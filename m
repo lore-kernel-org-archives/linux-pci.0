@@ -1,42 +1,114 @@
-Return-Path: <SRS0=WUYf=HJ=ziepe.ca=jgg@kernel.org>
-Return-Path: <SRS0=WUYf=HJ=ziepe.ca=jgg@kernel.org>
-Date: Fri, 20 Apr 2018 08:54:00 -0600
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, sulrich@codeaurora.org,
-	timur@codeaurora.org, linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Mike Marciniszyn <mike.marciniszyn@intel.com>,
-	Dennis Dalessandro <dennis.dalessandro@intel.com>,
-	Doug Ledford <dledford@redhat.com>,
-	"open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	Alex Deucher <alexander.deucher@amd.com>
-Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
-Message-ID: <20180420145400.GA30433@ziepe.ca>
-References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
- <20180419202632.GE14063@ziepe.ca>
- <20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=fKP7=HB=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=fKP7=HB=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH v13 6/6] PCI/DPC: Do not do recovery for hotplug enabled
+ system
+To: Keith Busch <keith.busch@intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Oza Pawandeep <poza@codeaurora.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Philippe Ombredanne <pombredanne@nexb.com>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Kate Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>,
+ Wei Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>,
+ Alex Williamson <alex.williamson@redhat.com>
+References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
+ <1523284914-2037-7-git-send-email-poza@codeaurora.org>
+ <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
+ <13efe2e8-74c8-acb4-ec58-f79b14a1f182@codeaurora.org>
+ <20180412140648.GD145698@bhelgaas-glaptop.roam.corp.google.com>
+ <ca7e5285-2e88-e130-6402-a271bb92a81e@codeaurora.org>
+ <20180412143954.GB4810@localhost.localdomain>
+ <20180412150231.GD4810@localhost.localdomain>
+ <ea977780-6f90-af5a-442f-575536038307@codeaurora.org>
+ <20180412170911.GA6424@localhost.localdomain>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <fa167b21-f70d-a220-5671-5ad66a0f72c0@codeaurora.org>
+Date: Thu, 12 Apr 2018 13:41:25 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180412170911.GA6424@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 19, 2018 at 04:47:23PM -0500, Bjorn Helgaas wrote:
- 
-> I *thought* the hardware was supposed to automatically negotiate to
-> the highest rate supported by both sides without any help at all from
-> software.  But since several drivers have code to do it themselves, I
-> wonder if I'm missing something, or maybe there's something the PCI
-> core should be doing that it isn't, and the driver code is basically
-> working around that PCI core deficiency.
+On 4/12/2018 1:09 PM, Keith Busch wrote:
+> On Thu, Apr 12, 2018 at 12:27:20PM -0400, Sinan Kaya wrote:
+>> On 4/12/2018 11:02 AM, Keith Busch wrote:
+>>>
+>>> Also, I thought the plan was to keep hotplug and non-hotplug the same,
+>>> except for the very end: if not a hotplug bridge, initiate the rescan
+>>> automatically after releasing from containment, otherwise let pciehp
+>>> handle it when the link reactivates.
+>>>
+>>
+>> Hmm...
+>>
+>> AER driver doesn't do stop and rescan approach for fatal errors. AER driver
+>> makes an error callback followed by secondary bus reset and finally driver
+>> the resume callback on the endpoint only if link recovery is successful.
+>> Otherwise, AER driver bails out with recovery unsuccessful message.
+> 
+> I'm not sure if that's necessarily true. People have reported AER
+> handling triggers PCIe hotplug events, and creates some interesting race
+> conditions:
 
-The HW is supposed to do that, but Gen3 is electrically *hard*.
+By reading the code, I don't see a stop and rescan in the AER error recovery
+path.
 
-I'm not surprised that some HW has run into trouble where the driver
-might have to be involved to tweak the SERDES.. eg there is now often
-on-device software involved here and updating the SERDES 'firmware'
-may be needed.
+As both logs indicate, stop and rescan is initiated in response to link down
+and link up interrupts triggered by the secondary bus reset. 
+The SW entity handling these is not AER driver. It is the hotplug driver
+running asynchronous to the AER driver.
 
-Jason
+AER driver should have tried a slot reset before attempting to do a secondary
+bus reset.
+
+/**
+ * pci_reset_slot - reset a PCI slot
+ * @slot: PCI slot to reset
+ *
+ * A PCI bus may host multiple slots, each slot may support a reset mechanism
+ * independent of other slots.  For instance, some slots may support slot power
+ * control.  In the case of a 1:1 bus to slot architecture, this function may
+ * wrap the bus reset to avoid spurious slot related events such as hotplug.
+ * Generally a slot reset should be attempted before a bus reset.  All of the
+ * function of the slot and any subordinate buses behind the slot are reset
+ * through this function.  PCI config space of all devices in the slot and
+ * behind the slot is saved before and restored after reset.
+ *
+ * Return 0 on success, non-zero on error.
+ */
+int pci_reset_slot(struct pci_slot *slot)
+
+Slot reset is there to mask hotplug interrupts before the reset and unmask them
+after reset.
+
+> 
+> https://marc.info/?l=linux-pci&m=152336615707640&w=2
+> 
+> https://www.spinics.net/lists/linux-pci/msg70614.html
+> 
+>> Why do we need an additional rescan in the DPC driver if the link is up
+>> and driver resumes operation?
+> 
+> I thought the plan was to have DPC always go through the removal path
+> to ensure all devices are properly configured when containment is
+> released. In order to reconfigure those, you'll need to initiate the
+> rescan from somewhere.
+> 
+
+This is where the contradiction is. 
+
+Bjorn is asking for a unified error handling for both AER and DPC.
+
+Current AER error recovery framework is error callback + secondary
+bus reset + resume callback.
+
+How does this stop + rescan model fit?
+
+Do we want to change the error recovery framework? I suppose this will 
+become a bigger conversation as there are more customers of this.
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
