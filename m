@@ -1,66 +1,41 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 01/12] iommu-common: move to arch/sparc
-To: David Miller <davem@davemloft.net>, khandual@linux.vnet.ibm.com
-References: <20180415145947.1248-1-hch@lst.de>
- <20180415145947.1248-2-hch@lst.de>
- <f0305a92-b206-1567-3c25-67fbd194047d@linux.vnet.ibm.com>
- <20180416.095833.969403163564136309.davem@davemloft.net>
-From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
-Date: Tue, 17 Apr 2018 11:20:58 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:55616 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753102AbeDLVIP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Apr 2018 17:08:15 -0400
+Received: by mail-wm0-f65.google.com with SMTP id b127so990809wmf.5
+        for <linux-pci@vger.kernel.org>; Thu, 12 Apr 2018 14:08:14 -0700 (PDT)
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Subject: [PATCH] PCI: Add two more values for PCIe Max_Read_Request_Size
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Message-ID: <90260d62-e136-44a3-a35b-19fac1bcfb20@gmail.com>
+Date: Thu, 12 Apr 2018 23:08:04 +0200
 MIME-Version: 1.0
-In-Reply-To: <20180416.095833.969403163564136309.davem@davemloft.net>
-Message-Id: <f5741528-427d-3537-5498-2080766df0fe@linux.vnet.ibm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
- konrad.wilk@oracle.com, linux-pci@vger.kernel.org, x86@kernel.org,
- linux-block@vger.kernel.org, linux-mm@kvack.org,
- iommu@lists.linux-foundation.org, Michael Ellerman <mpe@ellerman.id.au>,
- sparclinux@vger.kernel.org, hch@lst.de, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/16/2018 07:28 PM, David Miller wrote:
-> From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
-> Date: Mon, 16 Apr 2018 14:26:07 +0530
-> 
->> On 04/15/2018 08:29 PM, Christoph Hellwig wrote:
->>> This code is only used by sparc, and all new iommu drivers should use the
->>> drivers/iommu/ framework.  Also remove the unused exports.
->>>
->>> Signed-off-by: Christoph Hellwig <hch@lst.de>
->>
->> Right, these functions are used only from SPARC architecture. Simple
->> git grep confirms it as well. Hence it makes sense to move them into
->> arch code instead.
-> 
-> Well, we put these into a common location and used type friendly for
-> powerpc because we hoped powerpc would convert over to using this
-> common piece of code as well.
-> 
-> But nobody did the powerpc work.
-> 
-> If you look at the powerpc iommu support, it's the same code basically
-> for entry allocation.
+This patch adds missing values for the max read request size.
+E.g. network driver r8169 uses a value of 4K.
 
-I understand. But there are some differences in iommu_table structure,
-how both regular and large IOMMU pools are being initialized etc. So
-if the movement of code into SPARC help cleaning up these generic config
-options in general, I guess we should do that. But I will leave it upto
-others who have more experience in this area.
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+---
+ include/uapi/linux/pci_regs.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-+mpe
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 0c79eac5..699257fb 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -506,6 +506,8 @@
+ #define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
+ #define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
+ #define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
++#define  PCI_EXP_DEVCTL_READRQ_2048B 0x4000 /* 2048 Bytes */
++#define  PCI_EXP_DEVCTL_READRQ_4096B 0x5000 /* 4096 Bytes */
+ #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
+ #define PCI_EXP_DEVSTA		10	/* Device Status */
+ #define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
+-- 
+2.17.0
