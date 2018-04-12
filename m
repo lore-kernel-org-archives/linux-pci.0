@@ -1,108 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-he1eur01on0050.outbound.protection.outlook.com ([104.47.0.50]:3360
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754213AbeDBHfH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Apr 2018 03:35:07 -0400
-Subject: Re: [PATCH v5 03/14] PCI: Add pcie_bandwidth_capable() to compute max
- supported link bandwidth
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Tariq Toukan <tariqt@mellanox.com>,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        everest-linux-l2@cavium.com, intel-wired-lan@lists.osuosl.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152244390359.135666.14890735614456271032.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <31e66048-e8b8-47ba-baf5-023560b4c124@mellanox.com>
- <20180402004049.GA131023@bhelgaas-glaptop.roam.corp.google.com>
-From: Tal Gilboa <talgi@mellanox.com>
-Message-ID: <50346f44-de3f-b226-69ad-6de45e94e261@mellanox.com>
-Date: Mon, 2 Apr 2018 10:34:58 +0300
+Received: from mail.kernel.org ([198.145.29.99]:58004 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752836AbeDLW4A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Apr 2018 18:56:00 -0400
+Date: Thu, 12 Apr 2018 17:55:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Heiner Kallweit <hkallweit1@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add two more values for PCIe Max_Read_Request_Size
+Message-ID: <20180412225557.GB46420@bhelgaas-glaptop.roam.corp.google.com>
+References: <90260d62-e136-44a3-a35b-19fac1bcfb20@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180402004049.GA131023@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <90260d62-e136-44a3-a35b-19fac1bcfb20@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/2/2018 3:40 AM, Bjorn Helgaas wrote:
-> On Sun, Apr 01, 2018 at 11:38:53PM +0300, Tal Gilboa wrote:
->> On 3/31/2018 12:05 AM, Bjorn Helgaas wrote:
->>> From: Tal Gilboa <talgi@mellanox.com>
->>>
->>> Add pcie_bandwidth_capable() to compute the max link bandwidth supported by
->>> a device, based on the max link speed and width, adjusted by the encoding
->>> overhead.
->>>
->>> The maximum bandwidth of the link is computed as:
->>>
->>>     max_link_speed * max_link_width * (1 - encoding_overhead)
->>>
->>> The encoding overhead is about 20% for 2.5 and 5.0 GT/s links using 8b/10b
->>> encoding, and about 1.5% for 8 GT/s or higher speed links using 128b/130b
->>> encoding.
->>>
->>> Signed-off-by: Tal Gilboa <talgi@mellanox.com>
->>> [bhelgaas: adjust for pcie_get_speed_cap() and pcie_get_width_cap()
->>> signatures, don't export outside drivers/pci]
->>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>> Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
->>> ---
->>>    drivers/pci/pci.c |   21 +++++++++++++++++++++
->>>    drivers/pci/pci.h |    9 +++++++++
->>>    2 files changed, 30 insertions(+)
->>>
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index 43075be79388..9ce89e254197 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -5208,6 +5208,27 @@ enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev)
->>>    	return PCIE_LNK_WIDTH_UNKNOWN;
->>>    }
->>> +/**
->>> + * pcie_bandwidth_capable - calculates a PCI device's link bandwidth capability
->>> + * @dev: PCI device
->>> + * @speed: storage for link speed
->>> + * @width: storage for link width
->>> + *
->>> + * Calculate a PCI device's link bandwidth by querying for its link speed
->>> + * and width, multiplying them, and applying encoding overhead.
->>> + */
->>> +u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
->>> +			   enum pcie_link_width *width)
->>> +{
->>> +	*speed = pcie_get_speed_cap(dev);
->>> +	*width = pcie_get_width_cap(dev);
->>> +
->>> +	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN)
->>> +		return 0;
->>> +
->>> +	return *width * PCIE_SPEED2MBS_ENC(*speed);
->>> +}
->>> +
->>>    /**
->>>     * pci_select_bars - Make BAR mask from the type of resource
->>>     * @dev: the PCI device for which BAR mask is made
->>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->>> index 66738f1050c0..2a50172b9803 100644
->>> --- a/drivers/pci/pci.h
->>> +++ b/drivers/pci/pci.h
->>> @@ -261,8 +261,17 @@ void pci_disable_bridge_window(struct pci_dev *dev);
->>>    	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
->>>    	 "Unknown speed")
->>> +/* PCIe speed to Mb/s with encoding overhead: 20% for gen2, ~1.5% for gen3 */
->>> +#define PCIE_SPEED2MBS_ENC(speed) \
->>
->> Missing gen4.
-> 
-> I made it "gen3+".  I think that's accurate, isn't it?  The spec
-> doesn't seem to actually use "gen3" as a specific term, but sec 4.2.2
-> says rates of 8 GT/s or higher (which I think includes gen3 and gen4)
-> use 128b/130b encoding.
-> 
+Hello Heiner,
 
-I meant that PCIE_SPEED_16_0GT will return 0 from this macro since it 
-wasn't added. Need to return 15754.
+On Thu, Apr 12, 2018 at 11:08:04PM +0200, Heiner Kallweit wrote:
+> This patch adds missing values for the max read request size.
+> E.g. network driver r8169 uses a value of 4K.
+
+Is there a r8169 patch that adds uses of PCI_EXP_DEVCTL_READRQ_4096B?
+If so, we should probably keep it together with this one since this
+one would have to be merged first.
+
+There's also a larger issue in that when Linux configures MPS and MRRS
+at enumeration-time, it makes some assumptions about how MRRS is set.
+If a driver like r8169 changes MRRS later, it may break those
+assumptions, which might lead to PCIe errors.
+
+If a user boots with "pci=pcie_bus_perf", we use PCIE_BUS_PERFORMANCE
+mode, and in that case we may set MPS to something larger than some
+devices can support, and we rely on MRRS to avoid problems.
+
+I don't really *like* that scheme because it makes assumptions like
+"drivers never change MRRS", but that's what we have right now.
+
+So just be aware that if r8169 changes MRRS and users boot with
+"pci=pcie_bus_perf", there is the potential for PCIe bus errors.
+
+There was some recent discussion about this; [1] is a good place to
+start.
+
+[1] http://lkml.kernel.org/r/20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com
+
+> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+> ---
+>  include/uapi/linux/pci_regs.h | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 0c79eac5..699257fb 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -506,6 +506,8 @@
+>  #define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
+>  #define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
+>  #define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
+> +#define  PCI_EXP_DEVCTL_READRQ_2048B 0x4000 /* 2048 Bytes */
+> +#define  PCI_EXP_DEVCTL_READRQ_4096B 0x5000 /* 4096 Bytes */
+>  #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
+>  #define PCI_EXP_DEVSTA		10	/* Device Status */
+>  #define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
+> -- 
+> 2.17.0
+> 
