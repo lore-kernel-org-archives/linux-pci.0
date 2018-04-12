@@ -1,67 +1,37 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v5 09/10] PCI: dwc: Small computation improvement
-Date: Tue, 17 Apr 2018 15:34:27 +0100
-Message-Id: <4fc069a2b82cc7a3790bc528a6b67636654a3a35.1523973931.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:55883 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752437AbeDLRJ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Apr 2018 13:09:29 -0400
+Date: Thu, 12 Apr 2018 11:10:26 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Alex_Gagniuc@Dellteam.com
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        scott.bauer@intel.com
+Subject: Re: [PATCH 0/4] PCI/AER: Use-after-free fix
+Message-ID: <20180412171025.GB6424@localhost.localdomain>
+References: <20180409220444.6632-1-keith.busch@intel.com>
+ <a97b5921e5cf4855b5e76110a7984fdf@ausx13mps321.AMER.DELL.COM>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a97b5921e5cf4855b5e76110a7984fdf@ausx13mps321.AMER.DELL.COM>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replaces a simple division by 2 to a right shift rotation of 1 bit.
+On Thu, Apr 12, 2018 at 05:06:05PM +0000, Alex_Gagniuc@Dellteam.com wrote:
+> From: Keith Busch [mailto:keith.busch@intel.com] 
+> 
+> > AER error handling walks the PCI topology below a root port, saving
+> > pointers of the pci_dev structs affected by the error along the way.
+> 
+> Hi Keith,
+> 
+> I've been trying to do an ABA test to confirm that your change
+> eliminates the use-after-free issue we've seen. The race seems to be
+> quite elusive, so I can't reliably reproduce it. Your changes have not
+> been forgotten; I have them staged for further testing.
+> 
+> Alex
 
-Probably any recent and decent compiler does this kind of substitution
-in order to improve code performance. Nevertheless it's a coding good
-practice whenever there is a division / multiplication by multiple of 2
-to replace it by the equivalent operation in this case, the shift
-rotation.
-
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Changes v3->v4:
- - Added a small explication to the log description.
-Changes v4->v5:
- - Nothing changed, just to follow the patch set version.
-
- drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 5a23f78..fc55fde 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
- 	if (cfg_res) {
--		pp->cfg0_size = resource_size(cfg_res) / 2;
--		pp->cfg1_size = resource_size(cfg_res) / 2;
-+		pp->cfg0_size = resource_size(cfg_res) >> 1;
-+		pp->cfg1_size = resource_size(cfg_res) >> 1;
- 		pp->cfg0_base = cfg_res->start;
- 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
- 	} else if (!pp->va_cfg0_base) {
-@@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			break;
- 		case 0:
- 			pp->cfg = win->res;
--			pp->cfg0_size = resource_size(pp->cfg) / 2;
--			pp->cfg1_size = resource_size(pp->cfg) / 2;
-+			pp->cfg0_size = resource_size(pp->cfg) >> 1;
-+			pp->cfg1_size = resource_size(pp->cfg) >> 1;
- 			pp->cfg0_base = pp->cfg->start;
- 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
- 			break;
--- 
-2.7.4
+No worries. This is essentially just a "safe" version of the patch that
+you had tested, so if that one was successful, this one should be too.
