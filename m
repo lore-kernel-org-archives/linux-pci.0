@@ -1,129 +1,58 @@
-Return-Path: <SRS0=EUIw=HP=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=EUIw=HP=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Kai Heng Feng <kai.heng.feng@canonical.com>, bhelgaas@google.com, linux-pci@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable@vger.kernel.org
-Subject: Re: [PATCH v3] PCI / PM: Always check PME wakeup capability for runtime wakeup support
-Date: Thu, 26 Apr 2018 16:36:26 +0200
-Message-ID: <1772514.uJjIhrptf1@aspire.rjw.lan>
-In-Reply-To: <20180426135545.GB225403@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180331164022.24220-1-kai.heng.feng@canonical.com> <10732937.eAR6mAEfiz@aspire.rjw.lan> <20180426135545.GB225403@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=9FkI=HB=microsoft.com=Sridhar.Pitchai@kernel.org>
+Return-Path: <SRS0=9FkI=HB=microsoft.com=Sridhar.Pitchai@kernel.org>
+From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Lorenzo Pieralisi
+	<lorenzo.pieralisi@arm.com>, Haiyang Zhang <haiyangz@microsoft.com>, Dexuan
+ Cui <decui@microsoft.com>
+CC: Stephen Hemminger <sthemmin@microsoft.com>, Jake Oshins
+	<jakeo@microsoft.com>, KY Srinivasan <kys@microsoft.com>, "Michael Kelley
+ (EOSG)" <Michael.H.Kelley@microsoft.com>, "devel@linuxdriverproject.org"
+	<devel@linuxdriverproject.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: [PATCH v7] Revert "PCI: hv: Use device serial number as PCI domain"
+Date: Thu, 12 Apr 2018 02:44:42 +0000
+Message-ID: <FE7CB779-F2C9-4967-BCF1-A0DFE846B2E5@microsoft.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, April 26, 2018 3:55:45 PM CEST Bjorn Helgaas wrote:
-> On Fri, Apr 13, 2018 at 09:29:56AM +0200, Rafael J. Wysocki wrote:
-> > On Friday, April 13, 2018 8:58:11 AM CEST Kai Heng Feng wrote:
-> > > Hi Bjorn and Rafael,
-> > > 
-> > > > On Apr 1, 2018, at 12:40 AM, Kai-Heng Feng <kai.heng.feng@canonical.com>  
-> > > > wrote:
-> > > >
-> > > > USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
-> > > > core: Drop run_wake flag from struct dev_pm_info").
-> > > >
-> > > > The device in question is not power managed by platform firmware,
-> > > > furthermore, it only supports PME# from D3cold:
-> > > > Capabilities: [78] Power Management version 3
-> > > >        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
-> > > >        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-> > > >
-> > > > Before commit de3ef1eb1cd0, the device never gets runtime suspended.
-> > > > After that commit, the device gets runtime suspended, so it does not
-> > > > respond to any PME#.
-> 
-> Apologies for my lack of PM expertise.  I don't think the device would
-> *respond* to PME#, would it?  I would think the device would
-> potentially *generate* a PME#.
-
-Right.
-
-> And I guess since this device can generate PME# only from D3cold, the
-> implication is that runtime suspending the device may put it into D1,
-> D2, or D3hot, but not D3cold?  Is that an axiom of the runtime suspend
-> design?
-
-No, it isn't.
-
-Runtime PM is expected to only put devices into D-states from where they
-can generate PME.
-
-Before the problematic change it would just hold the device in question in D0,
-but after that change the device will be suspended (in which case it will end
-up in D3hot which is incorrect).
-
-> > > > usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
-> > > > device_can_wakeup() in pci_dev_run_wake() always returns true.
-> 
-> I think "mandatorily" means "always" or "unconditionally", right?
-> 
-> > > > So pci_dev_run_wake() needs to check PME wakeup capability as its first
-> > > > condition.
-> > > >
-> > > > In addition, change wakeup flag passed to pci_target_state() from false
-> > > > to true, because we want to find the deepest state that the device can
-> > > > still generate PME#.
-> 
-> Is this a separate bug fix?  I don't understand how it fits in here
-> because the wakeup flag means "Whether or not wakeup functionality
-> will be enabled for the device", and you're not changing anything
-> about whether wakeup functionality will be enabled.
-
-For runtime PM the "wakeup" argument of pci_target_state() should always be
-"true", so technically this may be regarded as a separate issue, but this
-change is needed as a functional fix for the device in question along with
-the reordering.
-
-Since technically there is a state from which the device can signal PME,
-device_can_wakeup() returns "true" for it, but this isn't sufficient for
-pci_dev_run_wake() to return "true" (because that state is D3cold and
-the platform cannot power-manage the device, so the device cannot be put
-into D3cold directly).  That's the first thing that needs to be changed.
-
-On top of that, we need to look for a state from which the device can
-generate PME.
-
-> > > > Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct  
-> > > > dev_pm_info")
-> > > > Cc: stable@vger.kernel.org # 4.13+
-> > > > Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> > > > ---
-> > > > v3: State the reason why the wakeup flag gets changed.
-> > > >
-> > > > v2: Explicitly check dev->pme_support.
-> > > 
-> > > If this patch is good enough, I am hoping it can get merged in v4.17.
-> > 
-> > OK
-> > 
-> > Bjorn, if you want to take this:
-> > 
-> >  Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > Otherwise please let me know and I'll queue it up.
-> 
-> de3ef1eb1cd0 went through your tree, so I think this fix should go
-> through your tree, too.
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-OK
-
-> Not directly related to this patch, but I think these comments in
-> pci_target_state() are slightly misleading:
-> 
->    * Call the platform to choose the target state of the device
->    * and enable wake-up from this state if supported.
-> 
->    * Find the deepest state from which the device can generate
->    * wake-up events, make it the target state and enable device
->    * to generate PME#.
-> 
-> AFAICT, pci_target_state() does not actually "enable wake-up from this
-> state" or "enable device to generate PME#".
-
-Right, the comments appear to be stale, I'll send a patch to update them.
-
-Thanks,
-Rafael
+V2hlbiBMaW51eCBydW5zIGFzIGEgZ3Vlc3QgVk0gaW4gSHlwZXItViBhbmQgSHlwZXItViBhZGRz
+IHRoZSB2aXJ0dWFsIFBDSQ0KYnVzIHRvIHRoZSBndWVzdCwgSHlwZXItViBhbHdheXMgcHJvdmlk
+ZXMgdW5pcXVlIFBDSSBkb21haW4uDQoNCmNvbW1pdCA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBV
+c2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQpvdmVycm9kZSB1bmlxdWUg
+ZG9tYWluIHdpdGggdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGZpcnN0IGRldmljZSBhZGRlZCB0
+bw0KdGhlIHZpcnR1YWwgUENJIGJ1cy4NCg0KVGhlIHJlYXNvbiBmb3IgdGhhdCBwYXRjaCB3YXMg
+dG8gaGF2ZSBhIGNvbnNpc3RlbnQgYW5kIHNob3J0IG5hbWUgZm9yIHRoZQ0KZGV2aWNlLCBidXQg
+SHlwZXItViBkb2Vzbid0IHByb3ZpZGUgdW5pcXVlIHNlcmlhbCBudW1iZXJzLiBVc2luZyBub24t
+dW5pcXVlDQpzZXJpYWwgbnVtYmVycyBhcyBkb21haW4gSURzIGxlYWRzIHRvIGR1cGxpY2F0ZSBk
+ZXZpY2UgYWRkcmVzc2VzLCB3aGljaA0KY2F1c2VzIFBDSSBidXMgcmVnaXN0cmF0aW9uIHRvIGZh
+aWwuDQoNClJldmVydCBjb21taXQgNGE5YjA5MzNiZGZjICgiUENJOiBodjogVXNlIGRldmljZSBz
+ZXJpYWwgbnVtYmVyIGFzIFBDSQ0KZG9tYWluIikgc28gd2UgY2FuIHJlbGlhYmx5IHN1cHBvcnQg
+bXVsdGlwbGUgZGV2aWNlcyBiZWluZyBhc3NpZ25lZCB0bw0KYSBndWVzdC4NCg0KRml4ZXM6IDRh
+OWIwOTMzYmRmYyAoIlBDSTogaHY6IFVzZSBkZXZpY2Ugc2VyaWFsIG51bWJlciBhcyBQQ0kgZG9t
+YWluIikNClNpZ25lZC1vZmYtYnk6IFNyaWRoYXIgUGl0Y2hhaSA8c3JpZGhhci5waXRjaGFpQG1p
+Y3Jvc29mdC5jb20+DQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZw0KUmV2aWV3ZWQtYnk6IEJq
+b3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+DQoNCi0tLQ0KQ2hhbmdlcyBpbiB2NzoN
+CiogZml4IHRoZSBjb21taXQgY29tbWVudC4gW0Jqb3JuIEhlbGdhYXNdDQotLS0NCiBkcml2ZXJz
+L3BjaS9ob3N0L3BjaS1oeXBlcnYuYyB8IDExIC0tLS0tLS0tLS0tDQogMSBmaWxlIGNoYW5nZWQs
+IDExIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlw
+ZXJ2LmMgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYw0KaW5kZXggMmZhZjM4ZWFiNzg1
+Li5hYzY3ZTU2ZTQ1MWEgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYu
+Yw0KKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMNCkBAIC0xNTE4LDE3ICsxNTE4
+LDYgQEAgc3RhdGljIHN0cnVjdCBodl9wY2lfZGV2ICpuZXdfcGNpY2hpbGRfZGV2aWNlKHN0cnVj
+dCBodl9wY2lidXNfZGV2aWNlICpoYnVzLA0KIAlnZXRfcGNpY2hpbGQoaHBkZXYsIGh2X3BjaWRl
+dl9yZWZfY2hpbGRsaXN0KTsNCiAJc3Bpbl9sb2NrX2lycXNhdmUoJmhidXMtPmRldmljZV9saXN0
+X2xvY2ssIGZsYWdzKTsNCiANCi0JLyoNCi0JICogV2hlbiBhIGRldmljZSBpcyBiZWluZyBhZGRl
+ZCB0byB0aGUgYnVzLCB3ZSBzZXQgdGhlIFBDSSBkb21haW4NCi0JICogbnVtYmVyIHRvIGJlIHRo
+ZSBkZXZpY2Ugc2VyaWFsIG51bWJlciwgd2hpY2ggaXMgbm9uLXplcm8gYW5kDQotCSAqIHVuaXF1
+ZSBvbiB0aGUgc2FtZSBWTS4gIFRoZSBzZXJpYWwgbnVtYmVycyBzdGFydCB3aXRoIDEsIGFuZA0K
+LQkgKiBpbmNyZWFzZSBieSAxIGZvciBlYWNoIGRldmljZS4gIFNvIGRldmljZSBuYW1lcyBpbmNs
+dWRpbmcgdGhpcw0KLQkgKiBjYW4gaGF2ZSBzaG9ydGVyIG5hbWVzIHRoYW4gYmFzZWQgb24gdGhl
+IGJ1cyBpbnN0YW5jZSBVVUlELg0KLQkgKiBPbmx5IHRoZSBmaXJzdCBkZXZpY2Ugc2VyaWFsIG51
+bWJlciBpcyB1c2VkIGZvciBkb21haW4sIHNvIHRoZQ0KLQkgKiBkb21haW4gbnVtYmVyIHdpbGwg
+bm90IGNoYW5nZSBhZnRlciB0aGUgZmlyc3QgZGV2aWNlIGlzIGFkZGVkLg0KLQkgKi8NCi0JaWYg
+KGxpc3RfZW1wdHkoJmhidXMtPmNoaWxkcmVuKSkNCi0JCWhidXMtPnN5c2RhdGEuZG9tYWluID0g
+ZGVzYy0+c2VyOw0KIAlsaXN0X2FkZF90YWlsKCZocGRldi0+bGlzdF9lbnRyeSwgJmhidXMtPmNo
+aWxkcmVuKTsNCiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9j
+aywgZmxhZ3MpOw0KIAlyZXR1cm4gaHBkZXY7DQotLSANCjIuMTQuMQ0KDQo=
