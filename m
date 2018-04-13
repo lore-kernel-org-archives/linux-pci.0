@@ -1,47 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:40105 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752531AbeDBQT4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Apr 2018 12:19:56 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 0/7] DPC updates
-Date: Mon,  2 Apr 2018 10:21:56 -0600
-Message-Id: <20180402162203.3370-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Kai Heng Feng <kai.heng.feng@canonical.com>, bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        stable@vger.kernel.org
+Subject: Re: [PATCH v3] PCI / PM: Always check PME wakeup capability for runtime wakeup support
+Date: Fri, 13 Apr 2018 09:29:56 +0200
+Message-ID: <10732937.eAR6mAEfiz@aspire.rjw.lan>
+In-Reply-To: <798A7C7A-A3DA-4C0E-A774-48042430EE1A@canonical.com>
+References: <20180331164022.24220-1-kai.heng.feng@canonical.com> <798A7C7A-A3DA-4C0E-A774-48042430EE1A@canonical.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I am terribly sorry about the delay getting this back to you. I had some
-scheduling issues with test equipment and other unrelated conflicts.
+On Friday, April 13, 2018 8:58:11 AM CEST Kai Heng Feng wrote:
+> Hi Bjorn and Rafael,
+> 
+> > On Apr 1, 2018, at 12:40 AM, Kai-Heng Feng <kai.heng.feng@canonical.com>  
+> > wrote:
+> >
+> > USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
+> > core: Drop run_wake flag from struct dev_pm_info").
+> >
+> > The device in question is not power managed by platform firmware,
+> > furthermore, it only supports PME# from D3cold:
+> > Capabilities: [78] Power Management version 3
+> >        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+> >        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+> >
+> > Before commit de3ef1eb1cd0, the device never gets runtime suspended.
+> > After that commit, the device gets runtime suspended, so it does not
+> > respond to any PME#.
+> >
+> > usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
+> > device_can_wakeup() in pci_dev_run_wake() always returns true.
+> >
+> > So pci_dev_run_wake() needs to check PME wakeup capability as its first
+> > condition.
+> >
+> > In addition, change wakeup flag passed to pci_target_state() from false
+> > to true, because we want to find the deepest state that the device can
+> > still generate PME#.
+> >
+> > Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct  
+> > dev_pm_info")
+> > Cc: stable@vger.kernel.org # 4.13+
+> > Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> > ---
+> > v3: State the reason why the wakeup flag gets changed.
+> >
+> > v2: Explicitly check dev->pme_support.
+> 
+> If this patch is good enough, I am hoping it can get merged in v4.17.
 
-I added Oza's legacy IRQ fix into this series, as I didn't see this
-staged yet, and it really does fix some issues as well as provide the
-means to clean up other parts.
+OK
 
-I'm sending this later than I intended, but hoping you might see a way
-to including this to 4.17. I can rebase to 'next' where the file is
-renamed to 'dpc.c'.
+Bjorn, if you want to take this:
 
-Keith Busch (6):
-  PCI/DPC: Enable ERR_COR
-  PCI/DPC: Leave interrupts enabled while handling event
-  PCI/DPC: Defer event handling to work queue
-  PCI/DPC: Remove rp_pio_status from dpc struct
-  PCI/AER: API for obtaining AER information
-  PCI/DPC: Print AER status in DPC event handling
+ Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Oza Pawandeep (1):
-  PCI/DPC: Fix PCI legacy interrupt acknowledgement
+Otherwise please let me know and I'll queue it up.
 
- drivers/pci/pcie/aer/aerdrv.h      |   1 +
- drivers/pci/pcie/aer/aerdrv_core.c |   8 +--
- drivers/pci/pcie/pcie-dpc.c        | 106 +++++++++++++++++--------------------
- include/uapi/linux/pci_regs.h      |   1 +
- 4 files changed, 55 insertions(+), 61 deletions(-)
 
--- 
-2.14.3
+> >
+> >  drivers/pci/pci.c | 8 ++++----
+> >  1 file changed, 4 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index f6a4dd10d9b0..52821a21fc07 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -2125,16 +2125,16 @@ bool pci_dev_run_wake(struct pci_dev *dev)
+> >  {
+> >  	struct pci_bus *bus = dev->bus;
+> >
+> > -	if (device_can_wakeup(&dev->dev))
+> > -		return true;
+> > -
+> >  	if (!dev->pme_support)
+> >  		return false;
+> >
+> >  	/* PME-capable in principle, but not from the target power state */
+> > -	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
+> > +	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
+> >  		return false;
+> >
+> > +	if (device_can_wakeup(&dev->dev))
+> > +		return true;
+> > +
+> >  	while (bus->parent) {
+> >  		struct pci_dev *bridge = bus->self;
+> >
+> 
