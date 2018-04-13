@@ -1,52 +1,50 @@
-Return-Path: <SRS0=e93+=HT=gmail.com=mr.nuke.me@kernel.org>
-Return-Path: <SRS0=e93+=HT=gmail.com=mr.nuke.me@kernel.org>
-Subject: Re: [PATCH RESEND] PCI/AER: Use a common function to print AER error
- bits
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 12 Apr 2018 21:32:49 -0700
+From: Jakub Kicinski <kubakici@wp.pl>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
- gregkh@linuxfoundation.org, fred@fredlawl.com, linux-kernel@vger.kernel.org,
- alex_gagniuc@dellteam.com, austin_bolen@dell.com, keith.busch@intel.com
-References: <20180417170943.1767-1-mr.nuke.me@gmail.com>
- <20180427224337.GC73256@bhelgaas-glaptop.roam.corp.google.com>
- <12343e44-2d8a-51e1-a0be-e6804e9bd8a3@gmail.com>
- <220bb125-b933-abf3-7b30-63446634e8d6@gmail.com>
- <20180430171531.GB95643@bhelgaas-glaptop.roam.corp.google.com>
-From: "Alex G." <mr.nuke.me@gmail.com>
-Message-ID: <8e8a8de1-a90c-ab88-c8ac-bbe8bcc7d49c@gmail.com>
-Date: Mon, 30 Apr 2018 12:41:26 -0500
+Cc: Tal Gilboa <talgi@mellanox.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Jacob Keller <jacob.e.keller@intel.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        everest-linux-l2@cavium.com, intel-wired-lan@lists.osuosl.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 05/14] PCI: Add pcie_print_link_status() to log link
+ speed and whether it's limited
+Message-ID: <20180412213249.06661048@cakuba.netronome.com>
+In-Reply-To: <152244391852.135666.14903825998610307052.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        <152244391852.135666.14903825998610307052.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180430171531.GB95643@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, 30 Mar 2018 16:05:18 -0500, Bjorn Helgaas wrote:
+> +	if (bw_avail >= bw_cap)
+> +		pci_info(dev, "%d Mb/s available bandwidth (%s x%d link)\n",
+> +			 bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
+> +	else
+> +		pci_info(dev, "%d Mb/s available bandwidth, limited by %s x%d link at %s (capable of %d Mb/s with %s x%d link)\n",
+> +			 bw_avail, PCIE_SPEED2STR(speed), width,
+> +			 limiting_dev ? pci_name(limiting_dev) : "<unknown>",
+> +			 bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
 
+I was just looking at using this new function to print PCIe BW for a
+NIC, but I'm slightly worried that there is nothing in the message that
+says PCIe...  For a NIC some people may interpret the bandwidth as NIC
+bandwidth:
 
-On 04/30/2018 12:15 PM, Bjorn Helgaas wrote:
-> On Sat, Apr 28, 2018 at 12:07:48PM -0500, Alex G. wrote:
+[   39.839989] nfp 0000:04:00.0: Netronome Flow Processor NFP4000/NFP6000 PCIe Card Probe
+[   39.848943] nfp 0000:04:00.0: 63.008 Gb/s available bandwidth (8 GT/s x8 link)
+[   39.857146] nfp 0000:04:00.0: RESERVED BARs: 0.0: General/MSI-X SRAM, 0.1: PCIe XPB/MSI-X PBA, 0.4: Explicit0, 0.5: Explicit1, fre4
 
-(snip)
->> I could update the offending line to say:
->>  +	info.first_error = PCI_ERR_CAP_FEP(aer->cap_control);
-> 
-> That's what I would have expected.  So I'd say either do this, or add
-> a comment about why it's not the right thing to do.
+It's not a 63Gbps NIC...  I'm sorry if this was discussed before and I
+didn't find it.  Would it make sense to add the "PCIe: " prefix to the
+message like bnx2x used to do?  Like:
 
-Okay.
+nfp 0000:04:00.0: PCIe: 63.008 Gb/s available bandwidth (8 GT/s x8 link)
 
->> Though I still have the concerns with validating CPER data:
->>
->>> I can see a way to use even more common printk code, but that requires
->>> validating the PCI regs we get from firmware. That means we need to make
->>> a guarantee about CPER that is beyond the scope of this patch.
-> 
-> Sounds like this is material for another patch, but if/when you do
-> that, I'd like to understand your concern about validating the
-> registers we get from firmware.  Are you worried about getting
-> incorrect register contents, then printing the wrong info, making
-> the wrong decision about how to recover, something else?
-
-I don't trust firmware, and I have daymares about firmware leaving these
-fields uninitialized. In jargon, I'd like to treat it as external
-untrusted serialized data.
-
-Alex
+Sorry for a very late comment.
