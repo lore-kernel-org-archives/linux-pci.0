@@ -1,160 +1,75 @@
-Return-Path: <SRS0=YbMI=HR=rock-chips.com=shawn.lin@kernel.org>
-Return-Path: <SRS0=YbMI=HR=rock-chips.com=shawn.lin@kernel.org>
-Cc: shawn.lin@rock-chips.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/9] PCI: Add new helper for allocating irq domain for
- INTx
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
- <1524817367-239076-1-git-send-email-shawn.lin@rock-chips.com>
- <20180427171812.GB8199@bhelgaas-glaptop.roam.corp.google.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <c1555892-1235-f8de-686c-ad17455af119@rock-chips.com>
-Date: Sat, 28 Apr 2018 08:44:27 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:44998 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750783AbeDMRsO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 13 Apr 2018 13:48:14 -0400
+Date: Fri, 13 Apr 2018 18:48:07 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Simon Horman <horms@verge.net.au>
+Cc: Marek Vasut <marek.vasut@gmail.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
+Message-ID: <20180413174807.GA29353@e107981-ln.cambridge.arm.com>
+References: <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com>
+ <20180409114159.azxeehjkeuinwrwe@verge.net.au>
+ <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
+ <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
+ <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
+ <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
+ <a5a0d78d-627b-6277-ee75-44e204cbd390@gmail.com>
+ <CAMuHMdX9d29JYVDsghd3Koyg8Aeuv0D2Fx5Lnn0bBZSb9RntDw@mail.gmail.com>
+ <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
+ <20180413124819.tw5436lolpn5eqhw@verge.net.au>
 MIME-Version: 1.0
-In-Reply-To: <20180427171812.GB8199@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180413124819.tw5436lolpn5eqhw@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Fri, Apr 13, 2018 at 02:48:19PM +0200, Simon Horman wrote:
+> On Tue, Apr 10, 2018 at 06:17:04PM +0200, Marek Vasut wrote:
+> > On 04/10/2018 05:28 PM, Geert Uytterhoeven wrote:
+> 
+> ...
+> 
+> > >>> rcar_pcie_get_resources() is called while the device is
+> > >>> runtime-enabled/resumed,
+> > >>> pci_free_resource_list() is called while the device is runtime-disabled.
+> > 
+> > rcar_pcie_get_resources() is NOT a pair function for
+> > pci_free_resource_list() . rcar_pcie_parse_request_of_pci_ranges() is a
+> > pair function for pci_free_resource_list().
+> > 
+> > rcar_pcie_parse_request_of_pci_ranges() calls
+> > of_pci_get_host_bridge_resources() internally, so every single function
+> > called after successful call of rcar_pcie_parse_request_of_pci_ranges()
+> > must call pci_free_resource_list().
+> > 
+> > Both of_pci_get_host_bridge_resources() and pci_free_resource_list() are
+> > called with runtime PM disabled.
+> > 
+> > The naming of the functions is confusing though.
+> 
+> Hi,
+> 
+> thanks everyone for their efforts in preparing/reviewing this patch.
+> 
+> It seems there are some differences of opinion on how best to handle the
+> error paths but unlike earlier versions this one seems correct to me. If
+> that turns out to be false we can address it. But I don't think its likely
+> things will be enhanced by continuing this review.
+> 
+> Lorenzo, please consider taking this patch in its current form.
 
-On 2018/4/28 1:18, Bjorn Helgaas wrote:
-> s/PCI: Add new helper for allocating irq domain for INTx/
->    PCI: Add pci_alloc_intx_irqd() for allocating IRQ domain
-> 
-> On Fri, Apr 27, 2018 at 04:22:47PM +0800, Shawn Lin wrote:
->> It seems host drivers which allocate irq domain for INTx
-> 
-> s/irq/IRQ/
-> 
->> and the related code block looks highly similar to each other.
->> Add a new helper, pci_alloc_intx_irqd(), to avoid code duplication
->> as much as possible.
->>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->> ---
->>
->>   include/linux/pci.h | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->>   1 file changed, 74 insertions(+)
->>
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 73178a2..68a1994 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -31,6 +31,8 @@
->>   #include <linux/device.h>
->>   #include <linux/interrupt.h>
->>   #include <linux/io.h>
->> +#include <linux/irq.h>
->> +#include <linux/of_irq.h>
->>   #include <linux/resource_ext.h>
->>   #include <uapi/linux/pci.h>
->>   
->> @@ -1449,6 +1451,74 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
->>   	return 0;
->>   }
->>   
->> +static int pcie_intx_map(struct irq_domain *domain, unsigned int irq,
->> +				  irq_hw_number_t hwirq)
->> +{
->> +	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
->> +	irq_set_chip_data(irq, domain->host_data);
->> +
->> +	return 0;
->> +}
->> +
->> +static struct irq_domain_ops pci_intx_domain_ops = {
->> +	.map = pcie_intx_map,
->> +};
->> +
->> +/**
->> + * pci_alloc_intx_irqd() - PCI helper for allocating INTx irq domain
-> 
-> s/PCI helper for allocating INTx irq domain/
->    Allocate INTx IRQ domain
-> 
->> + * @dev: device associated with the PCI controller.
->> + * @host: pointer to host specific data struct
->> + * @general_xlate: flag for whether use pci_irqd_intx_xlate() helper
->> + * @intx_domain_ops: pointer to driver specific struct irq_domain_ops
->> + * @local_intc: pointer to driver specific interrupt controller node
->> + *
->> + * A simple helper for drivers to allocate irq domain for INTx. If
->> + * intx_domain_ops is NULL, use pci_intx_domain_ops by defalut. And if
->> + * local_intc is present, then use it firstly, otherwise, fallback to get
->> + * interrupt controller node from @dev.
-> 
-> s/irq/IRQ/
-> s/defalut/default/
-> 
->> + * Returns valid pointer of struct irq_domain on success, or PTR_ERR(-EINVAL)
->> + * if failure occurred.
->> + */
->> +static __maybe_unused struct irq_domain *pci_alloc_intx_irqd(struct device *dev,
->> +				void *host, bool general_xlate,
->> +				const struct irq_domain_ops *intx_domain_ops,
->> +				struct device_node *local_intc)
-> 
-> Why is this in the header file?  This is not a performance path and I
-> don't want to deal with this __maybe_unused stuff.
+I will as soon as we restart queueing patches for v4.18, thanks for
+the heads-up.
 
-Ah, I saw pci_irqd_intx_xlate() was here, and instinctively keep the
-code close to it. Will move it to C file in v2.
-
-> 
->> +{
->> +	struct device_node *intc = local_intc;
->> +	struct irq_domain *domain;
->> +	const struct irq_domain_ops *irqd_ops;
->> +	bool need_put = false;
->> +
->> +	if (!intc) {
->> +		intc = of_get_next_child(dev->of_node, NULL);
->> +		if (!intc) {
->> +			dev_err(dev, "missing child interrupt-controller node\n");
->> +			return ERR_PTR(-EINVAL);
->> +		}
->> +		need_put = true;
->> +	}
->> +
->> +	if (intx_domain_ops) {
->> +		irqd_ops = intx_domain_ops;
->> +	} else {
->> +		if (general_xlate)
->> +			pci_intx_domain_ops.xlate = &pci_irqd_intx_xlate;
->> +		irqd_ops = &pci_intx_domain_ops;
->> +	}
->> +
->> +	domain = irq_domain_add_linear(intc, PCI_NUM_INTX,
->> +				       irqd_ops, host);
->> +	if (!domain) {
->> +		dev_err(dev, "failed to get a INTx IRQ domain\n");
->> +		if (need_put)
->> +			of_node_put(intc);
->> +		return ERR_PTR(-EINVAL);
->> +	}
->> +
->> +	return domain;
->> +}
->> +
->>   #ifdef CONFIG_PCIEPORTBUS
->>   extern bool pcie_ports_disabled;
->>   #else
->> @@ -1683,6 +1753,10 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
->>   				      unsigned long *out_hwirq,
->>   				      unsigned int *out_type)
->>   { return -EINVAL; }
->> +
->> +static __maybe_unused struct irq_domain *pci_alloc_intx_irqd(struct device *dev,
->> +	void *host, bool general_xlate, const struct irq_domain_ops *ops)
->> +{ return ERR_PTR(-EINVAL); }
->>   #endif /* CONFIG_PCI */
->>   
->>   /* Include architecture-dependent settings and functions */
->> -- 
->> 1.9.1
->>
->>
-> 
-> 
-> 
+Lorenzo
