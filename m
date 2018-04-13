@@ -1,81 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41684 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751409AbeDKNdh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Apr 2018 09:33:37 -0400
-Date: Wed, 11 Apr 2018 08:33:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Meelis Roos <mroos@linux.ee>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-        sparclinux@vger.kernel.org
-Subject: Re: sparc64 PCI BAR allocation is still problematic
-Message-ID: <20180411133334.GA91792@bhelgaas-glaptop.roam.corp.google.com>
-References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
- <20180410173437.GB24642@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LRH.2.21.1804102144240.32411@math.ut.ee>
- <20180410185610.GD24642@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LRH.2.21.1804111045330.18432@math.ut.ee>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH 03/37] iommu/sva: Manage process address spaces
+To: Sinan Kaya <okaya@codeaurora.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Cc: "joro@8bytes.org" <joro@8bytes.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        Mark Rutland <Mark.Rutland@arm.com>,
+        Catalin Marinas <Catalin.Marinas@arm.com>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+        Sudeep Holla <Sudeep.Holla@arm.com>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "lenb@kernel.org" <lenb@kernel.org>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "tn@semihalf.com" <tn@semihalf.com>,
+        "liubo95@huawei.com" <liubo95@huawei.com>,
+        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+        "rfranz@cavium.com" <rfranz@cavium.com>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "robdclark@gmail.com" <robdclark@gmail.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "bharatku@xilinx.com" <bharatku@xilinx.com>
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-4-jean-philippe.brucker@arm.com>
+ <04d4d161-ed72-f6b6-9b94-1d60bd79ef94@codeaurora.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <f2ea5af2-dfd6-7463-0eaa-ee9ede87eac1@arm.com>
+Date: Fri, 13 Apr 2018 11:59:29 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LRH.2.21.1804111045330.18432@math.ut.ee>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <04d4d161-ed72-f6b6-9b94-1d60bd79ef94@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 11, 2018 at 10:59:19AM +0300, Meelis Roos wrote:
-> > Oops, sorry, I can't easily compile test it.  Here's an updated patch:
-> > 
-> > commit a9ded309cbf3f57e9979848fd0aa0ffacdf11f1a
-> > Author: Bjorn Helgaas <bhelgaas@google.com>
-> > Date:   Tue Apr 10 08:47:34 2018 -0500
+On 10/04/18 19:53, Sinan Kaya wrote:
+> On 2/12/2018 1:33 PM, Jean-Philippe Brucker wrote:
+>> +static void io_mm_detach_all_locked(struct iommu_bond *bond)
+>> +{
+>> +	while (!io_mm_detach_locked(bond));
+>> +}
+>> +
 > 
-> Thanks, this patch compiles and works - Video RAM related BAR allocation 
-> errors are gone.
+> I don't remember if I mentioned this before or not but I think this loop
+> needs a little bit relaxation with yield and maybe an informational message
+> with might help if wait exceeds some time.
 
-Great, thanks!  I didn't mean to take up so much of your time testing
-*all* of your systems :)
+Right, at the very least we should have a cpu_relax here. I think this
+bit is going away, though, because I want to lift the possibility of
+calling bind() for the same dev/mm pair multiple times. It's not useful
+in my opinion because that call could only be issued by a given driver.
 
-> Hera are the /proc/iomem's but unfortunately the physical 
-> addresses have been censored by security:
-
-If you look at /proc/iomem as root, you should see the actual
-addresses.
-
-If you have any systems with VGA, it would be useful to test one of
-them.  
-
-I took a quick look through your lspci logs, and it *looks* like the
-Blade 100 has a VGA at 00:13.0, but I don't see the "Video RAM area"
-entry in /proc/iomem that I expected:
-
-> Blade 100: Video RAM related BAR error is gnone, this is still here:
-> [    6.131499] pci 0000:00:07.0: can't claim BAR 0 [io  0x1fe02000000-0x1fe0200ffff]: address conflict with 0000:00:03.0 [io  0x1fe02000600-0x1fe0200061f]
-> 
-> 00000000-00000000 : System RAM
->   00000000-00000000 : Kernel code
->   00000000-00000000 : Kernel data
->   00000000-00000000 : Kernel bss
-> 00000000-00000000 : System RAM
-> 00000000-00000000 : System RAM
-> 00000000-00000000 : /pci@1f,0
->   00000000-00000000 : 0000:00:07.0
->   00000000-00000000 : 0000:00:0c.1
->     00000000-00000000 : sungem
->   00000000-00000000 : 0000:00:0c.2
->   00000000-00000000 : 0000:00:0c.2
->   00000000-00000000 : 0000:00:08.0
->   00000000-00000000 : 0000:00:13.0
->   00000000-00000000 : 0000:00:13.0
->   00000000-00000000 : 0000:00:0c.1
->   00000000-00000000 : 0000:00:0c.2
->   00000000-00000000 : 0000:00:0c.3
->   00000000-00000000 : 0000:00:0c.3
->     00000000-00000000 : ohci_hcd
->   00000000-00000000 : PCI Bus 0000:01
->     00000000-00000000 : 0000:01:00.0
->       00000000-00000000 : sym53c8xx
->     00000000-00000000 : 0000:01:02.0
->     00000000-00000000 : 0000:01:02.0
->   00000000-00000000 : 0000:00:13.0
->     00000000-00000000 : atyfb
->   00000000-00000000 : IOMMU
->   00000000-00000000 : eeprom
+Thanks,
+Jean
