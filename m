@@ -1,129 +1,190 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:54433 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757750AbeD0Ial (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 04:30:41 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 1/9] PCI: Add new helper for allocating irq domain for INTx
-Date: Fri, 27 Apr 2018 16:22:47 +0800
-Message-Id: <1524817367-239076-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=+qDp=HC=google.com=rajatja@kernel.org>
+Return-Path: <SRS0=+qDp=HC=google.com=rajatja@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CABe79T4nO7dC9uHwX-woAvkdw0+b2ssUyxgs0cnGo90OH_YD+Q@mail.gmail.com>
+References: <CABe79T47vUjq20HuMrJZxhZWMr0q3uXMF6xL1TgkqhqA8qi1wg@mail.gmail.com>
+ <20180413135659.GC46420@bhelgaas-glaptop.roam.corp.google.com> <CABe79T4nO7dC9uHwX-woAvkdw0+b2ssUyxgs0cnGo90OH_YD+Q@mail.gmail.com>
+From: Rajat Jain <rajatja@google.com>
+Date: Fri, 13 Apr 2018 12:04:23 -0700
+Message-ID: <CACK8Z6Ec-aneRH+x4ZBxWo2hiNYCMEv4=XD9G03rBTh=mB_2yA@mail.gmail.com>
+Subject: Re: Issue with Enable LTR while pcie_aspm off
+To: Srinath Mannam <srinath.mannam@broadcom.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Ray Jui <ray.jui@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-It seems host drivers which allocate irq domain for INTx
-and the related code block looks highly similar to each other.
-Add a new helper, pci_alloc_intx_irqd(), to avoid code duplication
-as much as possible.
+Hello Srinath,
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+One question for you.
 
- include/linux/pci.h | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 74 insertions(+)
+On Fri, Apr 13, 2018 at 8:43 AM, Srinath Mannam
+<srinath.mannam@broadcom.com> wrote:
+> Hi Bjorn,
+>
+> Thank you very much for quick response.
+>
+> I am using samsung NVMe card as EP connected to our platform. As per
+> link capabilities device does not support L1.s.
+> But LTR is enabled in DEVCAP2.
+> In my observation after setting LTR without enabling ASPM (common
+> clock and link retraining) in software, device stopped responding.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 73178a2..68a1994 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -31,6 +31,8 @@
- #include <linux/device.h>
- #include <linux/interrupt.h>
- #include <linux/io.h>
-+#include <linux/irq.h>
-+#include <linux/of_irq.h>
- #include <linux/resource_ext.h>
- #include <uapi/linux/pci.h>
- 
-@@ -1449,6 +1451,74 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
- 	return 0;
- }
- 
-+static int pcie_intx_map(struct irq_domain *domain, unsigned int irq,
-+				  irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+
-+	return 0;
-+}
-+
-+static struct irq_domain_ops pci_intx_domain_ops = {
-+	.map = pcie_intx_map,
-+};
-+
-+/**
-+ * pci_alloc_intx_irqd() - PCI helper for allocating INTx irq domain
-+ * @dev: device associated with the PCI controller.
-+ * @host: pointer to host specific data struct
-+ * @general_xlate: flag for whether use pci_irqd_intx_xlate() helper
-+ * @intx_domain_ops: pointer to driver specific struct irq_domain_ops
-+ * @local_intc: pointer to driver specific interrupt controller node
-+ *
-+ * A simple helper for drivers to allocate irq domain for INTx. If
-+ * intx_domain_ops is NULL, use pci_intx_domain_ops by defalut. And if
-+ * local_intc is present, then use it firstly, otherwise, fallback to get
-+ * interrupt controller node from @dev.
-+ *
-+ * Returns valid pointer of struct irq_domain on success, or PTR_ERR(-EINVAL)
-+ * if failure occurred.
-+ */
-+static __maybe_unused struct irq_domain *pci_alloc_intx_irqd(struct device *dev,
-+				void *host, bool general_xlate,
-+				const struct irq_domain_ops *intx_domain_ops,
-+				struct device_node *local_intc)
-+{
-+	struct device_node *intc = local_intc;
-+	struct irq_domain *domain;
-+	const struct irq_domain_ops *irqd_ops;
-+	bool need_put = false;
-+
-+	if (!intc) {
-+		intc = of_get_next_child(dev->of_node, NULL);
-+		if (!intc) {
-+			dev_err(dev, "missing child interrupt-controller node\n");
-+			return ERR_PTR(-EINVAL);
-+		}
-+		need_put = true;
-+	}
-+
-+	if (intx_domain_ops) {
-+		irqd_ops = intx_domain_ops;
-+	} else {
-+		if (general_xlate)
-+			pci_intx_domain_ops.xlate = &pci_irqd_intx_xlate;
-+		irqd_ops = &pci_intx_domain_ops;
-+	}
-+
-+	domain = irq_domain_add_linear(intc, PCI_NUM_INTX,
-+				       irqd_ops, host);
-+	if (!domain) {
-+		dev_err(dev, "failed to get a INTx IRQ domain\n");
-+		if (need_put)
-+			of_node_put(intc);
-+		return ERR_PTR(-EINVAL);
-+	}
-+
-+	return domain;
-+}
-+
- #ifdef CONFIG_PCIEPORTBUS
- extern bool pcie_ports_disabled;
- #else
-@@ -1683,6 +1753,10 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
- 				      unsigned long *out_hwirq,
- 				      unsigned int *out_type)
- { return -EINVAL; }
-+
-+static __maybe_unused struct irq_domain *pci_alloc_intx_irqd(struct device *dev,
-+	void *host, bool general_xlate, const struct irq_domain_ops *ops)
-+{ return ERR_PTR(-EINVAL); }
- #endif /* CONFIG_PCI */
- 
- /* Include architecture-dependent settings and functions */
--- 
-1.9.1
+
+Can you elaborate a little on what do you mean by "stop responding"?
+
+1) Is the system still usable but the PCI hierarchy not responding?
+e.g. can you still talk to the other PCI devices in the system? If you
+have a PCIe switch, can you talk to the other devices on other ports
+of the switch?
+
+2) When the device "stops responding", do you mean it stops responding
+to memory accesses (i.e. no reads/writes by the driver to the device
+registers are working)? Or does it also stop responding to
+configuration cycles? e.g. does the lspci -vvv -s <device address>
+still work?
+
+Thanks,
+
+Rajat
+
+
+> I have no Idea, How endpoint should behave as per spec in this case.
+>
+>
+> From your explanation, I understand that LTR configuration we can't
+> keep it in the part of ASPM cap init function in aspm.c where we
+> enable common clock.
+> and L1.ss capabilities.
+>
+> Also, as you said we use sysfs functions to set ASPM policies. that to
+> ASPM support enabled which configure aspm_capabilities and common
+> clock.
+>
+> ASPM_CONFIG is depend on PCIE_CONFIG, so there may be cases where
+> people want to enable PCIE and donot want ASPM.
+> In that case pcie_aspm boot args will help to disable ASPM.
+>
+> Is there any such cases where we don't need ASPM and need to set LTR.
+> If not we can move LTR configuration to aspm.c file.
+>
+> I think as you said it will be better to add LTR configuration also
+> part of sysfs interface while we enable L1.ss feature.
+>
+>
+>
+> Regards,
+> Srinath.
+>
+> On Fri, Apr 13, 2018 at 7:26 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> Hi Srinath,
+>>
+>> On Fri, Apr 13, 2018 at 12:16:46PM +0530, Srinath Mannam wrote:
+>>> Hi Bjorn,
+>>>
+>>> In our platform we disable aspm using boot_arg "pcie_aspm=off".
+>>> But with the below patch, LTR is enabled which is part of ASPM.
+>>> even we keep disable aspm using "pcie_aspm=off" then why we need to
+>>> enable LTR. This is causing issues with few NVMe cards.
+>>
+>> Strictly speaking, the spec does not define LTR as "part of" ASPM,
+>> although as far as I can tell, the only references to *using* the LTR
+>> information are related to ASPM L1 substates.
+>>
+>> I think the reason I made this patch enable LTR regardless of the
+>> initial ASPM settings is because the ASPM settings can be changed at
+>> run-time via sysfs (see pcie_aspm_set_policy()).
+>>
+>> If we enable L1 substates at run-time, LTR has to be enabled somehow,
+>> either at enumeration-time (as we currently do) or by some similar
+>> code in the pcie_aspm_set_policy() path.
+>>
+>> LTR consumes some PCIe bandwidth, so it's not free, and I do agree
+>> that it seems pointless to enable it if nothing is going to use the
+>> information.
+>>
+>> What sort of issues are you seeing?  Are the issues caused by hardware
+>> defects, e.g., things that don't conform to the PCIe spec, or are they
+>> caused by a software defect, e.g., something done wrong in the patch
+>> below, or maybe some requirement that LTR not be enabled unless ASPM
+>> L1 substates are enabled?
+>>
+>> If the issues are related to hardware defects with LTR itself, maybe a
+>> quirk would be the best way to approach it.  That would make it clear
+>> what the actual problem is and may allow us to do a better job of
+>> working around it.  For example, maybe we could enable some ASPM
+>> states, but not those requiring LTR.  Or maybe we could enable ASPM in
+>> some parts of the system, but not for the devices that have LTR
+>> issues.
+>>
+>> Also, it could potentially remove the need for you to use the
+>> "pcie_aspm=off" parameter, which would improve the user experience.
+>>
+>>> Please advice us how can we proceed in this scenario.
+>>>
+>>> commit c46fd358070f22ba68d6e74c22016a33b914c20a
+>>> Author: Bjorn Helgaas <bhelgaas@google.com>
+>>> Date:   Tue Nov 28 16:43:50 2017 -0600
+>>>
+>>>     PCI/ASPM: Enable Latency Tolerance Reporting when supported
+>>>
+>>>     Enable Latency Tolerance Reporting (LTR).  Note that LTR must be enabled in
+>>>     the Root Port first, and must not be enabled in any downstream device
+>>>     unless the Root Port and all intermediate Switches also support LTR.
+>>>     See PCIe r3.1, sec 6.18.
+>>>
+>>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>     Reviewed-by: Vidya Sagar <vidyas@nvidia.com>
+>>>
+>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>> index 14e0ea1..3761b13 100644
+>>> --- a/drivers/pci/probe.c
+>>> +++ b/drivers/pci/probe.c
+>>> @@ -1875,6 +1875,38 @@ static void
+>>> pci_configure_relaxed_ordering(struct pci_dev *dev)
+>>>         }
+>>>  }
+>>>
+>>> +static void pci_configure_ltr(struct pci_dev *dev)
+>>> +{
+>>> +#ifdef CONFIG_PCIEASPM
+>>> +       u32 cap;
+>>> +       struct pci_dev *bridge;
+>>> +
+>>> +       if (!pci_is_pcie(dev))
+>>> +               return;
+>>> +
+>>> +       pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
+>>> +       if (!(cap & PCI_EXP_DEVCAP2_LTR))
+>>> +               return;
+>>> +
+>>> +       /*
+>>> +        * Software must not enable LTR in an Endpoint unless the Root
+>>> +        * Complex and all intermediate Switches indicate support for LTR.
+>>> +        * PCIe r3.1, sec 6.18.
+>>> +        */
+>>> +       if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
+>>> +               dev->ltr_path = 1;
+>>> +       else {
+>>> +               bridge = pci_upstream_bridge(dev);
+>>> +               if (bridge && bridge->ltr_path)
+>>> +                       dev->ltr_path = 1;
+>>> +       }
+>>> +
+>>> +       if (dev->ltr_path)
+>>> +               pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
+>>> +                                        PCI_EXP_DEVCTL2_LTR_EN);
+>>> +#endif
+>>> +}
+>>> +
+>>>  static void pci_configure_device(struct pci_dev *dev)
+>>>  {
+>>>         struct hotplug_params hpp;
+>>> @@ -1883,6 +1915,7 @@ static void pci_configure_device(struct pci_dev *dev)
+>>>         pci_configure_mps(dev);
+>>>         pci_configure_extended_tags(dev, NULL);
+>>>         pci_configure_relaxed_ordering(dev);
+>>>
+>>>
+>>> Regards,
+>>> Srinath.
