@@ -1,72 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH 03/37] iommu/sva: Manage process address spaces
-To: Sinan Kaya <okaya@codeaurora.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
-Cc: "joro@8bytes.org" <joro@8bytes.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        Mark Rutland <Mark.Rutland@arm.com>,
-        Catalin Marinas <Catalin.Marinas@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        Sudeep Holla <Sudeep.Holla@arm.com>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "lenb@kernel.org" <lenb@kernel.org>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "liubo95@huawei.com" <liubo95@huawei.com>,
-        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
-        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
-        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
-        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "robdclark@gmail.com" <robdclark@gmail.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-4-jean-philippe.brucker@arm.com>
- <04d4d161-ed72-f6b6-9b94-1d60bd79ef94@codeaurora.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <f2ea5af2-dfd6-7463-0eaa-ee9ede87eac1@arm.com>
-Date: Fri, 13 Apr 2018 11:59:29 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 13 Apr 2018 16:34:27 -0500
+From: Rob Herring <robh@kernel.org>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        mark.rutland@arm.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 01/10] bindings: PCI: designware: Example update
+Message-ID: <20180413213427.3ny7ids3q7yxf35g@rob-hp-laptop>
+References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
+ <a3eebc66b17172b92e91d95c12a9d0289b9417c2.1523360166.git.gustavo.pimentel@synopsys.com>
 MIME-Version: 1.0
-In-Reply-To: <04d4d161-ed72-f6b6-9b94-1d60bd79ef94@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a3eebc66b17172b92e91d95c12a9d0289b9417c2.1523360166.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/04/18 19:53, Sinan Kaya wrote:
-> On 2/12/2018 1:33 PM, Jean-Philippe Brucker wrote:
->> +static void io_mm_detach_all_locked(struct iommu_bond *bond)
->> +{
->> +	while (!io_mm_detach_locked(bond));
->> +}
->> +
+On Tue, Apr 10, 2018 at 01:58:33PM +0100, Gustavo Pimentel wrote:
+> Replaces "ctrlreg" reg-name by "dbi" to be coherent with similar drivers,
+> however it still be compatible with any previous DT that uses the old
+> reg-name.
 > 
-> I don't remember if I mentioned this before or not but I think this loop
-> needs a little bit relaxation with yield and maybe an informational message
-> with might help if wait exceeds some time.
+> Replaces the PCIe base address example by a real PCIe base address in use.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+> Changes v1->v2:
+>  - Removed any iATU reference or changes to avoid confusion.
+>  - Add "snps,dw-pcie" compatible string following Kishon's suggestion.
+> Changes v2->v3:
+> - Nothing changed, just to follow the patch set version.
+> 
+>  Documentation/devicetree/bindings/pci/designware-pcie.txt | 14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> index 1da7ade..f02cd20 100644
+> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> @@ -1,7 +1,8 @@
+>  * Synopsys DesignWare PCIe interface
+>  
+>  Required properties:
+> -- compatible: should contain "snps,dw-pcie" to identify the core.
+> +- compatible:
+> +	"snps,dw-pcie-rc", "snps,dw-pcie" for RC mode;
 
-Right, at the very least we should have a cpu_relax here. I think this
-bit is going away, though, because I want to lift the possibility of
-calling bind() for the same dev/mm pair multiple times. It's not useful
-in my opinion because that call could only be issued by a given driver.
+I think adding this compatible is pointless. "snps,dw-pcie" meant RC and 
+should continue to mean that. We also have compatibles with the IP 
+version number as well as the SoC specific compatible strings. We don't 
+need 4 compatible strings here.
 
-Thanks,
-Jean
+Rob
