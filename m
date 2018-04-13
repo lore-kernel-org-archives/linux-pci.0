@@ -1,107 +1,54 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180410021043.GC25724@localhost.localdomain>
-References: <20180408024724.16812-1-bhe@redhat.com> <20180408024724.16812-2-bhe@redhat.com>
- <20180409090853.GJ19345@localhost.localdomain> <CAPcyv4huU32+oMeoF8-HmmctafZ_uOZN-v85O5M8Ka8pBXP+Lg@mail.gmail.com>
- <20180410021043.GC25724@localhost.localdomain>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 9 Apr 2018 19:34:09 -0700
-Message-ID: <CAPcyv4gLrfq87FWP2f9n8YbP-XZ-uxuoc0nZu3LEW_bDxEAH_w@mail.gmail.com>
-Subject: Re: [PATCH v3 1/3] resource: Use list_head to link resource sibling
-To: Baoquan He <bhe@redhat.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
-        David Airlie <airlied@linux.ie>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>,
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "Christoph Hellwig" <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Keith Busch <keith.busch@intel.com>,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Brijesh Singh <brijesh.singh@amd.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Borislav Petkov <bp@suse.de>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Yaowei Bai <baiyaowei@cmss.chinamobile.com>,
-        Wei Yang <richard.weiyang@gmail.com>,
-        devel@linuxdriverproject.org, linux-input@vger.kernel.org,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        Device Tree <devicetree@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Eric Wehage <Eric.Wehage@huawei.com>
+Subject: Re: [PATCH v3 01/11] PCI/P2PDMA: Support peer-to-peer memory
+Date: Fri, 13 Apr 2018 21:56:06 +0000
+Message-ID: <178FD8FA-53BA-49DA-807F-F8736157F179@raithlin.com>
+References: <20180312193525.2855-1-logang@deltatee.com>
+ <20180312193525.2855-2-logang@deltatee.com>
+ <59fd2f5d-177f-334a-a9c4-0f8a6ec7c303@codeaurora.org>
+ <24d8e5c2-065d-8bde-3f5d-7f158be9c578@deltatee.com>
+ <20180326121138.00005e30@huawei.com>
+ <20180326140118.GA221690@bhelgaas-glaptop.roam.corp.google.com>
+ <c717eb06-1e83-f0f3-4d6c-15531aa808e0@deltatee.com>
+ <20180327094701.0000300d@huawei.com>
+In-Reply-To: <20180327094701.0000300d@huawei.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 9, 2018 at 7:10 PM, Baoquan He <bhe@redhat.com> wrote:
-> On 04/09/18 at 08:38am, Dan Williams wrote:
->> On Mon, Apr 9, 2018 at 2:08 AM, Baoquan He <bhe@redhat.com> wrote:
->> > The struct resource uses singly linked list to link siblings. It's not
->> > easy to do reverse iteration on sibling list. So replace it with list_head.
->> >
->> > And code refactoring makes codes in kernel/resource.c more readable than
->> > pointer operation.
->> >
->> > Besides, type of member variables of struct resource, sibling and child, are
->> > changed from 'struct resource *' to 'struct list_head'. Kernel size will
->> > increase because of those statically defined struct resource instances.
->> >
->> > Signed-off-by: Baoquan He <bhe@redhat.com>
->> > ---
->> [..]
->> > diff --git a/kernel/resource.c b/kernel/resource.c
->> > index e270b5048988..473c624606f9 100644
->> > --- a/kernel/resource.c
->> > +++ b/kernel/resource.c
->> > @@ -31,6 +31,8 @@ struct resource ioport_resource = {
->> >         .start  = 0,
->> >         .end    = IO_SPACE_LIMIT,
->> >         .flags  = IORESOURCE_IO,
->> > +       .sibling = LIST_HEAD_INIT(ioport_resource.sibling),
->> > +       .child  = LIST_HEAD_INIT(ioport_resource.child),
->> >  };
->> >  EXPORT_SYMBOL(ioport_resource);
->> >
->> > @@ -39,6 +41,8 @@ struct resource iomem_resource = {
->> >         .start  = 0,
->> >         .end    = -1,
->> >         .flags  = IORESOURCE_MEM,
->> > +       .sibling = LIST_HEAD_INIT(iomem_resource.sibling),
->> > +       .child  = LIST_HEAD_INIT(iomem_resource.child),
->> >  };
->> >  EXPORT_SYMBOL(iomem_resource);
->> >
->> > @@ -57,20 +61,32 @@ static DEFINE_RWLOCK(resource_lock);
->> >   * by boot mem after the system is up. So for reusing the resource entry
->> >   * we need to remember the resource.
->> >   */
->> > -static struct resource *bootmem_resource_free;
->> > +static struct list_head bootmem_resource_free = LIST_HEAD_INIT(bootmem_resource_free);
->> >  static DEFINE_SPINLOCK(bootmem_resource_lock);
->> >
->> > +struct resource *sibling(struct resource *res)
->> > +{
->> > +       if (res->parent && !list_is_last(&res->sibling, &res->parent->child))
->> > +               return list_next_entry(res, sibling);
->> > +       return NULL;
->> > +}
->> > +
->> > +struct resource *first_child(struct list_head *head)
->> > +{
->> > +       return list_first_entry_or_null(head, struct resource, sibling);
->> > +}
->> > +
->>
->> These names are too generic for new global symbols. A "resource_"
->> prefix is warranted.
->
-> Thanks, sounds reasonable, will change them as resource_sibling() and
-> resource_first_child(). Or res_sibling()/res_1st_child()?
->
-
-resource_sibling() and resource_first_child()
+IA0KPiAgSSdsbCBzZWUgaWYgSSBjYW4gZ2V0IG91ciBQQ0kgU0lHIHBlb3BsZSB0byBmb2xsb3cg
+dGhpcyB0aHJvdWdoIA0KDQpIaSBKb25hdGhhbg0KDQpDYW4geW91IGxldCBtZSBrbm93IGlmIHRo
+aXMgbW92ZXMgZm9yd2FyZCB3aXRoaW4gUENJLVNJRz8gSSB3b3VsZCBsaWtlIHRvIHRyYWNrIGl0
+LiBJIGNhbiBzZWUgdGhpcyBiZWluZyBkb2FibGUgYmV0d2VlbiBSb290IFBvcnRzIHRoYXQgcmVz
+aWRlIGluIHRoZSBzYW1lIFJvb3QgQ29tcGxleCBidXQgbWlnaHQgYmVjb21lIG1vcmUgY2hhbGxl
+bmdpbmcgdG8gc3RhbmRhcmRpemUgZm9yIFJQcyB0aGF0IHJlc2lkZSBpbiBkaWZmZXJlbnQgUkNz
+IGluIHRoZSBzYW1lIChwb3RlbnRpYWxseSBtdWx0aS1zb2NrZXQpIHN5c3RlbS4gSSBrbm93IGlu
+IHRoZSBwYXN0IHdlIGhhdmUgc2VlbSBNZW1XciBUTFBTIGNyb3NzIHRoZSBRUEkgYnVzIGluIElu
+dGVsIHN5c3RlbXMgYnV0IEkgYW0gc3VyZSB0aGF0IGlzIG5vdCBzb21ldGhpbmcgdGhhdCB3b3Vs
+ZCB3b3JrIGluIGFsbCBzeXN0ZW1zIGFuZCBtdXN0IGZhbGwgb3V0c2lkZSB0aGUgcmVtaXQgb2Yg
+UENJLVNJRyA7LSkuDQoNCkkgYWdyZWUgc3VjaCBhIGNhcGFiaWxpdHkgYml0IHdvdWxkIGJlIHZl
+cnkgdXNlZnVsIGJ1dCBpdCdzIGdvaW5nIHRvIGJlIHF1aXRlIHNvbWUgdGltZSBiZWZvcmUgd2Ug
+Y2FuIHJlbHkgb24gaGFyZHdhcmUgYmVpbmcgYXZhaWxhYmxlIHRoYXQgc3VwcG9ydHMgaXQuDQoN
+ClN0ZXBoZW4NCiAgICANCg0K
