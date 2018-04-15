@@ -1,103 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:54559 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753980AbeDBBLP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Apr 2018 21:11:15 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Heiko Stuebner <heiko@sntech.de>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Simon Xue <xxm@rock-chips.com>, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 09/10] dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe endpoint controller
-Date: Mon,  2 Apr 2018 09:04:14 +0800
-Message-Id: <1522631054-151768-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sun, 15 Apr 2018 23:52:54 +0200
+From: Sam Ravnborg <sam@ravnborg.org>
+To: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 02/12] iommu-helper: unexport iommu_area_alloc
+Message-ID: <20180415215254.GA32231@ravnborg.org>
+References: <20180415145947.1248-1-hch@lst.de>
+ <20180415145947.1248-3-hch@lst.de>
+MIME-Version: 1.0
+In-Reply-To: <20180415145947.1248-3-hch@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, linux-pci@vger.kernel.org,
+ x86@kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org,
+ iommu@lists.linux-foundation.org, sparclinux@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch documents the DT bindings for the Rockchip PCIe controller
-when configured in endpoint mode.
+On Sun, Apr 15, 2018 at 04:59:37PM +0200, Christoph Hellwig wrote:
+> This function is only used by built-in code.
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by:....
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
+	Sam
 
- .../devicetree/bindings/pci/rockchip-pcie-ep.txt   | 62 ++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
-
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
-new file mode 100644
-index 0000000..77846730
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
-@@ -0,0 +1,62 @@
-+* Rockchip AXI PCIe Endpoint Controller DT description
-+
-+Required properties:
-+- compatible: Should contain "rockchip,rk3399-pcie-ep"
-+- reg: Two register ranges as listed in the reg-names property
-+- reg-names: Must include the following names
-+	- "apb-base"
-+	- "mem-base"
-+- clocks: Must contain an entry for each entry in clock-names.
-+		See ../clocks/clock-bindings.txt for details.
-+- clock-names: Must include the following entries:
-+	- "aclk"
-+	- "aclk-perf"
-+	- "hclk"
-+	- "pm"
-+- resets: Must contain seven entries for each entry in reset-names.
-+	   See ../reset/reset.txt for details.
-+- reset-names: Must include the following names
-+	- "core"
-+	- "mgmt"
-+	- "mgmt-sticky"
-+	- "pipe"
-+	- "pm"
-+	- "aclk"
-+	- "pclk"
-+- pinctrl-names : The pin control state names
-+- pinctrl-0: The "default" pinctrl state
-+- phys: Must contain an phandle to a PHY for each entry in phy-names.
-+- phy-names: Must include 4 entries for all 4 lanes even if some of
-+  them won't be used for your cases. Entries are of the form "pcie-phy-N":
-+  where N ranges from 0 to 3.
-+  (see example below and you MUST also refer to ../phy/rockchip-pcie-phy.txt
-+  for changing the #phy-cells of phy node to support it)
-+- rockchip,max-outbound-regions: Maximum number of outbound regions
-+
-+Optional Property:
-+- num-lanes: number of lanes to use
-+- max-functions: Maximum number of functions that can be configured (default 1).
-+
-+pcie0-ep: pcie@f8000000 {
-+	compatible = "rockchip,rk3399-pcie-ep";
-+	#address-cells = <3>;
-+	#size-cells = <2>;
-+	rockchip,max-outbound-regions = <16>;
-+	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
-+		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
-+	clock-names = "aclk", "aclk-perf",
-+		      "hclk", "pm";
-+	max-functions = /bits/ 8 <8>;
-+	num-lanes = <4>;
-+	reg = <0x0 0xfd000000 0x0 0x1000000>, <0x0 0x80000000 0x0 0x20000>;
-+	reg-names = "apb-base", "mem-base";
-+	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-+		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE> ,
-+		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
-+	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
-+		      "pm", "pclk", "aclk";
-+	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
-+	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_clkreq>;
-+};
--- 
-1.9.1
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
