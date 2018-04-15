@@ -1,38 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50106 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753987AbeDBAmD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 1 Apr 2018 20:42:03 -0400
-Date: Sun, 1 Apr 2018 19:42:01 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mike Lothian <mike@fireburn.co.uk>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Len Brown <lenb@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Check presence of slot itself in
- get_slot_status()
-Message-ID: <20180402004201.GC131023@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180212105523.15984-1-mika.westerberg@linux.intel.com>
- <20180323211819.GB210003@bhelgaas-glaptop.roam.corp.google.com>
- <CAHbf0-FR4dn8g10T42J8mbEr8XznyuNLem_Rvr6+G4YGLPv8Bg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHbf0-FR4dn8g10T42J8mbEr8XznyuNLem_Rvr6+G4YGLPv8Bg@mail.gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:58476 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752470AbeDOPAD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2018 11:00:03 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        iommu@lists.linux-foundation.org
+Cc: x86@kernel.org, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-mm@kvack.org,
+        linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
+        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 02/12] iommu-helper: unexport iommu_area_alloc
+Date: Sun, 15 Apr 2018 16:59:37 +0200
+Message-Id: <20180415145947.1248-3-hch@lst.de>
+In-Reply-To: <20180415145947.1248-1-hch@lst.de>
+References: <20180415145947.1248-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 01, 2018 at 11:36:02PM +0100, Mike Lothian wrote:
-> On 23 March 2018 at 21:18, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >
-> > I (finally) applied this to pci/hotplug with Rafael's ack for v4.17,
-> > thanks!
-> >
-> 
-> Sorry for sounding like a broken record but this still hasn't landed
-> in linux-next (https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/log/drivers/pci/hotplug/acpiphp_glue.c)
+This function is only used by built-in code.
 
-It's in my "next" branch pushed yesterday, so it should appear in
-the next cut of linux-next.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ lib/iommu-helper.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/lib/iommu-helper.c b/lib/iommu-helper.c
+index 23633c0fda4a..ded1703e7e64 100644
+--- a/lib/iommu-helper.c
++++ b/lib/iommu-helper.c
+@@ -3,7 +3,6 @@
+  * IOMMU helper functions for the free area management
+  */
+ 
+-#include <linux/export.h>
+ #include <linux/bitmap.h>
+ #include <linux/bug.h>
+ 
+@@ -38,4 +37,3 @@ unsigned long iommu_area_alloc(unsigned long *map, unsigned long size,
+ 	}
+ 	return -1;
+ }
+-EXPORT_SYMBOL(iommu_area_alloc);
+-- 
+2.17.0
