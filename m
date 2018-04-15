@@ -1,72 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:59563 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755443AbeDFOzn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 6 Apr 2018 10:55:43 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Wilson Ding <dingwei@marvell.com>, stable@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v4 2/6] PCI: aardvark: Set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
-Date: Fri,  6 Apr 2018 16:55:32 +0200
-Message-Id: <20180406145536.19637-3-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
-References: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:60520 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752465AbeDOPAu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2018 11:00:50 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        iommu@lists.linux-foundation.org
+Cc: x86@kernel.org, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-mm@kvack.org,
+        linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
+        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 12/12] swiotlb: remove the CONFIG_DMA_DIRECT_OPS ifdefs
+Date: Sun, 15 Apr 2018 16:59:47 +0200
+Message-Id: <20180415145947.1248-13-hch@lst.de>
+In-Reply-To: <20180415145947.1248-1-hch@lst.de>
+References: <20180415145947.1248-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Victor Gu <xigu@marvell.com>
+swiotlb now selects the DMA_DIRECT_OPS config symbol, so this will
+always be true.
 
-When setting the PIO_ADDR_LS register during a configuration read, we
-were properly passing the device number, function number and register
-number, but not the bus number, causing issues when reading the
-configuration of PCIe devices.
-
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Wilson Ding <dingwei@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
-Changes since v2:
- - Drop PCIE_BDF() macro, since it's no longer used. Noticed by Bjorn
-   Helgaas.
----
- drivers/pci/host/pci-aardvark.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ lib/swiotlb.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index b72f15c99793..5b8201aaf34d 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -172,8 +172,6 @@
- #define PCIE_CONFIG_WR_TYPE0			0xa
- #define PCIE_CONFIG_WR_TYPE1			0xb
+diff --git a/lib/swiotlb.c b/lib/swiotlb.c
+index 47aeb04c1997..07f260319b82 100644
+--- a/lib/swiotlb.c
++++ b/lib/swiotlb.c
+@@ -692,7 +692,6 @@ void swiotlb_tbl_sync_single(struct device *hwdev, phys_addr_t tlb_addr,
+ 	}
+ }
  
--/* PCI_BDF shifts 8bit, so we need extra 4bit shift */
--#define PCIE_BDF(dev)				(dev << 4)
- #define PCIE_CONF_BUS(bus)			(((bus) & 0xff) << 20)
- #define PCIE_CONF_DEV(dev)			(((dev) & 0x1f) << 15)
- #define PCIE_CONF_FUNC(fun)			(((fun) & 0x7)	<< 12)
-@@ -456,7 +454,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 	advk_writel(pcie, reg, PIO_CTRL);
+-#ifdef CONFIG_DMA_DIRECT_OPS
+ static inline bool dma_coherent_ok(struct device *dev, dma_addr_t addr,
+ 		size_t size)
+ {
+@@ -764,7 +763,6 @@ static bool swiotlb_free_buffer(struct device *dev, size_t size,
+ 				 DMA_ATTR_SKIP_CPU_SYNC);
+ 	return true;
+ }
+-#endif
  
- 	/* Program the address registers */
--	reg = PCIE_BDF(devfn) | PCIE_CONF_REG(where);
-+	reg = PCIE_CONF_ADDR(bus->number, devfn, where);
- 	advk_writel(pcie, reg, PIO_ADDR_LS);
- 	advk_writel(pcie, 0, PIO_ADDR_MS);
+ static void
+ swiotlb_full(struct device *dev, size_t size, enum dma_data_direction dir,
+@@ -1045,7 +1043,6 @@ swiotlb_dma_supported(struct device *hwdev, u64 mask)
+ 	return __phys_to_dma(hwdev, io_tlb_end - 1) <= mask;
+ }
  
+-#ifdef CONFIG_DMA_DIRECT_OPS
+ void *swiotlb_alloc(struct device *dev, size_t size, dma_addr_t *dma_handle,
+ 		gfp_t gfp, unsigned long attrs)
+ {
+@@ -1089,4 +1086,3 @@ const struct dma_map_ops swiotlb_dma_ops = {
+ 	.unmap_page		= swiotlb_unmap_page,
+ 	.dma_supported		= swiotlb_dma_supported,
+ };
+-#endif /* CONFIG_DMA_DIRECT_OPS */
 -- 
-2.14.3
+2.17.0
