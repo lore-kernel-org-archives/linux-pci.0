@@ -1,102 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: Re: [RFC 01/10] PCI: dwc: Add MSI-X callbacks handler
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
- <77b7b2687e9618d3f7d1f11c3fc6ecec9a9442ef.1523379766.git.gustavo.pimentel@synopsys.com>
- <0b7023d9-29c6-0993-07d3-b046d25b67ff@ti.com>
-Message-ID: <e2fe7d5f-9f57-0e67-d321-541ff4706792@synopsys.com>
-Date: Mon, 23 Apr 2018 10:36:32 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:53623 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752554AbeDOS4Y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2018 14:56:24 -0400
+Date: Sun, 15 Apr 2018 20:56:21 +0200
+From: Jesper Nilsson <jesper.nilsson@axis.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: dwc: artpec6: Add reset-gpios for PERST# control
+Message-ID: <20180415185621.GR16746@axis.com>
 MIME-Version: 1.0
-In-Reply-To: <0b7023d9-29c6-0993-07d3-b046d25b67ff@ti.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+Some devices need an optional external gpio for controlling
+the PERST# signal to bring up for example a PCIe switch
+after a soft reset.
 
-On 16/04/2018 10:29, Kishon Vijay Abraham I wrote:
-> Hi Gustavo,
-> 
-> On Tuesday 10 April 2018 10:44 PM, Gustavo Pimentel wrote:
->> Changes the pcie_raise_irq function signature, namely the interrupt_num
->> variable type from u8 to u16 to accommodate the MSI-X maximum interrupts
->> of 2048.
->>
->> Implements a PCIe config space capability iterator function to search and
->> save the MSI and MSI-X pointers. With this method the code becomes more
->> generic and flexible.
->>
->> Implements MSI-X set/get functions for sysfs interface in order to change
->> the EP entries number.
->>
->> Implements EP MSI-X interface for triggering interruptions.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->>  drivers/pci/dwc/pci-dra7xx.c           |   2 +-
->>  drivers/pci/dwc/pcie-artpec6.c         |   2 +-
->>  drivers/pci/dwc/pcie-designware-ep.c   | 145 ++++++++++++++++++++++++++++++++-
->>  drivers/pci/dwc/pcie-designware-plat.c |   6 +-
->>  drivers/pci/dwc/pcie-designware.h      |  23 +++++-
->>  5 files changed, 173 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
->> index ed8558d..5265725 100644
->> --- a/drivers/pci/dwc/pci-dra7xx.c
->> +++ b/drivers/pci/dwc/pci-dra7xx.c
->> @@ -369,7 +369,7 @@ static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
->>  }
->>  
->>  static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
->> -				 enum pci_epc_irq_type type, u8 interrupt_num)
->> +				 enum pci_epc_irq_type type, u16 interrupt_num)
->>  {
->>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
->> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
->> index e66cede..96dc259 100644
->> --- a/drivers/pci/dwc/pcie-artpec6.c
->> +++ b/drivers/pci/dwc/pcie-artpec6.c
->> @@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
->>  }
->>  
->>  static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
->> -				  enum pci_epc_irq_type type, u8 interrupt_num)
->> +				  enum pci_epc_irq_type type, u16 interrupt_num)
->>  {
->>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->>  
->> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
->> index 15b22a6..874d4c2 100644
->> --- a/drivers/pci/dwc/pcie-designware-ep.c
->> +++ b/drivers/pci/dwc/pcie-designware-ep.c
->> @@ -40,6 +40,44 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
->>  	__dw_pcie_ep_reset_bar(pci, bar, 0);
->>  }
->>  
->> +void dw_pcie_ep_find_cap_addr(struct dw_pcie_ep *ep)
->> +{
-> 
-> This should be implemented in a generic way similar to pci_find_capability().
-> It'll be useful when we try to implement other capabilities as well.
+Without this, some boards (the ARTPEC-6 master devboard)
+would not get the PCIe link back after a soft reset.
 
-Hum, what you suggest? Something implemented on the pci-epf-core?
+Signed-off-by: Jesper Nilsson <jesper.nilsson@axis.com>
+---
+ .../devicetree/bindings/pci/axis,artpec6-pcie.txt    |  4 ++++
+ drivers/pci/dwc/pcie-artpec6.c                       | 20 +++++++++++++++++++-
+ 2 files changed, 23 insertions(+), 1 deletion(-)
 
-> 
-> Thanks
-> Kishon
-> 
+diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+index 979dc7b6cfe8..810bd461e81c 100644
+--- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+@@ -21,6 +21,10 @@ and thus inherits all the common properties defined in designware-pcie.txt.
+ - axis,syscon-pcie: A phandle pointing to the ARTPEC-6 system controller,
+ 	used to enable and control the Synopsys IP.
+ 
++Optional properties:
++
++- reset-gpios: GPIO to generate PCIe PERST# assert and deassert signal.
++
+ Example:
+ 
+ 	pcie@f8050000 {
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 93b3df9ed1b5..1eada6d1a381 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -19,6 +19,8 @@
+ #include <linux/interrupt.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/regmap.h>
++#include <linux/gpio.h>
++#include <linux/gpio/consumer.h>
+ 
+ #include "pcie-designware.h"
+ 
+@@ -35,6 +37,7 @@ struct artpec6_pcie {
+ 	void __iomem		*phy_base;	/* DT phy */
+ 	enum artpec_pcie_variants variant;
+ 	enum dw_pcie_device_mode mode;
++	struct gpio_desc	*reset;
+ };
+ 
+ struct artpec_pcie_of_data {
+@@ -350,6 +353,13 @@ static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
+ 	}
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+ 	usleep_range(100, 200);
++
++	/* Some boards don't have PCIe reset hardwired, use a GPIO insted. */
++	if (artpec6_pcie->reset) {
++		gpiod_set_value_cansleep(artpec6_pcie->reset, 1);
++		msleep(100);
++		gpiod_set_value_cansleep(artpec6_pcie->reset, 0);
++	}
+ }
+ 
+ static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
+@@ -513,6 +523,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	const struct artpec_pcie_of_data *data;
+ 	enum artpec_pcie_variants variant;
+ 	enum dw_pcie_device_mode mode;
++	struct device_node *node = dev->of_node;
+ 
+ 	match = of_match_device(artpec6_pcie_of_match, dev);
+ 	if (!match)
+@@ -548,11 +559,18 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(artpec6_pcie->phy_base);
+ 
+ 	artpec6_pcie->regmap =
+-		syscon_regmap_lookup_by_phandle(dev->of_node,
++		syscon_regmap_lookup_by_phandle(node,
+ 						"axis,syscon-pcie");
+ 	if (IS_ERR(artpec6_pcie->regmap))
+ 		return PTR_ERR(artpec6_pcie->regmap);
+ 
++	artpec6_pcie->reset = devm_gpiod_get_optional(dev, "reset",
++						      GPIOD_OUT_LOW);
++	if (IS_ERR(artpec6_pcie->reset)) {
++		dev_err(dev, "Failed to request reset gpio\n");
++		return PTR_ERR(artpec6_pcie->reset);
++	}
++
+ 	platform_set_drvdata(pdev, artpec6_pcie);
+ 
+ 	switch (artpec6_pcie->mode) {
+-- 
+2.1.4
 
-Regards,
-Gustavo
+/^JN - Jesper Nilsson
+-- 
+               Jesper Nilsson -- jesper.nilsson@axis.com
