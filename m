@@ -1,54 +1,161 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v5 7/9] PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
-Date: Mon, 16 Apr 2018 13:34:51 +0300
-Message-Id: <20180416103453.46232-8-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Christoph Hellwig <hch@lst.de>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ iommu@lists.linux-foundation.org
+Subject: [PATCH 04/12] iommu-helper: move the IOMMU_HELPER config symbol to
+ lib/
+Date: Sun, 15 Apr 2018 16:59:39 +0200
+Message-Id: <20180415145947.1248-5-hch@lst.de>
+In-Reply-To: <20180415145947.1248-1-hch@lst.de>
+References: <20180415145947.1248-1-hch@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-mips@linux-mips.org, linux-mm@kvack.org, linux-pci@vger.kernel.org,
+ x86@kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+ sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is not immediately clear what the two functions actually return so
-add kernel-doc comment explaining it a bit better.
+This way we have one central definition of it, and user can select it as
+needed.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/probe.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ arch/powerpc/Kconfig | 4 +---
+ arch/s390/Kconfig    | 5 ++---
+ arch/sparc/Kconfig   | 5 +----
+ arch/x86/Kconfig     | 6 ++----
+ lib/Kconfig          | 3 +++
+ 5 files changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7c34a2ccb514..30a895bd9839 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -998,6 +998,8 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
-  * already configured by the BIOS and after we are done with all of
-  * them, we proceed to assigning numbers to the remaining buses in
-  * order to avoid overlaps between old and new bus numbers.
-+ *
-+ * Return: New subordinate number covering all buses behind this bridge.
-  */
- static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 				  int max, unsigned int available_buses,
-@@ -1230,6 +1232,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
-  * already configured by the BIOS and after we are done with all of
-  * them, we proceed to assigning numbers to the remaining buses in
-  * order to avoid overlaps between old and new bus numbers.
-+ *
-+ * Return: New subordinate number covering all buses behind this bridge.
-  */
- int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- {
+diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
+index eb23f2949bf6..3ca617cd4807 100644
+--- a/arch/powerpc/Kconfig
++++ b/arch/powerpc/Kconfig
+@@ -223,6 +223,7 @@ config PPC
+ 	select HAVE_SYSCALL_TRACEPOINTS
+ 	select HAVE_VIRT_CPU_ACCOUNTING
+ 	select HAVE_IRQ_TIME_ACCOUNTING
++	select IOMMU_HELPER			if PPC64
+ 	select IRQ_DOMAIN
+ 	select IRQ_FORCED_THREADING
+ 	select MODULES_USE_ELF_RELA
+@@ -478,9 +479,6 @@ config MPROFILE_KERNEL
+ 	depends on PPC64 && CPU_LITTLE_ENDIAN
+ 	def_bool !DISABLE_MPROFILE_KERNEL
+ 
+-config IOMMU_HELPER
+-	def_bool PPC64
+-
+ config SWIOTLB
+ 	bool "SWIOTLB support"
+ 	default n
+diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
+index 32a0d5b958bf..bfa449fdeb19 100644
+--- a/arch/s390/Kconfig
++++ b/arch/s390/Kconfig
+@@ -693,7 +693,9 @@ config QDIO
+ menuconfig PCI
+ 	bool "PCI support"
+ 	select PCI_MSI
++	select IOMMU_HELPER
+ 	select IOMMU_SUPPORT
++
+ 	help
+ 	  Enable PCI support.
+ 
+@@ -717,9 +719,6 @@ config PCI_DOMAINS
+ config HAS_IOMEM
+ 	def_bool PCI
+ 
+-config IOMMU_HELPER
+-	def_bool PCI
+-
+ config NEED_SG_DMA_LENGTH
+ 	def_bool PCI
+ 
+diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
+index 8767e45f1b2b..44e0f3cd7988 100644
+--- a/arch/sparc/Kconfig
++++ b/arch/sparc/Kconfig
+@@ -67,6 +67,7 @@ config SPARC64
+ 	select HAVE_SYSCALL_TRACEPOINTS
+ 	select HAVE_CONTEXT_TRACKING
+ 	select HAVE_DEBUG_KMEMLEAK
++	select IOMMU_HELPER
+ 	select SPARSE_IRQ
+ 	select RTC_DRV_CMOS
+ 	select RTC_DRV_BQ4802
+@@ -106,10 +107,6 @@ config ARCH_DMA_ADDR_T_64BIT
+ 	bool
+ 	default y if ARCH_ATU
+ 
+-config IOMMU_HELPER
+-	bool
+-	default y if SPARC64
+-
+ config STACKTRACE_SUPPORT
+ 	bool
+ 	default y if SPARC64
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 336b1378ee62..06ca29e70d6b 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -870,6 +870,7 @@ config DMI
+ 
+ config GART_IOMMU
+ 	bool "Old AMD GART IOMMU support"
++	select IOMMU_HELPER
+ 	select SWIOTLB
+ 	depends on X86_64 && PCI && AMD_NB
+ 	---help---
+@@ -891,6 +892,7 @@ config GART_IOMMU
+ 
+ config CALGARY_IOMMU
+ 	bool "IBM Calgary IOMMU support"
++	select IOMMU_HELPER
+ 	select SWIOTLB
+ 	depends on X86_64 && PCI
+ 	---help---
+@@ -928,10 +930,6 @@ config SWIOTLB
+ 	  with more than 3 GB of memory.
+ 	  If unsure, say Y.
+ 
+-config IOMMU_HELPER
+-	def_bool y
+-	depends on CALGARY_IOMMU || GART_IOMMU
+-
+ config MAXSMP
+ 	bool "Enable Maximum number of SMP Processors and NUMA Nodes"
+ 	depends on X86_64 && SMP && DEBUG_KERNEL
+diff --git a/lib/Kconfig b/lib/Kconfig
+index 5fe577673b98..2f6908577534 100644
+--- a/lib/Kconfig
++++ b/lib/Kconfig
+@@ -429,6 +429,9 @@ config SGL_ALLOC
+ 	bool
+ 	default n
+ 
++config IOMMU_HELPER
++	bool
++
+ config DMA_DIRECT_OPS
+ 	bool
+ 	depends on HAS_DMA && (!64BIT || ARCH_DMA_ADDR_T_64BIT)
 -- 
-2.16.3
+2.17.0
 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
