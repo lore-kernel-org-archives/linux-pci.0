@@ -1,88 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44442 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932476AbeD0Sv2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 14:51:28 -0400
-Subject: Re: [PATCH 2/2] PCI/AER: Try slot reset before secondary bus reset
-To: linux-pci@vger.kernel.org, sulrich@codeaurora.org,
-        timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Juan J. Alvarez" <jjalvare@linux.vnet.ibm.com>,
-        Russell Currey <ruscur@russell.cc>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Tyler Baicar <tbaicar@codeaurora.org>,
-        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
- <1524167784-5911-2-git-send-email-okaya@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <550e4064-9618-0784-643d-b3f9b364ba9e@codeaurora.org>
-Date: Fri, 27 Apr 2018 14:51:24 -0400
-MIME-Version: 1.0
-In-Reply-To: <1524167784-5911-2-git-send-email-okaya@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Received: from bombadil.infradead.org ([198.137.202.133]:60276 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751622AbeDOPAn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2018 11:00:43 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        iommu@lists.linux-foundation.org
+Cc: x86@kernel.org, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-mm@kvack.org,
+        linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
+        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 10/12] arm: don't build swiotlb by default
+Date: Sun, 15 Apr 2018 16:59:45 +0200
+Message-Id: <20180415145947.1248-11-hch@lst.de>
+In-Reply-To: <20180415145947.1248-1-hch@lst.de>
+References: <20180415145947.1248-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+swiotlb is only used as a library of helper for xen-swiotlb if Xen support
+is enabled on arm, so don't build it by default.
 
-On 4/19/2018 3:56 PM, Sinan Kaya wrote:
-> The endpoint observing AER_FATAL error might be connected to a PCI hotplug
-> slot. Performing secondary bus reset on a hotplug slot causes PCI link
-> up/down interrupts.
-> 
-> Hotplug driver removes the device from system when a link down interrupt
-> is observed and performs re-enumeration when link up interrupt is observed.
-> 
-> This conflicts with what this code is trying to do. Try secondary bus
-> reset only if pci_reset_slot() fails/unsupported.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/pcie/aer/aerdrv.c      | 3 ++-
->  drivers/pci/pcie/aer/aerdrv_core.c | 3 ++-
->  2 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> index 779b387..4eaa524 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.c
-> +++ b/drivers/pci/pcie/aer/aerdrv.c
-> @@ -318,7 +318,8 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
->  	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
->  	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
->  
-> -	pci_reset_bridge_secondary_bus(dev);
-> +	if (pci_reset_slot(dev->slot))
-> +		pci_reset_bridge_secondary_bus(dev);
->  	pci_printk(KERN_DEBUG, dev, "Root Port link has been reset\n");
->  
->  	/* Clear Root Error Status */
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 0ea5acc..a915b0e6 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -407,7 +407,8 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
->   */
->  static pci_ers_result_t default_reset_link(struct pci_dev *dev)
->  {
-> -	pci_reset_bridge_secondary_bus(dev);
-> +	if (pci_reset_slot(dev->slot))
-> +		pci_reset_bridge_secondary_bus(dev);
->  	pci_printk(KERN_DEBUG, dev, "downstream link has been reset\n");
->  	return PCI_ERS_RESULT_RECOVERED;
->  }
-> 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ arch/arm/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-If we put the 1/2 patch aside, what do you think about pulling this for 4.18?
-
-Sinan
-
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index aa1c187d756d..90b81a3a28a7 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -1774,7 +1774,7 @@ config SECCOMP
+ 	  defined by each seccomp mode.
+ 
+ config SWIOTLB
+-	def_bool y
++	bool
+ 
+ config PARAVIRT
+ 	bool "Enable paravirtualization code"
+@@ -1807,6 +1807,7 @@ config XEN
+ 	depends on MMU
+ 	select ARCH_DMA_ADDR_T_64BIT
+ 	select ARM_PSCI
++	select SWIOTLB
+ 	select SWIOTLB_XEN
+ 	select PARAVIRT
+ 	help
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.17.0
