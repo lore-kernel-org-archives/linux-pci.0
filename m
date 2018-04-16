@@ -1,85 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41670 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753569AbeD0WQF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Apr 2018 18:16:05 -0400
-Date: Fri, 27 Apr 2018 17:16:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH 0/6] PCI: leak fixes, removable generic PCI host,
- assorted stuff
-Message-ID: <20180427221602.GB73256@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1524582822.git.jan.kiszka@siemens.com>
+Return-Path: <SRS0=NmO7=HF=gmail.com=hkallweit1@kernel.org>
+Return-Path: <SRS0=NmO7=HF=gmail.com=hkallweit1@kernel.org>
+Subject: [PATCH net-next 1/2] PCI: Add two more values for PCIe
+ Max_Read_Request_Size
+From: Heiner Kallweit <hkallweit1@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, David Miller <davem@davemloft.net>,
+ Bjorn Helgaas <helgaas@kernel.org>,
+ Realtek linux nic maintainers <nic_swsd@realtek.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+References: <00f1255f-acf0-4760-c20f-0b78bda44645@gmail.com>
+Message-ID: <ab8696d7-59e0-1f24-0ead-757057eb50cf@gmail.com>
+Date: Mon, 16 Apr 2018 21:37:13 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1524582822.git.jan.kiszka@siemens.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <00f1255f-acf0-4760-c20f-0b78bda44645@gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 24, 2018 at 05:13:36PM +0200, Jan Kiszka wrote:
-> This primarily enables to unbind the generic PCI host controller without
-> leaving lots of memory leaks behind. A previous proposal patch 5 was
-> rejected because of those issues [1].
-> 
-> The fixes have been validated in the Jailhouse setup, where we add and
-> remove a virtual PCI host controller on hypervisor activation/
-> deactivation, with the help of kmemleak.
-> 
-> Besides that, there is tiny PCI API cleanup at the beginning and
-> support for manually enabled PCI domains at the end that enables the
-> Jailhouse scenario.
+This patch adds missing values for the max read request size.
+E.g. network driver r8169 uses a value of 4K.
 
-Sounds like you have a couple things lined up for a v2 posting.  When you
-do that, would you mind updating the function references in subjects,
-changelogs, and comments to include "()" after the function name, e.g.,
-s/pci_get_new_domain_nr/pci_get_new_domain_nr()/?
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+---
+ include/uapi/linux/pci_regs.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> [1] http://lkml.iu.edu/hypermail/linux/kernel/1606.3/00072.html
-> 
-> 
-> CC: Jingoo Han <jingoohan1@gmail.com>
-> CC: Joao Pinto <Joao.Pinto@synopsys.com>
-> CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> CC: Will Deacon <will.deacon@arm.com>
-> 
-> Jan Kiszka (6):
->   PCI: Make pci_get_new_domain_nr static
->   PCI: Fix memory leak of devm_pci_alloc_host_bridge
->   PCI: Introduce devm_of_pci_get_host_bridge_resources
->   PCI: Convert of_pci_get_host_bridge_resources users to devm variant
->   PCI: Add support for unbinding the generic PCI host controller
->   arm: Allow to enable PCI_DOMAINS manually
-> 
->  arch/arm/Kconfig                       |  7 ++-
->  drivers/pci/dwc/pcie-designware-host.c |  2 +-
->  drivers/pci/host/pci-aardvark.c        |  5 +-
->  drivers/pci/host/pci-ftpci100.c        |  4 +-
->  drivers/pci/host/pci-host-common.c     | 13 +++++
->  drivers/pci/host/pci-host-generic.c    |  1 +
->  drivers/pci/host/pci-v3-semi.c         |  3 +-
->  drivers/pci/host/pci-versatile.c       |  3 +-
->  drivers/pci/host/pci-xgene.c           |  3 +-
->  drivers/pci/host/pcie-altera.c         |  5 +-
->  drivers/pci/host/pcie-iproc-platform.c |  4 +-
->  drivers/pci/host/pcie-rcar.c           |  5 +-
->  drivers/pci/host/pcie-rockchip.c       |  4 +-
->  drivers/pci/host/pcie-xilinx-nwl.c     |  4 +-
->  drivers/pci/host/pcie-xilinx.c         |  4 +-
->  drivers/pci/of.c                       | 93 ++++++++++++++++++++++------------
->  drivers/pci/pci.c                      |  6 +--
->  drivers/pci/probe.c                    |  4 +-
->  include/linux/of_pci.h                 | 14 ++++-
->  include/linux/pci-ecam.h               |  1 +
->  include/linux/pci.h                    |  3 --
->  21 files changed, 120 insertions(+), 68 deletions(-)
-> 
-> -- 
-> 2.13.6
-> 
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 0c79eac5..699257fb 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -506,6 +506,8 @@
+ #define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
+ #define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
+ #define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
++#define  PCI_EXP_DEVCTL_READRQ_2048B 0x4000 /* 2048 Bytes */
++#define  PCI_EXP_DEVCTL_READRQ_4096B 0x5000 /* 4096 Bytes */
+ #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
+ #define PCI_EXP_DEVSTA		10	/* Device Status */
+ #define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
+-- 
+2.17.0
