@@ -1,190 +1,126 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alan Douglas <adouglas@cadence.com>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [RFC 01/10] PCI: dwc: Add MSI-X callbacks handler
-Date: Tue, 24 Apr 2018 14:05:26 +0000
-Message-ID: <SN6PR07MB4512BED3D44003EF72EE06FDD8880@SN6PR07MB4512.namprd07.prod.outlook.com>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
- <77b7b2687e9618d3f7d1f11c3fc6ecec9a9442ef.1523379766.git.gustavo.pimentel@synopsys.com>
- <0b7023d9-29c6-0993-07d3-b046d25b67ff@ti.com>
- <e2fe7d5f-9f57-0e67-d321-541ff4706792@synopsys.com>
- <0e8b8ce9-db12-1e11-3eb5-62f3fa686d59@ti.com>
- <16d237b2-0052-447e-13cb-bc2f15848be4@synopsys.com>
-In-Reply-To: <16d237b2-0052-447e-13cb-bc2f15848be4@synopsys.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=UnEt=HF=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=UnEt=HF=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 16 Apr 2018 11:21:15 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, Keith Busch <keith.busch@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
+ <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
+ <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Wei
+ Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>, Alex Williamson
+ <alex.williamson@redhat.com>, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v13 6/6] PCI/DPC: Do not do recovery for hotplug enabled
+ system
+In-Reply-To: <da626c40564276097ab7380ead5f0238@codeaurora.org>
+References: <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
+ <13efe2e8-74c8-acb4-ec58-f79b14a1f182@codeaurora.org>
+ <20180412140648.GD145698@bhelgaas-glaptop.roam.corp.google.com>
+ <ca7e5285-2e88-e130-6402-a271bb92a81e@codeaurora.org>
+ <20180412143954.GB4810@localhost.localdomain>
+ <20180412150231.GD4810@localhost.localdomain>
+ <ea977780-6f90-af5a-442f-575536038307@codeaurora.org>
+ <20180412170911.GA6424@localhost.localdomain>
+ <fa167b21-f70d-a220-5671-5ad66a0f72c0@codeaurora.org>
+ <cced24b5-c0bd-138a-0304-c87cac2ec226@codeaurora.org>
+ <20180416031726.GB158153@bhelgaas-glaptop.roam.corp.google.com>
+ <da626c40564276097ab7380ead5f0238@codeaurora.org>
+Message-ID: <a903dd90b53f018945d790b78e9572b9@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+On 2018-04-16 11:03, poza@codeaurora.org wrote:
+> On 2018-04-16 08:47, Bjorn Helgaas wrote:
+>> On Sat, Apr 14, 2018 at 11:53:17AM -0400, Sinan Kaya wrote:
+>> 
+>>> You indicated that you want to unify the AER and DPC behavior. Let's
+>>> settle on what we want to do one more time. We have been going forth
+>>> and back on the direction.
+>> 
+>> My thinking is that as much as possible, similar events should be
+>> handled similarly, whether the mechanism is AER, DPC, EEH, etc.
+>> Ideally, drivers shouldn't have to be aware of which mechanism is in
+>> use.
+>> 
+>> Error recovery includes conventional PCI as well, but right now I
+>> think we're only concerned with PCIe.  The following error types are
+>> from PCIe r4.0, sec 6.2.2:
+>> 
+>>   ERR_COR
+>>     Corrected by hardware with no software intervention.  Software
+>>     involved for logging only.
+>> 
+>>     Handled by AER via pci_error_handlers; DPC is never involved.
+>> 
+>>     Link is unaffected.
+>> 
+>>   ERR_NONFATAL
+>>     A transaction is unreliable but the link is fully functional.
+>> 
+>>     If DPC is not supported, handled by AER via pci_error_handlers and
+>>     the link is unaffected.
+>> 
+>>     If DPC supported, handled by DPC (because we set
+>>     PCI_EXP_DPC_CTL_EN_NONFATAL) via remove/re-enumerate.
+>> 
+>>   ERR_FATAL
+>>     The link is unreliable.
+>> 
+>>     If DPC is not supported, handled by AER via pci_error_handlers and
+>>     the link is reset.
+>> 
+>>     If DPC supported, handled by DPC via remove/re-enumerate.
+>> 
+>> It doesn't seem right to me that we handle both ERR_NONFATAL and
+>> ERR_FATAL events differently if we happen to have DPC support in a
+>> switch.
+>> 
+>> Maybe we should consider triggering DPC only on ERR_FATAL?  That would
+>> keep DPC out of the ERR_NONFATAL cases.
+>> 
+>> For ERR_FATAL, maybe we should bite the bullet and use
+>> remove/re-enumerate for AER as well as for DPC.  That would be painful
+>> for higher-level software, but if we're willing to accept that pain
+>> for new systems that support DPC, maybe life would be better overall
+>> if it worked the same way on systems without DPC?
+>> 
+>> Bjorn
+> 
+> This had crossed my mind when I first looked at the code.
+> DPC is getting triggered for both ERR_NONFATAL and ERR_FATAL case.
+> I thought the primary purpose of DPC to recover fatal errors, by
+> triggering HW recovery.
+> but what if some platform wants to handle both FATAL and NON_FATAL with 
+> DPC ?
+> 
+> As you said AER FATAL cases and DPC FATAL cases should be handled 
+> similarly.
+> e.g. remove/re-enumerate the devices.
+> 
+> while NON_FATAL case; only AER would come into picture.
+> if some platform would like to handle DPC NON_FATAL then it should
+> follow AER NON_FATAL path  (where it does not do remove/re-enumerate)
+> 
+> And the case where hotplug is enabled, remove/re-enumerate more sense
+> in case of ERR_FATAL.
+> And the case where hotplug is disabled, only re-enumeration is
+> required. (no need to remove the devices)
+> but then do we need to handle this case specifically, what is the harm
+> in removing the devices in all the cases followed by re-enumerate ?
 
-On 24 April 2018 10:36 Gustavo Pimentel wrote:
-> Hi Kishon,
->=20
-> On 24/04/2018 08:07, Kishon Vijay Abraham I wrote:
-> > Hi,
-> >
-> > On Monday 23 April 2018 03:06 PM, Gustavo Pimentel wrote:
-> >> Hi Kishon,
-> >>
-> >> On 16/04/2018 10:29, Kishon Vijay Abraham I wrote:
-> >>> Hi Gustavo,
-> >>>
-> >>> On Tuesday 10 April 2018 10:44 PM, Gustavo Pimentel wrote:
-> >>>> Changes the pcie_raise_irq function signature, namely the
-> >>>> interrupt_num variable type from u8 to u16 to accommodate the MSI-X
-> >>>> maximum interrupts of 2048.
-> >>>>
-> >>>> Implements a PCIe config space capability iterator function to
-> >>>> search and save the MSI and MSI-X pointers. With this method the
-> >>>> code becomes more generic and flexible.
-> >>>>
-> >>>> Implements MSI-X set/get functions for sysfs interface in order to
-> >>>> change the EP entries number.
-> >>>>
-> >>>> Implements EP MSI-X interface for triggering interruptions.
-> >>>>
-> >>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> >>>> ---
-> >>>>  drivers/pci/dwc/pci-dra7xx.c           |   2 +-
-> >>>>  drivers/pci/dwc/pcie-artpec6.c         |   2 +-
-> >>>>  drivers/pci/dwc/pcie-designware-ep.c   | 145
-> ++++++++++++++++++++++++++++++++-
-> >>>>  drivers/pci/dwc/pcie-designware-plat.c |   6 +-
-> >>>>  drivers/pci/dwc/pcie-designware.h      |  23 +++++-
-> >>>>  5 files changed, 173 insertions(+), 5 deletions(-)
-> >>>>
-> >>>> diff --git a/drivers/pci/dwc/pci-dra7xx.c
-> >>>> b/drivers/pci/dwc/pci-dra7xx.c index ed8558d..5265725 100644
-> >>>> --- a/drivers/pci/dwc/pci-dra7xx.c
-> >>>> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> >>>> @@ -369,7 +369,7 @@ static void dra7xx_pcie_raise_msi_irq(struct
-> >>>> dra7xx_pcie *dra7xx,  }
-> >>>>
-> >>>>  static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-> >>>> -				 enum pci_epc_irq_type type, u8
-> interrupt_num)
-> >>>> +				 enum pci_epc_irq_type type, u16
-> interrupt_num)
-> >>>>  {
-> >>>>  	struct dw_pcie *pci =3D to_dw_pcie_from_ep(ep);
-> >>>>  	struct dra7xx_pcie *dra7xx =3D to_dra7xx_pcie(pci); diff --git
-> >>>> a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-> >>>> index e66cede..96dc259 100644
-> >>>> --- a/drivers/pci/dwc/pcie-artpec6.c
-> >>>> +++ b/drivers/pci/dwc/pcie-artpec6.c
-> >>>> @@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct
-> >>>> dw_pcie_ep *ep)  }
-> >>>>
-> >>>>  static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no=
-,
-> >>>> -				  enum pci_epc_irq_type type, u8
-> interrupt_num)
-> >>>> +				  enum pci_epc_irq_type type, u16
-> interrupt_num)
-> >>>>  {
-> >>>>  	struct dw_pcie *pci =3D to_dw_pcie_from_ep(ep);
-> >>>>
-> >>>> diff --git a/drivers/pci/dwc/pcie-designware-ep.c
-> >>>> b/drivers/pci/dwc/pcie-designware-ep.c
-> >>>> index 15b22a6..874d4c2 100644
-> >>>> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> >>>> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> >>>> @@ -40,6 +40,44 @@ void dw_pcie_ep_reset_bar(struct dw_pcie
-> *pci, enum pci_barno bar)
-> >>>>  	__dw_pcie_ep_reset_bar(pci, bar, 0);  }
-> >>>>
-> >>>> +void dw_pcie_ep_find_cap_addr(struct dw_pcie_ep *ep) {
-> >>>
-> >>> This should be implemented in a generic way similar to
-> pci_find_capability().
-> >>> It'll be useful when we try to implement other capabilities as well.
-> >>
-> >> Hum, what you suggest? Something implemented on the pci-epf-core?
-> >
-> > yeah, Initially thought it could be implemented as a helper function
-> > in pci-epc-core so that both designware and cadence can use it.
->=20
-> That would be nice, however I couldn't find out how to access the config
-> space, through the pci_epf or pci_epc structs.
->=20
-> So, I reworked the functions like this:
->=20
-> (on pcie-designware-ep.c)
->=20
-> u8 __dw_pcie_ep_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
->                               u8 cap)
-> {
->         u8 cap_id, next_cap_ptr;
->         u16 reg;
->=20
->         reg =3D dw_pcie_readw_dbi(pci, cap_ptr);
->         next_cap_ptr =3D (reg & 0xff00) >> 8;
->         cap_id =3D (reg & 0x00ff);
->=20
->         if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
->                 return 0;
->=20
->         if (cap_id =3D=3D cap)
->                 return cap_ptr;
->=20
->         return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap); }
->=20
-> u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap) {
->         u8 next_cap_ptr;
->         u16 reg;
->=20
->         reg =3D dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
->         next_cap_ptr =3D (reg & 0x00ff);
->=20
->         if (!next_cap_ptr)
->                 return 0;
->=20
->         return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap); }
->=20
-> int dw_pcie_ep_init(struct dw_pcie_ep *ep) { [...]
->         ep->msi_cap =3D dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSI);
->         ep->msix_cap =3D dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSIX)=
-; [...]
-> }
->=20
-> >
-> > But do we really have to find the address like this? since all
-> > designware IP's will have a particular capability at a fixed address
-> > offset, why not follow use existing mechanism in dw_pcie_ep_get_msi?
->=20
-> The capabilities are not fixed to a specific address offset by default th=
-ey
-> assume those values, but they can be easily change at design stage.
->=20
-> >
-> > Or is it possible for a particular capability to have address offsets
-> > for different vendors? How is it for cadence?
->=20
-> Yes, it's possible to have different address offset for different vendors=
-.
->=20
-For cadence the offsets are fixed for each specific hw (if a capability is=
-=20
-disabled it will just be removed from the linked list) but it would be=20
-better to allow for the possibility for them to vary between different hw.
+To Clarify the last line, what I meant here was, in case of ERR_FATAL we 
+can always remove/re-enumerate the devices irrespective of hotplug is 
+enabled or not.
 
-> >
-> > Thanks
-> > Kishon
-> >
->=20
-> Thanks,
-> Gustavo
-Regards,
-Alan
+and in case of ERR_NONFATAL, DPC will follow AER path (where it just 
+tries to recover)
+although I am not very sure that how to handle ERR_NONFATAL case if 
+hotplug is enabled. Because as Keith suggested device might have been 
+changed run-time.
+
+> 
+> Regards,
+> Oza.
