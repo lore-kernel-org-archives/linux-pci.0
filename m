@@ -1,81 +1,29 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 11 Apr 2018 12:47:11 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-        x86@kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1] x86/PCI: Make pci=earlydump output neat
-Message-ID: <20180411094711.GH2173@lahna.fi.intel.com>
-References: <20180405121159.84241-1-andriy.shevchenko@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180405121159.84241-1-andriy.shevchenko@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=yohJ=HF=davemloft.net=davem@kernel.org>
+Return-Path: <SRS0=yohJ=HF=davemloft.net=davem@kernel.org>
+Date: Mon, 16 Apr 2018 18:55:18 -0400 (EDT)
+Message-Id: <20180416.185518.1020006266147417608.davem@davemloft.net>
+To: hkallweit1@gmail.com
+Cc: bhelgaas@google.com, helgaas@kernel.org, nic_swsd@realtek.com,
+ linux-pci@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH net-next 0/2] PCI: add two more values for PCIe
+ Max_Read_Request_Size and initially use them in r8169 network driver
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <00f1255f-acf0-4760-c20f-0b78bda44645@gmail.com>
+References: <00f1255f-acf0-4760-c20f-0b78bda44645@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 05, 2018 at 03:11:59PM +0300, Andy Shevchenko wrote:
-> Currently the early dump of PCI configuration space looks quite unhelpful, e.g.
-> 
-> [    0.000000]   60:
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]  00
-> [    0.000000]
-> 
-> which makes really hard to get anything out of this. Convert the function to
-> use print_hex_dump() to make output neat.
-> 
-> In the result we will have
-> 
-> [    0.000000] 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 
-> which is much, much better.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  arch/x86/pci/early.c | 19 +++++--------------
->  1 file changed, 5 insertions(+), 14 deletions(-)
-> 
-> diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
-> index f0114007e915..53a87692d687 100644
-> --- a/arch/x86/pci/early.c
-> +++ b/arch/x86/pci/early.c
-> @@ -59,24 +59,15 @@ int early_pci_allowed(void)
->  
->  void early_dump_pci_device(u8 bus, u8 slot, u8 func)
->  {
-> +	u32 value[256 / 4];
->  	int i;
-> -	int j;
-> -	u32 val;
->  
-> -	printk(KERN_INFO "pci 0000:%02x:%02x.%d config space:",
-> -	       bus, slot, func);
-> +	pr_info("pci 0000:%02x:%02x.%d config space:\n", bus, slot, func);
->  
-> -	for (i = 0; i < 256; i += 4) {
-> -		if (!(i & 0x0f))
-> -			printk("\n  %02x:",i);
-> +	for (i = 0; i < 256; i += 4)
-> +		value[i/4] = read_pci_config(bus, slot, func, i);
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Date: Mon, 16 Apr 2018 21:35:42 +0200
 
-Please be consistent with your use of whitespace: 256 / 4 vs. i/4.
+> In r8169 network driver I stumbled across a magic number translating
+> to PCI MRRS size 4K. The PCI core is still missing constants for
+> values 2K and 4K (as defined in PCI standard).
+> 
+> So let's add these two constants and use the 4K constant in r8169.
+> 
+> Second patch depends on the first one, therefore both patches
+> preferrably should go through either PCI or netdev tree.
 
-Other than that looks good and certainly is an improvement,
-
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Series applied, thank you.
