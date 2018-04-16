@@ -9,91 +9,45 @@ Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
         Lukas Wunner <lukas@wunner.de>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v5 3/9] PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
-Date: Mon, 16 Apr 2018 13:34:47 +0300
-Message-Id: <20180416103453.46232-4-mika.westerberg@linux.intel.com>
+Subject: [PATCH v5 9/9] ACPI / hotplug / PCI: Drop unnecessary parentheses
+Date: Mon, 16 Apr 2018 13:34:53 +0300
+Message-Id: <20180416103453.46232-10-mika.westerberg@linux.intel.com>
 In-Reply-To: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
 References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After suspend/resume cycle the Presence Detect or Data Link Layer Status
-Changed bits might be set and if we don't clear them those events will
-not fire anymore and nothing happens for instance when a device is now
-hot-unplugged.
-
-Fix this by clearing those bits in a newly introduced function
-pcie_reenable_notification(). This should be fine because immediately
-after we check if the adapter is still present by reading directly from
-the status register.
+There is no need for them and it makes the code look uglier than it
+should. Remove them.
 
 Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: stable@vger.kernel.org
 ---
- drivers/pci/hotplug/pciehp.h      |  2 +-
- drivers/pci/hotplug/pciehp_core.c |  2 +-
- drivers/pci/hotplug/pciehp_hpc.c  | 13 ++++++++++++-
- 3 files changed, 14 insertions(+), 3 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 88e917c9120f..5f892065585e 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -121,7 +121,7 @@ struct controller *pcie_init(struct pcie_device *dev);
- int pcie_init_notification(struct controller *ctrl);
- int pciehp_enable_slot(struct slot *p_slot);
- int pciehp_disable_slot(struct slot *p_slot);
--void pcie_enable_notification(struct controller *ctrl);
-+void pcie_reenable_notification(struct controller *ctrl);
- int pciehp_power_on_slot(struct slot *slot);
- void pciehp_power_off_slot(struct slot *slot);
- void pciehp_get_power_status(struct slot *slot, u8 *status);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 332b723ff9e6..44a6a63802d5 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -283,7 +283,7 @@ static int pciehp_resume(struct pcie_device *dev)
- 	ctrl = get_service_data(dev);
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 0aef35ee665a..45e19615819e 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -524,7 +524,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+ 		if (!dev) {
+ 			/* Do not set SLOT_ENABLED flag if some funcs
+ 			   are not added. */
+-			slot->flags &= (~SLOT_ENABLED);
++			slot->flags &= ~SLOT_ENABLED;
+ 			continue;
+ 		}
+ 	}
+@@ -553,7 +553,7 @@ static void disable_slot(struct acpiphp_slot *slot)
+ 	list_for_each_entry(func, &slot->funcs, sibling)
+ 		acpi_bus_trim(func_to_acpi_device(func));
  
- 	/* reinitialize the chipset's event detection logic */
--	pcie_enable_notification(ctrl);
-+	pcie_reenable_notification(ctrl);
- 
- 	slot = ctrl->slot;
- 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 18a42f8f5dc5..98ea75aa32c7 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -659,7 +659,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
- 	return handled;
+-	slot->flags &= (~SLOT_ENABLED);
++	slot->flags &= ~SLOT_ENABLED;
  }
  
--void pcie_enable_notification(struct controller *ctrl)
-+static void pcie_enable_notification(struct controller *ctrl)
- {
- 	u16 cmd, mask;
- 
-@@ -697,6 +697,17 @@ void pcie_enable_notification(struct controller *ctrl)
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
- }
- 
-+void pcie_reenable_notification(struct controller *ctrl)
-+{
-+	/*
-+	 * Clear both Presence and Data Link Layer Changed to make sure
-+	 * those events still fire after we have re-enabled them.
-+	 */
-+	pcie_capability_write_word(ctrl->pcie->port, PCI_EXP_SLTSTA,
-+				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
-+	pcie_enable_notification(ctrl);
-+}
-+
- static void pcie_disable_notification(struct controller *ctrl)
- {
- 	u16 mask;
+ static bool slot_no_hotplug(struct acpiphp_slot *slot)
 -- 
 2.16.3
 
