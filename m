@@ -1,65 +1,105 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v5 10/10] arm64: defconfig: update config for Rockchip PCIe
-Date: Mon,  2 Apr 2018 09:04:28 +0800
-Message-Id: <1522631068-151816-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
- linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
- Jeffy Chen <jeffy.chen@rock-chips.com>, linux-rockchip@lists.infradead.org,
- Rob Herring <robh+dt@kernel.org>, linux-arm-kernel@lists.infradead.org,
- Simon Xue <xxm@rock-chips.com>
+Return-Path: <SRS0=NmO7=HF=gmail.com=hkallweit1@kernel.org>
+Return-Path: <SRS0=NmO7=HF=gmail.com=hkallweit1@kernel.org>
+Subject: Re: [PATCH] PCI: Add two more values for PCIe Max_Read_Request_Size
+From: Heiner Kallweit <hkallweit1@gmail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, David Miller <davem@davemloft.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+References: <90260d62-e136-44a3-a35b-19fac1bcfb20@gmail.com>
+ <20180412225557.GB46420@bhelgaas-glaptop.roam.corp.google.com>
+ <e24bac5a-cf03-3579-2d44-6548a0998258@gmail.com>
+Message-ID: <11441d64-c03a-fd47-9e14-69e0a136f2be@gmail.com>
+Date: Mon, 16 Apr 2018 21:21:31 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <e24bac5a-cf03-3579-2d44-6548a0998258@gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Now Rockchip PCIe drivers could support both of host mode
-and endponint mode, so we rename the config name. This patch
-updates defconfig to refect the fact that we want to build
-Rockchip PCIe controller driver into a module as before.
+Am 13.04.2018 um 07:48 schrieb Heiner Kallweit:
+> Am 13.04.2018 um 00:55 schrieb Bjorn Helgaas:
+>> Hello Heiner,
+>>
+>> On Thu, Apr 12, 2018 at 11:08:04PM +0200, Heiner Kallweit wrote:
+>>> This patch adds missing values for the max read request size.
+>>> E.g. network driver r8169 uses a value of 4K.
+>>
+>> Is there a r8169 patch that adds uses of PCI_EXP_DEVCTL_READRQ_4096B?
+>> If so, we should probably keep it together with this one since this
+>> one would have to be merged first.
+>>
+> Not yet, so far r8169 uses the following to set a MRRS of 4K.
+> 
+> #define MAX_READ_REQUEST_SHIFT	12
+> 0x5 << MAX_READ_REQUEST_SHIFT
+> 
+> I have to check when setting 4K MRRS was added, but it seems
+> that so far it's fine with all users.
+> 
+> Before submitting the r8169 patch I wanted to check for feedback
+> regarding use of the two additional MRRS values, so what you write
+> in the following is exactly the type of feedback I was looking for.
+> 
+> I will read through the linked discussion and then also submit the
+> r8169 patch.
+> 
+Hello Bjorn,
 
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: Heiko Stuebner <heiko@sntech.de>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+I checked and using 4K MRRS was added to the r8169 driver about
+10 years ago. So it seems the described potential problems didn't
+hit anybody in reality.
 
----
+When submitting the patch series consisting of pci core change
+and r8169 change I will address it to pci and netdev.
+Then I leave it to David and you to agree on through which tree
+the series should go.
 
- arch/arm64/configs/defconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+To mention it briefly as I added David:
+The patch won't include any functional change.
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index ecf6137..17ea72b 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -78,7 +78,8 @@ CONFIG_PCIE_ARMADA_8K=y
- CONFIG_PCI_AARDVARK=y
- CONFIG_PCI_TEGRA=y
- CONFIG_PCIE_RCAR=y
--CONFIG_PCIE_ROCKCHIP=m
-+CONFIG_PCIE_ROCKCHIP=y
-+CONFIG_PCIE_ROCKCHIP_HOST=m
- CONFIG_PCI_HOST_GENERIC=y
- CONFIG_PCI_XGENE=y
- CONFIG_PCI_HOST_THUNDER_PEM=y
--- 
-1.9.1
+Regards, Heiner
 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Thanks, Heiner
+> 
+>> There's also a larger issue in that when Linux configures MPS and MRRS
+>> at enumeration-time, it makes some assumptions about how MRRS is set.
+>> If a driver like r8169 changes MRRS later, it may break those
+>> assumptions, which might lead to PCIe errors.
+>>
+>> If a user boots with "pci=pcie_bus_perf", we use PCIE_BUS_PERFORMANCE
+>> mode, and in that case we may set MPS to something larger than some
+>> devices can support, and we rely on MRRS to avoid problems.
+>>
+>> I don't really *like* that scheme because it makes assumptions like
+>> "drivers never change MRRS", but that's what we have right now.
+>>
+>> So just be aware that if r8169 changes MRRS and users boot with
+>> "pci=pcie_bus_perf", there is the potential for PCIe bus errors.
+>>
+>> There was some recent discussion about this; [1] is a good place to
+>> start.
+>>
+>> [1] http://lkml.kernel.org/r/20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com
+>>
+>>> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+>>> ---
+>>>  include/uapi/linux/pci_regs.h | 2 ++
+>>>  1 file changed, 2 insertions(+)
+>>>
+>>> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+>>> index 0c79eac5..699257fb 100644
+>>> --- a/include/uapi/linux/pci_regs.h
+>>> +++ b/include/uapi/linux/pci_regs.h
+>>> @@ -506,6 +506,8 @@
+>>>  #define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
+>>>  #define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
+>>>  #define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
+>>> +#define  PCI_EXP_DEVCTL_READRQ_2048B 0x4000 /* 2048 Bytes */
+>>> +#define  PCI_EXP_DEVCTL_READRQ_4096B 0x5000 /* 4096 Bytes */
+>>>  #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
+>>>  #define PCI_EXP_DEVSTA		10	/* Device Status */
+>>>  #define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
+>>> -- 
+>>> 2.17.0
+>>>
+>>
+> 
