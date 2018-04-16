@@ -1,73 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v7 8/9] PCI: dwc: Small computation improvement
-Date: Tue, 24 Apr 2018 14:44:45 +0100
-Message-Id: <8ec9ee255a82febf84e6c0cfa2a32ee87f3e6053.1524577064.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=tSFA=HF=xenosoft.de=chzigotzky@kernel.org>
+Return-Path: <SRS0=tSFA=HF=xenosoft.de=chzigotzky@kernel.org>
+Content-Type: text/plain;
+	charset=utf-8
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH 1/1] PCI set flag PCI_SCAN_ALL_PCIE_DEVS for P.A. Semi boards
+From: Christian Zigotzky <chzigotzky@xenosoft.de>
+In-Reply-To: <87tvtbg0i9.fsf@concordia.ellerman.id.au>
+Date: Mon, 16 Apr 2018 06:29:55 +0200
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Olof Johansson <olof@lixom.net>,
+ linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Message-Id: <0146B9E7-8ECB-48DF-ACCB-4173278A3422@xenosoft.de>
+References: <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de> <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com> <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de> <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com> <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de> <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com> <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de> <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com> <dc228918-652a-e24c-ce7b-8d1b30153d3b@xenosoft.de> <639e975f-1b3a-4f85-9a40-13fe2473fc28@xenosoft.de> <20180319191310.GG77194@bhelgaas-glaptop.roam.corp.google.com> <87tvtbg0i9.fsf@concordia.ellerman.id.au>
+To: Michael Ellerman <mpe@ellerman.id.au>
 List-ID: <linux-pci.vger.kernel.org>
 
-Replaces a simple division by 2 to a right shift rotation of 1 bit.
+Hi Michael,
 
-Probably any recent and decent compiler does this kind of substitution
-in order to improve code performance. Nevertheless it's a coding good
-practice whenever there is a division / multiplication by multiple of 2
-to replace it by the equivalent operation in this case, the shift
-rotation.
+Many thanks for your help. Did you merge Olof=E2=80=98s patch? I still have t=
+o patch the 4.17 source code.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-Acked-by: Joao Pinto <jpinto@synopsys.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Changes v3->v4:
- - Added a small explication to the log description.
-Changes v4->v5:
- - Nothing changed, just to follow the patch set version.
-Changes v5->v6:
- - Nothing changed, just to follow the patch set version.
-Changes v6->v7:
- - Nothing changed, just to follow the patch set version.
+Thanks,
+Christian
 
- drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Sent from my iPhone
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 5a23f78..fc55fde 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
- 	if (cfg_res) {
--		pp->cfg0_size = resource_size(cfg_res) / 2;
--		pp->cfg1_size = resource_size(cfg_res) / 2;
-+		pp->cfg0_size = resource_size(cfg_res) >> 1;
-+		pp->cfg1_size = resource_size(cfg_res) >> 1;
- 		pp->cfg0_base = cfg_res->start;
- 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
- 	} else if (!pp->va_cfg0_base) {
-@@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			break;
- 		case 0:
- 			pp->cfg = win->res;
--			pp->cfg0_size = resource_size(pp->cfg) / 2;
--			pp->cfg1_size = resource_size(pp->cfg) / 2;
-+			pp->cfg0_size = resource_size(pp->cfg) >> 1;
-+			pp->cfg1_size = resource_size(pp->cfg) >> 1;
- 			pp->cfg0_base = pp->cfg->start;
- 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
- 			break;
--- 
-2.7.4
+> On 19. Mar 2018, at 23:32, Michael Ellerman <mpe@ellerman.id.au> wrote:
+>=20
+> Bjorn Helgaas <helgaas@kernel.org> writes:
+>=20
+>>> On Fri, Mar 16, 2018 at 01:55:36PM +0100, Christian Zigotzky wrote:
+>>> Bjorn Helgaas created a patch for making PCI_SCAN_ALL_PCIE_DEVS work for=
+
+>>> Root Ports as well as Downstream. Previously PCI_SCAN_ALL_PCIE_DEVS (set=
+ by
+>>> quirks or the "pci=3Dpcie_scan_all"
+>>> kernel parameter) only affected Switch Downstream Ports, not Root Ports.=
+ The
+>>> problem is, that we have to add always the boot argument "pci=3Dpcie_sca=
+n_all"
+>>> for using Bjorn's improvements. Without the boot argument
+>>> "pci=3Dpcie_scan_all", the kernel doesn't boot on P.A. Semi boards with S=
+B600
+>>> chipset (SB600 chipset is connected via PCIe x4 to the P.A. Semi=E2=80=99=
+s
+>>> PA6T-1682M System-on-a-Chip) because the kernel can't find any drives
+>>> connected to the SB600 anymore. Olof Johansson has created a patch for
+>>> executing "pci=3Dpcie_scan_all" automatically on P.A. Semi boards. With h=
+is
+>>> patch, we don't need to add 'pci=3Dpcie_scan_all' to the kernel boot arg=
+uments
+>>> anymore.
+>>=20
+>> The patch looks fine, but I need a signed-off-by line before I can apply
+>> it.  See https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.g=
+it/tree/Documentation/process/submitting-patches.rst
+>=20
+> I'm happy to take it, I've been meaning to check if Olof sent a SOB in
+> his original mail but haven't got to it.
+>=20
+> ...
+>=20
+> Yes, he did, see below.
+>=20
+> So I'll merge that, I'll add a Tested-by for you Christian.
+>=20
+> Christian please don't remove any of the tags when submitting other
+> peoples' patches in future.
+>=20
+> cheers
+>=20
+>=20
+> =46rom a3b390277627b0342c8ccfc16e58679e0d8abdde Mon Sep 17 00:00:00 2001
+> From: Olof Johansson <olof@lixom.net>
+> Date: Sat, 2 Dec 2017 14:56:36 -0800
+> Subject: [PATCH] powerpc/pasemi: set PCI_SCAN_ALL_PCI_DEVS
+>=20
+> Needed on Amiga X1000 with SB600.
+>=20
+> Reported-by: Christian Zigotzky <chzigotzky@xenosoft.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Olof Johansson <olof@lixom.net>
+> ---
+> arch/powerpc/platforms/pasemi/pci.c | 2 ++
+> 1 file changed, 2 insertions(+)
+>=20
+> diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/=
+pasemi/pci.c
+> index 5ff6108..ea54ed2 100644
+> --- a/arch/powerpc/platforms/pasemi/pci.c
+> +++ b/arch/powerpc/platforms/pasemi/pci.c
+> @@ -224,6 +224,8 @@ void __init pas_pci_init(void)
+>        return;
+>    }
+>=20
+> +    pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS):
+> +
+>    for (np =3D NULL; (np =3D of_get_next_child(root, np)) !=3D NULL;)
+>        if (np->name && !strcmp(np->name, "pxp") && !pas_add_bridge(np))
+>            of_node_get(np);
