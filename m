@@ -1,88 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:36827 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757780AbeD0Iat (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 04:30:49 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH 2/9] PCI: dra7xx: Use pci_alloc_intx_irqd() helper to simplify the code
-Date: Fri, 27 Apr 2018 16:22:59 +0800
-Message-Id: <1524817379-239123-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:50270 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752060AbeDPQsW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2018 12:48:22 -0400
+Subject: Re: [Regression] PCI / PM: Simplify device wakeup settings code
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        1745646@bugs.launchpad.net
+References: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
+ <CAJZ5v0j8GAatWoAra37y3c-ti2Ft5am75KONgEkjB6AaypkCqg@mail.gmail.com>
+ <ae84e595-dede-1409-4aff-3a29a310f2ba@canonical.com>
+ <CAJZ5v0gapMMf=KqBAoDTv0SUBeusrUFPyEz6Z4k8Y3Szizdm5Q@mail.gmail.com>
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Message-ID: <63ab8099-1c33-50dd-8c79-e02d55fe9f81@canonical.com>
+Date: Mon, 16 Apr 2018 12:48:18 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0gapMMf=KqBAoDTv0SUBeusrUFPyEz6Z4k8Y3Szizdm5Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+On 04/16/2018 11:58 AM, Rafael J. Wysocki wrote:
+> On Mon, Apr 16, 2018 at 5:31 PM, Joseph Salisbury
+> <joseph.salisbury@canonical.com> wrote:
+>> On 04/13/2018 05:34 PM, Rafael J. Wysocki wrote:
+>>> On Fri, Apr 13, 2018 at 7:56 PM, Joseph Salisbury
+>>> <joseph.salisbury@canonical.com> wrote:
+>>>> Hi Rafael,
+>>>>
+>>>> A kernel bug report was opened against Ubuntu [0].  After a kernel
+>>>> bisect, it was found that reverting the following two commits resolved
+>>>> this bug:
+>>>>
+>>>> 0ce3fcaff929 ("PCI / PM: Restore PME Enable after config space restoration")
+>>>> 0847684cfc5f("PCI / PM: Simplify device wakeup settings code")
+>>>>
+>>>> This is a regression introduced in v4.13-rc1 and still exists in
+>>>> mainline.  The bug causes the battery to drain when the system is
+>>>> powered down and unplugged, which does not happed prior to these two
+>>>> commits.
+>>> What system and what do you mean by "powered down"?  How much time
+>>> does it take for the battery to drain now?
+>> By powered down, the bug reporter is saying physically powered off and
+>> unplugged.  The system is a HP laptop:
+>>
+>> dmi.chassis.vendor: HP
+>> dmi.product.family: 103C_5335KV HP Notebook
+>> dmi.product.name: HP Notebook
+>> vendor_id    : GenuineIntel
+>> cpu family    : 6
+>>
+>>
+>>>> The bisect actually pointed to commit de3ef1e, but reverting
+>>>> these two commits fixes the issue.
+>>>>
+>>>> I was hoping to get your feedback, since you are the patch author.  Do
+>>>> you think gathering any additional data will help diagnose this issue,
+>>>> or would it be best to submit a revert request?
+>>> First, reverting these is not an option or you will break systems
+>>> relying on them now.  4.13 is three releases back at this point.
+>>>
+>>> Second, your issue appears to be related to the suspend/shutdown path
+>>> whereas commit 0ce3fcaff929 is mostly about resume, so presumably the
+>>> change in pci_enable_wake() causes the problem to happen.  Can you try
+>>> to revert this one alone and see if that helps?
+>> A test kernel with commits 0ce3fcaff929 and de3ef1eb1cd0 reverted was
+>> tested.  However, the test kernel still exhibited the bug.
+> So essentially the bisection result cannot be trusted.
+Yes, the bisect results were different than usual.  The bisect reported
+commit de3ef1eb1cd0 as the first bad commit.  I could not revet commit
+de3ef1eb1cd0 without either back porting  the revert of that commit or
+reverting 0ce3fcaff929 first.  However, the bug still happened with
+these two reverted.  I needed to revert 0847684cfc5f and 0ce3fcaff929
+for the bug to go away.  I reverted 0ce3fcaff929 in this case to also
+avoid having to back port the revert of 0847684cfc5f.  I was unsure if
+these unexpected results were due to the interaction/dependency between
+the commits or due to inaccurate testing by the end user.
 
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
-
- drivers/pci/dwc/pci-dra7xx.c | 41 ++---------------------------------------
- 1 file changed, 2 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index ed8558d..45f6456 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -212,43 +212,6 @@ static int dra7xx_pcie_host_init(struct pcie_port *pp)
- 	.host_init = dra7xx_pcie_host_init,
- };
- 
--static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
--				irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--static const struct irq_domain_ops intx_domain_ops = {
--	.map = dra7xx_pcie_intx_map,
--	.xlate = pci_irqd_intx_xlate,
--};
--
--static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct device *dev = pci->dev;
--	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
--	struct device_node *node = dev->of_node;
--	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
--
--	if (!pcie_intc_node) {
--		dev_err(dev, "No PCIe Intc node found\n");
--		return -ENODEV;
--	}
--
--	dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--						   &intx_domain_ops, pp);
--	if (!dra7xx->irq_domain) {
--		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		return -ENODEV;
--	}
--
--	return 0;
--}
--
- static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- {
- 	struct dra7xx_pcie *dra7xx = arg;
-@@ -454,8 +417,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 		return ret;
- 	}
- 
--	ret = dra7xx_pcie_init_irq_domain(pp);
--	if (ret < 0)
-+	dra7xx->irq_domain = pci_alloc_intx_irqd(dev, dra7xx, true, NULL, NULL);
-+	if (IS_ERR(dra7xx->irq_domain))
- 		return ret;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
--- 
-1.9.1
+I'll build some more test kernels and have the user perform some more
+testing to see if the bug can be specifically narrowed down to 0847684cfc5f.
