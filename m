@@ -1,155 +1,124 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:59222 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751159AbeDPOiK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2018 10:38:10 -0400
 From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
         Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [RFC 04/10] PCI: dwc: MSI callbacks handler rework
-Date: Tue, 10 Apr 2018 18:14:43 +0100
-Message-Id: <dbfe4f7dfd60f2760f728e43e5f38a68cea91032.1523379766.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v4 10/10] PCI: dwc: Replace magic number by defines
+Date: Mon, 16 Apr 2018 15:37:58 +0100
+Message-Id: <f92eb1e94c9233cafb0d14462263e1c02f3d23c2.1523881182.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adds in pci_epc_set_msi function a maximum number of 32 interrupts
-validation.
-
-Removes duplicate defines located on pcie-designware.h file. Uses now
-the defines available on /include/uapi/linux/pci-regs.h file.
+Replace magic numbers by a well known define in order to make the code
+human readable and also facilitate the code reusability.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 ---
- drivers/pci/dwc/pcie-designware-ep.c | 46 +++++++++++++++++++++++-------------
- drivers/pci/dwc/pcie-designware.h    | 11 ---------
- drivers/pci/endpoint/pci-epc-core.c  |  3 ++-
- 3 files changed, 32 insertions(+), 28 deletions(-)
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
+Change v2->v3:
+- Nothing changed, just to follow the patch set version.
+Changes v3->v4:
+- Nothing changed, just to follow the patch set version.
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 874d4c2..e352786 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -251,29 +251,38 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
+ drivers/pci/dwc/pcie-designware-host.c | 34 ++++++++++++++++++++--------------
+ drivers/pci/dwc/pcie-designware.h      |  1 +
+ 2 files changed, 21 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index fc55fde..a7657ab 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -83,18 +83,23 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
  
- static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
- {
--	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 val, reg;
-+
-+	if (ep->cap_addr.msi_addr == 0)
-+		return 0;
+ 	for (i = 0; i < num_ctrls; i++) {
+-		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+-				    &val);
++		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
++					(i * MSI_REG_CTRL_BLOCK_SIZE),
++				    4, &val);
+ 		if (!val)
+ 			continue;
  
--	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
--	if (!(val & MSI_CAP_MSI_EN_MASK))
-+	reg = ep->cap_addr.msi_addr + PCI_MSI_FLAGS;
-+	val = dw_pcie_readw_dbi(pci, reg);
-+	if (!(val & PCI_MSI_FLAGS_ENABLE))
- 		return -EINVAL;
- 
--	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
-+	val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
-+
- 	return val;
- }
- 
--static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
-+static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- {
--	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 val, reg;
-+
-+	if (ep->cap_addr.msi_addr == 0)
-+		return 0;
- 
--	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
--	val &= ~MSI_CAP_MMC_MASK;
--	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
-+	reg = ep->cap_addr.msi_addr + PCI_MSI_FLAGS;
-+	val = dw_pcie_readw_dbi(pci, reg);
-+	val &= ~PCI_MSI_FLAGS_QMASK;
-+	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
- 	dw_pcie_dbi_ro_wr_en(pci);
--	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
-+	dw_pcie_writew_dbi(pci, reg, val);
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	return 0;
-@@ -372,21 +381,26 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct pci_epc *epc = ep->epc;
- 	u16 msg_ctrl, msg_data;
--	u32 msg_addr_lower, msg_addr_upper;
-+	u32 msg_addr_lower, msg_addr_upper, reg;
- 	u64 msg_addr;
- 	bool has_upper;
- 	int ret;
- 
- 	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
--	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-+	reg = ep->cap_addr.msi_addr + PCI_MSI_FLAGS;
-+	msg_ctrl = dw_pcie_readw_dbi(pci, reg);
- 	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
--	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-+	reg = ep->cap_addr.msi_addr + PCI_MSI_ADDRESS_LO;
-+	msg_addr_lower = dw_pcie_readl_dbi(pci, reg);
- 	if (has_upper) {
--		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
--		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
-+		reg = ep->cap_addr.msi_addr + PCI_MSI_ADDRESS_HI;
-+		msg_addr_upper = dw_pcie_readl_dbi(pci, reg);
-+		reg = ep->cap_addr.msi_addr + PCI_MSI_DATA_64;
-+		msg_data = dw_pcie_readw_dbi(pci, reg);
+ 		ret = IRQ_HANDLED;
+ 		pos = 0;
+-		while ((pos = find_next_bit((unsigned long *) &val, 32,
+-					    pos)) != 32) {
+-			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
++		while ((pos = find_next_bit((unsigned long *) &val,
++					    MAX_MSI_IRQS_PER_CTRL,
++					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
++			irq = irq_find_mapping(pp->irq_domain,
++					       (i * MAX_MSI_IRQS_PER_CTRL) +
++					       pos);
+ 			generic_handle_irq(irq);
+-			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
++			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
++						(i * MSI_REG_CTRL_BLOCK_SIZE),
+ 					    4, 1 << pos);
+ 			pos++;
+ 		}
+@@ -157,9 +162,9 @@ static void dw_pci_bottom_mask(struct irq_data *data)
+ 	if (pp->ops->msi_clear_irq) {
+ 		pp->ops->msi_clear_irq(pp, data->hwirq);
  	} else {
- 		msg_addr_upper = 0;
--		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
-+		reg = ep->cap_addr.msi_addr + PCI_MSI_DATA_32;
-+		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	}
- 	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
- 	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
+-		ctrl = data->hwirq / 32;
+-		res = ctrl * 12;
+-		bit = data->hwirq % 32;
++		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
++		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
++		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+ 
+ 		pp->irq_status[ctrl] &= ~(1 << bit);
+ 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+@@ -180,9 +185,9 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
+ 	if (pp->ops->msi_set_irq) {
+ 		pp->ops->msi_set_irq(pp, data->hwirq);
+ 	} else {
+-		ctrl = data->hwirq / 32;
+-		res = ctrl * 12;
+-		bit = data->hwirq % 32;
++		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
++		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
++		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+ 
+ 		pp->irq_status[ctrl] |= 1 << bit;
+ 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+@@ -652,8 +657,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 
+ 	/* Initialize IRQ Status array */
+ 	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+-		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+-				    &pp->irq_status[ctrl]);
++		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
++					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
++				    4, &pp->irq_status[ctrl]);
+ 
+ 	/* Setup RC BARs */
+ 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
 diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 456fd94..2acf18b0 100644
+index fe811db..bee4e25 100644
 --- a/drivers/pci/dwc/pcie-designware.h
 +++ b/drivers/pci/dwc/pcie-designware.h
-@@ -96,17 +96,6 @@
- #define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
- 			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
- 
--#define MSI_MESSAGE_CONTROL		0x52
--#define MSI_CAP_MMC_SHIFT		1
--#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
--#define MSI_CAP_MME_SHIFT		4
--#define MSI_CAP_MSI_EN_MASK		0x1
--#define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
--#define MSI_MESSAGE_ADDR_L32		0x54
--#define MSI_MESSAGE_ADDR_U32		0x58
--#define MSI_MESSAGE_DATA_32		0x58
--#define MSI_MESSAGE_DATA_64		0x5C
--
+@@ -110,6 +110,7 @@
  #define MAX_MSI_IRQS			256
  #define MAX_MSI_IRQS_PER_CTRL		32
  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index 294a383..dbd17e4 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -201,7 +201,8 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- 	u8 encode_int;
- 	unsigned long flags;
++#define MSI_REG_CTRL_BLOCK_SIZE		12
+ #define MSI_DEF_NUM_VECTORS		32
  
--	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
-+	    interrupts > 32)
- 		return -EINVAL;
- 
- 	if (!epc->ops->set_msi)
+ /* Maximum number of inbound/outbound iATUs */
 -- 
 2.7.4
