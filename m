@@ -1,233 +1,116 @@
-Return-Path: <SRS0=3/M6=HI=oracle.com=james.puthukattukaran@kernel.org>
-Return-Path: <SRS0=3/M6=HI=oracle.com=james.puthukattukaran@kernel.org>
-Subject: Re: [PATCH 1/2] PCI: Workaround hardware bugs in ACS functionality by
- implementing it as a quirk
-To: Alex Williamson <alex.williamson@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 8/9] PCI: dwc: Small computation improvement
+To: Jingoo Han <jingoohan1@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>
-References: <e6a55432-8c56-9c99-ce99-4ae80a0ed3ba@oracle.com>
- <20180411113803.38e307dd@w520.home>
-From: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Message-ID: <86940ff1-5a2d-6e21-84c4-bab3ccabb4dd@oracle.com>
-Date: Thu, 19 Apr 2018 11:39:59 -0400
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+ <5181f7ffbb9d2889974c49d84e72042251adf8b6.1523266508.git.gustavo.pimentel@synopsys.com>
+ <003001d3d128$39f3eaa0$addbbfe0$@gmail.com>
+ <c295bc5b-e67a-290c-3316-56a1cc001538@synopsys.com>
+ <000001d3d1cc$92706790$b75136b0$@gmail.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <6a947227-12f5-bc67-71bc-d6d67eb9e98f@synopsys.com>
+Date: Mon, 16 Apr 2018 09:41:11 +0100
 MIME-Version: 1.0
-In-Reply-To: <20180411113803.38e307dd@w520.home>
+In-Reply-To: <000001d3d1cc$92706790$b75136b0$@gmail.com>
 Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex -
-I have taken your suggestion at the end of to re-architect using a bus
-specific quirk and will be re-submitting the two patches with the rewrite.
-thanks
-James
+Hi Jingoo,
 
-On 04/11/2018 01:38 PM, Alex Williamson wrote:
-> On Wed, 11 Apr 2018 11:58:43 -0400
-> James Puthukattukaran <james.puthukattukaran@oracle.com> wrote:
-> 
->> There are bugs in ACS implementations by certain switch vendors that 
->> cause ACS violations in perfectly normal accesses. This patch provides 
->> the framework for enabling and disabling the functionality at certain 
->> points during endpoint bringup in the form of a quirk.
+On 11/04/2018 20:37, Jingoo Han wrote:
+> On Wednesday, April 11, 2018 3:40 AM, Gustavo Pimentel wrote:
 >>
->> Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
+>> Hi Jingoo,
 >>
->> --
+>> On 11/04/2018 01:01, Jingoo Han wrote:
+>>> On Monday, April 9, 2018 5:41 AM, Gustavo Pimentel wrote:
+>>>>
+>>>> Replaces a simple division by 2 to a right shift rotation of 1 bit.
+>>>
+>>> It looks good. However, would you add a simple reason to the commit
+>>> message?
 >>
->> -v2: move workaround to pci_bus_read_dev_vendor_id() from 
->> pci_bus_check_dev()
->>       and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
->> -v3: add bus->self check for root bus and virtual bus for sriov vfs.
->> -v4: only do workaround for IDT switches
->> -v5: tweak pci_std_enable_acs_sv to deal with unimplemented SV
->> -v6: Added errata verbiage verbatim and resolved patch format issues
->> -v7: changed int to bool for found and idt_workaround declarations. Also
->>       added bugzilla https://bugzilla.kernel.org/show_bug.cgi?id=196979
->> -v8: Rewrote the patch by adding a new acs quirk to keep the workaround
->>       out of the main code path
->> -v9: changed function name from pci_dev_specific_fixup_acs_quirk to
->>       pci_bus_acs_quirk. Also, tested for FLR and hot reset scenarios 
->> and did
->>       not see issues where workaround was required. The issue seems to be
->>       related only to cold reset/power on situation.
->> -v10: Moved the contents of pci_bus_read_vendor_id into an internal function
->>        __pci_bus_read_vendor_id
->> -v11: Split the patch into two patches. The first a general quirk framework.
+>> Sure.
 >>
->> ---
+>> Can be this one?
 >>
->>   drivers/pci/pci.h    |  7 +++++++
->>   drivers/pci/probe.c  | 33 ++++++++++++++++++++++++++++-----
->>   drivers/pci/quirks.c | 41 +++++++++++++++++++++++++++++++++++++++++
->>   3 files changed, 76 insertions(+), 5 deletions(-)
+>> Probably any recent and decent compiler does this kind of substitution
+>> in order to improve code performance. Nevertheless it's a coding good
+>> practice whenever there is a division / multiplication by multiple of 2
+>> to replace it by the equivalent operation in this case, the shift
+>> rotation.
+> 
+> Yes, that's what I wanted. The most platforms using 'dwc' are based on
+> ARM CPUs. So, the shift rotation can be better.
+> Thank you.
+
+Can I get your acked-by on this?
+
+> 
+> Best regards,
+> Jingoo Han
+> 
 >>
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index 023f7cf..a9e2a8c 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -387,11 +387,18 @@ struct pci_dev_reset_methods {
+>>>
+>>> Best regards,
+>>> Jingoo Han
+>>>
+>>>>
+>>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>>>> ---
+>>>> Change v1->v2:
+>>>> - Nothing changed, just to follow the patch set version.
+>>>>
+>>>>  drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
+>>>>  1 file changed, 4 insertions(+), 4 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/dwc/pcie-designware-host.c
+>>>> b/drivers/pci/dwc/pcie-designware-host.c
+>>>> index 03e9b82..8e6fed4 100644
+>>>> --- a/drivers/pci/dwc/pcie-designware-host.c
+>>>> +++ b/drivers/pci/dwc/pcie-designware-host.c
+>>>> @@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>>>
+>>>>  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+>>>> "config");
+>>>>  	if (cfg_res) {
+>>>> -		pp->cfg0_size = resource_size(cfg_res) / 2;
+>>>> -		pp->cfg1_size = resource_size(cfg_res) / 2;
+>>>> +		pp->cfg0_size = resource_size(cfg_res) >> 1;
+>>>> +		pp->cfg1_size = resource_size(cfg_res) >> 1;
+>>>>  		pp->cfg0_base = cfg_res->start;
+>>>>  		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+>>>>  	} else if (!pp->va_cfg0_base) {
+>>>> @@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>>>  			break;
+>>>>  		case 0:
+>>>>  			pp->cfg = win->res;
+>>>> -			pp->cfg0_size = resource_size(pp->cfg) / 2;
+>>>> -			pp->cfg1_size = resource_size(pp->cfg) / 2;
+>>>> +			pp->cfg0_size = resource_size(pp->cfg) >> 1;
+>>>> +			pp->cfg1_size = resource_size(pp->cfg) >> 1;
+>>>>  			pp->cfg0_base = pp->cfg->start;
+>>>>  			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
+>>>>  			break;
+>>>> --
+>>>> 2.7.4
+>>>>
+>>>
+>>>
 >>
->>   #ifdef CONFIG_PCI_QUIRKS
->>   int pci_dev_specific_reset(struct pci_dev *dev, int probe);
->> +int pci_bus_specific_acs_quirk(struct pci_bus *bus , int devfn,
->> +					int enable, bool found);
->>   #else
->>   static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->>   {
->>   	return -ENOTTY;
->>   }
->> +static inline int pci_bus_specific_acs_quirk(struct pc_bus *bus,
->> +					int devfn, int enable, bool found)
->> +{
->> +	return -ENOTTY;
->> +}
->>   #endif
->>
->>   #if defined(CONFIG_PCI_QUIRKS) && defined(CONFIG_ARM64)
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index ac91b6f..0c93b3e 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -2097,21 +2097,44 @@ static bool pci_bus_wait_crs(struct pci_bus 
->> *bus, int devfn, u32 *l,
->>   	return true;
->>   }
->>
->> -bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
->> +static bool __pci_bus_read_dev_vendor_id(struct pci_bus *bus, int 
->> devfn, u32 *l,
->>   				int timeout)
->>   {
->> +
->> +	int found = false;
->> +
->>   	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
->> -		return false;
->> +		goto out;
->>
->>   	/* Some broken boards return 0 or ~0 if a slot is empty: */
->>   	if (*l == 0xffffffff || *l == 0x00000000 ||
->>   	    *l == 0x0000ffff || *l == 0xffff0000)
->> -		return false;
->> +		goto out;
->>
->> +	found = true;
->>   	if (pci_bus_crs_vendor_id(*l))
->> -		return pci_bus_wait_crs(bus, devfn, l, timeout);
->> +		found = pci_bus_wait_crs(bus, devfn, l, timeout);
->>
->> -	return true;
->> +out:
->> +	return found;
->> +
->> +}
+>> Regards,
+>> Gustavo
 > 
-> The changes to the above function do not change the behavior and are
-> not an improvement to the function, imo.  There are no locks to be
-> released, there's no resources to free, there's no reason to have a
-> goto and common exit point.
 > 
->> +
->> +
->> +bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
->> +				int timeout)
->> +{
->> +	bool ret;
->> +	int enable = -1;
-> 
-> Unnecessary initialization.
-> 
->> +
->> +	enable = pci_bus_specific_acs_quirk(bus, devfn, false, false);
-> 
-> The prototype specifies the 3rd arg is an int, not bool.  The args are
-> pretty cryptic regardless though, can we rename or create wrappers to
-> make their usage better?  This looks like a test_and_clear sort of
-> function and the below looks like a restore (if found?).
-> 
->> +
->> +	ret = __pci_bus_read_dev_vendor_id(bus, devfn, l, timeout);
->> +
->> +	if (enable > 0)
->> +		pci_bus_specific_acs_quirk(bus, devfn, enable, ret);
->> +
->> +	return ret;
->>   }
->>   EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 26141b1..bf423e3 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -4737,3 +4737,44 @@ static void quirk_gpu_hda(struct pci_dev *hda)
->>   			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
->>   DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
->>   			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
->> +
->> +
->> +
->> +static const struct pci_dev_acs_quirk{
->> +	u16 vendor;
->> +	u16 device;
->> +	int (*acs_quirk)(struct pci_bus *bus, int devfn, int enable, bool found);
->> +} pci_dev_acs_quirks[] = {
->> +	{0}
->> +};
->> +
->> +int pci_bus_specific_acs_quirk(struct pci_bus *bus, int devfn, int enable,
->> +				bool found)
->> +{
->> +	const struct pci_dev_acs_quirk *i;
->> +	struct pci_dev *dev;
->> +	int ret;
->> +
->> +	if (!bus || !bus->self)
->> +		return -ENOTTY;
->> +
->> +	dev = bus->self;
->> +
->> +	 /*
->> +	  * Allow devices that have HW bugs in the ACS implementations to
->> +	  * control enabling or disabling that ACS feature here.
->> +	  */
->> +	for (i = pci_dev_acs_quirks; i->acs_quirk; i++) {
->> +	if ((i->vendor == dev->vendor ||
->> +		i->vendor == (u16)PCI_ANY_ID) &&
->> +		(i->device == dev->device ||
->> +		 i->device == (u16)PCI_ANY_ID)) {
->> +			ret = i->acs_quirk(bus, devfn, enable, found);
->> +			if (ret >= 0)
->> +				return ret;
->> +		}
->> +	}
->> +
->> +	return -ENOTTY;
->> +}
->> +
-> 
-> What about a "pci_bus_specific_acs_quirk()" would make something think
-> they need to call it in the presented use case above?  The commit log
-> really doesn't shed any light on why it's used here and not elsewhere
-> or specifically what condition this is meant to trap.  Should we
-> instead be looking at a pci_bus_specific_read_dev_vendor_id()
-> function?  For example:
-> 
-> bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l, int timeout)
-> {
-> 	int ret = pci_bus_specific_read_dev_vendor_id(...);
-> 
-> 	if (ret >= 0)
-> 		return ret > 0;
-> 
-> 	return pci_bus_generic_read_dev_vendor_id(...);
-> }
-> 
-> That makes the purpose and call point of the quirk function very well
-> defined and you can reuse the generic code within your quirk without
-> creating obscure calling conventions.
-> 
-> Please also fix your sending of patch series, there should be a cover
-> letter with patches referencing the message id for threading.  Thanks,
-> 
-> Alex
-> 
+
+Regards,
+Gustavo
