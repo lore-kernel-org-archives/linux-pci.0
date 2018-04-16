@@ -1,110 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:43153 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750724AbeDBN3p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Apr 2018 09:29:45 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <kishon@ti.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH] PCI: endpoint: Create configfs entry for each pci_epf_device_id table entry
-Date: Mon, 2 Apr 2018 18:59:35 +0530
-Message-ID: <20180402132935.32008-1-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 16 Apr 2018 08:27:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: poza@codeaurora.org
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v13 0/6] Address error and recovery for AER and DPC
+Message-ID: <20180416132753.GA28657@bhelgaas-glaptop.roam.corp.google.com>
+References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
+ <20180416031600.GB80087@bhelgaas-glaptop.roam.corp.google.com>
+ <5b4e667f-bead-a007-78dd-e42d3194f232@codeaurora.org>
+ <9301606a70a213c180d9e6764b002cf9@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9301606a70a213c180d9e6764b002cf9@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to be able to provide correct driver_data for pci_epf device,
-a separate configfs entry for each pci_epf_device_id table entry in
-pci_epf_driver is required.
+On Mon, Apr 16, 2018 at 11:33:13AM +0530, poza@codeaurora.org wrote:
+> On 2018-04-16 09:23, Sinan Kaya wrote:
+> > On 4/15/2018 11:16 PM, Bjorn Helgaas wrote:
+> > > On Mon, Apr 09, 2018 at 10:41:48AM -0400, Oza Pawandeep wrote:
+> > > > This patch set brings in error handling support for DPC
+> > > > 
+> > > > The current implementation of AER and error message broadcasting
+> > > > to the
+> > > > EP driver is tightly coupled and limited to AER service driver.
+> > > > It is important to factor out broadcasting and other link handling
+> > > > callbacks. So that not only when AER gets triggered, but also
+> > > > when DPC get
+> > > > triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+> > > > 
+> > > > DPC should behave identical to AER as far as error handling is
+> > > > concerned.
+> > > > DPC should remove the devices and not to do recovery for hotplug
+> > > > enabled system.
+> > > 
+> > > Is there a specific bug that's fixed by these patches?  I didn't see
+> > > one mentioned in the changelogs.
+> > > 
+> > 
+> > There is no actual bug.
+> > 
+> > We realized that DPC and hotplug is heavily integrated today. We
+> > have use cases for systems without hotplug support but still
+> > support DPC. That's the problem we are trying to solve with this
+> > patchset.
 
-Add support to create configfs entry for each pci_epf_device_id
-table entry here.
+Apparently there's a problem with systems that have DPC but not
+hotplug.  It will be extremely helpful if you can articulate what that
+problem is and include it in the appropriate changelog.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/endpoint/pci-epf-core.c | 23 +++++++++++++++++++++--
- include/linux/pci-epf.h             |  4 ++--
- 2 files changed, 23 insertions(+), 4 deletions(-)
+> Adding to what Sinan said;
+> 
+> DPC should handle the error handling and recovery similar to AER,
+> because finally both are attempting recovery in some or the other
+> way, and for that error handling and recovery framework has to be
+> loosely coupled.  It achieves uniformity and transparency to the
+> error handling agents such as AER, DPC, with respect to recovery and
+> error handling.
+> 
+> So, this patch-set tries to unify lot of things between error agents
+> and make them behave in a well defined way. (be it error (FATAL,
+> NON_FATAL) handling or recovery).
 
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index 59ed29e550e9..d6787f39fd41 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -15,6 +15,8 @@
- #include <linux/pci-epf.h>
- #include <linux/pci-ep-cfs.h>
- 
-+static DEFINE_MUTEX(pci_epf_mutex);
-+
- static struct bus_type pci_epf_bus_type;
- static const struct device_type pci_epf_type;
- 
-@@ -139,7 +141,13 @@ EXPORT_SYMBOL_GPL(pci_epf_alloc_space);
-  */
- void pci_epf_unregister_driver(struct pci_epf_driver *driver)
- {
--	pci_ep_cfs_remove_epf_group(driver->group);
-+	struct config_group *group;
-+
-+	mutex_lock(&pci_epf_mutex);
-+	list_for_each_entry(group, &driver->epf_group, group_entry)
-+		pci_ep_cfs_remove_epf_group(group);
-+	list_del(&driver->epf_group);
-+	mutex_unlock(&pci_epf_mutex);
- 	driver_unregister(&driver->driver);
- }
- EXPORT_SYMBOL_GPL(pci_epf_unregister_driver);
-@@ -155,6 +163,8 @@ int __pci_epf_register_driver(struct pci_epf_driver *driver,
- 			      struct module *owner)
- {
- 	int ret;
-+	struct config_group *group;
-+	const struct pci_epf_device_id *id;
- 
- 	if (!driver->ops)
- 		return -EINVAL;
-@@ -169,7 +179,16 @@ int __pci_epf_register_driver(struct pci_epf_driver *driver,
- 	if (ret)
- 		return ret;
- 
--	driver->group = pci_ep_cfs_add_epf_group(driver->driver.name);
-+	INIT_LIST_HEAD(&driver->epf_group);
-+
-+	id = driver->id_table;
-+	while (id->name[0]) {
-+		group = pci_ep_cfs_add_epf_group(id->name);
-+		mutex_lock(&pci_epf_mutex);
-+		list_add_tail(&group->group_entry, &driver->epf_group);
-+		mutex_unlock(&pci_epf_mutex);
-+		id++;
-+	}
- 
- 	return 0;
- }
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index e897bf076701..a30dcaafa6e8 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -72,7 +72,7 @@ struct pci_epf_ops {
-  * @driver: PCI EPF driver
-  * @ops: set of function pointers for performing EPF operations
-  * @owner: the owner of the module that registers the PCI EPF driver
-- * @group: configfs group corresponding to the PCI EPF driver
-+ * @epf_group: list of configfs group corresponding to the PCI EPF driver
-  * @id_table: identifies EPF devices for probing
-  */
- struct pci_epf_driver {
-@@ -82,7 +82,7 @@ struct pci_epf_driver {
- 	struct device_driver	driver;
- 	struct pci_epf_ops	*ops;
- 	struct module		*owner;
--	struct config_group	*group;
-+	struct list_head	epf_group;
- 	const struct pci_epf_device_id	*id_table;
- };
- 
--- 
-2.16.2
+I totally support this objective.
+
+Bjorn
