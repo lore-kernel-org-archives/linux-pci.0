@@ -1,75 +1,181 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:44998 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750783AbeDMRsO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Apr 2018 13:48:14 -0400
-Date: Fri, 13 Apr 2018 18:48:07 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Simon Horman <horms@verge.net.au>
-Cc: Marek Vasut <marek.vasut@gmail.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Dien Pham <dien.pham.ry@rvc.renesas.com>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
-Message-ID: <20180413174807.GA29353@e107981-ln.cambridge.arm.com>
-References: <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com>
- <20180409114159.azxeehjkeuinwrwe@verge.net.au>
- <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
- <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
- <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
- <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
- <a5a0d78d-627b-6277-ee75-44e204cbd390@gmail.com>
- <CAMuHMdX9d29JYVDsghd3Koyg8Aeuv0D2Fx5Lnn0bBZSb9RntDw@mail.gmail.com>
- <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
- <20180413124819.tw5436lolpn5eqhw@verge.net.au>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180413124819.tw5436lolpn5eqhw@verge.net.au>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v5 2/9] PCI: Take bridge window alignment into account when distributing resources
+Date: Mon, 16 Apr 2018 13:34:46 +0300
+Message-Id: <20180416103453.46232-3-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
+References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 13, 2018 at 02:48:19PM +0200, Simon Horman wrote:
-> On Tue, Apr 10, 2018 at 06:17:04PM +0200, Marek Vasut wrote:
-> > On 04/10/2018 05:28 PM, Geert Uytterhoeven wrote:
-> 
-> ...
-> 
-> > >>> rcar_pcie_get_resources() is called while the device is
-> > >>> runtime-enabled/resumed,
-> > >>> pci_free_resource_list() is called while the device is runtime-disabled.
-> > 
-> > rcar_pcie_get_resources() is NOT a pair function for
-> > pci_free_resource_list() . rcar_pcie_parse_request_of_pci_ranges() is a
-> > pair function for pci_free_resource_list().
-> > 
-> > rcar_pcie_parse_request_of_pci_ranges() calls
-> > of_pci_get_host_bridge_resources() internally, so every single function
-> > called after successful call of rcar_pcie_parse_request_of_pci_ranges()
-> > must call pci_free_resource_list().
-> > 
-> > Both of_pci_get_host_bridge_resources() and pci_free_resource_list() are
-> > called with runtime PM disabled.
-> > 
-> > The naming of the functions is confusing though.
-> 
-> Hi,
-> 
-> thanks everyone for their efforts in preparing/reviewing this patch.
-> 
-> It seems there are some differences of opinion on how best to handle the
-> error paths but unlike earlier versions this one seems correct to me. If
-> that turns out to be false we can address it. But I don't think its likely
-> things will be enhanced by continuing this review.
-> 
-> Lorenzo, please consider taking this patch in its current form.
+When hot-adding a PCIe switch the way we currently distribute resources
+does not always work well because devices connected to the switch might
+need to have their MMIO resources aligned to something else than the
+default 1 MB boundary. For example Intel Gigabit ET2 quad port server
+adapter includes PCIe switch leading to 4 x GbE NIC devices that want
+to have their MMIO resources aligned to 2 MB boundary instead.
 
-I will as soon as we restart queueing patches for v4.18, thanks for
-the heads-up.
+The current resource distribution code does not take this alignment into
+account and might try to add too much resources for the extension
+hotplug bridge(s). The resulting bridge window is too big which makes
+the resource assignment operation fail, and we are left with a bridge
+window with minimal amount (1 MB) of MMIO space.
 
-Lorenzo
+Here is what happens when an Intel Gigabit ET2 quad port server adapter
+is hot-added:
+
+  pci 0000:39:00.0: BAR 14: assigned [mem 0x53300000-0x6a0fffff]
+                                          ^^^^^^^^^^
+  pci 0000:3a:01.0: BAR 14: assigned [mem 0x53400000-0x547fffff]
+                                          ^^^^^^^^^^
+The above shows that the downstream bridge (3a:01.0) window is aligned
+to 2 MB instead of 1 MB as is the upstream bridge (39:00.0) window. The
+remaining MMIO space (0x15a00000) is assigned to the hotplug bridge
+(3a:04.0) but it fails:
+
+  pci 0000:3a:04.0: BAR 14: no space for [mem size 0x15a00000]
+  pci 0000:3a:04.0: BAR 14: failed to assign [mem size 0x15a00000]
+
+The MMIO resource is calculated as follows:
+
+  start = 0x54800000
+  end = 0x54800000 + 0x15a00000 - 1 = 0x6a1fffff
+
+This results bridge window [mem 0x54800000 - 0x6a1fffff] and it ends
+after the upstream bridge window [mem 0x53300000-0x6a0fffff] explaining
+the above failure. Because of this Linux falls back to the default
+allocation of 1 MB as can be seen from 'lspci' output:
+
+ 39:00.0 Memory behind bridge: 53300000-6a0fffff [size=366M]
+   3a:01.0 Memory behind bridge: 53400000-547fffff [size=20M]
+   3a:04.0 Memory behind bridge: 53300000-533fffff [size=1M]
+
+The hotplug bridge 3a:04.0 only occupies 1 MB MMIO window which is
+clearly not enough for extending the PCIe topology later if more devices
+are to be hot-added.
+
+Fix this by substracting properly aligned non-hotplug downstream bridge
+window size from the remaining resources used for extension. After this
+change the resource allocation looks like:
+
+  39:00.0 Memory behind bridge: 53300000-6a0fffff [size=366M]
+    3a:01.0 Memory behind bridge: 53400000-547fffff [size=20M]
+    3a:04.0 Memory behind bridge: 54800000-6a0fffff [size=345M]
+
+This matches the expectation. All the extra MMIO resource space (345 MB)
+is allocated to the extension hotplug bridge (3a:04.0).
+
+Fixes: 1a5767725cec ("PCI: Distribute available resources to hotplug-capable bridges")
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/setup-bus.c | 41 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 40 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 072784f55ea5..eb3059fb7f63 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1878,6 +1878,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 	resource_size_t available_mmio, resource_size_t available_mmio_pref)
+ {
+ 	resource_size_t remaining_io, remaining_mmio, remaining_mmio_pref;
++	resource_size_t io_start, mmio_start, mmio_pref_start;
+ 	unsigned int normal_bridges = 0, hotplug_bridges = 0;
+ 	struct resource *io_res, *mmio_res, *mmio_pref_res;
+ 	struct pci_dev *dev, *bridge = bus->self;
+@@ -1942,11 +1943,16 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 			remaining_mmio_pref -= resource_size(res);
+ 	}
+ 
++	io_start = io_res->start;
++	mmio_start = mmio_res->start;
++	mmio_pref_start = mmio_pref_res->start;
++
+ 	/*
+ 	 * Go over devices on this bus and distribute the remaining
+ 	 * resource space between hotplug bridges.
+ 	 */
+ 	for_each_pci_bridge(dev, bus) {
++		resource_size_t align;
+ 		struct pci_bus *b;
+ 
+ 		b = dev->subordinate;
+@@ -1964,7 +1970,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 				available_io, available_mmio,
+ 				available_mmio_pref);
+ 		} else if (dev->is_hotplug_bridge) {
+-			resource_size_t align, io, mmio, mmio_pref;
++			resource_size_t io, mmio, mmio_pref;
+ 
+ 			/*
+ 			 * Distribute available extra resources equally
+@@ -1977,11 +1983,13 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 			io = div64_ul(available_io, hotplug_bridges);
+ 			io = min(ALIGN(io, align), remaining_io);
+ 			remaining_io -= io;
++			io_start += io;
+ 
+ 			align = pci_resource_alignment(bridge, mmio_res);
+ 			mmio = div64_ul(available_mmio, hotplug_bridges);
+ 			mmio = min(ALIGN(mmio, align), remaining_mmio);
+ 			remaining_mmio -= mmio;
++			mmio_start += mmio;
+ 
+ 			align = pci_resource_alignment(bridge, mmio_pref_res);
+ 			mmio_pref = div64_ul(available_mmio_pref,
+@@ -1989,9 +1997,40 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 			mmio_pref = min(ALIGN(mmio_pref, align),
+ 					remaining_mmio_pref);
+ 			remaining_mmio_pref -= mmio_pref;
++			mmio_pref_start += mmio_pref;
+ 
+ 			pci_bus_distribute_available_resources(b, add_list, io,
+ 							       mmio, mmio_pref);
++		} else {
++			/*
++			 * For normal bridges, track start of the parent
++			 * bridge window to make sure we align the
++			 * remaining space which is distributed to the
++			 * hotplug bridges properly.
++			 */
++			resource_size_t aligned;
++			struct resource *res;
++
++			res = &dev->resource[PCI_BRIDGE_RESOURCES + 0];
++			io_start += resource_size(res);
++			aligned = ALIGN(io_start,
++					pci_resource_alignment(dev, res));
++			if (aligned > io_start)
++				remaining_io -= aligned - io_start;
++
++			res = &dev->resource[PCI_BRIDGE_RESOURCES + 1];
++			mmio_start += resource_size(res);
++			aligned = ALIGN(mmio_start,
++					pci_resource_alignment(dev, res));
++			if (aligned > mmio_start)
++				remaining_mmio -= aligned - mmio_start;
++
++			res = &dev->resource[PCI_BRIDGE_RESOURCES + 2];
++			mmio_pref_start += resource_size(res);
++			aligned = ALIGN(mmio_pref_start,
++					pci_resource_alignment(dev, res));
++			if (aligned > mmio_pref_start)
++				remaining_mmio_pref -= aligned - mmio_pref_start;
+ 		}
+ 	}
+ }
+-- 
+2.16.3
+
