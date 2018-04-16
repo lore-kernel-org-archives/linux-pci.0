@@ -1,79 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay6.synopsys.com ([198.182.37.59]:36058 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757661AbeD0MAO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 08:00:14 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v8 8/9] PCI: dwc: Small computation improvement
-Date: Fri, 27 Apr 2018 13:00:03 +0100
-Message-Id: <a0bb1eb13d2f2a156c3b5a99d6140c07b6b56fe4.1524829928.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=UnEt=HF=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=UnEt=HF=codeaurora.org=poza@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 16 Apr 2018 19:42:44 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Philippe Ombredanne <pombredanne@nexb.com>, Thomas Gleixner
+ <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate
+ Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
+ Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Timur Tabi
+ <timur@codeaurora.org>
+Subject: Re: [PATCH v13 0/6] Address error and recovery for AER and DPC
+In-Reply-To: <20180416132753.GA28657@bhelgaas-glaptop.roam.corp.google.com>
+References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
+ <20180416031600.GB80087@bhelgaas-glaptop.roam.corp.google.com>
+ <5b4e667f-bead-a007-78dd-e42d3194f232@codeaurora.org>
+ <9301606a70a213c180d9e6764b002cf9@codeaurora.org>
+ <20180416132753.GA28657@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <0b94f5a75fbfec9063e2c07006be3fbb@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace a division by 2 operation for a right shift rotation of 1 bit.
+On 2018-04-16 18:57, Bjorn Helgaas wrote:
+> On Mon, Apr 16, 2018 at 11:33:13AM +0530, poza@codeaurora.org wrote:
+>> On 2018-04-16 09:23, Sinan Kaya wrote:
+>> > On 4/15/2018 11:16 PM, Bjorn Helgaas wrote:
+>> > > On Mon, Apr 09, 2018 at 10:41:48AM -0400, Oza Pawandeep wrote:
+>> > > > This patch set brings in error handling support for DPC
+>> > > >
+>> > > > The current implementation of AER and error message broadcasting
+>> > > > to the
+>> > > > EP driver is tightly coupled and limited to AER service driver.
+>> > > > It is important to factor out broadcasting and other link handling
+>> > > > callbacks. So that not only when AER gets triggered, but also
+>> > > > when DPC get
+>> > > > triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+>> > > >
+>> > > > DPC should behave identical to AER as far as error handling is
+>> > > > concerned.
+>> > > > DPC should remove the devices and not to do recovery for hotplug
+>> > > > enabled system.
+>> > >
+>> > > Is there a specific bug that's fixed by these patches?  I didn't see
+>> > > one mentioned in the changelogs.
+>> > >
+>> >
+>> > There is no actual bug.
+>> >
+>> > We realized that DPC and hotplug is heavily integrated today. We
+>> > have use cases for systems without hotplug support but still
+>> > support DPC. That's the problem we are trying to solve with this
+>> > patchset.
+> 
+> Apparently there's a problem with systems that have DPC but not
+> hotplug.  It will be extremely helpful if you can articulate what that
+> problem is and include it in the appropriate changelog.
+> 
+>> Adding to what Sinan said;
+>> 
+>> DPC should handle the error handling and recovery similar to AER,
+>> because finally both are attempting recovery in some or the other
+>> way, and for that error handling and recovery framework has to be
+>> loosely coupled.  It achieves uniformity and transparency to the
+>> error handling agents such as AER, DPC, with respect to recovery and
+>> error handling.
+>> 
+>> So, this patch-set tries to unify lot of things between error agents
+>> and make them behave in a well defined way. (be it error (FATAL,
+>> NON_FATAL) handling or recovery).
+> 
+> I totally support this objective.
 
-Probably any recent and decent compiler does this kind of substitution
-in order to improve code performance. Nevertheless it's a coding good
-practice whenever there is a division / multiplication by multiple of 2
-to replace it by the equivalent operation in this case, the shift
-rotation.
+Thanks Bjorn, I will include this objective in Changelog along with 
+Sinan's text.
+I am not clear on one last thing Bjorn; which is;
+do we need last patch ? patch-6 which handles hotplug case.
+Also I think we could take this patch-set as basic changes/attempt to 
+unify the code which it does.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-Acked-by: Joao Pinto <jpinto@synopsys.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Changes v3->v4:
- - Added a small explication to the log description.
-Changes v4->v5:
- - Nothing changed, just to follow the patch set version.
-Changes v5->v6:
- - Nothing changed, just to follow the patch set version.
-Changes v6->v7:
- - Nothing changed, just to follow the patch set version.
-Changes v7->v8:
- - Patch description rework for an imperative verbal mode.
+And, in the next follow-up patches we can improve upon the things such 
+as,
+whether to do different actions for FATAL cases and NON_FATAL cases. And 
+then I can make needed changes to AER and DPC
+Please let me know how this sounds.
 
- drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 5a23f78..fc55fde 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
- 	if (cfg_res) {
--		pp->cfg0_size = resource_size(cfg_res) / 2;
--		pp->cfg1_size = resource_size(cfg_res) / 2;
-+		pp->cfg0_size = resource_size(cfg_res) >> 1;
-+		pp->cfg1_size = resource_size(cfg_res) >> 1;
- 		pp->cfg0_base = cfg_res->start;
- 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
- 	} else if (!pp->va_cfg0_base) {
-@@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			break;
- 		case 0:
- 			pp->cfg = win->res;
--			pp->cfg0_size = resource_size(pp->cfg) / 2;
--			pp->cfg1_size = resource_size(pp->cfg) / 2;
-+			pp->cfg0_size = resource_size(pp->cfg) >> 1;
-+			pp->cfg1_size = resource_size(pp->cfg) >> 1;
- 			pp->cfg0_base = pp->cfg->start;
- 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
- 			break;
--- 
-2.7.4
+> 
+> Bjorn
