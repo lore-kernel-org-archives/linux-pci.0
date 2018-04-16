@@ -1,84 +1,35 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-he1eur01on0040.outbound.protection.outlook.com ([104.47.0.40]:10786
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751994AbeD3G2u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Apr 2018 02:28:50 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
-        robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
-        gregkh@linuxfoundation.org
-Cc: hch@lst.de, joro@8bytes.org, m.szyprowski@samsung.com,
-        shawnguo@kernel.org, frowand.list@gmail.com, bhelgaas@google.com,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bharat.bhushan@nxp.com, stuyoder@gmail.com,
-        laurentiu.tudor@nxp.com, leoyang.li@nxp.com,
-        Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH v4 5/6] bus: fsl-mc: supoprt dma configure for devices on fsl-mc bus
-Date: Mon, 30 Apr 2018 11:57:20 +0530
-Message-Id: <1525069641-8523-6-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
-References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
- <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <SRS0=NmO7=HF=gmail.com=hkallweit1@kernel.org>
+Return-Path: <SRS0=NmO7=HF=gmail.com=hkallweit1@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, David Miller <davem@davemloft.net>,
+ Bjorn Helgaas <helgaas@kernel.org>,
+ Realtek linux nic maintainers <nic_swsd@realtek.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Subject: [PATCH net-next 0/2] PCI: add two more values for PCIe
+ Max_Read_Request_Size and initially use them in r8169 network driver
+Message-ID: <00f1255f-acf0-4760-c20f-0b78bda44645@gmail.com>
+Date: Mon, 16 Apr 2018 21:35:42 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
----
- drivers/bus/fsl-mc/fsl-mc-bus.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+In r8169 network driver I stumbled across a magic number translating
+to PCI MRRS size 4K. The PCI core is still missing constants for
+values 2K and 4K (as defined in PCI standard).
 
-diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
-index 5d8266c..624828b 100644
---- a/drivers/bus/fsl-mc/fsl-mc-bus.c
-+++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
-@@ -127,6 +127,16 @@ static int fsl_mc_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
- 	return 0;
- }
- 
-+static int fsl_mc_dma_configure(struct device *dev)
-+{
-+	struct device *dma_dev = dev;
-+
-+	while (dev_is_fsl_mc(dma_dev))
-+		dma_dev = dma_dev->parent;
-+
-+	return of_dma_configure(dev, dma_dev->of_node, 0);
-+}
-+
- static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
- 			     char *buf)
- {
-@@ -148,6 +158,7 @@ struct bus_type fsl_mc_bus_type = {
- 	.name = "fsl-mc",
- 	.match = fsl_mc_bus_match,
- 	.uevent = fsl_mc_bus_uevent,
-+	.dma_configure  = fsl_mc_dma_configure,
- 	.dev_groups = fsl_mc_dev_groups,
- };
- EXPORT_SYMBOL_GPL(fsl_mc_bus_type);
-@@ -616,6 +627,7 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
- 		mc_dev->icid = parent_mc_dev->icid;
- 		mc_dev->dma_mask = FSL_MC_DEFAULT_DMA_MASK;
- 		mc_dev->dev.dma_mask = &mc_dev->dma_mask;
-+		mc_dev->dev.coherent_dma_mask = mc_dev->dma_mask;
- 		dev_set_msi_domain(&mc_dev->dev,
- 				   dev_get_msi_domain(&parent_mc_dev->dev));
- 	}
-@@ -633,10 +645,6 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
- 			goto error_cleanup_dev;
- 	}
- 
--	/* Objects are coherent, unless 'no shareability' flag set. */
--	if (!(obj_desc->flags & FSL_MC_OBJ_FLAG_NO_MEM_SHAREABILITY))
--		arch_setup_dma_ops(&mc_dev->dev, 0, 0, NULL, true);
--
- 	/*
- 	 * The device-specific probe callback will get invoked by device_add()
- 	 */
+So let's add these two constants and use the 4K constant in r8169.
+
+Second patch depends on the first one, therefore both patches
+preferrably should go through either PCI or netdev tree.
+
+Heiner Kallweit (2):
+  PCI: add two more values for PCIe Max_Read_Request_Size
+  r8169: replace magic numbers with PCI MRRS constant
+
+ drivers/net/ethernet/realtek/r8169.c | 39 ++++++++++++++--------------
+ include/uapi/linux/pci_regs.h        |  2 ++
+ 2 files changed, 21 insertions(+), 20 deletions(-)
+
 -- 
-1.9.1
+2.17.0
