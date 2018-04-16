@@ -1,160 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:44199 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755513AbeDWPXQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 11:23:16 -0400
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v14 3/9] PCI/PORTDRV: Implement generic find service
-Date: Mon, 23 Apr 2018 11:23:07 -0400
-Message-Id: <1524496993-29799-4-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
-References: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 04/12] iommu-helper: move the IOMMU_HELPER config symbol
+ to lib/
+To: Christoph Hellwig <hch@lst.de>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ iommu@lists.linux-foundation.org
+References: <20180415145947.1248-1-hch@lst.de>
+ <20180415145947.1248-5-hch@lst.de>
+From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+Date: Mon, 16 Apr 2018 15:13:04 +0530
+MIME-Version: 1.0
+In-Reply-To: <20180415145947.1248-5-hch@lst.de>
+Message-Id: <69224eb2-7056-4894-36d8-c6e9518df647@linux.vnet.ibm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-mips@linux-mips.org, linux-mm@kvack.org, linux-pci@vger.kernel.org,
+ x86@kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+ sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch implements generic pcie_port_find_service() routine.
+On 04/15/2018 08:29 PM, Christoph Hellwig wrote:
+> This way we have one central definition of it, and user can select it as
+> needed.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
+Reviewed-by: Anshuman Khandual <khandual@linux.vnet.ibm.com>
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 4acec3b..aeb8236 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -231,32 +231,6 @@ static bool find_source_device(struct pci_dev *parent,
- 	return true;
- }
- 
--static int find_aer_service_iter(struct device *device, void *data)
--{
--	struct pcie_port_service_driver *service_driver, **drv;
--
--	drv = (struct pcie_port_service_driver **) data;
--
--	if (device->bus == &pcie_port_bus_type && device->driver) {
--		service_driver = to_service_driver(device->driver);
--		if (service_driver->service == PCIE_PORT_SERVICE_AER) {
--			*drv = service_driver;
--			return 1;
--		}
--	}
--
--	return 0;
--}
--
--struct pcie_port_service_driver *find_aer_service(struct pci_dev *dev)
--{
--	struct pcie_port_service_driver *drv = NULL;
--
--	device_for_each_child(&dev->dev, &drv, find_aer_service_iter);
--
--	return drv;
--}
--
- /**
-  * handle_error_source - handle logging error into an event log
-  * @aerdev: pointer to pcie_device data structure of the root port
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index c6a9a72..98aeec4 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -193,10 +193,8 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
- 		udev = dev->bus->self;
- 	}
- 
--#if IS_ENABLED(CONFIG_PCIEAER)
- 	/* Use the aer driver of the component firstly */
--	driver = find_aer_service(udev);
--#endif
-+	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
- 
- 	if (driver && driver->reset_link) {
- 		status = driver->reset_link(udev);
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index 9a8d0dd..419bdf3 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -79,5 +79,6 @@ static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask)
- static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask){}
- #endif /* !CONFIG_ACPI */
- 
--struct pcie_port_service_driver *find_aer_service(struct pci_dev *dev);
-+struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
-+							u32 service);
- #endif /* _PORTDRV_H_ */
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index ef3bad4..94de1fa 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -23,6 +23,11 @@
- 
- bool pciehp_msi_disabled;
- 
-+struct portdrv_service_data {
-+	struct pcie_port_service_driver *drv;
-+	u32 service;
-+};
-+
- static int __init pciehp_setup(char *str)
- {
- 	if (!strncmp(str, "nomsi", 5))
-@@ -414,6 +419,46 @@ static int remove_iter(struct device *dev, void *data)
- 	return 0;
- }
- 
-+static int find_service_iter(struct device *device, void *data)
-+{
-+	struct pcie_port_service_driver *service_driver;
-+	struct portdrv_service_data *pdrvs;
-+	u32 service;
-+
-+	pdrvs = (struct portdrv_service_data *) data;
-+	service = pdrvs->service;
-+
-+	if (device->bus == &pcie_port_bus_type && device->driver) {
-+		service_driver = to_service_driver(device->driver);
-+		if (service_driver->service == service) {
-+			pdrvs->drv = service_driver;
-+			return 1;
-+		}
-+	}
-+
-+	return 0;
-+}
-+/**
-+ * pcie_port_find_service - find the service driver
-+ * @dev: PCI Express port the service devices associated with
-+ * @service: Service to find
-+ *
-+ * Find PCI Express port service driver associated with given service
-+ */
-+struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
-+							u32 service)
-+{
-+	struct pcie_port_service_driver *drv;
-+	struct portdrv_service_data pdrvs;
-+
-+	pdrvs.drv = NULL;
-+	pdrvs.service = service;
-+	device_for_each_child(&dev->dev, &pdrvs, find_service_iter);
-+
-+	drv = pdrvs.drv;
-+	return drv;
-+}
-+
- /**
-  * pcie_port_device_remove - unregister PCI Express port service devices
-  * @dev: PCI Express port the service devices to unregister are associated with
--- 
-2.7.4
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
