@@ -1,73 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v5 09/10] PCI: dwc: Small computation improvement
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>, <kishon@ti.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
- <4fc069a2b82cc7a3790bc528a6b67636654a3a35.1523973931.git.gustavo.pimentel@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <d0a96713-9e34-2351-4301-8a2f9039e224@synopsys.com>
-Date: Tue, 17 Apr 2018 20:05:11 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:55358 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752609AbeDPDR3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 15 Apr 2018 23:17:29 -0400
+Date: Sun, 15 Apr 2018 22:17:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Wei Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v13 6/6] PCI/DPC: Do not do recovery for hotplug enabled
+ system
+Message-ID: <20180416031726.GB158153@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
+ <13efe2e8-74c8-acb4-ec58-f79b14a1f182@codeaurora.org>
+ <20180412140648.GD145698@bhelgaas-glaptop.roam.corp.google.com>
+ <ca7e5285-2e88-e130-6402-a271bb92a81e@codeaurora.org>
+ <20180412143954.GB4810@localhost.localdomain>
+ <20180412150231.GD4810@localhost.localdomain>
+ <ea977780-6f90-af5a-442f-575536038307@codeaurora.org>
+ <20180412170911.GA6424@localhost.localdomain>
+ <fa167b21-f70d-a220-5671-5ad66a0f72c0@codeaurora.org>
+ <cced24b5-c0bd-138a-0304-c87cac2ec226@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <4fc069a2b82cc7a3790bc528a6b67636654a3a35.1523973931.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cced24b5-c0bd-138a-0304-c87cac2ec226@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 3:34 PM de 4/17/2018, Gustavo Pimentel escreveu:
-> Replaces a simple division by 2 to a right shift rotation of 1 bit.
-> 
-> Probably any recent and decent compiler does this kind of substitution
-> in order to improve code performance. Nevertheless it's a coding good
-> practice whenever there is a division / multiplication by multiple of 2
-> to replace it by the equivalent operation in this case, the shift
-> rotation.
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
-> Change v1->v2:
->  - Nothing changed, just to follow the patch set version.
-> Change v2->v3:
->  - Nothing changed, just to follow the patch set version.
-> Changes v3->v4:
->  - Added a small explication to the log description.
-> Changes v4->v5:
->  - Nothing changed, just to follow the patch set version.
-> 
->  drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 5a23f78..fc55fde 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  
->  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
->  	if (cfg_res) {
-> -		pp->cfg0_size = resource_size(cfg_res) / 2;
-> -		pp->cfg1_size = resource_size(cfg_res) / 2;
-> +		pp->cfg0_size = resource_size(cfg_res) >> 1;
-> +		pp->cfg1_size = resource_size(cfg_res) >> 1;
->  		pp->cfg0_base = cfg_res->start;
->  		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
->  	} else if (!pp->va_cfg0_base) {
-> @@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  			break;
->  		case 0:
->  			pp->cfg = win->res;
-> -			pp->cfg0_size = resource_size(pp->cfg) / 2;
-> -			pp->cfg1_size = resource_size(pp->cfg) / 2;
-> +			pp->cfg0_size = resource_size(pp->cfg) >> 1;
-> +			pp->cfg1_size = resource_size(pp->cfg) >> 1;
->  			pp->cfg0_base = pp->cfg->start;
->  			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
->  			break;
-> 
+On Sat, Apr 14, 2018 at 11:53:17AM -0400, Sinan Kaya wrote:
 
-Thanks Gustavo!
+> You indicated that you want to unify the AER and DPC behavior. Let's
+> settle on what we want to do one more time. We have been going forth
+> and back on the direction.
 
-Acked-by: Joao Pinto <jpinto@synopsys.com>
+My thinking is that as much as possible, similar events should be
+handled similarly, whether the mechanism is AER, DPC, EEH, etc.
+Ideally, drivers shouldn't have to be aware of which mechanism is in
+use.
+
+Error recovery includes conventional PCI as well, but right now I
+think we're only concerned with PCIe.  The following error types are
+from PCIe r4.0, sec 6.2.2:
+
+  ERR_COR
+    Corrected by hardware with no software intervention.  Software
+    involved for logging only.
+
+    Handled by AER via pci_error_handlers; DPC is never involved.
+
+    Link is unaffected.
+
+  ERR_NONFATAL
+    A transaction is unreliable but the link is fully functional.
+
+    If DPC is not supported, handled by AER via pci_error_handlers and
+    the link is unaffected.
+
+    If DPC supported, handled by DPC (because we set
+    PCI_EXP_DPC_CTL_EN_NONFATAL) via remove/re-enumerate.
+
+  ERR_FATAL
+    The link is unreliable.
+
+    If DPC is not supported, handled by AER via pci_error_handlers and
+    the link is reset.
+
+    If DPC supported, handled by DPC via remove/re-enumerate.
+
+It doesn't seem right to me that we handle both ERR_NONFATAL and
+ERR_FATAL events differently if we happen to have DPC support in a
+switch.
+
+Maybe we should consider triggering DPC only on ERR_FATAL?  That would
+keep DPC out of the ERR_NONFATAL cases.
+
+For ERR_FATAL, maybe we should bite the bullet and use
+remove/re-enumerate for AER as well as for DPC.  That would be painful
+for higher-level software, but if we're willing to accept that pain
+for new systems that support DPC, maybe life would be better overall
+if it worked the same way on systems without DPC?
+
+Bjorn
