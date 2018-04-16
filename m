@@ -1,82 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from david.siemens.de ([192.35.17.14]:41462 "EHLO david.siemens.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751231AbeDXP2Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Apr 2018 11:28:16 -0400
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Will Deacon <will.deacon@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH 5/6] PCI: Add support for unbinding the generic PCI host controller
-Date: Tue, 24 Apr 2018 17:13:41 +0200
-Message-Id: <e420c5f6e3a6f8326d941d21bd730034d7b41cee.1524582822.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1524582822.git.jan.kiszka@siemens.com>
-References: <cover.1524582822.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1524582822.git.jan.kiszka@siemens.com>
-References: <cover.1524582822.git.jan.kiszka@siemens.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=UnEt=HF=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=UnEt=HF=codeaurora.org=poza@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 16 Apr 2018 11:03:25 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, Keith Busch <keith.busch@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
+ <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
+ <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Wei
+ Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>, Alex Williamson
+ <alex.williamson@redhat.com>
+Subject: Re: [PATCH v13 6/6] PCI/DPC: Do not do recovery for hotplug enabled
+ system
+In-Reply-To: <20180416031726.GB158153@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
+ <13efe2e8-74c8-acb4-ec58-f79b14a1f182@codeaurora.org>
+ <20180412140648.GD145698@bhelgaas-glaptop.roam.corp.google.com>
+ <ca7e5285-2e88-e130-6402-a271bb92a81e@codeaurora.org>
+ <20180412143954.GB4810@localhost.localdomain>
+ <20180412150231.GD4810@localhost.localdomain>
+ <ea977780-6f90-af5a-442f-575536038307@codeaurora.org>
+ <20180412170911.GA6424@localhost.localdomain>
+ <fa167b21-f70d-a220-5671-5ad66a0f72c0@codeaurora.org>
+ <cced24b5-c0bd-138a-0304-c87cac2ec226@codeaurora.org>
+ <20180416031726.GB158153@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <da626c40564276097ab7380ead5f0238@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+On 2018-04-16 08:47, Bjorn Helgaas wrote:
+> On Sat, Apr 14, 2018 at 11:53:17AM -0400, Sinan Kaya wrote:
+> 
+>> You indicated that you want to unify the AER and DPC behavior. Let's
+>> settle on what we want to do one more time. We have been going forth
+>> and back on the direction.
+> 
+> My thinking is that as much as possible, similar events should be
+> handled similarly, whether the mechanism is AER, DPC, EEH, etc.
+> Ideally, drivers shouldn't have to be aware of which mechanism is in
+> use.
+> 
+> Error recovery includes conventional PCI as well, but right now I
+> think we're only concerned with PCIe.  The following error types are
+> from PCIe r4.0, sec 6.2.2:
+> 
+>   ERR_COR
+>     Corrected by hardware with no software intervention.  Software
+>     involved for logging only.
+> 
+>     Handled by AER via pci_error_handlers; DPC is never involved.
+> 
+>     Link is unaffected.
+> 
+>   ERR_NONFATAL
+>     A transaction is unreliable but the link is fully functional.
+> 
+>     If DPC is not supported, handled by AER via pci_error_handlers and
+>     the link is unaffected.
+> 
+>     If DPC supported, handled by DPC (because we set
+>     PCI_EXP_DPC_CTL_EN_NONFATAL) via remove/re-enumerate.
+> 
+>   ERR_FATAL
+>     The link is unreliable.
+> 
+>     If DPC is not supported, handled by AER via pci_error_handlers and
+>     the link is reset.
+> 
+>     If DPC supported, handled by DPC via remove/re-enumerate.
+> 
+> It doesn't seem right to me that we handle both ERR_NONFATAL and
+> ERR_FATAL events differently if we happen to have DPC support in a
+> switch.
+> 
+> Maybe we should consider triggering DPC only on ERR_FATAL?  That would
+> keep DPC out of the ERR_NONFATAL cases.
+> 
+> For ERR_FATAL, maybe we should bite the bullet and use
+> remove/re-enumerate for AER as well as for DPC.  That would be painful
+> for higher-level software, but if we're willing to accept that pain
+> for new systems that support DPC, maybe life would be better overall
+> if it worked the same way on systems without DPC?
+> 
+> Bjorn
 
-Particularly useful when working in virtual environments where the
-controller may come and go, but possibly not only there.
+This had crossed my mind when I first looked at the code.
+DPC is getting triggered for both ERR_NONFATAL and ERR_FATAL case.
+I thought the primary purpose of DPC to recover fatal errors, by 
+triggering HW recovery.
+but what if some platform wants to handle both FATAL and NON_FATAL with 
+DPC ?
 
-CC: Will Deacon <will.deacon@arm.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
----
- drivers/pci/host/pci-host-common.c  | 13 +++++++++++++
- drivers/pci/host/pci-host-generic.c |  1 +
- include/linux/pci-ecam.h            |  1 +
- 3 files changed, 15 insertions(+)
+As you said AER FATAL cases and DPC FATAL cases should be handled 
+similarly.
+e.g. remove/re-enumerate the devices.
 
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-index 5d028f53fdcd..d8f10451f273 100644
---- a/drivers/pci/host/pci-host-common.c
-+++ b/drivers/pci/host/pci-host-common.c
-@@ -101,5 +101,18 @@ int pci_host_common_probe(struct platform_device *pdev,
- 		return ret;
- 	}
- 
-+	platform_set_drvdata(pdev, bridge->bus);
-+	return 0;
-+}
-+
-+int pci_host_common_remove(struct platform_device *pdev)
-+{
-+	struct pci_bus *bus = platform_get_drvdata(pdev);
-+
-+	pci_lock_rescan_remove();
-+	pci_stop_root_bus(bus);
-+	pci_remove_root_bus(bus);
-+	pci_unlock_rescan_remove();
-+
- 	return 0;
- }
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 45319ee3b484..dea3ec7592a2 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -95,5 +95,6 @@ static struct platform_driver gen_pci_driver = {
- 		.suppress_bind_attrs = true,
- 	},
- 	.probe = gen_pci_probe,
-+	.remove = pci_host_common_remove,
- };
- builtin_platform_driver(gen_pci_driver);
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-index baadad1aabbc..29efa09d686b 100644
---- a/include/linux/pci-ecam.h
-+++ b/include/linux/pci-ecam.h
-@@ -62,5 +62,6 @@ extern struct pci_ecam_ops xgene_v2_pcie_ecam_ops; /* APM X-Gene PCIe v2.x */
- /* for DT-based PCI controllers that support ECAM */
- int pci_host_common_probe(struct platform_device *pdev,
- 			  struct pci_ecam_ops *ops);
-+int pci_host_common_remove(struct platform_device *pdev);
- #endif
- #endif
--- 
-2.13.6
+while NON_FATAL case; only AER would come into picture.
+if some platform would like to handle DPC NON_FATAL then it should 
+follow AER NON_FATAL path  (where it does not do remove/re-enumerate)
+
+And the case where hotplug is enabled, remove/re-enumerate more sense in 
+case of ERR_FATAL.
+And the case where hotplug is disabled, only re-enumeration is required. 
+(no need to remove the devices)
+but then do we need to handle this case specifically, what is the harm 
+in removing the devices in all the cases followed by re-enumerate ?
+
+Regards,
+Oza.
