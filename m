@@ -1,118 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH RESEND v4 1/9] PCI: Take all bridges into account when calculating bus numbers for extension
-Date: Tue,  3 Apr 2018 17:52:17 +0300
-Message-Id: <20180403145225.22371-2-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180403145225.22371-1-mika.westerberg@linux.intel.com>
-References: <20180403145225.22371-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 01/12] iommu-common: move to arch/sparc
+To: Christoph Hellwig <hch@lst.de>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ iommu@lists.linux-foundation.org
+References: <20180415145947.1248-1-hch@lst.de>
+ <20180415145947.1248-2-hch@lst.de>
+From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+Date: Mon, 16 Apr 2018 14:26:07 +0530
+MIME-Version: 1.0
+In-Reply-To: <20180415145947.1248-2-hch@lst.de>
+Message-Id: <f0305a92-b206-1567-3c25-67fbd194047d@linux.vnet.ibm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-mips@linux-mips.org, linux-mm@kvack.org, linux-pci@vger.kernel.org,
+ x86@kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+ sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When distributing extra buses between hotplug bridges for future
-extension we currently fail to take into account the fact that there
-might be non-hotplug bridges on the bus after the hotplug bridges. In
-this particular system we have following topology:
+On 04/15/2018 08:29 PM, Christoph Hellwig wrote:
+> This code is only used by sparc, and all new iommu drivers should use the
+> drivers/iommu/ framework.  Also remove the unused exports.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-  01:00.0 --+- 02:00.0 -- Thunderbolt host controller
-            +- 02:01.0 (HotPlug+)
-            \- 02:02.0 -- xHCI host controller
+Right, these functions are used only from SPARC architecture. Simple
+git grep confirms it as well. Hence it makes sense to move them into
+arch code instead.
 
-Now, pci_scan_child_bus_extend() is supposed to distribute remaining bus
-numbers to the hotplug bridge at 02:01.0 but only after all bridges on
-that bus have been been accounted for. Since we don't check upfront that
-there will be another non-hotplug bridge after the hotplug bridge
-02:01.0 it will inadvertently extend over the bus space of the
-non-hotplug bridge:
+git grep iommu_tbl_pool_init
+----------------------------
 
-  pci 0000:01:00.0: PCI bridge to [bus 02-39]
-  ...
-  pci_bus 0000:04: [bus 04-39] extended by 0x35
-  pci_bus 0000:04: bus scan returning with max=39
-  pci_bus 0000:04: busn_res: [bus 04-39] end is updated to 39
-  pci 0000:02:02.0: scanning [bus 00-00] behind bridge, pass 1
-  pci_bus 0000:3a: scanning bus
-  pci_bus 0000:3a: bus scan returning with max=3a
-  pci_bus 0000:3a: busn_res: [bus 3a] end is updated to 3a
-  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
-  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
-  pci_bus 0000:02: bus scan returning with max=3a
-  pci_bus 0000:02: busn_res: [bus 02-39] end can not be updated to 3a
+arch/sparc/include/asm/iommu-common.h:extern void iommu_tbl_pool_init(struct iommu_map_table *iommu,
+arch/sparc/kernel/iommu-common.c:void iommu_tbl_pool_init(struct iommu_map_table *iommu,
+arch/sparc/kernel/iommu.c:      iommu_tbl_pool_init(&iommu->tbl, num_tsb_entries, IO_PAGE_SHIFT,
+arch/sparc/kernel/ldc.c:        iommu_tbl_pool_init(iommu, num_tsb_entries, PAGE_SHIFT,
+arch/sparc/kernel/pci_sun4v.c:  iommu_tbl_pool_init(&atu->tbl, num_iotte, IO_PAGE_SHIFT,
+arch/sparc/kernel/pci_sun4v.c:  iommu_tbl_pool_init(&iommu->tbl, num_tsb_entries, IO_PAGE_SHIFT,
 
-Resulting 'lspci -t' output looks like this:
+git grep iommu_tbl_range_alloc
+------------------------------
 
-  +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
-                             ^^   +-01.0-[04-39]--
-                                  \-02.0-[3a]----00.0
-                                          ^^
-The xHCI host controller (3a:00.0) behind downstream bridge at 02:02.0
-is not usable anymore.
+arch/sparc/include/asm/iommu-common.h:extern unsigned long iommu_tbl_range_alloc(struct device *dev,
+arch/sparc/kernel/iommu-common.c:unsigned long iommu_tbl_range_alloc(struct device *dev,
+arch/sparc/kernel/iommu.c:      entry = iommu_tbl_range_alloc(dev, &iommu->tbl, npages, NULL,
+arch/sparc/kernel/iommu.c:              entry = iommu_tbl_range_alloc(dev, &iommu->tbl, npages,
+arch/sparc/kernel/ldc.c:        entry = iommu_tbl_range_alloc(NULL, &iommu->iommu_map_table,
+arch/sparc/kernel/pci_sun4v.c:  entry = iommu_tbl_range_alloc(dev, tbl, npages, NULL,
+arch/sparc/kernel/pci_sun4v.c:  entry = iommu_tbl_range_alloc(dev, tbl, npages, NULL,
+arch/sparc/kernel/pci_sun4v.c:          entry = iommu_tbl_range_alloc(dev, tbl, npages,
 
-To fix this reserve at least one bus for each bridge during scanning of
-already configured bridges. Then we use this information in the second
-scan to correct the available extra bus space for hotplug bridges.
+git grep iommu_tbl_range_free
+-----------------------------
 
-After this change the 'lspci -t' output is what is expected:
+arch/sparc/include/asm/iommu-common.h:extern void iommu_tbl_range_free(struct iommu_map_table *iommu,
+arch/sparc/kernel/iommu-common.c:void iommu_tbl_range_free(struct iommu_map_table *iommu, u64 dma_addr,
+arch/sparc/kernel/iommu.c:      iommu_tbl_range_free(&iommu->tbl, dvma, npages, IOMMU_ERROR_CODE);
+arch/sparc/kernel/iommu.c:      iommu_tbl_range_free(&iommu->tbl, bus_addr, npages, IOMMU_ERROR_CODE);
+arch/sparc/kernel/iommu.c:                      iommu_tbl_range_free(&iommu->tbl, vaddr, npages,
+arch/sparc/kernel/iommu.c:              iommu_tbl_range_free(&iommu->tbl, dma_handle, npages,
+arch/sparc/kernel/ldc.c:        iommu_tbl_range_free(&iommu->iommu_map_table, cookie, npages, entry);
+arch/sparc/kernel/pci_sun4v.c:  iommu_tbl_range_free(tbl, *dma_addrp, npages, IOMMU_ERROR_CODE);
+arch/sparc/kernel/pci_sun4v.c:  iommu_tbl_range_free(tbl, dvma, npages, IOMMU_ERROR_CODE);
+arch/sparc/kernel/pci_sun4v.c:  iommu_tbl_range_free(tbl, bus_addr, npages, IOMMU_ERROR_CODE);
+arch/sparc/kernel/pci_sun4v.c:  iommu_tbl_range_free(tbl, bus_addr, npages, IOMMU_ERROR_CODE);
+arch/sparc/kernel/pci_sun4v.c:                  iommu_tbl_range_free(tbl, vaddr, npages,
+arch/sparc/kernel/pci_sun4v.c:          iommu_tbl_range_free(tbl, dma_handle, npages,
 
-  +-1b.0-[01-39]----00.0-[02-39]--+-00.0-[03]----00.0
-                                  +-01.0-[04-38]--
-                                  \-02.0-[39]----00.0
+Reviewed-by: Anshuman Khandual <khandual@linux.vnet.ibm.com>
 
-Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
-Reported-by: Mario Limonciello <mario.limonciello@dell.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: stable@vger.kernel.org
----
- drivers/pci/probe.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ef5377438a1e..8c4715df62e7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2561,7 +2561,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 	for_each_pci_bridge(dev, bus) {
- 		cmax = max;
- 		max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
--		used_buses += cmax - max;
-+		/*
-+		 * Reserve one bus for each bridge now to avoid
-+		 * extending hotplug bridges too much during the second
-+		 * scan below.
-+		 */
-+		used_buses++;
-+		if (cmax - max > 1)
-+			used_buses += cmax - max - 1;
- 	}
- 
- 	/* Scan bridges that need to be reconfigured */
-@@ -2584,12 +2591,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 			 * bridges if any.
- 			 */
- 			buses = available_buses / hotplug_bridges;
--			buses = min(buses, available_buses - used_buses);
-+			buses = min(buses, available_buses - used_buses + 1);
- 		}
- 
- 		cmax = max;
- 		max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
--		used_buses += max - cmax;
-+		/* One bus is already accounted so don't add it again */
-+		if (max - cmax > 1)
-+			used_buses += max - cmax - 1;
- 	}
- 
- 	/*
--- 
-2.16.2
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
