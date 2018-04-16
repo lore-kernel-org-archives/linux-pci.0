@@ -1,97 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 24 Apr 2018 18:05:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v5 6/9] PCI: Move resource distribution for a single
- bridge outside of the loop
-Message-ID: <20180424230558.GA101734@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
- <20180416103453.46232-7-mika.westerberg@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC 01/10] PCI: dwc: Add MSI-X callbacks handler
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
+        <adouglas@cadence.com>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>
+References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+ <77b7b2687e9618d3f7d1f11c3fc6ecec9a9442ef.1523379766.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <0b7023d9-29c6-0993-07d3-b046d25b67ff@ti.com>
+Date: Mon, 16 Apr 2018 14:59:34 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180416103453.46232-7-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <77b7b2687e9618d3f7d1f11c3fc6ecec9a9442ef.1523379766.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 16, 2018 at 01:34:50PM +0300, Mika Westerberg wrote:
-> There is a special case where there is only single bridge on the bus. In
-> that case we just assign all resources to it. Currently this is done as
-> a part of the resource distribution loop but it does not have to be
-> there, and moving it outside actually improves readability.
+Hi Gustavo,
+
+On Tuesday 10 April 2018 10:44 PM, Gustavo Pimentel wrote:
+> Changes the pcie_raise_irq function signature, namely the interrupt_num
+> variable type from u8 to u16 to accommodate the MSI-X maximum interrupts
+> of 2048.
 > 
-> While there we can add hotplug_bridges == 1 && normal_bridges == 0 to
-> the same block because they are dealt the same way.
+> Implements a PCIe config space capability iterator function to search and
+> save the MSI and MSI-X pointers. With this method the code becomes more
+> generic and flexible.
 > 
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Implements MSI-X set/get functions for sysfs interface in order to change
+> the EP entries number.
+> 
+> Implements EP MSI-X interface for triggering interruptions.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 > ---
->  drivers/pci/setup-bus.c | 28 +++++++++++++++++-----------
->  1 file changed, 17 insertions(+), 11 deletions(-)
+>  drivers/pci/dwc/pci-dra7xx.c           |   2 +-
+>  drivers/pci/dwc/pcie-artpec6.c         |   2 +-
+>  drivers/pci/dwc/pcie-designware-ep.c   | 145 ++++++++++++++++++++++++++++++++-
+>  drivers/pci/dwc/pcie-designware-plat.c |   6 +-
+>  drivers/pci/dwc/pcie-designware.h      |  23 +++++-
+>  5 files changed, 173 insertions(+), 5 deletions(-)
 > 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index eb3059fb7f63..a1b63c7745d0 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1947,6 +1947,22 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
->  	mmio_start = mmio_res->start;
->  	mmio_pref_start = mmio_pref_res->start;
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index ed8558d..5265725 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -369,7 +369,7 @@ static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
+>  }
 >  
-> +	/*
-> +	 * There is only one bridge on the bus so it gets all available
-> +	 * resources which it can then distribute to the possible
-> +	 * hotplug bridges below.
-> +	 */
-> +	if ((hotplug_bridges == 0 && normal_bridges == 1) ||
-> +	    (hotplug_bridges == 1 && normal_bridges == 0)) {
-
-  if (hotplug_bridges + normal_bridges == 1) {
-
-Don't repost just for this; I can fold it in if you agree.
-
-> +		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
-> +		if (dev->subordinate) {
-> +			pci_bus_distribute_available_resources(dev->subordinate,
-> +				add_list, available_io, available_mmio,
-> +				available_mmio_pref);
-> +		}
-> +		return;
-> +	}
-> +
->  	/*
->  	 * Go over devices on this bus and distribute the remaining
->  	 * resource space between hotplug bridges.
-> @@ -1959,17 +1975,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
->  		if (!b)
->  			continue;
+>  static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+> -				 enum pci_epc_irq_type type, u8 interrupt_num)
+> +				 enum pci_epc_irq_type type, u16 interrupt_num)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+> index e66cede..96dc259 100644
+> --- a/drivers/pci/dwc/pcie-artpec6.c
+> +++ b/drivers/pci/dwc/pcie-artpec6.c
+> @@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
+>  }
 >  
-> -		if (!hotplug_bridges && normal_bridges == 1) {
-> -			/*
-> -			 * There is only one bridge on the bus (upstream
-> -			 * port) so it gets all available resources
-> -			 * which it can then distribute to the possible
-> -			 * hotplug bridges below.
-> -			 */
-> -			pci_bus_distribute_available_resources(b, add_list,
-> -				available_io, available_mmio,
-> -				available_mmio_pref);
-> -		} else if (dev->is_hotplug_bridge) {
-> +		if (dev->is_hotplug_bridge) {
->  			resource_size_t io, mmio, mmio_pref;
+>  static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+> -				  enum pci_epc_irq_type type, u8 interrupt_num)
+> +				  enum pci_epc_irq_type type, u16 interrupt_num)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
 >  
->  			/*
-> -- 
-> 2.16.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index 15b22a6..874d4c2 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -40,6 +40,44 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+>  	__dw_pcie_ep_reset_bar(pci, bar, 0);
+>  }
+>  
+> +void dw_pcie_ep_find_cap_addr(struct dw_pcie_ep *ep)
+> +{
+
+This should be implemented in a generic way similar to pci_find_capability().
+It'll be useful when we try to implement other capabilities as well.
+
+Thanks
+Kishon
