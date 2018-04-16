@@ -1,66 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:31482 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752410AbeDCK46 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Apr 2018 06:56:58 -0400
-Subject: Re: [PATCH 4/8] misc: pci_endpoint_test: Add designware EP entry
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 8/9] PCI: dwc: Small computation improvement
+To: Fabio Estevam <festevam@gmail.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
         "bhelgaas@google.com" <bhelgaas@google.com>,
         "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
         "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "kishon@ti.com" <kishon@ti.com>,
         "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
- <1bc09dfd205d0721366267e023550c4a5a4a84db.1522235224.git.gustavo.pimentel@synopsys.com>
- <76c6e35c-5659-7313-a1b4-aa93e323ef79@ti.com>
- <77999353-fd50-b90f-ab00-b2cd29048257@synopsys.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <90dce42c-f128-3135-be9a-77c9aec9482e@ti.com>
-Date: Tue, 3 Apr 2018 16:26:48 +0530
+References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
+ <5181f7ffbb9d2889974c49d84e72042251adf8b6.1523266508.git.gustavo.pimentel@synopsys.com>
+ <003001d3d128$39f3eaa0$addbbfe0$@gmail.com>
+ <c295bc5b-e67a-290c-3316-56a1cc001538@synopsys.com>
+ <CAOMZO5Acd-5ed_FivBf=GMmKLxipnossDtG4ptzq5-LzcNBhjA@mail.gmail.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <b8f10ee2-b580-9d49-247f-6c65804816c4@synopsys.com>
+Date: Mon, 16 Apr 2018 09:35:55 +0100
 MIME-Version: 1.0
-In-Reply-To: <77999353-fd50-b90f-ab00-b2cd29048257@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAOMZO5Acd-5ed_FivBf=GMmKLxipnossDtG4ptzq5-LzcNBhjA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Hi Fabio,
 
-On Tuesday 03 April 2018 03:41 PM, Gustavo Pimentel wrote:
-> Hi Kishon,
+On 15/04/2018 14:09, Fabio Estevam wrote:
+> Hi Gustavo,
 > 
-> On 02/04/2018 06:36, Kishon Vijay Abraham I wrote:
->> Hi,
->>
->> On Wednesday 28 March 2018 05:08 PM, Gustavo Pimentel wrote:
->>> Adds the designware EP device ID entry to pci_endpoint_test driver table
->>> to allow this device to be recognize and handle by the pci_endpoint_test
->>> driver.
->>>
->>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->>> ---
->>>  drivers/misc/pci_endpoint_test.c | 1 +
->>>  1 file changed, 1 insertion(+)
->>>
->>> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
->>> index 320276f..e80c533 100644
->>> --- a/drivers/misc/pci_endpoint_test.c
->>> +++ b/drivers/misc/pci_endpoint_test.c
->>> @@ -632,6 +632,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
->>>  static const struct pci_device_id pci_endpoint_test_tbl[] = {
->>>  	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
->>>  	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
->>> +	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, 0xedda) },
->>
->> Add device ids to include/linux/pci_ids.h and use the macro here.
+> On Wed, Apr 11, 2018 at 4:40 AM, Gustavo Pimentel
+> <gustavo.pimentel@synopsys.com> wrote:
 > 
-> Add device id request sent, as soon as I get a positive confirmation from them
-> I'll change for the macro. It works for you?
+>> Can be this one?
+>>
+>> Probably any recent and decent compiler does this kind of substitution
+>> in order to improve code performance. Nevertheless it's a coding good
+>> practice whenever there is a division / multiplication by multiple of 2
+>> to replace it by the equivalent operation in this case, the shift
+>> rotation.
+> 
+> Subject says that this patch provides a computation improvement, but
+> as you said above the compiler
+> will perform the shift, so it doesn't seem we will get any benefit.
 
-IMO only confirmed device ID's should be used.
+In the worth case there is no performance, so it will not hurt having it.
+However depending the compiler and the platform this can bring some improvement.
+For instance like Jingoo said: "The most platforms using 'dwc' are based on ARM
+CPUs. So, the shift rotation can be better."
 
-Thanks
-Kishon
+It's just a attempt to improve the code that doesn't bring any harm.
+
+> 
+> IMHO the original code has better readability as it makes easier to
+> understand that pp->cfg0_size will get the half of
+> resource_size(pp->cfg) size.
+
+Personally I prefer the shift rotation rather the division by 2. But in my case
+I'm used to use/see this type of operation, but it's like I said it's my
+personal opinion.
+
+> 
+> I would say it is better to drop this patch from the series.
+
+Let's see this patch inflicts pain on someone else, in that case I'll remove
+from the series.
+
+> 
+> Thanks
+> 
+
+Regards,
+Gustavo
