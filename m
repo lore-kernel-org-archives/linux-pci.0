@@ -1,76 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v2 04/10] PCI: Add dev parameter to __of_pci_get_host_bridge_resources()
-Date: Mon, 30 Apr 2018 07:48:38 +0200
-Message-Id: <cfab525f3d0436f75187fbd65907ada909d7692f.1525067324.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
-References: <cover.1525067324.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
-References: <cover.1525067324.git.jan.kiszka@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:59620 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754834AbeDPNrk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 16 Apr 2018 09:47:40 -0400
+Date: Mon, 16 Apr 2018 14:48:30 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: songxiaowei <songxiaowei@hisilicon.com>
+Cc: Loic Poulain <loic.poulain@linaro.org>,
+        Wangbinghui <wangbinghui@hisilicon.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Guodong Xu <guodong.xu@linaro.org>
+Subject: Re: =?utf-8?B?562U5aSN?= =?utf-8?Q?=3A?= [PATCH] PCI: kirin: Fix
+ reset gpio name
+Message-ID: <20180416134830.GA32565@red-moon>
+References: <1522747141-8299-1-git-send-email-loic.poulain@linaro.org>
+ <CAMZdPi-jsf0_oYvdUtobr+pJyaWomFv7MWcZRr_P7xBfi_8-rw@mail.gmail.com>
+ <99B4C6BADD9E3241B25E52B02BA737C54126803E@DGGEMA505-MBS.china.huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <99B4C6BADD9E3241B25E52B02BA737C54126803E@DGGEMA505-MBS.china.huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+On Mon, Apr 16, 2018 at 11:48:52AM +0000, songxiaowei wrote:
+> It's a bug indeed, thank you very much for the patch. I think the
+> patch is ok.
 
-When non-NULL, use the new dev parameter of
-__of_pci_get_host_bridge_resources() to allocate the resource data
-structures via devm_kzalloc. That allows to release them automatically
-during device destruction.
+Is this an ACK ? Please provide one if you want me to merge this
+fix.
 
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
----
- drivers/pci/of.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+Lorenzo
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 375de447a58e..bfa282b538d5 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -243,7 +243,7 @@ void of_pci_check_probe_only(void)
- EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
- 
- #if defined(CONFIG_OF_ADDRESS)
--static int __of_pci_get_host_bridge_resources(
-+static int __of_pci_get_host_bridge_resources(struct device *dev,
- 			struct device_node *dev_node,
- 			unsigned char busno, unsigned char bus_max,
- 			struct list_head *resources, resource_size_t *io_base)
-@@ -259,7 +259,10 @@ static int __of_pci_get_host_bridge_resources(
- 	if (io_base)
- 		*io_base = (resource_size_t)OF_BAD_ADDR;
- 
--	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
-+	if (dev)
-+		bus_range = devm_kzalloc(dev,sizeof(*bus_range), GFP_KERNEL);
-+	else
-+		bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
- 	if (!bus_range)
- 		return -ENOMEM;
- 
-@@ -303,7 +306,11 @@ static int __of_pci_get_host_bridge_resources(
- 		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
- 			continue;
- 
--		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-+		if (dev)
-+			res = devm_kzalloc(dev, sizeof(struct resource),
-+					   GFP_KERNEL);
-+		else
-+			res = kzalloc(sizeof(struct resource), GFP_KERNEL);
- 		if (!res) {
- 			err = -ENOMEM;
- 			goto parse_failed;
-@@ -365,7 +372,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev_node,
- 			unsigned char busno, unsigned char bus_max,
- 			struct list_head *resources, resource_size_t *io_base)
- {
--	return __of_pci_get_host_bridge_resources(dev_node, busno,
-+	return __of_pci_get_host_bridge_resources(NULL, dev_node, busno,
- 						  bus_max, resources, io_base);
- }
- EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
--- 
-2.13.6
+> -----邮件原件-----
+> 发件人: Loic Poulain [mailto:loic.poulain@linaro.org] 
+> 发送时间: 2018年4月16日 19:35
+> 收件人: songxiaowei <songxiaowei@hisilicon.com>; Wangbinghui <wangbinghui@hisilicon.com>
+> 抄送: linux-pci@vger.kernel.org; Bjorn Helgaas <bhelgaas@google.com>; lorenzo.pieralisi@arm.com; Loic Poulain <loic.poulain@linaro.org>; Guodong Xu <guodong.xu@linaro.org>
+> 主题: Re: [PATCH] PCI: kirin: Fix reset gpio name
+> 
+> Hi Xiaowei,
+> 
+> On 3 April 2018 at 11:19, Loic Poulain <loic.poulain@linaro.org> wrote:
+> > As documented in the device-tree bindings (pci/kirin-pcie.txt) and 
+> > defined in existing device-tree (hi3660.dtsi), the reset gpio name is 
+> > 'reset-gpios'. However, driver looks for a 'reset-gpio' resource which 
+> > makes the driver probe fail. Fix this.
+> >
+> > Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe 
+> > controller driver")
+> > Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+> 
+> 
+> Are you still maintaining this driver ? Binghui's email seems to be invalid now.
+> 
+> Regards,
+> Loic
