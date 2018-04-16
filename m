@@ -1,67 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58220 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752507AbeDSUQ2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 19 Apr 2018 16:16:28 -0400
-Subject: [PATCH 1/4] lspci: Clarify unknown capability IDs
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org
-Date: Thu, 19 Apr 2018 15:16:26 -0500
-Message-ID: <152416898648.71364.15417323482028209640.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152416880512.71364.16029919502694064334.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152416880512.71364.16029919502694064334.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [Regression] PCI / PM: Simplify device wakeup settings code
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        1745646@bugs.launchpad.net
+References: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
+ <CAJZ5v0j8GAatWoAra37y3c-ti2Ft5am75KONgEkjB6AaypkCqg@mail.gmail.com>
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Message-ID: <ae84e595-dede-1409-4aff-3a29a310f2ba@canonical.com>
+Date: Mon, 16 Apr 2018 11:31:08 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0j8GAatWoAra37y3c-ti2Ft5am75KONgEkjB6AaypkCqg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On 04/13/2018 05:34 PM, Rafael J. Wysocki wrote:
+> On Fri, Apr 13, 2018 at 7:56 PM, Joseph Salisbury
+> <joseph.salisbury@canonical.com> wrote:
+>> Hi Rafael,
+>>
+>> A kernel bug report was opened against Ubuntu [0].  After a kernel
+>> bisect, it was found that reverting the following two commits resolved
+>> this bug:
+>>
+>> 0ce3fcaff929 ("PCI / PM: Restore PME Enable after config space restoration")
+>> 0847684cfc5f("PCI / PM: Simplify device wakeup settings code")
+>>
+>> This is a regression introduced in v4.13-rc1 and still exists in
+>> mainline.  The bug causes the battery to drain when the system is
+>> powered down and unplugged, which does not happed prior to these two
+>> commits.
+> What system and what do you mean by "powered down"?  How much time
+> does it take for the battery to drain now?
+By powered down, the bug reporter is saying physically powered off and
+unplugged.  The system is a HP laptop:
 
-For capabilities we don't know how to decode, we print the config address,
-version, and capability ID:
+dmi.chassis.vendor: HP
+dmi.product.family: 103C_5335KV HP Notebook
+dmi.product.name: HP Notebook
+vendor_id    : GenuineIntel
+cpu family    : 6
 
-  Capabilities: [220 v1] #19
 
-This doesn't clearly identify the capability ID ("19"), whether it is a
-PCI-compatible Capability ID or an Extended Capability ID (although you can
-infer this by whether the address is 2 or 3 digits), or the fact that the
-ID is printed in hex, which makes it hard to parse this manually.
-
-Add a label ("Capability ID" or "Extended Capability ID") and print a "0x"
-prefix so it's clear the value is in hex:
-
-  Capabilities: [220 v1] Extended Capability ID 0x19
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- ls-caps.c  |    2 +-
- ls-ecaps.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/ls-caps.c b/ls-caps.c
-index 3135224..bc7829c 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -1599,7 +1599,7 @@ show_caps(struct device *d, int where)
- 	      cap_ea(d, where, cap);
- 	      break;
- 	    default:
--	      printf("#%02x [%04x]\n", id, cap);
-+	      printf("Capability ID %#02x [%04x]\n", id, cap);
- 	    }
- 	  where = next;
- 	}
-diff --git a/ls-ecaps.c b/ls-ecaps.c
-index 800a032..cb3d46d 100644
---- a/ls-ecaps.c
-+++ b/ls-ecaps.c
-@@ -802,7 +802,7 @@ show_ext_caps(struct device *d, int type)
- 	    cap_ptm(d, where);
- 	    break;
- 	  default:
--	    printf("#%02x\n", id);
-+	    printf("Extended Capability ID %#02x\n", id);
- 	    break;
- 	}
-       where = (header >> 20) & ~3;
+>
+>> The bisect actually pointed to commit de3ef1e, but reverting
+>> these two commits fixes the issue.
+>>
+>> I was hoping to get your feedback, since you are the patch author.  Do
+>> you think gathering any additional data will help diagnose this issue,
+>> or would it be best to submit a revert request?
+> First, reverting these is not an option or you will break systems
+> relying on them now.  4.13 is three releases back at this point.
+>
+> Second, your issue appears to be related to the suspend/shutdown path
+> whereas commit 0ce3fcaff929 is mostly about resume, so presumably the
+> change in pci_enable_wake() causes the problem to happen.  Can you try
+> to revert this one alone and see if that helps?
+A test kernel with commits 0ce3fcaff929 and de3ef1eb1cd0 reverted was
+tested.  However, the test kernel still exhibited the bug.
