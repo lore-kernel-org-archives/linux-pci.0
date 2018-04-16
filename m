@@ -1,41 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:55616 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753102AbeDLVIP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Apr 2018 17:08:15 -0400
-Received: by mail-wm0-f65.google.com with SMTP id b127so990809wmf.5
-        for <linux-pci@vger.kernel.org>; Thu, 12 Apr 2018 14:08:14 -0700 (PDT)
-From: Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [PATCH] PCI: Add two more values for PCIe Max_Read_Request_Size
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Message-ID: <90260d62-e136-44a3-a35b-19fac1bcfb20@gmail.com>
-Date: Thu, 12 Apr 2018 23:08:04 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=yohJ=HF=davemloft.net=davem@kernel.org>
+Return-Path: <SRS0=yohJ=HF=davemloft.net=davem@kernel.org>
+Date: Mon, 16 Apr 2018 18:06:22 -0400 (EDT)
+Message-Id: <20180416.180622.47531730658466358.davem@davemloft.net>
+To: helgaas@kernel.org
+Cc: hkallweit1@gmail.com, bhelgaas@google.com, nic_swsd@realtek.com,
+ linux-pci@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH net-next 1/2] PCI: Add two more values for PCIe
+ Max_Read_Request_Size
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20180416214204.GD28657@bhelgaas-glaptop.roam.corp.google.com>
+References: <00f1255f-acf0-4760-c20f-0b78bda44645@gmail.com>
+	<ab8696d7-59e0-1f24-0ead-757057eb50cf@gmail.com>
+	<20180416214204.GD28657@bhelgaas-glaptop.roam.corp.google.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds missing values for the max read request size.
-E.g. network driver r8169 uses a value of 4K.
+From: Bjorn Helgaas <helgaas@kernel.org>
+Date: Mon, 16 Apr 2018 16:42:04 -0500
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- include/uapi/linux/pci_regs.h | 2 ++
- 1 file changed, 2 insertions(+)
+> On Mon, Apr 16, 2018 at 09:37:13PM +0200, Heiner Kallweit wrote:
+>> This patch adds missing values for the max read request size.
+>> E.g. network driver r8169 uses a value of 4K.
+>> 
+>> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+> 
+> I'd prefer a subject line with more details, e.g.,
+> 
+>   PCI: Add #defines for 2K and 4K Max Read Request Size
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> I suspect conflicts are more likely in r8169.c so it might make more
+> sense to route these through the netdev tree.  I'd also be happy to
+> take them, so let me know if you want me to take them, David.
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 0c79eac5..699257fb 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -506,6 +506,8 @@
- #define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
- #define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
- #define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
-+#define  PCI_EXP_DEVCTL_READRQ_2048B 0x4000 /* 2048 Bytes */
-+#define  PCI_EXP_DEVCTL_READRQ_4096B 0x5000 /* 4096 Bytes */
- #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
- #define PCI_EXP_DEVSTA		10	/* Device Status */
- #define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
--- 
-2.17.0
+I'll take them into net-next, thanks Bjorn.
