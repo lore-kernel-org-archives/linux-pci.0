@@ -1,53 +1,41 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:55292 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752609AbeDPDQM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 15 Apr 2018 23:16:12 -0400
+Date: Sun, 15 Apr 2018 22:16:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v13 0/6] Address error and recovery for AER and DPC
+Message-ID: <20180416031600.GB80087@bhelgaas-glaptop.roam.corp.google.com>
+References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
-References: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 13 Apr 2018 23:34:52 +0200
-Message-ID: <CAJZ5v0j8GAatWoAra37y3c-ti2Ft5am75KONgEkjB6AaypkCqg@mail.gmail.com>
-Subject: Re: [Regression] PCI / PM: Simplify device wakeup settings code
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        1745646@bugs.launchpad.net
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 13, 2018 at 7:56 PM, Joseph Salisbury
-<joseph.salisbury@canonical.com> wrote:
-> Hi Rafael,
->
-> A kernel bug report was opened against Ubuntu [0].  After a kernel
-> bisect, it was found that reverting the following two commits resolved
-> this bug:
->
-> 0ce3fcaff929 ("PCI / PM: Restore PME Enable after config space restoration")
-> 0847684cfc5f("PCI / PM: Simplify device wakeup settings code")
->
-> This is a regression introduced in v4.13-rc1 and still exists in
-> mainline.  The bug causes the battery to drain when the system is
-> powered down and unplugged, which does not happed prior to these two
-> commits.
+On Mon, Apr 09, 2018 at 10:41:48AM -0400, Oza Pawandeep wrote:
+> This patch set brings in error handling support for DPC
+> 
+> The current implementation of AER and error message broadcasting to the
+> EP driver is tightly coupled and limited to AER service driver.
+> It is important to factor out broadcasting and other link handling
+> callbacks. So that not only when AER gets triggered, but also when DPC get
+> triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+> 
+> DPC should behave identical to AER as far as error handling is concerned.
+> DPC should remove the devices and not to do recovery for hotplug enabled system.
 
-What system and what do you mean by "powered down"?  How much time
-does it take for the battery to drain now?
-
-> The bisect actually pointed to commit de3ef1e, but reverting
-> these two commits fixes the issue.
->
-> I was hoping to get your feedback, since you are the patch author.  Do
-> you think gathering any additional data will help diagnose this issue,
-> or would it be best to submit a revert request?
-
-First, reverting these is not an option or you will break systems
-relying on them now.  4.13 is three releases back at this point.
-
-Second, your issue appears to be related to the suspend/shutdown path
-whereas commit 0ce3fcaff929 is mostly about resume, so presumably the
-change in pci_enable_wake() causes the problem to happen.  Can you try
-to revert this one alone and see if that helps?
+Is there a specific bug that's fixed by these patches?  I didn't see
+one mentioned in the changelogs.
