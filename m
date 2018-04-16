@@ -1,133 +1,118 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 1/8] bindings: PCI: designware: Example update
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
- <33aa86ee667e8b435db080b8c683cb5df1bd6544.1522235224.git.gustavo.pimentel@synopsys.com>
- <fa001440-0dfe-b84a-e5ef-9285043b5ede@ti.com>
- <36a36857-2d79-2c2d-198d-a3b65cafc768@synopsys.com>
- <c5ffa7d6-40b1-1702-c0fd-9ebb1b4197f8@ti.com>
- <170b150d-d2c6-fee8-17f7-12a3107c13ff@ti.com>
- <342e7438-ef13-e297-cc51-3df3a43a45d4@synopsys.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <ed26b2df-64fc-4f12-5097-35070eb2c7db@ti.com>
-Date: Fri, 6 Apr 2018 11:53:47 +0530
-MIME-Version: 1.0
-In-Reply-To: <342e7438-ef13-e297-cc51-3df3a43a45d4@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v5 1/9] PCI: Take all bridges into account when calculating bus numbers for extension
+Date: Mon, 16 Apr 2018 13:34:45 +0300
+Message-Id: <20180416103453.46232-2-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
+References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+When distributing extra buses between hotplug bridges for future
+extension we currently fail to take into account the fact that there
+might be non-hotplug bridges on the bus after the hotplug bridges. In
+this particular system we have following topology:
 
-On Tuesday 03 April 2018 06:43 PM, Gustavo Pimentel wrote:
-> Hi Kishon,
-> 
-> On 03/04/2018 11:53, Kishon Vijay Abraham I wrote:
->> Hi,
->>
->> On Tuesday 03 April 2018 04:22 PM, Kishon Vijay Abraham I wrote:
->>>
->>>
->>> On Tuesday 03 April 2018 04:03 PM, Gustavo Pimentel wrote:
->>>> Hi Kishon,
->>>>
->>>> On 02/04/2018 06:23, Kishon Vijay Abraham I wrote:
->>>>> Hi,
->>>>>
->>>>> On Wednesday 28 March 2018 05:08 PM, Gustavo Pimentel wrote:
->>>>>> Changes the IP registers size to accommodate the ATU unroll space.
->>>>>>
->>>>>> Replaces "ctrlreg" reg-name by "dbi" to be coherent with similar drivers.
->>>>>>
->>>>>> Replaces the pcie base address example by a real pcie base address in use.
->>>>>>
->>>>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->>>>>> ---
->>>>>>  Documentation/devicetree/bindings/pci/designware-pcie.txt | 12 ++++++------
->>>>>>  1 file changed, 6 insertions(+), 6 deletions(-)
->>>>>>
->>>>>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>>>>> index 1da7ade..6300762 100644
->>>>>> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>>>>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>>>>> @@ -1,7 +1,8 @@
->>>>>>  * Synopsys DesignWare PCIe interface
->>>>>>  
->>>>>>  Required properties:
->>>>>> -- compatible: should contain "snps,dw-pcie" to identify the core.
->>>>>> +- compatible:
->>>>>> +	"snps,dw-pcie" for RC mode;
->>>>>
->>>>> I think irrespective of RC mode or EP mode, "snps,dw-pcie" can be used to
->>>>> identify the pcie core?
->>>>
->>>> I guess so. What you suggest? I was just folling the same guideline present
->>>> here: https://urldefense.proofpoint.com/v2/url?u=https-3A__lkml.org_lkml_2017_11_3_310&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=G1MqB_DY6ZwWtvS60L9PZMHnMe6rClMnrakAyQT_hDc&s=BhQYkrcp6y3QkD23qn1I6lU882BDUfLiXjBVWQ91cmg&e=
->>>
->>> Okay, I think you should have
->>> "snps,dw-pcie-rc", "snps,dw-pcie" for RC mode;
->>>
->>> and in the later patch
->>> "snps,dw-pcie-ep", "snps,dw-pcie" for EP mode;
->>>
-> 
-> Ok, I'll change it.
-> 
->>>>
->>>>>>  - reg: Should contain the configuration address space.
->>>>>>  - reg-names: Must be "config" for the PCIe configuration space.
->>>>>>      (The old way of getting the configuration address space from "ranges"
->>>>>> @@ -41,11 +42,11 @@ EP mode:
->>>>>>  
->>>>>>  Example configuration:
->>>>>>  
->>>>>> -	pcie: pcie@dffff000 {
->>>>>> +	pcie: pcie@dfc00000 {
->>>>>>  		compatible = "snps,dw-pcie";
->>>>>> -		reg = <0xdffff000 0x1000>, /* Controller registers */
->>>>>> -		      <0xd0000000 0x2000>; /* PCI config space */
->>>>>> -		reg-names = "ctrlreg", "config";
->>>>>> +		reg = <0xdfc00000 0x302000>, /* IP registers */
->>>>>
->>>>> which version of synopsys IP is this. I think the ideal thing to do here is to
->>>>> have a separate register space for iATU.
->>>>
->>>> I also agree with that. The unroll iATU was introduced on Synopsys IP version
->>>> 4.80 and the kernel patch was release on 2016-08-10
->>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_657796_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=G1MqB_DY6ZwWtvS60L9PZMHnMe6rClMnrakAyQT_hDc&s=EgKKDbg4ywCxu4-lG_scYAgPMnxirsjS0uSS7SzBTeM&e=
->>>> However a separate register space for iATU implies some extra code do handle it
->>>> (and of course some tests) that don't fit into this patch series, in my point of
->>>> view. Can this task enter in the backlog in order to be done in another patch
->>>> series?
->>>
->>> Yes sure. I think we should also make sure existing binding doesn't break.
-> 
-> I'll remove the any iATU unroll reference or change from this patch to avoid any
-> confusion.
+  01:00.0 --+- 02:00.0 -- Thunderbolt host controller
+            +- 02:01.0 (HotPlug+)
+            \- 02:02.0 -- xHCI host controller
 
-No, I think it's fine to have iATU unroll reference (since kernel also seems to
-support iATU unroll).
+Now, pci_scan_child_bus_extend() is supposed to distribute remaining bus
+numbers to the hotplug bridge at 02:01.0 but only after all bridges on
+that bus have been been accounted for. Since we don't check upfront that
+there will be another non-hotplug bridge after the hotplug bridge
+02:01.0 it will inadvertently extend over the bus space of the
+non-hotplug bridge:
 
-What I meant is, we should add more flexibility on defining iATU address space
-(while making sure it doesn't break existing binding).
+  pci 0000:01:00.0: PCI bridge to [bus 02-39]
+  ...
+  pci_bus 0000:04: [bus 04-39] extended by 0x35
+  pci_bus 0000:04: bus scan returning with max=39
+  pci_bus 0000:04: busn_res: [bus 04-39] end is updated to 39
+  pci 0000:02:02.0: scanning [bus 00-00] behind bridge, pass 1
+  pci_bus 0000:3a: scanning bus
+  pci_bus 0000:3a: bus scan returning with max=3a
+  pci_bus 0000:3a: busn_res: [bus 3a] end is updated to 3a
+  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
+  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
+  pci_bus 0000:02: bus scan returning with max=3a
+  pci_bus 0000:02: busn_res: [bus 02-39] end can not be updated to 3a
 
-I'm okay with this patch once you fix the compatible comment but in general
-this is what I'd like to have (in a future patch)
+Resulting 'lspci -t' output looks like this:
 
-*)  Add a new compatible "snps,dw-pcie-4.80";
-*) In the kernel "iatu_unroll_enabled" should be set based on the above compatible
-*) Define the a new reg space for iATU in 4.80
+  +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
+                             ^^   +-01.0-[04-39]--
+                                  \-02.0-[3a]----00.0
+                                          ^^
+The xHCI host controller (3a:00.0) behind downstream bridge at 02:02.0
+is not usable anymore.
 
-And these have to be done in a way it doesn't break existing binding.
+To fix this reserve at least one bus for each bridge during scanning of
+already configured bridges. Then we use this information in the second
+scan to correct the available extra bus space for hotplug bridges.
 
-Thanks
-Kishon
+After this change the 'lspci -t' output is what is expected:
+
+  +-1b.0-[01-39]----00.0-[02-39]--+-00.0-[03]----00.0
+                                  +-01.0-[04-38]--
+                                  \-02.0-[39]----00.0
+
+Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
+Reported-by: Mario Limonciello <mario.limonciello@dell.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/probe.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ac91b6fd0bcd..7c34a2ccb514 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2638,7 +2638,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+ 	for_each_pci_bridge(dev, bus) {
+ 		cmax = max;
+ 		max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
+-		used_buses += cmax - max;
++		/*
++		 * Reserve one bus for each bridge now to avoid
++		 * extending hotplug bridges too much during the second
++		 * scan below.
++		 */
++		used_buses++;
++		if (cmax - max > 1)
++			used_buses += cmax - max - 1;
+ 	}
+ 
+ 	/* Scan bridges that need to be reconfigured */
+@@ -2661,12 +2668,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+ 			 * bridges if any.
+ 			 */
+ 			buses = available_buses / hotplug_bridges;
+-			buses = min(buses, available_buses - used_buses);
++			buses = min(buses, available_buses - used_buses + 1);
+ 		}
+ 
+ 		cmax = max;
+ 		max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
+-		used_buses += max - cmax;
++		/* One bus is already accounted so don't add it again */
++		if (max - cmax > 1)
++			used_buses += max - cmax - 1;
+ 	}
+ 
+ 	/*
+-- 
+2.16.3
+
