@@ -1,50 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47184 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751862AbeDIDX7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 8 Apr 2018 23:23:59 -0400
-Date: Sun, 8 Apr 2018 22:23:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Meelis Roos <mroos@linux.ee>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-        sparclinux@vger.kernel.org
-Subject: Re: sparc64 PCI BAR allocation is still problematic
-Message-ID: <20180409032354.GA24642@bhelgaas-glaptop.roam.corp.google.com>
-References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 16 Apr 2018 09:58:33 -0400 (EDT)
+Message-Id: <20180416.095833.969403163564136309.davem@davemloft.net>
+To: khandual@linux.vnet.ibm.com
+Subject: Re: [PATCH 01/12] iommu-common: move to arch/sparc
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <f0305a92-b206-1567-3c25-67fbd194047d@linux.vnet.ibm.com>
+References: <20180415145947.1248-1-hch@lst.de>
+ <20180415145947.1248-2-hch@lst.de>
+ <f0305a92-b206-1567-3c25-67fbd194047d@linux.vnet.ibm.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
+ konrad.wilk@oracle.com, linux-pci@vger.kernel.org, x86@kernel.org,
+ linux-block@vger.kernel.org, linux-mm@kvack.org,
+ iommu@lists.linux-foundation.org, sparclinux@vger.kernel.org, hch@lst.de,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 08, 2018 at 09:44:57PM +0300, Meelis Roos wrote:
-> This is a followup on the thread https://lkml.org/lkml/2015/10/7/135 and 
-> corresponding https://bugzilla.kernel.org/show_bug.cgi?id=117191 entry.
-> 
-> I saw some sparc64 PCI allocation changes in yesterdays git and compiled 
-> 4.16.0-10242-gf605ba9 on most of my sparc64 machines to test if the PCI 
-> BAR allocation problems introduced in 4.3 were fixed on some of them. 
-> Alas, no change at all - of the test machines, none showed any changes 
-> in the error messages in "dmesg | grep BAR".
-> 
-> There was one test machine, T1000 with no addon cards, that did not 
-> encounter any problem, before or after the recent patch. All the other 
-> test machines tried still have the BAR allocation problems.
-> 
-> The errors seem to cluster into 3 categories:
-> 
-> 1. many devices fail BAR allocations
-> 2. one of the Davicom Ethernet devices fails BAR allocation
-> 3. Uli ISA bridge fails BAR allocation.
-> 
-> Full current dmesg and lspci info is also available if there is any 
-> interest. I did not include it all here, which machines are interesting?
+From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+Date: Mon, 16 Apr 2018 14:26:07 +0530
 
-I'm interested in that info.  Can you attach it all to the bugzilla?
-I can't predict ahead of time which pieces will be useful.
+> On 04/15/2018 08:29 PM, Christoph Hellwig wrote:
+>> This code is only used by sparc, and all new iommu drivers should use the
+>> drivers/iommu/ framework.  Also remove the unused exports.
+>> 
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Right, these functions are used only from SPARC architecture. Simple
+> git grep confirms it as well. Hence it makes sense to move them into
+> arch code instead.
 
-If you happen to have more specific information about which commit
-introduced the regression, that might be helpful, but it's probably
-not worth starting a new bisection yet.
+Well, we put these into a common location and used type friendly for
+powerpc because we hoped powerpc would convert over to using this
+common piece of code as well.
 
-Bjorn
+But nobody did the powerpc work.
+
+If you look at the powerpc iommu support, it's the same code basically
+for entry allocation.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
