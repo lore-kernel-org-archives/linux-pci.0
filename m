@@ -1,74 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH 10/10] misc: pci_endpoint_test: Use pci_irq_vector function
-Date: Fri, 27 Apr 2018 17:57:47 +0100
-Message-Id: <d817b639ca484665a085df9a5cdefbcd7a062e31.1524845816.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=UnEt=HF=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=UnEt=HF=codeaurora.org=poza@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 16 Apr 2018 22:45:19 +0530
+From: poza@codeaurora.org
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
+ <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
+ <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Wei
+ Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>, Alex Williamson
+ <alex.williamson@redhat.com>
+Subject: Re: [PATCH v13 6/6] PCI/DPC: Do not do recovery for hotplug enabled
+ system
+In-Reply-To: <c236b732-ed65-9f94-7ae5-b1203dff2eb0@codeaurora.org>
+References: <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
+ <13efe2e8-74c8-acb4-ec58-f79b14a1f182@codeaurora.org>
+ <20180412140648.GD145698@bhelgaas-glaptop.roam.corp.google.com>
+ <ca7e5285-2e88-e130-6402-a271bb92a81e@codeaurora.org>
+ <20180412143954.GB4810@localhost.localdomain>
+ <20180412150231.GD4810@localhost.localdomain>
+ <ea977780-6f90-af5a-442f-575536038307@codeaurora.org>
+ <20180412170911.GA6424@localhost.localdomain>
+ <fa167b21-f70d-a220-5671-5ad66a0f72c0@codeaurora.org>
+ <cced24b5-c0bd-138a-0304-c87cac2ec226@codeaurora.org>
+ <20180416031726.GB158153@bhelgaas-glaptop.roam.corp.google.com>
+ <c236b732-ed65-9f94-7ae5-b1203dff2eb0@codeaurora.org>
+Message-ID: <0bed6fb09478349a95d9f6ad4449f31f@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace "pdev->irq + index" operation by the pci_irq_vector() call,
-that converts from device vector to Linux IRQ.
-(suggestion made by Alan Douglas).
+On 2018-04-16 20:16, Sinan Kaya wrote:
+> On 4/15/2018 11:17 PM, Bjorn Helgaas wrote:
+>> It doesn't seem right to me that we handle both ERR_NONFATAL and
+>> ERR_FATAL events differently if we happen to have DPC support in a
+>> switch.
+>> 
+>> Maybe we should consider triggering DPC only on ERR_FATAL?  That would
+>> keep DPC out of the ERR_NONFATAL cases.
+>> 
+> From reliability perspective, it makes sense. DPC handles NONFATAL 
+> errors
+> by bringing down the link. If error happened behind a switch and root 
+> port
+> is handling DPC, we are impacting a lot of devices operation because of 
+> one
+> faulty device.
+> 
+> Keith, do you have any preference on this direction?
+> 
+>> For ERR_FATAL, maybe we should bite the bullet and use
+>> remove/re-enumerate for AER as well as for DPC.  That would be painful
+>> for higher-level software, but if we're willing to accept that pain
+>> for new systems that support DPC, maybe life would be better overall
+>> if it worked the same way on systems without DPC?
+> 
+> Sure, we can go to this route as well.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
- drivers/misc/pci_endpoint_test.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index c9b6e26..cbdd0c6 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -220,7 +220,7 @@ static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
- 	if (!val)
- 		return false;
- 
--	if (test->last_irq - pdev->irq == msi_num - 1)
-+	if (pci_irq_vector(pdev, irq_num - 1) == test->last_irq)
- 		return true;
- 
- 	return false;
-@@ -565,12 +565,12 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	}
- 
- 	for (i = 1; i < irq; i++) {
--		err = devm_request_irq(dev, pdev->irq + i,
-+		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
- 				       pci_endpoint_test_irqhandler,
- 				       IRQF_SHARED, DRV_MODULE_NAME, test);
- 		if (err)
- 			dev_err(dev, "Failed to request IRQ %d for MSI%s %d\n",
--				pdev->irq + i,
-+				pci_irq_vector(pdev, i),
- 				irq_type == IRQ_TYPE_MSIX ? "-X" : "", i + 1);
- 	}
- 
-@@ -633,7 +633,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	}
- 
- 	for (i = 0; i < irq; i++)
--		devm_free_irq(dev, pdev->irq + i, test);
-+		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, i), test);
- 
- err_disable_msi:
- 	pci_disable_msi(pdev);
-@@ -667,7 +667,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
- 			pci_iounmap(pdev, test->bar[bar]);
- 	}
- 	for (i = 0; i < test->num_irqs; i++)
--		devm_free_irq(&pdev->dev, pdev->irq + i, test);
-+		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, i), test);
- 	pci_disable_msi(pdev);
- 	pci_disable_msix(pdev);
- 	pci_release_regions(pdev);
--- 
-2.7.4
+ok so finally this is what is being proposed and so far Bjorn, Sinan and 
+myself agreed on following:
+
+I need to move the stop and re-enumerate code into the AER path instead 
+of patch #6 for both DPC_FATAL and AER_FATAL error types.
+Also, I should turn off DPC NON_FATAL error detection.
+
+Keith, please confirm if you are okay with above proposal.
+
+Regards,
+Oza.
