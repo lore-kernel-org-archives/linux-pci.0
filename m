@@ -1,69 +1,193 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 9 Apr 2018 20:54:33 +0200
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v4 0/6] PCI: aardvark: misc fixes and improvements
-Message-ID: <20180409205433.4eb78a45@windsurf>
-In-Reply-To: <20180409162356.GB14533@e107981-ln.cambridge.arm.com>
-References: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
- <20180409162356.GB14533@e107981-ln.cambridge.arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC 03/10] PCI: endpoint: Add MSI-X interfaces
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
+        <adouglas@cadence.com>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>
+References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+ <c76688ee290a9ed4f0f70f5e350b906950ec05df.1523379766.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <7fec2005-d7a8-daea-9451-7f3593afe285@ti.com>
+Date: Tue, 17 Apr 2018 15:54:06 +0530
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- Miqu??l Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Wilson Ding <dingwei@marvell.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <c76688ee290a9ed4f0f70f5e350b906950ec05df.1523379766.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Lorenzo,
+Hi,
 
-Thanks for your feedback!
-
-On Mon, 9 Apr 2018 17:23:56 +0100, Lorenzo Pieralisi wrote:
-
-> it is not just improvements, these look like significant bug fixes too.
+On Tuesday 10 April 2018 10:44 PM, Gustavo Pimentel wrote:
+> Implements the generic method for calling the get/set callbacks.
 > 
-> Let me know which patches we should prioritize since hopefully they can
-> be sent during v4.17-rc* releases, I will queue the rest for the next
-> merge window.
+> Adds the PCI_EPC_IRQ_MSIX type.
+> 
+> Adds the MSI-X callbacks signatures to the ops structure.
+> 
+> Adds sysfs interface for altering the number of MSI-X entries.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+>  drivers/pci/endpoint/pci-ep-cfs.c   | 24 ++++++++++++++++
+>  drivers/pci/endpoint/pci-epc-core.c | 57 +++++++++++++++++++++++++++++++++++++
+>  include/linux/pci-epc.h             | 11 ++++++-
+>  include/linux/pci-epf.h             |  1 +
+>  4 files changed, 92 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+> index 018ea34..d1288a0 100644
+> --- a/drivers/pci/endpoint/pci-ep-cfs.c
+> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
+> @@ -286,6 +286,28 @@ static ssize_t pci_epf_msi_interrupts_show(struct config_item *item,
+>  		       to_pci_epf_group(item)->epf->msi_interrupts);
+>  }
+>  
+> +static ssize_t pci_epf_msix_interrupts_store(struct config_item *item,
+> +					     const char *page, size_t len)
+> +{
+> +	u16 val;
+> +	int ret;
+> +
+> +	ret = kstrtou16(page, 0, &val);
+> +	if (ret)
+> +		return ret;
+> +
+> +	to_pci_epf_group(item)->epf->msix_interrupts = val;
+> +
+> +	return len;
+> +}
+> +
+> +static ssize_t pci_epf_msix_interrupts_show(struct config_item *item,
+> +					    char *page)
+> +{
+> +	return sprintf(page, "%d\n",
+> +		       to_pci_epf_group(item)->epf->msix_interrupts);
+> +}
+> +
+>  PCI_EPF_HEADER_R(vendorid)
+>  PCI_EPF_HEADER_W_u16(vendorid)
+>  
+> @@ -327,6 +349,7 @@ CONFIGFS_ATTR(pci_epf_, subsys_vendor_id);
+>  CONFIGFS_ATTR(pci_epf_, subsys_id);
+>  CONFIGFS_ATTR(pci_epf_, interrupt_pin);
+>  CONFIGFS_ATTR(pci_epf_, msi_interrupts);
+> +CONFIGFS_ATTR(pci_epf_, msix_interrupts);
+>  
+>  static struct configfs_attribute *pci_epf_attrs[] = {
+>  	&pci_epf_attr_vendorid,
+> @@ -340,6 +363,7 @@ static struct configfs_attribute *pci_epf_attrs[] = {
+>  	&pci_epf_attr_subsys_id,
+>  	&pci_epf_attr_interrupt_pin,
+>  	&pci_epf_attr_msi_interrupts,
+> +	&pci_epf_attr_msix_interrupts,
+>  	NULL,
+>  };
+>  
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index b0ee427..294a383 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -218,6 +218,63 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
+>  EXPORT_SYMBOL_GPL(pci_epc_set_msi);
+>  
+>  /**
+> + * pci_epc_get_msix() - get the number of MSI-X interrupt numbers allocated
+> + * @epc: the EPC device to which MSI-X interrupts was requested
+> + * @func_no: the endpoint function number in the EPC device
+> + *
+> + * Invoke to get the number of MSI-X interrupts allocated by the RC
+> + */
+> +int pci_epc_get_msix(struct pci_epc *epc, u8 func_no)
+> +{
+> +	int interrupt;
+> +	unsigned long flags;
+> +
+> +	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> +		return 0;
+> +
+> +	if (!epc->ops->get_msix)
+> +		return 0;
+> +
+> +	spin_lock_irqsave(&epc->lock, flags);
+> +	interrupt = epc->ops->get_msix(epc, func_no);
+> +	spin_unlock_irqrestore(&epc->lock, flags);
+> +
+> +	if (interrupt < 0)
+> +		return 0;
+> +
+> +	return interrupt++;
 
-The patches that are bug fixes are marked with a "Fixes:" tag and are
-Cc'ed to stable.
+return interrupt + 1?
+> +}
+> +EXPORT_SYMBOL_GPL(pci_epc_get_msix);
+> +
+> +/**
+> + * pci_epc_set_msix() - set the number of MSI-X interrupt numbers required
+> + * @epc: the EPC device on which MSI-X has to be configured
+> + * @func_no: the endpoint function number in the EPC device
+> + * @interrupts: number of MSI-X interrupts required by the EPF
+> + *
+> + * Invoke to set the required number of MSI-X interrupts.
+> + */
+> +int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
+> +{
+> +	int ret;
+> +	unsigned long flags;
+> +
+> +	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
+> +	    interrupts < 1 || interrupts > 2048)
+> +		return -EINVAL;
+> +
+> +	if (!epc->ops->set_msix)
+> +		return 0;
+> +
+> +	spin_lock_irqsave(&epc->lock, flags);
+> +	ret = epc->ops->set_msix(epc, func_no, interrupts - 1);
+> +	spin_unlock_irqrestore(&epc->lock, flags);
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_epc_set_msix);
+> +
+> +/**
+>   * pci_epc_unmap_addr() - unmap CPU address from PCI address
+>   * @epc: the EPC device on which address is allocated
+>   * @func_no: the endpoint function number in the EPC device
+> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+> index af657ca..32e8961 100644
+> --- a/include/linux/pci-epc.h
+> +++ b/include/linux/pci-epc.h
+> @@ -17,6 +17,7 @@ enum pci_epc_irq_type {
+>  	PCI_EPC_IRQ_UNKNOWN,
+>  	PCI_EPC_IRQ_LEGACY,
+>  	PCI_EPC_IRQ_MSI,
+> +	PCI_EPC_IRQ_MSIX,
+>  };
+>  
+>  /**
+> @@ -30,6 +31,10 @@ enum pci_epc_irq_type {
+>   *	     capability register
+>   * @get_msi: ops to get the number of MSI interrupts allocated by the RC from
+>   *	     the MSI capability register
+> + * @set_msix: ops to set the requested number of MSI-X interrupts in the
+> + *	     MSI-X capability register
+> + * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
+> + *	     from the MSI-X capability register
+>   * @raise_irq: ops to raise a legacy or MSI interrupt
+>   * @start: ops to start the PCI link
+>   * @stop: ops to stop the PCI link
+> @@ -48,8 +53,10 @@ struct pci_epc_ops {
+>  			      phys_addr_t addr);
+>  	int	(*set_msi)(struct pci_epc *epc, u8 func_no, u8 interrupts);
+>  	int	(*get_msi)(struct pci_epc *epc, u8 func_no);
+> +	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
+> +	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
 
-So, the following patches are fixes:
+The 1st patch in the series is already using get_msix, set_msix. This patch
+should precede the 1st patch.
 
-[PATCH v4 1/6] PCI: aardvark: Fix logic in advk_pcie_{rd,wr}_conf()
-[PATCH v4 2/6] PCI: aardvark: Set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
-[PATCH v4 3/6] PCI: aardvark: Use ISR1 instead of ISR0 interrupt in legacy irq mode
-[PATCH v4 4/6] PCI: aardvark: Fix PCIe Max Read Request Size setting
-
-The following patches are improvements:
-
-[PATCH v4 5/6] PCI: aardvark: Introduce an advk_pcie_valid_device() helper
-[PATCH v4 6/6] PCI: aardvark: Remove PCIe outbound window configuration
-
-Thanks!
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-https://bootlin.com
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks
+Kishon
