@@ -1,70 +1,67 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <ae84e595-dede-1409-4aff-3a29a310f2ba@canonical.com>
-References: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
- <CAJZ5v0j8GAatWoAra37y3c-ti2Ft5am75KONgEkjB6AaypkCqg@mail.gmail.com> <ae84e595-dede-1409-4aff-3a29a310f2ba@canonical.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 16 Apr 2018 17:58:10 +0200
-Message-ID: <CAJZ5v0gapMMf=KqBAoDTv0SUBeusrUFPyEz6Z4k8Y3Szizdm5Q@mail.gmail.com>
-Subject: Re: [Regression] PCI / PM: Simplify device wakeup settings code
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        1745646@bugs.launchpad.net
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v5 09/10] PCI: dwc: Small computation improvement
+Date: Tue, 17 Apr 2018 15:34:27 +0100
+Message-Id: <4fc069a2b82cc7a3790bc528a6b67636654a3a35.1523973931.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 16, 2018 at 5:31 PM, Joseph Salisbury
-<joseph.salisbury@canonical.com> wrote:
-> On 04/13/2018 05:34 PM, Rafael J. Wysocki wrote:
->> On Fri, Apr 13, 2018 at 7:56 PM, Joseph Salisbury
->> <joseph.salisbury@canonical.com> wrote:
->>> Hi Rafael,
->>>
->>> A kernel bug report was opened against Ubuntu [0].  After a kernel
->>> bisect, it was found that reverting the following two commits resolved
->>> this bug:
->>>
->>> 0ce3fcaff929 ("PCI / PM: Restore PME Enable after config space restoration")
->>> 0847684cfc5f("PCI / PM: Simplify device wakeup settings code")
->>>
->>> This is a regression introduced in v4.13-rc1 and still exists in
->>> mainline.  The bug causes the battery to drain when the system is
->>> powered down and unplugged, which does not happed prior to these two
->>> commits.
->> What system and what do you mean by "powered down"?  How much time
->> does it take for the battery to drain now?
-> By powered down, the bug reporter is saying physically powered off and
-> unplugged.  The system is a HP laptop:
->
-> dmi.chassis.vendor: HP
-> dmi.product.family: 103C_5335KV HP Notebook
-> dmi.product.name: HP Notebook
-> vendor_id    : GenuineIntel
-> cpu family    : 6
->
->
->>
->>> The bisect actually pointed to commit de3ef1e, but reverting
->>> these two commits fixes the issue.
->>>
->>> I was hoping to get your feedback, since you are the patch author.  Do
->>> you think gathering any additional data will help diagnose this issue,
->>> or would it be best to submit a revert request?
->> First, reverting these is not an option or you will break systems
->> relying on them now.  4.13 is three releases back at this point.
->>
->> Second, your issue appears to be related to the suspend/shutdown path
->> whereas commit 0ce3fcaff929 is mostly about resume, so presumably the
->> change in pci_enable_wake() causes the problem to happen.  Can you try
->> to revert this one alone and see if that helps?
-> A test kernel with commits 0ce3fcaff929 and de3ef1eb1cd0 reverted was
-> tested.  However, the test kernel still exhibited the bug.
+Replaces a simple division by 2 to a right shift rotation of 1 bit.
 
-So essentially the bisection result cannot be trusted.
+Probably any recent and decent compiler does this kind of substitution
+in order to improve code performance. Nevertheless it's a coding good
+practice whenever there is a division / multiplication by multiple of 2
+to replace it by the equivalent operation in this case, the shift
+rotation.
+
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Changes v3->v4:
+ - Added a small explication to the log description.
+Changes v4->v5:
+ - Nothing changed, just to follow the patch set version.
+
+ drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 5a23f78..fc55fde 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+ 	if (cfg_res) {
+-		pp->cfg0_size = resource_size(cfg_res) / 2;
+-		pp->cfg1_size = resource_size(cfg_res) / 2;
++		pp->cfg0_size = resource_size(cfg_res) >> 1;
++		pp->cfg1_size = resource_size(cfg_res) >> 1;
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+ 	} else if (!pp->va_cfg0_base) {
+@@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			break;
+ 		case 0:
+ 			pp->cfg = win->res;
+-			pp->cfg0_size = resource_size(pp->cfg) / 2;
+-			pp->cfg1_size = resource_size(pp->cfg) / 2;
++			pp->cfg0_size = resource_size(pp->cfg) >> 1;
++			pp->cfg1_size = resource_size(pp->cfg) >> 1;
+ 			pp->cfg0_base = pp->cfg->start;
+ 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
+ 			break;
+-- 
+2.7.4
