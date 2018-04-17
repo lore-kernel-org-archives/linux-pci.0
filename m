@@ -1,169 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:57808 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751919AbeDHSSR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Apr 2018 14:18:17 -0400
-Subject: Re: [PATCH V3] PCI: rcar: Clean up the macros
-To: Marek Vasut <marek.vasut@gmail.com>, linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-References: <20180408180431.17323-1-marek.vasut+renesas@gmail.com>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <dd9de97f-82e7-689f-6d5f-d4267b530603@infradead.org>
-Date: Sun, 8 Apr 2018 11:18:15 -0700
+Received: from mail.kernel.org ([198.145.29.99]:34788 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752387AbeDQRT7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Apr 2018 13:19:59 -0400
+Date: Tue, 17 Apr 2018 12:19:56 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+        Frederick Lawler <fred@fredlawl.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
+        "dledford@redhat.com" <dledford@redhat.com>,
+        "jgg@mellanox.com" <jgg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
+Subject: Re: [PATCH v3 0/2] IB/hfi1: Cleanup PCIe link configuration
+Message-ID: <20180417171956.GJ28657@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180417002825.2737-1-fred@fredlawl.com>
+ <20180417065343.GA29193@infradead.org>
+ <32E1700B9017364D9B60AED9960492BC627FF54C@fmsmsx120.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180408180431.17323-1-marek.vasut+renesas@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <32E1700B9017364D9B60AED9960492BC627FF54C@fmsmsx120.amr.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/08/2018 11:04 AM, Marek Vasut wrote:
-> This patch replaces the (1 << n) with BIT(n) and cleans up whitespace,
-> no functional change.
+On Tue, Apr 17, 2018 at 03:56:13PM +0000, Marciniszyn, Mike wrote:
+> > 
+> > Btw, why is the driver configuring the PCIe link speed?  Isn't this
+> > something we should be handling in the PCI core?
 > 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> Reviewed-by: Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
-
-Acked-by: Randy Dunlap <rdunlap@infradead.org>
-
-Thanks.
-
-> ---
-> V2: Reword the commit message
-> V3: Add bitops.h
-> ---
->  drivers/pci/host/pcie-rcar.c | 53 ++++++++++++++++++++++----------------------
->  1 file changed, 27 insertions(+), 26 deletions(-)
+> The device comes out of reset at the 5GT/s speed. The driver
+> downloads device firmware, programs PCIe registers, and co-ordinates
+> the transition to 8GT/s.
 > 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 25f68305322c..e403c5206b24 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -11,6 +11,7 @@
->   * Author: Phil Edworthy <phil.edworthy@renesas.com>
->   */
->  
-> +#include <linux/bitops.h>
->  #include <linux/clk.h>
->  #include <linux/delay.h>
->  #include <linux/interrupt.h>
-> @@ -30,9 +31,9 @@
->  
->  #define PCIECAR			0x000010
->  #define PCIECCTLR		0x000018
-> -#define  CONFIG_SEND_ENABLE	(1 << 31)
-> +#define  CONFIG_SEND_ENABLE	BIT(31)
->  #define  TYPE0			(0 << 8)
-> -#define  TYPE1			(1 << 8)
-> +#define  TYPE1			BIT(8)
->  #define PCIECDR			0x000020
->  #define PCIEMSR			0x000028
->  #define PCIEINTXR		0x000400
-> @@ -44,7 +45,7 @@
->  #define PCIETSTR		0x02004
->  #define  DATA_LINK_ACTIVE	1
->  #define PCIEERRFR		0x02020
-> -#define  UNSUPPORTED_REQUEST	(1 << 4)
-> +#define  UNSUPPORTED_REQUEST	BIT(4)
->  #define PCIEMSIFR		0x02044
->  #define PCIEMSIALR		0x02048
->  #define  MSIFE			1
-> @@ -57,17 +58,17 @@
->  /* local address reg & mask */
->  #define PCIELAR(x)		(0x02200 + ((x) * 0x20))
->  #define PCIELAMR(x)		(0x02208 + ((x) * 0x20))
-> -#define  LAM_PREFETCH		(1 << 3)
-> -#define  LAM_64BIT		(1 << 2)
-> -#define  LAR_ENABLE		(1 << 1)
-> +#define  LAM_PREFETCH		BIT(3)
-> +#define  LAM_64BIT		BIT(2)
-> +#define  LAR_ENABLE		BIT(1)
->  
->  /* PCIe address reg & mask */
->  #define PCIEPALR(x)		(0x03400 + ((x) * 0x20))
->  #define PCIEPAUR(x)		(0x03404 + ((x) * 0x20))
->  #define PCIEPAMR(x)		(0x03408 + ((x) * 0x20))
->  #define PCIEPTCTLR(x)		(0x0340c + ((x) * 0x20))
-> -#define  PAR_ENABLE		(1 << 31)
-> -#define  IO_SPACE		(1 << 8)
-> +#define  PAR_ENABLE		BIT(31)
-> +#define  IO_SPACE		BIT(8)
->  
->  /* Configuration */
->  #define PCICONF(x)		(0x010000 + ((x) * 0x4))
-> @@ -79,23 +80,23 @@
->  #define IDSETR1			0x011004
->  #define TLCTLR			0x011048
->  #define MACSR			0x011054
-> -#define  SPCHGFIN		(1 << 4)
-> -#define  SPCHGFAIL		(1 << 6)
-> -#define  SPCHGSUC		(1 << 7)
-> +#define  SPCHGFIN		BIT(4)
-> +#define  SPCHGFAIL		BIT(6)
-> +#define  SPCHGSUC		BIT(7)
->  #define  LINK_SPEED		(0xf << 16)
->  #define  LINK_SPEED_2_5GTS	(1 << 16)
->  #define  LINK_SPEED_5_0GTS	(2 << 16)
->  #define MACCTLR			0x011058
-> -#define  SPEED_CHANGE		(1 << 24)
-> -#define  SCRAMBLE_DISABLE	(1 << 27)
-> +#define  SPEED_CHANGE		BIT(24)
-> +#define  SCRAMBLE_DISABLE	BIT(27)
->  #define MACS2R			0x011078
->  #define MACCGSPSETR		0x011084
-> -#define  SPCNGRSN		(1 << 31)
-> +#define  SPCNGRSN		BIT(31)
->  
->  /* R-Car H1 PHY */
->  #define H1_PCIEPHYADRR		0x04000c
-> -#define  WRITE_CMD		(1 << 16)
-> -#define  PHY_ACK		(1 << 24)
-> +#define  WRITE_CMD		BIT(16)
-> +#define  PHY_ACK		BIT(24)
->  #define  RATE_POS		12
->  #define  LANE_POS		8
->  #define  ADR_POS		0
-> @@ -107,19 +108,19 @@
->  #define GEN2_PCIEPHYDATA	0x784
->  #define GEN2_PCIEPHYCTRL	0x78c
->  
-> -#define INT_PCI_MSI_NR	32
-> +#define INT_PCI_MSI_NR		32
->  
-> -#define RCONF(x)	(PCICONF(0)+(x))
-> -#define RPMCAP(x)	(PMCAP(0)+(x))
-> -#define REXPCAP(x)	(EXPCAP(0)+(x))
-> -#define RVCCAP(x)	(VCCAP(0)+(x))
-> +#define RCONF(x)		(PCICONF(0) + (x))
-> +#define RPMCAP(x)		(PMCAP(0) + (x))
-> +#define REXPCAP(x)		(EXPCAP(0) + (x))
-> +#define RVCCAP(x)		(VCCAP(0) + (x))
->  
-> -#define  PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
-> -#define  PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
-> -#define  PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
-> +#define PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
-> +#define PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
-> +#define PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
->  
-> -#define RCAR_PCI_MAX_RESOURCES 4
-> -#define MAX_NR_INBOUND_MAPS 6
-> +#define RCAR_PCI_MAX_RESOURCES	4
-> +#define MAX_NR_INBOUND_MAPS	6
->  
->  struct rcar_msi {
->  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-> 
+> This recipe is device specific and is therefore implemented in the
+> hfi1 driver built on top of PCI core functions and macros.
 
+Do you think this behavior conforms to the spec, or is this a
+workaround for a hardware erratum?
 
--- 
-~Randy
+I don't think it's feasible to have every driver deal with this level
+of PCIe detail.  Do you have to do something similar in the Windows
+driver?
+
+Is there something we can do in the PCI core to do the
+reconfiguration?  If you can't go to 8GT/s before doing some
+device-specific initialization, could the driver do that setup and
+then use a generic PCI core interface to reconfigure the link?
+
+Or maybe if the driver finds the device at 5GT/s, it could download
+the firmware and reset the device.  Would the device then negotiate at
+8GT/s?
+
+Bjorn
