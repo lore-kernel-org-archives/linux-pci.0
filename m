@@ -1,80 +1,195 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:42769 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751110AbeDPVn0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2018 17:43:26 -0400
-Date: Mon, 16 Apr 2018 16:43:24 -0500
-From: Rob Herring <robh@kernel.org>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        mark.rutland@arm.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 04/10] bindings: PCI: designware: Add support for the
- EP in Designware driver
-Message-ID: <20180416214324.wcyghdwejucoutki@rob-hp-laptop>
-References: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
- <7d3445e3f8bb15d27987e0d061275d7d69f2c519.1523881182.git.gustavo.pimentel@synopsys.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC 06/10] misc: pci_endpoint_test: Add MSI-X support
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "adouglas@cadence.com" <adouglas@cadence.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+ <8b88f8c2b766f36c71659deb0fce635154b2b39f.1523379766.git.gustavo.pimentel@synopsys.com>
+ <b25dcfb1-e770-e302-d9aa-7c35f6c58fa5@ti.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <c6d1d492-38a0-6a03-7e61-b8b50226734b@synopsys.com>
+Date: Tue, 17 Apr 2018 18:38:58 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7d3445e3f8bb15d27987e0d061275d7d69f2c519.1523881182.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <b25dcfb1-e770-e302-d9aa-7c35f6c58fa5@ti.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 16, 2018 at 03:37:52PM +0100, Gustavo Pimentel wrote:
-> Add device tree binding documentation for the Endpoint in PCIe Designware
-> driver.
+Hi Kishon,
+
+On 17/04/2018 11:33, Kishon Vijay Abraham I wrote:
+> Hi,
 > 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
-> Change v1->v2:
->  - Add a missing log description.
->  - Add "snps,dw-pcie" compatible string following Kishon's suggestion.
-> Change v2->v3:
-> - Reverted pcie_ep name to pcie.
-> Changes v3->v4:
-> - Reverted "snps,dw-pcie-rc" compatible string requested by Rob Herring.
+> On Tuesday 10 April 2018 10:44 PM, Gustavo Pimentel wrote:
+>> Adds the MSI-X support and updates driver documentation accordingly.
+>>
+>> Changes the driver parameter in order to allow the interruption type
+>> selection.
+>>
+>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>> ---
+>>  Documentation/misc-devices/pci-endpoint-test.txt |   3 +
+>>  drivers/misc/pci_endpoint_test.c                 | 102 +++++++++++++++++------
+>>  2 files changed, 79 insertions(+), 26 deletions(-)
+>>
+>> diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
+>> index 4ebc359..fdfa0f6 100644
+>> --- a/Documentation/misc-devices/pci-endpoint-test.txt
+>> +++ b/Documentation/misc-devices/pci-endpoint-test.txt
+>> @@ -10,6 +10,7 @@ The PCI driver for the test device performs the following tests
+>>  	*) verifying addresses programmed in BAR
+>>  	*) raise legacy IRQ
+>>  	*) raise MSI IRQ
+>> +	*) raise MSI-X IRQ
+>>  	*) read data
+>>  	*) write data
+>>  	*) copy data
+>> @@ -25,6 +26,8 @@ ioctl
+>>   PCITEST_LEGACY_IRQ: Tests legacy IRQ
+>>   PCITEST_MSI: Tests message signalled interrupts. The MSI number
+>>  	      to be tested should be passed as argument.
+>> + PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
+>> +	      to be tested should be passed as argument.
+>>   PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
+>>  		as argument.
+>>   PCITEST_READ: Perform read tests. The size of the buffer should be passed
+>> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+>> index 37db0fc..a7d9354 100644
+>> --- a/drivers/misc/pci_endpoint_test.c
+>> +++ b/drivers/misc/pci_endpoint_test.c
+>> @@ -42,11 +42,16 @@
+>>  #define PCI_ENDPOINT_TEST_COMMAND	0x4
+>>  #define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+>>  #define COMMAND_RAISE_MSI_IRQ		BIT(1)
+>> -#define MSI_NUMBER_SHIFT		2
+>> -/* 6 bits for MSI number */
+>> -#define COMMAND_READ                    BIT(8)
+>> -#define COMMAND_WRITE                   BIT(9)
+>> -#define COMMAND_COPY                    BIT(10)
+>> +#define COMMAND_RAISE_MSIX_IRQ		BIT(2)
+>> +#define IRQ_TYPE_SHIFT			3
+>> +#define IRQ_TYPE_LEGACY			0
+>> +#define IRQ_TYPE_MSI			1
+>> +#define IRQ_TYPE_MSIX			2
+>> +#define MSI_NUMBER_SHIFT		5
 > 
->  Documentation/devicetree/bindings/pci/designware-pcie.txt | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
+> Now that you are anyways fixing this, add a new register entry for MSI numbers.
+> Let's not keep COMMAND and MSI's together.
+
+What you suggest?
+
+>> +/* 12 bits for MSI number */
+>> +#define COMMAND_READ                    BIT(17)
+>> +#define COMMAND_WRITE                   BIT(18)
+>> +#define COMMAND_COPY                    BIT(19)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> index 7f9804d..980fc9a 100644
-> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> @@ -3,6 +3,7 @@
->  Required properties:
->  - compatible:
->  	"snps,dw-pcie" for RC mode;
-> +	"snps,dw-pcie-ep" for EP mode;
->  - reg: Should contain the configuration address space.
->  - reg-names: Must be "config" for the PCIe configuration space.
->      (The old way of getting the configuration address space from "ranges"
-> @@ -56,3 +57,15 @@ Example configuration:
->  		#interrupt-cells = <1>;
->  		num-lanes = <1>;
->  	};
-> +or
-> +	pcie: pcie@dfc00000 {
-> +		compatible = "snps,dw-pcie-ep";
-> +		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
-> +		      <0xdfc01000 0x0001000>, /* IP registers 2 */
-> +		      <0xd0000000 0x2000000>; /* Configuration space */
-> +		reg-names = "dbi", "dbi2", "addr_space";
-> +		device_type = "pci";
+> This change should be done along with the pci-epf-test in a single patch.
 
-This should not be present for endpoints.
+To be clear, you're saying is this patch should be just be squashed into the
+patch number 8 [1], because there is a lot of dependencies namely the defines,
+that is used on the alter functions.
 
-With that dropped,
+[1] -> https://patchwork.ozlabs.org/patch/896841/
 
-Reviewed-by: Rob Herring <robh@kernel.org>
-
-
-> +		num-ib-windows = <6>;
-> +		num-ob-windows = <2>;
-> +		num-lanes = <1>;
-> +	};
-> -- 
-> 2.7.4
+>>  
+>>  #define PCI_ENDPOINT_TEST_STATUS	0x8
+>>  #define STATUS_READ_SUCCESS             BIT(0)
+>> @@ -73,9 +78,9 @@ static DEFINE_IDA(pci_endpoint_test_ida);
+>>  #define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
+>>  					    miscdev)
+>>  
+>> -static bool no_msi;
+>> -module_param(no_msi, bool, 0444);
+>> -MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
 > 
+> Let's not remove this just to make sure existing users doesn't get affected.
+
+Hum, by making an internal conversion? Like this
+no_msi = false <=> irq_type = 1
+no_msi = true <=> irq_type = 0
+
+>> +static int irq_type = IRQ_TYPE_MSIX;
+>> +module_param(irq_type, int, 0444);
+>> +MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI, 2 - MSI-X)");
+>>  
+>>  enum pci_barno {
+>>  	BAR_0,
+>> @@ -103,7 +108,7 @@ struct pci_endpoint_test {
+>>  struct pci_endpoint_test_data {
+>>  	enum pci_barno test_reg_bar;
+>>  	size_t alignment;
+>> -	bool no_msi;
+>> +	int irq_type;
+>>  };
+>>  
+>>  static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
+>> @@ -177,10 +182,10 @@ static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
+>>  
+>>  static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
+>>  {
+>> -	u32 val;
+>> +	u32 val = COMMAND_RAISE_LEGACY_IRQ;
+>>  
+>> -	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+>> -				 COMMAND_RAISE_LEGACY_IRQ);
+>> +	val |= (IRQ_TYPE_LEGACY << IRQ_TYPE_SHIFT);
+>> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND, val);
+>>  	val = wait_for_completion_timeout(&test->irq_raised,
+>>  					  msecs_to_jiffies(1000));
+>>  	if (!val)
+>> @@ -192,12 +197,12 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
+>>  static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
+>>  				      u8 msi_num)
+>>  {
+>> -	u32 val;
+>> +	u32 val = COMMAND_RAISE_MSI_IRQ;
+>>  	struct pci_dev *pdev = test->pdev;
+>>  
+>> -	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+>> -				 msi_num << MSI_NUMBER_SHIFT |
+>> -				 COMMAND_RAISE_MSI_IRQ);
+>> +	val |= (msi_num << MSI_NUMBER_SHIFT);
+>> +	val |= (IRQ_TYPE_MSI << IRQ_TYPE_SHIFT);
+>> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND, val);
+>>  	val = wait_for_completion_timeout(&test->irq_raised,
+>>  					  msecs_to_jiffies(1000));
+>>  	if (!val)
+>> @@ -209,6 +214,26 @@ static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
+>>  	return false;
+>>  }
+>>  
+>> +static bool pci_endpoint_test_msix_irq(struct pci_endpoint_test *test,
+>> +				       u16 msix_num)
+>> +{
+>> +	u32 val = COMMAND_RAISE_MSIX_IRQ;
+>> +	struct pci_dev *pdev = test->pdev;
+>> +
+>> +	val |= (msix_num << MSI_NUMBER_SHIFT);
+>> +	val |= (IRQ_TYPE_MSIX << IRQ_TYPE_SHIFT);
+>> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND, val);
+>> +	val = wait_for_completion_timeout(&test->irq_raised,
+>> +					  msecs_to_jiffies(1000));
+>> +	if (!val)
+>> +		return false;
+>> +
+>> +	if (test->last_irq - pdev->irq == msix_num - 1)
+>> +		return true;
+>> +
+>> +	return false;
+> 
+> I think you can have a single function for msix_irq and msi_irq.
+
+Ok.
+
+> 
+> Thanks
+> Kishon
 > 
