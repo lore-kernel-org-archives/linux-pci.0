@@ -1,29 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:56890 "EHLO smtp2.it.da.ut.ee"
+Received: from mga14.intel.com ([192.55.52.115]:62919 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752100AbeDIOax (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 9 Apr 2018 10:30:53 -0400
-Date: Mon, 9 Apr 2018 17:30:48 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-        sparclinux@vger.kernel.org
-Subject: Re: sparc64 PCI BAR allocation is still problematic
-In-Reply-To: <20180409032354.GA24642@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.LRH.2.21.1804091730060.16892@math.ut.ee>
-References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee> <20180409032354.GA24642@bhelgaas-glaptop.roam.corp.google.com>
+        id S1752592AbeDQP4P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Apr 2018 11:56:15 -0400
+From: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>
+To: Christoph Hellwig <hch@infradead.org>,
+        Frederick Lawler <fred@fredlawl.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
+        "dledford@redhat.com" <dledford@redhat.com>,
+        "jgg@mellanox.com" <jgg@mellanox.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
+Subject: RE: [PATCH v3 0/2] IB/hfi1: Cleanup PCIe link configuration
+Date: Tue, 17 Apr 2018 15:56:13 +0000
+Message-ID: <32E1700B9017364D9B60AED9960492BC627FF54C@fmsmsx120.amr.corp.intel.com>
+References: <20180417002825.2737-1-fred@fredlawl.com>
+ <20180417065343.GA29193@infradead.org>
+In-Reply-To: <20180417065343.GA29193@infradead.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > Full current dmesg and lspci info is also available if there is any 
-> > interest. I did not include it all here, which machines are interesting?
 > 
-> I'm interested in that info.  Can you attach it all to the bugzilla?
-> I can't predict ahead of time which pieces will be useful.
+> Btw, why is the driver configuring the PCIe link speed?  Isn't this
+> something we should be handling in the PCI core?
 
-Added, all of them.
+The device comes out of reset at the 5GT/s speed. The driver downloads device firmware, programs PCIe registers, and co-ordinates the transition to 8GT/s.
 
--- 
-Meelis Roos (mroos@linux.ee)
+This recipe is device specific and is therefore implemented in the hfi1 driver built on top of PCI core functions and macros.
+
+Mike
