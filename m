@@ -1,147 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH 08/10] PCI: endpoint: functions/pci-epf-test: Replace lower into upper case characters
-Date: Fri, 27 Apr 2018 17:57:45 +0100
-Message-Id: <55b6661e5deaf8aa7766c3ec6fd535bb6bff9887.1524845816.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 17 Apr 2018 15:04:41 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: RFC on MCFG Table Support
+Message-ID: <20180417200441.GL28657@bhelgaas-glaptop.roam.corp.google.com>
+References: <bd3f4d3a-f641-7385-4ce2-d62a28bc9cd3@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bd3f4d3a-f641-7385-4ce2-d62a28bc9cd3@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace all initial lower case character into upper case in comments
-and debug printks.
+On Tue, Apr 17, 2018 at 12:18:22PM -0400, Sinan Kaya wrote:
+> Hi,
+> 
+> QDT is working with PCI-SIG to revisit some of the spec language
+> ambiguity on the definition of PCI Segment Group in PCI FW
+> Specification. 
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
- drivers/pci/endpoint/functions/pci-epf-test.c | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+I assume you're looking at the PCI Firmware Spec, r3.2, sec 4.1.2.  I
+agree this could use some clarification.
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index be5547f..e9ff4aa 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -92,7 +92,7 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
- 
- 	src_addr = pci_epc_mem_alloc_addr(epc, &src_phys_addr, reg->size);
- 	if (!src_addr) {
--		dev_err(dev, "failed to allocate source address\n");
-+		dev_err(dev, "Failed to allocate source address\n");
- 		reg->status = STATUS_SRC_ADDR_INVALID;
- 		ret = -ENOMEM;
- 		goto err;
-@@ -101,14 +101,14 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
- 	ret = pci_epc_map_addr(epc, epf->func_no, src_phys_addr, reg->src_addr,
- 			       reg->size);
- 	if (ret) {
--		dev_err(dev, "failed to map source address\n");
-+		dev_err(dev, "Failed to map source address\n");
- 		reg->status = STATUS_SRC_ADDR_INVALID;
- 		goto err_src_addr;
- 	}
- 
- 	dst_addr = pci_epc_mem_alloc_addr(epc, &dst_phys_addr, reg->size);
- 	if (!dst_addr) {
--		dev_err(dev, "failed to allocate destination address\n");
-+		dev_err(dev, "Failed to allocate destination address\n");
- 		reg->status = STATUS_DST_ADDR_INVALID;
- 		ret = -ENOMEM;
- 		goto err_src_map_addr;
-@@ -117,7 +117,7 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
- 	ret = pci_epc_map_addr(epc, epf->func_no, dst_phys_addr, reg->dst_addr,
- 			       reg->size);
- 	if (ret) {
--		dev_err(dev, "failed to map destination address\n");
-+		dev_err(dev, "Failed to map destination address\n");
- 		reg->status = STATUS_DST_ADDR_INVALID;
- 		goto err_dst_addr;
- 	}
-@@ -154,7 +154,7 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
- 
- 	src_addr = pci_epc_mem_alloc_addr(epc, &phys_addr, reg->size);
- 	if (!src_addr) {
--		dev_err(dev, "failed to allocate address\n");
-+		dev_err(dev, "Failed to allocate address\n");
- 		reg->status = STATUS_SRC_ADDR_INVALID;
- 		ret = -ENOMEM;
- 		goto err;
-@@ -163,7 +163,7 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
- 	ret = pci_epc_map_addr(epc, epf->func_no, phys_addr, reg->src_addr,
- 			       reg->size);
- 	if (ret) {
--		dev_err(dev, "failed to map address\n");
-+		dev_err(dev, "Failed to map address\n");
- 		reg->status = STATUS_SRC_ADDR_INVALID;
- 		goto err_addr;
- 	}
-@@ -206,7 +206,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
- 
- 	dst_addr = pci_epc_mem_alloc_addr(epc, &phys_addr, reg->size);
- 	if (!dst_addr) {
--		dev_err(dev, "failed to allocate address\n");
-+		dev_err(dev, "Failed to allocate address\n");
- 		reg->status = STATUS_DST_ADDR_INVALID;
- 		ret = -ENOMEM;
- 		goto err;
-@@ -215,7 +215,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
- 	ret = pci_epc_map_addr(epc, epf->func_no, phys_addr, reg->dst_addr,
- 			       reg->size);
- 	if (ret) {
--		dev_err(dev, "failed to map address\n");
-+		dev_err(dev, "Failed to map address\n");
- 		reg->status = STATUS_DST_ADDR_INVALID;
- 		goto err_addr;
- 	}
-@@ -409,7 +409,7 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
- 		ret = pci_epc_set_bar(epc, epf->func_no, epf_bar);
- 		if (ret) {
- 			pci_epf_free_space(epf, epf_test->reg[bar], bar);
--			dev_err(dev, "failed to set BAR%d\n", bar);
-+			dev_err(dev, "Failed to set BAR%d\n", bar);
- 			if (bar == test_reg_bar)
- 				return ret;
- 		}
-@@ -436,7 +436,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- 	base = pci_epf_alloc_space(epf, sizeof(struct pci_epf_test_reg),
- 				   test_reg_bar);
- 	if (!base) {
--		dev_err(dev, "failed to allocated register space\n");
-+		dev_err(dev, "Failed to allocated register space\n");
- 		return -ENOMEM;
- 	}
- 	epf_test->reg[test_reg_bar] = base;
-@@ -446,7 +446,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- 			continue;
- 		base = pci_epf_alloc_space(epf, bar_size[bar], bar);
- 		if (!base)
--			dev_err(dev, "failed to allocate space for BAR%d\n",
-+			dev_err(dev, "Failed to allocate space for BAR%d\n",
- 				bar);
- 		epf_test->reg[bar] = base;
- 	}
-@@ -467,7 +467,7 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 
- 	ret = pci_epc_write_header(epc, epf->func_no, header);
- 	if (ret) {
--		dev_err(dev, "configuration header write failed\n");
-+		dev_err(dev, "Configuration header write failed\n");
- 		return ret;
- 	}
- 
-@@ -565,7 +565,7 @@ static int __init pci_epf_test_init(void)
- 					     WQ_MEM_RECLAIM | WQ_HIGHPRI, 0);
- 	ret = pci_epf_register_driver(&test_driver);
- 	if (ret) {
--		pr_err("failed to register pci epf test driver --> %d\n", ret);
-+		pr_err("Failed to register pci epf test driver --> %d\n", ret);
- 		return ret;
- 	}
- 
--- 
-2.7.4
+> PCI spec is currently requiring a single entry per segment in the
+> MCFG table with a contiguous 256MB range. 
+
+I see the statement that "Multiple [MCFG] entries corresponding to a
+single PCI Segment Group is (sic) not allowed."
+
+Since the MCFG entry contains both the start and end bus number, I
+assume it only describes a 256MB range if start == 0 and end == 255
+(256 buses * 32 devices * 8 functions * 4K config space = 256MB).
+
+If start > 0 or end < 255, I'd say the entry describes a range smaller
+than 256MB, and it would be an error to use space outside that range.
+
+But the existing language says you still only get one entry per
+segment group.  It seems reasonable to me to relax that restriction.
+
+> Based on our research, this rule is being violated in the industry
+> for existing platforms due to the different ways spec is
+> interpreted.
+> 
+> We are trying to remove this restriction in the spec and have
+> multiple entries per segment as long as <segment, bus start number,
+> bus end number> tuple is unique. 
+
+I hope you mean the <start, end> tuples are more than just unique;
+they shouldn't overlap, i.e., a given <segment, bus number> should
+match at most one MCFG entry.
+
+I think it is permissible for a <segment, bus number> to not be
+described via MCFG at all for the case of hot-plugged host bridges
+that use _CBA instead of MCFG.
+
+> AFAIS, generic ACPI Linux driver already supports this via
+> pci_mcfg_lookup(). 
+
+Looks like it to me.  And if it doesn't, it sounds reasonable to fix
+it so it does.
+
+Of course, pci_mcfg_lookup() is currently only used by arm64.  I
+didn't look at x86 or ia64, which also use MCFG, to see what they
+would do with this.
+
+Thanks for working on this!
+
+Bjorn
