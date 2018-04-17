@@ -1,56 +1,30 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34788 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752387AbeDQRT7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Apr 2018 13:19:59 -0400
-Date: Tue, 17 Apr 2018 12:19:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
-        "dledford@redhat.com" <dledford@redhat.com>,
-        "jgg@mellanox.com" <jgg@mellanox.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
-Subject: Re: [PATCH v3 0/2] IB/hfi1: Cleanup PCIe link configuration
-Message-ID: <20180417171956.GJ28657@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180417002825.2737-1-fred@fredlawl.com>
- <20180417065343.GA29193@infradead.org>
- <32E1700B9017364D9B60AED9960492BC627FF54C@fmsmsx120.amr.corp.intel.com>
+Return-Path: <SRS0=0995=HG=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=0995=HG=codeaurora.org=okaya@kernel.org>
+Subject: Re: RFC on MCFG Table Support
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+References: <bd3f4d3a-f641-7385-4ce2-d62a28bc9cd3@codeaurora.org>
+ <20180417200441.GL28657@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <22609a39-d701-9b36-f99f-0334aee88c6a@codeaurora.org>
+Date: Tue, 17 Apr 2018 16:09:24 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <32E1700B9017364D9B60AED9960492BC627FF54C@fmsmsx120.amr.corp.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180417200441.GL28657@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 17, 2018 at 03:56:13PM +0000, Marciniszyn, Mike wrote:
-> > 
-> > Btw, why is the driver configuring the PCIe link speed?  Isn't this
-> > something we should be handling in the PCI core?
-> 
-> The device comes out of reset at the 5GT/s speed. The driver
-> downloads device firmware, programs PCIe registers, and co-ordinates
-> the transition to 8GT/s.
-> 
-> This recipe is device specific and is therefore implemented in the
-> hfi1 driver built on top of PCI core functions and macros.
+On 4/17/2018 4:04 PM, Bjorn Helgaas wrote:
+>> We are trying to remove this restriction in the spec and have
+>> multiple entries per segment as long as <segment, bus start number,
+>> bus end number> tuple is unique. 
+> I hope you mean the <start, end> tuples are more than just unique;
+> they shouldn't overlap, i.e., a given <segment, bus number> should
+> match at most one MCFG entry.
 
-Do you think this behavior conforms to the spec, or is this a
-workaround for a hardware erratum?
+Agreed, I'm talking about no overlap. 
 
-I don't think it's feasible to have every driver deal with this level
-of PCIe detail.  Do you have to do something similar in the Windows
-driver?
-
-Is there something we can do in the PCI core to do the
-reconfiguration?  If you can't go to 8GT/s before doing some
-device-specific initialization, could the driver do that setup and
-then use a generic PCI core interface to reconfigure the link?
-
-Or maybe if the driver finds the device at 5GT/s, it could download
-the firmware and reset the device.  Would the device then negotiate at
-8GT/s?
-
-Bjorn
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
