@@ -1,67 +1,64 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v6 4/9] bindings: PCI: designware: Add support for the EP in Designware driver
-Date: Wed, 18 Apr 2018 15:46:39 +0100
-Message-Id: <9ead29e037d7e399b2a647efc1393c6556feb8b2.1524062073.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
+Subject: Re: [PATCH v4 03/10] PCI: endpoint: functions/pci-epf-test: Add
+ second entry
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>
+References: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
+ <d025236bb2646eb3b4d4de9f2e745cab5d7ef2b9.1523881182.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <56bdafe6-1725-6e55-68a4-38667f114e5c@ti.com>
+Date: Tue, 17 Apr 2018 14:49:37 +0530
+MIME-Version: 1.0
+In-Reply-To: <d025236bb2646eb3b4d4de9f2e745cab5d7ef2b9.1523881182.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device tree binding documentation for the Endpoint in PCIe Designware
-driver.
+Hi,
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
-Change v1->v2:
- - Add a missing log description.
- - Add "snps,dw-pcie" compatible string following Kishon's suggestion.
-Change v2->v3:
- - Reverted pcie_ep name to pcie.
-Changes v3->v4:
- - Reverted "snps,dw-pcie-rc" compatible string requested by Rob Herring.
-Changes v4->v5:
- - Removed device_type entry from EP requested by Rob Herring.
-Changes v5->v6:
- - Nothing changed, just to follow the patch set version.
+On Monday 16 April 2018 08:07 PM, Gustavo Pimentel wrote:
+> Adds a seconds entry on the pci_epf_test_ids structure that disables the
+> linkup_notifier parameter on driver.
+> 
+> This allows EPs that doesn't have linkup notification signal to work
+> with pcitest.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+> Change v2->v3:
+>  - Added second entry in pci_epf_test_ids structure.
+>  - Remove test_reg_bar field assignment on second entry.
+> Changes v3->v4:
+> - Nothing changed, just to follow the patch set version.
+> 
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 7cef851..63dca44 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -459,10 +459,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+>  	return 0;
+>  }
+>  
+> +static const struct pci_epf_test_data data_cfg2 = {
+> +	.linkup_notifier = false
+> +};
+> +
+>  static const struct pci_epf_device_id pci_epf_test_ids[] = {
+>  	{
+>  		.name = "pci_epf_test",
+>  	},
+> +	{
+> +		.name = "pci_epf_test_cfg2",
 
- Documentation/devicetree/bindings/pci/designware-pcie.txt | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+I'd prefer this to be named pci_epf_test_designware so that configfs entry is
+self explanatory.
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 7f9804d..c124f9b 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -3,6 +3,7 @@
- Required properties:
- - compatible:
- 	"snps,dw-pcie" for RC mode;
-+	"snps,dw-pcie-ep" for EP mode;
- - reg: Should contain the configuration address space.
- - reg-names: Must be "config" for the PCIe configuration space.
-     (The old way of getting the configuration address space from "ranges"
-@@ -56,3 +57,14 @@ Example configuration:
- 		#interrupt-cells = <1>;
- 		num-lanes = <1>;
- 	};
-+or
-+	pcie: pcie@dfc00000 {
-+		compatible = "snps,dw-pcie-ep";
-+		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
-+		      <0xdfc01000 0x0001000>, /* IP registers 2 */
-+		      <0xd0000000 0x2000000>; /* Configuration space */
-+		reg-names = "dbi", "dbi2", "addr_space";
-+		num-ib-windows = <6>;
-+		num-ob-windows = <2>;
-+		num-lanes = <1>;
-+	};
--- 
-2.7.4
+Thanks
+Kishon
