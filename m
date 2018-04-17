@@ -1,136 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37820 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751233AbeDXO7r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Apr 2018 10:59:47 -0400
-Subject: [PATCH 1/2] PCI: Add pci_bus_specific_read_dev_vendor_id() to
- workaround PCI switch specific issues prior to accessing newly added endpoint
-From: James Puthukattukaran <james.puthukattukaran@oracle.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <7e9f5905-34c5-f24c-8b13-df36b8bf3621@oracle.com>
-Message-ID: <16461819-82a1-8122-4a30-842f9a078988@oracle.com>
-Date: Tue, 24 Apr 2018 10:53:08 -0400
-MIME-Version: 1.0
-In-Reply-To: <7e9f5905-34c5-f24c-8b13-df36b8bf3621@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v5 10/10] PCI: dwc: Replace magic number by defines
+Date: Tue, 17 Apr 2018 15:34:28 +0100
+Message-Id: <c5728c9f71dff5aac0ff575106ecf4045ba30b40.1523973931.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch provides a framework in which it would be possible to implement
-bus specific quirks prior to accessing an endpoint device beneath that bus.
-The routine, pci_bus_specific_read_dev_vendor_id, can be called prior to
-accessing the end point device itself in order to workaround potential issues
-with the parent device (switch). If there is nothing specific to be done for
-a particular switch device, it falls through to check for the endpoint device
-i.e pci_bus_generic_read_dev_vendor_id().
+Replace magic numbers by a well known define in order to make the code
+human readable and also facilitate the code reusability.
 
-Signed-off: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 ---
- drivers/pci/pci.h    |  2 ++
- drivers/pci/probe.c  | 19 ++++++++++++++++++-
- drivers/pci/quirks.c | 41 +++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 61 insertions(+), 1 deletion(-)
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Changes v3->v4:
+ - Nothing changed, just to follow the patch set version.
+Changes v4->v5:
+ - Nothing changed, just to follow the patch set version.
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 023f7cf..39ea6ee 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -225,6 +225,8 @@ enum pci_bar_type {
- int pci_configure_extended_tags(struct pci_dev *dev, void *ign);
- bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
- 				int crs_timeout);
-+int pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn,
-+				u32 *pl, int crs_timeout);
- int pci_setup_device(struct pci_dev *dev);
- int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		    struct resource *res, unsigned int reg);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac91b6f..d8bf71b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2097,7 +2097,7 @@ static bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l,
- 	return true;
- }
+ drivers/pci/dwc/pcie-designware-host.c | 34 ++++++++++++++++++++--------------
+ drivers/pci/dwc/pcie-designware.h      |  1 +
+ 2 files changed, 21 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index fc55fde..a7657ab 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -83,18 +83,23 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
  
--bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-+bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 				int timeout)
- {
- 	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-@@ -2113,6 +2113,23 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+ 	for (i = 0; i < num_ctrls; i++) {
+-		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+-				    &val);
++		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
++					(i * MSI_REG_CTRL_BLOCK_SIZE),
++				    4, &val);
+ 		if (!val)
+ 			continue;
  
- 	return true;
- }
-+
-+
-+bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-+					int timeout)
-+{
-+	int ret;
-+
-+	/* An opportunity to implement something specific for this device.
-+	 * For ex, impelement a quirk prior to even accessing the device
-+	 */
-+	ret = pci_bus_specific_read_dev_vendor_id(bus, devfn, l, timeout);
-+	if (ret >= 0)
-+		return (ret >= 0);
-+
-+	return pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
-+}
-+
- EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
+ 		ret = IRQ_HANDLED;
+ 		pos = 0;
+-		while ((pos = find_next_bit((unsigned long *) &val, 32,
+-					    pos)) != 32) {
+-			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
++		while ((pos = find_next_bit((unsigned long *) &val,
++					    MAX_MSI_IRQS_PER_CTRL,
++					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
++			irq = irq_find_mapping(pp->irq_domain,
++					       (i * MAX_MSI_IRQS_PER_CTRL) +
++					       pos);
+ 			generic_handle_irq(irq);
+-			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
++			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
++						(i * MSI_REG_CTRL_BLOCK_SIZE),
+ 					    4, 1 << pos);
+ 			pos++;
+ 		}
+@@ -157,9 +162,9 @@ static void dw_pci_bottom_mask(struct irq_data *data)
+ 	if (pp->ops->msi_clear_irq) {
+ 		pp->ops->msi_clear_irq(pp, data->hwirq);
+ 	} else {
+-		ctrl = data->hwirq / 32;
+-		res = ctrl * 12;
+-		bit = data->hwirq % 32;
++		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
++		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
++		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
  
- /*
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 2990ad1..c32c5ec 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4741,3 +4741,44 @@ static void quirk_gpu_hda(struct pci_dev *hda)
- 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
- 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
-+
-+
-+static const struct pci_bus_specific_quirk{
-+	u16 vendor;
-+	u16 device;
-+	int (*bus_quirk)(struct pci_bus *bus, int devfn, u32 *l, int timeout);
-+} pci_bus_specific_quirks[] = {
-+	{0}
-+};
-+
-+/*
-+ * This routine provides the ability to implement a bus specific quirk
-+ * prior to doing config accesses to the endpoint device itself. For ex, there
-+ * could be HW problems with the switch above the endpoint that causes issues
-+ * when accessing the endpoint device. Such workarounds "specific" to the
-+ * parent could be implemented prior or subsequent to accesses to the
-+ * endpoint itself
-+ *
-+ */
-+int pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-+					int timeout)
-+{
-+	const struct pci_bus_specific_quirk *i;
-+	struct pci_dev *dev;
-+
-+	if (!bus || !bus->self)
-+		return -ENOTTY;
-+
-+	dev = bus->self;
-+
-+	/* Implement any quirks in the "bus" (switch, for ex) that causes
-+	 * issues in accessing the endpoint
-+	 */
-+	for (i = pci_bus_specific_quirks; i->bus_quirk; i++) {
-+		if ((i->vendor == dev->vendor ||
-+		     i->vendor == (u16)PCI_ANY_ID) &&
-+		    (i->device == dev->device || i->device == (u16)PCI_ANY_ID))
-+			return(i->bus_quirk(bus, devfn, l, timeout));
-+	}
-+	return -ENOTTY;
-+}
+ 		pp->irq_status[ctrl] &= ~(1 << bit);
+ 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+@@ -180,9 +185,9 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
+ 	if (pp->ops->msi_set_irq) {
+ 		pp->ops->msi_set_irq(pp, data->hwirq);
+ 	} else {
+-		ctrl = data->hwirq / 32;
+-		res = ctrl * 12;
+-		bit = data->hwirq % 32;
++		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
++		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
++		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+ 
+ 		pp->irq_status[ctrl] |= 1 << bit;
+ 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+@@ -652,8 +657,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 
+ 	/* Initialize IRQ Status array */
+ 	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+-		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+-				    &pp->irq_status[ctrl]);
++		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
++					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
++				    4, &pp->irq_status[ctrl]);
+ 
+ 	/* Setup RC BARs */
+ 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index fe811db..bee4e25 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -110,6 +110,7 @@
+ #define MAX_MSI_IRQS			256
+ #define MAX_MSI_IRQS_PER_CTRL		32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
++#define MSI_REG_CTRL_BLOCK_SIZE		12
+ #define MSI_DEF_NUM_VECTORS		32
+ 
+ /* Maximum number of inbound/outbound iATUs */
 -- 
-1.8.3.1
+2.7.4
