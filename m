@@ -1,67 +1,48 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 23 Apr 2018 16:09:30 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Christoph Hellwig <hch@lst.de>, sstabellini@kernel.org
-Subject: Re: [PATCH 10/12] arm: don't build swiotlb by default
-Message-ID: <20180423200930.GB5215@char.us.oracle.com>
-References: <20180423170419.20330-1-hch@lst.de>
- <20180423170419.20330-11-hch@lst.de>
-MIME-Version: 1.0
-In-Reply-To: <20180423170419.20330-11-hch@lst.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-mips@linux-mips.org, linux-pci@vger.kernel.org, x86@kernel.org,
- linux-block@vger.kernel.org, linux-mm@kvack.org,
- iommu@lists.linux-foundation.org, sparclinux@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v5 05/10] PCI: Adds device ID for Synopsys Sample Endpoint.
+Date: Tue, 17 Apr 2018 15:34:23 +0100
+Message-Id: <5d20185e88e7b6738d6b6aca41b1a237033fc36f.1523973931.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 23, 2018 at 07:04:17PM +0200, Christoph Hellwig wrote:
-> swiotlb is only used as a library of helper for xen-swiotlb if Xen support
-> is enabled on arm, so don't build it by default.
-> 
+The PCIe controller dual mode is capable of operating in host mode as well
+as endpoint mode by configuration.
 
-CCing Stefano
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  arch/arm/Kconfig | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> index aa1c187d756d..90b81a3a28a7 100644
-> --- a/arch/arm/Kconfig
-> +++ b/arch/arm/Kconfig
-> @@ -1774,7 +1774,7 @@ config SECCOMP
->  	  defined by each seccomp mode.
->  
->  config SWIOTLB
-> -	def_bool y
-> +	bool
->  
->  config PARAVIRT
->  	bool "Enable paravirtualization code"
-> @@ -1807,6 +1807,7 @@ config XEN
->  	depends on MMU
->  	select ARCH_DMA_ADDR_T_64BIT
->  	select ARM_PSCI
-> +	select SWIOTLB
->  	select SWIOTLB_XEN
->  	select PARAVIRT
->  	help
-> -- 
-> 2.17.0
-> 
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+ - Register new device id following Kishon's suggestion.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Changes v3->v4:
+ - Nothing changed, just to follow the patch set version.
+Changes v4->v5:
+ - Nothing changed, just to follow the patch set version.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ include/linux/pci_ids.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index cc608fc5..22b1c1b 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2350,6 +2350,7 @@
+ #define PCI_DEVICE_ID_CENATEK_IDE	0x0001
+ 
+ #define PCI_VENDOR_ID_SYNOPSYS		0x16c3
++#define PCI_DEVICE_ID_SYNOPSYS_SMPL_EP	0xedda
+ 
+ #define PCI_VENDOR_ID_VITESSE		0x1725
+ #define PCI_DEVICE_ID_VITESSE_VSC7174	0x7174
+-- 
+2.7.4
