@@ -1,161 +1,362 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:38542 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754231AbeDJOmW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2018 10:42:22 -0400
-MIME-Version: 1.0
-In-Reply-To: <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
-References: <20180408130925.19088-1-marek.vasut+renesas@gmail.com>
- <CAMuHMdVGBkEY2kE7auUwXBn2QSfX+yhxkFH--4tTw+XJ3WCk0w@mail.gmail.com>
- <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com> <20180409114159.azxeehjkeuinwrwe@verge.net.au>
- <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
- <20180409122636.6rmtzhqqlpqxyear@verge.net.au> <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 10 Apr 2018 16:42:20 +0200
-Message-ID: <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
-Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: Simon Horman <horms@verge.net.au>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Dien Pham <dien.pham.ry@rvc.renesas.com>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:35829 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753634AbeDQOeh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Apr 2018 10:34:37 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v5 08/10] PCI: dwc: Replace lower into upper case characters
+Date: Tue, 17 Apr 2018 15:34:26 +0100
+Message-Id: <ffebc61b2143027cbfb4914079f7c7b6a7c2bac9.1523973931.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek,
+Replaces lower into upper case characters in comments and debug printks.
 
-On Tue, Apr 10, 2018 at 4:31 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
-> On 04/09/2018 02:26 PM, Simon Horman wrote:
->> On Mon, Apr 09, 2018 at 01:47:38PM +0200, Geert Uytterhoeven wrote:
->>> On Mon, Apr 9, 2018 at 1:41 PM, Simon Horman <horms@verge.net.au> wrote:
->>>> On Mon, Apr 09, 2018 at 10:20:05AM +0200, Marek Vasut wrote:
->>>>> On 04/09/2018 10:07 AM, Geert Uytterhoeven wrote:
->>>>>> On Sun, Apr 8, 2018 at 3:09 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
->>>>>>> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
->>>>>>>
->>>>>>> The controller clock can be switched off during suspend/resume,
->>>>>>> let runtime PM take care of that.
->>>>>>>
->>>>>>> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
->>>>>>> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
->>>>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->>>>>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>>>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->>>>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
->>>>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
->>>>>>> Cc: linux-renesas-soc@vger.kernel.org
->>>>>>> To: linux-pci@vger.kernel.org
->>>>>>> ---
->>>>>>> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
->>>>>>>       reordering of function calls in probe
->>>>>>>     - Dispose of fail_clk in rcar_pcie_get_resources()
->>>>>>> V3: - Fix up the failpath in probe function
->>>>>>> V4: - Rebase on recent linux-next
->>>>>>> V5: - Do not call pci_free_resource_list(&pcie->resources) if
->>>>>>>       rcar_pcie_parse_request_of_pci_ranges() fails, since that
->>>>>>>       functiona calls pci_free_resource_list() already.
->>>>>>
->>>>>> Thanks for the update!
->>>>>>
->>>>>>> --- a/drivers/pci/host/pcie-rcar.c
->>>>>>> +++ b/drivers/pci/host/pcie-rcar.c
->>>>>>
->>>>>>> @@ -1124,22 +1111,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->>>>>>>         if (err)
->>>>>>>                 goto err_free_bridge;
->>>>>>>
->>>>>>> +       pm_runtime_enable(pcie->dev);
->>>>>>> +       err = pm_runtime_get_sync(pcie->dev);
->>>>>>> +       if (err < 0) {
->>>>>>> +               dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
->>>>>>> +               goto err_pm_disable;
->>>>>>> +       }
->>>>>>> +
->>>>>>
->>>>>> As you moved the pm_runtime setup up...
->>>>>>
->>>>>>>         err = rcar_pcie_get_resources(pcie);
->>>>>>>         if (err < 0) {
->>>>>>>                 dev_err(dev, "failed to request resources: %d\n", err);
->>>>>>> -               goto err_free_resource_list;
->>>>>>> +               goto err_pm_put;
->>>>>>>         }
->>>>>>>
->>>>>>>         err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
->>>>>>>         if (err)
->>>>>>> -               goto err_free_resource_list;
->>>>>>> -
->>>>>>> -       pm_runtime_enable(dev);
->>>>>>> -       err = pm_runtime_get_sync(dev);
->>>>>>> -       if (err < 0) {
->>>>>>> -               dev_err(dev, "pm_runtime_get_sync failed\n");
->>>>>>> -               goto err_pm_disable;
->>>>>>> -       }
->>>>>>> +               goto err_pm_put;
->>>>>>>
->>>>>>>         /* Failure to get a link might just be that no cards are inserted */
->>>>>>>         hw_init_fn = of_device_get_match_data(dev);
->>>>>>> @@ -1174,9 +1161,8 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->>>>>>>
->>>>>>>  err_pm_disable:
->>>>>>>         pm_runtime_disable(dev);
->>>>>>
->>>>>> ... shouldn't it be moved down here, for symmetry?
->>>>>
->>>>> I am reasonably certain the failpath should be correct now. Did I still
->>>>> miss something ?
->>>>
->>>> It looks correct to me too. Geert are Marek and I missing something?
->>>
->>> Probably it will still work fine, but after this patch, Runtime PM is enabled
->>> early, and disabled early, which is not symmetrical.
->>>
->>> I like symmetry ;-)
->>
->> Understood. I think that is reasonable.
->> Marek, would you care to respin?
->
-> I am looking into the driver, but I fail to see what Geert is trying to
-> make me change here.
->
-> The pairing looks as follows:
->
-> .- rcar_pcie_parse_request_of_pci_ranges()
-> |  (pm_runtime_enable is here)
-> | .- pm_runtime_get_sync()
-> | | .- rcar_pcie_get_resources()
+This is an attempt to keep the messages coherent within the designware
+driver.
 
-rcar_pcie_get_resources() is called  while the device is runtime-enabled/resumed
+Also fixed code style on dw_pcie_irq_domain_free function.
 
-> | | |
-> | | '- pm_runtime_put()
-> | '- pm_runtime_disable() + pci_free_resource_list()
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
+---
+Change v1->v2:
+ - Added an extra log description line about code style following Fabio
+Estevam suggestion.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Changes v3->v4:
+ - Nothing changed, just to follow the patch set version.
+Changes v4->v5:
+ - Nothing changed, just to follow the patch set version.
 
-pci_free_resource_list() is called while the device is runtime-disabled.
+ drivers/pci/dwc/pcie-designware-ep.c   | 16 ++++++++--------
+ drivers/pci/dwc/pcie-designware-host.c | 35 ++++++++++++++++++----------------
+ drivers/pci/dwc/pcie-designware.c      | 22 ++++++++++-----------
+ 3 files changed, 38 insertions(+), 35 deletions(-)
 
-> '- pci_free_host_bridge()
->
-> It looks symmetric to me ...
-
-rcar_pcie_get_resources() is called while the device is
-runtime-enabled/resumed,
-pci_free_resource_list() is called while the device is runtime-disabled.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index f07678b..15b22a6 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -75,7 +75,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+ 
+ 	free_win = find_first_zero_bit(ep->ib_window_map, ep->num_ib_windows);
+ 	if (free_win >= ep->num_ib_windows) {
+-		dev_err(pci->dev, "no free inbound window\n");
++		dev_err(pci->dev, "No free inbound window\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -100,7 +100,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+ 
+ 	free_win = find_first_zero_bit(ep->ob_window_map, ep->num_ob_windows);
+ 	if (free_win >= ep->num_ob_windows) {
+-		dev_err(pci->dev, "no free outbound window\n");
++		dev_err(pci->dev, "No free outbound window\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -204,7 +204,7 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
+ 
+ 	ret = dw_pcie_ep_outbound_atu(ep, addr, pci_addr, size);
+ 	if (ret) {
+-		dev_err(pci->dev, "failed to enable address\n");
++		dev_err(pci->dev, "Failed to enable address\n");
+ 		return ret;
+ 	}
+ 
+@@ -348,21 +348,21 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 
+ 	ret = of_property_read_u32(np, "num-ib-windows", &ep->num_ib_windows);
+ 	if (ret < 0) {
+-		dev_err(dev, "unable to read *num-ib-windows* property\n");
++		dev_err(dev, "Unable to read *num-ib-windows* property\n");
+ 		return ret;
+ 	}
+ 	if (ep->num_ib_windows > MAX_IATU_IN) {
+-		dev_err(dev, "invalid *num-ib-windows*\n");
++		dev_err(dev, "Invalid *num-ib-windows*\n");
+ 		return -EINVAL;
+ 	}
+ 
+ 	ret = of_property_read_u32(np, "num-ob-windows", &ep->num_ob_windows);
+ 	if (ret < 0) {
+-		dev_err(dev, "unable to read *num-ob-windows* property\n");
++		dev_err(dev, "Unable to read *num-ob-windows* property\n");
+ 		return ret;
+ 	}
+ 	if (ep->num_ob_windows > MAX_IATU_OUT) {
+-		dev_err(dev, "invalid *num-ob-windows*\n");
++		dev_err(dev, "Invalid *num-ob-windows*\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -389,7 +389,7 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 
+ 	epc = devm_pci_epc_create(dev, &epc_ops);
+ 	if (IS_ERR(epc)) {
+-		dev_err(dev, "failed to create epc device\n");
++		dev_err(dev, "Failed to create epc device\n");
+ 		return PTR_ERR(epc);
+ 	}
+ 
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 6c409079..5a23f78 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -248,8 +248,10 @@ static void dw_pcie_irq_domain_free(struct irq_domain *domain,
+ 	unsigned long flags;
+ 
+ 	raw_spin_lock_irqsave(&pp->lock, flags);
++
+ 	bitmap_release_region(pp->msi_irq_in_use, data->hwirq,
+ 			      order_base_2(nr_irqs));
++
+ 	raw_spin_unlock_irqrestore(&pp->lock, flags);
+ }
+ 
+@@ -266,7 +268,7 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
+ 	pp->irq_domain = irq_domain_create_linear(fwnode, pp->num_vectors,
+ 					       &dw_pcie_msi_domain_ops, pp);
+ 	if (!pp->irq_domain) {
+-		dev_err(pci->dev, "failed to create IRQ domain\n");
++		dev_err(pci->dev, "Failed to create IRQ domain\n");
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -274,7 +276,7 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
+ 						   &dw_pcie_msi_domain_info,
+ 						   pp->irq_domain);
+ 	if (!pp->msi_domain) {
+-		dev_err(pci->dev, "failed to create MSI domain\n");
++		dev_err(pci->dev, "Failed to create MSI domain\n");
+ 		irq_domain_remove(pp->irq_domain);
+ 		return -ENOMEM;
+ 	}
+@@ -301,13 +303,13 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+ 	page = alloc_page(GFP_KERNEL);
+ 	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
+ 	if (dma_mapping_error(dev, pp->msi_data)) {
+-		dev_err(dev, "failed to map MSI data\n");
++		dev_err(dev, "Failed to map MSI data\n");
+ 		__free_page(page);
+ 		return;
+ 	}
+ 	msi_target = (u64)pp->msi_data;
+ 
+-	/* program the msi_data */
++	/* Program the msi_data */
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+ 			    lower_32_bits(msi_target));
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+@@ -335,7 +337,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+ 	} else if (!pp->va_cfg0_base) {
+-		dev_err(dev, "missing *config* reg space\n");
++		dev_err(dev, "Missing *config* reg space\n");
+ 	}
+ 
+ 	bridge = pci_alloc_host_bridge(0);
+@@ -357,7 +359,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		case IORESOURCE_IO:
+ 			ret = pci_remap_iospace(win->res, pp->io_base);
+ 			if (ret) {
+-				dev_warn(dev, "error %d: failed to map resource %pR\n",
++				dev_warn(dev, "Error %d: failed to map resource %pR\n",
+ 					 ret, win->res);
+ 				resource_list_destroy_entry(win);
+ 			} else {
+@@ -391,7 +393,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 						pp->cfg->start,
+ 						resource_size(pp->cfg));
+ 		if (!pci->dbi_base) {
+-			dev_err(dev, "error with ioremap\n");
++			dev_err(dev, "Error with ioremap\n");
+ 			ret = -ENOMEM;
+ 			goto error;
+ 		}
+@@ -403,7 +405,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		pp->va_cfg0_base = devm_pci_remap_cfgspace(dev,
+ 					pp->cfg0_base, pp->cfg0_size);
+ 		if (!pp->va_cfg0_base) {
+-			dev_err(dev, "error with ioremap in function\n");
++			dev_err(dev, "Error with ioremap in function\n");
+ 			ret = -ENOMEM;
+ 			goto error;
+ 		}
+@@ -414,7 +416,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 						pp->cfg1_base,
+ 						pp->cfg1_size);
+ 		if (!pp->va_cfg1_base) {
+-			dev_err(dev, "error with ioremap\n");
++			dev_err(dev, "Error with ioremap\n");
+ 			ret = -ENOMEM;
+ 			goto error;
+ 		}
+@@ -586,7 +588,7 @@ static int dw_pcie_valid_device(struct pcie_port *pp, struct pci_bus *bus,
+ 			return 0;
+ 	}
+ 
+-	/* access only one slot on each root port */
++	/* Access only one slot on each root port */
+ 	if (bus->number == pp->root_bus_nr && dev > 0)
+ 		return 0;
+ 
+@@ -652,11 +654,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
+ 				    &pp->irq_status[ctrl]);
+-	/* setup RC BARs */
++
++	/* Setup RC BARs */
+ 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
+ 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_1, 0x00000000);
+ 
+-	/* setup interrupt pins */
++	/* Setup interrupt pins */
+ 	dw_pcie_dbi_ro_wr_en(pci);
+ 	val = dw_pcie_readl_dbi(pci, PCI_INTERRUPT_LINE);
+ 	val &= 0xffff00ff;
+@@ -664,13 +667,13 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	dw_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+-	/* setup bus numbers */
++	/* Setup bus numbers */
+ 	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
+ 	val &= 0xff000000;
+ 	val |= 0x00ff0100;
+ 	dw_pcie_writel_dbi(pci, PCI_PRIMARY_BUS, val);
+ 
+-	/* setup command register */
++	/* Setup command register */
+ 	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
+ 	val &= 0xffff0000;
+ 	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
+@@ -683,7 +686,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	 * we should not program the ATU here.
+ 	 */
+ 	if (!pp->ops->rd_other_conf) {
+-		/* get iATU unroll support */
++		/* Get iATU unroll support */
+ 		pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
+ 		dev_dbg(pci->dev, "iATU unroll: %s\n",
+ 			pci->iatu_unroll_enabled ? "enabled" : "disabled");
+@@ -701,7 +704,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 
+ 	/* Enable write permission for the DBI read-only register */
+ 	dw_pcie_dbi_ro_wr_en(pci);
+-	/* program correct class for RC */
++	/* Program correct class for RC */
+ 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+ 	/* Better disable write permission right after the update */
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index 1b7282e..778c4f7 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -69,7 +69,7 @@ u32 __dw_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+ 
+ 	ret = dw_pcie_read(base + reg, size, &val);
+ 	if (ret)
+-		dev_err(pci->dev, "read DBI address failed\n");
++		dev_err(pci->dev, "Read DBI address failed\n");
+ 
+ 	return val;
+ }
+@@ -86,7 +86,7 @@ void __dw_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+ 
+ 	ret = dw_pcie_write(base + reg, size, val);
+ 	if (ret)
+-		dev_err(pci->dev, "write DBI address failed\n");
++		dev_err(pci->dev, "Write DBI address failed\n");
+ }
+ 
+ static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+@@ -137,7 +137,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
+ 
+ 		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+ 	}
+-	dev_err(pci->dev, "outbound iATU is not being enabled\n");
++	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
+ }
+ 
+ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+@@ -180,7 +180,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+ 
+ 		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+ 	}
+-	dev_err(pci->dev, "outbound iATU is not being enabled\n");
++	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
+ }
+ 
+ static u32 dw_pcie_readl_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+@@ -238,7 +238,7 @@ static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
+ 
+ 		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+ 	}
+-	dev_err(pci->dev, "inbound iATU is not being enabled\n");
++	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
+ 
+ 	return -EBUSY;
+ }
+@@ -284,7 +284,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
+ 
+ 		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+ 	}
+-	dev_err(pci->dev, "inbound iATU is not being enabled\n");
++	dev_err(pci->dev, "Inbound iATU is not being enabled\n");
+ 
+ 	return -EBUSY;
+ }
+@@ -313,16 +313,16 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
+ {
+ 	int retries;
+ 
+-	/* check if the link is up or not */
++	/* Check if the link is up or not */
+ 	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
+ 		if (dw_pcie_link_up(pci)) {
+-			dev_info(pci->dev, "link up\n");
++			dev_info(pci->dev, "Link up\n");
+ 			return 0;
+ 		}
+ 		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
+ 	}
+ 
+-	dev_err(pci->dev, "phy link never came up\n");
++	dev_err(pci->dev, "Phy link never came up\n");
+ 
+ 	return -ETIMEDOUT;
+ }
+@@ -351,7 +351,7 @@ void dw_pcie_setup(struct dw_pcie *pci)
+ 	if (ret)
+ 		lanes = 0;
+ 
+-	/* set the number of lanes */
++	/* Set the number of lanes */
+ 	val = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
+ 	val &= ~PORT_LINK_MODE_MASK;
+ 	switch (lanes) {
+@@ -373,7 +373,7 @@ void dw_pcie_setup(struct dw_pcie *pci)
+ 	}
+ 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
+ 
+-	/* set link width speed control register */
++	/* Set link width speed control register */
+ 	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
+ 	val &= ~PORT_LOGIC_LINK_WIDTH_MASK;
+ 	switch (lanes) {
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+2.7.4
