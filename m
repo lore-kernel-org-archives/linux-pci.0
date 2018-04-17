@@ -1,53 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v4 06/10] misc: pci_endpoint_test: Add designware EP entry
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>
-References: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
- <11fa6ecaae3b0c004b18e57b6b16b2b89ad4dfd4.1523881182.git.gustavo.pimentel@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <549c7c45-4e01-33b6-a105-2a621128c748@ti.com>
-Date: Tue, 17 Apr 2018 14:52:17 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, mark.rutland@arm.com,
+ catalin.marinas@arm.com
+Subject: [PATCH 1/6 v2] Docs: dt: add fsl-mc iommu-map device-tree binding
+Date: Tue, 17 Apr 2018 15:51:49 +0530
+Message-Id: <1523960514-25457-2-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1523960514-25457-1-git-send-email-nipun.gupta@nxp.com>
+References: <1520260166-29387-1-git-send-email-nipun.gupta@nxp.com>
+ <1523960514-25457-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <11fa6ecaae3b0c004b18e57b6b16b2b89ad4dfd4.1523881182.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, bharat.bhushan@nxp.com, stuyoder@gmail.com,
+ frowand.list@gmail.com, gregkh@linuxfoundation.org, joro@8bytes.org,
+ linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+ leoyang.li@nxp.com, iommu@lists.linux-foundation.org, robh+dt@kernel.org,
+ Nipun Gupta <nipun.gupta@nxp.com>, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, laurentiu.tudor@nxp.com, shawnguo@kernel.org, hch@lst.de,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The existing IOMMU bindings cannot be used to specify the relationship
+between fsl-mc devices and IOMMUs. This patch adds a generic binding for
+mapping fsl-mc devices to IOMMUs, using iommu-map property.
+
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+---
+ .../devicetree/bindings/misc/fsl,qoriq-mc.txt      | 39 ++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
+index 6611a7c..8cbed4f 100644
+--- a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
++++ b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
+@@ -9,6 +9,25 @@ blocks that can be used to create functional hardware objects/devices
+ such as network interfaces, crypto accelerator instances, L2 switches,
+ etc.
+ 
++For an overview of the DPAA2 architecture and fsl-mc bus see:
++drivers/staging/fsl-mc/README.txt
++
++As described in the above overview, all DPAA2 objects in a DPRC share the
++same hardware "isolation context" and a 10-bit value called an ICID
++(isolation context id) is expressed by the hardware to identify
++the requester.
++
++The generic 'iommus' property is insufficient to describe the relationship
++between ICIDs and IOMMUs, so an iommu-map property is used to define
++the set of possible ICIDs under a root DPRC and how they map to
++an IOMMU.
++
++For generic IOMMU bindings, see
++Documentation/devicetree/bindings/iommu/iommu.txt.
++
++For arm-smmu binding, see:
++Documentation/devicetree/bindings/iommu/arm,smmu.txt.
++
+ Required properties:
+ 
+     - compatible
+@@ -88,14 +107,34 @@ Sub-nodes:
+               Value type: <phandle>
+               Definition: Specifies the phandle to the PHY device node associated
+                           with the this dpmac.
++Optional properties:
++
++- iommu-map: Maps an ICID to an IOMMU and associated iommu-specifier
++  data.
++
++  The property is an arbitrary number of tuples of
++  (icid-base,iommu,iommu-base,length).
++
++  Any ICID i in the interval [icid-base, icid-base + length) is
++  associated with the listed IOMMU, with the iommu-specifier
++  (i - icid-base + iommu-base).
+ 
+ Example:
+ 
++        smmu: iommu@5000000 {
++               compatible = "arm,mmu-500";
++               #iommu-cells = <2>;
++               stream-match-mask = <0x7C00>;
++               ...
++        };
++
+         fsl_mc: fsl-mc@80c000000 {
+                 compatible = "fsl,qoriq-mc";
+                 reg = <0x00000008 0x0c000000 0 0x40>,    /* MC portal base */
+                       <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
+                 msi-parent = <&its>;
++                /* define map for ICIDs 23-64 */
++                iommu-map = <23 &smmu 23 41>;
+                 #address-cells = <3>;
+                 #size-cells = <1>;
+ 
+-- 
+1.9.1
 
 
-On Monday 16 April 2018 08:07 PM, Gustavo Pimentel wrote:
-> Adds the designware EP device ID entry to pci_endpoint_test driver table
-> to allow this device to be recognize and handle by the pci_endpoint_test
-> driver.
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
-> Change v1->v2:
-> - Changed device id following Kishon's suggestion.
-> Change v2->v3:
-> - Nothing changed, just to follow the patch set version.
-> Changes v3->v4:
-> - Nothing changed, just to follow the patch set version.
-> 
->  drivers/misc/pci_endpoint_test.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-> index fe8897e..37db0fc 100644
-> --- a/drivers/misc/pci_endpoint_test.c
-> +++ b/drivers/misc/pci_endpoint_test.c
-> @@ -634,6 +634,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
->  static const struct pci_device_id pci_endpoint_test_tbl[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, PCI_DEVICE_ID_SYNOPSYS_SMPL_EP) },
->  	{ }
->  };
->  MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
