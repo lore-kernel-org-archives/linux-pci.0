@@ -1,53 +1,29 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH RESEND v4 7/9] PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
-Date: Tue,  3 Apr 2018 17:52:23 +0300
-Message-Id: <20180403145225.22371-8-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180403145225.22371-1-mika.westerberg@linux.intel.com>
-References: <20180403145225.22371-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:55362 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751147AbeDQGxr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Apr 2018 02:53:47 -0400
+Date: Mon, 16 Apr 2018 23:53:43 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Frederick Lawler <fred@fredlawl.com>
+Cc: bhelgaas@google.com, mike.marciniszyn@intel.com,
+        dennis.dalessandro@intel.com, dledford@redhat.com,
+        jgg@mellanox.com, linux-pci@vger.kernel.org,
+        linux-rdma@vger.kernel.org
+Subject: Re: [PATCH v3 0/2] IB/hfi1: Cleanup PCIe link configuration
+Message-ID: <20180417065343.GA29193@infradead.org>
+References: <20180417002825.2737-1-fred@fredlawl.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180417002825.2737-1-fred@fredlawl.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is not immediately clear what the two functions actually return so
-add kernel-doc comment explaining it a bit better.
+On Mon, Apr 16, 2018 at 07:28:23PM -0500, Frederick Lawler wrote:
+> The IB/hfi1 driver uses custom macros to configure the target link speed. Some 
+> macros were previously replaced, but not fully. This patch series addresses the
+> configuration inconsistencies by adding PCI_EXP_LNKCTL2_TLS* macros to PCI,
+> and then use them in the following IB/hfi1 patch.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/probe.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8c4715df62e7..079eea6680bb 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -983,6 +983,8 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
-  * already configured by the BIOS and after we are done with all of
-  * them, we proceed to assigning numbers to the remaining buses in
-  * order to avoid overlaps between old and new bus numbers.
-+ *
-+ * Return: New subordinate number covering all buses behind this bridge.
-  */
- static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 				  int max, unsigned int available_buses,
-@@ -1215,6 +1217,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
-  * already configured by the BIOS and after we are done with all of
-  * them, we proceed to assigning numbers to the remaining buses in
-  * order to avoid overlaps between old and new bus numbers.
-+ *
-+ * Return: New subordinate number covering all buses behind this bridge.
-  */
- int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- {
--- 
-2.16.2
-
+Btw, why is the driver configuring the PCIe link speed?  Isn't this
+something we should be handling in the PCI core?
