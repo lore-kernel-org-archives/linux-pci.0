@@ -1,83 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:40236 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932257AbeDWRFW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 13:05:22 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: x86@kernel.org, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        linux-mips@linux-mips.org, sparclinux@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 09/12] PCI: remove CONFIG_PCI_BUS_ADDR_T_64BIT
-Date: Mon, 23 Apr 2018 19:04:16 +0200
-Message-Id: <20180423170419.20330-10-hch@lst.de>
-In-Reply-To: <20180423170419.20330-1-hch@lst.de>
-References: <20180423170419.20330-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v5 04/10] bindings: PCI: designware: Add support for the EP in Designware driver
+Date: Tue, 17 Apr 2018 15:34:22 +0100
+Message-Id: <44c1ed8bb6f64d1024b7d6aaf783806850a2699a.1523973931.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This symbol is now always identical to CONFIG_ARCH_DMA_ADDR_T_64BIT, so
-remove it.
+Add device tree binding documentation for the Endpoint in PCIe Designware
+driver.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/Kconfig | 4 ----
- drivers/pci/bus.c   | 4 ++--
- include/linux/pci.h | 2 +-
- 3 files changed, 3 insertions(+), 7 deletions(-)
+Change v1->v2:
+ - Add a missing log description.
+ - Add "snps,dw-pcie" compatible string following Kishon's suggestion.
+Change v2->v3:
+ - Reverted pcie_ep name to pcie.
+Changes v3->v4:
+ - Reverted "snps,dw-pcie-rc" compatible string requested by Rob Herring.
+Changes v4->v5:
+ - Removed device_type entry from EP requested by Rob Herring.
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 34b56a8f8480..29a487f31dae 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -5,10 +5,6 @@
- 
- source "drivers/pci/pcie/Kconfig"
- 
--config PCI_BUS_ADDR_T_64BIT
--	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
--	depends on PCI
--
- config PCI_MSI
- 	bool "Message Signaled Interrupts (MSI and MSI-X)"
- 	depends on PCI
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index bc2ded4c451f..35b7fc87eac5 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -120,7 +120,7 @@ int devm_request_pci_bus_resources(struct device *dev,
- EXPORT_SYMBOL_GPL(devm_request_pci_bus_resources);
- 
- static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
--#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-+#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
- static struct pci_bus_region pci_64_bit = {0,
- 				(pci_bus_addr_t) 0xffffffffffffffffULL};
- static struct pci_bus_region pci_high = {(pci_bus_addr_t) 0x100000000ULL,
-@@ -230,7 +230,7 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 					  resource_size_t),
- 		void *alignf_data)
- {
--#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-+#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
- 	int rc;
- 
- 	if (res->flags & IORESOURCE_MEM_64) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 73178a2fcee0..55371cb827ad 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -670,7 +670,7 @@ int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
- int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
- 		  int reg, int len, u32 val);
- 
--#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-+#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
- typedef u64 pci_bus_addr_t;
- #else
- typedef u32 pci_bus_addr_t;
+ Documentation/devicetree/bindings/pci/designware-pcie.txt | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index 7f9804d..c124f9b 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -3,6 +3,7 @@
+ Required properties:
+ - compatible:
+ 	"snps,dw-pcie" for RC mode;
++	"snps,dw-pcie-ep" for EP mode;
+ - reg: Should contain the configuration address space.
+ - reg-names: Must be "config" for the PCIe configuration space.
+     (The old way of getting the configuration address space from "ranges"
+@@ -56,3 +57,14 @@ Example configuration:
+ 		#interrupt-cells = <1>;
+ 		num-lanes = <1>;
+ 	};
++or
++	pcie: pcie@dfc00000 {
++		compatible = "snps,dw-pcie-ep";
++		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
++		      <0xdfc01000 0x0001000>, /* IP registers 2 */
++		      <0xd0000000 0x2000000>; /* Configuration space */
++		reg-names = "dbi", "dbi2", "addr_space";
++		num-ib-windows = <6>;
++		num-ob-windows = <2>;
++		num-lanes = <1>;
++	};
 -- 
-2.17.0
+2.7.4
