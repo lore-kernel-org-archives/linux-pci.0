@@ -1,70 +1,53 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>
-Subject: [PATCH 0/6] PCI: leak fixes, removable generic PCI host, assorted stuff
-Date: Tue, 24 Apr 2018 17:13:36 +0200
-Message-Id: <cover.1524582822.git.jan.kiszka@siemens.com>
+Subject: Re: [PATCH v4 06/10] misc: pci_endpoint_test: Add designware EP entry
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>
+References: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
+ <11fa6ecaae3b0c004b18e57b6b16b2b89ad4dfd4.1523881182.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <549c7c45-4e01-33b6-a105-2a621128c748@ti.com>
+Date: Tue, 17 Apr 2018 14:52:17 +0530
+MIME-Version: 1.0
+In-Reply-To: <11fa6ecaae3b0c004b18e57b6b16b2b89ad4dfd4.1523881182.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This primarily enables to unbind the generic PCI host controller without
-leaving lots of memory leaks behind. A previous proposal patch 5 was
-rejected because of those issues [1].
-
-The fixes have been validated in the Jailhouse setup, where we add and
-remove a virtual PCI host controller on hypervisor activation/
-deactivation, with the help of kmemleak.
-
-Besides that, there is tiny PCI API cleanup at the beginning and
-support for manually enabled PCI domains at the end that enables the
-Jailhouse scenario.
-
-Jan
-
-[1] http://lkml.iu.edu/hypermail/linux/kernel/1606.3/00072.html
 
 
-CC: Jingoo Han <jingoohan1@gmail.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Will Deacon <will.deacon@arm.com>
+On Monday 16 April 2018 08:07 PM, Gustavo Pimentel wrote:
+> Adds the designware EP device ID entry to pci_endpoint_test driver table
+> to allow this device to be recognize and handle by the pci_endpoint_test
+> driver.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 
-Jan Kiszka (6):
-  PCI: Make pci_get_new_domain_nr static
-  PCI: Fix memory leak of devm_pci_alloc_host_bridge
-  PCI: Introduce devm_of_pci_get_host_bridge_resources
-  PCI: Convert of_pci_get_host_bridge_resources users to devm variant
-  PCI: Add support for unbinding the generic PCI host controller
-  arm: Allow to enable PCI_DOMAINS manually
-
- arch/arm/Kconfig                       |  7 ++-
- drivers/pci/dwc/pcie-designware-host.c |  2 +-
- drivers/pci/host/pci-aardvark.c        |  5 +-
- drivers/pci/host/pci-ftpci100.c        |  4 +-
- drivers/pci/host/pci-host-common.c     | 13 +++++
- drivers/pci/host/pci-host-generic.c    |  1 +
- drivers/pci/host/pci-v3-semi.c         |  3 +-
- drivers/pci/host/pci-versatile.c       |  3 +-
- drivers/pci/host/pci-xgene.c           |  3 +-
- drivers/pci/host/pcie-altera.c         |  5 +-
- drivers/pci/host/pcie-iproc-platform.c |  4 +-
- drivers/pci/host/pcie-rcar.c           |  5 +-
- drivers/pci/host/pcie-rockchip.c       |  4 +-
- drivers/pci/host/pcie-xilinx-nwl.c     |  4 +-
- drivers/pci/host/pcie-xilinx.c         |  4 +-
- drivers/pci/of.c                       | 93 ++++++++++++++++++++++------------
- drivers/pci/pci.c                      |  6 +--
- drivers/pci/probe.c                    |  4 +-
- include/linux/of_pci.h                 | 14 ++++-
- include/linux/pci-ecam.h               |  1 +
- include/linux/pci.h                    |  3 --
- 21 files changed, 120 insertions(+), 68 deletions(-)
-
--- 
-2.13.6
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+> Change v1->v2:
+> - Changed device id following Kishon's suggestion.
+> Change v2->v3:
+> - Nothing changed, just to follow the patch set version.
+> Changes v3->v4:
+> - Nothing changed, just to follow the patch set version.
+> 
+>  drivers/misc/pci_endpoint_test.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+> index fe8897e..37db0fc 100644
+> --- a/drivers/misc/pci_endpoint_test.c
+> +++ b/drivers/misc/pci_endpoint_test.c
+> @@ -634,6 +634,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+>  static const struct pci_device_id pci_endpoint_test_tbl[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, PCI_DEVICE_ID_SYNOPSYS_SMPL_EP) },
+>  	{ }
+>  };
+>  MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
+> 
