@@ -1,81 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53924 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751919AbeDHSDi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Apr 2018 14:03:38 -0400
-Subject: Re: [PATCH V2] PCI: rcar: Clean up the macros
-To: Marek Vasut <marek.vasut@gmail.com>, linux-pci@vger.kernel.org
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-References: <20180408130942.19148-1-marek.vasut+renesas@gmail.com>
- <7f63726a-fb96-a329-cce4-d1dd64b33de7@infradead.org>
- <710bfa56-09a6-5017-e493-fce7cd09e788@gmail.com>
- <21dff119-07a4-e7b0-f3c0-b21721124232@infradead.org>
- <1043a359-7440-826b-5146-7dea494214b8@gmail.com>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <06dedbd6-13df-3d7a-5244-c4e92df0a009@infradead.org>
-Date: Sun, 8 Apr 2018 11:03:36 -0700
-MIME-Version: 1.0
-In-Reply-To: <1043a359-7440-826b-5146-7dea494214b8@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v6 3/9] PCI: endpoint: functions/pci-epf-test: Add second entry
+Date: Wed, 18 Apr 2018 15:46:38 +0100
+Message-Id: <9efd4af2f91e1be2b65d2df93444b35871673e8b.1524062073.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/08/2018 09:53 AM, Marek Vasut wrote:
-> On 04/08/2018 06:51 PM, Randy Dunlap wrote:
->> On 04/08/2018 09:34 AM, Marek Vasut wrote:
->>> On 04/08/2018 05:27 PM, Randy Dunlap wrote:
->>>> On 04/08/2018 06:09 AM, Marek Vasut wrote:
->>>>> This patch replaces the (1 << n) with BIT(n) and cleans up whitespace,
->>>>> no functional change.
->>>>>
->>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
->>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
->>>>> Cc: linux-renesas-soc@vger.kernel.org
->>>>> ---
->>>>> V2: Reword the commit message
->>>>> ---
->>>>>  drivers/pci/host/pcie-rcar.c | 52 ++++++++++++++++++++++----------------------
->>>>>  1 file changed, 26 insertions(+), 26 deletions(-)
->>>>>
->>>>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
->>>>> index 25f68305322c..5ab7bf6a8de0 100644
->>>>> --- a/drivers/pci/host/pcie-rcar.c
->>>>> +++ b/drivers/pci/host/pcie-rcar.c
->>>>> @@ -30,9 +30,9 @@
->>>>
->>>> missing this:
->>>>
->>>> #include <linux/bitops.h>
->>>
->>> This compiles just fine without it though, which means it's probably
->>> pulled in through some of the other includes already present.
->>>
->>
->> I suspected that. However, please see rule #1 in
->> Documentation/process/submit-checklist.rst:
->>
->> 1) If you use a facility then #include the file that defines/declares
->>    that facility.  Don't depend on other header files pulling in ones
->>    that you use.
-> 
-> If I was to include every single header from which I use something,
-> wouldn't that make the list real long then ? Is that really worth it?
+Adds a seconds entry on the pci_epf_test_ids structure that disables the
+linkup_notifier parameter on driver for the designware EP.
 
-The length of the list of headers is not an issue.
-And if you are "cleaning up," you might as well do a full job of it.
+This allows designware EPs that doesn't have linkup notification signal
+to work with pcitest.
 
-Just because it builds on one $ARCH (with various pulled-in headers) does
-not mean that it will build on another $ARCH (with different pulled-in headers).
+Updates the binding documentation accordingly.
 
-Or did you build it on all linux/arch/* ?
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v2->v3:
+ - Added second entry in pci_epf_test_ids structure.
+ - Remove test_reg_bar field assignment on second entry.
+Changes v3->v4:
+ - Nothing changed, just to follow the patch set version.
+Changes v4->v5:
+ - Changed pci_epf_test_cfg2 to pci_epf_test_designware.
+Changes v5->v6:
+ - Changed name field from pci_epf_test_designware to pci_epf_test_dw.
 
-thanks,
+ Documentation/PCI/endpoint/function/binding/pci-test.txt | 2 ++
+ drivers/pci/endpoint/functions/pci-epf-test.c            | 8 ++++++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+index 3b68b95..dc39f47 100644
+--- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
++++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+@@ -1,6 +1,8 @@
+ PCI TEST ENDPOINT FUNCTION
+ 
+ name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
++name: Should be "pci_epf_test_dw" to bind to the pci_epf_test driver
++      with a custom configuration for the designware EP.
+ 
+ Configurable Fields:
+ vendorid	 : should be 0x104c
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 7cef851..b7dff87 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -459,10 +459,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+ 	return 0;
+ }
+ 
++static const struct pci_epf_test_data data_cfg2 = {
++	.linkup_notifier = false
++};
++
+ static const struct pci_epf_device_id pci_epf_test_ids[] = {
+ 	{
+ 		.name = "pci_epf_test",
+ 	},
++	{
++		.name = "pci_epf_test_dw",
++		.driver_data = (kernel_ulong_t)&data_cfg2,
++	},
+ 	{},
+ };
+ 
 -- 
-~Randy
+2.7.4
