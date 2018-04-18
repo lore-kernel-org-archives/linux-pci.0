@@ -1,34 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:45538 "EHLO
-        mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752593AbeDPOeS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2018 10:34:18 -0400
-MIME-Version: 1.0
-From: Matt Turner <mattst88@gmail.com>
-Date: Mon, 16 Apr 2018 07:33:57 -0700
-Message-ID: <CAEdQ38GUhL0R4c7ZjEZv89TmqQ0cwhnvBawxuXonSb9On=+B6A@mail.gmail.com>
-Subject: Some Alphas broken by f75b99d5a77d (PCI: Enforce bus address limits
- in resource allocation)
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-        linux-alpha <linux-alpha@vger.kernel.org>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Jay Estabrook <jay.estabrook@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:43228 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752941AbeDRIGg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Apr 2018 04:06:36 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH] PCI: dwc: artpec6: Use devm_ioremap_resource instead of devm_ioremap_resource
+Date: Wed, 18 Apr 2018 09:06:33 +0100
+Message-Id: <828d8a53d85be073672fec67ee6980818dc459ab.1524038460.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit f75b99d5a77d63f20e07bd276d5a427808ac8ef6 (PCI: Enforce bus
-address limits in resource allocation) broke Alpha systems using
-CONFIG_ALPHA_NAUTILUS. Alpha is 64-bit, but Nautilus systems use a
-32-bit AMD 751/761 chipset. arch/alpha/kernel/sys_nautilus.c maps PCI
-into the upper addresses just below 4GB.
+This fix aims to replace the use of devm_ioremap() by
+devm_ioremap_resource() already discussed on [1].
 
-I can get a working kernel by ifdef'ing out the code in
-drivers/pci/bus.c:pci_bus_alloc_resource. We can't tie
-PCI_BUS_ADDR_T_64BIT to ALPHA_NAUTILUS without breaking generic
-kernels.
+[1] -> https://patchwork.kernel.org/patch/10173831/
 
-How can we get Nautilus working again?
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/pci/dwc/pcie-artpec6.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index e66cede..321b56c 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -463,9 +463,9 @@ static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
+ 	ep->ops = &pcie_ep_ops;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
+-	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
+-	if (!pci->dbi_base2)
+-		return -ENOMEM;
++	pci->dbi_base2 = devm_ioremap_resource(dev, res);
++	if (IS_ERR(pci->dbi_base2))
++		return PTR_ERR(pci->dbi_base2);
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+ 	if (!res)
+-- 
+2.7.4
