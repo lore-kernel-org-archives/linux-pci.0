@@ -1,68 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:44138 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753522AbeD3RZ0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Apr 2018 13:25:26 -0400
-To: Alex Williamson <alex.williamson@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Subject: [PATCH v2 0/2] PCI: Support to workaround bus level HW issues
-Message-ID: <4bd28931-8e8d-6bfe-a98c-49f8e2778c6e@oracle.com>
-Date: Mon, 30 Apr 2018 13:25:22 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 18 Apr 2018 14:02:30 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: Re: [PATCH v4 0/6] PCI: aardvark: misc fixes and improvements
+Message-ID: <20180418130230.GB22463@e107981-ln.cambridge.arm.com>
+References: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
+ <20180409162356.GB14533@e107981-ln.cambridge.arm.com>
+ <20180409205433.4eb78a45@windsurf>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180409205433.4eb78a45@windsurf>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
+ Gregory Clement <gregory.clement@bootlin.com>,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
+ Miqu??l Raynal <miquel.raynal@bootlin.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Wilson Ding <dingwei@marvell.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are bugs in certain PCIe switches that cause access violations when an
-endpoint device is hotplugged. In particular, there's an issue with
-certain IDT switches that trigger a ACS violation when bringing up a newly
-plugged PCIe endpoint device. This is a major issue for platforms
-designed to issue a fatal reset in the case of this event.
+On Mon, Apr 09, 2018 at 08:54:33PM +0200, Thomas Petazzoni wrote:
+> Hello Lorenzo,
+> 
+> Thanks for your feedback!
+> 
+> On Mon, 9 Apr 2018 17:23:56 +0100, Lorenzo Pieralisi wrote:
+> 
+> > it is not just improvements, these look like significant bug fixes too.
+> > 
+> > Let me know which patches we should prioritize since hopefully they can
+> > be sent during v4.17-rc* releases, I will queue the rest for the next
+> > merge window.
+> 
+> The patches that are bug fixes are marked with a "Fixes:" tag and are
+> Cc'ed to stable.
+> 
+> So, the following patches are fixes:
+> 
+> [PATCH v4 1/6] PCI: aardvark: Fix logic in advk_pcie_{rd,wr}_conf()
+> [PATCH v4 2/6] PCI: aardvark: Set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
+> [PATCH v4 3/6] PCI: aardvark: Use ISR1 instead of ISR0 interrupt in legacy irq mode
+> [PATCH v4 4/6] PCI: aardvark: Fix PCIe Max Read Request Size setting
+> 
+> The following patches are improvements:
+> 
+> [PATCH v4 5/6] PCI: aardvark: Introduce an advk_pcie_valid_device() helper
+> [PATCH v4 6/6] PCI: aardvark: Remove PCIe outbound window configuration
 
-The first patch provides a framework for intercepting and working around
-issues with parent devices to the endpoint being brought up.
+I added those four patches to my pci/host/fixes branch, please have a
+look if they meet your expectations and if so I will ask Bjorn to send
+them if he thinks they are fit for -rc*.
 
-The second patch provides the actual patch for the IDT switch issue using
-that framework. The ACS feature is disabled in the IDT switch prior to endpoint
-device detection and then re-enabled subsequent to that.
+Thanks,
+Lorenzo
 
-James
-
--v2: move workaround to pci_bus_read_dev_vendor_id() from pci_bus_check_dev()
-     and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
--v3: add bus->self check for root bus and virtual bus for sriov vfs.
--v4: only do workaround for IDT switches
--v5: tweak pci_std_enable_acs_sv to deal with unimplemented SV
--v6: Added errata verbiage verbatim and resolved patch format issues
--v7: changed int to bool for found and idt_workaround declarations. Also
-     added bugzilla https://bugzilla.kernel.org/show_bug.cgi?id=196979
--v8: Rewrote the patch by adding a new acs quirk to keep the workaround
-     out of the main code path
--v9: changed function name from pci_dev_specific_fixup_acs_quirk to
-     pci_bus_acs_quirk. Also, tested for FLR and hot reset scenarios and did
-     not see issues where workaround was required. The issue seems to be
-     related only to cold reset/power on situation.
--v10: Moved the contents of pci_bus_read_vendor_id into an internal function
-      __pci_bus_read_vendor_id
--v11: Split the patch into two patches. The first a general quirk framework.
--v12: Add pci_bus_generic_read_dev_vendor_id() to carry out default behavior
-      when detecting endpoint and pci_bus_specific_read_dev_vendor_id for
-      bus quirk behavior
--v13: Fixed build errors found for non-x86 platforms via cross compiles when
-      CONFIG_QUIRKS is not defined
-
-
-James Puthukattukaran (2):
-  PCI: Add pci_bus_specific_read_dev_vendor_id() to workaround PCI
-    switch     specific issues prior to accessing newly added endpoint
-  PCI: Implement workaround for the ACS bug in the IDT switch
-
- drivers/pci/pci.h    |  13 +++++
- drivers/pci/probe.c  |  20 +++++++-
- drivers/pci/quirks.c | 142 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 174 insertions(+), 1 deletion(-)
-
--- 
-1.8.3.1
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
