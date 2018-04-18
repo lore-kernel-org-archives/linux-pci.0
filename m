@@ -1,63 +1,126 @@
-Return-Path: <SRS0=YPu5=HB=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=YPu5=HB=intel.com=keith.busch@kernel.org>
-Date: Thu, 12 Apr 2018 11:09:11 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Oza Pawandeep <poza@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Philippe Ombredanne <pombredanne@nexb.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Kate Stewart <kstewart@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Dongdong Liu <liudongdong3@huawei.com>, Wei Zhang <wzhang@fb.com>,
-	Timur Tabi <timur@codeaurora.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v13 6/6] PCI/DPC: Do not do recovery for hotplug enabled
- system
-Message-ID: <20180412170911.GA6424@localhost.localdomain>
-References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
- <1523284914-2037-7-git-send-email-poza@codeaurora.org>
- <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
- <13efe2e8-74c8-acb4-ec58-f79b14a1f182@codeaurora.org>
- <20180412140648.GD145698@bhelgaas-glaptop.roam.corp.google.com>
- <ca7e5285-2e88-e130-6402-a271bb92a81e@codeaurora.org>
- <20180412143954.GB4810@localhost.localdomain>
- <20180412150231.GD4810@localhost.localdomain>
- <ea977780-6f90-af5a-442f-575536038307@codeaurora.org>
+Return-Path: <SRS0=C7R8=HH=jurassic.park.msu.ru=ink@kernel.org>
+Return-Path: <SRS0=C7R8=HH=jurassic.park.msu.ru=ink@kernel.org>
+Date: Wed, 18 Apr 2018 21:48:08 +0100
+From: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Matt Turner <mattst88@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-alpha <linux-alpha@vger.kernel.org>,
+	Richard Henderson <rth@twiddle.net>,
+	Jay Estabrook <jay.estabrook@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: Some Alphas broken by f75b99d5a77d (PCI: Enforce bus address
+ limits in resource allocation)
+Message-ID: <20180418204808.GA2352@mail.rc.ru>
+References: <CAEdQ38GUhL0R4c7ZjEZv89TmqQ0cwhnvBawxuXonSb9On=+B6A@mail.gmail.com>
+ <20180416215044.GE28657@bhelgaas-glaptop.roam.corp.google.com>
+ <CAEdQ38EdxHigQiH_k=+4enbHAutbWOE6Kc5C81ghfsC3pwELjw@mail.gmail.com>
+ <20180417194344.GK28657@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ea977780-6f90-af5a-442f-575536038307@codeaurora.org>
+In-Reply-To: <20180417194344.GK28657@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 12, 2018 at 12:27:20PM -0400, Sinan Kaya wrote:
-> On 4/12/2018 11:02 AM, Keith Busch wrote:
+On Tue, Apr 17, 2018 at 02:43:44PM -0500, Bjorn Helgaas wrote:
+> On Mon, Apr 16, 2018 at 09:43:42PM -0700, Matt Turner wrote:
+> > On Mon, Apr 16, 2018 at 2:50 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > Hi Matt,
+> > >
+> > > First of all, sorry about breaking Nautilus, and thanks very much for
+> > > tracking it down to this commit.
 > > 
-> > Also, I thought the plan was to keep hotplug and non-hotplug the same,
-> > except for the very end: if not a hotplug bridge, initiate the rescan
-> > automatically after releasing from containment, otherwise let pciehp
-> > handle it when the link reactivates.
+> > It's a particularly weird case, as far as I've been able to discern :)
 > > 
+> > > On Mon, Apr 16, 2018 at 07:33:57AM -0700, Matt Turner wrote:
+> > >> Commit f75b99d5a77d63f20e07bd276d5a427808ac8ef6 (PCI: Enforce bus
+> > >> address limits in resource allocation) broke Alpha systems using
+> > >> CONFIG_ALPHA_NAUTILUS. Alpha is 64-bit, but Nautilus systems use a
+> > >> 32-bit AMD 751/761 chipset. arch/alpha/kernel/sys_nautilus.c maps PCI
+> > >> into the upper addresses just below 4GB.
+> > >>
+> > >> I can get a working kernel by ifdef'ing out the code in
+> > >> drivers/pci/bus.c:pci_bus_alloc_resource. We can't tie
+> > >> PCI_BUS_ADDR_T_64BIT to ALPHA_NAUTILUS without breaking generic
+> > >> kernels.
+> > >>
+> > >> How can we get Nautilus working again?
+> > >
+> > > Can you collect a complete dmesg log, ideally both before and after
+> > > f75b99d5a77d?  I assume the problem is that after f75b99d5a77d? we
+> > > erroneously assign space for something above 4GB.  But if we know the
+> > > correct host bridge apertures, we shouldn't assign space outside them,
+> > > regardless of the PCI bus address size.
+> > 
+> > I made a mistake in my initial report. Commit f75b99d5a77d is actually
+> > the last *working* commit. My apologies. The next commit is
+> > d56dbf5bab8c (PCI: Allocate 64-bit BARs above 4G when possible) and it
+> > breaks Nautilus I've confirmed.
+> > 
+> > Please find attached dmesgs from those two commits, from the commit
+> > immediately before them, and another from 4.17-rc1 with my hack of #if
+> > 0'ing out the pci_bus_alloc_from_region(..., &pci_high) code.
+> > 
+> > Thanks for having a look!
 > 
-> Hmm...
+> We're telling the PCI core that the host bridge MMIO aperture is the
+> entire 64-bit address space, so when we assign BARs, some of them end
+> up above 4GB:
 > 
-> AER driver doesn't do stop and rescan approach for fatal errors. AER driver
-> makes an error callback followed by secondary bus reset and finally driver
-> the resume callback on the endpoint only if link recovery is successful.
-> Otherwise, AER driver bails out with recovery unsuccessful message.
+>   pci_bus 0000:00: root bus resource [mem 0x00000000-0xffffffffffffffff]
+>   pci 0000:00:09.0: BAR 0: assigned [mem 0x100000000-0x10000ffff 64bit]
+> 
+> But it sounds like the MMIO aperture really ends at 0xffffffff, so
+> that's not going to work.
 
-I'm not sure if that's necessarily true. People have reported AER
-handling triggers PCIe hotplug events, and creates some interesting race
-conditions:
+Correct... This would do as a quick fix, I think:
 
-https://marc.info/?l=linux-pci&m=152336615707640&w=2
+diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+index ff4f54b..477ba65 100644
+--- a/arch/alpha/kernel/sys_nautilus.c
++++ b/arch/alpha/kernel/sys_nautilus.c
+@@ -193,6 +193,8 @@ static struct resource irongate_io = {
+ };
+ static struct resource irongate_mem = {
+ 	.name	= "Irongate PCI MEM",
++	.start	= 0,
++	.end	= 0xffffffff,
+ 	.flags	= IORESOURCE_MEM,
+ };
+ static struct resource busn_resource = {
+@@ -218,7 +220,7 @@ nautilus_init_pci(void)
+ 		return;
+ 
+ 	pci_add_resource(&bridge->windows, &ioport_resource);
+-	pci_add_resource(&bridge->windows, &iomem_resource);
++	pci_add_resource(&bridge->windows, &irongate_mem);
+ 	pci_add_resource(&bridge->windows, &busn_resource);
+ 	bridge->dev.parent = NULL;
+ 	bridge->sysdata = hose;
 
-https://www.spinics.net/lists/linux-pci/msg70614.html
 
-> Why do we need an additional rescan in the DPC driver if the link is up
-> and driver resumes operation?
+> There's probably some register in the chipset that tells us where the
+> MMIO aperture starts.  The best thing to do would be to read that
+> register, use it to initialize irongate_mem, and use that as the MMIO
+> aperture.
 
-I thought the plan was to have DPC always go through the removal path
-to ensure all devices are properly configured when containment is
-released. In order to reconfigure those, you'll need to initiate the
-rescan from somewhere.
+Surely there is the register, namely IRONGATE0->pci_mem, but it's
+basically write-only for us as it contains utter crap on bootup.
+
+> But I don't know where to look in the chipset, and it looks like the
+> current strategy is to infer the base by looking at BAR assignments of
+> PCI devices.  Can you try the patch below (based on v4.17-rc1) and
+> save the dmesg and /proc/iomem and /proc/ioports contents?  I'm
+> guessing at some things here, so I added a few debug printks, too.
+
+No, the strategy was to do PCI resource allocations from scratch,
+minimizing MMIO aperture to save as much RAM as possible in 4Gb
+memory configuration. That's what all that hackery with bus sizing
+was for. We pretended that irongate is sort of non-standard p2p bridge
+(which is almost true wrt internal alpha ev6 "host bridge"),
+called pci_bus_size_bridges() for it, then moved calculated MMIO
+window up to 4G boundary and then did normal "assign unassigned".
+However, it was broken long time ago in a more subtle way - even in
+Matt's dmesg from working 3.13 kernels AGP framebuffer resource ended
+up either unassigned or in the wrong place. This is relatively harmless
+if you don't use graphics though. Not sure how to fix that, this
+"root bridge" approach looks rather limiting to me.
