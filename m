@@ -1,84 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v8 3/9] PCI: endpoint: functions/pci-epf-test: Add second entry
-Date: Fri, 27 Apr 2018 12:59:58 +0100
-Message-Id: <c2b6cb8de2502e1b5352be3b6d687b1cb4b7033a.1524829928.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33912 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752135AbeDRR2w (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Apr 2018 13:28:52 -0400
+Received: by mail-oi0-f67.google.com with SMTP id e23-v6so2326509oiy.1
+        for <linux-pci@vger.kernel.org>; Wed, 18 Apr 2018 10:28:51 -0700 (PDT)
+From: minyard@acm.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: openipmi-developer@lists.sourceforge.net,
+        linux-pci@vger.kernel.org, Corey Minyard <cminyard@mvista.com>
+Subject: [PATCH v2] pci:ipmi: Move IPMI PCI class id defines to pci_ids.h
+Date: Wed, 18 Apr 2018 12:28:47 -0500
+Message-Id: <1524072527-11690-1-git-send-email-minyard@acm.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a seconds entry on the pci_epf_test_ids structure that disables the
-linkup_notifier parameter on driver for the DesignWare EP.
+From: Corey Minyard <cminyard@mvista.com>
 
-Allow DesignWare EPs that doesn't have linkup notification signal to work
-with pcitest.
-
-Update the binding documentation accordingly.
-
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Corey Minyard <cminyard@mvista.com>
 ---
-Change v2->v3:
- - Added second entry in pci_epf_test_ids structure.
- - Remove test_reg_bar field assignment on second entry.
-Changes v3->v4:
- - Nothing changed, just to follow the patch set version.
-Changes v4->v5:
- - Changed pci_epf_test_cfg2 to pci_epf_test_designware.
-Changes v5->v6:
- - Changed name field from pci_epf_test_designware to pci_epf_test_dw.
-Changes v6->v7:
- - Changed variable name from data_cfg2 to data_linkup_notifier_disabled.
-Changes v7->v8:
- - Patch description rework for an imperative verbal mode.
+ drivers/char/ipmi/ipmi_si_pci.c | 5 -----
+ include/linux/pci_ids.h         | 4 ++++
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
- Documentation/PCI/endpoint/function/binding/pci-test.txt | 2 ++
- drivers/pci/endpoint/functions/pci-epf-test.c            | 8 ++++++++
- 2 files changed, 10 insertions(+)
+Changes from v1:
+  * Leave PCI_DEVICE_ID_HP_MMC in the IPMI driver, per comments
+    by Bjorn Helgaas.
 
-diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-index 3b68b95..dc39f47 100644
---- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
-+++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-@@ -1,6 +1,8 @@
- PCI TEST ENDPOINT FUNCTION
+There's no hurry on this, if it is suitable I can keep it in my
+queue with your ack, or you can take it.
+
+Thanks!
+
+-corey
+
+diff --git a/drivers/char/ipmi/ipmi_si_pci.c b/drivers/char/ipmi/ipmi_si_pci.c
+index f54ca68..bdba128 100644
+--- a/drivers/char/ipmi/ipmi_si_pci.c
++++ b/drivers/char/ipmi/ipmi_si_pci.c
+@@ -18,11 +18,6 @@ module_param_named(trypci, si_trypci, bool, 0);
+ MODULE_PARM_DESC(trypci, "Setting this to zero will disable the"
+ 		 " default scan of the interfaces identified via pci");
  
- name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
-+name: Should be "pci_epf_test_dw" to bind to the pci_epf_test driver
-+      with a custom configuration for the designware EP.
+-#define PCI_CLASS_SERIAL_IPMI		0x0c07
+-#define PCI_CLASS_SERIAL_IPMI_SMIC	0x0c0700
+-#define PCI_CLASS_SERIAL_IPMI_KCS	0x0c0701
+-#define PCI_CLASS_SERIAL_IPMI_BT	0x0c0702
+-
+ #define PCI_DEVICE_ID_HP_MMC 0x121A
  
- Configurable Fields:
- vendorid	 : should be 0x104c
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 7cef851..4ab463b 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -459,10 +459,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 	return 0;
- }
+ static void ipmi_pci_cleanup(struct si_sm_io *io)
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index cc608fc5..ac79652 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -117,6 +117,10 @@
+ #define PCI_CLASS_SERIAL_USB_DEVICE	0x0c03fe
+ #define PCI_CLASS_SERIAL_FIBER		0x0c04
+ #define PCI_CLASS_SERIAL_SMBUS		0x0c05
++#define PCI_CLASS_SERIAL_IPMI		0x0c07
++#define PCI_CLASS_SERIAL_IPMI_SMIC	0x0c0700
++#define PCI_CLASS_SERIAL_IPMI_KCS	0x0c0701
++#define PCI_CLASS_SERIAL_IPMI_BT	0x0c0702
  
-+static const struct pci_epf_test_data data_linkup_notifier_disabled = {
-+	.linkup_notifier = false
-+};
-+
- static const struct pci_epf_device_id pci_epf_test_ids[] = {
- 	{
- 		.name = "pci_epf_test",
- 	},
-+	{
-+		.name = "pci_epf_test_dw",
-+		.driver_data = (kernel_ulong_t)&data_linkup_notifier_disabled,
-+	},
- 	{},
- };
- 
+ #define PCI_BASE_CLASS_WIRELESS			0x0d
+ #define PCI_CLASS_WIRELESS_RF_CONTROLLER	0x0d10
 -- 
 2.7.4
