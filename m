@@ -1,54 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35508 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753153AbeDPVus (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 16 Apr 2018 17:50:48 -0400
-Date: Mon, 16 Apr 2018 16:50:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Matt Turner <mattst88@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-        linux-alpha <linux-alpha@vger.kernel.org>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Jay Estabrook <jay.estabrook@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: Some Alphas broken by f75b99d5a77d (PCI: Enforce bus address
- limits in resource allocation)
-Message-ID: <20180416215044.GE28657@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAEdQ38GUhL0R4c7ZjEZv89TmqQ0cwhnvBawxuXonSb9On=+B6A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAEdQ38GUhL0R4c7ZjEZv89TmqQ0cwhnvBawxuXonSb9On=+B6A@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v6 0/9] Designware EP support and code clean up
+Date: Wed, 18 Apr 2018 15:46:35 +0100
+Message-Id: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Matt,
+The patch set was made against the Lorenzo's master branch.
 
-First of all, sorry about breaking Nautilus, and thanks very much for
-tracking it down to this commit.
+Adds support Designware EP support.
 
-On Mon, Apr 16, 2018 at 07:33:57AM -0700, Matt Turner wrote:
-> Commit f75b99d5a77d63f20e07bd276d5a427808ac8ef6 (PCI: Enforce bus
-> address limits in resource allocation) broke Alpha systems using
-> CONFIG_ALPHA_NAUTILUS. Alpha is 64-bit, but Nautilus systems use a
-> 32-bit AMD 751/761 chipset. arch/alpha/kernel/sys_nautilus.c maps PCI
-> into the upper addresses just below 4GB.
-> 
-> I can get a working kernel by ifdef'ing out the code in
-> drivers/pci/bus.c:pci_bus_alloc_resource. We can't tie
-> PCI_BUS_ADDR_T_64BIT to ALPHA_NAUTILUS without breaking generic
-> kernels.
-> 
-> How can we get Nautilus working again?
+Increases the maximum number of interrupts allowed for Designware IP
+controller.
 
-Can you collect a complete dmesg log, ideally both before and after
-f75b99d5a77d?  I assume the problem is that after f75b99d5a77d? we
-erroneously assign space for something above 4GB.  But if we know the
-correct host bridge apertures, we shouldn't assign space outside them,
-regardless of the PCI bus address size.
+Does a code cleanup on Designware driver:
+ - Replaces magic numbers without a easy meaning by a well known define
+   that helps the human compreension.
+ - Replaces a division by 2 by a simple right shift rotation of 1 bit.
+ - Fixes all first letter characters on comments and debug messages to
+   upper case to maintain coherency.
 
-Coincidentally, Christoph is replacing CONFIG_PCI_BUS_ADDR_T_64BIT
-with CONFIG_ARCH_DMA_ADDR_T_64BIT, but I think that change is a no-op
-with respect to the problem you're seeing.
+Gustavo Pimentel (9):
+  bindings: PCI: designware: Example update
+  PCI: dwc: Add support for endpoint mode
+  PCI: endpoint: functions/pci-epf-test: Add second entry
+  bindings: PCI: designware: Add support for the EP in Designware driver
+  misc: pci_endpoint_test: Add designware EP entry
+  PCI: dwc: Define maximum number of vectors
+  PCI: dwc: Replace lower into upper case characters
+  PCI: dwc: Small computation improvement
+  PCI: dwc: Replace magic number by defines
 
-[1] https://lkml.kernel.org/r/20180415145947.1248-10-hch@lst.de
+ .../PCI/endpoint/function/binding/pci-test.txt     |   2 +
+ .../devicetree/bindings/pci/designware-pcie.txt    |  24 +++-
+ drivers/misc/pci_endpoint_test.c                   |   1 +
+ drivers/pci/dwc/Kconfig                            |  41 ++++--
+ drivers/pci/dwc/pcie-designware-ep.c               |  16 +--
+ drivers/pci/dwc/pcie-designware-host.c             |  77 +++++-----
+ drivers/pci/dwc/pcie-designware-plat.c             | 155 +++++++++++++++++++--
+ drivers/pci/dwc/pcie-designware.c                  |  22 +--
+ drivers/pci/dwc/pcie-designware.h                  |   1 +
+ drivers/pci/endpoint/functions/pci-epf-test.c      |   8 ++
+ 10 files changed, 267 insertions(+), 80 deletions(-)
+
+-- 
+2.7.4
