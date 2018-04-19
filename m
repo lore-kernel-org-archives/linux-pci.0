@@ -1,61 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34154 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:58240 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750972AbeDPVmG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 16 Apr 2018 17:42:06 -0400
-Date: Mon, 16 Apr 2018 16:42:04 -0500
+        id S1753011AbeDSUQg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 19 Apr 2018 16:16:36 -0400
+Subject: [PATCH 2/4] lspci: Decode Null Capability
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Heiner Kallweit <hkallweit1@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Realtek linux nic maintainers <nic_swsd@realtek.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH net-next 1/2] PCI: Add two more values for PCIe
- Max_Read_Request_Size
-Message-ID: <20180416214204.GD28657@bhelgaas-glaptop.roam.corp.google.com>
-References: <00f1255f-acf0-4760-c20f-0b78bda44645@gmail.com>
- <ab8696d7-59e0-1f24-0ead-757057eb50cf@gmail.com>
+To: Martin Mares <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org
+Date: Thu, 19 Apr 2018 15:16:33 -0500
+Message-ID: <152416899351.71364.17915245982467561819.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152416880512.71364.16029919502694064334.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152416880512.71364.16029919502694064334.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ab8696d7-59e0-1f24-0ead-757057eb50cf@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 16, 2018 at 09:37:13PM +0200, Heiner Kallweit wrote:
-> This patch adds missing values for the max read request size.
-> E.g. network driver r8169 uses a value of 4K.
-> 
-> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-I'd prefer a subject line with more details, e.g.,
+The PCI Code and ID Assignment spec, r1.9, sec 2, defines a "Null
+Capability" containing no registers other than the 8-bit Capability ID
+(00h) and an 8-bit Next Capability Pointer.
 
-  PCI: Add #defines for 2K and 4K Max Read Request Size
+Some devices, e.g., the Intel [8086:2058] implement this Capability.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ lib/header.h |    2 ++
+ ls-caps.c    |    3 +++
+ ls-ecaps.c   |    3 +++
+ 3 files changed, 8 insertions(+)
 
-I suspect conflicts are more likely in r8169.c so it might make more
-sense to route these through the netdev tree.  I'd also be happy to
-take them, so let me know if you want me to take them, David.
-
-> ---
->  include/uapi/linux/pci_regs.h | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 0c79eac5..699257fb 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -506,6 +506,8 @@
->  #define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
->  #define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
->  #define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
-> +#define  PCI_EXP_DEVCTL_READRQ_2048B 0x4000 /* 2048 Bytes */
-> +#define  PCI_EXP_DEVCTL_READRQ_4096B 0x5000 /* 4096 Bytes */
->  #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
->  #define PCI_EXP_DEVSTA		10	/* Device Status */
->  #define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
-> -- 
-> 2.17.0
-> 
-> 
+diff --git a/lib/header.h b/lib/header.h
+index 0b12b2c..1f0e460 100644
+--- a/lib/header.h
++++ b/lib/header.h
+@@ -185,6 +185,7 @@
+ /* Capability lists */
+ 
+ #define PCI_CAP_LIST_ID		0	/* Capability ID */
++#define  PCI_CAP_ID_NULL	0x00	/* Null Capability */
+ #define  PCI_CAP_ID_PM		0x01	/* Power Management */
+ #define  PCI_CAP_ID_AGP		0x02	/* Accelerated Graphics Port */
+ #define  PCI_CAP_ID_VPD		0x03	/* Vital Product Data */
+@@ -211,6 +212,7 @@
+ 
+ /* Capabilities residing in the PCI Express extended configuration space */
+ 
++#define PCI_EXT_CAP_ID_NULL	0x00	/* Null Capability */
+ #define PCI_EXT_CAP_ID_AER	0x01	/* Advanced Error Reporting */
+ #define PCI_EXT_CAP_ID_VC	0x02	/* Virtual Channel */
+ #define PCI_EXT_CAP_ID_DSN	0x03	/* Device Serial Number */
+diff --git a/ls-caps.c b/ls-caps.c
+index bc7829c..8b707c2 100644
+--- a/ls-caps.c
++++ b/ls-caps.c
+@@ -1536,6 +1536,9 @@ show_caps(struct device *d, int where)
+ 	    }
+ 	  switch (id)
+ 	    {
++	    case PCI_CAP_ID_NULL:
++	      printf("Null\n");
++	      break;
+ 	    case PCI_CAP_ID_PM:
+ 	      cap_pm(d, where, cap);
+ 	      break;
+diff --git a/ls-ecaps.c b/ls-ecaps.c
+index cb3d46d..3f6a364 100644
+--- a/ls-ecaps.c
++++ b/ls-ecaps.c
+@@ -737,6 +737,9 @@ show_ext_caps(struct device *d, int type)
+ 	}
+       switch (id)
+ 	{
++	  case PCI_EXT_CAP_ID_NULL:
++	    printf("Null\n");
++	    break;
+ 	  case PCI_EXT_CAP_ID_AER:
+ 	    cap_aer(d, where, type);
+ 	    break;
