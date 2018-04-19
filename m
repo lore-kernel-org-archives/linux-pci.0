@@ -1,340 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:39846 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755643AbeDWRFF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 13:05:05 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: x86@kernel.org, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        linux-mips@linux-mips.org, sparclinux@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 06/12] dma-mapping: move the NEED_DMA_MAP_STATE config symbol to lib/Kconfig
-Date: Mon, 23 Apr 2018 19:04:13 +0200
-Message-Id: <20180423170419.20330-7-hch@lst.de>
-In-Reply-To: <20180423170419.20330-1-hch@lst.de>
-References: <20180423170419.20330-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>
+Subject: RE: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
+Date: Thu, 19 Apr 2018 22:11:27 +0000
+Message-ID: <BN6PR12MB1809BD30AA5B890C054F9832F7B50@BN6PR12MB1809.namprd12.prod.outlook.com>
+References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+ <20180419202632.GE14063@ziepe.ca>
+ <20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>,
+ "sulrich@codeaurora.org" <sulrich@codeaurora.org>, "open
+ list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "timur@codeaurora.org" <timur@codeaurora.org>,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Doug Ledford <dledford@redhat.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Dennis Dalessandro <dennis.dalessandro@intel.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This way we have one central definition of it, and user can select it as
-needed.  Note that we now also always select it when CONFIG_DMA_API_DEBUG
-is select, which fixes some incorrect checks in a few network drivers.
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Thursday, April 19, 2018 5:47 PM
+> To: Jason Gunthorpe <jgg@ziepe.ca>
+> Cc: Sinan Kaya <okaya@codeaurora.org>; Bjorn Helgaas
+> <bhelgaas@google.com>; linux-pci@vger.kernel.org;
+> sulrich@codeaurora.org; timur@codeaurora.org; linux-arm-
+> msm@vger.kernel.org; linux-arm-kernel@lists.infradead.org; Mike
+> Marciniszyn <mike.marciniszyn@intel.com>; Dennis Dalessandro
+> <dennis.dalessandro@intel.com>; Doug Ledford <dledford@redhat.com>;
+> open list:HFI1 DRIVER <linux-rdma@vger.kernel.org>; open list <linux-
+> kernel@vger.kernel.org>; Deucher, Alexander
+> <Alexander.Deucher@amd.com>
+> Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
+> 
+> [+cc Alex, who might know why DRM drivers have their own PCIe Gen3
+> code]
+> 
+> On Thu, Apr 19, 2018 at 02:26:32PM -0600, Jason Gunthorpe wrote:
+> > On Thu, Apr 19, 2018 at 03:56:23PM -0400, Sinan Kaya wrote:
+> > > The infiniband adapter might be connected to a PCI hotplug slot.
+> > > Performing secondary bus reset on a hotplug slot causes PCI link
+> up/down interrupts.
+> > >
+> > > Hotplug driver removes the device from system when a link down
+> > > interrupt is observed and performs re-enumeration when link up
+> interrupt is observed.
+> > >
+> > > This conflicts with what this code is trying to do. Try secondary
+> > > bus reset only if pci_reset_slot() fails/unsupported.
+> > >
+> > > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> > > drivers/infiniband/hw/hfi1/pcie.c | 3 ++-
+> > >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/drivers/infiniband/hw/hfi1/pcie.c
+> > > b/drivers/infiniband/hw/hfi1/pcie.c
+> > > index 83d66e8..75f49e3 100644
+> > > +++ b/drivers/infiniband/hw/hfi1/pcie.c
+> > > @@ -908,7 +908,8 @@ static int trigger_sbr(struct hfi1_devdata *dd)
+> >
+> > The code above this hunk is:
+> >
+> > /*
+> >  * Trigger a secondary bus reset (SBR) on ourselves using our parent.
+> >  *
+> >  * Based on pci_parent_bus_reset() which is not exported by the
+> >  * kernel core.
+> >  */
+> > static int trigger_sbr(struct hfi1_devdata *dd) {
+> >
+> > [..]
+> >
+> > This really seems like something the PCI core should be helping with,
+> > drivers shouldn't be doing stuff like this. I get the feeling this
+> > should be a common need if drivers support various error recovery
+> > schemes?
+> >
+> > Bjorn, would be appropriate to export pci_parent_bus_reset() or some
+> > variation therin??
+> 
+> I agree it would be really nice if the PCI core could help out somehow so we
+> could get some of this code out of individual drivers.
+> 
+> If fact, stepping back a few paces, this HFI reset path is part of a transition to
+> PCIe gen3 signaling, and I'm not sure why *that* is in the driver either.
+> 
+> There's an ongoing discussion [1] about why this gen3 code is in the driver.
+> Several DRM drivers include similar code (cik_pcie_gen3_enable(),
+> si_pcie_gen3_enable()).
+> 
+> I *thought* the hardware was supposed to automatically negotiate to the
+> highest rate supported by both sides without any help at all from software.
+> But since several drivers have code to do it themselves, I wonder if I'm
+> missing something, or maybe there's something the PCI core should be doing
+> that it isn't, and the driver code is basically working around that PCI core
+> deficiency.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Anshuman Khandual <khandual@linux.vnet.ibm.com>
----
- arch/alpha/Kconfig          | 4 +---
- arch/arm/Kconfig            | 4 +---
- arch/arm64/Kconfig          | 4 +---
- arch/ia64/Kconfig           | 4 +---
- arch/mips/Kconfig           | 3 ---
- arch/parisc/Kconfig         | 4 +---
- arch/s390/Kconfig           | 4 +---
- arch/sh/Kconfig             | 4 +---
- arch/sparc/Kconfig          | 4 +---
- arch/unicore32/Kconfig      | 4 +---
- arch/x86/Kconfig            | 6 ++----
- drivers/iommu/Kconfig       | 1 +
- include/linux/dma-mapping.h | 2 +-
- lib/Kconfig                 | 3 +++
- lib/Kconfig.debug           | 1 +
- 15 files changed, 17 insertions(+), 35 deletions(-)
+My understanding was that some platfoms only bring up the link in gen 1 mode for compatibility reasons.  TBH, I'm not that familiar with how the links come up on different platforms.
 
-diff --git a/arch/alpha/Kconfig b/arch/alpha/Kconfig
-index 8e6a67ecf069..1fd9645b0c67 100644
---- a/arch/alpha/Kconfig
-+++ b/arch/alpha/Kconfig
-@@ -10,6 +10,7 @@ config ALPHA
- 	select HAVE_OPROFILE
- 	select HAVE_PCSPKR_PLATFORM
- 	select HAVE_PERF_EVENTS
-+	select NEED_DMA_MAP_STATE
- 	select NEED_SG_DMA_LENGTH
- 	select VIRT_TO_BUS
- 	select GENERIC_IRQ_PROBE
-@@ -68,9 +69,6 @@ config ZONE_DMA
- config ARCH_DMA_ADDR_T_64BIT
- 	def_bool y
- 
--config NEED_DMA_MAP_STATE
--       def_bool y
--
- config GENERIC_ISA_DMA
- 	bool
- 	default y
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 602c8320282f..aa1c187d756d 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -96,6 +96,7 @@ config ARM
- 	select HAVE_VIRT_CPU_ACCOUNTING_GEN
- 	select IRQ_FORCED_THREADING
- 	select MODULES_USE_ELF_REL
-+	select NEED_DMA_MAP_STATE
- 	select NO_BOOTMEM
- 	select OF_EARLY_FLATTREE if OF
- 	select OF_RESERVED_MEM if OF
-@@ -221,9 +222,6 @@ config ARCH_MAY_HAVE_PC_FDC
- config ZONE_DMA
- 	bool
- 
--config NEED_DMA_MAP_STATE
--       def_bool y
--
- config ARCH_SUPPORTS_UPROBES
- 	def_bool y
- 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 3b441c5587f1..940adfb9a2bc 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -133,6 +133,7 @@ config ARM64
- 	select IRQ_FORCED_THREADING
- 	select MODULES_USE_ELF_RELA
- 	select MULTI_IRQ_HANDLER
-+	select NEED_DMA_MAP_STATE
- 	select NEED_SG_DMA_LENGTH
- 	select NO_BOOTMEM
- 	select OF
-@@ -241,9 +242,6 @@ config HAVE_GENERIC_GUP
- config ARCH_DMA_ADDR_T_64BIT
- 	def_bool y
- 
--config NEED_DMA_MAP_STATE
--	def_bool y
--
- config SMP
- 	def_bool y
- 
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index 333917676f7f..0e42731adaf1 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -54,6 +54,7 @@ config IA64
- 	select MODULES_USE_ELF_RELA
- 	select ARCH_USE_CMPXCHG_LOCKREF
- 	select HAVE_ARCH_AUDITSYSCALL
-+	select NEED_DMA_MAP_STATE
- 	select NEED_SG_DMA_LENGTH
- 	default y
- 	help
-@@ -82,9 +83,6 @@ config MMU
- config ARCH_DMA_ADDR_T_64BIT
- 	def_bool y
- 
--config NEED_DMA_MAP_STATE
--	def_bool y
--
- config SWIOTLB
-        bool
- 
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index 225c95da23ce..47d72c64d687 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -1122,9 +1122,6 @@ config DMA_NONCOHERENT
- 	bool
- 	select NEED_DMA_MAP_STATE
- 
--config NEED_DMA_MAP_STATE
--	bool
--
- config SYS_HAS_EARLY_PRINTK
- 	bool
- 
-diff --git a/arch/parisc/Kconfig b/arch/parisc/Kconfig
-index 89caea87556e..4d8f64d48597 100644
---- a/arch/parisc/Kconfig
-+++ b/arch/parisc/Kconfig
-@@ -51,6 +51,7 @@ config PARISC
- 	select GENERIC_CLOCKEVENTS
- 	select ARCH_NO_COHERENT_DMA_MMAP
- 	select CPU_NO_EFFICIENT_FFS
-+	select NEED_DMA_MAP_STATE
- 	select NEED_SG_DMA_LENGTH
- 
- 	help
-@@ -112,9 +113,6 @@ config PM
- config STACKTRACE_SUPPORT
- 	def_bool y
- 
--config NEED_DMA_MAP_STATE
--	def_bool y
--
- config ISA_DMA_API
- 	bool
- 
-diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
-index f80c6b983159..89a007672f70 100644
---- a/arch/s390/Kconfig
-+++ b/arch/s390/Kconfig
-@@ -711,6 +711,7 @@ menuconfig PCI
- 	select PCI_MSI
- 	select IOMMU_HELPER
- 	select IOMMU_SUPPORT
-+	select NEED_DMA_MAP_STATE
- 	select NEED_SG_DMA_LENGTH
- 
- 	help
-@@ -736,9 +737,6 @@ config PCI_DOMAINS
- config HAS_IOMEM
- 	def_bool PCI
- 
--config NEED_DMA_MAP_STATE
--	def_bool PCI
--
- config CHSC_SCH
- 	def_tristate m
- 	prompt "Support for CHSC subchannels"
-diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
-index e127e0cbe30f..9417f70e008e 100644
---- a/arch/sh/Kconfig
-+++ b/arch/sh/Kconfig
-@@ -50,6 +50,7 @@ config SUPERH
- 	select HAVE_ARCH_AUDITSYSCALL
- 	select HAVE_FUTEX_CMPXCHG if FUTEX
- 	select HAVE_NMI
-+	select NEED_DMA_MAP_STATE
- 	select NEED_SG_DMA_LENGTH
- 
- 	help
-@@ -162,9 +163,6 @@ config DMA_COHERENT
- config DMA_NONCOHERENT
- 	def_bool !DMA_COHERENT
- 
--config NEED_DMA_MAP_STATE
--	def_bool DMA_NONCOHERENT
--
- config PGTABLE_LEVELS
- 	default 3 if X2TLB
- 	default 2
-diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
-index e79badc8a682..be770b511ddd 100644
---- a/arch/sparc/Kconfig
-+++ b/arch/sparc/Kconfig
-@@ -44,6 +44,7 @@ config SPARC
- 	select ARCH_HAS_SG_CHAIN
- 	select CPU_NO_EFFICIENT_FFS
- 	select LOCKDEP_SMALL if LOCKDEP
-+	select NEED_DMA_MAP_STATE
- 	select NEED_SG_DMA_LENGTH
- 
- config SPARC32
-@@ -144,9 +145,6 @@ config ZONE_DMA
- 	bool
- 	default y if SPARC32
- 
--config NEED_DMA_MAP_STATE
--	def_bool y
--
- config GENERIC_ISA_DMA
- 	bool
- 	default y if SPARC32
-diff --git a/arch/unicore32/Kconfig b/arch/unicore32/Kconfig
-index 462e59a7ae78..82195714d20b 100644
---- a/arch/unicore32/Kconfig
-+++ b/arch/unicore32/Kconfig
-@@ -19,6 +19,7 @@ config UNICORE32
- 	select ARCH_WANT_FRAME_POINTERS
- 	select GENERIC_IOMAP
- 	select MODULES_USE_ELF_REL
-+	select NEED_DMA_MAP_STATE
- 	help
- 	  UniCore-32 is 32-bit Instruction Set Architecture,
- 	  including a series of low-power-consumption RISC chip
-@@ -61,9 +62,6 @@ config ARCH_MAY_HAVE_PC_FDC
- config ZONE_DMA
- 	def_bool y
- 
--config NEED_DMA_MAP_STATE
--       def_bool y
--
- source "init/Kconfig"
- 
- source "kernel/Kconfig.freezer"
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index ead3babe4e79..a98a9b14fda2 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -28,6 +28,7 @@ config X86_64
- 	select ARCH_USE_CMPXCHG_LOCKREF
- 	select HAVE_ARCH_SOFT_DIRTY
- 	select MODULES_USE_ELF_RELA
-+	select NEED_DMA_MAP_STATE
- 	select X86_DEV_DMA_OPS
- 	select ARCH_HAS_SYSCALL_WRAPPER
- 
-@@ -236,10 +237,6 @@ config ARCH_MMAP_RND_COMPAT_BITS_MAX
- config SBUS
- 	bool
- 
--config NEED_DMA_MAP_STATE
--	def_bool y
--	depends on X86_64 || INTEL_IOMMU || DMA_API_DEBUG || SWIOTLB
--
- config GENERIC_ISA_DMA
- 	def_bool y
- 	depends on ISA_DMA_API
-@@ -922,6 +919,7 @@ config CALGARY_IOMMU_ENABLED_BY_DEFAULT
- # need this always selected by IOMMU for the VIA workaround
- config SWIOTLB
- 	def_bool y if X86_64
-+	select NEED_DMA_MAP_STATE
- 	---help---
- 	  Support for software bounce buffers used on x86-64 systems
- 	  which don't have a hardware IOMMU. Using this PCI devices
-diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-index df171cb85822..5b714a062fa7 100644
---- a/drivers/iommu/Kconfig
-+++ b/drivers/iommu/Kconfig
-@@ -146,6 +146,7 @@ config INTEL_IOMMU
- 	select DMA_DIRECT_OPS
- 	select IOMMU_API
- 	select IOMMU_IOVA
-+	select NEED_DMA_MAP_STATE
- 	select DMAR_TABLE
- 	help
- 	  DMA remapping (DMAR) devices support enables independent address
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index f8ab1c0f589e..14269d25498b 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -839,7 +839,7 @@ static inline int dma_mmap_wc(struct device *dev,
- #define dma_mmap_writecombine dma_mmap_wc
- #endif
- 
--#if defined(CONFIG_NEED_DMA_MAP_STATE) || defined(CONFIG_DMA_API_DEBUG)
-+#ifdef CONFIG_NEED_DMA_MAP_STATE
- #define DEFINE_DMA_UNMAP_ADDR(ADDR_NAME)        dma_addr_t ADDR_NAME
- #define DEFINE_DMA_UNMAP_LEN(LEN_NAME)          __u32 LEN_NAME
- #define dma_unmap_addr(PTR, ADDR_NAME)           ((PTR)->ADDR_NAME)
-diff --git a/lib/Kconfig b/lib/Kconfig
-index aeb7fae16bc2..ce9fa962d59b 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -432,6 +432,9 @@ config SGL_ALLOC
- config NEED_SG_DMA_LENGTH
- 	bool
- 
-+config NEED_DMA_MAP_STATE
-+	bool
-+
- config IOMMU_HELPER
- 	bool
- 
-diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index c40c7b734cd1..685ed2dd4384 100644
---- a/lib/Kconfig.debug
-+++ b/lib/Kconfig.debug
-@@ -1635,6 +1635,7 @@ config PROVIDE_OHCI1394_DMA_INIT
- config DMA_API_DEBUG
- 	bool "Enable debugging of DMA-API usage"
- 	depends on HAVE_DMA_API_DEBUG
-+	select NEED_DMA_MAP_STATE
- 	help
- 	  Enable this option to debug the use of the DMA API by device drivers.
- 	  With this option you will be able to detect common bugs in device
--- 
-2.17.0
+Alex
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
