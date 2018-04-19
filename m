@@ -1,72 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
-        robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
-        gregkh@linuxfoundation.org
-Cc: hch@lst.de, joro@8bytes.org, m.szyprowski@samsung.com,
-        shawnguo@kernel.org, frowand.list@gmail.com, bhelgaas@google.com,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bharat.bhushan@nxp.com, stuyoder@gmail.com,
-        laurentiu.tudor@nxp.com, leoyang.li@nxp.com,
-        Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH v4 6/6] arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
-Date: Mon, 30 Apr 2018 11:57:21 +0530
-Message-Id: <1525069641-8523-7-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
-References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
- <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ua0-f196.google.com ([209.85.217.196]:46902 "EHLO
+        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751042AbeDSKAX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Apr 2018 06:00:23 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
+References: <20180408130925.19088-1-marek.vasut+renesas@gmail.com>
+ <CAMuHMdVGBkEY2kE7auUwXBn2QSfX+yhxkFH--4tTw+XJ3WCk0w@mail.gmail.com>
+ <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com> <20180409114159.azxeehjkeuinwrwe@verge.net.au>
+ <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
+ <20180409122636.6rmtzhqqlpqxyear@verge.net.au> <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
+ <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
+ <a5a0d78d-627b-6277-ee75-44e204cbd390@gmail.com> <CAMuHMdX9d29JYVDsghd3Koyg8Aeuv0D2Fx5Lnn0bBZSb9RntDw@mail.gmail.com>
+ <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Thu, 19 Apr 2018 12:00:21 +0200
+Message-ID: <CAMuHMdWpV-HN=ojjv_-PGDCe+Ud8AOPzJSk5fZXOG6tVC3mV+w@mail.gmail.com>
+Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: Simon Horman <horms@verge.net.au>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-fsl-mc bus support the new iommu-map property. Comply to this binding
-for fsl_mc bus.
+Hi Marek,
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
----
- arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+On Tue, Apr 10, 2018 at 6:17 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+> On 04/10/2018 05:28 PM, Geert Uytterhoeven wrote:
+>>>>> The pairing looks as follows:
+>>>>>
+>>>>> .- rcar_pcie_parse_request_of_pci_ranges()
+>>>>> |  (pm_runtime_enable is here)
+>>>>> | .- pm_runtime_get_sync()
+>>>>> | | .- rcar_pcie_get_resources()
+>>>>
+>>>> rcar_pcie_get_resources() is called  while the device is runtime-enabled/resumed
+>>>
+>>> Because something may access the device, yes.
+>>>
+>>>>> | | |
+>>>>> | | '- pm_runtime_put()
+>>>>> | '- pm_runtime_disable() + pci_free_resource_list()
+>>>>
+>>>> pci_free_resource_list() is called while the device is runtime-disabled.
+>>>
+>>> Because nothing will access the device.
+>>>
+>>>>> '- pci_free_host_bridge()
+>>>>>
+>>>>> It looks symmetric to me ...
+>>>>
+>>>> rcar_pcie_get_resources() is called while the device is
+>>>> runtime-enabled/resumed,
+>>>> pci_free_resource_list() is called while the device is runtime-disabled.
+>>>
+>>> At this point, I think I'd rather see a diff of changes which you have
+>>> in mind rather than this endless discussion. Can you provide one against
+>>> this patch ?
+>>
+>> My final comment:
+>>
+>> If the steps during probing are A..Z, cleanup and removal should undo them
+>> in reverse order (Z..A), unless there's a very good reason not to do so.
+>
+> I spent extra time going through the probe function and I just don't see
+> how it is not done in the exact reverse, I checked every single goto
+> statement in probe.
+>
+> I noticed this though:
+>
+>>>> rcar_pcie_get_resources() is called while the device is
+>>>> runtime-enabled/resumed,
+>>>> pci_free_resource_list() is called while the device is runtime-disabled.
+>
+> rcar_pcie_get_resources() is NOT a pair function for
+> pci_free_resource_list() . rcar_pcie_parse_request_of_pci_ranges() is a
+> pair function for pci_free_resource_list().
+>
+> rcar_pcie_parse_request_of_pci_ranges() calls
+> of_pci_get_host_bridge_resources() internally, so every single function
+> called after successful call of rcar_pcie_parse_request_of_pci_ranges()
+> must call pci_free_resource_list().
+>
+> Both of_pci_get_host_bridge_resources() and pci_free_resource_list() are
+> called with runtime PM disabled.
+>
+> The naming of the functions is confusing though.
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-index 137ef4d..6010505 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-@@ -184,6 +184,7 @@
- 		#address-cells = <2>;
- 		#size-cells = <2>;
- 		ranges;
-+		dma-ranges = <0x0 0x0 0x0 0x0 0x10000 0x00000000>;
- 
- 		clockgen: clocking@1300000 {
- 			compatible = "fsl,ls2080a-clockgen";
-@@ -357,6 +358,8 @@
- 			reg = <0x00000008 0x0c000000 0 0x40>,	 /* MC portal base */
- 			      <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
- 			msi-parent = <&its>;
-+			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by u-boot */
-+			dma-coherent;
- 			#address-cells = <3>;
- 			#size-cells = <1>;
- 
-@@ -460,6 +463,8 @@
- 			compatible = "arm,mmu-500";
- 			reg = <0 0x5000000 0 0x800000>;
- 			#global-interrupts = <12>;
-+			#iommu-cells = <1>;
-+			stream-match-mask = <0x7C00>;
- 			interrupts = <0 13 4>, /* global secure fault */
- 				     <0 14 4>, /* combined secure interrupt */
- 				     <0 15 4>, /* global non-secure fault */
-@@ -502,7 +507,6 @@
- 				     <0 204 4>, <0 205 4>,
- 				     <0 206 4>, <0 207 4>,
- 				     <0 208 4>, <0 209 4>;
--			mmu-masters = <&fsl_mc 0x300 0>;
- 		};
- 
- 		dspi: dspi@2100000 {
+You are right, your changes are correct, and the naming of these functions
+is confusing. Perhaps it should be changed, to avoid misleading the (not so)
+casual reviewer?
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+
+BTW, while diving deeper, I noticed a few other pre-existing issues in error
+handling:
+
+1. If anything fails after rcar_pcie_get_resources(), the bus clock is never
+   disabled,
+2. The error path of rcar_pcie_enable_msi() does not call
+   irq_dispose_mapping() before irq_domain_remove(),
+3. If rcar_pcie_enable() fails, none of the setup done in
+   rcar_pcie_enable_msi() is reverted.
+   Apart from the IRQ domain handling in 2, that includes freeing msi->pages
+   (should this be allocated using the DMA API?), and undoing the related HW
+   setup, to prevent the HW from scribbling the former MSI page in the future.
+
+Care to fix these, too?
+Thanks!
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
 -- 
-1.9.1
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
