@@ -1,104 +1,145 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 4 Apr 2018 12:28:43 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH v4 1/6] PCI: aardvark: Introduce an
- advk_pcie_valid_device() helper
-Message-ID: <20180404112843.GA24669@red-moon>
-References: <20180329083946.25970-1-thomas.petazzoni@bootlin.com>
- <20180329083946.25970-2-thomas.petazzoni@bootlin.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:55836 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752887AbeDSRh6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Apr 2018 13:37:58 -0400
+Subject: [PATCH 1/2] PCI: Add pci_bus_specific_read_dev_vendor_id() to
+ workaround PCI switch specific issues prior to accessing newly added endpoint
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <b6439e86-2284-5b3c-3656-a0c3c2568317@oracle.com>
+Message-ID: <028a4335-94f7-48bd-ddea-4ed38159c7e9@oracle.com>
+Date: Thu, 19 Apr 2018 13:37:44 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180329083946.25970-2-thomas.petazzoni@bootlin.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Gregory Clement <gregory.clement@bootlin.com>, stable@vger.kernel.org,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <b6439e86-2284-5b3c-3656-a0c3c2568317@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 29, 2018 at 10:39:41AM +0200, Thomas Petazzoni wrote:
-> In other to mimic other PCIe host controller drivers, introduce an
-> advk_pcie_valid_device() helper, used in the configuration read/write
-> functions.
-> 
-> This patch by itself is not a fix, but it is required for a follow-up
-> patch that is a fix, hence the Fixes tag and the Cc to stable.
 
-Should not we just reshuffle patch 1 and 2 instead of sending this
-patch to stable ? I appreciate the merge window is open and timing is
-quite tight, it is just to avoid sending churn to stable kernels
-for not much.
+This patch provides a framework in which it would be possible to implement
+bus specific quirks prior to accessing an endpoint device beneath that bus.
+The routine, pci_bus_specific_read_dev_vendor_id, can be called prior to
+accessing the end point device itself in order to workaround potential
+issues
+with the parent device (switch). If there is nothing specific to be done for
+a particular switch device, it falls through to check for the endpoint
+device
+i.e pci_bus_generic_read_dev_vendor_id().
 
-Thanks,
-Lorenzo
+Signed-off: James Puthukattukaran <james.puthukattukaran@oracle.com>
+---
+ drivers/pci/pci.h    |  2 ++
+ drivers/pci/probe.c  | 19 ++++++++++++++++++-
+ drivers/pci/quirks.c | 41 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 61 insertions(+), 1 deletion(-)
 
-> Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-> ---
-> Changes since v3:
->  - Make the new helper return a bool instead of int
-> Changes since v2:
->  - New patch
-> ---
->  drivers/pci/host/pci-aardvark.c | 13 +++++++++++--
->  1 file changed, 11 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-> index b04d37b3c5de..82bff709a4b3 100644
-> --- a/drivers/pci/host/pci-aardvark.c
-> +++ b/drivers/pci/host/pci-aardvark.c
-> @@ -430,6 +430,15 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
->  	return -ETIMEDOUT;
->  }
->  
-> +static bool advk_pcie_valid_device(struct advk_pcie *pcie, struct pci_bus *bus,
-> +				  int devfn)
-> +{
-> +	if (PCI_SLOT(devfn) != 0)
-> +		return false;
-> +
-> +	return true;
-> +}
-> +
->  static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
->  			     int where, int size, u32 *val)
->  {
-> @@ -437,7 +446,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
->  	u32 reg;
->  	int ret;
->  
-> -	if (PCI_SLOT(devfn) != 0) {
-> +	if (!advk_pcie_valid_device(pcie, bus, devfn)) {
->  		*val = 0xffffffff;
->  		return PCIBIOS_DEVICE_NOT_FOUND;
->  	}
-> @@ -491,7 +500,7 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
->  	int offset;
->  	int ret;
->  
-> -	if (PCI_SLOT(devfn) != 0)
-> +	if (!advk_pcie_valid_device(pcie, bus, devfn))
->  		return PCIBIOS_DEVICE_NOT_FOUND;
->  
->  	if (where % size)
-> -- 
-> 2.14.3
-> 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 023f7cf..2d06689 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -225,6 +225,8 @@ enum pci_bar_type {
+ int pci_configure_extended_tags(struct pci_dev *dev, void *ign);
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+ 				int crs_timeout);
++int pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn,
++				u32 *pl, int crs_timeout);
+ int pci_setup_device(struct pci_dev *dev);
+ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		    struct resource *res, unsigned int reg);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ac91b6f..b4d8cbd 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2097,7 +2097,7 @@ static bool pci_bus_wait_crs(struct pci_bus *bus,
+int devfn, u32 *l,
+ 	return true;
+ }
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
++bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn,
+u32 *l,
+ 				int timeout)
+ {
+ 	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
+@@ -2113,6 +2113,23 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus
+*bus, int devfn, u32 *l,
+
+ 	return true;
+ }
++
++
++bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
++					int timeout)
++{
++	int ret;
++
++	/* An opportunity to implement something specific for this device.
++         * For ex, impelement a quirk prior to even accessing the device
++         */
++	ret = pci_bus_specific_read_dev_vendor_id(bus, devfn, l, timeout);
++	if (ret >= 0)
++		return (ret >= 0);
++
++	return(pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout));
++}
++
+ EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
+
+ /*
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 2990ad1..c637162 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4741,3 +4741,44 @@ static void quirk_gpu_hda(struct pci_dev *hda)
+ 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
++
++
++static const struct pci_bus_specific_quirk{
++	u16 vendor;
++	u16 device;
++	int (*bus_quirk)(struct pci_bus *bus, int devfn, u32 *l, int timeout);
++} pci_bus_specific_quirks[] = {
++	{0}
++};
++
++/*
++ * This routine provides the ability to implement a bus specific quirk
++ * prior to doing config accesses to the endpoint device itself. For
+ex, there
++ * could be HW problems with the switch above the endpoint that causes
+issues
++ * when accessing the endpoint device. Such workarounds "specific" to the
++ * parent could be implemented prior or subsequent to accesses to the
++ * endpoint itself
++ *
++ */
++int pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn,
+u32 *l,
++					int timeout)
++{
++	const struct pci_bus_specific_quirk *i;
++	struct pci_dev *dev;
++
++	if (!bus || !bus->self)
++	        return -ENOTTY;
++
++	dev = bus->self;
++
++	/* Implement any quirks in the "bus" (switch, for ex) that causes
++	 * issues in accessing the endpoint */
++	for (i = pci_bus_specific_quirks; i->bus_quirk; i++) {
++		if ((i->vendor == dev->vendor ||
++			i->vendor == (u16)PCI_ANY_ID) &&
++			(i->device == dev->device ||
++			i->device == (u16)PCI_ANY_ID))
++				return(i->bus_quirk(bus, devfn, l, timeout));
++	}
++	return -ENOTTY;
++}
+-- 
+1.8.3.1
