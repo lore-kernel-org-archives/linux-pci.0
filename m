@@ -1,36 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f174.google.com ([74.125.82.174]:34271 "EHLO
-        mail-ot0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750851AbeDMRXY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2018 13:23:24 -0400
-Date: Fri, 13 Apr 2018 12:23:22 -0500
-From: Rob Herring <robh@kernel.org>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        "linux-renesas-soc@vger.kernel.org"
-        <linux-renesas-soc@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH v2 5/5] DT: pci: rcar-pci: document R8A77980 bindings
-Message-ID: <20180413172322.k7nmtz3xnlaenvxq@rob-hp-laptop>
-References: <26e803ca-06b6-28c5-b87c-fc639b322d6f@cogentembedded.com>
- <461a6029-1e03-a292-62d2-aca7de274de6@cogentembedded.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
+To: Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <bhelgaas@google.com>
+References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+ <20180419202632.GE14063@ziepe.ca>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <0049ffa6-0735-160d-d504-09966839caf4@codeaurora.org>
+Date: Thu, 19 Apr 2018 16:35:20 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <461a6029-1e03-a292-62d2-aca7de274de6@cogentembedded.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180419202632.GE14063@ziepe.ca>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>, sulrich@codeaurora.org,
+ "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
+ linux-pci@vger.kernel.org, timur@codeaurora.org,
+ open list <linux-kernel@vger.kernel.org>, Doug Ledford <dledford@redhat.com>,
+ linux-arm-msm@vger.kernel.org,
+ Dennis Dalessandro <dennis.dalessandro@intel.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 08, 2018 at 09:10:43PM +0300, Sergei Shtylyov wrote:
-> Document the R-Car V3H (R8A77980) SoC in the R-Car PCIe bindings.
+On 4/19/2018 4:26 PM, Jason Gunthorpe wrote:
+> On Thu, Apr 19, 2018 at 03:56:23PM -0400, Sinan Kaya wrote:
+>> The infiniband adapter might be connected to a PCI hotplug slot. Performing
+>> secondary bus reset on a hotplug slot causes PCI link up/down interrupts.
+>>
+>> Hotplug driver removes the device from system when a link down interrupt
+>> is observed and performs re-enumeration when link up interrupt is observed.
+>>
+>> This conflicts with what this code is trying to do. Try secondary bus reset
+>> only if pci_reset_slot() fails/unsupported.
+>>
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>>  drivers/infiniband/hw/hfi1/pcie.c | 3 ++-
+>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
+>> index 83d66e8..75f49e3 100644
+>> +++ b/drivers/infiniband/hw/hfi1/pcie.c
+>> @@ -908,7 +908,8 @@ static int trigger_sbr(struct hfi1_devdata *dd)
 > 
-> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> The code above this hunk is:
 > 
-> ---
-> Changes in version 2:
-> - new patch.
+> /*
+>  * Trigger a secondary bus reset (SBR) on ourselves using our parent.
+>  *
+>  * Based on pci_parent_bus_reset() which is not exported by the
+>  * kernel core.
+>  */
+> static int trigger_sbr(struct hfi1_devdata *dd)
+> {
 > 
->  Documentation/devicetree/bindings/pci/rcar-pci.txt |    1 +
->  1 file changed, 1 insertion(+)
+> [..]
+> 
+> This really seems like something the PCI core should be helping with,
+> drivers shouldn't be doing stuff like this. I get the feeling this
+> should be a common need if drivers support various error recovery
+> schemes?
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+pci_parent_bus_reset() still doesn't deal with hotplug. We need to call
+a variation of pci_slot_reset() before calling pci_parent_bus_reset().
+
+	rc = pci_dev_reset_slot_function(dev, 0);
+	if (rc != -ENOTTY)
+		return rc;
+	return pci_parent_bus_reset(dev, 0);
+
+VFIO driver does this.
+
+			/* User has access, do the reset */
+			ret = slot ? pci_try_reset_slot(vdev->pdev->slot) :
+				     pci_try_reset_bus(vdev->pdev->bus);
+
+I assumed the responsibility is at the driver to call the right API it likes.
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
