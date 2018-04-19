@@ -1,46 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:35901 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751676AbeDJROz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2018 13:14:55 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [RFC 02/10] PCI: cadence: Update cdns_pcie_ep_raise_irq function signature
-Date: Tue, 10 Apr 2018 18:14:41 +0100
-Message-Id: <52314006c63f8d21907dfaa03207b39e36bb8171.1523379766.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	sulrich@codeaurora.org,
+	timur@codeaurora.org
+Subject: [PATCH 2/2] PCI/AER: Try slot reset before secondary bus reset
+Date: Thu, 19 Apr 2018 15:56:24 -0400
+Message-Id: <1524167784-5911-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>, Tyler Baicar <tbaicar@codeaurora.org>,
+ "Juan J. Alvarez" <jjalvare@linux.vnet.ibm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Frederick Lawler <fred@fredlawl.com>, linux-arm-msm@vger.kernel.org,
+ Russell Currey <ruscur@russell.cc>, open list <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>,
+ "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes the cdns_pcie_ep_raise_irq function signature, namely the
-interrupt_num variable type from u8 to u16 to accommodate the MSI-X maximum
-interrupts of 2048.
+The endpoint observing AER_FATAL error might be connected to a PCI hotplug
+slot. Performing secondary bus reset on a hotplug slot causes PCI link
+up/down interrupts.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Hotplug driver removes the device from system when a link down interrupt
+is observed and performs re-enumeration when link up interrupt is observed.
+
+This conflicts with what this code is trying to do. Try secondary bus
+reset only if pci_reset_slot() fails/unsupported.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/cadence/pcie-cadence-ep.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pcie/aer/aerdrv.c      | 3 ++-
+ drivers/pci/pcie/aer/aerdrv_core.c | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
-index 3d8283e..6d6322c 100644
---- a/drivers/pci/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/cadence/pcie-cadence-ep.c
-@@ -363,7 +363,7 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
- }
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 779b387..4eaa524 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -318,7 +318,8 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ 	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
+ 	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
  
- static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
--				  enum pci_epc_irq_type type, u8 interrupt_num)
-+				  enum pci_epc_irq_type type, u16 interrupt_num)
+-	pci_reset_bridge_secondary_bus(dev);
++	if (pci_reset_slot(dev->slot))
++		pci_reset_bridge_secondary_bus(dev);
+ 	pci_printk(KERN_DEBUG, dev, "Root Port link has been reset\n");
+ 
+ 	/* Clear Root Error Status */
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 0ea5acc..a915b0e6 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -407,7 +407,8 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+  */
+ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
  {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
- 
+-	pci_reset_bridge_secondary_bus(dev);
++	if (pci_reset_slot(dev->slot))
++		pci_reset_bridge_secondary_bus(dev);
+ 	pci_printk(KERN_DEBUG, dev, "downstream link has been reset\n");
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
 -- 
 2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
