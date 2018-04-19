@@ -1,243 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:45725 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751231AbeDZBSp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 21:18:45 -0400
-Date: Thu, 26 Apr 2018 09:18:37 +0800
-From: Wei Yang <richard.weiyang@gmail.com>
-To: Baoquan He <bhe@redhat.com>
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-        robh+dt@kernel.org, dan.j.williams@intel.com,
-        nicolas.pitre@linaro.org, josh@joshtriplett.org,
-        Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
-        David Airlie <airlied@linux.ie>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Brijesh Singh <brijesh.singh@amd.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Borislav Petkov <bp@suse.de>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Yaowei Bai <baiyaowei@cmss.chinamobile.com>,
-        Wei Yang <richard.weiyang@gmail.com>,
-        devel@linuxdriverproject.org, linux-input@vger.kernel.org,
-        linux-nvdimm@lists.01.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] resource: Use list_head to link sibling resource
-Message-ID: <20180426011837.GA79340@WeideMacBook-Pro.local>
-Reply-To: Wei Yang <richard.weiyang@gmail.com>
-References: <20180419001848.3041-1-bhe@redhat.com>
- <20180419001848.3041-2-bhe@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57742 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752490AbeDSSID (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 19 Apr 2018 14:08:03 -0400
+Date: Thu, 19 Apr 2018 12:08:03 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 0/2] PCI: Support to workaround bus level HW issues
+Message-ID: <20180419120803.3d5791b4@w520.home>
+In-Reply-To: <b6439e86-2284-5b3c-3656-a0c3c2568317@oracle.com>
+References: <b6439e86-2284-5b3c-3656-a0c3c2568317@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180419001848.3041-2-bhe@redhat.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 19, 2018 at 08:18:46AM +0800, Baoquan He wrote:
->The struct resource uses singly linked list to link siblings. It's not
->easy to do reverse iteration on sibling list. So replace it with list_head.
->
+On Thu, 19 Apr 2018 13:36:00 -0400
+James Puthukattukaran <james.puthukattukaran@oracle.com> wrote:
 
-Hi, Baoquan
+> There are bugs in certain PCIe switches that cause access violations
+>  when an endpoint device is hotplugged. In particular, there's an issue
+> with
+> certain IDT switches that trigger a ACS violation when bringing up a newly
+> plugged PCIe endpoint device. This is a major issue for platforms
+> designed to
+> issue a fatal reset in the case of this event.
+> 
+> The first patch provides a framework for intercepting and working around
+> issues with parent devices to the endpoint being brought up.
+> 
+> The second patch provides the actual patch for the IDT switch issue using
+> that framework. The ACS feature is disabled in the IDT switch prior to
+> endpoint
+> device detection and then re-enabled subsequent to that.
 
-Besides changing the data structure, I have another proposal to do the reverse
-iteration. Which means it would not affect other users, if you just want a
-reverse iteration.
+I'm happy with the logic of the patch, but:
 
-BTW, I don't think Andrew suggest to use linked-list directly. What he wants
-is a better solution to your first proposal in
-https://patchwork.kernel.org/patch/10300819/.
+ - Patches are lined wrapped
+ - There are white space issues (space indenting and extra returns)
+ - 'return(foo(bar));' has too many parens, using 'return foo(bar);'
+ - Comment style, see Documentation/process/coding-style.rst for
+   preferred multi-line inline comment style.  (I see mixed comment
+   style in quirks.c, but probe.c is pretty consistent)
+ - Please don't fixup style issues in patch 1/2 in patch 2/2
 
-Below is my proposal of resource reverse iteration without changing current
-design.
+scripts/checkpatch.pl can find some of these for you.  Thanks,
 
->From 5d7145d44fe48b98572a03884fa3a3aa82e3cef9 Mon Sep 17 00:00:00 2001
-From: Wei Yang <richard.weiyang@gmail.com>
-Date: Sat, 24 Mar 2018 23:25:46 +0800
-Subject: [PATCH] kernel/resource: add walk_system_ram_res_rev()
-
-As discussed on https://patchwork.kernel.org/patch/10300819/, this patch
-comes up with a variant implementation of walk_system_ram_res_rev(), which
-uses iteration instead of allocating array to store those resources.
-
-Signed-off-by: Wei Yang <richard.weiyang@gmail.com>
----
- include/linux/ioport.h |   3 ++
- kernel/resource.c      | 113 +++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 116 insertions(+)
-
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index da0ebaec25f0..473f1d9cb97e 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -277,6 +277,9 @@ extern int
- walk_system_ram_res(u64 start, u64 end, void *arg,
- 		    int (*func)(struct resource *, void *));
- extern int
-+walk_system_ram_res_rev(u64 start, u64 end, void *arg,
-+		    int (*func)(struct resource *, void *));
-+extern int
- walk_iomem_res_desc(unsigned long desc, unsigned long flags, u64 start, u64 end,
- 		    void *arg, int (*func)(struct resource *, void *));
- 
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 769109f20fb7..d4ec5fbc6875 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -73,6 +73,38 @@ static struct resource *next_resource(struct resource *p, bool sibling_only)
- 	return p->sibling;
- }
- 
-+static struct resource *prev_resource(struct resource *p, bool sibling_only)
-+{
-+	struct resource *prev;
-+	if (NULL == iomem_resource.child)
-+		return NULL;
-+
-+	if (p == NULL) {
-+		prev = iomem_resource.child;
-+		while (prev->sibling)
-+			prev = prev->sibling;
-+	} else {
-+		if (p->parent->child == p) {
-+			return p->parent;
-+		}
-+
-+		for (prev = p->parent->child; prev->sibling != p;
-+			prev = prev->sibling) {}
-+	}
-+
-+	/* Caller wants to traverse through siblings only */
-+	if (sibling_only)
-+		return prev;
-+
-+	for (;prev->child;) {
-+		prev = prev->child;
-+
-+		while (prev->sibling)
-+			prev = prev->sibling;
-+	}
-+	return prev;
-+}
-+
- static void *r_next(struct seq_file *m, void *v, loff_t *pos)
- {
- 	struct resource *p = v;
-@@ -401,6 +433,47 @@ static int find_next_iomem_res(struct resource *res, unsigned long desc,
- 	return 0;
- }
- 
-+/*
-+ * Finds the highest iomem resource existing within [res->start.res->end).
-+ * The caller must specify res->start, res->end, res->flags, and optionally
-+ * desc.  If found, returns 0, res is overwritten, if not found, returns -1.
-+ * This function walks the whole tree and not just first level children until
-+ * and unless first_level_children_only is true.
-+ */
-+static int find_prev_iomem_res(struct resource *res, unsigned long desc,
-+			       bool first_level_children_only)
-+{
-+	struct resource *p;
-+
-+	BUG_ON(!res);
-+	BUG_ON(res->start >= res->end);
-+
-+	read_lock(&resource_lock);
-+
-+	for (p = prev_resource(NULL, first_level_children_only); p;
-+		p = prev_resource(p, first_level_children_only)) {
-+		if ((p->flags & res->flags) != res->flags)
-+			continue;
-+		if ((desc != IORES_DESC_NONE) && (desc != p->desc))
-+			continue;
-+		if (p->end < res->start || p->child == iomem_resource.child) {
-+			p = NULL;
-+			break;
-+		}
-+		if ((p->end >= res->start) && (p->start < res->end))
-+			break;
-+	}
-+
-+	read_unlock(&resource_lock);
-+	if (!p)
-+		return -1;
-+	/* copy data */
-+	resource_clip(res, p->start, p->end);
-+	res->flags = p->flags;
-+	res->desc = p->desc;
-+	return 0;
-+}
-+
- static int __walk_iomem_res_desc(struct resource *res, unsigned long desc,
- 				 bool first_level_children_only,
- 				 void *arg,
-@@ -422,6 +495,27 @@ static int __walk_iomem_res_desc(struct resource *res, unsigned long desc,
- 	return ret;
- }
- 
-+static int __walk_iomem_res_rev_desc(struct resource *res, unsigned long desc,
-+				 bool first_level_children_only,
-+				 void *arg,
-+				 int (*func)(struct resource *, void *))
-+{
-+	u64 orig_start = res->start;
-+	int ret = -1;
-+
-+	while ((res->start < res->end) &&
-+	       !find_prev_iomem_res(res, desc, first_level_children_only)) {
-+		ret = (*func)(res, arg);
-+		if (ret)
-+			break;
-+
-+		res->end = res->start?(res->start - 1):0;
-+		res->start = orig_start;
-+	}
-+
-+	return ret;
-+}
-+
- /*
-  * Walks through iomem resources and calls func() with matching resource
-  * ranges. This walks through whole tree and not just first level children.
-@@ -468,6 +562,25 @@ int walk_system_ram_res(u64 start, u64 end, void *arg,
- 				     arg, func);
- }
- 
-+/*
-+ * This function, being a variant of walk_system_ram_res(), calls the @func
-+ * callback against all memory ranges of type System RAM which are marked as
-+ * IORESOURCE_SYSTEM_RAM and IORESOUCE_BUSY in reversed order, i.e., from
-+ * higher to lower.
-+ */
-+int walk_system_ram_res_rev(u64 start, u64 end, void *arg,
-+				int (*func)(struct resource *, void *))
-+{
-+	struct resource res;
-+
-+	res.start = start;
-+	res.end = end;
-+	res.flags = IORESOURCE_SYSTEM_RAM | IORESOURCE_BUSY;
-+
-+	return __walk_iomem_res_rev_desc(&res, IORES_DESC_NONE, true,
-+				     arg, func);
-+}
-+
- /*
-  * This function calls the @func callback against all memory ranges, which
-  * are ranges marked as IORESOURCE_MEM and IORESOUCE_BUSY.
--- 
-2.15.1
-
-
--- 
-Wei Yang
-Help you, Help me
+Alex
