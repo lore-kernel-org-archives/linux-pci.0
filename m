@@ -1,75 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: Christoph Hellwig <hch@lst.de>
-CC: "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "zajec5@gmail.com" <zajec5@gmail.com>,
-        "andy.gross@linaro.org" <andy.gross@linaro.org>,
-        "david.brown@linaro.org" <david.brown@linaro.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "vinod.koul@intel.com" <vinod.koul@intel.com>,
-        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
-        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
-        "johan@kernel.org" <johan@kernel.org>,
-        "msuchanek@suse.de" <msuchanek@suse.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Bharat Bhushan <bharat.bhushan@nxp.com>,
-        Leo Li <leoyang.li@nxp.com>
-Subject: RE: [PATCH v3 1/2] dma-mapping: move dma configuration to bus
-        infrastructure
-Date: Fri, 27 Apr 2018 17:10:48 +0000
-Message-ID: <HE1PR0401MB24259708C02B6AD57C11A18EE68D0@HE1PR0401MB2425.eurprd04.prod.outlook.com>
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
- <1522396485-10248-1-git-send-email-nipun.gupta@nxp.com>
- <20180423125638.GB8824@lst.de>
-In-Reply-To: <20180423125638.GB8824@lst.de>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:53960 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752887AbeDSRgQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Apr 2018 13:36:16 -0400
+To: Alex Williamson <alex.williamson@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Subject: [PATCH 0/2] PCI: Support to workaround bus level HW issues
+Message-ID: <b6439e86-2284-5b3c-3656-a0c3c2568317@oracle.com>
+Date: Thu, 19 Apr 2018 13:36:00 -0400
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+There are bugs in certain PCIe switches that cause access violations
+ when an endpoint device is hotplugged. In particular, there's an issue
+with
+certain IDT switches that trigger a ACS violation when bringing up a newly
+plugged PCIe endpoint device. This is a major issue for platforms
+designed to
+issue a fatal reset in the case of this event.
 
+The first patch provides a framework for intercepting and working around
+issues with parent devices to the endpoint being brought up.
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@lst.de]
-> Sent: Monday, April 23, 2018 6:27 PM
-> To: Nipun Gupta <nipun.gupta@nxp.com>
-> Cc: robin.murphy@arm.com; hch@lst.de; linux@armlinux.org.uk;
-> gregkh@linuxfoundation.org; m.szyprowski@samsung.com;
-> bhelgaas@google.com; zajec5@gmail.com; andy.gross@linaro.org;
-> david.brown@linaro.org; dan.j.williams@intel.com; vinod.koul@intel.com;
-> thierry.reding@gmail.com; robh+dt@kernel.org; frowand.list@gmail.com;
-> jarkko.sakkinen@linux.intel.com; rafael.j.wysocki@intel.com;
-> dmitry.torokhov@gmail.com; johan@kernel.org; msuchanek@suse.de; linux-
-> kernel@vger.kernel.org; iommu@lists.linux-foundation.org; linux-
-> wireless@vger.kernel.org; linux-arm-msm@vger.kernel.org; linux-
-> soc@vger.kernel.org; dmaengine@vger.kernel.org; dri-
-> devel@lists.freedesktop.org; linux-tegra@vger.kernel.org;
-> devicetree@vger.kernel.org; linux-pci@vger.kernel.org; Bharat Bhushan
-> <bharat.bhushan@nxp.com>; Leo Li <leoyang.li@nxp.com>
-> Subject: Re: [PATCH v3 1/2] dma-mapping: move dma configuration to bus
-> infrastructure
->=20
-> Can you resend your changes against Linux 4.17-rc2?  There are a lot
-> of conflicts as-is.
+The second patch provides the actual patch for the IDT switch issue using
+that framework. The ACS feature is disabled in the IDT switch prior to
+endpoint
+device detection and then re-enabled subsequent to that.
 
-Sure.. I will send it soon..
+James
 
-Regards,
-Nipun
+---
+
+James Puthukattukaran (2):
+  PCI: Add pci_bus_specific_read_dev_vendor_id() to workaround PCI
+    switch     specific issues prior to accessing newly added endpoint
+  PCI: Implement workaround for the ACS bug in the IDT switch
+
+ drivers/pci/pci.h    |   4 ++
+ drivers/pci/probe.c  |  19 +++++++-
+ drivers/pci/quirks.c | 130
++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 152 insertions(+), 1 deletion(-)
