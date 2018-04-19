@@ -1,342 +1,215 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v5 02/10] PCI: dwc: Add support for endpoint mode
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>, <kishon@ti.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
- <b961f8d5682d77d808638b9254daaf6e8770cf67.1523973931.git.gustavo.pimentel@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <a63cbbb4-0548-c17e-56a5-35cd71ba4092@synopsys.com>
-Date: Tue, 17 Apr 2018 19:46:23 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:58944 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753475AbeDSVza (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Apr 2018 17:55:30 -0400
+Subject: [PATCH 2/2] PCI: Implement workaround for the ACS bug in the IDT,
+ switch
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <b6439e86-2284-5b3c-3656-a0c3c2568317@oracle.com>
+Message-ID: <a4f8dbde-9fcf-3644-e08c-88654637d157@oracle.com>
+Date: Thu, 19 Apr 2018 13:39:26 -0400
 MIME-Version: 1.0
-In-Reply-To: <b961f8d5682d77d808638b9254daaf6e8770cf67.1523973931.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <b6439e86-2284-5b3c-3656-a0c3c2568317@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The IDT switch incorrectly flags an ACS source violation on a read config
+request to an end point device on the completion (IDT 89H32H8G3-YC,
+errata #36) even though the PCI Express spec states that completions are
+never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
+Here's
+the specific copy of the errata text
 
-Hi Gustavo,
+"Item #36 - Downstream port applies ACS Source Validation to Completions
+Section 6.12.1.1 of the PCI Express Base Specification 3.1 states
+that completions are never affected
+by ACS Source Validation. However, completions received by a
+downstream port of the PCIe switch from a device that has not yet
+captured a PCIe bus number are incorrectly dropped by ACS source
+validation by the switch downstream port.
 
-Às 3:34 PM de 4/17/2018, Gustavo Pimentel escreveu:
-> The PCIe controller dual mode is capable of operating in host mode as well
-> as endpoint mode by configuration, therefore this patch aims to add
-> endpoint mode support to the designware driver.
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
-> Change v1->v2:
->  - Removed dw_plat_pcie_stop_link empty function.
->  - Implemented Kishon's suggestions about dw-pcie-rc and dw-pcie strings.
-> compatibility.
->  - Added second entry on pci_epf_test_ids structure.
-> Changes v2->v3:
->  - Reverted additions in dw_pcie_ep_linkup function.
->  - Replaced devm_ioremap by devm_ioremap_resource function.
->  - Moved second entry in pci_epf_test_ids structure into a new patch file.
-> Changes v3->v4:
->  - Reverted "snps,dw-pcie-rc" compatible string requested by Rob Herring.
-> Changes v4->v5:
->  - Nothing changed, just to follow the patch set version.
-> 
->  drivers/pci/dwc/Kconfig                |  45 +++++++---
->  drivers/pci/dwc/pcie-designware-plat.c | 149 ++++++++++++++++++++++++++++++---
->  2 files changed, 174 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> index 2f3f5c5..3fd7daf 100644
-> --- a/drivers/pci/dwc/Kconfig
-> +++ b/drivers/pci/dwc/Kconfig
-> @@ -7,8 +7,7 @@ config PCIE_DW
->  
->  config PCIE_DW_HOST
->          bool
-> -	depends on PCI
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
->          select PCIE_DW
->  
->  config PCIE_DW_EP
-> @@ -52,16 +51,42 @@ config PCI_DRA7XX_EP
->  
->  config PCIE_DW_PLAT
->  	bool "Platform bus based DesignWare PCIe Controller"
-> -	depends on PCI
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIE_DW_HOST
-> -	---help---
-> -	 This selects the DesignWare PCIe controller support. Select this if
-> -	 you have a PCIe controller on Platform bus.
-> +	help
-> +	  There are two instances of PCIe controller in Designware IP.
-> +	  This controller can work either as EP or RC. In order to enable
-> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
-> +	  order to enable device-specific features PCIE_DW_PLAT_EP must be
-> +	  selected.
+Workaround: Issue a CfgWr1 to the downstream device before issuing
+the first CfgRd1 to the device.
+This allows the downstream device to capture its bus number; ACS
+source validation no longer stops
+completions from being forwarded by the downstream port. It has been
+observed that Microsoft Windows implements this workaround already;
+however, some versions of Linux and other operating systems may not. "
 
-I just have have a suggestion regarding the PCIE-DW_PLAT Kconfig option that in
-my opinion should be hidden from the user like the PCIE_DW_HOST option, since it
-should be set only by PCIE_DW_PLAT_HOST and PCIE_DW_PLAT_EP.
+The suggested workaround by IDT is to issue a configuration write to the
+downstream device before issuing the first config read. This allows the
+downstream device to capture its bus number, thus avoiding the ACS
+violation on the completion. In order to make sure that the device is ready
+for config accesses, we do what is currently done in making config reads
+till it succeeds and then do the config write as specified by the errata.
+However, to avoid hitting the errata issue when doing config reads, we
+disable ACS SV around this process.
 
-Thanks,
-Joao
+The patch does the following -
 
->  
-> -	 If you have a controller with this interface, say Y or M here.
-> +config PCIE_DW_PLAT_HOST
-> +	bool "Platform bus based DesignWare PCIe Controller - Host mode"
-> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
-> +	select PCIE_DW_HOST
-> +	select PCIE_DW_PLAT
-> +	default y
-> +	help
-> +	  Enables support for the PCIe controller in the Designware IP to
-> +	  work in host mode. There are two instances of PCIe controller in
-> +	  Designware IP.
-> +	  This controller can work either as EP or RC. In order to enable
-> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
-> +	  order to enable device-specific features PCI_DW_PLAT_EP must be
-> +	  selected.
->  
-> -	 If unsure, say N.
-> +config PCIE_DW_PLAT_EP
-> +	bool "Platform bus based DesignWare PCIe Controller - Endpoint mode"
-> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
-> +	depends on PCI_ENDPOINT
-> +	select PCIE_DW_EP
-> +	select PCIE_DW_PLAT
-> +	help
-> +	  Enables support for the PCIe controller in the Designware IP to
-> +	  work in endpoint mode. There are two instances of PCIe controller
-> +	  in Designware IP.
-> +	  This controller can work either as EP or RC. In order to enable
-> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
-> +	  order to enable device-specific features PCI_DW_PLAT_EP must be
-> +	  selected.
->  
->  config PCI_EXYNOS
->  	bool "Samsung Exynos PCIe controller"
-> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-> index 5416aa8..efc315c 100644
-> --- a/drivers/pci/dwc/pcie-designware-plat.c
-> +++ b/drivers/pci/dwc/pcie-designware-plat.c
-> @@ -12,19 +12,29 @@
->  #include <linux/interrupt.h>
->  #include <linux/kernel.h>
->  #include <linux/init.h>
-> +#include <linux/of_device.h>
->  #include <linux/of_gpio.h>
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/resource.h>
->  #include <linux/signal.h>
->  #include <linux/types.h>
-> +#include <linux/regmap.h>
->  
->  #include "pcie-designware.h"
->  
->  struct dw_plat_pcie {
-> -	struct dw_pcie		*pci;
-> +	struct dw_pcie			*pci;
-> +	struct regmap			*regmap;
-> +	enum dw_pcie_device_mode	mode;
->  };
->  
-> +struct dw_plat_pcie_of_data {
-> +	enum dw_pcie_device_mode	mode;
-> +};
-> +
-> +static const struct of_device_id dw_plat_pcie_of_match[];
-> +
->  static int dw_plat_pcie_host_init(struct pcie_port *pp)
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> @@ -42,9 +52,53 @@ static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
->  	.host_init = dw_plat_pcie_host_init,
->  };
->  
-> -static int dw_plat_add_pcie_port(struct pcie_port *pp,
-> +static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
-> +{
-> +	return 0;
-> +}
-> +
-> +static const struct dw_pcie_ops dw_pcie_ops = {
-> +	.start_link = dw_plat_pcie_establish_link,
-> +};
-> +
-> +static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	enum pci_barno bar;
-> +
-> +	for (bar = BAR_0; bar <= BAR_5; bar++)
-> +		dw_pcie_ep_reset_bar(pci, bar);
-> +}
-> +
-> +static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-> +				     enum pci_epc_irq_type type,
-> +				     u8 interrupt_num)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +
-> +	switch (type) {
-> +	case PCI_EPC_IRQ_LEGACY:
-> +		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
-> +		return -EINVAL;
-> +	case PCI_EPC_IRQ_MSI:
-> +		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
-> +	default:
-> +		dev_err(pci->dev, "UNKNOWN IRQ type\n");
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static struct dw_pcie_ep_ops pcie_ep_ops = {
-> +	.ep_init = dw_plat_pcie_ep_init,
-> +	.raise_irq = dw_plat_pcie_ep_raise_irq,
-> +};
-> +
-> +static int dw_plat_add_pcie_port(struct dw_plat_pcie *dw_plat_pcie,
->  				 struct platform_device *pdev)
->  {
-> +	struct dw_pcie *pci = dw_plat_pcie->pci;
-> +	struct pcie_port *pp = &pci->pp;
->  	struct device *dev = &pdev->dev;
->  	int ret;
->  
-> @@ -63,15 +117,44 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
->  
->  	ret = dw_pcie_host_init(pp);
->  	if (ret) {
-> -		dev_err(dev, "failed to initialize host\n");
-> +		dev_err(dev, "Failed to initialize host\n");
->  		return ret;
->  	}
->  
->  	return 0;
->  }
->  
-> -static const struct dw_pcie_ops dw_pcie_ops = {
-> -};
-> +static int dw_plat_add_pcie_ep(struct dw_plat_pcie *dw_plat_pcie,
-> +			       struct platform_device *pdev)
-> +{
-> +	int ret;
-> +	struct dw_pcie_ep *ep;
-> +	struct resource *res;
-> +	struct device *dev = &pdev->dev;
-> +	struct dw_pcie *pci = dw_plat_pcie->pci;
-> +
-> +	ep = &pci->ep;
-> +	ep->ops = &pcie_ep_ops;
-> +
-> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
-> +	pci->dbi_base2 = devm_ioremap_resource(dev, res);
-> +	if (IS_ERR(pci->dbi_base2))
-> +		return PTR_ERR(pci->dbi_base2);
-> +
-> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
-> +	if (!res)
-> +		return -EINVAL;
-> +
-> +	ep->phys_base = res->start;
-> +	ep->addr_size = resource_size(res);
-> +
-> +	ret = dw_pcie_ep_init(ep);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to initialize endpoint\n");
-> +		return ret;
-> +	}
-> +	return 0;
-> +}
->  
->  static int dw_plat_pcie_probe(struct platform_device *pdev)
->  {
-> @@ -80,6 +163,16 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
->  	struct dw_pcie *pci;
->  	struct resource *res;  /* Resource from DT */
->  	int ret;
-> +	const struct of_device_id *match;
-> +	const struct dw_plat_pcie_of_data *data;
-> +	enum dw_pcie_device_mode mode;
-> +
-> +	match = of_match_device(dw_plat_pcie_of_match, dev);
-> +	if (!match)
-> +		return -EINVAL;
-> +
-> +	data = (struct dw_plat_pcie_of_data *)match->data;
-> +	mode = (enum dw_pcie_device_mode)data->mode;
->  
->  	dw_plat_pcie = devm_kzalloc(dev, sizeof(*dw_plat_pcie), GFP_KERNEL);
->  	if (!dw_plat_pcie)
-> @@ -93,23 +186,59 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
->  	pci->ops = &dw_pcie_ops;
->  
->  	dw_plat_pcie->pci = pci;
-> +	dw_plat_pcie->mode = mode;
-> +
-> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-> +	if (!res)
-> +		res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->  
-> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->  	pci->dbi_base = devm_ioremap_resource(dev, res);
->  	if (IS_ERR(pci->dbi_base))
->  		return PTR_ERR(pci->dbi_base);
->  
->  	platform_set_drvdata(pdev, dw_plat_pcie);
->  
-> -	ret = dw_plat_add_pcie_port(&pci->pp, pdev);
-> -	if (ret < 0)
-> -		return ret;
-> +	switch (dw_plat_pcie->mode) {
-> +	case DW_PCIE_RC_TYPE:
-> +		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_HOST))
-> +			return -ENODEV;
-> +
-> +		ret = dw_plat_add_pcie_port(dw_plat_pcie, pdev);
-> +		if (ret < 0)
-> +			return ret;
-> +		break;
-> +	case DW_PCIE_EP_TYPE:
-> +		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_EP))
-> +			return -ENODEV;
-> +
-> +		ret = dw_plat_add_pcie_ep(dw_plat_pcie, pdev);
-> +		if (ret < 0)
-> +			return ret;
-> +		break;
-> +	default:
-> +		dev_err(dev, "INVALID device type %d\n", dw_plat_pcie->mode);
-> +	}
->  
->  	return 0;
->  }
->  
-> +static const struct dw_plat_pcie_of_data dw_plat_pcie_rc_of_data = {
-> +	.mode = DW_PCIE_RC_TYPE,
-> +};
-> +
-> +static const struct dw_plat_pcie_of_data dw_plat_pcie_ep_of_data = {
-> +	.mode = DW_PCIE_EP_TYPE,
-> +};
-> +
->  static const struct of_device_id dw_plat_pcie_of_match[] = {
-> -	{ .compatible = "snps,dw-pcie", },
-> +	{
-> +		.compatible = "snps,dw-pcie",
-> +		.data = &dw_plat_pcie_rc_of_data,
-> +	},
-> +	{
-> +		.compatible = "snps,dw-pcie-ep",
-> +		.data = &dw_plat_pcie_ep_of_data,
-> +	},
->  	{},
->  };
->  
-> 
+1. Disable ACS source violation if enabled.
+2. Wait for config space access to become available by reading vendor id
+3. Do a config write to the end point (errata workaround)
+4. Enable ACS source validation (if it was enabled to begin with)
+
+Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
+---
+ drivers/pci/pci.h    |  2 ++
+ drivers/pci/quirks.c | 95
+++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 94 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 2d06689..e801d8b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -227,6 +227,8 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus,
+int devfn, u32 *pl,
+ 				int crs_timeout);
+ int pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn,
+ 				u32 *pl, int crs_timeout);
++bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn,
++				u32 *pl, int crs_timeout);
+ int pci_setup_device(struct pci_dev *dev);
+ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		    struct resource *res, unsigned int reg);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index c637162..0faad6f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4743,22 +4743,111 @@ static void quirk_gpu_hda(struct pci_dev *hda)
+ 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
+
+
++/*
++ * The IDT switch incorrectly flags an ACS source violation on a read
+config
++ * request to an end point device on the completion (IDT 89H32H8G3-YC,
++ * errata #36) even though the PCI Express spec states that completions are
++ * never affected by ACS source violation (PCI Spec 3.1, Section
+6.12.1.1).
++ * Here's * the specific copy of the errata text --
++ *
++ * "Item #36 - Downstream port applies ACS Source Validation to Completions
++ * Section 6.12.1.1 of the PCI Express Base Specification 3.1 states
++ * that completions are never affected
++ * by ACS Source Validation. However, completions received by a
++ * downstream port of the PCIe switch from a device that has not yet
++ * captured a PCIe bus number are incorrectly dropped by ACS source
++ * validation by the switch downstream port."
++ *
++ * The suggested workaround by IDT is to issue a configuration write to the
++ * downstream device before issuing the first config read. This allows the
++ * downstream device to capture its bus number, thus avoiding the ACS
++ * violation on the completion. In order to make sure that the device
+is ready
++ * for config accesses, we do what is currently done in making config reads
++ * till it succeeds and then do the config write as specified by the
+errata.
++ * However, to avoid hitting the errata issue when doing config reads, we
++ * disable ACS SV around this process.
++ */
++static int pci_idt_acs_quirk(struct pci_bus *bus, int devfn, int enable,
++				bool found)
++{
++	int pos;
++	u16 cap;
++	u16 ctrl;
++	int retval;
++	struct pci_dev *dev = bus->self;
++
++
++	/* Write 0 to the devfn device under the PCIE switch (bus->self)
++	 * as part of forcing the devfn number to latch with the device
++	 * below */
++	if (found)
++		pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
++
++
++	/* Enable/disable ACS SV feature (based on enable flag) */
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++	if (!pos)
++		return -ENODEV;
++
++	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
++
++	if (!(cap & PCI_ACS_SV))
++		return -ENODEV;
++
++	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
++
++	retval = !!(ctrl & cap & PCI_ACS_SV);
++	if (enable)
++		ctrl |= (cap & PCI_ACS_SV);
++	else
++		ctrl &= ~(cap & PCI_ACS_SV);
++
++	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
++
++	/* return the previous state of the ACS SV state i.e was SV enabled
++	 * or disabled? */
++	return retval;
++}
++
++static int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *l,
++				int timeout)
++{
++	int enable;
++	bool found;
++
++	/* Disable acs for the IDT switch before attempting the intial
++	 * config accesses to the endpoint device. */
++	enable = pci_idt_acs_quirk(bus, devfn, 0, false);
++
++	/* found indicates whether the endpoint device was identified
++	 * as present or not */
++
++	found = pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
++
++	/* re-enable acs feature for the switch again if it was enabled to
++ 	 * start with */	
++	if (enable > 0)
++		pci_idt_acs_quirk(bus, devfn, enable, found);
++
++	return (found ? 1 : 0);
++}
++
+ static const struct pci_bus_specific_quirk{
+ 	u16 vendor;
+ 	u16 device;
+ 	int (*bus_quirk)(struct pci_bus *bus, int devfn, u32 *l, int timeout);
+ } pci_bus_specific_quirks[] = {
++	{ PCI_VENDOR_ID_IDT, 0x80b5, pci_idt_bus_quirk},
+ 	{0}
+ };
+
+ /*
+  * This routine provides the ability to implement a bus specific quirk
+- * prior to doing config accesses to the endpoint device itself. For
+ex, there
++ * prior to doing config accesses to the endpoint device itself. For
+ex, there
+  * could be HW problems with the switch above the endpoint that causes
+issues
+  * when accessing the endpoint device. Such workarounds "specific" to the
+  * parent could be implemented prior or subsequent to accesses to the
+  * endpoint itself
+- *
+  */
+ int pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn,
+u32 *l,
+ 					int timeout)
+@@ -4767,7 +4856,7 @@ int pci_bus_specific_read_dev_vendor_id(struct
+pci_bus *bus, int devfn, u32 *l,
+ 	struct pci_dev *dev;
+
+ 	if (!bus || !bus->self)
+-	        return -ENOTTY;
++		return -ENOTTY;
+
+ 	dev = bus->self;
