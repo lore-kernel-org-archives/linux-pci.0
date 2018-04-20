@@ -1,74 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:36056 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757142AbeD0MAN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 08:00:13 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v8 4/9] bindings: PCI: designware: Add support for EP in DesignWare driver
-Date: Fri, 27 Apr 2018 12:59:59 +0100
-Message-Id: <270940114b0e84e700df792107b79b3fddd57016.1524829928.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
+Received: from mga07.intel.com ([134.134.136.100]:62064 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751168AbeDTQf2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Apr 2018 12:35:28 -0400
+Subject: [pci PATCH v8 1/4] pci: Add pci_sriov_configure_simple for PFs that
+ don't manage VF resources
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
+        mheyne@amazon.de, liang-min.wang@intel.com,
+        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
+        dwmw@amazon.co.uk
+Date: Fri, 20 Apr 2018 12:28:36 -0400
+Message-ID: <20180420162814.46077.11939.stgit@ahduyck-green-test.jf.intel.com>
+In-Reply-To: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
+References: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device tree binding documentation for the EP in PCIe DesignWare driver.
+This patch adds a common configuration function called
+pci_sriov_configure_simple that will allow for managing VFs on devices
+where the PF is not capable of managing VF resources.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+Tested-by: Mark Rustad <mark.d.rustad@intel.com>
 ---
-Change v1->v2:
- - Add a missing log description.
- - Add "snps,dw-pcie" compatible string following Kishon's suggestion.
-Change v2->v3:
- - Reverted pcie_ep name to pcie.
-Changes v3->v4:
- - Reverted "snps,dw-pcie-rc" compatible string requested by Rob Herring.
-Changes v4->v5:
- - Removed device_type entry from EP requested by Rob Herring.
-Changes v5->v6:
- - Nothing changed, just to follow the patch set version.
-Changes v6->v7:
- - Nothing changed, just to follow the patch set version.
-Changes v7->v8:
- - Patch description rework for an imperative verbal mode.
 
- Documentation/devicetree/bindings/pci/designware-pcie.txt | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+v5: New patch replacing pci_sriov_configure_unmanaged with
+      pci_sriov_configure_simple
+    Dropped bits related to autoprobe changes
+v6: Defined pci_sriov_configure_simple as NULL if IOV is disabled
+v7: Updated pci_sriov_configure_simple to drop need for err value
+    Fixed comment explaining why pci_sriov_configure_simple is NULL
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 7f9804d..c124f9b 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -3,6 +3,7 @@
- Required properties:
- - compatible:
- 	"snps,dw-pcie" for RC mode;
-+	"snps,dw-pcie-ep" for EP mode;
- - reg: Should contain the configuration address space.
- - reg-names: Must be "config" for the PCIe configuration space.
-     (The old way of getting the configuration address space from "ranges"
-@@ -56,3 +57,14 @@ Example configuration:
- 		#interrupt-cells = <1>;
- 		num-lanes = <1>;
- 	};
-+or
-+	pcie: pcie@dfc00000 {
-+		compatible = "snps,dw-pcie-ep";
-+		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
-+		      <0xdfc01000 0x0001000>, /* IP registers 2 */
-+		      <0xd0000000 0x2000000>; /* Configuration space */
-+		reg-names = "dbi", "dbi2", "addr_space";
-+		num-ib-windows = <6>;
-+		num-ob-windows = <2>;
-+		num-lanes = <1>;
-+	};
--- 
-2.7.4
+ drivers/pci/iov.c   |   31 +++++++++++++++++++++++++++++++
+ include/linux/pci.h |    3 +++
+ 2 files changed, 34 insertions(+)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 677924a..3e0a7fd 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -807,3 +807,34 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ 	return dev->sriov->total_VFs;
+ }
+ EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
++
++/**
++ * pci_sriov_configure_simple - helper to configure unmanaged SR-IOV
++ * @dev: the PCI device
++ * @nr_virtfn: number of virtual functions to enable, 0 to disable
++ *
++ * Used to provide generic enable/disable SR-IOV option for devices
++ * that do not manage the VFs generated by their driver. Return value
++ * is negative on error, or number of VFs allocated on success.
++ */
++int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn)
++{
++	might_sleep();
++
++	if (!dev->is_physfn)
++		return -ENODEV;
++
++	if (pci_vfs_assigned(dev)) {
++		pci_warn(dev,
++			 "Cannot modify SR-IOV while VFs are assigned\n");
++		return -EPERM;
++	}
++
++	if (!nr_virtfn) {
++		sriov_disable(dev);
++		return 0;
++	}
++
++	return sriov_enable(dev, nr_virtfn) ? : nr_virtfn;
++}
++EXPORT_SYMBOL_GPL(pci_sriov_configure_simple);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ae42289..7d36e39 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1955,6 +1955,7 @@ static inline void pci_mmcfg_late_init(void) { }
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
++int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn);
+ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+ void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+ #else
+@@ -1982,6 +1983,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+ { return 0; }
+ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ { return 0; }
++/* this is expected to be used as a function pointer, just define as NULL */
++#define pci_sriov_configure_simple NULL
+ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ { return 0; }
+ static inline void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe) { }
