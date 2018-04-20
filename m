@@ -1,78 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:42072 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759215AbeD1B51 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 21:57:27 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH v2 4/9] PCI: aardvark: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Sat, 28 Apr 2018 09:49:29 +0800
-Message-Id: <1524880169-101045-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mga14.intel.com ([192.55.52.115]:64061 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751227AbeDTQig (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Apr 2018 12:38:36 -0400
+Subject: [pci PATCH v8 4/4] pci-pf-stub: Add PF driver stub for PFs that
+ function only to enable VFs
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+To: bhelgaas@google.com, alexander.h.duyck@intel.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
+        mheyne@amazon.de, liang-min.wang@intel.com,
+        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
+        dwmw@amazon.co.uk
+Date: Fri, 20 Apr 2018 12:31:44 -0400
+Message-ID: <20180420163109.46077.60334.stgit@ahduyck-green-test.jf.intel.com>
+In-Reply-To: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
+References: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+Add a new driver called "pci-pf-stub" to act as a "white-list" for PF
+devices that provide no other functionality other then acting as a means of
+allocating a set of VFs. For now I only have one example ID provided by
+Amazon in terms of devices that require this functionality. The general
+idea is that in the future we will see other devices added as vendors come
+up with devices where the PF is more or less just a lightweight shim used
+to allocate VFs.
 
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
 ---
 
-Changes in v2: None
+v6: New driver to address concerns about Amazon devices left unsupported
+v7: Dropped pci_id table explanation from pci-pf-stub driver
 
- drivers/pci/host/pci-aardvark.c | 24 +++++-------------------
- 1 file changed, 5 insertions(+), 19 deletions(-)
+ drivers/pci/Kconfig       |   12 ++++++++++
+ drivers/pci/Makefile      |    2 ++
+ drivers/pci/pci-pf-stub.c |   54 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci_ids.h   |    2 ++
+ 4 files changed, 70 insertions(+)
+ create mode 100644 drivers/pci/pci-pf-stub.c
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 9abf549..df02b9a 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -702,37 +702,23 @@ static void advk_pcie_remove_msi_irq_domain(struct advk_pcie *pcie)
- static int advk_pcie_init_irq_domain(struct advk_pcie *pcie)
- {
- 	struct device *dev = &pcie->pdev->dev;
--	struct device_node *node = dev->of_node;
--	struct device_node *pcie_intc_node;
- 	struct irq_chip *irq_chip;
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 34b56a8..cdef2a2 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -71,6 +71,18 @@ config PCI_STUB
  
--	pcie_intc_node =  of_get_next_child(node, NULL);
--	if (!pcie_intc_node) {
--		dev_err(dev, "No PCIe Intc node found\n");
--		return -ENODEV;
--	}
--
- 	irq_chip = &pcie->irq_chip;
+ 	  When in doubt, say N.
  
- 	irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-irq",
- 					dev_name(dev));
--	if (!irq_chip->name) {
--		of_node_put(pcie_intc_node);
-+	if (!irq_chip->name)
- 		return -ENOMEM;
--	}
++config PCI_PF_STUB
++	tristate "PCI PF Stub driver"
++	depends on PCI
++	depends on PCI_IOV
++	help
++	  Say Y or M here if you want to enable support for devices that
++	  require SR-IOV support, while at the same time the PF itself is
++	  not providing any actual services on the host itself such as
++	  storage or networking.
++
++	  When in doubt, say N.
++
+ config XEN_PCIDEV_FRONTEND
+         tristate "Xen PCI Frontend"
+         depends on PCI && X86 && XEN
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 9419709..4e133d3 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -43,6 +43,8 @@ obj-$(CONFIG_PCI_SYSCALL) += syscall.o
  
- 	irq_chip->irq_mask = advk_pcie_irq_mask;
- 	irq_chip->irq_mask_ack = advk_pcie_irq_mask;
- 	irq_chip->irq_unmask = advk_pcie_irq_unmask;
+ obj-$(CONFIG_PCI_STUB) += pci-stub.o
  
--	pcie->irq_domain =
--		irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--				      &advk_pcie_irq_domain_ops, pcie);
--	if (!pcie->irq_domain) {
--		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		of_node_put(pcie_intc_node);
--		return -ENOMEM;
--	}
-+	pcie->irq_domain = pci_alloc_intx_irqd(dev, pcie, false,
-+				&advk_pcie_irq_domain_ops, NULL);
-+	if (IS_ERR(pcie->irq_domain))
-+		return PTR_ERR(pcie->irq_domain);
++obj-$(CONFIG_PCI_PF_STUB) += pci-pf-stub.o
++
+ obj-$(CONFIG_PCI_ECAM) += ecam.o
  
- 	return 0;
- }
--- 
-1.9.1
+ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+diff --git a/drivers/pci/pci-pf-stub.c b/drivers/pci/pci-pf-stub.c
+new file mode 100644
+index 0000000..9d5fdf2
+--- /dev/null
++++ b/drivers/pci/pci-pf-stub.c
+@@ -0,0 +1,54 @@
++// SPDX-License-Identifier: GPL-2.0
++/* pci-pf-stub - simple stub driver for PCI SR-IOV PF device
++ *
++ * This driver is meant to act as a "white-list" for devices that provde
++ * SR-IOV functionality while at the same time not actually needing a
++ * driver of their own.
++ */
++
++#include <linux/module.h>
++#include <linux/pci.h>
++
++/**
++ * pci_pf_stub_white_list - White list of devices to bind pci-pf-stub onto
++ *
++ * This table provides the list of IDs this driver is supposed to bind
++ * onto. You could think of this as a list of "quirked" devices where we
++ * are adding support for SR-IOV here since there are no other drivers
++ * that they would be running under.
++ */
++static const struct pci_device_id pci_pf_stub_white_list[] = {
++	{ PCI_VDEVICE(AMAZON, 0x0053) },
++	/* required last entry */
++	{ 0 }
++};
++MODULE_DEVICE_TABLE(pci, pci_pf_stub_white_list);
++
++static int pci_pf_stub_probe(struct pci_dev *dev,
++			     const struct pci_device_id *id)
++{
++	pci_info(dev, "claimed by pci-pf-stub\n");
++	return 0;
++}
++
++static struct pci_driver pf_stub_driver = {
++	.name			= "pci-pf-stub",
++	.id_table		= pci_pf_stub_white_list,
++	.probe			= pci_pf_stub_probe,
++	.sriov_configure	= pci_sriov_configure_simple,
++};
++
++static int __init pci_pf_stub_init(void)
++{
++	return pci_register_driver(&pf_stub_driver);
++}
++
++static void __exit pci_pf_stub_exit(void)
++{
++	pci_unregister_driver(&pf_stub_driver);
++}
++
++module_init(pci_pf_stub_init);
++module_exit(pci_pf_stub_exit);
++
++MODULE_LICENSE("GPL");
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index a637a7d..62dab14 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2549,6 +2549,8 @@
+ #define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
+ #define PCI_SUBSYSTEM_ID_CIRCUITCO_MINNOWBOARD	0x0001
+ 
++#define PCI_VENDOR_ID_AMAZON		0x1d0f
++
+ #define PCI_VENDOR_ID_TEKRAM		0x1de1
+ #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
+ 
