@@ -1,754 +1,197 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v13 2/6] PCI/AER: Factor out error reporting from AER
-Date: Mon,  9 Apr 2018 10:41:50 -0400
-Message-Id: <1523284914-2037-3-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
-References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
+MIME-Version: 1.0
+In-Reply-To: <20180420030640-mutt-send-email-mst@kernel.org>
+References: <20180315183449.3102.64791.stgit@localhost.localdomain>
+ <20180315184132.3102.90947.stgit@localhost.localdomain> <20180316183042-mutt-send-email-mst@kernel.org>
+ <CAKgT0UfgZ2gAdiAbCe4MTOr3o9cqq1q-mykCQsw68p2F-QEC8g@mail.gmail.com>
+ <20180403161151-mutt-send-email-mst@kernel.org> <CAKgT0UfeSmG=xsd6sTkg4cOMnZ0QiqtCRDt4PynpF3d6nvvFCA@mail.gmail.com>
+ <20180403212503-mutt-send-email-mst@kernel.org> <CAKgT0Ude79FYrK4qA0OKRJ1NackyqPi-hZ8Zh3WSdLDFxoOosQ@mail.gmail.com>
+ <20180420030640-mutt-send-email-mst@kernel.org>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Fri, 20 Apr 2018 07:56:14 -0700
+Message-ID: <CAKgT0Ucpw9D1u8MYoEX5KOij6sxs-5O9gPFTmOVq=Dgt=HUJ=g@mail.gmail.com>
+Subject: Re: [virtio-dev] [pci PATCH v7 2/5] virtio_pci: Add support for
+ unmanaged SR-IOV on virtio_pci devices
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: "Daly, Dan" <dan.daly@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
+        Don Dutile <ddutile@redhat.com>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch factors out error reporting callbacks, which are currently
-tightly coupled with AER.
+On Thu, Apr 19, 2018 at 5:40 PM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> On Tue, Apr 03, 2018 at 12:06:03PM -0700, Alexander Duyck wrote:
+>> On Tue, Apr 3, 2018 at 11:27 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+>> > On Tue, Apr 03, 2018 at 10:32:00AM -0700, Alexander Duyck wrote:
+>> >> On Tue, Apr 3, 2018 at 6:12 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+>> >> > On Fri, Mar 16, 2018 at 09:40:34AM -0700, Alexander Duyck wrote:
+>> >> >> On Fri, Mar 16, 2018 at 9:34 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+>> >> >> > On Thu, Mar 15, 2018 at 11:42:41AM -0700, Alexander Duyck wrote:
+>> >> >> >> From: Alexander Duyck <alexander.h.duyck@intel.com>
+>> >> >> >>
+>> >> >> >> Hardware-realized virtio_pci devices can implement SR-IOV, so this
+>> >> >> >> patch enables its use. The device in question is an upcoming Intel
+>> >> >> >> NIC that implements both a virtio_net PF and virtio_net VFs. These
+>> >> >> >> are hardware realizations of what has been up to now been a software
+>> >> >> >> interface.
+>> >> >> >>
+>> >> >> >> The device in question has the following 4-part PCI IDs:
+>> >> >> >>
+>> >> >> >> PF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 15fe
+>> >> >> >> VF: vendor: 1af4 device: 1041 subvendor: 8086 subdevice: 05fe
+>> >> >> >>
+>> >> >> >> The patch currently needs no check for device ID, because the callback
+>> >> >> >> will never be made for devices that do not assert the capability or
+>> >> >> >> when run on a platform incapable of SR-IOV.
+>> >> >> >>
+>> >> >> >> One reason for this patch is because the hardware requires the
+>> >> >> >> vendor ID of a VF to be the same as the vendor ID of the PF that
+>> >> >> >> created it. So it seemed logical to simply have a fully-functioning
+>> >> >> >> virtio_net PF create the VFs. This patch makes that possible.
+>> >> >> >>
+>> >> >> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> >> >> >> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+>> >> >> >> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>> >> >> >
+>> >> >> > So if and when virtio PFs can manage the VFs, then we can
+>> >> >> > add a feature bit for that?
+>> >> >> > Seems reasonable.
+>> >> >>
+>> >> >> Yes. If nothing else you may not even need a feature bit depending on
+>> >> >> how things go.
+>> >> >
+>> >> > OTOH if the interface is changed in an incompatible way,
+>> >> > and old Linux will attempt to drive the new device
+>> >> > since there is no check.
+>> >> >
+>> >> > I think we should add a feature bit right away.
+>> >>
+>> >> I'm not sure why you would need a feature bit. The capability is
+>> >> controlled via PCI configuration space. If it is present the device
+>> >> has the capability. If it is not then it does not.
+>> >>
+>> >> Basically if the PCI configuration space is not present then the sysfs
+>> >> entries will not be spawned and nothing will attempt to use this
+>> >> function.
+>> >>
+>> >> - ALex
+>> >
+>> > It's about compability with older guests which ignore the
+>> > capability.
+>> >
+>> > The feature is thus helpful so host knows whether guest supports VFs.
+>>
+>> The thing is if the capability is ignored then the feature isn't used.
+>> So for SR-IOV it isn't an uncommon thing for there to be drivers for
+>> the PF floating around that do not support SR-IOV. In such cases
+>> SR-IOV just isn't used while the hardware could support it.
+>
+> Right but how come there are VF drivers but PF driver does not
+> know about these?
 
-DPC should be able to register callbacks and attempt recovery when DPC
-trigger event occurs.
+I'm not sure what you mean here. The VF and PF drivers are the same
+driver. The only difference is that the PF has the extra SR-IOV
+configuration space.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+What this code is meant to enable is a form of SR-IOV where the VFs
+are essentially pre-allocated resources. So for example in our case
+the MMIO space is identical for a PF versus any of the VFs. It doesn't
+have any special controls in place to allow the PF to manipulate any
+of the resources belonging to the VFs.
 
-diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-index 223e4c3..f0b1a78 100644
---- a/drivers/pci/pcie/Makefile
-+++ b/drivers/pci/pcie/Makefile
-@@ -6,7 +6,7 @@
- # Build PCI Express ASPM if needed
- obj-$(CONFIG_PCIEASPM)		+= aspm.o
- 
--pcieportdrv-y			:= portdrv_core.o portdrv_pci.o portdrv_bus.o
-+pcieportdrv-y			:= portdrv_core.o portdrv_pci.o portdrv_bus.o err.o
- pcieportdrv-$(CONFIG_ACPI)	+= portdrv_acpi.o
- 
- obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index 5449e5c..bc9db53 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -76,36 +76,6 @@ struct aer_rpc {
- 					 */
- };
- 
--struct aer_broadcast_data {
--	enum pci_channel_state state;
--	enum pci_ers_result result;
--};
--
--static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
--		enum pci_ers_result new)
--{
--	if (new == PCI_ERS_RESULT_NO_AER_DRIVER)
--		return PCI_ERS_RESULT_NO_AER_DRIVER;
--
--	if (new == PCI_ERS_RESULT_NONE)
--		return orig;
--
--	switch (orig) {
--	case PCI_ERS_RESULT_CAN_RECOVER:
--	case PCI_ERS_RESULT_RECOVERED:
--		orig = new;
--		break;
--	case PCI_ERS_RESULT_DISCONNECT:
--		if (new == PCI_ERS_RESULT_NEED_RESET)
--			orig = PCI_ERS_RESULT_NEED_RESET;
--		break;
--	default:
--		break;
--	}
--
--	return orig;
--}
--
- extern struct bus_type pcie_port_bus_type;
- void aer_isr(struct work_struct *work);
- void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index aeb83a0..4acec3b 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -23,6 +23,7 @@
- #include <linux/slab.h>
- #include <linux/kfifo.h>
- #include "aerdrv.h"
-+#include "../../pci.h"
- 
- #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
- 				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
-@@ -230,191 +231,6 @@ static bool find_source_device(struct pci_dev *parent,
- 	return true;
- }
- 
--static int report_error_detected(struct pci_dev *dev, void *data)
--{
--	pci_ers_result_t vote;
--	const struct pci_error_handlers *err_handler;
--	struct aer_broadcast_data *result_data;
--	result_data = (struct aer_broadcast_data *) data;
--
--	device_lock(&dev->dev);
--	dev->error_state = result_data->state;
--
--	if (!dev->driver ||
--		!dev->driver->err_handler ||
--		!dev->driver->err_handler->error_detected) {
--		if (result_data->state == pci_channel_io_frozen &&
--			dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
--			/*
--			 * In case of fatal recovery, if one of down-
--			 * stream device has no driver. We might be
--			 * unable to recover because a later insmod
--			 * of a driver for this device is unaware of
--			 * its hw state.
--			 */
--			pci_printk(KERN_DEBUG, dev, "device has %s\n",
--				   dev->driver ?
--				   "no AER-aware driver" : "no driver");
--		}
--
--		/*
--		 * If there's any device in the subtree that does not
--		 * have an error_detected callback, returning
--		 * PCI_ERS_RESULT_NO_AER_DRIVER prevents calling of
--		 * the subsequent mmio_enabled/slot_reset/resume
--		 * callbacks of "any" device in the subtree. All the
--		 * devices in the subtree are left in the error state
--		 * without recovery.
--		 */
--
--		if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
--			vote = PCI_ERS_RESULT_NO_AER_DRIVER;
--		else
--			vote = PCI_ERS_RESULT_NONE;
--	} else {
--		err_handler = dev->driver->err_handler;
--		vote = err_handler->error_detected(dev, result_data->state);
--		pci_uevent_ers(dev, PCI_ERS_RESULT_NONE);
--	}
--
--	result_data->result = merge_result(result_data->result, vote);
--	device_unlock(&dev->dev);
--	return 0;
--}
--
--static int report_mmio_enabled(struct pci_dev *dev, void *data)
--{
--	pci_ers_result_t vote;
--	const struct pci_error_handlers *err_handler;
--	struct aer_broadcast_data *result_data;
--	result_data = (struct aer_broadcast_data *) data;
--
--	device_lock(&dev->dev);
--	if (!dev->driver ||
--		!dev->driver->err_handler ||
--		!dev->driver->err_handler->mmio_enabled)
--		goto out;
--
--	err_handler = dev->driver->err_handler;
--	vote = err_handler->mmio_enabled(dev);
--	result_data->result = merge_result(result_data->result, vote);
--out:
--	device_unlock(&dev->dev);
--	return 0;
--}
--
--static int report_slot_reset(struct pci_dev *dev, void *data)
--{
--	pci_ers_result_t vote;
--	const struct pci_error_handlers *err_handler;
--	struct aer_broadcast_data *result_data;
--	result_data = (struct aer_broadcast_data *) data;
--
--	device_lock(&dev->dev);
--	if (!dev->driver ||
--		!dev->driver->err_handler ||
--		!dev->driver->err_handler->slot_reset)
--		goto out;
--
--	err_handler = dev->driver->err_handler;
--	vote = err_handler->slot_reset(dev);
--	result_data->result = merge_result(result_data->result, vote);
--out:
--	device_unlock(&dev->dev);
--	return 0;
--}
--
--static int report_resume(struct pci_dev *dev, void *data)
--{
--	const struct pci_error_handlers *err_handler;
--
--	device_lock(&dev->dev);
--	dev->error_state = pci_channel_io_normal;
--
--	if (!dev->driver ||
--		!dev->driver->err_handler ||
--		!dev->driver->err_handler->resume)
--		goto out;
--
--	err_handler = dev->driver->err_handler;
--	err_handler->resume(dev);
--	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
--out:
--	device_unlock(&dev->dev);
--	return 0;
--}
--
--/**
-- * broadcast_error_message - handle message broadcast to downstream drivers
-- * @dev: pointer to from where in a hierarchy message is broadcasted down
-- * @state: error state
-- * @error_mesg: message to print
-- * @cb: callback to be broadcasted
-- *
-- * Invoked during error recovery process. Once being invoked, the content
-- * of error severity will be broadcasted to all downstream drivers in a
-- * hierarchy in question.
-- */
--static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
--	enum pci_channel_state state,
--	char *error_mesg,
--	int (*cb)(struct pci_dev *, void *))
--{
--	struct aer_broadcast_data result_data;
--
--	pci_printk(KERN_DEBUG, dev, "broadcast %s message\n", error_mesg);
--	result_data.state = state;
--	if (cb == report_error_detected)
--		result_data.result = PCI_ERS_RESULT_CAN_RECOVER;
--	else
--		result_data.result = PCI_ERS_RESULT_RECOVERED;
--
--	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
--		/*
--		 * If the error is reported by a bridge, we think this error
--		 * is related to the downstream link of the bridge, so we
--		 * do error recovery on all subordinates of the bridge instead
--		 * of the bridge and clear the error status of the bridge.
--		 */
--		if (cb == report_error_detected)
--			dev->error_state = state;
--		pci_walk_bus(dev->subordinate, cb, &result_data);
--		if (cb == report_resume) {
--			pci_cleanup_aer_uncorrect_error_status(dev);
--			dev->error_state = pci_channel_io_normal;
--		}
--	} else {
--		/*
--		 * If the error is reported by an end point, we think this
--		 * error is related to the upstream link of the end point.
--		 */
--		if (state == pci_channel_io_normal)
--			/*
--			 * the error is non fatal so the bus is ok, just invoke
--			 * the callback for the function that logged the error.
--			 */
--			cb(dev, &result_data);
--		else
--			pci_walk_bus(dev->bus, cb, &result_data);
--	}
--
--	return result_data.result;
--}
--
--/**
-- * default_reset_link - default reset function
-- * @dev: pointer to pci_dev data structure
-- *
-- * Invoked when performing link reset on a Downstream Port or a
-- * Root Port with no aer driver.
-- */
--static pci_ers_result_t default_reset_link(struct pci_dev *dev)
--{
--	pci_reset_bridge_secondary_bus(dev);
--	pci_printk(KERN_DEBUG, dev, "downstream link has been reset\n");
--	return PCI_ERS_RESULT_RECOVERED;
--}
--
- static int find_aer_service_iter(struct device *device, void *data)
- {
- 	struct pcie_port_service_driver *service_driver, **drv;
-@@ -432,7 +248,7 @@ static int find_aer_service_iter(struct device *device, void *data)
- 	return 0;
- }
- 
--static struct pcie_port_service_driver *find_aer_service(struct pci_dev *dev)
-+struct pcie_port_service_driver *find_aer_service(struct pci_dev *dev)
- {
- 	struct pcie_port_service_driver *drv = NULL;
- 
-@@ -441,107 +257,6 @@ static struct pcie_port_service_driver *find_aer_service(struct pci_dev *dev)
- 	return drv;
- }
- 
--static pci_ers_result_t reset_link(struct pci_dev *dev)
--{
--	struct pci_dev *udev;
--	pci_ers_result_t status;
--	struct pcie_port_service_driver *driver;
--
--	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
--		/* Reset this port for all subordinates */
--		udev = dev;
--	} else {
--		/* Reset the upstream component (likely downstream port) */
--		udev = dev->bus->self;
--	}
--
--	/* Use the aer driver of the component firstly */
--	driver = find_aer_service(udev);
--
--	if (driver && driver->reset_link) {
--		status = driver->reset_link(udev);
--	} else if (udev->has_secondary_link) {
--		status = default_reset_link(udev);
--	} else {
--		pci_printk(KERN_DEBUG, dev, "no link-reset support at upstream device %s\n",
--			pci_name(udev));
--		return PCI_ERS_RESULT_DISCONNECT;
--	}
--
--	if (status != PCI_ERS_RESULT_RECOVERED) {
--		pci_printk(KERN_DEBUG, dev, "link reset at upstream device %s failed\n",
--			pci_name(udev));
--		return PCI_ERS_RESULT_DISCONNECT;
--	}
--
--	return status;
--}
--
--/**
-- * pcie_do_recovery - handle nonfatal/fatal error recovery process
-- * @dev: pointer to a pci_dev data structure of agent detecting an error
-- * @severity: error severity type
-- *
-- * Invoked when an error is nonfatal/fatal. Once being invoked, broadcast
-- * error detected message to all downstream drivers within a hierarchy in
-- * question and return the returned code.
-- */
--static void pcie_do_recovery(struct pci_dev *dev, int severity)
--{
--	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
--	enum pci_channel_state state;
--
--	if (severity == AER_FATAL)
--		state = pci_channel_io_frozen;
--	else
--		state = pci_channel_io_normal;
--
--	status = broadcast_error_message(dev,
--			state,
--			"error_detected",
--			report_error_detected);
--
--	if (severity == AER_FATAL) {
--		result = reset_link(dev);
--		if (result != PCI_ERS_RESULT_RECOVERED)
--			goto failed;
--	}
--
--	if (status == PCI_ERS_RESULT_CAN_RECOVER)
--		status = broadcast_error_message(dev,
--				state,
--				"mmio_enabled",
--				report_mmio_enabled);
--
--	if (status == PCI_ERS_RESULT_NEED_RESET) {
--		/*
--		 * TODO: Should call platform-specific
--		 * functions to reset slot before calling
--		 * drivers' slot_reset callbacks?
--		 */
--		status = broadcast_error_message(dev,
--				state,
--				"slot_reset",
--				report_slot_reset);
--	}
--
--	if (status != PCI_ERS_RESULT_RECOVERED)
--		goto failed;
--
--	broadcast_error_message(dev,
--				state,
--				"resume",
--				report_resume);
--
--	pci_info(dev, "AER: Device recovery successful\n");
--	return;
--
--failed:
--	pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
--	/* TODO: Should kernel panic here? */
--	pci_info(dev, "AER: Device recovery failed\n");
--}
--
- /**
-  * handle_error_source - handle logging error into an event log
-  * @aerdev: pointer to pcie_device data structure of the root port
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-new file mode 100644
-index 0000000..c48eb0a
---- /dev/null
-+++ b/drivers/pci/pcie/err.c
-@@ -0,0 +1,332 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * This file implements the error recovery as a core part of PCIe error
-+ * reporting. When a PCIe error is delivered, an error message will be
-+ * collected and printed to console, then, an error recovery procedure
-+ * will be executed by following the PCI error recovery rules.
-+ *
-+ * Copyright (C) 2006 Intel Corp.
-+ *	Tom Long Nguyen (tom.l.nguyen@intel.com)
-+ *	Zhang Yanmin (yanmin.zhang@intel.com)
-+ *
-+ */
-+
-+#include <linux/pci.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/kernel.h>
-+#include <linux/errno.h>
-+#include <linux/aer.h>
-+#include <linux/pcieport_if.h>
-+#include "portdrv.h"
-+
-+struct aer_broadcast_data {
-+	enum pci_channel_state state;
-+	enum pci_ers_result result;
-+};
-+
-+static pci_ers_result_t merge_result(enum pci_ers_result orig,
-+				  enum pci_ers_result new)
-+{
-+	if (new == PCI_ERS_RESULT_NO_AER_DRIVER)
-+		return PCI_ERS_RESULT_NO_AER_DRIVER;
-+
-+	if (new == PCI_ERS_RESULT_NONE)
-+		return orig;
-+
-+	switch (orig) {
-+	case PCI_ERS_RESULT_CAN_RECOVER:
-+	case PCI_ERS_RESULT_RECOVERED:
-+		orig = new;
-+		break;
-+	case PCI_ERS_RESULT_DISCONNECT:
-+		if (new == PCI_ERS_RESULT_NEED_RESET)
-+			orig = PCI_ERS_RESULT_NEED_RESET;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return orig;
-+}
-+
-+static int report_mmio_enabled(struct pci_dev *dev, void *data)
-+{
-+	pci_ers_result_t vote;
-+	const struct pci_error_handlers *err_handler;
-+	struct aer_broadcast_data *result_data;
-+
-+	result_data = (struct aer_broadcast_data *) data;
-+
-+	device_lock(&dev->dev);
-+	if (!dev->driver ||
-+		!dev->driver->err_handler ||
-+		!dev->driver->err_handler->mmio_enabled)
-+		goto out;
-+
-+	err_handler = dev->driver->err_handler;
-+	vote = err_handler->mmio_enabled(dev);
-+	result_data->result = merge_result(result_data->result, vote);
-+out:
-+	device_unlock(&dev->dev);
-+	return 0;
-+}
-+
-+static int report_slot_reset(struct pci_dev *dev, void *data)
-+{
-+	pci_ers_result_t vote;
-+	const struct pci_error_handlers *err_handler;
-+	struct aer_broadcast_data *result_data;
-+
-+	result_data = (struct aer_broadcast_data *) data;
-+
-+	device_lock(&dev->dev);
-+	if (!dev->driver ||
-+		!dev->driver->err_handler ||
-+		!dev->driver->err_handler->slot_reset)
-+		goto out;
-+
-+	err_handler = dev->driver->err_handler;
-+	vote = err_handler->slot_reset(dev);
-+	result_data->result = merge_result(result_data->result, vote);
-+out:
-+	device_unlock(&dev->dev);
-+	return 0;
-+}
-+
-+static int report_resume(struct pci_dev *dev, void *data)
-+{
-+	const struct pci_error_handlers *err_handler;
-+
-+	device_lock(&dev->dev);
-+	dev->error_state = pci_channel_io_normal;
-+
-+	if (!dev->driver ||
-+		!dev->driver->err_handler ||
-+		!dev->driver->err_handler->resume)
-+		goto out;
-+
-+	err_handler = dev->driver->err_handler;
-+	err_handler->resume(dev);
-+out:
-+	device_unlock(&dev->dev);
-+	return 0;
-+}
-+
-+static int report_error_detected(struct pci_dev *dev, void *data)
-+{
-+	pci_ers_result_t vote;
-+	const struct pci_error_handlers *err_handler;
-+	struct aer_broadcast_data *result_data;
-+
-+	result_data = (struct aer_broadcast_data *) data;
-+
-+	device_lock(&dev->dev);
-+	dev->error_state = result_data->state;
-+
-+	if (!dev->driver ||
-+		!dev->driver->err_handler ||
-+		!dev->driver->err_handler->error_detected) {
-+		if (result_data->state == pci_channel_io_frozen &&
-+			dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
-+			/*
-+			 * In case of fatal recovery, if one of down-
-+			 * stream device has no driver. We might be
-+			 * unable to recover because a later insmod
-+			 * of a driver for this device is unaware of
-+			 * its hw state.
-+			 */
-+			pci_printk(KERN_DEBUG, dev, "device has %s\n",
-+				   dev->driver ?
-+				   "no error-aware driver" : "no driver");
-+		}
-+
-+		/*
-+		 * If there's any device in the subtree that does not
-+		 * have an error_detected callback, returning
-+		 * PCI_ERS_RESULT_NO_AER_DRIVER prevents calling of
-+		 * the subsequent mmio_enabled/slot_reset/resume
-+		 * callbacks of "any" device in the subtree. All the
-+		 * devices in the subtree are left in the error state
-+		 * without recovery.
-+		 */
-+
-+		if (dev->hdr_type != PCI_HEADER_TYPE_BRIDGE)
-+			vote = PCI_ERS_RESULT_NO_AER_DRIVER;
-+		else
-+			vote = PCI_ERS_RESULT_NONE;
-+	} else {
-+		err_handler = dev->driver->err_handler;
-+		vote = err_handler->error_detected(dev, result_data->state);
-+	}
-+
-+	result_data->result = merge_result(result_data->result, vote);
-+	device_unlock(&dev->dev);
-+	return 0;
-+}
-+
-+/**
-+ * default_reset_link - default reset function
-+ * @dev: pointer to pci_dev data structure
-+ *
-+ * Invoked when performing link reset on a Downstream Port or a
-+ * Root Port with no aer driver.
-+ */
-+static pci_ers_result_t default_reset_link(struct pci_dev *dev)
-+{
-+	pci_reset_bridge_secondary_bus(dev);
-+	pci_printk(KERN_DEBUG, dev, "downstream link has been reset\n");
-+	return PCI_ERS_RESULT_RECOVERED;
-+}
-+
-+static pci_ers_result_t reset_link(struct pci_dev *dev)
-+{
-+	struct pci_dev *udev;
-+	pci_ers_result_t status;
-+	struct pcie_port_service_driver *driver = NULL;
-+
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		/* Reset this port for all subordinates */
-+		udev = dev;
-+	} else {
-+		/* Reset the upstream component (likely downstream port) */
-+		udev = dev->bus->self;
-+	}
-+
-+	/* Use the aer driver of the component firstly */
-+	driver = find_aer_service(udev);
-+
-+	if (driver && driver->reset_link) {
-+		status = driver->reset_link(udev);
-+	} else if (udev->has_secondary_link) {
-+		status = default_reset_link(udev);
-+	} else {
-+		pci_printk(KERN_DEBUG, dev,
-+			"no link-reset support at upstream device %s\n",
-+			pci_name(udev));
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	if (status != PCI_ERS_RESULT_RECOVERED) {
-+		pci_printk(KERN_DEBUG, dev,
-+			"link reset at upstream device %s failed\n",
-+			pci_name(udev));
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	return status;
-+}
-+
-+/**
-+ * broadcast_error_message - handle message broadcast to downstream drivers
-+ * @dev: pointer to where in a hierarchy message is broadcasted down
-+ * @state: error state
-+ * @error_mesg: message to print
-+ * @cb: callback to be broadcast
-+ *
-+ * Invoked during error recovery process. Once being invoked, the content
-+ * of error severity will be broadcast to all downstream drivers in a
-+ * hierarchy in question.
-+ */
-+static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
-+	enum pci_channel_state state,
-+	char *error_mesg,
-+	int (*cb)(struct pci_dev *, void *))
-+{
-+	struct aer_broadcast_data result_data;
-+
-+	pci_printk(KERN_DEBUG, dev, "broadcast %s message\n", error_mesg);
-+	result_data.state = state;
-+	if (cb == report_error_detected)
-+		result_data.result = PCI_ERS_RESULT_CAN_RECOVER;
-+	else
-+		result_data.result = PCI_ERS_RESULT_RECOVERED;
-+
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		/*
-+		 * If the error is reported by a bridge, we think this error
-+		 * is related to the downstream link of the bridge, so we
-+		 * do error recovery on all subordinates of the bridge instead
-+		 * of the bridge and clear the error status of the bridge.
-+		 */
-+		if (cb == report_error_detected)
-+			dev->error_state = state;
-+		pci_walk_bus(dev->subordinate, cb, &result_data);
-+		if (cb == report_resume) {
-+			pci_cleanup_aer_uncorrect_error_status(dev);
-+			dev->error_state = pci_channel_io_normal;
-+		}
-+	} else {
-+		/*
-+		 * If the error is reported by an end point, we think this
-+		 * error is related to the upstream link of the end point.
-+		 */
-+		pci_walk_bus(dev->bus, cb, &result_data);
-+	}
-+
-+	return result_data.result;
-+}
-+
-+/**
-+ * pcie_do_recovery - handle nonfatal/fatal error recovery process
-+ * @dev: pointer to a pci_dev data structure of agent detecting an error
-+ * @severity: error severity type
-+ *
-+ * Invoked when an error is nonfatal/fatal. Once being invoked, broadcast
-+ * error detected message to all downstream drivers within a hierarchy in
-+ * question and return the returned code.
-+ */
-+void pcie_do_recovery(struct pci_dev *dev, int severity)
-+{
-+	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
-+	enum pci_channel_state state;
-+
-+	if (severity == AER_FATAL)
-+		state = pci_channel_io_frozen;
-+	else
-+		state = pci_channel_io_normal;
-+
-+	status = broadcast_error_message(dev,
-+			state,
-+			"error_detected",
-+			report_error_detected);
-+
-+	if (severity == AER_FATAL) {
-+		result = reset_link(dev);
-+		if (result != PCI_ERS_RESULT_RECOVERED)
-+			goto failed;
-+	}
-+
-+	if (status == PCI_ERS_RESULT_CAN_RECOVER)
-+		status = broadcast_error_message(dev,
-+				state,
-+				"mmio_enabled",
-+				report_mmio_enabled);
-+
-+	if (status == PCI_ERS_RESULT_NEED_RESET) {
-+		/*
-+		 * TODO: Should call platform-specific
-+		 * functions to reset slot before calling
-+		 * drivers' slot_reset callbacks?
-+		 */
-+		status = broadcast_error_message(dev,
-+				state,
-+				"slot_reset",
-+				report_slot_reset);
-+	}
-+
-+	if (status != PCI_ERS_RESULT_RECOVERED)
-+		goto failed;
-+
-+	broadcast_error_message(dev,
-+				state,
-+				"resume",
-+				report_resume);
-+
-+	dev_info(&dev->dev, "Device recovery successful\n");
-+	return;
-+
-+failed:
-+	/* TODO: Should kernel panic here? */
-+	dev_info(&dev->dev, "Device recovery failed\n");
-+}
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index a854bc5..9a8d0dd 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -79,4 +79,5 @@ static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask)
- static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask){}
- #endif /* !CONFIG_ACPI */
- 
-+struct pcie_port_service_driver *find_aer_service(struct pci_dev *dev);
- #endif /* _PORTDRV_H_ */
--- 
-2.7.4
+> And are there PF drivers that intentially do not enable SRIOV
+> because it's known to be broken in some way?
+
+In the Virtio IO case right now are there any devices that support
+SR-IOV? For now this is just an add-on bit to a function that is
+already emulating the Virtio in hardware.
+
+> Case in point I do think virtio want to limit this
+> depending on a feature bit on general principles
+> (the principle being that all extensions have feature bits).
+
+This part has me kind of scratching my head. In our setup the "PF" is
+really nothing more than a "VF" with the SR-IOV configuration space
+attached to it. There are already examples of similar designs for NVMe
+and the Amazon ENA devices. Giving the "PF" any functionality in MMIO
+space that controls the SR-IOV kind of defeats the whole point of
+allowing this function in the first place. Basically the PF isn't
+really controlling things, it is the kernel that is doing it.
+
+> There are security implications here - we previously relied on
+> whitelisting after all.
+
+Yes and no. The original patch set had issues as you could have a PF
+assigned to user space and the VFs managed by the host. When I changed
+things so that the function had to be in a kernel driver that issue
+went away.
+
+> Wouldn't it be safer to be a bit more careful and update the
+> actual PF drivers? It's just one line per driver, but it
+> can be done with an ack by driver maintainer.
+> If/once we find out all drivers do have it, we can then
+> change the default.
+
+I have no clue what you are talking about here. This is the more
+careful approach. Are you sure you are reviewing the v7 of the
+patches?
+
+My understanding is that no paravirtual interfaces currently expose
+SR-IOV. What we are looking at is hardware will want to emulate
+Virtio, specifically virtio_net in the future and as a part of that
+the PF ends up emulating it as well. What we would need to watch for
+going forward is that any device that enables SR-IOV support would
+need to also provide a 4 tuple ID so that if something goes wrong with
+it we could disable SR-IOV on the device via a PCI quirk later.
+
+>> I would think in the case of virtio it would be the same kind of
+>> thing. Basically if SR-IOV is supported by the host then the
+>> capability would be present. If SR-IOV is supported by the guest then
+>> it would make use of the capability to spawn VFs. If either the
+>> capability isn't present, or the driver doesn't use it then you won't
+>> be able to spawn VFs in the guest.
+>
+>> Maybe I am missing something. Do you support dynamically changing the
+>> PCI configuration space for Virtio devices based on the presence of
+>> feature bits provided by the guest?
+>
+> No. The point is that IMHO at least virtio - in absence of feature bit -
+> to ignore VFs rather than assume they are safe to drive
+> in an unmanaged way.
+>
+>> Also are you saying this patch set should wait on the feature bit to
+>> be added, or are you talking about doing this as some sort of
+>> follow-up?
+>>
+>> - Alex
+>
+> I think for virtio it should include the feature bit, yes.
+> Adding feature bit is very easy - post a patch to the virtio TC mailing
+> list, wait about a week to give people time to respond (two weeks if it
+> is around holidays and such).
+
+The problem is we are talking about hardware/FPGA, not software.
+Adding a feature bit means going back and updating RTL. The software
+side of things is easy, re-validating things after a hardware/FPGA
+change not so much.
+
+If this is a hard requirement I may just drop the virtio patch, push
+what I have, and leave it to Mark/Dan to deal with the necessary RTL
+and code changes needed to support Virtio as I don't expect the
+turnaround to be as easy as just a patch.
+
+Thanks.
+
+- Alex
