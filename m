@@ -1,105 +1,104 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [pci PATCH v8 0/4] Add support for unmanaged SR-IOV
-To: Alexander Duyck <alexander.h.duyck@intel.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org
-Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
-        mheyne@amazon.de, liang-min.wang@intel.com,
-        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
-        dwmw@amazon.co.uk
-References: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <5fc62d10-790f-2356-c2f6-fd49f542dd3c@infradead.org>
-Date: Fri, 20 Apr 2018 10:23:56 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180420180839-mutt-send-email-mst@kernel.org>
+References: <20180315183449.3102.64791.stgit@localhost.localdomain>
+ <20180315184132.3102.90947.stgit@localhost.localdomain> <20180316183042-mutt-send-email-mst@kernel.org>
+ <CAKgT0UfgZ2gAdiAbCe4MTOr3o9cqq1q-mykCQsw68p2F-QEC8g@mail.gmail.com>
+ <20180403161151-mutt-send-email-mst@kernel.org> <CAKgT0UfeSmG=xsd6sTkg4cOMnZ0QiqtCRDt4PynpF3d6nvvFCA@mail.gmail.com>
+ <20180403212503-mutt-send-email-mst@kernel.org> <CAKgT0Ude79FYrK4qA0OKRJ1NackyqPi-hZ8Zh3WSdLDFxoOosQ@mail.gmail.com>
+ <20180420030640-mutt-send-email-mst@kernel.org> <CAKgT0Ucpw9D1u8MYoEX5KOij6sxs-5O9gPFTmOVq=Dgt=HUJ=g@mail.gmail.com>
+ <20180420180839-mutt-send-email-mst@kernel.org>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Fri, 20 Apr 2018 09:08:51 -0700
+Message-ID: <CAKgT0UeWzK=_8m9hhWfaKyYB02WXDsuCkgowS4hgQ9GkLMcAMA@mail.gmail.com>
+Subject: Re: [virtio-dev] [pci PATCH v7 2/5] virtio_pci: Add support for
+ unmanaged SR-IOV on virtio_pci devices
+To: "Michael S. Tsirkin" <mst@redhat.com>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
+        Don Dutile <ddutile@redhat.com>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/20/18 09:28, Alexander Duyck wrote:
-> This series is meant to add support for SR-IOV on devices when the VFs are
-> not managed by the kernel. Examples of recent patches attempting to do this
-> include:
-> virto - https://patchwork.kernel.org/patch/10241225/
-> pci-stub - https://patchwork.kernel.org/patch/10109935/
-> vfio - https://patchwork.kernel.org/patch/10103353/
-> uio - https://patchwork.kernel.org/patch/9974031/
+On Fri, Apr 20, 2018 at 8:28 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> On Fri, Apr 20, 2018 at 07:56:14AM -0700, Alexander Duyck wrote:
+>> > I think for virtio it should include the feature bit, yes.
+>> > Adding feature bit is very easy - post a patch to the virtio TC mailing
+>> > list, wait about a week to give people time to respond (two weeks if it
+>> > is around holidays and such).
+>>
+>> The problem is we are talking about hardware/FPGA, not software.
+>> Adding a feature bit means going back and updating RTL. The software
+>> side of things is easy, re-validating things after a hardware/FPGA
+>> change not so much.
+>>
+>> If this is a hard requirement I may just drop the virtio patch, push
+>> what I have, and leave it to Mark/Dan to deal with the necessary RTL
+>> and code changes needed to support Virtio as I don't expect the
+>> turnaround to be as easy as just a patch.
+>>
+>> Thanks.
+>>
+>> - Alex
+>
+> Let's focus on virtio in this thread.
 
-Hi,
+That is kind of what I was thinking, and why I was thinking it might
+make sense to make the virtio specific changes a separate patch set. I
+could get the PCI bits taken care of in the meantime since they effect
+genetic PCI, NVMe, and the Amazon ENA interfaces.
 
-Somewhere in this patch series it would be nice to tell us what the heck
-a "PF" is.  :)
+> Involving the virtio TC in host/guest interface changes is a
+> hard requirement. It's just too easy to create conflicts otherwise.
+>
+> So you guys should have just sent the proposal to the TC when you
+> were doing your RTL and you would have been in the clear.
+
+Agreed. I believe I brought this up when I was originally asked to
+look into the coding for this.
+
+> Generally adding a feature bit with any extension is a good idea:
+> this way you merely reserve a feature bit for your feature through
+> the TC and are more or less sure of forward and backward compatibility.
+> It's incredibly easy.
+
+Agreed, though in this case I am not sure it makes sense since this
+isn't necessarily something that is a Virtio feature itself. It is
+just a side effect of the fact that they are adding SR-IOV support to
+a device that happens to emulate Virtio NET and apparently their PF
+has to be identical to the VF other than the PCIe extended config
+space.
+
+> But maybe it's not needed here.  I am not making the decisions myself.
+> Not too late: post to the TC list and let's see what the response is.
+> Without a feature bit you are making a change affecting all future
+> implementations without exception so the bar is a bit higher: you need
+> to actually post a spec text proposal not just a patch showing how to
+> use the feature, and TC needs to vote on it. Voting takes a week,
+> review a week or two depending on change complexity.
+>
+> Hope this helps,
+>
+> --
+> MST
+
+I think I will leave this for Dan and Mark to handle since I am still
+not all that familiar with the hardware in use here. Once a decision
+has been made him and Mark could look at pushing either the one line
+patch or something more complex involving a feature flag.
 
 Thanks.
 
-> Since this is quickly blowing up into a multi-driver problem it is probably
-> best to implement this solution as generically as possible.
-> 
-> This series is an attempt to do that. What we do with this patch set is
-> provide a generic framework to enable SR-IOV in the case that the PF driver
-> doesn't support managing the VFs itself.
-> 
-> I based my patch set originally on the patch by Mark Rustad but there isn't
-> much left after going through and cleaning out the bits that were no longer
-> needed, and after incorporating the feedback from David Miller. At this point
-> the only items to be fully reused was his patch description which is now
-> present in patch 3 of the set.
-> 
-> This solution is limited in scope to just adding support for devices that
-> provide no functionality for SR-IOV other than allocating the VFs by
-> calling pci_enable_sriov. Previous sets had included patches for VFIO, but
-> for now I am dropping that as the scope of that work is larger then I
-> think I can take on at this time.
-> 
-> v2: Reduced scope back to just virtio_pci and vfio-pci
->     Broke into 3 patch set from single patch
->     Changed autoprobe behavior to always set when num_vfs is set non-zero
-> v3: Updated Documentation to clarify when sriov_unmanaged_autoprobe is used
->     Wrapped vfio_pci_sriov_configure to fix build errors w/o SR-IOV in kernel
-> v4: Dropped vfio-pci patch
->     Added ena and nvme to drivers now using pci_sriov_configure_unmanaged
->     Dropped pci_disable_sriov call in virtio_pci to be consistent with ena
-> v5: Dropped sriov_unmanaged_autoprobe and pci_sriov_conifgure_unmanaged
->     Added new patch that enables pci_sriov_configure_simple
->     Updated drivers to use pci_sriov_configure_simple
-> v6: Defined pci_sriov_configure_simple as NULL when SR-IOV is not enabled
->     Updated drivers to drop "#ifdef" checks for IOV
->     Added pci-pf-stub as place for PF-only drivers to add support
-> v7: Dropped pci_id table explanation from pci-pf-stub driver
->     Updated pci_sriov_configure_simple to drop need for err value
->     Fixed comment explaining why pci_sriov_configure_simple is NULL
-> v8: Dropped virtio from the set, support to be added later after TC approval
-> 
-> Cc: Mark Rustad <mark.d.rustad@intel.com>
-> Cc: Maximilian Heyne <mheyne@amazon.de>
-> Cc: Liang-Min Wang <liang-min.wang@intel.com>
-> Cc: David Woodhouse <dwmw@amazon.co.uk>
-> 
-> ---
-> 
-> Alexander Duyck (4):
->       pci: Add pci_sriov_configure_simple for PFs that don't manage VF resources
->       ena: Migrate over to unmanaged SR-IOV support
->       nvme: Migrate over to unmanaged SR-IOV support
->       pci-pf-stub: Add PF driver stub for PFs that function only to enable VFs
-> 
-> 
->  drivers/net/ethernet/amazon/ena/ena_netdev.c |   28 -------------
->  drivers/nvme/host/pci.c                      |   20 ----------
->  drivers/pci/Kconfig                          |   12 ++++++
->  drivers/pci/Makefile                         |    2 +
->  drivers/pci/iov.c                            |   31 +++++++++++++++
->  drivers/pci/pci-pf-stub.c                    |   54 ++++++++++++++++++++++++++
->  include/linux/pci.h                          |    3 +
->  include/linux/pci_ids.h                      |    2 +
->  8 files changed, 106 insertions(+), 46 deletions(-)
->  create mode 100644 drivers/pci/pci-pf-stub.c
-> 
-> --
-> 
-
--- 
-~Randy
+Alex
