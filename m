@@ -1,159 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43834 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758725AbeD0TxP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Apr 2018 15:53:15 -0400
-Date: Fri, 27 Apr 2018 14:53:13 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Rajat Jain <rajatja@google.com>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: Bug? pcie_aspm=off cause less power consumption as default
-Message-ID: <20180427195313.GH8199@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180422171647.7v65zrlwhya5mq7v@pali>
+Return-Path: <SRS0=xuTc=HJ=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=xuTc=HJ=redhat.com=alex.williamson@kernel.org>
+Date: Fri, 20 Apr 2018 09:04:20 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, Jason Gunthorpe <jgg@ziepe.ca>, Bjorn
+ Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ sulrich@codeaurora.org, timur@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Mike
+ Marciniszyn <mike.marciniszyn@intel.com>, Dennis Dalessandro
+ <dennis.dalessandro@intel.com>, Doug Ledford <dledford@redhat.com>, "open
+ list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>, open list
+ <linux-kernel@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>,
+ Rajat Jain <rajatja@google.com>
+Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
+Message-ID: <20180420090420.03fb1e6c@w520.home>
+In-Reply-To: <20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
+References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+	<20180419202632.GE14063@ziepe.ca>
+	<20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
+	<290e9530-dcde-9c10-7ae0-59ac4c509db4@codeaurora.org>
+	<20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20180422171647.7v65zrlwhya5mq7v@pali>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Pali,
+On Fri, 20 Apr 2018 09:00:49 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-On Sun, Apr 22, 2018 at 07:16:47PM +0200, Pali Rohár wrote:
-> Hi!
+> [+cc Rajat, Alex because of their interest in the reset/hotplug issue]
 > 
-> To increase runtime on battery of my Dell Latitude E6440 laptop I tried
-> different tweaks and settings. And I come up to the conclusion that
-> adding pcie_aspm=off to the kernel command line decrease power
-> consumption by approx. 2 Watts as opposite to adding pcie_aspm=force or
-> nothing (letting ASPM in default state).
+> For context, Sinan's patch is this:
 > 
-> I suspect that this is a clear kernel bug as I cannot understand how
-> turning off powersave feature ASPM could lead to decrease of power
-> consumption. Turning powersave off should either not impact or increase
-> power consumption.
+> > diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
+> > index 83d66e8..75f49e3 100644
+> > --- a/drivers/infiniband/hw/hfi1/pcie.c
+> > +++ b/drivers/infiniband/hw/hfi1/pcie.c
+> > @@ -908,7 +908,8 @@ static int trigger_sbr(struct hfi1_devdata *dd)
+> >          * delay after a reset is required.  Per spec requirements,
+> >          * the link is either working or not after that point.
+> >          */
+> > -       pci_reset_bridge_secondary_bus(dev->bus->self);
+> > +       if (pci_reset_slot(dev->slot))
+> > +               pci_reset_bridge_secondary_bus(dev->bus->self);  
 > 
-> Moreover one I put laptop into ACPI S3 sleep and resume it, then power
-> consumption increase. The only way to decrease it is to power it off and
-> power on again. Very impractical, specially as ACPI sleep is there to
-> prevent power off and on.
+> On Thu, Apr 19, 2018 at 06:19:32PM -0400, Sinan Kaya wrote:
+> > On 4/19/2018 5:47 PM, Bjorn Helgaas wrote:  
+> > >> Bjorn, would be appropriate to export pci_parent_bus_reset() or some
+> > >> variation therin??  
+> > > I agree it would be really nice if the PCI core could help out somehow
+> > > so we could get some of this code out of individual drivers.  
 > 
-> Tests:
+> What I was really thinking here was about the whole Gen3 transition
+> thing, not the reset thing by itself.
 > 
-> Laptop on battery with pcie_aspm=off has average 8.50 Watts in idle.
-> After suspend+resume it has 11.20 Watts (power off + on is needed to get
-> back for 8.50 Watts).
+> > I can create a function called pci_reset_link() and move both slot and
+> > secondary bus reset inside.  
 > 
-> Laptop on battery with pcie_aspm=force and with powersave aspm policy
-> it has average 11.20 Watts in idle. After suspend+resume it is 11.30
-> Watts in idle. With default policy it has 11.15 Watts and with
-> performance policy it has 11.70 Watts.
+> What exactly is your patch fixing?  Is it the following?
 > 
-> When pcie_aspm is not specified at all, then average power consumption
-> in idle is 8.90 Watts. And after suspend+resume it is 9.30 Watts.
+>   If the HFI link is not operating at 8GT/s, the driver's .probe()
+>   method tries to transition it to 8GT/s, which involves resetting the
+>   HFI device with pci_reset_bridge_secondary_bus().  If the HFI device
+>   is in a hotplug slot, the reset causes a "Link Down" event, which
+>   causes the pciehp driver to remove the HFI device and re-enumerate
+>   it when the link comes back up.
 > 
-> So what is happening there? Such results are really strange and
-> apparently I'm not alone, see discussion in kernel bugzilla:
-> https://bugzilla.kernel.org/show_bug.cgi?id=62181#c23
+>   When pciehp removes the device, it calls the HFI .remove() method,
+>   which is a problem because the .probe() method is still active.
 > 
-> I'm using Debian Stretch with its default kernel. But I remember that
-> power consumption with defaults or with pcie_aspm=force was around 10-11
-> Watts even with older kernel versions.
+>   It looks like this should deadlock because __device_attach() holds
+>   the device_lock while calling .probe() and the
+>   device_release_driver() path tries to acquire it.
 > 
-> Debian Stretch has currently this kernel:
-> 4.9.0-6-amd64 #1 SMP Debian 4.9.82-1+deb9u3 (2018-03-02) x86_64 GNU/Linux
+> Your patch uses pci_reset_slot(), which connects with Rajat's work
+> (06a8d89af551 ("PCI: pciehp: Disable link notification across slot
+> reset")) to avoid hotplug events for intentional resets.
 > 
-> with this configuration:
+> So I think I just reverse-engineered the whole rationale for your
+> patch :)  Sorry about the long detour.
 > 
-> $ grep ASPM /boot/config-4.9.0-6-amd64
-> CONFIG_PCIEASPM=y
-> # CONFIG_PCIEASPM_DEBUG is not set
-> CONFIG_PCIEASPM_DEFAULT=y
-> # CONFIG_PCIEASPM_POWERSAVE is not set
-> # CONFIG_PCIEASPM_PERFORMANCE is not set
-> 
-> In dmesg are these ASPM strings:
-> 
-> $ dmesg | grep ASPM
-> 
-> pcie_aspm=off
-> [    0.000000] PCIe ASPM is disabled
-> [    0.119127] ACPI FADT declares the system doesn't support PCIe ASPM, so disable it
-> [    0.163351] acpi PNP0A08:00: _OSC: not requesting OS control; OS requires [ExtendedConfig ASPM ClockPM MSI]
-> 
-> pcie_aspm=force
-> [    0.000000] PCIe ASPM is forcibly enabled
-> [    0.118985] ACPI FADT declares the system doesn't support PCIe ASPM, so disable it
-> [    0.162322] acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
-> [    0.162621] acpi PNP0A08:00: FADT indicates ASPM is unsupported, using BIOS configuration
-> 
-> (none)
-> [    0.120064] ACPI FADT declares the system doesn't support PCIe ASPM, so disable it
-> [    0.163424] acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
-> [    0.163724] acpi PNP0A08:00: FADT indicates ASPM is unsupported, using BIOS configuration
-> [    3.294357] iwlwifi 0000:03:00.0: can't disable ASPM; OS doesn't have ASPM control
-> 
-> In attachments I'm sending output from lspci -vv -nn, maybe it could
-> contain some useful information.
-> 
-> Another strange thing which I spotted in lspci output is that Root Host
-> bridge at 00:00.0 pci address totally disappeared after suspend+resume.
-> I hope such thing is not normal.
-> 
-> So I see there at 3 bugs:
-> 
-> 1) Power consumption increase after suspend+resume when pcie_aspm=off or
-> default
-> 
-> 2) Power consumption is higher in pcie_aspm=force or default mode as in
-> pcie_aspm=off
-> 
-> 3) PCI host bridge disappear after suspend+resume.
-> 
-> Do you have any idea what is happening here?
+> I'm having a hard time articulating my thoughts here.  I think my
+> concern is that knowledge about this reset/link down/hotplug issue is
+> leaking out and we'll end up with different reset interfaces that may
+> or may not result in hotplug events.  This seems like a confusing API
+> because it's hard to explain which interface a driver should use.
 
-No, but I agree it looks totally nonsensical.  I tried to pull out the
-hardware ASPM settings from all your lspci info (thanks very much for
-collecting all that).  Here's what I got.  The same/disabled comments
-are relative to the "default" baseline:
+Is there a concern here about whether the endpoint device driver or the
+PCI core really knows better about link retraining?  This makes me
+remember my unfinished (and need to revisit) Pericom quirk[1] where
+errata in the PCIe switch requires that upstream and downstream links
+are balanced (ie. same link rate) or else enabling ACS results in
+packets not properly flowing through the switch.  If an endpoint driver
+starts deciding to retrain links, overriding quirks in the PCI core,
+then such topology manipulation isn't possible.  Why does the
+driver .probe() function think it can retrain at a higher link rate
+than PCI core?  Thanks,
 
-                                default,      force       force             force     default      pcie_aspm=off  force pwrsave
-                              pcie_aspm=off   default   performance        powersave  after resume  after resume  after resume
-  notes                                                                               [1,2,3]       [1,2,3,5]     [1,2,3,4,5]
-  power usage                8.90W, 8.50(off) 11.15W    11.70W             11.20W     9.30W         11.20W        11.30W
-  00:01.0 RP [bus 01] GPU    L0s L1 ClockPM-  same      disabled           same       same          same          same
-  00:1c.0 RP [bus 02] empty  L0s L1 ClockPM-  same      same               same       same          same          same
-  00:1c.2 RP [bus 03] NIC    L1     ClockPM-  disabled  disabled           disabled   same          same          disabled
-  00:1c.4 RP [bus 04] empty  L0s L1 ClockPM-  same      same               same       same          same          same
-  00:1c.5 RP [bus 05] empty  L0s L1 ClockPM-  same      same               same       same          same          same
-  00:1c.7 RP [bus 06] SD/MMC L1     ClockPM-  same      disabled           same       same          same          L0s L1
-  01:00.0 Radeon GPU         ? [6]            ?         ?                  ?          ?             ?             ?
-  03:00.0 Centrino NIC       L1     ClockPM-  disabled  disabled           disabled   same          same          disabled
-  06:00.0 SD/MMC card        L1     ClockPM+  same      disabled ClockPM-  L0s L1     same          same          L0s L1
+Alex
 
-  [1] 00:00.0 device absent
-  [2] 00:01.0 LnkCtl AutWidDis+, SltSta PresDet+
-  [3] 00:1c.2 SecStatus <MAbort-, SltSta LinkState+
-      00:1c.7 SecStatus <MAbort-, SltSta LinkState+
-      03:00.0 DevSta CorrErr-, UnsuppReq-
-  [4] 00:1c.2 LnkCtl ASPM Disabled
-      00:1c.7 LnkCtl L0s L1 Enabled
-      03:00.0 LnkCtl ASPM Disabled
-      06:00.0 LnkCtl ASPM L0s L1 Enabled
-  [5] 06:00.0 LTR max snoop 71680ns -> 566ns
-  [6] 01:00.0 seems completely powered off, probably because you're
-      using integrated video
-
-I haven't made sense out of any of this yet, except that the "force
-performance" column seems plausible: if we want performance, we should
-disable ASPM across the board.
-
-I don't really know where to start here.  Maybe we can focus on
-understanding one tiny piece.  Can you apply the following patch and
-try just the "force powersave" situation?  Please collect the entire
-dmesg log and "lspci -vv" output.
-
-Bjorn
+[1]https://lists.linuxfoundation.org/pipermail/iommu/2016-October/018890.html
