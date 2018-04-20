@@ -1,65 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:48993 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754298AbeDCKL6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Apr 2018 06:11:58 -0400
-Subject: Re: [PATCH 4/8] misc: pci_endpoint_test: Add designware EP entry
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
- <1bc09dfd205d0721366267e023550c4a5a4a84db.1522235224.git.gustavo.pimentel@synopsys.com>
- <76c6e35c-5659-7313-a1b4-aa93e323ef79@ti.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <77999353-fd50-b90f-ab00-b2cd29048257@synopsys.com>
-Date: Tue, 3 Apr 2018 11:11:04 +0100
+Received: from mail.kernel.org ([198.145.29.99]:46080 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750745AbeDTS4z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Apr 2018 14:56:55 -0400
+Date: Fri, 20 Apr 2018 13:56:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Michal Simek <monstr@monstr.eu>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 0/2] microblaze/PCI: Remove unused code
+Message-ID: <20180420185653.GV28657@bhelgaas-glaptop.roam.corp.google.com>
+References: <152336656418.18958.17017091754578447948.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <76c6e35c-5659-7313-a1b4-aa93e323ef79@ti.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <152336656418.18958.17017091754578447948.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
-
-On 02/04/2018 06:36, Kishon Vijay Abraham I wrote:
-> Hi,
+On Tue, Apr 10, 2018 at 08:24:59AM -0500, Bjorn Helgaas wrote:
+> Remove some unused microblaze PCI code.
 > 
-> On Wednesday 28 March 2018 05:08 PM, Gustavo Pimentel wrote:
->> Adds the designware EP device ID entry to pci_endpoint_test driver table
->> to allow this device to be recognize and handle by the pci_endpoint_test
->> driver.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->>  drivers/misc/pci_endpoint_test.c | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
->> index 320276f..e80c533 100644
->> --- a/drivers/misc/pci_endpoint_test.c
->> +++ b/drivers/misc/pci_endpoint_test.c
->> @@ -632,6 +632,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
->>  static const struct pci_device_id pci_endpoint_test_tbl[] = {
->>  	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
->>  	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
->> +	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, 0xedda) },
-> 
-> Add device ids to include/linux/pci_ids.h and use the macro here.
+> I can merge these via PCI if you like, Michal.  I have some related
+> changes coming for some sparc resource claim issues.  Or it's fine if
+> you pick them up.
 
-Add device id request sent, as soon as I get a positive confirmation from them
-I'll change for the macro. It works for you?
+I applied these to pci/microblaze for v4.17.  If you pick them up,
+Michal, I'll drop them; just let me know.
 
+> ---
 > 
-> Thanks
-> Kishon
+> Bjorn Helgaas (2):
+>       microblaze/PCI: Remove pcibios_finish_adding_to_bus() dead code
+>       microblaze/PCI: Remove pcibios_claim_one_bus() dead code
 > 
-
-Regards,
-Gustavo
+> 
+>  arch/microblaze/include/asm/pci.h |    4 --
+>  arch/microblaze/pci/pci-common.c  |   61 -------------------------------------
+>  2 files changed, 65 deletions(-)
