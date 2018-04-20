@@ -1,107 +1,145 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:55855 "EHLO smtp2.it.da.ut.ee"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752448AbeDHSpC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 8 Apr 2018 14:45:02 -0400
-Date: Sun, 8 Apr 2018 21:44:57 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Yinghai Lu <yinghai@kernel.org>
-cc: linux-pci@vger.kernel.org, sparclinux@vger.kernel.org
-Subject: sparc64 PCI BAR allocation is still problematic
-Message-ID: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: <honghui.zhang@mediatek.com>
+To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+ <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+ <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
+Subject: [PATCH v6 1/2] PCI: mediatek: Set up vendor ID and class type for
+ MT7622
+Date: Fri, 20 Apr 2018 13:25:09 +0800
+Message-ID: <1524201910-22836-2-git-send-email-honghui.zhang@mediatek.com>
+In-Reply-To: <1524201910-22836-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1524201910-22836-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
+ xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
+ yong.wu@mediatek.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a followup on the thread https://lkml.org/lkml/2015/10/7/135 and 
-corresponding https://bugzilla.kernel.org/show_bug.cgi?id=117191 entry.
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-I saw some sparc64 PCI allocation changes in yesterdays git and compiled 
-4.16.0-10242-gf605ba9 on most of my sparc64 machines to test if the PCI 
-BAR allocation problems introduced in 4.3 were fixed on some of them. 
-Alas, no change at all - of the test machines, none showed any changes 
-in the error messages in "dmesg | grep BAR".
+MT7622's hardware default value of vendor ID and class type is not correct,
+fix that by setup the correct values before linkup with Endpoint.
 
-There was one test machine, T1000 with no addon cards, that did not 
-encounter any problem, before or after the recent patch. All the other 
-test machines tried still have the BAR allocation problems.
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+---
+ drivers/pci/host/pcie-mediatek.c | 30 +++++++++++++++++++++++++++---
+ include/linux/pci_ids.h          |  2 ++
+ 2 files changed, 29 insertions(+), 3 deletions(-)
 
-The errors seem to cluster into 3 categories:
-
-1. many devices fail BAR allocations
-2. one of the Davicom Ethernet devices fails BAR allocation
-3. Uli ISA bridge fails BAR allocation.
-
-Full current dmesg and lspci info is also available if there is any 
-interest. I did not include it all here, which machines are interesting?
-
-Details:
-
-1. Many devices, including preventing FC HBA from working on T1-105:
-
-T1-105:
-pci 0000:00:01.0: can't claim BAR 8 [mem 0x1ff00000000-0x1ffbfffffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
-pci 0000:02:01.0: can't claim BAR 8 [mem 0x1ff00100000-0x1ff028fffff]: no compatible bridge window
-pci 0000:03:0f.0: can't claim BAR 8 [mem 0x1ff00100000-0x1ff028fffff]: no compatible bridge window
-pci 0000:04:00.0: can't claim BAR 0 [mem 0x1ff01000000-0x1ff01ffffff]: no compatible bridge window
-pci 0000:04:00.0: can't claim BAR 1 [mem 0x1ff02000000-0x1ff027fffff]: no compatible bridge window
-pci 0000:04:00.1: can't claim BAR 0 [mem 0x1ff02800000-0x1ff0280702f]: no compatible bridge window
-pci 0000:04:04.0: can't claim BAR 1 [mem 0x1ff02808000-0x1ff02808fff]: no compatible bridge window
-pci 0000:04:04.0: can't claim BAR 6 [mem 0x1ff02810000-0x1ff0281ffff]: no compatible bridge windowqla1280 0000:04:04.0: can't ioremap BAR 1: [mem size 0x00001000]
-
-T1-200:
-pci 0000:00:01.0: can't claim BAR 8 [mem 0x1ff00000000-0x1ffbfffffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
-pci 0000:02:08.0: can't claim BAR 1 [mem 0x1ff00002000-0x1ff00003fff 64bit]: no compatible bridge window
-pci 0000:02:08.0: can't claim BAR 3 [mem 0x1ff00004000-0x1ff00005fff 64bit]: no compatible bridge window
-pci 0000:02:08.1: can't claim BAR 1 [mem 0x1ff00006000-0x1ff00007fff 64bit]: no compatible bridge window
-pci 0000:02:08.1: can't claim BAR 3 [mem 0x1ff00008000-0x1ff00009fff 64bit]: no compatible bridge window
-pci 0000:02:05.0: can't claim BAR 1 [mem 0x1ff0000a000-0x1ff0000bfff]: no compatible bridge window
-pci 0000:02:05.0: can't claim BAR 6 [mem 0x1ff00020000-0x1ff0003ffff]: no compatible bridge window
-
-V120:
-pci 0000:00:01.0: can't claim BAR 8 [mem 0x1ff00000000-0x1ffbfffffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
-pci 0000:02:08.0: can't claim BAR 1 [mem 0x1ff00002000-0x1ff00003fff 64bit]: no compatible bridge window
-pci 0000:02:08.0: can't claim BAR 3 [mem 0x1ff00004000-0x1ff00005fff 64bit]: no compatible bridge window
-pci 0000:02:08.1: can't claim BAR 1 [mem 0x1ff00006000-0x1ff00007fff 64bit]: no compatible bridge window
-pci 0000:02:08.1: can't claim BAR 3 [mem 0x1ff00008000-0x1ff00009fff 64bit]: no compatible bridge window
-
-2. Davicom Ethernet:
-
-Netra X1:
-pci 0000:00:05.0: can't claim BAR 6 [mem 0x1ff00080000-0x1ff000bffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
-
-Fire V100:
-pci 0000:00:05.0: can't claim BAR 6 [mem 0x1ff00080000-0x1ff000bffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
-
-
-3. ULi ISA bridge:
-
-T2000:
-pci 0001:05:02.0: can't claim BAR 0 [io  0xf010000000-0xf01000ffff]: no compatible bridge window
-
-V245:
-pci 0000:05:1e.0: can't claim BAR 0 [io  0x7f810000000-0x7f810000fff]: no compatible bridge window
-
-V210:
-pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
-pci 0001:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
-pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
-
-V240:
-pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
-pci 0001:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
-pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
-
-V440:
-pci 0002:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0002:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
-pci 0002:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
-pci 0002:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
-
-Blade 100:
-pci 0000:00:07.0: can't claim BAR 0 [io  0x1fe02000000-0x1fe0200ffff]: address conflict with 0000:00:03.0 [io  0x1fe02000600-0x1fe0200061f]
-pci 0000:00:07.0: can't claim BAR 1 [mem 0x1ff00000000-0x1ff000fffff]: address conflict with Video RAM area [??? 0x1ff000a0000-0x1ff000bffff flags 0x80000000]
-
-
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index a8b20c5..c3dc549 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -66,6 +66,10 @@
+ 
+ /* PCIe V2 per-port registers */
+ #define PCIE_MSI_VECTOR		0x0c0
++
++#define PCIE_CONF_VEND_ID	0x100
++#define PCIE_CONF_CLASS_ID	0x106
++
+ #define PCIE_INT_MASK		0x420
+ #define INTX_MASK		GENMASK(19, 16)
+ #define INTX_SHIFT		16
+@@ -125,12 +129,14 @@ struct mtk_pcie_port;
+ 
+ /**
+  * struct mtk_pcie_soc - differentiate between host generations
++ * @need_fix_class_id: whether this host's class ID needed to be fixed or not
+  * @has_msi: whether this host supports MSI interrupts or not
+  * @ops: pointer to configuration access functions
+  * @startup: pointer to controller setting functions
+  * @setup_irq: pointer to initialize IRQ functions
+  */
+ struct mtk_pcie_soc {
++	bool need_fix_class_id;
+ 	bool has_msi;
+ 	struct pci_ops *ops;
+ 	int (*startup)(struct mtk_pcie_port *port);
+@@ -375,6 +381,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+ {
+ 	struct mtk_pcie *pcie = port->pcie;
+ 	struct resource *mem = &pcie->mem;
++	const struct mtk_pcie_soc *soc = port->pcie->soc;
+ 	u32 val;
+ 	size_t size;
+ 	int err;
+@@ -403,6 +410,15 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+ 	       PCIE_MAC_SRSTB | PCIE_CRSTB;
+ 	writel(val, port->base + PCIE_RST_CTRL);
+ 
++	/* Set up vendor ID and class code */
++	if (soc->need_fix_class_id) {
++		val = PCI_VENDOR_ID_MEDIATEK;
++		writew(val, port->base + PCIE_CONF_VEND_ID);
++
++		val = PCI_CLASS_BRIDGE_PCI;
++		writew(val, port->base + PCIE_CONF_CLASS_ID);
++	}
++
+ 	/* 100ms timeout value should be enough for Gen1/2 training */
+ 	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
+ 				 !!(val & PCIE_PORT_LINKUP_V2), 20,
+@@ -1142,7 +1158,15 @@ static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
+ 	.startup = mtk_pcie_startup_port,
+ };
+ 
+-static const struct mtk_pcie_soc mtk_pcie_soc_v2 = {
++static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
++	.has_msi = true,
++	.ops = &mtk_pcie_ops_v2,
++	.startup = mtk_pcie_startup_port_v2,
++	.setup_irq = mtk_pcie_setup_irq,
++};
++
++static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
++	.need_fix_class_id = true,
+ 	.has_msi = true,
+ 	.ops = &mtk_pcie_ops_v2,
+ 	.startup = mtk_pcie_startup_port_v2,
+@@ -1152,8 +1176,8 @@ static const struct mtk_pcie_soc mtk_pcie_soc_v2 = {
+ static const struct of_device_id mtk_pcie_ids[] = {
+ 	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
+ 	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
+-	{ .compatible = "mediatek,mt2712-pcie", .data = &mtk_pcie_soc_v2 },
+-	{ .compatible = "mediatek,mt7622-pcie", .data = &mtk_pcie_soc_v2 },
++	{ .compatible = "mediatek,mt2712-pcie", .data = &mtk_pcie_soc_mt2712 },
++	{ .compatible = "mediatek,mt7622-pcie", .data = &mtk_pcie_soc_mt7622 },
+ 	{},
+ };
+ 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index a6b3066..9d4fca5 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2115,6 +2115,8 @@
+ 
+ #define PCI_VENDOR_ID_MYRICOM		0x14c1
+ 
++#define PCI_VENDOR_ID_MEDIATEK		0x14c3
++
+ #define PCI_VENDOR_ID_TITAN		0x14D2
+ #define PCI_DEVICE_ID_TITAN_010L	0x8001
+ #define PCI_DEVICE_ID_TITAN_100L	0x8010
 -- 
-Meelis Roos (mroos@linux.ee)
+2.6.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
