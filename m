@@ -1,16 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 30 Apr 2018 13:40:07 -0500
+Date: Fri, 20 Apr 2018 13:42:14 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Subject: Re: [PATCH 3/6] PCI: Introduce devm_of_pci_get_host_bridge_resources
-Message-ID: <20180430184007.GC95643@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1524582822.git.jan.kiszka@siemens.com>
- <e387d04ea235c9a4879a897bb730adc383a96635.1524582822.git.jan.kiszka@siemens.com>
- <20180427222427.GB73638@bhelgaas-glaptop.roam.corp.google.com>
- <869a8ad9-dd2f-8462-c0c4-2d8a62d74185@siemens.com>
+To: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 09/12] PCI: remove CONFIG_PCI_BUS_ADDR_T_64BIT
+Message-ID: <20180420184214.GT28657@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180415145947.1248-1-hch@lst.de>
+ <20180415145947.1248-10-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <869a8ad9-dd2f-8462-c0c4-2d8a62d74185@siemens.com>
+In-Reply-To: <20180415145947.1248-10-hch@lst.de>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,58 +16,86 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, linux-pci@vger.kernel.org,
+ x86@kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org,
+ iommu@lists.linux-foundation.org, sparclinux@vger.kernel.org,
  linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 28, 2018 at 09:28:47AM +0200, Jan Kiszka wrote:
-> On 2018-04-28 00:24, Bjorn Helgaas wrote:
-> > On Tue, Apr 24, 2018 at 05:13:39PM +0200, Jan Kiszka wrote:
-> >> From: Jan Kiszka <jan.kiszka@siemens.com>
-> >>
-> >> of_pci_get_host_bridge_resources allocates the resource structures it
-> >> fills dynamically, but none of its callers care to release them so far.
-> >> Rather than requiring everyone to do this explicitly, introduce a
-> >> managed version of that service. This differs API-wise only in taking a
-> >> reference to the associated device, rather than to the device tree node.
-> >>
-> >> As of_pci_get_host_bridge_resources is an exported interface, we cannot
-> >> simply drop it at this point. After converting all in-tree users to the
-> >> new API, we could phase out the unmanaged one over some grace period.
-> > 
-> > It looks like it might be possible to split this into three or four
-> > patches:
-> > 
-> >   1) Factor __of_pci_get_host_bridge_resources() out of
-> >      of_pci_get_host_bridge_resources()
-> > 
-> >   2) Add struct device * argument
-> > 
-> >   3) Convert pr_info() to dev_info()
-> > 
-> >   4) Add devm_of_pci_get_host_bridge_resources()
+On Sun, Apr 15, 2018 at 04:59:44PM +0200, Christoph Hellwig wrote:
+> This symbol is now always identical to CONFIG_ARCH_DMA_ADDR_T_64BIT, so
+> remove it.
 > 
-> Will do. I'm even considering
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Please merge this along with the rest of the series; let me know if you
+need anything more from me.
+
+> ---
+>  drivers/pci/Kconfig | 4 ----
+>  drivers/pci/bus.c   | 4 ++--
+>  include/linux/pci.h | 2 +-
+>  3 files changed, 3 insertions(+), 7 deletions(-)
 > 
-> 5) mark of_pci_get_host_bridge_resources() __deprecated, due to the leak
->    and no remaining in-tree user - what do you think?
-
-Sounds good.
-
-It'd be nice if we had some guideline about deprecation -- whether we
-actually need to mark things __deprecated, and then how long to wait
-before actually removing them, but I don't see anything in
-Documentation/.
-
-Looks like it was added by cbe4097f8ae6 ("of/pci: Add support for
-parsing PCI host bridge resources from DT") in v3.18, so it's been
-around for a while and I guess it would be nice to have a grace period
-before removing it.
-
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 34b56a8f8480..29a487f31dae 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -5,10 +5,6 @@
+>  
+>  source "drivers/pci/pcie/Kconfig"
+>  
+> -config PCI_BUS_ADDR_T_64BIT
+> -	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
+> -	depends on PCI
+> -
+>  config PCI_MSI
+>  	bool "Message Signaled Interrupts (MSI and MSI-X)"
+>  	depends on PCI
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index bc2ded4c451f..35b7fc87eac5 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -120,7 +120,7 @@ int devm_request_pci_bus_resources(struct device *dev,
+>  EXPORT_SYMBOL_GPL(devm_request_pci_bus_resources);
+>  
+>  static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
+> -#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+> +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+>  static struct pci_bus_region pci_64_bit = {0,
+>  				(pci_bus_addr_t) 0xffffffffffffffffULL};
+>  static struct pci_bus_region pci_high = {(pci_bus_addr_t) 0x100000000ULL,
+> @@ -230,7 +230,7 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+>  					  resource_size_t),
+>  		void *alignf_data)
+>  {
+> -#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+> +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+>  	int rc;
+>  
+>  	if (res->flags & IORESOURCE_MEM_64) {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 73178a2fcee0..55371cb827ad 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -670,7 +670,7 @@ int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
+>  int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
+>  		  int reg, int len, u32 val);
+>  
+> -#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+> +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+>  typedef u64 pci_bus_addr_t;
+>  #else
+>  typedef u32 pci_bus_addr_t;
+> -- 
+> 2.17.0
+> 
 
 _______________________________________________
 linux-arm-kernel mailing list
