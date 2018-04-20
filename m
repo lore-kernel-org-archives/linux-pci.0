@@ -1,110 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:42552 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751882AbeDII3s (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 04:29:48 -0400
-Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Dien Pham <dien.pham.ry@rvc.renesas.com>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20180408130925.19088-1-marek.vasut+renesas@gmail.com>
- <CAMuHMdVGBkEY2kE7auUwXBn2QSfX+yhxkFH--4tTw+XJ3WCk0w@mail.gmail.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com>
-Date: Mon, 9 Apr 2018 10:20:05 +0200
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:43305 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752096AbeDTWKR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Apr 2018 18:10:17 -0400
+Subject: Re: [pci PATCH v8 2/4] ena: Migrate over to unmanaged SR-IOV support
+To: Alexander Duyck <alexander.h.duyck@intel.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
+        mheyne@amazon.de, liang-min.wang@intel.com,
+        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
+        dwmw@amazon.co.uk
+References: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
+ <20180420162841.46077.17967.stgit@ahduyck-green-test.jf.intel.com>
+From: Gregory Rose <gvrose8192@gmail.com>
+Message-ID: <411245b6-fb34-0494-aa5d-1ed5bc69a18c@gmail.com>
+Date: Fri, 20 Apr 2018 15:10:15 -0700
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdVGBkEY2kE7auUwXBn2QSfX+yhxkFH--4tTw+XJ3WCk0w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180420162841.46077.17967.stgit@ahduyck-green-test.jf.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/09/2018 10:07 AM, Geert Uytterhoeven wrote:
-> Hi Marek,
-> 
-> On Sun, Apr 8, 2018 at 3:09 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
->> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
->>
->> The controller clock can be switched off during suspend/resume,
->> let runtime PM take care of that.
->>
->> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
->> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->> Cc: Simon Horman <horms+renesas@verge.net.au>
->> Cc: Wolfram Sang <wsa@the-dreams.de>
->> Cc: linux-renesas-soc@vger.kernel.org
->> To: linux-pci@vger.kernel.org
->> ---
->> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
->>       reordering of function calls in probe
->>     - Dispose of fail_clk in rcar_pcie_get_resources()
->> V3: - Fix up the failpath in probe function
->> V4: - Rebase on recent linux-next
->> V5: - Do not call pci_free_resource_list(&pcie->resources) if
->>       rcar_pcie_parse_request_of_pci_ranges() fails, since that
->>       functiona calls pci_free_resource_list() already.
-> 
-> Thanks for the update!
-> 
->> --- a/drivers/pci/host/pcie-rcar.c
->> +++ b/drivers/pci/host/pcie-rcar.c
-> 
->> @@ -1124,22 +1111,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->>         if (err)
->>                 goto err_free_bridge;
->>
->> +       pm_runtime_enable(pcie->dev);
->> +       err = pm_runtime_get_sync(pcie->dev);
->> +       if (err < 0) {
->> +               dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
->> +               goto err_pm_disable;
->> +       }
->> +
-> 
-> As you moved the pm_runtime setup up...
-> 
->>         err = rcar_pcie_get_resources(pcie);
->>         if (err < 0) {
->>                 dev_err(dev, "failed to request resources: %d\n", err);
->> -               goto err_free_resource_list;
->> +               goto err_pm_put;
->>         }
->>
->>         err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
->>         if (err)
->> -               goto err_free_resource_list;
->> -
->> -       pm_runtime_enable(dev);
->> -       err = pm_runtime_get_sync(dev);
->> -       if (err < 0) {
->> -               dev_err(dev, "pm_runtime_get_sync failed\n");
->> -               goto err_pm_disable;
->> -       }
->> +               goto err_pm_put;
->>
->>         /* Failure to get a link might just be that no cards are inserted */
->>         hw_init_fn = of_device_get_match_data(dev);
->> @@ -1174,9 +1161,8 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->>
->>  err_pm_disable:
->>         pm_runtime_disable(dev);
-> 
-> ... shouldn't it be moved down here, for symmetry?
+On 4/20/2018 9:30 AM, Alexander Duyck wrote:
+> Instead of implementing our own version of a SR-IOV configuration stub in
+> the ena driver we can just reuse the existing
+> pci_sriov_configure_simple function.
+>
+> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> ---
+>
+> v5: Replaced call to pci_sriov_configure_unmanaged with
+>          pci_sriov_configure_simple
+> v6: Dropped "#ifdef" checks for IOV wrapping sriov_configure definition
+> v7: No change
+>
+>   drivers/net/ethernet/amazon/ena/ena_netdev.c |   28 +-------------------------
+>   1 file changed, 1 insertion(+), 27 deletions(-)
+>
+> diff --git a/drivers/net/ethernet/amazon/ena/ena_netdev.c b/drivers/net/ethernet/amazon/ena/ena_netdev.c
+> index a822e70..f2af87d 100644
+> --- a/drivers/net/ethernet/amazon/ena/ena_netdev.c
+> +++ b/drivers/net/ethernet/amazon/ena/ena_netdev.c
+> @@ -3386,32 +3386,6 @@ static int ena_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+>   }
+>   
+>   /*****************************************************************************/
+> -static int ena_sriov_configure(struct pci_dev *dev, int numvfs)
+> -{
+> -	int rc;
+> -
+> -	if (numvfs > 0) {
+> -		rc = pci_enable_sriov(dev, numvfs);
+> -		if (rc != 0) {
+> -			dev_err(&dev->dev,
+> -				"pci_enable_sriov failed to enable: %d vfs with the error: %d\n",
+> -				numvfs, rc);
+> -			return rc;
+> -		}
+> -
+> -		return numvfs;
+> -	}
+> -
+> -	if (numvfs == 0) {
+> -		pci_disable_sriov(dev);
+> -		return 0;
+> -	}
+> -
+> -	return -EINVAL;
+> -}
+> -
+> -/*****************************************************************************/
+> -/*****************************************************************************/
+>   
+>   /* ena_remove - Device Removal Routine
+>    * @pdev: PCI device information struct
+> @@ -3526,7 +3500,7 @@ static int ena_resume(struct pci_dev *pdev)
+>   	.suspend    = ena_suspend,
+>   	.resume     = ena_resume,
+>   #endif
+> -	.sriov_configure = ena_sriov_configure,
+> +	.sriov_configure = pci_sriov_configure_simple,
+>   };
+>   
+>   static int __init ena_init(void)
+>
 
-I am reasonably certain the failpath should be correct now. Did I still
-miss something ?
-
--- 
-Best regards,
-Marek Vasut
+Reviewed-by: Greg Rose <gvrose8192@gmail.com>
