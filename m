@@ -1,89 +1,109 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 3/8] bindings: PCI: designware: Add support for the EP in
- designware driver
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
- <dd582bfc2780679b7a092d23547c316234a84c34.1522235224.git.gustavo.pimentel@synopsys.com>
- <405911c8-fffc-5bd7-76c5-f7aabde3b7bc@ti.com>
- <87ba8936-e870-f52b-2ff1-0aea90d0a25c@synopsys.com>
- <f94889e3-ba6f-5aba-d0ab-85db5d434cc9@ti.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <331e32c4-a39b-b5a6-6fbd-6eef7ca4b27c@synopsys.com>
-Date: Tue, 3 Apr 2018 14:20:45 +0100
+Subject: Re: [pci PATCH v8 1/4] pci: Add pci_sriov_configure_simple for PFs
+ that don't manage VF resources
+To: Alexander Duyck <alexander.h.duyck@intel.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
+        mheyne@amazon.de, liang-min.wang@intel.com,
+        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
+        dwmw@amazon.co.uk
+References: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
+ <20180420162814.46077.11939.stgit@ahduyck-green-test.jf.intel.com>
+From: Gregory Rose <gvrose8192@gmail.com>
+Message-ID: <2f23908d-13c6-55c8-217f-d8be5bd450c5@gmail.com>
+Date: Fri, 20 Apr 2018 15:06:24 -0700
 MIME-Version: 1.0
-In-Reply-To: <f94889e3-ba6f-5aba-d0ab-85db5d434cc9@ti.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20180420162814.46077.11939.stgit@ahduyck-green-test.jf.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
 
-On 03/04/2018 11:55, Kishon Vijay Abraham I wrote:
-> Hi,
-> 
-> On Tuesday 03 April 2018 04:13 PM, Gustavo Pimentel wrote:
->> Hi Kishon,
->>
->> On 02/04/2018 06:35, Kishon Vijay Abraham I wrote:
->>>
->>>
->>> On Wednesday 28 March 2018 05:08 PM, Gustavo Pimentel wrote:
->>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->>>
->>> Please add a commit message.
->>
->> Ok. I'll add. Thanks for noticing it.
->>
->>>> ---
->>>>  Documentation/devicetree/bindings/pci/designware-pcie.txt | 13 +++++++++++++
->>>>  1 file changed, 13 insertions(+)
->>>>
->>>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>>> index 6300762..4bb2e08 100644
->>>> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>>> @@ -3,6 +3,7 @@
->>>>  Required properties:
->>>>  - compatible:
->>>>  	"snps,dw-pcie" for RC mode;
->>>> +	"snps,dw-pcie-ep" for EP mode;
->>>>  - reg: Should contain the configuration address space.
->>>>  - reg-names: Must be "config" for the PCIe configuration space.
->>>>      (The old way of getting the configuration address space from "ranges"
->>>> @@ -56,3 +57,15 @@ Example configuration:
->>>>  		#interrupt-cells = <1>;
->>>>  		num-lanes = <1>;
->>>>  	};
->>>> +or
->>>> +	pcie_ep: pcie_ep@dfc00000 {
->>>> +		compatible = "snps,dw-pcie-ep";
->>>> +		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
->>>> +		      <0xdfc01000 0x0001000>, /* IP registers 2 */
->>>
->>> Doesn't this have iATU unroll space?
->>
->> I don't think EP has it, but I'm no expert on this matter. Can you provide me
->> some example of having iATU unroll space mapping would be useful in EP scope?
-> 
-> I'm not sure. I thought if the dwc3 core version is 4.80, then it'll have a
-> separate ATU space irrespective of RC mode or EP mode.
+On 4/20/2018 9:28 AM, Alexander Duyck wrote:
+> This patch adds a common configuration function called
+> pci_sriov_configure_simple that will allow for managing VFs on devices
+> where the PF is not capable of managing VF resources.
+>
+> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> Tested-by: Mark Rustad <mark.d.rustad@intel.com>
+> ---
+>
+> v5: New patch replacing pci_sriov_configure_unmanaged with
+>        pci_sriov_configure_simple
+>      Dropped bits related to autoprobe changes
+> v6: Defined pci_sriov_configure_simple as NULL if IOV is disabled
+> v7: Updated pci_sriov_configure_simple to drop need for err value
+>      Fixed comment explaining why pci_sriov_configure_simple is NULL
+>
+>   drivers/pci/iov.c   |   31 +++++++++++++++++++++++++++++++
+>   include/linux/pci.h |    3 +++
+>   2 files changed, 34 insertions(+)
+>
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 677924a..3e0a7fd 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -807,3 +807,34 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>   	return dev->sriov->total_VFs;
+>   }
+>   EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+> +
+> +/**
+> + * pci_sriov_configure_simple - helper to configure unmanaged SR-IOV
+> + * @dev: the PCI device
+> + * @nr_virtfn: number of virtual functions to enable, 0 to disable
+> + *
+> + * Used to provide generic enable/disable SR-IOV option for devices
+> + * that do not manage the VFs generated by their driver. Return value
+> + * is negative on error, or number of VFs allocated on success.
+> + */
+> +int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn)
+> +{
+> +	might_sleep();
+> +
+> +	if (!dev->is_physfn)
+> +		return -ENODEV;
+> +
+> +	if (pci_vfs_assigned(dev)) {
+> +		pci_warn(dev,
+> +			 "Cannot modify SR-IOV while VFs are assigned\n");
+> +		return -EPERM;
+> +	}
+> +
+> +	if (!nr_virtfn) {
+> +		sriov_disable(dev);
+> +		return 0;
+> +	}
+> +
+> +	return sriov_enable(dev, nr_virtfn) ? : nr_virtfn;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_sriov_configure_simple);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index ae42289..7d36e39 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1955,6 +1955,7 @@ static inline void pci_mmcfg_late_init(void) { }
+>   int pci_vfs_assigned(struct pci_dev *dev);
+>   int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>   int pci_sriov_get_totalvfs(struct pci_dev *dev);
+> +int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn);
+>   resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+>   void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+>   #else
+> @@ -1982,6 +1983,8 @@ static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+>   { return 0; }
+>   static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>   { return 0; }
+> +/* this is expected to be used as a function pointer, just define as NULL */
+> +#define pci_sriov_configure_simple NULL
+>   static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+>   { return 0; }
+>   static inline void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe) { }
+>
 
-As replied on patch 1, let's leave out  any reference of iATU unroll to avoid
-any confusion. Agree?
+Thanks Alex!
 
-> 
-> Thanks
-> Kishon
-> 
-
-Regards,
-Gustavo
+Reviewed-by: Greg Rose <gvrose8192@gmail.com>
