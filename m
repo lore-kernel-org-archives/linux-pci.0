@@ -1,114 +1,105 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 03/37] iommu/sva: Manage process address spaces
-To: Sinan Kaya <okaya@codeaurora.org>, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>
-References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
- <20180212183352.22730-4-jean-philippe.brucker@arm.com>
- <57d77955-caa7-ddac-df7d-7eef1f05dbb2@codeaurora.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <66ec18ca-ea4e-d224-c9c5-8dbee5da8a72@arm.com>
-Date: Tue, 24 Apr 2018 10:33:03 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [pci PATCH v8 0/4] Add support for unmanaged SR-IOV
+To: Alexander Duyck <alexander.h.duyck@intel.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, dan.daly@intel.com,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
+        mheyne@amazon.de, liang-min.wang@intel.com,
+        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
+        dwmw@amazon.co.uk
+References: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <5fc62d10-790f-2356-c2f6-fd49f542dd3c@infradead.org>
+Date: Fri, 20 Apr 2018 10:23:56 -0700
 MIME-Version: 1.0
-In-Reply-To: <57d77955-caa7-ddac-df7d-7eef1f05dbb2@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
- "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
- Will Deacon <Will.Deacon@arm.com>, "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24/04/18 02:32, Sinan Kaya wrote:
-> On 2/12/2018 1:33 PM, Jean-Philippe Brucker wrote:
->> /**
->>   * iommu_sva_device_init() - Initialize Shared Virtual Addressing for a device
->>   * @dev: the device
->> @@ -129,7 +439,10 @@ EXPORT_SYMBOL_GPL(iommu_sva_device_shutdown);
->>  int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
->>  			  unsigned long flags, void *drvdata)
->>  {
->> +	int i, ret;
->> +	struct io_mm *io_mm = NULL;
->>  	struct iommu_domain *domain;
->> +	struct iommu_bond *bond = NULL, *tmp;
->>  	struct iommu_param *dev_param = dev->iommu_param;
->>  
->>  	domain = iommu_get_domain_for_dev(dev);
->> @@ -145,7 +458,42 @@ int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
->>  	if (flags != (IOMMU_SVA_FEAT_PASID | IOMMU_SVA_FEAT_IOPF))
->>  		return -EINVAL;
->>  
->> -	return -ENOSYS; /* TODO */
->> +	/* If an io_mm already exists, use it */
->> +	spin_lock(&iommu_sva_lock);
->> +	idr_for_each_entry(&iommu_pasid_idr, io_mm, i) {
->> +		if (io_mm->mm != mm || !io_mm_get_locked(io_mm))
->> +			continue;
->> +
->> +		/* Is it already bound to this device? */
->> +		list_for_each_entry(tmp, &io_mm->devices, mm_head) {
->> +			if (tmp->dev != dev)
->> +				continue;
->> +
->> +			bond = tmp;
->> +			refcount_inc(&bond->refs);
->> +			io_mm_put_locked(io_mm);
->> +			break;
->> +		}
->> +		break;
->> +	}
->> +	spin_unlock(&iommu_sva_lock);
->> +
->> +	if (bond)
+On 04/20/18 09:28, Alexander Duyck wrote:
+> This series is meant to add support for SR-IOV on devices when the VFs are
+> not managed by the kernel. Examples of recent patches attempting to do this
+> include:
+> virto - https://patchwork.kernel.org/patch/10241225/
+> pci-stub - https://patchwork.kernel.org/patch/10109935/
+> vfio - https://patchwork.kernel.org/patch/10103353/
+> uio - https://patchwork.kernel.org/patch/9974031/
+
+Hi,
+
+Somewhere in this patch series it would be nice to tell us what the heck
+a "PF" is.  :)
+
+Thanks.
+
+> Since this is quickly blowing up into a multi-driver problem it is probably
+> best to implement this solution as generically as possible.
 > 
-> Please return pasid when you find an io_mm that is already bound. Something like
-> *pasid = io_mm->pasid should do the work here when bond is true.
+> This series is an attempt to do that. What we do with this patch set is
+> provide a generic framework to enable SR-IOV in the case that the PF driver
+> doesn't support managing the VFs itself.
+> 
+> I based my patch set originally on the patch by Mark Rustad but there isn't
+> much left after going through and cleaning out the bits that were no longer
+> needed, and after incorporating the feedback from David Miller. At this point
+> the only items to be fully reused was his patch description which is now
+> present in patch 3 of the set.
+> 
+> This solution is limited in scope to just adding support for devices that
+> provide no functionality for SR-IOV other than allocating the VFs by
+> calling pci_enable_sriov. Previous sets had included patches for VFIO, but
+> for now I am dropping that as the scope of that work is larger then I
+> think I can take on at this time.
+> 
+> v2: Reduced scope back to just virtio_pci and vfio-pci
+>     Broke into 3 patch set from single patch
+>     Changed autoprobe behavior to always set when num_vfs is set non-zero
+> v3: Updated Documentation to clarify when sriov_unmanaged_autoprobe is used
+>     Wrapped vfio_pci_sriov_configure to fix build errors w/o SR-IOV in kernel
+> v4: Dropped vfio-pci patch
+>     Added ena and nvme to drivers now using pci_sriov_configure_unmanaged
+>     Dropped pci_disable_sriov call in virtio_pci to be consistent with ena
+> v5: Dropped sriov_unmanaged_autoprobe and pci_sriov_conifgure_unmanaged
+>     Added new patch that enables pci_sriov_configure_simple
+>     Updated drivers to use pci_sriov_configure_simple
+> v6: Defined pci_sriov_configure_simple as NULL when SR-IOV is not enabled
+>     Updated drivers to drop "#ifdef" checks for IOV
+>     Added pci-pf-stub as place for PF-only drivers to add support
+> v7: Dropped pci_id table explanation from pci-pf-stub driver
+>     Updated pci_sriov_configure_simple to drop need for err value
+>     Fixed comment explaining why pci_sriov_configure_simple is NULL
+> v8: Dropped virtio from the set, support to be added later after TC approval
+> 
+> Cc: Mark Rustad <mark.d.rustad@intel.com>
+> Cc: Maximilian Heyne <mheyne@amazon.de>
+> Cc: Liang-Min Wang <liang-min.wang@intel.com>
+> Cc: David Woodhouse <dwmw@amazon.co.uk>
+> 
+> ---
+> 
+> Alexander Duyck (4):
+>       pci: Add pci_sriov_configure_simple for PFs that don't manage VF resources
+>       ena: Migrate over to unmanaged SR-IOV support
+>       nvme: Migrate over to unmanaged SR-IOV support
+>       pci-pf-stub: Add PF driver stub for PFs that function only to enable VFs
+> 
+> 
+>  drivers/net/ethernet/amazon/ena/ena_netdev.c |   28 -------------
+>  drivers/nvme/host/pci.c                      |   20 ----------
+>  drivers/pci/Kconfig                          |   12 ++++++
+>  drivers/pci/Makefile                         |    2 +
+>  drivers/pci/iov.c                            |   31 +++++++++++++++
+>  drivers/pci/pci-pf-stub.c                    |   54 ++++++++++++++++++++++++++
+>  include/linux/pci.h                          |    3 +
+>  include/linux/pci_ids.h                      |    2 +
+>  8 files changed, 106 insertions(+), 46 deletions(-)
+>  create mode 100644 drivers/pci/pci-pf-stub.c
+> 
+> --
+> 
 
-Right. I think we should also keep returning 0, not switch to -EEXIST or
-similar. So in next version a driver can call bind(devX, mmY) multiple
-times, but the first unbind() removes the bond.
-
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+~Randy
