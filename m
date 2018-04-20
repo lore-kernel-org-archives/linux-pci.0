@@ -1,53 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36298 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751230AbeDQOcf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Apr 2018 10:32:35 -0400
-Date: Tue, 17 Apr 2018 09:32:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Frederick Lawler <fred@fredlawl.com>, bhelgaas@google.com,
-        mike.marciniszyn@intel.com, dennis.dalessandro@intel.com,
-        dledford@redhat.com, jgg@mellanox.com, linux-pci@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bartlomiej Dudek <bartlomiej.dudek@intel.com>
-Subject: Re: [PATCH v3 0/2] IB/hfi1: Cleanup PCIe link configuration
-Message-ID: <20180417143232.GH28657@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180417002825.2737-1-fred@fredlawl.com>
- <20180417065343.GA29193@infradead.org>
+Return-Path: <SRS0=WUYf=HJ=ziepe.ca=jgg@kernel.org>
+Return-Path: <SRS0=WUYf=HJ=ziepe.ca=jgg@kernel.org>
+Date: Fri, 20 Apr 2018 08:55:21 -0600
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sulrich@codeaurora.org" <sulrich@codeaurora.org>,
+	"timur@codeaurora.org" <timur@codeaurora.org>,
+	"linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	Mike Marciniszyn <mike.marciniszyn@intel.com>,
+	Dennis Dalessandro <dennis.dalessandro@intel.com>,
+	Doug Ledford <dledford@redhat.com>,
+	"open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
+Message-ID: <20180420145521.GB30433@ziepe.ca>
+References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+ <20180419202632.GE14063@ziepe.ca>
+ <20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
+ <BN6PR12MB1809BD30AA5B890C054F9832F7B50@BN6PR12MB1809.namprd12.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20180417065343.GA29193@infradead.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BN6PR12MB1809BD30AA5B890C054F9832F7B50@BN6PR12MB1809.namprd12.prod.outlook.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Bartlomiej, who recently changed do_pcie_gen3_transition(), LKML]
+On Thu, Apr 19, 2018 at 10:11:27PM +0000, Deucher, Alexander wrote:
 
-On Mon, Apr 16, 2018 at 11:53:43PM -0700, Christoph Hellwig wrote:
-> On Mon, Apr 16, 2018 at 07:28:23PM -0500, Frederick Lawler wrote:
-> > The IB/hfi1 driver uses custom macros to configure the target link speed. Some 
-> > macros were previously replaced, but not fully. This patch series addresses the
-> > configuration inconsistencies by adding PCI_EXP_LNKCTL2_TLS* macros to PCI,
-> > and then use them in the following IB/hfi1 patch.
-> 
-> Btw, why is the driver configuring the PCIe link speed?  Isn't this
-> something we should be handling in the PCI core?
+> My understanding was that some platfoms only bring up the link in
+> gen 1 mode for compatibility reasons.  TBH, I'm not that familiar
+> with how the links come up on different platforms.
 
-Good question.  I think this sort of code definitely should not be in
-drivers unless it's to work around some kind of defect in the device.
+Then the platform firmware or platform's linux PCI root complex driver
+should perform speed negotiation.
 
-I think the intent of the spec is that neither the OS nor the driver
-has to deal with link training and the link should train to the
-highest speed supported by both ends.  For example, PCIe r4.0, sec 1.2
-says
+Something like that shouldn't be a driver problem to solve.
 
-  Initialization – During hardware initialization, each PCI Express
-  Link is set up following a negotiation of Lane widths and frequency
-  of operation by the two agents at each end of the Link. No firmware
-  or operating system software is involved.
+The driver should only be involved if it has to alter the device (eg
+new device firmware or something)..
 
-Maybe the Intel guys can comment on why HFI needs this code.
-Presumably they didn't write it just for fun, so I assume there's
-some reason.
-
-Bjorn
+Jason
