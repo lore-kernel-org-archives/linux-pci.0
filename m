@@ -1,83 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39722 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756748AbeDBUbr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Apr 2018 16:31:47 -0400
-Date: Mon, 2 Apr 2018 15:31:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Keller, Jacob E" <jacob.e.keller@intel.com>
-Cc: Tal Gilboa <talgi@mellanox.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-        "everest-linux-l2@cavium.com" <everest-linux-l2@cavium.com>,
-        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v5 12/14] fm10k: Report PCIe link properties with
- pcie_print_link_status()
-Message-ID: <20180402203144.GM9322@bhelgaas-glaptop.roam.corp.google.com>
-References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152244397259.135666.12655029447932912161.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <02874ECE860811409154E81DA85FBB5882D497EE@ORSMSX115.amr.corp.intel.com>
+Received: from mailgw02.mediatek.com ([210.61.82.184]:36678 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750841AbeDTFZ2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Apr 2018 01:25:28 -0400
+From: <honghui.zhang@mediatek.com>
+To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>
+CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
+        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
+        <xinping.qian@mediatek.com>
+Subject: [PATCH v6 0/2] PCI: mediatek: Fixups for the IRQ handle routine and MT7622's class code
+Date: Fri, 20 Apr 2018 13:25:08 +0800
+Message-ID: <1524201910-22836-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <02874ECE860811409154E81DA85FBB5882D497EE@ORSMSX115.amr.corp.intel.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 02, 2018 at 03:56:06PM +0000, Keller, Jacob E wrote:
-> > -----Original Message-----
-> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > Sent: Friday, March 30, 2018 2:06 PM
-> > To: Tal Gilboa <talgi@mellanox.com>
-> > Cc: Tariq Toukan <tariqt@mellanox.com>; Keller, Jacob E
-> > <jacob.e.keller@intel.com>; Ariel Elior <ariel.elior@cavium.com>; Ganesh
-> > Goudar <ganeshgr@chelsio.com>; Kirsher, Jeffrey T
-> > <jeffrey.t.kirsher@intel.com>; everest-linux-l2@cavium.com; intel-wired-
-> > lan@lists.osuosl.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > linux-pci@vger.kernel.org
-> > Subject: [PATCH v5 12/14] fm10k: Report PCIe link properties with
-> > pcie_print_link_status()
-> > 
-> > From: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > Use pcie_print_link_status() to report PCIe link speed and possible
-> > limitations instead of implementing this in the driver itself.
-> > 
-> > Note that pcie_get_minimum_link() can return misleading information because
-> > it finds the slowest link and the narrowest link without considering the
-> > total bandwidth of the link.  If the path contains a 16 GT/s x1 link and a
-> > 2.5 GT/s x16 link, pcie_get_minimum_link() returns 2.5 GT/s x1, which
-> > corresponds to 250 MB/s of bandwidth, not the actual available bandwidth of
-> > about 2000 MB/s for a 16 GT/s x1 link.
-> 
-> This comment is about what's being fixed, so it would have been easier to
-> parse if it were written to more clearly indicate that we're removing
-> (and not adding) this behavior.
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Good point.  Is this any better?
+Two fixups for mediatek's host bridge:
+The first patch fixup class type and vendor ID for MT7622.
+The second patch fixup the IRQ handle routine by using irq_chip solution
+to avoid IRQ reentry which may exist for both MT2712 and MT7622.
 
-  fm10k: Report PCIe link properties with pcie_print_link_status()
-  
-  Previously the driver used pcie_get_minimum_link() to warn when the NIC
-  is in a slot that can't supply as much bandwidth as the NIC could use.
-  
-  pcie_get_minimum_link() can be misleading because it finds the slowest link
-  and the narrowest link (which may be different links) without considering
-  the total bandwidth of each link.  For a path with a 16 GT/s x1 link and a
-  2.5 GT/s x16 link, it returns 2.5 GT/s x1, which corresponds to 250 MB/s of
-  bandwidth, not the true available bandwidth of about 1969 MB/s for a
-  16 GT/s x1 link.
-  
-  Use pcie_print_link_status() to report PCIe link speed and possible
-  limitations instead of implementing this in the driver itself.  This finds
-  the slowest link in the path to the device by computing the total bandwidth
-  of each link and compares that with the capabilities of the device.
-  
-  Note that the driver previously used dev_warn() to suggest using a
-  different slot, but pcie_print_link_status() uses dev_info() because if the
-  platform has no faster slot available, the user can't do anything about the
-  warning and may not want to be bothered with it.
+Change since v5:
+ - Make the comments consistend with the code modification in the first patch.
+ - Using writew to performing a 16-bit write.
+ - Using irq_chip solution to fix the IRQ issue.
+
+The v5 patchset could be found in:
+ https://patchwork.kernel.org/patch/10133303
+ https://patchwork.kernel.org/patch/10133305
+
+Change since v4:
+ - Only setup vendor ID for MT7622, igorning the device ID since mediatek's
+   host bridge driver does not cares about the device ID.
+
+Change since v3:
+ - Setup the class type and vendor ID at the beginning of startup instead
+   of in a quirk.
+ - Add mediatek's vendor ID, it could be found in:
+   https://pcisig.com/membership/member-companies?combine=&page=4
+
+Change since v2:
+ - Move the initialize of the iterate before the loop to fix an
+   INTx IRQ issue in the first patch
+
+Change since v1:
+ - Add the second patch.
+ - Make the first patch's commit message more standard.
+Honghui Zhang (2):
+  PCI: mediatek: Set up vendor ID and class type for MT7622
+  PCI: mediatek: Using chained IRQ to setup IRQ handle
+
+ drivers/pci/host/pcie-mediatek.c | 220 +++++++++++++++++++++++----------------
+ include/linux/pci_ids.h          |   2 +
+ 2 files changed, 133 insertions(+), 89 deletions(-)
+
+-- 
+2.6.4
