@@ -1,116 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:35932 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751862AbeDJROz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2018 13:14:55 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [RFC 07/10] misc: pci_endpoint_test: Replace lower into upper case characters
-Date: Tue, 10 Apr 2018 18:14:46 +0100
-Message-Id: <48fee5fd7c31a22d1122ae3428810b6d1dba2f81.1523379766.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 21 Apr 2018 09:05:16 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        linux-pci@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        kvm@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Keith Busch <keith.busch@intel.com>, netanel@amazon.com,
+        Don Dutile <ddutile@redhat.com>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, dwmw@amazon.co.uk
+Subject: Re: [virtio-dev] [pci PATCH v7 2/5] virtio_pci: Add support for
+        unmanaged SR-IOV on virtio_pci devices
+Message-ID: <20180421070516.GA24431@lst.de>
+References: <20180315184132.3102.90947.stgit@localhost.localdomain> <20180316183042-mutt-send-email-mst@kernel.org> <CAKgT0UfgZ2gAdiAbCe4MTOr3o9cqq1q-mykCQsw68p2F-QEC8g@mail.gmail.com> <20180403161151-mutt-send-email-mst@kernel.org> <CAKgT0UfeSmG=xsd6sTkg4cOMnZ0QiqtCRDt4PynpF3d6nvvFCA@mail.gmail.com> <20180403212503-mutt-send-email-mst@kernel.org> <CAKgT0Ude79FYrK4qA0OKRJ1NackyqPi-hZ8Zh3WSdLDFxoOosQ@mail.gmail.com> <20180420030640-mutt-send-email-mst@kernel.org> <CAKgT0Ucpw9D1u8MYoEX5KOij6sxs-5O9gPFTmOVq=Dgt=HUJ=g@mail.gmail.com> <20180420180839-mutt-send-email-mst@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180420180839-mutt-send-email-mst@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replaces lower into upper case characters in comments and debug printks.
+On Fri, Apr 20, 2018 at 06:28:50PM +0300, Michael S. Tsirkin wrote:
+> But maybe it's not needed here.  I am not making the decisions myself.
+> Not too late: post to the TC list and let's see what the response is.
+> Without a feature bit you are making a change affecting all future
+> implementations without exception so the bar is a bit higher: you need
+> to actually post a spec text proposal not just a patch showing how to
+> use the feature, and TC needs to vote on it. Voting takes a week,
+> review a week or two depending on change complexity.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
- drivers/misc/pci_endpoint_test.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index a7d9354..7212a7d 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -259,7 +259,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 	orig_src_addr = dma_alloc_coherent(dev, size + alignment,
- 					   &orig_src_phys_addr, GFP_KERNEL);
- 	if (!orig_src_addr) {
--		dev_err(dev, "failed to allocate source buffer\n");
-+		dev_err(dev, "Failed to allocate source buffer\n");
- 		ret = false;
- 		goto err;
- 	}
-@@ -285,7 +285,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 	orig_dst_addr = dma_alloc_coherent(dev, size + alignment,
- 					   &orig_dst_phys_addr, GFP_KERNEL);
- 	if (!orig_dst_addr) {
--		dev_err(dev, "failed to allocate destination address\n");
-+		dev_err(dev, "Failed to allocate destination address\n");
- 		ret = false;
- 		goto err_orig_src_addr;
- 	}
-@@ -349,7 +349,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
- 				       GFP_KERNEL);
- 	if (!orig_addr) {
--		dev_err(dev, "failed to allocate address\n");
-+		dev_err(dev, "Failed to allocate address\n");
- 		ret = false;
- 		goto err;
- 	}
-@@ -412,7 +412,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
- 				       GFP_KERNEL);
- 	if (!orig_addr) {
--		dev_err(dev, "failed to allocate destination address\n");
-+		dev_err(dev, "Failed to allocate destination address\n");
- 		ret = false;
- 		goto err;
- 	}
-@@ -550,7 +550,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	case IRQ_TYPE_MSI:
- 		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
- 		if (irq < 0)
--			dev_err(dev, "failed to get MSI interrupts\n");
-+			dev_err(dev, "Failed to get MSI interrupts\n");
- 		test->num_irqs = irq;
- 		break;
- 	case IRQ_TYPE_MSIX:
-@@ -567,7 +567,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
- 			       IRQF_SHARED, DRV_MODULE_NAME, test);
- 	if (err) {
--		dev_err(dev, "failed to request IRQ %d\n", pdev->irq);
-+		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
- 		goto err_disable_msi;
- 	}
- 
-@@ -585,7 +585,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
- 			base = pci_ioremap_bar(pdev, bar);
- 			if (!base) {
--				dev_err(dev, "failed to read BAR%d\n", bar);
-+				dev_err(dev, "Failed to read BAR%d\n", bar);
- 				WARN_ON(bar == test_reg_bar);
- 			}
- 			test->bar[bar] = base;
-@@ -605,7 +605,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	id = ida_simple_get(&pci_endpoint_test_ida, 0, 0, GFP_KERNEL);
- 	if (id < 0) {
- 		err = id;
--		dev_err(dev, "unable to get id\n");
-+		dev_err(dev, "Unable to get id\n");
- 		goto err_iounmap;
- 	}
- 
-@@ -621,7 +621,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 
- 	err = misc_register(misc_device);
- 	if (err) {
--		dev_err(dev, "failed to register device\n");
-+		dev_err(dev, "Failed to register device\n");
- 		goto err_kfree_name;
- 	}
- 
--- 
-2.7.4
+Also IFF the hardware already is out we can quirk it in the PCI ID
+table to manually set the feature in the driver as a workaround.
