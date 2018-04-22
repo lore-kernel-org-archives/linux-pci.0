@@ -1,83 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:44674 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751440AbeDXOj0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Apr 2018 10:39:26 -0400
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Gustavo Pimentel'" <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <kishon@ti.com>, <robh+dt@kernel.org>,
-        <mark.rutland@arm.com>
-Cc: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-References: <cover.1524577064.git.gustavo.pimentel@synopsys.com> <6b2c7ec1835cf422af5703aa14c99dbad8c6ffb8.1524577064.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <6b2c7ec1835cf422af5703aa14c99dbad8c6ffb8.1524577064.git.gustavo.pimentel@synopsys.com>
-Subject: Re: [PATCH v7 6/9] PCI: dwc: Define maximum number of vectors
-Date: Tue, 24 Apr 2018 10:39:20 -0400
-Message-ID: <000001d3dbda$0a135930$1e3a0b90$@gmail.com>
+Return-Path: <SRS0=dPKR=HL=gmail.com=mattst88@kernel.org>
+Return-Path: <SRS0=dPKR=HL=gmail.com=mattst88@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180418204808.GA2352@mail.rc.ru>
+References: <CAEdQ38GUhL0R4c7ZjEZv89TmqQ0cwhnvBawxuXonSb9On=+B6A@mail.gmail.com>
+ <20180416215044.GE28657@bhelgaas-glaptop.roam.corp.google.com>
+ <CAEdQ38EdxHigQiH_k=+4enbHAutbWOE6Kc5C81ghfsC3pwELjw@mail.gmail.com>
+ <20180417194344.GK28657@bhelgaas-glaptop.roam.corp.google.com> <20180418204808.GA2352@mail.rc.ru>
+From: Matt Turner <mattst88@gmail.com>
+Date: Sun, 22 Apr 2018 13:07:38 -0700
+Message-ID: <CAEdQ38H-SGfj5rijGv2iJYWGfwnn6iWc=xot+HFMbJSu5rEd0Q@mail.gmail.com>
+Subject: Re: Some Alphas broken by f75b99d5a77d (PCI: Enforce bus address
+ limits in resource allocation)
+To: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	linux-alpha <linux-alpha@vger.kernel.org>, Richard Henderson <rth@twiddle.net>,
+	Jay Estabrook <jay.estabrook@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, April 24, 2018 9:45 AM, Gustavo Pimentel wrote:
-> 
-> Adds a callback that defines the maximum number of vectors that can be use
-> by the Root Complex.
-> 
-> Since this is a parameter associated to each SoC IP setting, makes sense
-> to
-> be configurable and easily visible to future modifications.
-> 
-> The designware IP supports a maximum of 256 vectors.
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> Acked-by: Joao Pinto <jpinto@synopsys.com>
-
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-Best regards,
-Jingoo Han
-
-
-> ---
-> Change v1->v2:
->  - Nothing changed, just to follow the patch set version.
-> Change v2->v3:
->  - Nothing changed, just to follow the patch set version.
-> Changes v3->v4:
->  - Nothing changed, just to follow the patch set version.
-> Changes v4->v5:
->  - Nothing changed, just to follow the patch set version.
-> Changes v5->v6:
->  - Nothing changed, just to follow the patch set version.
-> Changes v6->v7:
->  - Nothing changed, just to follow the patch set version.
-> 
->  drivers/pci/dwc/pcie-designware-plat.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-plat.c
-> b/drivers/pci/dwc/pcie-designware-plat.c
-> index efc315c..5937fed 100644
-> --- a/drivers/pci/dwc/pcie-designware-plat.c
-> +++ b/drivers/pci/dwc/pcie-designware-plat.c
-> @@ -48,8 +48,14 @@ static int dw_plat_pcie_host_init(struct pcie_port *pp)
->  	return 0;
->  }
-> 
-> +static void dw_plat_set_num_vectors(struct pcie_port *pp)
-> +{
-> +	pp->num_vectors = MAX_MSI_IRQS;
-> +}
-> +
->  static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
->  	.host_init = dw_plat_pcie_host_init,
-> +	.set_num_vectors = dw_plat_set_num_vectors,
+On Wed, Apr 18, 2018 at 1:48 PM, Ivan Kokshaysky
+<ink@jurassic.park.msu.ru> wrote:
+> On Tue, Apr 17, 2018 at 02:43:44PM -0500, Bjorn Helgaas wrote:
+>> On Mon, Apr 16, 2018 at 09:43:42PM -0700, Matt Turner wrote:
+>> > On Mon, Apr 16, 2018 at 2:50 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > > Hi Matt,
+>> > >
+>> > > First of all, sorry about breaking Nautilus, and thanks very much for
+>> > > tracking it down to this commit.
+>> >
+>> > It's a particularly weird case, as far as I've been able to discern :)
+>> >
+>> > > On Mon, Apr 16, 2018 at 07:33:57AM -0700, Matt Turner wrote:
+>> > >> Commit f75b99d5a77d63f20e07bd276d5a427808ac8ef6 (PCI: Enforce bus
+>> > >> address limits in resource allocation) broke Alpha systems using
+>> > >> CONFIG_ALPHA_NAUTILUS. Alpha is 64-bit, but Nautilus systems use a
+>> > >> 32-bit AMD 751/761 chipset. arch/alpha/kernel/sys_nautilus.c maps PCI
+>> > >> into the upper addresses just below 4GB.
+>> > >>
+>> > >> I can get a working kernel by ifdef'ing out the code in
+>> > >> drivers/pci/bus.c:pci_bus_alloc_resource. We can't tie
+>> > >> PCI_BUS_ADDR_T_64BIT to ALPHA_NAUTILUS without breaking generic
+>> > >> kernels.
+>> > >>
+>> > >> How can we get Nautilus working again?
+>> > >
+>> > > Can you collect a complete dmesg log, ideally both before and after
+>> > > f75b99d5a77d?  I assume the problem is that after f75b99d5a77d? we
+>> > > erroneously assign space for something above 4GB.  But if we know the
+>> > > correct host bridge apertures, we shouldn't assign space outside them,
+>> > > regardless of the PCI bus address size.
+>> >
+>> > I made a mistake in my initial report. Commit f75b99d5a77d is actually
+>> > the last *working* commit. My apologies. The next commit is
+>> > d56dbf5bab8c (PCI: Allocate 64-bit BARs above 4G when possible) and it
+>> > breaks Nautilus I've confirmed.
+>> >
+>> > Please find attached dmesgs from those two commits, from the commit
+>> > immediately before them, and another from 4.17-rc1 with my hack of #if
+>> > 0'ing out the pci_bus_alloc_from_region(..., &pci_high) code.
+>> >
+>> > Thanks for having a look!
+>>
+>> We're telling the PCI core that the host bridge MMIO aperture is the
+>> entire 64-bit address space, so when we assign BARs, some of them end
+>> up above 4GB:
+>>
+>>   pci_bus 0000:00: root bus resource [mem 0x00000000-0xffffffffffffffff]
+>>   pci 0000:00:09.0: BAR 0: assigned [mem 0x100000000-0x10000ffff 64bit]
+>>
+>> But it sounds like the MMIO aperture really ends at 0xffffffff, so
+>> that's not going to work.
+>
+> Correct... This would do as a quick fix, I think:
+>
+> diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+> index ff4f54b..477ba65 100644
+> --- a/arch/alpha/kernel/sys_nautilus.c
+> +++ b/arch/alpha/kernel/sys_nautilus.c
+> @@ -193,6 +193,8 @@ static struct resource irongate_io = {
 >  };
-> 
->  static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
-> --
-> 2.7.4
-> 
+>  static struct resource irongate_mem = {
+>         .name   = "Irongate PCI MEM",
+> +       .start  = 0,
+> +       .end    = 0xffffffff,
+>         .flags  = IORESOURCE_MEM,
+>  };
+>  static struct resource busn_resource = {
+> @@ -218,7 +220,7 @@ nautilus_init_pci(void)
+>                 return;
+>
+>         pci_add_resource(&bridge->windows, &ioport_resource);
+> -       pci_add_resource(&bridge->windows, &iomem_resource);
+> +       pci_add_resource(&bridge->windows, &irongate_mem);
+>         pci_add_resource(&bridge->windows, &busn_resource);
+>         bridge->dev.parent = NULL;
+>         bridge->sysdata = hose;
+
+Thanks. But with that I get
+
+PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+pci_bus 0000:00: root bus resource [mem 0x00000000-0xffffffff]
+pci_bus 0000:00: root bus resource [bus 00-ff]
+pci 0000:00:10.0: [Firmware Bug]: reg 0x10: invalid BAR (can't size)
+pci 0000:00:10.0: [Firmware Bug]: reg 0x14: invalid BAR (can't size)
+pci 0000:00:10.0: [Firmware Bug]: reg 0x18: invalid BAR (can't size)
+pci 0000:00:10.0: [Firmware Bug]: reg 0x1c: invalid BAR (can't size)
+pci 0000:00:10.0: legacy IDE quirk: reg 0x10: [io  0x01f0-0x01f7]
+pci 0000:00:10.0: legacy IDE quirk: reg 0x14: [io  0x03f6]
+pci 0000:00:10.0: legacy IDE quirk: reg 0x18: [io  0x0170-0x0177]
+pci 0000:00:10.0: legacy IDE quirk: reg 0x1c: [io  0x0376]
+pci 0000:00:11.0: quirk: [io  0x4000-0x403f] claimed by ali7101 ACPI
+pci 0000:00:11.0: quirk: [io  0x5000-0x501f] claimed by ali7101 SMB
+pci 0000:00:01.0: BAR 9: assigned [mem 0xc0000000-0xc2ffffff pref]
+pci 0000:00:01.0: BAR 8: assigned [mem 0xc3000000-0xc3bfffff]
+pci 0000:00:0b.0: BAR 6: assigned [mem 0xc3c00000-0xc3c3ffff pref]
+pci 0000:00:08.0: BAR 6: assigned [mem 0xc3c40000-0xc3c5ffff pref]
+pci 0000:00:09.0: BAR 0: assigned [mem 0xc3c60000-0xc3c6ffff 64bit]
+pci 0000:00:03.0: BAR 0: assigned [mem 0xc3c70000-0xc3c70fff]
+pci 0000:00:06.0: BAR 1: assigned [mem 0xc3c71000-0xc3c71fff]
+pci 0000:00:08.0: BAR 1: assigned [mem 0xc3c72000-0xc3c72fff 64bit]
+pci 0000:00:14.0: BAR 0: assigned [mem 0xc3c73000-0xc3c73fff]
+pci 0000:00:0b.0: BAR 1: assigned [mem 0xc3c74000-0xc3c743ff]
+pci 0000:00:03.0: BAR 1: assigned [io  0x8000-0x80ff]
+pci 0000:00:06.0: BAR 0: assigned [io  0x8400-0x84ff]
+pci 0000:00:08.0: BAR 0: assigned [io  0x8800-0x88ff]
+pci 0000:00:0b.0: BAR 0: assigned [io  0x8c00-0x8c7f]
+pci 0000:00:10.0: BAR 4: assigned [io  0x8c80-0x8c8f]
+pci 0000:01:05.0: BAR 0: assigned [mem 0xc0000000-0xc1ffffff pref]
+pci 0000:01:05.0: BAR 2: assigned [mem 0xc3000000-0xc37fffff]
+pci 0000:01:05.0: BAR 6: assigned [mem 0xc2000000-0xc200ffff pref]
+pci 0000:01:05.0: BAR 1: assigned [mem 0xc3800000-0xc3803fff]
+pci 0000:00:01.0: PCI bridge to [bus 01]
+pci 0000:00:01.0:   bridge window [mem 0xc3000000-0xc3bfffff]
+pci 0000:00:01.0:   bridge window [mem 0xc0000000-0xc2ffffff pref]
+
+Looks like the bridge window is overlapping with some previously assigned BARs?
+
+The result is the SCSI card failing to work:
+
+scsi host0: Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0
+        <Adaptec 29160 Ultra160 SCSI adapter>
+        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+
+scsi0: ahc_intr - referenced scb not valid during SELTO scb(0, 255)
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State while idle, at SEQADDR 0x18
+[snip endless spew]
