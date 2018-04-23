@@ -1,106 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pio-pvt-msa1.bahnhof.se ([79.136.2.40]:34266 "EHLO
-        pio-pvt-msa1.bahnhof.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750722AbeDCODQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Apr 2018 10:03:16 -0400
-Date: Tue, 3 Apr 2018 16:03:10 +0200
-From: Niklas Cassel <nks@flawful.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        cyrille.pitchen@free-electrons.com,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 06/12] PCI: designware-ep: Make dw_pcie_ep_set_bar()
- handle 64-bit BARs properly
-Message-ID: <20180403140310.GA28539@flawful.org>
-References: <20180328115018.31921-1-niklas.cassel@axis.com>
- <20180328115018.31921-7-niklas.cassel@axis.com>
- <45971780-3a46-061d-bb76-2f450401c797@ti.com>
- <20180402193703.GB23587@flawful.org>
- <20180403125312.GA18128@e107981-ln.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180403125312.GA18128@e107981-ln.cambridge.arm.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:40356 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932085AbeDWRF1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 13:05:27 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        iommu@lists.linux-foundation.org
+Cc: x86@kernel.org, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-mm@kvack.org,
+        linux-mips@linux-mips.org, sparclinux@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 10/12] arm: don't build swiotlb by default
+Date: Mon, 23 Apr 2018 19:04:17 +0200
+Message-Id: <20180423170419.20330-11-hch@lst.de>
+In-Reply-To: <20180423170419.20330-1-hch@lst.de>
+References: <20180423170419.20330-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 03, 2018 at 01:53:12PM +0100, Lorenzo Pieralisi wrote:
-> On Mon, Apr 02, 2018 at 09:37:03PM +0200, Niklas Cassel wrote:
-> > On Thu, Mar 29, 2018 at 03:17:11PM +0530, Kishon Vijay Abraham I wrote:
-> > > Hi,
-> > > 
-> > > On Wednesday 28 March 2018 05:20 PM, Niklas Cassel wrote:
-> > > > Since a 64-bit BAR consists of a BAR pair, we need to write to both
-> > > > BARs in the BAR pair to setup the BAR properly.
-> > > > 
-> > > > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> > > > ---
-> > > >  drivers/pci/dwc/pcie-designware-ep.c | 11 +++++++++--
-> > > >  1 file changed, 9 insertions(+), 2 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> > > > index 5a0bb53c795c..571b90f88d84 100644
-> > > > --- a/drivers/pci/dwc/pcie-designware-ep.c
-> > > > +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> > > > @@ -138,8 +138,15 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
-> > > >  		return ret;
-> > > >  
-> > > >  	dw_pcie_dbi_ro_wr_en(pci);
-> > > > -	dw_pcie_writel_dbi2(pci, reg, size - 1);
-> > > > -	dw_pcie_writel_dbi(pci, reg, flags);
-> > > > +	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
-> > > > +		dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
-> > > > +		dw_pcie_writel_dbi(pci, reg, flags);
-> > > > +		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
-> > > > +		dw_pcie_writel_dbi(pci, reg + 4, 0);
-> > > > +	} else {
-> > > > +		dw_pcie_writel_dbi2(pci, reg, size - 1);
-> > > > +		dw_pcie_writel_dbi(pci, reg, flags);
-> > > > +	}
-> > > 
-> > > 
-> > > I think this should work too?
-> > > 	dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
-> > > 	dw_pcie_writel_dbi(pci, reg, flags);
-> > > 
-> > > 	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
-> > > 		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
-> > > 		dw_pcie_writel_dbi(pci, reg + 4, 0);
-> > > 	}
-> > > 
-> > 
-> > Hello Kishon,
-> > 
-> > I agree, your suggestion is more neat.
-> > 
-> > 
-> > Kishon, please tell me if you insist that the long if-statement
-> > in pci_epc_set_bar() should be split, since there are 5 different
-> > conditions. Because imho, having 5 succeeding if-statements isn't
-> > clearer than having 1 long if-statement.
-> > 
-> > If Kishon agrees with me, then the review comment in this mail
-> > seems to be the only review comment.
-> > And in that case, perhaps Lorenzo wouldn't mind fixing this up.
-> > Or perhaps Lorenzo prefers if I reroll the whole patch series?
-> 
-> I updated it myself in my pci/endpoint branch, please have a look, I
-> can't guarantee we can merge this for this cycle though, I will ask
-> Bjorn; apologies I could not be online for a while.
+swiotlb is only used as a library of helper for xen-swiotlb if Xen support
+is enabled on arm, so don't build it by default.
 
-Hello Lorenzo,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ arch/arm/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-your pci/endpoint branch looks good.
-
-There is no rush, merge it whenever you think is best.
-
-Have in mind that there is EP support @ patchwork for Rockchip
-and for pcie-designware-plat, so make sure to juggle all the
-branches with care :)
-
-Kind regards,
-Niklas
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index aa1c187d756d..90b81a3a28a7 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -1774,7 +1774,7 @@ config SECCOMP
+ 	  defined by each seccomp mode.
+ 
+ config SWIOTLB
+-	def_bool y
++	bool
+ 
+ config PARAVIRT
+ 	bool "Enable paravirtualization code"
+@@ -1807,6 +1807,7 @@ config XEN
+ 	depends on MMU
+ 	select ARCH_DMA_ADDR_T_64BIT
+ 	select ARM_PSCI
++	select SWIOTLB
+ 	select SWIOTLB_XEN
+ 	select PARAVIRT
+ 	help
+-- 
+2.17.0
