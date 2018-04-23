@@ -1,150 +1,340 @@
-Return-Path: <SRS0=hrbt=HD=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=hrbt=HD=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH v13 6/6] PCI/DPC: Do not do recovery for hotplug enabled
- system
-To: Keith Busch <keith.busch@intel.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Philippe Ombredanne <pombredanne@nexb.com>,
- Thomas Gleixner <tglx@linutronix.de>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Kate Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>,
- Wei Zhang <wzhang@fb.com>, Timur Tabi <timur@codeaurora.org>,
- Alex Williamson <alex.williamson@redhat.com>
-References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
- <1523284914-2037-7-git-send-email-poza@codeaurora.org>
- <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
- <13efe2e8-74c8-acb4-ec58-f79b14a1f182@codeaurora.org>
- <20180412140648.GD145698@bhelgaas-glaptop.roam.corp.google.com>
- <ca7e5285-2e88-e130-6402-a271bb92a81e@codeaurora.org>
- <20180412143954.GB4810@localhost.localdomain>
- <20180412150231.GD4810@localhost.localdomain>
- <ea977780-6f90-af5a-442f-575536038307@codeaurora.org>
- <20180412170911.GA6424@localhost.localdomain>
- <fa167b21-f70d-a220-5671-5ad66a0f72c0@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <cced24b5-c0bd-138a-0304-c87cac2ec226@codeaurora.org>
-Date: Sat, 14 Apr 2018 11:53:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <fa167b21-f70d-a220-5671-5ad66a0f72c0@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:39846 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755643AbeDWRFF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 13:05:05 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        iommu@lists.linux-foundation.org
+Cc: x86@kernel.org, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-mm@kvack.org,
+        linux-mips@linux-mips.org, sparclinux@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 06/12] dma-mapping: move the NEED_DMA_MAP_STATE config symbol to lib/Kconfig
+Date: Mon, 23 Apr 2018 19:04:13 +0200
+Message-Id: <20180423170419.20330-7-hch@lst.de>
+In-Reply-To: <20180423170419.20330-1-hch@lst.de>
+References: <20180423170419.20330-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith, Bjorn;
+This way we have one central definition of it, and user can select it as
+needed.  Note that we now also always select it when CONFIG_DMA_API_DEBUG
+is select, which fixes some incorrect checks in a few network drivers.
 
-On 4/12/2018 1:41 PM, Sinan Kaya wrote:
-> On 4/12/2018 1:09 PM, Keith Busch wrote:
->> On Thu, Apr 12, 2018 at 12:27:20PM -0400, Sinan Kaya wrote:
->>> On 4/12/2018 11:02 AM, Keith Busch wrote:
->>>>
->>>> Also, I thought the plan was to keep hotplug and non-hotplug the same,
->>>> except for the very end: if not a hotplug bridge, initiate the rescan
->>>> automatically after releasing from containment, otherwise let pciehp
->>>> handle it when the link reactivates.
->>>>
->>>
->>> Hmm...
->>>
->>> AER driver doesn't do stop and rescan approach for fatal errors. AER driver
->>> makes an error callback followed by secondary bus reset and finally driver
->>> the resume callback on the endpoint only if link recovery is successful.
->>> Otherwise, AER driver bails out with recovery unsuccessful message.
->>
->> I'm not sure if that's necessarily true. People have reported AER
->> handling triggers PCIe hotplug events, and creates some interesting race
->> conditions:
-> 
-> By reading the code, I don't see a stop and rescan in the AER error recovery
-> path.
-> 
-> As both logs indicate, stop and rescan is initiated in response to link down
-> and link up interrupts triggered by the secondary bus reset. 
-> The SW entity handling these is not AER driver. It is the hotplug driver
-> running asynchronous to the AER driver.
-> 
-> AER driver should have tried a slot reset before attempting to do a secondary
-> bus reset.
-> 
-> /**
->  * pci_reset_slot - reset a PCI slot
->  * @slot: PCI slot to reset
->  *
->  * A PCI bus may host multiple slots, each slot may support a reset mechanism
->  * independent of other slots.  For instance, some slots may support slot power
->  * control.  In the case of a 1:1 bus to slot architecture, this function may
->  * wrap the bus reset to avoid spurious slot related events such as hotplug.
->  * Generally a slot reset should be attempted before a bus reset.  All of the
->  * function of the slot and any subordinate buses behind the slot are reset
->  * through this function.  PCI config space of all devices in the slot and
->  * behind the slot is saved before and restored after reset.
->  *
->  * Return 0 on success, non-zero on error.
->  */
-> int pci_reset_slot(struct pci_slot *slot)
-> 
-> Slot reset is there to mask hotplug interrupts before the reset and unmask them
-> after reset.
-> 
->>
->> https://marc.info/?l=linux-pci&m=152336615707640&w=2
->>
->> https://www.spinics.net/lists/linux-pci/msg70614.html
->>
->>> Why do we need an additional rescan in the DPC driver if the link is up
->>> and driver resumes operation?
->>
->> I thought the plan was to have DPC always go through the removal path
->> to ensure all devices are properly configured when containment is
->> released. In order to reconfigure those, you'll need to initiate the
->> rescan from somewhere.
->>
-> 
-> This is where the contradiction is. 
-> 
-> Bjorn is asking for a unified error handling for both AER and DPC.
-> 
-> Current AER error recovery framework is error callback + secondary
-> bus reset + resume callback.
-> 
-> How does this stop + rescan model fit?
-> 
-> Do we want to change the error recovery framework? I suppose this will 
-> become a bigger conversation as there are more customers of this.
-> 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+---
+ arch/alpha/Kconfig          | 4 +---
+ arch/arm/Kconfig            | 4 +---
+ arch/arm64/Kconfig          | 4 +---
+ arch/ia64/Kconfig           | 4 +---
+ arch/mips/Kconfig           | 3 ---
+ arch/parisc/Kconfig         | 4 +---
+ arch/s390/Kconfig           | 4 +---
+ arch/sh/Kconfig             | 4 +---
+ arch/sparc/Kconfig          | 4 +---
+ arch/unicore32/Kconfig      | 4 +---
+ arch/x86/Kconfig            | 6 ++----
+ drivers/iommu/Kconfig       | 1 +
+ include/linux/dma-mapping.h | 2 +-
+ lib/Kconfig                 | 3 +++
+ lib/Kconfig.debug           | 1 +
+ 15 files changed, 17 insertions(+), 35 deletions(-)
 
-I also want to highlight that the PCI Error recovery sequence is well
-documented here.
-
-https://www.kernel.org/doc/Documentation/PCI/pci-error-recovery.txt
-
-We don't really have to guess what Linux does. 
-
-IMO, the hotplug issues Keith is seeing are orthogonal and needs to be
-addressed independent of this series by following the pci slot reset
-procedure.
-
-Hotplug driver handles link up/down events due to insertion/removal.
-Hotplug driver is expected to do the re-enumeration.
-
-I don't understand why we need to do another re-enumeration if system
-observes a PCIe error handled by the AER/DPC driver. 
-
-These two are independent events.
-
-PCIe error recovery framework does the reset callback + SBR + resume
-behavior today.
-
-Bjorn,
-
-You indicated that you want to unify the AER and DPC behavior. Let's
-settle on what we want to do one more time. We have been going forth
-and back on the direction.
-
-We are on V13. I hope we won't hit V20 :)
-
-Sinan
-
+diff --git a/arch/alpha/Kconfig b/arch/alpha/Kconfig
+index 8e6a67ecf069..1fd9645b0c67 100644
+--- a/arch/alpha/Kconfig
++++ b/arch/alpha/Kconfig
+@@ -10,6 +10,7 @@ config ALPHA
+ 	select HAVE_OPROFILE
+ 	select HAVE_PCSPKR_PLATFORM
+ 	select HAVE_PERF_EVENTS
++	select NEED_DMA_MAP_STATE
+ 	select NEED_SG_DMA_LENGTH
+ 	select VIRT_TO_BUS
+ 	select GENERIC_IRQ_PROBE
+@@ -68,9 +69,6 @@ config ZONE_DMA
+ config ARCH_DMA_ADDR_T_64BIT
+ 	def_bool y
+ 
+-config NEED_DMA_MAP_STATE
+-       def_bool y
+-
+ config GENERIC_ISA_DMA
+ 	bool
+ 	default y
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 602c8320282f..aa1c187d756d 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -96,6 +96,7 @@ config ARM
+ 	select HAVE_VIRT_CPU_ACCOUNTING_GEN
+ 	select IRQ_FORCED_THREADING
+ 	select MODULES_USE_ELF_REL
++	select NEED_DMA_MAP_STATE
+ 	select NO_BOOTMEM
+ 	select OF_EARLY_FLATTREE if OF
+ 	select OF_RESERVED_MEM if OF
+@@ -221,9 +222,6 @@ config ARCH_MAY_HAVE_PC_FDC
+ config ZONE_DMA
+ 	bool
+ 
+-config NEED_DMA_MAP_STATE
+-       def_bool y
+-
+ config ARCH_SUPPORTS_UPROBES
+ 	def_bool y
+ 
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 3b441c5587f1..940adfb9a2bc 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -133,6 +133,7 @@ config ARM64
+ 	select IRQ_FORCED_THREADING
+ 	select MODULES_USE_ELF_RELA
+ 	select MULTI_IRQ_HANDLER
++	select NEED_DMA_MAP_STATE
+ 	select NEED_SG_DMA_LENGTH
+ 	select NO_BOOTMEM
+ 	select OF
+@@ -241,9 +242,6 @@ config HAVE_GENERIC_GUP
+ config ARCH_DMA_ADDR_T_64BIT
+ 	def_bool y
+ 
+-config NEED_DMA_MAP_STATE
+-	def_bool y
+-
+ config SMP
+ 	def_bool y
+ 
+diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
+index 333917676f7f..0e42731adaf1 100644
+--- a/arch/ia64/Kconfig
++++ b/arch/ia64/Kconfig
+@@ -54,6 +54,7 @@ config IA64
+ 	select MODULES_USE_ELF_RELA
+ 	select ARCH_USE_CMPXCHG_LOCKREF
+ 	select HAVE_ARCH_AUDITSYSCALL
++	select NEED_DMA_MAP_STATE
+ 	select NEED_SG_DMA_LENGTH
+ 	default y
+ 	help
+@@ -82,9 +83,6 @@ config MMU
+ config ARCH_DMA_ADDR_T_64BIT
+ 	def_bool y
+ 
+-config NEED_DMA_MAP_STATE
+-	def_bool y
+-
+ config SWIOTLB
+        bool
+ 
+diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+index 225c95da23ce..47d72c64d687 100644
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -1122,9 +1122,6 @@ config DMA_NONCOHERENT
+ 	bool
+ 	select NEED_DMA_MAP_STATE
+ 
+-config NEED_DMA_MAP_STATE
+-	bool
+-
+ config SYS_HAS_EARLY_PRINTK
+ 	bool
+ 
+diff --git a/arch/parisc/Kconfig b/arch/parisc/Kconfig
+index 89caea87556e..4d8f64d48597 100644
+--- a/arch/parisc/Kconfig
++++ b/arch/parisc/Kconfig
+@@ -51,6 +51,7 @@ config PARISC
+ 	select GENERIC_CLOCKEVENTS
+ 	select ARCH_NO_COHERENT_DMA_MMAP
+ 	select CPU_NO_EFFICIENT_FFS
++	select NEED_DMA_MAP_STATE
+ 	select NEED_SG_DMA_LENGTH
+ 
+ 	help
+@@ -112,9 +113,6 @@ config PM
+ config STACKTRACE_SUPPORT
+ 	def_bool y
+ 
+-config NEED_DMA_MAP_STATE
+-	def_bool y
+-
+ config ISA_DMA_API
+ 	bool
+ 
+diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
+index f80c6b983159..89a007672f70 100644
+--- a/arch/s390/Kconfig
++++ b/arch/s390/Kconfig
+@@ -711,6 +711,7 @@ menuconfig PCI
+ 	select PCI_MSI
+ 	select IOMMU_HELPER
+ 	select IOMMU_SUPPORT
++	select NEED_DMA_MAP_STATE
+ 	select NEED_SG_DMA_LENGTH
+ 
+ 	help
+@@ -736,9 +737,6 @@ config PCI_DOMAINS
+ config HAS_IOMEM
+ 	def_bool PCI
+ 
+-config NEED_DMA_MAP_STATE
+-	def_bool PCI
+-
+ config CHSC_SCH
+ 	def_tristate m
+ 	prompt "Support for CHSC subchannels"
+diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+index e127e0cbe30f..9417f70e008e 100644
+--- a/arch/sh/Kconfig
++++ b/arch/sh/Kconfig
+@@ -50,6 +50,7 @@ config SUPERH
+ 	select HAVE_ARCH_AUDITSYSCALL
+ 	select HAVE_FUTEX_CMPXCHG if FUTEX
+ 	select HAVE_NMI
++	select NEED_DMA_MAP_STATE
+ 	select NEED_SG_DMA_LENGTH
+ 
+ 	help
+@@ -162,9 +163,6 @@ config DMA_COHERENT
+ config DMA_NONCOHERENT
+ 	def_bool !DMA_COHERENT
+ 
+-config NEED_DMA_MAP_STATE
+-	def_bool DMA_NONCOHERENT
+-
+ config PGTABLE_LEVELS
+ 	default 3 if X2TLB
+ 	default 2
+diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
+index e79badc8a682..be770b511ddd 100644
+--- a/arch/sparc/Kconfig
++++ b/arch/sparc/Kconfig
+@@ -44,6 +44,7 @@ config SPARC
+ 	select ARCH_HAS_SG_CHAIN
+ 	select CPU_NO_EFFICIENT_FFS
+ 	select LOCKDEP_SMALL if LOCKDEP
++	select NEED_DMA_MAP_STATE
+ 	select NEED_SG_DMA_LENGTH
+ 
+ config SPARC32
+@@ -144,9 +145,6 @@ config ZONE_DMA
+ 	bool
+ 	default y if SPARC32
+ 
+-config NEED_DMA_MAP_STATE
+-	def_bool y
+-
+ config GENERIC_ISA_DMA
+ 	bool
+ 	default y if SPARC32
+diff --git a/arch/unicore32/Kconfig b/arch/unicore32/Kconfig
+index 462e59a7ae78..82195714d20b 100644
+--- a/arch/unicore32/Kconfig
++++ b/arch/unicore32/Kconfig
+@@ -19,6 +19,7 @@ config UNICORE32
+ 	select ARCH_WANT_FRAME_POINTERS
+ 	select GENERIC_IOMAP
+ 	select MODULES_USE_ELF_REL
++	select NEED_DMA_MAP_STATE
+ 	help
+ 	  UniCore-32 is 32-bit Instruction Set Architecture,
+ 	  including a series of low-power-consumption RISC chip
+@@ -61,9 +62,6 @@ config ARCH_MAY_HAVE_PC_FDC
+ config ZONE_DMA
+ 	def_bool y
+ 
+-config NEED_DMA_MAP_STATE
+-       def_bool y
+-
+ source "init/Kconfig"
+ 
+ source "kernel/Kconfig.freezer"
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index ead3babe4e79..a98a9b14fda2 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -28,6 +28,7 @@ config X86_64
+ 	select ARCH_USE_CMPXCHG_LOCKREF
+ 	select HAVE_ARCH_SOFT_DIRTY
+ 	select MODULES_USE_ELF_RELA
++	select NEED_DMA_MAP_STATE
+ 	select X86_DEV_DMA_OPS
+ 	select ARCH_HAS_SYSCALL_WRAPPER
+ 
+@@ -236,10 +237,6 @@ config ARCH_MMAP_RND_COMPAT_BITS_MAX
+ config SBUS
+ 	bool
+ 
+-config NEED_DMA_MAP_STATE
+-	def_bool y
+-	depends on X86_64 || INTEL_IOMMU || DMA_API_DEBUG || SWIOTLB
+-
+ config GENERIC_ISA_DMA
+ 	def_bool y
+ 	depends on ISA_DMA_API
+@@ -922,6 +919,7 @@ config CALGARY_IOMMU_ENABLED_BY_DEFAULT
+ # need this always selected by IOMMU for the VIA workaround
+ config SWIOTLB
+ 	def_bool y if X86_64
++	select NEED_DMA_MAP_STATE
+ 	---help---
+ 	  Support for software bounce buffers used on x86-64 systems
+ 	  which don't have a hardware IOMMU. Using this PCI devices
+diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+index df171cb85822..5b714a062fa7 100644
+--- a/drivers/iommu/Kconfig
++++ b/drivers/iommu/Kconfig
+@@ -146,6 +146,7 @@ config INTEL_IOMMU
+ 	select DMA_DIRECT_OPS
+ 	select IOMMU_API
+ 	select IOMMU_IOVA
++	select NEED_DMA_MAP_STATE
+ 	select DMAR_TABLE
+ 	help
+ 	  DMA remapping (DMAR) devices support enables independent address
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index f8ab1c0f589e..14269d25498b 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -839,7 +839,7 @@ static inline int dma_mmap_wc(struct device *dev,
+ #define dma_mmap_writecombine dma_mmap_wc
+ #endif
+ 
+-#if defined(CONFIG_NEED_DMA_MAP_STATE) || defined(CONFIG_DMA_API_DEBUG)
++#ifdef CONFIG_NEED_DMA_MAP_STATE
+ #define DEFINE_DMA_UNMAP_ADDR(ADDR_NAME)        dma_addr_t ADDR_NAME
+ #define DEFINE_DMA_UNMAP_LEN(LEN_NAME)          __u32 LEN_NAME
+ #define dma_unmap_addr(PTR, ADDR_NAME)           ((PTR)->ADDR_NAME)
+diff --git a/lib/Kconfig b/lib/Kconfig
+index aeb7fae16bc2..ce9fa962d59b 100644
+--- a/lib/Kconfig
++++ b/lib/Kconfig
+@@ -432,6 +432,9 @@ config SGL_ALLOC
+ config NEED_SG_DMA_LENGTH
+ 	bool
+ 
++config NEED_DMA_MAP_STATE
++	bool
++
+ config IOMMU_HELPER
+ 	bool
+ 
+diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
+index c40c7b734cd1..685ed2dd4384 100644
+--- a/lib/Kconfig.debug
++++ b/lib/Kconfig.debug
+@@ -1635,6 +1635,7 @@ config PROVIDE_OHCI1394_DMA_INIT
+ config DMA_API_DEBUG
+ 	bool "Enable debugging of DMA-API usage"
+ 	depends on HAVE_DMA_API_DEBUG
++	select NEED_DMA_MAP_STATE
+ 	help
+ 	  Enable this option to debug the use of the DMA API by device drivers.
+ 	  With this option you will be able to detect common bugs in device
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.17.0
