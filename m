@@ -1,103 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 11 Apr 2018 15:16:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Jake Oshins <jakeo@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v6] PCI: hv: Make sure the bus domain is really unique
-Message-ID: <20180411201634.GB105104@bhelgaas-glaptop.roam.corp.google.com>
-References: <9496B0D1-CC19-42F4-BE50-DEA4EFC8D615@microsoft.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9496B0D1-CC19-42F4-BE50-DEA4EFC8D615@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:40236 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932257AbeDWRFW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 13:05:22 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        iommu@lists.linux-foundation.org
+Cc: x86@kernel.org, linux-block@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-mm@kvack.org,
+        linux-mips@linux-mips.org, sparclinux@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 09/12] PCI: remove CONFIG_PCI_BUS_ADDR_T_64BIT
+Date: Mon, 23 Apr 2018 19:04:16 +0200
+Message-Id: <20180423170419.20330-10-hch@lst.de>
+In-Reply-To: <20180423170419.20330-1-hch@lst.de>
+References: <20180423170419.20330-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I would make the subject:
+This symbol is now always identical to CONFIG_ARCH_DMA_ADDR_T_64BIT, so
+remove it.
 
-  Revert "PCI: hv: Use device serial number as PCI domain"
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/Kconfig | 4 ----
+ drivers/pci/bus.c   | 4 ++--
+ include/linux/pci.h | 2 +-
+ 3 files changed, 3 insertions(+), 7 deletions(-)
 
-so it matches the original commit.  Otherwise you really need quite a
-lot of driver internal knowledge to connect them.
-
-On Wed, Apr 11, 2018 at 12:36:25AM +0000, Sridhar Pitchai wrote:
-> When Linux runs as a guest VM in Hyper-V and Hyper-V adds the virtual
-> PCI bus to the guest, Hyper-V always provides unique PCI domain.
-> 
-> commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI domain")
-> overrode unique domain with the serial number of the first device added
-> to the virtual PCI bus. The reason for that patch is to have a consistent
-> and short name for the device. But commit 4a9b0933bdfc ("PCI: hv: Use
-> device serial number as PCI domain") will not guarantee unique domain id.
-
-Possible alternate text:
-
-  The reason for that patch was to have a consistent and short name
-  for the device, but Hyper-V doesn't provide unique serial numbers
-  (in spite of the code comment claiming that it does).  Using
-  non-unique serial numbers as domain IDs leads to duplicate device
-  addresses, which causes PCI bus registration to fail.
-  
-> For example, if the serial number of the device is 0 and there exists a
-> PCI bus with domain 0 already, this will cause the PCI bus registration
-> with kernel fails.
-> 
-> commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI
-> domain") need to be reverted.
-
-I think the above sentence is redundant and could be removed.
-
-> Revert commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI
-> domain") so we can reliably support multiple devices being assigned to
-> a guest.
-> 
-> Fixes: 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI domain")
-> Signed-off-by: Sridhar Pitchai <sridhar.pitchai@microsoft.com>
-> Cc: stable@vger.kernel.org
-
-Regardless of what you do with the feedback above,
-
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Thanks a lot for persisting with this!
-
-> ---
-> Changes in v6:
-> * fix the commit comment. [Lorenzo Pieralisi, Bjorn Helgaas]
-> ---
->  drivers/pci/host/pci-hyperv.c | 11 -----------
->  1 file changed, 11 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index 2faf38eab785..ac67e56e451a 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -1518,17 +1518,6 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
->  	get_pcichild(hpdev, hv_pcidev_ref_childlist);
->  	spin_lock_irqsave(&hbus->device_list_lock, flags);
->  
-> -	/*
-> -	 * When a device is being added to the bus, we set the PCI domain
-> -	 * number to be the device serial number, which is non-zero and
-> -	 * unique on the same VM.  The serial numbers start with 1, and
-> -	 * increase by 1 for each device.  So device names including this
-> -	 * can have shorter names than based on the bus instance UUID.
-> -	 * Only the first device serial number is used for domain, so the
-> -	 * domain number will not change after the first device is added.
-> -	 */
-> -	if (list_empty(&hbus->children))
-> -		hbus->sysdata.domain = desc->ser;
->  	list_add_tail(&hpdev->list_entry, &hbus->children);
->  	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
->  	return hpdev;
-> -- 
-> 2.14.1
-> 
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 34b56a8f8480..29a487f31dae 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -5,10 +5,6 @@
+ 
+ source "drivers/pci/pcie/Kconfig"
+ 
+-config PCI_BUS_ADDR_T_64BIT
+-	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
+-	depends on PCI
+-
+ config PCI_MSI
+ 	bool "Message Signaled Interrupts (MSI and MSI-X)"
+ 	depends on PCI
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index bc2ded4c451f..35b7fc87eac5 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -120,7 +120,7 @@ int devm_request_pci_bus_resources(struct device *dev,
+ EXPORT_SYMBOL_GPL(devm_request_pci_bus_resources);
+ 
+ static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
+-#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
++#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+ static struct pci_bus_region pci_64_bit = {0,
+ 				(pci_bus_addr_t) 0xffffffffffffffffULL};
+ static struct pci_bus_region pci_high = {(pci_bus_addr_t) 0x100000000ULL,
+@@ -230,7 +230,7 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 					  resource_size_t),
+ 		void *alignf_data)
+ {
+-#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
++#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+ 	int rc;
+ 
+ 	if (res->flags & IORESOURCE_MEM_64) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 73178a2fcee0..55371cb827ad 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -670,7 +670,7 @@ int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
+ int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
+ 		  int reg, int len, u32 val);
+ 
+-#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
++#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+ typedef u64 pci_bus_addr_t;
+ #else
+ typedef u32 pci_bus_addr_t;
+-- 
+2.17.0
