@@ -1,71 +1,184 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:55395 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753786AbeDMMsY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2018 08:48:24 -0400
-Date: Fri, 13 Apr 2018 14:48:19 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Marek Vasut <marek.vasut@gmail.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Dien Pham <dien.pham.ry@rvc.renesas.com>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
-Message-ID: <20180413124819.tw5436lolpn5eqhw@verge.net.au>
-References: <CAMuHMdVGBkEY2kE7auUwXBn2QSfX+yhxkFH--4tTw+XJ3WCk0w@mail.gmail.com>
- <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com>
- <20180409114159.azxeehjkeuinwrwe@verge.net.au>
- <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
- <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
- <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
- <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
- <a5a0d78d-627b-6277-ee75-44e204cbd390@gmail.com>
- <CAMuHMdX9d29JYVDsghd3Koyg8Aeuv0D2Fx5Lnn0bBZSb9RntDw@mail.gmail.com>
- <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v14 5/9] PCI/DPC: Unify and plumb error handling into DPC
+Date: Mon, 23 Apr 2018 11:23:09 -0400
+Message-Id: <1524496993-29799-6-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
+References: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 10, 2018 at 06:17:04PM +0200, Marek Vasut wrote:
-> On 04/10/2018 05:28 PM, Geert Uytterhoeven wrote:
+Current DPC driver does not do recovery, e.g. calling end-point's driver's
+callbacks, which sanitize the sw.
 
-...
+DPC driver implements link_reset callback, and calls pci_do_recovery().
 
-> >>> rcar_pcie_get_resources() is called while the device is
-> >>> runtime-enabled/resumed,
-> >>> pci_free_resource_list() is called while the device is runtime-disabled.
-> 
-> rcar_pcie_get_resources() is NOT a pair function for
-> pci_free_resource_list() . rcar_pcie_parse_request_of_pci_ranges() is a
-> pair function for pci_free_resource_list().
-> 
-> rcar_pcie_parse_request_of_pci_ranges() calls
-> of_pci_get_host_bridge_resources() internally, so every single function
-> called after successful call of rcar_pcie_parse_request_of_pci_ranges()
-> must call pci_free_resource_list().
-> 
-> Both of_pci_get_host_bridge_resources() and pci_free_resource_list() are
-> called with runtime PM disabled.
-> 
-> The naming of the functions is confusing though.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-Hi,
-
-thanks everyone for their efforts in preparing/reviewing this patch.
-
-It seems there are some differences of opinion on how best to handle the
-error paths but unlike earlier versions this one seems correct to me. If
-that turns out to be false we can address it. But I don't think its likely
-things will be enhanced by continuing this review.
-
-Lorenzo, please consider taking this patch in its current form.
-
-Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 98aeec4..d02e029 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -19,6 +19,7 @@
+ #include <linux/aer.h>
+ #include <linux/pcieport_if.h>
+ #include "portdrv.h"
++#include "./../pci.h"
+ 
+ struct aer_broadcast_data {
+ 	enum pci_channel_state state;
+@@ -179,11 +180,12 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+-static pci_ers_result_t reset_link(struct pci_dev *dev)
++static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+ {
+ 	struct pci_dev *udev;
+ 	pci_ers_result_t status;
+ 	struct pcie_port_service_driver *driver = NULL;
++	u32 service;
+ 
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+ 		/* Reset this port for all subordinates */
+@@ -193,8 +195,12 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ 		udev = dev->bus->self;
+ 	}
+ 
+-	/* Use the aer driver of the component firstly */
+-	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
++	if (severity == DPC_FATAL)
++		service = PCIE_PORT_SERVICE_DPC;
++	else
++		service = PCIE_PORT_SERVICE_AER;
++
++	driver = pcie_port_find_service(udev, service);
+ 
+ 	if (driver && driver->reset_link) {
+ 		status = driver->reset_link(udev);
+@@ -281,7 +287,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
+ 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+ 	enum pci_channel_state state;
+ 
+-	if (severity == AER_FATAL)
++	if ((severity == AER_FATAL) ||
++	    (severity == DPC_FATAL))
+ 		state = pci_channel_io_frozen;
+ 	else
+ 		state = pci_channel_io_normal;
+@@ -291,8 +298,9 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
+ 			"error_detected",
+ 			report_error_detected);
+ 
+-	if (severity == AER_FATAL) {
+-		result = reset_link(dev);
++	if ((severity == AER_FATAL) ||
++	    (severity == DPC_FATAL)) {
++		result = reset_link(dev, severity);
+ 		if (result != PCI_ERS_RESULT_RECOVERED)
+ 			goto failed;
+ 	}
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 38e40c6..ad02298 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -13,6 +13,7 @@
+ #include <linux/pcieport_if.h>
+ #include "../pci.h"
+ #include "aer/aerdrv.h"
++#include "portdrv.h"
+ 
+ struct dpc_dev {
+ 	struct pcie_device	*dev;
+@@ -82,12 +83,25 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ 		dev_warn(dev, "Link state not disabled for DPC event\n");
+ }
+ 
+-static void dpc_work(struct work_struct *work)
++/**
++ * dpc_reset_link - reset link DPC routine
++ * @pdev: pointer to Root Port's pci_dev data structure
++ *
++ * Invoked by Port Bus driver when performing link reset at Root Port.
++ */
++static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+ {
+-	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+-	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+ 	struct pci_bus *parent = pdev->subordinate;
+-	u16 cap = dpc->cap_pos, ctl;
++	struct pci_dev *dev, *temp;
++	struct dpc_dev *dpc;
++	struct pcie_device *pciedev;
++	struct device *devdpc;
++	u16 cap, ctl;
++
++	devdpc = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_DPC);
++	pciedev = to_pcie_device(devdpc);
++	dpc = get_service_data(pciedev);
++	cap = dpc->cap_pos;
+ 
+ 	pci_lock_rescan_remove();
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+@@ -104,7 +118,7 @@ static void dpc_work(struct work_struct *work)
+ 
+ 	dpc_wait_link_inactive(dpc);
+ 	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
+-		return;
++		return PCI_ERS_RESULT_DISCONNECT;
+ 	if (dpc->rp_extensions && dpc->rp_pio_status) {
+ 		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
+ 				       dpc->rp_pio_status);
+@@ -117,8 +131,18 @@ static void dpc_work(struct work_struct *work)
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+ 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+ 			      ctl | PCI_EXP_DPC_CTL_INT_EN);
++
++	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
++static void dpc_work(struct work_struct *work)
++{
++	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
++	struct pci_dev *pdev = dpc->dev->port;
++
++	/* From DPC point of view error is always FATAL. */
++	pcie_do_recovery(pdev, DPC_FATAL);
++}
+ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
+ {
+ 	struct device *dev = &dpc->dev->device;
+@@ -297,6 +321,7 @@ static struct pcie_port_service_driver dpcdriver = {
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
++	.reset_link     = dpc_reset_link,
+ };
+ 
+ static int __init dpc_service_init(void)
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 8f87bbe..9cfd0b8 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -15,6 +15,8 @@
+ #define AER_FATAL			1
+ #define AER_CORRECTABLE			2
+ 
++#define DPC_FATAL			4
++
+ struct pci_dev;
+ 
+ struct aer_header_log_regs {
+-- 
+2.7.4
