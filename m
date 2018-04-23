@@ -1,55 +1,88 @@
-Return-Path: <SRS0=pQir=HR=gmail.com=mr.nuke.me@kernel.org>
-Return-Path: <SRS0=pQir=HR=gmail.com=mr.nuke.me@kernel.org>
-Subject: Re: [PATCH RESEND] PCI/AER: Use a common function to print AER error
- bits
-From: "Alex G." <mr.nuke.me@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
- gregkh@linuxfoundation.org, fred@fredlawl.com, linux-kernel@vger.kernel.org,
- alex_gagniuc@dellteam.com, austin_bolen@dell.com, keith.busch@intel.com
-References: <20180417170943.1767-1-mr.nuke.me@gmail.com>
- <20180427224337.GC73256@bhelgaas-glaptop.roam.corp.google.com>
- <12343e44-2d8a-51e1-a0be-e6804e9bd8a3@gmail.com>
-Message-ID: <220bb125-b933-abf3-7b30-63446634e8d6@gmail.com>
-Date: Sat, 28 Apr 2018 12:07:48 -0500
+Return-Path: <SRS0=4vff=HM=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=4vff=HM=redhat.com=alex.williamson@kernel.org>
+Date: Mon, 23 Apr 2018 13:10:44 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ sulrich@codeaurora.org, timur@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Mike
+ Marciniszyn <mike.marciniszyn@intel.com>, Dennis Dalessandro
+ <dennis.dalessandro@intel.com>, Doug Ledford <dledford@redhat.com>, "open
+ list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>, open list
+ <linux-kernel@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>,
+ Rajat Jain <rajatja@google.com>
+Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
+Message-ID: <20180423131044.53471670@w520.home>
+In-Reply-To: <10d9cf68-29ed-d205-a25f-b8dade53cdd8@codeaurora.org>
+References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+	<20180419202632.GE14063@ziepe.ca>
+	<20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
+	<290e9530-dcde-9c10-7ae0-59ac4c509db4@codeaurora.org>
+	<20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
+	<20180420090420.03fb1e6c@w520.home>
+	<10d9cf68-29ed-d205-a25f-b8dade53cdd8@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <12343e44-2d8a-51e1-a0be-e6804e9bd8a3@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/28/2018 11:46 AM, Alex G. wrote:
-> On 04/27/2018 05:43 PM, Bjorn Helgaas wrote:
->> On Tue, Apr 17, 2018 at 12:09:43PM -0500, Alexandru Gagniuc wrote:
-(snip)
->>> +    memset(&info, 0, sizeof(info));
->>> +    info.severity = aer_severity;
->>> +    info.status = status;
->>> +    info.mask = mask;
->>> +    info.first_error = 0x1f;
->>
->> I like this patch a lot, but where does this "first_error = 0x1f" come
->> from?
-> 
-> aer_(un)correctable_error_string don't go to [0x1f], so this guarantees 
-> us we don't print "(First)".
-> 
->> I assume this is supposed to be the "First Error Pointer" in the
->> Advanced Error Capabilities and Control register (PCIe r4.0, sec
->> 7.8.4.7).  There is a "cap_control" field in struct
->> aer_capability_regs; should we be using that here?
-> 
-> There is a way to extract it from the PCI regs, and it's quite simple. 
-> IIRC, it should be all f's when the capability is not implemented. I 
-> wanted to avoid any further parsing of PCI regs in this patch.
+On Mon, 23 Apr 2018 13:28:22 -0400
+Sinan Kaya <okaya@codeaurora.org> wrote:
 
-I could update the offending line to say:
-  +	info.first_error = PCI_ERR_CAP_FEP(aer->cap_control);
-
-Though I still have the concerns with validating CPER data:
-
-> I can see a way to use even more common printk code, but that requires 
-> validating the PCI regs we get from firmware. That means we need to make 
-> a guarantee about CPER that is beyond the scope of this patch.
+> On 4/20/2018 11:04 AM, Alex Williamson wrote:
+> > Is there a concern here about whether the endpoint device driver or the
+> > PCI core really knows better about link retraining?  This makes me
+> > remember my unfinished (and need to revisit) Pericom quirk[1] where
+> > errata in the PCIe switch requires that upstream and downstream links
+> > are balanced (ie. same link rate) or else enabling ACS results in
+> > packets not properly flowing through the switch.  If an endpoint driver
+> > starts deciding to retrain links, overriding quirks in the PCI core,
+> > then such topology manipulation isn't possible.  Why does the
+> > driver .probe() function think it can retrain at a higher link rate
+> > than PCI core?  Thanks,  
 > 
-> Alex
+> The example given is for some serdes firmware load to happen in probe and
+> then performing a retrain to reach to a better speed.
 > 
+> It becomes a chicken and egg problem. 
+> 
+> 1. Endpoint HW trains to gen1 by default pre-boot.
+> 2. PCI core enumerates the device.
+> 3. Endpoint driver gets loaded
+> 4. Driver does the firmware programming followed by a link retrain.
+> 
+> I think it is the responsibility of the PCI core to provide reset APIs.
+> However, expecting endpoint drivers to be knowledgeable about hotplug is
+> too much.
+> 
+> We can certainly contain AER change into pci directory by moving the slot
+> reset function to drivers/pci.h file.
+> 
+> But, we need to think about what to do about VFIO and other endpoint
+> initiated reset cases. My suggestion was to move this into a single API and
+> remove all other APIs from include/linux/pci.h.
+
+I'm a little confused about the relation between reset and retrain.
+AIUI we can retrain the link without any sort of endpoint reset and if
+some sort of driver/firmware setup is required on the endpoint to
+achieve the target link speed, then I'd think we only want to retrain.
+How this is going to work with vfio is an interesting question.  We're
+only providing access to the device, not the link to the device.
+Multifunction endpoints become a big problem if one function starts
+requesting link retraining while another is in use elsewhere.
+ 
+> Coming back to this patch...
+> 
+> Do we need a retrain API with the speed that driver wants to reach to?
+> API can return what was actually accomplished. The quirk from Alex can
+> run inside this API to make a decision on what speed do we actually want
+> to reach to for a given PCI topology by reprogramming the target link speed
+> field.
+
+Yes, I think the core should provide a retraining API, that would also
+make the Pericom quirk easier to implement.  We'd want a field/flag on
+the pcidev that could be set by quirks to limit the highest target
+rate, but it makes sense that this should be an interface provided by
+and control point for the PCI core.  Thanks,
+
+Alex
