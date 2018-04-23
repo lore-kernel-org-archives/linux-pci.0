@@ -1,317 +1,192 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:60494 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751622AbeDOPAt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2018 11:00:49 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: x86@kernel.org, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
-        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 11/12] swiotlb: move the SWIOTLB config symbol to lib/Kconfig
-Date: Sun, 15 Apr 2018 16:59:46 +0200
-Message-Id: <20180415145947.1248-12-hch@lst.de>
-In-Reply-To: <20180415145947.1248-1-hch@lst.de>
-References: <20180415145947.1248-1-hch@lst.de>
+Received: from ale.deltatee.com ([207.54.116.67]:41934 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932644AbeDWXbF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 23 Apr 2018 19:31:05 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Mon, 23 Apr 2018 17:30:36 -0600
+Message-Id: <20180423233046.21476-5-logang@deltatee.com>
+In-Reply-To: <20180423233046.21476-1-logang@deltatee.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+Subject: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices behind switches
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This way we have one central definition of it, and user can select it as
-needed.  Note that we also add a second ARCH_HAS_SWIOTLB symbol to
-indicate the architecture supports swiotlb at all, so that we can still
-make the usage optional for a few architectures that want this feature
-to be user selectable.
+For peer-to-peer transactions to work the downstream ports in each
+switch must not have the ACS flags set. At this time there is no way
+to dynamically change the flags and update the corresponding IOMMU
+groups so this is done at enumeration time before the groups are
+assigned.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+This effectively means that if CONFIG_PCI_P2PDMA is selected then
+all devices behind any PCIe switch heirarchy will be in the same IOMMU
+group. Which implies that individual devices behind any switch
+heirarchy will not be able to be assigned to separate VMs because
+there is no isolation between them. Additionally, any malicious PCIe
+devices will be able to DMA to memory exposed by other EPs in the same
+domain as TLPs will not be checked by the IOMMU.
+
+Given that the intended use case of P2P Memory is for users with
+custom hardware designed for purpose, we do not expect distributors
+to ever need to enable this option. Users that want to use P2P
+must have compiled a custom kernel with this configuration option
+and understand the implications regarding ACS. They will either
+not require ACS or will have design the system in such a way that
+devices that require isolation will be separate from those using P2P
+transactions.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- arch/arm/Kconfig                |  4 +---
- arch/arm64/Kconfig              |  5 ++---
- arch/ia64/Kconfig               |  9 +--------
- arch/mips/Kconfig               |  3 +++
- arch/mips/cavium-octeon/Kconfig |  5 -----
- arch/mips/loongson64/Kconfig    |  8 --------
- arch/powerpc/Kconfig            |  9 ---------
- arch/unicore32/mm/Kconfig       |  5 -----
- arch/x86/Kconfig                | 14 +++-----------
- lib/Kconfig                     | 15 +++++++++++++++
- 10 files changed, 25 insertions(+), 52 deletions(-)
+ drivers/pci/Kconfig        |  9 +++++++++
+ drivers/pci/p2pdma.c       | 45 ++++++++++++++++++++++++++++++---------------
+ drivers/pci/pci.c          |  6 ++++++
+ include/linux/pci-p2pdma.h |  5 +++++
+ 4 files changed, 50 insertions(+), 15 deletions(-)
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 90b81a3a28a7..f91f69174630 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -106,6 +106,7 @@ config ARM
- 	select REFCOUNT_FULL
- 	select RTC_LIB
- 	select SYS_SUPPORTS_APM_EMULATION
-+	select ARCH_HAS_SWIOTLB
- 	# Above selects are sorted alphabetically; please add new ones
- 	# according to that.  Thanks.
- 	help
-@@ -1773,9 +1774,6 @@ config SECCOMP
- 	  and the task is only allowed to execute a few safe syscalls
- 	  defined by each seccomp mode.
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index b2396c22b53e..b6db41d4b708 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -139,6 +139,15 @@ config PCI_P2PDMA
+ 	  transations must be between devices behind the same root port.
+ 	  (Typically behind a network of PCIe switches).
  
--config SWIOTLB
--	bool
--
- config PARAVIRT
- 	bool "Enable paravirtualization code"
- 	help
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 4d924eb32e7f..056bc7365adf 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -21,6 +21,7 @@ config ARM64
- 	select ARCH_HAS_SG_CHAIN
- 	select ARCH_HAS_STRICT_KERNEL_RWX
- 	select ARCH_HAS_STRICT_MODULE_RWX
-+	select ARCH_HAS_SWIOTLB
- 	select ARCH_HAS_TICK_BROADCAST if GENERIC_CLOCKEVENTS_BROADCAST
- 	select ARCH_HAVE_NMI_SAFE_CMPXCHG
- 	select ARCH_INLINE_READ_LOCK if !PREEMPT
-@@ -144,6 +145,7 @@ config ARM64
- 	select POWER_SUPPLY
- 	select REFCOUNT_FULL
- 	select SPARSE_IRQ
-+	select SWIOTLB
- 	select SYSCTL_EXCEPTION_TRACE
- 	select THREAD_INFO_IN_TASK
- 	help
-@@ -239,9 +241,6 @@ config HAVE_GENERIC_GUP
- config SMP
- 	def_bool y
- 
--config SWIOTLB
--	def_bool y
--
- config KERNEL_MODE_NEON
- 	def_bool y
- 
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index 685d557eea48..d396230913e6 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -56,6 +56,7 @@ config IA64
- 	select HAVE_ARCH_AUDITSYSCALL
- 	select NEED_DMA_MAP_STATE
- 	select NEED_SG_DMA_LENGTH
-+	select ARCH_HAS_SWIOTLB
- 	default y
- 	help
- 	  The Itanium Processor Family is Intel's 64-bit successor to
-@@ -80,9 +81,6 @@ config MMU
- 	bool
- 	default y
- 
--config SWIOTLB
--       bool
--
- config STACKTRACE_SUPPORT
- 	def_bool y
- 
-@@ -139,7 +137,6 @@ config IA64_GENERIC
- 	bool "generic"
- 	select NUMA
- 	select ACPI_NUMA
--	select DMA_DIRECT_OPS
- 	select SWIOTLB
- 	select PCI_MSI
- 	help
-@@ -160,7 +157,6 @@ config IA64_GENERIC
- 
- config IA64_DIG
- 	bool "DIG-compliant"
--	select DMA_DIRECT_OPS
- 	select SWIOTLB
- 
- config IA64_DIG_VTD
-@@ -176,7 +172,6 @@ config IA64_HP_ZX1
- 
- config IA64_HP_ZX1_SWIOTLB
- 	bool "HP-zx1/sx1000 with software I/O TLB"
--	select DMA_DIRECT_OPS
- 	select SWIOTLB
- 	help
- 	  Build a kernel that runs on HP zx1 and sx1000 systems even when they
-@@ -200,7 +195,6 @@ config IA64_SGI_UV
- 	bool "SGI-UV"
- 	select NUMA
- 	select ACPI_NUMA
--	select DMA_DIRECT_OPS
- 	select SWIOTLB
- 	help
- 	  Selecting this option will optimize the kernel for use on UV based
-@@ -211,7 +205,6 @@ config IA64_SGI_UV
- 
- config IA64_HP_SIM
- 	bool "Ski-simulator"
--	select DMA_DIRECT_OPS
- 	select SWIOTLB
- 	depends on !PM
- 
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index e10cc5c7be69..b6b4c1e154f8 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -912,6 +912,8 @@ config CAVIUM_OCTEON_SOC
- 	select MIPS_NR_CPU_NR_MAP_1024
- 	select BUILTIN_DTB
- 	select MTD_COMPLEX_MAPPINGS
-+	select ARCH_HAS_SWIOTLB
-+	select SWIOTLB
- 	select SYS_SUPPORTS_RELOCATABLE
- 	help
- 	  This option supports all of the Octeon reference boards from Cavium
-@@ -1367,6 +1369,7 @@ config CPU_LOONGSON3
- 	select MIPS_PGD_C0_CONTEXT
- 	select MIPS_L1_CACHE_SHIFT_6
- 	select GPIOLIB
-+	select ARCH_HAS_SWIOTLB
- 	help
- 		The Loongson 3 processor implements the MIPS64R2 instruction
- 		set with many extensions.
-diff --git a/arch/mips/cavium-octeon/Kconfig b/arch/mips/cavium-octeon/Kconfig
-index 5d73041547a7..4984e462be30 100644
---- a/arch/mips/cavium-octeon/Kconfig
-+++ b/arch/mips/cavium-octeon/Kconfig
-@@ -67,11 +67,6 @@ config CAVIUM_OCTEON_LOCK_L2_MEMCPY
- 	help
- 	  Lock the kernel's implementation of memcpy() into L2.
- 
--config SWIOTLB
--	def_bool y
--	select DMA_DIRECT_OPS
--	select NEED_SG_DMA_LENGTH
--
- config OCTEON_ILM
- 	tristate "Module to measure interrupt latency using Octeon CIU Timer"
- 	help
-diff --git a/arch/mips/loongson64/Kconfig b/arch/mips/loongson64/Kconfig
-index 641a1477031e..c79e6a565572 100644
---- a/arch/mips/loongson64/Kconfig
-+++ b/arch/mips/loongson64/Kconfig
-@@ -130,14 +130,6 @@ config LOONGSON_UART_BASE
- 	default y
- 	depends on EARLY_PRINTK || SERIAL_8250
- 
--config SWIOTLB
--	bool "Soft IOMMU Support for All-Memory DMA"
--	default y
--	depends on CPU_LOONGSON3
--	select DMA_DIRECT_OPS
--	select NEED_SG_DMA_LENGTH
--	select NEED_DMA_MAP_STATE
--
- config PHYS48_TO_HT40
- 	bool
- 	default y if CPU_LOONGSON3
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index b85a537421b8..beb28153fcb2 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -474,15 +474,6 @@ config MPROFILE_KERNEL
- 	depends on PPC64 && CPU_LITTLE_ENDIAN
- 	def_bool !DISABLE_MPROFILE_KERNEL
- 
--config SWIOTLB
--	bool "SWIOTLB support"
--	default n
--	---help---
--	  Support for IO bounce buffering for systems without an IOMMU.
--	  This allows us to DMA to the full physical address space on
--	  platforms where the size of a physical address is larger
--	  than the bus address.  Not all platforms support this.
--
- config HOTPLUG_CPU
- 	bool "Support for enabling/disabling CPUs"
- 	depends on SMP && (PPC_PSERIES || \
-diff --git a/arch/unicore32/mm/Kconfig b/arch/unicore32/mm/Kconfig
-index 1d9fed0ada71..82759b6aba67 100644
---- a/arch/unicore32/mm/Kconfig
-+++ b/arch/unicore32/mm/Kconfig
-@@ -39,8 +39,3 @@ config CPU_TLB_SINGLE_ENTRY_DISABLE
- 	default y
- 	help
- 	  Say Y here to disable the TLB single entry operations.
--
--config SWIOTLB
--	def_bool y
--	select DMA_DIRECT_OPS
--	select NEED_SG_DMA_LENGTH
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index a95eb9ef3311..063bef5f830f 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -24,6 +24,7 @@ config X86_64
- 	depends on 64BIT
- 	# Options that are inherently 64-bit kernel only:
- 	select ARCH_HAS_GIGANTIC_PAGE if (MEMORY_ISOLATION && COMPACTION) || CMA
-+	select ARCH_HAS_SWIOTLB
- 	select ARCH_SUPPORTS_INT128
- 	select ARCH_USE_CMPXCHG_LOCKREF
- 	select HAVE_ARCH_SOFT_DIRTY
-@@ -676,6 +677,7 @@ config STA2X11
- 	bool "STA2X11 Companion Chip Support"
- 	depends on X86_32_NON_STANDARD && PCI
- 	select ARCH_HAS_PHYS_TO_DMA
-+	select ARCH_HAS_SWIOTLB
- 	select X86_DEV_DMA_OPS
- 	select X86_DMA_REMAP
- 	select SWIOTLB
-@@ -915,17 +917,6 @@ config CALGARY_IOMMU_ENABLED_BY_DEFAULT
- 	  Calgary anyway, pass 'iommu=calgary' on the kernel command line.
- 	  If unsure, say Y.
- 
--# need this always selected by IOMMU for the VIA workaround
--config SWIOTLB
--	def_bool y if X86_64
--	select NEED_DMA_MAP_STATE
--	---help---
--	  Support for software bounce buffers used on x86-64 systems
--	  which don't have a hardware IOMMU. Using this PCI devices
--	  which can only access 32-bits of memory can be used on systems
--	  with more than 3 GB of memory.
--	  If unsure, say Y.
--
- config MAXSMP
- 	bool "Enable Maximum number of SMP Processors and NUMA Nodes"
- 	depends on X86_64 && SMP && DEBUG_KERNEL
-@@ -1447,6 +1438,7 @@ config HIGHMEM
- config X86_PAE
- 	bool "PAE (Physical Address Extension) Support"
- 	depends on X86_32 && !HIGHMEM4G
-+	select ARCH_HAS_SWIOTLB
- 	select PHYS_ADDR_T_64BIT
- 	select SWIOTLB
- 	---help---
-diff --git a/lib/Kconfig b/lib/Kconfig
-index 1f12faf03819..01a37920949c 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -451,6 +451,21 @@ config DMA_VIRT_OPS
- 	depends on HAS_DMA && (!64BIT || ARCH_DMA_ADDR_T_64BIT)
- 	default n
- 
-+config ARCH_HAS_SWIOTLB
-+	bool
++	  Enabling this option will also disable ACS on all ports behind
++	  any PCIe switch. This effectively puts all devices behind any
++	  switch heirarchy into the same IOMMU group. Which implies that
++	  individual devices behind any switch will not be able to be
++	  assigned to separate VMs because there is no isolation between
++	  them. Additionally, any malicious PCIe devices will be able to
++	  DMA to memory exposed by other EPs in the same domain as TLPs
++	  will not be checked by the IOMMU.
 +
-+config SWIOTLB
-+	bool "SWIOTLB support"
-+	default ARCH_HAS_SWIOTLB
-+	select DMA_DIRECT_OPS
-+	select NEED_DMA_MAP_STATE
-+	select NEED_SG_DMA_LENGTH
-+	---help---
-+	  Support for IO bounce buffering for systems without an IOMMU.
-+	  This allows us to DMA to the full physical address space on
-+	  platforms where the size of a physical address is larger
-+	  than the bus address.  If unsure, say Y.
-+
- config CHECK_SIGNATURE
- 	bool
+ 	  If unsure, say N.
  
+ config PCI_LABEL
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index ed9dce8552a2..e9f43b43acac 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -240,27 +240,42 @@ static struct pci_dev *find_parent_pci_dev(struct device *dev)
+ }
+ 
+ /*
+- * If a device is behind a switch, we try to find the upstream bridge
+- * port of the switch. This requires two calls to pci_upstream_bridge():
+- * one for the upstream port on the switch, one on the upstream port
+- * for the next level in the hierarchy. Because of this, devices connected
+- * to the root port will be rejected.
++ * pci_p2pdma_disable_acs - disable ACS flags for all PCI bridges
++ * @pdev: device to disable ACS flags for
++ *
++ * The ACS flags for P2P Request Redirect and P2P Completion Redirect need
++ * to be disabled on any PCI bridge in order for the TLPS to not be forwarded
++ * up to the RC which is not what we want for P2P.
++ *
++ * This function is called when the devices are first enumerated and
++ * will result in all devices behind any bridge to be in the same IOMMU
++ * group. At this time, there is no way to "hotplug" IOMMU groups so we rely
++ * on this largish hammer. If you need the devices to be in separate groups
++ * don't enable CONFIG_PCI_P2PDMA.
++ *
++ * Returns 1 if the ACS bits for this device was cleared, otherwise 0.
+  */
+-static struct pci_dev *get_upstream_bridge_port(struct pci_dev *pdev)
++int pci_p2pdma_disable_acs(struct pci_dev *pdev)
+ {
+-	struct pci_dev *up1, *up2;
++	int pos;
++	u16 ctrl;
+ 
+-	if (!pdev)
+-		return NULL;
++	if (!pci_is_bridge(pdev))
++		return 0;
+ 
+-	up1 = pci_dev_get(pci_upstream_bridge(pdev));
+-	if (!up1)
+-		return NULL;
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
++	if (!pos)
++		return 0;
++
++	pci_info(pdev, "disabling ACS flags for peer-to-peer DMA\n");
++
++	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
++
++	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR);
+ 
+-	up2 = pci_dev_get(pci_upstream_bridge(up1));
+-	pci_dev_put(up1);
++	pci_write_config_word(pdev, pos + PCI_ACS_CTRL, ctrl);
+ 
+-	return up2;
++	return 1;
+ }
+ 
+ /*
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e597655a5643..7e2f5724ba22 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -16,6 +16,7 @@
+ #include <linux/of.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci.h>
++#include <linux/pci-p2pdma.h>
+ #include <linux/pm.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+@@ -2835,6 +2836,11 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+  */
+ void pci_enable_acs(struct pci_dev *dev)
+ {
++#ifdef CONFIG_PCI_P2PDMA
++	if (pci_p2pdma_disable_acs(dev))
++		return;
++#endif
++
+ 	if (!pci_acs_enable)
+ 		return;
+ 
+diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+index 0cde88341eeb..fcb3437a2f3c 100644
+--- a/include/linux/pci-p2pdma.h
++++ b/include/linux/pci-p2pdma.h
+@@ -18,6 +18,7 @@ struct block_device;
+ struct scatterlist;
+ 
+ #ifdef CONFIG_PCI_P2PDMA
++int pci_p2pdma_disable_acs(struct pci_dev *pdev);
+ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 		u64 offset);
+ int pci_p2pdma_add_client(struct list_head *head, struct device *dev);
+@@ -40,6 +41,10 @@ int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
+ void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
+ 			 enum dma_data_direction dir);
+ #else /* CONFIG_PCI_P2PDMA */
++static inline int pci_p2pdma_disable_acs(struct pci_dev *pdev)
++{
++	return 0;
++}
+ static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
+ 		size_t size, u64 offset)
+ {
 -- 
-2.17.0
+2.11.0
