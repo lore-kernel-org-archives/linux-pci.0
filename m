@@ -1,158 +1,210 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:36592 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751738AbeDHSEi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Apr 2018 14:04:38 -0400
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH V3] PCI: rcar: Clean up the macros
-Date: Sun,  8 Apr 2018 20:04:31 +0200
-Message-Id: <20180408180431.17323-1-marek.vasut+renesas@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Mon, 23 Apr 2018 17:30:41 -0600
+Message-Id: <20180423233046.21476-10-logang@deltatee.com>
+In-Reply-To: <20180423233046.21476-1-logang@deltatee.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+Subject: [PATCH v4 09/14] nvme-pci: Use PCI p2pmem subsystem to manage the CMB
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch replaces the (1 << n) with BIT(n) and cleans up whitespace,
-no functional change.
+Register the CMB buffer as p2pmem and use the appropriate allocation
+functions to create and destroy the IO submission queues.
 
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
-Reviewed-by: Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
----
-V2: Reword the commit message
-V3: Add bitops.h
----
- drivers/pci/host/pcie-rcar.c | 53 ++++++++++++++++++++++----------------------
- 1 file changed, 27 insertions(+), 26 deletions(-)
+If the CMB supports WDS and RDS, publish it for use as P2P memory
+by other devices.
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 25f68305322c..e403c5206b24 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -11,6 +11,7 @@
-  * Author: Phil Edworthy <phil.edworthy@renesas.com>
-  */
+We can now drop the __iomem safety on the buffer seeing that, by
+convention, devm_memremap_pages() allocates regular memory without
+side effects that's accessible without the iomem accessors.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/nvme/host/pci.c | 75 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 41 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index fbc71fac6f1e..514da4de3c85 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -29,6 +29,7 @@
+ #include <linux/types.h>
+ #include <linux/io-64-nonatomic-lo-hi.h>
+ #include <linux/sed-opal.h>
++#include <linux/pci-p2pdma.h>
  
-+#include <linux/bitops.h>
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-@@ -30,9 +31,9 @@
+ #include "nvme.h"
  
- #define PCIECAR			0x000010
- #define PCIECCTLR		0x000018
--#define  CONFIG_SEND_ENABLE	(1 << 31)
-+#define  CONFIG_SEND_ENABLE	BIT(31)
- #define  TYPE0			(0 << 8)
--#define  TYPE1			(1 << 8)
-+#define  TYPE1			BIT(8)
- #define PCIECDR			0x000020
- #define PCIEMSR			0x000028
- #define PCIEINTXR		0x000400
-@@ -44,7 +45,7 @@
- #define PCIETSTR		0x02004
- #define  DATA_LINK_ACTIVE	1
- #define PCIEERRFR		0x02020
--#define  UNSUPPORTED_REQUEST	(1 << 4)
-+#define  UNSUPPORTED_REQUEST	BIT(4)
- #define PCIEMSIFR		0x02044
- #define PCIEMSIALR		0x02048
- #define  MSIFE			1
-@@ -57,17 +58,17 @@
- /* local address reg & mask */
- #define PCIELAR(x)		(0x02200 + ((x) * 0x20))
- #define PCIELAMR(x)		(0x02208 + ((x) * 0x20))
--#define  LAM_PREFETCH		(1 << 3)
--#define  LAM_64BIT		(1 << 2)
--#define  LAR_ENABLE		(1 << 1)
-+#define  LAM_PREFETCH		BIT(3)
-+#define  LAM_64BIT		BIT(2)
-+#define  LAR_ENABLE		BIT(1)
+@@ -92,9 +93,8 @@ struct nvme_dev {
+ 	struct work_struct remove_work;
+ 	struct mutex shutdown_lock;
+ 	bool subsystem;
+-	void __iomem *cmb;
+-	pci_bus_addr_t cmb_bus_addr;
+ 	u64 cmb_size;
++	bool cmb_use_sqes;
+ 	u32 cmbsz;
+ 	u32 cmbloc;
+ 	struct nvme_ctrl ctrl;
+@@ -149,7 +149,7 @@ struct nvme_queue {
+ 	struct nvme_dev *dev;
+ 	spinlock_t q_lock;
+ 	struct nvme_command *sq_cmds;
+-	struct nvme_command __iomem *sq_cmds_io;
++	bool sq_cmds_is_io;
+ 	volatile struct nvme_completion *cqes;
+ 	struct blk_mq_tags **tags;
+ 	dma_addr_t sq_dma_addr;
+@@ -431,10 +431,7 @@ static void __nvme_submit_cmd(struct nvme_queue *nvmeq,
+ {
+ 	u16 tail = nvmeq->sq_tail;
  
- /* PCIe address reg & mask */
- #define PCIEPALR(x)		(0x03400 + ((x) * 0x20))
- #define PCIEPAUR(x)		(0x03404 + ((x) * 0x20))
- #define PCIEPAMR(x)		(0x03408 + ((x) * 0x20))
- #define PCIEPTCTLR(x)		(0x0340c + ((x) * 0x20))
--#define  PAR_ENABLE		(1 << 31)
--#define  IO_SPACE		(1 << 8)
-+#define  PAR_ENABLE		BIT(31)
-+#define  IO_SPACE		BIT(8)
+-	if (nvmeq->sq_cmds_io)
+-		memcpy_toio(&nvmeq->sq_cmds_io[tail], cmd, sizeof(*cmd));
+-	else
+-		memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
++	memcpy(&nvmeq->sq_cmds[tail], cmd, sizeof(*cmd));
  
- /* Configuration */
- #define PCICONF(x)		(0x010000 + ((x) * 0x4))
-@@ -79,23 +80,23 @@
- #define IDSETR1			0x011004
- #define TLCTLR			0x011048
- #define MACSR			0x011054
--#define  SPCHGFIN		(1 << 4)
--#define  SPCHGFAIL		(1 << 6)
--#define  SPCHGSUC		(1 << 7)
-+#define  SPCHGFIN		BIT(4)
-+#define  SPCHGFAIL		BIT(6)
-+#define  SPCHGSUC		BIT(7)
- #define  LINK_SPEED		(0xf << 16)
- #define  LINK_SPEED_2_5GTS	(1 << 16)
- #define  LINK_SPEED_5_0GTS	(2 << 16)
- #define MACCTLR			0x011058
--#define  SPEED_CHANGE		(1 << 24)
--#define  SCRAMBLE_DISABLE	(1 << 27)
-+#define  SPEED_CHANGE		BIT(24)
-+#define  SCRAMBLE_DISABLE	BIT(27)
- #define MACS2R			0x011078
- #define MACCGSPSETR		0x011084
--#define  SPCNGRSN		(1 << 31)
-+#define  SPCNGRSN		BIT(31)
+ 	if (++tail == nvmeq->q_depth)
+ 		tail = 0;
+@@ -1289,9 +1286,18 @@ static void nvme_free_queue(struct nvme_queue *nvmeq)
+ {
+ 	dma_free_coherent(nvmeq->q_dmadev, CQ_SIZE(nvmeq->q_depth),
+ 				(void *)nvmeq->cqes, nvmeq->cq_dma_addr);
+-	if (nvmeq->sq_cmds)
+-		dma_free_coherent(nvmeq->q_dmadev, SQ_SIZE(nvmeq->q_depth),
+-					nvmeq->sq_cmds, nvmeq->sq_dma_addr);
++
++	if (nvmeq->sq_cmds) {
++		if (nvmeq->sq_cmds_is_io)
++			pci_free_p2pmem(to_pci_dev(nvmeq->q_dmadev),
++					nvmeq->sq_cmds,
++					SQ_SIZE(nvmeq->q_depth));
++		else
++			dma_free_coherent(nvmeq->q_dmadev,
++					  SQ_SIZE(nvmeq->q_depth),
++					  nvmeq->sq_cmds,
++					  nvmeq->sq_dma_addr);
++	}
+ }
  
- /* R-Car H1 PHY */
- #define H1_PCIEPHYADRR		0x04000c
--#define  WRITE_CMD		(1 << 16)
--#define  PHY_ACK		(1 << 24)
-+#define  WRITE_CMD		BIT(16)
-+#define  PHY_ACK		BIT(24)
- #define  RATE_POS		12
- #define  LANE_POS		8
- #define  ADR_POS		0
-@@ -107,19 +108,19 @@
- #define GEN2_PCIEPHYDATA	0x784
- #define GEN2_PCIEPHYCTRL	0x78c
+ static void nvme_free_queues(struct nvme_dev *dev, int lowest)
+@@ -1371,12 +1377,21 @@ static int nvme_cmb_qdepth(struct nvme_dev *dev, int nr_io_queues,
+ static int nvme_alloc_sq_cmds(struct nvme_dev *dev, struct nvme_queue *nvmeq,
+ 				int qid, int depth)
+ {
+-	/* CMB SQEs will be mapped before creation */
+-	if (qid && dev->cmb && use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS))
+-		return 0;
++	struct pci_dev *pdev = to_pci_dev(dev->dev);
++
++	if (qid && dev->cmb_use_sqes && (dev->cmbsz & NVME_CMBSZ_SQS)) {
++		nvmeq->sq_cmds = pci_alloc_p2pmem(pdev, SQ_SIZE(depth));
++		nvmeq->sq_dma_addr = pci_p2pmem_virt_to_bus(pdev,
++						nvmeq->sq_cmds);
++		nvmeq->sq_cmds_is_io = true;
++	}
++
++	if (!nvmeq->sq_cmds) {
++		nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(depth),
++					&nvmeq->sq_dma_addr, GFP_KERNEL);
++		nvmeq->sq_cmds_is_io = false;
++	}
  
--#define INT_PCI_MSI_NR	32
-+#define INT_PCI_MSI_NR		32
+-	nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(depth),
+-					    &nvmeq->sq_dma_addr, GFP_KERNEL);
+ 	if (!nvmeq->sq_cmds)
+ 		return -ENOMEM;
+ 	return 0;
+@@ -1451,13 +1466,6 @@ static int nvme_create_queue(struct nvme_queue *nvmeq, int qid)
+ 	struct nvme_dev *dev = nvmeq->dev;
+ 	int result;
  
--#define RCONF(x)	(PCICONF(0)+(x))
--#define RPMCAP(x)	(PMCAP(0)+(x))
--#define REXPCAP(x)	(EXPCAP(0)+(x))
--#define RVCCAP(x)	(VCCAP(0)+(x))
-+#define RCONF(x)		(PCICONF(0) + (x))
-+#define RPMCAP(x)		(PMCAP(0) + (x))
-+#define REXPCAP(x)		(EXPCAP(0) + (x))
-+#define RVCCAP(x)		(VCCAP(0) + (x))
+-	if (dev->cmb && use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS)) {
+-		unsigned offset = (qid - 1) * roundup(SQ_SIZE(nvmeq->q_depth),
+-						      dev->ctrl.page_size);
+-		nvmeq->sq_dma_addr = dev->cmb_bus_addr + offset;
+-		nvmeq->sq_cmds_io = dev->cmb + offset;
+-	}
+-
+ 	/*
+ 	 * A queue's vector matches the queue identifier unless the controller
+ 	 * has only one vector available.
+@@ -1691,9 +1699,6 @@ static void nvme_map_cmb(struct nvme_dev *dev)
+ 		return;
+ 	dev->cmbloc = readl(dev->bar + NVME_REG_CMBLOC);
  
--#define  PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
--#define  PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
--#define  PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
-+#define PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
-+#define PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
-+#define PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
+-	if (!use_cmb_sqes)
+-		return;
+-
+ 	size = nvme_cmb_size_unit(dev) * nvme_cmb_size(dev);
+ 	offset = nvme_cmb_size_unit(dev) * NVME_CMB_OFST(dev->cmbloc);
+ 	bar = NVME_CMB_BIR(dev->cmbloc);
+@@ -1710,11 +1715,15 @@ static void nvme_map_cmb(struct nvme_dev *dev)
+ 	if (size > bar_size - offset)
+ 		size = bar_size - offset;
  
--#define RCAR_PCI_MAX_RESOURCES 4
--#define MAX_NR_INBOUND_MAPS 6
-+#define RCAR_PCI_MAX_RESOURCES	4
-+#define MAX_NR_INBOUND_MAPS	6
+-	dev->cmb = ioremap_wc(pci_resource_start(pdev, bar) + offset, size);
+-	if (!dev->cmb)
++	if (pci_p2pdma_add_resource(pdev, bar, size, offset))
+ 		return;
+-	dev->cmb_bus_addr = pci_bus_address(pdev, bar) + offset;
++
+ 	dev->cmb_size = size;
++	dev->cmb_use_sqes = use_cmb_sqes && (dev->cmbsz & NVME_CMBSZ_SQS);
++
++	if ((dev->cmbsz & (NVME_CMBSZ_WDS | NVME_CMBSZ_RDS)) ==
++			(NVME_CMBSZ_WDS | NVME_CMBSZ_RDS))
++		pci_p2pmem_publish(pdev, true);
  
- struct rcar_msi {
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+ 	if (sysfs_add_file_to_group(&dev->ctrl.device->kobj,
+ 				    &dev_attr_cmb.attr, NULL))
+@@ -1724,12 +1733,10 @@ static void nvme_map_cmb(struct nvme_dev *dev)
+ 
+ static inline void nvme_release_cmb(struct nvme_dev *dev)
+ {
+-	if (dev->cmb) {
+-		iounmap(dev->cmb);
+-		dev->cmb = NULL;
++	if (dev->cmb_size) {
+ 		sysfs_remove_file_from_group(&dev->ctrl.device->kobj,
+ 					     &dev_attr_cmb.attr, NULL);
+-		dev->cmbsz = 0;
++		dev->cmb_size = 0;
+ 	}
+ }
+ 
+@@ -1928,13 +1935,13 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 	if (nr_io_queues == 0)
+ 		return 0;
+ 
+-	if (dev->cmb && (dev->cmbsz & NVME_CMBSZ_SQS)) {
++	if (dev->cmb_use_sqes) {
+ 		result = nvme_cmb_qdepth(dev, nr_io_queues,
+ 				sizeof(struct nvme_command));
+ 		if (result > 0)
+ 			dev->q_depth = result;
+ 		else
+-			nvme_release_cmb(dev);
++			dev->cmb_use_sqes = false;
+ 	}
+ 
+ 	do {
 -- 
-2.16.2
+2.11.0
