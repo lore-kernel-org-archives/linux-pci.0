@@ -1,30 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:55608 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751456AbeDILoE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 07:44:04 -0400
-Date: Mon, 9 Apr 2018 13:44:00 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        "linux-renesas-soc@vger.kernel.org"
-        <linux-renesas-soc@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH v2 5/5] DT: pci: rcar-pci: document R8A77980 bindings
-Message-ID: <20180409114359.nkkwzfzs7vjoutuz@verge.net.au>
-References: <26e803ca-06b6-28c5-b87c-fc639b322d6f@cogentembedded.com>
- <461a6029-1e03-a292-62d2-aca7de274de6@cogentembedded.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <461a6029-1e03-a292-62d2-aca7de274de6@cogentembedded.com>
+Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:2244 "EHLO
+        alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755790AbeDWPXS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 11:23:18 -0400
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v14 9/9] pci-error-recovery: Add AER_FATAL handling
+Date: Mon, 23 Apr 2018 11:23:13 -0400
+Message-Id: <1524496993-29799-10-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
+References: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 08, 2018 at 09:10:43PM +0300, Sergei Shtylyov wrote:
-> Document the R-Car V3H (R8A77980) SoC in the R-Car PCIe bindings.
-> 
-> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+It adds description on AER_FATAL error handling.
 
-Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+
+diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
+index 0b6bb3e..688b691 100644
+--- a/Documentation/PCI/pci-error-recovery.txt
++++ b/Documentation/PCI/pci-error-recovery.txt
+@@ -110,7 +110,7 @@ The actual steps taken by a platform to recover from a PCI error
+ event will be platform-dependent, but will follow the general
+ sequence described below.
+ 
+-STEP 0: Error Event
++STEP 0: Error Event: ERR_NONFATAL
+ -------------------
+ A PCI bus error is detected by the PCI hardware.  On powerpc, the slot
+ is isolated, in that all I/O is blocked: all reads return 0xffffffff,
+@@ -228,13 +228,7 @@ proceeds to either STEP3 (Link Reset) or to STEP 5 (Resume Operations).
+ If any driver returned PCI_ERS_RESULT_NEED_RESET, then the platform
+ proceeds to STEP 4 (Slot Reset)
+ 
+-STEP 3: Link Reset
+-------------------
+-The platform resets the link.  This is a PCI-Express specific step
+-and is done whenever a fatal error has been detected that can be
+-"solved" by resetting the link.
+-
+-STEP 4: Slot Reset
++STEP 3: Slot Reset
+ ------------------
+ 
+ In response to a return value of PCI_ERS_RESULT_NEED_RESET, the
+@@ -320,7 +314,7 @@ Failure).
+ >>> However, it probably should.
+ 
+ 
+-STEP 5: Resume Operations
++STEP 4: Resume Operations
+ -------------------------
+ The platform will call the resume() callback on all affected device
+ drivers if all drivers on the segment have returned
+@@ -332,7 +326,7 @@ a result code.
+ At this point, if a new error happens, the platform will restart
+ a new error recovery sequence.
+ 
+-STEP 6: Permanent Failure
++STEP 5: Permanent Failure
+ -------------------------
+ A "permanent failure" has occurred, and the platform cannot recover
+ the device.  The platform will call error_detected() with a
+@@ -355,6 +349,27 @@ errors. See the discussion in powerpc/eeh-pci-error-recovery.txt
+ for additional detail on real-life experience of the causes of
+ software errors.
+ 
++STEP 0: Error Event: ERR_FATAL
++-------------------
++PCI bus error is detected by the PCI hardware. On powerpc, the slot is
++isolated, in that all I/O is blocked: all reads return 0xffffffff, all
++writes are ignored.
++
++STEP 1: Remove devices
++--------------------
++Platform removes the devices depending on the error agent, it could be
++this port for all subordinates or upstream component (likely downstream
++port)
++
++STEP 2: Reset link
++--------------------
++The platform resets the link.  This is a PCI-Express specific step and is
++done whenever a fatal error has been detected that can be "solved" by
++resetting the link.
++
++STEP 3: Re-enumerate the devices
++--------------------
++Initiates the re-enumeration.
+ 
+ Conclusion; General Remarks
+ ---------------------------
+-- 
+2.7.4
