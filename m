@@ -1,68 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 10 Apr 2018 14:41:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, sulrich@codeaurora.org,
-        timur@codeaurora.org, linux-arm-msm@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: quirk HT1100 & HT2000 and one HT2100 Root Ports for
- Extended Tags
-Message-ID: <20180410194144.GD54986@bhelgaas-glaptop.roam.corp.google.com>
-References: <1522882209-9743-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1522882209-9743-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8437 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755047AbeDWPXQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 11:23:16 -0400
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v14 1/9] PCI/AER: Rename error recovery to generic PCI naming
+Date: Mon, 23 Apr 2018 11:23:05 -0400
+Message-Id: <1524496993-29799-2-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
+References: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 04, 2018 at 06:50:09PM -0400, Sinan Kaya wrote:
-> Per PCIe r3.1, sec 2.2.6.2 and 7.8.4, a Requester may not use 8-bit Tags
-> unless its Extended Tag Field Enable is set, but all Receivers/Completers
-> must handle 8-bit Tags correctly regardless of their Extended Tag Field
-> Enable.
-> 
-> Some devices do not handle 8-bit Tags as Completers, so add a quirk for
-> them.  If we find such a device, we disable Extended Tags for the entire
-> hierarchy to make peer-to-peer DMA possible.
-> 
-> The Broadcom HT1100/HT2000/HT2100 seems to have issues with handling 8-bit
-> tags.  Mark it as broken.
-> 
-> Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=196197
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+This patch renames error recovery to generic name with pcie prefix
 
-Applied to pci/enumeration for v4.18, thanks!
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
 
-> ---
->  drivers/pci/quirks.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 8b14bd3..f012742 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4813,9 +4813,13 @@ static void quirk_no_ext_tags(struct pci_dev *pdev)
->  
->  	pci_walk_bus(bridge->bus, pci_configure_extended_tags, NULL);
->  }
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0132, quirk_no_ext_tags);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0140, quirk_no_ext_tags);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0141, quirk_no_ext_tags);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0142, quirk_no_ext_tags);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0144, quirk_no_ext_tags);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0420, quirk_no_ext_tags);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0422, quirk_no_ext_tags);
->  
->  #ifdef CONFIG_PCI_ATS
->  /*
-> -- 
-> 2.7.4
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index fcd8191..abc514e 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -342,6 +342,9 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ 
+ void pci_enable_acs(struct pci_dev *dev);
+ 
++/* PCI error reporting and recovery */
++void pcie_do_recovery(struct pci_dev *dev, int severity);
++
+ #ifdef CONFIG_PCIEASPM
+ void pcie_aspm_init_link_state(struct pci_dev *pdev);
+ void pcie_aspm_exit_link_state(struct pci_dev *pdev);
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index a4bfea5..aeb83a0 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -478,7 +478,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ }
+ 
+ /**
+- * do_recovery - handle nonfatal/fatal error recovery process
++ * pcie_do_recovery - handle nonfatal/fatal error recovery process
+  * @dev: pointer to a pci_dev data structure of agent detecting an error
+  * @severity: error severity type
+  *
+@@ -486,7 +486,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+  * error detected message to all downstream drivers within a hierarchy in
+  * question and return the returned code.
+  */
+-static void do_recovery(struct pci_dev *dev, int severity)
++static void pcie_do_recovery(struct pci_dev *dev, int severity)
+ {
+ 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+ 	enum pci_channel_state state;
+@@ -566,7 +566,7 @@ static void handle_error_source(struct pcie_device *aerdev,
+ 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+ 					info->status);
+ 	} else
+-		do_recovery(dev, info->severity);
++		pcie_do_recovery(dev, info->severity);
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+@@ -631,7 +631,7 @@ static void aer_recover_work_func(struct work_struct *work)
+ 		}
+ 		cper_print_aer(pdev, entry.severity, entry.regs);
+ 		if (entry.severity != AER_CORRECTABLE)
+-			do_recovery(pdev, entry.severity);
++			pcie_do_recovery(pdev, entry.severity);
+ 		pci_dev_put(pdev);
+ 	}
+ }
+-- 
+2.7.4
