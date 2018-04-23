@@ -1,190 +1,274 @@
-Return-Path: <SRS0=+qDp=HC=google.com=rajatja@kernel.org>
-Return-Path: <SRS0=+qDp=HC=google.com=rajatja@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CABe79T4nO7dC9uHwX-woAvkdw0+b2ssUyxgs0cnGo90OH_YD+Q@mail.gmail.com>
-References: <CABe79T47vUjq20HuMrJZxhZWMr0q3uXMF6xL1TgkqhqA8qi1wg@mail.gmail.com>
- <20180413135659.GC46420@bhelgaas-glaptop.roam.corp.google.com> <CABe79T4nO7dC9uHwX-woAvkdw0+b2ssUyxgs0cnGo90OH_YD+Q@mail.gmail.com>
-From: Rajat Jain <rajatja@google.com>
-Date: Fri, 13 Apr 2018 12:04:23 -0700
-Message-ID: <CACK8Z6Ec-aneRH+x4ZBxWo2hiNYCMEv4=XD9G03rBTh=mB_2yA@mail.gmail.com>
-Subject: Re: Issue with Enable LTR while pcie_aspm off
-To: Srinath Mannam <srinath.mannam@broadcom.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Ray Jui <ray.jui@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Jonathan Corbet <corbet@lwn.net>
+Date: Mon, 23 Apr 2018 17:30:38 -0600
+Message-Id: <20180423233046.21476-7-logang@deltatee.com>
+In-Reply-To: <20180423233046.21476-1-logang@deltatee.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+Subject: [PATCH v4 06/14] PCI/P2PDMA: Add P2P DMA driver writer's documentation
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Srinath,
+Add a restructured text file describing how to write drivers
+with support for P2P DMA transactions. The document describes
+how to use the APIs that were added in the previous few
+commits.
 
-One question for you.
+Also adds an index for the PCI documentation tree even though this
+is the only PCI document that has been converted to restructured text
+at this time.
 
-On Fri, Apr 13, 2018 at 8:43 AM, Srinath Mannam
-<srinath.mannam@broadcom.com> wrote:
-> Hi Bjorn,
->
-> Thank you very much for quick response.
->
-> I am using samsung NVMe card as EP connected to our platform. As per
-> link capabilities device does not support L1.s.
-> But LTR is enabled in DEVCAP2.
-> In my observation after setting LTR without enabling ASPM (common
-> clock and link retraining) in software, device stopped responding.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Cc: Jonathan Corbet <corbet@lwn.net>
+---
+ Documentation/PCI/index.rst             |  14 +++
+ Documentation/driver-api/pci/index.rst  |   1 +
+ Documentation/driver-api/pci/p2pdma.rst | 166 ++++++++++++++++++++++++++++++++
+ Documentation/index.rst                 |   3 +-
+ 4 files changed, 183 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/PCI/index.rst
+ create mode 100644 Documentation/driver-api/pci/p2pdma.rst
 
-
-Can you elaborate a little on what do you mean by "stop responding"?
-
-1) Is the system still usable but the PCI hierarchy not responding?
-e.g. can you still talk to the other PCI devices in the system? If you
-have a PCIe switch, can you talk to the other devices on other ports
-of the switch?
-
-2) When the device "stops responding", do you mean it stops responding
-to memory accesses (i.e. no reads/writes by the driver to the device
-registers are working)? Or does it also stop responding to
-configuration cycles? e.g. does the lspci -vvv -s <device address>
-still work?
-
-Thanks,
-
-Rajat
-
-
-> I have no Idea, How endpoint should behave as per spec in this case.
->
->
-> From your explanation, I understand that LTR configuration we can't
-> keep it in the part of ASPM cap init function in aspm.c where we
-> enable common clock.
-> and L1.ss capabilities.
->
-> Also, as you said we use sysfs functions to set ASPM policies. that to
-> ASPM support enabled which configure aspm_capabilities and common
-> clock.
->
-> ASPM_CONFIG is depend on PCIE_CONFIG, so there may be cases where
-> people want to enable PCIE and donot want ASPM.
-> In that case pcie_aspm boot args will help to disable ASPM.
->
-> Is there any such cases where we don't need ASPM and need to set LTR.
-> If not we can move LTR configuration to aspm.c file.
->
-> I think as you said it will be better to add LTR configuration also
-> part of sysfs interface while we enable L1.ss feature.
->
->
->
-> Regards,
-> Srinath.
->
-> On Fri, Apr 13, 2018 at 7:26 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> Hi Srinath,
->>
->> On Fri, Apr 13, 2018 at 12:16:46PM +0530, Srinath Mannam wrote:
->>> Hi Bjorn,
->>>
->>> In our platform we disable aspm using boot_arg "pcie_aspm=off".
->>> But with the below patch, LTR is enabled which is part of ASPM.
->>> even we keep disable aspm using "pcie_aspm=off" then why we need to
->>> enable LTR. This is causing issues with few NVMe cards.
->>
->> Strictly speaking, the spec does not define LTR as "part of" ASPM,
->> although as far as I can tell, the only references to *using* the LTR
->> information are related to ASPM L1 substates.
->>
->> I think the reason I made this patch enable LTR regardless of the
->> initial ASPM settings is because the ASPM settings can be changed at
->> run-time via sysfs (see pcie_aspm_set_policy()).
->>
->> If we enable L1 substates at run-time, LTR has to be enabled somehow,
->> either at enumeration-time (as we currently do) or by some similar
->> code in the pcie_aspm_set_policy() path.
->>
->> LTR consumes some PCIe bandwidth, so it's not free, and I do agree
->> that it seems pointless to enable it if nothing is going to use the
->> information.
->>
->> What sort of issues are you seeing?  Are the issues caused by hardware
->> defects, e.g., things that don't conform to the PCIe spec, or are they
->> caused by a software defect, e.g., something done wrong in the patch
->> below, or maybe some requirement that LTR not be enabled unless ASPM
->> L1 substates are enabled?
->>
->> If the issues are related to hardware defects with LTR itself, maybe a
->> quirk would be the best way to approach it.  That would make it clear
->> what the actual problem is and may allow us to do a better job of
->> working around it.  For example, maybe we could enable some ASPM
->> states, but not those requiring LTR.  Or maybe we could enable ASPM in
->> some parts of the system, but not for the devices that have LTR
->> issues.
->>
->> Also, it could potentially remove the need for you to use the
->> "pcie_aspm=off" parameter, which would improve the user experience.
->>
->>> Please advice us how can we proceed in this scenario.
->>>
->>> commit c46fd358070f22ba68d6e74c22016a33b914c20a
->>> Author: Bjorn Helgaas <bhelgaas@google.com>
->>> Date:   Tue Nov 28 16:43:50 2017 -0600
->>>
->>>     PCI/ASPM: Enable Latency Tolerance Reporting when supported
->>>
->>>     Enable Latency Tolerance Reporting (LTR).  Note that LTR must be enabled in
->>>     the Root Port first, and must not be enabled in any downstream device
->>>     unless the Root Port and all intermediate Switches also support LTR.
->>>     See PCIe r3.1, sec 6.18.
->>>
->>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>     Reviewed-by: Vidya Sagar <vidyas@nvidia.com>
->>>
->>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>> index 14e0ea1..3761b13 100644
->>> --- a/drivers/pci/probe.c
->>> +++ b/drivers/pci/probe.c
->>> @@ -1875,6 +1875,38 @@ static void
->>> pci_configure_relaxed_ordering(struct pci_dev *dev)
->>>         }
->>>  }
->>>
->>> +static void pci_configure_ltr(struct pci_dev *dev)
->>> +{
->>> +#ifdef CONFIG_PCIEASPM
->>> +       u32 cap;
->>> +       struct pci_dev *bridge;
->>> +
->>> +       if (!pci_is_pcie(dev))
->>> +               return;
->>> +
->>> +       pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
->>> +       if (!(cap & PCI_EXP_DEVCAP2_LTR))
->>> +               return;
->>> +
->>> +       /*
->>> +        * Software must not enable LTR in an Endpoint unless the Root
->>> +        * Complex and all intermediate Switches indicate support for LTR.
->>> +        * PCIe r3.1, sec 6.18.
->>> +        */
->>> +       if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
->>> +               dev->ltr_path = 1;
->>> +       else {
->>> +               bridge = pci_upstream_bridge(dev);
->>> +               if (bridge && bridge->ltr_path)
->>> +                       dev->ltr_path = 1;
->>> +       }
->>> +
->>> +       if (dev->ltr_path)
->>> +               pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
->>> +                                        PCI_EXP_DEVCTL2_LTR_EN);
->>> +#endif
->>> +}
->>> +
->>>  static void pci_configure_device(struct pci_dev *dev)
->>>  {
->>>         struct hotplug_params hpp;
->>> @@ -1883,6 +1915,7 @@ static void pci_configure_device(struct pci_dev *dev)
->>>         pci_configure_mps(dev);
->>>         pci_configure_extended_tags(dev, NULL);
->>>         pci_configure_relaxed_ordering(dev);
->>>
->>>
->>> Regards,
->>> Srinath.
+diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
+new file mode 100644
+index 000000000000..2fdc4b3c291d
+--- /dev/null
++++ b/Documentation/PCI/index.rst
+@@ -0,0 +1,14 @@
++==================================
++Linux PCI Driver Developer's Guide
++==================================
++
++.. toctree::
++
++   p2pdma
++
++.. only::  subproject and html
++
++   Indices
++   =======
++
++   * :ref:`genindex`
+diff --git a/Documentation/driver-api/pci/index.rst b/Documentation/driver-api/pci/index.rst
+index 03b57cbf8cc2..d12eeafbfc90 100644
+--- a/Documentation/driver-api/pci/index.rst
++++ b/Documentation/driver-api/pci/index.rst
+@@ -10,6 +10,7 @@ The Linux PCI driver implementer's API guide
+    :maxdepth: 2
+ 
+    pci
++   p2pdma
+ 
+ .. only::  subproject and html
+ 
+diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
+new file mode 100644
+index 000000000000..49a512c405b2
+--- /dev/null
++++ b/Documentation/driver-api/pci/p2pdma.rst
+@@ -0,0 +1,166 @@
++============================
++PCI Peer-to-Peer DMA Support
++============================
++
++The PCI bus has pretty decent support for performing DMA transfers
++between two endpoints on the bus. This type of transaction is
++henceforth called Peer-to-Peer (or P2P). However, there are a number of
++issues that make P2P transactions tricky to do in a perfectly safe way.
++
++One of the biggest issues is that PCI Root Complexes are not required
++to support forwarding packets between Root Ports. To make things worse,
++there is no simple way to determine if a given Root Complex supports
++this or not. (See PCIe r4.0, sec 1.3.1). Therefore, as of this writing,
++the kernel only supports doing P2P when the endpoints involved are all
++behind the same PCIe root port as the spec guarantees that all
++packets will always be routable but does not require routing between
++root ports.
++
++The second issue is that to make use of existing interfaces in Linux,
++memory that is used for P2P transactions needs to be backed by struct
++pages. However, PCI BARs are not typically cache coherent so there are
++a few corner case gotchas with these pages so developers need to
++be careful about what they do with them.
++
++
++Driver Writer's Guide
++=====================
++
++In a given P2P implementation there may be three or more different
++types of kernel drivers in play:
++
++* Providers - A driver which provides or publishes P2P resources like
++  memory or doorbell registers to other drivers.
++* Clients - A driver which makes use of a resource by setting up a
++  DMA transaction to or from it.
++* Orchestrators - A driver which orchestrates the flow of data between
++  clients and providers
++
++In many cases there could be overlap between these three types (ie.
++it may be typical for a driver to be both a provider and a client).
++
++For example, in the NVMe Target Copy Offload implementation:
++
++* The NVMe PCI driver is both a client, provider and orchestrator
++  in that it exposes any CMB (Controller Memory Buffer) as a P2P memory
++  resource (provider), it accepts P2P memory pages as buffers in requests
++  to be used directly (client) and it can also make use the CMB as
++  submission queue entries.
++* The RDMA driver is a client in this arrangement so that an RNIC
++  can DMA directly to the memory exposed by the NVMe device.
++* The NVMe Target driver (nvmet) can orchestrate the data from the RNIC
++  to the P2P memory (CMB) and then to the NVMe device (and vice versa).
++
++This is currently the only arrangement supported by the kernel but
++one could imagine slight tweaks to this that would allow for the same
++functionality. For example, if a specific RNIC added a BAR with some
++memory behind it, its driver could add support as a P2P provider and
++then the NVMe Target could use the RNIC's memory instead of the CMB
++in cases where the NVMe cards in use do not have CMB support.
++
++
++Provider Drivers
++----------------
++
++A provider simply needs to register a BAR (or a portion of a BAR)
++as a P2P DMA resource using :c:func:`pci_p2pdma_add_resource()`.
++This will register struct pages for all the specified memory.
++
++After that it may optionally publish all of its resources as
++P2P memory using :c:func:`pci_p2pmem_publish()`. This will allow
++any orchestrator drivers to find and use the memory. When marked in
++this way, the resource must be regular memory with no side effects.
++
++For the time being this is fairly rudimentary in that all resources
++are typically going to be P2P memory. Future work will likely expand
++this to include other types of resources like doorbells.
++
++
++Client Drivers
++--------------
++
++A client driver typically only has to conditionally change its DMA map
++routine to use the mapping functions :c:func:`pci_p2pdma_map_sg()` and
++:c:func:`pci_p2pdma_unmap_sg()` instead of the usual :c:func:`dma_map_sg()`
++functions.
++
++The client may also, optionally, make use of
++:c:func:`is_pci_p2pdma_page()` to determine when to use the P2P mapping
++functions and when to use the regular mapping functions. In some
++situations, it may be more appropriate to use a flag to indicate a
++given request is P2P memory and map appropriately (for example the
++block layer uses a flag to keep P2P memory out of queues that do not
++have P2P client support). It is important to ensure that struct pages that
++back P2P memory stay out of code that does not have support for them.
++
++
++Orchestrator Drivers
++--------------------
++
++The first task an orchestrator driver must do is compile a list of
++all client drivers that will be involved in a given transaction. For
++example, the NVMe Target driver creates a list including all NVMe drives
++and the RNIC in use. The list is stored as an anonymous struct
++list_head which must be initialized with the usual INIT_LIST_HEAD.
++The following functions may then be used to add to, remove from and free
++the list of clients with the functions :c:func:`pci_p2pdma_add_client()`,
++:c:func:`pci_p2pdma_remove_client()` and
++:c:func:`pci_p2pdma_client_list_free()`.
++
++With the client list in hand, the orchestrator may then call
++:c:func:`pci_p2pmem_find()` to obtain a published P2P memory provider
++that is supported (behind the same root port) as all the clients. If more
++than one provider is supported, the one nearest to all the clients will
++be chosen first. If there are more than one provider is an equal distance
++away, the one returned will be chosen at random. This function returns the PCI
++device to use for the provider with a reference taken and therefore
++when it's no longer needed it should be returned with pci_dev_put().
++
++Alternatively, if the orchestrator knows (via some other means)
++which provider it wants to use it may use :c:func:`pci_has_p2pmem()`
++to determine if it has P2P memory and :c:func:`pci_p2pdma_distance()`
++to determine the cumulative distance between it and a potential
++list of clients.
++
++With a supported provider in hand, the driver can then call
++:c:func:`pci_p2pdma_assign_provider()` to assign the provider
++to the client list. This function returns false if any of the
++clients are unsupported by the provider.
++
++Once a provider is assigned to a client list via either
++:c:func:`pci_p2pmem_find()` or :c:func:`pci_p2pdma_assign_provider()`,
++the list is permanently bound to the provider such that any new clients
++added to the list must be supported by the already selected provider.
++If they are not supported, :c:func:`pci_p2pdma_add_client()` will return
++an error. In this way, orchestrators are free to add and remove devices
++without having to recheck support or tear down existing transfers to
++change P2P providers.
++
++Once a provider is selected, the orchestrator can then use
++:c:func:`pci_alloc_p2pmem()` and :c:func:`pci_free_p2pmem()` to
++allocate P2P memory from the provider. :c:func:`pci_p2pmem_alloc_sgl()`
++and :c:func:`pci_p2pmem_free_sgl()` are convenience functions for
++allocating scatter-gather lists with P2P memory.
++
++Struct Page Caveats
++-------------------
++
++Driver writers should be very careful about not passing these special
++struct pages to code that isn't prepared for it. At this time, the kernel
++interfaces do not have any checks for ensuring this. This obviously
++precludes passing these pages to userspace.
++
++P2P memory is also technically IO memory but should never have any side
++effects behind it. Thus, the order of loads and stores should not be important
++and ioreadX(), iowriteX() and friends should not be necessary.
++However, as the memory is not cache coherent, if access ever needs to
++be protected by a spinlock then :c:func:`mmiowb()` must be used before
++unlocking the lock. (See ACQUIRES VS I/O ACCESSES in
++Documentation/memory-barriers.txt)
++
++
++P2P DMA Support Library
++=====================
++
++.. kernel-doc:: drivers/pci/p2pdma.c
++   :export:
+diff --git a/Documentation/index.rst b/Documentation/index.rst
+index 3b99ab931d41..e7938b507df3 100644
+--- a/Documentation/index.rst
++++ b/Documentation/index.rst
+@@ -45,7 +45,7 @@ the kernel interface as seen by application developers.
+ .. toctree::
+    :maxdepth: 2
+ 
+-   userspace-api/index	      
++   userspace-api/index
+ 
+ 
+ Introduction to kernel development
+@@ -89,6 +89,7 @@ needed).
+    sound/index
+    crypto/index
+    filesystems/index
++   PCI/index
+ 
+ Architecture-specific documentation
+ -----------------------------------
+-- 
+2.11.0
