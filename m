@@ -1,85 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yb0-f178.google.com ([209.85.213.178]:42524 "EHLO
-        mail-yb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750735AbeDXTbP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Apr 2018 15:31:15 -0400
-Received: by mail-yb0-f178.google.com with SMTP id j69-v6so3374387ybg.9
-        for <linux-pci@vger.kernel.org>; Tue, 24 Apr 2018 12:31:15 -0700 (PDT)
+Return-Path: <SRS0=Ug22=HM=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=Ug22=HM=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
+To: Alex Williamson <alex.williamson@redhat.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, sulrich@codeaurora.org, timur@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ Mike Marciniszyn <mike.marciniszyn@intel.com>,
+ Dennis Dalessandro <dennis.dalessandro@intel.com>,
+ Doug Ledford <dledford@redhat.com>,
+ "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ Alex Deucher <alexander.deucher@amd.com>, Rajat Jain <rajatja@google.com>
+References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+ <20180419202632.GE14063@ziepe.ca>
+ <20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
+ <290e9530-dcde-9c10-7ae0-59ac4c509db4@codeaurora.org>
+ <20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
+ <20180420090420.03fb1e6c@w520.home>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <10d9cf68-29ed-d205-a25f-b8dade53cdd8@codeaurora.org>
+Date: Mon, 23 Apr 2018 13:28:22 -0400
 MIME-Version: 1.0
-References: <bug-199473-41252@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-199473-41252@https.bugzilla.kernel.org/>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 24 Apr 2018 19:31:03 +0000
-Message-ID: <CAErSpo4BOD3V7pgR75Gm7dYqvXYq1QfChjj16Jn1QgSK1W=Drw@mail.gmail.com>
-Subject: Fwd: [Bug 199473] New: pcieport does not scan devices behind PEX
- switch, while resources are allocated
-To: janpieter.sollie@dommel.be
-Cc: linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180420090420.03fb1e6c@w520.home>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the report!
+On 4/20/2018 11:04 AM, Alex Williamson wrote:
+> Is there a concern here about whether the endpoint device driver or the
+> PCI core really knows better about link retraining?  This makes me
+> remember my unfinished (and need to revisit) Pericom quirk[1] where
+> errata in the PCIe switch requires that upstream and downstream links
+> are balanced (ie. same link rate) or else enabling ACS results in
+> packets not properly flowing through the switch.  If an endpoint driver
+> starts deciding to retrain links, overriding quirks in the PCI core,
+> then such topology manipulation isn't possible.  Why does the
+> driver .probe() function think it can retrain at a higher link rate
+> than PCI core?  Thanks,
 
-I don't understand exactly what the issue is yet.  You attached lspci
-output from v4.14.27 and v4.17-rc1.  The v4.17-rc1 output shows several
-devices (4b:00, 4c:00, 4f:00) below the PEX switch, while the v4.14.27
-output shows only the 4f:00 devices.
+The example given is for some serdes firmware load to happen in probe and
+then performing a retrain to reach to a better speed.
 
-Is the problem that v4.14.27 doesn't find the 4b:00 and 4c:00 devices?
-Does v4.17-rc1 work correctly?
+It becomes a chicken and egg problem. 
 
-If v4.17-rc1 works but v4.14.27 does not, it's probably a question of
-working with your distro to see if they can (1) identify some change that
-fixed things, and (2) backport that change to the distro kernel.
+1. Endpoint HW trains to gen1 by default pre-boot.
+2. PCI core enumerates the device.
+3. Endpoint driver gets loaded
+4. Driver does the firmware programming followed by a link retrain.
 
-The Broadcom driver you attached at comment #4 shouldn't be related to this
-problem.  Device enumeration is performed by the PCI core and doesn't
-require any additional drivers.  I didn't look at the Broadcom driver, so I
-don't know what it does.  The PEX switch does include an endpoint
-(42:00.1); it's possible the driver is for some functionality provided by
-that endpoint.
+I think it is the responsibility of the PCI core to provide reset APIs.
+However, expecting endpoint drivers to be knowledgeable about hotplug is
+too much.
 
----------- Forwarded message ---------
-From: <bugzilla-daemon@bugzilla.kernel.org>
-Date: Mon, Apr 23, 2018 at 12:20 AM
-Subject: [Bug 199473] New: pcieport does not scan devices behind PEX
-switch, while resources are allocated
-To: <bhelgaas@google.com>
+We can certainly contain AER change into pci directory by moving the slot
+reset function to drivers/pci.h file.
 
+But, we need to think about what to do about VFIO and other endpoint
+initiated reset cases. My suggestion was to move this into a single API and
+remove all other APIs from include/linux/pci.h.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=199473
+Coming back to this patch...
 
-             Bug ID: 199473
-            Summary: pcieport does not scan devices behind PEX switch,
-                     while resources are allocated
-            Product: Drivers
-            Version: 2.5
-     Kernel Version: 4.17-rc1
-           Hardware: x86-64
-                 OS: Linux
-               Tree: Mainline
-             Status: NEW
-           Severity: normal
-           Priority: P1
-          Component: PCI
-           Assignee: drivers_pci@kernel-bugs.osdl.org
-           Reporter: janpieter.sollie@dommel.be
-         Regression: No
+Do we need a retrain API with the speed that driver wants to reach to?
+API can return what was actually accomplished. The quirk from Alex can
+run inside this API to make a decision on what speed do we actually want
+to reach to for a given PCI topology by reprogramming the target link speed
+field.
 
-Created attachment 275511
-   --> https://bugzilla.kernel.org/attachment.cgi?id=275511&action=edit
-dmesg stable kernel
-
-pcieport assigns the PEX 8619 pcie expander switch ports, but does not scan
-them for additional objects behind the ports. only 1 device is added @ pci
-region 4f.  Workaround for getting all devices online: while pc is on,
-remove
-the card, reinsert it at a slot before the working device, and make a cold
-start.
-It would be nice if the pcie switches are scanned properly.
-
---
-You are receiving this mail because:
-You are watching the assignee of the bug.
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
