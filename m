@@ -1,49 +1,146 @@
-Return-Path: <SRS0=W8iN=HT=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=W8iN=HT=h08.hostsharing.net=foo00@kernel.org>
-Date: Mon, 30 Apr 2018 23:38:26 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
-	Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Eric Biederman <ebiederm@xmission.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
- (issued 65284 msec ago)
-Message-ID: <20180430213826.GA6046@wunner.de>
-References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
- <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
- <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
- <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
- <20180428005620.GB1675@dhcp-128-65.nay.redhat.com>
- <20180428011845.GC1675@dhcp-128-65.nay.redhat.com>
- <3ebc908fb196168bf0373875ffc5679e@codeaurora.org>
- <d8d134dc-9757-97cd-7a24-cbb21611d6c6@codeaurora.org>
- <20180430211740.GG95643@bhelgaas-glaptop.roam.corp.google.com>
- <7285da70-2c3e-c3b7-62e1-fdbb55a77729@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7285da70-2c3e-c3b7-62e1-fdbb55a77729@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:44199 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755693AbeDWPXR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 11:23:17 -0400
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v14 6/9] PCI: Unify wait for link active into generic PCI
+Date: Mon, 23 Apr 2018 11:23:10 -0400
+Message-Id: <1524496993-29799-7-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
+References: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 30, 2018 at 05:27:32PM -0400, Sinan Kaya wrote:
-> On 4/30/2018 5:17 PM, Bjorn Helgaas wrote:
-> How about remove() only if MSI is disabled? Most root port interrupts
-> are MSI based anyhow.
+Clients such as HP, DPC are using pcie_wait_link_active(), which waits
+till the link becomes active or inactive.
 
-I think the code is perfectly fine as it is and doesn't need to nor
-should be modified.  We should just add a quirk for this particular
-chipset that it doesn't support Command Completed interrupts (if that's
-what's broken).  In the case of Thunderbolt controllers, the first few
-had the NoCompl bit set incorrectly in config space and Intel hardware
-engineers confirmed the error.  These or similar oddities may occur
-with more chipsets, so I propose moving existing quirks to a
-separate file, thereby avoiding that they clutter generic code.
-The blinkenlights feature added with commit 576243b3f9ea is a similar
-quirk that could be moved to a separate pciehp_quirks.c file.
+Made generic function and moved it to drivers/pci/pci.c
 
-Thanks,
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-Lukas
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 18a42f8..e0c2b8e 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -231,25 +231,11 @@ bool pciehp_check_link_active(struct controller *ctrl)
+ 	return ret;
+ }
+ 
+-static void __pcie_wait_link_active(struct controller *ctrl, bool active)
+-{
+-	int timeout = 1000;
+-
+-	if (pciehp_check_link_active(ctrl) == active)
+-		return;
+-	while (timeout > 0) {
+-		msleep(10);
+-		timeout -= 10;
+-		if (pciehp_check_link_active(ctrl) == active)
+-			return;
+-	}
+-	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
+-			active ? "set" : "cleared");
+-}
+-
+ static void pcie_wait_link_active(struct controller *ctrl)
+ {
+-	__pcie_wait_link_active(ctrl, true);
++	struct pci_dev *pdev = ctrl_dev(ctrl);
++
++	pcie_wait_for_link(pdev, true);
+ }
+ 
+ static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f6a4dd1..2bcf977 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4176,6 +4176,36 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
++/**
++ * pcie_wait_for_link - Wait for link till it's active/inactive
++ * @pdev: Bridge device
++ * @active: waiting for active or inactive ?
++ *
++ * Use this to wait till link becomes active or inactive.
++ */
++bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
++{
++	int timeout = 1000;
++	bool ret;
++	u16 lnk_status;
++
++	for (;;) {
++		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
++		if (ret == active)
++			return true;
++		if (timeout <= 0)
++			break;
++		msleep(10);
++		timeout -= 10;
++	}
++
++	pci_info(pdev, "Data Link Layer Link Active not %s in 1000 msec\n",
++		 active ? "set" : "cleared");
++
++	return false;
++}
++
+ void pci_reset_secondary_bus(struct pci_dev *dev)
+ {
+ 	u16 ctrl;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index abc514e..5c44fbc 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -345,6 +345,8 @@ void pci_enable_acs(struct pci_dev *dev);
+ /* PCI error reporting and recovery */
+ void pcie_do_recovery(struct pci_dev *dev, int severity);
+ 
++bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
++
+ #ifdef CONFIG_PCIEASPM
+ void pcie_aspm_init_link_state(struct pci_dev *pdev);
+ void pcie_aspm_exit_link_state(struct pci_dev *pdev);
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index ad02298..6baed85 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -68,19 +68,9 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+ 
+ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ {
+-	unsigned long timeout = jiffies + HZ;
+ 	struct pci_dev *pdev = dpc->dev->port;
+-	struct device *dev = &dpc->dev->device;
+-	u16 lnk_status;
+ 
+-	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+-	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
+-					!time_after(jiffies, timeout)) {
+-		msleep(10);
+-		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+-	}
+-	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
+-		dev_warn(dev, "Link state not disabled for DPC event\n");
++	pcie_wait_for_link(pdev, false);
+ }
+ 
+ /**
+-- 
+2.7.4
