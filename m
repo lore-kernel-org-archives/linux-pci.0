@@ -1,87 +1,101 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-        Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH RESEND v4 8/9] PCI: Improve "partially hidden behind bridge" log message
-Date: Tue, 10 Apr 2018 17:04:53 +0200
-Message-ID: <2498516.Go1qFCBKL6@aspire.rjw.lan>
-In-Reply-To: <20180403145225.22371-9-mika.westerberg@linux.intel.com>
-References: <20180403145225.22371-1-mika.westerberg@linux.intel.com> <20180403145225.22371-9-mika.westerberg@linux.intel.com>
+Return-Path: <SRS0=4vff=HM=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=4vff=HM=redhat.com=alex.williamson@kernel.org>
+Date: Mon, 23 Apr 2018 14:41:04 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, Jason Gunthorpe <jgg@ziepe.ca>, Bjorn
+ Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ sulrich@codeaurora.org, timur@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Mike
+ Marciniszyn <mike.marciniszyn@intel.com>, Dennis Dalessandro
+ <dennis.dalessandro@intel.com>, Doug Ledford <dledford@redhat.com>, "open
+ list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>, open list
+ <linux-kernel@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>,
+ Rajat Jain <rajatja@google.com>
+Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
+Message-ID: <20180423144104.2dad7495@w520.home>
+In-Reply-To: <20180423202311.GA164898@bhelgaas-glaptop.roam.corp.google.com>
+References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+	<20180419202632.GE14063@ziepe.ca>
+	<20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
+	<290e9530-dcde-9c10-7ae0-59ac4c509db4@codeaurora.org>
+	<20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
+	<20180420090420.03fb1e6c@w520.home>
+	<10d9cf68-29ed-d205-a25f-b8dade53cdd8@codeaurora.org>
+	<20180423131044.53471670@w520.home>
+	<20180423202311.GA164898@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, April 3, 2018 4:52:24 PM CEST Mika Westerberg wrote:
-> There is a sanity checker in the end of pci_scan_child_bus_extend() that
-> tries to detect badly configured bridges. For example given the below
-> topology:
-> 
->   +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
->                                   +-01.0-[04-39]--
->                                   \-02.0-[3a]----00.0
-> 
-> The sanity checker notices this and logs following messages:
-> 
->   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
->   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
-> 
-> This is not really helpful to users and the information above is not
-> even correct (0000:02 is a bus not bridge). Make this a bit more
-> understandable by changing the sanity checker to log following message
-> in place of the above two messages:
-> 
->   pci 0000:02:02.0: devices behind bridge are unusable because we cannot assign [bus 3a] for them
+On Mon, 23 Apr 2018 15:23:11 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-FWIW, I prefer to use passive voice in messages, like
-
- devices behind bridge are unusable, because [bus 3a] cannot be assigned for them
-
-> While there update the comment on top of the sanity checker block to
-> make it clear that it is not only restricted to CardBus.
+> On Mon, Apr 23, 2018 at 01:10:44PM -0600, Alex Williamson wrote:
+> > On Mon, 23 Apr 2018 13:28:22 -0400
+> > Sinan Kaya <okaya@codeaurora.org> wrote:
+> >   
+> > > On 4/20/2018 11:04 AM, Alex Williamson wrote:  
+> > > > Is there a concern here about whether the endpoint device driver or the
+> > > > PCI core really knows better about link retraining?  This makes me
+> > > > remember my unfinished (and need to revisit) Pericom quirk[1] where
+> > > > errata in the PCIe switch requires that upstream and downstream links
+> > > > are balanced (ie. same link rate) or else enabling ACS results in
+> > > > packets not properly flowing through the switch.  If an endpoint driver
+> > > > starts deciding to retrain links, overriding quirks in the PCI core,
+> > > > then such topology manipulation isn't possible.  Why does the
+> > > > driver .probe() function think it can retrain at a higher link rate
+> > > > than PCI core?  Thanks,    
+> > > 
+> > > The example given is for some serdes firmware load to happen in probe and
+> > > then performing a retrain to reach to a better speed.
+> > > 
+> > > It becomes a chicken and egg problem. 
+> > > 
+> > > 1. Endpoint HW trains to gen1 by default pre-boot.
+> > > 2. PCI core enumerates the device.
+> > > 3. Endpoint driver gets loaded
+> > > 4. Driver does the firmware programming followed by a link retrain.
+> > > 
+> > > I think it is the responsibility of the PCI core to provide reset APIs.
+> > > However, expecting endpoint drivers to be knowledgeable about hotplug is
+> > > too much.
+> > > 
+> > > We can certainly contain AER change into pci directory by moving the slot
+> > > reset function to drivers/pci.h file.
+> > > 
+> > > But, we need to think about what to do about VFIO and other endpoint
+> > > initiated reset cases. My suggestion was to move this into a single API and
+> > > remove all other APIs from include/linux/pci.h.  
+> > 
+> > I'm a little confused about the relation between reset and retrain.
+> > AIUI we can retrain the link without any sort of endpoint reset and if
+> > some sort of driver/firmware setup is required on the endpoint to
+> > achieve the target link speed, then I'd think we only want to retrain.  
 > 
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/probe.c | 14 +++++---------
->  1 file changed, 5 insertions(+), 9 deletions(-)
+> In hfi1, do_pcie_gen3_transition() resets the device.  I don't know if
+> retraining the link would be sufficient; maybe the reset is required
+> to make the device use the new firmware.  I guess we already export
+> reset interfaces, so if we add a retrain interface, drivers could
+> choose what they need.
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 079eea6680bb..70b07a0e00b8 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1175,20 +1175,16 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->  		(is_cardbus ? "PCI CardBus %04x:%02x" : "PCI Bus %04x:%02x"),
->  		pci_domain_nr(bus), child->number);
->  
-> -	/* Has only triggered on CardBus, fixup is in yenta_socket */
-> +	/* Check that all devices are accessible */
->  	while (bus->parent) {
->  		if ((child->busn_res.end > bus->busn_res.end) ||
->  		    (child->number > bus->busn_res.end) ||
->  		    (child->number < bus->number) ||
->  		    (child->busn_res.end < bus->number)) {
-> -			dev_info(&child->dev, "%pR %s hidden behind%s bridge %s %pR\n",
-> -				&child->busn_res,
-> -				(bus->number > child->busn_res.end &&
-> -				 bus->busn_res.end < child->number) ?
-> -					"wholly" : "partially",
-> -				bus->self->transparent ? " transparent" : "",
-> -				dev_name(&bus->dev),
-> -				&bus->busn_res);
-> +			dev_info(&dev->dev,
-> +				 "devices behind bridge are unusable because we cannot assign %pR for them\n",
-> +				 &child->busn_res);
-> +			break;
->  		}
->  		bus = bus->parent;
->  	}
+> > How this is going to work with vfio is an interesting question.  We're
+> > only providing access to the device, not the link to the device.  
 > 
+> > Multifunction endpoints become a big problem if one function starts
+> > requesting link retraining while another is in use elsewhere.  
+> 
+> Can we just make it the driver's problem by returning -EPERM if one
+> function requests a retrain while another function is in use?
 
+Yes, this is basically how we handle bus resets through vfio-pci, if
+there are multiple devices affected by a bus reset, slots or functions,
+the caller needs to prove ownership of all of them before we do a bus
+reset.  That's great for video cards where we have the GPU and audio
+functions typically assigned together anyway, but I don't know that
+it's a great solution for IB where you're more likely to want to assign
+separate functions to separate users and nobody can get the device to
+run at full speed unless all the functions are assigned to one user.
+Thanks,
 
+Alex
