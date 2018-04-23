@@ -1,63 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 9 Apr 2018 14:12:33 -0500
-From: Rob Herring <robh@kernel.org>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        mark.rutland@arm.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 3/8] bindings: PCI: designware: Add support for the EP in
- designware driver
-Message-ID: <20180409191233.l2s5hnrq7gejrmq6@rob-hp-laptop>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
- <dd582bfc2780679b7a092d23547c316234a84c34.1522235224.git.gustavo.pimentel@synopsys.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 24 Apr 2018 00:52:05 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 11/12] swiotlb: move the SWIOTLB config symbol to
+ lib/Kconfig
+Message-ID: <20180423235205.GH16141@n2100.armlinux.org.uk>
+References: <20180423170419.20330-1-hch@lst.de>
+ <20180423170419.20330-12-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <dd582bfc2780679b7a092d23547c316234a84c34.1522235224.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180423170419.20330-12-hch@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-mips@linux-mips.org, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ linux-pci@vger.kernel.org, x86@kernel.org, linux-block@vger.kernel.org,
+ linux-mm@kvack.org, iommu@lists.linux-foundation.org,
+ sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 28, 2018 at 12:38:33PM +0100, Gustavo Pimentel wrote:
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
->  Documentation/devicetree/bindings/pci/designware-pcie.txt | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
+On Mon, Apr 23, 2018 at 07:04:18PM +0200, Christoph Hellwig wrote:
+> This way we have one central definition of it, and user can select it as
+> needed.  Note that we also add a second ARCH_HAS_SWIOTLB symbol to
+> indicate the architecture supports swiotlb at all, so that we can still
+> make the usage optional for a few architectures that want this feature
+> to be user selectable.
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> index 6300762..4bb2e08 100644
-> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> @@ -3,6 +3,7 @@
->  Required properties:
->  - compatible:
->  	"snps,dw-pcie" for RC mode;
-> +	"snps,dw-pcie-ep" for EP mode;
->  - reg: Should contain the configuration address space.
->  - reg-names: Must be "config" for the PCIe configuration space.
->      (The old way of getting the configuration address space from "ranges"
-> @@ -56,3 +57,15 @@ Example configuration:
->  		#interrupt-cells = <1>;
->  		num-lanes = <1>;
->  	};
-> +or
-> +	pcie_ep: pcie_ep@dfc00000 {
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-pcie-ep@...
+Hmm, this looks like we end up with NEED_SG_DMA_LENGTH=y on ARM by
+default, which probably isn't a good idea - ARM pre-dates the dma_length
+parameter in scatterlists, and I don't think all code is guaranteed to
+do the right thing if this is enabled.
 
-Or what others have used. We should define a standard name in the DT 
-spec for this.
+For example, arch/arm/mach-rpc/dma.c doesn't use the dma_length
+member of struct scatterlist.
 
-> +		compatible = "snps,dw-pcie-ep";
-> +		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
-> +		      <0xdfc01000 0x0001000>, /* IP registers 2 */
-> +		      <0xd0000000 0x2000000>; /* Configuration space */
-> +		reg-names = "dbi", "dbi2", "addr_space";
-> +		device_type = "pci";
-> +		num-ib-windows = <6>;
-> +		num-ob-windows = <2>;
-> +		num-lanes = <1>;
-> +	};
-> -- 
-> 2.7.4
-> 
-> 
+-- 
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line in suburbia: sync at 8.8Mbps down 630kbps up
+According to speedtest.net: 8.21Mbps down 510kbps up
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
