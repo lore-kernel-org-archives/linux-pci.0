@@ -1,304 +1,424 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:40088 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755772AbeDWRFQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 13:05:16 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: x86@kernel.org, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        linux-mips@linux-mips.org, sparclinux@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 08/12] arch: define the ARCH_DMA_ADDR_T_64BIT config symbol in lib/Kconfig
-Date: Mon, 23 Apr 2018 19:04:15 +0200
-Message-Id: <20180423170419.20330-9-hch@lst.de>
-In-Reply-To: <20180423170419.20330-1-hch@lst.de>
-References: <20180423170419.20330-1-hch@lst.de>
+Received: from foss.arm.com ([217.140.101.70]:41628 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755285AbeDWOhf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 23 Apr 2018 10:37:35 -0400
+Date: Mon, 23 Apr 2018 15:37:27 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Simon Xue <xxm@rock-chips.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 01/10] PCI: Rename directory from host to controller
+Message-ID: <20180423143727.GA17979@e107981-ln.cambridge.arm.com>
+References: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
+ <1522630910-151391-1-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1522630910-151391-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Define this symbol if the architecture either uses 64-bit pointers or the
-PHYS_ADDR_T_64BIT is set.  This covers 95% of the old arch magic.  We only
-need an additional select for Xen on ARM (why anyway?), and we now always
-set ARCH_DMA_ADDR_T_64BIT on mips boards with 64-bit physical addressing
-instead of only doing it when highmem is set.
+On Mon, Apr 02, 2018 at 09:01:50AM +0800, Shawn Lin wrote:
+> This patch is in preparation for moving back dwc and
+> cadence drivers.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- arch/alpha/Kconfig             | 3 ---
- arch/arc/Kconfig               | 3 ---
- arch/arm/mach-axxia/Kconfig    | 1 -
- arch/arm/mach-bcm/Kconfig      | 1 -
- arch/arm/mach-exynos/Kconfig   | 1 -
- arch/arm/mach-highbank/Kconfig | 1 -
- arch/arm/mach-rockchip/Kconfig | 1 -
- arch/arm/mach-shmobile/Kconfig | 1 -
- arch/arm/mach-tegra/Kconfig    | 1 -
- arch/arm/mm/Kconfig            | 3 ---
- arch/arm64/Kconfig             | 3 ---
- arch/ia64/Kconfig              | 3 ---
- arch/mips/Kconfig              | 3 ---
- arch/powerpc/Kconfig           | 3 ---
- arch/riscv/Kconfig             | 3 ---
- arch/s390/Kconfig              | 3 ---
- arch/sparc/Kconfig             | 4 ----
- arch/x86/Kconfig               | 4 ----
- lib/Kconfig                    | 3 +++
- 19 files changed, 3 insertions(+), 42 deletions(-)
+I know we have discussed this before but I would like to get Bjorn's
+opinion on this patch - it is quite intrusive and if we decide to do it
+I should ask people to rebase all their patches against it, which means
+that the sooner we decide what to do the better.
 
-diff --git a/arch/alpha/Kconfig b/arch/alpha/Kconfig
-index 1fd9645b0c67..aa7df1a36fd0 100644
---- a/arch/alpha/Kconfig
-+++ b/arch/alpha/Kconfig
-@@ -66,9 +66,6 @@ config ZONE_DMA
- 	bool
- 	default y
- 
--config ARCH_DMA_ADDR_T_64BIT
--	def_bool y
--
- config GENERIC_ISA_DMA
- 	bool
- 	default y
-diff --git a/arch/arc/Kconfig b/arch/arc/Kconfig
-index f94c61da682a..7498aca4b887 100644
---- a/arch/arc/Kconfig
-+++ b/arch/arc/Kconfig
-@@ -458,9 +458,6 @@ config ARC_HAS_PAE40
- 	  Enable access to physical memory beyond 4G, only supported on
- 	  ARC cores with 40 bit Physical Addressing support
- 
--config ARCH_DMA_ADDR_T_64BIT
--	bool
--
- config ARC_KVADDR_SIZE
- 	int "Kernel Virtual Address Space size (MB)"
- 	range 0 512
-diff --git a/arch/arm/mach-axxia/Kconfig b/arch/arm/mach-axxia/Kconfig
-index bb2ce1c63fd9..d3eae6037913 100644
---- a/arch/arm/mach-axxia/Kconfig
-+++ b/arch/arm/mach-axxia/Kconfig
-@@ -2,7 +2,6 @@
- config ARCH_AXXIA
- 	bool "LSI Axxia platforms"
- 	depends on ARCH_MULTI_V7 && ARM_LPAE
--	select ARCH_DMA_ADDR_T_64BIT
- 	select ARM_AMBA
- 	select ARM_GIC
- 	select ARM_TIMER_SP804
-diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
-index c2f3b0d216a4..c46a728df44e 100644
---- a/arch/arm/mach-bcm/Kconfig
-+++ b/arch/arm/mach-bcm/Kconfig
-@@ -211,7 +211,6 @@ config ARCH_BRCMSTB
- 	select BRCMSTB_L2_IRQ
- 	select BCM7120_L2_IRQ
- 	select ARCH_HAS_HOLES_MEMORYMODEL
--	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
- 	select ZONE_DMA if ARM_LPAE
- 	select SOC_BRCMSTB
- 	select SOC_BUS
-diff --git a/arch/arm/mach-exynos/Kconfig b/arch/arm/mach-exynos/Kconfig
-index 647c319f9f5f..2ca405816846 100644
---- a/arch/arm/mach-exynos/Kconfig
-+++ b/arch/arm/mach-exynos/Kconfig
-@@ -112,7 +112,6 @@ config SOC_EXYNOS5440
- 	bool "SAMSUNG EXYNOS5440"
- 	default y
- 	depends on ARCH_EXYNOS5
--	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
- 	select HAVE_ARM_ARCH_TIMER
- 	select AUTO_ZRELADDR
- 	select PINCTRL_EXYNOS5440
-diff --git a/arch/arm/mach-highbank/Kconfig b/arch/arm/mach-highbank/Kconfig
-index 81110ec34226..5552968f07f8 100644
---- a/arch/arm/mach-highbank/Kconfig
-+++ b/arch/arm/mach-highbank/Kconfig
-@@ -1,7 +1,6 @@
- config ARCH_HIGHBANK
- 	bool "Calxeda ECX-1000/2000 (Highbank/Midway)"
- 	depends on ARCH_MULTI_V7
--	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
- 	select ARCH_HAS_HOLES_MEMORYMODEL
- 	select ARCH_SUPPORTS_BIG_ENDIAN
- 	select ARM_AMBA
-diff --git a/arch/arm/mach-rockchip/Kconfig b/arch/arm/mach-rockchip/Kconfig
-index a4065966881a..fafd3d7f9f8c 100644
---- a/arch/arm/mach-rockchip/Kconfig
-+++ b/arch/arm/mach-rockchip/Kconfig
-@@ -3,7 +3,6 @@ config ARCH_ROCKCHIP
- 	depends on ARCH_MULTI_V7
- 	select PINCTRL
- 	select PINCTRL_ROCKCHIP
--	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
- 	select ARCH_HAS_RESET_CONTROLLER
- 	select ARM_AMBA
- 	select ARM_GIC
-diff --git a/arch/arm/mach-shmobile/Kconfig b/arch/arm/mach-shmobile/Kconfig
-index 280e7312a9e1..fe60cd09a5ca 100644
---- a/arch/arm/mach-shmobile/Kconfig
-+++ b/arch/arm/mach-shmobile/Kconfig
-@@ -29,7 +29,6 @@ config ARCH_RMOBILE
- menuconfig ARCH_RENESAS
- 	bool "Renesas ARM SoCs"
- 	depends on ARCH_MULTI_V7 && MMU
--	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
- 	select ARCH_SHMOBILE
- 	select ARM_GIC
- 	select GPIOLIB
-diff --git a/arch/arm/mach-tegra/Kconfig b/arch/arm/mach-tegra/Kconfig
-index 1e0aeb47bac6..7f3b83e0d324 100644
---- a/arch/arm/mach-tegra/Kconfig
-+++ b/arch/arm/mach-tegra/Kconfig
-@@ -15,6 +15,5 @@ menuconfig ARCH_TEGRA
- 	select RESET_CONTROLLER
- 	select SOC_BUS
- 	select ZONE_DMA if ARM_LPAE
--	select ARCH_DMA_ADDR_T_64BIT if ARM_LPAE
- 	help
- 	  This enables support for NVIDIA Tegra based systems.
-diff --git a/arch/arm/mm/Kconfig b/arch/arm/mm/Kconfig
-index 2f77c6344ef1..5a016bc80e26 100644
---- a/arch/arm/mm/Kconfig
-+++ b/arch/arm/mm/Kconfig
-@@ -674,9 +674,6 @@ config ARM_PV_FIXUP
- 	def_bool y
- 	depends on ARM_LPAE && ARM_PATCH_PHYS_VIRT && ARCH_KEYSTONE
- 
--config ARCH_DMA_ADDR_T_64BIT
--	bool
--
- config ARM_THUMB
- 	bool "Support Thumb user binaries" if !CPU_THUMBONLY && EXPERT
- 	depends on CPU_THUMB_CAPABLE
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index b6aa33e642cc..4d924eb32e7f 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -236,9 +236,6 @@ config ZONE_DMA32
- config HAVE_GENERIC_GUP
- 	def_bool y
- 
--config ARCH_DMA_ADDR_T_64BIT
--	def_bool y
--
- config SMP
- 	def_bool y
- 
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index 0e42731adaf1..685d557eea48 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -80,9 +80,6 @@ config MMU
- 	bool
- 	default y
- 
--config ARCH_DMA_ADDR_T_64BIT
--	def_bool y
--
- config SWIOTLB
-        bool
- 
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index 985388078872..e10cc5c7be69 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -1101,9 +1101,6 @@ config GPIO_TXX9
- config FW_CFE
- 	bool
- 
--config ARCH_DMA_ADDR_T_64BIT
--	def_bool (HIGHMEM && PHYS_ADDR_T_64BIT) || 64BIT
--
- config ARCH_SUPPORTS_UPROBES
- 	bool
- 
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index b3d091d65e05..a4b2ac7c3d2e 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -13,9 +13,6 @@ config 64BIT
- 	bool
- 	default y if PPC64
- 
--config ARCH_DMA_ADDR_T_64BIT
--	def_bool PHYS_ADDR_T_64BIT
--
- config MMU
- 	bool
- 	default y
-diff --git a/arch/riscv/Kconfig b/arch/riscv/Kconfig
-index f52f86f43a4b..17212ba54ee3 100644
---- a/arch/riscv/Kconfig
-+++ b/arch/riscv/Kconfig
-@@ -44,9 +44,6 @@ config ZONE_DMA32
- 	bool
- 	default y
- 
--config ARCH_DMA_ADDR_T_64BIT
--	def_bool y
--
- config PAGE_OFFSET
- 	hex
- 	default 0xC0000000 if 32BIT && MAXPHYSMEM_2GB
-diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
-index 89a007672f70..b794a2ab6d15 100644
---- a/arch/s390/Kconfig
-+++ b/arch/s390/Kconfig
-@@ -35,9 +35,6 @@ config GENERIC_BUG
- config GENERIC_BUG_RELATIVE_POINTERS
- 	def_bool y
- 
--config ARCH_DMA_ADDR_T_64BIT
--	def_bool y
--
- config GENERIC_LOCKBREAK
- 	def_bool y if SMP && PREEMPT
- 
-diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
-index be770b511ddd..c1cfc17eb504 100644
---- a/arch/sparc/Kconfig
-+++ b/arch/sparc/Kconfig
-@@ -105,10 +105,6 @@ config ARCH_ATU
- 	bool
- 	default y if SPARC64
- 
--config ARCH_DMA_ADDR_T_64BIT
--	bool
--	default y if ARCH_ATU
--
- config STACKTRACE_SUPPORT
- 	bool
- 	default y if SPARC64
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 8fccdaf02bb0..07b031f99eb1 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -1476,10 +1476,6 @@ config X86_5LEVEL
- 
- 	  Say N if unsure.
- 
--config ARCH_DMA_ADDR_T_64BIT
--	def_bool y
--	depends on X86_64 || HIGHMEM64G
--
- config X86_DIRECT_GBPAGES
- 	def_bool y
- 	depends on X86_64 && !DEBUG_PAGEALLOC
-diff --git a/lib/Kconfig b/lib/Kconfig
-index ce9fa962d59b..1f12faf03819 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -435,6 +435,9 @@ config NEED_SG_DMA_LENGTH
- config NEED_DMA_MAP_STATE
- 	bool
- 
-+config ARCH_DMA_ADDR_T_64BIT
-+	def_bool 64BIT || PHYS_ADDR_T_64BIT
-+
- config IOMMU_HELPER
- 	bool
- 
--- 
-2.17.0
+Thanks,
+Lorenzo
+
+> No functional change intended.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+> 
+>  MAINTAINERS                                        | 36 +++++++++++-----------
+>  drivers/pci/Kconfig                                |  2 +-
+>  drivers/pci/Makefile                               |  2 +-
+>  drivers/pci/{host => controller}/Kconfig           |  2 +-
+>  drivers/pci/{host => controller}/Makefile          |  0
+>  drivers/pci/{host => controller}/pci-aardvark.c    |  0
+>  drivers/pci/{host => controller}/pci-ftpci100.c    |  0
+>  drivers/pci/{host => controller}/pci-host-common.c |  0
+>  .../pci/{host => controller}/pci-host-generic.c    |  0
+>  drivers/pci/{host => controller}/pci-hyperv.c      |  0
+>  drivers/pci/{host => controller}/pci-mvebu.c       |  0
+>  drivers/pci/{host => controller}/pci-rcar-gen2.c   |  0
+>  drivers/pci/{host => controller}/pci-tegra.c       |  0
+>  .../pci/{host => controller}/pci-thunder-ecam.c    |  0
+>  drivers/pci/{host => controller}/pci-thunder-pem.c |  0
+>  drivers/pci/{host => controller}/pci-v3-semi.c     |  0
+>  drivers/pci/{host => controller}/pci-versatile.c   |  0
+>  drivers/pci/{host => controller}/pci-xgene-msi.c   |  0
+>  drivers/pci/{host => controller}/pci-xgene.c       |  0
+>  drivers/pci/{host => controller}/pcie-altera-msi.c |  0
+>  drivers/pci/{host => controller}/pcie-altera.c     |  0
+>  drivers/pci/{host => controller}/pcie-iproc-bcma.c |  0
+>  drivers/pci/{host => controller}/pcie-iproc-msi.c  |  0
+>  .../pci/{host => controller}/pcie-iproc-platform.c |  0
+>  drivers/pci/{host => controller}/pcie-iproc.c      |  0
+>  drivers/pci/{host => controller}/pcie-iproc.h      |  0
+>  drivers/pci/{host => controller}/pcie-mediatek.c   |  0
+>  drivers/pci/{host => controller}/pcie-rcar.c       |  0
+>  drivers/pci/{host => controller}/pcie-rockchip.c   |  0
+>  drivers/pci/{host => controller}/pcie-tango.c      |  0
+>  drivers/pci/{host => controller}/pcie-xilinx-nwl.c |  0
+>  drivers/pci/{host => controller}/pcie-xilinx.c     |  0
+>  drivers/pci/{host => controller}/vmd.c             |  0
+>  33 files changed, 21 insertions(+), 21 deletions(-)
+>  rename drivers/pci/{host => controller}/Kconfig (99%)
+>  rename drivers/pci/{host => controller}/Makefile (100%)
+>  rename drivers/pci/{host => controller}/pci-aardvark.c (100%)
+>  rename drivers/pci/{host => controller}/pci-ftpci100.c (100%)
+>  rename drivers/pci/{host => controller}/pci-host-common.c (100%)
+>  rename drivers/pci/{host => controller}/pci-host-generic.c (100%)
+>  rename drivers/pci/{host => controller}/pci-hyperv.c (100%)
+>  rename drivers/pci/{host => controller}/pci-mvebu.c (100%)
+>  rename drivers/pci/{host => controller}/pci-rcar-gen2.c (100%)
+>  rename drivers/pci/{host => controller}/pci-tegra.c (100%)
+>  rename drivers/pci/{host => controller}/pci-thunder-ecam.c (100%)
+>  rename drivers/pci/{host => controller}/pci-thunder-pem.c (100%)
+>  rename drivers/pci/{host => controller}/pci-v3-semi.c (100%)
+>  rename drivers/pci/{host => controller}/pci-versatile.c (100%)
+>  rename drivers/pci/{host => controller}/pci-xgene-msi.c (100%)
+>  rename drivers/pci/{host => controller}/pci-xgene.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-altera-msi.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-altera.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-iproc-bcma.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-iproc-msi.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-iproc-platform.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-iproc.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-iproc.h (100%)
+>  rename drivers/pci/{host => controller}/pcie-mediatek.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-rcar.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-rockchip.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-tango.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-xilinx-nwl.c (100%)
+>  rename drivers/pci/{host => controller}/pcie-xilinx.c (100%)
+>  rename drivers/pci/{host => controller}/vmd.c (100%)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 4923621..a4e5971 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -6511,7 +6511,7 @@ F:	arch/x86/hyperv
+>  F:	drivers/hid/hid-hyperv.c
+>  F:	drivers/hv/
+>  F:	drivers/input/serio/hyperv-keyboard.c
+> -F:	drivers/pci/host/pci-hyperv.c
+> +F:	drivers/pci/controller/pci-hyperv.c
+>  F:	drivers/net/hyperv/
+>  F:	drivers/scsi/storvsc_drv.c
+>  F:	drivers/uio/uio_hv_generic.c
+> @@ -10628,7 +10628,7 @@ L:	linux-pci@vger.kernel.org
+>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+>  S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/aardvark-pci.txt
+> -F:	drivers/pci/host/pci-aardvark.c
+> +F:	drivers/pci/controller/pci-aardvark.c
+>  
+>  PCI DRIVER FOR ALTERA PCIE IP
+>  M:	Ley Foon Tan <lftan@altera.com>
+> @@ -10636,7 +10636,7 @@ L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
+>  L:	linux-pci@vger.kernel.org
+>  S:	Supported
+>  F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
+> -F:	drivers/pci/host/pcie-altera.c
+> +F:	drivers/pci/controller/pcie-altera.c
+>  
+>  PCI DRIVER FOR APPLIEDMICRO XGENE
+>  M:	Tanmay Inamdar <tinamdar@apm.com>
+> @@ -10644,7 +10644,7 @@ L:	linux-pci@vger.kernel.org
+>  L:	linux-arm-kernel@lists.infradead.org
+>  S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/xgene-pci.txt
+> -F:	drivers/pci/host/pci-xgene.c
+> +F:	drivers/pci/controller/pci-xgene.c
+>  
+>  PCI DRIVER FOR ARM VERSATILE PLATFORM
+>  M:	Rob Herring <robh@kernel.org>
+> @@ -10652,7 +10652,7 @@ L:	linux-pci@vger.kernel.org
+>  L:	linux-arm-kernel@lists.infradead.org
+>  S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/versatile.txt
+> -F:	drivers/pci/host/pci-versatile.c
+> +F:	drivers/pci/controller/pci-versatile.c
+>  
+>  PCI DRIVER FOR ARMADA 8K
+>  M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> @@ -10685,8 +10685,8 @@ L:	linux-pci@vger.kernel.org
+>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+>  S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> -F:	drivers/pci/host/pci-host-common.c
+> -F:	drivers/pci/host/pci-host-generic.c
+> +F:	drivers/pci/controller/pci-host-common.c
+> +F:	drivers/pci/controller/pci-host-generic.c
+>  
+>  PCI DRIVER FOR IMX6
+>  M:	Richard Zhu <hongxing.zhu@nxp.com>
+> @@ -10702,7 +10702,7 @@ M:	Keith Busch <keith.busch@intel.com>
+>  M:	Jonathan Derrick <jonathan.derrick@intel.com>
+>  L:	linux-pci@vger.kernel.org
+>  S:	Supported
+> -F:	drivers/pci/host/vmd.c
+> +F:	drivers/pci/controller/vmd.c
+>  
+>  PCI DRIVER FOR MICROSEMI SWITCHTEC
+>  M:	Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+> @@ -10722,7 +10722,7 @@ M:	Jason Cooper <jason@lakedaemon.net>
+>  L:	linux-pci@vger.kernel.org
+>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+>  S:	Maintained
+> -F:	drivers/pci/host/*mvebu*
+> +F:	drivers/pci/controller/*mvebu*
+>  
+>  PCI DRIVER FOR NVIDIA TEGRA
+>  M:	Thierry Reding <thierry.reding@gmail.com>
+> @@ -10730,14 +10730,14 @@ L:	linux-tegra@vger.kernel.org
+>  L:	linux-pci@vger.kernel.org
+>  S:	Supported
+>  F:	Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+> -F:	drivers/pci/host/pci-tegra.c
+> +F:	drivers/pci/controller/pci-tegra.c
+>  
+>  PCI DRIVER FOR RENESAS R-CAR
+>  M:	Simon Horman <horms@verge.net.au>
+>  L:	linux-pci@vger.kernel.org
+>  L:	linux-renesas-soc@vger.kernel.org
+>  S:	Maintained
+> -F:	drivers/pci/host/*rcar*
+> +F:	drivers/pci/controller/*rcar*
+>  
+>  PCI DRIVER FOR SAMSUNG EXYNOS
+>  M:	Jingoo Han <jingoohan1@gmail.com>
+> @@ -10801,7 +10801,7 @@ L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
+>  L:	linux-pci@vger.kernel.org
+>  S:	Supported
+>  F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+> -F:	drivers/pci/host/pcie-altera-msi.c
+> +F:	drivers/pci/controller/pcie-altera-msi.c
+>  
+>  PCI MSI DRIVER FOR APPLIEDMICRO XGENE
+>  M:	Duc Dang <dhdang@apm.com>
+> @@ -10809,7 +10809,7 @@ L:	linux-pci@vger.kernel.org
+>  L:	linux-arm-kernel@lists.infradead.org
+>  S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+> -F:	drivers/pci/host/pci-xgene-msi.c
+> +F:	drivers/pci/controller/pci-xgene-msi.c
+>  
+>  PCI SUBSYSTEM
+>  M:	Bjorn Helgaas <bhelgaas@google.com>
+> @@ -10835,7 +10835,7 @@ L:	linux-pci@vger.kernel.org
+>  Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
+>  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
+>  S:	Supported
+> -F:	drivers/pci/host/
+> +F:	drivers/pci/controller/
+>  F:	drivers/pci/dwc/
+>  
+>  PCIE DRIVER FOR AXIS ARTPEC
+> @@ -10853,7 +10853,7 @@ L:	linux-pci@vger.kernel.org
+>  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+>  S:	Supported
+>  F:	Documentation/devicetree/bindings/pci/pci-thunder-*
+> -F:	drivers/pci/host/pci-thunder-*
+> +F:	drivers/pci/controller/pci-thunder-*
+>  
+>  PCIE DRIVER FOR HISILICON
+>  M:	Zhou Wang <wangzhou1@hisilicon.com>
+> @@ -10884,7 +10884,7 @@ L:	linux-pci@vger.kernel.org
+>  L:	linux-mediatek@lists.infradead.org
+>  S:	Supported
+>  F:	Documentation/devicetree/bindings/pci/mediatek*
+> -F:	drivers/pci/host/*mediatek*
+> +F:	drivers/pci/controller/*mediatek*
+>  
+>  PCIE DRIVER FOR QUALCOMM MSM
+>  M:	Stanimir Varbanov <svarbanov@mm-sol.com>
+> @@ -10899,14 +10899,14 @@ L:	linux-pci@vger.kernel.org
+>  L:	linux-rockchip@lists.infradead.org
+>  S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> -F:	drivers/pci/host/pcie-rockchip.c
+> +F:	drivers/pci/controller/pcie-rockchip.c
+>  
+>  PCI DRIVER FOR V3 SEMICONDUCTOR V360EPC
+>  M:	Linus Walleij <linus.walleij@linaro.org>
+>  L:	linux-pci@vger.kernel.org
+>  S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
+> -F:	drivers/pci/host/pci-v3-semi.c
+> +F:	drivers/pci/controller/pci-v3-semi.c
+>  
+>  PCIE DRIVER FOR ST SPEAR13XX
+>  M:	Pratyush Anand <pratyush.anand@gmail.com>
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 34b56a8..b759b29 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -138,7 +138,7 @@ config PCI_HYPERV
+>  
+>  source "drivers/pci/hotplug/Kconfig"
+>  source "drivers/pci/cadence/Kconfig"
+> +source "drivers/pci/controller/Kconfig"
+>  source "drivers/pci/dwc/Kconfig"
+> -source "drivers/pci/host/Kconfig"
+>  source "drivers/pci/endpoint/Kconfig"
+>  source "drivers/pci/switch/Kconfig"
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index 952addc..7769641 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -27,7 +27,7 @@ obj-$(CONFIG_PCI_STUB)		+= pci-stub.o
+>  obj-$(CONFIG_PCI_ECAM)		+= ecam.o
+>  obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+>  
+> -obj-y				+= host/
+> +obj-y				+= controller/
+>  obj-y				+= switch/
+>  
+>  # Endpoint library must be initialized before its users
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/controller/Kconfig
+> similarity index 99%
+> rename from drivers/pci/host/Kconfig
+> rename to drivers/pci/controller/Kconfig
+> index 0d0177ce..7af83af 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/controller/Kconfig
+> @@ -1,6 +1,6 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  
+> -menu "PCI host controller drivers"
+> +menu "PCI controller drivers"
+>  	depends on PCI
+>  
+>  config PCI_MVEBU
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/controller/Makefile
+> similarity index 100%
+> rename from drivers/pci/host/Makefile
+> rename to drivers/pci/controller/Makefile
+> diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-aardvark.c
+> rename to drivers/pci/controller/pci-aardvark.c
+> diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/controller/pci-ftpci100.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-ftpci100.c
+> rename to drivers/pci/controller/pci-ftpci100.c
+> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-host-common.c
+> rename to drivers/pci/controller/pci-host-common.c
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/controller/pci-host-generic.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-host-generic.c
+> rename to drivers/pci/controller/pci-host-generic.c
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-hyperv.c
+> rename to drivers/pci/controller/pci-hyperv.c
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-mvebu.c
+> rename to drivers/pci/controller/pci-mvebu.c
+> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/controller/pci-rcar-gen2.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-rcar-gen2.c
+> rename to drivers/pci/controller/pci-rcar-gen2.c
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-tegra.c
+> rename to drivers/pci/controller/pci-tegra.c
+> diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/controller/pci-thunder-ecam.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-thunder-ecam.c
+> rename to drivers/pci/controller/pci-thunder-ecam.c
+> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/controller/pci-thunder-pem.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-thunder-pem.c
+> rename to drivers/pci/controller/pci-thunder-pem.c
+> diff --git a/drivers/pci/host/pci-v3-semi.c b/drivers/pci/controller/pci-v3-semi.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-v3-semi.c
+> rename to drivers/pci/controller/pci-v3-semi.c
+> diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/controller/pci-versatile.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-versatile.c
+> rename to drivers/pci/controller/pci-versatile.c
+> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/controller/pci-xgene-msi.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-xgene-msi.c
+> rename to drivers/pci/controller/pci-xgene-msi.c
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/controller/pci-xgene.c
+> similarity index 100%
+> rename from drivers/pci/host/pci-xgene.c
+> rename to drivers/pci/controller/pci-xgene.c
+> diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/controller/pcie-altera-msi.c
+> similarity index 100%
+> rename from drivers/pci/host/pcie-altera-msi.c
+> rename to drivers/pci/controller/pcie-altera-msi.c
+> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
+> similarity index 100%
+> rename from drivers/pci/host/pcie-altera.c
+> rename to drivers/pci/controller/pcie-altera.c
+> diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/controller/pcie-iproc-bcma.c
+> similarity index 100%
+> rename from drivers/pci/host/pcie-iproc-bcma.c
+> rename to drivers/pci/controller/pcie-iproc-bcma.c
+> diff --git a/drivers/pci/host/pcie-iproc-msi.c b/drivers/pci/controller/pcie-iproc-msi.c
+> similarity index 100%
+> rename from drivers/pci/host/pcie-iproc-msi.c
+> rename to drivers/pci/controller/pcie-iproc-msi.c
+> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/controller/pcie-iproc-platform.c
+> similarity index 100%
+> rename from drivers/pci/host/pcie-iproc-platform.c
+> rename to drivers/pci/controller/pcie-iproc-platform.c
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
+> similarity index 100%
+> rename from drivers/pci/host/pcie-iproc.c
+> rename to drivers/pci/controller/pcie-iproc.c
+> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/controller/pcie-iproc.h
+> similarity index 100%
+> rename from drivers/pci/host/pcie-iproc.h
+> rename to drivers/pci/controller/pcie-iproc.h
+> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> similarity index 100%
+> rename from drivers/pci/host/pcie-mediatek.c
+> rename to drivers/pci/controller/pcie-mediatek.c
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+> similarity index 100%
+> rename from drivers/pci/host/pcie-rcar.c
+> rename to drivers/pci/controller/pcie-rcar.c
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/controller/pcie-rockchip.c
+> similarity index 100%
+> rename from drivers/pci/host/pcie-rockchip.c
+> rename to drivers/pci/controller/pcie-rockchip.c
+> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/controller/pcie-tango.c
+> similarity index 100%
+> rename from drivers/pci/host/pcie-tango.c
+> rename to drivers/pci/controller/pcie-tango.c
+> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
+> similarity index 100%
+> rename from drivers/pci/host/pcie-xilinx-nwl.c
+> rename to drivers/pci/controller/pcie-xilinx-nwl.c
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
+> similarity index 100%
+> rename from drivers/pci/host/pcie-xilinx.c
+> rename to drivers/pci/controller/pcie-xilinx.c
+> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/controller/vmd.c
+> similarity index 100%
+> rename from drivers/pci/host/vmd.c
+> rename to drivers/pci/controller/vmd.c
+> -- 
+> 1.9.1
+> 
+> 
