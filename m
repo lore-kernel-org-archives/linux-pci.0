@@ -1,69 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58004 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752836AbeDLW4A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Apr 2018 18:56:00 -0400
-Date: Thu, 12 Apr 2018 17:55:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Heiner Kallweit <hkallweit1@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add two more values for PCIe Max_Read_Request_Size
-Message-ID: <20180412225557.GB46420@bhelgaas-glaptop.roam.corp.google.com>
-References: <90260d62-e136-44a3-a35b-19fac1bcfb20@gmail.com>
+Return-Path: <SRS0=Ug22=HM=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=Ug22=HM=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ sulrich@codeaurora.org, timur@codeaurora.org, linux-arm-msm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org,
+ Mike Marciniszyn <mike.marciniszyn@intel.com>,
+ Dennis Dalessandro <dennis.dalessandro@intel.com>,
+ Doug Ledford <dledford@redhat.com>,
+ "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ Alex Deucher <alexander.deucher@amd.com>, Rajat Jain <rajatja@google.com>
+References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+ <20180419202632.GE14063@ziepe.ca>
+ <20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
+ <290e9530-dcde-9c10-7ae0-59ac4c509db4@codeaurora.org>
+ <20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
+ <20180420090420.03fb1e6c@w520.home>
+ <10d9cf68-29ed-d205-a25f-b8dade53cdd8@codeaurora.org>
+ <20180423131044.53471670@w520.home>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <f7022685-9c99-7d49-a2f3-07b387d96e8d@codeaurora.org>
+Date: Mon, 23 Apr 2018 16:17:23 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <90260d62-e136-44a3-a35b-19fac1bcfb20@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180423131044.53471670@w520.home>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Heiner,
+On 4/23/2018 3:10 PM, Alex Williamson wrote:
+>> But, we need to think about what to do about VFIO and other endpoint
+>> initiated reset cases. My suggestion was to move this into a single API and
+>> remove all other APIs from include/linux/pci.h.
+> I'm a little confused about the relation between reset and retrain.
+> AIUI we can retrain the link without any sort of endpoint reset and if
+> some sort of driver/firmware setup is required on the endpoint to
+> achieve the target link speed, then I'd think we only want to retrain.
 
-On Thu, Apr 12, 2018 at 11:08:04PM +0200, Heiner Kallweit wrote:
-> This patch adds missing values for the max read request size.
-> E.g. network driver r8169 uses a value of 4K.
+I'm guessing on why you may want to do a secondary bus reset instead of just
+retrain bit in the PCI Express Capabilities register...
 
-Is there a r8169 patch that adds uses of PCI_EXP_DEVCTL_READRQ_4096B?
-If so, we should probably keep it together with this one since this
-one would have to be merged first.
+The maximum link speed is embedded into the TS1s that are exchanged during
+initial link training. 
 
-There's also a larger issue in that when Linux configures MPS and MRRS
-at enumeration-time, it makes some assumptions about how MRRS is set.
-If a driver like r8169 changes MRRS later, it may break those
-assumptions, which might lead to PCIe errors.
+If device only advertises gen1 during boot, no matter what you do with retrain
+bit link may not reach to gen3.
 
-If a user boots with "pci=pcie_bus_perf", we use PCIE_BUS_PERFORMANCE
-mode, and in that case we may set MPS to something larger than some
-devices can support, and we rely on MRRS to avoid problems.
+A lot of guess here.
 
-I don't really *like* that scheme because it makes assumptions like
-"drivers never change MRRS", but that's what we have right now.
-
-So just be aware that if r8169 changes MRRS and users boot with
-"pci=pcie_bus_perf", there is the potential for PCIe bus errors.
-
-There was some recent discussion about this; [1] is a good place to
-start.
-
-[1] http://lkml.kernel.org/r/20180119205153.GB160618@bhelgaas-glaptop.roam.corp.google.com
-
-> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
-> ---
->  include/uapi/linux/pci_regs.h | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 0c79eac5..699257fb 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -506,6 +506,8 @@
->  #define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
->  #define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
->  #define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
-> +#define  PCI_EXP_DEVCTL_READRQ_2048B 0x4000 /* 2048 Bytes */
-> +#define  PCI_EXP_DEVCTL_READRQ_4096B 0x5000 /* 4096 Bytes */
->  #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
->  #define PCI_EXP_DEVSTA		10	/* Device Status */
->  #define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
-> -- 
-> 2.17.0
-> 
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
