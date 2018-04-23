@@ -1,90 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:38599 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757743AbeD0IdS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 04:33:18 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 9/9] PCI: xilinx: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Fri, 27 Apr 2018 16:25:12 +0800
-Message-Id: <1524817512-243562-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 23 Apr 2018 10:24:51 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH V4] PM / core: fix deferred probe breaking suspend resume
+ order
+Message-ID: <20180423082451.GA20822@kroah.com>
+References: <1523404626-1466-1-git-send-email-fkan@apm.com>
+ <13159334.FbaSTEhggn@aspire.rjw.lan>
+MIME-Version: 1.0
+In-Reply-To: <13159334.FbaSTEhggn@aspire.rjw.lan>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Feng Kan <fkan@apm.com>, lorenzo.pieralisi@arm.com,
+ linux-pm@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com,
+ Toan Le <toanle@apm.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+On Mon, Apr 23, 2018 at 10:03:19AM +0200, Rafael J. Wysocki wrote:
+> On Wednesday, April 11, 2018 1:57:06 AM CEST Feng Kan wrote:
+> > When bridge and its endpoint is enumerated the devices are added to the
+> > dpm list. Afterward, the bridge defers probe when IOMMU is not ready.
+> > This causes the bridge to be moved to the end of the dpm list when
+> > deferred probe kicks in. The order of the dpm list for bridge and
+> > endpoint is reversed.
+> > 
+> > Add reordering code to move the bridge and its children and consumers to
+> > the end of the pm list so the order for suspend and resume is not altered.
+> > The code also move device and its children and consumers to the tail of
+> > device_kset list if it is registered.
+> > 
+> > Signed-off-by: Feng Kan <fkan@apm.com>
+> > Signed-off-by: Toan Le <toanle@apm.com>
+> 
+> I'm going to queue this up for 4.18-rc1.
+> 
+> If anyone, and Greg in particular, has any objections of concerns regarding
+> that, please let me know.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+No objection from me:
+	Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
----
-
- drivers/pci/host/pcie-xilinx.c | 43 +++---------------------------------------
- 1 file changed, 3 insertions(+), 40 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 0ad188e..905668a 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -344,31 +344,6 @@ static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
- 	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
- }
- 
--/* INTx Functions */
--
--/**
-- * xilinx_pcie_intx_map - Set the handler for the INTx and mark IRQ as valid
-- * @domain: IRQ domain
-- * @irq: Virtual IRQ number
-- * @hwirq: HW interrupt number
-- *
-- * Return: Always returns 0.
-- */
--static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
--				irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--/* INTx IRQ Domain operations */
--static const struct irq_domain_ops intx_domain_ops = {
--	.map = xilinx_pcie_intx_map,
--	.xlate = pci_irqd_intx_xlate,
--};
--
- /* PCIe HW Functions */
- 
- /**
-@@ -495,22 +470,10 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- {
- 	struct device *dev = port->dev;
- 	struct device_node *node = dev->of_node;
--	struct device_node *pcie_intc_node;
- 
--	/* Setup INTx */
--	pcie_intc_node = of_get_next_child(node, NULL);
--	if (!pcie_intc_node) {
--		dev_err(dev, "No PCIe Intc node found\n");
--		return -ENODEV;
--	}
--
--	port->leg_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--						 &intx_domain_ops,
--						 port);
--	if (!port->leg_domain) {
--		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		return -ENODEV;
--	}
-+	port->leg_domain = pci_alloc_intx_irqd(dev, port, true, NULL, NULL);
-+	if (IS_ERR(port->leg_domain))
-+		return PTR_ERR(port->leg_domain);
- 
- 	/* Setup MSI */
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--- 
-1.9.1
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
