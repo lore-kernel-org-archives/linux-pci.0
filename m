@@ -1,66 +1,99 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 30 Apr 2018 12:15:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Alex G." <mr.nuke.me@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        gregkh@linuxfoundation.org, fred@fredlawl.com,
-        linux-kernel@vger.kernel.org, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, keith.busch@intel.com
-Subject: Re: [PATCH RESEND] PCI/AER: Use a common function to print AER error
- bits
-Message-ID: <20180430171531.GB95643@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180417170943.1767-1-mr.nuke.me@gmail.com>
- <20180427224337.GC73256@bhelgaas-glaptop.roam.corp.google.com>
- <12343e44-2d8a-51e1-a0be-e6804e9bd8a3@gmail.com>
- <220bb125-b933-abf3-7b30-63446634e8d6@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <220bb125-b933-abf3-7b30-63446634e8d6@gmail.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Mon, 23 Apr 2018 17:30:45 -0600
+Message-Id: <20180423233046.21476-14-logang@deltatee.com>
+In-Reply-To: <20180423233046.21476-1-logang@deltatee.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+Subject: [PATCH v4 13/14] nvmet-rdma: Use new SGL alloc/free helper for requests
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 28, 2018 at 12:07:48PM -0500, Alex G. wrote:
-> On 04/28/2018 11:46 AM, Alex G. wrote:
-> > On 04/27/2018 05:43 PM, Bjorn Helgaas wrote:
-> > > On Tue, Apr 17, 2018 at 12:09:43PM -0500, Alexandru Gagniuc wrote:
-> (snip)
-> > > > +    memset(&info, 0, sizeof(info));
-> > > > +    info.severity = aer_severity;
-> > > > +    info.status = status;
-> > > > +    info.mask = mask;
-> > > > +    info.first_error = 0x1f;
-> > > 
-> > > I like this patch a lot, but where does this "first_error = 0x1f" come
-> > > from?
-> > 
-> > aer_(un)correctable_error_string don't go to [0x1f], so this guarantees
-> > us we don't print "(First)".
-> > 
-> > > I assume this is supposed to be the "First Error Pointer" in the
-> > > Advanced Error Capabilities and Control register (PCIe r4.0, sec
-> > > 7.8.4.7).  There is a "cap_control" field in struct
-> > > aer_capability_regs; should we be using that here?
-> > 
-> > There is a way to extract it from the PCI regs, and it's quite simple.
-> > IIRC, it should be all f's when the capability is not implemented. I
-> > wanted to avoid any further parsing of PCI regs in this patch.
-> 
-> I could update the offending line to say:
->  +	info.first_error = PCI_ERR_CAP_FEP(aer->cap_control);
+Use the new helpers introduced in the previous patch to allocate
+the SGLs for the request.
 
-That's what I would have expected.  So I'd say either do this, or add
-a comment about why it's not the right thing to do.
+Seeing we use req.transfer_len as the length of the SGL it is
+set earlier and cleared on any error. It also seems to be unnecessary
+to accumulate the length as the map_sgl functions should only ever
+be called once.
 
-> Though I still have the concerns with validating CPER data:
-> 
-> > I can see a way to use even more common printk code, but that requires
-> > validating the PCI regs we get from firmware. That means we need to make
-> > a guarantee about CPER that is beyond the scope of this patch.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Sagi Grimberg <sagi@grimberg.me>
+---
+ drivers/nvme/target/rdma.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-Sounds like this is material for another patch, but if/when you do
-that, I'd like to understand your concern about validating the
-registers we get from firmware.  Are you worried about getting
-incorrect register contents, then printing the wrong info, making
-the wrong decision about how to recover, something else?
-
-Bjorn
+diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
+index 52e0c5d579a7..f7a3459d618f 100644
+--- a/drivers/nvme/target/rdma.c
++++ b/drivers/nvme/target/rdma.c
+@@ -430,7 +430,7 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
+ 	}
+ 
+ 	if (rsp->req.sg != &rsp->cmd->inline_sg)
+-		sgl_free(rsp->req.sg);
++		nvmet_req_free_sgl(&rsp->req);
+ 
+ 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
+ 		nvmet_rdma_process_wr_wait_list(queue);
+@@ -564,24 +564,24 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
+ {
+ 	struct rdma_cm_id *cm_id = rsp->queue->cm_id;
+ 	u64 addr = le64_to_cpu(sgl->addr);
+-	u32 len = get_unaligned_le24(sgl->length);
+ 	u32 key = get_unaligned_le32(sgl->key);
+ 	int ret;
+ 
++	rsp->req.transfer_len = get_unaligned_le24(sgl->length);
++
+ 	/* no data command? */
+-	if (!len)
++	if (!rsp->req.transfer_len)
+ 		return 0;
+ 
+-	rsp->req.sg = sgl_alloc(len, GFP_KERNEL, &rsp->req.sg_cnt);
+-	if (!rsp->req.sg)
+-		return NVME_SC_INTERNAL;
++	ret = nvmet_req_alloc_sgl(&rsp->req, &rsp->queue->nvme_sq);
++	if (ret < 0)
++		goto error_out;
+ 
+ 	ret = rdma_rw_ctx_init(&rsp->rw, cm_id->qp, cm_id->port_num,
+ 			rsp->req.sg, rsp->req.sg_cnt, 0, addr, key,
+ 			nvmet_data_dir(&rsp->req));
+ 	if (ret < 0)
+-		return NVME_SC_INTERNAL;
+-	rsp->req.transfer_len += len;
++		goto error_out;
+ 	rsp->n_rdma += ret;
+ 
+ 	if (invalidate) {
+@@ -590,6 +590,10 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
+ 	}
+ 
+ 	return 0;
++
++error_out:
++	rsp->req.transfer_len = 0;
++	return NVME_SC_INTERNAL;
+ }
+ 
+ static u16 nvmet_rdma_map_sgl(struct nvmet_rdma_rsp *rsp)
+-- 
+2.11.0
