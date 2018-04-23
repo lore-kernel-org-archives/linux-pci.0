@@ -1,70 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:22838 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750779AbeDXXM6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Apr 2018 19:12:58 -0400
-Date: Tue, 24 Apr 2018 17:14:15 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Jens Axboe <axboe@fb.com>,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-        Arjan van de Ven <arjan@linux.intel.com>
-Subject: Re: [PATCH] fix failure when root filesystem is on nvme
-Message-ID: <20180424231415.GA31318@localhost.localdomain>
-References: <alpine.LRH.2.02.1804210942070.11467@file01.intranet.prod.int.rdu2.redhat.com>
- <20180421191608.GC19048@localhost.localdomain>
- <alpine.LRH.2.02.1804241743050.19786@file01.intranet.prod.int.rdu2.redhat.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 23 Apr 2018 15:23:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
+Message-ID: <20180423202311.GA164898@bhelgaas-glaptop.roam.corp.google.com>
+References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+ <20180419202632.GE14063@ziepe.ca>
+ <20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
+ <290e9530-dcde-9c10-7ae0-59ac4c509db4@codeaurora.org>
+ <20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
+ <20180420090420.03fb1e6c@w520.home>
+ <10d9cf68-29ed-d205-a25f-b8dade53cdd8@codeaurora.org>
+ <20180423131044.53471670@w520.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LRH.2.02.1804241743050.19786@file01.intranet.prod.int.rdu2.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180423131044.53471670@w520.home>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>, sulrich@codeaurora.org,
+ "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
+ linux-pci@vger.kernel.org, timur@codeaurora.org,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Doug Ledford <dledford@redhat.com>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Alex Deucher <alexander.deucher@amd.com>, Rajat Jain <rajatja@google.com>,
+ Dennis Dalessandro <dennis.dalessandro@intel.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 24, 2018 at 06:18:54PM -0400, Mikulas Patocka wrote:
+On Mon, Apr 23, 2018 at 01:10:44PM -0600, Alex Williamson wrote:
+> On Mon, 23 Apr 2018 13:28:22 -0400
+> Sinan Kaya <okaya@codeaurora.org> wrote:
 > 
-> 
-> On Sat, 21 Apr 2018, Keith Busch wrote:
-> 
-> > On Sat, Apr 21, 2018 at 09:59:48AM -0400, Mikulas Patocka wrote:
-> >
-> > > There's a bug in the nvme block device driver that causes failure when we 
-> > > have no initramfs and the root filesystem is directly on nvme. The driver 
-> > > spawns a work item nvme_reset_work() in the nvme_wq workqueue, but doesn't 
-> > > wait for it. The result is that the kernel attempts to mount the root 
-> > > filesystem before nvme_reset_work() finishes and it panics because it 
-> > > can't find the root device.
-> > > 
-> > > It can be fixed with this simple patch (perhaps you can come up with a 
-> > > better patch that uses the asynchronous probing infrastructure?)
+> > On 4/20/2018 11:04 AM, Alex Williamson wrote:
+> > > Is there a concern here about whether the endpoint device driver or the
+> > > PCI core really knows better about link retraining?  This makes me
+> > > remember my unfinished (and need to revisit) Pericom quirk[1] where
+> > > errata in the PCIe switch requires that upstream and downstream links
+> > > are balanced (ie. same link rate) or else enabling ACS results in
+> > > packets not properly flowing through the switch.  If an endpoint driver
+> > > starts deciding to retrain links, overriding quirks in the PCI core,
+> > > then such topology manipulation isn't possible.  Why does the
+> > > driver .probe() function think it can retrain at a higher link rate
+> > > than PCI core?  Thanks,  
 > > 
-> > We probe asynchronously to fix other issues.
+> > The example given is for some serdes firmware load to happen in probe and
+> > then performing a retrain to reach to a better speed.
 > > 
-> > First is that boot takes way
-> > too long if you have a lot of devices when probing all of them serially,
-> > and then certain init systems kill the probe task after a certain time,
-> > breaking boot for those.
+> > It becomes a chicken and egg problem. 
 > > 
-> > Is there something we can do for your setup to have the kernel wait for
-> > the root partition to be available instead of givinig up after pci probe?
+> > 1. Endpoint HW trains to gen1 by default pre-boot.
+> > 2. PCI core enumerates the device.
+> > 3. Endpoint driver gets loaded
+> > 4. Driver does the firmware programming followed by a link retrain.
+> > 
+> > I think it is the responsibility of the PCI core to provide reset APIs.
+> > However, expecting endpoint drivers to be knowledgeable about hotplug is
+> > too much.
+> > 
+> > We can certainly contain AER change into pci directory by moving the slot
+> > reset function to drivers/pci.h file.
+> > 
+> > But, we need to think about what to do about VFIO and other endpoint
+> > initiated reset cases. My suggestion was to move this into a single API and
+> > remove all other APIs from include/linux/pci.h.
 > 
-> Are different PCI NVME devices probed concurrently by the PCI API? (I 
-> can't try, I have just one) 
+> I'm a little confused about the relation between reset and retrain.
+> AIUI we can retrain the link without any sort of endpoint reset and if
+> some sort of driver/firmware setup is required on the endpoint to
+> achieve the target link speed, then I'd think we only want to retrain.
 
-It does not.
+In hfi1, do_pcie_gen3_transition() resets the device.  I don't know if
+retraining the link would be sufficient; maybe the reset is required
+to make the device use the new firmware.  I guess we already export
+reset interfaces, so if we add a retrain interface, drivers could
+choose what they need.
 
-> If yes, then the patch that I posted should be 
-> OK, because it wouldn't break this concurrency.
+> How this is going to work with vfio is an interesting question.  We're
+> only providing access to the device, not the link to the device.
 
-But you're waiting for the wrong work queue: the driver's reset_work
-won't get your root filesystem. That is handled in the scan_work.
+> Multifunction endpoints become a big problem if one function starts
+> requesting link retraining while another is in use elsewhere.
 
-> If not, then you need to make sure that wait_for_device_probe() waits for 
-> the NVME probe to finish. The kernel calls wait_for_device_probe() just 
-> before it attempts to mount the root filesystem. I don't know which of the 
-> kernel frameworks would be best suited to accomplish that. Perhaps the 
-> simplest solution would be to increment probe_count in nvme_probe and 
-> decrement it when the probe work item finishes - but it is not exported 
-> and you'd need to create helper functions in drivers/base/dd.c to do that.
+Can we just make it the driver's problem by returning -EPERM if one
+function requests a retrain while another function is in use?
 
-Will have to look into it, but I think an async_domain is going to be the
-right way to go and shouldn't require any changes outside nvme.
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
