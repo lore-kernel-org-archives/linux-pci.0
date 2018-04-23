@@ -1,75 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57250 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754892AbeDKVRX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Apr 2018 17:17:23 -0400
-Date: Wed, 11 Apr 2018 16:17:22 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Meelis Roos <mroos@linux.ee>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-        sparclinux@vger.kernel.org
-Subject: Re: sparc64 PCI BAR allocation is still problematic
-Message-ID: <20180411211722.GB145698@bhelgaas-glaptop.roam.corp.google.com>
-References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
- <20180410173437.GB24642@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LRH.2.21.1804102144240.32411@math.ut.ee>
- <20180410185610.GD24642@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LRH.2.21.1804111045330.18432@math.ut.ee>
- <20180411133334.GA91792@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LRH.2.21.1804111738260.18432@math.ut.ee>
- <20180411200143.GA105104@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LRH.2.21.1804112323170.25495@math.ut.ee>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LRH.2.21.1804112323170.25495@math.ut.ee>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Mon, 23 Apr 2018 17:30:35 -0600
+Message-Id: <20180423233046.21476-4-logang@deltatee.com>
+In-Reply-To: <20180423233046.21476-1-logang@deltatee.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+Subject: [PATCH v4 03/14] PCI/P2PDMA: Add PCI p2pmem dma mappings to adjust the bus offset
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 11, 2018 at 11:25:06PM +0300, Meelis Roos wrote:
-> > Thanks, this is really interesting.  Would you mind replacing the test
-> > patch with the following (this applies directly on the upstream
-> > kernel, e.g., fd3b36d27566)?
-> > 
-> > Sorry for the back and forth, but there's a lot going on here that I
-> > don't understand.  
-> > 
-> > I'd like to see the complete dmesg log, /proc/iomem, and "lspci -vv".
+The DMA address used when mapping PCI P2P memory must be the PCI bus
+address. Thus, introduce pci_p2pmem_[un]map_sg() to map the correct
+addresses when using P2P memory.
 
-Thanks, this helps a lot.  Things I learned or noticed:
+For this, we assume that an SGL passed to these functions contain all
+P2P memory or no P2P memory.
 
-1) Sparc exposes raw BAR values instead of CPU resource addresses
-   because it implements pci_resource_to_user().  This means that on
-   sparc, /sys/devices/pci*/resource and lspci show the raw BAR
-   values, unlike most arches.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/pci/p2pdma.c       | 51 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/memremap.h   |  1 +
+ include/linux/pci-p2pdma.h | 13 ++++++++++++
+ 3 files changed, 65 insertions(+)
 
-2) We select the ATI Rage XL device as the default VGA device.  The
-   messages maybe could be improved because there's no bridge in the
-   path, and the legacy resources are "not available" because the
-   device's PCI_COMMAND_MEMORY and PCI_COMMAND_IO bits are disabled at
-   boot (and probably enabled by the fb driver):
-
-    pci 0000:00:13.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
-    pci 0000:00:13.0: vgaarb: bridge control possible
-    pci 0000:00:13.0: vgaarb: setting as boot device (VGA legacy resources not available)
-
-3) With this patch, we do see a conflict between the VGA device and
-   the ISA bridge, as I expected:
-
-     pci_bus 0000:00: root bus resource [mem 0x1ff00000000-0x1ffffffffff] (bus address [0x00000000-0xffffffff])
-     pci 0000:00:07.0: reg 0x14: [mem 0x1ff00000000-0x1ff000fffff]
-     pci 0000:00:13.0: can't claim VGA legacy [mem 0x1ff000a0000-0x1ff000bffff]: address conflict with 0000:00:07.0 [mem 0x1ff00000000-0x1ff000fffff]
-
-I don't know how to resolve this conflict nicely.  Both the ISA bridge
-at 00:07.0 and the VGA device at 00:13.0 can claim accesses to the
-framebuffer at PCI address 0xa0000.
-
-I don't know what (if anything) is behind the ISA bridge.  Maybe we
-could disable it by clearing its PCI_COMMAND_MEMORY and PCI_COMMAND_IO
-bits?
-
-My plan for now is to post the "Request legacy VGA framebuffer only
-for VGA devices" patch and to write a small vgaarb patch to clarify
-the messages.  That will still leave us with the "can't claim VGA
-legacy" message unless we can figure out something to do there.
-
-Bjorn
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 4daad6374869..ed9dce8552a2 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -190,6 +190,8 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 	pgmap->res.flags = pci_resource_flags(pdev, bar);
+ 	pgmap->ref = &pdev->p2pdma->devmap_ref;
+ 	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
++	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
++		pci_resource_start(pdev, bar);
+ 
+ 	addr = devm_memremap_pages(&pdev->dev, pgmap);
+ 	if (IS_ERR(addr)) {
+@@ -746,3 +748,52 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+ 	pdev->p2pdma->p2pmem_published = publish;
+ }
+ EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
++
++/**
++ * pci_p2pdma_map_sg - map a PCI peer-to-peer sg for DMA
++ * @dev: device doing the DMA request
++ * @sg: scatter list to map
++ * @nents: elements in the scatterlist
++ * @dir: DMA direction
++ *
++ * Returns the number of SG entries mapped
++ */
++int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
++		      enum dma_data_direction dir)
++{
++	struct dev_pagemap *pgmap;
++	struct scatterlist *s;
++	phys_addr_t paddr;
++	int i;
++
++	/*
++	 * p2pdma mappings are not compatible with devices that use
++	 * dma_virt_ops.
++	 */
++	if (IS_ENABLED(CONFIG_DMA_VIRT_OPS) && dev->dma_ops == &dma_virt_ops)
++		return 0;
++
++	for_each_sg(sg, s, nents, i) {
++		pgmap = sg_page(s)->pgmap;
++		paddr = sg_phys(s);
++
++		s->dma_address = paddr - pgmap->pci_p2pdma_bus_offset;
++		sg_dma_len(s) = s->length;
++	}
++
++	return nents;
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg);
++
++/**
++ * pci_p2pdma_unmap_sg - unmap a PCI peer-to-peer sg for DMA
++ * @dev: device doing the DMA request
++ * @sg: scatter list to map
++ * @nents: elements in the scatterlist
++ * @dir: DMA direction
++ */
++void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
++			 enum dma_data_direction dir)
++{
++}
++EXPORT_SYMBOL_GPL(pci_p2pdma_unmap_sg);
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index 9e907c338a44..1660f64ce96f 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -125,6 +125,7 @@ struct dev_pagemap {
+ 	struct device *dev;
+ 	void *data;
+ 	enum memory_type type;
++	u64 pci_p2pdma_bus_offset;
+ };
+ 
+ #ifdef CONFIG_ZONE_DEVICE
+diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+index 80e931cb1235..0cde88341eeb 100644
+--- a/include/linux/pci-p2pdma.h
++++ b/include/linux/pci-p2pdma.h
+@@ -35,6 +35,10 @@ struct scatterlist *pci_p2pmem_alloc_sgl(struct pci_dev *pdev,
+ 					 unsigned int *nents, u32 length);
+ void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl);
+ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
++int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
++		      enum dma_data_direction dir);
++void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
++			 enum dma_data_direction dir);
+ #else /* CONFIG_PCI_P2PDMA */
+ static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
+ 		size_t size, u64 offset)
+@@ -96,5 +100,14 @@ static inline void pci_p2pmem_free_sgl(struct pci_dev *pdev,
+ static inline void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
+ {
+ }
++static inline int pci_p2pdma_map_sg(struct device *dev,
++	struct scatterlist *sg, int nents, enum dma_data_direction dir)
++{
++	return 0;
++}
++static inline void pci_p2pdma_unmap_sg(struct device *dev,
++	struct scatterlist *sg, int nents, enum dma_data_direction dir)
++{
++}
+ #endif /* CONFIG_PCI_P2PDMA */
+ #endif /* _LINUX_PCI_P2P_H */
+-- 
+2.11.0
