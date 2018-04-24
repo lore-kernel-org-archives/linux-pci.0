@@ -1,50 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 12 Apr 2018 21:32:49 -0700
-From: Jakub Kicinski <kubakici@wp.pl>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Tal Gilboa <talgi@mellanox.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        everest-linux-l2@cavium.com, intel-wired-lan@lists.osuosl.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 05/14] PCI: Add pcie_print_link_status() to log link
- speed and whether it's limited
-Message-ID: <20180412213249.06661048@cakuba.netronome.com>
-In-Reply-To: <152244391852.135666.14903825998610307052.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
-        <152244391852.135666.14903825998610307052.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yb0-f178.google.com ([209.85.213.178]:42524 "EHLO
+        mail-yb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750735AbeDXTbP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Apr 2018 15:31:15 -0400
+Received: by mail-yb0-f178.google.com with SMTP id j69-v6so3374387ybg.9
+        for <linux-pci@vger.kernel.org>; Tue, 24 Apr 2018 12:31:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+References: <bug-199473-41252@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-199473-41252@https.bugzilla.kernel.org/>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 24 Apr 2018 19:31:03 +0000
+Message-ID: <CAErSpo4BOD3V7pgR75Gm7dYqvXYq1QfChjj16Jn1QgSK1W=Drw@mail.gmail.com>
+Subject: Fwd: [Bug 199473] New: pcieport does not scan devices behind PEX
+ switch, while resources are allocated
+To: janpieter.sollie@dommel.be
+Cc: linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 30 Mar 2018 16:05:18 -0500, Bjorn Helgaas wrote:
-> +	if (bw_avail >= bw_cap)
-> +		pci_info(dev, "%d Mb/s available bandwidth (%s x%d link)\n",
-> +			 bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
-> +	else
-> +		pci_info(dev, "%d Mb/s available bandwidth, limited by %s x%d link at %s (capable of %d Mb/s with %s x%d link)\n",
-> +			 bw_avail, PCIE_SPEED2STR(speed), width,
-> +			 limiting_dev ? pci_name(limiting_dev) : "<unknown>",
-> +			 bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
+Thanks for the report!
 
-I was just looking at using this new function to print PCIe BW for a
-NIC, but I'm slightly worried that there is nothing in the message that
-says PCIe...  For a NIC some people may interpret the bandwidth as NIC
-bandwidth:
+I don't understand exactly what the issue is yet.  You attached lspci
+output from v4.14.27 and v4.17-rc1.  The v4.17-rc1 output shows several
+devices (4b:00, 4c:00, 4f:00) below the PEX switch, while the v4.14.27
+output shows only the 4f:00 devices.
 
-[   39.839989] nfp 0000:04:00.0: Netronome Flow Processor NFP4000/NFP6000 PCIe Card Probe
-[   39.848943] nfp 0000:04:00.0: 63.008 Gb/s available bandwidth (8 GT/s x8 link)
-[   39.857146] nfp 0000:04:00.0: RESERVED BARs: 0.0: General/MSI-X SRAM, 0.1: PCIe XPB/MSI-X PBA, 0.4: Explicit0, 0.5: Explicit1, fre4
+Is the problem that v4.14.27 doesn't find the 4b:00 and 4c:00 devices?
+Does v4.17-rc1 work correctly?
 
-It's not a 63Gbps NIC...  I'm sorry if this was discussed before and I
-didn't find it.  Would it make sense to add the "PCIe: " prefix to the
-message like bnx2x used to do?  Like:
+If v4.17-rc1 works but v4.14.27 does not, it's probably a question of
+working with your distro to see if they can (1) identify some change that
+fixed things, and (2) backport that change to the distro kernel.
 
-nfp 0000:04:00.0: PCIe: 63.008 Gb/s available bandwidth (8 GT/s x8 link)
+The Broadcom driver you attached at comment #4 shouldn't be related to this
+problem.  Device enumeration is performed by the PCI core and doesn't
+require any additional drivers.  I didn't look at the Broadcom driver, so I
+don't know what it does.  The PEX switch does include an endpoint
+(42:00.1); it's possible the driver is for some functionality provided by
+that endpoint.
 
-Sorry for a very late comment.
+---------- Forwarded message ---------
+From: <bugzilla-daemon@bugzilla.kernel.org>
+Date: Mon, Apr 23, 2018 at 12:20 AM
+Subject: [Bug 199473] New: pcieport does not scan devices behind PEX
+switch, while resources are allocated
+To: <bhelgaas@google.com>
+
+
+https://bugzilla.kernel.org/show_bug.cgi?id=199473
+
+             Bug ID: 199473
+            Summary: pcieport does not scan devices behind PEX switch,
+                     while resources are allocated
+            Product: Drivers
+            Version: 2.5
+     Kernel Version: 4.17-rc1
+           Hardware: x86-64
+                 OS: Linux
+               Tree: Mainline
+             Status: NEW
+           Severity: normal
+           Priority: P1
+          Component: PCI
+           Assignee: drivers_pci@kernel-bugs.osdl.org
+           Reporter: janpieter.sollie@dommel.be
+         Regression: No
+
+Created attachment 275511
+   --> https://bugzilla.kernel.org/attachment.cgi?id=275511&action=edit
+dmesg stable kernel
+
+pcieport assigns the PEX 8619 pcie expander switch ports, but does not scan
+them for additional objects behind the ports. only 1 device is added @ pci
+region 4f.  Workaround for getting all devices online: while pc is on,
+remove
+the card, reinsert it at a slot before the working device, and make a cold
+start.
+It would be nice if the pcie switches are scanned properly.
+
+--
+You are receiving this mail because:
+You are watching the assignee of the bug.
