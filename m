@@ -1,122 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v5 10/10] PCI: dwc: Replace magic number by defines
-Date: Tue, 17 Apr 2018 15:34:28 +0100
-Message-Id: <c5728c9f71dff5aac0ff575106ecf4045ba30b40.1523973931.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:40010 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750902AbeDXWS5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Apr 2018 18:18:57 -0400
+Date: Tue, 24 Apr 2018 18:18:54 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Keith Busch <keith.busch@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+cc: Jens Axboe <axboe@fb.com>, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, Arjan van de Ven <arjan@linux.intel.com>
+Subject: Re: [PATCH] fix failure when root filesystem is on nvme
+In-Reply-To: <20180421191608.GC19048@localhost.localdomain>
+Message-ID: <alpine.LRH.2.02.1804241743050.19786@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1804210942070.11467@file01.intranet.prod.int.rdu2.redhat.com> <20180421191608.GC19048@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace magic numbers by a well known define in order to make the code
-human readable and also facilitate the code reusability.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Changes v3->v4:
- - Nothing changed, just to follow the patch set version.
-Changes v4->v5:
- - Nothing changed, just to follow the patch set version.
 
- drivers/pci/dwc/pcie-designware-host.c | 34 ++++++++++++++++++++--------------
- drivers/pci/dwc/pcie-designware.h      |  1 +
- 2 files changed, 21 insertions(+), 14 deletions(-)
+On Sat, 21 Apr 2018, Keith Busch wrote:
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index fc55fde..a7657ab 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -83,18 +83,23 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
- 
- 	for (i = 0; i < num_ctrls; i++) {
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
--				    &val);
-+		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
-+					(i * MSI_REG_CTRL_BLOCK_SIZE),
-+				    4, &val);
- 		if (!val)
- 			continue;
- 
- 		ret = IRQ_HANDLED;
- 		pos = 0;
--		while ((pos = find_next_bit((unsigned long *) &val, 32,
--					    pos)) != 32) {
--			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
-+		while ((pos = find_next_bit((unsigned long *) &val,
-+					    MAX_MSI_IRQS_PER_CTRL,
-+					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
-+			irq = irq_find_mapping(pp->irq_domain,
-+					       (i * MAX_MSI_IRQS_PER_CTRL) +
-+					       pos);
- 			generic_handle_irq(irq);
--			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
-+			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
-+						(i * MSI_REG_CTRL_BLOCK_SIZE),
- 					    4, 1 << pos);
- 			pos++;
- 		}
-@@ -157,9 +162,9 @@ static void dw_pci_bottom_mask(struct irq_data *data)
- 	if (pp->ops->msi_clear_irq) {
- 		pp->ops->msi_clear_irq(pp, data->hwirq);
- 	} else {
--		ctrl = data->hwirq / 32;
--		res = ctrl * 12;
--		bit = data->hwirq % 32;
-+		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-+		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-+		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
- 
- 		pp->irq_status[ctrl] &= ~(1 << bit);
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
-@@ -180,9 +185,9 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
- 	if (pp->ops->msi_set_irq) {
- 		pp->ops->msi_set_irq(pp, data->hwirq);
- 	} else {
--		ctrl = data->hwirq / 32;
--		res = ctrl * 12;
--		bit = data->hwirq % 32;
-+		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-+		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-+		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
- 
- 		pp->irq_status[ctrl] |= 1 << bit;
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
-@@ -652,8 +657,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 
- 	/* Initialize IRQ Status array */
- 	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
--				    &pp->irq_status[ctrl]);
-+		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
-+					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
-+				    4, &pp->irq_status[ctrl]);
- 
- 	/* Setup RC BARs */
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index fe811db..bee4e25 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -110,6 +110,7 @@
- #define MAX_MSI_IRQS			256
- #define MAX_MSI_IRQS_PER_CTRL		32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
-+#define MSI_REG_CTRL_BLOCK_SIZE		12
- #define MSI_DEF_NUM_VECTORS		32
- 
- /* Maximum number of inbound/outbound iATUs */
--- 
-2.7.4
+> On Sat, Apr 21, 2018 at 09:59:48AM -0400, Mikulas Patocka wrote:
+>
+> > There's a bug in the nvme block device driver that causes failure when we 
+> > have no initramfs and the root filesystem is directly on nvme. The driver 
+> > spawns a work item nvme_reset_work() in the nvme_wq workqueue, but doesn't 
+> > wait for it. The result is that the kernel attempts to mount the root 
+> > filesystem before nvme_reset_work() finishes and it panics because it 
+> > can't find the root device.
+> > 
+> > It can be fixed with this simple patch (perhaps you can come up with a 
+> > better patch that uses the asynchronous probing infrastructure?)
+> 
+> We probe asynchronously to fix other issues.
+> 
+> First is that boot takes way
+> too long if you have a lot of devices when probing all of them serially,
+> and then certain init systems kill the probe task after a certain time,
+> breaking boot for those.
+> 
+> Is there something we can do for your setup to have the kernel wait for
+> the root partition to be available instead of givinig up after pci probe?
+
+Are different PCI NVME devices probed concurrently by the PCI API? (I 
+can't try, I have just one) If yes, then the patch that I posted should be 
+OK, because it wouldn't break this concurrency.
+
+If not, then you need to make sure that wait_for_device_probe() waits for 
+the NVME probe to finish. The kernel calls wait_for_device_probe() just 
+before it attempts to mount the root filesystem. I don't know which of the 
+kernel frameworks would be best suited to accomplish that. Perhaps the 
+simplest solution would be to increment probe_count in nvme_probe and 
+decrement it when the probe work item finishes - but it is not exported 
+and you'd need to create helper functions in drivers/base/dd.c to do that.
+
+Mikulas
