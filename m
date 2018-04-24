@@ -1,42 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:55693 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750955AbeEAFxj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 May 2018 01:53:39 -0400
-Date: Tue, 1 May 2018 07:53:19 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH V3] PCI: rcar: Clean up the macros
-Message-ID: <20180501055319.irtspgcupxac32bd@verge.net.au>
-References: <20180408180431.17323-1-marek.vasut+renesas@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v6 3/9] PCI: endpoint: functions/pci-epf-test: Add second
+ entry
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>
+References: <cover.1524062073.git.gustavo.pimentel@synopsys.com>
+ <9efd4af2f91e1be2b65d2df93444b35871673e8b.1524062073.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <57e5c94a-1e9a-6b4f-cbf8-5ac85ae1a919@ti.com>
+Date: Tue, 24 Apr 2018 18:11:41 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20180408180431.17323-1-marek.vasut+renesas@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <9efd4af2f91e1be2b65d2df93444b35871673e8b.1524062073.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 08, 2018 at 08:04:31PM +0200, Marek Vasut wrote:
-> This patch replaces the (1 << n) with BIT(n) and cleans up whitespace,
-> no functional change.
+
+
+On Wednesday 18 April 2018 08:16 PM, Gustavo Pimentel wrote:
+> Adds a seconds entry on the pci_epf_test_ids structure that disables the
+> linkup_notifier parameter on driver for the designware EP.
 > 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> Reviewed-by: Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
+> This allows designware EPs that doesn't have linkup notification signal
+> to work with pcitest.
+> 
+> Updates the binding documentation accordingly.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+> Change v2->v3:
+>  - Added second entry in pci_epf_test_ids structure.
+>  - Remove test_reg_bar field assignment on second entry.
+> Changes v3->v4:
+>  - Nothing changed, just to follow the patch set version.
+> Changes v4->v5:
+>  - Changed pci_epf_test_cfg2 to pci_epf_test_designware.
+> Changes v5->v6:
+>  - Changed name field from pci_epf_test_designware to pci_epf_test_dw.
+> 
+>  Documentation/PCI/endpoint/function/binding/pci-test.txt | 2 ++
+>  drivers/pci/endpoint/functions/pci-epf-test.c            | 8 ++++++++
+>  2 files changed, 10 insertions(+)
+> 
+> diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+> index 3b68b95..dc39f47 100644
+> --- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
+> +++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+> @@ -1,6 +1,8 @@
+>  PCI TEST ENDPOINT FUNCTION
+>  
+>  name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
+> +name: Should be "pci_epf_test_dw" to bind to the pci_epf_test driver
+> +      with a custom configuration for the designware EP.
+>  
+>  Configurable Fields:
+>  vendorid	 : should be 0x104c
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 7cef851..b7dff87 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -459,10 +459,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+>  	return 0;
+>  }
+>  
+> +static const struct pci_epf_test_data data_cfg2 = {
 
-Marek, thanks for your patch.
+Would prefer a descriptive name, otherwise
 
-Lorenzo, this seems pretty well baked.
-Could you consider applying it?
-
-Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> +	.linkup_notifier = false
+> +};
+> +
+>  static const struct pci_epf_device_id pci_epf_test_ids[] = {
+>  	{
+>  		.name = "pci_epf_test",
+>  	},
+> +	{
+> +		.name = "pci_epf_test_dw",
+> +		.driver_data = (kernel_ulong_t)&data_cfg2,
+> +	},
+>  	{},
+>  };
+>  
+> 
