@@ -1,96 +1,146 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 27/37] iommu/arm-smmu-v3: Register fault workqueue
-To: Yisheng Xie <xieyisheng1@huawei.com>
-References: <1519280641-30258-1-git-send-email-xieyisheng1@huawei.com>
- <1519280641-30258-27-git-send-email-xieyisheng1@huawei.com>
- <f2841aac-4c5e-4ac2-fa4d-81d6b2857503@huawei.com>
- <cabd71fd-c54c-c21a-a5b7-227e69fa4286@arm.com>
- <c4f0a441-e975-395a-fc38-3686db21227d@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <5a610d4f-dc41-15a8-78be-ff5c098c2523@arm.com>
-Date: Wed, 4 Apr 2018 11:13:01 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37272 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750962AbeDXTwN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Apr 2018 15:52:13 -0400
+Date: Tue, 24 Apr 2018 14:52:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, marc.zyngier@arm.com,
+        mingkai.hu@nxp.com, peter.newton@nxp.com, minghuan.lian@nxp.com,
+        rajesh.raina@nxp.com, rajan.kapoor@nxp.com, prabhjot.singh@nxp.com,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v7 2/3] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
+ driver
+Message-ID: <20180424195210.GA72698@bhelgaas-glaptop.roam.corp.google.com>
+References: <1524580195-4680-1-git-send-email-l.subrahmanya@mobiveil.co.in>
 MIME-Version: 1.0
-In-Reply-To: <c4f0a441-e975-395a-fc38-3686db21227d@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
- "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
- Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "robh@kernel.org" <robh@kernel.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1524580195-4680-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22/03/18 01:09, Yisheng Xie wrote:
-> Hi Jean,
+On Tue, Apr 24, 2018 at 10:29:55AM -0400, Subrahmanya Lingappa wrote:
+> Adds driver for Mobiveil AXI PCIe Host Bridge Soft IP
+>  - GPEX 4.0, a PCIe gen4 IP. This IP has upto 8 outbound and inbound windows
+>  for the address translation.
 > 
-> On 2018/3/21 21:24, Jean-Philippe Brucker wrote:
->> Hi Yisheng,
->>
->> On 19/03/18 11:03, Yisheng Xie wrote:
->>> Hi Jean,
->>>
->>> [...]
->>>> @@ -3168,6 +3260,13 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
->>>>  	if (ret)
->>>>  		return ret;
->>>>  
->>>> +	if (smmu->features & (ARM_SMMU_FEAT_STALLS | ARM_SMMU_FEAT_PRI)) {
->>>> +		smmu->faultq_nb.notifier_call = arm_smmu_flush_queues;
->>>> +		ret = iommu_fault_queue_register(&smmu->faultq_nb);
->>>> +		if (ret)
->>>> +			return ret;
->>>
->>> I find a case here: CONFIG_IOMMU_FAULT=n, and smmu support feature STALLS or PRI,
->>> the device probe will failed here, is this what we want?
->>
->> Since CONFIG_ARM_SMMU_V3 selects CONFIG_IOMMU_FAULT, I don't think it
->> can happen. 
+> Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Marc Zyngier <marc.zyngier@arm.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: devicetree@vger.kernel.org
+> ---
+>  drivers/pci/host/pcie-mobiveil.c | 692 +++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 692 insertions(+)
+>  create mode 100644 drivers/pci/host/pcie-mobiveil.c
 > 
-> But CONFIG_IOMMU_FAULT can be changed after select, maybe can make it as unchangeable. Seems sensible, I don't see a reason to leave IOMMU_FAULT selectable
-manually.
+> diff --git a/drivers/pci/host/pcie-mobiveil.c b/drivers/pci/host/pcie-mobiveil.c
+> new file mode 100644
+> index 0000000..28f488b
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-mobiveil.c
+> @@ -0,0 +1,692 @@
+> +/*
+> + * PCIe host controller driver for Mobiveil PCIe Host controller
+> + *
+> + * SPDX-License-Identifier: GPL-2.0
 
-Thanks,
-Jean
+Incorrect usage of SPDX tag, see https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/license-rules.rst
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+(Must be first line of file, should use "//" comment in C source)
+
+> + * Copyright (c) 2017 Mobiveil Inc.
+
+It's 2018 already, so use 2018 here instead of 2017 in this patch and
+then updating it in the next.
+
+> +/* supported number of interrupts */
+> +#define PCI_NUM_INTX    4
+
+This is already defined in include/linux/pci.h; you don't need another
+one.
+
+> +static inline u32 csr_readl(struct mobiveil_pcie *pcie,	const u32 reg)
+
+Should be space, not tab, after ","
+
+> +/*
+> + * Routine to check the downstream link status, its recommended to
+> + * check the link status before accessing downstream config resources.
+
+Checking the link status before accessing downstream config resources
+is racy because the link may go down after you check the status but
+before you actually do the access.
+
+> + */
+> +static bool mobiveil_pcie_link_up(struct mobiveil_pcie *pcie)
+> +{
+> +	return (csr_readl(pcie, LTSSM_STATUS) &
+> +		LTSSM_STATUS_L0_MASK) == LTSSM_STATUS_L0;
+> +}
+
+> +static void __iomem *mobiveil_pcie_map_bus(struct pci_bus *bus,
+> +					unsigned int devfn, int where)
+> +{
+> +	struct mobiveil_pcie *pcie = bus->sysdata;
+> +
+> +	if (!mobiveil_pcie_valid_device(bus, devfn))
+> +		return NULL;
+> +
+> +	if (bus->number == pcie->root_bus_nr) {
+> +		/* RC config access */
+> +		return pcie->csr_axi_slave_base + where;
+> +	} else {
+
+No "else" needed, since the "if" body always returns.  Then you can
+unindent the block below.
+
+> +		/*
+> +		 * EP config access (in Config/APIO space)
+> +		 * Program PEX Address base (31..16 bits) with appropriate value
+> +		 * (BDF) in PAB_AXI_AMAP_PEX_WIN_L0 Register.
+> +		 * Relies on pci_lock serialization
+> +		 */
+> +		csr_writel(pcie,
+> +			bus->number << PAB_BUS_SHIFT |
+> +			PCI_SLOT(devfn) << PAB_DEVICE_SHIFT |
+> +			PCI_FUNC(devfn) << PAB_FUNCTION_SHIFT,
+> +			PAB_AXI_AMAP_PEX_WIN_L(WIN_NUM_0));
+> +		return pcie->config_axi_slave_base + where;
+> +	}
+
+> +/*
+> + * select_paged_register - routine to access paged register of root complex
+> + *
+> + * registers of RC are paged, for this scheme to work
+> + * extracted higher 6 bits of the offset will be written to pg_sel
+> + * field of PAB_CTRL register and rest of the lower 10 bits enabled with
+> + * PAGE_SEL_EN are used as offset of the register.
+> + *
+
+Remove the extra blank line at the end of the comment.
+
+> + */
+> +static void select_paged_register(struct mobiveil_pcie *pcie, u32 offset)
+
+> +	value = csr_readl(pcie, PCI_COMMAND);
+> +	csr_writel(pcie, value | PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
+> +		PCI_COMMAND_MASTER,	PCI_COMMAND);
+
+Use space, not tab, after the comma.
+
+> +	/* program PIO Enable Bit to 1 and Config Window Enable Bit to 1 in
+> +	 * PAB_AXI_PIO_CTRL Register
+> +	 */
+
+Wrong comment style, needs:
+
+  /*
+   * Program PIO ...
+   * ...
+   */
+
+Bjorn
