@@ -1,98 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Gustavo Pimentel'" <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <kishon@ti.com>, <robh+dt@kernel.org>,
-        <mark.rutland@arm.com>
-Cc: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-References: <cover.1523266508.git.gustavo.pimentel@synopsys.com> <5181f7ffbb9d2889974c49d84e72042251adf8b6.1523266508.git.gustavo.pimentel@synopsys.com> <003001d3d128$39f3eaa0$addbbfe0$@gmail.com> <c295bc5b-e67a-290c-3316-56a1cc001538@synopsys.com>
-In-Reply-To: <c295bc5b-e67a-290c-3316-56a1cc001538@synopsys.com>
-Subject: Re: [PATCH v2 8/9] PCI: dwc: Small computation improvement
-Date: Wed, 11 Apr 2018 15:37:46 -0400
-Message-ID: <000001d3d1cc$92706790$b75136b0$@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:22838 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750779AbeDXXM6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Apr 2018 19:12:58 -0400
+Date: Tue, 24 Apr 2018 17:14:15 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jens Axboe <axboe@fb.com>,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        Arjan van de Ven <arjan@linux.intel.com>
+Subject: Re: [PATCH] fix failure when root filesystem is on nvme
+Message-ID: <20180424231415.GA31318@localhost.localdomain>
+References: <alpine.LRH.2.02.1804210942070.11467@file01.intranet.prod.int.rdu2.redhat.com>
+ <20180421191608.GC19048@localhost.localdomain>
+ <alpine.LRH.2.02.1804241743050.19786@file01.intranet.prod.int.rdu2.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LRH.2.02.1804241743050.19786@file01.intranet.prod.int.rdu2.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, April 11, 2018 3:40 AM, Gustavo Pimentel wrote:
+On Tue, Apr 24, 2018 at 06:18:54PM -0400, Mikulas Patocka wrote:
 > 
-> Hi Jingoo,
 > 
-> On 11/04/2018 01:01, Jingoo Han wrote:
-> > On Monday, April 9, 2018 5:41 AM, Gustavo Pimentel wrote:
-> >>
-> >> Replaces a simple division by 2 to a right shift rotation of 1 bit.
+> On Sat, 21 Apr 2018, Keith Busch wrote:
+> 
+> > On Sat, Apr 21, 2018 at 09:59:48AM -0400, Mikulas Patocka wrote:
 > >
-> > It looks good. However, would you add a simple reason to the commit
-> > message?
+> > > There's a bug in the nvme block device driver that causes failure when we 
+> > > have no initramfs and the root filesystem is directly on nvme. The driver 
+> > > spawns a work item nvme_reset_work() in the nvme_wq workqueue, but doesn't 
+> > > wait for it. The result is that the kernel attempts to mount the root 
+> > > filesystem before nvme_reset_work() finishes and it panics because it 
+> > > can't find the root device.
+> > > 
+> > > It can be fixed with this simple patch (perhaps you can come up with a 
+> > > better patch that uses the asynchronous probing infrastructure?)
+> > 
+> > We probe asynchronously to fix other issues.
+> > 
+> > First is that boot takes way
+> > too long if you have a lot of devices when probing all of them serially,
+> > and then certain init systems kill the probe task after a certain time,
+> > breaking boot for those.
+> > 
+> > Is there something we can do for your setup to have the kernel wait for
+> > the root partition to be available instead of givinig up after pci probe?
 > 
-> Sure.
-> 
-> Can be this one?
-> 
-> Probably any recent and decent compiler does this kind of substitution
-> in order to improve code performance. Nevertheless it's a coding good
-> practice whenever there is a division / multiplication by multiple of 2
-> to replace it by the equivalent operation in this case, the shift
-> rotation.
+> Are different PCI NVME devices probed concurrently by the PCI API? (I 
+> can't try, I have just one) 
 
-Yes, that's what I wanted. The most platforms using 'dwc' are based on
-ARM CPUs. So, the shift rotation can be better.
-Thank you.
+It does not.
 
-Best regards,
-Jingoo Han
+> If yes, then the patch that I posted should be 
+> OK, because it wouldn't break this concurrency.
 
-> 
-> >
-> > Best regards,
-> > Jingoo Han
-> >
-> >>
-> >> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> >> ---
-> >> Change v1->v2:
-> >> - Nothing changed, just to follow the patch set version.
-> >>
-> >>  drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
-> >>  1 file changed, 4 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/dwc/pcie-designware-host.c
-> >> b/drivers/pci/dwc/pcie-designware-host.c
-> >> index 03e9b82..8e6fed4 100644
-> >> --- a/drivers/pci/dwc/pcie-designware-host.c
-> >> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> >> @@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> >>
-> >>  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-> >> "config");
-> >>  	if (cfg_res) {
-> >> -		pp->cfg0_size = resource_size(cfg_res) / 2;
-> >> -		pp->cfg1_size = resource_size(cfg_res) / 2;
-> >> +		pp->cfg0_size = resource_size(cfg_res) >> 1;
-> >> +		pp->cfg1_size = resource_size(cfg_res) >> 1;
-> >>  		pp->cfg0_base = cfg_res->start;
-> >>  		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
-> >>  	} else if (!pp->va_cfg0_base) {
-> >> @@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> >>  			break;
-> >>  		case 0:
-> >>  			pp->cfg = win->res;
-> >> -			pp->cfg0_size = resource_size(pp->cfg) / 2;
-> >> -			pp->cfg1_size = resource_size(pp->cfg) / 2;
-> >> +			pp->cfg0_size = resource_size(pp->cfg) >> 1;
-> >> +			pp->cfg1_size = resource_size(pp->cfg) >> 1;
-> >>  			pp->cfg0_base = pp->cfg->start;
-> >>  			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
-> >>  			break;
-> >> --
-> >> 2.7.4
-> >>
-> >
-> >
-> 
-> Regards,
-> Gustavo
+But you're waiting for the wrong work queue: the driver's reset_work
+won't get your root filesystem. That is handled in the scan_work.
+
+> If not, then you need to make sure that wait_for_device_probe() waits for 
+> the NVME probe to finish. The kernel calls wait_for_device_probe() just 
+> before it attempts to mount the root filesystem. I don't know which of the 
+> kernel frameworks would be best suited to accomplish that. Perhaps the 
+> simplest solution would be to increment probe_count in nvme_probe and 
+> decrement it when the probe work item finishes - but it is not exported 
+> and you'd need to create helper functions in drivers/base/dd.c to do that.
+
+Will have to look into it, but I think an async_domain is going to be the
+right way to go and shouldn't require any changes outside nvme.
