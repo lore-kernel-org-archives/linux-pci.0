@@ -1,104 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-he1eur01on0088.outbound.protection.outlook.com ([104.47.0.88]:47403
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1757811AbeD0K1w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Apr 2018 06:27:52 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, mark.rutland@arm.com,
-        catalin.marinas@arm.com
-Cc: hch@lst.de, gregkh@linuxfoundation.org, joro@8bytes.org,
-        robh+dt@kernel.org, m.szyprowski@samsung.com, shawnguo@kernel.org,
-        frowand.list@gmail.com, bhelgaas@google.com,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bharat.bhushan@nxp.com, stuyoder@gmail.com,
-        laurentiu.tudor@nxp.com, leoyang.li@nxp.com,
-        Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH 1/6 v3] Docs: dt: add fsl-mc iommu-map device-tree binding
-Date: Fri, 27 Apr 2018 15:57:01 +0530
-Message-Id: <1524824826-29473-2-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
-References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v7 6/9] PCI: dwc: Define maximum number of vectors
+Date: Tue, 24 Apr 2018 14:44:43 +0100
+Message-Id: <6b2c7ec1835cf422af5703aa14c99dbad8c6ffb8.1524577064.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The existing IOMMU bindings cannot be used to specify the relationship
-between fsl-mc devices and IOMMUs. This patch adds a generic binding for
-mapping fsl-mc devices to IOMMUs, using iommu-map property.
+Adds a callback that defines the maximum number of vectors that can be use
+by the Root Complex.
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Since this is a parameter associated to each SoC IP setting, makes sense to
+be configurable and easily visible to future modifications.
+
+The designware IP supports a maximum of 256 vectors.
+
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Joao Pinto <jpinto@synopsys.com>
 ---
- .../devicetree/bindings/misc/fsl,qoriq-mc.txt      | 39 ++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Changes v3->v4:
+ - Nothing changed, just to follow the patch set version.
+Changes v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Changes v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Changes v6->v7:
+ - Nothing changed, just to follow the patch set version.
 
-diff --git a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-index 6611a7c..8cbed4f 100644
---- a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-+++ b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-@@ -9,6 +9,25 @@ blocks that can be used to create functional hardware objects/devices
- such as network interfaces, crypto accelerator instances, L2 switches,
- etc.
+ drivers/pci/dwc/pcie-designware-plat.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index efc315c..5937fed 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -48,8 +48,14 @@ static int dw_plat_pcie_host_init(struct pcie_port *pp)
+ 	return 0;
+ }
  
-+For an overview of the DPAA2 architecture and fsl-mc bus see:
-+drivers/staging/fsl-mc/README.txt
++static void dw_plat_set_num_vectors(struct pcie_port *pp)
++{
++	pp->num_vectors = MAX_MSI_IRQS;
++}
 +
-+As described in the above overview, all DPAA2 objects in a DPRC share the
-+same hardware "isolation context" and a 10-bit value called an ICID
-+(isolation context id) is expressed by the hardware to identify
-+the requester.
-+
-+The generic 'iommus' property is insufficient to describe the relationship
-+between ICIDs and IOMMUs, so an iommu-map property is used to define
-+the set of possible ICIDs under a root DPRC and how they map to
-+an IOMMU.
-+
-+For generic IOMMU bindings, see
-+Documentation/devicetree/bindings/iommu/iommu.txt.
-+
-+For arm-smmu binding, see:
-+Documentation/devicetree/bindings/iommu/arm,smmu.txt.
-+
- Required properties:
+ static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
+ 	.host_init = dw_plat_pcie_host_init,
++	.set_num_vectors = dw_plat_set_num_vectors,
+ };
  
-     - compatible
-@@ -88,14 +107,34 @@ Sub-nodes:
-               Value type: <phandle>
-               Definition: Specifies the phandle to the PHY device node associated
-                           with the this dpmac.
-+Optional properties:
-+
-+- iommu-map: Maps an ICID to an IOMMU and associated iommu-specifier
-+  data.
-+
-+  The property is an arbitrary number of tuples of
-+  (icid-base,iommu,iommu-base,length).
-+
-+  Any ICID i in the interval [icid-base, icid-base + length) is
-+  associated with the listed IOMMU, with the iommu-specifier
-+  (i - icid-base + iommu-base).
- 
- Example:
- 
-+        smmu: iommu@5000000 {
-+               compatible = "arm,mmu-500";
-+               #iommu-cells = <2>;
-+               stream-match-mask = <0x7C00>;
-+               ...
-+        };
-+
-         fsl_mc: fsl-mc@80c000000 {
-                 compatible = "fsl,qoriq-mc";
-                 reg = <0x00000008 0x0c000000 0 0x40>,    /* MC portal base */
-                       <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
-                 msi-parent = <&its>;
-+                /* define map for ICIDs 23-64 */
-+                iommu-map = <23 &smmu 23 41>;
-                 #address-cells = <3>;
-                 #size-cells = <1>;
- 
+ static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
 -- 
-1.9.1
+2.7.4
