@@ -1,380 +1,187 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 30 Apr 2018 15:56:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Subject: Re: [PATCH v4 2/6] iommu: of: make of_pci_map_rid() available for
- other devices too
-Message-ID: <20180430205649.GD95643@bhelgaas-glaptop.roam.corp.google.com>
-References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
- <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
- <1525069641-8523-3-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC 01/10] PCI: dwc: Add MSI-X callbacks handler
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "adouglas@cadence.com" <adouglas@cadence.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+ <77b7b2687e9618d3f7d1f11c3fc6ecec9a9442ef.1523379766.git.gustavo.pimentel@synopsys.com>
+ <0b7023d9-29c6-0993-07d3-b046d25b67ff@ti.com>
+ <e2fe7d5f-9f57-0e67-d321-541ff4706792@synopsys.com>
+ <0e8b8ce9-db12-1e11-3eb5-62f3fa686d59@ti.com>
+ <16d237b2-0052-447e-13cb-bc2f15848be4@synopsys.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <eeb3ace0-9206-efbf-f5db-97ccea0f47b7@ti.com>
+Date: Tue, 24 Apr 2018 16:54:20 +0530
 MIME-Version: 1.0
-In-Reply-To: <1525069641-8523-3-git-send-email-nipun.gupta@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, stuyoder@gmail.com, linux-pci@vger.kernel.org,
- will.deacon@arm.com, shawnguo@kernel.org, bharat.bhushan@nxp.com, hch@lst.de,
- m.szyprowski@samsung.com, robh@kernel.org, frowand.list@gmail.com,
- joro@8bytes.org, catalin.marinas@arm.com, devicetree@vger.kernel.org,
- robin.murphy@arm.com, robh+dt@kernel.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org, laurentiu.tudor@nxp.com,
- gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <16d237b2-0052-447e-13cb-bc2f15848be4@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 30, 2018 at 11:57:17AM +0530, Nipun Gupta wrote:
-> iommu-map property is also used by devices with fsl-mc. This
-> patch moves the of_pci_map_rid to generic location, so that it
-> can be used by other busses too.
-> 
-> 'of_pci_map_rid' is renamed here to 'of_map_rid' and there is no
-> functional change done in the API.
-> 
-> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Hi,
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  drivers/iommu/of_iommu.c |   5 +--
->  drivers/of/base.c        | 102 +++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/of/irq.c         |   5 +--
->  drivers/pci/of.c         | 101 ----------------------------------------------
->  include/linux/of.h       |  11 +++++
->  include/linux/of_pci.h   |  10 -----
->  6 files changed, 117 insertions(+), 117 deletions(-)
+On Tuesday 24 April 2018 03:06 PM, Gustavo Pimentel wrote:
+> Hi Kishon,
 > 
-> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> index 5c36a8b..811e160 100644
-> --- a/drivers/iommu/of_iommu.c
-> +++ b/drivers/iommu/of_iommu.c
-> @@ -149,9 +149,8 @@ static int of_pci_iommu_init(struct pci_dev *pdev, u16 alias, void *data)
->  	struct of_phandle_args iommu_spec = { .args_count = 1 };
->  	int err;
->  
-> -	err = of_pci_map_rid(info->np, alias, "iommu-map",
-> -			     "iommu-map-mask", &iommu_spec.np,
-> -			     iommu_spec.args);
-> +	err = of_map_rid(info->np, alias, "iommu-map", "iommu-map-mask",
-> +			 &iommu_spec.np, iommu_spec.args);
->  	if (err)
->  		return err == -ENODEV ? NO_IOMMU : err;
->  
-> diff --git a/drivers/of/base.c b/drivers/of/base.c
-> index 848f549..c7aac81 100644
-> --- a/drivers/of/base.c
-> +++ b/drivers/of/base.c
-> @@ -1995,3 +1995,105 @@ int of_find_last_cache_level(unsigned int cpu)
->  
->  	return cache_level;
->  }
-> +
-> +/**
-> + * of_map_rid - Translate a requester ID through a downstream mapping.
-> + * @np: root complex device node.
-> + * @rid: device requester ID to map.
-> + * @map_name: property name of the map to use.
-> + * @map_mask_name: optional property name of the mask to use.
-> + * @target: optional pointer to a target device node.
-> + * @id_out: optional pointer to receive the translated ID.
-> + *
-> + * Given a device requester ID, look up the appropriate implementation-defined
-> + * platform ID and/or the target device which receives transactions on that
-> + * ID, as per the "iommu-map" and "msi-map" bindings. Either of @target or
-> + * @id_out may be NULL if only the other is required. If @target points to
-> + * a non-NULL device node pointer, only entries targeting that node will be
-> + * matched; if it points to a NULL value, it will receive the device node of
-> + * the first matching target phandle, with a reference held.
-> + *
-> + * Return: 0 on success or a standard error code on failure.
-> + */
-> +int of_map_rid(struct device_node *np, u32 rid,
-> +	       const char *map_name, const char *map_mask_name,
-> +	       struct device_node **target, u32 *id_out)
-> +{
-> +	u32 map_mask, masked_rid;
-> +	int map_len;
-> +	const __be32 *map = NULL;
-> +
-> +	if (!np || !map_name || (!target && !id_out))
-> +		return -EINVAL;
-> +
-> +	map = of_get_property(np, map_name, &map_len);
-> +	if (!map) {
-> +		if (target)
-> +			return -ENODEV;
-> +		/* Otherwise, no map implies no translation */
-> +		*id_out = rid;
-> +		return 0;
-> +	}
-> +
-> +	if (!map_len || map_len % (4 * sizeof(*map))) {
-> +		pr_err("%pOF: Error: Bad %s length: %d\n", np,
-> +			map_name, map_len);
-> +		return -EINVAL;
-> +	}
-> +
-> +	/* The default is to select all bits. */
-> +	map_mask = 0xffffffff;
-> +
-> +	/*
-> +	 * Can be overridden by "{iommu,msi}-map-mask" property.
-> +	 * If of_property_read_u32() fails, the default is used.
-> +	 */
-> +	if (map_mask_name)
-> +		of_property_read_u32(np, map_mask_name, &map_mask);
-> +
-> +	masked_rid = map_mask & rid;
-> +	for ( ; map_len > 0; map_len -= 4 * sizeof(*map), map += 4) {
-> +		struct device_node *phandle_node;
-> +		u32 rid_base = be32_to_cpup(map + 0);
-> +		u32 phandle = be32_to_cpup(map + 1);
-> +		u32 out_base = be32_to_cpup(map + 2);
-> +		u32 rid_len = be32_to_cpup(map + 3);
-> +
-> +		if (rid_base & ~map_mask) {
-> +			pr_err("%pOF: Invalid %s translation - %s-mask (0x%x) ignores rid-base (0x%x)\n",
-> +				np, map_name, map_name,
-> +				map_mask, rid_base);
-> +			return -EFAULT;
-> +		}
-> +
-> +		if (masked_rid < rid_base || masked_rid >= rid_base + rid_len)
-> +			continue;
-> +
-> +		phandle_node = of_find_node_by_phandle(phandle);
-> +		if (!phandle_node)
-> +			return -ENODEV;
-> +
-> +		if (target) {
-> +			if (*target)
-> +				of_node_put(phandle_node);
-> +			else
-> +				*target = phandle_node;
-> +
-> +			if (*target != phandle_node)
-> +				continue;
-> +		}
-> +
-> +		if (id_out)
-> +			*id_out = masked_rid - rid_base + out_base;
-> +
-> +		pr_debug("%pOF: %s, using mask %08x, rid-base: %08x, out-base: %08x, length: %08x, rid: %08x -> %08x\n",
-> +			np, map_name, map_mask, rid_base, out_base,
-> +			rid_len, rid, masked_rid - rid_base + out_base);
-> +		return 0;
-> +	}
-> +
-> +	pr_err("%pOF: Invalid %s translation - no match for rid 0x%x on %pOF\n",
-> +		np, map_name, rid, target && *target ? *target : NULL);
-> +	return -EFAULT;
-> +}
-> +EXPORT_SYMBOL_GPL(of_map_rid);
-> diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-> index 02ad93a..e1f6f39 100644
-> --- a/drivers/of/irq.c
-> +++ b/drivers/of/irq.c
-> @@ -22,7 +22,6 @@
->  #include <linux/module.h>
->  #include <linux/of.h>
->  #include <linux/of_irq.h>
-> -#include <linux/of_pci.h>
->  #include <linux/string.h>
->  #include <linux/slab.h>
->  
-> @@ -588,8 +587,8 @@ static u32 __of_msi_map_rid(struct device *dev, struct device_node **np,
->  	 * "msi-map" property.
->  	 */
->  	for (parent_dev = dev; parent_dev; parent_dev = parent_dev->parent)
-> -		if (!of_pci_map_rid(parent_dev->of_node, rid_in, "msi-map",
-> -				    "msi-map-mask", np, &rid_out))
-> +		if (!of_map_rid(parent_dev->of_node, rid_in, "msi-map",
-> +				"msi-map-mask", np, &rid_out))
->  			break;
->  	return rid_out;
->  }
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index a28355c..d2cebbe 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -362,107 +362,6 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
->  #endif /* CONFIG_OF_ADDRESS */
->  
-> -/**
-> - * of_pci_map_rid - Translate a requester ID through a downstream mapping.
-> - * @np: root complex device node.
-> - * @rid: PCI requester ID to map.
-> - * @map_name: property name of the map to use.
-> - * @map_mask_name: optional property name of the mask to use.
-> - * @target: optional pointer to a target device node.
-> - * @id_out: optional pointer to receive the translated ID.
-> - *
-> - * Given a PCI requester ID, look up the appropriate implementation-defined
-> - * platform ID and/or the target device which receives transactions on that
-> - * ID, as per the "iommu-map" and "msi-map" bindings. Either of @target or
-> - * @id_out may be NULL if only the other is required. If @target points to
-> - * a non-NULL device node pointer, only entries targeting that node will be
-> - * matched; if it points to a NULL value, it will receive the device node of
-> - * the first matching target phandle, with a reference held.
-> - *
-> - * Return: 0 on success or a standard error code on failure.
-> - */
-> -int of_pci_map_rid(struct device_node *np, u32 rid,
-> -		   const char *map_name, const char *map_mask_name,
-> -		   struct device_node **target, u32 *id_out)
-> -{
-> -	u32 map_mask, masked_rid;
-> -	int map_len;
-> -	const __be32 *map = NULL;
-> -
-> -	if (!np || !map_name || (!target && !id_out))
-> -		return -EINVAL;
-> -
-> -	map = of_get_property(np, map_name, &map_len);
-> -	if (!map) {
-> -		if (target)
-> -			return -ENODEV;
-> -		/* Otherwise, no map implies no translation */
-> -		*id_out = rid;
-> -		return 0;
-> -	}
-> -
-> -	if (!map_len || map_len % (4 * sizeof(*map))) {
-> -		pr_err("%pOF: Error: Bad %s length: %d\n", np,
-> -			map_name, map_len);
-> -		return -EINVAL;
-> -	}
-> -
-> -	/* The default is to select all bits. */
-> -	map_mask = 0xffffffff;
-> -
-> -	/*
-> -	 * Can be overridden by "{iommu,msi}-map-mask" property.
-> -	 * If of_property_read_u32() fails, the default is used.
-> -	 */
-> -	if (map_mask_name)
-> -		of_property_read_u32(np, map_mask_name, &map_mask);
-> -
-> -	masked_rid = map_mask & rid;
-> -	for ( ; map_len > 0; map_len -= 4 * sizeof(*map), map += 4) {
-> -		struct device_node *phandle_node;
-> -		u32 rid_base = be32_to_cpup(map + 0);
-> -		u32 phandle = be32_to_cpup(map + 1);
-> -		u32 out_base = be32_to_cpup(map + 2);
-> -		u32 rid_len = be32_to_cpup(map + 3);
-> -
-> -		if (rid_base & ~map_mask) {
-> -			pr_err("%pOF: Invalid %s translation - %s-mask (0x%x) ignores rid-base (0x%x)\n",
-> -				np, map_name, map_name,
-> -				map_mask, rid_base);
-> -			return -EFAULT;
-> -		}
-> -
-> -		if (masked_rid < rid_base || masked_rid >= rid_base + rid_len)
-> -			continue;
-> -
-> -		phandle_node = of_find_node_by_phandle(phandle);
-> -		if (!phandle_node)
-> -			return -ENODEV;
-> -
-> -		if (target) {
-> -			if (*target)
-> -				of_node_put(phandle_node);
-> -			else
-> -				*target = phandle_node;
-> -
-> -			if (*target != phandle_node)
-> -				continue;
-> -		}
-> -
-> -		if (id_out)
-> -			*id_out = masked_rid - rid_base + out_base;
-> -
-> -		pr_debug("%pOF: %s, using mask %08x, rid-base: %08x, out-base: %08x, length: %08x, rid: %08x -> %08x\n",
-> -			np, map_name, map_mask, rid_base, out_base,
-> -			rid_len, rid, masked_rid - rid_base + out_base);
-> -		return 0;
-> -	}
-> -
-> -	pr_err("%pOF: Invalid %s translation - no match for rid 0x%x on %pOF\n",
-> -		np, map_name, rid, target && *target ? *target : NULL);
-> -	return -EFAULT;
-> -}
-> -
->  #if IS_ENABLED(CONFIG_OF_IRQ)
->  /**
->   * of_irq_parse_pci - Resolve the interrupt for a PCI device
-> diff --git a/include/linux/of.h b/include/linux/of.h
-> index 4d25e4f..f4251c3 100644
-> --- a/include/linux/of.h
-> +++ b/include/linux/of.h
-> @@ -545,6 +545,10 @@ const __be32 *of_prop_next_u32(struct property *prop, const __be32 *cur,
->  
->  extern int of_cpu_node_to_id(struct device_node *np);
->  
-> +int of_map_rid(struct device_node *np, u32 rid,
-> +	       const char *map_name, const char *map_mask_name,
-> +	       struct device_node **target, u32 *id_out);
-> +
->  #else /* CONFIG_OF */
->  
->  static inline void of_core_init(void)
-> @@ -931,6 +935,13 @@ static inline int of_cpu_node_to_id(struct device_node *np)
->  	return -ENODEV;
->  }
->  
-> +static inline int of_map_rid(struct device_node *np, u32 rid,
-> +			     const char *map_name, const char *map_mask_name,
-> +			     struct device_node **target, u32 *id_out)
-> +{
-> +	return -EINVAL;
-> +}
-> +
->  #define of_match_ptr(_ptr)	NULL
->  #define of_match_node(_matches, _node)	NULL
->  #endif /* CONFIG_OF */
-> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> index 091033a..a23b44a 100644
-> --- a/include/linux/of_pci.h
-> +++ b/include/linux/of_pci.h
-> @@ -17,9 +17,6 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
->  int of_get_pci_domain_nr(struct device_node *node);
->  int of_pci_get_max_link_speed(struct device_node *node);
->  void of_pci_check_probe_only(void);
-> -int of_pci_map_rid(struct device_node *np, u32 rid,
-> -		   const char *map_name, const char *map_mask_name,
-> -		   struct device_node **target, u32 *id_out);
->  #else
->  static inline struct device_node *of_pci_find_child_device(struct device_node *parent,
->  					     unsigned int devfn)
-> @@ -44,13 +41,6 @@ static inline int of_pci_get_devfn(struct device_node *np)
->  	return -1;
->  }
->  
-> -static inline int of_pci_map_rid(struct device_node *np, u32 rid,
-> -			const char *map_name, const char *map_mask_name,
-> -			struct device_node **target, u32 *id_out)
-> -{
-> -	return -EINVAL;
-> -}
-> -
->  static inline int
->  of_pci_get_max_link_speed(struct device_node *node)
->  {
-> -- 
-> 1.9.1
+> On 24/04/2018 08:07, Kishon Vijay Abraham I wrote:
+>> Hi,
+>>
+>> On Monday 23 April 2018 03:06 PM, Gustavo Pimentel wrote:
+>>> Hi Kishon,
+>>>
+>>> On 16/04/2018 10:29, Kishon Vijay Abraham I wrote:
+>>>> Hi Gustavo,
+>>>>
+>>>> On Tuesday 10 April 2018 10:44 PM, Gustavo Pimentel wrote:
+>>>>> Changes the pcie_raise_irq function signature, namely the interrupt_num
+>>>>> variable type from u8 to u16 to accommodate the MSI-X maximum interrupts
+>>>>> of 2048.
+>>>>>
+>>>>> Implements a PCIe config space capability iterator function to search and
+>>>>> save the MSI and MSI-X pointers. With this method the code becomes more
+>>>>> generic and flexible.
+>>>>>
+>>>>> Implements MSI-X set/get functions for sysfs interface in order to change
+>>>>> the EP entries number.
+>>>>>
+>>>>> Implements EP MSI-X interface for triggering interruptions.
+>>>>>
+>>>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>>>>> ---
+>>>>>  drivers/pci/dwc/pci-dra7xx.c           |   2 +-
+>>>>>  drivers/pci/dwc/pcie-artpec6.c         |   2 +-
+>>>>>  drivers/pci/dwc/pcie-designware-ep.c   | 145 ++++++++++++++++++++++++++++++++-
+>>>>>  drivers/pci/dwc/pcie-designware-plat.c |   6 +-
+>>>>>  drivers/pci/dwc/pcie-designware.h      |  23 +++++-
+>>>>>  5 files changed, 173 insertions(+), 5 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+>>>>> index ed8558d..5265725 100644
+>>>>> --- a/drivers/pci/dwc/pci-dra7xx.c
+>>>>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+>>>>> @@ -369,7 +369,7 @@ static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
+>>>>>  }
+>>>>>  
+>>>>>  static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+>>>>> -				 enum pci_epc_irq_type type, u8 interrupt_num)
+>>>>> +				 enum pci_epc_irq_type type, u16 interrupt_num)
+>>>>>  {
+>>>>>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>>>>>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+>>>>> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+>>>>> index e66cede..96dc259 100644
+>>>>> --- a/drivers/pci/dwc/pcie-artpec6.c
+>>>>> +++ b/drivers/pci/dwc/pcie-artpec6.c
+>>>>> @@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
+>>>>>  }
+>>>>>  
+>>>>>  static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+>>>>> -				  enum pci_epc_irq_type type, u8 interrupt_num)
+>>>>> +				  enum pci_epc_irq_type type, u16 interrupt_num)
+>>>>>  {
+>>>>>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>>>>>  
+>>>>> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+>>>>> index 15b22a6..874d4c2 100644
+>>>>> --- a/drivers/pci/dwc/pcie-designware-ep.c
+>>>>> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+>>>>> @@ -40,6 +40,44 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+>>>>>  	__dw_pcie_ep_reset_bar(pci, bar, 0);
+>>>>>  }
+>>>>>  
+>>>>> +void dw_pcie_ep_find_cap_addr(struct dw_pcie_ep *ep)
+>>>>> +{
+>>>>
+>>>> This should be implemented in a generic way similar to pci_find_capability().
+>>>> It'll be useful when we try to implement other capabilities as well.
+>>>
+>>> Hum, what you suggest? Something implemented on the pci-epf-core?
+>>
+>> yeah, Initially thought it could be implemented as a helper function in
+>> pci-epc-core so that both designware and cadence can use it.
 > 
+> That would be nice, however I couldn't find out how to access the config space,
+> through the pci_epf or pci_epc structs.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+It's just a helper function so it can directly take the base address of the
+configuration space as argument (in our case, it should be dbi_base).
+
+Thanks
+Kishon
+
+> 
+> So, I reworked the functions like this:
+> 
+> (on pcie-designware-ep.c)
+> 
+> u8 __dw_pcie_ep_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
+>                               u8 cap)
+> {
+>         u8 cap_id, next_cap_ptr;
+>         u16 reg;
+> 
+>         reg = dw_pcie_readw_dbi(pci, cap_ptr);
+>         next_cap_ptr = (reg & 0xff00) >> 8;
+>         cap_id = (reg & 0x00ff);
+> 
+>         if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
+>                 return 0;
+> 
+>         if (cap_id == cap)
+>                 return cap_ptr;
+> 
+>         return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+> }
+> 
+> u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
+> {
+>         u8 next_cap_ptr;
+>         u16 reg;
+> 
+>         reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
+>         next_cap_ptr = (reg & 0x00ff);
+> 
+>         if (!next_cap_ptr)
+>                 return 0;
+> 
+>         return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+> }
+> 
+> int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+> {
+> [...]
+>         ep->msi_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSI);
+>         ep->msix_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSIX);
+> [...]
+> }
+> 
+>>
+>> But do we really have to find the address like this? since all designware IP's
+>> will have a particular capability at a fixed address offset, why not follow use
+>> existing mechanism in dw_pcie_ep_get_msi?
+> 
+> The capabilities are not fixed to a specific address offset by default they
+> assume those values, but they can be easily change at design stage.
+> 
+>>
+>> Or is it possible for a particular capability to have address offsets for
+>> different vendors? How is it for cadence?
+> 
+> Yes, it's possible to have different address offset for different vendors.
+> 
+>>
+>> Thanks
+>> Kishon
+>>
+> 
+> Thanks,
+> Gustavo
+> 
