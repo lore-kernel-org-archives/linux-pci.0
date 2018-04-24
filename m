@@ -1,75 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:59547 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755370AbeDFOzm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 6 Apr 2018 10:55:42 -0400
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Wilson Ding <dingwei@marvell.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v4 0/6] PCI: aardvark: misc fixes and improvements
-Date: Fri,  6 Apr 2018 16:55:30 +0200
-Message-Id: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alan Douglas <adouglas@cadence.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [RFC 00/10] Adds pcitest tool support for MSI-X
+Date: Tue, 24 Apr 2018 06:48:59 +0000
+Message-ID: <SN6PR07MB45123840F0C9487F1CD119A9D8880@SN6PR07MB4512.namprd07.prod.outlook.com>
+References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, Lorenzo,
+Hi Gustavo,
 
-This patch series brings a number of improvements to the aardvark
-PCIe.
+On 10 April 2018 18:15 Gustavo Pimentel wrote:
+> This patch set depends the following series:
+> https://lkml.org/lkml/2018/4/10/421> This series aims to add pcitest tool=
+ support for MSI-X.
+>=20
+> Includes new callbacks methods and handlers to trigger the MSI-X
+> interruptions on the EP Designware IP driver.
+>=20
+> Provides new methods on pci_epf_test driver that allows to set/get EP
+> maximum number of MSI-X entries (similar to set/get MSI methods).
+>=20
+> Reworks on MSI set/get and triggering methods on EP Designware IP driver =
+to
+> be more generic and flexible.
+>=20
+> Adds a new input parameter (msix) and replicates the whole MSI mechanism
+> applied to the MSI-X feature on pcitest tool. Also updates the pcitest sc=
+ript
+> with the new test set applied to this new feature.
+>=20
+> Gustavo Pimentel (10):
+>   PCI: dwc: Add MSI-X callbacks handler
+>   PCI: cadence: Update cdns_pcie_ep_raise_irq function signature
+>   PCI: endpoint: Add MSI-X interfaces
+>   PCI: dwc: MSI callbacks handler rework
+>   PCI: dwc: Add legacy interrupt callback handler
+>   misc: pci_endpoint_test: Add MSI-X support
+>   misc: pci_endpoint_test: Replace lower into upper case characters
+>   PCI: endpoint: functions/pci-epf-test: Add MSI-X support
+>   PCI: endpoint: functions/pci-epf-test: Replace lower into upper case
+>     characters
+>   tools: PCI: Add MSI-X support
+>=20
+>  Documentation/misc-devices/pci-endpoint-test.txt |   3 +
+>  drivers/misc/pci_endpoint_test.c                 | 120 ++++++++++----
+>  drivers/pci/cadence/pcie-cadence-ep.c            |   2 +-
+>  drivers/pci/dwc/pci-dra7xx.c                     |   2 +-
+>  drivers/pci/dwc/pcie-artpec6.c                   |   2 +-
+>  drivers/pci/dwc/pcie-designware-ep.c             | 201
+> +++++++++++++++++++++--
+>  drivers/pci/dwc/pcie-designware-plat.c           |   9 +-
+>  drivers/pci/dwc/pcie-designware.h                |  40 +++--
+>  drivers/pci/endpoint/functions/pci-epf-test.c    | 113 +++++++++----
+>  drivers/pci/endpoint/pci-ep-cfs.c                |  24 +++
+>  drivers/pci/endpoint/pci-epc-core.c              |  60 ++++++-
+>  include/linux/pci-epc.h                          |  11 +-
+>  include/linux/pci-epf.h                          |   1 +
+>  include/uapi/linux/pcitest.h                     |   1 +
+>  tools/pci/pcitest.c                              |  18 +-
+>  tools/pci/pcitest.sh                             |  25 +++
+>  16 files changed, 528 insertions(+), 104 deletions(-)
+>=20
+> --
+> 2.7.4
+>=20
+Nice set of patches.  I have tested this with the Cadence EP driver after a=
+dding MSI-X support, and found a few changes required.
+I will send you comments.
 
-Changes since v3:
-
- - Introduced advk_pcie_valid_device() late in the series, so that the
-   patch fixing the logic in the PCIe configuration space read/write
-   function does not depend on it. This is needed as we don't want the
-   advk_pcie_valid_device() addition to go to stable.
-
-Changes since v2:
-
- - Rebased on v4.16-rc7
-
- - Dropped the patches disabling L0S and aligning the MPS between RC
-   and EP, since we are working on a different solution, implementing
-   a proper root port. Therefore, this patch series only has the
-   (hopefully) non-controversial changes.
-
- - Add a patch (PATCH 1) that factorizes the logic to decide if the
-   target of a configuration space access is a valid device or not
-   into a advk_pcie_valid_device() helper, and adjust PATCH 2
-   accordingly.
-
- - Drop unused PCIE_BDF macro in PATCH 3.
-
-Best regards,
-
-Thomas Petazzoni
-
-
-
-Evan Wang (2):
-  PCI: aardvark: Fix PCIe Max Read Request Size setting
-  PCI: aardvark: Remove PCIe outbound window configuration
-
-Thomas Petazzoni (1):
-  PCI: aardvark: Introduce an advk_pcie_valid_device() helper
-
-Victor Gu (3):
-  PCI: aardvark: Fix logic in advk_pcie_{rd,wr}_conf()
-  PCI: aardvark: Set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
-  PCI: aardvark: Use ISR1 instead of ISR0 interrupt in legacy irq mode
-
- drivers/pci/host/pci-aardvark.c | 117 ++++++++++++++--------------------------
- 1 file changed, 39 insertions(+), 78 deletions(-)
-
--- 
-2.14.3
+Thanks,
+Alan
