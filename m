@@ -1,91 +1,202 @@
-Return-Path: <SRS0=bVkc=HC=intel.com=jacob.e.keller@kernel.org>
-Return-Path: <SRS0=bVkc=HC=intel.com=jacob.e.keller@kernel.org>
-From: "Keller, Jacob E" <jacob.e.keller@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Jakub Kicinski <kubakici@wp.pl>
-CC: Tal Gilboa <talgi@mellanox.com>, Tariq Toukan <tariqt@mellanox.com>, Ariel
- Elior <ariel.elior@cavium.com>, Ganesh Goudar <ganeshgr@chelsio.com>,
-	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	"everest-linux-l2@cavium.com" <everest-linux-l2@cavium.com>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v5 05/14] PCI: Add pcie_print_link_status() to log link
- speed and whether it's limited
-Date: Fri, 13 Apr 2018 15:34:08 +0000
-Message-ID: <02874ECE860811409154E81DA85FBB5882D7BF4B@ORSMSX115.amr.corp.intel.com>
-References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152244391852.135666.14903825998610307052.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180412213249.06661048@cakuba.netronome.com>
- <20180413140633.GD46420@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180413140633.GD46420@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44172 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751315AbeDXRu1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Apr 2018 13:50:27 -0400
+Date: Tue, 24 Apr 2018 11:50:26 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI: Implement workaround for the ACS bug in the
+ IDT switch
+Message-ID: <20180424115026.134940cf@w520.home>
+In-Reply-To: <1e849db0-7b87-1394-bfa4-3c4ab1e4ebb3@oracle.com>
+References: <7e9f5905-34c5-f24c-8b13-df36b8bf3621@oracle.com>
+        <1e849db0-7b87-1394-bfa4-3c4ab1e4ebb3@oracle.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, 24 Apr 2018 10:54:26 -0400
+James Puthukattukaran <james.puthukattukaran@oracle.com> wrote:
+
+> The IDT switch incorrectly flags an ACS source violation on a read config
+> request to an end point device on the completion (IDT 89H32H8G3-YC,
+> errata #36) even though the PCI Express spec states that completions are
+> never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1). Here's
+> the specific copy of the errata text
+> 
+> "Item #36 - Downstream port applies ACS Source Validation to Completions
+> Section 6.12.1.1 of the PCI Express Base Specification 3.1 states
+> that completions are never affected
+> by ACS Source Validation. However, completions received by a
+> downstream port of the PCIe switch from a device that has not yet
+> captured a PCIe bus number are incorrectly dropped by ACS source
+> validation by the switch downstream port.
+> 
+> Workaround: Issue a CfgWr1 to the downstream device before issuing
+> the first CfgRd1 to the device.
+> This allows the downstream device to capture its bus number; ACS
+> source validation no longer stops
+> completions from being forwarded by the downstream port. It has been
+> observed that Microsoft Windows implements this workaround already;
+> however, some versions of Linux and other operating systems may not. "
+> 
+> The suggested workaround by IDT is to issue a configuration write to the
+> downstream device before issuing the first config read. This allows the
+> downstream device to capture its bus number, thus avoiding the ACS
+> violation on the completion. In order to make sure that the device is ready
+> for config accesses, we do what is currently done in making config reads
+> till it succeeds and then do the config write as specified by the errata.
+> However, to avoid hitting the errata issue when doing config reads, we
+> disable ACS SV around this process.
+> 
+> The patch does the following -
+> 
+> 1. Disable ACS source violation if enabled.
+> 2. Wait for config space access to become available by reading vendor id
+> 3. Do a config write to the end point (errata workaround)
+> 4. Enable ACS source validation (if it was enabled to begin with)
+> 
+> Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
+> ---
+>  drivers/pci/pci.h    |  2 ++
+>  drivers/pci/quirks.c | 97 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 99 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 39ea6ee..d0d588d 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -227,6 +227,8 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+>  				int crs_timeout);
+>  int pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn,
+>  				u32 *pl, int crs_timeout);
+> +bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn,
+> +				u32 *pl, int crs_timeout);
+>  int pci_setup_device(struct pci_dev *dev);
+>  int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>  		    struct resource *res, unsigned int reg);
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index c32c5ec..89cd47d 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4742,12 +4742,109 @@ static void quirk_gpu_hda(struct pci_dev *hda)
+>  DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+>  			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
+>  
+> +/*
+> + * The IDT switch incorrectly flags an ACS source violation on a read config
+> + * request to an end point device on the completion (IDT 89H32H8G3-YC,
+> + * errata #36) even though the PCI Express spec states that completions are
+> + * never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
+> + * Here's * the specific copy of the errata text --
+> + *
+> + * "Item #36 - Downstream port applies ACS Source Validation to Completions
+> + * Section 6.12.1.1 of the PCI Express Base Specification 3.1 states
+> + * that completions are never affected
+> + * by ACS Source Validation. However, completions received by a
+> + * downstream port of the PCIe switch from a device that has not yet
+> + * captured a PCIe bus number are incorrectly dropped by ACS source
+> + * validation by the switch downstream port."
+> + *
+> + * The suggested workaround by IDT is to issue a configuration write to the
+> + * downstream device before issuing the first config read. This allows the
+> + * downstream device to capture its bus number, thus avoiding the ACS
+> + * violation on the completion. In order to make sure that the device is ready
+> + * for config accesses, we do what is currently done in making config reads
+> + * till it succeeds and then do the config write as specified by the errata.
+> + * However, to avoid hitting the errata issue when doing config reads, we
+> + * disable ACS SV around this process.
+> + */
+> +static int pci_idt_acs_quirk(struct pci_bus *bus, int devfn, int enable,
+> +				bool found)
+> +{
+> +	int pos;
+> +	u16 cap;
+> +	u16 ctrl;
+> +	int retval;
+> +	struct pci_dev *dev = bus->self;
+> +
+> +
+> +	/* Write 0 to the devfn device under the PCIE switch (bus->self)
+> +	 * as part of forcing the devfn number to latch with the device
+> +	 * below
+> +	 */
+> +	if (found)
+> +		pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
+> +
+> +
+> +	/* Enable/disable ACS SV feature (based on enable flag) */
+> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
+> +	if (!pos)
+> +		return -ENODEV;
+> +
+> +	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
+> +
+> +	if (!(cap & PCI_ACS_SV))
+> +		return -ENODEV;
+> +
+> +	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
+> +
+> +	retval = !!(ctrl & cap & PCI_ACS_SV);
+> +	if (enable)
+> +		ctrl |= (cap & PCI_ACS_SV);
+> +	else
+> +		ctrl &= ~(cap & PCI_ACS_SV);
+> +
+> +	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
+> +
+> +	/* return the previous state of the ACS SV state i.e was SV enabled
+> +	 * or disabled?
+> +	 */
+> +	return retval;
+> +}
+> +
+> +static int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *l,
+> +				int timeout)
+> +{
+> +	int enable;
+> +	bool found;
+> +
+> +	/*
+> +	 * Disable acs for the IDT switch before attempting the initial
+> +	 * config accesses to the endpoint device.
+> +	 */
+> +	enable = pci_idt_acs_quirk(bus, devfn, 0, false);
+> +
+> +	/*
+> +	 * found indicates whether the endpoint device was identified
+> +	 * as present or not
+> +	 */
+> +
+> +	found = pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
+> +
+> +	/*
+> +	 * re-enable acs feature for the switch again if it was enabled to
+> +	 * start with
+> +	 */
 
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Friday, April 13, 2018 7:07 AM
-> To: Jakub Kicinski <kubakici@wp.pl>
-> Cc: Tal Gilboa <talgi@mellanox.com>; Tariq Toukan <tariqt@mellanox.com>;
-> Keller, Jacob E <jacob.e.keller@intel.com>; Ariel Elior <ariel.elior@cavi=
-um.com>;
-> Ganesh Goudar <ganeshgr@chelsio.com>; Kirsher, Jeffrey T
-> <jeffrey.t.kirsher@intel.com>; everest-linux-l2@cavium.com; intel-wired-
-> lan@lists.osuosl.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.or=
-g;
-> linux-pci@vger.kernel.org
-> Subject: Re: [PATCH v5 05/14] PCI: Add pcie_print_link_status() to log li=
-nk speed
-> and whether it's limited
->=20
-> On Thu, Apr 12, 2018 at 09:32:49PM -0700, Jakub Kicinski wrote:
-> > On Fri, 30 Mar 2018 16:05:18 -0500, Bjorn Helgaas wrote:
-> > > +	if (bw_avail >=3D bw_cap)
-> > > +		pci_info(dev, "%d Mb/s available bandwidth (%s x%d link)\n",
-> > > +			 bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
-> > > +	else
-> > > +		pci_info(dev, "%d Mb/s available bandwidth, limited by %s x%d
-> link at %s (capable of %d Mb/s with %s x%d link)\n",
-> > > +			 bw_avail, PCIE_SPEED2STR(speed), width,
-> > > +			 limiting_dev ? pci_name(limiting_dev) : "<unknown>",
-> > > +			 bw_cap, PCIE_SPEED2STR(speed_cap), width_cap);
-> >
-> > I was just looking at using this new function to print PCIe BW for a
-> > NIC, but I'm slightly worried that there is nothing in the message that
-> > says PCIe...  For a NIC some people may interpret the bandwidth as NIC
-> > bandwidth:
-> >
-> > [   39.839989] nfp 0000:04:00.0: Netronome Flow Processor NFP4000/NFP60=
-00
-> PCIe Card Probe
-> > [   39.848943] nfp 0000:04:00.0: 63.008 Gb/s available bandwidth (8 GT/=
-s x8 link)
-> > [   39.857146] nfp 0000:04:00.0: RESERVED BARs: 0.0: General/MSI-X SRAM=
-, 0.1:
-> PCIe XPB/MSI-X PBA, 0.4: Explicit0, 0.5: Explicit1, fre4
-> >
-> > It's not a 63Gbps NIC...  I'm sorry if this was discussed before and I
-> > didn't find it.  Would it make sense to add the "PCIe: " prefix to the
-> > message like bnx2x used to do?  Like:
-> >
-> > nfp 0000:04:00.0: PCIe: 63.008 Gb/s available bandwidth (8 GT/s x8 link=
-)
->=20
-> I agree, that does look potentially confusing.  How about this:
->=20
->   nfp 0000:04:00.0: 63.008 Gb/s available PCIe bandwidth (8 GT/s x8 link)
->=20
-> I did have to look twice at this before I remembered that we're
-> printing Gb/s (not GB/s).  Most of the references I found on the web
-> use GB/s when talking about total PCIe bandwidth.
->=20
-> But either way I think it's definitely worth mentioning PCIe
-> explicitly.
+Inconsistent comment style even within the same patch.  Otherwise,
 
-I also agree printing PCIe explicitly is good.
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
 
-Thanks,
-Jake
+
+> +	if (enable > 0)
+> +		pci_idt_acs_quirk(bus, devfn, enable, found);
+> +
+> +	return found ? 1 : 0;
+> +}
+>  
+>  static const struct pci_bus_specific_quirk{
+>  	u16 vendor;
+>  	u16 device;
+>  	int (*bus_quirk)(struct pci_bus *bus, int devfn, u32 *l, int timeout);
+>  } pci_bus_specific_quirks[] = {
+> +	{ PCI_VENDOR_ID_IDT, 0x80b5, pci_idt_bus_quirk},
+>  	{0}
+>  };
+>  
