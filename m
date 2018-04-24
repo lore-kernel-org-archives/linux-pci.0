@@ -1,101 +1,221 @@
-Return-Path: <SRS0=4vff=HM=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=4vff=HM=redhat.com=alex.williamson@kernel.org>
-Date: Mon, 23 Apr 2018 14:41:04 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, Jason Gunthorpe <jgg@ziepe.ca>, Bjorn
- Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- sulrich@codeaurora.org, timur@codeaurora.org,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Mike
- Marciniszyn <mike.marciniszyn@intel.com>, Dennis Dalessandro
- <dennis.dalessandro@intel.com>, Doug Ledford <dledford@redhat.com>, "open
- list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>, open list
- <linux-kernel@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>,
- Rajat Jain <rajatja@google.com>
-Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
-Message-ID: <20180423144104.2dad7495@w520.home>
-In-Reply-To: <20180423202311.GA164898@bhelgaas-glaptop.roam.corp.google.com>
-References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
-	<20180419202632.GE14063@ziepe.ca>
-	<20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
-	<290e9530-dcde-9c10-7ae0-59ac4c509db4@codeaurora.org>
-	<20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
-	<20180420090420.03fb1e6c@w520.home>
-	<10d9cf68-29ed-d205-a25f-b8dade53cdd8@codeaurora.org>
-	<20180423131044.53471670@w520.home>
-	<20180423202311.GA164898@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 3/6] PCI: Introduce devm_of_pci_get_host_bridge_resources
+Date: Tue, 24 Apr 2018 17:13:39 +0200
+Message-Id: <e387d04ea235c9a4879a897bb730adc383a96635.1524582822.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1524582822.git.jan.kiszka@siemens.com>
+References: <cover.1524582822.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1524582822.git.jan.kiszka@siemens.com>
+References: <cover.1524582822.git.jan.kiszka@siemens.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 23 Apr 2018 15:23:11 -0500
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-> On Mon, Apr 23, 2018 at 01:10:44PM -0600, Alex Williamson wrote:
-> > On Mon, 23 Apr 2018 13:28:22 -0400
-> > Sinan Kaya <okaya@codeaurora.org> wrote:
-> >   
-> > > On 4/20/2018 11:04 AM, Alex Williamson wrote:  
-> > > > Is there a concern here about whether the endpoint device driver or the
-> > > > PCI core really knows better about link retraining?  This makes me
-> > > > remember my unfinished (and need to revisit) Pericom quirk[1] where
-> > > > errata in the PCIe switch requires that upstream and downstream links
-> > > > are balanced (ie. same link rate) or else enabling ACS results in
-> > > > packets not properly flowing through the switch.  If an endpoint driver
-> > > > starts deciding to retrain links, overriding quirks in the PCI core,
-> > > > then such topology manipulation isn't possible.  Why does the
-> > > > driver .probe() function think it can retrain at a higher link rate
-> > > > than PCI core?  Thanks,    
-> > > 
-> > > The example given is for some serdes firmware load to happen in probe and
-> > > then performing a retrain to reach to a better speed.
-> > > 
-> > > It becomes a chicken and egg problem. 
-> > > 
-> > > 1. Endpoint HW trains to gen1 by default pre-boot.
-> > > 2. PCI core enumerates the device.
-> > > 3. Endpoint driver gets loaded
-> > > 4. Driver does the firmware programming followed by a link retrain.
-> > > 
-> > > I think it is the responsibility of the PCI core to provide reset APIs.
-> > > However, expecting endpoint drivers to be knowledgeable about hotplug is
-> > > too much.
-> > > 
-> > > We can certainly contain AER change into pci directory by moving the slot
-> > > reset function to drivers/pci.h file.
-> > > 
-> > > But, we need to think about what to do about VFIO and other endpoint
-> > > initiated reset cases. My suggestion was to move this into a single API and
-> > > remove all other APIs from include/linux/pci.h.  
-> > 
-> > I'm a little confused about the relation between reset and retrain.
-> > AIUI we can retrain the link without any sort of endpoint reset and if
-> > some sort of driver/firmware setup is required on the endpoint to
-> > achieve the target link speed, then I'd think we only want to retrain.  
-> 
-> In hfi1, do_pcie_gen3_transition() resets the device.  I don't know if
-> retraining the link would be sufficient; maybe the reset is required
-> to make the device use the new firmware.  I guess we already export
-> reset interfaces, so if we add a retrain interface, drivers could
-> choose what they need.
-> 
-> > How this is going to work with vfio is an interesting question.  We're
-> > only providing access to the device, not the link to the device.  
-> 
-> > Multifunction endpoints become a big problem if one function starts
-> > requesting link retraining while another is in use elsewhere.  
-> 
-> Can we just make it the driver's problem by returning -EPERM if one
-> function requests a retrain while another function is in use?
+of_pci_get_host_bridge_resources allocates the resource structures it
+fills dynamically, but none of its callers care to release them so far.
+Rather than requiring everyone to do this explicitly, introduce a
+managed version of that service. This differs API-wise only in taking a
+reference to the associated device, rather than to the device tree node.
 
-Yes, this is basically how we handle bus resets through vfio-pci, if
-there are multiple devices affected by a bus reset, slots or functions,
-the caller needs to prove ownership of all of them before we do a bus
-reset.  That's great for video cards where we have the GPU and audio
-functions typically assigned together anyway, but I don't know that
-it's a great solution for IB where you're more likely to want to assign
-separate functions to separate users and nobody can get the device to
-run at full speed unless all the functions are assigned to one user.
-Thanks,
+As of_pci_get_host_bridge_resources is an exported interface, we cannot
+simply drop it at this point. After converting all in-tree users to the
+new API, we could phase out the unmanaged one over some grace period.
 
-Alex
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+---
+ drivers/pci/of.c       | 89 ++++++++++++++++++++++++++++++++------------------
+ include/linux/of_pci.h | 14 ++++++--
+ 2 files changed, 70 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index a28355c273ae..6eab0bde2ab3 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -243,26 +243,8 @@ void of_pci_check_probe_only(void)
+ EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
+ 
+ #if defined(CONFIG_OF_ADDRESS)
+-/**
+- * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
+- * @dev: device node of the host bridge having the range property
+- * @busno: bus number associated with the bridge root bus
+- * @bus_max: maximum number of buses for this bridge
+- * @resources: list where the range of resources will be added after DT parsing
+- * @io_base: pointer to a variable that will contain on return the physical
+- * address for the start of the I/O range. Can be NULL if the caller doesn't
+- * expect I/O ranges to be present in the device tree.
+- *
+- * It is the caller's job to free the @resources list.
+- *
+- * This function will parse the "ranges" property of a PCI host bridge device
+- * node and setup the resource mapping based on its content. It is expected
+- * that the property conforms with the Power ePAPR document.
+- *
+- * It returns zero if the range parsing has been successful or a standard error
+- * value if it failed.
+- */
+-int of_pci_get_host_bridge_resources(struct device_node *dev,
++static int __of_pci_get_host_bridge_resources(struct device *dev,
++			struct device_node *dev_node,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base)
+ {
+@@ -277,19 +259,22 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 	if (io_base)
+ 		*io_base = (resource_size_t)OF_BAD_ADDR;
+ 
+-	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
++	if (dev)
++		bus_range = devm_kzalloc(dev,sizeof(*bus_range), GFP_KERNEL);
++	else
++		bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+ 	if (!bus_range)
+ 		return -ENOMEM;
+ 
+-	pr_info("host bridge %pOF ranges:\n", dev);
++	pr_info("host bridge %pOF ranges:\n", dev_node);
+ 
+-	err = of_pci_parse_bus_range(dev, bus_range);
++	err = of_pci_parse_bus_range(dev_node, bus_range);
+ 	if (err) {
+ 		bus_range->start = busno;
+ 		bus_range->end = bus_max;
+ 		bus_range->flags = IORESOURCE_BUS;
+ 		pr_info("  No bus range found for %pOF, using %pR\n",
+-			dev, bus_range);
++			dev_node, bus_range);
+ 	} else {
+ 		if (bus_range->end > bus_range->start + bus_max)
+ 			bus_range->end = bus_range->start + bus_max;
+@@ -297,7 +282,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 	pci_add_resource(resources, bus_range);
+ 
+ 	/* Check for ranges property */
+-	err = of_pci_range_parser_init(&parser, dev);
++	err = of_pci_range_parser_init(&parser, dev_node);
+ 	if (err)
+ 		goto parse_failed;
+ 
+@@ -321,13 +306,17 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+ 			continue;
+ 
+-		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
++		if (dev)
++			res = devm_kzalloc(dev, sizeof(struct resource),
++					   GFP_KERNEL);
++		else
++			res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+ 		if (!res) {
+ 			err = -ENOMEM;
+ 			goto parse_failed;
+ 		}
+ 
+-		err = of_pci_range_to_resource(&range, dev, res);
++		err = of_pci_range_to_resource(&range, dev_node, res);
+ 		if (err) {
+ 			kfree(res);
+ 			continue;
+@@ -336,13 +325,13 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 		if (resource_type(res) == IORESOURCE_IO) {
+ 			if (!io_base) {
+ 				pr_err("I/O range found for %pOF. Please provide an io_base pointer to save CPU base address\n",
+-					dev);
++					dev_node);
+ 				err = -EINVAL;
+ 				goto conversion_failed;
+ 			}
+ 			if (*io_base != (resource_size_t)OF_BAD_ADDR)
+ 				pr_warn("More than one I/O resource converted for %pOF. CPU base address for old range lost!\n",
+-					dev);
++					dev_node);
+ 			*io_base = range.cpu_addr;
+ 		}
+ 
+@@ -354,12 +343,50 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ conversion_failed:
+ 	kfree(res);
+ parse_failed:
+-	resource_list_for_each_entry(window, resources)
+-		kfree(window->res);
++	if (!dev);
++		resource_list_for_each_entry(window, resources)
++			kfree(window->res);
+ 	pci_free_resource_list(resources);
+ 	return err;
+ }
++
++/**
++ * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
++ * @dev: device node of the host bridge having the range property
++ * @busno: bus number associated with the bridge root bus
++ * @bus_max: maximum number of buses for this bridge
++ * @resources: list where the range of resources will be added after DT parsing
++ * @io_base: pointer to a variable that will contain on return the physical
++ * address for the start of the I/O range. Can be NULL if the caller doesn't
++ * expect I/O ranges to be present in the device tree.
++ *
++ * It is the caller's job to free the @resources list.
++ *
++ * This function will parse the "ranges" property of a PCI host bridge device
++ * node and setup the resource mapping based on its content. It is expected
++ * that the property conforms with the Power ePAPR document.
++ *
++ * It returns zero if the range parsing has been successful or a standard error
++ * value if it failed.
++ */
++int of_pci_get_host_bridge_resources(struct device_node *dev_node,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base)
++{
++	return __of_pci_get_host_bridge_resources(NULL, dev_node, busno,
++						  bus_max, resources, io_base);
++}
+ EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
++
++int devm_of_pci_get_host_bridge_resources(struct device *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base)
++{
++	return __of_pci_get_host_bridge_resources(dev, dev->of_node, busno,
++						  bus_max, resources, io_base);
++}
++EXPORT_SYMBOL_GPL(devm_of_pci_get_host_bridge_resources);
++
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+ /**
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 091033a6b836..08b8f02426a5 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -71,11 +71,21 @@ of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+ #endif
+ 
+ #if defined(CONFIG_OF_ADDRESS)
+-int of_pci_get_host_bridge_resources(struct device_node *dev,
++int of_pci_get_host_bridge_resources(struct device_node *dev_node,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base);
++int devm_of_pci_get_host_bridge_resources(struct device *dev,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base);
+ #else
+-static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
++static inline int of_pci_get_host_bridge_resources(struct device_node *dev_node,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base)
++{
++	return -EINVAL;
++}
++
++static inline int devm_of_pci_get_host_bridge_resources(struct device *dev,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base)
+ {
+-- 
+2.13.6
