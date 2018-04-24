@@ -1,107 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:48008 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751345AbeDSIDa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 19 Apr 2018 04:03:30 -0400
-Subject: Re: [PATCH v2 1/2] PCI ACPI: Avoid panic when PCI IO resource's size
- is not page aligned
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>
-References: <1522480343-37669-1-git-send-email-xieyisheng1@huawei.com>
-CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <guohanjun@huawei.com>,
-        <jcm@redhat.com>, <toshi.kani@hpe.com>, <tanxiaojun@huawei.com>,
-        <wangzhou1@hisilicon.com>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <cabc6d02-af9b-9322-a48b-4e525ba8aef9@huawei.com>
-Date: Thu, 19 Apr 2018 16:03:01 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 03/37] iommu/sva: Manage process address spaces
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+ iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+References: <20180212183352.22730-1-jean-philippe.brucker@arm.com>
+ <20180212183352.22730-4-jean-philippe.brucker@arm.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <57d77955-caa7-ddac-df7d-7eef1f05dbb2@codeaurora.org>
+Date: Mon, 23 Apr 2018 21:32:33 -0400
 MIME-Version: 1.0
-In-Reply-To: <1522480343-37669-1-git-send-email-xieyisheng1@huawei.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180212183352.22730-4-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, xieyisheng1@huawei.com, ilias.apalodimas@linaro.org,
+ catalin.marinas@arm.com, xuzaibo@huawei.com, jonathan.cameron@huawei.com,
+ will.deacon@arm.com, yi.l.liu@intel.com, lorenzo.pieralisi@arm.com,
+ ashok.raj@intel.com, tn@semihalf.com, joro@8bytes.org, bharatku@xilinx.com,
+ rfranz@cavium.com, lenb@kernel.org, jacob.jun.pan@linux.intel.com,
+ alex.williamson@redhat.com, robh+dt@kernel.org, thunder.leizhen@huawei.com,
+ bhelgaas@google.com, shunyong.yang@hxt-semitech.com, dwmw2@infradead.org,
+ liubo95@huawei.com, rjw@rjwysocki.net, jcrouse@codeaurora.org,
+ robdclark@gmail.com, hanjun.guo@linaro.org, sudeep.holla@arm.com,
+ robin.murphy@arm.com, christian.koenig@amd.com, nwatters@codeaurora.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
-
-ping... Sorry to disturb, but any comment about this patchset?
-
-Thanks
-Yisheng
-
-On 2018/3/31 15:12, Yisheng Xie wrote:
-> Zhou reported a bug on Hisilicon arm64 D06 platform with 64KB page size:
-> 
->  [    2.470908] kernel BUG at lib/ioremap.c:72!
->  [    2.475079] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
->  [    2.480551] Modules linked in:
->  [    2.483594] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.16.0-rc7-00062-g0b41260-dirty #23
->  [    2.491756] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI Nemo 2.0 RC0 - B120 03/23/2018
->  [    2.500614] pstate: 80c00009 (Nzcv daif +PAN +UAO)
->  [    2.505395] pc : ioremap_page_range+0x268/0x36c
->  [    2.509912] lr : pci_remap_iospace+0xe4/0x100
->  [...]
->  [    2.603733] Call trace:
->  [    2.606168]  ioremap_page_range+0x268/0x36c
->  [    2.610337]  pci_remap_iospace+0xe4/0x100
->  [    2.614334]  acpi_pci_probe_root_resources+0x1d4/0x214
->  [    2.619460]  pci_acpi_root_prepare_resources+0x18/0xa8
->  [    2.624585]  acpi_pci_root_create+0x98/0x214
->  [    2.628843]  pci_acpi_scan_root+0x124/0x20c
->  [    2.633013]  acpi_pci_root_add+0x224/0x494
->  [    2.637096]  acpi_bus_attach+0xf8/0x200
->  [    2.640918]  acpi_bus_attach+0x98/0x200
->  [    2.644740]  acpi_bus_attach+0x98/0x200
->  [    2.648562]  acpi_bus_scan+0x48/0x9c
->  [    2.652125]  acpi_scan_init+0x104/0x268
->  [    2.655948]  acpi_init+0x308/0x374
->  [    2.659337]  do_one_initcall+0x48/0x14c
->  [    2.663160]  kernel_init_freeable+0x19c/0x250
->  [    2.667504]  kernel_init+0x10/0x100
->  [    2.670979]  ret_from_fork+0x10/0x18
-> 
-> The cause is the size of PCI IO resource is 32KB, which is 4K aligned but
-> not 64KB aligned, however, ioremap_page_range() request the range as page
-> aligned or it will trigger a BUG_ON() on ioremap_pte_range() it calls, as
-> ioremap_pte_range increase the addr by PAGE_SIZE, which makes addr != end
-> until trigger BUG_ON, if its incoming end is not page aligned. More detail
-> trace is as following:
-> 
->  ioremap_page_range
->  -> ioremap_p4d_range
->     -> ioremap_p4d_range
->        -> ioremap_pud_range
->           -> ioremap_pmd_range
->              -> ioremap_pte_range
-> 
-> This patch fix the bug by align the size of PCI IO resource to PAGE_SIZE.
-> 
-> Reported-by: Zhou Wang <wangzhou1@hisilicon.com>
-> Tested-by: Xiaojun Tan <tanxiaojun@huawei.com>
-> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
-> ---
-> I mark this as v2 for I have post a RFC version:
-> 
->  https://lkml.org/lkml/2018/3/30/8
+On 2/12/2018 1:33 PM, Jean-Philippe Brucker wrote:
+> /**
+>   * iommu_sva_device_init() - Initialize Shared Virtual Addressing for a device
+>   * @dev: the device
+> @@ -129,7 +439,10 @@ EXPORT_SYMBOL_GPL(iommu_sva_device_shutdown);
+>  int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
+>  			  unsigned long flags, void *drvdata)
+>  {
+> +	int i, ret;
+> +	struct io_mm *io_mm = NULL;
+>  	struct iommu_domain *domain;
+> +	struct iommu_bond *bond = NULL, *tmp;
+>  	struct iommu_param *dev_param = dev->iommu_param;
 >  
-> v2:
->  * Let the caller of ioremap_page_range() align the request by PAGE_SIZE - per Toshi
-> 
-> Thanks
-> Yisheng
-> 
->  drivers/acpi/pci_root.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 6fc204a..b758ca3 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -746,7 +746,7 @@ static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
->  		goto err;
+>  	domain = iommu_get_domain_for_dev(dev);
+> @@ -145,7 +458,42 @@ int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
+>  	if (flags != (IOMMU_SVA_FEAT_PASID | IOMMU_SVA_FEAT_IOPF))
+>  		return -EINVAL;
 >  
->  	res->start = port;
-> -	res->end = port + length - 1;
-> +	res->end = PAGE_ALIGN(port + length) - 1;
->  	entry->offset = port - pci_addr;
->  
->  	if (pci_remap_iospace(res, cpu_addr) < 0)
-> 
+> -	return -ENOSYS; /* TODO */
+> +	/* If an io_mm already exists, use it */
+> +	spin_lock(&iommu_sva_lock);
+> +	idr_for_each_entry(&iommu_pasid_idr, io_mm, i) {
+> +		if (io_mm->mm != mm || !io_mm_get_locked(io_mm))
+> +			continue;
+> +
+> +		/* Is it already bound to this device? */
+> +		list_for_each_entry(tmp, &io_mm->devices, mm_head) {
+> +			if (tmp->dev != dev)
+> +				continue;
+> +
+> +			bond = tmp;
+> +			refcount_inc(&bond->refs);
+> +			io_mm_put_locked(io_mm);
+> +			break;
+> +		}
+> +		break;
+> +	}
+> +	spin_unlock(&iommu_sva_lock);
+> +
+> +	if (bond)
+
+Please return pasid when you find an io_mm that is already bound. Something like
+*pasid = io_mm->pasid should do the work here when bond is true.
+
+> +		return 0;
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
