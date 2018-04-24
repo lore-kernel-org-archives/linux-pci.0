@@ -1,64 +1,97 @@
-Return-Path: <SRS0=fKP7=HB=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=fKP7=HB=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH v13 6/6] PCI/DPC: Do not do recovery for hotplug enabled
- system
-To: Bjorn Helgaas <helgaas@kernel.org>, Oza Pawandeep <poza@codeaurora.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 24 Apr 2018 18:05:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Philippe Ombredanne <pombredanne@nexb.com>,
- Thomas Gleixner <tglx@linutronix.de>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Kate Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>,
- Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
- Timur Tabi <timur@codeaurora.org>
-References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
- <1523284914-2037-7-git-send-email-poza@codeaurora.org>
- <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <13efe2e8-74c8-acb4-ec58-f79b14a1f182@codeaurora.org>
-Date: Wed, 11 Apr 2018 21:41:56 -0400
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v5 6/9] PCI: Move resource distribution for a single
+ bridge outside of the loop
+Message-ID: <20180424230558.GA101734@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
+ <20180416103453.46232-7-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180416103453.46232-7-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/10/2018 5:03 PM, Bjorn Helgaas wrote:
->> DPC and AER should attempt recovery in the same way, except the
->> cases where system is with hotplug enabled.
-> What's the connection with hotplug?  I see from the patch that for
-> hotplug bridges you remove the tree below the bridge, and otherwise
-> you just reset the secondary link (I think).
+On Mon, Apr 16, 2018 at 01:34:50PM +0300, Mika Westerberg wrote:
+> There is a special case where there is only single bridge on the bus. In
+> that case we just assign all resources to it. Currently this is done as
+> a part of the resource distribution loop but it does not have to be
+> there, and moving it outside actually improves readability.
 > 
-> The changelog should explain why we need the difference.
+> While there we can add hotplug_bridges == 1 && normal_bridges == 0 to
+> the same block because they are dealt the same way.
 > 
-> I'm a little skeptical to begin with, because I'm not sure why we
-> should handle a DPC event differently just because a bridge has the
-> *capability* of hotplug.  Even if a hotplug bridge reports a DPC
-> event, that doesn't necessarily mean a hotplug has occurred.
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/pci/setup-bus.c | 28 +++++++++++++++++-----------
+>  1 file changed, 17 insertions(+), 11 deletions(-)
 > 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index eb3059fb7f63..a1b63c7745d0 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1947,6 +1947,22 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>  	mmio_start = mmio_res->start;
+>  	mmio_pref_start = mmio_pref_res->start;
+>  
+> +	/*
+> +	 * There is only one bridge on the bus so it gets all available
+> +	 * resources which it can then distribute to the possible
+> +	 * hotplug bridges below.
+> +	 */
+> +	if ((hotplug_bridges == 0 && normal_bridges == 1) ||
+> +	    (hotplug_bridges == 1 && normal_bridges == 0)) {
 
-Let's do a recap on what we have discussed about this until now.
+  if (hotplug_bridges + normal_bridges == 1) {
 
-There are two conflicting error recovery mechanisms for PCIe. 
+Don't repost just for this; I can fold it in if you agree.
 
-If a system supports both hotplug and DPC, endpoint can be removed and inserted safely.
-DPC driver shuts down the driver on link down. When link comes back up,
-hotplug driver takes over and initiates an enumeration process. 
-Keith mentioned the stop and re-enumerate design was chosen because 
-someone could remove a drive and insert an unrelated drive back to the
-system.  We can't really save and restore state as we do in the AER path. 
-
-Now, let's assume a system without hotplug capability.
-Second mechanism is to go through DPC/AER path and do an automatic link
-down recovery via DPC retrain/secondary bus reset including register save and
-restore.  Second mechanism is more suitable for handling "surprise link down"
-event. The goal is to retrain the link and continue driver operation. 
-
-The goal of this patch to separate these two cases from each other as
-the DPC driver needs to work on both contexts. Current DPC code doesn't handle
-the second use case.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> +		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
+> +		if (dev->subordinate) {
+> +			pci_bus_distribute_available_resources(dev->subordinate,
+> +				add_list, available_io, available_mmio,
+> +				available_mmio_pref);
+> +		}
+> +		return;
+> +	}
+> +
+>  	/*
+>  	 * Go over devices on this bus and distribute the remaining
+>  	 * resource space between hotplug bridges.
+> @@ -1959,17 +1975,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>  		if (!b)
+>  			continue;
+>  
+> -		if (!hotplug_bridges && normal_bridges == 1) {
+> -			/*
+> -			 * There is only one bridge on the bus (upstream
+> -			 * port) so it gets all available resources
+> -			 * which it can then distribute to the possible
+> -			 * hotplug bridges below.
+> -			 */
+> -			pci_bus_distribute_available_resources(b, add_list,
+> -				available_io, available_mmio,
+> -				available_mmio_pref);
+> -		} else if (dev->is_hotplug_bridge) {
+> +		if (dev->is_hotplug_bridge) {
+>  			resource_size_t io, mmio, mmio_pref;
+>  
+>  			/*
+> -- 
+> 2.16.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
