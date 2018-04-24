@@ -1,74 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40734 "EHLO mail.kernel.org"
+Received: from david.siemens.de ([192.35.17.14]:41462 "EHLO david.siemens.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753569AbeD0V7h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Apr 2018 17:59:37 -0400
-Date: Fri, 27 Apr 2018 16:59:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: minyard@acm.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        openipmi-developer@lists.sourceforge.net,
-        linux-pci@vger.kernel.org, Corey Minyard <cminyard@mvista.com>
-Subject: Re: [PATCH v2] pci:ipmi: Move IPMI PCI class id defines to pci_ids.h
-Message-ID: <20180427215935.GA73256@bhelgaas-glaptop.roam.corp.google.com>
-References: <1524072527-11690-1-git-send-email-minyard@acm.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524072527-11690-1-git-send-email-minyard@acm.org>
+        id S1751231AbeDXP2Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Apr 2018 11:28:16 -0400
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: Will Deacon <will.deacon@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH 5/6] PCI: Add support for unbinding the generic PCI host controller
+Date: Tue, 24 Apr 2018 17:13:41 +0200
+Message-Id: <e420c5f6e3a6f8326d941d21bd730034d7b41cee.1524582822.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1524582822.git.jan.kiszka@siemens.com>
+References: <cover.1524582822.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1524582822.git.jan.kiszka@siemens.com>
+References: <cover.1524582822.git.jan.kiszka@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 18, 2018 at 12:28:47PM -0500, minyard@acm.org wrote:
-> From: Corey Minyard <cminyard@mvista.com>
-> 
-> Signed-off-by: Corey Minyard <cminyard@mvista.com>
-> ---
->  drivers/char/ipmi/ipmi_si_pci.c | 5 -----
->  include/linux/pci_ids.h         | 4 ++++
->  2 files changed, 4 insertions(+), 5 deletions(-)
-> 
-> Changes from v1:
->   * Leave PCI_DEVICE_ID_HP_MMC in the IPMI driver, per comments
->     by Bjorn Helgaas.
-> 
-> There's no hurry on this, if it is suitable I can keep it in my
-> queue with your ack, or you can take it.
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-Looks great to me, I'll assume you'll merge it.
+Particularly useful when working in virtual environments where the
+controller may come and go, but possibly not only there.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Will Deacon <will.deacon@arm.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+---
+ drivers/pci/host/pci-host-common.c  | 13 +++++++++++++
+ drivers/pci/host/pci-host-generic.c |  1 +
+ include/linux/pci-ecam.h            |  1 +
+ 3 files changed, 15 insertions(+)
 
-> diff --git a/drivers/char/ipmi/ipmi_si_pci.c b/drivers/char/ipmi/ipmi_si_pci.c
-> index f54ca68..bdba128 100644
-> --- a/drivers/char/ipmi/ipmi_si_pci.c
-> +++ b/drivers/char/ipmi/ipmi_si_pci.c
-> @@ -18,11 +18,6 @@ module_param_named(trypci, si_trypci, bool, 0);
->  MODULE_PARM_DESC(trypci, "Setting this to zero will disable the"
->  		 " default scan of the interfaces identified via pci");
->  
-> -#define PCI_CLASS_SERIAL_IPMI		0x0c07
-> -#define PCI_CLASS_SERIAL_IPMI_SMIC	0x0c0700
-> -#define PCI_CLASS_SERIAL_IPMI_KCS	0x0c0701
-> -#define PCI_CLASS_SERIAL_IPMI_BT	0x0c0702
-> -
->  #define PCI_DEVICE_ID_HP_MMC 0x121A
->  
->  static void ipmi_pci_cleanup(struct si_sm_io *io)
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index cc608fc5..ac79652 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -117,6 +117,10 @@
->  #define PCI_CLASS_SERIAL_USB_DEVICE	0x0c03fe
->  #define PCI_CLASS_SERIAL_FIBER		0x0c04
->  #define PCI_CLASS_SERIAL_SMBUS		0x0c05
-> +#define PCI_CLASS_SERIAL_IPMI		0x0c07
-> +#define PCI_CLASS_SERIAL_IPMI_SMIC	0x0c0700
-> +#define PCI_CLASS_SERIAL_IPMI_KCS	0x0c0701
-> +#define PCI_CLASS_SERIAL_IPMI_BT	0x0c0702
->  
->  #define PCI_BASE_CLASS_WIRELESS			0x0d
->  #define PCI_CLASS_WIRELESS_RF_CONTROLLER	0x0d10
-> -- 
-> 2.7.4
-> 
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index 5d028f53fdcd..d8f10451f273 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -101,5 +101,18 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 		return ret;
+ 	}
+ 
++	platform_set_drvdata(pdev, bridge->bus);
++	return 0;
++}
++
++int pci_host_common_remove(struct platform_device *pdev)
++{
++	struct pci_bus *bus = platform_get_drvdata(pdev);
++
++	pci_lock_rescan_remove();
++	pci_stop_root_bus(bus);
++	pci_remove_root_bus(bus);
++	pci_unlock_rescan_remove();
++
+ 	return 0;
+ }
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 45319ee3b484..dea3ec7592a2 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -95,5 +95,6 @@ static struct platform_driver gen_pci_driver = {
+ 		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = gen_pci_probe,
++	.remove = pci_host_common_remove,
+ };
+ builtin_platform_driver(gen_pci_driver);
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+index baadad1aabbc..29efa09d686b 100644
+--- a/include/linux/pci-ecam.h
++++ b/include/linux/pci-ecam.h
+@@ -62,5 +62,6 @@ extern struct pci_ecam_ops xgene_v2_pcie_ecam_ops; /* APM X-Gene PCIe v2.x */
+ /* for DT-based PCI controllers that support ECAM */
+ int pci_host_common_probe(struct platform_device *pdev,
+ 			  struct pci_ecam_ops *ops);
++int pci_host_common_remove(struct platform_device *pdev);
+ #endif
+ #endif
+-- 
+2.13.6
