@@ -1,54 +1,70 @@
-Return-Path: <SRS0=Ug22=HM=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=Ug22=HM=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- sulrich@codeaurora.org, timur@codeaurora.org, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org,
- Mike Marciniszyn <mike.marciniszyn@intel.com>,
- Dennis Dalessandro <dennis.dalessandro@intel.com>,
- Doug Ledford <dledford@redhat.com>,
- "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>,
- Alex Deucher <alexander.deucher@amd.com>, Rajat Jain <rajatja@google.com>
-References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
- <20180419202632.GE14063@ziepe.ca>
- <20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
- <290e9530-dcde-9c10-7ae0-59ac4c509db4@codeaurora.org>
- <20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
- <20180420090420.03fb1e6c@w520.home>
- <10d9cf68-29ed-d205-a25f-b8dade53cdd8@codeaurora.org>
- <20180423131044.53471670@w520.home>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <f7022685-9c99-7d49-a2f3-07b387d96e8d@codeaurora.org>
-Date: Mon, 23 Apr 2018 16:17:23 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180423131044.53471670@w520.home>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>
+Subject: [PATCH 0/6] PCI: leak fixes, removable generic PCI host, assorted stuff
+Date: Tue, 24 Apr 2018 17:13:36 +0200
+Message-Id: <cover.1524582822.git.jan.kiszka@siemens.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/23/2018 3:10 PM, Alex Williamson wrote:
->> But, we need to think about what to do about VFIO and other endpoint
->> initiated reset cases. My suggestion was to move this into a single API and
->> remove all other APIs from include/linux/pci.h.
-> I'm a little confused about the relation between reset and retrain.
-> AIUI we can retrain the link without any sort of endpoint reset and if
-> some sort of driver/firmware setup is required on the endpoint to
-> achieve the target link speed, then I'd think we only want to retrain.
+This primarily enables to unbind the generic PCI host controller without
+leaving lots of memory leaks behind. A previous proposal patch 5 was
+rejected because of those issues [1].
 
-I'm guessing on why you may want to do a secondary bus reset instead of just
-retrain bit in the PCI Express Capabilities register...
+The fixes have been validated in the Jailhouse setup, where we add and
+remove a virtual PCI host controller on hypervisor activation/
+deactivation, with the help of kmemleak.
 
-The maximum link speed is embedded into the TS1s that are exchanged during
-initial link training. 
+Besides that, there is tiny PCI API cleanup at the beginning and
+support for manually enabled PCI domains at the end that enables the
+Jailhouse scenario.
 
-If device only advertises gen1 during boot, no matter what you do with retrain
-bit link may not reach to gen3.
+Jan
 
-A lot of guess here.
+[1] http://lkml.iu.edu/hypermail/linux/kernel/1606.3/00072.html
+
+
+CC: Jingoo Han <jingoohan1@gmail.com>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Will Deacon <will.deacon@arm.com>
+
+Jan Kiszka (6):
+  PCI: Make pci_get_new_domain_nr static
+  PCI: Fix memory leak of devm_pci_alloc_host_bridge
+  PCI: Introduce devm_of_pci_get_host_bridge_resources
+  PCI: Convert of_pci_get_host_bridge_resources users to devm variant
+  PCI: Add support for unbinding the generic PCI host controller
+  arm: Allow to enable PCI_DOMAINS manually
+
+ arch/arm/Kconfig                       |  7 ++-
+ drivers/pci/dwc/pcie-designware-host.c |  2 +-
+ drivers/pci/host/pci-aardvark.c        |  5 +-
+ drivers/pci/host/pci-ftpci100.c        |  4 +-
+ drivers/pci/host/pci-host-common.c     | 13 +++++
+ drivers/pci/host/pci-host-generic.c    |  1 +
+ drivers/pci/host/pci-v3-semi.c         |  3 +-
+ drivers/pci/host/pci-versatile.c       |  3 +-
+ drivers/pci/host/pci-xgene.c           |  3 +-
+ drivers/pci/host/pcie-altera.c         |  5 +-
+ drivers/pci/host/pcie-iproc-platform.c |  4 +-
+ drivers/pci/host/pcie-rcar.c           |  5 +-
+ drivers/pci/host/pcie-rockchip.c       |  4 +-
+ drivers/pci/host/pcie-xilinx-nwl.c     |  4 +-
+ drivers/pci/host/pcie-xilinx.c         |  4 +-
+ drivers/pci/of.c                       | 93 ++++++++++++++++++++++------------
+ drivers/pci/pci.c                      |  6 +--
+ drivers/pci/probe.c                    |  4 +-
+ include/linux/of_pci.h                 | 14 ++++-
+ include/linux/pci-ecam.h               |  1 +
+ include/linux/pci.h                    |  3 --
+ 21 files changed, 120 insertions(+), 68 deletions(-)
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.13.6
