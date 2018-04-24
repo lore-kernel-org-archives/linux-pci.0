@@ -1,75 +1,54 @@
-Return-Path: <SRS0=YPu5=HB=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=YPu5=HB=intel.com=keith.busch@kernel.org>
-Date: Thu, 12 Apr 2018 08:39:54 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Oza Pawandeep <poza@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Philippe Ombredanne <pombredanne@nexb.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Kate Stewart <kstewart@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Dongdong Liu <liudongdong3@huawei.com>, Wei Zhang <wzhang@fb.com>,
-	Timur Tabi <timur@codeaurora.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v13 6/6] PCI/DPC: Do not do recovery for hotplug enabled
- system
-Message-ID: <20180412143954.GB4810@localhost.localdomain>
-References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
- <1523284914-2037-7-git-send-email-poza@codeaurora.org>
- <20180410210349.GG54986@bhelgaas-glaptop.roam.corp.google.com>
- <13efe2e8-74c8-acb4-ec58-f79b14a1f182@codeaurora.org>
- <20180412140648.GD145698@bhelgaas-glaptop.roam.corp.google.com>
- <ca7e5285-2e88-e130-6402-a271bb92a81e@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ca7e5285-2e88-e130-6402-a271bb92a81e@codeaurora.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v7 5/9] misc: pci_endpoint_test: Add designware EP entry
+Date: Tue, 24 Apr 2018 14:44:42 +0100
+Message-Id: <3cd5566a84f9ec6cd17741f3574a5cdaccdf041c.1524577064.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 12, 2018 at 10:34:37AM -0400, Sinan Kaya wrote:
-> On 4/12/2018 10:06 AM, Bjorn Helgaas wrote:
-> > 
-> > I think the scenario you are describing is two systems that are
-> > identical except that in the first, the endpoint is below a hotplug
-> > bridge, while in the second, it's below a non-hotplug bridge.  There's
-> > no physical hotplug (no drive removed or inserted), and DPC is
-> > triggered in both systems.
-> > 
-> > I suggest that DPC should be handled identically in both systems:
-> > 
-> >   - The PCI core should have the same view of the endpoint: it should
-> >     be removed and re-added in both cases (or in neither case).
-> > 
-> >   - The endpoint itself should not be able to tell the difference: it
-> >     should see a link down event, followed by a link retrain, followed
-> >     by the same sequence of config accesses, etc.
-> > 
-> >   - The endpoint driver should not be able to tell the difference,
-> >     i.e., we should be calling the same pci_error_handlers callbacks
-> >     in both cases.
-> > 
-> > It's true that in the non-hotplug system, pciehp probably won't start
-> > re-enumeration, so we might need an alternate path to trigger that.
-> > 
-> > But that's not what we're doing in this patch.  In this patch we're
-> > adding a much bigger difference: for hotplug bridges, we stop and
-> > remove the hierarchy below the bridge; for non-hotplug bridges, we do
-> > the AER-style flow of calling pci_error_handlers callbacks.
-> 
-> Our approach on V12 was to go to AER style recovery for all DPC events
-> regardless of hotplug support or not. 
-> 
-> Keith was not comfortable with this approach. That's why, we special cased
-> hotplug.
-> 
-> If we drop 6/6 on this patch on v13, we achieve this. We still have to
-> take care of Keith's inputs on individual patches.
-> 
-> we have been struggling with the direction for a while.
-> 
-> Keith, what do you think?
+Adds the designware EP device ID entry to pci_endpoint_test driver table
+to allow this device to be recognize and handle by the pci_endpoint_test
+driver.
 
-My only concern was for existing production environments that use DPC
-for handling surprise removal, and I don't wish to break the existing
-uses.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Change v1->v2:
+ - Changed device id following Kishon's suggestion.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Changes v3->v4:
+ - Nothing changed, just to follow the patch set version.
+Changes v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Changes v5->v6:
+ - Reverted Kishon's suggestion by Bjorn request.
+Changes v6->v7:
+ - Nothing changed, just to follow the patch set version.
+
+ drivers/misc/pci_endpoint_test.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index fe8897e..58a88ba 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -634,6 +634,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, 0xedda) },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
+-- 
+2.7.4
