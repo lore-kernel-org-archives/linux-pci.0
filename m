@@ -1,51 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:60276 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751622AbeDOPAn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2018 11:00:43 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: x86@kernel.org, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
-        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 10/12] arm: don't build swiotlb by default
-Date: Sun, 15 Apr 2018 16:59:45 +0200
-Message-Id: <20180415145947.1248-11-hch@lst.de>
-In-Reply-To: <20180415145947.1248-1-hch@lst.de>
-References: <20180415145947.1248-1-hch@lst.de>
+Received: from smtprelay6.synopsys.com ([198.182.37.59]:50312 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750735AbeDXRUH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Apr 2018 13:20:07 -0400
+Subject: Re: [RFC 10/10] tools: PCI: Add MSI-X support
+To: Alan Douglas <adouglas@cadence.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+ <9865822fb89ea84cb55fe93e151295afcd5c96b3.1523379766.git.gustavo.pimentel@synopsys.com>
+ <SN6PR07MB45126298F09735193B0F0F00D8880@SN6PR07MB4512.namprd07.prod.outlook.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <b51efe22-f57e-ee1c-ab00-87f34ea6452d@synopsys.com>
+Date: Tue, 24 Apr 2018 18:18:55 +0100
+MIME-Version: 1.0
+In-Reply-To: <SN6PR07MB45126298F09735193B0F0F00D8880@SN6PR07MB4512.namprd07.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-swiotlb is only used as a library of helper for xen-swiotlb if Xen support
-is enabled on arm, so don't build it by default.
+Hi Alan,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- arch/arm/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+On 24/04/2018 10:57, Alan Douglas wrote:
+> Hi Gustavo,
+> 
+> On 10 April 2018 18:15, Gustavo Pimentel wrote:
+>> Adds MSI-X support to the pcitest tool and modified the pcitest.sh script to
+>> accomodate this new type of interruption test.
+>>
+>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>> ---
+>>  include/uapi/linux/pcitest.h |  1 +
+>>  tools/pci/pcitest.c          | 18 +++++++++++++++++-
+>>  tools/pci/pcitest.sh         | 25 +++++++++++++++++++++++++
+>>  3 files changed, 43 insertions(+), 1 deletion(-)
+> I found some possible problems when testing with the Cadence EP driver.  The problem
+> is that pcitest uses the BARs for tests, but we also use one for the MSI-X tables
+> 
+> In Cadence core the MSI-X table is in BAR0 by default, but this is configured to a size
+> of 0x80 in the test driver, since it is used as the test_reg_bar.  So, I changed the 
+> configuration to use BAR4 instead, which is configured to a size of 131072 
+> in pci-efp-test.c, and this gives me enough space.
+> 
+> However, if I run the BAR tests in pcitest before running the MSI-X tests, the
+> MSI-X tests fail, since the BAR content is overwritten.  It's not a problem with the 
+> scenario in pcitest.sh, but it would be if the module wasn't re-loaded.
+> 
+> So, wondering if we need to come up with some mechanism to specify that a specific
+> BAR will be used for MSI-X, and that its size and content shouldn't be modified by
+> pcitest?
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index aa1c187d756d..90b81a3a28a7 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1774,7 +1774,7 @@ config SECCOMP
- 	  defined by each seccomp mode.
- 
- config SWIOTLB
--	def_bool y
-+	bool
- 
- config PARAVIRT
- 	bool "Enable paravirtualization code"
-@@ -1807,6 +1807,7 @@ config XEN
- 	depends on MMU
- 	select ARCH_DMA_ADDR_T_64BIT
- 	select ARM_PSCI
-+	select SWIOTLB
- 	select SWIOTLB_XEN
- 	select PARAVIRT
- 	help
--- 
-2.17.0
+I see your point. I have bypassed the problem by doing the module load/unload
+(to avoid having to fight on multiple fronts).
+
+I like your suggestion. Maybe we could have a bool variable for each BARs that
+could be set to false if a resource have intent to use it.
+
+However this change must be accepted by Kishon.
+
+> 
+> Regards,
+> Alan
+> 
+Regards,
+Gustavo
