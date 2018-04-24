@@ -1,124 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:59222 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751159AbeDPOiK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2018 10:38:10 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v4 10/10] PCI: dwc: Replace magic number by defines
-Date: Mon, 16 Apr 2018 15:37:58 +0100
-Message-Id: <f92eb1e94c9233cafb0d14462263e1c02f3d23c2.1523881182.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alan Douglas <adouglas@cadence.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [RFC 10/10] tools: PCI: Add MSI-X support
+Date: Tue, 24 Apr 2018 09:57:45 +0000
+Message-ID: <SN6PR07MB45126298F09735193B0F0F00D8880@SN6PR07MB4512.namprd07.prod.outlook.com>
+References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+ <9865822fb89ea84cb55fe93e151295afcd5c96b3.1523379766.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <9865822fb89ea84cb55fe93e151295afcd5c96b3.1523379766.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace magic numbers by a well known define in order to make the code
-human readable and also facilitate the code reusability.
+Hi Gustavo,
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
----
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
-Changes v3->v4:
-- Nothing changed, just to follow the patch set version.
+On 10 April 2018 18:15, Gustavo Pimentel wrote:
+> Adds MSI-X support to the pcitest tool and modified the pcitest.sh script=
+ to
+> accomodate this new type of interruption test.
+>=20
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+>  include/uapi/linux/pcitest.h |  1 +
+>  tools/pci/pcitest.c          | 18 +++++++++++++++++-
+>  tools/pci/pcitest.sh         | 25 +++++++++++++++++++++++++
+>  3 files changed, 43 insertions(+), 1 deletion(-)
+I found some possible problems when testing with the Cadence EP driver.  Th=
+e problem
+is that pcitest uses the BARs for tests, but we also use one for the MSI-X =
+tables
 
- drivers/pci/dwc/pcie-designware-host.c | 34 ++++++++++++++++++++--------------
- drivers/pci/dwc/pcie-designware.h      |  1 +
- 2 files changed, 21 insertions(+), 14 deletions(-)
+In Cadence core the MSI-X table is in BAR0 by default, but this is configur=
+ed to a size
+of 0x80 in the test driver, since it is used as the test_reg_bar.  So, I ch=
+anged the=20
+configuration to use BAR4 instead, which is configured to a size of 131072=
+=20
+in pci-efp-test.c, and this gives me enough space.
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index fc55fde..a7657ab 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -83,18 +83,23 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
- 
- 	for (i = 0; i < num_ctrls; i++) {
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
--				    &val);
-+		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
-+					(i * MSI_REG_CTRL_BLOCK_SIZE),
-+				    4, &val);
- 		if (!val)
- 			continue;
- 
- 		ret = IRQ_HANDLED;
- 		pos = 0;
--		while ((pos = find_next_bit((unsigned long *) &val, 32,
--					    pos)) != 32) {
--			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
-+		while ((pos = find_next_bit((unsigned long *) &val,
-+					    MAX_MSI_IRQS_PER_CTRL,
-+					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
-+			irq = irq_find_mapping(pp->irq_domain,
-+					       (i * MAX_MSI_IRQS_PER_CTRL) +
-+					       pos);
- 			generic_handle_irq(irq);
--			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
-+			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
-+						(i * MSI_REG_CTRL_BLOCK_SIZE),
- 					    4, 1 << pos);
- 			pos++;
- 		}
-@@ -157,9 +162,9 @@ static void dw_pci_bottom_mask(struct irq_data *data)
- 	if (pp->ops->msi_clear_irq) {
- 		pp->ops->msi_clear_irq(pp, data->hwirq);
- 	} else {
--		ctrl = data->hwirq / 32;
--		res = ctrl * 12;
--		bit = data->hwirq % 32;
-+		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-+		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-+		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
- 
- 		pp->irq_status[ctrl] &= ~(1 << bit);
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
-@@ -180,9 +185,9 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
- 	if (pp->ops->msi_set_irq) {
- 		pp->ops->msi_set_irq(pp, data->hwirq);
- 	} else {
--		ctrl = data->hwirq / 32;
--		res = ctrl * 12;
--		bit = data->hwirq % 32;
-+		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-+		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-+		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
- 
- 		pp->irq_status[ctrl] |= 1 << bit;
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
-@@ -652,8 +657,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 
- 	/* Initialize IRQ Status array */
- 	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
--				    &pp->irq_status[ctrl]);
-+		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
-+					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
-+				    4, &pp->irq_status[ctrl]);
- 
- 	/* Setup RC BARs */
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index fe811db..bee4e25 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -110,6 +110,7 @@
- #define MAX_MSI_IRQS			256
- #define MAX_MSI_IRQS_PER_CTRL		32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
-+#define MSI_REG_CTRL_BLOCK_SIZE		12
- #define MSI_DEF_NUM_VECTORS		32
- 
- /* Maximum number of inbound/outbound iATUs */
--- 
-2.7.4
+However, if I run the BAR tests in pcitest before running the MSI-X tests, =
+the
+MSI-X tests fail, since the BAR content is overwritten.  It's not a problem=
+ with the=20
+scenario in pcitest.sh, but it would be if the module wasn't re-loaded.
+
+So, wondering if we need to come up with some mechanism to specify that a s=
+pecific
+BAR will be used for MSI-X, and that its size and content shouldn't be modi=
+fied by
+pcitest?
+
+Regards,
+Alan
