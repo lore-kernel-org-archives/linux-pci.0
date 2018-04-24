@@ -1,155 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 23 Apr 2018 17:30:34 -0600
-Message-Id: <20180423233046.21476-3-logang@deltatee.com>
-In-Reply-To: <20180423233046.21476-1-logang@deltatee.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
-Subject: [PATCH v4 02/14] PCI/P2PDMA: Add sysfs group to display p2pmem stats
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:40828 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750853AbeDXPDl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Apr 2018 11:03:41 -0400
+Subject: Re: [PATCH 0/2] PCI: Support to workaround bus level HW issues
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <b6439e86-2284-5b3c-3656-a0c3c2568317@oracle.com>
+ <20180419120803.3d5791b4@w520.home>
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Message-ID: <2c28ca4c-c216-79f5-2127-417fd28772e2@oracle.com>
+Date: Tue, 24 Apr 2018 10:57:01 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180419120803.3d5791b4@w520.home>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a sysfs group to display statistics about P2P memory that is
-registered in each PCI device.
 
-Attributes in the group display the total amount of P2P memory, the
-amount available and whether it is published or not.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- Documentation/ABI/testing/sysfs-bus-pci | 25 +++++++++++++++
- drivers/pci/p2pdma.c                    | 54 +++++++++++++++++++++++++++++++++
- 2 files changed, 79 insertions(+)
+On 04/19/2018 02:08 PM, Alex Williamson wrote:
+> On Thu, 19 Apr 2018 13:36:00 -0400
+> James Puthukattukaran <james.puthukattukaran@oracle.com> wrote:
+> 
+>> There are bugs in certain PCIe switches that cause access violations
+>>  when an endpoint device is hotplugged. In particular, there's an issue
+>> with
+>> certain IDT switches that trigger a ACS violation when bringing up a newly
+>> plugged PCIe endpoint device. This is a major issue for platforms
+>> designed to
+>> issue a fatal reset in the case of this event.
+>>
+>> The first patch provides a framework for intercepting and working around
+>> issues with parent devices to the endpoint being brought up.
+>>
+>> The second patch provides the actual patch for the IDT switch issue using
+>> that framework. The ACS feature is disabled in the IDT switch prior to
+>> endpoint
+>> device detection and then re-enabled subsequent to that.
+> 
+> I'm happy with the logic of the patch, but:
+> 
+>  - Patches are lined wrapped
+>  - There are white space issues (space indenting and extra returns)
+>  - 'return(foo(bar));' has too many parens, using 'return foo(bar);'
+>  - Comment style, see Documentation/process/coding-style.rst for
+>    preferred multi-line inline comment style.  (I see mixed comment
+>    style in quirks.c, but probe.c is pretty consistent)
+>  - Please don't fixup style issues in patch 1/2 in patch 2/2
+> 
+> scripts/checkpatch.pl can find some of these for you.  Thanks,
+> 
+> 
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 44d4b2be92fd..044812c816d0 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -323,3 +323,28 @@ Description:
- 
- 		This is similar to /sys/bus/pci/drivers_autoprobe, but
- 		affects only the VFs associated with a specific PF.
-+
-+What:		/sys/bus/pci/devices/.../p2pmem/available
-+Date:		November 2017
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:
-+		If the device has any Peer-to-Peer memory registered, this
-+	        file contains the amount of memory that has not been
-+		allocated (in decimal).
-+
-+What:		/sys/bus/pci/devices/.../p2pmem/size
-+Date:		November 2017
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:
-+		If the device has any Peer-to-Peer memory registered, this
-+	        file contains the total amount of memory that the device
-+		provides (in decimal).
-+
-+What:		/sys/bus/pci/devices/.../p2pmem/published
-+Date:		November 2017
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:
-+		If the device has any Peer-to-Peer memory registered, this
-+	        file contains a '1' if the memory has been published for
-+		use inside the kernel or a '0' if it is only intended
-+		for use within the driver that published it.
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index e524a12eca1f..4daad6374869 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -24,6 +24,54 @@ struct pci_p2pdma {
- 	bool p2pmem_published;
- };
- 
-+static ssize_t size_show(struct device *dev, struct device_attribute *attr,
-+			 char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	size_t size = 0;
-+
-+	if (pdev->p2pdma->pool)
-+		size = gen_pool_size(pdev->p2pdma->pool);
-+
-+	return snprintf(buf, PAGE_SIZE, "%zd\n", size);
-+}
-+static DEVICE_ATTR_RO(size);
-+
-+static ssize_t available_show(struct device *dev, struct device_attribute *attr,
-+			      char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	size_t avail = 0;
-+
-+	if (pdev->p2pdma->pool)
-+		avail = gen_pool_avail(pdev->p2pdma->pool);
-+
-+	return snprintf(buf, PAGE_SIZE, "%zd\n", avail);
-+}
-+static DEVICE_ATTR_RO(available);
-+
-+static ssize_t published_show(struct device *dev, struct device_attribute *attr,
-+			      char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n",
-+			pdev->p2pdma->p2pmem_published);
-+}
-+static DEVICE_ATTR_RO(published);
-+
-+static struct attribute *p2pmem_attrs[] = {
-+	&dev_attr_size.attr,
-+	&dev_attr_available.attr,
-+	&dev_attr_published.attr,
-+	NULL,
-+};
-+
-+static const struct attribute_group p2pmem_group = {
-+	.attrs = p2pmem_attrs,
-+	.name = "p2pmem",
-+};
-+
- static void pci_p2pdma_percpu_release(struct percpu_ref *ref)
- {
- 	struct pci_p2pdma *p2p =
-@@ -53,6 +101,7 @@ static void pci_p2pdma_release(void *data)
- 	percpu_ref_exit(&pdev->p2pdma->devmap_ref);
- 
- 	gen_pool_destroy(pdev->p2pdma->pool);
-+	sysfs_remove_group(&pdev->dev.kobj, &p2pmem_group);
- 	pdev->p2pdma = NULL;
- }
- 
-@@ -83,9 +132,14 @@ static int pci_p2pdma_setup(struct pci_dev *pdev)
- 
- 	pdev->p2pdma = p2p;
- 
-+	error = sysfs_create_group(&pdev->dev.kobj, &p2pmem_group);
-+	if (error)
-+		goto out_pool_destroy;
-+
- 	return 0;
- 
- out_pool_destroy:
-+	pdev->p2pdma = NULL;
- 	gen_pool_destroy(p2p->pool);
- out:
- 	devm_kfree(&pdev->dev, p2p);
--- 
-2.11.0
+Alex - 
+I believe I resolved the issues you pointed out wrt style. I sent out a fresh set of patches.
+Again, appreciate your time!
+regards
+James
