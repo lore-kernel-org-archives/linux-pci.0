@@ -1,215 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:55680 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751187AbeDQPwM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Apr 2018 11:52:12 -0400
-Subject: Re: [RFC 03/10] PCI: endpoint: Add MSI-X interfaces
-To: Kishon Vijay Abraham I <kishon@ti.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alan Douglas <adouglas@cadence.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         "bhelgaas@google.com" <bhelgaas@google.com>,
         "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
         "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
         "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "kishon@ti.com" <kishon@ti.com>,
         "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [RFC 00/10] Adds pcitest tool support for MSI-X
+Date: Tue, 24 Apr 2018 09:28:33 +0000
+Message-ID: <SN6PR07MB4512656ED4FA817D3276665CD8880@SN6PR07MB4512.namprd07.prod.outlook.com>
 References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
- <c76688ee290a9ed4f0f70f5e350b906950ec05df.1523379766.git.gustavo.pimentel@synopsys.com>
- <7fec2005-d7a8-daea-9451-7f3593afe285@ti.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <27b67ebd-b585-f3a1-091d-a3cdf13f03eb@synopsys.com>
-Date: Tue, 17 Apr 2018 16:51:05 +0100
+ <SN6PR07MB45123840F0C9487F1CD119A9D8880@SN6PR07MB4512.namprd07.prod.outlook.com>
+ <767b50e3-8890-c241-bc97-1687bd0661c1@synopsys.com>
+In-Reply-To: <767b50e3-8890-c241-bc97-1687bd0661c1@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <7fec2005-d7a8-daea-9451-7f3593afe285@ti.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
-
-On 17/04/2018 11:24, Kishon Vijay Abraham I wrote:
-> Hi,
-> 
-> On Tuesday 10 April 2018 10:44 PM, Gustavo Pimentel wrote:
->> Implements the generic method for calling the get/set callbacks.
->>
->> Adds the PCI_EPC_IRQ_MSIX type.
->>
->> Adds the MSI-X callbacks signatures to the ops structure.
->>
->> Adds sysfs interface for altering the number of MSI-X entries.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->>  drivers/pci/endpoint/pci-ep-cfs.c   | 24 ++++++++++++++++
->>  drivers/pci/endpoint/pci-epc-core.c | 57 +++++++++++++++++++++++++++++++++++++
->>  include/linux/pci-epc.h             | 11 ++++++-
->>  include/linux/pci-epf.h             |  1 +
->>  4 files changed, 92 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
->> index 018ea34..d1288a0 100644
->> --- a/drivers/pci/endpoint/pci-ep-cfs.c
->> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
->> @@ -286,6 +286,28 @@ static ssize_t pci_epf_msi_interrupts_show(struct config_item *item,
->>  		       to_pci_epf_group(item)->epf->msi_interrupts);
->>  }
->>  
->> +static ssize_t pci_epf_msix_interrupts_store(struct config_item *item,
->> +					     const char *page, size_t len)
->> +{
->> +	u16 val;
->> +	int ret;
->> +
->> +	ret = kstrtou16(page, 0, &val);
->> +	if (ret)
->> +		return ret;
->> +
->> +	to_pci_epf_group(item)->epf->msix_interrupts = val;
->> +
->> +	return len;
->> +}
->> +
->> +static ssize_t pci_epf_msix_interrupts_show(struct config_item *item,
->> +					    char *page)
->> +{
->> +	return sprintf(page, "%d\n",
->> +		       to_pci_epf_group(item)->epf->msix_interrupts);
->> +}
->> +
->>  PCI_EPF_HEADER_R(vendorid)
->>  PCI_EPF_HEADER_W_u16(vendorid)
->>  
->> @@ -327,6 +349,7 @@ CONFIGFS_ATTR(pci_epf_, subsys_vendor_id);
->>  CONFIGFS_ATTR(pci_epf_, subsys_id);
->>  CONFIGFS_ATTR(pci_epf_, interrupt_pin);
->>  CONFIGFS_ATTR(pci_epf_, msi_interrupts);
->> +CONFIGFS_ATTR(pci_epf_, msix_interrupts);
->>  
->>  static struct configfs_attribute *pci_epf_attrs[] = {
->>  	&pci_epf_attr_vendorid,
->> @@ -340,6 +363,7 @@ static struct configfs_attribute *pci_epf_attrs[] = {
->>  	&pci_epf_attr_subsys_id,
->>  	&pci_epf_attr_interrupt_pin,
->>  	&pci_epf_attr_msi_interrupts,
->> +	&pci_epf_attr_msix_interrupts,
->>  	NULL,
->>  };
->>  
->> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
->> index b0ee427..294a383 100644
->> --- a/drivers/pci/endpoint/pci-epc-core.c
->> +++ b/drivers/pci/endpoint/pci-epc-core.c
->> @@ -218,6 +218,63 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
->>  EXPORT_SYMBOL_GPL(pci_epc_set_msi);
->>  
->>  /**
->> + * pci_epc_get_msix() - get the number of MSI-X interrupt numbers allocated
->> + * @epc: the EPC device to which MSI-X interrupts was requested
->> + * @func_no: the endpoint function number in the EPC device
->> + *
->> + * Invoke to get the number of MSI-X interrupts allocated by the RC
->> + */
->> +int pci_epc_get_msix(struct pci_epc *epc, u8 func_no)
->> +{
->> +	int interrupt;
->> +	unsigned long flags;
->> +
->> +	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
->> +		return 0;
->> +
->> +	if (!epc->ops->get_msix)
->> +		return 0;
->> +
->> +	spin_lock_irqsave(&epc->lock, flags);
->> +	interrupt = epc->ops->get_msix(epc, func_no);
->> +	spin_unlock_irqrestore(&epc->lock, flags);
->> +
->> +	if (interrupt < 0)
->> +		return 0;
->> +
->> +	return interrupt++;
-> 
-> return interrupt + 1?
-
-I'll change it.
-
->> +}
->> +EXPORT_SYMBOL_GPL(pci_epc_get_msix);
->> +
->> +/**
->> + * pci_epc_set_msix() - set the number of MSI-X interrupt numbers required
->> + * @epc: the EPC device on which MSI-X has to be configured
->> + * @func_no: the endpoint function number in the EPC device
->> + * @interrupts: number of MSI-X interrupts required by the EPF
->> + *
->> + * Invoke to set the required number of MSI-X interrupts.
->> + */
->> +int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
->> +{
->> +	int ret;
->> +	unsigned long flags;
->> +
->> +	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
->> +	    interrupts < 1 || interrupts > 2048)
->> +		return -EINVAL;
->> +
->> +	if (!epc->ops->set_msix)
->> +		return 0;
->> +
->> +	spin_lock_irqsave(&epc->lock, flags);
->> +	ret = epc->ops->set_msix(epc, func_no, interrupts - 1);
->> +	spin_unlock_irqrestore(&epc->lock, flags);
->> +
->> +	return ret;
->> +}
->> +EXPORT_SYMBOL_GPL(pci_epc_set_msix);
->> +
->> +/**
->>   * pci_epc_unmap_addr() - unmap CPU address from PCI address
->>   * @epc: the EPC device on which address is allocated
->>   * @func_no: the endpoint function number in the EPC device
->> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
->> index af657ca..32e8961 100644
->> --- a/include/linux/pci-epc.h
->> +++ b/include/linux/pci-epc.h
->> @@ -17,6 +17,7 @@ enum pci_epc_irq_type {
->>  	PCI_EPC_IRQ_UNKNOWN,
->>  	PCI_EPC_IRQ_LEGACY,
->>  	PCI_EPC_IRQ_MSI,
->> +	PCI_EPC_IRQ_MSIX,
->>  };
->>  
->>  /**
->> @@ -30,6 +31,10 @@ enum pci_epc_irq_type {
->>   *	     capability register
->>   * @get_msi: ops to get the number of MSI interrupts allocated by the RC from
->>   *	     the MSI capability register
->> + * @set_msix: ops to set the requested number of MSI-X interrupts in the
->> + *	     MSI-X capability register
->> + * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
->> + *	     from the MSI-X capability register
->>   * @raise_irq: ops to raise a legacy or MSI interrupt
->>   * @start: ops to start the PCI link
->>   * @stop: ops to stop the PCI link
->> @@ -48,8 +53,10 @@ struct pci_epc_ops {
->>  			      phys_addr_t addr);
->>  	int	(*set_msi)(struct pci_epc *epc, u8 func_no, u8 interrupts);
->>  	int	(*get_msi)(struct pci_epc *epc, u8 func_no);
->> +	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
->> +	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
-> 
-> The 1st patch in the series is already using get_msix, set_msix. This patch
-> should precede the 1st patch.
-
-Yes, you're right.
-
-> 
-> Thanks
-> Kishon
-> 
-
-Regards,
-Gustavo
+T24gMjQgQXByaWwgMjAxOCAwOTo1MCwgR3VzdGF2byBQaW1lbnRlbCB3cm90ZToNCj4gSGkgQWxh
+biwNCj4gDQo+IE9uIDI0LzA0LzIwMTggMDc6NDgsIEFsYW4gRG91Z2xhcyB3cm90ZToNCj4gPiBI
+aSBHdXN0YXZvLA0KPiA+DQo+ID4gT24gMTAgQXByaWwgMjAxOCAxODoxNSBHdXN0YXZvIFBpbWVu
+dGVsIHdyb3RlOg0KPiA+PiAgaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIwMTgvNC8xMC80MjENCj4g
+Pj4gIFRoaXMgc2VyaWVzIGFpbXMgdG8gYWRkIHBjaXRlc3QgdG9vbCBzdXBwb3J0IGZvciBNU0kt
+WC4NCj4gPj4gSW5jbHVkZXMgbmV3IGNhbGxiYWNrcyBtZXRob2RzIGFuZCBoYW5kbGVycyB0byB0
+cmlnZ2VyIHRoZSBNU0ktWA0KPiA+PiBpbnRlcnJ1cHRpb25zIG9uIHRoZSBFUCBEZXNpZ253YXJl
+IElQIGRyaXZlci4NCj4gPj4NCj4gPj4gUHJvdmlkZXMgbmV3IG1ldGhvZHMgb24gcGNpX2VwZl90
+ZXN0IGRyaXZlciB0aGF0IGFsbG93cyB0byBzZXQvZ2V0IEVQDQo+ID4+IG1heGltdW0gbnVtYmVy
+IG9mIE1TSS1YIGVudHJpZXMgKHNpbWlsYXIgdG8gc2V0L2dldCBNU0kgbWV0aG9kcykuDQo+ID4+
+DQo+ID4+IFJld29ya3Mgb24gTVNJIHNldC9nZXQgYW5kIHRyaWdnZXJpbmcgbWV0aG9kcyBvbiBF
+UCBEZXNpZ253YXJlIElQDQo+ID4+IGRyaXZlciB0byBiZSBtb3JlIGdlbmVyaWMgYW5kIGZsZXhp
+YmxlLg0KPiA+Pg0KPiA+PiBBZGRzIGEgbmV3IGlucHV0IHBhcmFtZXRlciAobXNpeCkgYW5kIHJl
+cGxpY2F0ZXMgdGhlIHdob2xlIE1TSQ0KPiA+PiBtZWNoYW5pc20gYXBwbGllZCB0byB0aGUgTVNJ
+LVggZmVhdHVyZSBvbiBwY2l0ZXN0IHRvb2wuIEFsc28gdXBkYXRlcw0KPiA+PiB0aGUgcGNpdGVz
+dCBzY3JpcHQgd2l0aCB0aGUgbmV3IHRlc3Qgc2V0IGFwcGxpZWQgdG8gdGhpcyBuZXcgZmVhdHVy
+ZS4NCj4gPj4NCj4gPj4gR3VzdGF2byBQaW1lbnRlbCAoMTApOg0KPiA+PiAgIFBDSTogZHdjOiBB
+ZGQgTVNJLVggY2FsbGJhY2tzIGhhbmRsZXINCj4gPj4gICBQQ0k6IGNhZGVuY2U6IFVwZGF0ZSBj
+ZG5zX3BjaWVfZXBfcmFpc2VfaXJxIGZ1bmN0aW9uIHNpZ25hdHVyZQ0KPiA+PiAgIFBDSTogZW5k
+cG9pbnQ6IEFkZCBNU0ktWCBpbnRlcmZhY2VzDQo+ID4+ICAgUENJOiBkd2M6IE1TSSBjYWxsYmFj
+a3MgaGFuZGxlciByZXdvcmsNCj4gPj4gICBQQ0k6IGR3YzogQWRkIGxlZ2FjeSBpbnRlcnJ1cHQg
+Y2FsbGJhY2sgaGFuZGxlcg0KPiA+PiAgIG1pc2M6IHBjaV9lbmRwb2ludF90ZXN0OiBBZGQgTVNJ
+LVggc3VwcG9ydA0KPiA+PiAgIG1pc2M6IHBjaV9lbmRwb2ludF90ZXN0OiBSZXBsYWNlIGxvd2Vy
+IGludG8gdXBwZXIgY2FzZSBjaGFyYWN0ZXJzDQo+ID4+ICAgUENJOiBlbmRwb2ludDogZnVuY3Rp
+b25zL3BjaS1lcGYtdGVzdDogQWRkIE1TSS1YIHN1cHBvcnQNCj4gPj4gICBQQ0k6IGVuZHBvaW50
+OiBmdW5jdGlvbnMvcGNpLWVwZi10ZXN0OiBSZXBsYWNlIGxvd2VyIGludG8gdXBwZXIgY2FzZQ0K
+PiA+PiAgICAgY2hhcmFjdGVycw0KPiA+PiAgIHRvb2xzOiBQQ0k6IEFkZCBNU0ktWCBzdXBwb3J0
+DQo+ID4+DQo+ID4+ICBEb2N1bWVudGF0aW9uL21pc2MtZGV2aWNlcy9wY2ktZW5kcG9pbnQtdGVz
+dC50eHQgfCAgIDMgKw0KPiA+PiAgZHJpdmVycy9taXNjL3BjaV9lbmRwb2ludF90ZXN0LmMgICAg
+ICAgICAgICAgICAgIHwgMTIwICsrKysrKysrKystLS0tDQo+ID4+ICBkcml2ZXJzL3BjaS9jYWRl
+bmNlL3BjaWUtY2FkZW5jZS1lcC5jICAgICAgICAgICAgfCAgIDIgKy0NCj4gPj4gIGRyaXZlcnMv
+cGNpL2R3Yy9wY2ktZHJhN3h4LmMgICAgICAgICAgICAgICAgICAgICB8ICAgMiArLQ0KPiA+PiAg
+ZHJpdmVycy9wY2kvZHdjL3BjaWUtYXJ0cGVjNi5jICAgICAgICAgICAgICAgICAgIHwgICAyICst
+DQo+ID4+ICBkcml2ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLWVwLmMgICAgICAgICAgICAg
+fCAyMDENCj4gPj4gKysrKysrKysrKysrKysrKysrKysrLS0NCj4gPj4gIGRyaXZlcnMvcGNpL2R3
+Yy9wY2llLWRlc2lnbndhcmUtcGxhdC5jICAgICAgICAgICB8ICAgOSArLQ0KPiA+PiAgZHJpdmVy
+cy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oICAgICAgICAgICAgICAgIHwgIDQwICsrKy0tDQo+
+ID4+ICBkcml2ZXJzL3BjaS9lbmRwb2ludC9mdW5jdGlvbnMvcGNpLWVwZi10ZXN0LmMgICAgfCAx
+MTMgKysrKysrKysrLS0tLQ0KPiA+PiAgZHJpdmVycy9wY2kvZW5kcG9pbnQvcGNpLWVwLWNmcy5j
+ICAgICAgICAgICAgICAgIHwgIDI0ICsrKw0KPiA+PiAgZHJpdmVycy9wY2kvZW5kcG9pbnQvcGNp
+LWVwYy1jb3JlLmMgICAgICAgICAgICAgIHwgIDYwICsrKysrKy0NCj4gPj4gIGluY2x1ZGUvbGlu
+dXgvcGNpLWVwYy5oICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAxMSArLQ0KPiA+PiAgaW5j
+bHVkZS9saW51eC9wY2ktZXBmLmggICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAxICsNCj4g
+Pj4gIGluY2x1ZGUvdWFwaS9saW51eC9wY2l0ZXN0LmggICAgICAgICAgICAgICAgICAgICB8ICAg
+MSArDQo+ID4+ICB0b29scy9wY2kvcGNpdGVzdC5jICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgfCAgMTggKy0NCj4gPj4gIHRvb2xzL3BjaS9wY2l0ZXN0LnNoICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICB8ICAyNSArKysNCj4gPj4gIDE2IGZpbGVzIGNoYW5nZWQsIDUyOCBpbnNlcnRp
+b25zKCspLCAxMDQgZGVsZXRpb25zKC0pDQo+ID4+DQo+ID4+IC0tDQo+ID4+IDIuNy40DQo+ID4+
+DQo+ID4gTmljZSBzZXQgb2YgcGF0Y2hlcy4gIEkgaGF2ZSB0ZXN0ZWQgdGhpcyB3aXRoIHRoZSBD
+YWRlbmNlIEVQIGRyaXZlciBhZnRlcg0KPiBhZGRpbmcgTVNJLVggc3VwcG9ydCwgYW5kIGZvdW5k
+IGEgZmV3IGNoYW5nZXMgcmVxdWlyZWQuDQo+ID4gSSB3aWxsIHNlbmQgeW91IGNvbW1lbnRzLg0K
+PiANCj4gT2ssIGdyZWF0IG5ld3MhDQo+IA0KPiBNYXliZSBhZnRlciB0aGlzIHBhdGNoIHNlcmll
+cyBzdWJtaXNzaW9uIHdlIGNvdWxkIHN0YXJ0IGEgbmV3IHRocmVhZCBhYm91dA0KPiBuZXcgZmVh
+dHVyZXMgdGhhdCBjb3VsZCBiZSB0ZXN0ZWQvdmVyaWZpZWQgdXNpbmcgcGNpdGVzdC4gSSB0aGlu
+ayB0aGlzIGNvdWxkIGJlDQo+IGhlbHBmdWwgZm9yIGV2ZXJ5Ym9keS4NCj4gDQpHcmVhdCwgSSB0
+aGluayB0aGF0IHdvdWxkIGRlZmluaXRlbHkgYmUgb2YgYmVuZWZpdC4NCj4gPg0KPiA+IFRoYW5r
+cywNCj4gPiBBbGFuDQo+ID4NCj4gDQo+IFRoYW5rcywNCj4gR3VzdGF2bw0KVGhhbmtzLA0KQWxh
+bg0KDQoNCg==
