@@ -1,99 +1,136 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 24 Apr 2018 08:47:27 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 11/12] swiotlb: move the SWIOTLB config symbol to
- lib/Kconfig
-Message-ID: <20180424074726.GI16141@n2100.armlinux.org.uk>
-References: <20180423170419.20330-1-hch@lst.de>
- <20180423170419.20330-12-hch@lst.de>
- <20180423235205.GH16141@n2100.armlinux.org.uk>
- <20180424065549.GA18468@lst.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:37820 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751233AbeDXO7r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Apr 2018 10:59:47 -0400
+Subject: [PATCH 1/2] PCI: Add pci_bus_specific_read_dev_vendor_id() to
+ workaround PCI switch specific issues prior to accessing newly added endpoint
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <7e9f5905-34c5-f24c-8b13-df36b8bf3621@oracle.com>
+Message-ID: <16461819-82a1-8122-4a30-842f9a078988@oracle.com>
+Date: Tue, 24 Apr 2018 10:53:08 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180424065549.GA18468@lst.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-mips@linux-mips.org, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- linux-pci@vger.kernel.org, x86@kernel.org, linux-block@vger.kernel.org,
- linux-mm@kvack.org, iommu@lists.linux-foundation.org,
- sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <7e9f5905-34c5-f24c-8b13-df36b8bf3621@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 24, 2018 at 08:55:49AM +0200, Christoph Hellwig wrote:
-> On Tue, Apr 24, 2018 at 12:52:05AM +0100, Russell King - ARM Linux wrote:
-> > On Mon, Apr 23, 2018 at 07:04:18PM +0200, Christoph Hellwig wrote:
-> > > This way we have one central definition of it, and user can select it as
-> > > needed.  Note that we also add a second ARCH_HAS_SWIOTLB symbol to
-> > > indicate the architecture supports swiotlb at all, so that we can still
-> > > make the usage optional for a few architectures that want this feature
-> > > to be user selectable.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Hmm, this looks like we end up with NEED_SG_DMA_LENGTH=y on ARM by
-> > default, which probably isn't a good idea - ARM pre-dates the dma_length
-> > parameter in scatterlists, and I don't think all code is guaranteed to
-> > do the right thing if this is enabled.
-> 
-> We shouldn't end up with NEED_SG_DMA_LENGTH=y on ARM by default.
+This patch provides a framework in which it would be possible to implement
+bus specific quirks prior to accessing an endpoint device beneath that bus.
+The routine, pci_bus_specific_read_dev_vendor_id, can be called prior to
+accessing the end point device itself in order to workaround potential issues
+with the parent device (switch). If there is nothing specific to be done for
+a particular switch device, it falls through to check for the endpoint device
+i.e pci_bus_generic_read_dev_vendor_id().
 
-Your patch as sent would end up with:
+Signed-off: James Puthukattukaran <james.puthukattukaran@oracle.com>
+---
+ drivers/pci/pci.h    |  2 ++
+ drivers/pci/probe.c  | 19 ++++++++++++++++++-
+ drivers/pci/quirks.c | 41 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 61 insertions(+), 1 deletion(-)
 
-ARM selects ARCH_HAS_SWIOTLB
-SWIOTLB is defaulted to ARCH_HAS_SWIOTLB
-SWIOTLB selects NEED_SG_DMA_LENGTH
-
-due to:
-
-@@ -106,6 +106,7 @@ config ARM
-        select REFCOUNT_FULL
-        select RTC_LIB
-        select SYS_SUPPORTS_APM_EMULATION
-+       select ARCH_HAS_SWIOTLB
-
-and:
-
-+config SWIOTLB
-+       bool "SWIOTLB support"
-+       default ARCH_HAS_SWIOTLB
-+       select NEED_SG_DMA_LENGTH
-
-Therefore, the default state for SWIOTLB and hence NEED_SG_DMA_LENGTH
-becomes 'y' on ARM, and any defconfig file that does not mention SWIOTLB
-explicitly ends up with both these enabled.
-
-> It is only select by ARM_DMA_USE_IOMMU before the patch, and it will
-> now also be selected by SWIOTLB, which for arm is never used or seleted
-> directly by anything but xen-swiotlb.
-
-See above.
-
-> Then again looking at the series there shouldn't be any need to
-> even select NEED_SG_DMA_LENGTH for swiotlb, as we'll never merge segments,
-> so I'll fix that up.
-
-That would help to avoid any regressions along the lines I've spotted
-by review.
-
-It does look a bit weird though - patch 10 arranged stuff so that we
-didn't end up with SWIOTLB always enabled, but this patch reintroduces
-that with the allowance that the user can disable if so desired.
-
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 023f7cf..39ea6ee 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -225,6 +225,8 @@ enum pci_bar_type {
+ int pci_configure_extended_tags(struct pci_dev *dev, void *ign);
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+ 				int crs_timeout);
++int pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn,
++				u32 *pl, int crs_timeout);
+ int pci_setup_device(struct pci_dev *dev);
+ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		    struct resource *res, unsigned int reg);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ac91b6f..d8bf71b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2097,7 +2097,7 @@ static bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l,
+ 	return true;
+ }
+ 
+-bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
++bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+ 				int timeout)
+ {
+ 	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
+@@ -2113,6 +2113,23 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+ 
+ 	return true;
+ }
++
++
++bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
++					int timeout)
++{
++	int ret;
++
++	/* An opportunity to implement something specific for this device.
++	 * For ex, impelement a quirk prior to even accessing the device
++	 */
++	ret = pci_bus_specific_read_dev_vendor_id(bus, devfn, l, timeout);
++	if (ret >= 0)
++		return (ret >= 0);
++
++	return pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
++}
++
+ EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
+ 
+ /*
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 2990ad1..c32c5ec 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4741,3 +4741,44 @@ static void quirk_gpu_hda(struct pci_dev *hda)
+ 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
++
++
++static const struct pci_bus_specific_quirk{
++	u16 vendor;
++	u16 device;
++	int (*bus_quirk)(struct pci_bus *bus, int devfn, u32 *l, int timeout);
++} pci_bus_specific_quirks[] = {
++	{0}
++};
++
++/*
++ * This routine provides the ability to implement a bus specific quirk
++ * prior to doing config accesses to the endpoint device itself. For ex, there
++ * could be HW problems with the switch above the endpoint that causes issues
++ * when accessing the endpoint device. Such workarounds "specific" to the
++ * parent could be implemented prior or subsequent to accesses to the
++ * endpoint itself
++ *
++ */
++int pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
++					int timeout)
++{
++	const struct pci_bus_specific_quirk *i;
++	struct pci_dev *dev;
++
++	if (!bus || !bus->self)
++		return -ENOTTY;
++
++	dev = bus->self;
++
++	/* Implement any quirks in the "bus" (switch, for ex) that causes
++	 * issues in accessing the endpoint
++	 */
++	for (i = pci_bus_specific_quirks; i->bus_quirk; i++) {
++		if ((i->vendor == dev->vendor ||
++		     i->vendor == (u16)PCI_ANY_ID) &&
++		    (i->device == dev->device || i->device == (u16)PCI_ANY_ID))
++			return(i->bus_quirk(bus, devfn, l, timeout));
++	}
++	return -ENOTTY;
++}
 -- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 8.8Mbps down 630kbps up
-According to speedtest.net: 8.21Mbps down 510kbps up
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.8.3.1
