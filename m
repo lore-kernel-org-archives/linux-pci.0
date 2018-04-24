@@ -1,207 +1,194 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55702 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751249AbeDBOFE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Apr 2018 10:05:04 -0400
-Date: Mon, 2 Apr 2018 09:05:01 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tal Gilboa <talgi@mellanox.com>
-Cc: Tariq Toukan <tariqt@mellanox.com>,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        everest-linux-l2@cavium.com, intel-wired-lan@lists.osuosl.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 03/14] PCI: Add pcie_bandwidth_capable() to compute
- max supported link bandwidth
-Message-ID: <20180402140501.GA244675@bhelgaas-glaptop.roam.corp.google.com>
-References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152244390359.135666.14890735614456271032.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <31e66048-e8b8-47ba-baf5-023560b4c124@mellanox.com>
- <20180402004049.GA131023@bhelgaas-glaptop.roam.corp.google.com>
- <50346f44-de3f-b226-69ad-6de45e94e261@mellanox.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC 06/10] misc: pci_endpoint_test: Add MSI-X support
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "adouglas@cadence.com" <adouglas@cadence.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
+ <8b88f8c2b766f36c71659deb0fce635154b2b39f.1523379766.git.gustavo.pimentel@synopsys.com>
+ <b25dcfb1-e770-e302-d9aa-7c35f6c58fa5@ti.com>
+ <c6d1d492-38a0-6a03-7e61-b8b50226734b@synopsys.com>
+ <a982ca92-d34c-12ea-30bf-9a9b1661d50d@ti.com>
+ <2bd77bf2-1d64-6043-422a-6a96c1a3d3a4@synopsys.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <aa1c6446-bcf4-1cdb-d900-22e5d6fa4cab@ti.com>
+Date: Tue, 24 Apr 2018 17:13:06 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50346f44-de3f-b226-69ad-6de45e94e261@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2bd77bf2-1d64-6043-422a-6a96c1a3d3a4@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 02, 2018 at 10:34:58AM +0300, Tal Gilboa wrote:
-> On 4/2/2018 3:40 AM, Bjorn Helgaas wrote:
-> > On Sun, Apr 01, 2018 at 11:38:53PM +0300, Tal Gilboa wrote:
-> > > On 3/31/2018 12:05 AM, Bjorn Helgaas wrote:
-> > > > From: Tal Gilboa <talgi@mellanox.com>
-> > > > 
-> > > > Add pcie_bandwidth_capable() to compute the max link bandwidth supported by
-> > > > a device, based on the max link speed and width, adjusted by the encoding
-> > > > overhead.
-> > > > 
-> > > > The maximum bandwidth of the link is computed as:
-> > > > 
-> > > >     max_link_speed * max_link_width * (1 - encoding_overhead)
-> > > > 
-> > > > The encoding overhead is about 20% for 2.5 and 5.0 GT/s links using 8b/10b
-> > > > encoding, and about 1.5% for 8 GT/s or higher speed links using 128b/130b
-> > > > encoding.
-> > > > 
-> > > > Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-> > > > [bhelgaas: adjust for pcie_get_speed_cap() and pcie_get_width_cap()
-> > > > signatures, don't export outside drivers/pci]
-> > > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > > Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
-> > > > ---
-> > > >    drivers/pci/pci.c |   21 +++++++++++++++++++++
-> > > >    drivers/pci/pci.h |    9 +++++++++
-> > > >    2 files changed, 30 insertions(+)
-> > > > 
-> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > > index 43075be79388..9ce89e254197 100644
-> > > > --- a/drivers/pci/pci.c
-> > > > +++ b/drivers/pci/pci.c
-> > > > @@ -5208,6 +5208,27 @@ enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev)
-> > > >    	return PCIE_LNK_WIDTH_UNKNOWN;
-> > > >    }
-> > > > +/**
-> > > > + * pcie_bandwidth_capable - calculates a PCI device's link bandwidth capability
-> > > > + * @dev: PCI device
-> > > > + * @speed: storage for link speed
-> > > > + * @width: storage for link width
-> > > > + *
-> > > > + * Calculate a PCI device's link bandwidth by querying for its link speed
-> > > > + * and width, multiplying them, and applying encoding overhead.
-> > > > + */
-> > > > +u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
-> > > > +			   enum pcie_link_width *width)
-> > > > +{
-> > > > +	*speed = pcie_get_speed_cap(dev);
-> > > > +	*width = pcie_get_width_cap(dev);
-> > > > +
-> > > > +	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN)
-> > > > +		return 0;
-> > > > +
-> > > > +	return *width * PCIE_SPEED2MBS_ENC(*speed);
-> > > > +}
-> > > > +
-> > > >    /**
-> > > >     * pci_select_bars - Make BAR mask from the type of resource
-> > > >     * @dev: the PCI device for which BAR mask is made
-> > > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> > > > index 66738f1050c0..2a50172b9803 100644
-> > > > --- a/drivers/pci/pci.h
-> > > > +++ b/drivers/pci/pci.h
-> > > > @@ -261,8 +261,17 @@ void pci_disable_bridge_window(struct pci_dev *dev);
-> > > >    	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
-> > > >    	 "Unknown speed")
-> > > > +/* PCIe speed to Mb/s with encoding overhead: 20% for gen2, ~1.5% for gen3 */
-> > > > +#define PCIE_SPEED2MBS_ENC(speed) \
-> > > 
-> > > Missing gen4.
-> > 
-> > I made it "gen3+".  I think that's accurate, isn't it?  The spec
-> > doesn't seem to actually use "gen3" as a specific term, but sec 4.2.2
-> > says rates of 8 GT/s or higher (which I think includes gen3 and gen4)
-> > use 128b/130b encoding.
-> > 
+Hi,
+
+On Tuesday 24 April 2018 04:27 PM, Gustavo Pimentel wrote:
+> Hi Kishon,
 > 
-> I meant that PCIE_SPEED_16_0GT will return 0 from this macro since it wasn't
-> added. Need to return 15754.
+> On 24/04/2018 08:19, Kishon Vijay Abraham I wrote:
+>> Hi,
+>>
+>> On Tuesday 17 April 2018 11:08 PM, Gustavo Pimentel wrote:
+>>> Hi Kishon,
+>>>
+>>> On 17/04/2018 11:33, Kishon Vijay Abraham I wrote:
+>>>> Hi,
+>>>>
+>>>> On Tuesday 10 April 2018 10:44 PM, Gustavo Pimentel wrote:
+>>>>> Adds the MSI-X support and updates driver documentation accordingly.
+>>>>>
+>>>>> Changes the driver parameter in order to allow the interruption type
+>>>>> selection.
+>>>>>
+>>>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>>>>> ---
+>>>>>  Documentation/misc-devices/pci-endpoint-test.txt |   3 +
+>>>>>  drivers/misc/pci_endpoint_test.c                 | 102 +++++++++++++++++------
+>>>>>  2 files changed, 79 insertions(+), 26 deletions(-)
+>>>>>
+>>>>> diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
+>>>>> index 4ebc359..fdfa0f6 100644
+>>>>> --- a/Documentation/misc-devices/pci-endpoint-test.txt
+>>>>> +++ b/Documentation/misc-devices/pci-endpoint-test.txt
+>>>>> @@ -10,6 +10,7 @@ The PCI driver for the test device performs the following tests
+>>>>>  	*) verifying addresses programmed in BAR
+>>>>>  	*) raise legacy IRQ
+>>>>>  	*) raise MSI IRQ
+>>>>> +	*) raise MSI-X IRQ
+>>>>>  	*) read data
+>>>>>  	*) write data
+>>>>>  	*) copy data
+>>>>> @@ -25,6 +26,8 @@ ioctl
+>>>>>   PCITEST_LEGACY_IRQ: Tests legacy IRQ
+>>>>>   PCITEST_MSI: Tests message signalled interrupts. The MSI number
+>>>>>  	      to be tested should be passed as argument.
+>>>>> + PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
+>>>>> +	      to be tested should be passed as argument.
+>>>>>   PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
+>>>>>  		as argument.
+>>>>>   PCITEST_READ: Perform read tests. The size of the buffer should be passed
+>>>>> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+>>>>> index 37db0fc..a7d9354 100644
+>>>>> --- a/drivers/misc/pci_endpoint_test.c
+>>>>> +++ b/drivers/misc/pci_endpoint_test.c
+>>>>> @@ -42,11 +42,16 @@
+>>>>>  #define PCI_ENDPOINT_TEST_COMMAND	0x4
+>>>>>  #define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+>>>>>  #define COMMAND_RAISE_MSI_IRQ		BIT(1)
+>>>>> -#define MSI_NUMBER_SHIFT		2
+>>>>> -/* 6 bits for MSI number */
+>>>>> -#define COMMAND_READ                    BIT(8)
+>>>>> -#define COMMAND_WRITE                   BIT(9)
+>>>>> -#define COMMAND_COPY                    BIT(10)
+>>>>> +#define COMMAND_RAISE_MSIX_IRQ		BIT(2)
+>>>>> +#define IRQ_TYPE_SHIFT			3
+>>>>> +#define IRQ_TYPE_LEGACY			0
+>>>>> +#define IRQ_TYPE_MSI			1
+>>>>> +#define IRQ_TYPE_MSIX			2
+>>>>> +#define MSI_NUMBER_SHIFT		5
+>>>>
+>>>> Now that you are anyways fixing this, add a new register entry for MSI numbers.
+>>>> Let's not keep COMMAND and MSI's together.
+>>>
+>>> What you suggest?
+>>
+>> #define PCI_ENDPOINT_TEST_COMMAND	0x4
+>> #define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+>> #define COMMAND_RAISE_MSI_IRQ		BIT(1)
+>> #define COMMAND_RAISE_MSIX_IRQ		BIT(2)
+>> #define COMMAND_READ                    BIT(3)
+>> #define COMMAND_WRITE                   BIT(4)
+>> #define COMMAND_COPY                    BIT(5)
+>>
+>> #define PCI_ENDPOINT_TEST_STATUS	0x8
+>> #define STATUS_READ_SUCCESS             BIT(0)
+>> #define STATUS_READ_FAIL                BIT(1)
+>> #define STATUS_WRITE_SUCCESS            BIT(2)
+>> #define STATUS_WRITE_FAIL               BIT(3)
+>> #define STATUS_COPY_SUCCESS             BIT(4)
+>> #define STATUS_COPY_FAIL                BIT(5)
+>> #define STATUS_IRQ_RAISED               BIT(6)
+>> #define STATUS_SRC_ADDR_INVALID         BIT(7)
+>> #define STATUS_DST_ADDR_INVALID         BIT(8)
+>>
+>> #define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0xc
+>> #define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
+>>
+>> #define PCI_ENDPOINT_TEST_LOWER_DST_ADDR	0x14
+>> #define PCI_ENDPOINT_TEST_UPPER_DST_ADDR	0x18
+>>
+>> #define PCI_ENDPOINT_TEST_SIZE		0x1c
+>> #define PCI_ENDPOINT_TEST_CHECKSUM	0x20
+>>
+>> #define PCI_ENDPOINT_TEST_MSI_NUMBER	0x24
+> 
+> Ok. I will do it.
+> 
+>>
+>> We should try not to modify either the existing register offsets or the bit
+>> fields within these registers in the future as EP and RC will be running on
+>> different systems and it is possible one of them might not have the updated
+>> kernel.
+> 
+> I totally agree.
+> 
+>>>
+>>>>> +/* 12 bits for MSI number */
+>>>>> +#define COMMAND_READ                    BIT(17)
+>>>>> +#define COMMAND_WRITE                   BIT(18)
+>>>>> +#define COMMAND_COPY                    BIT(19)
+>>>>
+>>>> This change should be done along with the pci-epf-test in a single patch.
+>>>
+>>> To be clear, you're saying is this patch should be just be squashed into the
+>>> patch number 8 [1], because there is a lot of dependencies namely the defines,
+>>> that is used on the alter functions.
+>>>
+>>> [1] -> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_896841_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=8urVwHCybXa1XMxsEbwHZAzzaEI_HJGXqmWgXpXb9TY&s=MRVr2YPY2Bk_WNFOxBfU4FGrFReTKdPhfzNDLiVxDbs&e=
+>>
+>> yeah. We have to make sure git bisect doesn't break functionality.
+> 
+> Ok, it'll be squashed.
+> 
+>>>
+>>>>>  
+>>>>>  #define PCI_ENDPOINT_TEST_STATUS	0x8
+>>>>>  #define STATUS_READ_SUCCESS             BIT(0)
+>>>>> @@ -73,9 +78,9 @@ static DEFINE_IDA(pci_endpoint_test_ida);
+>>>>>  #define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
+>>>>>  					    miscdev)
+>>>>>  
+>>>>> -static bool no_msi;
+>>>>> -module_param(no_msi, bool, 0444);
+>>>>> -MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
+>>>>
+>>>> Let's not remove this just to make sure existing users doesn't get affected.
+>>>
+>>> Hum, by making an internal conversion? Like this
+>>> no_msi = false <=> irq_type = 1
+>>> no_msi = true <=> irq_type = 0
+>>
+> Disregard previous comment, it doesn't make sense. I don't know where my head was.
+> 
+> It will be like this on probe:
+> 
+> if (no_msi)
+> 	irq_type = IRQ_TYPE_LEGACY;
+> 
+> However since we are breaking the compatibility on terms of MSI/MSI-X
+> bits/registers (discussion on the top), it makes sense to keep the compatibility
+> on this parameter?
 
-Oh, duh, of course!  Sorry for being dense.  What about the following?
-I included the calculation as opposed to just the magic numbers to try
-to make it clear how they're derived.  This has the disadvantage of
-truncating the result instead of rounding, but I doubt that's
-significant in this context.  If it is, we could use the magic numbers
-and put the computation in a comment.
+This is userspace compatibility, so lets not break it.
+Btw can we have a sysfs entry per device for defining irq_type. Having a sysfs
+entry might be helpful instead of insmod/rmmod with different irq_type values?
+It will also help if a system has enumerated multiple PCI_ENDPOINT_TEST EP devices.
 
-Another question: we currently deal in Mb/s, not MB/s.  Mb/s has the
-advantage of sort of corresponding to the GT/s numbers, but using MB/s
-would have the advantage of smaller numbers that match the table here:
-https://en.wikipedia.org/wiki/PCI_Express#History_and_revisions,
-but I don't know what's most typical in user-facing situations.
-What's better?
-
-
-commit 946435491b35b7782157e9a4d1bd73071fba7709
-Author: Tal Gilboa <talgi@mellanox.com>
-Date:   Fri Mar 30 08:32:03 2018 -0500
-
-    PCI: Add pcie_bandwidth_capable() to compute max supported link bandwidth
-    
-    Add pcie_bandwidth_capable() to compute the max link bandwidth supported by
-    a device, based on the max link speed and width, adjusted by the encoding
-    overhead.
-    
-    The maximum bandwidth of the link is computed as:
-    
-      max_link_width * max_link_speed * (1 - encoding_overhead)
-    
-    2.5 and 5.0 GT/s links use 8b/10b encoding, which reduces the raw bandwidth
-    available by 20%; 8.0 GT/s and faster links use 128b/130b encoding, which
-    reduces it by about 1.5%.
-    
-    The result is in Mb/s, i.e., megabits/second, of raw bandwidth.
-    
-    Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-    [bhelgaas: add 16 GT/s, adjust for pcie_get_speed_cap() and
-    pcie_get_width_cap() signatures, don't export outside drivers/pci]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 43075be79388..ff1e72060952 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5208,6 +5208,28 @@ enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev)
- 	return PCIE_LNK_WIDTH_UNKNOWN;
- }
- 
-+/**
-+ * pcie_bandwidth_capable - calculate a PCI device's link bandwidth capability
-+ * @dev: PCI device
-+ * @speed: storage for link speed
-+ * @width: storage for link width
-+ *
-+ * Calculate a PCI device's link bandwidth by querying for its link speed
-+ * and width, multiplying them, and applying encoding overhead.  The result
-+ * is in Mb/s, i.e., megabits/second of raw bandwidth.
-+ */
-+u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
-+			   enum pcie_link_width *width)
-+{
-+	*speed = pcie_get_speed_cap(dev);
-+	*width = pcie_get_width_cap(dev);
-+
-+	if (*speed == PCI_SPEED_UNKNOWN || *width == PCIE_LNK_WIDTH_UNKNOWN)
-+		return 0;
-+
-+	return *width * PCIE_SPEED2MBS_ENC(*speed);
-+}
-+
- /**
-  * pci_select_bars - Make BAR mask from the type of resource
-  * @dev: the PCI device for which BAR mask is made
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 66738f1050c0..37f9299ed623 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -261,8 +261,18 @@ void pci_disable_bridge_window(struct pci_dev *dev);
- 	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
- 	 "Unknown speed")
- 
-+/* PCIe speed to Mb/s reduced by encoding overhead */
-+#define PCIE_SPEED2MBS_ENC(speed) \
-+	((speed) == PCIE_SPEED_16_0GT ? (16000*(128/130)) : \
-+	 (speed) == PCIE_SPEED_8_0GT  ?  (8000*(128/130)) : \
-+	 (speed) == PCIE_SPEED_5_0GT  ?  (5000*(8/10)) : \
-+	 (speed) == PCIE_SPEED_2_5GT  ?  (2500*(8/10)) : \
-+	 0)
-+
- enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev);
- enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev);
-+u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
-+			   enum pcie_link_width *width);
- 
- /* Single Root I/O Virtualization */
- struct pci_sriov {
+Thanks
+Kishon
