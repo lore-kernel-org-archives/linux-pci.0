@@ -1,64 +1,57 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 19 Apr 2018 14:26:32 -0600
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, sulrich@codeaurora.org,
-        timur@codeaurora.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
-Message-ID: <20180419202632.GE14063@ziepe.ca>
-References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+Subject: [PATCH] PCI: Add Intel 7th & 8th Gen mobile to ACS quirks
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 25 Apr 2018 14:27:37 -0600
+Message-ID: <152468799766.12449.11245066753252100117.stgit@w520.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 19, 2018 at 03:56:23PM -0400, Sinan Kaya wrote:
-> The infiniband adapter might be connected to a PCI hotplug slot. Performing
-> secondary bus reset on a hotplug slot causes PCI link up/down interrupts.
-> 
-> Hotplug driver removes the device from system when a link down interrupt
-> is observed and performs re-enumeration when link up interrupt is observed.
-> 
-> This conflicts with what this code is trying to do. Try secondary bus reset
-> only if pci_reset_slot() fails/unsupported.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->  drivers/infiniband/hw/hfi1/pcie.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-> index 83d66e8..75f49e3 100644
-> +++ b/drivers/infiniband/hw/hfi1/pcie.c
-> @@ -908,7 +908,8 @@ static int trigger_sbr(struct hfi1_devdata *dd)
+The specification update indicates these have the same errate for
+implementing non-standard ACS capabilities.
 
-The code above this hunk is:
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/quirks.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-/*
- * Trigger a secondary bus reset (SBR) on ourselves using our parent.
- *
- * Based on pci_parent_bus_reset() which is not exported by the
- * kernel core.
- */
-static int trigger_sbr(struct hfi1_devdata *dd)
-{
-
-[..]
-
-This really seems like something the PCI core should be helping with,
-drivers shouldn't be doing stuff like this. I get the feeling this
-should be a common need if drivers support various error recovery
-schemes?
-
-Bjorn, would be appropriate to export pci_parent_bus_reset() or some
-variation therin??
-
-Thanks,
-Jason
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 2990ad1e7c99..6d0dee40dbe5 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4230,11 +4230,24 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
+  * 0xa290-0xa29f PCI Express Root port #{0-16}
+  * 0xa2e7-0xa2ee PCI Express Root port #{17-24}
+  *
++ * Mobile chipsets are also affected, 7th & 8th Generation
++ * Specification update confirms ACS errata 22, status no fix: (7th Generation
++ * Intel Processor Family I/O for U/Y Platforms and 8th Generation Intel
++ * Processor Family I/O for U Quad Core Platforms Specification Update,
++ * August 2017, Revision 002, Document#: 334660-002)[6]
++ * Device IDs from I/O datasheet: (7th Generation Intel Processor Family I/O
++ * for U/Y Platforms and 8th Generation Intel ® Processor Family I/O for U
++ * Quad Core Platforms, Vol 1 of 2, August 2017, Document#: 334658-003)[7]
++ *
++ * 0x9d10-0x9d1b PCI Express Root port #{1-12}
++ *
+  * [1] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-2.html
+  * [2] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-1.html
+  * [3] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-spec-update.html
+  * [4] http://www.intel.com/content/www/us/en/chipsets/200-series-chipset-pch-spec-update.html
+  * [5] http://www.intel.com/content/www/us/en/chipsets/200-series-chipset-pch-datasheet-vol-1.html
++ * [6] https://www.intel.com/content/www/us/en/processors/core/7th-gen-core-family-mobile-u-y-processor-lines-i-o-spec-update.html
++ * [7] https://www.intel.com/content/www/us/en/processors/core/7th-gen-core-family-mobile-u-y-processor-lines-i-o-datasheet-vol-1.html
+  */
+ static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
+ {
+@@ -4244,6 +4257,7 @@ static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
+ 	switch (dev->device) {
+ 	case 0xa110 ... 0xa11f: case 0xa167 ... 0xa16a: /* Sunrise Point */
+ 	case 0xa290 ... 0xa29f: case 0xa2e7 ... 0xa2ee: /* Union Point */
++	case 0x9d10 ... 0x9d1b: /* 7th & 8th Gen Mobile */
+ 		return true;
+ 	}
+ 
