@@ -1,71 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.185]:64141 "EHLO
-        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750982AbeDIKCP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 06:02:15 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Keith Busch' <keith.busch@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: Oza Pawandeep <poza@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>
-Subject: RE: [PATCHv2 6/7] PCI/AER: API for obtaining AER information
-Date: Mon, 9 Apr 2018 10:03:14 +0000
-Message-ID: <bc217ceacda04d9884331f5b6bff30d3@AcuMS.aculab.com>
-References: <20180402162203.3370-1-keith.busch@intel.com>
- <20180402162203.3370-7-keith.busch@intel.com>
-In-Reply-To: <20180402162203.3370-7-keith.busch@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 1/6] PCI: Make pci_get_new_domain_nr static
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+References: <cover.1524582822.git.jan.kiszka@siemens.com>
+ <a21882288c4664cc983a5741e8cbf6d59abacd46.1524582822.git.jan.kiszka@siemens.com>
+ <20180425162745.GB21628@e107981-ln.cambridge.arm.com>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+Message-ID: <db40716e-85ac-a91d-98a9-81accb2b6756@siemens.com>
+Date: Wed, 25 Apr 2018 19:21:12 +0200
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180425162745.GB21628@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Keith Busch
-> Sent: 02 April 2018 17:22
-> To: Linux PCI; Bjorn Helgaas
+On 2018-04-25 18:27, Lorenzo Pieralisi wrote:
+> On Tue, Apr 24, 2018 at 05:13:37PM +0200, Jan Kiszka wrote:
+>> From: Jan Kiszka <jan.kiszka@siemens.com>
+>>
+>> The only user of that function is of_pci_bus_find_domain_nr. Pure
+>> cleanup.
 > 
-> Since this is making the function externally visible, appending "aer_"
-> prefix to the function name.
+> "The only user of pci_get_new_domain_nr() is of_pci_bus_find_domain_nr().
+> Since they are defined in the same compilation unit,
+> pci_get_new_domain_nr() can be made static, which also simplifies
+> preprocessor conditionals.
 > 
-...
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index a4bfea52e7d4..4fb24003cac3 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -638,7 +638,7 @@ static void aer_recover_work_func(struct work_struct *work)
->  #endif
+> No functional change intended."
 > 
->  /**
-> - * get_device_error_info - read error status from dev and store it to info
-> + * aer_get_device_error_info - read error status from dev and store it to info
->   * @dev: pointer to the device expected to have a error record
->   * @info: pointer to structure to store the error record
->   *
-> @@ -646,7 +646,7 @@ static void aer_recover_work_func(struct work_struct *work)
->   *
->   * Note that @info is reused among all error devices. Clear fields properly.
->   */
-> -static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
-> +int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
->  {
->  	int pos, temp;
-> 
-> @@ -705,11 +705,11 @@ static inline void aer_process_err_devices(struct pcie_device *p_device,
-> 
->  	/* Report all before handle them, not to lost records by reset etc. */
->  	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
-> -		if (get_device_error_info(e_info->dev[i], e_info))
-> +		if (aer_get_device_error_info(e_info->dev[i], e_info))
->  			aer_print_error(e_info->dev[i], e_info);
->  	}
->  	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
-> -		if (get_device_error_info(e_info->dev[i], e_info))
-> +		if (aer_get_device_error_info(e_info->dev[i], e_info))
->  			handle_error_source(p_device, e_info->dev[i], e_info);
->  	}
->  }
 
-Should there be an EXPORT_SYMBOL(aer_get_device_error_info) here?
-(preferable without _GPL).
+Thanks, wording adopted for v2.
 
-	David
+Jan
+
+>> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+>> ---
+>>  drivers/pci/pci.c   | 6 ++----
+>>  include/linux/pci.h | 3 ---
+>>  2 files changed, 2 insertions(+), 7 deletions(-)
+> 
+> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index e597655a5643..695c2bb4e853 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -5702,15 +5702,14 @@ static void pci_no_domains(void)
+>>  #endif
+>>  }
+>>  
+>> -#ifdef CONFIG_PCI_DOMAINS
+>> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+>>  static atomic_t __domain_nr = ATOMIC_INIT(-1);
+>>  
+>> -int pci_get_new_domain_nr(void)
+>> +static int pci_get_new_domain_nr(void)
+>>  {
+>>  	return atomic_inc_return(&__domain_nr);
+>>  }
+>>  
+>> -#ifdef CONFIG_PCI_DOMAINS_GENERIC
+>>  static int of_pci_bus_find_domain_nr(struct device *parent)
+>>  {
+>>  	static int use_dt_domains = -1;
+>> @@ -5765,7 +5764,6 @@ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
+>>  			       acpi_pci_bus_find_domain_nr(bus);
+>>  }
+>>  #endif
+>> -#endif
+>>  
+>>  /**
+>>   * pci_ext_cfg_avail - can we access extended PCI config space?
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 73178a2fcee0..963232a6cd2e 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1510,12 +1510,10 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
+>>   */
+>>  #ifdef CONFIG_PCI_DOMAINS
+>>  extern int pci_domains_supported;
+>> -int pci_get_new_domain_nr(void);
+>>  #else
+>>  enum { pci_domains_supported = 0 };
+>>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>>  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+>> -static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+>>  #endif /* CONFIG_PCI_DOMAINS */
+>>  
+>>  /*
+>> @@ -1670,7 +1668,6 @@ static inline struct pci_dev *pci_get_domain_bus_and_slot(int domain,
+>>  
+>>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>>  static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
+>> -static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+>>  
+>>  #define dev_is_pci(d) (false)
+>>  #define dev_is_pf(d) (false)
+>> -- 
+>> 2.13.6
+>>
