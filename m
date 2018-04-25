@@ -1,139 +1,246 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 3/6] PCI: Introduce devm_of_pci_get_host_bridge_resources
+From: Jan Kiszka <jan.kiszka@siemens.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v14 0/9] Address error and recovery for AER and DPC
-Date: Mon, 23 Apr 2018 11:23:04 -0400
-Message-Id: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+References: <cover.1524582822.git.jan.kiszka@siemens.com>
+ <e387d04ea235c9a4879a897bb730adc383a96635.1524582822.git.jan.kiszka@siemens.com>
+Message-ID: <3920f35d-e667-4ff2-83e0-8f35ea078b23@siemens.com>
+Date: Wed, 25 Apr 2018 12:40:09 +0200
+MIME-Version: 1.0
+In-Reply-To: <e387d04ea235c9a4879a897bb730adc383a96635.1524582822.git.jan.kiszka@siemens.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set brings in error handling support for DPC
+On 2018-04-24 17:13, Jan Kiszka wrote:
+> From: Jan Kiszka <jan.kiszka@siemens.com>
+> 
+> of_pci_get_host_bridge_resources allocates the resource structures it
+> fills dynamically, but none of its callers care to release them so far.
+> Rather than requiring everyone to do this explicitly, introduce a
+> managed version of that service. This differs API-wise only in taking a
+> reference to the associated device, rather than to the device tree node.
+> 
+> As of_pci_get_host_bridge_resources is an exported interface, we cannot
+> simply drop it at this point. After converting all in-tree users to the
+> new API, we could phase out the unmanaged one over some grace period.
+> 
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> ---
+>  drivers/pci/of.c       | 89 ++++++++++++++++++++++++++++++++------------------
+>  include/linux/of_pci.h | 14 ++++++--
+>  2 files changed, 70 insertions(+), 33 deletions(-)
+> 
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index a28355c273ae..6eab0bde2ab3 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -243,26 +243,8 @@ void of_pci_check_probe_only(void)
+>  EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
+>  
+>  #if defined(CONFIG_OF_ADDRESS)
+> -/**
+> - * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
+> - * @dev: device node of the host bridge having the range property
+> - * @busno: bus number associated with the bridge root bus
+> - * @bus_max: maximum number of buses for this bridge
+> - * @resources: list where the range of resources will be added after DT parsing
+> - * @io_base: pointer to a variable that will contain on return the physical
+> - * address for the start of the I/O range. Can be NULL if the caller doesn't
+> - * expect I/O ranges to be present in the device tree.
+> - *
+> - * It is the caller's job to free the @resources list.
+> - *
+> - * This function will parse the "ranges" property of a PCI host bridge device
+> - * node and setup the resource mapping based on its content. It is expected
+> - * that the property conforms with the Power ePAPR document.
+> - *
+> - * It returns zero if the range parsing has been successful or a standard error
+> - * value if it failed.
+> - */
+> -int of_pci_get_host_bridge_resources(struct device_node *dev,
+> +static int __of_pci_get_host_bridge_resources(struct device *dev,
+> +			struct device_node *dev_node,
+>  			unsigned char busno, unsigned char bus_max,
+>  			struct list_head *resources, resource_size_t *io_base)
+>  {
+> @@ -277,19 +259,22 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  	if (io_base)
+>  		*io_base = (resource_size_t)OF_BAD_ADDR;
+>  
+> -	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+> +	if (dev)
+> +		bus_range = devm_kzalloc(dev,sizeof(*bus_range), GFP_KERNEL);
+> +	else
+> +		bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+>  	if (!bus_range)
+>  		return -ENOMEM;
+>  
+> -	pr_info("host bridge %pOF ranges:\n", dev);
+> +	pr_info("host bridge %pOF ranges:\n", dev_node);
+>  
+> -	err = of_pci_parse_bus_range(dev, bus_range);
+> +	err = of_pci_parse_bus_range(dev_node, bus_range);
+>  	if (err) {
+>  		bus_range->start = busno;
+>  		bus_range->end = bus_max;
+>  		bus_range->flags = IORESOURCE_BUS;
+>  		pr_info("  No bus range found for %pOF, using %pR\n",
+> -			dev, bus_range);
+> +			dev_node, bus_range);
+>  	} else {
+>  		if (bus_range->end > bus_range->start + bus_max)
+>  			bus_range->end = bus_range->start + bus_max;
+> @@ -297,7 +282,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  	pci_add_resource(resources, bus_range);
+>  
+>  	/* Check for ranges property */
+> -	err = of_pci_range_parser_init(&parser, dev);
+> +	err = of_pci_range_parser_init(&parser, dev_node);
+>  	if (err)
+>  		goto parse_failed;
+>  
+> @@ -321,13 +306,17 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+>  			continue;
+>  
+> -		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+> +		if (dev)
+> +			res = devm_kzalloc(dev, sizeof(struct resource),
+> +					   GFP_KERNEL);
+> +		else
+> +			res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+>  		if (!res) {
+>  			err = -ENOMEM;
+>  			goto parse_failed;
+>  		}
+>  
+> -		err = of_pci_range_to_resource(&range, dev, res);
+> +		err = of_pci_range_to_resource(&range, dev_node, res);
+>  		if (err) {
+>  			kfree(res);
+>  			continue;
+> @@ -336,13 +325,13 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  		if (resource_type(res) == IORESOURCE_IO) {
+>  			if (!io_base) {
+>  				pr_err("I/O range found for %pOF. Please provide an io_base pointer to save CPU base address\n",
+> -					dev);
+> +					dev_node);
+>  				err = -EINVAL;
+>  				goto conversion_failed;
+>  			}
+>  			if (*io_base != (resource_size_t)OF_BAD_ADDR)
+>  				pr_warn("More than one I/O resource converted for %pOF. CPU base address for old range lost!\n",
+> -					dev);
+> +					dev_node);
+>  			*io_base = range.cpu_addr;
+>  		}
+>  
+> @@ -354,12 +343,50 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  conversion_failed:
+>  	kfree(res);
+>  parse_failed:
+> -	resource_list_for_each_entry(window, resources)
+> -		kfree(window->res);
+> +	if (!dev);
+> +		resource_list_for_each_entry(window, resources)
+> +			kfree(window->res);
+>  	pci_free_resource_list(resources);
+>  	return err;
+>  }
+> +
+> +/**
+> + * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
+> + * @dev: device node of the host bridge having the range property
+> + * @busno: bus number associated with the bridge root bus
+> + * @bus_max: maximum number of buses for this bridge
+> + * @resources: list where the range of resources will be added after DT parsing
+> + * @io_base: pointer to a variable that will contain on return the physical
+> + * address for the start of the I/O range. Can be NULL if the caller doesn't
+> + * expect I/O ranges to be present in the device tree.
+> + *
+> + * It is the caller's job to free the @resources list.
+> + *
+> + * This function will parse the "ranges" property of a PCI host bridge device
+> + * node and setup the resource mapping based on its content. It is expected
+> + * that the property conforms with the Power ePAPR document.
+> + *
+> + * It returns zero if the range parsing has been successful or a standard error
+> + * value if it failed.
+> + */
+> +int of_pci_get_host_bridge_resources(struct device_node *dev_node,
+> +			unsigned char busno, unsigned char bus_max,
+> +			struct list_head *resources, resource_size_t *io_base)
+> +{
+> +	return __of_pci_get_host_bridge_resources(NULL, dev_node, busno,
+> +						  bus_max, resources, io_base);
+> +}
+>  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+> +
+> +int devm_of_pci_get_host_bridge_resources(struct device *dev,
+> +			unsigned char busno, unsigned char bus_max,
+> +			struct list_head *resources, resource_size_t *io_base)
+> +{
+> +	return __of_pci_get_host_bridge_resources(dev, dev->of_node, busno,
+> +						  bus_max, resources, io_base);
+> +}
+> +EXPORT_SYMBOL_GPL(devm_of_pci_get_host_bridge_resources);
+> +
+>  #endif /* CONFIG_OF_ADDRESS */
+>  
+>  /**
+> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> index 091033a6b836..08b8f02426a5 100644
+> --- a/include/linux/of_pci.h
+> +++ b/include/linux/of_pci.h
+> @@ -71,11 +71,21 @@ of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+>  #endif
+>  
+>  #if defined(CONFIG_OF_ADDRESS)
+> -int of_pci_get_host_bridge_resources(struct device_node *dev,
+> +int of_pci_get_host_bridge_resources(struct device_node *dev_node,
+> +			unsigned char busno, unsigned char bus_max,
+> +			struct list_head *resources, resource_size_t *io_base);
+> +int devm_of_pci_get_host_bridge_resources(struct device *dev,
+>  			unsigned char busno, unsigned char bus_max,
+>  			struct list_head *resources, resource_size_t *io_base);
+>  #else
+> -static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
+> +static inline int of_pci_get_host_bridge_resources(struct device_node *dev_node,
+> +			unsigned char busno, unsigned char bus_max,
+> +			struct list_head *resources, resource_size_t *io_base)
+> +{
+> +	return -EINVAL;
+> +}
+> +
+> +static inline int devm_of_pci_get_host_bridge_resources(struct device *dev,
+>  			unsigned char busno, unsigned char bus_max,
+>  			struct list_head *resources, resource_size_t *io_base)
+>  {
+> 
 
-The current implementation of AER and error message broadcasting to the
-EP driver is tightly coupled and limited to AER service driver.
-It is important to factor out broadcasting and other link handling
-callbacks. So that not only when AER gets triggered, but also when DPC get
-triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+I left a small reviewer exercise in this patch behind, just noticed
+during a backport. Will resolved it via some v2, just waiting in case
+there will be further comments.
 
-The goal of the patch-set is:
-DPC should handle the error handling and recovery similar to AER, because 
-finally both are attempting recovery in some or the other way,
-and for that error handling and recovery framework has to be loosely
-coupled.
-
-It achieves uniformity and transparency to the error handling agents such
-as AER, DPC, with respect to recovery and error handling.
-
-So, this patch-set tries to unify lot of things between error agents and
-make them behave in a well defined way. (be it error (FATAL, NON_FATAL)
-handling or recovery).
-
-The FATAL error handling is handled with remove/reset_link/re-enumerate
-sequence while the NON_FATAL follows the default path.
-Documentation/PCI/pci-error-recovery.txt talks more on that.
-
-Changes since v13:
-    Bjorn's comments addressed
-    > handke FATAL errors with remove devices followed by re-enumeration.
-    > changes in AER and DPC along with required Documentation.
-Changes since v12:
-    Bjorn's and Keith's Comments addressed.
-    > Made DPC and AER error handling identical <aligned err.c>
-    > hanldled cases for hotplug enabled system differently.
-Changes since v11:
-    Bjorn's comments addressed.
-    > rename pcie-err.c to err.c
-    > removed EXPORT_SYMBOL
-    > made generic find_serivce function in port driver.
-    > removed mutex patch as no need to have mutex in pcie_do_recovery
-    > brough in DPC_FATAL in aer.h
-    > so now all the error codes (AER and DPC) are unified in aer.h
-Changes since v10:
-    Christoph Hellwig's, David Laight's and Randy Dunlap's
-    comments addressed.
-        > renamed pci_do_recovery to pcie_do_recovery
-        > removed inner braces in conditional statements.
-        > restrctured the code in pci_wait_for_link
-        > EXPORT_SYMBOL_GPL
-Changes since v9:
-    Sinan's comments addressed.
-        > bool active = true; unnecessary variable removed.
-Changes since v8:
-    Fixed Kbuild errors.
-Changes since v7:
-    Rebased the code on pci master
-        > https://kernel.googlesource.com/pub/scm/linux/kernel/git/helgaas/pci
-Changes since v6:
-    Sinan's and Stefan's comments implemented.
-        > reordered patch 6 and 7
-        > cleaned up
-Changes since v5:
-    Sinan's and Keith's comments incorporated.
-        > made separate patch for mutex
-        > unified error repotting codes into driver/pci/pci.h
-        > got rid of wait link active/inactive and
-          made generic function in driver/pci/pci.c
-Changes since v4:
-    Bjorn's comments incorporated.
-        > Renamed only do_recovery.
-        > moved the things more locally to drivers/pci/pci.h
-Changes since v3:
-    Bjorn's comments incorporated.
-        > Made separate patch renaming generic pci_err.c
-        > Introduce pci_err.h to contain all the error types and recovery
-        > removed all the dependencies on pci.h
-Changes since v2:
-    Based on feedback from Keith:
-    "
-    When DPC is triggered due to receipt of an uncorrectable error Message,
-    the Requester ID from the Message is recorded in the DPC Error
-    Source ID register and that Message is discarded and not forwarded Upstream.
-    "
-    Removed the patch where AER checks if DPC service is active
-Changes since v1:
-    Kbuild errors fixed:
-        > pci_find_dpc_dev made static
-        > ras_event.h updated
-        > pci_find_aer_service call with CONFIG check
-        > pci_find_dpc_service call with CONFIG check
-
-Oza Pawandeep (9):
-  PCI/AER: Rename error recovery to generic PCI naming
-  PCI/AER: Factor out error reporting from AER
-  PCI/PORTDRV: Implement generic find service
-  PCI/PORTDRV: Implement generic find device
-  PCI/DPC: Unify and plumb error handling into DPC
-  PCI: Unify wait for link active into generic PCI
-  PCI/DPC: Disable ERR_NONFATAL for DPC
-  PCI/AER/DPC: Align FATAL error handling for AER and DPC
-  pci-error-recovery: Add AER_FATAL handling
-
- Documentation/PCI/pci-error-recovery.txt |  35 ++-
- drivers/pci/hotplug/pciehp_hpc.c         |  20 +-
- drivers/pci/pci.c                        |  30 +++
- drivers/pci/pci.h                        |   5 +
- drivers/pci/pcie/Makefile                |   2 +-
- drivers/pci/pcie/aer/aerdrv.c            |   2 +
- drivers/pci/pcie/aer/aerdrv.h            |  30 ---
- drivers/pci/pcie/aer/aerdrv_core.c       | 317 +-------------------------
- drivers/pci/pcie/err.c                   | 374 +++++++++++++++++++++++++++++++
- drivers/pci/pcie/pcie-dpc.c              |  63 +++---
- drivers/pci/pcie/portdrv.h               |   4 +
- drivers/pci/pcie/portdrv_core.c          |  69 ++++++
- include/linux/aer.h                      |   2 +
- include/uapi/linux/pci_regs.h            |   3 +-
- 14 files changed, 552 insertions(+), 404 deletions(-)
- create mode 100644 drivers/pci/pcie/err.c
+Jan
 
 -- 
-2.7.4
+Siemens AG, Corporate Technology, CT RDA IOT SES-DE
+Corporate Competence Center Embedded Linux
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
