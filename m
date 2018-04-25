@@ -1,75 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:57406 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753102AbeD3KTo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Apr 2018 06:19:44 -0400
-Date: Mon, 30 Apr 2018 11:19:40 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 25 Apr 2018 17:27:45 +0100
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/9] Add new helper to allocate irq domain for hosts
-Message-ID: <20180430101940.GB32033@e107981-ln.cambridge.arm.com>
-References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Subject: Re: [PATCH 1/6] PCI: Make pci_get_new_domain_nr static
+Message-ID: <20180425162745.GB21628@e107981-ln.cambridge.arm.com>
+References: <cover.1524582822.git.jan.kiszka@siemens.com>
+ <a21882288c4664cc983a5741e8cbf6d59abacd46.1524582822.git.jan.kiszka@siemens.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <a21882288c4664cc983a5741e8cbf6d59abacd46.1524582822.git.jan.kiszka@siemens.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 27, 2018 at 04:22:02PM +0800, Shawn Lin wrote:
+On Tue, Apr 24, 2018 at 05:13:37PM +0200, Jan Kiszka wrote:
+> From: Jan Kiszka <jan.kiszka@siemens.com>
 > 
-> Hi Bjorn and Lorenzo,
-> 
-> PCI drivers use highly similar code block to allocate irq domain which
-> leads to code duplication than expected. This patchset adds a new helper,
-> pci_alloc_intx_irqd(), to avoid that as much as possible. Just leave
-> pcie-rockchip out now as it's under re-construct and will add incremental
-> patch for it if this series looks ok and the pcie-rockchip ongoing patches
-> got merge.
+> The only user of that function is of_pci_bus_find_domain_nr. Pure
+> cleanup.
 
-Is this patch series v1 of:
+"The only user of pci_get_new_domain_nr() is of_pci_bus_find_domain_nr().
+Since they are defined in the same compilation unit,
+pci_get_new_domain_nr() can be made static, which also simplifies
+preprocessor conditionals.
 
-https://patchwork.ozlabs.org/patch/906006/
+No functional change intended."
 
-?
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> ---
+>  drivers/pci/pci.c   | 6 ++----
+>  include/linux/pci.h | 3 ---
+>  2 files changed, 2 insertions(+), 7 deletions(-)
 
-Thanks,
-Lorenzo
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-> 
-> 
-> 
-> 
-> Shawn Lin (9):
->   PCI: Add new helper for allocating irq domain for INTx
->   PCI: dra7xx: Use pci_alloc_intx_irqd() helper to simplify the code
->   PCI: keystone-dw: Use pci_alloc_intx_irqd() helper to get irq domain
->     for INTx
->   PCI: aardvark: Use pci_alloc_intx_irqd() helper to get irq domain for
->     INTx
->   PCI: faraday: Use pci_alloc_intx_irqd() helper to get irq domain for
->     INTx
->   PCI: altera: Use pci_alloc_intx_irqd() helper to get irq domain for
->     INTx
->   PCI: mediatek: Use pci_alloc_intx_irqd() helper to get irq domain for
->     INTx
->   PCI: xilinx-nwl: Use pci_alloc_intx_irqd() helper to get irq domain
->     for INTx
->   PCI: xilinx: Use pci_alloc_intx_irqd() helper to get irq domain for
->     INTx
-> 
->  drivers/pci/dwc/pci-dra7xx.c       | 41 ++-------------------
->  drivers/pci/dwc/pci-keystone-dw.c  | 12 +++----
->  drivers/pci/host/pci-aardvark.c    | 24 +++----------
->  drivers/pci/host/pci-ftpci100.c    | 15 +++-----
->  drivers/pci/host/pcie-altera.c     | 38 +++-----------------
->  drivers/pci/host/pcie-mediatek.c   | 29 ++-------------
->  drivers/pci/host/pcie-xilinx-nwl.c | 21 +++--------
->  drivers/pci/host/pcie-xilinx.c     | 43 ++--------------------
->  include/linux/pci.h                | 74 ++++++++++++++++++++++++++++++++++++++
->  9 files changed, 104 insertions(+), 193 deletions(-)
-> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index e597655a5643..695c2bb4e853 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5702,15 +5702,14 @@ static void pci_no_domains(void)
+>  #endif
+>  }
+>  
+> -#ifdef CONFIG_PCI_DOMAINS
+> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
+>  static atomic_t __domain_nr = ATOMIC_INIT(-1);
+>  
+> -int pci_get_new_domain_nr(void)
+> +static int pci_get_new_domain_nr(void)
+>  {
+>  	return atomic_inc_return(&__domain_nr);
+>  }
+>  
+> -#ifdef CONFIG_PCI_DOMAINS_GENERIC
+>  static int of_pci_bus_find_domain_nr(struct device *parent)
+>  {
+>  	static int use_dt_domains = -1;
+> @@ -5765,7 +5764,6 @@ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
+>  			       acpi_pci_bus_find_domain_nr(bus);
+>  }
+>  #endif
+> -#endif
+>  
+>  /**
+>   * pci_ext_cfg_avail - can we access extended PCI config space?
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 73178a2fcee0..963232a6cd2e 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1510,12 +1510,10 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
+>   */
+>  #ifdef CONFIG_PCI_DOMAINS
+>  extern int pci_domains_supported;
+> -int pci_get_new_domain_nr(void);
+>  #else
+>  enum { pci_domains_supported = 0 };
+>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+> -static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+>  #endif /* CONFIG_PCI_DOMAINS */
+>  
+>  /*
+> @@ -1670,7 +1668,6 @@ static inline struct pci_dev *pci_get_domain_bus_and_slot(int domain,
+>  
+>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>  static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
+> -static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+>  
+>  #define dev_is_pci(d) (false)
+>  #define dev_is_pf(d) (false)
 > -- 
-> 1.9.1
+> 2.13.6
 > 
-> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
