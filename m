@@ -1,144 +1,155 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:56083 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753154AbeDJObT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2018 10:31:19 -0400
-Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
-To: Simon Horman <horms@verge.net.au>,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Dien Pham <dien.pham.ry@rvc.renesas.com>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20180408130925.19088-1-marek.vasut+renesas@gmail.com>
- <CAMuHMdVGBkEY2kE7auUwXBn2QSfX+yhxkFH--4tTw+XJ3WCk0w@mail.gmail.com>
- <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com>
- <20180409114159.azxeehjkeuinwrwe@verge.net.au>
- <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
- <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
-Date: Tue, 10 Apr 2018 16:31:16 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+References: <bug-199473-41252@https.bugzilla.kernel.org/> <CAErSpo4BOD3V7pgR75Gm7dYqvXYq1QfChjj16Jn1QgSK1W=Drw@mail.gmail.com>
+ <000701d3dc6f$61f91230$25eb3690$@dommel.be>
+In-Reply-To: <000701d3dc6f$61f91230$25eb3690$@dommel.be>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 25 Apr 2018 19:05:14 +0000
+Message-ID: <CAErSpo7FoAWrrCo9ifzCHtihsZUBG4HDS=kCT2ZjPi7qpVgWzg@mail.gmail.com>
+Subject: Re: [Bug 199473] New: pcieport does not scan devices behind PEX
+ switch, while resources are allocated
+To: janpieter.sollie@dommel.be
+Cc: linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/09/2018 02:26 PM, Simon Horman wrote:
-> On Mon, Apr 09, 2018 at 01:47:38PM +0200, Geert Uytterhoeven wrote:
->> Hi Simon, Marek,
->>
->> On Mon, Apr 9, 2018 at 1:41 PM, Simon Horman <horms@verge.net.au> wrote:
->>> On Mon, Apr 09, 2018 at 10:20:05AM +0200, Marek Vasut wrote:
->>>> On 04/09/2018 10:07 AM, Geert Uytterhoeven wrote:
->>>>> On Sun, Apr 8, 2018 at 3:09 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
->>>>>> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
->>>>>>
->>>>>> The controller clock can be switched off during suspend/resume,
->>>>>> let runtime PM take care of that.
->>>>>>
->>>>>> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
->>>>>> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
->>>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->>>>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->>>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
->>>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
->>>>>> Cc: linux-renesas-soc@vger.kernel.org
->>>>>> To: linux-pci@vger.kernel.org
->>>>>> ---
->>>>>> V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
->>>>>>       reordering of function calls in probe
->>>>>>     - Dispose of fail_clk in rcar_pcie_get_resources()
->>>>>> V3: - Fix up the failpath in probe function
->>>>>> V4: - Rebase on recent linux-next
->>>>>> V5: - Do not call pci_free_resource_list(&pcie->resources) if
->>>>>>       rcar_pcie_parse_request_of_pci_ranges() fails, since that
->>>>>>       functiona calls pci_free_resource_list() already.
->>>>>
->>>>> Thanks for the update!
->>>>>
->>>>>> --- a/drivers/pci/host/pcie-rcar.c
->>>>>> +++ b/drivers/pci/host/pcie-rcar.c
->>>>>
->>>>>> @@ -1124,22 +1111,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->>>>>>         if (err)
->>>>>>                 goto err_free_bridge;
->>>>>>
->>>>>> +       pm_runtime_enable(pcie->dev);
->>>>>> +       err = pm_runtime_get_sync(pcie->dev);
->>>>>> +       if (err < 0) {
->>>>>> +               dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
->>>>>> +               goto err_pm_disable;
->>>>>> +       }
->>>>>> +
->>>>>
->>>>> As you moved the pm_runtime setup up...
->>>>>
->>>>>>         err = rcar_pcie_get_resources(pcie);
->>>>>>         if (err < 0) {
->>>>>>                 dev_err(dev, "failed to request resources: %d\n", err);
->>>>>> -               goto err_free_resource_list;
->>>>>> +               goto err_pm_put;
->>>>>>         }
->>>>>>
->>>>>>         err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
->>>>>>         if (err)
->>>>>> -               goto err_free_resource_list;
->>>>>> -
->>>>>> -       pm_runtime_enable(dev);
->>>>>> -       err = pm_runtime_get_sync(dev);
->>>>>> -       if (err < 0) {
->>>>>> -               dev_err(dev, "pm_runtime_get_sync failed\n");
->>>>>> -               goto err_pm_disable;
->>>>>> -       }
->>>>>> +               goto err_pm_put;
->>>>>>
->>>>>>         /* Failure to get a link might just be that no cards are inserted */
->>>>>>         hw_init_fn = of_device_get_match_data(dev);
->>>>>> @@ -1174,9 +1161,8 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->>>>>>
->>>>>>  err_pm_disable:
->>>>>>         pm_runtime_disable(dev);
->>>>>
->>>>> ... shouldn't it be moved down here, for symmetry?
->>>>
->>>> I am reasonably certain the failpath should be correct now. Did I still
->>>> miss something ?
->>>
->>> It looks correct to me too. Geert are Marek and I missing something?
->>
->> Probably it will still work fine, but after this patch, Runtime PM is enabled
->> early, and disabled early, which is not symmetrical.
->>
->> I like symmetry ;-)
-> 
-> Understood. I think that is reasonable.
-> Marek, would you care to respin?
+[Please retain the mailing list cc when replying]
 
-I am looking into the driver, but I fail to see what Geert is trying to
-make me change here.
+On Wed, Apr 25, 2018 at 3:28 AM Janpieter Sollie
+<janpieter.sollie@dommel.be>
+wrote:
 
-The pairing looks as follows:
+> Hi Bjorn,
 
-.- rcar_pcie_parse_request_of_pci_ranges()
-|  (pm_runtime_enable is here)
-| .- pm_runtime_get_sync()
-| | .- rcar_pcie_get_resources()
-| | |
-| | '- pm_runtime_put()
-| '- pm_runtime_disable() + pci_free_resource_list()
-'- pci_free_host_bridge()
+> I'm at work now, but I saw your mail contained much more info than only
+the remark "does it work at 4.17?", so I'll try to answer all your
+questions:
+> 1. as stated, it only assigns the address space of the second and 3rd
+device when the PCI device is hotplugged and then the pc is restarted on a
+port before the first device.  In this case:
+>           - The Ellesmere 01.0-[4f] device is connected to port 3 (0-7) and
+is always reported.  For other devices, this is not the case.
+>           - The other devices are at port 1 and 2.  When adding them on a
+higher port, the workaround does not work.
+>           - The devices 05.0-[4c] and 07.0-[4b] are ALSO NOT VISIBLE in the
+BIOS IRQ listing, it just talks about an endpoint.  Not even with the
+workaround.  So a trick to discard bios info and let the PCIe switch report
+its devices would be nice.
 
-It looks symmetric to me ...
+BIOS info is not used when we enumerate devices, so I don't think there's
+really anything to discard.
 
--- 
-Best regards,
-Marek Vasut
+> 2. I am always building my kernel from the kernel.org sources, not from
+Gentoo sources, so it's not a distro problem.
+> 3. The workaround only works with kernel 4.17
+> 4. You are probably right about the Broadcom driver, as it only picks up
+the endpoint at 42.00.1 when loaded.  I have no idea wat it does either,
+besides taining the kernel.
+
+Let's simplify the situation by focusing only on v4.17.  We can
+also ignore the Broadcom driver, since it's not involved in enumeration.
+
+> So, to summarize:
+> - Why are ports 4-7 not working when a device is plugged in at port 3?
+
+I don't know what "port 3" and "ports 4-7" refer to.  Are these labels on
+slots in an expansion chassis?  Something from lspci, e.g., the port number
+from Link Capabilites, or the slot number from Slot Capabilities?
+
+> - Why do I need a hotplug event to push the device name into the kernel
+after a cold start?  This is complete madness, isn't it?
+
+I don't know why the hotplug would make a difference.  It does sound like
+complete madness.
+
+> - Why are resources allocated while the PCI slot is empty?
+
+I don't know exactly what resources you're referring to (bus numbers, MMIO
+space, I/O port space).  In general we try to allocate some space for all
+of those even if the slot is currently empty, because that makes it
+possible to hot-add devices in the slot later.
+
+In this case, the bus number space is quite constrained because the host
+bridge leading to the PEX switch only supports [bus 40-4f].  But I think
+that should be enough for this case, since the only switch in this tree is
+the PEX, and your Bonaire/Tobago/Ellesmere devices are all endpoints that
+only require one bus number each.
+
+If you run "lspci -vv" as root, it'll decode more details.
+
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: dinsdag 24 april 2018 21:31
+> To: janpieter.sollie@dommel.be
+> Cc: linux-pci@vger.kernel.org; Linux Kernel Mailing List
+> Subject: Fwd: [Bug 199473] New: pcieport does not scan devices behind PEX
+switch, while resources are allocated
+
+> Thanks for the report!
+
+> I don't understand exactly what the issue is yet.  You attached lspci
+> output from v4.14.27 and v4.17-rc1.  The v4.17-rc1 output shows several
+> devices (4b:00, 4c:00, 4f:00) below the PEX switch, while the v4.14.27
+> output shows only the 4f:00 devices.
+
+> Is the problem that v4.14.27 doesn't find the 4b:00 and 4c:00 devices?
+> Does v4.17-rc1 work correctly?
+
+> If v4.17-rc1 works but v4.14.27 does not, it's probably a question of
+> working with your distro to see if they can (1) identify some change that
+> fixed things, and (2) backport that change to the distro kernel.
+
+> The Broadcom driver you attached at comment #4 shouldn't be related to
+this
+> problem.  Device enumeration is performed by the PCI core and doesn't
+> require any additional drivers.  I didn't look at the Broadcom driver, so
+I
+> don't know what it does.  The PEX switch does include an endpoint
+> (42:00.1); it's possible the driver is for some functionality provided by
+> that endpoint.
+
+> ---------- Forwarded message ---------
+> From: <bugzilla-daemon@bugzilla.kernel.org>
+> Date: Mon, Apr 23, 2018 at 12:20 AM
+> Subject: [Bug 199473] New: pcieport does not scan devices behind PEX
+> switch, while resources are allocated
+> To: <bhelgaas@google.com>
+
+
+> https://bugzilla.kernel.org/show_bug.cgi?id=199473
+
+>                Bug ID: 199473
+>               Summary: pcieport does not scan devices behind PEX switch,
+>                        while resources are allocated
+>               Product: Drivers
+>               Version: 2.5
+>        Kernel Version: 4.17-rc1
+>              Hardware: x86-64
+>                    OS: Linux
+>                  Tree: Mainline
+>                Status: NEW
+>              Severity: normal
+>              Priority: P1
+>             Component: PCI
+>              Assignee: drivers_pci@kernel-bugs.osdl.org
+>              Reporter: janpieter.sollie@dommel.be
+>            Regression: No
+
+> Created attachment 275511
+>      --> https://bugzilla.kernel.org/attachment.cgi?id=275511&action=edit
+> dmesg stable kernel
+
+> pcieport assigns the PEX 8619 pcie expander switch ports, but does not
+scan
+> them for additional objects behind the ports. only 1 device is added @ pci
+> region 4f.  Workaround for getting all devices online: while pc is on,
+> remove
+> the card, reinsert it at a slot before the working device, and make a cold
+> start.
+> It would be nice if the pcie switches are scanned properly.
+
+> --
+> You are receiving this mail because:
+> You are watching the assignee of the bug.
