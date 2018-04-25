@@ -1,118 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v5 1/9] PCI: Take all bridges into account when calculating bus numbers for extension
-Date: Mon, 16 Apr 2018 13:34:45 +0300
-Message-Id: <20180416103453.46232-2-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:55454 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750962AbeDYFmn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 01:42:43 -0400
+Subject: Re: [PATCH] PCI: dwc: dra7xx: Use devm_ioremap_resource instead of
+ devm_ioremap_resource
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
+References: <52159ae41a6e5a804b91c84f69a2e1374d4d1063.1524038248.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <59152b8d-5096-10ef-1915-9333ef6f97f1@ti.com>
+Date: Wed, 25 Apr 2018 11:12:35 +0530
+MIME-Version: 1.0
+In-Reply-To: <52159ae41a6e5a804b91c84f69a2e1374d4d1063.1524038248.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When distributing extra buses between hotplug bridges for future
-extension we currently fail to take into account the fact that there
-might be non-hotplug bridges on the bus after the hotplug bridges. In
-this particular system we have following topology:
+Hi Gustavo,
 
-  01:00.0 --+- 02:00.0 -- Thunderbolt host controller
-            +- 02:01.0 (HotPlug+)
-            \- 02:02.0 -- xHCI host controller
+On Wednesday 18 April 2018 01:36 PM, Gustavo Pimentel wrote:
+> This fix aims to replace the use of devm_ioremap() by
+> devm_ioremap_resource() already discussed on [1].
+> 
+> [1] -> https://patchwork.kernel.org/patch/10173831/
 
-Now, pci_scan_child_bus_extend() is supposed to distribute remaining bus
-numbers to the hotplug bridge at 02:01.0 but only after all bridges on
-that bus have been been accounted for. Since we don't check upfront that
-there will be another non-hotplug bridge after the hotplug bridge
-02:01.0 it will inadvertently extend over the bus space of the
-non-hotplug bridge:
+Please use https://lkml.kernel.org/ redirector as mentioned in
+Documentation/process/submitting-patches.rst
 
-  pci 0000:01:00.0: PCI bridge to [bus 02-39]
-  ...
-  pci_bus 0000:04: [bus 04-39] extended by 0x35
-  pci_bus 0000:04: bus scan returning with max=39
-  pci_bus 0000:04: busn_res: [bus 04-39] end is updated to 39
-  pci 0000:02:02.0: scanning [bus 00-00] behind bridge, pass 1
-  pci_bus 0000:3a: scanning bus
-  pci_bus 0000:3a: bus scan returning with max=3a
-  pci_bus 0000:3a: busn_res: [bus 3a] end is updated to 3a
-  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
-  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
-  pci_bus 0000:02: bus scan returning with max=3a
-  pci_bus 0000:02: busn_res: [bus 02-39] end can not be updated to 3a
-
-Resulting 'lspci -t' output looks like this:
-
-  +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
-                             ^^   +-01.0-[04-39]--
-                                  \-02.0-[3a]----00.0
-                                          ^^
-The xHCI host controller (3a:00.0) behind downstream bridge at 02:02.0
-is not usable anymore.
-
-To fix this reserve at least one bus for each bridge during scanning of
-already configured bridges. Then we use this information in the second
-scan to correct the available extra bus space for hotplug bridges.
-
-After this change the 'lspci -t' output is what is expected:
-
-  +-1b.0-[01-39]----00.0-[02-39]--+-00.0-[03]----00.0
-                                  +-01.0-[04-38]--
-                                  \-02.0-[39]----00.0
-
-Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
-Reported-by: Mario Limonciello <mario.limonciello@dell.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: stable@vger.kernel.org
----
- drivers/pci/probe.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac91b6fd0bcd..7c34a2ccb514 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2638,7 +2638,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 	for_each_pci_bridge(dev, bus) {
- 		cmax = max;
- 		max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
--		used_buses += cmax - max;
-+		/*
-+		 * Reserve one bus for each bridge now to avoid
-+		 * extending hotplug bridges too much during the second
-+		 * scan below.
-+		 */
-+		used_buses++;
-+		if (cmax - max > 1)
-+			used_buses += cmax - max - 1;
- 	}
- 
- 	/* Scan bridges that need to be reconfigured */
-@@ -2661,12 +2668,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 			 * bridges if any.
- 			 */
- 			buses = available_buses / hotplug_bridges;
--			buses = min(buses, available_buses - used_buses);
-+			buses = min(buses, available_buses - used_buses + 1);
- 		}
- 
- 		cmax = max;
- 		max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
--		used_buses += max - cmax;
-+		/* One bus is already accounted so don't add it again */
-+		if (max - cmax > 1)
-+			used_buses += max - cmax - 1;
- 	}
- 
- 	/*
--- 
-2.16.3
-
+Once that is fixed
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+>  drivers/pci/dwc/pci-dra7xx.c | 18 +++++++++---------
+>  1 file changed, 9 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index ed8558d..b410bb4 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -406,14 +406,14 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
+>  	ep->ops = &pcie_ep_ops;
+>  
+>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
+> -	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+> -	if (!pci->dbi_base)
+> -		return -ENOMEM;
+> +	pci->dbi_base = devm_ioremap_resource(dev, res);
+> +	if (IS_ERR(pci->dbi_base))
+> +		return PTR_ERR(pci->dbi_base);
+>  
+>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
+> -	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
+> -	if (!pci->dbi_base2)
+> -		return -ENOMEM;
+> +	pci->dbi_base2 = devm_ioremap_resource(dev, res);
+> +	if (IS_ERR(pci->dbi_base2))
+> +		return PTR_ERR(pci->dbi_base2);
+>  
+>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+>  	if (!res)
+> @@ -459,9 +459,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+>  		return ret;
+>  
+>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
+> -	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+> -	if (!pci->dbi_base)
+> -		return -ENOMEM;
+> +	pci->dbi_base = devm_ioremap_resource(dev, res);
+> +	if (IS_ERR(pci->dbi_base))
+> +		return PTR_ERR(pci->dbi_base);
+>  
+>  	pp->ops = &dra7xx_pcie_host_ops;
+>  
+> 
