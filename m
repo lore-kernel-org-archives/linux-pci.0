@@ -1,64 +1,160 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 6 Apr 2018 08:33:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH v4 1/6] PCI: aardvark: Introduce an
- advk_pcie_valid_device() helper
-Message-ID: <20180406133356.GA163363@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180329083946.25970-1-thomas.petazzoni@bootlin.com>
- <20180329083946.25970-2-thomas.petazzoni@bootlin.com>
- <20180404112843.GA24669@red-moon>
- <20180406112128.6b904f39@windsurf>
-MIME-Version: 1.0
-In-Reply-To: <20180406112128.6b904f39@windsurf>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Gregory Clement <gregory.clement@bootlin.com>, stable@vger.kernel.org,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:50798 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751417AbeDYFPs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 01:15:48 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        iommu@lists.linux-foundation.org
+Cc: sstabellini@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org, linux-mips@linux-mips.org,
+        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 01/13] iommu-common: move to arch/sparc
+Date: Wed, 25 Apr 2018 07:15:27 +0200
+Message-Id: <20180425051539.1989-2-hch@lst.de>
+In-Reply-To: <20180425051539.1989-1-hch@lst.de>
+References: <20180425051539.1989-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 06, 2018 at 11:21:28AM +0200, Thomas Petazzoni wrote:
-> Hello,
-> 
-> On Wed, 4 Apr 2018 12:28:43 +0100, Lorenzo Pieralisi wrote:
-> > On Thu, Mar 29, 2018 at 10:39:41AM +0200, Thomas Petazzoni wrote:
-> > > In other to mimic other PCIe host controller drivers, introduce an
-> > > advk_pcie_valid_device() helper, used in the configuration read/write
-> > > functions.
-> > > 
-> > > This patch by itself is not a fix, but it is required for a follow-up
-> > > patch that is a fix, hence the Fixes tag and the Cc to stable.  
-> > 
-> > Should not we just reshuffle patch 1 and 2 instead of sending this
-> > patch to stable ? I appreciate the merge window is open and timing is
-> > quite tight, it is just to avoid sending churn to stable kernels
-> > for not much.
-> 
-> I can certainly do that, but it's actually Bjorn who asked in the first
-> place to introduce the advk_pcie_valid_device() helper.
+This code is only used by sparc, and all new iommu drivers should use the
+drivers/iommu/ framework.  Also remove the unused exports.
 
-I did suggest [1] adding advk_pcie_valid_device() to match other
-drivers, but I don't care about the order of these patches.  If it
-makes more sense to put the fix first for easier backporting to
-stable, that's fine with me.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+---
+ {include/linux => arch/sparc/include/asm}/iommu-common.h | 0
+ arch/sparc/include/asm/iommu_64.h                        | 2 +-
+ arch/sparc/kernel/Makefile                               | 2 +-
+ {lib => arch/sparc/kernel}/iommu-common.c                | 5 +----
+ arch/sparc/kernel/iommu.c                                | 2 +-
+ arch/sparc/kernel/ldc.c                                  | 2 +-
+ arch/sparc/kernel/pci_sun4v.c                            | 2 +-
+ lib/Makefile                                             | 2 +-
+ 8 files changed, 7 insertions(+), 10 deletions(-)
+ rename {include/linux => arch/sparc/include/asm}/iommu-common.h (100%)
+ rename {lib => arch/sparc/kernel}/iommu-common.c (98%)
 
-[1] https://lkml.kernel.org/r/20180110011136.GB157182@bhelgaas-glaptop.roam.corp.google.com
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/include/linux/iommu-common.h b/arch/sparc/include/asm/iommu-common.h
+similarity index 100%
+rename from include/linux/iommu-common.h
+rename to arch/sparc/include/asm/iommu-common.h
+diff --git a/arch/sparc/include/asm/iommu_64.h b/arch/sparc/include/asm/iommu_64.h
+index 9ed6b54caa4b..0ef6dedf747e 100644
+--- a/arch/sparc/include/asm/iommu_64.h
++++ b/arch/sparc/include/asm/iommu_64.h
+@@ -17,7 +17,7 @@
+ #define IOPTE_WRITE   0x0000000000000002UL
+ 
+ #define IOMMU_NUM_CTXS	4096
+-#include <linux/iommu-common.h>
++#include <asm/iommu-common.h>
+ 
+ struct iommu_arena {
+ 	unsigned long	*map;
+diff --git a/arch/sparc/kernel/Makefile b/arch/sparc/kernel/Makefile
+index 76cb57750dda..a284662b0e4c 100644
+--- a/arch/sparc/kernel/Makefile
++++ b/arch/sparc/kernel/Makefile
+@@ -59,7 +59,7 @@ obj-$(CONFIG_SPARC32)   += leon_pmc.o
+ 
+ obj-$(CONFIG_SPARC64)   += reboot.o
+ obj-$(CONFIG_SPARC64)   += sysfs.o
+-obj-$(CONFIG_SPARC64)   += iommu.o
++obj-$(CONFIG_SPARC64)   += iommu.o iommu-common.o
+ obj-$(CONFIG_SPARC64)   += central.o
+ obj-$(CONFIG_SPARC64)   += starfire.o
+ obj-$(CONFIG_SPARC64)   += power.o
+diff --git a/lib/iommu-common.c b/arch/sparc/kernel/iommu-common.c
+similarity index 98%
+rename from lib/iommu-common.c
+rename to arch/sparc/kernel/iommu-common.c
+index 55b00de106b5..59cb16691322 100644
+--- a/lib/iommu-common.c
++++ b/arch/sparc/kernel/iommu-common.c
+@@ -8,9 +8,9 @@
+ #include <linux/bitmap.h>
+ #include <linux/bug.h>
+ #include <linux/iommu-helper.h>
+-#include <linux/iommu-common.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/hash.h>
++#include <asm/iommu-common.h>
+ 
+ static unsigned long iommu_large_alloc = 15;
+ 
+@@ -93,7 +93,6 @@ void iommu_tbl_pool_init(struct iommu_map_table *iommu,
+ 	p->hint = p->start;
+ 	p->end = num_entries;
+ }
+-EXPORT_SYMBOL(iommu_tbl_pool_init);
+ 
+ unsigned long iommu_tbl_range_alloc(struct device *dev,
+ 				struct iommu_map_table *iommu,
+@@ -224,7 +223,6 @@ unsigned long iommu_tbl_range_alloc(struct device *dev,
+ 
+ 	return n;
+ }
+-EXPORT_SYMBOL(iommu_tbl_range_alloc);
+ 
+ static struct iommu_pool *get_pool(struct iommu_map_table *tbl,
+ 				   unsigned long entry)
+@@ -264,4 +262,3 @@ void iommu_tbl_range_free(struct iommu_map_table *iommu, u64 dma_addr,
+ 	bitmap_clear(iommu->map, entry, npages);
+ 	spin_unlock_irqrestore(&(pool->lock), flags);
+ }
+-EXPORT_SYMBOL(iommu_tbl_range_free);
+diff --git a/arch/sparc/kernel/iommu.c b/arch/sparc/kernel/iommu.c
+index b08dc3416f06..40d008b0bd3e 100644
+--- a/arch/sparc/kernel/iommu.c
++++ b/arch/sparc/kernel/iommu.c
+@@ -14,7 +14,7 @@
+ #include <linux/errno.h>
+ #include <linux/iommu-helper.h>
+ #include <linux/bitmap.h>
+-#include <linux/iommu-common.h>
++#include <asm/iommu-common.h>
+ 
+ #ifdef CONFIG_PCI
+ #include <linux/pci.h>
+diff --git a/arch/sparc/kernel/ldc.c b/arch/sparc/kernel/ldc.c
+index 86b625f9d8dc..c0fa3ef6cf01 100644
+--- a/arch/sparc/kernel/ldc.c
++++ b/arch/sparc/kernel/ldc.c
+@@ -16,7 +16,7 @@
+ #include <linux/list.h>
+ #include <linux/init.h>
+ #include <linux/bitmap.h>
+-#include <linux/iommu-common.h>
++#include <asm/iommu-common.h>
+ 
+ #include <asm/hypervisor.h>
+ #include <asm/iommu.h>
+diff --git a/arch/sparc/kernel/pci_sun4v.c b/arch/sparc/kernel/pci_sun4v.c
+index 249367228c33..565d9ac883d0 100644
+--- a/arch/sparc/kernel/pci_sun4v.c
++++ b/arch/sparc/kernel/pci_sun4v.c
+@@ -16,7 +16,7 @@
+ #include <linux/export.h>
+ #include <linux/log2.h>
+ #include <linux/of_device.h>
+-#include <linux/iommu-common.h>
++#include <asm/iommu-common.h>
+ 
+ #include <asm/iommu.h>
+ #include <asm/irq.h>
+diff --git a/lib/Makefile b/lib/Makefile
+index ce20696d5a92..94203b5eecd4 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -147,7 +147,7 @@ obj-$(CONFIG_AUDIT_GENERIC) += audit.o
+ obj-$(CONFIG_AUDIT_COMPAT_GENERIC) += compat_audit.o
+ 
+ obj-$(CONFIG_SWIOTLB) += swiotlb.o
+-obj-$(CONFIG_IOMMU_HELPER) += iommu-helper.o iommu-common.o
++obj-$(CONFIG_IOMMU_HELPER) += iommu-helper.o
+ obj-$(CONFIG_FAULT_INJECTION) += fault-inject.o
+ obj-$(CONFIG_NOTIFIER_ERROR_INJECTION) += notifier-error-inject.o
+ obj-$(CONFIG_PM_NOTIFIER_ERROR_INJECT) += pm-notifier-error-inject.o
+-- 
+2.17.0
