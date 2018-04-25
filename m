@@ -1,46 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 3 Apr 2018 09:05:52 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jacob Keller <jacob.keller@gmail.com>
-Cc: Tal Gilboa <talgi@mellanox.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        everest-linux-l2@cavium.com, intel-wired-lan@lists.osuosl.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 03/14] PCI: Add pcie_bandwidth_capable() to compute
- max supported link bandwidth
-Message-ID: <20180403140552.GB60020@bhelgaas-glaptop.roam.corp.google.com>
-References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152244390359.135666.14890735614456271032.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <31e66048-e8b8-47ba-baf5-023560b4c124@mellanox.com>
- <20180402004049.GA131023@bhelgaas-glaptop.roam.corp.google.com>
- <50346f44-de3f-b226-69ad-6de45e94e261@mellanox.com>
- <20180402140501.GA244675@bhelgaas-glaptop.roam.corp.google.com>
- <CA+P7+xr1N+X5DyPwNpWUtfqr9U4pLL9bMoB1wkBdf2K9n6cxKw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+P7+xr1N+X5DyPwNpWUtfqr9U4pLL9bMoB1wkBdf2K9n6cxKw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:52778 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751494AbeDYFQs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 01:16:48 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        iommu@lists.linux-foundation.org
+Cc: sstabellini@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org, linux-mips@linux-mips.org,
+        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 13/13] swiotlb: remove the CONFIG_DMA_DIRECT_OPS ifdefs
+Date: Wed, 25 Apr 2018 07:15:39 +0200
+Message-Id: <20180425051539.1989-14-hch@lst.de>
+In-Reply-To: <20180425051539.1989-1-hch@lst.de>
+References: <20180425051539.1989-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 02, 2018 at 05:30:54PM -0700, Jacob Keller wrote:
-> On Mon, Apr 2, 2018 at 7:05 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > +/* PCIe speed to Mb/s reduced by encoding overhead */
-> > +#define PCIE_SPEED2MBS_ENC(speed) \
-> > +       ((speed) == PCIE_SPEED_16_0GT ? (16000*(128/130)) : \
-> > +        (speed) == PCIE_SPEED_8_0GT  ?  (8000*(128/130)) : \
-> > +        (speed) == PCIE_SPEED_5_0GT  ?  (5000*(8/10)) : \
-> > +        (speed) == PCIE_SPEED_2_5GT  ?  (2500*(8/10)) : \
-> > +        0)
-> > +
-> 
-> Should this be "(speed * x ) / y" instead? wouldn't they calculate
-> 128/130 and truncate that to zero before multiplying by the speed? Or
-> are compilers smart enough to do this the other way to avoid the
-> losses?
+swiotlb now selects the DMA_DIRECT_OPS config symbol, so this will
+always be true.
 
-Yep, thanks for saving me yet more embarrassment.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ lib/swiotlb.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/lib/swiotlb.c b/lib/swiotlb.c
+index fece57566d45..6954f7ad200a 100644
+--- a/lib/swiotlb.c
++++ b/lib/swiotlb.c
+@@ -692,7 +692,6 @@ void swiotlb_tbl_sync_single(struct device *hwdev, phys_addr_t tlb_addr,
+ 	}
+ }
+ 
+-#ifdef CONFIG_DMA_DIRECT_OPS
+ static inline bool dma_coherent_ok(struct device *dev, dma_addr_t addr,
+ 		size_t size)
+ {
+@@ -764,7 +763,6 @@ static bool swiotlb_free_buffer(struct device *dev, size_t size,
+ 				 DMA_ATTR_SKIP_CPU_SYNC);
+ 	return true;
+ }
+-#endif
+ 
+ static void
+ swiotlb_full(struct device *dev, size_t size, enum dma_data_direction dir,
+@@ -1045,7 +1043,6 @@ swiotlb_dma_supported(struct device *hwdev, u64 mask)
+ 	return __phys_to_dma(hwdev, io_tlb_end - 1) <= mask;
+ }
+ 
+-#ifdef CONFIG_DMA_DIRECT_OPS
+ void *swiotlb_alloc(struct device *dev, size_t size, dma_addr_t *dma_handle,
+ 		gfp_t gfp, unsigned long attrs)
+ {
+@@ -1089,4 +1086,3 @@ const struct dma_map_ops swiotlb_dma_ops = {
+ 	.unmap_page		= swiotlb_unmap_page,
+ 	.dma_supported		= dma_direct_supported,
+ };
+-#endif /* CONFIG_DMA_DIRECT_OPS */
+-- 
+2.17.0
