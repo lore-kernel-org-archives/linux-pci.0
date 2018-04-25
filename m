@@ -1,90 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:43540 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759307AbeD1B4s (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 21:56:48 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2 2/9] PCI: dra7xx: Use pci_alloc_intx_irqd() helper to simplify the code
-Date: Sat, 28 Apr 2018 09:49:00 +0800
-Message-Id: <1524880140-100951-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 25 Apr 2018 10:58:20 -0400 (EDT)
+Message-Id: <20180425.105820.1294383479112934639.davem@davemloft.net>
+To: hch@lst.de
+Subject: Re: [PATCH 01/13] iommu-common: move to arch/sparc
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20180425051539.1989-2-hch@lst.de>
+References: <20180425051539.1989-1-hch@lst.de>
+ <20180425051539.1989-2-hch@lst.de>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-mips@linux-mips.org, sstabellini@kernel.org, konrad.wilk@oracle.com,
+ linux-pci@vger.kernel.org, x86@kernel.org, linux-mm@kvack.org,
+ iommu@lists.linux-foundation.org, sparclinux@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+From: Christoph Hellwig <hch@lst.de>
+Date: Wed, 25 Apr 2018 07:15:27 +0200
 
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+> This code is only used by sparc, and all new iommu drivers should use the
+> drivers/iommu/ framework.  Also remove the unused exports.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Anshuman Khandual <khandual@linux.vnet.ibm.com>
 
-Changes in v2: None
+Acked-by: David S. Miller <davem@davemloft.net>
 
- drivers/pci/dwc/pci-dra7xx.c | 41 ++---------------------------------------
- 1 file changed, 2 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index ed8558d..45f6456 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -212,43 +212,6 @@ static int dra7xx_pcie_host_init(struct pcie_port *pp)
- 	.host_init = dra7xx_pcie_host_init,
- };
- 
--static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
--				irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--static const struct irq_domain_ops intx_domain_ops = {
--	.map = dra7xx_pcie_intx_map,
--	.xlate = pci_irqd_intx_xlate,
--};
--
--static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct device *dev = pci->dev;
--	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
--	struct device_node *node = dev->of_node;
--	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
--
--	if (!pcie_intc_node) {
--		dev_err(dev, "No PCIe Intc node found\n");
--		return -ENODEV;
--	}
--
--	dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--						   &intx_domain_ops, pp);
--	if (!dra7xx->irq_domain) {
--		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		return -ENODEV;
--	}
--
--	return 0;
--}
--
- static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- {
- 	struct dra7xx_pcie *dra7xx = arg;
-@@ -454,8 +417,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 		return ret;
- 	}
- 
--	ret = dra7xx_pcie_init_irq_domain(pp);
--	if (ret < 0)
-+	dra7xx->irq_domain = pci_alloc_intx_irqd(dev, dra7xx, true, NULL, NULL);
-+	if (IS_ERR(dra7xx->irq_domain))
- 		return ret;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
--- 
-1.9.1
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
