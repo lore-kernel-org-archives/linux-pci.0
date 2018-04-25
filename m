@@ -1,58 +1,52 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 24 Apr 2018 08:55:49 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Subject: Re: [PATCH 11/12] swiotlb: move the SWIOTLB config symbol to
- lib/Kconfig
-Message-ID: <20180424065549.GA18468@lst.de>
-References: <20180423170419.20330-1-hch@lst.de>
- <20180423170419.20330-12-hch@lst.de>
- <20180423235205.GH16141@n2100.armlinux.org.uk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:54524 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755232AbeDYPtl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 11:49:41 -0400
+Subject: Re: [PATCH 1/2] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+References: <20180318105253.30532-1-marek.vasut+renesas@gmail.com>
+ <20180425141329.GA20923@e107981-ln.cambridge.arm.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <2b9d300b-09d7-d2ad-a22d-4f532276ae4c@gmail.com>
+Date: Wed, 25 Apr 2018 17:49:37 +0200
 MIME-Version: 1.0
-In-Reply-To: <20180423235205.GH16141@n2100.armlinux.org.uk>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-mips@linux-mips.org, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- linux-pci@vger.kernel.org, x86@kernel.org, linux-block@vger.kernel.org,
- linux-mm@kvack.org, iommu@lists.linux-foundation.org,
- sparclinux@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180425141329.GA20923@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 24, 2018 at 12:52:05AM +0100, Russell King - ARM Linux wrote:
-> On Mon, Apr 23, 2018 at 07:04:18PM +0200, Christoph Hellwig wrote:
-> > This way we have one central definition of it, and user can select it as
-> > needed.  Note that we also add a second ARCH_HAS_SWIOTLB symbol to
-> > indicate the architecture supports swiotlb at all, so that we can still
-> > make the usage optional for a few architectures that want this feature
-> > to be user selectable.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 04/25/2018 04:13 PM, Lorenzo Pieralisi wrote:
+> Hi Marek,
 > 
-> Hmm, this looks like we end up with NEED_SG_DMA_LENGTH=y on ARM by
-> default, which probably isn't a good idea - ARM pre-dates the dma_length
-> parameter in scatterlists, and I don't think all code is guaranteed to
-> do the right thing if this is enabled.
+> On Sun, Mar 18, 2018 at 11:52:52AM +0100, Marek Vasut wrote:
+>> The data link active signal usually takes ~20 uSec to be asserted,
+>> poll the bit more often to avoid useless delays in this function.
+>>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>> Cc: linux-renesas-soc@vger.kernel.org
+>> ---
+>>  drivers/pci/host/pcie-rcar.c | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> I assume this patch is still a valid change, I noticed you split this
+> series but I think this patch was not updated so I should take it as-is.
+> 
+> Please let me know.
 
-We shouldn't end up with NEED_SG_DMA_LENGTH=y on ARM by default.
-It is only select by ARM_DMA_USE_IOMMU before the patch, and it will
-now also be selected by SWIOTLB, which for arm is never used or seleted
-directly by anything but xen-swiotlb.
+The discussion from a month ago would indicate that I need to resubmit it.
 
-Then again looking at the series there shouldn't be any need to
-even select NEED_SG_DMA_LENGTH for swiotlb, as we'll never merge segments,
-so I'll fix that up.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Best regards,
+Marek Vasut
