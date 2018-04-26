@@ -1,112 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:40105 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752609AbeDBQT5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Apr 2018 12:19:57 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 4/7] PCI/DPC: Defer event handling to work queue
-Date: Mon,  2 Apr 2018 10:22:00 -0600
-Message-Id: <20180402162203.3370-5-keith.busch@intel.com>
-In-Reply-To: <20180402162203.3370-1-keith.busch@intel.com>
-References: <20180402162203.3370-1-keith.busch@intel.com>
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:41087 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754727AbeDZOmn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2018 10:42:43 -0400
+MIME-Version: 1.0
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 26 Apr 2018 16:42:42 +0200
+Message-ID: <CAJZ5v0isQnkPq-47G4n5C3vyNoY2xWokzVTC35MBSPGivfxqjQ@mail.gmail.com>
+Subject: [GIT PULL] Power management fixes for v4.17-rc3
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This moves all event handling to the existing work queue, which will
-make passing event information simpler to the handler.
+Hi Linus,
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/pcie-dpc.c | 53 ++++++++++++++++++++-------------------------
- 1 file changed, 24 insertions(+), 29 deletions(-)
+Please pull from the tag
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 38b2d0586c72..a28901e88f7b 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -45,6 +45,8 @@ static const char * const rp_pio_error_string[] = {
- 	"Memory Request Completion Timeout",		 /* Bit Position 18 */
- };
- 
-+static void dpc_process_rp_pio_error(struct dpc_dev *dpc);
-+
- static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
- {
- 	unsigned long timeout = jiffies + HZ;
-@@ -87,7 +89,27 @@ static void dpc_work(struct work_struct *work)
- 	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
- 	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
- 	struct pci_bus *parent = pdev->subordinate;
--	u16 cap = dpc->cap_pos;
-+	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
-+
-+	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
-+	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID, &source);
-+
-+	dev_info(&pdev->dev, "DPC containment event, status:%#06x source:%#06x\n",
-+		status, source);
-+
-+	reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN) >> 1;
-+	ext_reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT) >> 5;
-+
-+	dev_warn(&pdev->dev, "DPC %s detected, remove downstream devices\n",
-+		 (reason == 0) ? "unmasked uncorrectable error" :
-+		 (reason == 1) ? "ERR_NONFATAL" :
-+		 (reason == 2) ? "ERR_FATAL" :
-+		 (ext_reason == 0) ? "RP PIO error" :
-+		 (ext_reason == 1) ? "software trigger" :
-+				     "reserved error");
-+
-+	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
-+		dpc_process_rp_pio_error(dpc);
- 
- 	pci_lock_rescan_remove();
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-@@ -176,39 +198,12 @@ static irqreturn_t dpc_irq(int irq, void *context)
- {
- 	struct dpc_dev *dpc = (struct dpc_dev *)context;
- 	struct pci_dev *pdev = dpc->dev->port;
--	struct device *dev = &dpc->dev->device;
--	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
-+	u16 cap = dpc->cap_pos, status;
- 
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
- 	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT) || status == (u16)(~0))
- 		return IRQ_NONE;
- 
--	if (!(status & PCI_EXP_DPC_STATUS_TRIGGER)) {
--		pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
--				      PCI_EXP_DPC_STATUS_INTERRUPT);
--		return IRQ_HANDLED;
--	}
--
--	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID,
--			     &source);
--
--	dev_info(dev, "DPC containment event, status:%#06x source:%#06x\n",
--		status, source);
--
--	reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN) >> 1;
--	ext_reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT) >> 5;
--
--	dev_warn(dev, "DPC %s detected, remove downstream devices\n",
--		 (reason == 0) ? "unmasked uncorrectable error" :
--		 (reason == 1) ? "ERR_NONFATAL" :
--		 (reason == 2) ? "ERR_FATAL" :
--		 (ext_reason == 0) ? "RP PIO error" :
--		 (ext_reason == 1) ? "software trigger" :
--				     "reserved error");
--	/* show RP PIO error detail information */
--	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
--		dpc_process_rp_pio_error(dpc);
--
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
- 			      PCI_EXP_DPC_STATUS_INTERRUPT);
- 	if (status & PCI_EXP_DPC_STATUS_TRIGGER)
--- 
-2.14.3
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ pm-4.17-rc3
+
+with top-most commit e140c4af1b63125dff629e8339793390201e2470
+
+ Merge branches 'acpi-pm' and 'pm-cpufreq'
+
+on top of commit 6d08b06e67cd117f6992c46611dfb4ce267cd71e
+
+ Linux 4.17-rc2
+
+to receive power management fixes for 4.17-rc3.
+
+These are a Low Power S0 Idle quirk, a hibernation handling fix for
+the PCI bus type and a brcmstb-avs-cpufreq driver fixup removing
+development debug code from it.
+
+Specifics:
+
+ - Blacklist the Low Power S0 Idle _DSM on ThinkPad X1 Tablet(2016)
+   where it causes issues and make it use ACPI S3 which works instead
+   of the non-working suspend-to-idle by default (Chen Yu).
+
+ - Fix the handling of hibernation in the PCI core for devices with
+   the DPM_FLAG_SMART_SUSPEND flag set to fix a regression affecting
+   intel-lpss I2C devices (Mika Westerberg).
+
+ - Drop development debug code from the brcmstb-avs-cpufreq driver
+   (Markus Mayer).
+
+Thanks!
+
+
+---------------
+
+Chen Yu (1):
+      ACPI / PM: Blacklist Low Power S0 Idle _DSM for ThinkPad X1 Tablet(2016)
+
+Markus Mayer (1):
+      cpufreq: brcmstb-avs-cpufreq: remove development debug support
+
+Mika Westerberg (1):
+      PCI / PM: Do not clear state_saved in pci_pm_freeze() when smart
+suspend is set
+
+---------------
+
+ drivers/acpi/sleep.c                  |  13 ++
+ drivers/cpufreq/Kconfig.arm           |  10 --
+ drivers/cpufreq/brcmstb-avs-cpufreq.c | 323 +---------------------------------
+ drivers/pci/pci-driver.c              |   5 +-
+ 4 files changed, 17 insertions(+), 334 deletions(-)
