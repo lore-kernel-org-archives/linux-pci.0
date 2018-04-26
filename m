@@ -1,379 +1,162 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:42000 "EHLO smtp1.it.da.ut.ee"
+Received: from mga04.intel.com ([192.55.52.120]:33132 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751972AbeDKH7X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Apr 2018 03:59:23 -0400
-Date: Wed, 11 Apr 2018 10:59:19 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-        sparclinux@vger.kernel.org
-Subject: Re: sparc64 PCI BAR allocation is still problematic
-In-Reply-To: <20180410185610.GD24642@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.LRH.2.21.1804111045330.18432@math.ut.ee>
-References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee> <20180410173437.GB24642@bhelgaas-glaptop.roam.corp.google.com> <alpine.LRH.2.21.1804102144240.32411@math.ut.ee> <20180410185610.GD24642@bhelgaas-glaptop.roam.corp.google.com>
+        id S1753459AbeDZG1Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 26 Apr 2018 02:27:24 -0400
+Date: Thu, 26 Apr 2018 14:26:28 +0800
+From: kbuild test robot <lkp@intel.com>
+To: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Cc: kbuild-all@01.org, Alex Williamson <alex.williamson@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI: Add pci_bus_specific_read_dev_vendor_id() to
+ workaround PCI switch specific issues prior to accessing newly added
+ endpoint
+Message-ID: <201804261426.2HZUSMma%fengguang.wu@intel.com>
+References: <16461819-82a1-8122-4a30-842f9a078988@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: multipart/mixed; boundary="wac7ysb48OaltWcw"
+In-Reply-To: <16461819-82a1-8122-4a30-842f9a078988@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Oops, sorry, I can't easily compile test it.  Here's an updated patch:
-> 
-> commit a9ded309cbf3f57e9979848fd0aa0ffacdf11f1a
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Tue Apr 10 08:47:34 2018 -0500
 
-Thanks, this patch compiles and works - Video RAM related BAR allocation 
-errors are gone.
+--wac7ysb48OaltWcw
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Hera are the /proc/iomem's but unfortunately the physical 
-addresses have been censored by security:
+Hi James,
 
-Netra X1: no BAR errors
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-  00000000-00000000 : Kernel code
-  00000000-00000000 : Kernel data
-  00000000-00000000 : Kernel bss
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : /pci@1f,0
-  00000000-00000000 : 0000:00:0c.0
-    00000000-00000000 : tulip
-  00000000-00000000 : 0000:00:05.0
-    00000000-00000000 : tulip
-  00000000-00000000 : 0000:00:0c.0
-  00000000-00000000 : 0000:00:05.0
-  00000000-00000000 : 0000:00:0a.0
-    00000000-00000000 : ohci_hcd
-  00000000-00000000 : IOMMU
+Thank you for the patch! Yet something to improve:
 
-Fire V100: no BAR errors
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-  00000000-00000000 : Kernel code
-  00000000-00000000 : Kernel data
-  00000000-00000000 : Kernel bss
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : /pci@1f,0
-  00000000-00000000 : 0000:00:0c.0
-    00000000-00000000 : tulip
-  00000000-00000000 : 0000:00:05.0
-    00000000-00000000 : tulip
-  00000000-00000000 : 0000:00:0c.0
-  00000000-00000000 : 0000:00:05.0
-  00000000-00000000 : 0000:00:0a.0
-  00000000-00000000 : IOMMU
+[auto build test ERROR on pci/next]
+[also build test ERROR on v4.17-rc2 next-20180424]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-Netra T1-105: no BAR errors, qla1280 loads fine.
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-  00000000-00000000 : Kernel code
-  00000000-00000000 : Kernel data
-  00000000-00000000 : Kernel bss
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : /pci@1f,0
-  00000000-00000000 : PCI Bus 0000:02
-    00000000-00000000 : PCI Bus 0000:03
-      00000000-00000000 : PCI Bus 0000:04
-        00000000-00000000 : 0000:04:00.0
-        00000000-00000000 : 0000:04:00.0
-        00000000-00000000 : 0000:04:00.1
-          00000000-00000000 : sunhme
-        00000000-00000000 : 0000:04:04.0
-        00000000-00000000 : 0000:04:04.0
-  00000000-00000000 : IOMMU
-  00000000-00000000 : PCI Bus 0000:01
-    00000000-00000000 : 0000:01:01.1
-      00000000-00000000 : sunhme
-    00000000-00000000 : 0000:01:02.0
-      00000000-00000000 : sym53c8xx
-    00000000-00000000 : 0000:01:02.0
-      00000000-00000000 : sym53c8xx
-    00000000-00000000 : 0000:01:03.1
-      00000000-00000000 : sunhme
-    00000000-00000000 : eeprom
-    00000000-00000000 : su
-    00000000-00000000 : su
-    00000000-00000000 : power
-    00000000-00000000 : auxio
+url:    https://github.com/0day-ci/linux/commits/James-Puthukattukaran/PCI-SUpport-to-workaround-bus-level-HW-issues/20180426-092305
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+config: ia64-allnoconfig (attached as .config)
+compiler: ia64-linux-gcc (GCC) 7.2.0
+reproduce:
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # save the attached .config to linux build tree
+        make.cross ARCH=ia64 
 
-Netra T1-200: no BAR errors
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-  00000000-00000000 : Kernel code
-  00000000-00000000 : Kernel data
-  00000000-00000000 : Kernel bss
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : /pci@1f,0
-  00000000-00000000 : PCI Bus 0000:02
-    00000000-00000000 : 0000:02:08.0
-      00000000-00000000 : sym53c8xx
-    00000000-00000000 : 0000:02:08.0
-      00000000-00000000 : sym53c8xx
-    00000000-00000000 : 0000:02:08.1
-      00000000-00000000 : sym53c8xx
-    00000000-00000000 : 0000:02:08.1
-      00000000-00000000 : sym53c8xx
-    00000000-00000000 : 0000:02:05.0
-      00000000-00000000 : qla2xxx
-    00000000-00000000 : 0000:02:05.0
-  00000000-00000000 : IOMMU
-  00000000-00000000 : PCI Bus 0000:01
-    00000000-00000000 : 0000:01:0c.1
-      00000000-00000000 : sungem
-    00000000-00000000 : 0000:01:05.1
-      00000000-00000000 : sungem
-    00000000-00000000 : 0000:01:0c.1
-    00000000-00000000 : 0000:01:0c.3
-    00000000-00000000 : 0000:01:0c.3
-      00000000-00000000 : ohci_hcd
-    00000000-00000000 : 0000:01:05.1
-    00000000-00000000 : 0000:01:05.3
-    00000000-00000000 : 0000:01:05.3
-      00000000-00000000 : ohci_hcd
-    00000000-00000000 : eeprom
+All errors (new ones prefixed by >>):
 
-Fire V120: no BAR errors
-00000000-00000000 : System RAM
-  00000000-00000000 : Kernel code
-  00000000-00000000 : Kernel data
-  00000000-00000000 : Kernel bss
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : /pci@1f,0
-  00000000-00000000 : PCI Bus 0000:02
-    00000000-00000000 : 0000:02:08.0
-      00000000-00000000 : sym53c8xx
-    00000000-00000000 : 0000:02:08.0
-      00000000-00000000 : sym53c8xx
-    00000000-00000000 : 0000:02:08.1
-      00000000-00000000 : sym53c8xx
-    00000000-00000000 : 0000:02:08.1
-      00000000-00000000 : sym53c8xx
-  00000000-00000000 : IOMMU
-  00000000-00000000 : PCI Bus 0000:01
-    00000000-00000000 : 0000:01:0c.1
-      00000000-00000000 : sungem
-    00000000-00000000 : 0000:01:05.1
-      00000000-00000000 : sungem
-    00000000-00000000 : 0000:01:0c.1
-    00000000-00000000 : 0000:01:0c.3
-    00000000-00000000 : 0000:01:0c.3
-      00000000-00000000 : ohci_hcd
-    00000000-00000000 : 0000:01:05.1
-    00000000-00000000 : 0000:01:05.3
-    00000000-00000000 : 0000:01:05.3
-      00000000-00000000 : ohci_hcd
-    00000000-00000000 : eeprom
+   drivers/pci/probe.o: In function `pci_bus_read_dev_vendor_id':
+>> probe.c:(.text+0x3e02): undefined reference to `pci_bus_specific_read_dev_vendor_id'
 
-Fire V210: Video RAM BAR error is gone, these are still here:
-[    5.061083] pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
-[    5.061334] pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-  00000000-00000000 : Kernel code
-  00000000-00000000 : Kernel data
-  00000000-00000000 : Kernel bss
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : jbusmc
-00000000-00000000 : jbusmc
-00000000-00000000 : /pci@1d,700000
-  00000000-00000000 : 0003:00:02.0
-    00000000-00000000 : tg3
-  00000000-00000000 : 0003:00:02.1
-    00000000-00000000 : tg3
-  00000000-00000000 : 0003:00:02.0
-    00000000-00000000 : tg3
-  00000000-00000000 : 0003:00:02.1
-    00000000-00000000 : tg3
-  00000000-00000000 : IOMMU
-00000000-00000000 : /pci@1c,600000
-  00000000-00000000 : 0002:00:02.0
-    00000000-00000000 : sym53c8xx
-  00000000-00000000 : 0002:00:02.0
-    00000000-00000000 : sym53c8xx
-  00000000-00000000 : 0002:00:02.1
-    00000000-00000000 : sym53c8xx
-  00000000-00000000 : 0002:00:02.1
-    00000000-00000000 : sym53c8xx
-  00000000-00000000 : IOMMU
-00000000-00000000 : /pci@1f,700000
-  00000000-00000000 : 0000:00:02.0
-    00000000-00000000 : tg3
-  00000000-00000000 : 0000:00:02.1
-    00000000-00000000 : tg3
-  00000000-00000000 : 0000:00:02.0
-    00000000-00000000 : tg3
-  00000000-00000000 : 0000:00:02.1
-    00000000-00000000 : tg3
-  00000000-00000000 : IOMMU
-00000000-00000000 : /pci@1e,600000
-  00000000-00000000 : 0001:00:07.0
-  00000000-00000000 : 0001:00:0a.0
-  00000000-00000000 : IOMMU
+--wac7ysb48OaltWcw
+Content-Type: application/gzip
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
 
-Fire V240: Video RAM BAR errors is gone, these are still here:
-[    5.530237] pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
-[    5.530389] pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
+H4sICB1m4VoAAy5jb25maWcAjVxZc9u4sn6fX8E6U3UrqTrJeIvj1K08QCAoYkQSDABq8QtL
+IzOOKrbkq2Vm8u9vAxAlLg3ZD3OOw25sDXT3142Gfv/t94Dsd+vn+W65mD89/Qoeq1W1me+q
+h+D78qn63yAUQSZ0wEKuPwJzslzt//1jOb+9CW4+Xn7+ePFhs7gMRtVmVT0FdL36vnzcQ/Pl
+evXb779RkUV8WOZDTQYJKxM2Zon6ev0bkH4Phnagp2Bb7fYvJ+aBFCOWlSIrVZp//VV/5hnX
+JcvGJZHDMuEp11+vr2oilUKpkoo05wn7+p//QO81xX0rNVM6WG6D1XpnBqwbJoKSZMyk4iJr
+tWsSSlJogTQOWUSKRJexUDojKQz8brVeVe8b3aiZGvOcNhufpmYnnbJUyFlJtCY0RvkKxRI+
+QMaPyZiBOGgME4TdgbFgzgmIzIqXy2/Bdv/X9td2Vz2fxDtkGZOclkCG/RgSOjvJuEnLpRgw
+nKRiMelTUsUN9USwM6MgyJEShaSsDIkm/Xaap6wcdyZP8+IPPd/+DHbL5yqYrx6C7W6+2wbz
+xWK9X+2Wq8fTijSnoxIalIRSUWSaZ0Po5ii+MZe6Qy4zovmYNUVqR5W0CFRfZNBkVgKt2Sv8
+s2TTnEmN7hkfuT98u1ZkyqmEojELnZSa3dOhFEWu0L5dE3MmLRPKI1lCZihlkIzg4I6tPskQ
+mR+lpchhU/g9KyMhS1gj/F9KMspaM+ywKfgD6c3sq07cWSgykvBhVmainBCZnY6CE2Sz9xT0
+isPBl7gEhkynRI3Kw6nBmWYqUmc5ophkYcJQWi4Un9qzKfFdyCXP9AgXcTHEvxMFsip8syk0
+m6IUlgvfGkGcJIlClGgn76GBIc60h6ZisEkohXCBfw/HHJZ2kDUuL+hzQKTkni2FM01HuQCZ
+wtlVWkh8W0am/1mKDzHIo7P7bc6TtdgRdu5hfiwMWdg8hjm9vLjpmYmDs8urzff15nm+WlQB
++7tagXkiYKioMVDVZuvs2MEGpU7ipbVAviNlfBXR4ADxY6USgnkBlRSD5pxVIgbe9rANcshq
+z+VniyQDp6NgM0BFBH4a2owxkSFYdPxIgTOJeAKW12cPheNoOBz7+fZmAF7fWg1j8ihlSnVY
+RtZR9b5KplGCNURaEspiIUZ9bwSYo+ShAQyxZCTseDNtjY6WBdUWoIDPHp1hgYMIMAIOc5fH
+9u2aY0x2pmFKSpJz2CuwJ50OLEOW8lKRiJU0zac0HnbaI37vdQ4jhw5XKkI3qMoZ5RGnJzqQ
+ioQpo1glSyLrdTqt2RQ28CjLhn+K7JA9c+iQIRXjD3/Nt4BBfzpde9msAY223L61pio1oOGy
+YWbclDyuD7wscgJ5BkcT+sp5Bj7KMLWBzIFu98zRz9HQthPJNfM1bhIPra0Y8s16UW23602w
++/XiUND3ar7bb6rtSQyc3N6cerQKc/rnvcjsQbq+On37VgBeMirb2Me06Bwwe/jCUJa622XG
+QBMNOSW5OcGadWhqaMkJy4Y6PtHUhAudDBofzOm3mliqIs+FbAwiJ4qlpTnUMAnQkKEAEcVp
+X13B1vOBhEmAmgDi6Rw+xXSRGwDjTjls0okhTHkDgESNfzh8JSDCAOsGsL60bok1ldjAbSuo
+xl7CPtTTap50+z3kOCKoieVY44bTMsR5eT+9fI1eS9jPp4ZgMLKr8wzF+OxAiqeYBmmS8SJt
+ITg6guPNcBBqe8sJeCIDG8ub0ZlZn9juRpj/6zBd3o4ahyy+/3r16eLUY3xfXl5cYF7ovgTG
+5gLgy3WbtdML1o2dzEAmgCaKztlILuG0wtECfMUj/fW2s0w6gyAgwyA0Fwr8QMPsAtwGpUnJ
+1Oq3AL8rv142bCD4MKQbq9css1HHIeiMhc6TnnPp8Uj4a9xQ8xx8fpprwPFZKySov49FAqad
+SHzvD1wYkmEJA695GBgsOUua3UcJ0UCDhWcFSZD2IVfwl+bDE1cLGOVEgll5aw8NecPAsNjQ
+ysTYvY7Fs8FKDiIzPA3AcRpwDP9j7KUTbdfBAvJs+4XW58PIzVGdiYa5AuZCmqs8AfOUa9sa
+LJ/6etMBmVRzkeEwnQ/BnHao9c7FM+XzCtL5FXDFNeQ14EILCIZUcxNGCrMfdSbFCikFN2xG
++Xpz8eW2Jejako9aloYmDIJTo1o4qk4J+v0+FwKPE+4HBW6N7y3cEHg6ByZn5mZcIg4/huCL
+BiyjcUokBkMcyEJ1oLvvx1PePVCWo1YUlHg6lCi51fthWxrbXKQNF2qP+8GcXTaMrNl60K9a
+W85mrkwfJi8EQFGzzKbhjv0bWHmQqhnYKQIP+3oCogLMp47617asKSWAzwBSMp9FgrAw9ejD
+wbsATovw2PcwRMmkBDz3J2weZtms5+3NjCl+1tmSNCmzaNLDxyoLwurv5aJqBZlmEC7oNR44
+symjvY6i5eb5n/mmCsLN8u9OzBpxmU4AM5XOduFphIhDjBziREBYHAu0QxO3UJLB2aCxwb/g
+R2xPESjXgLQTYUMhhmBZ68n0VgDtgnfs31212i7/eqpOK+ImCP8+X1TvA7V/eVlvds3FmeHG
+xBOHGyIluSpMylqQ0JOyMGzdtLIdQ1ePm3nwvZ7Jg5Vtc/QBnKZUm5AJj1McWVHJczxGP3Ck
+oKyeTIJkYdGGAS6kWP9TbYLn+Wr+WD1Xq50NKgjNebB+MTn71gnIMVNtmDs2A3xGrA86DdQy
+DxtgxX5RM6XBGORiAhbcBg2qAfpPeSRax7tDj8xdbzkFF2SMl5+HUddRhG+xGwkPB90apDDJ
+BgEOpw5y2o2PDL4e2rbSfqKF0gLMqgohtOjeVJwW75+xMc0EVOaMcGJPCsYSzamg4EhNssbq
+tsgSj01MuUnwSjb0IYV6QvB3W8j2CA322/pIBe9yyv8b5DSlnLxv3ArRxkGCf8B+pLA41f54
+uhhoZOU4M0cHoAWGUqARUDxAxVBTxTvdGfAiR55ELz23LXaKusDjF0PkAg+oDC2XuP23NKJQ
+62loCRmw01XJ/KEyKUggVMFivdpt1k9PYMuD7dHsWb6w2i4fVxNjkYA1oGv4Q7VZzPcf6+2u
+0c3Bem2bLGz18LJerloG1UyLZaENlftWBxpt/1nuFj/wntvSnJhIVtNYMw/Qogb3oqSM9Qd3
+nrLh4U6Xj8vF4XMg+tavcBnbmCW5R99CNtZp7rEwYDWykHRDumYUZLs/etlBwRN8UdHknBcy
+gHRib3Qwo9+YK5zgMpR87F2MZWBj6cmeOQbj8A7dlC4uRFX/oQ9PUk+KQ0SYBe34lZyCQsiu
+vzh8wrQky1uMWX6Yfwo2mwxZ32Dlm/VuvVg/NVJr0Org7SxHBlFcV2PS5XaBLRb2IZ2ZXB6+
++THJtC+r7lDcDUrUPErtPuOAJKOJUIU0iS855tSzkQAseYKDWSUJPqumevdAzwl2XHW3w2E0
+Bs4ybdij04wtpfxyTae3eI+Dz5cXvRUfUNa/8y3AvO1us3+2ty/bH2DcHoLdZr7ampGCp+UK
+4Bds0fLF/FlvGnkCaDgPonxIGiht/c/qaT1/CJ7XD3sAku821f/tl5sKhrii7+umBlU+BeAb
+g/8JNtWTLZPo2NkTi1GEsAZ/DrhTHiGfxyJHvp46io1N9hHpfPOADePlX78c88pqBysI0hMc
+fEeFSt93jaWZX9hDsUOWTb55TiKN8QNmEGsptZqaE+ULDHnIap1TFEIkp18NOdenFYgmRG4l
+iQrVASxu+Yyx4PL6y03wDiKEagL/vccOJJhjNuEe/aqJELCoWX+I1ct+15/rKajL8qKvGzHs
+notX/hCBadIO6ZjkWOUJYh4taytyIilD1ZGCmswXO+OBj4arti961iqdwNW8yPj0y12Z6xlu
+YFxZiZ9upkoSE/Y5J+lz5uJepDhAOlwb8Ay/KQUv5rvCBtLIR3NRuiekMkQNhnnak6cCIDF/
+wuDMYaF3V58ueq2y9eqDJWxdc2uwkGNz6KMgUidc4wfzwGOmaLLMIFfhiY0OnH8qjwQOHVGa
+TXEcceAgiWaSlH9qMjQzewPrq2zSI3dHljl+b3EgRyopk/y1MQxK6gQNpyOlZ+dqOjgERKWr
+F8HxUzw5d1ducgVS4yuU119ucXdP8jzh1NNlnDN8sTDLoS2ncBUg+Gop/Jd7VaRrN460KU+S
+WUeEzvpdUdToXXl2NccVW+UejY89qbI8R6CczoPF03rxs+ua2WpuckR5PDMFdSb1AQHDRMiR
+SW1baYFBSnNTp7BbQ39VsPtRBfOHh6WJDkBJba/bj62QhWdUSzyRPMy56JTuHWkT/ELPpUjI
+2BOLWiogdM/WHxIsBZwbPKyPJ75Ep46ZTAm+jgmBcCwUWPWGUgNTK6W4SyWfNlJhd3UDmhKU
+fdDJ0jtwvX/aLb/vVwsj/dqzImY21tSGy57UZwLekXtqKw1NeWhpFJZ/kuy+pIAxPJVPhmfE
+0twTuhlyqm+vv3z2kmVIr68u8cIvQ1fppwv8qJDB9NNFHxy3W89MOt9L1rwk6fX1p2mpFSUh
+rquGcTy9+/QJt15sWCSmfAVvy0JO6lRfb4OHm/nLj+Vii1kOMsQd0HhIwFfgOhXKtDcGRHDB
+O7J/WK4B+R4rKt73SpUdcxoGyfKvzXzzK9is9zsIGo4gONrMn6vgr/3374CckPR7hM/JJLQT
+i9QSGmKSOKmMKDIs41OAionYpH241gkzcRgnrWuSQb+Cwnw8lAqpMqYtjFygumlauJScXZVh
+spikkwAy3/Mfv7amWjxI5r/wRE4mctvhlDKO578MdUjCoceS6VnuSf+YhkWSc68nLyb4TqSp
+53yzVJkaYk9GaQJ4NvRlkU0KmA847Axub8HnlzQhypNSSQk4226g7rJWKRkUEZaVV7OM2uwx
+PqViGnKV+6p/C48ds7e1Lq2DT9UwcAGyyoq+nV4uNuvt+vsuiH+9VJsP4+BxX21xNAuAsVMG
+2PBNpgKrW6N12ibCk4HADSUXaVp4zYysnte7ykS92FE1WSxt8hD96zH58rx9RNvkqapl4tfl
+biDpogUY552yFeaBWEEwtnyBSPSlWiy/H9ORR2Ujz0/rR/is1rSrh4PNev6wWD9jtOXHdIp9
+/7afP0GTbpvGrE05fm/KU1N596+v0dQUdk7LMS1QSeTmGnkcSYanwthUex2UvdjF99sj9kzj
+qg/hoNdc5JO+0zCJuwXsTD/nQGRaDs1rBzItM9msPOS5qeb0jWIxm72/kSLxxRBR2j+DgExb
+bxKa6RdbAmcYUMdD03IkMmIM5pWXywDffErKq7ssNSDbk3Jvcpn+/OiTeq6KU4pvjSR940dW
+D5v18qEFB7JQCo6jrJDgViHrZgFcxmViMoSL5eoRN1B4UGQqABMAyfi+mUwiaga4x2CphKdY
+GBXngVo+75/muzXqV10FngtncTGrHL3nh7DHHaFWd2xqDGakXGlsKTwvToy3MS+iRj7TDT2w
+jMpZ7q0rCjOheeTRZkcrve89InKm9bdCaFz65olMpG5Kzw1NZOpLPDRTLAI+tERuNul88aOD
+/FSv+sip7rbaP6ztMzpE9sbj+Ia3NBrzJJQMl6d93YK70QIwVTLwUN3/wX556CziYyJ9VJu+
+NafBXehj169Z0rjAhX8ci4j+s9yu7+4+fflw2bj0NgxUhMzWb95c42FSi+nzm5g+48FKi+nu
+E17d2WHCbV2H6U3DvWHid7dvmdMtHhB2mN4y8Vs8ZO4w4dmpDtNbRHCL3/J0mL68zvTl+g09
+fXnLBn+5foOcvty8YU53n/1y4kqYs1/evd7N5dVbpg1c/kNAFOV4uqw5F3/7msMvmZrDf3xq
+jtdl4j84NYd/r2sOv2rVHP4NPMrj9cVcvr6aS/9yRoLflbiHO5JxEG3IKaGlFCnB/UHNQVmi
+PSDuxAJYppAeBF0zSUE0f22wmeRJ8spwQ8JeZZGMecLvAwfEyAnJPPdENU9WcDyZ0BLfa4vS
+hRxxhQM9w1PoqKXFvzWeBP6YL366R0r268tmudr9tInmh+cKQslTOH9yx+auBsDV0D6OP3rL
+z8e3Oa5goc9xc4Aj6+cXABgf7ENpQCaLn1s74MJ932ApBFcK4S1pPTwAMG90gTWXjBLtqSqr
+3woUSrsnnAgicI9o7Ivfq4ubuybWljwHY5WW3ied5l2VHYF4bqyKDFCcyXOmA+F5eWrtpZj4
+quacMCIMy8TMlN0ot7JmBs21UczW0RtUlJoMOQ7UOkxOrN66u8Ns7AuPCSOjuubdkxIxoShg
+sXadSaurEZPZqVgsrZ7Xm19BWP21f3x0J7Utp2MZ9pnZGcYzdfCmm1yAPcx84YLrRgxMtfS5
+YqOx74LKVfLYEnnzjv0Ml4o7RTiHmjBYf5CsFz/3L05d4vnqsZMLiewDisJUDmmYqCfD7YiA
+urOhffuJMk2+oXcoDZllptwSzkUnBMPo5ZgkBft60Saa2ytR6K+NOnz3kM29MmVZ2FfQjqxM
+FyPG8s62WakYWZ2OTfBu+7Jc2cuw/wbP+131bwV/VLvFx48f3/ctzdm83mE3zev3s5VnRAtT
+k6oSmOEZtkOYap/OKpZEpljJU6ZgQl7YVm0qprw1TZOJm9uxM1zLj48Z8U6MzoPKmN99YCyE
+XTlzV3zQW6ce51bKPZM5aCl/jUOd004bcXNfOtjxUAlryQAmJP0w2fyWBmpmzC9nmBcXfpEb
+jlf3xTJ5BW5/nuObOlO461YAiulsrfRb2VoS5omHqB95+Cyke8eE8tROxRTsREXm3IJdQvfp
+d+TqW1L3RNq8XZGtC5zW03B8/eY5d+rEZ7Shm7c/uRCWekVsjXRmf7bF3DLKwp/eUSTNfc+u
+i4EimCDci1lQBPPO4vI2HfTex9h6DBDJPZGeG5iQKwsPxrHnpYR7YetOq3sm/xob5i9Utdhv
+lrtfGJgaMW+ZEy0k1zPYLqZsBhjwjkeja14chpgzUf++gs2SUZHPWj8ccMr+dNl85gqiBMtj
+npj1a5yPSuLO82kppPG0o0tt//CSyQaKniSR29VDg2M+2xbNt947Hn98SPSfQZok3mFnrUWX
+LGo9DpQQplCuPQWrkl56Ck+hnb68CDn+RMeQuQYL5KN6sgpAwUNIIOAxbMIHtjvfb0hRPKXg
+/Mv11Xm3Nb2HTaTokVNG2s1XsO6TyRe3H6Oa72HaellPQC+lQUWAVlqbAXbMEwqGIQ6v7E9R
+dX7+prYrVF3ZGCLr/zyGMj9DQGPCW4/uHDMqkno4e5Ho9AFa/j+/l5MfHk0AAA==
 
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-  00000000-00000000 : Kernel code
-  00000000-00000000 : Kernel data
-  00000000-00000000 : Kernel bss
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : jbusmc
-00000000-00000000 : jbusmc
-00000000-00000000 : /pci@1d,700000
-  00000000-00000000 : 0003:00:02.0
-    00000000-00000000 : tg3
-  00000000-00000000 : 0003:00:02.1
-    00000000-00000000 : tg3
-  00000000-00000000 : 0003:00:02.0
-    00000000-00000000 : tg3
-  00000000-00000000 : 0003:00:02.1
-    00000000-00000000 : tg3
-  00000000-00000000 : IOMMU
-00000000-00000000 : /pci@1c,600000
-  00000000-00000000 : 0002:00:02.0
-    00000000-00000000 : sym53c8xx
-  00000000-00000000 : 0002:00:02.0
-    00000000-00000000 : sym53c8xx
-  00000000-00000000 : 0002:00:02.1
-    00000000-00000000 : sym53c8xx
-  00000000-00000000 : 0002:00:02.1
-    00000000-00000000 : sym53c8xx
-  00000000-00000000 : IOMMU
-00000000-00000000 : /pci@1f,700000
-  00000000-00000000 : 0000:00:02.0
-    00000000-00000000 : tg3
-  00000000-00000000 : 0000:00:02.1
-    00000000-00000000 : tg3
-  00000000-00000000 : 0000:00:02.0
-    00000000-00000000 : tg3
-  00000000-00000000 : 0000:00:02.1
-    00000000-00000000 : tg3
-  00000000-00000000 : IOMMU
-00000000-00000000 : /pci@1e,600000
-  00000000-00000000 : 0001:00:07.0
-  00000000-00000000 : 0001:00:03.0
-    00000000-00000000 : skge
-  00000000-00000000 : 0001:00:03.0
-  00000000-00000000 : 0001:00:0a.0
-  00000000-00000000 : IOMMU
-
-Fire V440: Video RAM BAR error is gone, these are still here:
-[    5.082920] pci 0002:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0002:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
-[    5.082945] pci 0002:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with 0002:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
-
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-  00000000-00000000 : Kernel code
-  00000000-00000000 : Kernel data
-  00000000-00000000 : Kernel bss
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : jbusmc
-00000000-00000000 : jbusmc
-00000000-00000000 : jbusmc
-00000000-00000000 : jbusmc
-00000000-00000000 : /pci@1d,700000
-  00000000-00000000 : IOMMU
-00000000-00000000 : /pci@1c,600000
-  00000000-00000000 : 0000:00:02.0
-  00000000-00000000 : 0000:00:02.0
-    00000000-00000000 : eth0
-  00000000-00000000 : IOMMU
-00000000-00000000 : /pci@1f,700000
-  00000000-00000000 : 0003:00:01.0
-  00000000-00000000 : 0003:00:01.0
-    00000000-00000000 : eth1
-  00000000-00000000 : 0003:00:02.0
-    00000000-00000000 : mpt
-  00000000-00000000 : 0003:00:02.0
-    00000000-00000000 : mpt
-  00000000-00000000 : 0003:00:02.1
-    00000000-00000000 : mpt
-  00000000-00000000 : 0003:00:02.1
-    00000000-00000000 : mpt
-  00000000-00000000 : 0003:00:02.0
-  00000000-00000000 : 0003:00:02.1
-  00000000-00000000 : IOMMU
-00000000-00000000 : /pci@1e,600000
-  00000000-00000000 : 0002:00:07.0
-  00000000-00000000 : 0002:00:0a.0
-  00000000-00000000 : 0002:00:0b.0
-  00000000-00000000 : IOMMU
-
-Blade 100: Video RAM related BAR error is gnone, this is still here:
-[    6.131499] pci 0000:00:07.0: can't claim BAR 0 [io  0x1fe02000000-0x1fe0200ffff]: address conflict with 0000:00:03.0 [io  0x1fe02000600-0x1fe0200061f]
-
-00000000-00000000 : System RAM
-  00000000-00000000 : Kernel code
-  00000000-00000000 : Kernel data
-  00000000-00000000 : Kernel bss
-00000000-00000000 : System RAM
-00000000-00000000 : System RAM
-00000000-00000000 : /pci@1f,0
-  00000000-00000000 : 0000:00:07.0
-  00000000-00000000 : 0000:00:0c.1
-    00000000-00000000 : sungem
-  00000000-00000000 : 0000:00:0c.2
-  00000000-00000000 : 0000:00:0c.2
-  00000000-00000000 : 0000:00:08.0
-  00000000-00000000 : 0000:00:13.0
-  00000000-00000000 : 0000:00:13.0
-  00000000-00000000 : 0000:00:0c.1
-  00000000-00000000 : 0000:00:0c.2
-  00000000-00000000 : 0000:00:0c.3
-  00000000-00000000 : 0000:00:0c.3
-    00000000-00000000 : ohci_hcd
-  00000000-00000000 : PCI Bus 0000:01
-    00000000-00000000 : 0000:01:00.0
-      00000000-00000000 : sym53c8xx
-    00000000-00000000 : 0000:01:02.0
-    00000000-00000000 : 0000:01:02.0
-  00000000-00000000 : 0000:00:13.0
-    00000000-00000000 : atyfb
-  00000000-00000000 : IOMMU
-  00000000-00000000 : eeprom
-
-
--- 
-Meelis Roos (mroos@linux.ee)
+--wac7ysb48OaltWcw--
