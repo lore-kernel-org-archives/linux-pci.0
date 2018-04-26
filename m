@@ -1,87 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43490 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:46220 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752487AbeDRQZt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Apr 2018 12:25:49 -0400
-Date: Wed, 18 Apr 2018 11:25:47 -0500
+        id S1754553AbeDZRan (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 26 Apr 2018 13:30:43 -0400
+Date: Thu, 26 Apr 2018 12:30:41 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: minyard@acm.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        openipmi-developer@lists.sourceforge.net,
-        linux-pci@vger.kernel.org, Corey Minyard <cminyard@mvista.com>
-Subject: Re: [PATCH] pci:ipmi: Move IPMI PCI device defines to pci_ids.h
-Message-ID: <20180418162547.GN28657@bhelgaas-glaptop.roam.corp.google.com>
-References: <1524064680-22333-1-git-send-email-minyard@acm.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Loic Poulain <loic.poulain@linaro.org>,
+        Evan Wang <xswang@marvell.com>, Victor Gu <xigu@marvell.com>
+Subject: [GIT PULL] PCI fixes for v4.17
+Message-ID: <20180426173041.GX28657@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524064680-22333-1-git-send-email-minyard@acm.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 18, 2018 at 10:18:00AM -0500, minyard@acm.org wrote:
-> From: Corey Minyard <cminyard@mvista.com>
-> 
-> Signed-off-by: Corey Minyard <cminyard@mvista.com>
-> ---
->  drivers/char/ipmi/ipmi_si_pci.c | 7 -------
->  include/linux/pci_ids.h         | 5 +++++
->  2 files changed, 5 insertions(+), 7 deletions(-)
-> 
-> It seems better to have these definitions in pci_ids.h and not in
-> the IPMI driver.
-> 
-> diff --git a/drivers/char/ipmi/ipmi_si_pci.c b/drivers/char/ipmi/ipmi_si_pci.c
-> index f54ca68..e0bc101 100644
-> --- a/drivers/char/ipmi/ipmi_si_pci.c
-> +++ b/drivers/char/ipmi/ipmi_si_pci.c
-> @@ -18,13 +18,6 @@ module_param_named(trypci, si_trypci, bool, 0);
->  MODULE_PARM_DESC(trypci, "Setting this to zero will disable the"
->  		 " default scan of the interfaces identified via pci");
->  
-> -#define PCI_CLASS_SERIAL_IPMI		0x0c07
-> -#define PCI_CLASS_SERIAL_IPMI_SMIC	0x0c0700
-> -#define PCI_CLASS_SERIAL_IPMI_KCS	0x0c0701
-> -#define PCI_CLASS_SERIAL_IPMI_BT	0x0c0702
-> -
-> -#define PCI_DEVICE_ID_HP_MMC 0x121A
-> -
->  static void ipmi_pci_cleanup(struct si_sm_io *io)
->  {
->  	struct pci_dev *pdev = io->addr_source_data;
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 2d61d9b..bedbae9 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -117,6 +117,10 @@
->  #define PCI_CLASS_SERIAL_USB_DEVICE	0x0c03fe
->  #define PCI_CLASS_SERIAL_FIBER		0x0c04
->  #define PCI_CLASS_SERIAL_SMBUS		0x0c05
-> +#define PCI_CLASS_SERIAL_IPMI		0x0c07
-> +#define PCI_CLASS_SERIAL_IPMI_SMIC	0x0c0700
-> +#define PCI_CLASS_SERIAL_IPMI_KCS	0x0c0701
-> +#define PCI_CLASS_SERIAL_IPMI_BT	0x0c0702
+PCI fixes:
 
-I'm in favor of this part -- it makes sense to define these along with
-all the other similar things.
+  - fix Aardvark MRRS setting (Evan Wang)
 
->  #define PCI_BASE_CLASS_WIRELESS			0x0d
->  #define PCI_CLASS_WIRELESS_RF_CONTROLLER	0x0d10
-> @@ -759,6 +763,7 @@
->  #define PCI_DEVICE_ID_HP_DIVA_MAESTRO	0x104B
->  #define PCI_DEVICE_ID_HP_REO_IOC	0x10f1
->  #define PCI_DEVICE_ID_HP_VISUALIZE_FXE	0x108b
-> +#define PCI_DEVICE_ID_HP_MMC		0x121a
+  - clarify "bandwidth available" link status message (Jakub Kicinski)
 
-But I don't think I'd include this one because it's only used on
-one driver, so by the guideline at the top of pci_ids.h, we wouldn't
-include it there.
+  - update Kirin GPIO name to fix probe failure (Loic Poulain)
 
-Given that, I would change the subject so it mentions "class IDs", not
-"device IDs".
+  - fix Aardvark IRQ usage (Victor Gu)
 
->  #define PCI_DEVICE_ID_HP_DIVA_HALFDOME	0x1223
->  #define PCI_DEVICE_ID_HP_DIVA_KEYSTONE	0x1226
->  #define PCI_DEVICE_ID_HP_DIVA_POWERBAR	0x1227
-> -- 
-> 2.7.4
-> 
+  - fix Aardvark config accessor issues (Victor Gu)
+
+
+The following changes since commit 60cc43fc888428bb2f18f08997432d426a243338:
+
+  Linux 4.17-rc1 (2018-04-15 18:24:20 -0700)
+
+are available in the Git repository at:
+
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.17-fixes-1
+
+for you to fetch changes up to 0cf22d6b317ce0103b7d5a47878aa5ef94240433:
+
+  PCI: Add "PCIe" to pcie_print_link_status() messages (2018-04-20 12:56:36 -0500)
+
+----------------------------------------------------------------
+pci-v4.17-fixes-1
+
+----------------------------------------------------------------
+Bjorn Helgaas (1):
+      Merge remote-tracking branch 'lorenzo/pci/host/fixes' into for-linus
+
+Evan Wang (1):
+      PCI: aardvark: Fix PCIe Max Read Request Size setting
+
+Jakub Kicinski (1):
+      PCI: Add "PCIe" to pcie_print_link_status() messages
+
+Loic Poulain (1):
+      PCI: kirin: Fix reset gpio name
+
+Victor Gu (3):
+      PCI: aardvark: Fix logic in advk_pcie_{rd,wr}_conf()
+      PCI: aardvark: Set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
+      PCI: aardvark: Use ISR1 instead of ISR0 interrupt in legacy irq mode
+
+ drivers/pci/dwc/pcie-kirin.c    |  2 +-
+ drivers/pci/host/pci-aardvark.c | 53 +++++++++++++++++++++++------------------
+ drivers/pci/pci.c               |  4 ++--
+ 3 files changed, 33 insertions(+), 26 deletions(-)
