@@ -1,160 +1,243 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:58308 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752470AbeDOO77 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Apr 2018 10:59:59 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: x86@kernel.org, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        linux-ide@vger.kernel.org, linux-mips@linux-mips.org,
-        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 01/12] iommu-common: move to arch/sparc
-Date: Sun, 15 Apr 2018 16:59:36 +0200
-Message-Id: <20180415145947.1248-2-hch@lst.de>
-In-Reply-To: <20180415145947.1248-1-hch@lst.de>
-References: <20180415145947.1248-1-hch@lst.de>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:45725 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751231AbeDZBSp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 21:18:45 -0400
+Date: Thu, 26 Apr 2018 09:18:37 +0800
+From: Wei Yang <richard.weiyang@gmail.com>
+To: Baoquan He <bhe@redhat.com>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+        robh+dt@kernel.org, dan.j.williams@intel.com,
+        nicolas.pitre@linaro.org, josh@joshtriplett.org,
+        Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
+        David Airlie <airlied@linux.ie>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Brijesh Singh <brijesh.singh@amd.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Borislav Petkov <bp@suse.de>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Yaowei Bai <baiyaowei@cmss.chinamobile.com>,
+        Wei Yang <richard.weiyang@gmail.com>,
+        devel@linuxdriverproject.org, linux-input@vger.kernel.org,
+        linux-nvdimm@lists.01.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] resource: Use list_head to link sibling resource
+Message-ID: <20180426011837.GA79340@WeideMacBook-Pro.local>
+Reply-To: Wei Yang <richard.weiyang@gmail.com>
+References: <20180419001848.3041-1-bhe@redhat.com>
+ <20180419001848.3041-2-bhe@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180419001848.3041-2-bhe@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This code is only used by sparc, and all new iommu drivers should use the
-drivers/iommu/ framework.  Also remove the unused exports.
+On Thu, Apr 19, 2018 at 08:18:46AM +0800, Baoquan He wrote:
+>The struct resource uses singly linked list to link siblings. It's not
+>easy to do reverse iteration on sibling list. So replace it with list_head.
+>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hi, Baoquan
+
+Besides changing the data structure, I have another proposal to do the reverse
+iteration. Which means it would not affect other users, if you just want a
+reverse iteration.
+
+BTW, I don't think Andrew suggest to use linked-list directly. What he wants
+is a better solution to your first proposal in
+https://patchwork.kernel.org/patch/10300819/.
+
+Below is my proposal of resource reverse iteration without changing current
+design.
+
+>From 5d7145d44fe48b98572a03884fa3a3aa82e3cef9 Mon Sep 17 00:00:00 2001
+From: Wei Yang <richard.weiyang@gmail.com>
+Date: Sat, 24 Mar 2018 23:25:46 +0800
+Subject: [PATCH] kernel/resource: add walk_system_ram_res_rev()
+
+As discussed on https://patchwork.kernel.org/patch/10300819/, this patch
+comes up with a variant implementation of walk_system_ram_res_rev(), which
+uses iteration instead of allocating array to store those resources.
+
+Signed-off-by: Wei Yang <richard.weiyang@gmail.com>
 ---
- {include/linux => arch/sparc/include/asm}/iommu-common.h | 0
- arch/sparc/include/asm/iommu_64.h                        | 2 +-
- arch/sparc/kernel/Makefile                               | 2 +-
- {lib => arch/sparc/kernel}/iommu-common.c                | 5 +----
- arch/sparc/kernel/iommu.c                                | 2 +-
- arch/sparc/kernel/ldc.c                                  | 2 +-
- arch/sparc/kernel/pci_sun4v.c                            | 2 +-
- lib/Makefile                                             | 2 +-
- 8 files changed, 7 insertions(+), 10 deletions(-)
- rename {include/linux => arch/sparc/include/asm}/iommu-common.h (100%)
- rename {lib => arch/sparc/kernel}/iommu-common.c (98%)
+ include/linux/ioport.h |   3 ++
+ kernel/resource.c      | 113 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 116 insertions(+)
 
-diff --git a/include/linux/iommu-common.h b/arch/sparc/include/asm/iommu-common.h
-similarity index 100%
-rename from include/linux/iommu-common.h
-rename to arch/sparc/include/asm/iommu-common.h
-diff --git a/arch/sparc/include/asm/iommu_64.h b/arch/sparc/include/asm/iommu_64.h
-index 9ed6b54caa4b..0ef6dedf747e 100644
---- a/arch/sparc/include/asm/iommu_64.h
-+++ b/arch/sparc/include/asm/iommu_64.h
-@@ -17,7 +17,7 @@
- #define IOPTE_WRITE   0x0000000000000002UL
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index da0ebaec25f0..473f1d9cb97e 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -277,6 +277,9 @@ extern int
+ walk_system_ram_res(u64 start, u64 end, void *arg,
+ 		    int (*func)(struct resource *, void *));
+ extern int
++walk_system_ram_res_rev(u64 start, u64 end, void *arg,
++		    int (*func)(struct resource *, void *));
++extern int
+ walk_iomem_res_desc(unsigned long desc, unsigned long flags, u64 start, u64 end,
+ 		    void *arg, int (*func)(struct resource *, void *));
  
- #define IOMMU_NUM_CTXS	4096
--#include <linux/iommu-common.h>
-+#include <asm/iommu-common.h>
- 
- struct iommu_arena {
- 	unsigned long	*map;
-diff --git a/arch/sparc/kernel/Makefile b/arch/sparc/kernel/Makefile
-index 76cb57750dda..a284662b0e4c 100644
---- a/arch/sparc/kernel/Makefile
-+++ b/arch/sparc/kernel/Makefile
-@@ -59,7 +59,7 @@ obj-$(CONFIG_SPARC32)   += leon_pmc.o
- 
- obj-$(CONFIG_SPARC64)   += reboot.o
- obj-$(CONFIG_SPARC64)   += sysfs.o
--obj-$(CONFIG_SPARC64)   += iommu.o
-+obj-$(CONFIG_SPARC64)   += iommu.o iommu-common.o
- obj-$(CONFIG_SPARC64)   += central.o
- obj-$(CONFIG_SPARC64)   += starfire.o
- obj-$(CONFIG_SPARC64)   += power.o
-diff --git a/lib/iommu-common.c b/arch/sparc/kernel/iommu-common.c
-similarity index 98%
-rename from lib/iommu-common.c
-rename to arch/sparc/kernel/iommu-common.c
-index 55b00de106b5..59cb16691322 100644
---- a/lib/iommu-common.c
-+++ b/arch/sparc/kernel/iommu-common.c
-@@ -8,9 +8,9 @@
- #include <linux/bitmap.h>
- #include <linux/bug.h>
- #include <linux/iommu-helper.h>
--#include <linux/iommu-common.h>
- #include <linux/dma-mapping.h>
- #include <linux/hash.h>
-+#include <asm/iommu-common.h>
- 
- static unsigned long iommu_large_alloc = 15;
- 
-@@ -93,7 +93,6 @@ void iommu_tbl_pool_init(struct iommu_map_table *iommu,
- 	p->hint = p->start;
- 	p->end = num_entries;
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 769109f20fb7..d4ec5fbc6875 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -73,6 +73,38 @@ static struct resource *next_resource(struct resource *p, bool sibling_only)
+ 	return p->sibling;
  }
--EXPORT_SYMBOL(iommu_tbl_pool_init);
  
- unsigned long iommu_tbl_range_alloc(struct device *dev,
- 				struct iommu_map_table *iommu,
-@@ -224,7 +223,6 @@ unsigned long iommu_tbl_range_alloc(struct device *dev,
- 
- 	return n;
++static struct resource *prev_resource(struct resource *p, bool sibling_only)
++{
++	struct resource *prev;
++	if (NULL == iomem_resource.child)
++		return NULL;
++
++	if (p == NULL) {
++		prev = iomem_resource.child;
++		while (prev->sibling)
++			prev = prev->sibling;
++	} else {
++		if (p->parent->child == p) {
++			return p->parent;
++		}
++
++		for (prev = p->parent->child; prev->sibling != p;
++			prev = prev->sibling) {}
++	}
++
++	/* Caller wants to traverse through siblings only */
++	if (sibling_only)
++		return prev;
++
++	for (;prev->child;) {
++		prev = prev->child;
++
++		while (prev->sibling)
++			prev = prev->sibling;
++	}
++	return prev;
++}
++
+ static void *r_next(struct seq_file *m, void *v, loff_t *pos)
+ {
+ 	struct resource *p = v;
+@@ -401,6 +433,47 @@ static int find_next_iomem_res(struct resource *res, unsigned long desc,
+ 	return 0;
  }
--EXPORT_SYMBOL(iommu_tbl_range_alloc);
  
- static struct iommu_pool *get_pool(struct iommu_map_table *tbl,
- 				   unsigned long entry)
-@@ -264,4 +262,3 @@ void iommu_tbl_range_free(struct iommu_map_table *iommu, u64 dma_addr,
- 	bitmap_clear(iommu->map, entry, npages);
- 	spin_unlock_irqrestore(&(pool->lock), flags);
++/*
++ * Finds the highest iomem resource existing within [res->start.res->end).
++ * The caller must specify res->start, res->end, res->flags, and optionally
++ * desc.  If found, returns 0, res is overwritten, if not found, returns -1.
++ * This function walks the whole tree and not just first level children until
++ * and unless first_level_children_only is true.
++ */
++static int find_prev_iomem_res(struct resource *res, unsigned long desc,
++			       bool first_level_children_only)
++{
++	struct resource *p;
++
++	BUG_ON(!res);
++	BUG_ON(res->start >= res->end);
++
++	read_lock(&resource_lock);
++
++	for (p = prev_resource(NULL, first_level_children_only); p;
++		p = prev_resource(p, first_level_children_only)) {
++		if ((p->flags & res->flags) != res->flags)
++			continue;
++		if ((desc != IORES_DESC_NONE) && (desc != p->desc))
++			continue;
++		if (p->end < res->start || p->child == iomem_resource.child) {
++			p = NULL;
++			break;
++		}
++		if ((p->end >= res->start) && (p->start < res->end))
++			break;
++	}
++
++	read_unlock(&resource_lock);
++	if (!p)
++		return -1;
++	/* copy data */
++	resource_clip(res, p->start, p->end);
++	res->flags = p->flags;
++	res->desc = p->desc;
++	return 0;
++}
++
+ static int __walk_iomem_res_desc(struct resource *res, unsigned long desc,
+ 				 bool first_level_children_only,
+ 				 void *arg,
+@@ -422,6 +495,27 @@ static int __walk_iomem_res_desc(struct resource *res, unsigned long desc,
+ 	return ret;
  }
--EXPORT_SYMBOL(iommu_tbl_range_free);
-diff --git a/arch/sparc/kernel/iommu.c b/arch/sparc/kernel/iommu.c
-index b08dc3416f06..40d008b0bd3e 100644
---- a/arch/sparc/kernel/iommu.c
-+++ b/arch/sparc/kernel/iommu.c
-@@ -14,7 +14,7 @@
- #include <linux/errno.h>
- #include <linux/iommu-helper.h>
- #include <linux/bitmap.h>
--#include <linux/iommu-common.h>
-+#include <asm/iommu-common.h>
  
- #ifdef CONFIG_PCI
- #include <linux/pci.h>
-diff --git a/arch/sparc/kernel/ldc.c b/arch/sparc/kernel/ldc.c
-index 86b625f9d8dc..c0fa3ef6cf01 100644
---- a/arch/sparc/kernel/ldc.c
-+++ b/arch/sparc/kernel/ldc.c
-@@ -16,7 +16,7 @@
- #include <linux/list.h>
- #include <linux/init.h>
- #include <linux/bitmap.h>
--#include <linux/iommu-common.h>
-+#include <asm/iommu-common.h>
++static int __walk_iomem_res_rev_desc(struct resource *res, unsigned long desc,
++				 bool first_level_children_only,
++				 void *arg,
++				 int (*func)(struct resource *, void *))
++{
++	u64 orig_start = res->start;
++	int ret = -1;
++
++	while ((res->start < res->end) &&
++	       !find_prev_iomem_res(res, desc, first_level_children_only)) {
++		ret = (*func)(res, arg);
++		if (ret)
++			break;
++
++		res->end = res->start?(res->start - 1):0;
++		res->start = orig_start;
++	}
++
++	return ret;
++}
++
+ /*
+  * Walks through iomem resources and calls func() with matching resource
+  * ranges. This walks through whole tree and not just first level children.
+@@ -468,6 +562,25 @@ int walk_system_ram_res(u64 start, u64 end, void *arg,
+ 				     arg, func);
+ }
  
- #include <asm/hypervisor.h>
- #include <asm/iommu.h>
-diff --git a/arch/sparc/kernel/pci_sun4v.c b/arch/sparc/kernel/pci_sun4v.c
-index 249367228c33..565d9ac883d0 100644
---- a/arch/sparc/kernel/pci_sun4v.c
-+++ b/arch/sparc/kernel/pci_sun4v.c
-@@ -16,7 +16,7 @@
- #include <linux/export.h>
- #include <linux/log2.h>
- #include <linux/of_device.h>
--#include <linux/iommu-common.h>
-+#include <asm/iommu-common.h>
- 
- #include <asm/iommu.h>
- #include <asm/irq.h>
-diff --git a/lib/Makefile b/lib/Makefile
-index ce20696d5a92..94203b5eecd4 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -147,7 +147,7 @@ obj-$(CONFIG_AUDIT_GENERIC) += audit.o
- obj-$(CONFIG_AUDIT_COMPAT_GENERIC) += compat_audit.o
- 
- obj-$(CONFIG_SWIOTLB) += swiotlb.o
--obj-$(CONFIG_IOMMU_HELPER) += iommu-helper.o iommu-common.o
-+obj-$(CONFIG_IOMMU_HELPER) += iommu-helper.o
- obj-$(CONFIG_FAULT_INJECTION) += fault-inject.o
- obj-$(CONFIG_NOTIFIER_ERROR_INJECTION) += notifier-error-inject.o
- obj-$(CONFIG_PM_NOTIFIER_ERROR_INJECT) += pm-notifier-error-inject.o
++/*
++ * This function, being a variant of walk_system_ram_res(), calls the @func
++ * callback against all memory ranges of type System RAM which are marked as
++ * IORESOURCE_SYSTEM_RAM and IORESOUCE_BUSY in reversed order, i.e., from
++ * higher to lower.
++ */
++int walk_system_ram_res_rev(u64 start, u64 end, void *arg,
++				int (*func)(struct resource *, void *))
++{
++	struct resource res;
++
++	res.start = start;
++	res.end = end;
++	res.flags = IORESOURCE_SYSTEM_RAM | IORESOURCE_BUSY;
++
++	return __walk_iomem_res_rev_desc(&res, IORES_DESC_NONE, true,
++				     arg, func);
++}
++
+ /*
+  * This function calls the @func callback against all memory ranges, which
+  * are ranges marked as IORESOURCE_MEM and IORESOUCE_BUSY.
 -- 
-2.17.0
+2.15.1
+
+
+-- 
+Wei Yang
+Help you, Help me
