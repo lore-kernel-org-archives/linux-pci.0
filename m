@@ -1,211 +1,119 @@
-Return-Path: <SRS0=NmO7=HF=gmail.com=hkallweit1@kernel.org>
-Return-Path: <SRS0=NmO7=HF=gmail.com=hkallweit1@kernel.org>
-Subject: [PATCH net-next 2/2] r8169: replace magic numbers with PCI MRRS
- constant
-From: Heiner Kallweit <hkallweit1@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, David Miller <davem@davemloft.net>,
- Bjorn Helgaas <helgaas@kernel.org>,
- Realtek linux nic maintainers <nic_swsd@realtek.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-References: <00f1255f-acf0-4760-c20f-0b78bda44645@gmail.com>
-Message-ID: <0a0229e0-7980-7661-f26b-ea3b2becb12b@gmail.com>
-Date: Mon, 16 Apr 2018 21:38:27 +0200
-MIME-Version: 1.0
-In-Reply-To: <00f1255f-acf0-4760-c20f-0b78bda44645@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:58339 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753551AbeDZGyV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2018 02:54:21 -0400
+Received: from mail-pf0-f197.google.com ([209.85.192.197])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <kai.heng.feng@canonical.com>)
+        id 1fBanM-0006yF-C5
+        for linux-pci@vger.kernel.org; Thu, 26 Apr 2018 06:54:20 +0000
+Received: by mail-pf0-f197.google.com with SMTP id e14so17949133pfi.9
+        for <linux-pci@vger.kernel.org>; Wed, 25 Apr 2018 23:54:20 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii;
+        delsp=yes;
+        format=flowed
+Mime-Version: 1.0 (Mac OS X Mail 11.3 \(3445.6.18\))
+Subject: Re: [PATCH v3] PCI / PM: Always check PME wakeup capability for
+ runtime wakeup support
+From: Kai Heng Feng <kai.heng.feng@canonical.com>
+In-Reply-To: <10732937.eAR6mAEfiz@aspire.rjw.lan>
+Date: Thu, 26 Apr 2018 14:54:14 +0800
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        stable@vger.kernel.org
+Message-Id: <C07517A2-0AE5-4EE2-AB64-7F0767C988DF@canonical.com>
+References: <20180331164022.24220-1-kai.heng.feng@canonical.com>
+ <798A7C7A-A3DA-4C0E-A774-48042430EE1A@canonical.com>
+ <10732937.eAR6mAEfiz@aspire.rjw.lan>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace magic number "0x5 << MAX_READ_REQUEST_SHIFT" with the
-appropriate constant as defined in PCI core.
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- drivers/net/ethernet/realtek/r8169.c | 39 ++++++++++++++--------------
- 1 file changed, 19 insertions(+), 20 deletions(-)
+> On Apr 13, 2018, at 3:29 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>
+> On Friday, April 13, 2018 8:58:11 AM CEST Kai Heng Feng wrote:
+>> Hi Bjorn and Rafael,
+>>
+>>> On Apr 1, 2018, at 12:40 AM, Kai-Heng Feng <kai.heng.feng@canonical.com>
+>>> wrote:
+>>>
+>>> USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
+>>> core: Drop run_wake flag from struct dev_pm_info").
+>>>
+>>> The device in question is not power managed by platform firmware,
+>>> furthermore, it only supports PME# from D3cold:
+>>> Capabilities: [78] Power Management version 3
+>>>        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+>>>        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>>>
+>>> Before commit de3ef1eb1cd0, the device never gets runtime suspended.
+>>> After that commit, the device gets runtime suspended, so it does not
+>>> respond to any PME#.
+>>>
+>>> usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
+>>> device_can_wakeup() in pci_dev_run_wake() always returns true.
+>>>
+>>> So pci_dev_run_wake() needs to check PME wakeup capability as its first
+>>> condition.
+>>>
+>>> In addition, change wakeup flag passed to pci_target_state() from false
+>>> to true, because we want to find the deepest state that the device can
+>>> still generate PME#.
+>>>
+>>> Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct
+>>> dev_pm_info")
+>>> Cc: stable@vger.kernel.org # 4.13+
+>>> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+>>> ---
+>>> v3: State the reason why the wakeup flag gets changed.
+>>>
+>>> v2: Explicitly check dev->pme_support.
+>>
+>> If this patch is good enough, I am hoping it can get merged in v4.17.
+>
+> OK
+>
+> Bjorn, if you want to take this:
+>
+>  Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Otherwise please let me know and I'll queue it up.
 
-diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
-index 604ae783..7d4e6890 100644
---- a/drivers/net/ethernet/realtek/r8169.c
-+++ b/drivers/net/ethernet/realtek/r8169.c
-@@ -84,7 +84,6 @@
-    The RTL chips use a 64 element hash table based on the Ethernet CRC. */
- static const int multicast_filter_limit = 32;
- 
--#define MAX_READ_REQUEST_SHIFT	12
- #define TX_DMA_BURST	7	/* Maximum PCI burst, '7' is unlimited */
- #define InterFrameGap	0x03	/* 3 means InterFrameGap = the shortest one */
- 
-@@ -5125,7 +5124,7 @@ static void r8168c_hw_jumbo_disable(struct rtl8169_private *tp)
- {
- 	RTL_W8(tp, Config3, RTL_R8(tp, Config3) & ~Jumbo_En0);
- 	RTL_W8(tp, Config4, RTL_R8(tp, Config4) & ~Jumbo_En1);
--	rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+	rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- }
- 
- static void r8168dp_hw_jumbo_enable(struct rtl8169_private *tp)
-@@ -5151,7 +5150,7 @@ static void r8168e_hw_jumbo_disable(struct rtl8169_private *tp)
- 	RTL_W8(tp, MaxTxPacketSize, 0x0c);
- 	RTL_W8(tp, Config3, RTL_R8(tp, Config3) & ~Jumbo_En0);
- 	RTL_W8(tp, Config4, RTL_R8(tp, Config4) & ~0x01);
--	rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+	rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- }
- 
- static void r8168b_0_hw_jumbo_enable(struct rtl8169_private *tp)
-@@ -5163,7 +5162,7 @@ static void r8168b_0_hw_jumbo_enable(struct rtl8169_private *tp)
- static void r8168b_0_hw_jumbo_disable(struct rtl8169_private *tp)
- {
- 	rtl_tx_performance_tweak(tp,
--		(0x5 << MAX_READ_REQUEST_SHIFT) | PCI_EXP_DEVCTL_NOSNOOP_EN);
-+		PCI_EXP_DEVCTL_READRQ_4096B | PCI_EXP_DEVCTL_NOSNOOP_EN);
- }
- 
- static void r8168b_1_hw_jumbo_enable(struct rtl8169_private *tp)
-@@ -5736,7 +5735,7 @@ static void rtl_hw_start_8168bb(struct rtl8169_private *tp)
- 	RTL_W16(tp, CPlusCmd, RTL_R16(tp, CPlusCmd) & ~R8168_CPCMD_QUIRK_MASK);
- 
- 	if (tp->dev->mtu <= ETH_DATA_LEN) {
--		rtl_tx_performance_tweak(tp, (0x5 << MAX_READ_REQUEST_SHIFT) |
-+		rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B |
- 					 PCI_EXP_DEVCTL_NOSNOOP_EN);
- 	}
- }
-@@ -5757,7 +5756,7 @@ static void __rtl_hw_start_8168cp(struct rtl8169_private *tp)
- 	RTL_W8(tp, Config3, RTL_R8(tp, Config3) & ~Beacon_en);
- 
- 	if (tp->dev->mtu <= ETH_DATA_LEN)
--		rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+		rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	rtl_disable_clock_request(tp);
- 
-@@ -5788,7 +5787,7 @@ static void rtl_hw_start_8168cp_2(struct rtl8169_private *tp)
- 	RTL_W8(tp, Config3, RTL_R8(tp, Config3) & ~Beacon_en);
- 
- 	if (tp->dev->mtu <= ETH_DATA_LEN)
--		rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+		rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	RTL_W16(tp, CPlusCmd, RTL_R16(tp, CPlusCmd) & ~R8168_CPCMD_QUIRK_MASK);
- }
-@@ -5805,7 +5804,7 @@ static void rtl_hw_start_8168cp_3(struct rtl8169_private *tp)
- 	RTL_W8(tp, MaxTxPacketSize, TxPacketMax);
- 
- 	if (tp->dev->mtu <= ETH_DATA_LEN)
--		rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+		rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	RTL_W16(tp, CPlusCmd, RTL_R16(tp, CPlusCmd) & ~R8168_CPCMD_QUIRK_MASK);
- }
-@@ -5862,7 +5861,7 @@ static void rtl_hw_start_8168d(struct rtl8169_private *tp)
- 	RTL_W8(tp, MaxTxPacketSize, TxPacketMax);
- 
- 	if (tp->dev->mtu <= ETH_DATA_LEN)
--		rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+		rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	RTL_W16(tp, CPlusCmd, RTL_R16(tp, CPlusCmd) & ~R8168_CPCMD_QUIRK_MASK);
- }
-@@ -5872,7 +5871,7 @@ static void rtl_hw_start_8168dp(struct rtl8169_private *tp)
- 	rtl_csi_access_enable_1(tp);
- 
- 	if (tp->dev->mtu <= ETH_DATA_LEN)
--		rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+		rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	RTL_W8(tp, MaxTxPacketSize, TxPacketMax);
- 
-@@ -5889,7 +5888,7 @@ static void rtl_hw_start_8168d_4(struct rtl8169_private *tp)
- 
- 	rtl_csi_access_enable_1(tp);
- 
--	rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+	rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	RTL_W8(tp, MaxTxPacketSize, TxPacketMax);
- 
-@@ -5921,7 +5920,7 @@ static void rtl_hw_start_8168e_1(struct rtl8169_private *tp)
- 	rtl_ephy_init(tp, e_info_8168e_1, ARRAY_SIZE(e_info_8168e_1));
- 
- 	if (tp->dev->mtu <= ETH_DATA_LEN)
--		rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+		rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	RTL_W8(tp, MaxTxPacketSize, TxPacketMax);
- 
-@@ -5946,7 +5945,7 @@ static void rtl_hw_start_8168e_2(struct rtl8169_private *tp)
- 	rtl_ephy_init(tp, e_info_8168e_2, ARRAY_SIZE(e_info_8168e_2));
- 
- 	if (tp->dev->mtu <= ETH_DATA_LEN)
--		rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+		rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	rtl_eri_write(tp, 0xc0, ERIAR_MASK_0011, 0x0000, ERIAR_EXGMAC);
- 	rtl_eri_write(tp, 0xb8, ERIAR_MASK_0011, 0x0000, ERIAR_EXGMAC);
-@@ -5976,7 +5975,7 @@ static void rtl_hw_start_8168f(struct rtl8169_private *tp)
- {
- 	rtl_csi_access_enable_2(tp);
- 
--	rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+	rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	rtl_eri_write(tp, 0xc0, ERIAR_MASK_0011, 0x0000, ERIAR_EXGMAC);
- 	rtl_eri_write(tp, 0xb8, ERIAR_MASK_0011, 0x0000, ERIAR_EXGMAC);
-@@ -6047,7 +6046,7 @@ static void rtl_hw_start_8168g(struct rtl8169_private *tp)
- 
- 	rtl_csi_access_enable_1(tp);
- 
--	rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+	rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	rtl_w0w1_eri(tp, 0xdc, ERIAR_MASK_0001, 0x00, 0x01, ERIAR_EXGMAC);
- 	rtl_w0w1_eri(tp, 0xdc, ERIAR_MASK_0001, 0x01, 0x00, ERIAR_EXGMAC);
-@@ -6147,7 +6146,7 @@ static void rtl_hw_start_8168h_1(struct rtl8169_private *tp)
- 
- 	rtl_csi_access_enable_1(tp);
- 
--	rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+	rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	rtl_w0w1_eri(tp, 0xdc, ERIAR_MASK_0001, 0x00, 0x01, ERIAR_EXGMAC);
- 	rtl_w0w1_eri(tp, 0xdc, ERIAR_MASK_0001, 0x01, 0x00, ERIAR_EXGMAC);
-@@ -6229,7 +6228,7 @@ static void rtl_hw_start_8168ep(struct rtl8169_private *tp)
- 
- 	rtl_csi_access_enable_1(tp);
- 
--	rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+	rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	rtl_w0w1_eri(tp, 0xdc, ERIAR_MASK_0001, 0x00, 0x01, ERIAR_EXGMAC);
- 	rtl_w0w1_eri(tp, 0xdc, ERIAR_MASK_0001, 0x01, 0x00, ERIAR_EXGMAC);
-@@ -6495,7 +6494,7 @@ static void rtl_hw_start_8102e_1(struct rtl8169_private *tp)
- 
- 	RTL_W8(tp, DBG_REG, FIX_NAK_1);
- 
--	rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+	rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	RTL_W8(tp, Config1,
- 	       LEDS1 | LEDS0 | Speed_down | MEMMAP | IOMAP | VPD | PMEnable);
-@@ -6512,7 +6511,7 @@ static void rtl_hw_start_8102e_2(struct rtl8169_private *tp)
- {
- 	rtl_csi_access_enable_2(tp);
- 
--	rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+	rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	RTL_W8(tp, Config1, MEMMAP | IOMAP | VPD | PMEnable);
- 	RTL_W8(tp, Config3, RTL_R8(tp, Config3) & ~Beacon_en);
-@@ -6575,7 +6574,7 @@ static void rtl_hw_start_8402(struct rtl8169_private *tp)
- 
- 	rtl_ephy_init(tp, e_info_8402, ARRAY_SIZE(e_info_8402));
- 
--	rtl_tx_performance_tweak(tp, 0x5 << MAX_READ_REQUEST_SHIFT);
-+	rtl_tx_performance_tweak(tp, PCI_EXP_DEVCTL_READRQ_4096B);
- 
- 	rtl_eri_write(tp, 0xc8, ERIAR_MASK_1111, 0x00000002, ERIAR_EXGMAC);
- 	rtl_eri_write(tp, 0xe8, ERIAR_MASK_1111, 0x00000006, ERIAR_EXGMAC);
--- 
-2.17.0
+Hi, Rafael,
+Can this patch be merged into your tree?
+
+Kai-Heng
+
+>
+>
+>>>  drivers/pci/pci.c | 8 ++++----
+>>>  1 file changed, 4 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>> index f6a4dd10d9b0..52821a21fc07 100644
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -2125,16 +2125,16 @@ bool pci_dev_run_wake(struct pci_dev *dev)
+>>>  {
+>>>  	struct pci_bus *bus = dev->bus;
+>>>
+>>> -	if (device_can_wakeup(&dev->dev))
+>>> -		return true;
+>>> -
+>>>  	if (!dev->pme_support)
+>>>  		return false;
+>>>
+>>>  	/* PME-capable in principle, but not from the target power state */
+>>> -	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
+>>> +	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
+>>>  		return false;
+>>>
+>>> +	if (device_can_wakeup(&dev->dev))
+>>> +		return true;
+>>> +
+>>>  	while (bus->parent) {
+>>>  		struct pci_dev *bridge = bus->self;
