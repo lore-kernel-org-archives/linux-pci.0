@@ -1,169 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51772 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751204AbeDQTns (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Apr 2018 15:43:48 -0400
-Date: Tue, 17 Apr 2018 14:43:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Matt Turner <mattst88@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-        linux-alpha <linux-alpha@vger.kernel.org>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Jay Estabrook <jay.estabrook@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: Some Alphas broken by f75b99d5a77d (PCI: Enforce bus address
- limits in resource allocation)
-Message-ID: <20180417194344.GK28657@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAEdQ38GUhL0R4c7ZjEZv89TmqQ0cwhnvBawxuXonSb9On=+B6A@mail.gmail.com>
- <20180416215044.GE28657@bhelgaas-glaptop.roam.corp.google.com>
- <CAEdQ38EdxHigQiH_k=+4enbHAutbWOE6Kc5C81ghfsC3pwELjw@mail.gmail.com>
+Return-Path: <SRS0=EUIw=HP=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=EUIw=HP=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Kai Heng Feng <kai.heng.feng@canonical.com>, bhelgaas@google.com, linux-pci@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable@vger.kernel.org
+Subject: Re: [PATCH v3] PCI / PM: Always check PME wakeup capability for runtime wakeup support
+Date: Thu, 26 Apr 2018 16:36:26 +0200
+Message-ID: <1772514.uJjIhrptf1@aspire.rjw.lan>
+In-Reply-To: <20180426135545.GB225403@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180331164022.24220-1-kai.heng.feng@canonical.com> <10732937.eAR6mAEfiz@aspire.rjw.lan> <20180426135545.GB225403@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAEdQ38EdxHigQiH_k=+4enbHAutbWOE6Kc5C81ghfsC3pwELjw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 16, 2018 at 09:43:42PM -0700, Matt Turner wrote:
-> On Mon, Apr 16, 2018 at 2:50 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > Hi Matt,
-> >
-> > First of all, sorry about breaking Nautilus, and thanks very much for
-> > tracking it down to this commit.
+On Thursday, April 26, 2018 3:55:45 PM CEST Bjorn Helgaas wrote:
+> On Fri, Apr 13, 2018 at 09:29:56AM +0200, Rafael J. Wysocki wrote:
+> > On Friday, April 13, 2018 8:58:11 AM CEST Kai Heng Feng wrote:
+> > > Hi Bjorn and Rafael,
+> > > 
+> > > > On Apr 1, 2018, at 12:40 AM, Kai-Heng Feng <kai.heng.feng@canonical.com>  
+> > > > wrote:
+> > > >
+> > > > USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
+> > > > core: Drop run_wake flag from struct dev_pm_info").
+> > > >
+> > > > The device in question is not power managed by platform firmware,
+> > > > furthermore, it only supports PME# from D3cold:
+> > > > Capabilities: [78] Power Management version 3
+> > > >        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+> > > >        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+> > > >
+> > > > Before commit de3ef1eb1cd0, the device never gets runtime suspended.
+> > > > After that commit, the device gets runtime suspended, so it does not
+> > > > respond to any PME#.
 > 
-> It's a particularly weird case, as far as I've been able to discern :)
+> Apologies for my lack of PM expertise.  I don't think the device would
+> *respond* to PME#, would it?  I would think the device would
+> potentially *generate* a PME#.
+
+Right.
+
+> And I guess since this device can generate PME# only from D3cold, the
+> implication is that runtime suspending the device may put it into D1,
+> D2, or D3hot, but not D3cold?  Is that an axiom of the runtime suspend
+> design?
+
+No, it isn't.
+
+Runtime PM is expected to only put devices into D-states from where they
+can generate PME.
+
+Before the problematic change it would just hold the device in question in D0,
+but after that change the device will be suspended (in which case it will end
+up in D3hot which is incorrect).
+
+> > > > usb_hcd_pci_probe() mandatorily calls device_wakeup_enable(), hence
+> > > > device_can_wakeup() in pci_dev_run_wake() always returns true.
 > 
-> > On Mon, Apr 16, 2018 at 07:33:57AM -0700, Matt Turner wrote:
-> >> Commit f75b99d5a77d63f20e07bd276d5a427808ac8ef6 (PCI: Enforce bus
-> >> address limits in resource allocation) broke Alpha systems using
-> >> CONFIG_ALPHA_NAUTILUS. Alpha is 64-bit, but Nautilus systems use a
-> >> 32-bit AMD 751/761 chipset. arch/alpha/kernel/sys_nautilus.c maps PCI
-> >> into the upper addresses just below 4GB.
-> >>
-> >> I can get a working kernel by ifdef'ing out the code in
-> >> drivers/pci/bus.c:pci_bus_alloc_resource. We can't tie
-> >> PCI_BUS_ADDR_T_64BIT to ALPHA_NAUTILUS without breaking generic
-> >> kernels.
-> >>
-> >> How can we get Nautilus working again?
-> >
-> > Can you collect a complete dmesg log, ideally both before and after
-> > f75b99d5a77d?  I assume the problem is that after f75b99d5a77d? we
-> > erroneously assign space for something above 4GB.  But if we know the
-> > correct host bridge apertures, we shouldn't assign space outside them,
-> > regardless of the PCI bus address size.
+> I think "mandatorily" means "always" or "unconditionally", right?
 > 
-> I made a mistake in my initial report. Commit f75b99d5a77d is actually
-> the last *working* commit. My apologies. The next commit is
-> d56dbf5bab8c (PCI: Allocate 64-bit BARs above 4G when possible) and it
-> breaks Nautilus I've confirmed.
+> > > > So pci_dev_run_wake() needs to check PME wakeup capability as its first
+> > > > condition.
+> > > >
+> > > > In addition, change wakeup flag passed to pci_target_state() from false
+> > > > to true, because we want to find the deepest state that the device can
+> > > > still generate PME#.
 > 
-> Please find attached dmesgs from those two commits, from the commit
-> immediately before them, and another from 4.17-rc1 with my hack of #if
-> 0'ing out the pci_bus_alloc_from_region(..., &pci_high) code.
+> Is this a separate bug fix?  I don't understand how it fits in here
+> because the wakeup flag means "Whether or not wakeup functionality
+> will be enabled for the device", and you're not changing anything
+> about whether wakeup functionality will be enabled.
+
+For runtime PM the "wakeup" argument of pci_target_state() should always be
+"true", so technically this may be regarded as a separate issue, but this
+change is needed as a functional fix for the device in question along with
+the reordering.
+
+Since technically there is a state from which the device can signal PME,
+device_can_wakeup() returns "true" for it, but this isn't sufficient for
+pci_dev_run_wake() to return "true" (because that state is D3cold and
+the platform cannot power-manage the device, so the device cannot be put
+into D3cold directly).  That's the first thing that needs to be changed.
+
+On top of that, we need to look for a state from which the device can
+generate PME.
+
+> > > > Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct  
+> > > > dev_pm_info")
+> > > > Cc: stable@vger.kernel.org # 4.13+
+> > > > Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> > > > ---
+> > > > v3: State the reason why the wakeup flag gets changed.
+> > > >
+> > > > v2: Explicitly check dev->pme_support.
+> > > 
+> > > If this patch is good enough, I am hoping it can get merged in v4.17.
+> > 
+> > OK
+> > 
+> > Bjorn, if you want to take this:
+> > 
+> >  Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Otherwise please let me know and I'll queue it up.
 > 
-> Thanks for having a look!
+> de3ef1eb1cd0 went through your tree, so I think this fix should go
+> through your tree, too.
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-We're telling the PCI core that the host bridge MMIO aperture is the
-entire 64-bit address space, so when we assign BARs, some of them end
-up above 4GB:
+OK
 
-  pci_bus 0000:00: root bus resource [mem 0x00000000-0xffffffffffffffff]
-  pci 0000:00:09.0: BAR 0: assigned [mem 0x100000000-0x10000ffff 64bit]
+> Not directly related to this patch, but I think these comments in
+> pci_target_state() are slightly misleading:
+> 
+>    * Call the platform to choose the target state of the device
+>    * and enable wake-up from this state if supported.
+> 
+>    * Find the deepest state from which the device can generate
+>    * wake-up events, make it the target state and enable device
+>    * to generate PME#.
+> 
+> AFAICT, pci_target_state() does not actually "enable wake-up from this
+> state" or "enable device to generate PME#".
 
-But it sounds like the MMIO aperture really ends at 0xffffffff, so
-that's not going to work.
+Right, the comments appear to be stale, I'll send a patch to update them.
 
-There's probably some register in the chipset that tells us where the
-MMIO aperture starts.  The best thing to do would be to read that
-register, use it to initialize irongate_mem, and use that as the MMIO
-aperture.
-
-But I don't know where to look in the chipset, and it looks like the
-current strategy is to infer the base by looking at BAR assignments of
-PCI devices.  Can you try the patch below (based on v4.17-rc1) and
-save the dmesg and /proc/iomem and /proc/ioports contents?  I'm
-guessing at some things here, so I added a few debug printks, too.
-
-
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index ff4f54b86c7f..093ad6e5c75f 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -189,10 +189,14 @@ extern void pcibios_claim_one_bus(struct pci_bus *);
- 
- static struct resource irongate_io = {
- 	.name	= "Irongate PCI IO",
-+	.start	= 0,
-+	.end	= 0xffff,
- 	.flags	= IORESOURCE_IO,
- };
- static struct resource irongate_mem = {
- 	.name	= "Irongate PCI MEM",
-+	.start	= 0,
-+	.end	= 0xffffffff,
- 	.flags	= IORESOURCE_MEM,
- };
- static struct resource busn_resource = {
-@@ -208,7 +212,6 @@ nautilus_init_pci(void)
- 	struct pci_controller *hose = hose_head;
- 	struct pci_host_bridge *bridge;
- 	struct pci_bus *bus;
--	struct pci_dev *irongate;
- 	unsigned long bus_align, bus_size, pci_mem;
- 	unsigned long memtop = max_low_pfn << PAGE_SHIFT;
- 	int ret;
-@@ -217,8 +220,8 @@ nautilus_init_pci(void)
- 	if (!bridge)
- 		return;
- 
--	pci_add_resource(&bridge->windows, &ioport_resource);
--	pci_add_resource(&bridge->windows, &iomem_resource);
-+	pci_add_resource(&bridge->windows, &irongate_io);
-+	pci_add_resource(&bridge->windows, &irongate_mem);
- 	pci_add_resource(&bridge->windows, &busn_resource);
- 	bridge->dev.parent = NULL;
- 	bridge->sysdata = hose;
-@@ -237,33 +240,30 @@ nautilus_init_pci(void)
- 	bus = hose->bus = bridge->bus;
- 	pcibios_claim_one_bus(bus);
- 
--	irongate = pci_get_domain_bus_and_slot(pci_domain_nr(bus), 0, 0);
--	bus->self = irongate;
--	bus->resource[0] = &irongate_io;
--	bus->resource[1] = &irongate_mem;
--
- 	pci_bus_size_bridges(bus);
- 
--	/* IO port range. */
--	bus->resource[0]->start = 0;
--	bus->resource[0]->end = 0xffff;
--
-+	printk("bus->resource[1] %pR\n", &bus->resource[1]);
- 	/* Set up PCI memory range - limit is hardwired to 0xffffffff,
- 	   base must be at aligned to 16Mb. */
- 	bus_align = bus->resource[1]->start;
- 	bus_size = bus->resource[1]->end + 1 - bus_align;
- 	if (bus_align < 0x1000000UL)
- 		bus_align = 0x1000000UL;
-+	printk("bus_align %#lx bus_size %#lx\n", bus_align, bus_size);
- 
- 	pci_mem = (0x100000000UL - bus_size) & -bus_align;
- 
-+	printk("memtop %#lx pci_mem %#lx\n", memtop, pci_mem);
-+	irongate_mem.start = pci_mem;
- 	bus->resource[1]->start = pci_mem;
--	bus->resource[1]->end = 0xffffffffUL;
--	if (request_resource(&iomem_resource, bus->resource[1]) < 0)
--		printk(KERN_ERR "Failed to request MEM on hose 0\n");
-+	if (request_resource(&iomem_resource, &irongate_mem) < 0)
-+		printk(KERN_ERR "Failed to request %pR on hose 0\n",
-+		       &irongate_mem);
- 
- 	if (pci_mem < memtop)
- 		memtop = pci_mem;
-+	printk("memtop %#lx alpha_mv.min_mem_address %#lx\n", memtop,
-+	       alpha_mv.min_mem_address);
- 	if (memtop > alpha_mv.min_mem_address) {
- 		free_reserved_area(__va(alpha_mv.min_mem_address),
- 				   __va(memtop), -1, NULL);
+Thanks,
+Rafael
