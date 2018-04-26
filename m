@@ -1,40 +1,85 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- iommu@lists.linux-foundation.org
-Subject: centralize SWIOTLB config symbol and misc other cleanups V3
-Date: Wed, 25 Apr 2018 07:15:26 +0200
-Message-Id: <20180425051539.1989-1-hch@lst.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-mips@linux-mips.org, sstabellini@kernel.org,
- linux-pci@vger.kernel.org, x86@kernel.org, linux-mm@kvack.org,
- sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:59282 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755168AbeDZTmb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 26 Apr 2018 15:42:31 -0400
+Date: Thu, 26 Apr 2018 13:42:30 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI: Add pci_bus_specific_read_dev_vendor_id() to
+ workaround PCI switch specific issues prior to accessing newly added
+ endpoint
+Message-ID: <20180426134230.3d0d55ca@w520.home>
+In-Reply-To: <32d9b7ce-0993-c749-3285-a51146fe37d6@oracle.com>
+References: <16461819-82a1-8122-4a30-842f9a078988@oracle.com>
+        <201804261426.2HZUSMma%fengguang.wu@intel.com>
+        <32d9b7ce-0993-c749-3285-a51146fe37d6@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+On Thu, 26 Apr 2018 15:32:00 -0400
+James Puthukattukaran <james.puthukattukaran@oracle.com> wrote:
 
-this seris aims for a single defintion of the Kconfig symbol.  To get
-there various cleanups, mostly about config symbols are included as well.
+> On 04/26/2018 02:26 AM, kbuild test robot wrote:
+> > Hi James,
+> > 
+> > Thank you for the patch! Yet something to improve:
+> > 
+> > [auto build test ERROR on pci/next]
+> > [also build test ERROR on v4.17-rc2 next-20180424]
+> > [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> > 
+> > url:    https://github.com/0day-ci/linux/commits/James-Puthukattukaran/PCI-SUpport-to-workaround-bus-level-HW-issues/20180426-092305
+> > base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+> > config: ia64-allnoconfig (attached as .config)
+> > compiler: ia64-linux-gcc (GCC) 7.2.0
+> > reproduce:
+> >         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+> >         chmod +x ~/bin/make.cross
+> >         # save the attached .config to linux build tree
+> >         make.cross ARCH=ia64 
+> > 
+> > All errors (new ones prefixed by >>):
+> > 
+> >    drivers/pci/probe.o: In function `pci_bus_read_dev_vendor_id':  
+> >>> probe.c:(.text+0x3e02): undefined reference to `pci_bus_specific_read_dev_vendor_id'  
+> 
+> Alex/Sinan -
+> 
+> Would it be an acceptable fix for this problem?
+> 
+> 
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2097,6 +2097,13 @@ static bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l,
+>  	return true;
+>  }
+>  
+> +int __weak pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn, 
+> +					u32 *l, int timeout)
+> +{
+> +	return -ENOTTY;
+> +}
+> +
+> +
 
-Changes since V2:
- - swiotlb doesn't need the dma_length field by itself, so don't select it
- - don't offer a user visible SWIOTLB choice
+Close, but I'd suggest following the example set by other quirks,
+generally there's a stub definition of it in pci.h when !#defined
+CONFIG_PCI_QUIRKS.  See for example pci_dev_specific_acs_enabled().
+Thanks,
 
-Chages since V1:
- - fixed a incorrect Reviewed-by that should be a Signed-off-by.
+Alex
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+>  				int timeout)
+>  {
+> 
+> 
+> I ran the repro steps and it completes without issues. In addition, I will fix the typos Alex pointed out in the last submission and resubmit.
+> thanks
+> James
