@@ -1,75 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:60865 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757536AbeD0Icb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 04:32:31 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 7/9] PCI: mediatek: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Fri, 27 Apr 2018 16:24:28 +0800
-Message-Id: <1524817468-242615-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 6/6] arm: Allow to enable PCI_DOMAINS manually
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+References: <cover.1524582822.git.jan.kiszka@siemens.com>
+ <4b97c00b9cd72f508aa27f0b58711d73de2cd397.1524582822.git.jan.kiszka@siemens.com>
+ <20180425175446.GC21628@e107981-ln.cambridge.arm.com>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+Message-ID: <ed0e7c92-6ee1-53a9-4448-a679aed8f613@siemens.com>
+Date: Thu, 26 Apr 2018 09:19:37 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180425175446.GC21628@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+On 2018-04-25 19:54, Lorenzo Pieralisi wrote:
+> On Tue, Apr 24, 2018 at 05:13:42PM +0200, Jan Kiszka wrote:
+>> From: Jan Kiszka <jan.kiszka@siemens.com>
+>>
+>> Required when running over Jailhouse, and there is already a physical
+>> host controller that Jailhouse does not intercept and rather adds a
+>> virtual one. That is the case for the Tegra TK1, e.g.
+>>
+>> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+>> ---
+>>  arch/arm/Kconfig | 7 ++++++-
+>>  1 file changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+>> index a7f8e7f4b88f..5f8190cb057d 100644
+>> --- a/arch/arm/Kconfig
+>> +++ b/arch/arm/Kconfig
+>> @@ -1248,8 +1248,13 @@ config PCI
+>>  	  VESA. If you have PCI, say Y, otherwise N.
+>>  
+>>  config PCI_DOMAINS
+>> -	bool
+>> +	bool "Support for multiple PCI domains"
+>>  	depends on PCI
+>> +	help
+>> +	  Automatically enabled if the platform supports multiple PCI host
+>> +	  controllers. Say Y if running over a hypervisor like Jailhouse that
+>> +	  dynamically adds further host controllers while the system is
+>> +	  running. Say N otherwise.
+> 
+> Alternatively, you could select it under PCI_HOST_GENERIC if that's all
+> you need in Jailhouse. Actually that's a change that makes sense anyway
+> I think.
 
-Cc: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+If that's preferred - will switch!
 
- drivers/pci/host/pcie-mediatek.c | 29 +++--------------------------
- 1 file changed, 3 insertions(+), 26 deletions(-)
+Thanks,
+Jan
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index a8b20c5..e977a43 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -541,38 +541,15 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
- 	writel(val, port->base + PCIE_INT_MASK);
- }
- 
--static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
--			     irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--static const struct irq_domain_ops intx_domain_ops = {
--	.map = mtk_pcie_intx_map,
--};
--
- static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
- 				    struct device_node *node)
- {
- 	struct device *dev = port->pcie->dev;
--	struct device_node *pcie_intc_node;
- 
--	/* Setup INTx */
--	pcie_intc_node = of_get_next_child(node, NULL);
--	if (!pcie_intc_node) {
--		dev_err(dev, "no PCIe Intc node found\n");
--		return -ENODEV;
--	}
-+	port->irq_domain = pci_alloc_intx_irqd(dev, port, false, NULL, NULL);
-+	if (IS_ERR(port->irq_domain))
-+		return PTR_ERR(port->irq_domain);
- 
--	port->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--						 &intx_domain_ops, port);
--	if (!port->irq_domain) {
--		dev_err(dev, "failed to get INTx IRQ domain\n");
--		return -ENODEV;
--	}
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
 -- 
-1.9.1
+Siemens AG, Corporate Technology, CT RDA IOT SES-DE
+Corporate Competence Center Embedded Linux
