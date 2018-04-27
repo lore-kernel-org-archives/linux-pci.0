@@ -1,59 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v2 10/10] PCI: Enable PCI_DOMAINS along with generic PCI host
- controller
-Date: Mon, 30 Apr 2018 07:48:44 +0200
-Message-Id: <5122e6157951cff6fc2436dcd19d51c5b6b0a353.1525067324.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
-References: <cover.1525067324.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
-References: <cover.1525067324.git.jan.kiszka@siemens.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:60882 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757338AbeD0SKZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Apr 2018 14:10:25 -0400
+Date: Fri, 27 Apr 2018 13:10:24 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add ACS quirk for Intel 300 series chipset
+Message-ID: <20180427181024.GE8199@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+On Fri, Apr 27, 2018 at 01:44:23PM +0300, Mika Westerberg wrote:
+> Intel 300 series chipset still has the same ACS issue than the previous
+> generations so extend the ACS quirk to cover it as well.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-This controller is often instantiated by hypervisors, and they may add
-multiple of them or add them in addition to a physical host controller
-like the Jailhouse hypervisor is doing. Therefore allow for multiple
-domains so that we can handle them all.
+Applied to pci/virtualization for v4.18, thanks!
 
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
----
- drivers/pci/host/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+Stable tag here, too?
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 0d0177ce436c..3d25b35bb5ab 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -68,6 +68,7 @@ config PCI_HOST_GENERIC
- 	depends on (ARM || ARM64) && OF
- 	select PCI_HOST_COMMON
- 	select IRQ_DOMAIN
-+	select PCI_DOMAINS
- 	help
- 	  Say Y here if you want to support a simple generic PCI host
- 	  controller, such as the one emulated by kvmtool.
--- 
-2.13.6
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/pci/quirks.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 2990ad1e7c99..7a0f41176369 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4230,6 +4230,11 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
+>   * 0xa290-0xa29f PCI Express Root port #{0-16}
+>   * 0xa2e7-0xa2ee PCI Express Root port #{17-24}
+>   *
+> + * The 300 series chipset suffers from the same bug so include those root
+> + * ports here as well.
+> + *
+> + * 0xa32c-0xa343 PCI Express Root port #{0-24}
+> + *
+>   * [1] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-2.html
+>   * [2] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-1.html
+>   * [3] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-spec-update.html
+> @@ -4244,6 +4249,7 @@ static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
+>  	switch (dev->device) {
+>  	case 0xa110 ... 0xa11f: case 0xa167 ... 0xa16a: /* Sunrise Point */
+>  	case 0xa290 ... 0xa29f: case 0xa2e7 ... 0xa2ee: /* Union Point */
+> +	case 0xa32c ... 0xa343:				/* 300 series */
+>  		return true;
+>  	}
+>  
+> -- 
+> 2.17.0
+> 
