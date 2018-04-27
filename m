@@ -1,101 +1,61 @@
-Return-Path: <SRS0=xuTc=HJ=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=xuTc=HJ=redhat.com=alex.williamson@kernel.org>
-Date: Fri, 20 Apr 2018 09:04:20 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, Jason Gunthorpe <jgg@ziepe.ca>, Bjorn
- Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- sulrich@codeaurora.org, timur@codeaurora.org,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Mike
- Marciniszyn <mike.marciniszyn@intel.com>, Dennis Dalessandro
- <dennis.dalessandro@intel.com>, Doug Ledford <dledford@redhat.com>, "open
- list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>, open list
- <linux-kernel@vger.kernel.org>, Alex Deucher <alexander.deucher@amd.com>,
- Rajat Jain <rajatja@google.com>
-Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
-Message-ID: <20180420090420.03fb1e6c@w520.home>
-In-Reply-To: <20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
-References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
-	<20180419202632.GE14063@ziepe.ca>
-	<20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
-	<290e9530-dcde-9c10-7ae0-59ac4c509db4@codeaurora.org>
-	<20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f66.google.com ([209.85.214.66]:53209 "EHLO
+        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932282AbeD0In5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 04:43:57 -0400
+Received: by mail-it0-f66.google.com with SMTP id f6-v6so1005332ita.2
+        for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2018 01:43:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <5AD0E995.3090802@kontron.com>
+References: <5AD0E995.3090802@kontron.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Fri, 27 Apr 2018 10:43:56 +0200
+Message-ID: <CAKv+Gu_v4V8DUa6f4WxvjZHoJbbqT0mKpOwYVmaLaE20CB3U_g@mail.gmail.com>
+Subject: Re: LS1043A : "synchronous abort" at boot due to PCI config read
+To: Gilles Buloz <Gilles.Buloz@kontron.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+Cc: "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "minghuan.Lian@freescale.com" <minghuan.Lian@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 20 Apr 2018 09:00:49 -0500
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+(add Bjorn and linux-pci)
 
-> [+cc Rajat, Alex because of their interest in the reset/hotplug issue]
-> 
-> For context, Sinan's patch is this:
-> 
-> > diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-> > index 83d66e8..75f49e3 100644
-> > --- a/drivers/infiniband/hw/hfi1/pcie.c
-> > +++ b/drivers/infiniband/hw/hfi1/pcie.c
-> > @@ -908,7 +908,8 @@ static int trigger_sbr(struct hfi1_devdata *dd)
-> >          * delay after a reset is required.  Per spec requirements,
-> >          * the link is either working or not after that point.
-> >          */
-> > -       pci_reset_bridge_secondary_bus(dev->bus->self);
-> > +       if (pci_reset_slot(dev->slot))
-> > +               pci_reset_bridge_secondary_bus(dev->bus->self);  
-> 
-> On Thu, Apr 19, 2018 at 06:19:32PM -0400, Sinan Kaya wrote:
-> > On 4/19/2018 5:47 PM, Bjorn Helgaas wrote:  
-> > >> Bjorn, would be appropriate to export pci_parent_bus_reset() or some
-> > >> variation therin??  
-> > > I agree it would be really nice if the PCI core could help out somehow
-> > > so we could get some of this code out of individual drivers.  
-> 
-> What I was really thinking here was about the whole Gen3 transition
-> thing, not the reset thing by itself.
-> 
-> > I can create a function called pci_reset_link() and move both slot and
-> > secondary bus reset inside.  
-> 
-> What exactly is your patch fixing?  Is it the following?
-> 
->   If the HFI link is not operating at 8GT/s, the driver's .probe()
->   method tries to transition it to 8GT/s, which involves resetting the
->   HFI device with pci_reset_bridge_secondary_bus().  If the HFI device
->   is in a hotplug slot, the reset causes a "Link Down" event, which
->   causes the pciehp driver to remove the HFI device and re-enumerate
->   it when the link comes back up.
-> 
->   When pciehp removes the device, it calls the HFI .remove() method,
->   which is a problem because the .probe() method is still active.
-> 
->   It looks like this should deadlock because __device_attach() holds
->   the device_lock while calling .probe() and the
->   device_release_driver() path tries to acquire it.
-> 
-> Your patch uses pci_reset_slot(), which connects with Rajat's work
-> (06a8d89af551 ("PCI: pciehp: Disable link notification across slot
-> reset")) to avoid hotplug events for intentional resets.
-> 
-> So I think I just reverse-engineered the whole rationale for your
-> patch :)  Sorry about the long detour.
-> 
-> I'm having a hard time articulating my thoughts here.  I think my
-> concern is that knowledge about this reset/link down/hotplug issue is
-> leaking out and we'll end up with different reset interfaces that may
-> or may not result in hotplug events.  This seems like a confusing API
-> because it's hard to explain which interface a driver should use.
+On 13 April 2018 at 19:32, Gilles Buloz <Gilles.Buloz@kontron.com> wrote:
+> Dear developers,
+>
+> I currently have two functional workarounds for this issue but would like to know which one you would recommend, if any :-)
+> I'm using a LS1043A CPU (NXP QorIQ Layerscape) and get a "synchronous external abort" when booting because of a PCI config read
+> during PCI scan.
+>
+> I'm using a custom hardware (based on LS1043ARDB) having a PEX8112 PCIe-to-PCI bridge connected to the LS1043A to have a PCI slot
+> for legacy devices. This bridge only supports PCI-Compatible config accesses (offset 0x00-0xFF).
+> On this PCI slot I connect a PCI module made of a PCI-to-PCIe bridge plus PCIe devices behind.
+> The problem occurs when the kernel probes the PCIe devices : as they are PCIe devices, the kernel does a PCI config read access at
+> offset 0x100 to check if "PCIe extended capability registers" are accessible (see drivers/pci/probe.c, function
+> pci_cfg_space_size_ext()). Unfortunately the PEX8112 PCIe-to-PCI bridge that is in the path reports an error to the CPU for this
+> access, and it seems there's no way to disable that on this bridge.
+>
+> The first workaround I found was to patch drivers/pci/host/pci-layerscape.c to have PCIE_ABSERR_SETTING set to 0x9400 instead of
+> 0x9401 (for PCIE_ABSERR register) to disable error reporting. This only impacts an NXP part of the Linux kernel code, but I'm not
+> sure this is a good idea (however it seems to be like that on Intel platforms where even MEM accesses to a no-device address return
+> FF without any error).
+>
+> I've also tried another workaround that works : patch drivers/pci/probe.c to use bus_flags to remember if a bus is behind a bridge
+> without extended address capability, to avoid PCi config read accesses at offset 0x100 in
+> pci_cfg_space_size() / pci_cfg_space_size_ext(). But this patch impacts the generic PCI probe method of Linux.
+>
+> Any Idea to properly handle that issue ?
+>
 
-Is there a concern here about whether the endpoint device driver or the
-PCI core really knows better about link retraining?  This makes me
-remember my unfinished (and need to revisit) Pericom quirk[1] where
-errata in the PCIe switch requires that upstream and downstream links
-are balanced (ie. same link rate) or else enabling ACS results in
-packets not properly flowing through the switch.  If an endpoint driver
-starts deciding to retrain links, overriding quirks in the PCI core,
-then such topology manipulation isn't possible.  Why does the
-driver .probe() function think it can retrain at a higher link rate
-than PCI core?  Thanks,
+This seems like a rather unusual configuration, but I guess that if
+the first bridge/switch advertises its inability to support extended
+config space accesses, we should not be performing them on any of its
+subordinate buses. How does the PEX8112 advertise this limitation?
 
-Alex
-
-[1]https://lists.linuxfoundation.org/pipermail/iommu/2016-October/018890.html
+That said, I wonder if it is reasonable in the first place to expect
+that a PCIe device works as expected passing through a legacy PCI
+layer like that.
