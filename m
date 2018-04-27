@@ -1,126 +1,147 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Feng Kan <fkan@apm.com>, gregkh@linuxfoundation.org
-Subject: Re: [PATCH V4] PM / core: fix deferred probe breaking suspend resume
- order
-Date: Mon, 23 Apr 2018 10:03:19 +0200
-Message-ID: <13159334.FbaSTEhggn@aspire.rjw.lan>
-In-Reply-To: <1523404626-1466-1-git-send-email-fkan@apm.com>
-References: <1523404626-1466-1-git-send-email-fkan@apm.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: lorenzo.pieralisi@arm.com, linux-pm@vger.kernel.org,
- linux-pci@vger.kernel.org, bhelgaas@google.com, Toan Le <toanle@apm.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH 08/10] PCI: endpoint: functions/pci-epf-test: Replace lower into upper case characters
+Date: Fri, 27 Apr 2018 17:57:45 +0100
+Message-Id: <55b6661e5deaf8aa7766c3ec6fd535bb6bff9887.1524845816.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, April 11, 2018 1:57:06 AM CEST Feng Kan wrote:
-> When bridge and its endpoint is enumerated the devices are added to the
-> dpm list. Afterward, the bridge defers probe when IOMMU is not ready.
-> This causes the bridge to be moved to the end of the dpm list when
-> deferred probe kicks in. The order of the dpm list for bridge and
-> endpoint is reversed.
-> 
-> Add reordering code to move the bridge and its children and consumers to
-> the end of the pm list so the order for suspend and resume is not altered.
-> The code also move device and its children and consumers to the tail of
-> device_kset list if it is registered.
-> 
-> Signed-off-by: Feng Kan <fkan@apm.com>
-> Signed-off-by: Toan Le <toanle@apm.com>
+Replace all initial lower case character into upper case in comments
+and debug printks.
 
-I'm going to queue this up for 4.18-rc1.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/pci/endpoint/functions/pci-epf-test.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-If anyone, and Greg in particular, has any objections of concerns regarding
-that, please let me know.
-
-> ---
->  V4:
-> 	1. additional comment change from Rafael
->  V3:
-> 	1. additional code comment changes
->  V2:
->         1. change patch title from "move device and its children..."
->         2. move define based on Bjorn's comment
->         3. rename function name and comment content
-> 
->  drivers/base/base.h |  3 +++
->  drivers/base/core.c | 20 ++++++++++++++++++++
->  drivers/base/dd.c   |  4 +---
->  3 files changed, 24 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/base/base.h b/drivers/base/base.h
-> index d800de6..a75c302 100644
-> --- a/drivers/base/base.h
-> +++ b/drivers/base/base.h
-> @@ -161,3 +161,6 @@ static inline void module_remove_driver(struct device_driver *drv) { }
->  extern void device_links_no_driver(struct device *dev);
->  extern bool device_links_busy(struct device *dev);
->  extern void device_links_unbind_consumers(struct device *dev);
-> +
-> +/* device pm support */
-> +void device_pm_move_to_tail(struct device *dev);
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 110230d..eaa5d9f 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -148,6 +148,26 @@ static int device_reorder_to_tail(struct device *dev, void *not_used)
->  }
->  
->  /**
-> + * device_pm_move_to_tail - Move set of devices to the end of device lists
-> + * @dev: Device to move
-> + *
-> + * This is a device_reorder_to_tail() wrapper taking the requisite locks.
-> + *
-> + * It moves the @dev along with all of its children and all of its consumers
-> + * to the ends of the device_kset and dpm_list, recursively.
-> + */
-> +void device_pm_move_to_tail(struct device *dev)
-> +{
-> +	int idx;
-> +
-> +	idx = device_links_read_lock();
-> +	device_pm_lock();
-> +	device_reorder_to_tail(dev, NULL);
-> +	device_pm_unlock();
-> +	device_links_read_unlock(idx);
-> +}
-> +
-> +/**
->   * device_link_add - Create a link between two devices.
->   * @consumer: Consumer end of the link.
->   * @supplier: Supplier end of the link.
-> diff --git a/drivers/base/dd.c b/drivers/base/dd.c
-> index 2c964f5..96fab29 100644
-> --- a/drivers/base/dd.c
-> +++ b/drivers/base/dd.c
-> @@ -123,9 +123,7 @@ static void deferred_probe_work_func(struct work_struct *work)
->  		 * the list is a good order for suspend but deferred
->  		 * probe makes that very unsafe.
->  		 */
-> -		device_pm_lock();
-> -		device_pm_move_last(dev);
-> -		device_pm_unlock();
-> +		device_pm_move_to_tail(dev);
->  
->  		dev_dbg(dev, "Retrying from deferred list\n");
->  		if (initcall_debug && !initcalls_done)
-> 
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index be5547f..e9ff4aa 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -92,7 +92,7 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
+ 
+ 	src_addr = pci_epc_mem_alloc_addr(epc, &src_phys_addr, reg->size);
+ 	if (!src_addr) {
+-		dev_err(dev, "failed to allocate source address\n");
++		dev_err(dev, "Failed to allocate source address\n");
+ 		reg->status = STATUS_SRC_ADDR_INVALID;
+ 		ret = -ENOMEM;
+ 		goto err;
+@@ -101,14 +101,14 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
+ 	ret = pci_epc_map_addr(epc, epf->func_no, src_phys_addr, reg->src_addr,
+ 			       reg->size);
+ 	if (ret) {
+-		dev_err(dev, "failed to map source address\n");
++		dev_err(dev, "Failed to map source address\n");
+ 		reg->status = STATUS_SRC_ADDR_INVALID;
+ 		goto err_src_addr;
+ 	}
+ 
+ 	dst_addr = pci_epc_mem_alloc_addr(epc, &dst_phys_addr, reg->size);
+ 	if (!dst_addr) {
+-		dev_err(dev, "failed to allocate destination address\n");
++		dev_err(dev, "Failed to allocate destination address\n");
+ 		reg->status = STATUS_DST_ADDR_INVALID;
+ 		ret = -ENOMEM;
+ 		goto err_src_map_addr;
+@@ -117,7 +117,7 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
+ 	ret = pci_epc_map_addr(epc, epf->func_no, dst_phys_addr, reg->dst_addr,
+ 			       reg->size);
+ 	if (ret) {
+-		dev_err(dev, "failed to map destination address\n");
++		dev_err(dev, "Failed to map destination address\n");
+ 		reg->status = STATUS_DST_ADDR_INVALID;
+ 		goto err_dst_addr;
+ 	}
+@@ -154,7 +154,7 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
+ 
+ 	src_addr = pci_epc_mem_alloc_addr(epc, &phys_addr, reg->size);
+ 	if (!src_addr) {
+-		dev_err(dev, "failed to allocate address\n");
++		dev_err(dev, "Failed to allocate address\n");
+ 		reg->status = STATUS_SRC_ADDR_INVALID;
+ 		ret = -ENOMEM;
+ 		goto err;
+@@ -163,7 +163,7 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
+ 	ret = pci_epc_map_addr(epc, epf->func_no, phys_addr, reg->src_addr,
+ 			       reg->size);
+ 	if (ret) {
+-		dev_err(dev, "failed to map address\n");
++		dev_err(dev, "Failed to map address\n");
+ 		reg->status = STATUS_SRC_ADDR_INVALID;
+ 		goto err_addr;
+ 	}
+@@ -206,7 +206,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+ 
+ 	dst_addr = pci_epc_mem_alloc_addr(epc, &phys_addr, reg->size);
+ 	if (!dst_addr) {
+-		dev_err(dev, "failed to allocate address\n");
++		dev_err(dev, "Failed to allocate address\n");
+ 		reg->status = STATUS_DST_ADDR_INVALID;
+ 		ret = -ENOMEM;
+ 		goto err;
+@@ -215,7 +215,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+ 	ret = pci_epc_map_addr(epc, epf->func_no, phys_addr, reg->dst_addr,
+ 			       reg->size);
+ 	if (ret) {
+-		dev_err(dev, "failed to map address\n");
++		dev_err(dev, "Failed to map address\n");
+ 		reg->status = STATUS_DST_ADDR_INVALID;
+ 		goto err_addr;
+ 	}
+@@ -409,7 +409,7 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
+ 		ret = pci_epc_set_bar(epc, epf->func_no, epf_bar);
+ 		if (ret) {
+ 			pci_epf_free_space(epf, epf_test->reg[bar], bar);
+-			dev_err(dev, "failed to set BAR%d\n", bar);
++			dev_err(dev, "Failed to set BAR%d\n", bar);
+ 			if (bar == test_reg_bar)
+ 				return ret;
+ 		}
+@@ -436,7 +436,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
+ 	base = pci_epf_alloc_space(epf, sizeof(struct pci_epf_test_reg),
+ 				   test_reg_bar);
+ 	if (!base) {
+-		dev_err(dev, "failed to allocated register space\n");
++		dev_err(dev, "Failed to allocated register space\n");
+ 		return -ENOMEM;
+ 	}
+ 	epf_test->reg[test_reg_bar] = base;
+@@ -446,7 +446,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
+ 			continue;
+ 		base = pci_epf_alloc_space(epf, bar_size[bar], bar);
+ 		if (!base)
+-			dev_err(dev, "failed to allocate space for BAR%d\n",
++			dev_err(dev, "Failed to allocate space for BAR%d\n",
+ 				bar);
+ 		epf_test->reg[bar] = base;
+ 	}
+@@ -467,7 +467,7 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+ 
+ 	ret = pci_epc_write_header(epc, epf->func_no, header);
+ 	if (ret) {
+-		dev_err(dev, "configuration header write failed\n");
++		dev_err(dev, "Configuration header write failed\n");
+ 		return ret;
+ 	}
+ 
+@@ -565,7 +565,7 @@ static int __init pci_epf_test_init(void)
+ 					     WQ_MEM_RECLAIM | WQ_HIGHPRI, 0);
+ 	ret = pci_epf_register_driver(&test_driver);
+ 	if (ret) {
+-		pr_err("failed to register pci epf test driver --> %d\n", ret);
++		pr_err("Failed to register pci epf test driver --> %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-- 
+2.7.4
