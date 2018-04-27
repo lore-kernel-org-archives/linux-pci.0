@@ -1,161 +1,245 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- iommu@lists.linux-foundation.org
-Subject: [PATCH 04/12] iommu-helper: move the IOMMU_HELPER config symbol to
- lib/
-Date: Sun, 15 Apr 2018 16:59:39 +0200
-Message-Id: <20180415145947.1248-5-hch@lst.de>
-In-Reply-To: <20180415145947.1248-1-hch@lst.de>
-References: <20180415145947.1248-1-hch@lst.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-mips@linux-mips.org, linux-mm@kvack.org, linux-pci@vger.kernel.org,
- x86@kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
- sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:42344 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759215AbeD0WY3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Apr 2018 18:24:29 -0400
+Date: Fri, 27 Apr 2018 17:24:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 3/6] PCI: Introduce devm_of_pci_get_host_bridge_resources
+Message-ID: <20180427222427.GB73638@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1524582822.git.jan.kiszka@siemens.com>
+ <e387d04ea235c9a4879a897bb730adc383a96635.1524582822.git.jan.kiszka@siemens.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e387d04ea235c9a4879a897bb730adc383a96635.1524582822.git.jan.kiszka@siemens.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This way we have one central definition of it, and user can select it as
-needed.
+On Tue, Apr 24, 2018 at 05:13:39PM +0200, Jan Kiszka wrote:
+> From: Jan Kiszka <jan.kiszka@siemens.com>
+> 
+> of_pci_get_host_bridge_resources allocates the resource structures it
+> fills dynamically, but none of its callers care to release them so far.
+> Rather than requiring everyone to do this explicitly, introduce a
+> managed version of that service. This differs API-wise only in taking a
+> reference to the associated device, rather than to the device tree node.
+> 
+> As of_pci_get_host_bridge_resources is an exported interface, we cannot
+> simply drop it at this point. After converting all in-tree users to the
+> new API, we could phase out the unmanaged one over some grace period.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- arch/powerpc/Kconfig | 4 +---
- arch/s390/Kconfig    | 5 ++---
- arch/sparc/Kconfig   | 5 +----
- arch/x86/Kconfig     | 6 ++----
- lib/Kconfig          | 3 +++
- 5 files changed, 9 insertions(+), 14 deletions(-)
+It looks like it might be possible to split this into three or four
+patches:
 
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index eb23f2949bf6..3ca617cd4807 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -223,6 +223,7 @@ config PPC
- 	select HAVE_SYSCALL_TRACEPOINTS
- 	select HAVE_VIRT_CPU_ACCOUNTING
- 	select HAVE_IRQ_TIME_ACCOUNTING
-+	select IOMMU_HELPER			if PPC64
- 	select IRQ_DOMAIN
- 	select IRQ_FORCED_THREADING
- 	select MODULES_USE_ELF_RELA
-@@ -478,9 +479,6 @@ config MPROFILE_KERNEL
- 	depends on PPC64 && CPU_LITTLE_ENDIAN
- 	def_bool !DISABLE_MPROFILE_KERNEL
- 
--config IOMMU_HELPER
--	def_bool PPC64
--
- config SWIOTLB
- 	bool "SWIOTLB support"
- 	default n
-diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
-index 32a0d5b958bf..bfa449fdeb19 100644
---- a/arch/s390/Kconfig
-+++ b/arch/s390/Kconfig
-@@ -693,7 +693,9 @@ config QDIO
- menuconfig PCI
- 	bool "PCI support"
- 	select PCI_MSI
-+	select IOMMU_HELPER
- 	select IOMMU_SUPPORT
-+
- 	help
- 	  Enable PCI support.
- 
-@@ -717,9 +719,6 @@ config PCI_DOMAINS
- config HAS_IOMEM
- 	def_bool PCI
- 
--config IOMMU_HELPER
--	def_bool PCI
--
- config NEED_SG_DMA_LENGTH
- 	def_bool PCI
- 
-diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
-index 8767e45f1b2b..44e0f3cd7988 100644
---- a/arch/sparc/Kconfig
-+++ b/arch/sparc/Kconfig
-@@ -67,6 +67,7 @@ config SPARC64
- 	select HAVE_SYSCALL_TRACEPOINTS
- 	select HAVE_CONTEXT_TRACKING
- 	select HAVE_DEBUG_KMEMLEAK
-+	select IOMMU_HELPER
- 	select SPARSE_IRQ
- 	select RTC_DRV_CMOS
- 	select RTC_DRV_BQ4802
-@@ -106,10 +107,6 @@ config ARCH_DMA_ADDR_T_64BIT
- 	bool
- 	default y if ARCH_ATU
- 
--config IOMMU_HELPER
--	bool
--	default y if SPARC64
--
- config STACKTRACE_SUPPORT
- 	bool
- 	default y if SPARC64
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 336b1378ee62..06ca29e70d6b 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -870,6 +870,7 @@ config DMI
- 
- config GART_IOMMU
- 	bool "Old AMD GART IOMMU support"
-+	select IOMMU_HELPER
- 	select SWIOTLB
- 	depends on X86_64 && PCI && AMD_NB
- 	---help---
-@@ -891,6 +892,7 @@ config GART_IOMMU
- 
- config CALGARY_IOMMU
- 	bool "IBM Calgary IOMMU support"
-+	select IOMMU_HELPER
- 	select SWIOTLB
- 	depends on X86_64 && PCI
- 	---help---
-@@ -928,10 +930,6 @@ config SWIOTLB
- 	  with more than 3 GB of memory.
- 	  If unsure, say Y.
- 
--config IOMMU_HELPER
--	def_bool y
--	depends on CALGARY_IOMMU || GART_IOMMU
--
- config MAXSMP
- 	bool "Enable Maximum number of SMP Processors and NUMA Nodes"
- 	depends on X86_64 && SMP && DEBUG_KERNEL
-diff --git a/lib/Kconfig b/lib/Kconfig
-index 5fe577673b98..2f6908577534 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -429,6 +429,9 @@ config SGL_ALLOC
- 	bool
- 	default n
- 
-+config IOMMU_HELPER
-+	bool
-+
- config DMA_DIRECT_OPS
- 	bool
- 	depends on HAS_DMA && (!64BIT || ARCH_DMA_ADDR_T_64BIT)
--- 
-2.17.0
+  1) Factor __of_pci_get_host_bridge_resources() out of
+     of_pci_get_host_bridge_resources()
 
+  2) Add struct device * argument
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+  3) Convert pr_info() to dev_info()
+
+  4) Add devm_of_pci_get_host_bridge_resources()
+
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> ---
+>  drivers/pci/of.c       | 89 ++++++++++++++++++++++++++++++++------------------
+>  include/linux/of_pci.h | 14 ++++++--
+>  2 files changed, 70 insertions(+), 33 deletions(-)
+> 
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index a28355c273ae..6eab0bde2ab3 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -243,26 +243,8 @@ void of_pci_check_probe_only(void)
+>  EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
+>  
+>  #if defined(CONFIG_OF_ADDRESS)
+> -/**
+> - * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
+> - * @dev: device node of the host bridge having the range property
+> - * @busno: bus number associated with the bridge root bus
+> - * @bus_max: maximum number of buses for this bridge
+> - * @resources: list where the range of resources will be added after DT parsing
+> - * @io_base: pointer to a variable that will contain on return the physical
+> - * address for the start of the I/O range. Can be NULL if the caller doesn't
+> - * expect I/O ranges to be present in the device tree.
+> - *
+> - * It is the caller's job to free the @resources list.
+> - *
+> - * This function will parse the "ranges" property of a PCI host bridge device
+> - * node and setup the resource mapping based on its content. It is expected
+> - * that the property conforms with the Power ePAPR document.
+> - *
+> - * It returns zero if the range parsing has been successful or a standard error
+> - * value if it failed.
+> - */
+> -int of_pci_get_host_bridge_resources(struct device_node *dev,
+> +static int __of_pci_get_host_bridge_resources(struct device *dev,
+> +			struct device_node *dev_node,
+>  			unsigned char busno, unsigned char bus_max,
+>  			struct list_head *resources, resource_size_t *io_base)
+>  {
+> @@ -277,19 +259,22 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  	if (io_base)
+>  		*io_base = (resource_size_t)OF_BAD_ADDR;
+>  
+> -	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+> +	if (dev)
+> +		bus_range = devm_kzalloc(dev,sizeof(*bus_range), GFP_KERNEL);
+> +	else
+> +		bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+>  	if (!bus_range)
+>  		return -ENOMEM;
+>  
+> -	pr_info("host bridge %pOF ranges:\n", dev);
+> +	pr_info("host bridge %pOF ranges:\n", dev_node);
+
+Since you now have a struct device *, maybe convert these to dev_info()?
+It looks like __dev_printk() does something sensible if "dev" is NULL.
+
+>  
+> -	err = of_pci_parse_bus_range(dev, bus_range);
+> +	err = of_pci_parse_bus_range(dev_node, bus_range);
+>  	if (err) {
+>  		bus_range->start = busno;
+>  		bus_range->end = bus_max;
+>  		bus_range->flags = IORESOURCE_BUS;
+>  		pr_info("  No bus range found for %pOF, using %pR\n",
+> -			dev, bus_range);
+> +			dev_node, bus_range);
+>  	} else {
+>  		if (bus_range->end > bus_range->start + bus_max)
+>  			bus_range->end = bus_range->start + bus_max;
+> @@ -297,7 +282,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  	pci_add_resource(resources, bus_range);
+>  
+>  	/* Check for ranges property */
+> -	err = of_pci_range_parser_init(&parser, dev);
+> +	err = of_pci_range_parser_init(&parser, dev_node);
+>  	if (err)
+>  		goto parse_failed;
+>  
+> @@ -321,13 +306,17 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+>  			continue;
+>  
+> -		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+> +		if (dev)
+> +			res = devm_kzalloc(dev, sizeof(struct resource),
+> +					   GFP_KERNEL);
+> +		else
+> +			res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+>  		if (!res) {
+>  			err = -ENOMEM;
+>  			goto parse_failed;
+>  		}
+>  
+> -		err = of_pci_range_to_resource(&range, dev, res);
+> +		err = of_pci_range_to_resource(&range, dev_node, res);
+>  		if (err) {
+>  			kfree(res);
+>  			continue;
+> @@ -336,13 +325,13 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  		if (resource_type(res) == IORESOURCE_IO) {
+>  			if (!io_base) {
+>  				pr_err("I/O range found for %pOF. Please provide an io_base pointer to save CPU base address\n",
+> -					dev);
+> +					dev_node);
+>  				err = -EINVAL;
+>  				goto conversion_failed;
+>  			}
+>  			if (*io_base != (resource_size_t)OF_BAD_ADDR)
+>  				pr_warn("More than one I/O resource converted for %pOF. CPU base address for old range lost!\n",
+> -					dev);
+> +					dev_node);
+>  			*io_base = range.cpu_addr;
+>  		}
+>  
+> @@ -354,12 +343,50 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  conversion_failed:
+>  	kfree(res);
+>  parse_failed:
+> -	resource_list_for_each_entry(window, resources)
+> -		kfree(window->res);
+> +	if (!dev);
+> +		resource_list_for_each_entry(window, resources)
+> +			kfree(window->res);
+>  	pci_free_resource_list(resources);
+>  	return err;
+>  }
+> +
+> +/**
+> + * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
+> + * @dev: device node of the host bridge having the range property
+> + * @busno: bus number associated with the bridge root bus
+> + * @bus_max: maximum number of buses for this bridge
+> + * @resources: list where the range of resources will be added after DT parsing
+> + * @io_base: pointer to a variable that will contain on return the physical
+> + * address for the start of the I/O range. Can be NULL if the caller doesn't
+> + * expect I/O ranges to be present in the device tree.
+> + *
+> + * It is the caller's job to free the @resources list.
+> + *
+> + * This function will parse the "ranges" property of a PCI host bridge device
+> + * node and setup the resource mapping based on its content. It is expected
+> + * that the property conforms with the Power ePAPR document.
+> + *
+> + * It returns zero if the range parsing has been successful or a standard error
+> + * value if it failed.
+> + */
+> +int of_pci_get_host_bridge_resources(struct device_node *dev_node,
+> +			unsigned char busno, unsigned char bus_max,
+> +			struct list_head *resources, resource_size_t *io_base)
+> +{
+> +	return __of_pci_get_host_bridge_resources(NULL, dev_node, busno,
+> +						  bus_max, resources, io_base);
+> +}
+>  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+> +
+> +int devm_of_pci_get_host_bridge_resources(struct device *dev,
+> +			unsigned char busno, unsigned char bus_max,
+> +			struct list_head *resources, resource_size_t *io_base)
+> +{
+> +	return __of_pci_get_host_bridge_resources(dev, dev->of_node, busno,
+> +						  bus_max, resources, io_base);
+> +}
+> +EXPORT_SYMBOL_GPL(devm_of_pci_get_host_bridge_resources);
+> +
+>  #endif /* CONFIG_OF_ADDRESS */
+>  
+>  /**
+> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+> index 091033a6b836..08b8f02426a5 100644
+> --- a/include/linux/of_pci.h
+> +++ b/include/linux/of_pci.h
+> @@ -71,11 +71,21 @@ of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+>  #endif
+>  
+>  #if defined(CONFIG_OF_ADDRESS)
+> -int of_pci_get_host_bridge_resources(struct device_node *dev,
+> +int of_pci_get_host_bridge_resources(struct device_node *dev_node,
+> +			unsigned char busno, unsigned char bus_max,
+> +			struct list_head *resources, resource_size_t *io_base);
+> +int devm_of_pci_get_host_bridge_resources(struct device *dev,
+>  			unsigned char busno, unsigned char bus_max,
+>  			struct list_head *resources, resource_size_t *io_base);
+>  #else
+> -static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
+> +static inline int of_pci_get_host_bridge_resources(struct device_node *dev_node,
+> +			unsigned char busno, unsigned char bus_max,
+> +			struct list_head *resources, resource_size_t *io_base)
+> +{
+> +	return -EINVAL;
+> +}
+> +
+> +static inline int devm_of_pci_get_host_bridge_resources(struct device *dev,
+>  			unsigned char busno, unsigned char bus_max,
+>  			struct list_head *resources, resource_size_t *io_base)
+>  {
+> -- 
+> 2.13.6
+> 
