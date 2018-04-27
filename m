@@ -1,93 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:34270 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750761AbeDMGqr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Apr 2018 02:46:47 -0400
-Received: by mail-ot0-f194.google.com with SMTP id m7-v6so8787825otd.1
-        for <linux-pci@vger.kernel.org>; Thu, 12 Apr 2018 23:46:47 -0700 (PDT)
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 27 Apr 2018 12:15:37 -0500
+From: Rob Herring <robh@kernel.org>
+To: Nipun Gupta <nipun.gupta@nxp.com>
+Subject: Re: [PATCH 2/6 v3] iommu: of: make of_pci_map_rid() available for
+ other devices too
+Message-ID: <20180427171537.lvzygghnuolk6cnh@rob-hp-laptop>
+References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
+ <1524824826-29473-3-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-From: Srinath Mannam <srinath.mannam@broadcom.com>
-Date: Fri, 13 Apr 2018 12:16:46 +0530
-Message-ID: <CABe79T47vUjq20HuMrJZxhZWMr0q3uXMF6xL1TgkqhqA8qi1wg@mail.gmail.com>
-Subject: Issue with Enable LTR while pcie_aspm off
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ray Jui <ray.jui@broadcom.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1524824826-29473-3-git-send-email-nipun.gupta@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, bharat.bhushan@nxp.com,
+ stuyoder@gmail.com, frowand.list@gmail.com, linux-pci@vger.kernel.org,
+ gregkh@linuxfoundation.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
+ will.deacon@arm.com, linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, catalin.marinas@arm.com, bhelgaas@google.com,
+ shawnguo@kernel.org, laurentiu.tudor@nxp.com, robin.murphy@arm.com, hch@lst.de,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Fri, Apr 27, 2018 at 03:57:02PM +0530, Nipun Gupta wrote:
+> iommu-map property is also used by devices with fsl-mc. This
+> patch moves the of_pci_map_rid to generic location, so that it
+> can be used by other busses too.
+> 
+> 'of_pci_map_rid' is renamed here to 'of_map_rid' and there is no
+> functional change done in the API.
+> 
+> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+> ---
+>  drivers/iommu/of_iommu.c   |   6 +--
+>  drivers/of/address.c       | 102 +++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/of/irq.c           |   7 ++--
+>  drivers/pci/of.c           | 101 --------------------------------------------
+>  include/linux/of_address.h |  11 +++++
+>  include/linux/of_pci.h     |  10 -----
+>  6 files changed, 120 insertions(+), 117 deletions(-)
 
-In our platform we disable aspm using boot_arg "pcie_aspm=off".
-But with the below patch, LTR is enabled which is part of ASPM.
-even we keep disable aspm using "pcie_aspm=off" then why we need to
-enable LTR. This is causing issues with few NVMe cards.
+of/address.c isn't really the best fit either, though I don't have a 
+better suggestion. 
 
-Please advice us how can we proceed in this scenario.
+I'm guessing this breaks on Sparc which doesn't build of/address.c. 
+I guess move it to base.c and of.h if that is the case.
 
-commit c46fd358070f22ba68d6e74c22016a33b914c20a
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Tue Nov 28 16:43:50 2017 -0600
+Rob
 
-    PCI/ASPM: Enable Latency Tolerance Reporting when supported
-
-    Enable Latency Tolerance Reporting (LTR).  Note that LTR must be enabled in
-    the Root Port first, and must not be enabled in any downstream device
-    unless the Root Port and all intermediate Switches also support LTR.
-    See PCIe r3.1, sec 6.18.
-
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Reviewed-by: Vidya Sagar <vidyas@nvidia.com>
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 14e0ea1..3761b13 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1875,6 +1875,38 @@ static void
-pci_configure_relaxed_ordering(struct pci_dev *dev)
-        }
- }
-
-+static void pci_configure_ltr(struct pci_dev *dev)
-+{
-+#ifdef CONFIG_PCIEASPM
-+       u32 cap;
-+       struct pci_dev *bridge;
-+
-+       if (!pci_is_pcie(dev))
-+               return;
-+
-+       pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
-+       if (!(cap & PCI_EXP_DEVCAP2_LTR))
-+               return;
-+
-+       /*
-+        * Software must not enable LTR in an Endpoint unless the Root
-+        * Complex and all intermediate Switches indicate support for LTR.
-+        * PCIe r3.1, sec 6.18.
-+        */
-+       if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
-+               dev->ltr_path = 1;
-+       else {
-+               bridge = pci_upstream_bridge(dev);
-+               if (bridge && bridge->ltr_path)
-+                       dev->ltr_path = 1;
-+       }
-+
-+       if (dev->ltr_path)
-+               pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-+                                        PCI_EXP_DEVCTL2_LTR_EN);
-+#endif
-+}
-+
- static void pci_configure_device(struct pci_dev *dev)
- {
-        struct hotplug_params hpp;
-@@ -1883,6 +1915,7 @@ static void pci_configure_device(struct pci_dev *dev)
-        pci_configure_mps(dev);
-        pci_configure_extended_tags(dev, NULL);
-        pci_configure_relaxed_ordering(dev);
-
-
-Regards,
-Srinath.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
