@@ -1,148 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51484 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751425AbeDYFQH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 01:16:07 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: sstabellini@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, linux-mips@linux-mips.org,
-        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 04/13] iommu-helper: move the IOMMU_HELPER config symbol to lib/
-Date: Wed, 25 Apr 2018 07:15:30 +0200
-Message-Id: <20180425051539.1989-5-hch@lst.de>
-In-Reply-To: <20180425051539.1989-1-hch@lst.de>
-References: <20180425051539.1989-1-hch@lst.de>
+Received: from lucky1.263xmail.com ([211.157.147.131]:36827 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757780AbeD0Iat (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 04:30:49 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH 2/9] PCI: dra7xx: Use pci_alloc_intx_irqd() helper to simplify the code
+Date: Fri, 27 Apr 2018 16:22:59 +0800
+Message-Id: <1524817379-239123-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This way we have one central definition of it, and user can select it as
-needed.
+Just avoid code duplication, but no functional change intended.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- arch/powerpc/Kconfig | 4 +---
- arch/s390/Kconfig    | 5 ++---
- arch/sparc/Kconfig   | 5 +----
- arch/x86/Kconfig     | 6 ++----
- lib/Kconfig          | 3 +++
- 5 files changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index 43e3c8e4e7f4..7698cf89af9c 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -223,6 +223,7 @@ config PPC
- 	select HAVE_SYSCALL_TRACEPOINTS
- 	select HAVE_VIRT_CPU_ACCOUNTING
- 	select HAVE_IRQ_TIME_ACCOUNTING
-+	select IOMMU_HELPER			if PPC64
- 	select IRQ_DOMAIN
- 	select IRQ_FORCED_THREADING
- 	select MODULES_USE_ELF_RELA
-@@ -478,9 +479,6 @@ config MPROFILE_KERNEL
- 	depends on PPC64 && CPU_LITTLE_ENDIAN
- 	def_bool !DISABLE_MPROFILE_KERNEL
+ drivers/pci/dwc/pci-dra7xx.c | 41 ++---------------------------------------
+ 1 file changed, 2 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index ed8558d..45f6456 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -212,43 +212,6 @@ static int dra7xx_pcie_host_init(struct pcie_port *pp)
+ 	.host_init = dra7xx_pcie_host_init,
+ };
  
--config IOMMU_HELPER
--	def_bool PPC64
+-static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+-				irq_hw_number_t hwirq)
+-{
+-	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
 -
- config SWIOTLB
- 	bool "SWIOTLB support"
- 	default n
-diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
-index 199ac3e4da1d..60c4ab854182 100644
---- a/arch/s390/Kconfig
-+++ b/arch/s390/Kconfig
-@@ -709,7 +709,9 @@ config QDIO
- menuconfig PCI
- 	bool "PCI support"
- 	select PCI_MSI
-+	select IOMMU_HELPER
- 	select IOMMU_SUPPORT
-+
- 	help
- 	  Enable PCI support.
- 
-@@ -733,9 +735,6 @@ config PCI_DOMAINS
- config HAS_IOMEM
- 	def_bool PCI
- 
--config IOMMU_HELPER
--	def_bool PCI
+-	return 0;
+-}
 -
- config NEED_SG_DMA_LENGTH
- 	def_bool PCI
- 
-diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
-index 8767e45f1b2b..44e0f3cd7988 100644
---- a/arch/sparc/Kconfig
-+++ b/arch/sparc/Kconfig
-@@ -67,6 +67,7 @@ config SPARC64
- 	select HAVE_SYSCALL_TRACEPOINTS
- 	select HAVE_CONTEXT_TRACKING
- 	select HAVE_DEBUG_KMEMLEAK
-+	select IOMMU_HELPER
- 	select SPARSE_IRQ
- 	select RTC_DRV_CMOS
- 	select RTC_DRV_BQ4802
-@@ -106,10 +107,6 @@ config ARCH_DMA_ADDR_T_64BIT
- 	bool
- 	default y if ARCH_ATU
- 
--config IOMMU_HELPER
--	bool
--	default y if SPARC64
+-static const struct irq_domain_ops intx_domain_ops = {
+-	.map = dra7xx_pcie_intx_map,
+-	.xlate = pci_irqd_intx_xlate,
+-};
 -
- config STACKTRACE_SUPPORT
- 	bool
- 	default y if SPARC64
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index cb2c7ecc1fea..fe9713539166 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -871,6 +871,7 @@ config DMI
- 
- config GART_IOMMU
- 	bool "Old AMD GART IOMMU support"
-+	select IOMMU_HELPER
- 	select SWIOTLB
- 	depends on X86_64 && PCI && AMD_NB
- 	---help---
-@@ -892,6 +893,7 @@ config GART_IOMMU
- 
- config CALGARY_IOMMU
- 	bool "IBM Calgary IOMMU support"
-+	select IOMMU_HELPER
- 	select SWIOTLB
- 	depends on X86_64 && PCI
- 	---help---
-@@ -929,10 +931,6 @@ config SWIOTLB
- 	  with more than 3 GB of memory.
- 	  If unsure, say Y.
- 
--config IOMMU_HELPER
--	def_bool y
--	depends on CALGARY_IOMMU || GART_IOMMU
+-static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+-{
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct device *dev = pci->dev;
+-	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+-	struct device_node *node = dev->of_node;
+-	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
 -
- config MAXSMP
- 	bool "Enable Maximum number of SMP Processors and NUMA Nodes"
- 	depends on X86_64 && SMP && DEBUG_KERNEL
-diff --git a/lib/Kconfig b/lib/Kconfig
-index 5fe577673b98..2f6908577534 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -429,6 +429,9 @@ config SGL_ALLOC
- 	bool
- 	default n
+-	if (!pcie_intc_node) {
+-		dev_err(dev, "No PCIe Intc node found\n");
+-		return -ENODEV;
+-	}
+-
+-	dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+-						   &intx_domain_ops, pp);
+-	if (!dra7xx->irq_domain) {
+-		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+-		return -ENODEV;
+-	}
+-
+-	return 0;
+-}
+-
+ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+ {
+ 	struct dra7xx_pcie *dra7xx = arg;
+@@ -454,8 +417,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 		return ret;
+ 	}
  
-+config IOMMU_HELPER
-+	bool
-+
- config DMA_DIRECT_OPS
- 	bool
- 	depends on HAS_DMA && (!64BIT || ARCH_DMA_ADDR_T_64BIT)
+-	ret = dra7xx_pcie_init_irq_domain(pp);
+-	if (ret < 0)
++	dra7xx->irq_domain = pci_alloc_intx_irqd(dev, dra7xx, true, NULL, NULL);
++	if (IS_ERR(dra7xx->irq_domain))
+ 		return ret;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
 -- 
-2.17.0
+1.9.1
