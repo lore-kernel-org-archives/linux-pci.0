@@ -1,63 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v4 04/10] bindings: PCI: designware: Add support for the EP in Designware driver
-Date: Mon, 16 Apr 2018 15:37:52 +0100
-Message-Id: <7d3445e3f8bb15d27987e0d061275d7d69f2c519.1523881182.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523881182.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37992 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757592AbeD0VM7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Apr 2018 17:12:59 -0400
+Date: Fri, 27 Apr 2018 16:12:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
+        Eric Biederman <ebiederm@xmission.com>,
+        Vivek Goyal <vgoyal@redhat.com>, kexec@lists.infradead.org
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+Message-ID: <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+ <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device tree binding documentation for the Endpoint in PCIe Designware
-driver.
+[+cc Eric, Vivek, kexec list]
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
- - Add a missing log description.
- - Add "snps,dw-pcie" compatible string following Kishon's suggestion.
-Change v2->v3:
-- Reverted pcie_ep name to pcie.
-Changes v3->v4:
-- Reverted "snps,dw-pcie-rc" compatible string requested by Rob Herring.
+On Fri, Apr 27, 2018 at 03:34:30PM -0400, Sinan Kaya wrote:
+> On 4/27/2018 3:22 PM, Bjorn Helgaas wrote:
+> > Sinan mooted the idea of using a "no-wait" path of sending the "don't
+> > generate hotplug interrupts" command.  I think we should work on this
+> > idea a little more.  If we're shutting down the whole system, I can't
+> > believe there's much value in *anything* we do in the pciehp_remove()
+> > path.
+> > 
+> > Maybe we should just get rid of pciehp_remove() (and probably
+> > pcie_port_remove_service() and the other service driver remove methods)
+> > completely.  That dates from when the service drivers could be modules that
+> > could be potentially unloaded, but unloading them hasn't been possible for
+> > years.
+> 
+> Shutdown path is also used for kexec. Leaving hotplug interrupts
+> pending is dangerous for the newly loaded kernel as it leaves
+> spurious interrupts during the new kernel boot.
+> 
+> I think we should always disable the hotplug interrupt on shutdown.
+> We might think of not waiting for command-completion as a
+> middle-ground or go to polling path instead of interrupts all the
+> time.
 
- Documentation/devicetree/bindings/pci/designware-pcie.txt | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+Ah, I forgot about the kexec path.  The kexec path is used for
+crashdump, too, so ideally the newly-loaded kernel would defend itself
+when possible so it doesn't depend on the original kernel doing things
+correctly.
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 7f9804d..980fc9a 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -3,6 +3,7 @@
- Required properties:
- - compatible:
- 	"snps,dw-pcie" for RC mode;
-+	"snps,dw-pcie-ep" for EP mode;
- - reg: Should contain the configuration address space.
- - reg-names: Must be "config" for the PCIe configuration space.
-     (The old way of getting the configuration address space from "ranges"
-@@ -56,3 +57,15 @@ Example configuration:
- 		#interrupt-cells = <1>;
- 		num-lanes = <1>;
- 	};
-+or
-+	pcie: pcie@dfc00000 {
-+		compatible = "snps,dw-pcie-ep";
-+		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
-+		      <0xdfc01000 0x0001000>, /* IP registers 2 */
-+		      <0xd0000000 0x2000000>; /* Configuration space */
-+		reg-names = "dbi", "dbi2", "addr_space";
-+		device_type = "pci";
-+		num-ib-windows = <6>;
-+		num-ob-windows = <2>;
-+		num-lanes = <1>;
-+	};
--- 
-2.7.4
+Seems like this question of whether to do things in the original
+kernel or the kexec-ed kernel comes up periodically, but I can never
+remember a definitive answer.  My initial reaction is that it'd be
+nice if we didn't have to do *any* shutdown in the original kernel,
+but I'm sure there are reasons that's not practical.
+
+I copied Eric (kexec maintainer) and Vivek (contact listed in
+Documentation/kdump/kdump.txt) in case they have suggestions or would
+consider some sort of Documentation/ update.
+
+Bjorn
