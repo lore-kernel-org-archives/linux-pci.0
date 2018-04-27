@@ -1,61 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33782 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751960AbeDJS3f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Apr 2018 14:29:35 -0400
-Date: Tue, 10 Apr 2018 13:29:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Frederick Lawler <fred@fredlawl.com>
-Cc: mike.marciniszyn@intel.com, dennis.dalessandro@intel.com,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] IB/hfi1: Cleanup PCIe link configuration
-Message-ID: <20180410182933.GC24642@bhelgaas-glaptop.roam.corp.google.com>
-References: <1523244898-25942-1-git-send-email-fred@fredlawl.com>
- <5ACBF5C6.60601@fredlawl.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5ACBF5C6.60601@fredlawl.com>
+Received: from smtprelay.synopsys.com ([198.182.37.59]:36052 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751464AbeD0MAM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 08:00:12 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v8 0/9] DesignWare EP support and code clean up
+Date: Fri, 27 Apr 2018 12:59:55 +0100
+Message-Id: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 09, 2018 at 06:22:46PM -0500, Frederick Lawler wrote:
-> Frederick Lawler wrote:
-> > The IB/hfi1 driver uses custom macros to configure link speed. Some macros were
-> > previously replaced, but not fully. This patch series addresses the 
-> > configuration inconsistencies and introduces minor cleanup by replacing
-> > redundant magic number usage.
+Add DesignWare EP support.
 
-Sorry for not responding to the actual patches; I'm not subscribed to
-linux-rdma, so reading them via an archive.
+Increase maximum number of interrupts allow for DesignWare IP controller.
 
-> > Frederick Lawler (2):
-> >   IB/hfi1: Replace custom hfi1 macros with PCIe macros
+Does a code cleanup on DesignWare driver, which involves:
+ - Replacement of magic numbers by a self-explained define to ease human
+comprehension.
+ - Replacement a division by 2 operation for a right shift rotation of 1
+bit.
+ - Replacement of all initial lowercase character in comments and debug
+messages to uppercase to maintain coherence.
 
-s/This patch removes/Remove/
-s/infavor/in favor/
+Gustavo Pimentel (9):
+  bindings: PCI: designware: Example update
+  PCI: dwc: Add support for EP mode
+  PCI: endpoint: functions/pci-epf-test: Add second entry
+  bindings: PCI: designware: Add support for EP in DesignWare driver
+  misc: pci_endpoint_test: Add DesignWare EP entry
+  PCI: dwc: Define maximum number of vectors
+  PCI: dwc: Replace lower into upper case characters
+  PCI: dwc: Small computation improvement
+  PCI: dwc: Replace magic number by defines
 
-> @@ -320,7 +315,7 @@ int pcie_speeds(struct hfi1_devdata *dd)
-> -	if ((linkcap & PCI_EXP_LNKCAP_SLS) != GEN3_SPEED_VECTOR) {
-> +	if ((linkcap & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKSTA_CLS_8_0GB) {
+ .../PCI/endpoint/function/binding/pci-test.txt     |   2 +
+ .../devicetree/bindings/pci/designware-pcie.txt    |  24 +++-
+ drivers/misc/pci_endpoint_test.c                   |   1 +
+ drivers/pci/dwc/Kconfig                            |  41 ++++--
+ drivers/pci/dwc/pcie-designware-ep.c               |  16 +--
+ drivers/pci/dwc/pcie-designware-host.c             |  77 +++++-----
+ drivers/pci/dwc/pcie-designware-plat.c             | 155 +++++++++++++++++++--
+ drivers/pci/dwc/pcie-designware.c                  |  22 +--
+ drivers/pci/dwc/pcie-designware.h                  |   1 +
+ drivers/pci/endpoint/functions/pci-epf-test.c      |   8 ++
+ 10 files changed, 267 insertions(+), 80 deletions(-)
 
-Use PCI_EXP_LNKCAP_SLS_8_0GB (not PCI_EXP_LNKSTA_CLS_8_0GB) since
-we're testing a PCI_EXP_LNKCAP value.  They happen to be the same
-values, but we should use the matching definitions.
-
-> @@ -1048,14 +1040,14 @@ int do_pcie_gen3_transition(struct hfi1_devdata *dd)
-> -		target_vector = GEN1_SPEED_VECTOR;
-> +		target_vector = PCI_EXP_LNKSTA_CLS_2_5GB;
-
-target_vector is later ORed into a PCI_EXP_LNKCTL2 value.  We
-currently do not have any definitions for PCI_EXP_LNKCTL2.  We should
-add those, then use them here.  Similarly for the rest of this patch.
-
-> -		target_speed = 8000;
-> +		target_speed = 8000;
-
-Is there an unintended whitespace change here, e.g., trailing space or
-replacing tab with space?  I can't tell from the archive.
-
-> >   IB/hfi1: Cleanup PCIe speed link configuration
-
-s/speed link/link speed/
+-- 
+2.7.4
