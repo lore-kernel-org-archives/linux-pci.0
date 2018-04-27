@@ -1,263 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33228 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:45190 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754655AbeDBTh4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Apr 2018 15:37:56 -0400
-Date: Mon, 2 Apr 2018 14:37:54 -0500
+        id S1759215AbeD0Wnj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Apr 2018 18:43:39 -0400
+Date: Fri, 27 Apr 2018 17:43:37 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Keller, Jacob E" <jacob.e.keller@intel.com>
-Cc: Tal Gilboa <talgi@mellanox.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Ariel Elior <ariel.elior@cavium.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-        "everest-linux-l2@cavium.com" <everest-linux-l2@cavium.com>,
-        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v5 03/14] PCI: Add pcie_bandwidth_capable() to compute
- max supported link bandwidth
-Message-ID: <20180402193754.GK9322@bhelgaas-glaptop.roam.corp.google.com>
-References: <152244269202.135666.3064353823697623332.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152244390359.135666.14890735614456271032.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <31e66048-e8b8-47ba-baf5-023560b4c124@mellanox.com>
- <20180402004049.GA131023@bhelgaas-glaptop.roam.corp.google.com>
- <50346f44-de3f-b226-69ad-6de45e94e261@mellanox.com>
- <20180402140501.GA244675@bhelgaas-glaptop.roam.corp.google.com>
- <3decbba0-74a2-c906-b5b4-a04f261860eb@mellanox.com>
- <02874ECE860811409154E81DA85FBB5882D4980A@ORSMSX115.amr.corp.intel.com>
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        gregkh@linuxfoundation.org, fred@fredlawl.com,
+        linux-kernel@vger.kernel.org, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, keith.busch@intel.com
+Subject: Re: [PATCH RESEND] PCI/AER: Use a common function to print AER error
+ bits
+Message-ID: <20180427224337.GC73256@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180417170943.1767-1-mr.nuke.me@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <02874ECE860811409154E81DA85FBB5882D4980A@ORSMSX115.amr.corp.intel.com>
+In-Reply-To: <20180417170943.1767-1-mr.nuke.me@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 02, 2018 at 04:00:16PM +0000, Keller, Jacob E wrote:
-> > -----Original Message-----
-> > From: Tal Gilboa [mailto:talgi@mellanox.com]
-> > Sent: Monday, April 02, 2018 7:34 AM
-> > To: Bjorn Helgaas <helgaas@kernel.org>
-> > Cc: Tariq Toukan <tariqt@mellanox.com>; Keller, Jacob E
-> > <jacob.e.keller@intel.com>; Ariel Elior <ariel.elior@cavium.com>; Ganesh
-> > Goudar <ganeshgr@chelsio.com>; Kirsher, Jeffrey T
-> > <jeffrey.t.kirsher@intel.com>; everest-linux-l2@cavium.com; intel-wired-
-> > lan@lists.osuosl.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > linux-pci@vger.kernel.org
-> > Subject: Re: [PATCH v5 03/14] PCI: Add pcie_bandwidth_capable() to compute
-> > max supported link bandwidth
-> > 
-> > On 4/2/2018 5:05 PM, Bjorn Helgaas wrote:
-> > > On Mon, Apr 02, 2018 at 10:34:58AM +0300, Tal Gilboa wrote:
-> > >> On 4/2/2018 3:40 AM, Bjorn Helgaas wrote:
-> > >>> On Sun, Apr 01, 2018 at 11:38:53PM +0300, Tal Gilboa wrote:
-> > >>>> On 3/31/2018 12:05 AM, Bjorn Helgaas wrote:
-> > >>>>> From: Tal Gilboa <talgi@mellanox.com>
-> > >>>>>
-> > >>>>> Add pcie_bandwidth_capable() to compute the max link bandwidth
-> > supported by
-> > >>>>> a device, based on the max link speed and width, adjusted by the
-> > encoding
-> > >>>>> overhead.
-> > >>>>>
-> > >>>>> The maximum bandwidth of the link is computed as:
-> > >>>>>
-> > >>>>>      max_link_speed * max_link_width * (1 - encoding_overhead)
-> > >>>>>
-> > >>>>> The encoding overhead is about 20% for 2.5 and 5.0 GT/s links using
-> > 8b/10b
-> > >>>>> encoding, and about 1.5% for 8 GT/s or higher speed links using 128b/130b
-> > >>>>> encoding.
-> > >>>>>
-> > >>>>> Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-> > >>>>> [bhelgaas: adjust for pcie_get_speed_cap() and pcie_get_width_cap()
-> > >>>>> signatures, don't export outside drivers/pci]
-> > >>>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > >>>>> Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
-> > >>>>> ---
-> > >>>>>     drivers/pci/pci.c |   21 +++++++++++++++++++++
-> > >>>>>     drivers/pci/pci.h |    9 +++++++++
-> > >>>>>     2 files changed, 30 insertions(+)
-> > >>>>>
-> > >>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > >>>>> index 43075be79388..9ce89e254197 100644
-> > >>>>> --- a/drivers/pci/pci.c
-> > >>>>> +++ b/drivers/pci/pci.c
-> > >>>>> @@ -5208,6 +5208,27 @@ enum pcie_link_width
-> > pcie_get_width_cap(struct pci_dev *dev)
-> > >>>>>     	return PCIE_LNK_WIDTH_UNKNOWN;
-> > >>>>>     }
-> > >>>>> +/**
-> > >>>>> + * pcie_bandwidth_capable - calculates a PCI device's link bandwidth
-> > capability
-> > >>>>> + * @dev: PCI device
-> > >>>>> + * @speed: storage for link speed
-> > >>>>> + * @width: storage for link width
-> > >>>>> + *
-> > >>>>> + * Calculate a PCI device's link bandwidth by querying for its link speed
-> > >>>>> + * and width, multiplying them, and applying encoding overhead.
-> > >>>>> + */
-> > >>>>> +u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed
-> > *speed,
-> > >>>>> +			   enum pcie_link_width *width)
-> > >>>>> +{
-> > >>>>> +	*speed = pcie_get_speed_cap(dev);
-> > >>>>> +	*width = pcie_get_width_cap(dev);
-> > >>>>> +
-> > >>>>> +	if (*speed == PCI_SPEED_UNKNOWN || *width ==
-> > PCIE_LNK_WIDTH_UNKNOWN)
-> > >>>>> +		return 0;
-> > >>>>> +
-> > >>>>> +	return *width * PCIE_SPEED2MBS_ENC(*speed);
-> > >>>>> +}
-> > >>>>> +
-> > >>>>>     /**
-> > >>>>>      * pci_select_bars - Make BAR mask from the type of resource
-> > >>>>>      * @dev: the PCI device for which BAR mask is made
-> > >>>>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> > >>>>> index 66738f1050c0..2a50172b9803 100644
-> > >>>>> --- a/drivers/pci/pci.h
-> > >>>>> +++ b/drivers/pci/pci.h
-> > >>>>> @@ -261,8 +261,17 @@ void pci_disable_bridge_window(struct pci_dev
-> > *dev);
-> > >>>>>     	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
-> > >>>>>     	 "Unknown speed")
-> > >>>>> +/* PCIe speed to Mb/s with encoding overhead: 20% for gen2, ~1.5% for
-> > gen3 */
-> > >>>>> +#define PCIE_SPEED2MBS_ENC(speed) \
-> > >>>>
-> > >>>> Missing gen4.
-> > >>>
-> > >>> I made it "gen3+".  I think that's accurate, isn't it?  The spec
-> > >>> doesn't seem to actually use "gen3" as a specific term, but sec 4.2.2
-> > >>> says rates of 8 GT/s or higher (which I think includes gen3 and gen4)
-> > >>> use 128b/130b encoding.
-> > >>>
-> > >>
-> > >> I meant that PCIE_SPEED_16_0GT will return 0 from this macro since it wasn't
-> > >> added. Need to return 15754.
-> > >
-> > > Oh, duh, of course!  Sorry for being dense.  What about the following?
-> > > I included the calculation as opposed to just the magic numbers to try
-> > > to make it clear how they're derived.  This has the disadvantage of
-> > > truncating the result instead of rounding, but I doubt that's
-> > > significant in this context.  If it is, we could use the magic numbers
-> > > and put the computation in a comment.
-> > 
-> > We can always use DIV_ROUND_UP((speed * enc_nominator),
-> > enc_denominator). I think this is confusing and since this introduces a
-> > bandwidth limit I would prefer to give a wider limit than a wrong one,
-> > even it is by less than 1Mb/s. My vote is for leaving it as you wrote below.
-> > 
-> > > Another question: we currently deal in Mb/s, not MB/s.  Mb/s has the
-> > > advantage of sort of corresponding to the GT/s numbers, but using MB/s
-> > > would have the advantage of smaller numbers that match the table here:
-> > > https://en.wikipedia.org/wiki/PCI_Express#History_and_revisions,
-> > > but I don't know what's most typical in user-facing situations.
-> > > What's better?
-> > 
-> > I don't know what's better but for network devices we measure bandwidth
-> > in Gb/s, so presenting bandwidth in MB/s would mean additional
-> > calculations. The truth is I would have prefer to use Gb/s instead of
-> > Mb/s, but again, don't want to loss up to 1Gb/s.
+On Tue, Apr 17, 2018 at 12:09:43PM -0500, Alexandru Gagniuc wrote:
+> On errors reported from CPER, cper_print_bits() was used to log the
+> AER bits. This resulted in hard-to-understand messages, without a
+> prefix. Instead use __aer_print_error() for both native AER and CPER
+> to provide a more consistent log format.
 > 
-> I prefer this version with the calculation in line since it makes
-> the derivation clear. Keeping them in Mb/s makes it easier to
-> convert to Gb/s, which is what most people would expect.
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> ---
+>  drivers/pci/pcie/aer/aerdrv_errprint.c | 16 +++++++++-------
+>  1 file changed, 9 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> index cfc89dd57831..cfae4d52f848 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -216,28 +216,30 @@ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+>  void cper_print_aer(struct pci_dev *dev, int aer_severity,
+>  		    struct aer_capability_regs *aer)
+>  {
+> -	int layer, agent, status_strs_size, tlp_header_valid = 0;
+> +	int layer, agent, tlp_header_valid = 0;
+>  	u32 status, mask;
+> -	const char **status_strs;
+> +	struct aer_err_info info;
+>  
+>  	if (aer_severity == AER_CORRECTABLE) {
+>  		status = aer->cor_status;
+>  		mask = aer->cor_mask;
+> -		status_strs = aer_correctable_error_string;
+> -		status_strs_size = ARRAY_SIZE(aer_correctable_error_string);
+>  	} else {
+>  		status = aer->uncor_status;
+>  		mask = aer->uncor_mask;
+> -		status_strs = aer_uncorrectable_error_string;
+> -		status_strs_size = ARRAY_SIZE(aer_uncorrectable_error_string);
+>  		tlp_header_valid = status & AER_LOG_TLP_MASKS;
+>  	}
+>  
+>  	layer = AER_GET_LAYER_ERROR(aer_severity, status);
+>  	agent = AER_GET_AGENT(aer_severity, status);
+>  
+> +	memset(&info, 0, sizeof(info));
+> +	info.severity = aer_severity;
+> +	info.status = status;
+> +	info.mask = mask;
+> +	info.first_error = 0x1f;
 
-OK, let's keep this patch as-is since returning Mb/s means we
-don't have to worry about floating point, and it sounds like we
-agree the truncation isn't a big deal.
+I like this patch a lot, but where does this "first_error = 0x1f" come
+from?
 
-I'll post a proposal to convert to Gb/s when printing.
+I assume this is supposed to be the "First Error Pointer" in the
+Advanced Error Capabilities and Control register (PCIe r4.0, sec
+7.8.4.7).  There is a "cap_control" field in struct
+aer_capability_regs; should we be using that here?
 
-> > > commit 946435491b35b7782157e9a4d1bd73071fba7709
-> > > Author: Tal Gilboa <talgi@mellanox.com>
-> > > Date:   Fri Mar 30 08:32:03 2018 -0500
-> > >
-> > >      PCI: Add pcie_bandwidth_capable() to compute max supported link
-> > bandwidth
-> > >
-> > >      Add pcie_bandwidth_capable() to compute the max link bandwidth
-> > supported by
-> > >      a device, based on the max link speed and width, adjusted by the encoding
-> > >      overhead.
-> > >
-> > >      The maximum bandwidth of the link is computed as:
-> > >
-> > >        max_link_width * max_link_speed * (1 - encoding_overhead)
-> > >
-> > >      2.5 and 5.0 GT/s links use 8b/10b encoding, which reduces the raw
-> > bandwidth
-> > >      available by 20%; 8.0 GT/s and faster links use 128b/130b encoding, which
-> > >      reduces it by about 1.5%.
-> > >
-> > >      The result is in Mb/s, i.e., megabits/second, of raw bandwidth.
-> > >
-> > >      Signed-off-by: Tal Gilboa <talgi@mellanox.com>
-> > >      [bhelgaas: add 16 GT/s, adjust for pcie_get_speed_cap() and
-> > >      pcie_get_width_cap() signatures, don't export outside drivers/pci]
-> > >      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > >      Reviewed-by: Tariq Toukan <tariqt@mellanox.com>
-> > >
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index 43075be79388..ff1e72060952 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -5208,6 +5208,28 @@ enum pcie_link_width pcie_get_width_cap(struct
-> > pci_dev *dev)
-> > >   	return PCIE_LNK_WIDTH_UNKNOWN;
-> > >   }
-> > >
-> > > +/**
-> > > + * pcie_bandwidth_capable - calculate a PCI device's link bandwidth capability
-> > > + * @dev: PCI device
-> > > + * @speed: storage for link speed
-> > > + * @width: storage for link width
-> > > + *
-> > > + * Calculate a PCI device's link bandwidth by querying for its link speed
-> > > + * and width, multiplying them, and applying encoding overhead.  The result
-> > > + * is in Mb/s, i.e., megabits/second of raw bandwidth.
-> > > + */
-> > > +u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed
-> > *speed,
-> > > +			   enum pcie_link_width *width)
-> > > +{
-> > > +	*speed = pcie_get_speed_cap(dev);
-> > > +	*width = pcie_get_width_cap(dev);
-> > > +
-> > > +	if (*speed == PCI_SPEED_UNKNOWN || *width ==
-> > PCIE_LNK_WIDTH_UNKNOWN)
-> > > +		return 0;
-> > > +
-> > > +	return *width * PCIE_SPEED2MBS_ENC(*speed);
-> > > +}
-> > > +
-> > >   /**
-> > >    * pci_select_bars - Make BAR mask from the type of resource
-> > >    * @dev: the PCI device for which BAR mask is made
-> > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> > > index 66738f1050c0..37f9299ed623 100644
-> > > --- a/drivers/pci/pci.h
-> > > +++ b/drivers/pci/pci.h
-> > > @@ -261,8 +261,18 @@ void pci_disable_bridge_window(struct pci_dev *dev);
-> > >   	 (speed) == PCIE_SPEED_2_5GT ? "2.5 GT/s" : \
-> > >   	 "Unknown speed")
-> > >
-> > > +/* PCIe speed to Mb/s reduced by encoding overhead */
-> > > +#define PCIE_SPEED2MBS_ENC(speed) \
-> > > +	((speed) == PCIE_SPEED_16_0GT ? (16000*(128/130)) : \
-> > > +	 (speed) == PCIE_SPEED_8_0GT  ?  (8000*(128/130)) : \
-> > > +	 (speed) == PCIE_SPEED_5_0GT  ?  (5000*(8/10)) : \
-> > > +	 (speed) == PCIE_SPEED_2_5GT  ?  (2500*(8/10)) : \
-> > > +	 0)
-> > > +
-> > >   enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev);
-> > >   enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev);
-> > > +u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed
-> > *speed,
-> > > +			   enum pcie_link_width *width);
-> > >
-> > >   /* Single Root I/O Virtualization */
-> > >   struct pci_sriov {
-> > >
+> +
+>  	pci_err(dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, mask);
+> -	cper_print_bits("", status, status_strs, status_strs_size);
+> +	__aer_print_error(dev, &info);
+>  	pci_err(dev, "aer_layer=%s, aer_agent=%s\n",
+>  		aer_error_layer[layer], aer_agent_string[agent]);
+>  
+> -- 
+> 2.14.3
+> 
