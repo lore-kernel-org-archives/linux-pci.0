@@ -1,178 +1,151 @@
-Return-Path: <SRS0=dJFU=HA=oracle.com=james.puthukattukaran@kernel.org>
-Return-Path: <SRS0=dJFU=HA=oracle.com=james.puthukattukaran@kernel.org>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>
-From: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Subject: [PATCH 1/2] PCI: Workaround hardware bugs in ACS functionality by
- implementing it as a quirk
-Message-ID: <e6a55432-8c56-9c99-ce99-4ae80a0ed3ba@oracle.com>
-Date: Wed, 11 Apr 2018 11:58:43 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:41402 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758069AbeD0TWJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Apr 2018 15:22:09 -0400
+Date: Fri, 27 Apr 2018 14:22:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
+        Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+Message-ID: <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+[+cc Lukas, Sinan]
 
-There are bugs in ACS implementations by certain switch vendors that 
-cause ACS violations in perfectly normal accesses. This patch provides 
-the framework for enabling and disabling the functionality at certain 
-points during endpoint bringup in the form of a quirk.
+Hi Paul,
 
-Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Thanks for the report!
 
---
+On Thu, Apr 26, 2018 at 12:17:53PM +0200, Paul Menzel wrote:
+> Dear Linux folks,
+> 
+> 
+> On the Lenovo X60t, during resume from ACPI suspend and during shutdown, the
+> message below is shown in the logs.
+> 
+>     pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038 (issued
+> 65284 msec ago)
 
--v2: move workaround to pci_bus_read_dev_vendor_id() from 
-pci_bus_check_dev()
-      and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
--v3: add bus->self check for root bus and virtual bus for sriov vfs.
--v4: only do workaround for IDT switches
--v5: tweak pci_std_enable_acs_sv to deal with unimplemented SV
--v6: Added errata verbiage verbatim and resolved patch format issues
--v7: changed int to bool for found and idt_workaround declarations. Also
-      added bugzilla https://bugzilla.kernel.org/show_bug.cgi?id=196979
--v8: Rewrote the patch by adding a new acs quirk to keep the workaround
-      out of the main code path
--v9: changed function name from pci_dev_specific_fixup_acs_quirk to
-      pci_bus_acs_quirk. Also, tested for FLR and hot reset scenarios 
-and did
-      not see issues where workaround was required. The issue seems to be
-      related only to cold reset/power on situation.
--v10: Moved the contents of pci_bus_read_vendor_id into an internal function
-       __pci_bus_read_vendor_id
--v11: Split the patch into two patches. The first a general quirk framework.
+This is an Intel root port:
 
----
+  00:1c.0 PCI bridge: Intel Corporation NM10/ICH7 Family PCI Express Port 1 (rev 02) (prog-if 00 [Normal decode])
 
-  drivers/pci/pci.h    |  7 +++++++
-  drivers/pci/probe.c  | 33 ++++++++++++++++++++++++++++-----
-  drivers/pci/quirks.c | 41 +++++++++++++++++++++++++++++++++++++++++
-  3 files changed, 76 insertions(+), 5 deletions(-)
+and probably has the CF118 erratum (see
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3461a068661c
+for details).  I bet if you changed "msecs" in pcie_wait_cmd() to 30000
+you'd see a 30 second delay during shutdown because we write a command to
+tell the port not to generate any more hotplug interrupts, and we wait for
+that command to complete, but the port never tells us it has completed.
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 023f7cf..a9e2a8c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -387,11 +387,18 @@ struct pci_dev_reset_methods {
+Lukas reported a similar issue in
+https://lkml.kernel.org/r/20180112104929.GA10599@wunner.de, which we sort
+of worked around by assuming that Thunderbolt controllers never support
+that "command complete" interrupt (see
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=493fb50e958c)
 
-  #ifdef CONFIG_PCI_QUIRKS
-  int pci_dev_specific_reset(struct pci_dev *dev, int probe);
-+int pci_bus_specific_acs_quirk(struct pci_bus *bus , int devfn,
-+					int enable, bool found);
-  #else
-  static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
-  {
-  	return -ENOTTY;
-  }
-+static inline int pci_bus_specific_acs_quirk(struct pc_bus *bus,
-+					int devfn, int enable, bool found)
-+{
-+	return -ENOTTY;
-+}
-  #endif
+Sinan mooted the idea of using a "no-wait" path of sending the "don't
+generate hotplug interrupts" command.  I think we should work on this
+idea a little more.  If we're shutting down the whole system, I can't
+believe there's much value in *anything* we do in the pciehp_remove()
+path.
 
-  #if defined(CONFIG_PCI_QUIRKS) && defined(CONFIG_ARM64)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac91b6f..0c93b3e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2097,21 +2097,44 @@ static bool pci_bus_wait_crs(struct pci_bus 
-*bus, int devfn, u32 *l,
-  	return true;
-  }
+Maybe we should just get rid of pciehp_remove() (and probably
+pcie_port_remove_service() and the other service driver remove methods)
+completely.  That dates from when the service drivers could be modules that
+could be potentially unloaded, but unloading them hasn't been possible for
+years.
 
--bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-+static bool __pci_bus_read_dev_vendor_id(struct pci_bus *bus, int 
-devfn, u32 *l,
-  				int timeout)
-  {
-+
-+	int found = false;
-+
-  	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
--		return false;
-+		goto out;
+As far as the resume path, my guess is that in pciehp_resume(), we
+write a command to enable interrupts, then it looks like we get a
+PCI_EXP_SLTSTA_DLLSC "Link Up" interrupt, and apparently we issue
+another command.  Not sure exactly what's going on here.
 
-  	/* Some broken boards return 0 or ~0 if a slot is empty: */
-  	if (*l == 0xffffffff || *l == 0x00000000 ||
-  	    *l == 0x0000ffff || *l == 0xffff0000)
--		return false;
-+		goto out;
+Could you try the following patch?  The idea is to (1) do nothing on
+shutdown, so you should see no message and no delay, and (2) collect
+more information about the resume path.
 
-+	found = true;
-  	if (pci_bus_crs_vendor_id(*l))
--		return pci_bus_wait_crs(bus, devfn, l, timeout);
-+		found = pci_bus_wait_crs(bus, devfn, l, timeout);
 
--	return true;
-+out:
-+	return found;
-+
-+}
-+
-+
-+bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-+				int timeout)
-+{
-+	bool ret;
-+	int enable = -1;
-+
-+	enable = pci_bus_specific_acs_quirk(bus, devfn, false, false);
-+
-+	ret = __pci_bus_read_dev_vendor_id(bus, devfn, l, timeout);
-+
-+	if (enable > 0)
-+		pci_bus_specific_acs_quirk(bus, devfn, enable, ret);
-+
-+	return ret;
-  }
-  EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 26141b1..bf423e3 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4737,3 +4737,44 @@ static void quirk_gpu_hda(struct pci_dev *hda)
-  			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
-  DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
-  			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
-+
-+
-+
-+static const struct pci_dev_acs_quirk{
-+	u16 vendor;
-+	u16 device;
-+	int (*acs_quirk)(struct pci_bus *bus, int devfn, int enable, bool found);
-+} pci_dev_acs_quirks[] = {
-+	{0}
-+};
-+
-+int pci_bus_specific_acs_quirk(struct pci_bus *bus, int devfn, int enable,
-+				bool found)
-+{
-+	const struct pci_dev_acs_quirk *i;
-+	struct pci_dev *dev;
-+	int ret;
-+
-+	if (!bus || !bus->self)
-+		return -ENOTTY;
-+
-+	dev = bus->self;
-+
-+	 /*
-+	  * Allow devices that have HW bugs in the ACS implementations to
-+	  * control enabling or disabling that ACS feature here.
-+	  */
-+	for (i = pci_dev_acs_quirks; i->acs_quirk; i++) {
-+	if ((i->vendor == dev->vendor ||
-+		i->vendor == (u16)PCI_ANY_ID) &&
-+		(i->device == dev->device ||
-+		 i->device == (u16)PCI_ANY_ID)) {
-+			ret = i->acs_quirk(bus, devfn, enable, found);
-+			if (ret >= 0)
-+				return ret;
-+		}
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 332b723ff9e6..99751cc52968 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -260,14 +260,6 @@ static int pciehp_probe(struct pcie_device *dev)
+ 	return -ENODEV;
+ }
+ 
+-static void pciehp_remove(struct pcie_device *dev)
+-{
+-	struct controller *ctrl = get_service_data(dev);
+-
+-	cleanup_slot(ctrl);
+-	pciehp_release_ctrl(ctrl);
+-}
+-
+ #ifdef CONFIG_PM
+ static int pciehp_suspend(struct pcie_device *dev)
+ {
+@@ -305,7 +297,6 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
+ 	.service	= PCIE_PORT_SERVICE_HP,
+ 
+ 	.probe		= pciehp_probe,
+-	.remove		= pciehp_remove,
+ 
+ #ifdef	CONFIG_PM
+ 	.suspend	= pciehp_suspend,
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 18a42f8f5dc5..c3a9c47ed061 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -113,7 +113,7 @@ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
+ 	return 0;	/* timeout */
+ }
+ 
+-static void pcie_wait_cmd(struct controller *ctrl)
++static void pcie_wait_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+ {
+ 	unsigned int msecs = pciehp_poll_mode ? 2500 : 1000;
+ 	unsigned long duration = msecs_to_jiffies(msecs);
+@@ -155,10 +155,13 @@ static void pcie_wait_cmd(struct controller *ctrl)
+ 	 * don't change those bits, e.g., commands that merely enable
+ 	 * interrupts.
+ 	 */
+-	if (!rc)
+-		ctrl_info(ctrl, "Timeout on hotplug command %#06x (issued %u msec ago)\n",
++	if (!rc) {
++		ctrl_info(ctrl, "Timeout on hotplug command %#06x (issued %u msec ago), new command %#06x/mask %#06x\n",
+ 			  ctrl->slot_ctrl,
+-			  jiffies_to_msecs(jiffies - ctrl->cmd_started));
++			  jiffies_to_msecs(jiffies - ctrl->cmd_started),
++			  cmd, mask);
++		dump_stack();
 +	}
-+
-+	return -ENOTTY;
-+}
-+
+ }
+ 
+ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
+@@ -172,7 +175,7 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
+ 	/*
+ 	 * Always wait for any previous command that might still be in progress
+ 	 */
+-	pcie_wait_cmd(ctrl);
++	pcie_wait_cmd(ctrl, cmd, mask);
+ 
+ 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+ 	if (slot_ctrl == (u16) ~0) {
+@@ -193,7 +196,7 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
+ 	 * indicating completion of the above issued command.
+ 	 */
+ 	if (wait)
+-		pcie_wait_cmd(ctrl);
++		pcie_wait_cmd(ctrl, cmd, mask);
+ 
+ out:
+ 	mutex_unlock(&ctrl->ctrl_lock);
