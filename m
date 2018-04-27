@@ -1,71 +1,41 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, mark.rutland@arm.com,
-        catalin.marinas@arm.com
-Cc: hch@lst.de, gregkh@linuxfoundation.org, joro@8bytes.org,
-        robh+dt@kernel.org, m.szyprowski@samsung.com, shawnguo@kernel.org,
-        frowand.list@gmail.com, bhelgaas@google.com,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bharat.bhushan@nxp.com, stuyoder@gmail.com,
-        laurentiu.tudor@nxp.com, leoyang.li@nxp.com,
-        Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH 6/6 v3] arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
-Date: Fri, 27 Apr 2018 15:57:06 +0530
-Message-Id: <1524824826-29473-7-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
-References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH 03/10] PCI: cadence: Update cdns_pcie_ep_raise_irq function signature
+Date: Fri, 27 Apr 2018 17:57:40 +0100
+Message-Id: <22e7cbcda9369cf88aadfa1b17c1dad00170a4ff.1524845816.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-fsl-mc bus support the new iommu-map property. Comply to this binding
-for fsl_mc bus.
+Change cdns_pcie_ep_raise_irq() signature, namely the interrupt_num variable type
+from u8 to u16 to accommodate the 2048 maximum MSI-X interrupts.
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Alan Douglas <adouglas@cadence.com>
 ---
- arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/pci/cadence/pcie-cadence-ep.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-index 137ef4d..6010505 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-@@ -184,6 +184,7 @@
- 		#address-cells = <2>;
- 		#size-cells = <2>;
- 		ranges;
-+		dma-ranges = <0x0 0x0 0x0 0x0 0x10000 0x00000000>;
+diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
+index 3d8283e..6d6322c 100644
+--- a/drivers/pci/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/cadence/pcie-cadence-ep.c
+@@ -363,7 +363,7 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
+ }
  
- 		clockgen: clocking@1300000 {
- 			compatible = "fsl,ls2080a-clockgen";
-@@ -357,6 +358,8 @@
- 			reg = <0x00000008 0x0c000000 0 0x40>,	 /* MC portal base */
- 			      <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
- 			msi-parent = <&its>;
-+			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by u-boot */
-+			dma-coherent;
- 			#address-cells = <3>;
- 			#size-cells = <1>;
+ static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
+-				  enum pci_epc_irq_type type, u8 interrupt_num)
++				  enum pci_epc_irq_type type, u16 interrupt_num)
+ {
+ 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
  
-@@ -460,6 +463,8 @@
- 			compatible = "arm,mmu-500";
- 			reg = <0 0x5000000 0 0x800000>;
- 			#global-interrupts = <12>;
-+			#iommu-cells = <1>;
-+			stream-match-mask = <0x7C00>;
- 			interrupts = <0 13 4>, /* global secure fault */
- 				     <0 14 4>, /* combined secure interrupt */
- 				     <0 15 4>, /* global non-secure fault */
-@@ -502,7 +507,6 @@
- 				     <0 204 4>, <0 205 4>,
- 				     <0 206 4>, <0 207 4>,
- 				     <0 208 4>, <0 209 4>;
--			mmu-masters = <&fsl_mc 0x300 0>;
- 		};
- 
- 		dspi: dspi@2100000 {
 -- 
-1.9.1
+2.7.4
