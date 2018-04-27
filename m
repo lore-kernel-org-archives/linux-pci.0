@@ -1,333 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:35813 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753621AbeDQOeg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Apr 2018 10:34:36 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v5 02/10] PCI: dwc: Add support for endpoint mode
-Date: Tue, 17 Apr 2018 15:34:20 +0100
-Message-Id: <b961f8d5682d77d808638b9254daaf6e8770cf67.1523973931.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523973931.git.gustavo.pimentel@synopsys.com>
+Received: from mail.kernel.org ([198.145.29.99]:43834 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758725AbeD0TxP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Apr 2018 15:53:15 -0400
+Date: Fri, 27 Apr 2018 14:53:13 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Rajat Jain <rajatja@google.com>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: Bug? pcie_aspm=off cause less power consumption as default
+Message-ID: <20180427195313.GH8199@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180422171647.7v65zrlwhya5mq7v@pali>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20180422171647.7v65zrlwhya5mq7v@pali>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe controller dual mode is capable of operating in host mode as well
-as endpoint mode by configuration, therefore this patch aims to add
-endpoint mode support to the designware driver.
+Hi Pali,
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Removed dw_plat_pcie_stop_link empty function.
- - Implemented Kishon's suggestions about dw-pcie-rc and dw-pcie strings.
-compatibility.
- - Added second entry on pci_epf_test_ids structure.
-Changes v2->v3:
- - Reverted additions in dw_pcie_ep_linkup function.
- - Replaced devm_ioremap by devm_ioremap_resource function.
- - Moved second entry in pci_epf_test_ids structure into a new patch file.
-Changes v3->v4:
- - Reverted "snps,dw-pcie-rc" compatible string requested by Rob Herring.
-Changes v4->v5:
- - Nothing changed, just to follow the patch set version.
+On Sun, Apr 22, 2018 at 07:16:47PM +0200, Pali Rohár wrote:
+> Hi!
+> 
+> To increase runtime on battery of my Dell Latitude E6440 laptop I tried
+> different tweaks and settings. And I come up to the conclusion that
+> adding pcie_aspm=off to the kernel command line decrease power
+> consumption by approx. 2 Watts as opposite to adding pcie_aspm=force or
+> nothing (letting ASPM in default state).
+> 
+> I suspect that this is a clear kernel bug as I cannot understand how
+> turning off powersave feature ASPM could lead to decrease of power
+> consumption. Turning powersave off should either not impact or increase
+> power consumption.
+> 
+> Moreover one I put laptop into ACPI S3 sleep and resume it, then power
+> consumption increase. The only way to decrease it is to power it off and
+> power on again. Very impractical, specially as ACPI sleep is there to
+> prevent power off and on.
+> 
+> Tests:
+> 
+> Laptop on battery with pcie_aspm=off has average 8.50 Watts in idle.
+> After suspend+resume it has 11.20 Watts (power off + on is needed to get
+> back for 8.50 Watts).
+> 
+> Laptop on battery with pcie_aspm=force and with powersave aspm policy
+> it has average 11.20 Watts in idle. After suspend+resume it is 11.30
+> Watts in idle. With default policy it has 11.15 Watts and with
+> performance policy it has 11.70 Watts.
+> 
+> When pcie_aspm is not specified at all, then average power consumption
+> in idle is 8.90 Watts. And after suspend+resume it is 9.30 Watts.
+> 
+> So what is happening there? Such results are really strange and
+> apparently I'm not alone, see discussion in kernel bugzilla:
+> https://bugzilla.kernel.org/show_bug.cgi?id=62181#c23
+> 
+> I'm using Debian Stretch with its default kernel. But I remember that
+> power consumption with defaults or with pcie_aspm=force was around 10-11
+> Watts even with older kernel versions.
+> 
+> Debian Stretch has currently this kernel:
+> 4.9.0-6-amd64 #1 SMP Debian 4.9.82-1+deb9u3 (2018-03-02) x86_64 GNU/Linux
+> 
+> with this configuration:
+> 
+> $ grep ASPM /boot/config-4.9.0-6-amd64
+> CONFIG_PCIEASPM=y
+> # CONFIG_PCIEASPM_DEBUG is not set
+> CONFIG_PCIEASPM_DEFAULT=y
+> # CONFIG_PCIEASPM_POWERSAVE is not set
+> # CONFIG_PCIEASPM_PERFORMANCE is not set
+> 
+> In dmesg are these ASPM strings:
+> 
+> $ dmesg | grep ASPM
+> 
+> pcie_aspm=off
+> [    0.000000] PCIe ASPM is disabled
+> [    0.119127] ACPI FADT declares the system doesn't support PCIe ASPM, so disable it
+> [    0.163351] acpi PNP0A08:00: _OSC: not requesting OS control; OS requires [ExtendedConfig ASPM ClockPM MSI]
+> 
+> pcie_aspm=force
+> [    0.000000] PCIe ASPM is forcibly enabled
+> [    0.118985] ACPI FADT declares the system doesn't support PCIe ASPM, so disable it
+> [    0.162322] acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+> [    0.162621] acpi PNP0A08:00: FADT indicates ASPM is unsupported, using BIOS configuration
+> 
+> (none)
+> [    0.120064] ACPI FADT declares the system doesn't support PCIe ASPM, so disable it
+> [    0.163424] acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+> [    0.163724] acpi PNP0A08:00: FADT indicates ASPM is unsupported, using BIOS configuration
+> [    3.294357] iwlwifi 0000:03:00.0: can't disable ASPM; OS doesn't have ASPM control
+> 
+> In attachments I'm sending output from lspci -vv -nn, maybe it could
+> contain some useful information.
+> 
+> Another strange thing which I spotted in lspci output is that Root Host
+> bridge at 00:00.0 pci address totally disappeared after suspend+resume.
+> I hope such thing is not normal.
+> 
+> So I see there at 3 bugs:
+> 
+> 1) Power consumption increase after suspend+resume when pcie_aspm=off or
+> default
+> 
+> 2) Power consumption is higher in pcie_aspm=force or default mode as in
+> pcie_aspm=off
+> 
+> 3) PCI host bridge disappear after suspend+resume.
+> 
+> Do you have any idea what is happening here?
 
- drivers/pci/dwc/Kconfig                |  45 +++++++---
- drivers/pci/dwc/pcie-designware-plat.c | 149 ++++++++++++++++++++++++++++++---
- 2 files changed, 174 insertions(+), 20 deletions(-)
+No, but I agree it looks totally nonsensical.  I tried to pull out the
+hardware ASPM settings from all your lspci info (thanks very much for
+collecting all that).  Here's what I got.  The same/disabled comments
+are relative to the "default" baseline:
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 2f3f5c5..3fd7daf 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -7,8 +7,7 @@ config PCIE_DW
- 
- config PCIE_DW_HOST
-         bool
--	depends on PCI
--	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI && PCI_MSI_IRQ_DOMAIN
-         select PCIE_DW
- 
- config PCIE_DW_EP
-@@ -52,16 +51,42 @@ config PCI_DRA7XX_EP
- 
- config PCIE_DW_PLAT
- 	bool "Platform bus based DesignWare PCIe Controller"
--	depends on PCI
--	depends on PCI_MSI_IRQ_DOMAIN
--	select PCIE_DW_HOST
--	---help---
--	 This selects the DesignWare PCIe controller support. Select this if
--	 you have a PCIe controller on Platform bus.
-+	help
-+	  There are two instances of PCIe controller in Designware IP.
-+	  This controller can work either as EP or RC. In order to enable
-+	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
-+	  order to enable device-specific features PCIE_DW_PLAT_EP must be
-+	  selected.
- 
--	 If you have a controller with this interface, say Y or M here.
-+config PCIE_DW_PLAT_HOST
-+	bool "Platform bus based DesignWare PCIe Controller - Host mode"
-+	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	select PCIE_DW_HOST
-+	select PCIE_DW_PLAT
-+	default y
-+	help
-+	  Enables support for the PCIe controller in the Designware IP to
-+	  work in host mode. There are two instances of PCIe controller in
-+	  Designware IP.
-+	  This controller can work either as EP or RC. In order to enable
-+	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
-+	  order to enable device-specific features PCI_DW_PLAT_EP must be
-+	  selected.
- 
--	 If unsure, say N.
-+config PCIE_DW_PLAT_EP
-+	bool "Platform bus based DesignWare PCIe Controller - Endpoint mode"
-+	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	depends on PCI_ENDPOINT
-+	select PCIE_DW_EP
-+	select PCIE_DW_PLAT
-+	help
-+	  Enables support for the PCIe controller in the Designware IP to
-+	  work in endpoint mode. There are two instances of PCIe controller
-+	  in Designware IP.
-+	  This controller can work either as EP or RC. In order to enable
-+	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
-+	  order to enable device-specific features PCI_DW_PLAT_EP must be
-+	  selected.
- 
- config PCI_EXYNOS
- 	bool "Samsung Exynos PCIe controller"
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 5416aa8..efc315c 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -12,19 +12,29 @@
- #include <linux/interrupt.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/of_device.h>
- #include <linux/of_gpio.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/resource.h>
- #include <linux/signal.h>
- #include <linux/types.h>
-+#include <linux/regmap.h>
- 
- #include "pcie-designware.h"
- 
- struct dw_plat_pcie {
--	struct dw_pcie		*pci;
-+	struct dw_pcie			*pci;
-+	struct regmap			*regmap;
-+	enum dw_pcie_device_mode	mode;
- };
- 
-+struct dw_plat_pcie_of_data {
-+	enum dw_pcie_device_mode	mode;
-+};
-+
-+static const struct of_device_id dw_plat_pcie_of_match[];
-+
- static int dw_plat_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -42,9 +52,53 @@ static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
- 	.host_init = dw_plat_pcie_host_init,
- };
- 
--static int dw_plat_add_pcie_port(struct pcie_port *pp,
-+static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
-+{
-+	return 0;
-+}
-+
-+static const struct dw_pcie_ops dw_pcie_ops = {
-+	.start_link = dw_plat_pcie_establish_link,
-+};
-+
-+static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	enum pci_barno bar;
-+
-+	for (bar = BAR_0; bar <= BAR_5; bar++)
-+		dw_pcie_ep_reset_bar(pci, bar);
-+}
-+
-+static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-+				     enum pci_epc_irq_type type,
-+				     u8 interrupt_num)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	switch (type) {
-+	case PCI_EPC_IRQ_LEGACY:
-+		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
-+		return -EINVAL;
-+	case PCI_EPC_IRQ_MSI:
-+		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
-+	default:
-+		dev_err(pci->dev, "UNKNOWN IRQ type\n");
-+	}
-+
-+	return 0;
-+}
-+
-+static struct dw_pcie_ep_ops pcie_ep_ops = {
-+	.ep_init = dw_plat_pcie_ep_init,
-+	.raise_irq = dw_plat_pcie_ep_raise_irq,
-+};
-+
-+static int dw_plat_add_pcie_port(struct dw_plat_pcie *dw_plat_pcie,
- 				 struct platform_device *pdev)
- {
-+	struct dw_pcie *pci = dw_plat_pcie->pci;
-+	struct pcie_port *pp = &pci->pp;
- 	struct device *dev = &pdev->dev;
- 	int ret;
- 
-@@ -63,15 +117,44 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
- 
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
--		dev_err(dev, "failed to initialize host\n");
-+		dev_err(dev, "Failed to initialize host\n");
- 		return ret;
- 	}
- 
- 	return 0;
- }
- 
--static const struct dw_pcie_ops dw_pcie_ops = {
--};
-+static int dw_plat_add_pcie_ep(struct dw_plat_pcie *dw_plat_pcie,
-+			       struct platform_device *pdev)
-+{
-+	int ret;
-+	struct dw_pcie_ep *ep;
-+	struct resource *res;
-+	struct device *dev = &pdev->dev;
-+	struct dw_pcie *pci = dw_plat_pcie->pci;
-+
-+	ep = &pci->ep;
-+	ep->ops = &pcie_ep_ops;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
-+	pci->dbi_base2 = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(pci->dbi_base2))
-+		return PTR_ERR(pci->dbi_base2);
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
-+	if (!res)
-+		return -EINVAL;
-+
-+	ep->phys_base = res->start;
-+	ep->addr_size = resource_size(res);
-+
-+	ret = dw_pcie_ep_init(ep);
-+	if (ret) {
-+		dev_err(dev, "Failed to initialize endpoint\n");
-+		return ret;
-+	}
-+	return 0;
-+}
- 
- static int dw_plat_pcie_probe(struct platform_device *pdev)
- {
-@@ -80,6 +163,16 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
- 	struct dw_pcie *pci;
- 	struct resource *res;  /* Resource from DT */
- 	int ret;
-+	const struct of_device_id *match;
-+	const struct dw_plat_pcie_of_data *data;
-+	enum dw_pcie_device_mode mode;
-+
-+	match = of_match_device(dw_plat_pcie_of_match, dev);
-+	if (!match)
-+		return -EINVAL;
-+
-+	data = (struct dw_plat_pcie_of_data *)match->data;
-+	mode = (enum dw_pcie_device_mode)data->mode;
- 
- 	dw_plat_pcie = devm_kzalloc(dev, sizeof(*dw_plat_pcie), GFP_KERNEL);
- 	if (!dw_plat_pcie)
-@@ -93,23 +186,59 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
- 	pci->ops = &dw_pcie_ops;
- 
- 	dw_plat_pcie->pci = pci;
-+	dw_plat_pcie->mode = mode;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-+	if (!res)
-+		res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	pci->dbi_base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(pci->dbi_base))
- 		return PTR_ERR(pci->dbi_base);
- 
- 	platform_set_drvdata(pdev, dw_plat_pcie);
- 
--	ret = dw_plat_add_pcie_port(&pci->pp, pdev);
--	if (ret < 0)
--		return ret;
-+	switch (dw_plat_pcie->mode) {
-+	case DW_PCIE_RC_TYPE:
-+		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_HOST))
-+			return -ENODEV;
-+
-+		ret = dw_plat_add_pcie_port(dw_plat_pcie, pdev);
-+		if (ret < 0)
-+			return ret;
-+		break;
-+	case DW_PCIE_EP_TYPE:
-+		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_EP))
-+			return -ENODEV;
-+
-+		ret = dw_plat_add_pcie_ep(dw_plat_pcie, pdev);
-+		if (ret < 0)
-+			return ret;
-+		break;
-+	default:
-+		dev_err(dev, "INVALID device type %d\n", dw_plat_pcie->mode);
-+	}
- 
- 	return 0;
- }
- 
-+static const struct dw_plat_pcie_of_data dw_plat_pcie_rc_of_data = {
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
-+static const struct dw_plat_pcie_of_data dw_plat_pcie_ep_of_data = {
-+	.mode = DW_PCIE_EP_TYPE,
-+};
-+
- static const struct of_device_id dw_plat_pcie_of_match[] = {
--	{ .compatible = "snps,dw-pcie", },
-+	{
-+		.compatible = "snps,dw-pcie",
-+		.data = &dw_plat_pcie_rc_of_data,
-+	},
-+	{
-+		.compatible = "snps,dw-pcie-ep",
-+		.data = &dw_plat_pcie_ep_of_data,
-+	},
- 	{},
- };
- 
--- 
-2.7.4
+                                default,      force       force             force     default      pcie_aspm=off  force pwrsave
+                              pcie_aspm=off   default   performance        powersave  after resume  after resume  after resume
+  notes                                                                               [1,2,3]       [1,2,3,5]     [1,2,3,4,5]
+  power usage                8.90W, 8.50(off) 11.15W    11.70W             11.20W     9.30W         11.20W        11.30W
+  00:01.0 RP [bus 01] GPU    L0s L1 ClockPM-  same      disabled           same       same          same          same
+  00:1c.0 RP [bus 02] empty  L0s L1 ClockPM-  same      same               same       same          same          same
+  00:1c.2 RP [bus 03] NIC    L1     ClockPM-  disabled  disabled           disabled   same          same          disabled
+  00:1c.4 RP [bus 04] empty  L0s L1 ClockPM-  same      same               same       same          same          same
+  00:1c.5 RP [bus 05] empty  L0s L1 ClockPM-  same      same               same       same          same          same
+  00:1c.7 RP [bus 06] SD/MMC L1     ClockPM-  same      disabled           same       same          same          L0s L1
+  01:00.0 Radeon GPU         ? [6]            ?         ?                  ?          ?             ?             ?
+  03:00.0 Centrino NIC       L1     ClockPM-  disabled  disabled           disabled   same          same          disabled
+  06:00.0 SD/MMC card        L1     ClockPM+  same      disabled ClockPM-  L0s L1     same          same          L0s L1
+
+  [1] 00:00.0 device absent
+  [2] 00:01.0 LnkCtl AutWidDis+, SltSta PresDet+
+  [3] 00:1c.2 SecStatus <MAbort-, SltSta LinkState+
+      00:1c.7 SecStatus <MAbort-, SltSta LinkState+
+      03:00.0 DevSta CorrErr-, UnsuppReq-
+  [4] 00:1c.2 LnkCtl ASPM Disabled
+      00:1c.7 LnkCtl L0s L1 Enabled
+      03:00.0 LnkCtl ASPM Disabled
+      06:00.0 LnkCtl ASPM L0s L1 Enabled
+  [5] 06:00.0 LTR max snoop 71680ns -> 566ns
+  [6] 01:00.0 seems completely powered off, probably because you're
+      using integrated video
+
+I haven't made sense out of any of this yet, except that the "force
+performance" column seems plausible: if we want performance, we should
+disable ASPM across the board.
+
+I don't really know where to start here.  Maybe we can focus on
+understanding one tiny piece.  Can you apply the following patch and
+try just the "force powersave" situation?  Please collect the entire
+dmesg log and "lspci -vv" output.
+
+Bjorn
