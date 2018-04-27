@@ -1,38 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:40145 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752058AbeDPLfP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Apr 2018 07:35:15 -0400
-Received: by mail-ot0-f193.google.com with SMTP id h8-v6so5875971otj.7
-        for <linux-pci@vger.kernel.org>; Mon, 16 Apr 2018 04:35:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1522747141-8299-1-git-send-email-loic.poulain@linaro.org>
-References: <1522747141-8299-1-git-send-email-loic.poulain@linaro.org>
-From: Loic Poulain <loic.poulain@linaro.org>
-Date: Mon, 16 Apr 2018 13:34:34 +0200
-Message-ID: <CAMZdPi-jsf0_oYvdUtobr+pJyaWomFv7MWcZRr_P7xBfi_8-rw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: kirin: Fix reset gpio name
-To: songxiaowei@hisilicon.com, wangbinghui@hisilicon.com
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        lorenzo.pieralisi@arm.com, Loic Poulain <loic.poulain@linaro.org>,
-        Guodong Xu <guodong.xu@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from lucky1.263xmail.com ([211.157.147.133]:37908 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757671AbeD0IcH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 04:32:07 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+        Ley Foon Tan <ley.foon.tan@intel.com>
+Subject: [PATCH 6/9] PCI: altera: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
+Date: Fri, 27 Apr 2018 16:24:11 +0800
+Message-Id: <1524817451-240461-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Xiaowei,
+Just avoid code duplication, but no functional change intended.
 
-On 3 April 2018 at 11:19, Loic Poulain <loic.poulain@linaro.org> wrote:
-> As documented in the device-tree bindings (pci/kirin-pcie.txt) and
-> defined in existing device-tree (hi3660.dtsi), the reset gpio name
-> is 'reset-gpios'. However, driver looks for a 'reset-gpio' resource
-> which makes the driver probe fail. Fix this.
->
-> Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe controller driver")
-> Signed-off-by: Loic Poulain <loic.poulain@linaro.org>
+Cc: Ley Foon Tan <ley.foon.tan@intel.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
+ drivers/pci/host/pcie-altera.c | 38 ++++----------------------------------
+ 1 file changed, 4 insertions(+), 34 deletions(-)
 
-Are you still maintaining this driver ? Binghui's email seems to be invalid now.
-
-Regards,
-Loic
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index a6af62e..a0fcf0f 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -441,19 +441,6 @@ static void altera_pcie_retrain(struct altera_pcie *pcie)
+ 	}
+ }
+ 
+-static int altera_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+-				irq_hw_number_t hwirq)
+-{
+-	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
+-	return 0;
+-}
+-
+-static const struct irq_domain_ops intx_domain_ops = {
+-	.map = altera_pcie_intx_map,
+-	.xlate = pci_irqd_intx_xlate,
+-};
+-
+ static void altera_pcie_isr(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+@@ -518,22 +505,6 @@ static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
+ 	return err;
+ }
+ 
+-static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
+-{
+-	struct device *dev = &pcie->pdev->dev;
+-	struct device_node *node = dev->of_node;
+-
+-	/* Setup INTx */
+-	pcie->irq_domain = irq_domain_add_linear(node, PCI_NUM_INTX,
+-					&intx_domain_ops, pcie);
+-	if (!pcie->irq_domain) {
+-		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+-		return -ENOMEM;
+-	}
+-
+-	return 0;
+-}
+-
+ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+ {
+ 	struct device *dev = &pcie->pdev->dev;
+@@ -591,11 +562,10 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
+-	ret = altera_pcie_init_irq_domain(pcie);
+-	if (ret) {
+-		dev_err(dev, "Failed creating IRQ Domain\n");
+-		return ret;
+-	}
++	pcie->irq_domain = pci_alloc_intx_irqd(dev, pcie, true, NULL,
++					       dev->of_node);
++	if (IS_ERR(pcie->irq_domain))
++		return PTR_ERR(pcie->irq_domain);
+ 
+ 	/* clear all interrupts */
+ 	cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
+-- 
+1.9.1
