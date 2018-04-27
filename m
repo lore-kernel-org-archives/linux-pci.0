@@ -1,428 +1,470 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:13056 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751276AbeDFHRH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Apr 2018 03:17:07 -0400
-Subject: Re: [PATCH 2/8] PCI: dwc: designware: Add support for endpoint mode
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
- <93aafb03af86885994e633da240ef58dbd3f4d53.1522235224.git.gustavo.pimentel@synopsys.com>
- <df477a39-25b9-68f6-bd10-aa45226101e4@ti.com>
- <339b02fa-47bb-bd36-a1b2-72ff315c3f7a@synopsys.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <e629348f-20f2-f5ee-2ebb-2e24e69d1af8@ti.com>
-Date: Fri, 6 Apr 2018 12:46:56 +0530
-MIME-Version: 1.0
-In-Reply-To: <339b02fa-47bb-bd36-a1b2-72ff315c3f7a@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from smtprelay.synopsys.com ([198.182.37.59]:37150 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758923AbeD0Q6A (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 12:58:00 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH 06/10] misc: pci_endpoint_test: Add MSI-X support
+Date: Fri, 27 Apr 2018 17:57:43 +0100
+Message-Id: <633ea6faef782de5ea753bffe5028aceff09115a.1524845816.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Add MSI-X support and update driver documentation accordingly.
 
-On Wednesday 04 April 2018 03:50 PM, Gustavo Pimentel wrote:
-> On 02/04/2018 06:34, Kishon Vijay Abraham I wrote:
->> Hi,
->>
->> On Wednesday 28 March 2018 05:08 PM, Gustavo Pimentel wrote:
->>> The PCIe controller dual mode is capable of operating in host mode as well
->>> as endpoint mode by configuration, therefore this patch aims to add
->>> endpoint mode support to the designware driver.
->>>
->>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->>> ---
->>>  drivers/pci/dwc/Kconfig                       |  45 ++++++--
->>>  drivers/pci/dwc/pcie-designware-plat.c        | 157 ++++++++++++++++++++++++--
->>>  drivers/pci/endpoint/functions/pci-epf-test.c |   5 +
->>>  3 files changed, 187 insertions(+), 20 deletions(-)
->>>
->>> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
->>> index 2f3f5c5..3fd7daf 100644
->>> --- a/drivers/pci/dwc/Kconfig
->>> +++ b/drivers/pci/dwc/Kconfig
->>> @@ -7,8 +7,7 @@ config PCIE_DW
->>>  
->>>  config PCIE_DW_HOST
->>>          bool
->>> -	depends on PCI
->>> -	depends on PCI_MSI_IRQ_DOMAIN
->>> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
->>>          select PCIE_DW
->>>  
->>>  config PCIE_DW_EP
->>> @@ -52,16 +51,42 @@ config PCI_DRA7XX_EP
->>>  
->>>  config PCIE_DW_PLAT
->>>  	bool "Platform bus based DesignWare PCIe Controller"
->>> -	depends on PCI
->>> -	depends on PCI_MSI_IRQ_DOMAIN
->>> -	select PCIE_DW_HOST
->>> -	---help---
->>> -	 This selects the DesignWare PCIe controller support. Select this if
->>> -	 you have a PCIe controller on Platform bus.
->>> +	help
->>> +	  There are two instances of PCIe controller in Designware IP.
->>> +	  This controller can work either as EP or RC. In order to enable
->>> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
->>> +	  order to enable device-specific features PCIE_DW_PLAT_EP must be
->>> +	  selected.
->>>  
->>> -	 If you have a controller with this interface, say Y or M here.
->>> +config PCIE_DW_PLAT_HOST
->>> +	bool "Platform bus based DesignWare PCIe Controller - Host mode"
->>> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
->>> +	select PCIE_DW_HOST
->>> +	select PCIE_DW_PLAT
->>> +	default y
->>> +	help
->>> +	  Enables support for the PCIe controller in the Designware IP to
->>> +	  work in host mode. There are two instances of PCIe controller in
->>> +	  Designware IP.
->>> +	  This controller can work either as EP or RC. In order to enable
->>> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
->>> +	  order to enable device-specific features PCI_DW_PLAT_EP must be
->>> +	  selected.
->>>  
->>> -	 If unsure, say N.
->>> +config PCIE_DW_PLAT_EP
->>> +	bool "Platform bus based DesignWare PCIe Controller - Endpoint mode"
->>> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
->>> +	depends on PCI_ENDPOINT
->>> +	select PCIE_DW_EP
->>> +	select PCIE_DW_PLAT
->>> +	help
->>> +	  Enables support for the PCIe controller in the Designware IP to
->>> +	  work in endpoint mode. There are two instances of PCIe controller
->>> +	  in Designware IP.
->>> +	  This controller can work either as EP or RC. In order to enable
->>> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
->>> +	  order to enable device-specific features PCI_DW_PLAT_EP must be
->>> +	  selected.
->>>  
->>>  config PCI_EXYNOS
->>>  	bool "Samsung Exynos PCIe controller"
->>> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
->>> index 5416aa8..921ab07 100644
->>> --- a/drivers/pci/dwc/pcie-designware-plat.c
->>> +++ b/drivers/pci/dwc/pcie-designware-plat.c
->>> @@ -12,19 +12,29 @@
->>>  #include <linux/interrupt.h>
->>>  #include <linux/kernel.h>
->>>  #include <linux/init.h>
->>> +#include <linux/of_device.h>
->>>  #include <linux/of_gpio.h>
->>>  #include <linux/pci.h>
->>>  #include <linux/platform_device.h>
->>>  #include <linux/resource.h>
->>>  #include <linux/signal.h>
->>>  #include <linux/types.h>
->>> +#include <linux/regmap.h>
->>>  
->>>  #include "pcie-designware.h"
->>>  
->>>  struct dw_plat_pcie {
->>> -	struct dw_pcie		*pci;
->>> +	struct dw_pcie			*pci;
->>> +	struct regmap			*regmap;
->>> +	enum dw_pcie_device_mode	mode;
->>>  };
->>>  
->>> +struct dw_plat_pcie_of_data {
->>> +	enum dw_pcie_device_mode	mode;
->>> +};
->>> +
->>> +static const struct of_device_id dw_plat_pcie_of_match[];
->>> +
->>>  static int dw_plat_pcie_host_init(struct pcie_port *pp)
->>>  {
->>>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->>> @@ -42,9 +52,61 @@ static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
->>>  	.host_init = dw_plat_pcie_host_init,
->>>  };
->>>  
->>> -static int dw_plat_add_pcie_port(struct pcie_port *pp,
->>> +static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
->>> +{
->>> +	dw_pcie_ep_linkup(&pci->ep);
->>
->> .start_link ops is used incorrectly here. .start_link is used when all the
->> endpoint side configuration is done and "is ready" to establish a link with the
->> host. But dw_pcie_ep_linkup is used to inform the function devices that the
->> link "has been" established.
-> 
-> If I move the dw_pcie_ep_linkup call from the dw_plat_pcie_establish_link to the
-> dw_plat_pcie_ep_init function it would be more correct in your perspective? If
-> not, where you suggest?
+Add new driver parameter to allow interruption type selection.
 
-No, dw_pcie_ep_linkup is an optional function. If your platform gives a
-notification when the link to the host is established, then you have to invoke
-this function.
+Modify the Legacy/MSI/MSI-X test process, by:
+ - Add and use a specific register located in a BAR, which defines
+the interrupt type is been triggered.
+ - Move the interrupt ID number from the command section to a
+register located in a BAR.
 
-If you keep "linkup_notifier = false" in pci-epf-test.c, dw_pcie_ep_linkup
-should be required.
-> 
->>> +
->>> +	return 0;
->>> +}
->>> +
->>> +static void dw_plat_pcie_stop_link(struct dw_pcie *pci)
->>> +{
->>> +
->>> +}
->>
->> Not necessary to have empty function here. pci-epc-core will not try to invoke
->> ops which are not populated.
-> 
-> Ok, I'll remove it.
-> 
->>> +
->>> +static const struct dw_pcie_ops dw_pcie_ops = {
->>> +	.start_link = dw_plat_pcie_establish_link,
->>> +	.stop_link = dw_plat_pcie_stop_link,
->>> +};
->>> +
->>> +static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
->>> +{
->>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->>> +	enum pci_barno bar;
->>> +
->>> +	for (bar = BAR_0; bar <= BAR_5; bar++)
->>> +		dw_pcie_ep_reset_bar(pci, bar);
->>> +}
->>> +
->>> +static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
->>> +				     enum pci_epc_irq_type type,
->>> +				     u8 interrupt_num)
->>> +{
->>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->>> +
->>> +	switch (type) {
->>> +	case PCI_EPC_IRQ_LEGACY:
->>> +		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
->>> +		return -EINVAL;
->>> +	case PCI_EPC_IRQ_MSI:
->>> +		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
->>> +	default:
->>> +		dev_err(pci->dev, "UNKNOWN IRQ type\n");
->>> +	}
->>> +
->>> +	return 0;
->>> +}
->>> +
->>> +static struct dw_pcie_ep_ops pcie_ep_ops = {
->>> +	.ep_init = dw_plat_pcie_ep_init,
->>> +	.raise_irq = dw_plat_pcie_ep_raise_irq,
->>> +};
->>> +
->>> +static int dw_plat_add_pcie_port(struct dw_plat_pcie *dw_plat_pcie,
->>>  				 struct platform_device *pdev)
->>>  {
->>> +	struct dw_pcie *pci = dw_plat_pcie->pci;
->>> +	struct pcie_port *pp = &pci->pp;
->>>  	struct device *dev = &pdev->dev;
->>>  	int ret;
->>>  
->>> @@ -63,15 +125,44 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
->>>  
->>>  	ret = dw_pcie_host_init(pp);
->>>  	if (ret) {
->>> -		dev_err(dev, "failed to initialize host\n");
->>> +		dev_err(dev, "Failed to initialize host\n");
->>>  		return ret;
->>>  	}
->>>  
->>>  	return 0;
->>>  }
->>>  
->>> -static const struct dw_pcie_ops dw_pcie_ops = {
->>> -};
->>> +static int dw_plat_add_pcie_ep(struct dw_plat_pcie *dw_plat_pcie,
->>> +			       struct platform_device *pdev)
->>> +{
->>> +	int ret;
->>> +	struct dw_pcie_ep *ep;
->>> +	struct resource *res;
->>> +	struct device *dev = &pdev->dev;
->>> +	struct dw_pcie *pci = dw_plat_pcie->pci;
->>> +
->>> +	ep = &pci->ep;
->>> +	ep->ops = &pcie_ep_ops;
->>> +
->>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
->>> +	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
->>> +	if (IS_ERR(pci->dbi_base2))
->>> +		return PTR_ERR(pci->dbi_base2);
->>> +
->>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
->>> +	if (!res)
->>> +		return -EINVAL;
->>> +
->>> +	ep->phys_base = res->start;
->>> +	ep->addr_size = resource_size(res);
->>> +
->>> +	ret = dw_pcie_ep_init(ep);
->>> +	if (ret) {
->>> +		dev_err(dev, "Failed to initialize endpoint\n");
->>> +		return ret;
->>> +	}
->>> +	return 0;
->>> +}
->>>  
->>>  static int dw_plat_pcie_probe(struct platform_device *pdev)
->>>  {
->>> @@ -80,6 +171,16 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
->>>  	struct dw_pcie *pci;
->>>  	struct resource *res;  /* Resource from DT */
->>>  	int ret;
->>> +	const struct of_device_id *match;
->>> +	const struct dw_plat_pcie_of_data *data;
->>> +	enum dw_pcie_device_mode mode;
->>> +
->>> +	match = of_match_device(dw_plat_pcie_of_match, dev);
->>> +	if (!match)
->>> +		return -EINVAL;
->>> +
->>> +	data = (struct dw_plat_pcie_of_data *)match->data;
->>> +	mode = (enum dw_pcie_device_mode)data->mode;
->>>  
->>>  	dw_plat_pcie = devm_kzalloc(dev, sizeof(*dw_plat_pcie), GFP_KERNEL);
->>>  	if (!dw_plat_pcie)
->>> @@ -93,23 +194,59 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
->>>  	pci->ops = &dw_pcie_ops;
->>>  
->>>  	dw_plat_pcie->pci = pci;
->>> +	dw_plat_pcie->mode = mode;
->>> +
->>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
->>> +	if (!res)
->>> +		res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->>>  
->>> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->>>  	pci->dbi_base = devm_ioremap_resource(dev, res);
->>>  	if (IS_ERR(pci->dbi_base))
->>>  		return PTR_ERR(pci->dbi_base);
->>>  
->>>  	platform_set_drvdata(pdev, dw_plat_pcie);
->>>  
->>> -	ret = dw_plat_add_pcie_port(&pci->pp, pdev);
->>> -	if (ret < 0)
->>> -		return ret;
->>> +	switch (dw_plat_pcie->mode) {
->>> +	case DW_PCIE_RC_TYPE:
->>> +		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_HOST))
->>> +			return -ENODEV;
->>> +
->>> +		ret = dw_plat_add_pcie_port(dw_plat_pcie, pdev);
->>> +		if (ret < 0)
->>> +			return ret;
->>> +		break;
->>> +	case DW_PCIE_EP_TYPE:
->>> +		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_EP))
->>> +			return -ENODEV;
->>> +
->>> +		ret = dw_plat_add_pcie_ep(dw_plat_pcie, pdev);
->>> +		if (ret < 0)
->>> +			return ret;
->>> +		break;
->>> +	default:
->>> +		dev_err(dev, "INVALID device type %d\n", dw_plat_pcie->mode);
->>> +	}
->>>  
->>>  	return 0;
->>>  }
->>>  
->>> +static const struct dw_plat_pcie_of_data dw_plat_pcie_rc_of_data = {
->>> +	.mode = DW_PCIE_RC_TYPE,
->>> +};
->>> +
->>> +static const struct dw_plat_pcie_of_data dw_plat_pcie_ep_of_data = {
->>> +	.mode = DW_PCIE_EP_TYPE,
->>> +};
->>> +
->>>  static const struct of_device_id dw_plat_pcie_of_match[] = {
->>> -	{ .compatible = "snps,dw-pcie", },
->>> +	{
->>> +		.compatible = "snps,dw-pcie",
->>> +		.data = &dw_plat_pcie_rc_of_data,
->>> +	},
->>> +	{
->>> +		.compatible = "snps,dw-pcie-ep",
->>> +		.data = &dw_plat_pcie_ep_of_data,
->>> +	},
->>>  	{},
->>>  };
->>>  
->>> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
->>> index 64d8a17..d7de684 100644
->>> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
->>> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
->>> @@ -451,9 +451,14 @@ static int pci_epf_test_bind(struct pci_epf *epf)
->>>  	return 0;
->>>  }
->>>  
->>> +static const struct pci_epf_test_data pci_epf_data = {
->>> +	.linkup_notifier = false
->>> +};
->>> +
->>>  static const struct pci_epf_device_id pci_epf_test_ids[] = {
->>>  	{
->>>  		.name = "pci_epf_test",
->>> +		.driver_data = (kernel_ulong_t)&pci_epf_data,
->>
->> This will disable linkup_notifier for existing devices. Please add a new entry
->> to the table to make any modifications to driver data. (I have a configfs fix
->> for this to work. Will post that today).
-> 
-> Are you refering to this patch? https://patchwork.kernel.org/patch/10319695/
-> Let's see if I understood it right, this patch will expose the some configfs
-> (something like /sys/kernel/config/pci_ep/functions/pci_epf_test/func1/...) that
-> ables me to disable the linkup notifier for existing devices without the need to
-> change the code like I did, right?
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ Documentation/misc-devices/pci-endpoint-test.txt |   3 +
+ drivers/misc/pci_endpoint_test.c                 | 121 +++++++++++++++--------
+ drivers/pci/endpoint/functions/pci-epf-test.c    |  78 +++++++++++----
+ 3 files changed, 143 insertions(+), 59 deletions(-)
 
-Actually that patch doesn't add any configfs attribute entry. It just creates a
-new configfs directory for every entry populated in pci_epf_device_id.
-
-For example, If you have something like this
-
-static const struct pci_epf_test_data k2g_data = {
-	.test_reg_bar = BAR_1,
-	.linkup_notifier = false
-};
-
-static const struct pci_epf_device_id pci_epf_test_ids[] = {
-	{
-		.name = "pci_epf_test",
-	},
-	{
-		.name = "pci_epf_test_k2g",
-		.driver_data = (kernel_ulong_t)&k2g_data,
-	},
-	{},
-};
-
-after [1], there should be 2 entries in /sys/kernel/config/pci_ep/functions/
-pci_epf_test and pci_epf_test_k2g.
-
-Here if you use pci_epf_test_k2g entry then the driver data associated with
-pci_epf_test_k2g will be used.
-
-Thanks
-Kishon
-
-[1] -> https://patchwork.kernel.org/patch/10319695/
-> 
->>
->> Thanks
->> Kishon
->>
-> 
-> 
+diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
+index 4ebc359..fdfa0f6 100644
+--- a/Documentation/misc-devices/pci-endpoint-test.txt
++++ b/Documentation/misc-devices/pci-endpoint-test.txt
+@@ -10,6 +10,7 @@ The PCI driver for the test device performs the following tests
+ 	*) verifying addresses programmed in BAR
+ 	*) raise legacy IRQ
+ 	*) raise MSI IRQ
++	*) raise MSI-X IRQ
+ 	*) read data
+ 	*) write data
+ 	*) copy data
+@@ -25,6 +26,8 @@ ioctl
+  PCITEST_LEGACY_IRQ: Tests legacy IRQ
+  PCITEST_MSI: Tests message signalled interrupts. The MSI number
+ 	      to be tested should be passed as argument.
++ PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
++	      to be tested should be passed as argument.
+  PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
+ 		as argument.
+  PCITEST_READ: Perform read tests. The size of the buffer should be passed
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 58a88ba..b003079 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -35,38 +35,44 @@
+ 
+ #include <uapi/linux/pcitest.h>
+ 
+-#define DRV_MODULE_NAME			"pci-endpoint-test"
+-
+-#define PCI_ENDPOINT_TEST_MAGIC		0x0
+-
+-#define PCI_ENDPOINT_TEST_COMMAND	0x4
+-#define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+-#define COMMAND_RAISE_MSI_IRQ		BIT(1)
+-#define MSI_NUMBER_SHIFT		2
+-/* 6 bits for MSI number */
+-#define COMMAND_READ                    BIT(8)
+-#define COMMAND_WRITE                   BIT(9)
+-#define COMMAND_COPY                    BIT(10)
+-
+-#define PCI_ENDPOINT_TEST_STATUS	0x8
+-#define STATUS_READ_SUCCESS             BIT(0)
+-#define STATUS_READ_FAIL                BIT(1)
+-#define STATUS_WRITE_SUCCESS            BIT(2)
+-#define STATUS_WRITE_FAIL               BIT(3)
+-#define STATUS_COPY_SUCCESS             BIT(4)
+-#define STATUS_COPY_FAIL                BIT(5)
+-#define STATUS_IRQ_RAISED               BIT(6)
+-#define STATUS_SRC_ADDR_INVALID         BIT(7)
+-#define STATUS_DST_ADDR_INVALID         BIT(8)
+-
+-#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0xc
++#define DRV_MODULE_NAME				"pci-endpoint-test"
++
++#define IRQ_TYPE_LEGACY				0
++#define IRQ_TYPE_MSI				1
++#define IRQ_TYPE_MSIX				2
++
++#define PCI_ENDPOINT_TEST_MAGIC			0x0
++
++#define PCI_ENDPOINT_TEST_COMMAND		0x4
++#define COMMAND_RAISE_LEGACY_IRQ		BIT(0)
++#define COMMAND_RAISE_MSI_IRQ			BIT(1)
++#define COMMAND_RAISE_MSIX_IRQ			BIT(2)
++#define COMMAND_READ                    	BIT(3)
++#define COMMAND_WRITE                   	BIT(4)
++#define COMMAND_COPY                    	BIT(5)
++
++#define PCI_ENDPOINT_TEST_STATUS		0x8
++#define STATUS_READ_SUCCESS             	BIT(0)
++#define STATUS_READ_FAIL                	BIT(1)
++#define STATUS_WRITE_SUCCESS            	BIT(2)
++#define STATUS_WRITE_FAIL               	BIT(3)
++#define STATUS_COPY_SUCCESS             	BIT(4)
++#define STATUS_COPY_FAIL                	BIT(5)
++#define STATUS_IRQ_RAISED               	BIT(6)
++#define STATUS_SRC_ADDR_INVALID         	BIT(7)
++#define STATUS_DST_ADDR_INVALID         	BIT(8)
++
++#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0x0c
+ #define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
+ 
+ #define PCI_ENDPOINT_TEST_LOWER_DST_ADDR	0x14
+ #define PCI_ENDPOINT_TEST_UPPER_DST_ADDR	0x18
+ 
+-#define PCI_ENDPOINT_TEST_SIZE		0x1c
+-#define PCI_ENDPOINT_TEST_CHECKSUM	0x20
++#define PCI_ENDPOINT_TEST_SIZE			0x1c
++#define PCI_ENDPOINT_TEST_CHECKSUM		0x20
++
++#define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
++#define PCI_ENDPOINT_TEST_IRQ_NUMBER		0x28
+ 
+ static DEFINE_IDA(pci_endpoint_test_ida);
+ 
+@@ -77,6 +83,10 @@ static bool no_msi;
+ module_param(no_msi, bool, 0444);
+ MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
+ 
++static int irq_type = IRQ_TYPE_MSI;
++module_param(irq_type, int, 0444);
++MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI, 2 - MSI-X)");
++
+ enum pci_barno {
+ 	BAR_0,
+ 	BAR_1,
+@@ -103,7 +113,7 @@ struct pci_endpoint_test {
+ struct pci_endpoint_test_data {
+ 	enum pci_barno test_reg_bar;
+ 	size_t alignment;
+-	bool no_msi;
++	int irq_type;
+ };
+ 
+ static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
+@@ -179,6 +189,9 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
+ {
+ 	u32 val;
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
++				 IRQ_TYPE_LEGACY);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 0);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ 				 COMMAND_RAISE_LEGACY_IRQ);
+ 	val = wait_for_completion_timeout(&test->irq_raised,
+@@ -190,14 +203,18 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
+ }
+ 
+ static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
+-				      u8 msi_num)
++				       u16 irq_num, bool msix)
+ {
+ 	u32 val;
+ 	struct pci_dev *pdev = test->pdev;
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
++				 msix == false ? IRQ_TYPE_MSI :
++				 IRQ_TYPE_MSIX);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, irq_num);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 msi_num << MSI_NUMBER_SHIFT |
+-				 COMMAND_RAISE_MSI_IRQ);
++				 msix == false ? COMMAND_RAISE_MSI_IRQ :
++				 COMMAND_RAISE_MSIX_IRQ);
+ 	val = wait_for_completion_timeout(&test->irq_raised,
+ 					  msecs_to_jiffies(1000));
+ 	if (!val)
+@@ -281,8 +298,10 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
+ 				 size);
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 1 << MSI_NUMBER_SHIFT | COMMAND_COPY);
++				 COMMAND_COPY);
+ 
+ 	wait_for_completion(&test->irq_raised);
+ 
+@@ -348,8 +367,10 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 1 << MSI_NUMBER_SHIFT | COMMAND_READ);
++				 COMMAND_READ);
+ 
+ 	wait_for_completion(&test->irq_raised);
+ 
+@@ -403,8 +424,10 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 1 << MSI_NUMBER_SHIFT | COMMAND_WRITE);
++				 COMMAND_WRITE);
+ 
+ 	wait_for_completion(&test->irq_raised);
+ 
+@@ -436,7 +459,8 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
+ 		ret = pci_endpoint_test_legacy_irq(test);
+ 		break;
+ 	case PCITEST_MSI:
+-		ret = pci_endpoint_test_msi_irq(test, arg);
++	case PCITEST_MSIX:
++		ret = pci_endpoint_test_msi_irq(test, arg, cmd == PCITEST_MSIX);
+ 		break;
+ 	case PCITEST_WRITE:
+ 		ret = pci_endpoint_test_write(test, arg);
+@@ -486,11 +510,14 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	test->alignment = 0;
+ 	test->pdev = pdev;
+ 
++	if (no_msi)
++		irq_type = IRQ_TYPE_LEGACY;
++
+ 	data = (struct pci_endpoint_test_data *)ent->driver_data;
+ 	if (data) {
+ 		test_reg_bar = data->test_reg_bar;
+ 		test->alignment = data->alignment;
+-		no_msi = data->no_msi;
++		irq_type = data->irq_type;
+ 	}
+ 
+ 	init_completion(&test->irq_raised);
+@@ -510,11 +537,24 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 
+ 	pci_set_master(pdev);
+ 
+-	if (!no_msi) {
++	switch (irq_type) {
++	case IRQ_TYPE_LEGACY:
++		break;
++	case IRQ_TYPE_MSI:
+ 		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
+ 		if (irq < 0)
+ 			dev_err(dev, "failed to get MSI interrupts\n");
+ 		test->num_irqs = irq;
++		break;
++	case IRQ_TYPE_MSIX:
++		irq = pci_alloc_irq_vectors(pdev, 1, 2048, PCI_IRQ_MSIX);
++		if (irq < 0)
++			dev_err(dev, "Failed to get MSI-X interrupts\n");
++		test->num_irqs = irq;
++		break;
++	default:
++		dev_err(dev, "Invalid IRQ type selected\n");
++		goto err_disable_msi;
+ 	}
+ 
+ 	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
+@@ -529,8 +569,9 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 				       pci_endpoint_test_irqhandler,
+ 				       IRQF_SHARED, DRV_MODULE_NAME, test);
+ 		if (err)
+-			dev_err(dev, "failed to request IRQ %d for MSI %d\n",
+-				pdev->irq + i, i + 1);
++			dev_err(dev, "Failed to request IRQ %d for MSI%s %d\n",
++				pdev->irq + i,
++				irq_type == IRQ_TYPE_MSIX ? "-X" : "", i + 1);
+ 	}
+ 
+ 	for (bar = BAR_0; bar <= BAR_5; bar++) {
+@@ -596,6 +637,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 
+ err_disable_msi:
+ 	pci_disable_msi(pdev);
++	pci_disable_msix(pdev);
+ 	pci_release_regions(pdev);
+ 
+ err_disable_pdev:
+@@ -627,6 +669,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ 	for (i = 0; i < test->num_irqs; i++)
+ 		devm_free_irq(&pdev->dev, pdev->irq + i, test);
+ 	pci_disable_msi(pdev);
++	pci_disable_msix(pdev);
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+ }
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 4ab463b..be5547f 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -18,13 +18,16 @@
+ #include <linux/pci-epf.h>
+ #include <linux/pci_regs.h>
+ 
++#define IRQ_TYPE_LEGACY			0
++#define IRQ_TYPE_MSI			1
++#define IRQ_TYPE_MSIX			2
++
+ #define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+ #define COMMAND_RAISE_MSI_IRQ		BIT(1)
+-#define MSI_NUMBER_SHIFT		2
+-#define MSI_NUMBER_MASK			(0x3f << MSI_NUMBER_SHIFT)
+-#define COMMAND_READ			BIT(8)
+-#define COMMAND_WRITE			BIT(9)
+-#define COMMAND_COPY			BIT(10)
++#define COMMAND_RAISE_MSIX_IRQ		BIT(2)
++#define COMMAND_READ			BIT(3)
++#define COMMAND_WRITE			BIT(4)
++#define COMMAND_COPY			BIT(5)
+ 
+ #define STATUS_READ_SUCCESS		BIT(0)
+ #define STATUS_READ_FAIL		BIT(1)
+@@ -56,6 +59,8 @@ struct pci_epf_test_reg {
+ 	u64	dst_addr;
+ 	u32	size;
+ 	u32	checksum;
++	u32	irq_type;
++	u32	irq_number;
+ } __packed;
+ 
+ static struct pci_epf_header test_header = {
+@@ -244,31 +249,42 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+ 	return ret;
+ }
+ 
+-static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
++static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq_type,
++				   u16 irq)
+ {
+-	u8 msi_count;
+ 	struct pci_epf *epf = epf_test->epf;
++	struct device *dev = &epf->dev;
+ 	struct pci_epc *epc = epf->epc;
+ 	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
+ 	struct pci_epf_test_reg *reg = epf_test->reg[test_reg_bar];
+ 
+ 	reg->status |= STATUS_IRQ_RAISED;
+-	msi_count = pci_epc_get_msi(epc, epf->func_no);
+-	if (irq > msi_count || msi_count <= 0)
++
++	switch (irq_type) {
++	case IRQ_TYPE_LEGACY:
+ 		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_LEGACY, 0);
+-	else
++		break;
++	case IRQ_TYPE_MSI:
+ 		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
++		break;
++	case IRQ_TYPE_MSIX:
++		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSIX, irq);
++		break;
++	default:
++		dev_err(dev, "Failed to raise IRQ, unknown type\n");
++		break;
++	}
+ }
+ 
+ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ {
+ 	int ret;
+-	u8 irq;
+-	u8 msi_count;
++	u16 count;
+ 	u32 command;
+ 	struct pci_epf_test *epf_test = container_of(work, struct pci_epf_test,
+ 						     cmd_handler.work);
+ 	struct pci_epf *epf = epf_test->epf;
++	struct device *dev = &epf->dev;
+ 	struct pci_epc *epc = epf->epc;
+ 	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
+ 	struct pci_epf_test_reg *reg = epf_test->reg[test_reg_bar];
+@@ -280,7 +296,10 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 	reg->command = 0;
+ 	reg->status = 0;
+ 
+-	irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
++	if (reg->irq_type > IRQ_TYPE_MSIX) {
++		dev_err(dev, "Failed to detect IRQ type\n");
++		goto reset_handler;
++	}
+ 
+ 	if (command & COMMAND_RAISE_LEGACY_IRQ) {
+ 		reg->status = STATUS_IRQ_RAISED;
+@@ -294,7 +313,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 			reg->status |= STATUS_WRITE_FAIL;
+ 		else
+ 			reg->status |= STATUS_WRITE_SUCCESS;
+-		pci_epf_test_raise_irq(epf_test, irq);
++		pci_epf_test_raise_irq(epf_test, reg->irq_type, reg->irq_number);
+ 		goto reset_handler;
+ 	}
+ 
+@@ -304,7 +323,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 			reg->status |= STATUS_READ_SUCCESS;
+ 		else
+ 			reg->status |= STATUS_READ_FAIL;
+-		pci_epf_test_raise_irq(epf_test, irq);
++		pci_epf_test_raise_irq(epf_test, reg->irq_type, reg->irq_number);
+ 		goto reset_handler;
+ 	}
+ 
+@@ -314,16 +333,27 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 			reg->status |= STATUS_COPY_SUCCESS;
+ 		else
+ 			reg->status |= STATUS_COPY_FAIL;
+-		pci_epf_test_raise_irq(epf_test, irq);
++		pci_epf_test_raise_irq(epf_test, reg->irq_type, reg->irq_number);
+ 		goto reset_handler;
+ 	}
+ 
+ 	if (command & COMMAND_RAISE_MSI_IRQ) {
+-		msi_count = pci_epc_get_msi(epc, epf->func_no);
+-		if (irq > msi_count || msi_count <= 0)
++		count = pci_epc_get_msi(epc, epf->func_no);
++		if (reg->irq_number > count || count <= 0)
+ 			goto reset_handler;
+ 		reg->status = STATUS_IRQ_RAISED;
+-		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
++		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI,
++				  reg->irq_number);
++		goto reset_handler;
++	}
++
++	if (command & COMMAND_RAISE_MSIX_IRQ) {
++		count = pci_epc_get_msix(epc, epf->func_no);
++		if (reg->irq_number > count || count <= 0)
++			goto reset_handler;
++		reg->status = STATUS_IRQ_RAISED;
++		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSIX,
++				  reg->irq_number);
+ 		goto reset_handler;
+ 	}
+ 
+@@ -450,8 +480,16 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+ 		return ret;
+ 
+ 	ret = pci_epc_set_msi(epc, epf->func_no, epf->msi_interrupts);
+-	if (ret)
++	if (ret) {
++		dev_err(dev, "MSI configuration failed\n");
+ 		return ret;
++	}
++
++	ret = pci_epc_set_msix(epc, epf->func_no, epf->msix_interrupts);
++	if (ret) {
++		dev_err(dev, "MSI-X configuration failed\n");
++		return ret;
++	}
+ 
+ 	if (!epf_test->linkup_notifier)
+ 		queue_work(kpcitest_workqueue, &epf_test->cmd_handler.work);
+-- 
+2.7.4
