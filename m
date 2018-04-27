@@ -1,83 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:41630 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751546AbeDIWCI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 9 Apr 2018 18:02:08 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex_Gagniuc@Dellteam.com, Scott Bauer <scott.bauer@intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 4/4] PCI/AER: Lock pci topology when scanning errors
-Date: Mon,  9 Apr 2018 16:04:44 -0600
-Message-Id: <20180409220444.6632-5-keith.busch@intel.com>
-In-Reply-To: <20180409220444.6632-1-keith.busch@intel.com>
-References: <20180409220444.6632-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH 05/10] PCI: dwc: Add legacy interrupt callback handler
+Date: Fri, 27 Apr 2018 17:57:42 +0100
+Message-Id: <8d1204f6e1e0d4ceaa4df30415c025feaa72e6ee.1524845816.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The side effects of surprise removal may trigger AER handling. The AER
-handling walks the pci topology and may access a pci_dev that is being
-freed by the hotplug handler.
+Add a legacy interrupt callback handler. Currently DesignWare IP don't
+allow triggering the legacy interrupt.
 
-This patch fixes that use-after-free by locking the PCI topology in
-the AER handler so it isn't racing with the pciehp removal.
-
-Since the AER handler now runs under a global PCI lock, the rpc specific
-mutex is no longer necessary.
-
-Reported-by: Alex Gagniuc <Alex_Gagniuc@Dellteam.com>
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/pci/pcie/aer/aerdrv.c      | 1 -
- drivers/pci/pcie/aer/aerdrv.h      | 5 -----
- drivers/pci/pcie/aer/aerdrv_core.c | 4 ++--
- 3 files changed, 2 insertions(+), 8 deletions(-)
+ drivers/pci/dwc/pcie-designware-ep.c   | 10 ++++++++++
+ drivers/pci/dwc/pcie-designware-plat.c |  3 +--
+ drivers/pci/dwc/pcie-designware.h      |  6 ++++++
+ 3 files changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 0b2eb88c422b..b88e5e2f3700 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -237,7 +237,6 @@ static struct aer_rpc *aer_alloc_rpc(struct pcie_device *dev)
- 	rpc->rpd = pci_dev_get(dev->port);
- 	kref_init(&rpc->ref);
- 	INIT_WORK(&rpc->dpc_handler, aer_isr);
--	mutex_init(&rpc->rpc_mutex);
- 
- 	/* Use PCIe bus function to store rpc into PCIe device */
- 	set_service_data(dev, rpc);
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index f886521e2c7b..b90fc5d4cda2 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -70,11 +70,6 @@ struct aer_rpc {
- 					 * Lock access to Error Status/ID Regs
- 					 * and error producer/consumer index
- 					 */
--	struct mutex rpc_mutex;		/*
--					 * only one thread could do
--					 * recovery on the same
--					 * root port hierarchy
--					 */
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index 1ba3a7f..b599169 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
+ 	.stop			= dw_pcie_ep_stop,
  };
  
- struct aer_broadcast_data {
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index e4059d7fa7fa..de210b7439eb 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -796,10 +796,10 @@ void aer_isr(struct work_struct *work)
- 	struct aer_rpc *rpc = container_of(work, struct aer_rpc, dpc_handler);
- 	struct aer_err_source uninitialized_var(e_src);
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct device *dev = pci->dev;
++
++	dev_err(dev, "EP cannot trigger legacy IRQs\n");
++
++	return -EINVAL;
++}
++
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num)
+ {
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index 654dcb5..90a8c95 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -84,8 +84,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
  
--	mutex_lock(&rpc->rpc_mutex);
-+	pci_lock_rescan_remove();
- 	while (get_e_source(rpc, &e_src))
- 		aer_isr_one_error(rpc, &e_src);
--	mutex_unlock(&rpc->rpc_mutex);
-+	pci_unlock_rescan_remove();
- 
- 	aer_release(rpc);
+ 	switch (type) {
+ 	case PCI_EPC_IRQ_LEGACY:
+-		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
+-		return -EINVAL;
++		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
+ 	case PCI_EPC_IRQ_MSI:
+ 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
+ 	case PCI_EPC_IRQ_MSIX:
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index a0ab12f..69e6e17 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -350,6 +350,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num);
+ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+@@ -369,6 +370,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
  }
+ 
++static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	return 0;
++}
++
+ static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 					   u8 interrupt_num)
+ {
 -- 
-2.14.3
+2.7.4
