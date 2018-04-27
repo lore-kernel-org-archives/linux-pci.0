@@ -1,64 +1,76 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 6 Apr 2018 11:21:28 +0200
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v4 1/6] PCI: aardvark: Introduce an
- advk_pcie_valid_device() helper
-Message-ID: <20180406112128.6b904f39@windsurf>
-In-Reply-To: <20180404112843.GA24669@red-moon>
-References: <20180329083946.25970-1-thomas.petazzoni@bootlin.com>
- <20180329083946.25970-2-thomas.petazzoni@bootlin.com>
- <20180404112843.GA24669@red-moon>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Gregory Clement <gregory.clement@bootlin.com>, stable@vger.kernel.org,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- =?UTF-8?B?TWlxdcOobA==?= Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.132]:38731 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757721AbeD0Ibh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 04:31:37 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 4/9] PCI: aardvark: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
+Date: Fri, 27 Apr 2018 16:23:34 +0800
+Message-Id: <1524817414-239302-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Just avoid code duplication, but no functional change intended.
 
-On Wed, 4 Apr 2018 12:28:43 +0100, Lorenzo Pieralisi wrote:
-> On Thu, Mar 29, 2018 at 10:39:41AM +0200, Thomas Petazzoni wrote:
-> > In other to mimic other PCIe host controller drivers, introduce an
-> > advk_pcie_valid_device() helper, used in the configuration read/write
-> > functions.
-> > 
-> > This patch by itself is not a fix, but it is required for a follow-up
-> > patch that is a fix, hence the Fixes tag and the Cc to stable.  
-> 
-> Should not we just reshuffle patch 1 and 2 instead of sending this
-> patch to stable ? I appreciate the merge window is open and timing is
-> quite tight, it is just to avoid sending churn to stable kernels
-> for not much.
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-I can certainly do that, but it's actually Bjorn who asked in the first
-place to introduce the advk_pcie_valid_device() helper.
+ drivers/pci/host/pci-aardvark.c | 24 +++++-------------------
+ 1 file changed, 5 insertions(+), 19 deletions(-)
 
-I'll send a new patch series that has these reshuffled.
-
-Thanks,
-
-Thomas
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 9abf549..df02b9a 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -702,37 +702,23 @@ static void advk_pcie_remove_msi_irq_domain(struct advk_pcie *pcie)
+ static int advk_pcie_init_irq_domain(struct advk_pcie *pcie)
+ {
+ 	struct device *dev = &pcie->pdev->dev;
+-	struct device_node *node = dev->of_node;
+-	struct device_node *pcie_intc_node;
+ 	struct irq_chip *irq_chip;
+ 
+-	pcie_intc_node =  of_get_next_child(node, NULL);
+-	if (!pcie_intc_node) {
+-		dev_err(dev, "No PCIe Intc node found\n");
+-		return -ENODEV;
+-	}
+-
+ 	irq_chip = &pcie->irq_chip;
+ 
+ 	irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-irq",
+ 					dev_name(dev));
+-	if (!irq_chip->name) {
+-		of_node_put(pcie_intc_node);
++	if (!irq_chip->name)
+ 		return -ENOMEM;
+-	}
+ 
+ 	irq_chip->irq_mask = advk_pcie_irq_mask;
+ 	irq_chip->irq_mask_ack = advk_pcie_irq_mask;
+ 	irq_chip->irq_unmask = advk_pcie_irq_unmask;
+ 
+-	pcie->irq_domain =
+-		irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+-				      &advk_pcie_irq_domain_ops, pcie);
+-	if (!pcie->irq_domain) {
+-		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+-		of_node_put(pcie_intc_node);
+-		return -ENOMEM;
+-	}
++	pcie->irq_domain = pci_alloc_intx_irqd(dev, pcie, false,
++				&advk_pcie_irq_domain_ops, NULL);
++	if (IS_ERR(pcie->irq_domain))
++		return PTR_ERR(pcie->irq_domain);
+ 
+ 	return 0;
+ }
 -- 
-Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-https://bootlin.com
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.9.1
