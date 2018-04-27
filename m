@@ -1,57 +1,147 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:40107 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752531AbeDBQT6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Apr 2018 12:19:58 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 7/7] PCI/DPC: Print AER status in DPC event handling
-Date: Mon,  2 Apr 2018 10:22:03 -0600
-Message-Id: <20180402162203.3370-8-keith.busch@intel.com>
-In-Reply-To: <20180402162203.3370-1-keith.busch@intel.com>
-References: <20180402162203.3370-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Gilles Buloz <Gilles.Buloz@kontron.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: LS1043A : "synchronous abort" at boot due to PCI config read
+Date: Fri, 27 Apr 2018 12:29:32 +0000
+Message-ID: <5AE317AB.4020404@kontron.com>
+References: <5AD0E995.3090802@kontron.com>
+ <CAKv+Gu_v4V8DUa6f4WxvjZHoJbbqT0mKpOwYVmaLaE20CB3U_g@mail.gmail.com>
+In-Reply-To: <CAKv+Gu_v4V8DUa6f4WxvjZHoJbbqT0mKpOwYVmaLaE20CB3U_g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="_002_5AE317AB4020404kontroncom_"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci <linux-pci@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "minghuan.Lian@freescale.com" <minghuan.Lian@freescale.com>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A DPC enabled device suppresses ERR_(NON)FATAL messages, preventing the
-AER handler from reporting error details. If the DPC trigger reason says
-the downstream port detected the error, this patch has the DPC driver
-collect the AER uncorrectable status for logging, then clears the status.
+--_002_5AE317AB4020404kontroncom_
+Content-Type: text/plain; charset=UTF-8
+Content-ID: <11C8C84BCD79094DBBE958E07D9664BC@Kontron.com>
+Content-Transfer-Encoding: base64
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/pcie-dpc.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+TGUgMjcvMDQvMjAxOCAxMDo0MywgQXJkIEJpZXNoZXV2ZWwgYSDDqWNyaXQgOg0KPiAoYWRkIEJq
+b3JuIGFuZCBsaW51eC1wY2kpDQo+DQo+IE9uIDEzIEFwcmlsIDIwMTggYXQgMTk6MzIsIEdpbGxl
+cyBCdWxveiA8R2lsbGVzLkJ1bG96QGtvbnRyb24uY29tPiB3cm90ZToNCj4+IERlYXIgZGV2ZWxv
+cGVycywNCj4+DQo+PiBJIGN1cnJlbnRseSBoYXZlIHR3byBmdW5jdGlvbmFsIHdvcmthcm91bmRz
+IGZvciB0aGlzIGlzc3VlIGJ1dCB3b3VsZCBsaWtlIHRvIGtub3cgd2hpY2ggb25lIHlvdSB3b3Vs
+ZCByZWNvbW1lbmQsIGlmIGFueSA6LSkNCj4+IEknbSB1c2luZyBhIExTMTA0M0EgQ1BVIChOWFAg
+UW9ySVEgTGF5ZXJzY2FwZSkgYW5kIGdldCBhICJzeW5jaHJvbm91cyBleHRlcm5hbCBhYm9ydCIg
+d2hlbiBib290aW5nIGJlY2F1c2Ugb2YgYSBQQ0kgY29uZmlnIHJlYWQNCj4+IGR1cmluZyBQQ0kg
+c2Nhbi4NCj4+DQo+PiBJJ20gdXNpbmcgYSBjdXN0b20gaGFyZHdhcmUgKGJhc2VkIG9uIExTMTA0
+M0FSREIpIGhhdmluZyBhIFBFWDgxMTIgUENJZS10by1QQ0kgYnJpZGdlIGNvbm5lY3RlZCB0byB0
+aGUgTFMxMDQzQSB0byBoYXZlIGEgUENJIHNsb3QNCj4+IGZvciBsZWdhY3kgZGV2aWNlcy4gVGhp
+cyBicmlkZ2Ugb25seSBzdXBwb3J0cyBQQ0ktQ29tcGF0aWJsZSBjb25maWcgYWNjZXNzZXMgKG9m
+ZnNldCAweDAwLTB4RkYpLg0KPj4gT24gdGhpcyBQQ0kgc2xvdCBJIGNvbm5lY3QgYSBQQ0kgbW9k
+dWxlIG1hZGUgb2YgYSBQQ0ktdG8tUENJZSBicmlkZ2UgcGx1cyBQQ0llIGRldmljZXMgYmVoaW5k
+Lg0KPj4gVGhlIHByb2JsZW0gb2NjdXJzIHdoZW4gdGhlIGtlcm5lbCBwcm9iZXMgdGhlIFBDSWUg
+ZGV2aWNlcyA6IGFzIHRoZXkgYXJlIFBDSWUgZGV2aWNlcywgdGhlIGtlcm5lbCBkb2VzIGEgUENJ
+IGNvbmZpZyByZWFkIGFjY2VzcyBhdA0KPj4gb2Zmc2V0IDB4MTAwIHRvIGNoZWNrIGlmICJQQ0ll
+IGV4dGVuZGVkIGNhcGFiaWxpdHkgcmVnaXN0ZXJzIiBhcmUgYWNjZXNzaWJsZSAoc2VlIGRyaXZl
+cnMvcGNpL3Byb2JlLmMsIGZ1bmN0aW9uDQo+PiBwY2lfY2ZnX3NwYWNlX3NpemVfZXh0KCkpLiBV
+bmZvcnR1bmF0ZWx5IHRoZSBQRVg4MTEyIFBDSWUtdG8tUENJIGJyaWRnZSB0aGF0IGlzIGluIHRo
+ZSBwYXRoIHJlcG9ydHMgYW4gZXJyb3IgdG8gdGhlIENQVSBmb3IgdGhpcw0KPj4gYWNjZXNzLCBh
+bmQgaXQgc2VlbXMgdGhlcmUncyBubyB3YXkgdG8gZGlzYWJsZSB0aGF0IG9uIHRoaXMgYnJpZGdl
+Lg0KPj4NCj4+IFRoZSBmaXJzdCB3b3JrYXJvdW5kIEkgZm91bmQgd2FzIHRvIHBhdGNoIGRyaXZl
+cnMvcGNpL2hvc3QvcGNpLWxheWVyc2NhcGUuYyB0byBoYXZlIFBDSUVfQUJTRVJSX1NFVFRJTkcg
+c2V0IHRvIDB4OTQwMCBpbnN0ZWFkIG9mDQo+PiAweDk0MDEgKGZvciBQQ0lFX0FCU0VSUiByZWdp
+c3RlcikgdG8gZGlzYWJsZSBlcnJvciByZXBvcnRpbmcuIFRoaXMgb25seSBpbXBhY3RzIGFuIE5Y
+UCBwYXJ0IG9mIHRoZSBMaW51eCBrZXJuZWwgY29kZSwgYnV0IEknbSBub3QNCj4+IHN1cmUgdGhp
+cyBpcyBhIGdvb2QgaWRlYSAoaG93ZXZlciBpdCBzZWVtcyB0byBiZSBsaWtlIHRoYXQgb24gSW50
+ZWwgcGxhdGZvcm1zIHdoZXJlIGV2ZW4gTUVNIGFjY2Vzc2VzIHRvIGEgbm8tZGV2aWNlIGFkZHJl
+c3MgcmV0dXJuDQo+PiBGRiB3aXRob3V0IGFueSBlcnJvcikuDQo+Pg0KPj4gSSd2ZSBhbHNvIHRy
+aWVkIGFub3RoZXIgd29ya2Fyb3VuZCB0aGF0IHdvcmtzIDogcGF0Y2ggZHJpdmVycy9wY2kvcHJv
+YmUuYyB0byB1c2UgYnVzX2ZsYWdzIHRvIHJlbWVtYmVyIGlmIGEgYnVzIGlzIGJlaGluZCBhIGJy
+aWRnZQ0KPj4gd2l0aG91dCBleHRlbmRlZCBhZGRyZXNzIGNhcGFiaWxpdHksIHRvIGF2b2lkIFBD
+aSBjb25maWcgcmVhZCBhY2Nlc3NlcyBhdCBvZmZzZXQgMHgxMDAgaW4NCj4+IHBjaV9jZmdfc3Bh
+Y2Vfc2l6ZSgpIC8gcGNpX2NmZ19zcGFjZV9zaXplX2V4dCgpLiBCdXQgdGhpcyBwYXRjaCBpbXBh
+Y3RzIHRoZSBnZW5lcmljIFBDSSBwcm9iZSBtZXRob2Qgb2YgTGludXguDQo+Pg0KPj4gQW55IElk
+ZWEgdG8gcHJvcGVybHkgaGFuZGxlIHRoYXQgaXNzdWUgPw0KPj4NCj4gVGhpcyBzZWVtcyBsaWtl
+IGEgcmF0aGVyIHVudXN1YWwgY29uZmlndXJhdGlvbiwgYnV0IEkgZ3Vlc3MgdGhhdCBpZg0KPiB0
+aGUgZmlyc3QgYnJpZGdlL3N3aXRjaCBhZHZlcnRpc2VzIGl0cyBpbmFiaWxpdHkgdG8gc3VwcG9y
+dCBleHRlbmRlZA0KPiBjb25maWcgc3BhY2UgYWNjZXNzZXMsIHdlIHNob3VsZCBub3QgYmUgcGVy
+Zm9ybWluZyB0aGVtIG9uIGFueSBvZiBpdHMNCj4gc3Vib3JkaW5hdGUgYnVzZXMuIEhvdyBkb2Vz
+IHRoZSBQRVg4MTEyIGFkdmVydGlzZSB0aGlzIGxpbWl0YXRpb24/DQo+DQo+IFRoYXQgc2FpZCwg
+SSB3b25kZXIgaWYgaXQgaXMgcmVhc29uYWJsZSBpbiB0aGUgZmlyc3QgcGxhY2UgdG8gZXhwZWN0
+DQo+IHRoYXQgYSBQQ0llIGRldmljZSB3b3JrcyBhcyBleHBlY3RlZCBwYXNzaW5nIHRocm91Z2gg
+YSBsZWdhY3kgUENJDQo+IGxheWVyIGxpa2UgdGhhdC4NCj4NCj4gLg0KVGhlIFBFWDgxMTIgUENJ
+ZS10by1QQ0kgYnJpZGdlIGhhcyBjYXBhYmlsaXR5IFBDSV9DQVBfSURfRVhQLCBidXQgaGFzIG5v
+IFBDSV9DQVBfSURfUENJWCBjYXBhYmlsaXR5Lg0KQXMgSSB1bmRlcnN0YW5kIHRoZSBsYWNrIG9m
+IFBDSV9DQVBfSURfUENJWCBpcyBhZHZlcnRpc2luZyB0aGlzIGxpbWl0YXRpb24gb24gdGhlIFBD
+SSBzaWRlIChubyBzdXBwb3J0IGZvciBQQ0kgY29uZmlnIG9mZnNldCA+PTB4MTAwKS4NCkFsc28g
+SSBndWVzcyBpbiB0aGUgY2FzZSBvZiBhIGJyaWRnZSBoYXZpbmcgUENJX0NBUF9JRF9QQ0lYLCB0
+aGlzIGxpbWl0YXRpb24gd291bGQgYmUgYWR2ZXJ0aXNlZCBieSB0aGUgbGFjayBvZiBQQ0lfWF9T
+VEFUVVNfMjY2TUhaIA0KYW5kIFBDSV9YX1NUQVRVU181MzNNSFogKGFzIGRvbmUgaW4gZHJpdmVy
+cy9wY2kvcHJvYmUuYyBhdCBwY2lfY2ZnX3NwYWNlX3NpemUoKSkNCg0KSSdtIGN1cnJlbnRseSB1
+c2luZyB0aGUgYXR0YWNoZWQgcGF0Y2ggKGZvciBrZXJuZWwgNC4xLjM1LXJ0NDEgZnJvbSBOWFAg
+WW9jdG8gQlNQKS4gSXQgdXNlcyBidXNfZmxhZ3MgdG8gcmVtZW1iZXIgaWYgYSBidXMgaXMgYmVo
+aW5kIA0KYSBicmlkZ2Ugd2l0aG91dCBleHRlbmRlZCBhZGRyZXNzIGNhcGFiaWxpdHkgdG8gYXZv
+aWQgUENpIGNvbmZpZyBhY2Nlc3NlcyBhdCBvZmZzZXQgPj0gMHgxMDAuIFRoYW5rcyB0byB0aGlz
+IHBhdGNoIEkgbm93IGhhdmUgYSANCmZ1bmN0aW9uYWwgc3lzdGVtIHdpdGggZnVuY3Rpb25hbCBQ
+Q0kvUENJZSBkZXZpY2VzLg0K
+--_002_5AE317AB4020404kontroncom_
+Content-Type: text/x-patch; name=cfgspace.patch
+Content-Description: cfgspace.patch
+Content-Disposition: attachment; filename="cfgspace.patch"; size=1943;
+	creation-date="Fri, 27 Apr 2018 12:29:32 GMT";
+	modification-date="Fri, 27 Apr 2018 12:29:32 GMT"
+Content-ID: <E91554AF1033DD4B91DD215219E3551F@Kontron.com>
+Content-Transfer-Encoding: base64
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index e12837ee4f1c..76f963a5089e 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -85,6 +85,7 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- 
- static void dpc_work(struct work_struct *work)
- {
-+	struct aer_err_info info;
- 	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
- 	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
- 	struct pci_bus *parent = pdev->subordinate;
-@@ -108,8 +109,12 @@ static void dpc_work(struct work_struct *work)
- 		 (ext_reason == 1) ? "software trigger" :
- 				     "reserved error");
- 
--	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
-+	if (dpc->rp_extensions && reason == 3 && ext_reason == 0) {
- 		pio_status = dpc_process_rp_pio_error(dpc);
-+	} else if (reason == 0 && aer_get_device_error_info(pdev, &info)) {
-+		aer_print_error(pdev, &info);
-+		pci_cleanup_aer_uncorrect_error_status(pdev);
-+	}
- 
- 	pci_lock_rescan_remove();
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
--- 
-2.14.3
+LS0tIGluY2x1ZGUvbGludXgvcGNpLmgub3JpZwkyMDE4LTAzLTI2IDE2OjUxOjE4LjA1MDAwMDAw
+MCArMDAwMA0KKysrIGluY2x1ZGUvbGludXgvcGNpLmgJMjAxOC0wMy0yNiAxNjo1MToyNy42NjAw
+MDAwMDAgKzAwMDANCkBAIC0xOTMsNiArMTkzLDcgQEANCiBlbnVtIHBjaV9idXNfZmxhZ3Mgew0K
+IAlQQ0lfQlVTX0ZMQUdTX05PX01TSSAgID0gKF9fZm9yY2UgcGNpX2J1c19mbGFnc190KSAxLA0K
+IAlQQ0lfQlVTX0ZMQUdTX05PX01NUkJDID0gKF9fZm9yY2UgcGNpX2J1c19mbGFnc190KSAyLA0K
+KwlQQ0lfQlVTX0ZMQUdTX0NPTVBBVF9DRkdfU1BBQ0UgPSAoX19mb3JjZSBwY2lfYnVzX2ZsYWdz
+X3QpIDQsDQogfTsNCiANCiAvKiBUaGVzZSB2YWx1ZXMgY29tZSBmcm9tIHRoZSBQQ0kgRXhwcmVz
+cyBTcGVjICovDQotLS0gZHJpdmVycy9wY2kvcHJvYmUuYy5vcmlnCTIwMTgtMDEtMjIgMDk6Mjk6
+NTIuMDAwMDAwMDAwICswMDAwDQorKysgZHJpdmVycy9wY2kvcHJvYmUuYwkyMDE4LTAzLTI2IDE2
+OjU0OjMwLjgzMDAwMDAwMCArMDAwMA0KQEAgLTgyNyw2ICs4MjcsMjggQEANCiAJCQljaGlsZC0+
+cHJpbWFyeSA9IHByaW1hcnk7DQogCQkJcGNpX2J1c19pbnNlcnRfYnVzbl9yZXMoY2hpbGQsIHNl
+Y29uZGFyeSwgc3Vib3JkaW5hdGUpOw0KIAkJCWNoaWxkLT5icmlkZ2VfY3RsID0gYmN0bDsNCisN
+CisJCQl7DQorCQkJCWludCBwb3M7DQorCQkJCXUzMiBzdGF0dXM7DQorCQkJCWJvb2wgcGNpX2Nv
+bXBhdF9jZmdfc3BhY2UgPSBmYWxzZTsNCisNCisJCQkJaWYgKCFwY2lfaXNfcGNpZShkZXYpIHx8
+IChwY2lfcGNpZV90eXBlKGRldikgPT0gUENJX0VYUF9UWVBFX1BDSUVfQlJJREdFKSB8fCAocGNp
+X3BjaWVfdHlwZShkZXYpID09IFBDSV9FWFBfVFlQRV9QQ0lfQlJJREdFKSkgew0KKwkJCQkJLyog
+Zm9yIFBDSS9QQ0kgYnJpZGdlcywgb3IgUENJZS9QQ0kgYnJpZGdlIGluIGZvcndhcmQgb3IgcmV2
+ZXJzZSBtb2RlLCB3ZSBoYXZlIHRvIGNoZWNrIGZvciBQQ0ktWCBjYXBhYmlsaXRpZXMgKi8NCisJ
+CQkJCXBvcyA9IHBjaV9maW5kX2NhcGFiaWxpdHkoZGV2LCBQQ0lfQ0FQX0lEX1BDSVgpOw0KKwkJ
+CQkJaWYgKHBvcykgew0KKwkJCQkJCXBjaV9yZWFkX2NvbmZpZ19kd29yZChkZXYsIHBvcyArIFBD
+SV9YX1NUQVRVUywgJnN0YXR1cyk7DQorCQkJCQkJaWYgKCEoc3RhdHVzICYgKFBDSV9YX1NUQVRV
+U18yNjZNSFogfCBQQ0lfWF9TVEFUVVNfNTMzTUhaKSkpDQorCQkJCQkJCXBjaV9jb21wYXRfY2Zn
+X3NwYWNlID0gdHJ1ZTsNCisJCQkJCX0gZWxzZSB7DQorCQkJCQkJcGNpX2NvbXBhdF9jZmdfc3Bh
+Y2UgPSB0cnVlOw0KKwkJCQkJfQ0KKwkJCQkJaWYgKHBjaV9jb21wYXRfY2ZnX3NwYWNlKSB7DQor
+CQkJCQkJZGV2X2luZm8oJmRldi0+ZGV2LCAiWyUwNHg6JTA0eF0gQ2hpbGQgYnVzIGxpbWl0ZWQg
+dG8gUENJLUNvbXBhdGlibGUgY29uZmlnIHNwYWNlXG4iLCBkZXYtPnZlbmRvciwgZGV2LT5kZXZp
+Y2UpOw0KKwkJCQkJCWNoaWxkLT5idXNfZmxhZ3MgfD0gUENJX0JVU19GTEFHU19DT01QQVRfQ0ZH
+X1NQQUNFOw0KKwkJCQkJfQ0KKwkJCQl9DQorCQkJfQ0KIAkJfQ0KIA0KIAkJY21heCA9IHBjaV9z
+Y2FuX2NoaWxkX2J1cyhjaGlsZCk7DQpAQCAtMTA5OCw2ICsxMTIwLDExIEBADQogCQkJZ290byBm
+YWlsOw0KIAl9DQogDQorCWlmIChkZXYtPmJ1cy0+YnVzX2ZsYWdzICYgUENJX0JVU19GTEFHU19D
+T01QQVRfQ0ZHX1NQQUNFKSB7DQorCQlkZXZfaW5mbygmZGV2LT5kZXYsICJbJTA0eDolMDR4XSBQ
+Q0ktQ29tcGF0aWJsZSBjb25maWcgc3BhY2Ugb25seSBkdWUgdG8gcGFyZW50IGJ1cyhlcylcbiIs
+IGRldi0+dmVuZG9yLCBkZXYtPmRldmljZSk7DQorCQlyZXR1cm4gUENJX0NGR19TUEFDRV9TSVpF
+Ow0KKwl9DQorDQogCXJldHVybiBwY2lfY2ZnX3NwYWNlX3NpemVfZXh0KGRldik7DQogDQogIGZh
+aWw6DQo=
+--_002_5AE317AB4020404kontroncom_
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+--_002_5AE317AB4020404kontroncom_--
