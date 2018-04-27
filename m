@@ -1,74 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 11 Apr 2018 08:51:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH] PCI: quirk HT1100 & HT2000 and one HT2100 Root Ports for
- Extended Tags
-Message-ID: <20180411135151.GB91792@bhelgaas-glaptop.roam.corp.google.com>
-References: <1522882209-9743-1-git-send-email-okaya@codeaurora.org>
- <20180410194144.GD54986@bhelgaas-glaptop.roam.corp.google.com>
- <20180410195008.GE54986@bhelgaas-glaptop.roam.corp.google.com>
- <1c94361d-7a8d-ad18-12e5-1612326a54db@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <1c94361d-7a8d-ad18-12e5-1612326a54db@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sulrich@codeaurora.org, linux-pci@vger.kernel.org, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay6.synopsys.com ([198.182.37.59]:36058 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757661AbeD0MAO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 08:00:14 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH v8 8/9] PCI: dwc: Small computation improvement
+Date: Fri, 27 Apr 2018 13:00:03 +0100
+Message-Id: <a0bb1eb13d2f2a156c3b5a99d6140c07b6b56fe4.1524829928.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 10, 2018 at 04:18:01PM -0400, Sinan Kaya wrote:
-> On 4/10/2018 3:50 PM, Bjorn Helgaas wrote:
-> > On Tue, Apr 10, 2018 at 02:41:44PM -0500, Bjorn Helgaas wrote:
-> >> On Wed, Apr 04, 2018 at 06:50:09PM -0400, Sinan Kaya wrote:
-> >>> Per PCIe r3.1, sec 2.2.6.2 and 7.8.4, a Requester may not use 8-bit Tags
-> >>> unless its Extended Tag Field Enable is set, but all Receivers/Completers
-> >>> must handle 8-bit Tags correctly regardless of their Extended Tag Field
-> >>> Enable.
-> >>>
-> >>> Some devices do not handle 8-bit Tags as Completers, so add a quirk for
-> >>> them.  If we find such a device, we disable Extended Tags for the entire
-> >>> hierarchy to make peer-to-peer DMA possible.
-> >>>
-> >>> The Broadcom HT1100/HT2000/HT2100 seems to have issues with handling 8-bit
-> >>> tags.  Mark it as broken.
-> >>>
-> >>> Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
-> >>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=196197
-> >>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> >> Applied to pci/enumeration for v4.18, thanks!
-> > Actually, this is a really annoying issue and I think the fix is
-> > appropriate for v4.17, so I moved it to my for-linus branch.
-> > 
-> 
-> I agree. It causes boot issues on some AMD Opteron machines. It should
-> probably be back-ported too. 
+Replace a division by 2 operation for a right shift rotation of 1 bit.
 
-We started enabling extended tags with 60db3a4d8cc9 ("PCI: Enable PCIe
-Extended Tags if supported"), which appeared in v4.11.
+Probably any recent and decent compiler does this kind of substitution
+in order to improve code performance. Nevertheless it's a coding good
+practice whenever there is a division / multiplication by multiple of 2
+to replace it by the equivalent operation in this case, the shift
+rotation.
 
-So I added these stable tags:
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
+Acked-by: Joao Pinto <jpinto@synopsys.com>
+---
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Changes v3->v4:
+ - Added a small explication to the log description.
+Changes v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Changes v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Changes v6->v7:
+ - Nothing changed, just to follow the patch set version.
+Changes v7->v8:
+ - Patch description rework for an imperative verbal mode.
 
-  CC: stable@vger.kernel.org      # v4.11: 62ce94a7a5a5 PCI: Mark Broadcom HT2100 Root Port Extended Tags as broken
-  CC: stable@vger.kernel.org      # v4.11
+ drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-I'm not sure I'm using the stable request correctly, but my intent is:
-
-  - 62ce94a7a5a5 appeared in v4.14, so cherry-pick 62ce94a7a5a5 to
-    v4.11 through v4.13
-  - cherry-pick *this* patch on top of 62ce94a7a5a5 to v4.11 and later
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 5a23f78..fc55fde 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+ 	if (cfg_res) {
+-		pp->cfg0_size = resource_size(cfg_res) / 2;
+-		pp->cfg1_size = resource_size(cfg_res) / 2;
++		pp->cfg0_size = resource_size(cfg_res) >> 1;
++		pp->cfg1_size = resource_size(cfg_res) >> 1;
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+ 	} else if (!pp->va_cfg0_base) {
+@@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			break;
+ 		case 0:
+ 			pp->cfg = win->res;
+-			pp->cfg0_size = resource_size(pp->cfg) / 2;
+-			pp->cfg1_size = resource_size(pp->cfg) / 2;
++			pp->cfg0_size = resource_size(pp->cfg) >> 1;
++			pp->cfg1_size = resource_size(pp->cfg) >> 1;
+ 			pp->cfg0_base = pp->cfg->start;
+ 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
+ 			break;
+-- 
+2.7.4
