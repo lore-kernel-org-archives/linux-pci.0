@@ -1,70 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 18 Apr 2018 14:02:30 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH v4 0/6] PCI: aardvark: misc fixes and improvements
-Message-ID: <20180418130230.GB22463@e107981-ln.cambridge.arm.com>
-References: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
- <20180409162356.GB14533@e107981-ln.cambridge.arm.com>
- <20180409205433.4eb78a45@windsurf>
+Return-Path: <SRS0=g0YK=HQ=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=g0YK=HQ=codeaurora.org=okaya@kernel.org>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
+Date: Fri, 27 Apr 2018 15:34:30 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180409205433.4eb78a45@windsurf>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- Miqu??l Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Wilson Ding <dingwei@marvell.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 09, 2018 at 08:54:33PM +0200, Thomas Petazzoni wrote:
-> Hello Lorenzo,
-> 
-> Thanks for your feedback!
-> 
-> On Mon, 9 Apr 2018 17:23:56 +0100, Lorenzo Pieralisi wrote:
-> 
-> > it is not just improvements, these look like significant bug fixes too.
-> > 
-> > Let me know which patches we should prioritize since hopefully they can
-> > be sent during v4.17-rc* releases, I will queue the rest for the next
-> > merge window.
-> 
-> The patches that are bug fixes are marked with a "Fixes:" tag and are
-> Cc'ed to stable.
-> 
-> So, the following patches are fixes:
-> 
-> [PATCH v4 1/6] PCI: aardvark: Fix logic in advk_pcie_{rd,wr}_conf()
-> [PATCH v4 2/6] PCI: aardvark: Set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
-> [PATCH v4 3/6] PCI: aardvark: Use ISR1 instead of ISR0 interrupt in legacy irq mode
-> [PATCH v4 4/6] PCI: aardvark: Fix PCIe Max Read Request Size setting
-> 
-> The following patches are improvements:
-> 
-> [PATCH v4 5/6] PCI: aardvark: Introduce an advk_pcie_valid_device() helper
-> [PATCH v4 6/6] PCI: aardvark: Remove PCIe outbound window configuration
+Hi Bjorn,
 
-I added those four patches to my pci/host/fixes branch, please have a
-look if they meet your expectations and if so I will ask Bjorn to send
-them if he thinks they are fit for -rc*.
+Thanks for adding me.
 
-Thanks,
-Lorenzo
+On 4/27/2018 3:22 PM, Bjorn Helgaas wrote:
+> Sinan mooted the idea of using a "no-wait" path of sending the "don't
+> generate hotplug interrupts" command.  I think we should work on this
+> idea a little more.  If we're shutting down the whole system, I can't
+> believe there's much value in *anything* we do in the pciehp_remove()
+> path.
+> 
+> Maybe we should just get rid of pciehp_remove() (and probably
+> pcie_port_remove_service() and the other service driver remove methods)
+> completely.  That dates from when the service drivers could be modules that
+> could be potentially unloaded, but unloading them hasn't been possible for
+> years.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Shutdown path is also used for kexec. Leaving hotplug interrupts pending is
+dangerous for the newly loaded kernel as it leaves spurious interrupts
+during the new kernel boot.
+
+I think we should always disable the hotplug interrupt on shutdown. We might
+think of not waiting for command-completion as a middle-ground or go to polling
+path instead of interrupts all the time.
+
+Sinan
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
