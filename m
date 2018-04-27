@@ -1,83 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-he1eur01on0051.outbound.protection.outlook.com ([104.47.0.51]:35650
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1757811AbeD0K2L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Apr 2018 06:28:11 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, mark.rutland@arm.com,
-        catalin.marinas@arm.com
-Cc: hch@lst.de, gregkh@linuxfoundation.org, joro@8bytes.org,
-        robh+dt@kernel.org, m.szyprowski@samsung.com, shawnguo@kernel.org,
-        frowand.list@gmail.com, bhelgaas@google.com,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bharat.bhushan@nxp.com, stuyoder@gmail.com,
-        laurentiu.tudor@nxp.com, leoyang.li@nxp.com,
-        Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH 5/6 v3] bus: fsl-mc: supoprt dma configure for devices on fsl-mc bus
-Date: Fri, 27 Apr 2018 15:57:05 +0530
-Message-Id: <1524824826-29473-6-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
-References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <SRS0=4OLJ=HQ=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=4OLJ=HQ=redhat.com=alex.williamson@kernel.org>
+Date: Fri, 27 Apr 2018 13:06:41 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add Intel 7th & 8th Gen mobile to ACS quirks
+Message-ID: <20180427130641.2e464dfa@w520.home>
+In-Reply-To: <20180427180956.GD8199@bhelgaas-glaptop.roam.corp.google.com>
+References: <152468799766.12449.11245066753252100117.stgit@w520.home>
+	<20180427180956.GD8199@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
----
- drivers/bus/fsl-mc/fsl-mc-bus.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+On Fri, 27 Apr 2018 13:09:56 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
-index 5d8266c..624828b 100644
---- a/drivers/bus/fsl-mc/fsl-mc-bus.c
-+++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
-@@ -127,6 +127,16 @@ static int fsl_mc_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
- 	return 0;
- }
- 
-+static int fsl_mc_dma_configure(struct device *dev)
-+{
-+	struct device *dma_dev = dev;
-+
-+	while (dev_is_fsl_mc(dma_dev))
-+		dma_dev = dma_dev->parent;
-+
-+	return of_dma_configure(dev, dma_dev->of_node, 0);
-+}
-+
- static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
- 			     char *buf)
- {
-@@ -148,6 +158,7 @@ struct bus_type fsl_mc_bus_type = {
- 	.name = "fsl-mc",
- 	.match = fsl_mc_bus_match,
- 	.uevent = fsl_mc_bus_uevent,
-+	.dma_configure  = fsl_mc_dma_configure,
- 	.dev_groups = fsl_mc_dev_groups,
- };
- EXPORT_SYMBOL_GPL(fsl_mc_bus_type);
-@@ -616,6 +627,7 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
- 		mc_dev->icid = parent_mc_dev->icid;
- 		mc_dev->dma_mask = FSL_MC_DEFAULT_DMA_MASK;
- 		mc_dev->dev.dma_mask = &mc_dev->dma_mask;
-+		mc_dev->dev.coherent_dma_mask = mc_dev->dma_mask;
- 		dev_set_msi_domain(&mc_dev->dev,
- 				   dev_get_msi_domain(&parent_mc_dev->dev));
- 	}
-@@ -633,10 +645,6 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
- 			goto error_cleanup_dev;
- 	}
- 
--	/* Objects are coherent, unless 'no shareability' flag set. */
--	if (!(obj_desc->flags & FSL_MC_OBJ_FLAG_NO_MEM_SHAREABILITY))
--		arch_setup_dma_ops(&mc_dev->dev, 0, 0, NULL, true);
--
- 	/*
- 	 * The device-specific probe callback will get invoked by device_add()
- 	 */
--- 
-1.9.1
+> On Wed, Apr 25, 2018 at 02:27:37PM -0600, Alex Williamson wrote:
+> > The specification update indicates these have the same errate for
+> > implementing non-standard ACS capabilities.
+> >=20
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com> =20
+>=20
+> Applied to pci/virtualization for v4.18, thanks!
+>=20
+> I'm guessing a stable tag would make sense here?
+
+Yeah, why not.  Thanks,
+
+Alex
+
+> > ---
+> >  drivers/pci/quirks.c |   14 ++++++++++++++
+> >  1 file changed, 14 insertions(+)
+> >=20
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 2990ad1e7c99..6d0dee40dbe5 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -4230,11 +4230,24 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev=
+ *dev, u16 acs_flags)
+> >   * 0xa290-0xa29f PCI Express Root port #{0-16}
+> >   * 0xa2e7-0xa2ee PCI Express Root port #{17-24}
+> >   *
+> > + * Mobile chipsets are also affected, 7th & 8th Generation
+> > + * Specification update confirms ACS errata 22, status no fix: (7th Ge=
+neration
+> > + * Intel Processor Family I/O for U/Y Platforms and 8th Generation Int=
+el
+> > + * Processor Family I/O for U Quad Core Platforms Specification Update,
+> > + * August 2017, Revision 002, Document#: 334660-002)[6]
+> > + * Device IDs from I/O datasheet: (7th Generation Intel Processor Fami=
+ly I/O
+> > + * for U/Y Platforms and 8th Generation Intel =C2=AE Processor Family =
+I/O for U
+> > + * Quad Core Platforms, Vol 1 of 2, August 2017, Document#: 334658-003=
+)[7]
+> > + *
+> > + * 0x9d10-0x9d1b PCI Express Root port #{1-12}
+> > + *
+> >   * [1] http://www.intel.com/content/www/us/en/chipsets/100-series-chip=
+set-datasheet-vol-2.html
+> >   * [2] http://www.intel.com/content/www/us/en/chipsets/100-series-chip=
+set-datasheet-vol-1.html
+> >   * [3] http://www.intel.com/content/www/us/en/chipsets/100-series-chip=
+set-spec-update.html
+> >   * [4] http://www.intel.com/content/www/us/en/chipsets/200-series-chip=
+set-pch-spec-update.html
+> >   * [5] http://www.intel.com/content/www/us/en/chipsets/200-series-chip=
+set-pch-datasheet-vol-1.html
+> > + * [6] https://www.intel.com/content/www/us/en/processors/core/7th-gen=
+-core-family-mobile-u-y-processor-lines-i-o-spec-update.html
+> > + * [7] https://www.intel.com/content/www/us/en/processors/core/7th-gen=
+-core-family-mobile-u-y-processor-lines-i-o-datasheet-vol-1.html
+> >   */
+> >  static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
+> >  {
+> > @@ -4244,6 +4257,7 @@ static bool pci_quirk_intel_spt_pch_acs_match(str=
+uct pci_dev *dev)
+> >  	switch (dev->device) {
+> >  	case 0xa110 ... 0xa11f: case 0xa167 ... 0xa16a: /* Sunrise Point */
+> >  	case 0xa290 ... 0xa29f: case 0xa2e7 ... 0xa2ee: /* Union Point */
+> > +	case 0x9d10 ... 0x9d1b: /* 7th & 8th Gen Mobile */
+> >  		return true;
+> >  	}
+> > =20
+> >  =20
