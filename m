@@ -1,71 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:43529 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750872AbeDRPSH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Apr 2018 11:18:07 -0400
-Received: by mail-ot0-f193.google.com with SMTP id d9-v6so2312471oth.10
-        for <linux-pci@vger.kernel.org>; Wed, 18 Apr 2018 08:18:07 -0700 (PDT)
-From: minyard@acm.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: openipmi-developer@lists.sourceforge.net,
-        linux-pci@vger.kernel.org, Corey Minyard <cminyard@mvista.com>
-Subject: [PATCH] pci:ipmi: Move IPMI PCI device defines to pci_ids.h
-Date: Wed, 18 Apr 2018 10:18:00 -0500
-Message-Id: <1524064680-22333-1-git-send-email-minyard@acm.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: Christoph Hellwig <hch@lst.de>
+CC: "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "linux@armlinux.org.uk" <linux@armlinux.org.uk>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "zajec5@gmail.com" <zajec5@gmail.com>,
+        "andy.gross@linaro.org" <andy.gross@linaro.org>,
+        "david.brown@linaro.org" <david.brown@linaro.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "vinod.koul@intel.com" <vinod.koul@intel.com>,
+        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "jarkko.sakkinen@linux.intel.com" <jarkko.sakkinen@linux.intel.com>,
+        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
+        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
+        "johan@kernel.org" <johan@kernel.org>,
+        "msuchanek@suse.de" <msuchanek@suse.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-soc@vger.kernel.org" <linux-soc@vger.kernel.org>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bharat Bhushan <bharat.bhushan@nxp.com>,
+        Leo Li <leoyang.li@nxp.com>
+Subject: RE: [PATCH v3 1/2] dma-mapping: move dma configuration to bus
+        infrastructure
+Date: Fri, 27 Apr 2018 17:10:48 +0000
+Message-ID: <HE1PR0401MB24259708C02B6AD57C11A18EE68D0@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
+ <1522396485-10248-1-git-send-email-nipun.gupta@nxp.com>
+ <20180423125638.GB8824@lst.de>
+In-Reply-To: <20180423125638.GB8824@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Corey Minyard <cminyard@mvista.com>
 
-Signed-off-by: Corey Minyard <cminyard@mvista.com>
----
- drivers/char/ipmi/ipmi_si_pci.c | 7 -------
- include/linux/pci_ids.h         | 5 +++++
- 2 files changed, 5 insertions(+), 7 deletions(-)
 
-It seems better to have these definitions in pci_ids.h and not in
-the IPMI driver.
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@lst.de]
+> Sent: Monday, April 23, 2018 6:27 PM
+> To: Nipun Gupta <nipun.gupta@nxp.com>
+> Cc: robin.murphy@arm.com; hch@lst.de; linux@armlinux.org.uk;
+> gregkh@linuxfoundation.org; m.szyprowski@samsung.com;
+> bhelgaas@google.com; zajec5@gmail.com; andy.gross@linaro.org;
+> david.brown@linaro.org; dan.j.williams@intel.com; vinod.koul@intel.com;
+> thierry.reding@gmail.com; robh+dt@kernel.org; frowand.list@gmail.com;
+> jarkko.sakkinen@linux.intel.com; rafael.j.wysocki@intel.com;
+> dmitry.torokhov@gmail.com; johan@kernel.org; msuchanek@suse.de; linux-
+> kernel@vger.kernel.org; iommu@lists.linux-foundation.org; linux-
+> wireless@vger.kernel.org; linux-arm-msm@vger.kernel.org; linux-
+> soc@vger.kernel.org; dmaengine@vger.kernel.org; dri-
+> devel@lists.freedesktop.org; linux-tegra@vger.kernel.org;
+> devicetree@vger.kernel.org; linux-pci@vger.kernel.org; Bharat Bhushan
+> <bharat.bhushan@nxp.com>; Leo Li <leoyang.li@nxp.com>
+> Subject: Re: [PATCH v3 1/2] dma-mapping: move dma configuration to bus
+> infrastructure
+>=20
+> Can you resend your changes against Linux 4.17-rc2?  There are a lot
+> of conflicts as-is.
 
-diff --git a/drivers/char/ipmi/ipmi_si_pci.c b/drivers/char/ipmi/ipmi_si_pci.c
-index f54ca68..e0bc101 100644
---- a/drivers/char/ipmi/ipmi_si_pci.c
-+++ b/drivers/char/ipmi/ipmi_si_pci.c
-@@ -18,13 +18,6 @@ module_param_named(trypci, si_trypci, bool, 0);
- MODULE_PARM_DESC(trypci, "Setting this to zero will disable the"
- 		 " default scan of the interfaces identified via pci");
- 
--#define PCI_CLASS_SERIAL_IPMI		0x0c07
--#define PCI_CLASS_SERIAL_IPMI_SMIC	0x0c0700
--#define PCI_CLASS_SERIAL_IPMI_KCS	0x0c0701
--#define PCI_CLASS_SERIAL_IPMI_BT	0x0c0702
--
--#define PCI_DEVICE_ID_HP_MMC 0x121A
--
- static void ipmi_pci_cleanup(struct si_sm_io *io)
- {
- 	struct pci_dev *pdev = io->addr_source_data;
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 2d61d9b..bedbae9 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -117,6 +117,10 @@
- #define PCI_CLASS_SERIAL_USB_DEVICE	0x0c03fe
- #define PCI_CLASS_SERIAL_FIBER		0x0c04
- #define PCI_CLASS_SERIAL_SMBUS		0x0c05
-+#define PCI_CLASS_SERIAL_IPMI		0x0c07
-+#define PCI_CLASS_SERIAL_IPMI_SMIC	0x0c0700
-+#define PCI_CLASS_SERIAL_IPMI_KCS	0x0c0701
-+#define PCI_CLASS_SERIAL_IPMI_BT	0x0c0702
- 
- #define PCI_BASE_CLASS_WIRELESS			0x0d
- #define PCI_CLASS_WIRELESS_RF_CONTROLLER	0x0d10
-@@ -759,6 +763,7 @@
- #define PCI_DEVICE_ID_HP_DIVA_MAESTRO	0x104B
- #define PCI_DEVICE_ID_HP_REO_IOC	0x10f1
- #define PCI_DEVICE_ID_HP_VISUALIZE_FXE	0x108b
-+#define PCI_DEVICE_ID_HP_MMC		0x121a
- #define PCI_DEVICE_ID_HP_DIVA_HALFDOME	0x1223
- #define PCI_DEVICE_ID_HP_DIVA_KEYSTONE	0x1226
- #define PCI_DEVICE_ID_HP_DIVA_POWERBAR	0x1227
--- 
-2.7.4
+Sure.. I will send it soon..
+
+Regards,
+Nipun
