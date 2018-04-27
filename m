@@ -1,86 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 2/2] microblaze/PCI: Remove pcibios_claim_one_bus() dead
- code
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Michal Simek <monstr@monstr.eu>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 10 Apr 2018 08:25:12 -0500
-Message-ID: <152336671276.18958.18175353602437569251.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152336656418.18958.17017091754578447948.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152336656418.18958.17017091754578447948.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.131]:60865 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757536AbeD0Icb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 04:32:31 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 7/9] PCI: mediatek: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
+Date: Fri, 27 Apr 2018 16:24:28 +0800
+Message-Id: <1524817468-242615-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Just avoid code duplication, but no functional change intended.
 
-pcibios_claim_one_bus() is defined but never used.  Remove it.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- arch/microblaze/include/asm/pci.h |    2 --
- arch/microblaze/pci/pci-common.c  |   37 -------------------------------------
- 2 files changed, 39 deletions(-)
 
-diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
-index 4a96480e7716..7cfb90010f16 100644
---- a/arch/microblaze/include/asm/pci.h
-+++ b/arch/microblaze/include/asm/pci.h
-@@ -67,8 +67,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
-  */
- #define PCI_DMA_BUS_IS_PHYS     (1)
- 
--extern void pcibios_claim_one_bus(struct pci_bus *b);
--
- extern void pcibios_resource_survey(void);
- 
- struct file;
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 61494c4379f9..6a4e5b32a90e 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -996,43 +996,6 @@ void __init pcibios_resource_survey(void)
- 	pci_assign_unassigned_resources();
+ drivers/pci/host/pcie-mediatek.c | 29 +++--------------------------
+ 1 file changed, 3 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index a8b20c5..e977a43 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -541,38 +541,15 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+ 	writel(val, port->base + PCIE_INT_MASK);
  }
  
--/* This is used by the PCI hotplug driver to allocate resource
-- * of newly plugged busses. We can try to consolidate with the
-- * rest of the code later, for now, keep it as-is as our main
-- * resource allocation function doesn't deal with sub-trees yet.
-- */
--void pcibios_claim_one_bus(struct pci_bus *bus)
+-static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+-			     irq_hw_number_t hwirq)
 -{
--	struct pci_dev *dev;
--	struct pci_bus *child_bus;
+-	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
 -
--	list_for_each_entry(dev, &bus->devices, bus_list) {
--		int i;
--
--		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--			struct resource *r = &dev->resource[i];
--
--			if (r->parent || !r->start || !r->flags)
--				continue;
--
--			pr_debug("PCI: Claiming %s: ", pci_name(dev));
--			pr_debug("Resource %d: %016llx..%016llx [%x]\n",
--				 i, (unsigned long long)r->start,
--				 (unsigned long long)r->end,
--				 (unsigned int)r->flags);
--
--			if (pci_claim_resource(dev, i) == 0)
--				continue;
--
--			pci_claim_bridge_resource(dev, i);
--		}
--	}
--
--	list_for_each_entry(child_bus, &bus->children, node)
--		pcibios_claim_one_bus(child_bus);
+-	return 0;
 -}
--EXPORT_SYMBOL_GPL(pcibios_claim_one_bus);
 -
- static void pcibios_setup_phb_resources(struct pci_controller *hose,
- 					struct list_head *resources)
+-static const struct irq_domain_ops intx_domain_ops = {
+-	.map = mtk_pcie_intx_map,
+-};
+-
+ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+ 				    struct device_node *node)
  {
+ 	struct device *dev = port->pcie->dev;
+-	struct device_node *pcie_intc_node;
+ 
+-	/* Setup INTx */
+-	pcie_intc_node = of_get_next_child(node, NULL);
+-	if (!pcie_intc_node) {
+-		dev_err(dev, "no PCIe Intc node found\n");
+-		return -ENODEV;
+-	}
++	port->irq_domain = pci_alloc_intx_irqd(dev, port, false, NULL, NULL);
++	if (IS_ERR(port->irq_domain))
++		return PTR_ERR(port->irq_domain);
+ 
+-	port->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+-						 &intx_domain_ops, port);
+-	if (!port->irq_domain) {
+-		dev_err(dev, "failed to get INTx IRQ domain\n");
+-		return -ENODEV;
+-	}
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
+-- 
+1.9.1
