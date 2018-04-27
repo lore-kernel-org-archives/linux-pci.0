@@ -1,59 +1,30 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:40010 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750902AbeDXWS5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Apr 2018 18:18:57 -0400
-Date: Tue, 24 Apr 2018 18:18:54 -0400 (EDT)
-From: Mikulas Patocka <mpatocka@redhat.com>
-To: Keith Busch <keith.busch@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-cc: Jens Axboe <axboe@fb.com>, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, Arjan van de Ven <arjan@linux.intel.com>
-Subject: Re: [PATCH] fix failure when root filesystem is on nvme
-In-Reply-To: <20180421191608.GC19048@localhost.localdomain>
-Message-ID: <alpine.LRH.2.02.1804241743050.19786@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1804210942070.11467@file01.intranet.prod.int.rdu2.redhat.com> <20180421191608.GC19048@localhost.localdomain>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 27 Apr 2018 17:52:03 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Nipun Gupta <nipun.gupta@nxp.com>
+Cc: robin.murphy@arm.com, will.deacon@arm.com, mark.rutland@arm.com,
+        catalin.marinas@arm.com, hch@lst.de, gregkh@linuxfoundation.org,
+        joro@8bytes.org, robh+dt@kernel.org, m.szyprowski@samsung.com,
+        shawnguo@kernel.org, frowand.list@gmail.com, bhelgaas@google.com,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, stuyoder@gmail.com,
+        laurentiu.tudor@nxp.com, leoyang.li@nxp.com
+Subject: Re: [PATCH 0/6 v3] Support for fsl-mc bus and its devices in SMMU
+Message-ID: <20180427155203.GA9201@lst.de>
+References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Sat, 21 Apr 2018, Keith Busch wrote:
-
-> On Sat, Apr 21, 2018 at 09:59:48AM -0400, Mikulas Patocka wrote:
->
-> > There's a bug in the nvme block device driver that causes failure when we 
-> > have no initramfs and the root filesystem is directly on nvme. The driver 
-> > spawns a work item nvme_reset_work() in the nvme_wq workqueue, but doesn't 
-> > wait for it. The result is that the kernel attempts to mount the root 
-> > filesystem before nvme_reset_work() finishes and it panics because it 
-> > can't find the root device.
-> > 
-> > It can be fixed with this simple patch (perhaps you can come up with a 
-> > better patch that uses the asynchronous probing infrastructure?)
+On Fri, Apr 27, 2018 at 03:57:00PM +0530, Nipun Gupta wrote:
+> This patchset defines IOMMU DT binding for fsl-mc bus and adds
+> support in SMMU for fsl-mc bus.
 > 
-> We probe asynchronously to fix other issues.
-> 
-> First is that boot takes way
-> too long if you have a lot of devices when probing all of them serially,
-> and then certain init systems kill the probe task after a certain time,
-> breaking boot for those.
-> 
-> Is there something we can do for your setup to have the kernel wait for
-> the root partition to be available instead of givinig up after pci probe?
+> This patch series is dependent on patset:
+> https://patchwork.kernel.org/patch/10317337/
 
-Are different PCI NVME devices probed concurrently by the PCI API? (I 
-can't try, I have just one) If yes, then the patch that I posted should be 
-OK, because it wouldn't break this concurrency.
-
-If not, then you need to make sure that wait_for_device_probe() waits for 
-the NVME probe to finish. The kernel calls wait_for_device_probe() just 
-before it attempts to mount the root filesystem. I don't know which of the 
-kernel frameworks would be best suited to accomplish that. Perhaps the 
-simplest solution would be to increment probe_count in nvme_probe and 
-decrement it when the probe work item finishes - but it is not exported 
-and you'd need to create helper functions in drivers/base/dd.c to do that.
-
-Mikulas
+Which still needs to be resent against 4.17-rc..
