@@ -1,149 +1,353 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:39528 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932244AbeDWREx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 13:04:53 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: x86@kernel.org, linux-block@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        linux-mips@linux-mips.org, sparclinux@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 04/12] iommu-helper: move the IOMMU_HELPER config symbol to lib/
-Date: Mon, 23 Apr 2018 19:04:11 +0200
-Message-Id: <20180423170419.20330-5-hch@lst.de>
-In-Reply-To: <20180423170419.20330-1-hch@lst.de>
-References: <20180423170419.20330-1-hch@lst.de>
+Received: from lucky1.263xmail.com ([211.157.147.132]:35037 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757029AbeD0Cq6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Apr 2018 22:46:58 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Heiko Stuebner <heiko@sntech.de>, Rob Herring <robh+dt@kernel.org>,
+        devicetree@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v6 2/7] PCI: rockchip: Split out common function to parse DT
+Date: Fri, 27 Apr 2018 10:39:11 +0800
+Message-Id: <1524796751-161084-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1524796697-160764-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1524796697-160764-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This way we have one central definition of it, and user can select it as
-needed.
+Most of the DT properties are used for both of host and
+EP drivrs, so this patch spilt them out to new function,
+rockchip_pcie_parse_dt in pcie-rockchip.c and rename the
+original function to rockchip_pcie_parse_host_dt to avoid
+confusion. No functional changed intended.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 ---
- arch/powerpc/Kconfig | 4 +---
- arch/s390/Kconfig    | 5 ++---
- arch/sparc/Kconfig   | 5 +----
- arch/x86/Kconfig     | 6 ++----
- lib/Kconfig          | 3 +++
- 5 files changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index 43e3c8e4e7f4..7698cf89af9c 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -223,6 +223,7 @@ config PPC
- 	select HAVE_SYSCALL_TRACEPOINTS
- 	select HAVE_VIRT_CPU_ACCOUNTING
- 	select HAVE_IRQ_TIME_ACCOUNTING
-+	select IOMMU_HELPER			if PPC64
- 	select IRQ_DOMAIN
- 	select IRQ_FORCED_THREADING
- 	select MODULES_USE_ELF_RELA
-@@ -478,9 +479,6 @@ config MPROFILE_KERNEL
- 	depends on PPC64 && CPU_LITTLE_ENDIAN
- 	def_bool !DISABLE_MPROFILE_KERNEL
+Changes in v6: None
+Changes in v5: None
+Changes in v4: None
+
+ drivers/pci/host/pcie-rockchip-host.c | 119 ++-----------------------------
+ drivers/pci/host/pcie-rockchip.c      | 129 ++++++++++++++++++++++++++++++++++
+ drivers/pci/host/pcie-rockchip.h      |   2 +
+ 3 files changed, 136 insertions(+), 114 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip-host.c b/drivers/pci/host/pcie-rockchip-host.c
+index fae9ecc..cf97130 100644
+--- a/drivers/pci/host/pcie-rockchip-host.c
++++ b/drivers/pci/host/pcie-rockchip-host.c
+@@ -705,130 +705,20 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
+ }
  
--config IOMMU_HELPER
--	def_bool PPC64
+ /**
+- * rockchip_pcie_parse_dt - Parse Device Tree
++ * rockchip_pcie_parse_host_dt - Parse Device Tree
+  * @rockchip: PCIe port information
+  *
+  * Return: '0' on success and error value on failure
+  */
+-static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
++static int rockchip_pcie_parse_host_dt(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+-	struct platform_device *pdev = to_platform_device(dev);
+-	struct device_node *node = dev->of_node;
+-	struct resource *regs;
+ 	int err;
+ 
+-	regs = platform_get_resource_byname(pdev,
+-					    IORESOURCE_MEM,
+-					    "axi-base");
+-	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
+-	if (IS_ERR(rockchip->reg_base))
+-		return PTR_ERR(rockchip->reg_base);
 -
- config SWIOTLB
- 	bool "SWIOTLB support"
- 	default n
-diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
-index 199ac3e4da1d..60c4ab854182 100644
---- a/arch/s390/Kconfig
-+++ b/arch/s390/Kconfig
-@@ -709,7 +709,9 @@ config QDIO
- menuconfig PCI
- 	bool "PCI support"
- 	select PCI_MSI
-+	select IOMMU_HELPER
- 	select IOMMU_SUPPORT
+-	regs = platform_get_resource_byname(pdev,
+-					    IORESOURCE_MEM,
+-					    "apb-base");
+-	rockchip->apb_base = devm_ioremap_resource(dev, regs);
+-	if (IS_ERR(rockchip->apb_base))
+-		return PTR_ERR(rockchip->apb_base);
+-
+-	err = rockchip_pcie_get_phys(rockchip);
++	err = rockchip_pcie_parse_dt(rockchip);
+ 	if (err)
+ 		return err;
+ 
+-	rockchip->lanes = 1;
+-	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
+-	if (!err && (rockchip->lanes == 0 ||
+-		     rockchip->lanes == 3 ||
+-		     rockchip->lanes > 4)) {
+-		dev_warn(dev, "invalid num-lanes, default to use one lane\n");
+-		rockchip->lanes = 1;
+-	}
+-
+-	rockchip->link_gen = of_pci_get_max_link_speed(node);
+-	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
+-		rockchip->link_gen = 2;
+-
+-	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
+-	if (IS_ERR(rockchip->core_rst)) {
+-		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing core reset property in node\n");
+-		return PTR_ERR(rockchip->core_rst);
+-	}
+-
+-	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
+-	if (IS_ERR(rockchip->mgmt_rst)) {
+-		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing mgmt reset property in node\n");
+-		return PTR_ERR(rockchip->mgmt_rst);
+-	}
+-
+-	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
+-								     "mgmt-sticky");
+-	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
+-		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing mgmt-sticky reset property in node\n");
+-		return PTR_ERR(rockchip->mgmt_sticky_rst);
+-	}
+-
+-	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
+-	if (IS_ERR(rockchip->pipe_rst)) {
+-		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing pipe reset property in node\n");
+-		return PTR_ERR(rockchip->pipe_rst);
+-	}
+-
+-	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
+-	if (IS_ERR(rockchip->pm_rst)) {
+-		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing pm reset property in node\n");
+-		return PTR_ERR(rockchip->pm_rst);
+-	}
+-
+-	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
+-	if (IS_ERR(rockchip->pclk_rst)) {
+-		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing pclk reset property in node\n");
+-		return PTR_ERR(rockchip->pclk_rst);
+-	}
+-
+-	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
+-	if (IS_ERR(rockchip->aclk_rst)) {
+-		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing aclk reset property in node\n");
+-		return PTR_ERR(rockchip->aclk_rst);
+-	}
+-
+-	rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
+-	if (IS_ERR(rockchip->ep_gpio)) {
+-		dev_err(dev, "missing ep-gpios property in node\n");
+-		return PTR_ERR(rockchip->ep_gpio);
+-	}
+-
+-	rockchip->aclk_pcie = devm_clk_get(dev, "aclk");
+-	if (IS_ERR(rockchip->aclk_pcie)) {
+-		dev_err(dev, "aclk clock not found\n");
+-		return PTR_ERR(rockchip->aclk_pcie);
+-	}
+-
+-	rockchip->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
+-	if (IS_ERR(rockchip->aclk_perf_pcie)) {
+-		dev_err(dev, "aclk_perf clock not found\n");
+-		return PTR_ERR(rockchip->aclk_perf_pcie);
+-	}
+-
+-	rockchip->hclk_pcie = devm_clk_get(dev, "hclk");
+-	if (IS_ERR(rockchip->hclk_pcie)) {
+-		dev_err(dev, "hclk clock not found\n");
+-		return PTR_ERR(rockchip->hclk_pcie);
+-	}
+-
+-	rockchip->clk_pcie_pm = devm_clk_get(dev, "pm");
+-	if (IS_ERR(rockchip->clk_pcie_pm)) {
+-		dev_err(dev, "pm clock not found\n");
+-		return PTR_ERR(rockchip->clk_pcie_pm);
+-	}
+-
+ 	err = rockchip_pcie_setup_irq(rockchip);
+ 	if (err)
+ 		return err;
+@@ -1195,8 +1085,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, rockchip);
+ 	rockchip->dev = dev;
++	rockchip->is_rc = true;
+ 
+-	err = rockchip_pcie_parse_dt(rockchip);
++	err = rockchip_pcie_parse_host_dt(rockchip);
+ 	if (err)
+ 		return err;
+ 
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 3d46da9..bcc222b 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -12,10 +12,139 @@
+  */
+ 
+ #include <linux/clk.h>
++#include <linux/gpio/consumer.h>
++#include <linux/of_pci.h>
+ #include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++#include <linux/reset.h>
+ 
+ #include "pcie-rockchip.h"
+ 
++int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
++{
++	struct device *dev = rockchip->dev;
++	struct platform_device *pdev = to_platform_device(dev);
++	struct device_node *node = dev->of_node;
++	struct resource *regs;
++	int err;
 +
- 	help
- 	  Enable PCI support.
- 
-@@ -733,9 +735,6 @@ config PCI_DOMAINS
- config HAS_IOMEM
- 	def_bool PCI
- 
--config IOMMU_HELPER
--	def_bool PCI
--
- config NEED_SG_DMA_LENGTH
- 	def_bool PCI
- 
-diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
-index 8767e45f1b2b..44e0f3cd7988 100644
---- a/arch/sparc/Kconfig
-+++ b/arch/sparc/Kconfig
-@@ -67,6 +67,7 @@ config SPARC64
- 	select HAVE_SYSCALL_TRACEPOINTS
- 	select HAVE_CONTEXT_TRACKING
- 	select HAVE_DEBUG_KMEMLEAK
-+	select IOMMU_HELPER
- 	select SPARSE_IRQ
- 	select RTC_DRV_CMOS
- 	select RTC_DRV_BQ4802
-@@ -106,10 +107,6 @@ config ARCH_DMA_ADDR_T_64BIT
- 	bool
- 	default y if ARCH_ATU
- 
--config IOMMU_HELPER
--	bool
--	default y if SPARC64
--
- config STACKTRACE_SUPPORT
- 	bool
- 	default y if SPARC64
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index cb2c7ecc1fea..fe9713539166 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -871,6 +871,7 @@ config DMI
- 
- config GART_IOMMU
- 	bool "Old AMD GART IOMMU support"
-+	select IOMMU_HELPER
- 	select SWIOTLB
- 	depends on X86_64 && PCI && AMD_NB
- 	---help---
-@@ -892,6 +893,7 @@ config GART_IOMMU
- 
- config CALGARY_IOMMU
- 	bool "IBM Calgary IOMMU support"
-+	select IOMMU_HELPER
- 	select SWIOTLB
- 	depends on X86_64 && PCI
- 	---help---
-@@ -929,10 +931,6 @@ config SWIOTLB
- 	  with more than 3 GB of memory.
- 	  If unsure, say Y.
- 
--config IOMMU_HELPER
--	def_bool y
--	depends on CALGARY_IOMMU || GART_IOMMU
--
- config MAXSMP
- 	bool "Enable Maximum number of SMP Processors and NUMA Nodes"
- 	depends on X86_64 && SMP && DEBUG_KERNEL
-diff --git a/lib/Kconfig b/lib/Kconfig
-index 5fe577673b98..2f6908577534 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -429,6 +429,9 @@ config SGL_ALLOC
- 	bool
- 	default n
- 
-+config IOMMU_HELPER
-+	bool
++	regs = platform_get_resource_byname(pdev,
++					    IORESOURCE_MEM,
++					    "axi-base");
++	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
++	if (IS_ERR(rockchip->reg_base))
++		return PTR_ERR(rockchip->reg_base);
 +
- config DMA_DIRECT_OPS
- 	bool
- 	depends on HAS_DMA && (!64BIT || ARCH_DMA_ADDR_T_64BIT)
++	regs = platform_get_resource_byname(pdev,
++					    IORESOURCE_MEM,
++					    "apb-base");
++	rockchip->apb_base = devm_ioremap_resource(dev, regs);
++	if (IS_ERR(rockchip->apb_base))
++		return PTR_ERR(rockchip->apb_base);
++
++	err = rockchip_pcie_get_phys(rockchip);
++	if (err)
++		return err;
++
++	rockchip->lanes = 1;
++	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
++	if (!err && (rockchip->lanes == 0 ||
++		     rockchip->lanes == 3 ||
++		     rockchip->lanes > 4)) {
++		dev_warn(dev, "invalid num-lanes, default to use one lane\n");
++		rockchip->lanes = 1;
++	}
++
++	rockchip->link_gen = of_pci_get_max_link_speed(node);
++	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
++		rockchip->link_gen = 2;
++
++	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
++	if (IS_ERR(rockchip->core_rst)) {
++		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing core reset property in node\n");
++		return PTR_ERR(rockchip->core_rst);
++	}
++
++	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
++	if (IS_ERR(rockchip->mgmt_rst)) {
++		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing mgmt reset property in node\n");
++		return PTR_ERR(rockchip->mgmt_rst);
++	}
++
++	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
++								     "mgmt-sticky");
++	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
++		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing mgmt-sticky reset property in node\n");
++		return PTR_ERR(rockchip->mgmt_sticky_rst);
++	}
++
++	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
++	if (IS_ERR(rockchip->pipe_rst)) {
++		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing pipe reset property in node\n");
++		return PTR_ERR(rockchip->pipe_rst);
++	}
++
++	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
++	if (IS_ERR(rockchip->pm_rst)) {
++		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing pm reset property in node\n");
++		return PTR_ERR(rockchip->pm_rst);
++	}
++
++	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
++	if (IS_ERR(rockchip->pclk_rst)) {
++		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing pclk reset property in node\n");
++		return PTR_ERR(rockchip->pclk_rst);
++	}
++
++	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
++	if (IS_ERR(rockchip->aclk_rst)) {
++		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing aclk reset property in node\n");
++		return PTR_ERR(rockchip->aclk_rst);
++	}
++
++	if (rockchip->is_rc) {
++		rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
++		if (IS_ERR(rockchip->ep_gpio)) {
++			dev_err(dev, "missing ep-gpios property in node\n");
++			return PTR_ERR(rockchip->ep_gpio);
++		}
++	}
++
++	rockchip->aclk_pcie = devm_clk_get(dev, "aclk");
++	if (IS_ERR(rockchip->aclk_pcie)) {
++		dev_err(dev, "aclk clock not found\n");
++		return PTR_ERR(rockchip->aclk_pcie);
++	}
++
++	rockchip->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
++	if (IS_ERR(rockchip->aclk_perf_pcie)) {
++		dev_err(dev, "aclk_perf clock not found\n");
++		return PTR_ERR(rockchip->aclk_perf_pcie);
++	}
++
++	rockchip->hclk_pcie = devm_clk_get(dev, "hclk");
++	if (IS_ERR(rockchip->hclk_pcie)) {
++		dev_err(dev, "hclk clock not found\n");
++		return PTR_ERR(rockchip->hclk_pcie);
++	}
++
++	rockchip->clk_pcie_pm = devm_clk_get(dev, "pm");
++	if (IS_ERR(rockchip->clk_pcie_pm)) {
++		dev_err(dev, "pm clock not found\n");
++		return PTR_ERR(rockchip->clk_pcie_pm);
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(rockchip_pcie_parse_dt);
++
+ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+diff --git a/drivers/pci/host/pcie-rockchip.h b/drivers/pci/host/pcie-rockchip.h
+index d27941e..473e74f 100644
+--- a/drivers/pci/host/pcie-rockchip.h
++++ b/drivers/pci/host/pcie-rockchip.h
+@@ -222,6 +222,7 @@ struct rockchip_pcie {
+ 	u32     mem_size;
+ 	phys_addr_t msg_bus_addr;
+ 	phys_addr_t mem_bus_addr;
++	bool is_rc;
+ };
+ 
+ static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
+@@ -235,6 +236,7 @@ static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val,
+ 	writel(val, rockchip->apb_base + reg);
+ }
+ 
++int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip);
+ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip);
+ void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip);
+ int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip);
 -- 
-2.17.0
+1.9.1
