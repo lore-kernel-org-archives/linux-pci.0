@@ -1,62 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52778 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751494AbeDYFQs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 01:16:48 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: sstabellini@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, linux-mips@linux-mips.org,
-        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 13/13] swiotlb: remove the CONFIG_DMA_DIRECT_OPS ifdefs
-Date: Wed, 25 Apr 2018 07:15:39 +0200
-Message-Id: <20180425051539.1989-14-hch@lst.de>
-In-Reply-To: <20180425051539.1989-1-hch@lst.de>
-References: <20180425051539.1989-1-hch@lst.de>
+Received: from lucky1.263xmail.com ([211.157.147.130]:53651 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757798AbeD0IbI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 04:31:08 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH 3/9] PCI: keystone-dw: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
+Date: Fri, 27 Apr 2018 16:23:11 +0800
+Message-Id: <1524817391-239178-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-swiotlb now selects the DMA_DIRECT_OPS config symbol, so this will
-always be true.
+Just avoid code duplication, but no functional change intended.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- lib/swiotlb.c | 4 ----
- 1 file changed, 4 deletions(-)
 
-diff --git a/lib/swiotlb.c b/lib/swiotlb.c
-index fece57566d45..6954f7ad200a 100644
---- a/lib/swiotlb.c
-+++ b/lib/swiotlb.c
-@@ -692,7 +692,6 @@ void swiotlb_tbl_sync_single(struct device *hwdev, phys_addr_t tlb_addr,
- 	}
- }
+ drivers/pci/dwc/pci-keystone-dw.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
+index 0682213..171198a 100644
+--- a/drivers/pci/dwc/pci-keystone-dw.c
++++ b/drivers/pci/dwc/pci-keystone-dw.c
+@@ -470,15 +470,11 @@ int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
+ 	ks_pcie->app = *res;
  
--#ifdef CONFIG_DMA_DIRECT_OPS
- static inline bool dma_coherent_ok(struct device *dev, dma_addr_t addr,
- 		size_t size)
- {
-@@ -764,7 +763,6 @@ static bool swiotlb_free_buffer(struct device *dev, size_t size,
- 				 DMA_ATTR_SKIP_CPU_SYNC);
- 	return true;
- }
--#endif
+ 	/* Create legacy IRQ domain */
+-	ks_pcie->legacy_irq_domain =
+-			irq_domain_add_linear(ks_pcie->legacy_intc_np,
+-					PCI_NUM_INTX,
++	ks_pcie->legacy_irq_domain = pci_alloc_intx_irqd(dev, ks_pcie, false,
+ 					&ks_dw_pcie_legacy_irq_domain_ops,
+-					NULL);
+-	if (!ks_pcie->legacy_irq_domain) {
+-		dev_err(dev, "Failed to add irq domain for legacy irqs\n");
+-		return -EINVAL;
+-	}
++					ks_pcie->legacy_intc_np);
++	if (IS_ERR(ks_pcie->legacy_irq_domain))
++		return PTR_ERR(ks_pcie->legacy_irq_domain);
  
- static void
- swiotlb_full(struct device *dev, size_t size, enum dma_data_direction dir,
-@@ -1045,7 +1043,6 @@ swiotlb_dma_supported(struct device *hwdev, u64 mask)
- 	return __phys_to_dma(hwdev, io_tlb_end - 1) <= mask;
+ 	return dw_pcie_host_init(pp);
  }
- 
--#ifdef CONFIG_DMA_DIRECT_OPS
- void *swiotlb_alloc(struct device *dev, size_t size, dma_addr_t *dma_handle,
- 		gfp_t gfp, unsigned long attrs)
- {
-@@ -1089,4 +1086,3 @@ const struct dma_map_ops swiotlb_dma_ops = {
- 	.unmap_page		= swiotlb_unmap_page,
- 	.dma_supported		= dma_direct_supported,
- };
--#endif /* CONFIG_DMA_DIRECT_OPS */
 -- 
-2.17.0
+1.9.1
