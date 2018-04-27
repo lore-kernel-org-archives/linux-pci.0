@@ -1,52 +1,64 @@
-Return-Path: <SRS0=Gxz6=HO=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=Gxz6=HO=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- sulrich@codeaurora.org, timur@codeaurora.org, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org,
- Mike Marciniszyn <mike.marciniszyn@intel.com>,
- Dennis Dalessandro <dennis.dalessandro@intel.com>,
- Doug Ledford <dledford@redhat.com>,
- "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>,
- Alex Deucher <alexander.deucher@amd.com>, Rajat Jain <rajatja@google.com>
-References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
- <20180419202632.GE14063@ziepe.ca>
- <20180419214722.GO28657@bhelgaas-glaptop.roam.corp.google.com>
- <290e9530-dcde-9c10-7ae0-59ac4c509db4@codeaurora.org>
- <20180420140049.GP28657@bhelgaas-glaptop.roam.corp.google.com>
- <20180420090420.03fb1e6c@w520.home>
- <10d9cf68-29ed-d205-a25f-b8dade53cdd8@codeaurora.org>
- <20180423131044.53471670@w520.home>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <988448bc-a5be-2beb-cbe8-b5a8ec4b8cfa@codeaurora.org>
-Date: Wed, 25 Apr 2018 10:13:30 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180423131044.53471670@w520.home>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from va-smtp02.263.net ([38.83.106.158]:42332 "EHLO smtphy.263.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757548AbeD0Igi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Apr 2018 04:36:38 -0400
+Received: from transport.263xmail.com (unknown [38.83.106.156])
+        by smtphy.263.net (Postfix) with ESMTPS id BBF462F709D
+        for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2018 16:30:28 +0800 (CST)
+Received: from lucky1.263xmail.com (unknown [192.168.165.180])
+        by transportlucky.263xmail.com (Postfix) with ESMTP id EE622A03C
+        for <linux-pci@vger.kernel.org>; Fri, 27 Apr 2018 16:30:27 +0800 (CST)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 0/9] Add new helper to allocate irq domain for hosts
+Date: Fri, 27 Apr 2018 16:22:02 +0800
+Message-Id: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/23/2018 3:10 PM, Alex Williamson wrote:
->> Do we need a retrain API with the speed that driver wants to reach to?
->> API can return what was actually accomplished. The quirk from Alex can
->> run inside this API to make a decision on what speed do we actually want
->> to reach to for a given PCI topology by reprogramming the target link speed
->> field.
-> Yes, I think the core should provide a retraining API, that would also
-> make the Pericom quirk easier to implement.  We'd want a field/flag on
-> the pcidev that could be set by quirks to limit the highest target
-> rate, but it makes sense that this should be an interface provided by
-> and control point for the PCI core.  Thanks,
 
-Maybe, we could live with the existing secondary bus reset API. The speed that
-driver wants to reach to is in the target speed field. Quirk can hook up
-to the secondary bus reset call, read the target speed field to see what speed
-we are trying to negotiate to and override the target speed register based on
-upstream and downstream speeds.
+Hi Bjorn and Lorenzo,
+
+PCI drivers use highly similar code block to allocate irq domain which
+leads to code duplication than expected. This patchset adds a new helper,
+pci_alloc_intx_irqd(), to avoid that as much as possible. Just leave
+pcie-rockchip out now as it's under re-construct and will add incremental
+patch for it if this series looks ok and the pcie-rockchip ongoing patches
+got merge.
+
+
+
+Shawn Lin (9):
+  PCI: Add new helper for allocating irq domain for INTx
+  PCI: dra7xx: Use pci_alloc_intx_irqd() helper to simplify the code
+  PCI: keystone-dw: Use pci_alloc_intx_irqd() helper to get irq domain
+    for INTx
+  PCI: aardvark: Use pci_alloc_intx_irqd() helper to get irq domain for
+    INTx
+  PCI: faraday: Use pci_alloc_intx_irqd() helper to get irq domain for
+    INTx
+  PCI: altera: Use pci_alloc_intx_irqd() helper to get irq domain for
+    INTx
+  PCI: mediatek: Use pci_alloc_intx_irqd() helper to get irq domain for
+    INTx
+  PCI: xilinx-nwl: Use pci_alloc_intx_irqd() helper to get irq domain
+    for INTx
+  PCI: xilinx: Use pci_alloc_intx_irqd() helper to get irq domain for
+    INTx
+
+ drivers/pci/dwc/pci-dra7xx.c       | 41 ++-------------------
+ drivers/pci/dwc/pci-keystone-dw.c  | 12 +++----
+ drivers/pci/host/pci-aardvark.c    | 24 +++----------
+ drivers/pci/host/pci-ftpci100.c    | 15 +++-----
+ drivers/pci/host/pcie-altera.c     | 38 +++-----------------
+ drivers/pci/host/pcie-mediatek.c   | 29 ++-------------
+ drivers/pci/host/pcie-xilinx-nwl.c | 21 +++--------
+ drivers/pci/host/pcie-xilinx.c     | 43 ++--------------------
+ include/linux/pci.h                | 74 ++++++++++++++++++++++++++++++++++++++
+ 9 files changed, 104 insertions(+), 193 deletions(-)
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+1.9.1
