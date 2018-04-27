@@ -1,91 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:43305 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752096AbeDTWKR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Apr 2018 18:10:17 -0400
-Subject: Re: [pci PATCH v8 2/4] ena: Migrate over to unmanaged SR-IOV support
-To: Alexander Duyck <alexander.h.duyck@intel.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org
-Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
-        mheyne@amazon.de, liang-min.wang@intel.com,
-        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
-        dwmw@amazon.co.uk
-References: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
- <20180420162841.46077.17967.stgit@ahduyck-green-test.jf.intel.com>
-From: Gregory Rose <gvrose8192@gmail.com>
-Message-ID: <411245b6-fb34-0494-aa5d-1ed5bc69a18c@gmail.com>
-Date: Fri, 20 Apr 2018 15:10:15 -0700
+Received: from mail-he1eur01on0051.outbound.protection.outlook.com ([104.47.0.51]:35650
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1757811AbeD0K2L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Apr 2018 06:28:11 -0400
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, mark.rutland@arm.com,
+        catalin.marinas@arm.com
+Cc: hch@lst.de, gregkh@linuxfoundation.org, joro@8bytes.org,
+        robh+dt@kernel.org, m.szyprowski@samsung.com, shawnguo@kernel.org,
+        frowand.list@gmail.com, bhelgaas@google.com,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, stuyoder@gmail.com,
+        laurentiu.tudor@nxp.com, leoyang.li@nxp.com,
+        Nipun Gupta <nipun.gupta@nxp.com>
+Subject: [PATCH 5/6 v3] bus: fsl-mc: supoprt dma configure for devices on fsl-mc bus
+Date: Fri, 27 Apr 2018 15:57:05 +0530
+Message-Id: <1524824826-29473-6-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
+References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <20180420162841.46077.17967.stgit@ahduyck-green-test.jf.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/20/2018 9:30 AM, Alexander Duyck wrote:
-> Instead of implementing our own version of a SR-IOV configuration stub in
-> the ena driver we can just reuse the existing
-> pci_sriov_configure_simple function.
->
-> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
-> ---
->
-> v5: Replaced call to pci_sriov_configure_unmanaged with
->          pci_sriov_configure_simple
-> v6: Dropped "#ifdef" checks for IOV wrapping sriov_configure definition
-> v7: No change
->
->   drivers/net/ethernet/amazon/ena/ena_netdev.c |   28 +-------------------------
->   1 file changed, 1 insertion(+), 27 deletions(-)
->
-> diff --git a/drivers/net/ethernet/amazon/ena/ena_netdev.c b/drivers/net/ethernet/amazon/ena/ena_netdev.c
-> index a822e70..f2af87d 100644
-> --- a/drivers/net/ethernet/amazon/ena/ena_netdev.c
-> +++ b/drivers/net/ethernet/amazon/ena/ena_netdev.c
-> @@ -3386,32 +3386,6 @@ static int ena_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->   }
->   
->   /*****************************************************************************/
-> -static int ena_sriov_configure(struct pci_dev *dev, int numvfs)
-> -{
-> -	int rc;
-> -
-> -	if (numvfs > 0) {
-> -		rc = pci_enable_sriov(dev, numvfs);
-> -		if (rc != 0) {
-> -			dev_err(&dev->dev,
-> -				"pci_enable_sriov failed to enable: %d vfs with the error: %d\n",
-> -				numvfs, rc);
-> -			return rc;
-> -		}
-> -
-> -		return numvfs;
-> -	}
-> -
-> -	if (numvfs == 0) {
-> -		pci_disable_sriov(dev);
-> -		return 0;
-> -	}
-> -
-> -	return -EINVAL;
-> -}
-> -
-> -/*****************************************************************************/
-> -/*****************************************************************************/
->   
->   /* ena_remove - Device Removal Routine
->    * @pdev: PCI device information struct
-> @@ -3526,7 +3500,7 @@ static int ena_resume(struct pci_dev *pdev)
->   	.suspend    = ena_suspend,
->   	.resume     = ena_resume,
->   #endif
-> -	.sriov_configure = ena_sriov_configure,
-> +	.sriov_configure = pci_sriov_configure_simple,
->   };
->   
->   static int __init ena_init(void)
->
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+---
+ drivers/bus/fsl-mc/fsl-mc-bus.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-Reviewed-by: Greg Rose <gvrose8192@gmail.com>
+diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
+index 5d8266c..624828b 100644
+--- a/drivers/bus/fsl-mc/fsl-mc-bus.c
++++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
+@@ -127,6 +127,16 @@ static int fsl_mc_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 	return 0;
+ }
+ 
++static int fsl_mc_dma_configure(struct device *dev)
++{
++	struct device *dma_dev = dev;
++
++	while (dev_is_fsl_mc(dma_dev))
++		dma_dev = dma_dev->parent;
++
++	return of_dma_configure(dev, dma_dev->of_node, 0);
++}
++
+ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
+ {
+@@ -148,6 +158,7 @@ struct bus_type fsl_mc_bus_type = {
+ 	.name = "fsl-mc",
+ 	.match = fsl_mc_bus_match,
+ 	.uevent = fsl_mc_bus_uevent,
++	.dma_configure  = fsl_mc_dma_configure,
+ 	.dev_groups = fsl_mc_dev_groups,
+ };
+ EXPORT_SYMBOL_GPL(fsl_mc_bus_type);
+@@ -616,6 +627,7 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
+ 		mc_dev->icid = parent_mc_dev->icid;
+ 		mc_dev->dma_mask = FSL_MC_DEFAULT_DMA_MASK;
+ 		mc_dev->dev.dma_mask = &mc_dev->dma_mask;
++		mc_dev->dev.coherent_dma_mask = mc_dev->dma_mask;
+ 		dev_set_msi_domain(&mc_dev->dev,
+ 				   dev_get_msi_domain(&parent_mc_dev->dev));
+ 	}
+@@ -633,10 +645,6 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
+ 			goto error_cleanup_dev;
+ 	}
+ 
+-	/* Objects are coherent, unless 'no shareability' flag set. */
+-	if (!(obj_desc->flags & FSL_MC_OBJ_FLAG_NO_MEM_SHAREABILITY))
+-		arch_setup_dma_ops(&mc_dev->dev, 0, 0, NULL, true);
+-
+ 	/*
+ 	 * The device-specific probe callback will get invoked by device_add()
+ 	 */
+-- 
+1.9.1
