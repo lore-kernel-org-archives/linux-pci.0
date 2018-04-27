@@ -1,366 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay6.synopsys.com ([198.182.37.59]:37148 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758920AbeD0Q57 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 12:57:59 -0400
 From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
         Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v2 2/9] PCI: dwc: Add support for endpoint mode
-Date: Mon,  9 Apr 2018 10:41:11 +0100
-Message-Id: <9ce10e6844863029992a5f4e74c89818615850e3.1523266508.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        adouglas@cadence.com, jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
+Subject: [PATCH 07/10] misc: pci_endpoint_test: Replace lower into upper case characters
+Date: Fri, 27 Apr 2018 17:57:44 +0100
+Message-Id: <17224b32eaf73ac071975c4b6cda526472f11d15.1524845816.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe controller dual mode is capable of operating in host mode as well
-as endpoint mode by configuration, therefore this patch aims to add
-endpoint mode support to the designware driver.
+Replace all initial lower case character into upper case in comments
+and debug printks.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
-Change v1->v2:
- - Removed dw_plat_pcie_stop_link empty function.
- - Implemented Kishon's suggestions about dw-pcie-rc and dw-pcie strings.
-compatibility.
- - Added second entry on pci_epf_test_ids structure.
+ drivers/misc/pci_endpoint_test.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
- drivers/pci/dwc/Kconfig                       |  45 ++++++--
- drivers/pci/dwc/pcie-designware-ep.c          |   4 +-
- drivers/pci/dwc/pcie-designware-plat.c        | 153 ++++++++++++++++++++++++--
- drivers/pci/endpoint/functions/pci-epf-test.c |   9 ++
- 4 files changed, 190 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 2f3f5c5..3fd7daf 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -7,8 +7,7 @@ config PCIE_DW
- 
- config PCIE_DW_HOST
-         bool
--	depends on PCI
--	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI && PCI_MSI_IRQ_DOMAIN
-         select PCIE_DW
- 
- config PCIE_DW_EP
-@@ -52,16 +51,42 @@ config PCI_DRA7XX_EP
- 
- config PCIE_DW_PLAT
- 	bool "Platform bus based DesignWare PCIe Controller"
--	depends on PCI
--	depends on PCI_MSI_IRQ_DOMAIN
--	select PCIE_DW_HOST
--	---help---
--	 This selects the DesignWare PCIe controller support. Select this if
--	 you have a PCIe controller on Platform bus.
-+	help
-+	  There are two instances of PCIe controller in Designware IP.
-+	  This controller can work either as EP or RC. In order to enable
-+	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
-+	  order to enable device-specific features PCIE_DW_PLAT_EP must be
-+	  selected.
- 
--	 If you have a controller with this interface, say Y or M here.
-+config PCIE_DW_PLAT_HOST
-+	bool "Platform bus based DesignWare PCIe Controller - Host mode"
-+	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	select PCIE_DW_HOST
-+	select PCIE_DW_PLAT
-+	default y
-+	help
-+	  Enables support for the PCIe controller in the Designware IP to
-+	  work in host mode. There are two instances of PCIe controller in
-+	  Designware IP.
-+	  This controller can work either as EP or RC. In order to enable
-+	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
-+	  order to enable device-specific features PCI_DW_PLAT_EP must be
-+	  selected.
- 
--	 If unsure, say N.
-+config PCIE_DW_PLAT_EP
-+	bool "Platform bus based DesignWare PCIe Controller - Endpoint mode"
-+	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	depends on PCI_ENDPOINT
-+	select PCIE_DW_EP
-+	select PCIE_DW_PLAT
-+	help
-+	  Enables support for the PCIe controller in the Designware IP to
-+	  work in endpoint mode. There are two instances of PCIe controller
-+	  in Designware IP.
-+	  This controller can work either as EP or RC. In order to enable
-+	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
-+	  order to enable device-specific features PCI_DW_PLAT_EP must be
-+	  selected.
- 
- config PCI_EXYNOS
- 	bool "Samsung Exynos PCIe controller"
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index f07678b..4ac135a 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -15,8 +15,10 @@
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
- {
- 	struct pci_epc *epc = ep->epc;
-+	struct pci_epf *epf;
- 
--	pci_epc_linkup(epc);
-+	list_for_each_entry(epf, &epc->pci_epf, list)
-+		pci_epf_linkup(epf);
- }
- 
- static void __dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar,
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 5416aa8..5382a7a 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -12,19 +12,29 @@
- #include <linux/interrupt.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/of_device.h>
- #include <linux/of_gpio.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/resource.h>
- #include <linux/signal.h>
- #include <linux/types.h>
-+#include <linux/regmap.h>
- 
- #include "pcie-designware.h"
- 
- struct dw_plat_pcie {
--	struct dw_pcie		*pci;
-+	struct dw_pcie			*pci;
-+	struct regmap			*regmap;
-+	enum dw_pcie_device_mode	mode;
- };
- 
-+struct dw_plat_pcie_of_data {
-+	enum dw_pcie_device_mode	mode;
-+};
-+
-+static const struct of_device_id dw_plat_pcie_of_match[];
-+
- static int dw_plat_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -42,9 +52,53 @@ static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
- 	.host_init = dw_plat_pcie_host_init,
- };
- 
--static int dw_plat_add_pcie_port(struct pcie_port *pp,
-+static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
-+{
-+	return 0;
-+}
-+
-+static const struct dw_pcie_ops dw_pcie_ops = {
-+	.start_link = dw_plat_pcie_establish_link,
-+};
-+
-+static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	enum pci_barno bar;
-+
-+	for (bar = BAR_0; bar <= BAR_5; bar++)
-+		dw_pcie_ep_reset_bar(pci, bar);
-+}
-+
-+static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-+				     enum pci_epc_irq_type type,
-+				     u8 interrupt_num)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	switch (type) {
-+	case PCI_EPC_IRQ_LEGACY:
-+		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
-+		return -EINVAL;
-+	case PCI_EPC_IRQ_MSI:
-+		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
-+	default:
-+		dev_err(pci->dev, "UNKNOWN IRQ type\n");
-+	}
-+
-+	return 0;
-+}
-+
-+static struct dw_pcie_ep_ops pcie_ep_ops = {
-+	.ep_init = dw_plat_pcie_ep_init,
-+	.raise_irq = dw_plat_pcie_ep_raise_irq,
-+};
-+
-+static int dw_plat_add_pcie_port(struct dw_plat_pcie *dw_plat_pcie,
- 				 struct platform_device *pdev)
- {
-+	struct dw_pcie *pci = dw_plat_pcie->pci;
-+	struct pcie_port *pp = &pci->pp;
- 	struct device *dev = &pdev->dev;
- 	int ret;
- 
-@@ -63,15 +117,44 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
- 
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
--		dev_err(dev, "failed to initialize host\n");
-+		dev_err(dev, "Failed to initialize host\n");
- 		return ret;
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index b003079..c9b6e26 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -250,7 +250,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	orig_src_addr = dma_alloc_coherent(dev, size + alignment,
+ 					   &orig_src_phys_addr, GFP_KERNEL);
+ 	if (!orig_src_addr) {
+-		dev_err(dev, "failed to allocate source buffer\n");
++		dev_err(dev, "Failed to allocate source buffer\n");
+ 		ret = false;
+ 		goto err;
+ 	}
+@@ -276,7 +276,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	orig_dst_addr = dma_alloc_coherent(dev, size + alignment,
+ 					   &orig_dst_phys_addr, GFP_KERNEL);
+ 	if (!orig_dst_addr) {
+-		dev_err(dev, "failed to allocate destination address\n");
++		dev_err(dev, "Failed to allocate destination address\n");
+ 		ret = false;
+ 		goto err_orig_src_addr;
+ 	}
+@@ -340,7 +340,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
+ 				       GFP_KERNEL);
+ 	if (!orig_addr) {
+-		dev_err(dev, "failed to allocate address\n");
++		dev_err(dev, "Failed to allocate address\n");
+ 		ret = false;
+ 		goto err;
+ 	}
+@@ -403,7 +403,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
+ 				       GFP_KERNEL);
+ 	if (!orig_addr) {
+-		dev_err(dev, "failed to allocate destination address\n");
++		dev_err(dev, "Failed to allocate destination address\n");
+ 		ret = false;
+ 		goto err;
+ 	}
+@@ -543,7 +543,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	case IRQ_TYPE_MSI:
+ 		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
+ 		if (irq < 0)
+-			dev_err(dev, "failed to get MSI interrupts\n");
++			dev_err(dev, "Failed to get MSI interrupts\n");
+ 		test->num_irqs = irq;
+ 		break;
+ 	case IRQ_TYPE_MSIX:
+@@ -560,7 +560,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
+ 			       IRQF_SHARED, DRV_MODULE_NAME, test);
+ 	if (err) {
+-		dev_err(dev, "failed to request IRQ %d\n", pdev->irq);
++		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
+ 		goto err_disable_msi;
  	}
  
- 	return 0;
- }
+@@ -578,7 +578,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
+ 			base = pci_ioremap_bar(pdev, bar);
+ 			if (!base) {
+-				dev_err(dev, "failed to read BAR%d\n", bar);
++				dev_err(dev, "Failed to read BAR%d\n", bar);
+ 				WARN_ON(bar == test_reg_bar);
+ 			}
+ 			test->bar[bar] = base;
+@@ -598,7 +598,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	id = ida_simple_get(&pci_endpoint_test_ida, 0, 0, GFP_KERNEL);
+ 	if (id < 0) {
+ 		err = id;
+-		dev_err(dev, "unable to get id\n");
++		dev_err(dev, "Unable to get id\n");
+ 		goto err_iounmap;
+ 	}
  
--static const struct dw_pcie_ops dw_pcie_ops = {
--};
-+static int dw_plat_add_pcie_ep(struct dw_plat_pcie *dw_plat_pcie,
-+			       struct platform_device *pdev)
-+{
-+	int ret;
-+	struct dw_pcie_ep *ep;
-+	struct resource *res;
-+	struct device *dev = &pdev->dev;
-+	struct dw_pcie *pci = dw_plat_pcie->pci;
-+
-+	ep = &pci->ep;
-+	ep->ops = &pcie_ep_ops;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
-+	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
-+	if (IS_ERR(pci->dbi_base2))
-+		return PTR_ERR(pci->dbi_base2);
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
-+	if (!res)
-+		return -EINVAL;
-+
-+	ep->phys_base = res->start;
-+	ep->addr_size = resource_size(res);
-+
-+	ret = dw_pcie_ep_init(ep);
-+	if (ret) {
-+		dev_err(dev, "Failed to initialize endpoint\n");
-+		return ret;
-+	}
-+	return 0;
-+}
+@@ -614,7 +614,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
  
- static int dw_plat_pcie_probe(struct platform_device *pdev)
- {
-@@ -80,6 +163,16 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
- 	struct dw_pcie *pci;
- 	struct resource *res;  /* Resource from DT */
- 	int ret;
-+	const struct of_device_id *match;
-+	const struct dw_plat_pcie_of_data *data;
-+	enum dw_pcie_device_mode mode;
-+
-+	match = of_match_device(dw_plat_pcie_of_match, dev);
-+	if (!match)
-+		return -EINVAL;
-+
-+	data = (struct dw_plat_pcie_of_data *)match->data;
-+	mode = (enum dw_pcie_device_mode)data->mode;
- 
- 	dw_plat_pcie = devm_kzalloc(dev, sizeof(*dw_plat_pcie), GFP_KERNEL);
- 	if (!dw_plat_pcie)
-@@ -93,23 +186,63 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
- 	pci->ops = &dw_pcie_ops;
- 
- 	dw_plat_pcie->pci = pci;
-+	dw_plat_pcie->mode = mode;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-+	if (!res)
-+		res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	pci->dbi_base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(pci->dbi_base))
- 		return PTR_ERR(pci->dbi_base);
- 
- 	platform_set_drvdata(pdev, dw_plat_pcie);
- 
--	ret = dw_plat_add_pcie_port(&pci->pp, pdev);
--	if (ret < 0)
--		return ret;
-+	switch (dw_plat_pcie->mode) {
-+	case DW_PCIE_RC_TYPE:
-+		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_HOST))
-+			return -ENODEV;
-+
-+		ret = dw_plat_add_pcie_port(dw_plat_pcie, pdev);
-+		if (ret < 0)
-+			return ret;
-+		break;
-+	case DW_PCIE_EP_TYPE:
-+		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_EP))
-+			return -ENODEV;
-+
-+		ret = dw_plat_add_pcie_ep(dw_plat_pcie, pdev);
-+		if (ret < 0)
-+			return ret;
-+		break;
-+	default:
-+		dev_err(dev, "INVALID device type %d\n", dw_plat_pcie->mode);
-+	}
- 
- 	return 0;
- }
- 
-+static const struct dw_plat_pcie_of_data dw_plat_pcie_rc_of_data = {
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
-+static const struct dw_plat_pcie_of_data dw_plat_pcie_ep_of_data = {
-+	.mode = DW_PCIE_EP_TYPE,
-+};
-+
- static const struct of_device_id dw_plat_pcie_of_match[] = {
--	{ .compatible = "snps,dw-pcie", },
-+	{
-+		.compatible = "snps,dw-pcie",
-+		.data = &dw_plat_pcie_rc_of_data,
-+	},
-+	{
-+		.compatible = "snps,dw-pcie-rc",
-+		.data = &dw_plat_pcie_rc_of_data,
-+	},
-+	{
-+		.compatible = "snps,dw-pcie-ep",
-+		.data = &dw_plat_pcie_ep_of_data,
-+	},
- 	{},
- };
- 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 7cef851..45d1c63 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -459,10 +459,19 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 	return 0;
- }
- 
-+static const struct pci_epf_test_data data_cfg2 = {
-+	.test_reg_bar = BAR_0,
-+	.linkup_notifier = false
-+};
-+
- static const struct pci_epf_device_id pci_epf_test_ids[] = {
- 	{
- 		.name = "pci_epf_test",
- 	},
-+	{
-+		.name = "pci_epf_test_cfg2",
-+		.driver_data = (kernel_ulong_t)&data_cfg2,
-+	},
- 	{},
- };
+ 	err = misc_register(misc_device);
+ 	if (err) {
+-		dev_err(dev, "failed to register device\n");
++		dev_err(dev, "Failed to register device\n");
+ 		goto err_kfree_name;
+ 	}
  
 -- 
 2.7.4
