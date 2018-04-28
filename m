@@ -1,123 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:52214 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932151AbeDCNOS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Apr 2018 09:14:18 -0400
-Subject: Re: [PATCH 1/8] bindings: PCI: designware: Example update
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <cover.1522235224.git.gustavo.pimentel@synopsys.com>
- <33aa86ee667e8b435db080b8c683cb5df1bd6544.1522235224.git.gustavo.pimentel@synopsys.com>
- <fa001440-0dfe-b84a-e5ef-9285043b5ede@ti.com>
- <36a36857-2d79-2c2d-198d-a3b65cafc768@synopsys.com>
- <c5ffa7d6-40b1-1702-c0fd-9ebb1b4197f8@ti.com>
- <170b150d-d2c6-fee8-17f7-12a3107c13ff@ti.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <342e7438-ef13-e297-cc51-3df3a43a45d4@synopsys.com>
-Date: Tue, 3 Apr 2018 14:13:24 +0100
+Return-Path: <SRS0=l99Z=HR=redhat.com=dyoung@kernel.org>
+Return-Path: <SRS0=l99Z=HR=redhat.com=dyoung@kernel.org>
+Date: Sat, 28 Apr 2018 08:56:20 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+	Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
+	kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Lukas Wunner <lukas@wunner.de>,
+	Eric Biederman <ebiederm@xmission.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+Message-ID: <20180428005620.GB1675@dhcp-128-65.nay.redhat.com>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+ <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
+ <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <170b150d-d2c6-fee8-17f7-12a3107c13ff@ti.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
-
-On 03/04/2018 11:53, Kishon Vijay Abraham I wrote:
-> Hi,
+On 04/27/18 at 04:12pm, Bjorn Helgaas wrote:
+> [+cc Eric, Vivek, kexec list]
 > 
-> On Tuesday 03 April 2018 04:22 PM, Kishon Vijay Abraham I wrote:
->>
->>
->> On Tuesday 03 April 2018 04:03 PM, Gustavo Pimentel wrote:
->>> Hi Kishon,
->>>
->>> On 02/04/2018 06:23, Kishon Vijay Abraham I wrote:
->>>> Hi,
->>>>
->>>> On Wednesday 28 March 2018 05:08 PM, Gustavo Pimentel wrote:
->>>>> Changes the IP registers size to accommodate the ATU unroll space.
->>>>>
->>>>> Replaces "ctrlreg" reg-name by "dbi" to be coherent with similar drivers.
->>>>>
->>>>> Replaces the pcie base address example by a real pcie base address in use.
->>>>>
->>>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->>>>> ---
->>>>>  Documentation/devicetree/bindings/pci/designware-pcie.txt | 12 ++++++------
->>>>>  1 file changed, 6 insertions(+), 6 deletions(-)
->>>>>
->>>>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>>>> index 1da7ade..6300762 100644
->>>>> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>>>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
->>>>> @@ -1,7 +1,8 @@
->>>>>  * Synopsys DesignWare PCIe interface
->>>>>  
->>>>>  Required properties:
->>>>> -- compatible: should contain "snps,dw-pcie" to identify the core.
->>>>> +- compatible:
->>>>> +	"snps,dw-pcie" for RC mode;
->>>>
->>>> I think irrespective of RC mode or EP mode, "snps,dw-pcie" can be used to
->>>> identify the pcie core?
->>>
->>> I guess so. What you suggest? I was just folling the same guideline present
->>> here: https://urldefense.proofpoint.com/v2/url?u=https-3A__lkml.org_lkml_2017_11_3_310&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=G1MqB_DY6ZwWtvS60L9PZMHnMe6rClMnrakAyQT_hDc&s=BhQYkrcp6y3QkD23qn1I6lU882BDUfLiXjBVWQ91cmg&e=
->>
->> Okay, I think you should have
->> "snps,dw-pcie-rc", "snps,dw-pcie" for RC mode;
->>
->> and in the later patch
->> "snps,dw-pcie-ep", "snps,dw-pcie" for EP mode;
->>
+> On Fri, Apr 27, 2018 at 03:34:30PM -0400, Sinan Kaya wrote:
+> > On 4/27/2018 3:22 PM, Bjorn Helgaas wrote:
+> > > Sinan mooted the idea of using a "no-wait" path of sending the "don't
+> > > generate hotplug interrupts" command.  I think we should work on this
+> > > idea a little more.  If we're shutting down the whole system, I can't
+> > > believe there's much value in *anything* we do in the pciehp_remove()
+> > > path.
+> > > 
+> > > Maybe we should just get rid of pciehp_remove() (and probably
+> > > pcie_port_remove_service() and the other service driver remove methods)
+> > > completely.  That dates from when the service drivers could be modules that
+> > > could be potentially unloaded, but unloading them hasn't been possible for
+> > > years.
+> > 
+> > Shutdown path is also used for kexec. Leaving hotplug interrupts
+> > pending is dangerous for the newly loaded kernel as it leaves
+> > spurious interrupts during the new kernel boot.
+> > 
+> > I think we should always disable the hotplug interrupt on shutdown.
+> > We might think of not waiting for command-completion as a
+> > middle-ground or go to polling path instead of interrupts all the
+> > time.
+> 
+> Ah, I forgot about the kexec path.  The kexec path is used for
+> crashdump, too, so ideally the newly-loaded kernel would defend itself
+> when possible so it doesn't depend on the original kernel doing things
+> correctly.
 
-Ok, I'll change it.
-
->>>
->>>>>  - reg: Should contain the configuration address space.
->>>>>  - reg-names: Must be "config" for the PCIe configuration space.
->>>>>      (The old way of getting the configuration address space from "ranges"
->>>>> @@ -41,11 +42,11 @@ EP mode:
->>>>>  
->>>>>  Example configuration:
->>>>>  
->>>>> -	pcie: pcie@dffff000 {
->>>>> +	pcie: pcie@dfc00000 {
->>>>>  		compatible = "snps,dw-pcie";
->>>>> -		reg = <0xdffff000 0x1000>, /* Controller registers */
->>>>> -		      <0xd0000000 0x2000>; /* PCI config space */
->>>>> -		reg-names = "ctrlreg", "config";
->>>>> +		reg = <0xdfc00000 0x302000>, /* IP registers */
->>>>
->>>> which version of synopsys IP is this. I think the ideal thing to do here is to
->>>> have a separate register space for iATU.
->>>
->>> I also agree with that. The unroll iATU was introduced on Synopsys IP version
->>> 4.80 and the kernel patch was release on 2016-08-10
->>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_657796_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=G1MqB_DY6ZwWtvS60L9PZMHnMe6rClMnrakAyQT_hDc&s=EgKKDbg4ywCxu4-lG_scYAgPMnxirsjS0uSS7SzBTeM&e=
->>> However a separate register space for iATU implies some extra code do handle it
->>> (and of course some tests) that don't fit into this patch series, in my point of
->>> view. Can this task enter in the backlog in order to be done in another patch
->>> series?
->>
->> Yes sure. I think we should also make sure existing binding doesn't break.
-
-I'll remove the any iATU unroll reference or change from this patch to avoid any
-confusion.
+It is true for kdump.  But kexec needs device shutdown.
 
 > 
-> And IMO we should have a new compatible "snps,dw-pcie-4.80" in order to enable
-> iATU unroll.
+> Seems like this question of whether to do things in the original
+> kernel or the kexec-ed kernel comes up periodically, but I can never
+> remember a definitive answer.  My initial reaction is that it'd be
+> nice if we didn't have to do *any* shutdown in the original kernel,
+> but I'm sure there are reasons that's not practical.
+
+Devices sometimes assume it is in a good state initialized in firmware boot
+phase, so we need a shutdown in 1st kernel so that kexec kernel can boot
+correctly for those devices.  For kdump since kernel already panicked
+and it is not reliable so we do as less as we can in the 1st kernel
+crash path, but there are some special handling for kdump in various drivers
+to reset the devices in 2nd kernel, eg. when it see "reset_devices" kernel parameter.
+
 > 
-> Thanks
-> Kishon
+> I copied Eric (kexec maintainer) and Vivek (contact listed in
+> Documentation/kdump/kdump.txt) in case they have suggestions or would
+> consider some sort of Documentation/ update.
 > 
+> Bjorn
+> 
+> _______________________________________________
+> kexec mailing list
+> kexec@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/kexec
+
+Thanks
+Dave
