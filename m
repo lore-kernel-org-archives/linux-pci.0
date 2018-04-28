@@ -1,86 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:5909 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750841AbeDTQhO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Apr 2018 12:37:14 -0400
-Subject: [pci PATCH v8 2/4] ena: Migrate over to unmanaged SR-IOV support
-From: Alexander Duyck <alexander.h.duyck@intel.com>
-To: bhelgaas@google.com, alexander.h.duyck@intel.com,
-        linux-pci@vger.kernel.org
-Cc: virtio-dev@lists.oasis-open.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, dan.daly@intel.com,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        keith.busch@intel.com, netanel@amazon.com, ddutile@redhat.com,
-        mheyne@amazon.de, liang-min.wang@intel.com,
-        mark.d.rustad@intel.com, dwmw2@infradead.org, hch@lst.de,
-        dwmw@amazon.co.uk
-Date: Fri, 20 Apr 2018 12:30:21 -0400
-Message-ID: <20180420162841.46077.17967.stgit@ahduyck-green-test.jf.intel.com>
-In-Reply-To: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
-References: <20180420162633.46077.49012.stgit@ahduyck-green-test.jf.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from lucky1.263xmail.com ([211.157.147.134]:42236 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932662AbeD1B6I (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 21:58:08 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH v2 7/9] PCI: mediatek: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
+Date: Sat, 28 Apr 2018 09:50:12 +0800
+Message-Id: <1524880212-101211-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of implementing our own version of a SR-IOV configuration stub in
-the ena driver we can just reuse the existing
-pci_sriov_configure_simple function.
+Just avoid code duplication, but no functional change intended.
 
-Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
 
-v5: Replaced call to pci_sriov_configure_unmanaged with
-        pci_sriov_configure_simple
-v6: Dropped "#ifdef" checks for IOV wrapping sriov_configure definition
-v7: No change
+Changes in v2: None
 
- drivers/net/ethernet/amazon/ena/ena_netdev.c |   28 +-------------------------
- 1 file changed, 1 insertion(+), 27 deletions(-)
+ drivers/pci/host/pcie-mediatek.c | 29 +++--------------------------
+ 1 file changed, 3 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/ethernet/amazon/ena/ena_netdev.c b/drivers/net/ethernet/amazon/ena/ena_netdev.c
-index a822e70..f2af87d 100644
---- a/drivers/net/ethernet/amazon/ena/ena_netdev.c
-+++ b/drivers/net/ethernet/amazon/ena/ena_netdev.c
-@@ -3386,32 +3386,6 @@ static int ena_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index a8b20c5..e977a43 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -541,38 +541,15 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+ 	writel(val, port->base + PCIE_INT_MASK);
  }
  
- /*****************************************************************************/
--static int ena_sriov_configure(struct pci_dev *dev, int numvfs)
+-static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+-			     irq_hw_number_t hwirq)
 -{
--	int rc;
+-	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
 -
--	if (numvfs > 0) {
--		rc = pci_enable_sriov(dev, numvfs);
--		if (rc != 0) {
--			dev_err(&dev->dev,
--				"pci_enable_sriov failed to enable: %d vfs with the error: %d\n",
--				numvfs, rc);
--			return rc;
--		}
--
--		return numvfs;
--	}
--
--	if (numvfs == 0) {
--		pci_disable_sriov(dev);
--		return 0;
--	}
--
--	return -EINVAL;
+-	return 0;
 -}
 -
--/*****************************************************************************/
--/*****************************************************************************/
+-static const struct irq_domain_ops intx_domain_ops = {
+-	.map = mtk_pcie_intx_map,
+-};
+-
+ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+ 				    struct device_node *node)
+ {
+ 	struct device *dev = port->pcie->dev;
+-	struct device_node *pcie_intc_node;
  
- /* ena_remove - Device Removal Routine
-  * @pdev: PCI device information struct
-@@ -3526,7 +3500,7 @@ static int ena_resume(struct pci_dev *pdev)
- 	.suspend    = ena_suspend,
- 	.resume     = ena_resume,
- #endif
--	.sriov_configure = ena_sriov_configure,
-+	.sriov_configure = pci_sriov_configure_simple,
- };
+-	/* Setup INTx */
+-	pcie_intc_node = of_get_next_child(node, NULL);
+-	if (!pcie_intc_node) {
+-		dev_err(dev, "no PCIe Intc node found\n");
+-		return -ENODEV;
+-	}
++	port->irq_domain = pci_alloc_intx_irqd(dev, port, false, NULL, NULL);
++	if (IS_ERR(port->irq_domain))
++		return PTR_ERR(port->irq_domain);
  
- static int __init ena_init(void)
+-	port->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+-						 &intx_domain_ops, port);
+-	if (!port->irq_domain) {
+-		dev_err(dev, "failed to get INTx IRQ domain\n");
+-		return -ENODEV;
+-	}
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
+-- 
+1.9.1
