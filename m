@@ -1,63 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 0/2] PCI/ASPM: Tighten up ASPM L1.2 and LTR usage
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Rajat Jain <rajatja@google.com>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Ray Jui <ray.jui@broadcom.com>,
-        Keith Busch <keith.busch@intel.com>,
-        linux-acpi@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Date: Thu, 19 Apr 2018 16:05:19 -0500
-Message-ID: <152417080402.76853.4258398181136860884.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.133]:55936 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759215AbeD1B6g (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 21:58:36 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v2 9/9] PCI: xilinx: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
+Date: Sat, 28 Apr 2018 09:50:43 +0800
+Message-Id: <1524880243-101356-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ASPM L1.2 substate depends on LTR information.  Per the PCI
-Firmware spec, the OS is supposed to negotiate with the platform for
-control of the LTR feature, but previously we didn't do that.
+Just avoid code duplication, but no functional change intended.
 
-In addition, we must not enable LTR in an endpoint unless the Root
-Complex and all intermediate switches also support LTR.  We already
-took care of that in pci_configure_ltr(), but we didn't ensure that
-LTR was enabled before allowing ASPM L1.2 to be enabled.
-
-These patches fix both of these issues.  Or rather, they *should* fix
-them.  I don't have hardware to test them, so any help with testing
-would be appreciated.
-
-I think the most likely issue would be a platform where the hardware
-supports LTR and the ASPM L1.2 substate, but the BIOS doesn't support
-LTR in _OSC.  In that case, we previously could have enabled ASPM L1.2
-(though it probably wouldn't work correctly), and after these patches,
-we should not enable ASPM L1.2.
-
-You can look for issues by comparing dmesg and "lspci -vv" output
-before and after these patches.
-
-It would also be interesting to collect an acpidump from platforms
-that support LTR, even if there's no endpoint that supports ASPM L1.2.
-The acpidump should show that _OSC supports LTR.
-
-I included some NVMe folks because these were motivated by Srinath's
-recent report of LTR and ASPM issues with a Samsung NVMe SSD
-Controller SM961/PM961 device, so this is sort of FYI in case you see
-similar issues or are in a position to test these.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
 ---
 
-Bjorn Helgaas (2):
-      PCI/ASPM: Disable ASPM L1.2 Substate if we don't have LTR
-      PCI/ACPI: Request LTR control from platform before using it
+Changes in v2: None
 
+ drivers/pci/host/pcie-xilinx.c | 43 +++---------------------------------------
+ 1 file changed, 3 insertions(+), 40 deletions(-)
 
- drivers/acpi/pci_root.c |    7 +++++++
- drivers/pci/pcie/aspm.c |    9 +++++++++
- drivers/pci/probe.c     |    5 +++++
- include/linux/acpi.h    |    3 ++-
- include/linux/pci.h     |    1 +
- 5 files changed, 24 insertions(+), 1 deletion(-)
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 0ad188e..905668a 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -344,31 +344,6 @@ static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
+ 	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
+ }
+ 
+-/* INTx Functions */
+-
+-/**
+- * xilinx_pcie_intx_map - Set the handler for the INTx and mark IRQ as valid
+- * @domain: IRQ domain
+- * @irq: Virtual IRQ number
+- * @hwirq: HW interrupt number
+- *
+- * Return: Always returns 0.
+- */
+-static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+-				irq_hw_number_t hwirq)
+-{
+-	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
+-
+-	return 0;
+-}
+-
+-/* INTx IRQ Domain operations */
+-static const struct irq_domain_ops intx_domain_ops = {
+-	.map = xilinx_pcie_intx_map,
+-	.xlate = pci_irqd_intx_xlate,
+-};
+-
+ /* PCIe HW Functions */
+ 
+ /**
+@@ -495,22 +470,10 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ {
+ 	struct device *dev = port->dev;
+ 	struct device_node *node = dev->of_node;
+-	struct device_node *pcie_intc_node;
+ 
+-	/* Setup INTx */
+-	pcie_intc_node = of_get_next_child(node, NULL);
+-	if (!pcie_intc_node) {
+-		dev_err(dev, "No PCIe Intc node found\n");
+-		return -ENODEV;
+-	}
+-
+-	port->leg_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+-						 &intx_domain_ops,
+-						 port);
+-	if (!port->leg_domain) {
+-		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+-		return -ENODEV;
+-	}
++	port->leg_domain = pci_alloc_intx_irqd(dev, port, true, NULL, NULL);
++	if (IS_ERR(port->leg_domain))
++		return PTR_ERR(port->leg_domain);
+ 
+ 	/* Setup MSI */
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-- 
+1.9.1
