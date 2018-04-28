@@ -1,82 +1,160 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52542 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751470AbeDYFQk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 01:16:40 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: sstabellini@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, linux-mips@linux-mips.org,
-        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 09/13] PCI: remove CONFIG_PCI_BUS_ADDR_T_64BIT
-Date: Wed, 25 Apr 2018 07:15:35 +0200
-Message-Id: <20180425051539.1989-10-hch@lst.de>
-In-Reply-To: <20180425051539.1989-1-hch@lst.de>
-References: <20180425051539.1989-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=YbMI=HR=rock-chips.com=shawn.lin@kernel.org>
+Return-Path: <SRS0=YbMI=HR=rock-chips.com=shawn.lin@kernel.org>
+Cc: shawn.lin@rock-chips.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/9] PCI: Add new helper for allocating irq domain for
+ INTx
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+ <1524817367-239076-1-git-send-email-shawn.lin@rock-chips.com>
+ <20180427171812.GB8199@bhelgaas-glaptop.roam.corp.google.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <c1555892-1235-f8de-686c-ad17455af119@rock-chips.com>
+Date: Sat, 28 Apr 2018 08:44:27 +0800
+MIME-Version: 1.0
+In-Reply-To: <20180427171812.GB8199@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-This symbol is now always identical to CONFIG_ARCH_DMA_ADDR_T_64BIT, so
-remove it.
+Hi Bjorn,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/Kconfig | 4 ----
- drivers/pci/bus.c   | 4 ++--
- include/linux/pci.h | 2 +-
- 3 files changed, 3 insertions(+), 7 deletions(-)
+On 2018/4/28 1:18, Bjorn Helgaas wrote:
+> s/PCI: Add new helper for allocating irq domain for INTx/
+>    PCI: Add pci_alloc_intx_irqd() for allocating IRQ domain
+> 
+> On Fri, Apr 27, 2018 at 04:22:47PM +0800, Shawn Lin wrote:
+>> It seems host drivers which allocate irq domain for INTx
+> 
+> s/irq/IRQ/
+> 
+>> and the related code block looks highly similar to each other.
+>> Add a new helper, pci_alloc_intx_irqd(), to avoid code duplication
+>> as much as possible.
+>>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>> ---
+>>
+>>   include/linux/pci.h | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 74 insertions(+)
+>>
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 73178a2..68a1994 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -31,6 +31,8 @@
+>>   #include <linux/device.h>
+>>   #include <linux/interrupt.h>
+>>   #include <linux/io.h>
+>> +#include <linux/irq.h>
+>> +#include <linux/of_irq.h>
+>>   #include <linux/resource_ext.h>
+>>   #include <uapi/linux/pci.h>
+>>   
+>> @@ -1449,6 +1451,74 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
+>>   	return 0;
+>>   }
+>>   
+>> +static int pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+>> +				  irq_hw_number_t hwirq)
+>> +{
+>> +	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+>> +	irq_set_chip_data(irq, domain->host_data);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static struct irq_domain_ops pci_intx_domain_ops = {
+>> +	.map = pcie_intx_map,
+>> +};
+>> +
+>> +/**
+>> + * pci_alloc_intx_irqd() - PCI helper for allocating INTx irq domain
+> 
+> s/PCI helper for allocating INTx irq domain/
+>    Allocate INTx IRQ domain
+> 
+>> + * @dev: device associated with the PCI controller.
+>> + * @host: pointer to host specific data struct
+>> + * @general_xlate: flag for whether use pci_irqd_intx_xlate() helper
+>> + * @intx_domain_ops: pointer to driver specific struct irq_domain_ops
+>> + * @local_intc: pointer to driver specific interrupt controller node
+>> + *
+>> + * A simple helper for drivers to allocate irq domain for INTx. If
+>> + * intx_domain_ops is NULL, use pci_intx_domain_ops by defalut. And if
+>> + * local_intc is present, then use it firstly, otherwise, fallback to get
+>> + * interrupt controller node from @dev.
+> 
+> s/irq/IRQ/
+> s/defalut/default/
+> 
+>> + * Returns valid pointer of struct irq_domain on success, or PTR_ERR(-EINVAL)
+>> + * if failure occurred.
+>> + */
+>> +static __maybe_unused struct irq_domain *pci_alloc_intx_irqd(struct device *dev,
+>> +				void *host, bool general_xlate,
+>> +				const struct irq_domain_ops *intx_domain_ops,
+>> +				struct device_node *local_intc)
+> 
+> Why is this in the header file?  This is not a performance path and I
+> don't want to deal with this __maybe_unused stuff.
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 34b56a8f8480..29a487f31dae 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -5,10 +5,6 @@
- 
- source "drivers/pci/pcie/Kconfig"
- 
--config PCI_BUS_ADDR_T_64BIT
--	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
--	depends on PCI
--
- config PCI_MSI
- 	bool "Message Signaled Interrupts (MSI and MSI-X)"
- 	depends on PCI
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index bc2ded4c451f..35b7fc87eac5 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -120,7 +120,7 @@ int devm_request_pci_bus_resources(struct device *dev,
- EXPORT_SYMBOL_GPL(devm_request_pci_bus_resources);
- 
- static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
--#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-+#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
- static struct pci_bus_region pci_64_bit = {0,
- 				(pci_bus_addr_t) 0xffffffffffffffffULL};
- static struct pci_bus_region pci_high = {(pci_bus_addr_t) 0x100000000ULL,
-@@ -230,7 +230,7 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 					  resource_size_t),
- 		void *alignf_data)
- {
--#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-+#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
- 	int rc;
- 
- 	if (res->flags & IORESOURCE_MEM_64) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 73178a2fcee0..55371cb827ad 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -670,7 +670,7 @@ int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
- int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
- 		  int reg, int len, u32 val);
- 
--#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-+#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
- typedef u64 pci_bus_addr_t;
- #else
- typedef u32 pci_bus_addr_t;
--- 
-2.17.0
+Ah, I saw pci_irqd_intx_xlate() was here, and instinctively keep the
+code close to it. Will move it to C file in v2.
+
+> 
+>> +{
+>> +	struct device_node *intc = local_intc;
+>> +	struct irq_domain *domain;
+>> +	const struct irq_domain_ops *irqd_ops;
+>> +	bool need_put = false;
+>> +
+>> +	if (!intc) {
+>> +		intc = of_get_next_child(dev->of_node, NULL);
+>> +		if (!intc) {
+>> +			dev_err(dev, "missing child interrupt-controller node\n");
+>> +			return ERR_PTR(-EINVAL);
+>> +		}
+>> +		need_put = true;
+>> +	}
+>> +
+>> +	if (intx_domain_ops) {
+>> +		irqd_ops = intx_domain_ops;
+>> +	} else {
+>> +		if (general_xlate)
+>> +			pci_intx_domain_ops.xlate = &pci_irqd_intx_xlate;
+>> +		irqd_ops = &pci_intx_domain_ops;
+>> +	}
+>> +
+>> +	domain = irq_domain_add_linear(intc, PCI_NUM_INTX,
+>> +				       irqd_ops, host);
+>> +	if (!domain) {
+>> +		dev_err(dev, "failed to get a INTx IRQ domain\n");
+>> +		if (need_put)
+>> +			of_node_put(intc);
+>> +		return ERR_PTR(-EINVAL);
+>> +	}
+>> +
+>> +	return domain;
+>> +}
+>> +
+>>   #ifdef CONFIG_PCIEPORTBUS
+>>   extern bool pcie_ports_disabled;
+>>   #else
+>> @@ -1683,6 +1753,10 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
+>>   				      unsigned long *out_hwirq,
+>>   				      unsigned int *out_type)
+>>   { return -EINVAL; }
+>> +
+>> +static __maybe_unused struct irq_domain *pci_alloc_intx_irqd(struct device *dev,
+>> +	void *host, bool general_xlate, const struct irq_domain_ops *ops)
+>> +{ return ERR_PTR(-EINVAL); }
+>>   #endif /* CONFIG_PCI */
+>>   
+>>   /* Include architecture-dependent settings and functions */
+>> -- 
+>> 1.9.1
+>>
+>>
+> 
+> 
+> 
