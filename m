@@ -1,116 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay6.synopsys.com ([198.182.37.59]:37148 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758920AbeD0Q57 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 12:57:59 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH 07/10] misc: pci_endpoint_test: Replace lower into upper case characters
-Date: Fri, 27 Apr 2018 17:57:44 +0100
-Message-Id: <17224b32eaf73ac071975c4b6cda526472f11d15.1524845816.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-References: <cover.1524845816.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=l99Z=HR=redhat.com=dyoung@kernel.org>
+Return-Path: <SRS0=l99Z=HR=redhat.com=dyoung@kernel.org>
+Date: Sat, 28 Apr 2018 09:18:45 +0800
+From: Dave Young <dyoung@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+	Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
+	kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Sinan Kaya <okaya@codeaurora.org>, Lukas Wunner <lukas@wunner.de>,
+	Eric Biederman <ebiederm@xmission.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+Message-ID: <20180428011845.GC1675@dhcp-128-65.nay.redhat.com>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+ <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
+ <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
+ <20180428005620.GB1675@dhcp-128-65.nay.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180428005620.GB1675@dhcp-128-65.nay.redhat.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace all initial lower case character into upper case in comments
-and debug printks.
+On 04/28/18 at 08:56am, Dave Young wrote:
+> On 04/27/18 at 04:12pm, Bjorn Helgaas wrote:
+> > [+cc Eric, Vivek, kexec list]
+> > 
+> > On Fri, Apr 27, 2018 at 03:34:30PM -0400, Sinan Kaya wrote:
+> > > On 4/27/2018 3:22 PM, Bjorn Helgaas wrote:
+> > > > Sinan mooted the idea of using a "no-wait" path of sending the "don't
+> > > > generate hotplug interrupts" command.  I think we should work on this
+> > > > idea a little more.  If we're shutting down the whole system, I can't
+> > > > believe there's much value in *anything* we do in the pciehp_remove()
+> > > > path.
+> > > > 
+> > > > Maybe we should just get rid of pciehp_remove() (and probably
+> > > > pcie_port_remove_service() and the other service driver remove methods)
+> > > > completely.  That dates from when the service drivers could be modules that
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
- drivers/misc/pci_endpoint_test.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+Hmm, if it is the remove() method then kexec does not use it.  kexec use
+the shutdown() method instead.  I missed this details when I replied.
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index b003079..c9b6e26 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -250,7 +250,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 	orig_src_addr = dma_alloc_coherent(dev, size + alignment,
- 					   &orig_src_phys_addr, GFP_KERNEL);
- 	if (!orig_src_addr) {
--		dev_err(dev, "failed to allocate source buffer\n");
-+		dev_err(dev, "Failed to allocate source buffer\n");
- 		ret = false;
- 		goto err;
- 	}
-@@ -276,7 +276,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 	orig_dst_addr = dma_alloc_coherent(dev, size + alignment,
- 					   &orig_dst_phys_addr, GFP_KERNEL);
- 	if (!orig_dst_addr) {
--		dev_err(dev, "failed to allocate destination address\n");
-+		dev_err(dev, "Failed to allocate destination address\n");
- 		ret = false;
- 		goto err_orig_src_addr;
- 	}
-@@ -340,7 +340,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
- 				       GFP_KERNEL);
- 	if (!orig_addr) {
--		dev_err(dev, "failed to allocate address\n");
-+		dev_err(dev, "Failed to allocate address\n");
- 		ret = false;
- 		goto err;
- 	}
-@@ -403,7 +403,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
- 				       GFP_KERNEL);
- 	if (!orig_addr) {
--		dev_err(dev, "failed to allocate destination address\n");
-+		dev_err(dev, "Failed to allocate destination address\n");
- 		ret = false;
- 		goto err;
- 	}
-@@ -543,7 +543,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	case IRQ_TYPE_MSI:
- 		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
- 		if (irq < 0)
--			dev_err(dev, "failed to get MSI interrupts\n");
-+			dev_err(dev, "Failed to get MSI interrupts\n");
- 		test->num_irqs = irq;
- 		break;
- 	case IRQ_TYPE_MSIX:
-@@ -560,7 +560,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
- 			       IRQF_SHARED, DRV_MODULE_NAME, test);
- 	if (err) {
--		dev_err(dev, "failed to request IRQ %d\n", pdev->irq);
-+		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
- 		goto err_disable_msi;
- 	}
- 
-@@ -578,7 +578,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
- 			base = pci_ioremap_bar(pdev, bar);
- 			if (!base) {
--				dev_err(dev, "failed to read BAR%d\n", bar);
-+				dev_err(dev, "Failed to read BAR%d\n", bar);
- 				WARN_ON(bar == test_reg_bar);
- 			}
- 			test->bar[bar] = base;
-@@ -598,7 +598,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	id = ida_simple_get(&pci_endpoint_test_ida, 0, 0, GFP_KERNEL);
- 	if (id < 0) {
- 		err = id;
--		dev_err(dev, "unable to get id\n");
-+		dev_err(dev, "Unable to get id\n");
- 		goto err_iounmap;
- 	}
- 
-@@ -614,7 +614,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 
- 	err = misc_register(misc_device);
- 	if (err) {
--		dev_err(dev, "failed to register device\n");
-+		dev_err(dev, "Failed to register device\n");
- 		goto err_kfree_name;
- 	}
- 
--- 
-2.7.4
+> > > > could be potentially unloaded, but unloading them hasn't been possible for
+> > > > years.
+> > > 
+> > > Shutdown path is also used for kexec. Leaving hotplug interrupts
+> > > pending is dangerous for the newly loaded kernel as it leaves
+> > > spurious interrupts during the new kernel boot.
+> > > 
+> > > I think we should always disable the hotplug interrupt on shutdown.
+> > > We might think of not waiting for command-completion as a
+> > > middle-ground or go to polling path instead of interrupts all the
+> > > time.
+> > 
+> > Ah, I forgot about the kexec path.  The kexec path is used for
+> > crashdump, too, so ideally the newly-loaded kernel would defend itself
+> > when possible so it doesn't depend on the original kernel doing things
+> > correctly.
+> 
+> It is true for kdump.  But kexec needs device shutdown.
+> 
+> > 
+> > Seems like this question of whether to do things in the original
+> > kernel or the kexec-ed kernel comes up periodically, but I can never
+> > remember a definitive answer.  My initial reaction is that it'd be
+> > nice if we didn't have to do *any* shutdown in the original kernel,
+> > but I'm sure there are reasons that's not practical.
+> 
+> Devices sometimes assume it is in a good state initialized in firmware boot
+> phase, so we need a shutdown in 1st kernel so that kexec kernel can boot
+> correctly for those devices.  For kdump since kernel already panicked
+> and it is not reliable so we do as less as we can in the 1st kernel
+> crash path, but there are some special handling for kdump in various drivers
+> to reset the devices in 2nd kernel, eg. when it see "reset_devices" kernel parameter.
+> 
+> > 
+> > I copied Eric (kexec maintainer) and Vivek (contact listed in
+> > Documentation/kdump/kdump.txt) in case they have suggestions or would
+> > consider some sort of Documentation/ update.
+> > 
+> > Bjorn
+> > 
+> > _______________________________________________
+> > kexec mailing list
+> > kexec@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/kexec
+> 
+> Thanks
+> Dave
+> 
+> _______________________________________________
+> kexec mailing list
+> kexec@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/kexec
