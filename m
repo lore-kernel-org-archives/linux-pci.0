@@ -1,85 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:59451 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751239AbeDDIiF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Apr 2018 04:38:05 -0400
-Date: Wed, 4 Apr 2018 10:38:03 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCHv2 2/7] PCI/DPC: Fix PCI legacy interrupt acknowledgement
-Message-ID: <20180404083803.GA32642@wunner.de>
-References: <20180402162203.3370-1-keith.busch@intel.com>
- <20180402162203.3370-3-keith.busch@intel.com>
- <20180403203847.GO9322@bhelgaas-glaptop.roam.corp.google.com>
- <20180403230405.GP9322@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.DEB.2.21.1804041002550.2056@nanos.tec.linutronix.de>
+Return-Path: <SRS0=pQir=HR=gmail.com=mr.nuke.me@kernel.org>
+Return-Path: <SRS0=pQir=HR=gmail.com=mr.nuke.me@kernel.org>
+Subject: Re: [PATCH RESEND] PCI/AER: Use a common function to print AER error
+ bits
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+ gregkh@linuxfoundation.org, fred@fredlawl.com, linux-kernel@vger.kernel.org,
+ alex_gagniuc@dellteam.com, austin_bolen@dell.com, keith.busch@intel.com
+References: <20180417170943.1767-1-mr.nuke.me@gmail.com>
+ <20180427224337.GC73256@bhelgaas-glaptop.roam.corp.google.com>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <12343e44-2d8a-51e1-a0be-e6804e9bd8a3@gmail.com>
+Date: Sat, 28 Apr 2018 11:46:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.21.1804041002550.2056@nanos.tec.linutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180427224337.GC73256@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 04, 2018 at 10:13:32AM +0200, Thomas Gleixner wrote:
-> On Tue, 3 Apr 2018, Bjorn Helgaas wrote:
-> > On Tue, Apr 03, 2018 at 03:38:47PM -0500, Bjorn Helgaas wrote:
-> > > On Mon, Apr 02, 2018 at 10:21:58AM -0600, Keith Busch wrote:
-> > > > From: Oza Pawandeep <poza@codeaurora.org>
-> > > > 
-> > > > The DPC driver was acknowledging the DPC interrupt status in deferred
-> > > > work. That works for edge triggered interrupts, but causes an interrupt
-> > > > storm with level triggered legacy interrupts.
+On 04/27/2018 05:43 PM, Bjorn Helgaas wrote:
+> On Tue, Apr 17, 2018 at 12:09:43PM -0500, Alexandru Gagniuc wrote:
+>> On errors reported from CPER, cper_print_bits() was used to log the
+>> AER bits. This resulted in hard-to-understand messages, without a
+>> prefix. Instead use __aer_print_error() for both native AER and CPER
+>> to provide a more consistent log format.
+>>
+>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+>> ---
+>>   drivers/pci/pcie/aer/aerdrv_errprint.c | 16 +++++++++-------
+>>   1 file changed, 9 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> index cfc89dd57831..cfae4d52f848 100644
+>> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> @@ -216,28 +216,30 @@ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+>>   void cper_print_aer(struct pci_dev *dev, int aer_severity,
+>>   		    struct aer_capability_regs *aer)
+>>   {
+>> -	int layer, agent, status_strs_size, tlp_header_valid = 0;
+>> +	int layer, agent, tlp_header_valid = 0;
+>>   	u32 status, mask;
+>> -	const char **status_strs;
+>> +	struct aer_err_info info;
+>>   
+>>   	if (aer_severity == AER_CORRECTABLE) {
+>>   		status = aer->cor_status;
+>>   		mask = aer->cor_mask;
+>> -		status_strs = aer_correctable_error_string;
+>> -		status_strs_size = ARRAY_SIZE(aer_correctable_error_string);
+>>   	} else {
+>>   		status = aer->uncor_status;
+>>   		mask = aer->uncor_mask;
+>> -		status_strs = aer_uncorrectable_error_string;
+>> -		status_strs_size = ARRAY_SIZE(aer_uncorrectable_error_string);
+>>   		tlp_header_valid = status & AER_LOG_TLP_MASKS;
+>>   	}
+>>   
+>>   	layer = AER_GET_LAYER_ERROR(aer_severity, status);
+>>   	agent = AER_GET_AGENT(aer_severity, status);
+>>   
+>> +	memset(&info, 0, sizeof(info));
+>> +	info.severity = aer_severity;
+>> +	info.status = status;
+>> +	info.mask = mask;
+>> +	info.first_error = 0x1f;
 > 
-> The problem is homebrewn in the driver. So, yes it needs to mask the
-> interrupt before returning from the irq handler if the rest of the magic is
-> done in a worker.
+> I like this patch a lot, but where does this "first_error = 0x1f" come
+> from?
 
-If the IRQ is shared, the other handlers are starved for a brief
-period of time between the IRQ being masked in the handler and
-unmasked in the worker.
+aer_(un)correctable_error_string don't go to [0x1f], so this guarantees 
+us we don't print "(First)".
 
-What is the recommended way to handle this?
+> I assume this is supposed to be the "First Error Pointer" in the
+> Advanced Error Capabilities and Control register (PCIe r4.0, sec
+> 7.8.4.7).  There is a "cap_control" field in struct
+> aer_capability_regs; should we be using that here?
 
-I'm asking because I'm working on patches to runtime suspend
-pciehp hotplug ports to D3hot.  The first few Thunderbolt
-controllers that came to market had broken MSI signalling
-and are thus using INTx.  If a hotplug port is signaling an
-interrupt while its parent(s) are in D3hot, its config space
-is inaccessible for the IRQ handler, so the parent(s) have to
-be resumed to D0 first.  This takes too long to be done in an
-IRQ handler and I believe can also sleep, so it's done by a worker.
+There is a way to extract it from the PCI regs, and it's quite simple. 
+IIRC, it should be all f's when the capability is not implemented. I 
+wanted to avoid any further parsing of PCI regs in this patch.
 
-Now the problem is, INTx interrupts may be shared by multiple
-devices, and they *are* on my machine.  The conundrum I'm
-facing is to mask the IRQ and starve all the other handlers
-while the device is woken, or not mask it but risk getting
-lots of spurious interrupts.
+I can see a way to use even more common printk code, but that requires 
+validating the PCI regs we get from firmware. That means we need to make 
+a guarantee about CPER that is beyond the scope of this patch.
 
-For now I've gone with the latter approach, so I leave the
-IRQ unmasked and return IRQ_NONE because I don't know yet if
-the IRQ originated from this particular hotplug port or from
-something else.  Now if I check /proc/interrupts, I can see
-that about 5000 spurious interrupts were accumulated until
-the hotplug port's parents were woken and the interrupt could
-finally be handled.
+Alex
 
-Is there a better way to deal with this?
-
-Just so you get an idea what I'm talking about, this is
-/proc/interrupts on a MacBookPro9,1 with a daisy-chain of two
-Light Ridge Thunderbolt controllers and one Port Ridge (all
-with broken MSI signaling):
-
-  16:  IO-APIC  16-fasteoi  pciehp
-  17:  IO-APIC  17-fasteoi  pciehp, pciehp, pciehp, mmc0, snd_hda_intel, b43
-  18:  IO-APIC  18-fasteoi  pciehp, pciehp, i801_smbus
-  19:  IO-APIC  19-fasteoi  pciehp
-
-Thanks!
-
-Lukas
+>> +
+>>   	pci_err(dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, mask);
+>> -	cper_print_bits("", status, status_strs, status_strs_size);
+>> +	__aer_print_error(dev, &info);
+>>   	pci_err(dev, "aer_layer=%s, aer_agent=%s\n",
+>>   		aer_error_layer[layer], aer_agent_string[agent]);
+>>   
+>> -- 
+>> 2.14.3
+>>
