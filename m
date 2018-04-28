@@ -1,50 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52570 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751482AbeDYFQl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 01:16:41 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: sstabellini@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, linux-mips@linux-mips.org,
-        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 10/13] arm: don't build swiotlb by default
-Date: Wed, 25 Apr 2018 07:15:36 +0200
-Message-Id: <20180425051539.1989-11-hch@lst.de>
-In-Reply-To: <20180425051539.1989-1-hch@lst.de>
-References: <20180425051539.1989-1-hch@lst.de>
+Received: from lucky1.263xmail.com ([211.157.147.131]:42262 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759215AbeD1B5v (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 21:57:51 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+        Ley Foon Tan <ley.foon.tan@intel.com>
+Subject: [PATCH v2 6/9] PCI: altera: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
+Date: Sat, 28 Apr 2018 09:50:03 +0800
+Message-Id: <1524880203-101149-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-swiotlb is only used as a library of helper for xen-swiotlb if Xen support
-is enabled on arm, so don't build it by default.
+Just avoid code duplication, but no functional change intended.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Cc: Ley Foon Tan <ley.foon.tan@intel.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- arch/arm/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index aa1c187d756d..90b81a3a28a7 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1774,7 +1774,7 @@ config SECCOMP
- 	  defined by each seccomp mode.
+Changes in v2: None
+
+ drivers/pci/host/pcie-altera.c | 38 ++++----------------------------------
+ 1 file changed, 4 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index a6af62e..a0fcf0f 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -441,19 +441,6 @@ static void altera_pcie_retrain(struct altera_pcie *pcie)
+ 	}
+ }
  
- config SWIOTLB
--	def_bool y
-+	bool
+-static int altera_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+-				irq_hw_number_t hwirq)
+-{
+-	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
+-	return 0;
+-}
+-
+-static const struct irq_domain_ops intx_domain_ops = {
+-	.map = altera_pcie_intx_map,
+-	.xlate = pci_irqd_intx_xlate,
+-};
+-
+ static void altera_pcie_isr(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+@@ -518,22 +505,6 @@ static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
+ 	return err;
+ }
  
- config PARAVIRT
- 	bool "Enable paravirtualization code"
-@@ -1807,6 +1807,7 @@ config XEN
- 	depends on MMU
- 	select ARCH_DMA_ADDR_T_64BIT
- 	select ARM_PSCI
-+	select SWIOTLB
- 	select SWIOTLB_XEN
- 	select PARAVIRT
- 	help
+-static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
+-{
+-	struct device *dev = &pcie->pdev->dev;
+-	struct device_node *node = dev->of_node;
+-
+-	/* Setup INTx */
+-	pcie->irq_domain = irq_domain_add_linear(node, PCI_NUM_INTX,
+-					&intx_domain_ops, pcie);
+-	if (!pcie->irq_domain) {
+-		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+-		return -ENOMEM;
+-	}
+-
+-	return 0;
+-}
+-
+ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+ {
+ 	struct device *dev = &pcie->pdev->dev;
+@@ -591,11 +562,10 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
+-	ret = altera_pcie_init_irq_domain(pcie);
+-	if (ret) {
+-		dev_err(dev, "Failed creating IRQ Domain\n");
+-		return ret;
+-	}
++	pcie->irq_domain = pci_alloc_intx_irqd(dev, pcie, true, NULL,
++					       dev->of_node);
++	if (IS_ERR(pcie->irq_domain))
++		return PTR_ERR(pcie->irq_domain);
+ 
+ 	/* clear all interrupts */
+ 	cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
 -- 
-2.17.0
+1.9.1
