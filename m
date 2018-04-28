@@ -1,60 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay0214.hostedemail.com ([216.40.44.214]:46155 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752100AbeDIOZu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 10:25:50 -0400
-Message-ID: <3c3fbc6afabaf7c007cba4543c90ea83196c1a6e.camel@perches.com>
-Subject: Re: [PATCH v2 7/9] PCI: dwc: Replace lower into upper case
- characters
-From: Joe Perches <joe@perches.com>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Date: Mon, 09 Apr 2018 07:25:45 -0700
-In-Reply-To: <c7aa4990-92ad-3e5e-de27-40df4f29f08b@synopsys.com>
-References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
-         <a28d463d04b198f51c64c1a7eb5b3f77da2d4ab9.1523266508.git.gustavo.pimentel@synopsys.com>
-         <0dad6b43476c1a70944e3e7c245040243ddc2a04.camel@perches.com>
-         <c7aa4990-92ad-3e5e-de27-40df4f29f08b@synopsys.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from lucky1.263xmail.com ([211.157.147.131]:42072 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759215AbeD1B51 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 21:57:27 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH v2 4/9] PCI: aardvark: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
+Date: Sat, 28 Apr 2018 09:49:29 +0800
+Message-Id: <1524880169-101045-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2018-04-09 at 14:10 +0100, Gustavo Pimentel wrote:
-> Hi Joe,
+Just avoid code duplication, but no functional change intended.
 
-Hello Gustavo.
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-> On 09/04/2018 11:25, Joe Perches wrote:
-> > On Mon, 2018-04-09 at 10:41 +0100, Gustavo Pimentel wrote:
-> > > Replaces lower into upper case characters in comments and debug printks.
-> > > 
-> > > This is an attempt to keep the messages coherent within the designware
-> > > driver.
-> > 
-> > It'd be nice to make all the dwc drivers use the same
-> > message wording.
-> > 
-> > For instance:
-> > 
-> > drivers/pci/dwc/pci-keystone.c: dev_err(dev, "phy link never came up\n");
-> > drivers/pci/dwc/pcie-designware.c:      dev_err(pci->dev, "phy link never came up\n");
-> > drivers/pci/host/pcie-xilinx-nwl.c:     dev_err(dev, "PHY link never came up\n");
-> 
-> I also agree, I added a task to my backlog to fix that. However, this task
-> shouldn't be done in this patch series since it's a more broader task involving
-> many drivers and different maintainers. Agree?
+Changes in v2: None
 
-Right.
+ drivers/pci/host/pci-aardvark.c | 24 +++++-------------------
+ 1 file changed, 5 insertions(+), 19 deletions(-)
 
-I was just highlighting the inconsistency.
-So, no worries.  Whenever.
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 9abf549..df02b9a 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -702,37 +702,23 @@ static void advk_pcie_remove_msi_irq_domain(struct advk_pcie *pcie)
+ static int advk_pcie_init_irq_domain(struct advk_pcie *pcie)
+ {
+ 	struct device *dev = &pcie->pdev->dev;
+-	struct device_node *node = dev->of_node;
+-	struct device_node *pcie_intc_node;
+ 	struct irq_chip *irq_chip;
+ 
+-	pcie_intc_node =  of_get_next_child(node, NULL);
+-	if (!pcie_intc_node) {
+-		dev_err(dev, "No PCIe Intc node found\n");
+-		return -ENODEV;
+-	}
+-
+ 	irq_chip = &pcie->irq_chip;
+ 
+ 	irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-irq",
+ 					dev_name(dev));
+-	if (!irq_chip->name) {
+-		of_node_put(pcie_intc_node);
++	if (!irq_chip->name)
+ 		return -ENOMEM;
+-	}
+ 
+ 	irq_chip->irq_mask = advk_pcie_irq_mask;
+ 	irq_chip->irq_mask_ack = advk_pcie_irq_mask;
+ 	irq_chip->irq_unmask = advk_pcie_irq_unmask;
+ 
+-	pcie->irq_domain =
+-		irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+-				      &advk_pcie_irq_domain_ops, pcie);
+-	if (!pcie->irq_domain) {
+-		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+-		of_node_put(pcie_intc_node);
+-		return -ENOMEM;
+-	}
++	pcie->irq_domain = pci_alloc_intx_irqd(dev, pcie, false,
++				&advk_pcie_irq_domain_ops, NULL);
++	if (IS_ERR(pcie->irq_domain))
++		return PTR_ERR(pcie->irq_domain);
+ 
+ 	return 0;
+ }
+-- 
+1.9.1
