@@ -1,82 +1,163 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alan Douglas <adouglas@cadence.com>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [RFC 00/10] Adds pcitest tool support for MSI-X
-Date: Tue, 24 Apr 2018 09:28:33 +0000
-Message-ID: <SN6PR07MB4512656ED4FA817D3276665CD8880@SN6PR07MB4512.namprd07.prod.outlook.com>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
- <SN6PR07MB45123840F0C9487F1CD119A9D8880@SN6PR07MB4512.namprd07.prod.outlook.com>
- <767b50e3-8890-c241-bc97-1687bd0661c1@synopsys.com>
-In-Reply-To: <767b50e3-8890-c241-bc97-1687bd0661c1@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33554 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753546AbeD2SRm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Apr 2018 14:17:42 -0400
+From: Gil Kupfer <gilkup@gmail.com>
+To: joro@8bytes.org, dwmw2@infradead.org, bhelgaas@google.com
+Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, nadav.amit@gmail.com,
+        Gil Kupfer <gilkup@cs.technion.ac.il>
+Subject: [RFC/RFT] Add noats flag to boot parameters
+Date: Sun, 29 Apr 2018 21:16:48 +0300
+Message-Id: <1525025808-2365-1-git-send-email-gilkup@cs.technion.ac.il>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gMjQgQXByaWwgMjAxOCAwOTo1MCwgR3VzdGF2byBQaW1lbnRlbCB3cm90ZToNCj4gSGkgQWxh
-biwNCj4gDQo+IE9uIDI0LzA0LzIwMTggMDc6NDgsIEFsYW4gRG91Z2xhcyB3cm90ZToNCj4gPiBI
-aSBHdXN0YXZvLA0KPiA+DQo+ID4gT24gMTAgQXByaWwgMjAxOCAxODoxNSBHdXN0YXZvIFBpbWVu
-dGVsIHdyb3RlOg0KPiA+PiAgaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIwMTgvNC8xMC80MjENCj4g
-Pj4gIFRoaXMgc2VyaWVzIGFpbXMgdG8gYWRkIHBjaXRlc3QgdG9vbCBzdXBwb3J0IGZvciBNU0kt
-WC4NCj4gPj4gSW5jbHVkZXMgbmV3IGNhbGxiYWNrcyBtZXRob2RzIGFuZCBoYW5kbGVycyB0byB0
-cmlnZ2VyIHRoZSBNU0ktWA0KPiA+PiBpbnRlcnJ1cHRpb25zIG9uIHRoZSBFUCBEZXNpZ253YXJl
-IElQIGRyaXZlci4NCj4gPj4NCj4gPj4gUHJvdmlkZXMgbmV3IG1ldGhvZHMgb24gcGNpX2VwZl90
-ZXN0IGRyaXZlciB0aGF0IGFsbG93cyB0byBzZXQvZ2V0IEVQDQo+ID4+IG1heGltdW0gbnVtYmVy
-IG9mIE1TSS1YIGVudHJpZXMgKHNpbWlsYXIgdG8gc2V0L2dldCBNU0kgbWV0aG9kcykuDQo+ID4+
-DQo+ID4+IFJld29ya3Mgb24gTVNJIHNldC9nZXQgYW5kIHRyaWdnZXJpbmcgbWV0aG9kcyBvbiBF
-UCBEZXNpZ253YXJlIElQDQo+ID4+IGRyaXZlciB0byBiZSBtb3JlIGdlbmVyaWMgYW5kIGZsZXhp
-YmxlLg0KPiA+Pg0KPiA+PiBBZGRzIGEgbmV3IGlucHV0IHBhcmFtZXRlciAobXNpeCkgYW5kIHJl
-cGxpY2F0ZXMgdGhlIHdob2xlIE1TSQ0KPiA+PiBtZWNoYW5pc20gYXBwbGllZCB0byB0aGUgTVNJ
-LVggZmVhdHVyZSBvbiBwY2l0ZXN0IHRvb2wuIEFsc28gdXBkYXRlcw0KPiA+PiB0aGUgcGNpdGVz
-dCBzY3JpcHQgd2l0aCB0aGUgbmV3IHRlc3Qgc2V0IGFwcGxpZWQgdG8gdGhpcyBuZXcgZmVhdHVy
-ZS4NCj4gPj4NCj4gPj4gR3VzdGF2byBQaW1lbnRlbCAoMTApOg0KPiA+PiAgIFBDSTogZHdjOiBB
-ZGQgTVNJLVggY2FsbGJhY2tzIGhhbmRsZXINCj4gPj4gICBQQ0k6IGNhZGVuY2U6IFVwZGF0ZSBj
-ZG5zX3BjaWVfZXBfcmFpc2VfaXJxIGZ1bmN0aW9uIHNpZ25hdHVyZQ0KPiA+PiAgIFBDSTogZW5k
-cG9pbnQ6IEFkZCBNU0ktWCBpbnRlcmZhY2VzDQo+ID4+ICAgUENJOiBkd2M6IE1TSSBjYWxsYmFj
-a3MgaGFuZGxlciByZXdvcmsNCj4gPj4gICBQQ0k6IGR3YzogQWRkIGxlZ2FjeSBpbnRlcnJ1cHQg
-Y2FsbGJhY2sgaGFuZGxlcg0KPiA+PiAgIG1pc2M6IHBjaV9lbmRwb2ludF90ZXN0OiBBZGQgTVNJ
-LVggc3VwcG9ydA0KPiA+PiAgIG1pc2M6IHBjaV9lbmRwb2ludF90ZXN0OiBSZXBsYWNlIGxvd2Vy
-IGludG8gdXBwZXIgY2FzZSBjaGFyYWN0ZXJzDQo+ID4+ICAgUENJOiBlbmRwb2ludDogZnVuY3Rp
-b25zL3BjaS1lcGYtdGVzdDogQWRkIE1TSS1YIHN1cHBvcnQNCj4gPj4gICBQQ0k6IGVuZHBvaW50
-OiBmdW5jdGlvbnMvcGNpLWVwZi10ZXN0OiBSZXBsYWNlIGxvd2VyIGludG8gdXBwZXIgY2FzZQ0K
-PiA+PiAgICAgY2hhcmFjdGVycw0KPiA+PiAgIHRvb2xzOiBQQ0k6IEFkZCBNU0ktWCBzdXBwb3J0
-DQo+ID4+DQo+ID4+ICBEb2N1bWVudGF0aW9uL21pc2MtZGV2aWNlcy9wY2ktZW5kcG9pbnQtdGVz
-dC50eHQgfCAgIDMgKw0KPiA+PiAgZHJpdmVycy9taXNjL3BjaV9lbmRwb2ludF90ZXN0LmMgICAg
-ICAgICAgICAgICAgIHwgMTIwICsrKysrKysrKystLS0tDQo+ID4+ICBkcml2ZXJzL3BjaS9jYWRl
-bmNlL3BjaWUtY2FkZW5jZS1lcC5jICAgICAgICAgICAgfCAgIDIgKy0NCj4gPj4gIGRyaXZlcnMv
-cGNpL2R3Yy9wY2ktZHJhN3h4LmMgICAgICAgICAgICAgICAgICAgICB8ICAgMiArLQ0KPiA+PiAg
-ZHJpdmVycy9wY2kvZHdjL3BjaWUtYXJ0cGVjNi5jICAgICAgICAgICAgICAgICAgIHwgICAyICst
-DQo+ID4+ICBkcml2ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLWVwLmMgICAgICAgICAgICAg
-fCAyMDENCj4gPj4gKysrKysrKysrKysrKysrKysrKysrLS0NCj4gPj4gIGRyaXZlcnMvcGNpL2R3
-Yy9wY2llLWRlc2lnbndhcmUtcGxhdC5jICAgICAgICAgICB8ICAgOSArLQ0KPiA+PiAgZHJpdmVy
-cy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oICAgICAgICAgICAgICAgIHwgIDQwICsrKy0tDQo+
-ID4+ICBkcml2ZXJzL3BjaS9lbmRwb2ludC9mdW5jdGlvbnMvcGNpLWVwZi10ZXN0LmMgICAgfCAx
-MTMgKysrKysrKysrLS0tLQ0KPiA+PiAgZHJpdmVycy9wY2kvZW5kcG9pbnQvcGNpLWVwLWNmcy5j
-ICAgICAgICAgICAgICAgIHwgIDI0ICsrKw0KPiA+PiAgZHJpdmVycy9wY2kvZW5kcG9pbnQvcGNp
-LWVwYy1jb3JlLmMgICAgICAgICAgICAgIHwgIDYwICsrKysrKy0NCj4gPj4gIGluY2x1ZGUvbGlu
-dXgvcGNpLWVwYy5oICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAxMSArLQ0KPiA+PiAgaW5j
-bHVkZS9saW51eC9wY2ktZXBmLmggICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAxICsNCj4g
-Pj4gIGluY2x1ZGUvdWFwaS9saW51eC9wY2l0ZXN0LmggICAgICAgICAgICAgICAgICAgICB8ICAg
-MSArDQo+ID4+ICB0b29scy9wY2kvcGNpdGVzdC5jICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgfCAgMTggKy0NCj4gPj4gIHRvb2xzL3BjaS9wY2l0ZXN0LnNoICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICB8ICAyNSArKysNCj4gPj4gIDE2IGZpbGVzIGNoYW5nZWQsIDUyOCBpbnNlcnRp
-b25zKCspLCAxMDQgZGVsZXRpb25zKC0pDQo+ID4+DQo+ID4+IC0tDQo+ID4+IDIuNy40DQo+ID4+
-DQo+ID4gTmljZSBzZXQgb2YgcGF0Y2hlcy4gIEkgaGF2ZSB0ZXN0ZWQgdGhpcyB3aXRoIHRoZSBD
-YWRlbmNlIEVQIGRyaXZlciBhZnRlcg0KPiBhZGRpbmcgTVNJLVggc3VwcG9ydCwgYW5kIGZvdW5k
-IGEgZmV3IGNoYW5nZXMgcmVxdWlyZWQuDQo+ID4gSSB3aWxsIHNlbmQgeW91IGNvbW1lbnRzLg0K
-PiANCj4gT2ssIGdyZWF0IG5ld3MhDQo+IA0KPiBNYXliZSBhZnRlciB0aGlzIHBhdGNoIHNlcmll
-cyBzdWJtaXNzaW9uIHdlIGNvdWxkIHN0YXJ0IGEgbmV3IHRocmVhZCBhYm91dA0KPiBuZXcgZmVh
-dHVyZXMgdGhhdCBjb3VsZCBiZSB0ZXN0ZWQvdmVyaWZpZWQgdXNpbmcgcGNpdGVzdC4gSSB0aGlu
-ayB0aGlzIGNvdWxkIGJlDQo+IGhlbHBmdWwgZm9yIGV2ZXJ5Ym9keS4NCj4gDQpHcmVhdCwgSSB0
-aGluayB0aGF0IHdvdWxkIGRlZmluaXRlbHkgYmUgb2YgYmVuZWZpdC4NCj4gPg0KPiA+IFRoYW5r
-cywNCj4gPiBBbGFuDQo+ID4NCj4gDQo+IFRoYW5rcywNCj4gR3VzdGF2bw0KVGhhbmtzLA0KQWxh
-bg0KDQoNCg==
+This patch adds noats option to the pci boot parameter.
+When noats is selected, all ATS related functions fail immediately and
+the IOMMU is configured to not use device-iotlb.
+
+Any function that checks for ATS capabilities directly against the
+devices should also check this flag. (Currently, such functions exist
+only in IOMMU drivers, and they are covered by this patch.)
+
+The motivation behind this patch is the existence of malicious devices.
+Lots of research has been done about how to utilitize the IOMMU as a
+protection from such devices. When ATS is supported, any I/O device can
+access any physical access by faking device-IOTLB entries.
+Adding the ability to ignore these entries lets sysadmins enhance system
+security.
+
+Signed-off-by: Gil Kupfer <gilkup@cs.technion.ac.il>
+
+---
+This patch is intended to add the ability to disable ATS at boot time.
+
+My IOMMU has the ATS ecap but I don't have any PCI device that supports
+ATS so I can't fully test it. However, I did ran it (with and without the
+new boot flag) on QEMU with virtualized IOMMU with the device-iotlb flag
+and it seems that at least the machine does not crush.
+
+QEMU version:
+	master branch from Jul 11 2017
+	commit aa916e409c04 ("Merge 29741be b876804")
+---
+ Documentation/admin-guide/kernel-parameters.txt |  2 ++
+ drivers/iommu/amd_iommu.c                       | 11 ++++++++---
+ drivers/iommu/intel-iommu.c                     |  3 ++-
+ drivers/pci/ats.c                               |  3 +++
+ drivers/pci/pci.c                               |  7 +++++++
+ include/linux/pci.h                             |  2 ++
+ 6 files changed, 24 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 7737ab5..f443362 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3000,6 +3000,8 @@
+ 		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
+ 				only look for one device below a PCIe downstream
+ 				port.
++		noats		[PCIE, Intel-IOMMU, AMD-IOMMU]
++				do not use PCIe ATS (and IOMMU device-iotlb).
+ 
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 0f1219f..2aa757e 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -388,6 +388,9 @@ static bool pci_iommuv2_capable(struct pci_dev *pdev)
+ 	};
+ 	int i, pos;
+ 
++	if (is_pcie_ats_disabled())
++		return false;
++
+ 	for (i = 0; i < 3; ++i) {
+ 		pos = pci_find_ext_capability(pdev, caps[i]);
+ 		if (pos == 0)
+@@ -3602,9 +3605,11 @@ int amd_iommu_device_info(struct pci_dev *pdev,
+ 
+ 	memset(info, 0, sizeof(*info));
+ 
+-	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ATS);
+-	if (pos)
+-		info->flags |= AMD_IOMMU_DEVICE_FLAG_ATS_SUP;
++	if (!is_pcie_ats_disabled()) {
++		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ATS);
++		if (pos)
++			info->flags |= AMD_IOMMU_DEVICE_FLAG_ATS_SUP;
++	}
+ 
+ 	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
+ 	if (pos)
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index fc2765c..7ac4adc 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -2434,7 +2434,8 @@ static struct dmar_domain *dmar_insert_one_dev_info(struct intel_iommu *iommu,
+ 	if (dev && dev_is_pci(dev)) {
+ 		struct pci_dev *pdev = to_pci_dev(info->dev);
+ 
+-		if (ecap_dev_iotlb_support(iommu->ecap) &&
++		if (!is_pcie_ats_disabled() &&
++		    ecap_dev_iotlb_support(iommu->ecap) &&
+ 		    pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ATS) &&
+ 		    dmar_find_matched_atsr_unit(pdev))
+ 			info->ats_supported = 1;
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index eeb9fb2..619024d 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -21,6 +21,9 @@ void pci_ats_init(struct pci_dev *dev)
+ {
+ 	int pos;
+ 
++	if (is_pcie_ats_disabled())
++		return;
++
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
+ 	if (!pos)
+ 		return;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 563901c..eb77590 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -109,6 +109,10 @@ unsigned int pcibios_max_latency = 255;
+ /* If set, the PCIe ARI capability will not be used. */
+ static bool pcie_ari_disabled;
+ 
++/* If set, the PCIe ATS capability will not be used. */
++static bool pcie_ats_disabled;
++bool is_pcie_ats_disabled(void) { return pcie_ats_disabled; }
++
+ /* Disable bridge_d3 for all PCIe ports */
+ static bool pci_bridge_d3_disable;
+ /* Force bridge_d3 for all PCIe ports */
+@@ -5430,6 +5434,9 @@ static int __init pci_setup(char *str)
+ 		if (*str && (str = pcibios_setup(str)) && *str) {
+ 			if (!strcmp(str, "nomsi")) {
+ 				pci_no_msi();
++			} else if (!strncmp(str, "noats", 5)) {
++				pr_info("PCIe: ATS is disabled\n");
++				pcie_ats_disabled = true;
+ 			} else if (!strcmp(str, "noaer")) {
+ 				pci_no_aer();
+ 			} else if (!strncmp(str, "realloc=", 8)) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8039f9f..58fe5fb 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1420,6 +1420,8 @@ int  ht_create_irq(struct pci_dev *dev, int idx);
+ void ht_destroy_irq(unsigned int irq);
+ #endif /* CONFIG_HT_IRQ */
+ 
++bool is_pcie_ats_disabled(void);
++
+ #ifdef CONFIG_PCI_ATS
+ /* Address Translation Service */
+ void pci_ats_init(struct pci_dev *dev);
+-- 
+2.7.4
