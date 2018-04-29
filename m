@@ -1,145 +1,31 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:7659 "EHLO
-        alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751548AbeDIOsY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 10:48:24 -0400
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v13 5/6] PCI: Unify wait for link active into generic PCI
-Date: Mon,  9 Apr 2018 10:41:53 -0400
-Message-Id: <1523284914-2037-6-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
-References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=kr+q=HS=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=kr+q=HS=linux.intel.com=mika.westerberg@kernel.org>
+Date: Sun, 29 Apr 2018 10:03:34 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add ACS quirk for Intel 300 series chipset
+Message-ID: <20180429070334.GU2173@lahna.fi.intel.com>
+References: <20180427104423.2203-1-mika.westerberg@linux.intel.com>
+ <20180427181024.GE8199@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180427181024.GE8199@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Clients such as HP, DPC are using pcie_wait_link_active(), which waits
-till the link becomes active or inactive.
+On Fri, Apr 27, 2018 at 01:10:24PM -0500, Bjorn Helgaas wrote:
+> On Fri, Apr 27, 2018 at 01:44:23PM +0300, Mika Westerberg wrote:
+> > Intel 300 series chipset still has the same ACS issue than the previous
+> > generations so extend the ACS quirk to cover it as well.
+> > 
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> 
+> Applied to pci/virtualization for v4.18, thanks!
 
-Made generic function and moved it to drivers/pci/pci.c
+Thanks!
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> Stable tag here, too?
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 18a42f8..e0c2b8e 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -231,25 +231,11 @@ bool pciehp_check_link_active(struct controller *ctrl)
- 	return ret;
- }
- 
--static void __pcie_wait_link_active(struct controller *ctrl, bool active)
--{
--	int timeout = 1000;
--
--	if (pciehp_check_link_active(ctrl) == active)
--		return;
--	while (timeout > 0) {
--		msleep(10);
--		timeout -= 10;
--		if (pciehp_check_link_active(ctrl) == active)
--			return;
--	}
--	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
--			active ? "set" : "cleared");
--}
--
- static void pcie_wait_link_active(struct controller *ctrl)
- {
--	__pcie_wait_link_active(ctrl, true);
-+	struct pci_dev *pdev = ctrl_dev(ctrl);
-+
-+	pcie_wait_for_link(pdev, true);
- }
- 
- static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f6a4dd1..bbea997 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4176,6 +4176,35 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 	return 0;
- }
- 
-+/**
-+ * pcie_wait_for_link - Wait for link till it's active/inactive
-+ * @pdev: Bridge device
-+ * @active: waiting for active or inactive ?
-+ *
-+ * Use this to wait till link becomes active or inactive.
-+ */
-+bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
-+{
-+	int timeout = 1000;
-+	bool ret;
-+	u16 lnk_status;
-+
-+	for (;;) {
-+		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-+		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
-+		if (ret == active)
-+			return true;
-+		if (timeout <= 0)
-+			break;
-+		timeout -= 10;
-+	}
-+
-+	pci_info(pdev, "Data Link Layer Link Active not %s in 1000 msec\n",
-+		 active ? "set" : "cleared");
-+
-+	return false;
-+}
-+
- void pci_reset_secondary_bus(struct pci_dev *dev)
- {
- 	u16 ctrl;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index abc514e..5c44fbc 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -345,6 +345,8 @@ void pci_enable_acs(struct pci_dev *dev);
- /* PCI error reporting and recovery */
- void pcie_do_recovery(struct pci_dev *dev, int severity);
- 
-+bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
-+
- #ifdef CONFIG_PCIEASPM
- void pcie_aspm_init_link_state(struct pci_dev *pdev);
- void pcie_aspm_exit_link_state(struct pci_dev *pdev);
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 517c8b4..8e1553b 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -95,19 +95,9 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
- 
- static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- {
--	unsigned long timeout = jiffies + HZ;
- 	struct pci_dev *pdev = dpc->dev->port;
--	struct device *dev = &dpc->dev->device;
--	u16 lnk_status;
- 
--	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
--	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
--					!time_after(jiffies, timeout)) {
--		msleep(10);
--		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
--	}
--	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
--		dev_warn(dev, "Link state not disabled for DPC event\n");
-+	pcie_wait_for_link(pdev, false);
- }
- 
- /**
--- 
-2.7.4
+Fine by me.
