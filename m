@@ -1,113 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, mark.rutland@arm.com,
- catalin.marinas@arm.com
-Subject: [PATCH 1/6 v2] Docs: dt: add fsl-mc iommu-map device-tree binding
-Date: Tue, 17 Apr 2018 15:51:49 +0530
-Message-Id: <1523960514-25457-2-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1523960514-25457-1-git-send-email-nipun.gupta@nxp.com>
-References: <1520260166-29387-1-git-send-email-nipun.gupta@nxp.com>
- <1523960514-25457-1-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:57406 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753102AbeD3KTo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Apr 2018 06:19:44 -0400
+Date: Mon, 30 Apr 2018 11:19:40 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/9] Add new helper to allocate irq domain for hosts
+Message-ID: <20180430101940.GB32033@e107981-ln.cambridge.arm.com>
+References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, bharat.bhushan@nxp.com, stuyoder@gmail.com,
- frowand.list@gmail.com, gregkh@linuxfoundation.org, joro@8bytes.org,
- linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
- leoyang.li@nxp.com, iommu@lists.linux-foundation.org, robh+dt@kernel.org,
- Nipun Gupta <nipun.gupta@nxp.com>, linux-pci@vger.kernel.org,
- bhelgaas@google.com, laurentiu.tudor@nxp.com, shawnguo@kernel.org, hch@lst.de,
- linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The existing IOMMU bindings cannot be used to specify the relationship
-between fsl-mc devices and IOMMUs. This patch adds a generic binding for
-mapping fsl-mc devices to IOMMUs, using iommu-map property.
+On Fri, Apr 27, 2018 at 04:22:02PM +0800, Shawn Lin wrote:
+> 
+> Hi Bjorn and Lorenzo,
+> 
+> PCI drivers use highly similar code block to allocate irq domain which
+> leads to code duplication than expected. This patchset adds a new helper,
+> pci_alloc_intx_irqd(), to avoid that as much as possible. Just leave
+> pcie-rockchip out now as it's under re-construct and will add incremental
+> patch for it if this series looks ok and the pcie-rockchip ongoing patches
+> got merge.
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
----
- .../devicetree/bindings/misc/fsl,qoriq-mc.txt      | 39 ++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+Is this patch series v1 of:
 
-diff --git a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-index 6611a7c..8cbed4f 100644
---- a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-+++ b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-@@ -9,6 +9,25 @@ blocks that can be used to create functional hardware objects/devices
- such as network interfaces, crypto accelerator instances, L2 switches,
- etc.
- 
-+For an overview of the DPAA2 architecture and fsl-mc bus see:
-+drivers/staging/fsl-mc/README.txt
-+
-+As described in the above overview, all DPAA2 objects in a DPRC share the
-+same hardware "isolation context" and a 10-bit value called an ICID
-+(isolation context id) is expressed by the hardware to identify
-+the requester.
-+
-+The generic 'iommus' property is insufficient to describe the relationship
-+between ICIDs and IOMMUs, so an iommu-map property is used to define
-+the set of possible ICIDs under a root DPRC and how they map to
-+an IOMMU.
-+
-+For generic IOMMU bindings, see
-+Documentation/devicetree/bindings/iommu/iommu.txt.
-+
-+For arm-smmu binding, see:
-+Documentation/devicetree/bindings/iommu/arm,smmu.txt.
-+
- Required properties:
- 
-     - compatible
-@@ -88,14 +107,34 @@ Sub-nodes:
-               Value type: <phandle>
-               Definition: Specifies the phandle to the PHY device node associated
-                           with the this dpmac.
-+Optional properties:
-+
-+- iommu-map: Maps an ICID to an IOMMU and associated iommu-specifier
-+  data.
-+
-+  The property is an arbitrary number of tuples of
-+  (icid-base,iommu,iommu-base,length).
-+
-+  Any ICID i in the interval [icid-base, icid-base + length) is
-+  associated with the listed IOMMU, with the iommu-specifier
-+  (i - icid-base + iommu-base).
- 
- Example:
- 
-+        smmu: iommu@5000000 {
-+               compatible = "arm,mmu-500";
-+               #iommu-cells = <2>;
-+               stream-match-mask = <0x7C00>;
-+               ...
-+        };
-+
-         fsl_mc: fsl-mc@80c000000 {
-                 compatible = "fsl,qoriq-mc";
-                 reg = <0x00000008 0x0c000000 0 0x40>,    /* MC portal base */
-                       <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
-                 msi-parent = <&its>;
-+                /* define map for ICIDs 23-64 */
-+                iommu-map = <23 &smmu 23 41>;
-                 #address-cells = <3>;
-                 #size-cells = <1>;
- 
--- 
-1.9.1
+https://patchwork.ozlabs.org/patch/906006/
 
+?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Lorenzo
+
+> 
+> 
+> 
+> 
+> Shawn Lin (9):
+>   PCI: Add new helper for allocating irq domain for INTx
+>   PCI: dra7xx: Use pci_alloc_intx_irqd() helper to simplify the code
+>   PCI: keystone-dw: Use pci_alloc_intx_irqd() helper to get irq domain
+>     for INTx
+>   PCI: aardvark: Use pci_alloc_intx_irqd() helper to get irq domain for
+>     INTx
+>   PCI: faraday: Use pci_alloc_intx_irqd() helper to get irq domain for
+>     INTx
+>   PCI: altera: Use pci_alloc_intx_irqd() helper to get irq domain for
+>     INTx
+>   PCI: mediatek: Use pci_alloc_intx_irqd() helper to get irq domain for
+>     INTx
+>   PCI: xilinx-nwl: Use pci_alloc_intx_irqd() helper to get irq domain
+>     for INTx
+>   PCI: xilinx: Use pci_alloc_intx_irqd() helper to get irq domain for
+>     INTx
+> 
+>  drivers/pci/dwc/pci-dra7xx.c       | 41 ++-------------------
+>  drivers/pci/dwc/pci-keystone-dw.c  | 12 +++----
+>  drivers/pci/host/pci-aardvark.c    | 24 +++----------
+>  drivers/pci/host/pci-ftpci100.c    | 15 +++-----
+>  drivers/pci/host/pcie-altera.c     | 38 +++-----------------
+>  drivers/pci/host/pcie-mediatek.c   | 29 ++-------------
+>  drivers/pci/host/pcie-xilinx-nwl.c | 21 +++--------
+>  drivers/pci/host/pcie-xilinx.c     | 43 ++--------------------
+>  include/linux/pci.h                | 74 ++++++++++++++++++++++++++++++++++++++
+>  9 files changed, 104 insertions(+), 193 deletions(-)
+> 
+> -- 
+> 1.9.1
+> 
+> 
