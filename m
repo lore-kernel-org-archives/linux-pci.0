@@ -1,283 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52702 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751482AbeDYFQq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Apr 2018 01:16:46 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org
-Cc: sstabellini@kernel.org, x86@kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, linux-mips@linux-mips.org,
-        sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 12/13] swiotlb: move the SWIOTLB config symbol to lib/Kconfig
-Date: Wed, 25 Apr 2018 07:15:38 +0200
-Message-Id: <20180425051539.1989-13-hch@lst.de>
-In-Reply-To: <20180425051539.1989-1-hch@lst.de>
-References: <20180425051539.1989-1-hch@lst.de>
+Received: from david.siemens.de ([192.35.17.14]:41496 "EHLO david.siemens.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751778AbeD3FtQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Apr 2018 01:49:16 -0400
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v2 06/10] PCI: Introduce devm_of_pci_get_host_bridge_resources()
+Date: Mon, 30 Apr 2018 07:48:40 +0200
+Message-Id: <215a020abbafc599bda18463db6818fcb0d198c7.1525067324.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This way we have one central definition of it, and user can select it as
-needed.  The new option is not user visible, which is the behavior
-it had in most architectures, with a few notable exceptions:
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
- - On x86_64 and mips/loongson3 it used to be user selectable, but
-   defaulted to y.  It now is unconditional, which seems like the right
-   thing for 64-bit architectures without guaranteed availablity of
-   IOMMUs.
- - on powerpc the symbol is user selectable and defaults to n, but
-   many boards select it.  This change assumes no working setup
-   required a manual selection, but if that turned out to be wrong
-   we'll have to add another select statement or two for the respective
-   boards.
+of_pci_get_host_bridge_resources() allocates the resource structures it
+fills dynamically, but none of its callers care to release them so far.
+Rather than requiring everyone to do this explicitly, introduce a
+managed version of that service. This differs API-wise only in taking a
+reference to the associated device, rather than to the device tree node.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+As of_pci_get_host_bridge_resources() is an exported interface, we
+cannot simply drop it at this point. After converting all in-tree users
+to the new API, we will phase out the unmanaged one.
+
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 ---
- arch/arm/Kconfig                |  3 ---
- arch/arm64/Kconfig              |  4 +---
- arch/ia64/Kconfig               |  8 --------
- arch/mips/Kconfig               |  2 ++
- arch/mips/cavium-octeon/Kconfig |  4 ----
- arch/mips/loongson64/Kconfig    |  7 -------
- arch/powerpc/Kconfig            |  9 ---------
- arch/unicore32/Kconfig          |  1 +
- arch/unicore32/mm/Kconfig       |  4 ----
- arch/x86/Kconfig                | 12 +-----------
- lib/Kconfig                     |  5 +++++
- 11 files changed, 10 insertions(+), 49 deletions(-)
+ drivers/pci/of.c       | 28 ++++++++++++++++++++++++++++
+ include/linux/of_pci.h | 10 ++++++++++
+ 2 files changed, 38 insertions(+)
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 90b81a3a28a7..676977bdfe33 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1773,9 +1773,6 @@ config SECCOMP
- 	  and the task is only allowed to execute a few safe syscalls
- 	  defined by each seccomp mode.
- 
--config SWIOTLB
--	bool
--
- config PARAVIRT
- 	bool "Enable paravirtualization code"
- 	help
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 4d924eb32e7f..db51b6445744 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -144,6 +144,7 @@ config ARM64
- 	select POWER_SUPPLY
- 	select REFCOUNT_FULL
- 	select SPARSE_IRQ
-+	select SWIOTLB
- 	select SYSCTL_EXCEPTION_TRACE
- 	select THREAD_INFO_IN_TASK
- 	help
-@@ -239,9 +240,6 @@ config HAVE_GENERIC_GUP
- config SMP
- 	def_bool y
- 
--config SWIOTLB
--	def_bool y
--
- config KERNEL_MODE_NEON
- 	def_bool y
- 
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index 685d557eea48..9485b5490eca 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -80,9 +80,6 @@ config MMU
- 	bool
- 	default y
- 
--config SWIOTLB
--       bool
--
- config STACKTRACE_SUPPORT
- 	def_bool y
- 
-@@ -139,7 +136,6 @@ config IA64_GENERIC
- 	bool "generic"
- 	select NUMA
- 	select ACPI_NUMA
--	select DMA_DIRECT_OPS
- 	select SWIOTLB
- 	select PCI_MSI
- 	help
-@@ -160,7 +156,6 @@ config IA64_GENERIC
- 
- config IA64_DIG
- 	bool "DIG-compliant"
--	select DMA_DIRECT_OPS
- 	select SWIOTLB
- 
- config IA64_DIG_VTD
-@@ -176,7 +171,6 @@ config IA64_HP_ZX1
- 
- config IA64_HP_ZX1_SWIOTLB
- 	bool "HP-zx1/sx1000 with software I/O TLB"
--	select DMA_DIRECT_OPS
- 	select SWIOTLB
- 	help
- 	  Build a kernel that runs on HP zx1 and sx1000 systems even when they
-@@ -200,7 +194,6 @@ config IA64_SGI_UV
- 	bool "SGI-UV"
- 	select NUMA
- 	select ACPI_NUMA
--	select DMA_DIRECT_OPS
- 	select SWIOTLB
- 	help
- 	  Selecting this option will optimize the kernel for use on UV based
-@@ -211,7 +204,6 @@ config IA64_SGI_UV
- 
- config IA64_HP_SIM
- 	bool "Ski-simulator"
--	select DMA_DIRECT_OPS
- 	select SWIOTLB
- 	depends on !PM
- 
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index e10cc5c7be69..0f619b8c0e9e 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -912,6 +912,7 @@ config CAVIUM_OCTEON_SOC
- 	select MIPS_NR_CPU_NR_MAP_1024
- 	select BUILTIN_DTB
- 	select MTD_COMPLEX_MAPPINGS
-+	select SWIOTLB
- 	select SYS_SUPPORTS_RELOCATABLE
- 	help
- 	  This option supports all of the Octeon reference boards from Cavium
-@@ -1367,6 +1368,7 @@ config CPU_LOONGSON3
- 	select MIPS_PGD_C0_CONTEXT
- 	select MIPS_L1_CACHE_SHIFT_6
- 	select GPIOLIB
-+	select SWIOTLB
- 	help
- 		The Loongson 3 processor implements the MIPS64R2 instruction
- 		set with many extensions.
-diff --git a/arch/mips/cavium-octeon/Kconfig b/arch/mips/cavium-octeon/Kconfig
-index eb5faeed4f66..4984e462be30 100644
---- a/arch/mips/cavium-octeon/Kconfig
-+++ b/arch/mips/cavium-octeon/Kconfig
-@@ -67,10 +67,6 @@ config CAVIUM_OCTEON_LOCK_L2_MEMCPY
- 	help
- 	  Lock the kernel's implementation of memcpy() into L2.
- 
--config SWIOTLB
--	def_bool y
--	select DMA_DIRECT_OPS
--
- config OCTEON_ILM
- 	tristate "Module to measure interrupt latency using Octeon CIU Timer"
- 	help
-diff --git a/arch/mips/loongson64/Kconfig b/arch/mips/loongson64/Kconfig
-index 2a4fb91adbb6..c79e6a565572 100644
---- a/arch/mips/loongson64/Kconfig
-+++ b/arch/mips/loongson64/Kconfig
-@@ -130,13 +130,6 @@ config LOONGSON_UART_BASE
- 	default y
- 	depends on EARLY_PRINTK || SERIAL_8250
- 
--config SWIOTLB
--	bool "Soft IOMMU Support for All-Memory DMA"
--	default y
--	depends on CPU_LOONGSON3
--	select DMA_DIRECT_OPS
--	select NEED_DMA_MAP_STATE
--
- config PHYS48_TO_HT40
- 	bool
- 	default y if CPU_LOONGSON3
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index a4b2ac7c3d2e..1887f8f86a77 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -474,15 +474,6 @@ config MPROFILE_KERNEL
- 	depends on PPC64 && CPU_LITTLE_ENDIAN
- 	def_bool !DISABLE_MPROFILE_KERNEL
- 
--config SWIOTLB
--	bool "SWIOTLB support"
--	default n
--	---help---
--	  Support for IO bounce buffering for systems without an IOMMU.
--	  This allows us to DMA to the full physical address space on
--	  platforms where the size of a physical address is larger
--	  than the bus address.  Not all platforms support this.
--
- config HOTPLUG_CPU
- 	bool "Support for enabling/disabling CPUs"
- 	depends on SMP && (PPC_PSERIES || \
-diff --git a/arch/unicore32/Kconfig b/arch/unicore32/Kconfig
-index 82195714d20b..03f991e44288 100644
---- a/arch/unicore32/Kconfig
-+++ b/arch/unicore32/Kconfig
-@@ -20,6 +20,7 @@ config UNICORE32
- 	select GENERIC_IOMAP
- 	select MODULES_USE_ELF_REL
- 	select NEED_DMA_MAP_STATE
-+	select SWIOTLB
- 	help
- 	  UniCore-32 is 32-bit Instruction Set Architecture,
- 	  including a series of low-power-consumption RISC chip
-diff --git a/arch/unicore32/mm/Kconfig b/arch/unicore32/mm/Kconfig
-index 45b7f769375e..82759b6aba67 100644
---- a/arch/unicore32/mm/Kconfig
-+++ b/arch/unicore32/mm/Kconfig
-@@ -39,7 +39,3 @@ config CPU_TLB_SINGLE_ENTRY_DISABLE
- 	default y
- 	help
- 	  Say Y here to disable the TLB single entry operations.
--
--config SWIOTLB
--	def_bool y
--	select DMA_DIRECT_OPS
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 07b031f99eb1..aad35c568681 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -29,6 +29,7 @@ config X86_64
- 	select HAVE_ARCH_SOFT_DIRTY
- 	select MODULES_USE_ELF_RELA
- 	select NEED_DMA_MAP_STATE
-+	select SWIOTLB
- 	select X86_DEV_DMA_OPS
- 	select ARCH_HAS_SYSCALL_WRAPPER
- 
-@@ -916,17 +917,6 @@ config CALGARY_IOMMU_ENABLED_BY_DEFAULT
- 	  Calgary anyway, pass 'iommu=calgary' on the kernel command line.
- 	  If unsure, say Y.
- 
--# need this always selected by IOMMU for the VIA workaround
--config SWIOTLB
--	def_bool y if X86_64
--	select NEED_DMA_MAP_STATE
--	---help---
--	  Support for software bounce buffers used on x86-64 systems
--	  which don't have a hardware IOMMU. Using this PCI devices
--	  which can only access 32-bits of memory can be used on systems
--	  with more than 3 GB of memory.
--	  If unsure, say Y.
--
- config MAXSMP
- 	bool "Enable Maximum number of SMP Processors and NUMA Nodes"
- 	depends on X86_64 && SMP && DEBUG_KERNEL
-diff --git a/lib/Kconfig b/lib/Kconfig
-index 1f12faf03819..1d84e61cccfe 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -451,6 +451,11 @@ config DMA_VIRT_OPS
- 	depends on HAS_DMA && (!64BIT || ARCH_DMA_ADDR_T_64BIT)
- 	default n
- 
-+config SWIOTLB
-+	bool
-+	select DMA_DIRECT_OPS
-+	select NEED_DMA_MAP_STATE
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 8f6cbf13e18d..f16b343d3b85 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -378,6 +378,34 @@ int of_pci_get_host_bridge_resources(struct device_node *dev_node,
+ 						  bus_max, resources, io_base);
+ }
+ EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
 +
- config CHECK_SIGNATURE
- 	bool
++/**
++ * of_pci_get_host_bridge_resources() - Resource-managed parsing of PCI host
++ *                                      bridge resources from DT
++ * @dev: host bridge device
++ * @busno: bus number associated with the bridge root bus
++ * @bus_max: maximum number of buses for this bridge
++ * @resources: list where the range of resources will be added after DT parsing
++ * @io_base: pointer to a variable that will contain on return the physical
++ * address for the start of the I/O range. Can be NULL if the caller doesn't
++ * expect I/O ranges to be present in the device tree.
++ *
++ * This function will parse the "ranges" property of a PCI host bridge device
++ * node and setup the resource mapping based on its content. It is expected
++ * that the property conforms with the Power ePAPR document.
++ *
++ * It returns zero if the range parsing has been successful or a standard error
++ * value if it failed.
++ */
++int devm_of_pci_get_host_bridge_resources(struct device *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base)
++{
++	return __of_pci_get_host_bridge_resources(dev, dev->of_node, busno,
++						  bus_max, resources, io_base);
++}
++EXPORT_SYMBOL_GPL(devm_of_pci_get_host_bridge_resources);
++
+ #endif /* CONFIG_OF_ADDRESS */
  
+ /**
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 74eec1943ad2..08b8f02426a5 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -74,6 +74,9 @@ of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+ int of_pci_get_host_bridge_resources(struct device_node *dev_node,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base);
++int devm_of_pci_get_host_bridge_resources(struct device *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base);
+ #else
+ static inline int of_pci_get_host_bridge_resources(struct device_node *dev_node,
+ 			unsigned char busno, unsigned char bus_max,
+@@ -81,6 +84,13 @@ static inline int of_pci_get_host_bridge_resources(struct device_node *dev_node,
+ {
+ 	return -EINVAL;
+ }
++
++static inline int devm_of_pci_get_host_bridge_resources(struct device *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base)
++{
++	return -EINVAL;
++}
+ #endif
+ 
+ #endif
 -- 
-2.17.0
+2.13.6
