@@ -1,69 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:40452 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755728AbeDWPXS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Apr 2018 11:23:18 -0400
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v14 7/9] PCI/DPC: Disable ERR_NONFATAL and enable ERR_FATAL for DPC 
-Date: Mon, 23 Apr 2018 11:23:11 -0400
-Message-Id: <1524496993-29799-8-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
-References: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35049 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751064AbeD3Kl3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Apr 2018 06:41:29 -0400
+Date: Mon, 30 Apr 2018 12:41:24 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Nipun Gupta <nipun.gupta@nxp.com>
+Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
+        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
+        david.brown@linaro.org, dan.j.williams@intel.com,
+        vinod.koul@intel.com, robh+dt@kernel.org, frowand.list@gmail.com,
+        jarkko.sakkinen@linux.intel.com, rafael.j.wysocki@intel.com,
+        dmitry.torokhov@gmail.com, johan@kernel.org, msuchanek@suse.de,
+        linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-soc@vger.kernel.org, dmaengine@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-tegra@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, leoyang.li@nxp.com
+Subject: Re: [PATCH v4 1/2] dma-mapping: move dma configuration to bus
+ infrastructure
+Message-ID: <20180430104124.GE2476@ulmo>
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
+ <1524883919-29484-1-git-send-email-nipun.gupta@nxp.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="Ns7jmDPpOpCD+GE/"
+In-Reply-To: <1524883919-29484-1-git-send-email-nipun.gupta@nxp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch disables ERR_NONFATAL trigger for DPC, so now DPC
-handles only ERR_FATAL.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+--Ns7jmDPpOpCD+GE/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 6baed85..cd15862 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -283,7 +283,8 @@ static int dpc_probe(struct pcie_device *dev)
- 		}
- 	}
- 
--	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
-+	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_FATAL |
-+	      PCI_EXP_DPC_CTL_INT_EN;
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
- 
- 	dev_info(device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
-@@ -301,7 +302,7 @@ static void dpc_remove(struct pcie_device *dev)
- 	u16 ctl;
- 
- 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
--	ctl &= ~(PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN);
-+	ctl &= ~(PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN);
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
- }
- 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 0c79eac..dcc3957 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -978,7 +978,8 @@
- #define  PCI_EXP_DPC_CAP_DL_ACTIVE	0x1000	/* ERR_COR signal on DL_Active supported */
- 
- #define PCI_EXP_DPC_CTL			6	/* DPC control */
--#define  PCI_EXP_DPC_CTL_EN_NONFATAL 	0x0002	/* Enable trigger on ERR_NONFATAL message */
-+#define  PCI_EXP_DPC_CTL_EN_FATAL	0x0001	/* Enable trigger on ERR_FATAL message */
-+#define  PCI_EXP_DPC_CTL_EN_NONFATAL	0x0002	/* Enable trigger on ERR_NONFATAL message */
- #define  PCI_EXP_DPC_CTL_INT_EN 	0x0008	/* DPC Interrupt Enable */
- 
- #define PCI_EXP_DPC_STATUS		8	/* DPC Status */
--- 
-2.7.4
+On Sat, Apr 28, 2018 at 08:21:58AM +0530, Nipun Gupta wrote:
+[...]
+> diff --git a/drivers/gpu/host1x/bus.c b/drivers/gpu/host1x/bus.c
+> index 88a3558..a9ec99d 100644
+> --- a/drivers/gpu/host1x/bus.c
+> +++ b/drivers/gpu/host1x/bus.c
+> @@ -314,6 +314,13 @@ static int host1x_device_match(struct device *dev, s=
+truct device_driver *drv)
+>  	return strcmp(dev_name(dev), drv->name) =3D=3D 0;
+>  }
+> =20
+> +static int host1x_dma_configure(struct device *dev)
+> +{
+> +	if (dev->of_node)
+> +		return of_dma_configure(dev, dev->of_node);
+
+The conditional here is somewhat pointless since the of_node should
+always be set. If it weren't it should be considered a bug and this
+function welcome to crash to make that very obvious.
+
+Either way:
+
+Acked-by: Thierry Reding <treding@nvidia.com>
+
+--Ns7jmDPpOpCD+GE/
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlrm8tIACgkQ3SOs138+
+s6HAJg/9FscZP4vLRd/bBp6+rBZLIilAu8k5gn/V+Tv9DJZRIXPsbeOuuixcznXK
+Sc940MSfERPYXl8fscrW9kdJWuFM4W3bdXJGzZ08T+IdVVSyFdbldOoPAVpeLi8Y
+C8pT3jlCLD5r6foGpUXy52rt6Jtuh7Tc4+3rr+D5h/efg9kbudcOjb2p3hcUDum+
+6BJSl7yVKDN6yjK1+o7GHu0wic6CWZe/mNmaQ7g8jn7ahWV3kHnwrHj3/3l4N+h+
+cDiZhl34yzyEJRyQ0aHr1r2qdEJTXYA33JpX0zMhqzpv9JCMa+VlteQ48kXSxxTN
+X6TuS4pmeihUA9h3pFsuGAogPvW/tznL8tr9c2F2cJ/VDL3itQmfNmzT44ybrZYT
+uNPIULOaNePPf10DGcd4RZCJIMUDQeza1IHEmiwlDnr5lYJWJUDtSb4ZfyA2j87y
+q5wcupDKuqQ4v2tdkcZb9z8Mm5jYGsrWDVKFxKDPfx0LAwzmo5MNOcbGHnPiy8Oo
+N24oBFW3v1ESkzX9Yfd7VCDcKIms1qjO2hyVmIb6jCvPg36E8mqG3f599zn8zCdu
+i7xUnhwOs64t/yj62rPEd++T6dEsn7idUd6RGkZxLAWwSMipQ7dFhh0nBbKUGwwU
+8yRNFMAtpLAaTnt4FqcLN/0BFZ09zwCVHJFw/mYxeUTFGN/V4Xc=
+=hGR3
+-----END PGP SIGNATURE-----
+
+--Ns7jmDPpOpCD+GE/--
