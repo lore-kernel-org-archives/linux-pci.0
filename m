@@ -1,195 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:52931 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753980AbeDBBJL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Apr 2018 21:09:11 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Heiko Stuebner <heiko@sntech.de>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Simon Xue <xxm@rock-chips.com>, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 02/10] PCI: cadence: Move cadence drivers back to controller directory
-Date: Mon,  2 Apr 2018 09:02:12 +0800
-Message-Id: <1522630932-151438-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1522630865-151344-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v2 08/10] PCI: Deprecate of_pci_get_host_bridge_resources()
+Date: Mon, 30 Apr 2018 07:48:42 +0200
+Message-Id: <aca0d89cd8c1551a83b87ffab29fcd6e1d59a61c.1525067324.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change intended.
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+There are no in-tree users remaining, all are converted to the managed
+variant. And it is unlikely that any out-of-tree user got the resource
+management right as well. So deprecate the interface and push users to
+the managed version instead.
+
+To avoid raising a warning when exporting a deprecated symbol, wrap the
+API with an inline and export an internal name.
+
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 ---
+ drivers/pci/of.c       | 23 ++---------------------
+ include/linux/of_pci.h | 36 ++++++++++++++++++++++++++++++++----
+ 2 files changed, 34 insertions(+), 25 deletions(-)
 
- MAINTAINERS                                        |  2 +-
- drivers/pci/Kconfig                                |  1 -
- drivers/pci/Makefile                               |  1 -
- drivers/pci/cadence/Kconfig                        | 27 ---------------------
- drivers/pci/cadence/Makefile                       |  4 ----
- drivers/pci/controller/Kconfig                     | 28 ++++++++++++++++++++++
- drivers/pci/controller/Makefile                    |  3 +++
- .../pci/{cadence => controller}/pcie-cadence-ep.c  |  0
- .../{cadence => controller}/pcie-cadence-host.c    |  0
- drivers/pci/{cadence => controller}/pcie-cadence.c |  0
- drivers/pci/{cadence => controller}/pcie-cadence.h |  0
- 11 files changed, 32 insertions(+), 34 deletions(-)
- delete mode 100644 drivers/pci/cadence/Kconfig
- delete mode 100644 drivers/pci/cadence/Makefile
- rename drivers/pci/{cadence => controller}/pcie-cadence-ep.c (100%)
- rename drivers/pci/{cadence => controller}/pcie-cadence-host.c (100%)
- rename drivers/pci/{cadence => controller}/pcie-cadence.c (100%)
- rename drivers/pci/{cadence => controller}/pcie-cadence.h (100%)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index a4e5971..42c02e1 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10667,7 +10667,7 @@ M:	Alan Douglas <adouglas@cadence.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/cdns,*.txt
--F:	drivers/pci/cadence/pcie-cadence*
-+F:	drivers/pci/controller/pcie-cadence*
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 5a88d46a41b7..ccf8c7544e10 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -351,33 +351,14 @@ static int __of_pci_get_host_bridge_resources(struct device *dev,
+ 	return err;
+ }
  
- PCI DRIVER FOR FREESCALE LAYERSCAPE
- M:	Minghuan Lian <minghuan.Lian@freescale.com>
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index b759b29..49e4d18 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -137,7 +137,6 @@ config PCI_HYPERV
-           PCI devices from a PCI backend to support PCI driver domains.
+-/**
+- * of_pci_get_host_bridge_resources() - Parse PCI host bridge resources from DT
+- * @dev_node: device node of the host bridge having the range property
+- * @busno: bus number associated with the bridge root bus
+- * @bus_max: maximum number of buses for this bridge
+- * @resources: list where the range of resources will be added after DT parsing
+- * @io_base: pointer to a variable that will contain on return the physical
+- * address for the start of the I/O range. Can be NULL if the caller doesn't
+- * expect I/O ranges to be present in the device tree.
+- *
+- * It is the caller's job to free the @resources list.
+- *
+- * This function will parse the "ranges" property of a PCI host bridge device
+- * node and setup the resource mapping based on its content. It is expected
+- * that the property conforms with the Power ePAPR document.
+- *
+- * It returns zero if the range parsing has been successful or a standard error
+- * value if it failed.
+- */
+-int of_pci_get_host_bridge_resources(struct device_node *dev_node,
++int __of_pci_get_host_bridge_resources_deprecated(struct device_node *dev_node,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base)
+ {
+ 	return __of_pci_get_host_bridge_resources(NULL, dev_node, busno,
+ 						  bus_max, resources, io_base);
+ }
+-EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
++EXPORT_SYMBOL_GPL(__of_pci_get_host_bridge_resources_deprecated);
  
- source "drivers/pci/hotplug/Kconfig"
--source "drivers/pci/cadence/Kconfig"
- source "drivers/pci/controller/Kconfig"
- source "drivers/pci/dwc/Kconfig"
- source "drivers/pci/endpoint/Kconfig"
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 7769641..5a8a015 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -33,7 +33,6 @@ obj-y				+= switch/
- # Endpoint library must be initialized before its users
- obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
+ /**
+  * of_pci_get_host_bridge_resources() - Resource-managed parsing of PCI host
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 08b8f02426a5..c6408bd6f862 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -71,26 +71,54 @@ of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+ #endif
  
--obj-$(CONFIG_PCIE_CADENCE)	+= cadence/
- # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
- obj-y				+= dwc/
+ #if defined(CONFIG_OF_ADDRESS)
+-int of_pci_get_host_bridge_resources(struct device_node *dev_node,
++int __of_pci_get_host_bridge_resources_deprecated(struct device_node *dev_node,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base);
+ int devm_of_pci_get_host_bridge_resources(struct device *dev,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base);
+ #else
+-static inline int of_pci_get_host_bridge_resources(struct device_node *dev_node,
++static inline int devm_of_pci_get_host_bridge_resources(struct device *dev,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base)
+ {
+ 	return -EINVAL;
+ }
++#endif
  
-diff --git a/drivers/pci/cadence/Kconfig b/drivers/pci/cadence/Kconfig
-deleted file mode 100644
-index e6824cb..0000000
---- a/drivers/pci/cadence/Kconfig
-+++ /dev/null
-@@ -1,27 +0,0 @@
--menu "Cadence PCIe controllers support"
--
--config PCIE_CADENCE
--	bool
--
--config PCIE_CADENCE_HOST
--	bool "Cadence PCIe host controller"
--	depends on OF
--	depends on PCI
--	select IRQ_DOMAIN
--	select PCIE_CADENCE
--	help
--	  Say Y here if you want to support the Cadence PCIe controller in host
--	  mode. This PCIe controller may be embedded into many different vendors
--	  SoCs.
--
--config PCIE_CADENCE_EP
--	bool "Cadence PCIe endpoint controller"
--	depends on OF
--	depends on PCI_ENDPOINT
--	select PCIE_CADENCE
--	help
--	  Say Y here if you want to support the Cadence PCIe  controller in
--	  endpoint mode. This PCIe controller may be embedded into many
--	  different vendors SoCs.
--
--endmenu
-diff --git a/drivers/pci/cadence/Makefile b/drivers/pci/cadence/Makefile
-deleted file mode 100644
-index 719392b..0000000
---- a/drivers/pci/cadence/Makefile
-+++ /dev/null
-@@ -1,4 +0,0 @@
--# SPDX-License-Identifier: GPL-2.0
--obj-$(CONFIG_PCIE_CADENCE) += pcie-cadence.o
--obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host.o
--obj-$(CONFIG_PCIE_CADENCE_EP) += pcie-cadence-ep.o
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 7af83af..6a569a1 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -19,6 +19,34 @@ config PCI_AARDVARK
- 	 controller is part of the South Bridge of the Marvel Armada
- 	 3700 SoC.
+-static inline int devm_of_pci_get_host_bridge_resources(struct device *dev,
++/**
++ * of_pci_get_host_bridge_resources() - Parse PCI host bridge resources from DT
++ * @dev_node: device node of the host bridge having the range property
++ * @busno: bus number associated with the bridge root bus
++ * @bus_max: maximum number of buses for this bridge
++ * @resources: list where the range of resources will be added after DT parsing
++ * @io_base: pointer to a variable that will contain on return the physical
++ * address for the start of the I/O range. Can be NULL if the caller doesn't
++ * expect I/O ranges to be present in the device tree.
++ *
++ * It is the caller's job to free the @resources list.
++ *
++ * This function will parse the "ranges" property of a PCI host bridge device
++ * node and setup the resource mapping based on its content. It is expected
++ * that the property conforms with the Power ePAPR document.
++ *
++ * It returns zero if the range parsing has been successful or a standard error
++ * value if it failed.
++ *
++ * Note: This function is deprecated and will eventually be removed. Use
++ * devm_of_pci_get_host_bridge_resources() instead.
++ */
++static inline int __deprecated of_pci_get_host_bridge_resources(
++			struct device_node *dev_node,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base)
+ {
++#if defined(CONFIG_OF_ADDRESS)
++	return __of_pci_get_host_bridge_resources_deprecated(dev_node, busno,
++			bus_max, resources, io_base);
++#else
+ 	return -EINVAL;
+-}
+ #endif
++}
  
-+menu "Cadence PCIe controllers support"
-+
-+config PCIE_CADENCE
-+	bool
-+
-+config PCIE_CADENCE_HOST
-+	bool "Cadence PCIe host controller"
-+	depends on OF
-+	depends on PCI
-+	select IRQ_DOMAIN
-+	select PCIE_CADENCE
-+	help
-+	  Say Y here if you want to support the Cadence PCIe controller in host
-+	  mode. This PCIe controller may be embedded into many different vendors
-+	  SoCs.
-+
-+config PCIE_CADENCE_EP
-+	bool "Cadence PCIe endpoint controller"
-+	depends on OF
-+	depends on PCI_ENDPOINT
-+	select PCIE_CADENCE
-+	help
-+	  Say Y here if you want to support the Cadence PCIe  controller in
-+	  endpoint mode. This PCIe controller may be embedded into many
-+	  different vendors SoCs.
-+
-+endmenu
-+
- config PCIE_XILINX_NWL
- 	bool "NWL PCIe Core"
- 	depends on ARCH_ZYNQMP
-diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
-index 3b10591..6474638 100644
---- a/drivers/pci/controller/Makefile
-+++ b/drivers/pci/controller/Makefile
-@@ -1,4 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
-+obj-$(CONFIG_PCIE_CADENCE) += pcie-cadence.o
-+obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host.o
-+obj-$(CONFIG_PCIE_CADENCE_EP) += pcie-cadence-ep.o
- obj-$(CONFIG_PCI_FTPCI100) += pci-ftpci100.o
- obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
- obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
-diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-similarity index 100%
-rename from drivers/pci/cadence/pcie-cadence-ep.c
-rename to drivers/pci/controller/pcie-cadence-ep.c
-diff --git a/drivers/pci/cadence/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
-similarity index 100%
-rename from drivers/pci/cadence/pcie-cadence-host.c
-rename to drivers/pci/controller/pcie-cadence-host.c
-diff --git a/drivers/pci/cadence/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
-similarity index 100%
-rename from drivers/pci/cadence/pcie-cadence.c
-rename to drivers/pci/controller/pcie-cadence.c
-diff --git a/drivers/pci/cadence/pcie-cadence.h b/drivers/pci/controller/pcie-cadence.h
-similarity index 100%
-rename from drivers/pci/cadence/pcie-cadence.h
-rename to drivers/pci/controller/pcie-cadence.h
+ #endif
 -- 
-1.9.1
+2.13.6
