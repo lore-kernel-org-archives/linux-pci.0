@@ -1,117 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v3 10/10] PCI: dwc: Replace magic number by defines
-Date: Tue, 10 Apr 2018 13:58:42 +0100
-Message-Id: <35bd2edce6ad5df2c9ffceadc4b554ed131d9c86.1523360166.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-he1eur01on0040.outbound.protection.outlook.com ([104.47.0.40]:10786
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751994AbeD3G2u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Apr 2018 02:28:50 -0400
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+        gregkh@linuxfoundation.org
+Cc: hch@lst.de, joro@8bytes.org, m.szyprowski@samsung.com,
+        shawnguo@kernel.org, frowand.list@gmail.com, bhelgaas@google.com,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, stuyoder@gmail.com,
+        laurentiu.tudor@nxp.com, leoyang.li@nxp.com,
+        Nipun Gupta <nipun.gupta@nxp.com>
+Subject: [PATCH v4 5/6] bus: fsl-mc: supoprt dma configure for devices on fsl-mc bus
+Date: Mon, 30 Apr 2018 11:57:20 +0530
+Message-Id: <1525069641-8523-6-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
+References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
+ <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace magic numbers by a well known define in order to make the code
-human readable and also facilitate the code reusability.
-
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
 ---
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
+ drivers/bus/fsl-mc/fsl-mc-bus.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
- drivers/pci/dwc/pcie-designware-host.c | 34 ++++++++++++++++++++--------------
- drivers/pci/dwc/pcie-designware.h      |  1 +
- 2 files changed, 21 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 8e6fed4..ff43b0f 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -83,18 +83,23 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
+diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
+index 5d8266c..624828b 100644
+--- a/drivers/bus/fsl-mc/fsl-mc-bus.c
++++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
+@@ -127,6 +127,16 @@ static int fsl_mc_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 	return 0;
+ }
  
- 	for (i = 0; i < num_ctrls; i++) {
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
--				    &val);
-+		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
-+					(i * MSI_REG_CTRL_BLOCK_SIZE),
-+				    4, &val);
- 		if (!val)
- 			continue;
++static int fsl_mc_dma_configure(struct device *dev)
++{
++	struct device *dma_dev = dev;
++
++	while (dev_is_fsl_mc(dma_dev))
++		dma_dev = dma_dev->parent;
++
++	return of_dma_configure(dev, dma_dev->of_node, 0);
++}
++
+ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
+ {
+@@ -148,6 +158,7 @@ struct bus_type fsl_mc_bus_type = {
+ 	.name = "fsl-mc",
+ 	.match = fsl_mc_bus_match,
+ 	.uevent = fsl_mc_bus_uevent,
++	.dma_configure  = fsl_mc_dma_configure,
+ 	.dev_groups = fsl_mc_dev_groups,
+ };
+ EXPORT_SYMBOL_GPL(fsl_mc_bus_type);
+@@ -616,6 +627,7 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
+ 		mc_dev->icid = parent_mc_dev->icid;
+ 		mc_dev->dma_mask = FSL_MC_DEFAULT_DMA_MASK;
+ 		mc_dev->dev.dma_mask = &mc_dev->dma_mask;
++		mc_dev->dev.coherent_dma_mask = mc_dev->dma_mask;
+ 		dev_set_msi_domain(&mc_dev->dev,
+ 				   dev_get_msi_domain(&parent_mc_dev->dev));
+ 	}
+@@ -633,10 +645,6 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
+ 			goto error_cleanup_dev;
+ 	}
  
- 		ret = IRQ_HANDLED;
- 		pos = 0;
--		while ((pos = find_next_bit((unsigned long *) &val, 32,
--					    pos)) != 32) {
--			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
-+		while ((pos = find_next_bit((unsigned long *) &val,
-+					    MAX_MSI_IRQS_PER_CTRL,
-+					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
-+			irq = irq_find_mapping(pp->irq_domain,
-+					       (i * MAX_MSI_IRQS_PER_CTRL) +
-+					       pos);
- 			generic_handle_irq(irq);
--			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
-+			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
-+						(i * MSI_REG_CTRL_BLOCK_SIZE),
- 					    4, 1 << pos);
- 			pos++;
- 		}
-@@ -157,9 +162,9 @@ static void dw_pci_bottom_mask(struct irq_data *data)
- 	if (pp->ops->msi_clear_irq) {
- 		pp->ops->msi_clear_irq(pp, data->hwirq);
- 	} else {
--		ctrl = data->hwirq / 32;
--		res = ctrl * 12;
--		bit = data->hwirq % 32;
-+		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-+		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-+		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
- 
- 		pp->irq_status[ctrl] &= ~(1 << bit);
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
-@@ -180,9 +185,9 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
- 	if (pp->ops->msi_set_irq) {
- 		pp->ops->msi_set_irq(pp, data->hwirq);
- 	} else {
--		ctrl = data->hwirq / 32;
--		res = ctrl * 12;
--		bit = data->hwirq % 32;
-+		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-+		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-+		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
- 
- 		pp->irq_status[ctrl] |= 1 << bit;
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
-@@ -652,8 +657,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 
- 	/* Initialize IRQ Status array */
- 	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
--		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
--				    &pp->irq_status[ctrl]);
-+		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
-+					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
-+				    4, &pp->irq_status[ctrl]);
- 
- 	/* Setup RC BARs */
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index fe811db..bee4e25 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -110,6 +110,7 @@
- #define MAX_MSI_IRQS			256
- #define MAX_MSI_IRQS_PER_CTRL		32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
-+#define MSI_REG_CTRL_BLOCK_SIZE		12
- #define MSI_DEF_NUM_VECTORS		32
- 
- /* Maximum number of inbound/outbound iATUs */
+-	/* Objects are coherent, unless 'no shareability' flag set. */
+-	if (!(obj_desc->flags & FSL_MC_OBJ_FLAG_NO_MEM_SHAREABILITY))
+-		arch_setup_dma_ops(&mc_dev->dev, 0, 0, NULL, true);
+-
+ 	/*
+ 	 * The device-specific probe callback will get invoked by device_add()
+ 	 */
 -- 
-2.7.4
+1.9.1
