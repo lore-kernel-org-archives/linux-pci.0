@@ -1,145 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
- <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH v6 1/2] PCI: mediatek: Set up vendor ID and class type for
- MT7622
-Date: Fri, 20 Apr 2018 13:25:09 +0800
-Message-ID: <1524201910-22836-2-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1524201910-22836-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1524201910-22836-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-he1eur01on0062.outbound.protection.outlook.com ([104.47.0.62]:46976
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751841AbeD3G2h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Apr 2018 02:28:37 -0400
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+        gregkh@linuxfoundation.org
+Cc: hch@lst.de, joro@8bytes.org, m.szyprowski@samsung.com,
+        shawnguo@kernel.org, frowand.list@gmail.com, bhelgaas@google.com,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, stuyoder@gmail.com,
+        laurentiu.tudor@nxp.com, leoyang.li@nxp.com,
+        Nipun Gupta <nipun.gupta@nxp.com>
+Subject: [PATCH v4 3/6] iommu: support iommu configuration for fsl-mc devices
+Date: Mon, 30 Apr 2018 11:57:18 +0530
+Message-Id: <1525069641-8523-4-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
+References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
+ <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-
-MT7622's hardware default value of vendor ID and class type is not correct,
-fix that by setup the correct values before linkup with Endpoint.
-
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
 ---
- drivers/pci/host/pcie-mediatek.c | 30 +++++++++++++++++++++++++++---
- include/linux/pci_ids.h          |  2 ++
- 2 files changed, 29 insertions(+), 3 deletions(-)
+ drivers/iommu/of_iommu.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index a8b20c5..c3dc549 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -66,6 +66,10 @@
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 811e160..284474d 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -24,6 +24,7 @@
+ #include <linux/of_iommu.h>
+ #include <linux/of_pci.h>
+ #include <linux/slab.h>
++#include <linux/fsl/mc.h>
  
- /* PCIe V2 per-port registers */
- #define PCIE_MSI_VECTOR		0x0c0
-+
-+#define PCIE_CONF_VEND_ID	0x100
-+#define PCIE_CONF_CLASS_ID	0x106
-+
- #define PCIE_INT_MASK		0x420
- #define INTX_MASK		GENMASK(19, 16)
- #define INTX_SHIFT		16
-@@ -125,12 +129,14 @@ struct mtk_pcie_port;
+ #define NO_IOMMU	1
  
- /**
-  * struct mtk_pcie_soc - differentiate between host generations
-+ * @need_fix_class_id: whether this host's class ID needed to be fixed or not
-  * @has_msi: whether this host supports MSI interrupts or not
-  * @ops: pointer to configuration access functions
-  * @startup: pointer to controller setting functions
-  * @setup_irq: pointer to initialize IRQ functions
-  */
- struct mtk_pcie_soc {
-+	bool need_fix_class_id;
- 	bool has_msi;
- 	struct pci_ops *ops;
- 	int (*startup)(struct mtk_pcie_port *port);
-@@ -375,6 +381,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+@@ -159,6 +160,23 @@ static int of_pci_iommu_init(struct pci_dev *pdev, u16 alias, void *data)
+ 	return err;
+ }
+ 
++static int of_fsl_mc_iommu_init(struct fsl_mc_device *mc_dev,
++				struct device_node *master_np)
++{
++	struct of_phandle_args iommu_spec = { .args_count = 1 };
++	int err;
++
++	err = of_map_rid(master_np, mc_dev->icid, "iommu-map",
++			 "iommu-map-mask", &iommu_spec.np,
++			 iommu_spec.args);
++	if (err)
++		return err == -ENODEV ? NO_IOMMU : err;
++
++	err = of_iommu_xlate(&mc_dev->dev, &iommu_spec);
++	of_node_put(iommu_spec.np);
++	return err;
++}
++
+ const struct iommu_ops *of_iommu_configure(struct device *dev,
+ 					   struct device_node *master_np)
  {
- 	struct mtk_pcie *pcie = port->pcie;
- 	struct resource *mem = &pcie->mem;
-+	const struct mtk_pcie_soc *soc = port->pcie->soc;
- 	u32 val;
- 	size_t size;
- 	int err;
-@@ -403,6 +410,15 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
- 	       PCIE_MAC_SRSTB | PCIE_CRSTB;
- 	writel(val, port->base + PCIE_RST_CTRL);
+@@ -190,6 +208,8 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
  
-+	/* Set up vendor ID and class code */
-+	if (soc->need_fix_class_id) {
-+		val = PCI_VENDOR_ID_MEDIATEK;
-+		writew(val, port->base + PCIE_CONF_VEND_ID);
-+
-+		val = PCI_CLASS_BRIDGE_PCI;
-+		writew(val, port->base + PCIE_CONF_CLASS_ID);
-+	}
-+
- 	/* 100ms timeout value should be enough for Gen1/2 training */
- 	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
- 				 !!(val & PCIE_PORT_LINKUP_V2), 20,
-@@ -1142,7 +1158,15 @@ static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
- 	.startup = mtk_pcie_startup_port,
- };
- 
--static const struct mtk_pcie_soc mtk_pcie_soc_v2 = {
-+static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-+	.has_msi = true,
-+	.ops = &mtk_pcie_ops_v2,
-+	.startup = mtk_pcie_startup_port_v2,
-+	.setup_irq = mtk_pcie_setup_irq,
-+};
-+
-+static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
-+	.need_fix_class_id = true,
- 	.has_msi = true,
- 	.ops = &mtk_pcie_ops_v2,
- 	.startup = mtk_pcie_startup_port_v2,
-@@ -1152,8 +1176,8 @@ static const struct mtk_pcie_soc mtk_pcie_soc_v2 = {
- static const struct of_device_id mtk_pcie_ids[] = {
- 	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
- 	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
--	{ .compatible = "mediatek,mt2712-pcie", .data = &mtk_pcie_soc_v2 },
--	{ .compatible = "mediatek,mt7622-pcie", .data = &mtk_pcie_soc_v2 },
-+	{ .compatible = "mediatek,mt2712-pcie", .data = &mtk_pcie_soc_mt2712 },
-+	{ .compatible = "mediatek,mt7622-pcie", .data = &mtk_pcie_soc_mt7622 },
- 	{},
- };
- 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index a6b3066..9d4fca5 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2115,6 +2115,8 @@
- 
- #define PCI_VENDOR_ID_MYRICOM		0x14c1
- 
-+#define PCI_VENDOR_ID_MEDIATEK		0x14c3
-+
- #define PCI_VENDOR_ID_TITAN		0x14D2
- #define PCI_DEVICE_ID_TITAN_010L	0x8001
- #define PCI_DEVICE_ID_TITAN_100L	0x8010
+ 		err = pci_for_each_dma_alias(to_pci_dev(dev),
+ 					     of_pci_iommu_init, &info);
++	} else if (dev_is_fsl_mc(dev)) {
++		err = of_fsl_mc_iommu_init(to_fsl_mc_device(dev), master_np);
+ 	} else {
+ 		struct of_phandle_args iommu_spec;
+ 		int idx = 0;
 -- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.9.1
