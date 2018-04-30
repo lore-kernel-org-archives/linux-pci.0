@@ -1,73 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v3 01/10] bindings: PCI: designware: Example update
-Date: Tue, 10 Apr 2018 13:58:33 +0100
-Message-Id: <a3eebc66b17172b92e91d95c12a9d0289b9417c2.1523360166.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v2 10/10] PCI: Enable PCI_DOMAINS along with generic PCI host
+ controller
+Date: Mon, 30 Apr 2018 07:48:44 +0200
+Message-Id: <5122e6157951cff6fc2436dcd19d51c5b6b0a353.1525067324.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replaces "ctrlreg" reg-name by "dbi" to be coherent with similar drivers,
-however it still be compatible with any previous DT that uses the old
-reg-name.
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-Replaces the PCIe base address example by a real PCIe base address in use.
+This controller is often instantiated by hypervisors, and they may add
+multiple of them or add them in addition to a physical host controller
+like the Jailhouse hypervisor is doing. Therefore allow for multiple
+domains so that we can handle them all.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 ---
-Changes v1->v2:
- - Removed any iATU reference or changes to avoid confusion.
- - Add "snps,dw-pcie" compatible string following Kishon's suggestion.
-Changes v2->v3:
-- Nothing changed, just to follow the patch set version.
+ drivers/pci/host/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
- Documentation/devicetree/bindings/pci/designware-pcie.txt | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 1da7ade..f02cd20 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -1,7 +1,8 @@
- * Synopsys DesignWare PCIe interface
- 
- Required properties:
--- compatible: should contain "snps,dw-pcie" to identify the core.
-+- compatible:
-+	"snps,dw-pcie-rc", "snps,dw-pcie" for RC mode;
- - reg: Should contain the configuration address space.
- - reg-names: Must be "config" for the PCIe configuration space.
-     (The old way of getting the configuration address space from "ranges"
-@@ -41,11 +42,11 @@ EP mode:
- 
- Example configuration:
- 
--	pcie: pcie@dffff000 {
--		compatible = "snps,dw-pcie";
--		reg = <0xdffff000 0x1000>, /* Controller registers */
--		      <0xd0000000 0x2000>; /* PCI config space */
--		reg-names = "ctrlreg", "config";
-+	pcie: pcie@dfc00000 {
-+		compatible = "snps,dw-pcie-rc", "snps,dw-pcie";
-+		reg = <0xdfc00000 0x0001000>, /* IP registers */
-+		      <0xd0000000 0x0002000>; /* Configuration space */
-+		reg-names = "dbi", "config";
- 		#address-cells = <3>;
- 		#size-cells = <2>;
- 		device_type = "pci";
-@@ -54,5 +55,4 @@ Example configuration:
- 		interrupts = <25>, <24>;
- 		#interrupt-cells = <1>;
- 		num-lanes = <1>;
--		num-viewport = <3>;
- 	};
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 0d0177ce436c..3d25b35bb5ab 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -68,6 +68,7 @@ config PCI_HOST_GENERIC
+ 	depends on (ARM || ARM64) && OF
+ 	select PCI_HOST_COMMON
+ 	select IRQ_DOMAIN
++	select PCI_DOMAINS
+ 	help
+ 	  Say Y here if you want to support a simple generic PCI host
+ 	  controller, such as the one emulated by kvmtool.
 -- 
-2.7.4
+2.13.6
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
