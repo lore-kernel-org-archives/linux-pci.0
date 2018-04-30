@@ -1,78 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:40107 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752412AbeDBQT6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Apr 2018 12:19:58 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 6/7] PCI/AER: API for obtaining AER information
-Date: Mon,  2 Apr 2018 10:22:02 -0600
-Message-Id: <20180402162203.3370-7-keith.busch@intel.com>
-In-Reply-To: <20180402162203.3370-1-keith.busch@intel.com>
-References: <20180402162203.3370-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v2 05/10] PCI: Replace pr_*() with dev_*() in
+ __of_pci_get_host_bridge_resources()
+Date: Mon, 30 Apr 2018 07:48:39 +0200
+Message-Id: <63f2e316090ea3284b4be62e446b3b28f998ac55.1525067324.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since this is making the function externally visible, appending "aer_"
-prefix to the function name.
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Now that we have a device reference, make use of it for printing. And as
+long as dev can still be NULL, we will still get some reasonable output
+nevertheless.
+
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 ---
- drivers/pci/pcie/aer/aerdrv.h      | 1 +
- drivers/pci/pcie/aer/aerdrv_core.c | 8 ++++----
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/pci/of.c | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index 5449e5ce139d..7c833a1d897e 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -107,6 +107,7 @@ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
- }
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index bfa282b538d5..8f6cbf13e18d 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -266,15 +266,15 @@ static int __of_pci_get_host_bridge_resources(struct device *dev,
+ 	if (!bus_range)
+ 		return -ENOMEM;
  
- extern struct bus_type pcie_port_bus_type;
-+int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info);
- void aer_isr(struct work_struct *work);
- void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
- void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info);
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index a4bfea52e7d4..4fb24003cac3 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -638,7 +638,7 @@ static void aer_recover_work_func(struct work_struct *work)
- #endif
+-	pr_info("host bridge %pOF ranges:\n", dev_node);
++	dev_info(dev, "host bridge %pOF ranges:\n", dev_node);
  
- /**
-- * get_device_error_info - read error status from dev and store it to info
-+ * aer_get_device_error_info - read error status from dev and store it to info
-  * @dev: pointer to the device expected to have a error record
-  * @info: pointer to structure to store the error record
-  *
-@@ -646,7 +646,7 @@ static void aer_recover_work_func(struct work_struct *work)
-  *
-  * Note that @info is reused among all error devices. Clear fields properly.
-  */
--static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
-+int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
- {
- 	int pos, temp;
+ 	err = of_pci_parse_bus_range(dev_node, bus_range);
+ 	if (err) {
+ 		bus_range->start = busno;
+ 		bus_range->end = bus_max;
+ 		bus_range->flags = IORESOURCE_BUS;
+-		pr_info("  No bus range found for %pOF, using %pR\n",
+-			dev_node, bus_range);
++		dev_info(dev, "  No bus range found for %pOF, using %pR\n",
++			 dev_node, bus_range);
+ 	} else {
+ 		if (bus_range->end > bus_range->start + bus_max)
+ 			bus_range->end = bus_range->start + bus_max;
+@@ -286,7 +286,7 @@ static int __of_pci_get_host_bridge_resources(struct device *dev,
+ 	if (err)
+ 		goto parse_failed;
  
-@@ -705,11 +705,11 @@ static inline void aer_process_err_devices(struct pcie_device *p_device,
+-	pr_debug("Parsing ranges property...\n");
++	dev_dbg(dev, "Parsing ranges property...\n");
+ 	for_each_of_pci_range(&parser, &range) {
+ 		/* Read next ranges element */
+ 		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
+@@ -295,9 +295,9 @@ static int __of_pci_get_host_bridge_resources(struct device *dev,
+ 			snprintf(range_type, 4, "MEM");
+ 		else
+ 			snprintf(range_type, 4, "err");
+-		pr_info("  %s %#010llx..%#010llx -> %#010llx\n", range_type,
+-			range.cpu_addr, range.cpu_addr + range.size - 1,
+-			range.pci_addr);
++		dev_info(dev, "  %s %#010llx..%#010llx -> %#010llx\n",
++			 range_type, range.cpu_addr,
++			 range.cpu_addr + range.size - 1, range.pci_addr);
  
- 	/* Report all before handle them, not to lost records by reset etc. */
- 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
--		if (get_device_error_info(e_info->dev[i], e_info))
-+		if (aer_get_device_error_info(e_info->dev[i], e_info))
- 			aer_print_error(e_info->dev[i], e_info);
- 	}
- 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
--		if (get_device_error_info(e_info->dev[i], e_info))
-+		if (aer_get_device_error_info(e_info->dev[i], e_info))
- 			handle_error_source(p_device, e_info->dev[i], e_info);
- 	}
- }
+ 		/*
+ 		 * If we failed translation or got a zero-sized region
+@@ -324,14 +324,16 @@ static int __of_pci_get_host_bridge_resources(struct device *dev,
+ 
+ 		if (resource_type(res) == IORESOURCE_IO) {
+ 			if (!io_base) {
+-				pr_err("I/O range found for %pOF. Please provide an io_base pointer to save CPU base address\n",
++				dev_err(dev,
++					"I/O range found for %pOF. Please provide an io_base pointer to save CPU base address\n",
+ 					dev_node);
+ 				err = -EINVAL;
+ 				goto conversion_failed;
+ 			}
+ 			if (*io_base != (resource_size_t)OF_BAD_ADDR)
+-				pr_warn("More than one I/O resource converted for %pOF. CPU base address for old range lost!\n",
+-					dev_node);
++				dev_warn(dev,
++					 "More than one I/O resource converted for %pOF. CPU base address for old range lost!\n",
++					 dev_node);
+ 			*io_base = range.cpu_addr;
+ 		}
+ 
 -- 
-2.14.3
+2.13.6
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
