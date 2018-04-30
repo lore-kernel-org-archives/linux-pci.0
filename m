@@ -1,202 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44172 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751315AbeDXRu1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Apr 2018 13:50:27 -0400
-Date: Tue, 24 Apr 2018 11:50:26 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI: Implement workaround for the ACS bug in the
- IDT switch
-Message-ID: <20180424115026.134940cf@w520.home>
-In-Reply-To: <1e849db0-7b87-1394-bfa4-3c4ab1e4ebb3@oracle.com>
-References: <7e9f5905-34c5-f24c-8b13-df36b8bf3621@oracle.com>
-        <1e849db0-7b87-1394-bfa4-3c4ab1e4ebb3@oracle.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 30 Apr 2018 13:40:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Subject: Re: [PATCH 3/6] PCI: Introduce devm_of_pci_get_host_bridge_resources
+Message-ID: <20180430184007.GC95643@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1524582822.git.jan.kiszka@siemens.com>
+ <e387d04ea235c9a4879a897bb730adc383a96635.1524582822.git.jan.kiszka@siemens.com>
+ <20180427222427.GB73638@bhelgaas-glaptop.roam.corp.google.com>
+ <869a8ad9-dd2f-8462-c0c4-2d8a62d74185@siemens.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <869a8ad9-dd2f-8462-c0c4-2d8a62d74185@siemens.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 24 Apr 2018 10:54:26 -0400
-James Puthukattukaran <james.puthukattukaran@oracle.com> wrote:
+On Sat, Apr 28, 2018 at 09:28:47AM +0200, Jan Kiszka wrote:
+> On 2018-04-28 00:24, Bjorn Helgaas wrote:
+> > On Tue, Apr 24, 2018 at 05:13:39PM +0200, Jan Kiszka wrote:
+> >> From: Jan Kiszka <jan.kiszka@siemens.com>
+> >>
+> >> of_pci_get_host_bridge_resources allocates the resource structures it
+> >> fills dynamically, but none of its callers care to release them so far.
+> >> Rather than requiring everyone to do this explicitly, introduce a
+> >> managed version of that service. This differs API-wise only in taking a
+> >> reference to the associated device, rather than to the device tree node.
+> >>
+> >> As of_pci_get_host_bridge_resources is an exported interface, we cannot
+> >> simply drop it at this point. After converting all in-tree users to the
+> >> new API, we could phase out the unmanaged one over some grace period.
+> > 
+> > It looks like it might be possible to split this into three or four
+> > patches:
+> > 
+> >   1) Factor __of_pci_get_host_bridge_resources() out of
+> >      of_pci_get_host_bridge_resources()
+> > 
+> >   2) Add struct device * argument
+> > 
+> >   3) Convert pr_info() to dev_info()
+> > 
+> >   4) Add devm_of_pci_get_host_bridge_resources()
+> 
+> Will do. I'm even considering
+> 
+> 5) mark of_pci_get_host_bridge_resources() __deprecated, due to the leak
+>    and no remaining in-tree user - what do you think?
 
-> The IDT switch incorrectly flags an ACS source violation on a read config
-> request to an end point device on the completion (IDT 89H32H8G3-YC,
-> errata #36) even though the PCI Express spec states that completions are
-> never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1). Here's
-> the specific copy of the errata text
-> 
-> "Item #36 - Downstream port applies ACS Source Validation to Completions
-> Section 6.12.1.1 of the PCI Express Base Specification 3.1 states
-> that completions are never affected
-> by ACS Source Validation. However, completions received by a
-> downstream port of the PCIe switch from a device that has not yet
-> captured a PCIe bus number are incorrectly dropped by ACS source
-> validation by the switch downstream port.
-> 
-> Workaround: Issue a CfgWr1 to the downstream device before issuing
-> the first CfgRd1 to the device.
-> This allows the downstream device to capture its bus number; ACS
-> source validation no longer stops
-> completions from being forwarded by the downstream port. It has been
-> observed that Microsoft Windows implements this workaround already;
-> however, some versions of Linux and other operating systems may not. "
-> 
-> The suggested workaround by IDT is to issue a configuration write to the
-> downstream device before issuing the first config read. This allows the
-> downstream device to capture its bus number, thus avoiding the ACS
-> violation on the completion. In order to make sure that the device is ready
-> for config accesses, we do what is currently done in making config reads
-> till it succeeds and then do the config write as specified by the errata.
-> However, to avoid hitting the errata issue when doing config reads, we
-> disable ACS SV around this process.
-> 
-> The patch does the following -
-> 
-> 1. Disable ACS source violation if enabled.
-> 2. Wait for config space access to become available by reading vendor id
-> 3. Do a config write to the end point (errata workaround)
-> 4. Enable ACS source validation (if it was enabled to begin with)
-> 
-> Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
-> ---
->  drivers/pci/pci.h    |  2 ++
->  drivers/pci/quirks.c | 97 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 99 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 39ea6ee..d0d588d 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -227,6 +227,8 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
->  				int crs_timeout);
->  int pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn,
->  				u32 *pl, int crs_timeout);
-> +bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn,
-> +				u32 *pl, int crs_timeout);
->  int pci_setup_device(struct pci_dev *dev);
->  int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->  		    struct resource *res, unsigned int reg);
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index c32c5ec..89cd47d 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4742,12 +4742,109 @@ static void quirk_gpu_hda(struct pci_dev *hda)
->  DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
->  			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
->  
-> +/*
-> + * The IDT switch incorrectly flags an ACS source violation on a read config
-> + * request to an end point device on the completion (IDT 89H32H8G3-YC,
-> + * errata #36) even though the PCI Express spec states that completions are
-> + * never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
-> + * Here's * the specific copy of the errata text --
-> + *
-> + * "Item #36 - Downstream port applies ACS Source Validation to Completions
-> + * Section 6.12.1.1 of the PCI Express Base Specification 3.1 states
-> + * that completions are never affected
-> + * by ACS Source Validation. However, completions received by a
-> + * downstream port of the PCIe switch from a device that has not yet
-> + * captured a PCIe bus number are incorrectly dropped by ACS source
-> + * validation by the switch downstream port."
-> + *
-> + * The suggested workaround by IDT is to issue a configuration write to the
-> + * downstream device before issuing the first config read. This allows the
-> + * downstream device to capture its bus number, thus avoiding the ACS
-> + * violation on the completion. In order to make sure that the device is ready
-> + * for config accesses, we do what is currently done in making config reads
-> + * till it succeeds and then do the config write as specified by the errata.
-> + * However, to avoid hitting the errata issue when doing config reads, we
-> + * disable ACS SV around this process.
-> + */
-> +static int pci_idt_acs_quirk(struct pci_bus *bus, int devfn, int enable,
-> +				bool found)
-> +{
-> +	int pos;
-> +	u16 cap;
-> +	u16 ctrl;
-> +	int retval;
-> +	struct pci_dev *dev = bus->self;
-> +
-> +
-> +	/* Write 0 to the devfn device under the PCIE switch (bus->self)
-> +	 * as part of forcing the devfn number to latch with the device
-> +	 * below
-> +	 */
-> +	if (found)
-> +		pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
-> +
-> +
-> +	/* Enable/disable ACS SV feature (based on enable flag) */
-> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-> +	if (!pos)
-> +		return -ENODEV;
-> +
-> +	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
-> +
-> +	if (!(cap & PCI_ACS_SV))
-> +		return -ENODEV;
-> +
-> +	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-> +
-> +	retval = !!(ctrl & cap & PCI_ACS_SV);
-> +	if (enable)
-> +		ctrl |= (cap & PCI_ACS_SV);
-> +	else
-> +		ctrl &= ~(cap & PCI_ACS_SV);
-> +
-> +	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
-> +
-> +	/* return the previous state of the ACS SV state i.e was SV enabled
-> +	 * or disabled?
-> +	 */
-> +	return retval;
-> +}
-> +
-> +static int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *l,
-> +				int timeout)
-> +{
-> +	int enable;
-> +	bool found;
-> +
-> +	/*
-> +	 * Disable acs for the IDT switch before attempting the initial
-> +	 * config accesses to the endpoint device.
-> +	 */
-> +	enable = pci_idt_acs_quirk(bus, devfn, 0, false);
-> +
-> +	/*
-> +	 * found indicates whether the endpoint device was identified
-> +	 * as present or not
-> +	 */
-> +
-> +	found = pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
-> +
-> +	/*
-> +	 * re-enable acs feature for the switch again if it was enabled to
-> +	 * start with
-> +	 */
+Sounds good.
+
+It'd be nice if we had some guideline about deprecation -- whether we
+actually need to mark things __deprecated, and then how long to wait
+before actually removing them, but I don't see anything in
+Documentation/.
+
+Looks like it was added by cbe4097f8ae6 ("of/pci: Add support for
+parsing PCI host bridge resources from DT") in v3.18, so it's been
+around for a while and I guess it would be nice to have a grace period
+before removing it.
 
 
-Inconsistent comment style even within the same patch.  Otherwise,
-
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
-
-
-> +	if (enable > 0)
-> +		pci_idt_acs_quirk(bus, devfn, enable, found);
-> +
-> +	return found ? 1 : 0;
-> +}
->  
->  static const struct pci_bus_specific_quirk{
->  	u16 vendor;
->  	u16 device;
->  	int (*bus_quirk)(struct pci_bus *bus, int devfn, u32 *l, int timeout);
->  } pci_bus_specific_quirks[] = {
-> +	{ PCI_VENDOR_ID_IDT, 0x80b5, pci_idt_bus_quirk},
->  	{0}
->  };
->  
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
