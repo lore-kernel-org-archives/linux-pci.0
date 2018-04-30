@@ -1,41 +1,46 @@
-Return-Path: <SRS0=NmO7=HF=gmail.com=hkallweit1@kernel.org>
-Return-Path: <SRS0=NmO7=HF=gmail.com=hkallweit1@kernel.org>
-Subject: [PATCH net-next 1/2] PCI: Add two more values for PCIe
- Max_Read_Request_Size
-From: Heiner Kallweit <hkallweit1@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, David Miller <davem@davemloft.net>,
- Bjorn Helgaas <helgaas@kernel.org>,
- Realtek linux nic maintainers <nic_swsd@realtek.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-References: <00f1255f-acf0-4760-c20f-0b78bda44645@gmail.com>
-Message-ID: <ab8696d7-59e0-1f24-0ead-757057eb50cf@gmail.com>
-Date: Mon, 16 Apr 2018 21:37:13 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:49064 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755162AbeD3VEZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Apr 2018 17:04:25 -0400
+Date: Mon, 30 Apr 2018 16:04:23 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Matthew Wilcox <matthew@wil.cx>,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] PCI: ibmphp: fix get_max_bus_speed()
+Message-ID: <20180430210423.GF95643@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180419100549.GA10672@mwanda>
 MIME-Version: 1.0
-In-Reply-To: <00f1255f-acf0-4760-c20f-0b78bda44645@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180419100549.GA10672@mwanda>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds missing values for the max read request size.
-E.g. network driver r8169 uses a value of 4K.
+On Thu, Apr 19, 2018 at 01:05:49PM +0300, Dan Carpenter wrote:
+> The "rc" variable is only initialized on the error path.  The caller
+> doesn't check the return but, if "rc" is non-zero, then this function is
+> basically a no-op.
+> 
+> Fixes: 3749c51ac6c1 ("PCI: Make current and maximum bus speeds part of the PCI core")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- include/uapi/linux/pci_regs.h | 2 ++
- 1 file changed, 2 insertions(+)
+Applied to pci/hotplug for v4.18, thanks!
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 0c79eac5..699257fb 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -506,6 +506,8 @@
- #define  PCI_EXP_DEVCTL_READRQ_256B  0x1000 /* 256 Bytes */
- #define  PCI_EXP_DEVCTL_READRQ_512B  0x2000 /* 512 Bytes */
- #define  PCI_EXP_DEVCTL_READRQ_1024B 0x3000 /* 1024 Bytes */
-+#define  PCI_EXP_DEVCTL_READRQ_2048B 0x4000 /* 2048 Bytes */
-+#define  PCI_EXP_DEVCTL_READRQ_4096B 0x5000 /* 4096 Bytes */
- #define  PCI_EXP_DEVCTL_BCR_FLR 0x8000  /* Bridge Configuration Retry / FLR */
- #define PCI_EXP_DEVSTA		10	/* Device Status */
- #define  PCI_EXP_DEVSTA_CED	0x0001	/* Correctable Error Detected */
--- 
-2.17.0
+> diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+> index b81ca3fa0e84..1869b0411ce0 100644
+> --- a/drivers/pci/hotplug/ibmphp_core.c
+> +++ b/drivers/pci/hotplug/ibmphp_core.c
+> @@ -379,7 +379,7 @@ static int get_adapter_present(struct hotplug_slot *hotplug_slot, u8 *value)
+>  
+>  static int get_max_bus_speed(struct slot *slot)
+>  {
+> -	int rc;
+> +	int rc = 0;
+>  	u8 mode = 0;
+>  	enum pci_bus_speed speed;
+>  	struct pci_bus *bus = slot->hotplug_slot->pci_slot->bus;
