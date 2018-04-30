@@ -1,74 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay6.synopsys.com ([198.182.37.59]:50312 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750735AbeDXRUH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Apr 2018 13:20:07 -0400
-Subject: Re: [RFC 10/10] tools: PCI: Add MSI-X support
-To: Alan Douglas <adouglas@cadence.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
- <9865822fb89ea84cb55fe93e151295afcd5c96b3.1523379766.git.gustavo.pimentel@synopsys.com>
- <SN6PR07MB45126298F09735193B0F0F00D8880@SN6PR07MB4512.namprd07.prod.outlook.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <b51efe22-f57e-ee1c-ab00-87f34ea6452d@synopsys.com>
-Date: Tue, 24 Apr 2018 18:18:55 +0100
+Received: from mail.kernel.org ([198.145.29.99]:48172 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755162AbeD3VC7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Apr 2018 17:02:59 -0400
+Date: Mon, 30 Apr 2018 16:02:56 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Rajat Jain <rajatja@google.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Ray Jui <ray.jui@broadcom.com>,
+        Keith Busch <keith.busch@intel.com>,
+        linux-acpi@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 0/2] PCI/ASPM: Tighten up ASPM L1.2 and LTR usage
+Message-ID: <20180430210256.GE95643@bhelgaas-glaptop.roam.corp.google.com>
+References: <152417080402.76853.4258398181136860884.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <SN6PR07MB45126298F09735193B0F0F00D8880@SN6PR07MB4512.namprd07.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <152417080402.76853.4258398181136860884.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alan,
+On Thu, Apr 19, 2018 at 04:05:19PM -0500, Bjorn Helgaas wrote:
+> The ASPM L1.2 substate depends on LTR information.  Per the PCI
+> Firmware spec, the OS is supposed to negotiate with the platform for
+> control of the LTR feature, but previously we didn't do that.
+> 
+> In addition, we must not enable LTR in an endpoint unless the Root
+> Complex and all intermediate switches also support LTR.  We already
+> took care of that in pci_configure_ltr(), but we didn't ensure that
+> LTR was enabled before allowing ASPM L1.2 to be enabled.
+> 
+> These patches fix both of these issues.  Or rather, they *should* fix
+> them.  I don't have hardware to test them, so any help with testing
+> would be appreciated.
+> 
+> I think the most likely issue would be a platform where the hardware
+> supports LTR and the ASPM L1.2 substate, but the BIOS doesn't support
+> LTR in _OSC.  In that case, we previously could have enabled ASPM L1.2
+> (though it probably wouldn't work correctly), and after these patches,
+> we should not enable ASPM L1.2.
+> 
+> You can look for issues by comparing dmesg and "lspci -vv" output
+> before and after these patches.
+> 
+> It would also be interesting to collect an acpidump from platforms
+> that support LTR, even if there's no endpoint that supports ASPM L1.2.
+> The acpidump should show that _OSC supports LTR.
+> 
+> I included some NVMe folks because these were motivated by Srinath's
+> recent report of LTR and ASPM issues with a Samsung NVMe SSD
+> Controller SM961/PM961 device, so this is sort of FYI in case you see
+> similar issues or are in a position to test these.
+> 
+> ---
+> 
+> Bjorn Helgaas (2):
+>       PCI/ASPM: Disable ASPM L1.2 Substate if we don't have LTR
+>       PCI/ACPI: Request LTR control from platform before using it
+> 
+> 
+>  drivers/acpi/pci_root.c |    7 +++++++
+>  drivers/pci/pcie/aspm.c |    9 +++++++++
+>  drivers/pci/probe.c     |    5 +++++
+>  include/linux/acpi.h    |    3 ++-
+>  include/linux/pci.h     |    1 +
+>  5 files changed, 24 insertions(+), 1 deletion(-)
 
-On 24/04/2018 10:57, Alan Douglas wrote:
-> Hi Gustavo,
-> 
-> On 10 April 2018 18:15, Gustavo Pimentel wrote:
->> Adds MSI-X support to the pcitest tool and modified the pcitest.sh script to
->> accomodate this new type of interruption test.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->>  include/uapi/linux/pcitest.h |  1 +
->>  tools/pci/pcitest.c          | 18 +++++++++++++++++-
->>  tools/pci/pcitest.sh         | 25 +++++++++++++++++++++++++
->>  3 files changed, 43 insertions(+), 1 deletion(-)
-> I found some possible problems when testing with the Cadence EP driver.  The problem
-> is that pcitest uses the BARs for tests, but we also use one for the MSI-X tables
-> 
-> In Cadence core the MSI-X table is in BAR0 by default, but this is configured to a size
-> of 0x80 in the test driver, since it is used as the test_reg_bar.  So, I changed the 
-> configuration to use BAR4 instead, which is configured to a size of 131072 
-> in pci-efp-test.c, and this gives me enough space.
-> 
-> However, if I run the BAR tests in pcitest before running the MSI-X tests, the
-> MSI-X tests fail, since the BAR content is overwritten.  It's not a problem with the 
-> scenario in pcitest.sh, but it would be if the module wasn't re-loaded.
-> 
-> So, wondering if we need to come up with some mechanism to specify that a specific
-> BAR will be used for MSI-X, and that its size and content shouldn't be modified by
-> pcitest?
-
-I see your point. I have bypassed the problem by doing the module load/unload
-(to avoid having to fight on multiple fronts).
-
-I like your suggestion. Maybe we could have a bool variable for each BARs that
-could be set to false if a resource have intent to use it.
-
-However this change must be accepted by Kishon.
-
-> 
-> Regards,
-> Alan
-> 
-Regards,
-Gustavo
+Applied to pci/aspm for v4.18 with Rafael's reviewed-by and Srinath's
+tested-by (on first patch).
