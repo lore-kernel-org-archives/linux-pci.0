@@ -1,70 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 17 Apr 2018 15:04:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: RFC on MCFG Table Support
-Message-ID: <20180417200441.GL28657@bhelgaas-glaptop.roam.corp.google.com>
-References: <bd3f4d3a-f641-7385-4ce2-d62a28bc9cd3@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+ robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+ gregkh@linuxfoundation.org
+Subject: [PATCH v4 1/6] Docs: dt: add fsl-mc iommu-map device-tree binding
+Date: Mon, 30 Apr 2018 11:57:16 +0530
+Message-Id: <1525069641-8523-2-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
+References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
+ <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <bd3f4d3a-f641-7385-4ce2-d62a28bc9cd3@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
+ linux-pci@vger.kernel.org, bhelgaas@google.com, laurentiu.tudor@nxp.com,
+ frowand.list@gmail.com, hch@lst.de, linux-arm-kernel@lists.infradead.org,
+ m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 17, 2018 at 12:18:22PM -0400, Sinan Kaya wrote:
-> Hi,
-> 
-> QDT is working with PCI-SIG to revisit some of the spec language
-> ambiguity on the definition of PCI Segment Group in PCI FW
-> Specification. 
+The existing IOMMU bindings cannot be used to specify the relationship
+between fsl-mc devices and IOMMUs. This patch adds a generic binding for
+mapping fsl-mc devices to IOMMUs, using iommu-map property.
 
-I assume you're looking at the PCI Firmware Spec, r3.2, sec 4.1.2.  I
-agree this could use some clarification.
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+ .../devicetree/bindings/misc/fsl,qoriq-mc.txt      | 39 ++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-> PCI spec is currently requiring a single entry per segment in the
-> MCFG table with a contiguous 256MB range. 
+diff --git a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
+index 6611a7c..8cbed4f 100644
+--- a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
++++ b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
+@@ -9,6 +9,25 @@ blocks that can be used to create functional hardware objects/devices
+ such as network interfaces, crypto accelerator instances, L2 switches,
+ etc.
+ 
++For an overview of the DPAA2 architecture and fsl-mc bus see:
++drivers/staging/fsl-mc/README.txt
++
++As described in the above overview, all DPAA2 objects in a DPRC share the
++same hardware "isolation context" and a 10-bit value called an ICID
++(isolation context id) is expressed by the hardware to identify
++the requester.
++
++The generic 'iommus' property is insufficient to describe the relationship
++between ICIDs and IOMMUs, so an iommu-map property is used to define
++the set of possible ICIDs under a root DPRC and how they map to
++an IOMMU.
++
++For generic IOMMU bindings, see
++Documentation/devicetree/bindings/iommu/iommu.txt.
++
++For arm-smmu binding, see:
++Documentation/devicetree/bindings/iommu/arm,smmu.txt.
++
+ Required properties:
+ 
+     - compatible
+@@ -88,14 +107,34 @@ Sub-nodes:
+               Value type: <phandle>
+               Definition: Specifies the phandle to the PHY device node associated
+                           with the this dpmac.
++Optional properties:
++
++- iommu-map: Maps an ICID to an IOMMU and associated iommu-specifier
++  data.
++
++  The property is an arbitrary number of tuples of
++  (icid-base,iommu,iommu-base,length).
++
++  Any ICID i in the interval [icid-base, icid-base + length) is
++  associated with the listed IOMMU, with the iommu-specifier
++  (i - icid-base + iommu-base).
+ 
+ Example:
+ 
++        smmu: iommu@5000000 {
++               compatible = "arm,mmu-500";
++               #iommu-cells = <2>;
++               stream-match-mask = <0x7C00>;
++               ...
++        };
++
+         fsl_mc: fsl-mc@80c000000 {
+                 compatible = "fsl,qoriq-mc";
+                 reg = <0x00000008 0x0c000000 0 0x40>,    /* MC portal base */
+                       <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
+                 msi-parent = <&its>;
++                /* define map for ICIDs 23-64 */
++                iommu-map = <23 &smmu 23 41>;
+                 #address-cells = <3>;
+                 #size-cells = <1>;
+ 
+-- 
+1.9.1
 
-I see the statement that "Multiple [MCFG] entries corresponding to a
-single PCI Segment Group is (sic) not allowed."
 
-Since the MCFG entry contains both the start and end bus number, I
-assume it only describes a 256MB range if start == 0 and end == 255
-(256 buses * 32 devices * 8 functions * 4K config space = 256MB).
-
-If start > 0 or end < 255, I'd say the entry describes a range smaller
-than 256MB, and it would be an error to use space outside that range.
-
-But the existing language says you still only get one entry per
-segment group.  It seems reasonable to me to relax that restriction.
-
-> Based on our research, this rule is being violated in the industry
-> for existing platforms due to the different ways spec is
-> interpreted.
-> 
-> We are trying to remove this restriction in the spec and have
-> multiple entries per segment as long as <segment, bus start number,
-> bus end number> tuple is unique. 
-
-I hope you mean the <start, end> tuples are more than just unique;
-they shouldn't overlap, i.e., a given <segment, bus number> should
-match at most one MCFG entry.
-
-I think it is permissible for a <segment, bus number> to not be
-described via MCFG at all for the case of hot-plugged host bridges
-that use _CBA instead of MCFG.
-
-> AFAIS, generic ACPI Linux driver already supports this via
-> pci_mcfg_lookup(). 
-
-Looks like it to me.  And if it doesn't, it sounds reasonable to fix
-it so it does.
-
-Of course, pci_mcfg_lookup() is currently only used by arm64.  I
-didn't look at x86 or ia64, which also use MCFG, to see what they
-would do with this.
-
-Thanks for working on this!
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
