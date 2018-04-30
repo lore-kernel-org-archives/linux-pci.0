@@ -1,53 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:38736 "EHLO smtp1.it.da.ut.ee"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751548AbeDIKrO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 9 Apr 2018 06:47:14 -0400
-Date: Mon, 9 Apr 2018 13:47:09 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Sinan Kaya <okaya@codeaurora.org>
-cc: David Miller <davem@davemloft.net>, yinghai@kernel.org,
-        linux-pci@vger.kernel.org, sparclinux@vger.kernel.org
-Subject: Re: sparc64 PCI BAR allocation is still problematic
-In-Reply-To: <041acadb-e35e-80e5-2461-13b016b22cd1@codeaurora.org>
-Message-ID: <alpine.LRH.2.21.1804091346290.16892@math.ut.ee>
-References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee> <20180408.172152.113123578529151252.davem@davemloft.net> <041acadb-e35e-80e5-2461-13b016b22cd1@codeaurora.org>
+Received: from mail-he1eur01on0089.outbound.protection.outlook.com ([104.47.0.89]:22125
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751854AbeD3G2o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Apr 2018 02:28:44 -0400
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+        gregkh@linuxfoundation.org
+Cc: hch@lst.de, joro@8bytes.org, m.szyprowski@samsung.com,
+        shawnguo@kernel.org, frowand.list@gmail.com, bhelgaas@google.com,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, stuyoder@gmail.com,
+        laurentiu.tudor@nxp.com, leoyang.li@nxp.com,
+        Nipun Gupta <nipun.gupta@nxp.com>
+Subject: [PATCH v4 4/6] iommu: arm-smmu: Add support for the fsl-mc bus
+Date: Mon, 30 Apr 2018 11:57:19 +0530
+Message-Id: <1525069641-8523-5-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
+References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
+ <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> >> This is a followup on the thread https://lkml.org/lkml/2015/10/7/135 and 
-> >> corresponding https://bugzilla.kernel.org/show_bug.cgi?id=117191 entry.
-> >>
-> >> I saw some sparc64 PCI allocation changes in yesterdays git and compiled 
-> >> 4.16.0-10242-gf605ba9 on most of my sparc64 machines to test if the PCI 
-> >> BAR allocation problems introduced in 4.3 were fixed on some of them. 
-> >> Alas, no change at all - of the test machines, none showed any changes 
-> >> in the error messages in "dmesg | grep BAR".
-> >>
-> >> There was one test machine, T1000 with no addon cards, that did not 
-> >> encounter any problem, before or after the recent patch. All the other 
-> >> test machines tried still have the BAR allocation problems.
-> >>
-> >> The errors seem to cluster into 3 categories:
-> >>
-> >> 1. many devices fail BAR allocations
-> >> 2. one of the Davicom Ethernet devices fails BAR allocation
-> >> 3. Uli ISA bridge fails BAR allocation.
-> >>
-> >> Full current dmesg and lspci info is also available if there is any 
-> >> interest. I did not include it all here, which machines are interesting?
-> > 
-> > PCI folks, please look into this.
-> > 
-> > A regression like this should not linger since 4.3, thank you.
-> > 
-> 
-> It sounds like a FW issue. Does the problem go away when you boot with
-> pci=realloc kernel command line?
+Implement bus specific support for the fsl-mc bus including
+registering arm_smmu_ops and bus specific device add operations.
 
-Tried it on T2000, still the same.
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+---
+ drivers/iommu/arm-smmu.c |  7 +++++++
+ drivers/iommu/iommu.c    | 21 +++++++++++++++++++++
+ include/linux/fsl/mc.h   |  8 ++++++++
+ include/linux/iommu.h    |  2 ++
+ 4 files changed, 38 insertions(+)
 
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index 69e7c60..e1d5090 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -52,6 +52,7 @@
+ #include <linux/spinlock.h>
+ 
+ #include <linux/amba/bus.h>
++#include <linux/fsl/mc.h>
+ 
+ #include "io-pgtable.h"
+ #include "arm-smmu-regs.h"
+@@ -1459,6 +1460,8 @@ static struct iommu_group *arm_smmu_device_group(struct device *dev)
+ 
+ 	if (dev_is_pci(dev))
+ 		group = pci_device_group(dev);
++	else if (dev_is_fsl_mc(dev))
++		group = fsl_mc_device_group(dev);
+ 	else
+ 		group = generic_device_group(dev);
+ 
+@@ -2037,6 +2040,10 @@ static void arm_smmu_bus_init(void)
+ 		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
+ 	}
+ #endif
++#ifdef CONFIG_FSL_MC_BUS
++	if (!iommu_present(&fsl_mc_bus_type))
++		bus_set_iommu(&fsl_mc_bus_type, &arm_smmu_ops);
++#endif
+ }
+ 
+ static int arm_smmu_device_probe(struct platform_device *pdev)
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index d2aa2320..6d4ce35 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -32,6 +32,7 @@
+ #include <linux/pci.h>
+ #include <linux/bitops.h>
+ #include <linux/property.h>
++#include <linux/fsl/mc.h>
+ #include <trace/events/iommu.h>
+ 
+ static struct kset *iommu_group_kset;
+@@ -987,6 +988,26 @@ struct iommu_group *pci_device_group(struct device *dev)
+ 	return iommu_group_alloc();
+ }
+ 
++/* Get the IOMMU group for device on fsl-mc bus */
++struct iommu_group *fsl_mc_device_group(struct device *dev)
++{
++	struct device *cont_dev = fsl_mc_cont_dev(dev);
++	struct iommu_group *group;
++
++	/* Container device is responsible for creating the iommu group */
++	if (fsl_mc_is_cont_dev(dev)) {
++		group = iommu_group_alloc();
++		if (IS_ERR(group))
++			return NULL;
++	} else {
++		get_device(cont_dev);
++		group = iommu_group_get(cont_dev);
++		put_device(cont_dev);
++	}
++
++	return group;
++}
++
+ /**
+  * iommu_group_get_for_dev - Find or create the IOMMU group for a device
+  * @dev: target device
+diff --git a/include/linux/fsl/mc.h b/include/linux/fsl/mc.h
+index f27cb14..dddaca1 100644
+--- a/include/linux/fsl/mc.h
++++ b/include/linux/fsl/mc.h
+@@ -351,6 +351,14 @@ struct fsl_mc_io {
+ #define dev_is_fsl_mc(_dev) (0)
+ #endif
+ 
++/* Macro to check if a device is a container device */
++#define fsl_mc_is_cont_dev(_dev) (to_fsl_mc_device(_dev)->flags & \
++	FSL_MC_IS_DPRC)
++
++/* Macro to get the container device of a MC device */
++#define fsl_mc_cont_dev(_dev) (fsl_mc_is_cont_dev(_dev) ? \
++	(_dev) : (_dev)->parent)
++
+ /*
+  * module_fsl_mc_driver() - Helper macro for drivers that don't do
+  * anything special in module init/exit.  This eliminates a lot of
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 19938ee..2981200 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -389,6 +389,8 @@ static inline size_t iommu_map_sg(struct iommu_domain *domain,
+ extern struct iommu_group *pci_device_group(struct device *dev);
+ /* Generic device grouping function */
+ extern struct iommu_group *generic_device_group(struct device *dev);
++/* FSL-MC device grouping function */
++struct iommu_group *fsl_mc_device_group(struct device *dev);
+ 
+ /**
+  * struct iommu_fwspec - per-device IOMMU instance data
 -- 
-Meelis Roos (mroos@linux.ee)
+1.9.1
