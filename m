@@ -1,116 +1,78 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 8/9] PCI: dwc: Small computation improvement
-To: Jingoo Han <jingoohan1@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <cover.1523266508.git.gustavo.pimentel@synopsys.com>
- <5181f7ffbb9d2889974c49d84e72042251adf8b6.1523266508.git.gustavo.pimentel@synopsys.com>
- <003001d3d128$39f3eaa0$addbbfe0$@gmail.com>
- <c295bc5b-e67a-290c-3316-56a1cc001538@synopsys.com>
- <000001d3d1cc$92706790$b75136b0$@gmail.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <6a947227-12f5-bc67-71bc-d6d67eb9e98f@synopsys.com>
-Date: Mon, 16 Apr 2018 09:41:11 +0100
-MIME-Version: 1.0
-In-Reply-To: <000001d3d1cc$92706790$b75136b0$@gmail.com>
-Content-Type: text/plain; charset=utf-8
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: Will Deacon <will.deacon@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v2 09/10] PCI: Add support for unbinding the generic PCI host controller
+Date: Mon, 30 Apr 2018 07:48:43 +0200
+Message-Id: <c0f1b44f4b1fda35e3e8d2666ba7961571c31980.1525067324.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo,
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-On 11/04/2018 20:37, Jingoo Han wrote:
-> On Wednesday, April 11, 2018 3:40 AM, Gustavo Pimentel wrote:
->>
->> Hi Jingoo,
->>
->> On 11/04/2018 01:01, Jingoo Han wrote:
->>> On Monday, April 9, 2018 5:41 AM, Gustavo Pimentel wrote:
->>>>
->>>> Replaces a simple division by 2 to a right shift rotation of 1 bit.
->>>
->>> It looks good. However, would you add a simple reason to the commit
->>> message?
->>
->> Sure.
->>
->> Can be this one?
->>
->> Probably any recent and decent compiler does this kind of substitution
->> in order to improve code performance. Nevertheless it's a coding good
->> practice whenever there is a division / multiplication by multiple of 2
->> to replace it by the equivalent operation in this case, the shift
->> rotation.
-> 
-> Yes, that's what I wanted. The most platforms using 'dwc' are based on
-> ARM CPUs. So, the shift rotation can be better.
-> Thank you.
+Particularly useful when working in virtual environments where the
+controller may come and go, but possibly not only there.
 
-Can I get your acked-by on this?
+CC: Will Deacon <will.deacon@arm.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+---
+ drivers/pci/host/pci-host-common.c  | 13 +++++++++++++
+ drivers/pci/host/pci-host-generic.c |  1 +
+ include/linux/pci-ecam.h            |  1 +
+ 3 files changed, 15 insertions(+)
 
-> 
-> Best regards,
-> Jingoo Han
-> 
->>
->>>
->>> Best regards,
->>> Jingoo Han
->>>
->>>>
->>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->>>> ---
->>>> Change v1->v2:
->>>> - Nothing changed, just to follow the patch set version.
->>>>
->>>>  drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
->>>>  1 file changed, 4 insertions(+), 4 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/dwc/pcie-designware-host.c
->>>> b/drivers/pci/dwc/pcie-designware-host.c
->>>> index 03e9b82..8e6fed4 100644
->>>> --- a/drivers/pci/dwc/pcie-designware-host.c
->>>> +++ b/drivers/pci/dwc/pcie-designware-host.c
->>>> @@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>>>
->>>>  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
->>>> "config");
->>>>  	if (cfg_res) {
->>>> -		pp->cfg0_size = resource_size(cfg_res) / 2;
->>>> -		pp->cfg1_size = resource_size(cfg_res) / 2;
->>>> +		pp->cfg0_size = resource_size(cfg_res) >> 1;
->>>> +		pp->cfg1_size = resource_size(cfg_res) >> 1;
->>>>  		pp->cfg0_base = cfg_res->start;
->>>>  		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
->>>>  	} else if (!pp->va_cfg0_base) {
->>>> @@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>>>  			break;
->>>>  		case 0:
->>>>  			pp->cfg = win->res;
->>>> -			pp->cfg0_size = resource_size(pp->cfg) / 2;
->>>> -			pp->cfg1_size = resource_size(pp->cfg) / 2;
->>>> +			pp->cfg0_size = resource_size(pp->cfg) >> 1;
->>>> +			pp->cfg1_size = resource_size(pp->cfg) >> 1;
->>>>  			pp->cfg0_base = pp->cfg->start;
->>>>  			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
->>>>  			break;
->>>> --
->>>> 2.7.4
->>>>
->>>
->>>
->>
->> Regards,
->> Gustavo
-> 
-> 
-
-Regards,
-Gustavo
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index 5d028f53fdcd..d8f10451f273 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -101,5 +101,18 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 		return ret;
+ 	}
+ 
++	platform_set_drvdata(pdev, bridge->bus);
++	return 0;
++}
++
++int pci_host_common_remove(struct platform_device *pdev)
++{
++	struct pci_bus *bus = platform_get_drvdata(pdev);
++
++	pci_lock_rescan_remove();
++	pci_stop_root_bus(bus);
++	pci_remove_root_bus(bus);
++	pci_unlock_rescan_remove();
++
+ 	return 0;
+ }
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 45319ee3b484..dea3ec7592a2 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -95,5 +95,6 @@ static struct platform_driver gen_pci_driver = {
+ 		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = gen_pci_probe,
++	.remove = pci_host_common_remove,
+ };
+ builtin_platform_driver(gen_pci_driver);
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+index baadad1aabbc..29efa09d686b 100644
+--- a/include/linux/pci-ecam.h
++++ b/include/linux/pci-ecam.h
+@@ -62,5 +62,6 @@ extern struct pci_ecam_ops xgene_v2_pcie_ecam_ops; /* APM X-Gene PCIe v2.x */
+ /* for DT-based PCI controllers that support ECAM */
+ int pci_host_common_probe(struct platform_device *pdev,
+ 			  struct pci_ecam_ops *ops);
++int pci_host_common_remove(struct platform_device *pdev);
+ #endif
+ #endif
+-- 
+2.13.6
