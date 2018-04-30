@@ -1,48 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35248 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753079AbeD0Shr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Apr 2018 14:37:47 -0400
-Date: Fri, 27 Apr 2018 13:37:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: kbuild test robot <lkp@intel.com>
-Cc: Frederick Lawler <fred@fredlawl.com>, kbuild-all@01.org,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        "Michael J. Ruhl" <michael.j.ruhl@intel.com>
-Subject: Re: [pci:pci/misc 2/2] drivers/infiniband//hw/hfi1/pcie.c:263:7:
- error: 'PCI_EXP_LNKSTA_CLS_8_0GT' undeclared; did you mean
- 'PCI_EXP_LNKSTA_CLS_8_0GB'?
-Message-ID: <20180427183743.GF8199@bhelgaas-glaptop.roam.corp.google.com>
-References: <201804280224.jakvUcRr%fengguang.wu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201804280224.jakvUcRr%fengguang.wu@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: bhelgaas@google.com
+Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v2] PCI/AER: Use a common function to print AER error bits
+Date: Mon, 30 Apr 2018 14:52:15 -0500
+Message-Id: <20180430195218.27654-1-mr.nuke.me@gmail.com>
+In-Reply-To: <20180417170943.1767-1-mr.nuke.me@gmail.com>
+References: <20180417170943.1767-1-mr.nuke.me@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 28, 2018 at 02:14:26AM +0800, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/misc
-> head:   68e3ce09cb93f1a470b19816fa254b69480f246a
-> commit: 68e3ce09cb93f1a470b19816fa254b69480f246a [2/2] IB/hfi1: Replace custom hfi1 macros with PCIe macros
-> config: x86_64-randconfig-x001-201816 (attached as .config)
-> compiler: gcc-7 (Debian 7.3.0-16) 7.3.0
-> reproduce:
->         git checkout 68e3ce09cb93f1a470b19816fa254b69480f246a
->         # save the attached .config to linux build tree
->         make ARCH=x86_64 
-> 
-> All errors (new ones prefixed by >>):
-> 
->    drivers/infiniband//hw/hfi1/pcie.c: In function 'extract_speed':
-> >> drivers/infiniband//hw/hfi1/pcie.c:263:7: error: 'PCI_EXP_LNKSTA_CLS_8_0GT' undeclared (first use in this function); did you mean 'PCI_EXP_LNKSTA_CLS_8_0GB'?
->      case PCI_EXP_LNKSTA_CLS_8_0GT:
->           ^~~~~~~~~~~~~~~~~~~~~~~~
->           PCI_EXP_LNKSTA_CLS_8_0GB
->    drivers/infiniband//hw/hfi1/pcie.c:263:7: note: each undeclared identifier is reported only once for each function it appears in
->    drivers/infiniband//hw/hfi1/pcie.c: In function 'pcie_speeds':
-> >> drivers/infiniband//hw/hfi1/pcie.c:318:40: error: 'PCI_EXP_LNKCAP_SLS_8_0GT' undeclared (first use in this function); did you mean 'PCI_EXP_LNKCAP_SLS_8_0GB'?
->      if ((linkcap & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_8_0GT) {
->                                            ^~~~~~~~~~~~~~~~~~~~~~~~
->                                            PCI_EXP_LNKCAP_SLS_8_0GB
+On errors reported from CPER, cper_print_bits() was used to log the
+AER bits. This resulted in hard-to-understand messages, without a
+prefix. Instead use __aer_print_error() for both native AER and CPER
+to provide a more consistent log format.
 
-Sorry, my fault.  I fixed and even compiled it this time.
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
+
+Changes since v1:
+  - Parse aer regs for first error pointer instead of disabling it
+On the Dell machine where I tested this, the first error pointer is
+reported correctly by firmware.
+
+ drivers/pci/pcie/aer/aerdrv_errprint.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index cfc89dd57831..b5612cc51b63 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -216,28 +216,30 @@ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+ void cper_print_aer(struct pci_dev *dev, int aer_severity,
+ 		    struct aer_capability_regs *aer)
+ {
+-	int layer, agent, status_strs_size, tlp_header_valid = 0;
++	int layer, agent, tlp_header_valid = 0;
+ 	u32 status, mask;
+-	const char **status_strs;
++	struct aer_err_info info;
+ 
+ 	if (aer_severity == AER_CORRECTABLE) {
+ 		status = aer->cor_status;
+ 		mask = aer->cor_mask;
+-		status_strs = aer_correctable_error_string;
+-		status_strs_size = ARRAY_SIZE(aer_correctable_error_string);
+ 	} else {
+ 		status = aer->uncor_status;
+ 		mask = aer->uncor_mask;
+-		status_strs = aer_uncorrectable_error_string;
+-		status_strs_size = ARRAY_SIZE(aer_uncorrectable_error_string);
+ 		tlp_header_valid = status & AER_LOG_TLP_MASKS;
+ 	}
+ 
+ 	layer = AER_GET_LAYER_ERROR(aer_severity, status);
+ 	agent = AER_GET_AGENT(aer_severity, status);
+ 
++	memset(&info, 0, sizeof(info));
++	info.severity = aer_severity;
++	info.status = status;
++	info.mask = mask;
++	info.first_error = PCI_ERR_CAP_FEP(aer->cap_control);
++
+ 	pci_err(dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, mask);
+-	cper_print_bits("", status, status_strs, status_strs_size);
++	__aer_print_error(dev, &info);
+ 	pci_err(dev, "aer_layer=%s, aer_agent=%s\n",
+ 		aer_error_layer[layer], aer_agent_string[agent]);
+ 
+-- 
+2.14.3
