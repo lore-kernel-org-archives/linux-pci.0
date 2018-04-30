@@ -1,60 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:54196 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753198AbeDJM6v (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2018 08:58:51 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [PATCH v3 07/10] PCI: dwc: Define maximum number of vectors
-Date: Tue, 10 Apr 2018 13:58:39 +0100
-Message-Id: <04c2a7739be0a211e2123c54bf55368624a3ecd1.1523360166.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523360166.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=e93+=HT=gmail.com=mr.nuke.me@kernel.org>
+Return-Path: <SRS0=e93+=HT=gmail.com=mr.nuke.me@kernel.org>
+Subject: Re: [PATCH RESEND] PCI/AER: Use a common function to print AER error
+ bits
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+ gregkh@linuxfoundation.org, fred@fredlawl.com, linux-kernel@vger.kernel.org,
+ alex_gagniuc@dellteam.com, austin_bolen@dell.com, keith.busch@intel.com
+References: <20180417170943.1767-1-mr.nuke.me@gmail.com>
+ <20180427224337.GC73256@bhelgaas-glaptop.roam.corp.google.com>
+ <12343e44-2d8a-51e1-a0be-e6804e9bd8a3@gmail.com>
+ <220bb125-b933-abf3-7b30-63446634e8d6@gmail.com>
+ <20180430171531.GB95643@bhelgaas-glaptop.roam.corp.google.com>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <8e8a8de1-a90c-ab88-c8ac-bbe8bcc7d49c@gmail.com>
+Date: Mon, 30 Apr 2018 12:41:26 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180430171531.GB95643@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Adds a callback that defines the maximum number of vectors that can be use
-by the Root Complex.
 
-Since this is a parameter associated to each SoC IP setting, makes sense to
-be configurable and easily visible to future modifications.
 
-The designware IP supports a maximum of 256 vectors.
+On 04/30/2018 12:15 PM, Bjorn Helgaas wrote:
+> On Sat, Apr 28, 2018 at 12:07:48PM -0500, Alex G. wrote:
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
+(snip)
+>> I could update the offending line to say:
+>>  +	info.first_error = PCI_ERR_CAP_FEP(aer->cap_control);
+> 
+> That's what I would have expected.  So I'd say either do this, or add
+> a comment about why it's not the right thing to do.
 
- drivers/pci/dwc/pcie-designware-plat.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Okay.
 
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 4be9c3a..04afa80 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -48,8 +48,14 @@ static int dw_plat_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- }
- 
-+static void dw_plat_set_num_vectors(struct pcie_port *pp)
-+{
-+	pp->num_vectors = MAX_MSI_IRQS;
-+}
-+
- static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
- 	.host_init = dw_plat_pcie_host_init,
-+	.set_num_vectors = dw_plat_set_num_vectors,
- };
- 
- static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
--- 
-2.7.4
+>> Though I still have the concerns with validating CPER data:
+>>
+>>> I can see a way to use even more common printk code, but that requires
+>>> validating the PCI regs we get from firmware. That means we need to make
+>>> a guarantee about CPER that is beyond the scope of this patch.
+> 
+> Sounds like this is material for another patch, but if/when you do
+> that, I'd like to understand your concern about validating the
+> registers we get from firmware.  Are you worried about getting
+> incorrect register contents, then printing the wrong info, making
+> the wrong decision about how to recover, something else?
+
+I don't trust firmware, and I have daymares about firmware leaving these
+fields uninitialized. In jargon, I'd like to treat it as external
+untrusted serialized data.
+
+Alex
