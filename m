@@ -1,103 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 1/6] PCI: Make pci_get_new_domain_nr static
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-References: <cover.1524582822.git.jan.kiszka@siemens.com>
- <a21882288c4664cc983a5741e8cbf6d59abacd46.1524582822.git.jan.kiszka@siemens.com>
- <20180425162745.GB21628@e107981-ln.cambridge.arm.com>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-Message-ID: <db40716e-85ac-a91d-98a9-81accb2b6756@siemens.com>
-Date: Wed, 25 Apr 2018 19:21:12 +0200
+Return-Path: <SRS0=12iv=HT=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=12iv=HT=codeaurora.org=okaya@kernel.org>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
+ Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org,
+ kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+ Lukas Wunner <lukas@wunner.de>, Eric Biederman <ebiederm@xmission.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Vivek Goyal <vgoyal@redhat.com>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+ <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
+ <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
+ <20180428005620.GB1675@dhcp-128-65.nay.redhat.com>
+ <20180428011845.GC1675@dhcp-128-65.nay.redhat.com>
+ <3ebc908fb196168bf0373875ffc5679e@codeaurora.org>
+ <d8d134dc-9757-97cd-7a24-cbb21611d6c6@codeaurora.org>
+ <20180430211740.GG95643@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <7285da70-2c3e-c3b7-62e1-fdbb55a77729@codeaurora.org>
+Date: Mon, 30 Apr 2018 17:27:32 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180425162745.GB21628@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20180430211740.GG95643@bhelgaas-glaptop.roam.corp.google.com>
 Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-04-25 18:27, Lorenzo Pieralisi wrote:
-> On Tue, Apr 24, 2018 at 05:13:37PM +0200, Jan Kiszka wrote:
->> From: Jan Kiszka <jan.kiszka@siemens.com>
+On 4/30/2018 5:17 PM, Bjorn Helgaas wrote:
+>> What should we do about this?
 >>
->> The only user of that function is of_pci_bus_find_domain_nr. Pure
->> cleanup.
+>> Since there is an actual HW errata involved, should we quirk this
+>> root port and not wait as if remove/shutdown doesn't exist?
+> I was hoping to avoid a quirk because AFAIK all Intel parts have this
+> issue so it will be an ongoing maintenance issue.  I tried to avoid
+> the timeout delays, e.g., with 40b960831cfa ("PCI: pciehp: Compute
+> timeout from hotplug command start time").
 > 
-> "The only user of pci_get_new_domain_nr() is of_pci_bus_find_domain_nr().
-> Since they are defined in the same compilation unit,
-> pci_get_new_domain_nr() can be made static, which also simplifies
-> preprocessor conditionals.
+> But we still see the alarming messages, so we should probably add a
+> quirk to get rid of those.
 > 
-> No functional change intended."
+> But I haven't given up on the idea of getting rid of the
+> pciehp_remove() path.  I'm not convinced yet that we actually need to
+> do anything to shut this device down.  I don't like the assumption
+> that kexec requires this.  The kexec is fundamentally just a branch,
+> and anything we do before the branch (i.e., in the old kernel), we
+> should also be able to do after the branch (i.e., in the kexec-ed
+> kernel).
 > 
 
-Thanks, wording adopted for v2.
+In my experience with kexec, MSI type edge interrupts are harmless.
+You might just see a few unhandled interrupt messages during boot
+if something is pending from the first kernel.
 
-Jan
+It is the level interrupts that are more concerning. It remains pending
+until the interrupt source is cleared. CPU never returns from the
+interrupt handler to actually continue booting the second kernel.
 
->> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
->> ---
->>  drivers/pci/pci.c   | 6 ++----
->>  include/linux/pci.h | 3 ---
->>  2 files changed, 2 insertions(+), 7 deletions(-)
-> 
-> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> 
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index e597655a5643..695c2bb4e853 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -5702,15 +5702,14 @@ static void pci_no_domains(void)
->>  #endif
->>  }
->>  
->> -#ifdef CONFIG_PCI_DOMAINS
->> +#ifdef CONFIG_PCI_DOMAINS_GENERIC
->>  static atomic_t __domain_nr = ATOMIC_INIT(-1);
->>  
->> -int pci_get_new_domain_nr(void)
->> +static int pci_get_new_domain_nr(void)
->>  {
->>  	return atomic_inc_return(&__domain_nr);
->>  }
->>  
->> -#ifdef CONFIG_PCI_DOMAINS_GENERIC
->>  static int of_pci_bus_find_domain_nr(struct device *parent)
->>  {
->>  	static int use_dt_domains = -1;
->> @@ -5765,7 +5764,6 @@ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
->>  			       acpi_pci_bus_find_domain_nr(bus);
->>  }
->>  #endif
->> -#endif
->>  
->>  /**
->>   * pci_ext_cfg_avail - can we access extended PCI config space?
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 73178a2fcee0..963232a6cd2e 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1510,12 +1510,10 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
->>   */
->>  #ifdef CONFIG_PCI_DOMAINS
->>  extern int pci_domains_supported;
->> -int pci_get_new_domain_nr(void);
->>  #else
->>  enum { pci_domains_supported = 0 };
->>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
->>  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
->> -static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
->>  #endif /* CONFIG_PCI_DOMAINS */
->>  
->>  /*
->> @@ -1670,7 +1668,6 @@ static inline struct pci_dev *pci_get_domain_bus_and_slot(int domain,
->>  
->>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
->>  static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
->> -static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
->>  
->>  #define dev_is_pci(d) (false)
->>  #define dev_is_pf(d) (false)
->> -- 
->> 2.13.6
->>
+Execution doesn't reach to PCIe hp driver initialization for
+acknowledging the interrupt.
+
+How about remove() only if MSI is disabled? Most root port interrupts
+are MSI based anyhow.
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
