@@ -1,228 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:50647 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751456AbeDIOmS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Apr 2018 10:42:18 -0400
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v13 4/6] PCI/DPC: Unify and plumb error handling into DPC
-Date: Mon,  9 Apr 2018 10:41:52 -0400
-Message-Id: <1523284914-2037-5-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
-References: <1523284914-2037-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=12iv=HT=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=12iv=HT=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH 3/6] PCI: Introduce devm_of_pci_get_host_bridge_resources
+To: Bjorn Helgaas <helgaas@kernel.org>, Jan Kiszka <jan.kiszka@siemens.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+References: <cover.1524582822.git.jan.kiszka@siemens.com>
+ <e387d04ea235c9a4879a897bb730adc383a96635.1524582822.git.jan.kiszka@siemens.com>
+ <20180427222427.GB73638@bhelgaas-glaptop.roam.corp.google.com>
+ <869a8ad9-dd2f-8462-c0c4-2d8a62d74185@siemens.com>
+ <20180430184007.GC95643@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5e218659-b512-b622-25e0-5bb5a8f4b87d@codeaurora.org>
+Date: Mon, 30 Apr 2018 14:43:08 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180430184007.GC95643@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Current DPC driver does not do recovery, e.g. calling end-point's driver's
-callbacks, which sanitize the sw.
+On 4/30/2018 2:40 PM, Bjorn Helgaas wrote:
+> On Sat, Apr 28, 2018 at 09:28:47AM +0200, Jan Kiszka wrote:
+>> On 2018-04-28 00:24, Bjorn Helgaas wrote:
+>>> On Tue, Apr 24, 2018 at 05:13:39PM +0200, Jan Kiszka wrote:
+>>>> From: Jan Kiszka <jan.kiszka@siemens.com>
+>>>>
+>>>> of_pci_get_host_bridge_resources allocates the resource structures it
+>>>> fills dynamically, but none of its callers care to release them so far.
+>>>> Rather than requiring everyone to do this explicitly, introduce a
+>>>> managed version of that service. This differs API-wise only in taking a
+>>>> reference to the associated device, rather than to the device tree node.
+>>>>
+>>>> As of_pci_get_host_bridge_resources is an exported interface, we cannot
+>>>> simply drop it at this point. After converting all in-tree users to the
+>>>> new API, we could phase out the unmanaged one over some grace period.
+>>>
+>>> It looks like it might be possible to split this into three or four
+>>> patches:
+>>>
+>>>   1) Factor __of_pci_get_host_bridge_resources() out of
+>>>      of_pci_get_host_bridge_resources()
+>>>
+>>>   2) Add struct device * argument
+>>>
+>>>   3) Convert pr_info() to dev_info()
+>>>
+>>>   4) Add devm_of_pci_get_host_bridge_resources()
+>>
+>> Will do. I'm even considering
+>>
+>> 5) mark of_pci_get_host_bridge_resources() __deprecated, due to the leak
+>>    and no remaining in-tree user - what do you think?
+> 
+> Sounds good.
+> 
+> It'd be nice if we had some guideline about deprecation -- whether we
+> actually need to mark things __deprecated, and then how long to wait
+> before actually removing them, but I don't see anything in
+> Documentation/.
 
-DPC driver implements link_reset callback, and calls pci_do_recovery().
+I'm under the impression that we don't quite care about out-of-tree drivers.
+I have seen many times out-of-tree drivers to be broken due to API changes,
+renames or even parameter meaning change. 
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+If the plan is to remove the API, just remove the API today.
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 98aeec4..d02e029 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -19,6 +19,7 @@
- #include <linux/aer.h>
- #include <linux/pcieport_if.h>
- #include "portdrv.h"
-+#include "./../pci.h"
- 
- struct aer_broadcast_data {
- 	enum pci_channel_state state;
-@@ -179,11 +180,12 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
- 	return PCI_ERS_RESULT_RECOVERED;
- }
- 
--static pci_ers_result_t reset_link(struct pci_dev *dev)
-+static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
- {
- 	struct pci_dev *udev;
- 	pci_ers_result_t status;
- 	struct pcie_port_service_driver *driver = NULL;
-+	u32 service;
- 
- 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
- 		/* Reset this port for all subordinates */
-@@ -193,8 +195,12 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
- 		udev = dev->bus->self;
- 	}
- 
--	/* Use the aer driver of the component firstly */
--	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
-+	if (severity == DPC_FATAL)
-+		service = PCIE_PORT_SERVICE_DPC;
-+	else
-+		service = PCIE_PORT_SERVICE_AER;
-+
-+	driver = pcie_port_find_service(udev, service);
- 
- 	if (driver && driver->reset_link) {
- 		status = driver->reset_link(udev);
-@@ -281,7 +287,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
- 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
- 	enum pci_channel_state state;
- 
--	if (severity == AER_FATAL)
-+	if ((severity == AER_FATAL) ||
-+	    (severity == DPC_FATAL))
- 		state = pci_channel_io_frozen;
- 	else
- 		state = pci_channel_io_normal;
-@@ -291,8 +298,9 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
- 			"error_detected",
- 			report_error_detected);
- 
--	if (severity == AER_FATAL) {
--		result = reset_link(dev);
-+	if ((severity == AER_FATAL) ||
-+	    (severity == DPC_FATAL)) {
-+		result = reset_link(dev, severity);
- 		if (result != PCI_ERS_RESULT_RECOVERED)
- 			goto failed;
- 	}
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 38e40c6..517c8b4 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -13,6 +13,7 @@
- #include <linux/pcieport_if.h>
- #include "../pci.h"
- #include "aer/aerdrv.h"
-+#include "portdrv.h"
- 
- struct dpc_dev {
- 	struct pcie_device	*dev;
-@@ -45,6 +46,33 @@ static const char * const rp_pio_error_string[] = {
- 	"Memory Request Completion Timeout",		 /* Bit Position 18 */
- };
- 
-+static int find_dpc_dev_iter(struct device *device, void *data)
-+{
-+	struct pcie_port_service_driver *service_driver;
-+	struct device **dev;
-+
-+	dev = (struct device **) data;
-+
-+	if (device->bus == &pcie_port_bus_type && device->driver) {
-+		service_driver = to_service_driver(device->driver);
-+		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
-+			*dev = device;
-+			return 1;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static struct device *pci_find_dpc_dev(struct pci_dev *pdev)
-+{
-+	struct device *dev = NULL;
-+
-+	device_for_each_child(&pdev->dev, &dev, find_dpc_dev_iter);
-+
-+	return dev;
-+}
-+
- static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
- {
- 	unsigned long timeout = jiffies + HZ;
-@@ -82,12 +110,25 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- 		dev_warn(dev, "Link state not disabled for DPC event\n");
- }
- 
--static void dpc_work(struct work_struct *work)
-+/**
-+ * dpc_reset_link - reset link DPC routine
-+ * @pdev: pointer to Root Port's pci_dev data structure
-+ *
-+ * Invoked by Port Bus driver when performing link reset at Root Port.
-+ */
-+static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
- {
--	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
--	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
- 	struct pci_bus *parent = pdev->subordinate;
--	u16 cap = dpc->cap_pos, ctl;
-+	struct pci_dev *dev, *temp;
-+	struct dpc_dev *dpc;
-+	struct pcie_device *pciedev;
-+	struct device *devdpc;
-+	u16 cap, ctl;
-+
-+	devdpc = pci_find_dpc_dev(pdev);
-+	pciedev = to_pcie_device(devdpc);
-+	dpc = get_service_data(pciedev);
-+	cap = dpc->cap_pos;
- 
- 	pci_lock_rescan_remove();
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-@@ -104,21 +145,31 @@ static void dpc_work(struct work_struct *work)
- 
- 	dpc_wait_link_inactive(dpc);
- 	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
--		return;
-+		return PCI_ERS_RESULT_DISCONNECT;
- 	if (dpc->rp_extensions && dpc->rp_pio_status) {
- 		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
- 				       dpc->rp_pio_status);
- 		dpc->rp_pio_status = 0;
- 	}
- 
--	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
-+	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
- 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
- 
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
- 			      ctl | PCI_EXP_DPC_CTL_INT_EN);
-+
-+	return PCI_ERS_RESULT_RECOVERED;
- }
- 
-+static void dpc_work(struct work_struct *work)
-+{
-+	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
-+	struct pci_dev *pdev = dpc->dev->port;
-+
-+	/* From DPC point of view error is always FATAL. */
-+	pcie_do_recovery(pdev, DPC_FATAL);
-+}
- static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- {
- 	struct device *dev = &dpc->dev->device;
-@@ -297,6 +348,7 @@ static struct pcie_port_service_driver dpcdriver = {
- 	.service	= PCIE_PORT_SERVICE_DPC,
- 	.probe		= dpc_probe,
- 	.remove		= dpc_remove,
-+	.reset_link     = dpc_reset_link,
- };
- 
- static int __init dpc_service_init(void)
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 8f87bbe..9cfd0b8 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -15,6 +15,8 @@
- #define AER_FATAL			1
- #define AER_CORRECTABLE			2
- 
-+#define DPC_FATAL			4
-+
- struct pci_dev;
- 
- struct aer_header_log_regs {
+> 
+> Looks like it was added by cbe4097f8ae6 ("of/pci: Add support for
+> parsing PCI host bridge resources from DT") in v3.18, so it's been
+> around for a while and I guess it would be nice to have a grace period
+> before removing it.
+> 
+
+
 -- 
-2.7.4
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
