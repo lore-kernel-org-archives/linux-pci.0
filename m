@@ -1,197 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46254 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751938AbeD3R2u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Apr 2018 13:28:50 -0400
-Subject: [PATCH v2 2/2] PCI: Implement workaround for the ACS bug in the IDT,
- switch
-From: James Puthukattukaran <james.puthukattukaran@oracle.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <4bd28931-8e8d-6bfe-a98c-49f8e2778c6e@oracle.com>
-Message-ID: <9d9f1948-51a4-f0a5-fccb-2c76931532df@oracle.com>
-Date: Mon, 30 Apr 2018 13:28:46 -0400
+Received: from smtprelay.synopsys.com ([198.182.37.59]:52431 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753425AbeD3Rd0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Apr 2018 13:33:26 -0400
+Subject: Re: [PATCH v7 3/9] PCI: endpoint: functions/pci-epf-test: Add second
+ entry
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
+ <c6cfd167838ae8e226dee0820983efe918fa4e1f.1524577064.git.gustavo.pimentel@synopsys.com>
+ <20180426165605.GA6370@e107981-ln.cambridge.arm.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <d6f3d669-aa94-f6ab-e166-8af0fa7f4d0a@synopsys.com>
+Date: Mon, 30 Apr 2018 18:32:07 +0100
 MIME-Version: 1.0
-In-Reply-To: <4bd28931-8e8d-6bfe-a98c-49f8e2778c6e@oracle.com>
+In-Reply-To: <20180426165605.GA6370@e107981-ln.cambridge.arm.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The IDT switch incorrectly flags an ACS source violation on a read config
-request to an end point device on the completion (IDT 89H32H8G3-YC,
-errata #36) even though the PCI Express spec states that completions are
-never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1). Here's
-the specific copy of the errata text
+On 26/04/2018 17:56, Lorenzo Pieralisi wrote:
+> On Tue, Apr 24, 2018 at 02:44:40PM +0100, Gustavo Pimentel wrote:
+>> Adds a seconds entry on the pci_epf_test_ids structure that disables the
+> 
+> "Add a second entry to..."
+> 
+>> linkup_notifier parameter on driver for the designware EP.
+>>
+>> This allows designware EPs that doesn't have linkup notification signal
+>> to work with pcitest.
+>>
+>> Updates the binding documentation accordingly.
+> 
+> Valid for all the series: use imperative sentences.
+> 
+> eg:
+> 
+> "Update the binding documentation accordingly".
+> 
+> not
+> 
+> "Updates the binding documentation accordingly".
+> 
 
-"Item #36 - Downstream port applies ACS Source Validation to Completions
-Section 6.12.1.1 of the PCI Express Base Specification 3.1 states
-that completions are never affected
-by ACS Source Validation. However, completions received by a
-downstream port of the PCIe switch from a device that has not yet
-captured a PCIe bus number are incorrectly dropped by ACS source
-validation by the switch downstream port.
+Ok, I will do an overall check to fix the entries.
 
-Workaround: Issue a CfgWr1 to the downstream device before issuing
-the first CfgRd1 to the device.
-This allows the downstream device to capture its bus number; ACS
-source validation no longer stops
-completions from being forwarded by the downstream port. It has been
-observed that Microsoft Windows implements this workaround already;
-however, some versions of Linux and other operating systems may not. "
+>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>> Change v2->v3:
+>>  - Added second entry in pci_epf_test_ids structure.
+>>  - Remove test_reg_bar field assignment on second entry.
+>> Changes v3->v4:
+>>  - Nothing changed, just to follow the patch set version.
+>> Changes v4->v5:
+>>  - Changed pci_epf_test_cfg2 to pci_epf_test_designware.
+>> Changes v5->v6:
+>>  - Changed name field from pci_epf_test_designware to pci_epf_test_dw.
+>> Changes v6->v7:
+>>  - Changed variable name from data_cfg2 to data_linkup_notifier_disabled.
+>>
+>>  Documentation/PCI/endpoint/function/binding/pci-test.txt | 2 ++
+>>  drivers/pci/endpoint/functions/pci-epf-test.c            | 8 ++++++++
+>>  2 files changed, 10 insertions(+)
+>>
+>> diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+>> index 3b68b95..dc39f47 100644
+>> --- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
+>> +++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+>> @@ -1,6 +1,8 @@
+>>  PCI TEST ENDPOINT FUNCTION
+>>  
+>>  name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
+>> +name: Should be "pci_epf_test_dw" to bind to the pci_epf_test driver
+>> +      with a custom configuration for the designware EP.
+> 
+> The link between the "name" and the device created is quite obscure and
+> reading pci-test-howto.txt certainly does not clarify it.
 
-The suggested workaround by IDT is to issue a configuration write to the
-downstream device before issuing the first config read. This allows the
-downstream device to capture its bus number, thus avoiding the ACS
-violation on the completion. In order to make sure that the device is ready
-for config accesses, we do what is currently done in making config reads
-till it succeeds and then do the config write as specified by the errata.
-However, to avoid hitting the errata issue when doing config reads, we
-disable ACS SV around this process.
+I will add more information about it.
 
-The patch does the following -
+> 
+> In pci-test-howto.txt an explanation should be added to the configs
+> device creation paragraph to clarify it.
 
-1. Disable ACS source violation if enabled.
-2. Wait for config space access to become available by reading vendor id
-3. Do a config write to the end point (errata workaround)
-4. Enable ACS source validation (if it was enabled to begin with)
+That's true, it should exist some explanation of that. To be honest I didn't
+remember of the pci-test-howto.txt file existence.
 
-Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.h    |   2 +
- drivers/pci/quirks.c | 101 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 103 insertions(+)
+> 
+>>  Configurable Fields:
+>>  vendorid	 : should be 0x104c
+>> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+>> index 7cef851..4ab463b 100644
+>> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+>> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+>> @@ -459,10 +459,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+>>  	return 0;
+>>  }
+>>  
+>> +static const struct pci_epf_test_data data_linkup_notifier_disabled = {
+>> +	.linkup_notifier = false
+>> +};
+>> +
+>>  static const struct pci_epf_device_id pci_epf_test_ids[] = {
+>>  	{
+>>  		.name = "pci_epf_test",
+>>  	},
+>> +	{
+>> +		.name = "pci_epf_test_dw",
+>> +		.driver_data = (kernel_ulong_t)&data_linkup_notifier_disabled,
+>> +	},
+>>  	{},
+> 
+> Should not this be a property derived from the controller compatible
+> property instead of the test device name written in configfs ?
+> 
+> I think I am missing something in the whole scheme of things, please
+> clarify.
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 2132a60..586874d 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -228,6 +228,8 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
- #ifdef CONFIG_PCI_QUIRKS
- int pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn,
- 				u32 *pl, int crs_timeout);
-+bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn,
-+				u32 *pl, int crs_timeout);
- #else
- static int pci_bus_specific_read_dev_vendor_id(struct pci_bus *bus, int devfn,
- 				u32 *pl, int crs_timeout)
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 2b28584..2f5c024 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4742,11 +4742,112 @@ static void quirk_gpu_hda(struct pci_dev *hda)
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
- 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
- 
-+/*
-+ * The IDT switch incorrectly flags an ACS source violation on a read config
-+ * request to an end point device on the completion (IDT 89H32H8G3-YC,
-+ * errata #36) even though the PCI Express spec states that completions are
-+ * never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
-+ * Here's * the specific copy of the errata text --
-+ *
-+ * "Item #36 - Downstream port applies ACS Source Validation to Completions
-+ * Section 6.12.1.1 of the PCI Express Base Specification 3.1 states
-+ * that completions are never affected
-+ * by ACS Source Validation. However, completions received by a
-+ * downstream port of the PCIe switch from a device that has not yet
-+ * captured a PCIe bus number are incorrectly dropped by ACS source
-+ * validation by the switch downstream port."
-+ *
-+ * The suggested workaround by IDT is to issue a configuration write to the
-+ * downstream device before issuing the first config read. This allows the
-+ * downstream device to capture its bus number, thus avoiding the ACS
-+ * violation on the completion. In order to make sure that the device is ready
-+ * for config accesses, we do what is currently done in making config reads
-+ * till it succeeds and then do the config write as specified by the errata.
-+ * However, to avoid hitting the errata issue when doing config reads, we
-+ * disable ACS SV around this process.
-+ */
-+static int pci_idt_acs_quirk(struct pci_bus *bus, int devfn, int enable,
-+				bool found)
-+{
-+	int pos;
-+	u16 cap;
-+	u16 ctrl;
-+	int retval;
-+	struct pci_dev *dev = bus->self;
-+
-+
-+	/*
-+	 * Write 0 to the devfn device under the PCIE switch (bus->self)
-+	 * as part of forcing the devfn number to latch with the device
-+	 * below
-+	 */
-+	if (found)
-+		pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
-+
-+
-+	/* Enable/disable ACS SV feature (based on enable flag) */
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos)
-+		return -ENODEV;
-+
-+	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
-+
-+	if (!(cap & PCI_ACS_SV))
-+		return -ENODEV;
-+
-+	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-+
-+	retval = !!(ctrl & cap & PCI_ACS_SV);
-+	if (enable)
-+		ctrl |= (cap & PCI_ACS_SV);
-+	else
-+		ctrl &= ~(cap & PCI_ACS_SV);
-+
-+	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
-+
-+	/*
-+	 * return the previous state of the ACS SV state i.e was SV enabled
-+	 * or disabled?
-+	 */
-+	return retval;
-+}
-+
-+static int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *l,
-+				int timeout)
-+{
-+	int enable;
-+	bool found;
-+
-+	/*
-+	 * Disable acs for the IDT switch before attempting the initial
-+	 * config accesses to the endpoint device.
-+	 */
-+	enable = pci_idt_acs_quirk(bus, devfn, 0, false);
-+
-+	/*
-+	 * found indicates whether the endpoint device was identified
-+	 * as present or not
-+	 */
-+
-+	found = pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
-+
-+	/*
-+	 * re-enable acs feature for the switch again if it was enabled to
-+	 * start with
-+	 */
-+	if (enable > 0)
-+		pci_idt_acs_quirk(bus, devfn, enable, found);
-+
-+	return found ? 1 : 0;
-+}
-+
-+
- static const struct pci_bus_specific_quirk{
- 	u16 vendor;
- 	u16 device;
- 	int (*bus_quirk)(struct pci_bus *bus, int devfn, u32 *l, int timeout);
- } pci_bus_specific_quirks[] = {
-+	{ PCI_VENDOR_ID_IDT, 0x80b5, pci_idt_bus_quirk},
- 	{0}
- };
- 
--- 
-1.8.3.1
+This type of configuration / configuration was suggested by Kishon. I can only
+assume that it would not be possible (or no one thought of it) to correlate the
+compatible string of the controller to select the configuration, perhaps Kishon
+could give his opinion on the feasibility of this and even to provide some
+example of it. :)
+
+If it is possible, it will be quite straightforward.
+
+> 
+> Thanks,
+> Lorenzo
+> 
