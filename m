@@ -1,62 +1,176 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:38581 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932662AbeD1B6Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Apr 2018 21:58:25 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v2 8/9] PCI: xilinx-nwl: Use pci_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Sat, 28 Apr 2018 09:50:30 +0800
-Message-Id: <1524880230-101309-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1524880102-100856-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from david.siemens.de ([192.35.17.14]:41495 "EHLO david.siemens.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751575AbeD3FtQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Apr 2018 01:49:16 -0400
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v2 03/10] PCI: Factor out __of_pci_get_host_bridge_resources()
+Date: Mon, 30 Apr 2018 07:48:37 +0200
+Message-Id: <35efe707d03c886f1ac1e0c9634810c9da59c88a.1525067324.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+This will be needed for sharing the core logic between current
+of_pci_get_host_bridge_resources() and upcoming
+devm_of_pci_get_host_bridge_resources().
+
+Already rename the dev parameter to dev_node in order to free the
+namespace for a real device parameter.
+
+No functional changes.
+
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 ---
+ drivers/pci/of.c       | 63 ++++++++++++++++++++++++++++----------------------
+ include/linux/of_pci.h |  4 ++--
+ 2 files changed, 38 insertions(+), 29 deletions(-)
 
-Changes in v2: None
-
- drivers/pci/host/pcie-xilinx-nwl.c | 21 ++++-----------------
- 1 file changed, 4 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 4839ae5..1bb77c0 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -544,24 +544,11 @@ static int nwl_pcie_init_msi_irq_domain(struct nwl_pcie *pcie)
- static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index a28355c273ae..375de447a58e 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -243,26 +243,8 @@ void of_pci_check_probe_only(void)
+ EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
+ 
+ #if defined(CONFIG_OF_ADDRESS)
+-/**
+- * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
+- * @dev: device node of the host bridge having the range property
+- * @busno: bus number associated with the bridge root bus
+- * @bus_max: maximum number of buses for this bridge
+- * @resources: list where the range of resources will be added after DT parsing
+- * @io_base: pointer to a variable that will contain on return the physical
+- * address for the start of the I/O range. Can be NULL if the caller doesn't
+- * expect I/O ranges to be present in the device tree.
+- *
+- * It is the caller's job to free the @resources list.
+- *
+- * This function will parse the "ranges" property of a PCI host bridge device
+- * node and setup the resource mapping based on its content. It is expected
+- * that the property conforms with the Power ePAPR document.
+- *
+- * It returns zero if the range parsing has been successful or a standard error
+- * value if it failed.
+- */
+-int of_pci_get_host_bridge_resources(struct device_node *dev,
++static int __of_pci_get_host_bridge_resources(
++			struct device_node *dev_node,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base)
  {
- 	struct device *dev = pcie->dev;
--	struct device_node *node = dev->of_node;
--	struct device_node *legacy_intc_node;
--
--	legacy_intc_node = of_get_next_child(node, NULL);
--	if (!legacy_intc_node) {
--		dev_err(dev, "No legacy intc node found\n");
--		return -EINVAL;
--	}
+@@ -281,15 +263,15 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 	if (!bus_range)
+ 		return -ENOMEM;
  
--	pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node,
--							PCI_NUM_INTX,
--							&legacy_domain_ops,
--							pcie);
--
--	if (!pcie->legacy_irq_domain) {
--		dev_err(dev, "failed to create IRQ domain\n");
--		return -ENOMEM;
--	}
-+	pcie->legacy_irq_domain = pci_alloc_intx_irqd(dev, pcie, false,
-+						&legacy_domain_ops, NULL);
-+	if (IS_ERR(pcie->legacy_irq_domain))
-+		return PTR_ERR(pcie->legacy_irq_domain);
+-	pr_info("host bridge %pOF ranges:\n", dev);
++	pr_info("host bridge %pOF ranges:\n", dev_node);
  
- 	raw_spin_lock_init(&pcie->leg_mask_lock);
- 	nwl_pcie_init_msi_irq_domain(pcie);
+-	err = of_pci_parse_bus_range(dev, bus_range);
++	err = of_pci_parse_bus_range(dev_node, bus_range);
+ 	if (err) {
+ 		bus_range->start = busno;
+ 		bus_range->end = bus_max;
+ 		bus_range->flags = IORESOURCE_BUS;
+ 		pr_info("  No bus range found for %pOF, using %pR\n",
+-			dev, bus_range);
++			dev_node, bus_range);
+ 	} else {
+ 		if (bus_range->end > bus_range->start + bus_max)
+ 			bus_range->end = bus_range->start + bus_max;
+@@ -297,7 +279,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 	pci_add_resource(resources, bus_range);
+ 
+ 	/* Check for ranges property */
+-	err = of_pci_range_parser_init(&parser, dev);
++	err = of_pci_range_parser_init(&parser, dev_node);
+ 	if (err)
+ 		goto parse_failed;
+ 
+@@ -327,7 +309,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 			goto parse_failed;
+ 		}
+ 
+-		err = of_pci_range_to_resource(&range, dev, res);
++		err = of_pci_range_to_resource(&range, dev_node, res);
+ 		if (err) {
+ 			kfree(res);
+ 			continue;
+@@ -336,13 +318,13 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 		if (resource_type(res) == IORESOURCE_IO) {
+ 			if (!io_base) {
+ 				pr_err("I/O range found for %pOF. Please provide an io_base pointer to save CPU base address\n",
+-					dev);
++					dev_node);
+ 				err = -EINVAL;
+ 				goto conversion_failed;
+ 			}
+ 			if (*io_base != (resource_size_t)OF_BAD_ADDR)
+ 				pr_warn("More than one I/O resource converted for %pOF. CPU base address for old range lost!\n",
+-					dev);
++					dev_node);
+ 			*io_base = range.cpu_addr;
+ 		}
+ 
+@@ -359,6 +341,33 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 	pci_free_resource_list(resources);
+ 	return err;
+ }
++
++/**
++ * of_pci_get_host_bridge_resources() - Parse PCI host bridge resources from DT
++ * @dev_node: device node of the host bridge having the range property
++ * @busno: bus number associated with the bridge root bus
++ * @bus_max: maximum number of buses for this bridge
++ * @resources: list where the range of resources will be added after DT parsing
++ * @io_base: pointer to a variable that will contain on return the physical
++ * address for the start of the I/O range. Can be NULL if the caller doesn't
++ * expect I/O ranges to be present in the device tree.
++ *
++ * It is the caller's job to free the @resources list.
++ *
++ * This function will parse the "ranges" property of a PCI host bridge device
++ * node and setup the resource mapping based on its content. It is expected
++ * that the property conforms with the Power ePAPR document.
++ *
++ * It returns zero if the range parsing has been successful or a standard error
++ * value if it failed.
++ */
++int of_pci_get_host_bridge_resources(struct device_node *dev_node,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base)
++{
++	return __of_pci_get_host_bridge_resources(dev_node, busno,
++						  bus_max, resources, io_base);
++}
+ EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 091033a6b836..74eec1943ad2 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -71,11 +71,11 @@ of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+ #endif
+ 
+ #if defined(CONFIG_OF_ADDRESS)
+-int of_pci_get_host_bridge_resources(struct device_node *dev,
++int of_pci_get_host_bridge_resources(struct device_node *dev_node,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base);
+ #else
+-static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
++static inline int of_pci_get_host_bridge_resources(struct device_node *dev_node,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base)
+ {
 -- 
-1.9.1
+2.13.6
