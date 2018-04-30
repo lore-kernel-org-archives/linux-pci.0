@@ -1,175 +1,68 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Tue, 3 Apr 2018 15:45:31 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: John Garry <john.garry@huawei.com>
-Cc: mika.westerberg@linux.intel.com, rafael@kernel.org,
-        lorenzo.pieralisi@arm.com, rjw@rjwysocki.net,
-        hanjun.guo@linaro.org, robh+dt@kernel.org, bhelgaas@google.com,
-        arnd@arndb.de, mark.rutland@arm.com, olof@lixom.net,
-        dann.frazier@canonical.com, andy.shevchenko@gmail.com,
-        robh@kernel.org, andriy.shevchenko@linux.intel.com,
-        joe@perches.com, benh@kernel.crashing.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linuxarm@huawei.com, minyard@acm.org,
-        devicetree@vger.kernel.org, linux-arch@vger.kernel.org,
-        rdunlap@infradead.org, gregkh@linuxfoundation.org,
-        akpm@linux-foundation.org, frowand.list@gmail.com, agraf@suse.de
-Subject: Re: [PATCH v17 04/10] PCI: Apply the new generic I/O management on
- PCI IO hosts
-Message-ID: <20180403134531.GD27789@ulmo>
-References: <1521051359-34473-1-git-send-email-john.garry@huawei.com>
- <1521051359-34473-5-git-send-email-john.garry@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:44138 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753522AbeD3RZ0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Apr 2018 13:25:26 -0400
+To: Alex Williamson <alex.williamson@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Subject: [PATCH v2 0/2] PCI: Support to workaround bus level HW issues
+Message-ID: <4bd28931-8e8d-6bfe-a98c-49f8e2778c6e@oracle.com>
+Date: Mon, 30 Apr 2018 13:25:22 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="7DO5AaGCk89r4vaK"
-In-Reply-To: <1521051359-34473-5-git-send-email-john.garry@huawei.com>
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+There are bugs in certain PCIe switches that cause access violations when an
+endpoint device is hotplugged. In particular, there's an issue with
+certain IDT switches that trigger a ACS violation when bringing up a newly
+plugged PCIe endpoint device. This is a major issue for platforms
+designed to issue a fatal reset in the case of this event.
 
---7DO5AaGCk89r4vaK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The first patch provides a framework for intercepting and working around
+issues with parent devices to the endpoint being brought up.
 
-On Thu, Mar 15, 2018 at 02:15:53AM +0800, John Garry wrote:
-> From: Zhichang Yuan <yuanzhichang@hisilicon.com>
->=20
-> After introducing the new generic I/O space management(Logical PIO), the
-> original PCI MMIO relevant helpers need to be updated based on the new
-> interfaces defined in logical PIO.
-> This patch adapts the corresponding code to match the changes introduced
-> by logical PIO.
->=20
-> Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>        #earlier draft
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> Tested-by: dann frazier <dann.frazier@canonical.com>
-> ---
->  drivers/pci/pci.c        | 92 +++++++++---------------------------------=
-------
->  include/asm-generic/io.h |  2 +-
->  2 files changed, 18 insertions(+), 76 deletions(-)
+The second patch provides the actual patch for the IDT switch issue using
+that framework. The ACS feature is disabled in the IDT switch prior to endpoint
+device detection and then re-enabled subsequent to that.
 
-Today's linux-next regresses on NFS boot for Jetson TK1. I was able to
-bisect it to this commit. I'll comment below for where I think this is
-buggy.
+James
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 3f30b7d..09c2490 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -22,6 +22,7 @@
->  #include <linux/spinlock.h>
->  #include <linux/string.h>
->  #include <linux/log2.h>
-> +#include <linux/logic_pio.h>
->  #include <linux/pci-aspm.h>
->  #include <linux/pm_wakeup.h>
->  #include <linux/interrupt.h>
-> @@ -3436,17 +3437,6 @@ int pci_request_regions_exclusive(struct pci_dev *=
-pdev, const char *res_name)
->  }
->  EXPORT_SYMBOL(pci_request_regions_exclusive);
-> =20
-> -#ifdef PCI_IOBASE
-> -struct io_range {
-> -	struct list_head list;
-> -	phys_addr_t start;
-> -	resource_size_t size;
-> -};
-> -
-> -static LIST_HEAD(io_range_list);
-> -static DEFINE_SPINLOCK(io_range_lock);
-> -#endif
-> -
->  /*
->   * Record the PCI IO range (expressed as CPU physical address + size).
->   * Return a negative value if an error has occured, zero otherwise
-> @@ -3454,51 +3444,28 @@ struct io_range {
->  int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
->  			resource_size_t	size)
->  {
-> -	int err =3D 0;
-> -
-> +	int ret =3D 0;
->  #ifdef PCI_IOBASE
-> -	struct io_range *range;
-> -	resource_size_t allocated_size =3D 0;
-> -
-> -	/* check if the range hasn't been previously recorded */
-> -	spin_lock(&io_range_lock);
-> -	list_for_each_entry(range, &io_range_list, list) {
-> -		if (addr >=3D range->start && addr + size <=3D range->start + size) {
-> -			/* range already registered, bail out */
-> -			goto end_register;
-> -		}
-> -		allocated_size +=3D range->size;
-> -	}
-> +	struct logic_pio_hwaddr *range;
-> =20
-> -	/* range not registed yet, check for available space */
-> -	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
-> -		/* if it's too big check if 64K space can be reserved */
-> -		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
-> -			err =3D -E2BIG;
-> -			goto end_register;
-> -		}
-> -
-> -		size =3D SZ_64K;
-> -		pr_warn("Requested IO range too big, new size set to 64K\n");
-> -	}
-> +	if (!size || addr + size < addr)
-> +		return -EINVAL;
-> =20
-> -	/* add the range to the list */
->  	range =3D kzalloc(sizeof(*range), GFP_ATOMIC);
-> -	if (!range) {
-> -		err =3D -ENOMEM;
-> -		goto end_register;
-> -	}
-> +	if (!range)
-> +		return -ENOMEM;
-> =20
-> -	range->start =3D addr;
-> +	range->fwnode =3D fwnode;
->  	range->size =3D size;
-> +	range->hw_start =3D addr;
-> +	range->flags =3D LOGIC_PIO_CPU_MMIO;
-> =20
-> -	list_add_tail(&range->list, &io_range_list);
-> -
-> -end_register:
-> -	spin_unlock(&io_range_lock);
-> +	ret =3D logic_pio_register_range(range);
+-v2: move workaround to pci_bus_read_dev_vendor_id() from pci_bus_check_dev()
+     and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
+-v3: add bus->self check for root bus and virtual bus for sriov vfs.
+-v4: only do workaround for IDT switches
+-v5: tweak pci_std_enable_acs_sv to deal with unimplemented SV
+-v6: Added errata verbiage verbatim and resolved patch format issues
+-v7: changed int to bool for found and idt_workaround declarations. Also
+     added bugzilla https://bugzilla.kernel.org/show_bug.cgi?id=196979
+-v8: Rewrote the patch by adding a new acs quirk to keep the workaround
+     out of the main code path
+-v9: changed function name from pci_dev_specific_fixup_acs_quirk to
+     pci_bus_acs_quirk. Also, tested for FLR and hot reset scenarios and did
+     not see issues where workaround was required. The issue seems to be
+     related only to cold reset/power on situation.
+-v10: Moved the contents of pci_bus_read_vendor_id into an internal function
+      __pci_bus_read_vendor_id
+-v11: Split the patch into two patches. The first a general quirk framework.
+-v12: Add pci_bus_generic_read_dev_vendor_id() to carry out default behavior
+      when detecting endpoint and pci_bus_specific_read_dev_vendor_id for
+      bus quirk behavior
+-v13: Fixed build errors found for non-x86 platforms via cross compiles when
+      CONFIG_QUIRKS is not defined
 
-This ends up returning -EFAULT at some point, causing the driver's
-(pci-tegra.c) ->probe() to fail.
 
-Let me comment on a prior patch to pinpoint what exactly goes wrong.
+James Puthukattukaran (2):
+  PCI: Add pci_bus_specific_read_dev_vendor_id() to workaround PCI
+    switch     specific issues prior to accessing newly added endpoint
+  PCI: Implement workaround for the ACS bug in the IDT switch
 
-Thierry
+ drivers/pci/pci.h    |  13 +++++
+ drivers/pci/probe.c  |  20 +++++++-
+ drivers/pci/quirks.c | 142 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 174 insertions(+), 1 deletion(-)
 
---7DO5AaGCk89r4vaK
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlrDhXkACgkQ3SOs138+
-s6F7pg/8CQFtf5RHxNaZb5V8K1P/lB1HG4URViYpzlooy/NUaLxFjjlBaCBc6glR
-mviQR2CzLpKIjDs4OvkNs+oQXVNVAf9kT3dl3cvMtXadgXbnm2NhnHlkQdv5fve2
-4V1F2aOFfGj3T/jH4+o63yZ7eJ7DzgCaFUoeHYH6O4S80Uk4gK9iNTFNEApMO6uF
-14M6yAJsPU+mn69JyGLkADSYJej5XoT7keCc9IyBArBonn2TCsI9Wl4xURp4cW3h
-a8I9Ts2KzVP4TtZ0Qm0SBXsVF7anf5/ukHGbnSBEOclRSO6ojxJQAcnZjrQt/uez
-0Uc3QdowmC4X3BRVv2NCRth8dfK255GDffobVs5cgd4PjdrZSonRpYpP9Cy27Nu4
-01uO568zENdGXVmjEZduh0F+XBauBD4k8EkfEKBnD4wKfZUkflv0mY8ATJ51+XcL
-uxeFXtxNhIskdr4oZy3bVpjNRO1OXugaiqx98h7hhfwLAK1w6gu8XMgvP2CFqVIP
-AvugRZdf1oxrupeLDatJwe/IGCUplUD9zki6SPk7AtZuDJUop0b+OLp9PNiCDiTw
-0PPZfhMKErlpepAaACNzk5B4Xs8LFyy5L9K+VVtwLXLn104E9i0H5l7b5isNnHrH
-DYFas4uAeDTtQA5U96J1OSwA64mFAGOjKLAxlCpwnRt8z0yDuqY=
-=/ZDM
------END PGP SIGNATURE-----
-
---7DO5AaGCk89r4vaK--
+-- 
+1.8.3.1
