@@ -1,77 +1,48 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
-Subject: [PATCH v4 4/6] PCI: aardvark: Fix PCIe Max Read Request Size setting
-Date: Fri,  6 Apr 2018 16:55:34 +0200
-Message-Id: <20180406145536.19637-5-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
-References: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>,
- Gregory Clement <gregory.clement@bootlin.com>, Evan Wang <xswang@marvell.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- stable@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
- =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
- Wilson Ding <dingwei@marvell.com>, linux-arm-kernel@lists.infradead.org
+Return-Path: <SRS0=12iv=HT=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=12iv=HT=codeaurora.org=okaya@kernel.org>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+To: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+Cc: Dave Young <dyoung@redhat.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+ linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
+ Eric Biederman <ebiederm@xmission.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Vivek Goyal <vgoyal@redhat.com>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+ <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
+ <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
+ <20180428005620.GB1675@dhcp-128-65.nay.redhat.com>
+ <20180428011845.GC1675@dhcp-128-65.nay.redhat.com>
+ <3ebc908fb196168bf0373875ffc5679e@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <d8d134dc-9757-97cd-7a24-cbb21611d6c6@codeaurora.org>
+Date: Mon, 30 Apr 2018 16:48:15 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <3ebc908fb196168bf0373875ffc5679e@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Evan Wang <xswang@marvell.com>
+Bjorn,
 
-There is an obvious typo issue in the definition of the PCIe maximum
-read request size: a bit shift is directly used as a value, while it
-should be used to shift the correct value.
+On 4/28/2018 9:03 AM, okaya@codeaurora.org wrote:
+>> Hmm, if it is the remove() method then kexec does not use it.  kexec use
+>> the shutdown() method instead.  I missed this details when I replied.
+> 
+> Portdrv hooks up remove handler to shutdown. That's why remove is getting called.
 
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Evan Wang <xswang@marvell.com>
-Reviewed-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
- drivers/pci/host/pci-aardvark.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+What should we do about this?
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 7a0ddb709052..9abf549631b4 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -29,6 +29,7 @@
- #define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT	5
- #define     PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE		(0 << 11)
- #define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT	12
-+#define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ		0x2
- #define PCIE_CORE_LINK_CTRL_STAT_REG				0xd0
- #define     PCIE_CORE_LINK_L0S_ENTRY				BIT(0)
- #define     PCIE_CORE_LINK_TRAINING				BIT(5)
-@@ -295,7 +296,8 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 	reg = PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE |
- 		(7 << PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
- 		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE |
--		PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT;
-+		(PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ <<
-+		 PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT);
- 	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
- 
- 	/* Program PCIe Control 2 to disable strict ordering */
+Since there is an actual HW errata involved, should we quirk this root port and
+not wait as if remove/shutdown doesn't exist?
+
+Paul,
+You might want to file a bugzilla so that we can keep our debug efforts out of this
+list.
+
+Sinan
+
 -- 
-2.14.3
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
