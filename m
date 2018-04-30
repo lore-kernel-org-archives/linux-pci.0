@@ -1,77 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55628 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:52742 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753828AbeDJNZH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Apr 2018 09:25:07 -0400
-Subject: [PATCH v1 1/2] microblaze/PCI: Remove
- pcibios_finish_adding_to_bus() dead code
+        id S1755151AbeD3VRn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Apr 2018 17:17:43 -0400
+Date: Mon, 30 Apr 2018 16:17:40 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Michal Simek <monstr@monstr.eu>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 10 Apr 2018 08:25:06 -0500
-Message-ID: <152336670611.18958.11721407615659058726.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152336656418.18958.17017091754578447948.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152336656418.18958.17017091754578447948.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
+        Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org,
+        kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Lukas Wunner <lukas@wunner.de>,
+        Eric Biederman <ebiederm@xmission.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+Message-ID: <20180430211740.GG95643@bhelgaas-glaptop.roam.corp.google.com>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+ <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
+ <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
+ <20180428005620.GB1675@dhcp-128-65.nay.redhat.com>
+ <20180428011845.GC1675@dhcp-128-65.nay.redhat.com>
+ <3ebc908fb196168bf0373875ffc5679e@codeaurora.org>
+ <d8d134dc-9757-97cd-7a24-cbb21611d6c6@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <d8d134dc-9757-97cd-7a24-cbb21611d6c6@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Mon, Apr 30, 2018 at 04:48:15PM -0400, Sinan Kaya wrote:
+> Bjorn,
+> 
+> On 4/28/2018 9:03 AM, okaya@codeaurora.org wrote:
+> >> Hmm, if it is the remove() method then kexec does not use it.  kexec use
+> >> the shutdown() method instead.  I missed this details when I replied.
+> > 
+> > Portdrv hooks up remove handler to shutdown. That's why remove is getting called.
+> 
+> What should we do about this?
+> 
+> Since there is an actual HW errata involved, should we quirk this
+> root port and not wait as if remove/shutdown doesn't exist?
 
-pcibios_finish_adding_to_bus() is defined but never used.  Remove it.
+I was hoping to avoid a quirk because AFAIK all Intel parts have this
+issue so it will be an ongoing maintenance issue.  I tried to avoid
+the timeout delays, e.g., with 40b960831cfa ("PCI: pciehp: Compute
+timeout from hotplug command start time").
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/microblaze/include/asm/pci.h |    2 --
- arch/microblaze/pci/pci-common.c  |   24 ------------------------
- 2 files changed, 26 deletions(-)
+But we still see the alarming messages, so we should probably add a
+quirk to get rid of those.
 
-diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
-index 114b93488193..4a96480e7716 100644
---- a/arch/microblaze/include/asm/pci.h
-+++ b/arch/microblaze/include/asm/pci.h
-@@ -69,8 +69,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- 
- extern void pcibios_claim_one_bus(struct pci_bus *b);
- 
--extern void pcibios_finish_adding_to_bus(struct pci_bus *bus);
--
- extern void pcibios_resource_survey(void);
- 
- struct file;
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index ae79e8638d50..61494c4379f9 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -1033,30 +1033,6 @@ void pcibios_claim_one_bus(struct pci_bus *bus)
- }
- EXPORT_SYMBOL_GPL(pcibios_claim_one_bus);
- 
--
--/* pcibios_finish_adding_to_bus
-- *
-- * This is to be called by the hotplug code after devices have been
-- * added to a bus, this include calling it for a PHB that is just
-- * being added
-- */
--void pcibios_finish_adding_to_bus(struct pci_bus *bus)
--{
--	pr_debug("PCI: Finishing adding to hotplug bus %04x:%02x\n",
--		 pci_domain_nr(bus), bus->number);
--
--	/* Allocate bus and devices resources */
--	pcibios_allocate_bus_resources(bus);
--	pcibios_claim_one_bus(bus);
--
--	/* Add new devices to global lists.  Register in proc, sysfs. */
--	pci_bus_add_devices(bus);
--
--	/* Fixup EEH */
--	/* eeh_add_device_tree_late(bus); */
--}
--EXPORT_SYMBOL_GPL(pcibios_finish_adding_to_bus);
--
- static void pcibios_setup_phb_resources(struct pci_controller *hose,
- 					struct list_head *resources)
- {
+But I haven't given up on the idea of getting rid of the
+pciehp_remove() path.  I'm not convinced yet that we actually need to
+do anything to shut this device down.  I don't like the assumption
+that kexec requires this.  The kexec is fundamentally just a branch,
+and anything we do before the branch (i.e., in the old kernel), we
+should also be able to do after the branch (i.e., in the kexec-ed
+kernel).
+
+> Paul,
+> You might want to file a bugzilla so that we can keep our debug
+> efforts out of this list.
