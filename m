@@ -1,156 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:60210 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751504AbeDJRO4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Apr 2018 13:14:56 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, gustavo.pimentel@synopsys.com
-Subject: [RFC 10/10] tools: PCI: Add MSI-X support
-Date: Tue, 10 Apr 2018 18:14:49 +0100
-Message-Id: <9865822fb89ea84cb55fe93e151295afcd5c96b3.1523379766.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-References: <cover.1523379766.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 30 Apr 2018 15:22:13 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: bhelgaas@google.com, Joao.Pinto@synopsys.com, jingoohan1@gmail.com,
+        kishon@ti.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v8 3/9] PCI: endpoint: functions/pci-epf-test: Add second
+ entry
+Message-ID: <20180430142213.GC32033@e107981-ln.cambridge.arm.com>
+References: <cover.1524829928.git.gustavo.pimentel@synopsys.com>
+ <c2b6cb8de2502e1b5352be3b6d687b1cb4b7033a.1524829928.git.gustavo.pimentel@synopsys.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c2b6cb8de2502e1b5352be3b6d687b1cb4b7033a.1524829928.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adds MSI-X support to the pcitest tool and modified the pcitest.sh script
-to accomodate this new type of interruption test.
+On Fri, Apr 27, 2018 at 12:59:58PM +0100, Gustavo Pimentel wrote:
+> Add a seconds entry on the pci_epf_test_ids structure that disables the
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
- include/uapi/linux/pcitest.h |  1 +
- tools/pci/pcitest.c          | 18 +++++++++++++++++-
- tools/pci/pcitest.sh         | 25 +++++++++++++++++++++++++
- 3 files changed, 43 insertions(+), 1 deletion(-)
+"Add a second entry..."
 
-diff --git a/include/uapi/linux/pcitest.h b/include/uapi/linux/pcitest.h
-index 953cf03..d746fb1 100644
---- a/include/uapi/linux/pcitest.h
-+++ b/include/uapi/linux/pcitest.h
-@@ -16,5 +16,6 @@
- #define PCITEST_WRITE		_IOW('P', 0x4, unsigned long)
- #define PCITEST_READ		_IOW('P', 0x5, unsigned long)
- #define PCITEST_COPY		_IOW('P', 0x6, unsigned long)
-+#define PCITEST_MSIX		_IOW('P', 0x7, int)
- 
- #endif /* __UAPI_LINUX_PCITEST_H */
-diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
-index 9074b47..9d145a3 100644
---- a/tools/pci/pcitest.c
-+++ b/tools/pci/pcitest.c
-@@ -37,6 +37,7 @@ struct pci_test {
- 	char		barnum;
- 	bool		legacyirq;
- 	unsigned int	msinum;
-+	unsigned int	msixnum;
- 	bool		read;
- 	bool		write;
- 	bool		copy;
-@@ -83,6 +84,15 @@ static int run_test(struct pci_test *test)
- 			fprintf(stdout, "%s\n", result[ret]);
- 	}
- 
-+	if (test->msixnum > 0 && test->msixnum <= 2048) {
-+		ret = ioctl(fd, PCITEST_MSIX, test->msixnum);
-+		fprintf(stdout, "MSI-X%d:\t\t", test->msixnum);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
- 	if (test->write) {
- 		ret = ioctl(fd, PCITEST_WRITE, test->size);
- 		fprintf(stdout, "WRITE (%7ld bytes):\t\t", test->size);
-@@ -133,7 +143,7 @@ int main(int argc, char **argv)
- 	/* set default endpoint device */
- 	test->device = "/dev/pci-endpoint-test.0";
- 
--	while ((c = getopt(argc, argv, "D:b:m:lrwcs:")) != EOF)
-+	while ((c = getopt(argc, argv, "D:b:m:x:lrwcs:")) != EOF)
- 	switch (c) {
- 	case 'D':
- 		test->device = optarg;
-@@ -151,6 +161,11 @@ int main(int argc, char **argv)
- 		if (test->msinum < 1 || test->msinum > 32)
- 			goto usage;
- 		continue;
-+	case 'x':
-+		test->msixnum = atoi(optarg);
-+		if (test->msixnum < 1 || test->msixnum > 2048)
-+			goto usage;
-+		continue;
- 	case 'r':
- 		test->read = true;
- 		continue;
-@@ -173,6 +188,7 @@ int main(int argc, char **argv)
- 			"\t-D <dev>		PCI endpoint test device {default: /dev/pci-endpoint-test.0}\n"
- 			"\t-b <bar num>		BAR test (bar number between 0..5)\n"
- 			"\t-m <msi num>		MSI test (msi number between 1..32)\n"
-+			"\t-x <msix num>	MSI-X test (msix number between 1..2048)\n"
- 			"\t-l			Legacy IRQ test\n"
- 			"\t-r			Read buffer test\n"
- 			"\t-w			Write buffer test\n"
-diff --git a/tools/pci/pcitest.sh b/tools/pci/pcitest.sh
-index 77e8c85..86709a2 100644
---- a/tools/pci/pcitest.sh
-+++ b/tools/pci/pcitest.sh
-@@ -4,6 +4,8 @@
- echo "BAR tests"
- echo
- 
-+modprobe pci_endpoint_test
-+sleep 2
- bar=0
- 
- while [ $bar -lt 6 ]
-@@ -16,7 +18,14 @@ echo
- echo "Interrupt tests"
- echo
- 
-+rmmod pci_endpoint_test
-+sleep 2
-+modprobe pci_endpoint_test irq_type=0
- pcitest -l
-+
-+rmmod pci_endpoint_test
-+sleep 2
-+modprobe pci_endpoint_test irq_type=1
- msi=1
- 
- while [ $msi -lt 33 ]
-@@ -26,9 +35,25 @@ do
- done
- echo
- 
-+rmmod pci_endpoint_test
-+sleep 2
-+modprobe pci_endpoint_test irq_type=2
-+msix=1
-+
-+while [ $msix -lt 2049 ]
-+do
-+        pcitest -x $msix
-+        msix=`expr $msix + 1`
-+done
-+echo
-+
- echo "Read Tests"
- echo
- 
-+rmmod pci_endpoint_test
-+sleep 2
-+modprobe pci_endpoint_test irq_type=1
-+
- pcitest -r -s 1
- pcitest -r -s 1024
- pcitest -r -s 1025
--- 
-2.7.4
+> linkup_notifier parameter on driver for the DesignWare EP.
+> 
+> Allow DesignWare EPs that doesn't have linkup notification signal to work
+> with pcitest.
+> 
+> Update the binding documentation accordingly.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+> Change v2->v3:
+>  - Added second entry in pci_epf_test_ids structure.
+>  - Remove test_reg_bar field assignment on second entry.
+> Changes v3->v4:
+>  - Nothing changed, just to follow the patch set version.
+> Changes v4->v5:
+>  - Changed pci_epf_test_cfg2 to pci_epf_test_designware.
+> Changes v5->v6:
+>  - Changed name field from pci_epf_test_designware to pci_epf_test_dw.
+> Changes v6->v7:
+>  - Changed variable name from data_cfg2 to data_linkup_notifier_disabled.
+> Changes v7->v8:
+>  - Patch description rework for an imperative verbal mode.
+> 
+>  Documentation/PCI/endpoint/function/binding/pci-test.txt | 2 ++
+>  drivers/pci/endpoint/functions/pci-epf-test.c            | 8 ++++++++
+>  2 files changed, 10 insertions(+)
+> 
+> diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+> index 3b68b95..dc39f47 100644
+> --- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
+> +++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+> @@ -1,6 +1,8 @@
+>  PCI TEST ENDPOINT FUNCTION
+>  
+>  name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
+> +name: Should be "pci_epf_test_dw" to bind to the pci_epf_test driver
+> +      with a custom configuration for the designware EP.
+>  
+>  Configurable Fields:
+>  vendorid	 : should be 0x104c
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 7cef851..4ab463b 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -459,10 +459,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+>  	return 0;
+>  }
+>  
+> +static const struct pci_epf_test_data data_linkup_notifier_disabled = {
+> +	.linkup_notifier = false
+> +};
+> +
+>  static const struct pci_epf_device_id pci_epf_test_ids[] = {
+>  	{
+>  		.name = "pci_epf_test",
+>  	},
+> +	{
+> +		.name = "pci_epf_test_dw",
+> +		.driver_data = (kernel_ulong_t)&data_linkup_notifier_disabled,
+
+You have not answered my question on this though:
+
+https://marc.info/?l=linux-pci&m=152476180723047&w=2
+
+> +	},
+>  	{},
+>  };
+>  
+> -- 
+> 2.7.4
+> 
+> 
