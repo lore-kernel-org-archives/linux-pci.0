@@ -1,209 +1,152 @@
-Return-Path: <SRS0=Xniw=H6=siemens.com=jan.kiszka@kernel.org>
-Return-Path: <SRS0=Xniw=H6=siemens.com=jan.kiszka@kernel.org>
-Subject: Re: [pci:pci/resource 8/10] drivers/pci/of.c:332:3-8: WARNING:
- invalid free of devm_ allocated data
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Julia Lawall <julia.lawall@lip6.fr>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, kbuild-all@01.org
-References: <alpine.DEB.2.20.1805110706001.3191@hadrien>
- <3b005d1f-ee86-722b-d5ba-d543c044a941@siemens.com>
-Message-ID: <4720dc4c-9055-2616-c58b-d40895b9477c@siemens.com>
-Date: Fri, 11 May 2018 07:53:21 +0200
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 1 May 2018 16:52:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v5 3/9] PCI: pciehp: Clear Presence Detect and Data Link
+ Layer Status Changed on resume
+Message-ID: <20180501215211.GD11698@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
+ <20180416103453.46232-4-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <3b005d1f-ee86-722b-d5ba-d543c044a941@siemens.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180416103453.46232-4-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-11 07:45, Jan Kiszka wrote:
-> On 2018-05-11 07:08, Julia Lawall wrote:
->> The devm_kzalloc on line 324 makes the kfrees on lines 332 and 355
->> incorrect.  They can just be removed.
+Hi Mika,
+
+On Mon, Apr 16, 2018 at 01:34:47PM +0300, Mika Westerberg wrote:
+> After suspend/resume cycle the Presence Detect or Data Link Layer Status
+> Changed bits might be set and if we don't clear them those events will
+> not fire anymore and nothing happens for instance when a device is now
+> hot-unplugged.
 > 
-> True. In fact, 358 and 359 should go as well - making them obsolete is
-> the whole point of this conversion.
-
-More precisely, 332 needs to become devm_kfree because we skip over one
-resource without failing.
-
+> Fix this by clearing those bits in a newly introduced function
+> pcie_reenable_notification(). This should be fine because immediately
+> after we check if the adapter is still present by reading directly from
+> the status register.
 > 
-> The issue comes already with patch "Add dev parameter to
-> __of_pci_get_host_bridge_resources()" when dev != NULL. Bjorn, should I
-> resend the series with that patch fixed and the rest rebased? Or do you
-> prefer when I update only this patch, fixing the issue here?
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Cc: stable@vger.kernel.org
 
-...or is a fixup patch on top preferred?
+I want to understand why we need to handle this differently between
+the boot-time probe path and the resume path.
 
-Jan
+This patch clears PCI_EXP_SLTSTA_PDC and PCI_EXP_SLTSTA_DLLSC in the
+resume path:
 
+  pciehp_resume
+    pcie_reenable_notification
+      # clear PDC DLLSC
+      pcie_enable_notification
+        # set DLLSCE ABPE/PDCE HPIE CCIE
+    pciehp_get_adapter_status
+      # read PCI_EXP_SLTSTA
+
+We used to clear PCI_EXP_SLTSTA_PDC and PCI_EXP_SLTSTA_DLLSC in the
+probe path:
+
+  pciehp_probe
+    pcie_init
+      # clear PDC ABP PFD MRLSC CC DLSCC
+    pcie_init_notification
+      pciehp_request_irq
+      pcie_enable_notification
+        # set DLLSCE ABPE/PDCE HPIE CCIE
+    pciehp_get_adapter_status
+      # read PCI_EXP_SLTSTA
+    pciehp_get_power_status
+
+db63d40017a5 ("PCI: pciehp: Do not clear Presence Detect Changed
+during initialization") changed the probe path so we don't clear
+PCI_EXP_SLTSTA_PDC there anymore.  This was so we wouldn't miss a PDC
+interrupt that happened before probe.
+
+Why can't we handle probe and resume the same way?  They look quite
+similar.
+
+You say this patch should be fine because we read SLTSTA immediately
+after clearing PDC and DLLSC.  But we also read SLTSTA in the probe
+path, so I'm not sure why we need to clear PDC and DLLSC for resume
+but not for probe.
+
+> ---
+>  drivers/pci/hotplug/pciehp.h      |  2 +-
+>  drivers/pci/hotplug/pciehp_core.c |  2 +-
+>  drivers/pci/hotplug/pciehp_hpc.c  | 13 ++++++++++++-
+>  3 files changed, 14 insertions(+), 3 deletions(-)
 > 
-> Jan
+> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> index 88e917c9120f..5f892065585e 100644
+> --- a/drivers/pci/hotplug/pciehp.h
+> +++ b/drivers/pci/hotplug/pciehp.h
+> @@ -121,7 +121,7 @@ struct controller *pcie_init(struct pcie_device *dev);
+>  int pcie_init_notification(struct controller *ctrl);
+>  int pciehp_enable_slot(struct slot *p_slot);
+>  int pciehp_disable_slot(struct slot *p_slot);
+> -void pcie_enable_notification(struct controller *ctrl);
+> +void pcie_reenable_notification(struct controller *ctrl);
+>  int pciehp_power_on_slot(struct slot *slot);
+>  void pciehp_power_off_slot(struct slot *slot);
+>  void pciehp_get_power_status(struct slot *slot, u8 *status);
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 332b723ff9e6..44a6a63802d5 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -283,7 +283,7 @@ static int pciehp_resume(struct pcie_device *dev)
+>  	ctrl = get_service_data(dev);
+>  
+>  	/* reinitialize the chipset's event detection logic */
+> -	pcie_enable_notification(ctrl);
+> +	pcie_reenable_notification(ctrl);
+>  
+>  	slot = ctrl->slot;
+>  
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 18a42f8f5dc5..98ea75aa32c7 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -659,7 +659,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+>  	return handled;
+>  }
+>  
+> -void pcie_enable_notification(struct controller *ctrl)
+> +static void pcie_enable_notification(struct controller *ctrl)
+>  {
+>  	u16 cmd, mask;
+>  
+> @@ -697,6 +697,17 @@ void pcie_enable_notification(struct controller *ctrl)
+>  		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
+>  }
+>  
+> +void pcie_reenable_notification(struct controller *ctrl)
+> +{
+> +	/*
+> +	 * Clear both Presence and Data Link Layer Changed to make sure
+> +	 * those events still fire after we have re-enabled them.
+> +	 */
+> +	pcie_capability_write_word(ctrl->pcie->port, PCI_EXP_SLTSTA,
+> +				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
+> +	pcie_enable_notification(ctrl);
+> +}
+> +
+>  static void pcie_disable_notification(struct controller *ctrl)
+>  {
+>  	u16 mask;
+> -- 
+> 2.16.3
 > 
->>
->> julia
->>
->> ---------- Forwarded message ----------
->> Date: Fri, 11 May 2018 10:49:38 +0800
->> From: kbuild test robot <lkp@intel.com>
->> To: kbuild@01.org
->> Cc: Julia Lawall <julia.lawall@lip6.fr>
->> Subject: [pci:pci/resource 8/10] drivers/pci/of.c:332:3-8: WARNING: invalid free
->>      of devm_ allocated data
->>
->> CC: kbuild-all@01.org
->> CC: linux-pci@vger.kernel.org
->> TO: Jan Kiszka <jan.kiszka@siemens.com>
->> CC: Bjorn Helgaas <helgaas@kernel.org>
->>
->> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/resource
->> head:   f2837b7a1764f7b58d2febec2fe37fb0cd99de24
->> commit: 67ed62eb921e31fd51c1d83ca6313b9aa3cead46 [8/10] PCI: Remove unused of_pci_get_host_bridge_resources()
->> :::::: branch date: 4 hours ago
->> :::::: commit date: 4 hours ago
->>
->>>> drivers/pci/of.c:332:3-8: WARNING: invalid free of devm_ allocated data
->>    drivers/pci/of.c:355:1-6: WARNING: invalid free of devm_ allocated data
->>
->> # https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?id=67ed62eb921e31fd51c1d83ca6313b9aa3cead46
->> git remote add pci https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
->> git remote update pci
->> git checkout 67ed62eb921e31fd51c1d83ca6313b9aa3cead46
->> vim +332 drivers/pci/of.c
->>
->> 4670d610d Rob Herring 2018-01-17  244
->> 4670d610d Rob Herring 2018-01-17  245  #if defined(CONFIG_OF_ADDRESS)
->> 67ed62eb9 Jan Kiszka  2018-05-09  246  /**
->> 67ed62eb9 Jan Kiszka  2018-05-09  247   * devm_of_pci_get_host_bridge_resources() - Resource-managed parsing of PCI
->> 67ed62eb9 Jan Kiszka  2018-05-09  248   *                                           host bridge resources from DT
->> 67ed62eb9 Jan Kiszka  2018-05-09  249   * @dev: host bridge device
->> 67ed62eb9 Jan Kiszka  2018-05-09  250   * @busno: bus number associated with the bridge root bus
->> 67ed62eb9 Jan Kiszka  2018-05-09  251   * @bus_max: maximum number of buses for this bridge
->> 67ed62eb9 Jan Kiszka  2018-05-09  252   * @resources: list where the range of resources will be added after DT parsing
->> 67ed62eb9 Jan Kiszka  2018-05-09  253   * @io_base: pointer to a variable that will contain on return the physical
->> 67ed62eb9 Jan Kiszka  2018-05-09  254   * address for the start of the I/O range. Can be NULL if the caller doesn't
->> 67ed62eb9 Jan Kiszka  2018-05-09  255   * expect I/O ranges to be present in the device tree.
->> 67ed62eb9 Jan Kiszka  2018-05-09  256   *
->> 67ed62eb9 Jan Kiszka  2018-05-09  257   * This function will parse the "ranges" property of a PCI host bridge device
->> 67ed62eb9 Jan Kiszka  2018-05-09  258   * node and setup the resource mapping based on its content. It is expected
->> 67ed62eb9 Jan Kiszka  2018-05-09  259   * that the property conforms with the Power ePAPR document.
->> 67ed62eb9 Jan Kiszka  2018-05-09  260   *
->> 67ed62eb9 Jan Kiszka  2018-05-09  261   * It returns zero if the range parsing has been successful or a standard error
->> 67ed62eb9 Jan Kiszka  2018-05-09  262   * value if it failed.
->> 67ed62eb9 Jan Kiszka  2018-05-09  263   */
->> 67ed62eb9 Jan Kiszka  2018-05-09  264  int devm_of_pci_get_host_bridge_resources(struct device *dev,
->> 4670d610d Rob Herring 2018-01-17  265  			unsigned char busno, unsigned char bus_max,
->> 4670d610d Rob Herring 2018-01-17  266  			struct list_head *resources, resource_size_t *io_base)
->> 4670d610d Rob Herring 2018-01-17  267  {
->> 67ed62eb9 Jan Kiszka  2018-05-09  268  	struct device_node *dev_node = dev->of_node;
->> 4670d610d Rob Herring 2018-01-17  269  	struct resource_entry *window;
->> 4670d610d Rob Herring 2018-01-17  270  	struct resource *res;
->> 4670d610d Rob Herring 2018-01-17  271  	struct resource *bus_range;
->> 4670d610d Rob Herring 2018-01-17  272  	struct of_pci_range range;
->> 4670d610d Rob Herring 2018-01-17  273  	struct of_pci_range_parser parser;
->> 4670d610d Rob Herring 2018-01-17  274  	char range_type[4];
->> 4670d610d Rob Herring 2018-01-17  275  	int err;
->> 4670d610d Rob Herring 2018-01-17  276
->> 4670d610d Rob Herring 2018-01-17  277  	if (io_base)
->> 4670d610d Rob Herring 2018-01-17  278  		*io_base = (resource_size_t)OF_BAD_ADDR;
->> 4670d610d Rob Herring 2018-01-17  279
->> 07adab611 Jan Kiszka  2018-04-30  280  	bus_range = devm_kzalloc(dev,sizeof(*bus_range), GFP_KERNEL);
->> 4670d610d Rob Herring 2018-01-17  281  	if (!bus_range)
->> 4670d610d Rob Herring 2018-01-17  282  		return -ENOMEM;
->> 4670d610d Rob Herring 2018-01-17  283
->> 877a66649 Jan Kiszka  2018-04-30  284  	dev_info(dev, "host bridge %pOF ranges:\n", dev_node);
->> 4670d610d Rob Herring 2018-01-17  285
->> 08c1b3b10 Jan Kiszka  2018-04-30  286  	err = of_pci_parse_bus_range(dev_node, bus_range);
->> 4670d610d Rob Herring 2018-01-17  287  	if (err) {
->> 4670d610d Rob Herring 2018-01-17  288  		bus_range->start = busno;
->> 4670d610d Rob Herring 2018-01-17  289  		bus_range->end = bus_max;
->> 4670d610d Rob Herring 2018-01-17  290  		bus_range->flags = IORESOURCE_BUS;
->> 877a66649 Jan Kiszka  2018-04-30  291  		dev_info(dev, "  No bus range found for %pOF, using %pR\n",
->> 08c1b3b10 Jan Kiszka  2018-04-30  292  			 dev_node, bus_range);
->> 4670d610d Rob Herring 2018-01-17  293  	} else {
->> 4670d610d Rob Herring 2018-01-17  294  		if (bus_range->end > bus_range->start + bus_max)
->> 4670d610d Rob Herring 2018-01-17  295  			bus_range->end = bus_range->start + bus_max;
->> 4670d610d Rob Herring 2018-01-17  296  	}
->> 4670d610d Rob Herring 2018-01-17  297  	pci_add_resource(resources, bus_range);
->> 4670d610d Rob Herring 2018-01-17  298
->> 4670d610d Rob Herring 2018-01-17  299  	/* Check for ranges property */
->> 08c1b3b10 Jan Kiszka  2018-04-30  300  	err = of_pci_range_parser_init(&parser, dev_node);
->> 4670d610d Rob Herring 2018-01-17  301  	if (err)
->> 4670d610d Rob Herring 2018-01-17  302  		goto parse_failed;
->> 4670d610d Rob Herring 2018-01-17  303
->> 877a66649 Jan Kiszka  2018-04-30  304  	dev_dbg(dev, "Parsing ranges property...\n");
->> 4670d610d Rob Herring 2018-01-17  305  	for_each_of_pci_range(&parser, &range) {
->> 4670d610d Rob Herring 2018-01-17  306  		/* Read next ranges element */
->> 4670d610d Rob Herring 2018-01-17  307  		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
->> 4670d610d Rob Herring 2018-01-17  308  			snprintf(range_type, 4, " IO");
->> 4670d610d Rob Herring 2018-01-17  309  		else if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_MEM)
->> 4670d610d Rob Herring 2018-01-17  310  			snprintf(range_type, 4, "MEM");
->> 4670d610d Rob Herring 2018-01-17  311  		else
->> 4670d610d Rob Herring 2018-01-17  312  			snprintf(range_type, 4, "err");
->> 877a66649 Jan Kiszka  2018-04-30  313  		dev_info(dev, "  %s %#010llx..%#010llx -> %#010llx\n",
->> 877a66649 Jan Kiszka  2018-04-30  314  			 range_type, range.cpu_addr,
->> 877a66649 Jan Kiszka  2018-04-30  315  			 range.cpu_addr + range.size - 1, range.pci_addr);
->> 4670d610d Rob Herring 2018-01-17  316
->> 4670d610d Rob Herring 2018-01-17  317  		/*
->> 4670d610d Rob Herring 2018-01-17  318  		 * If we failed translation or got a zero-sized region
->> 4670d610d Rob Herring 2018-01-17  319  		 * then skip this range
->> 4670d610d Rob Herring 2018-01-17  320  		 */
->> 4670d610d Rob Herring 2018-01-17  321  		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
->> 4670d610d Rob Herring 2018-01-17  322  			continue;
->> 4670d610d Rob Herring 2018-01-17  323
->> 67ed62eb9 Jan Kiszka  2018-05-09  324  		res = devm_kzalloc(dev, sizeof(struct resource), GFP_KERNEL);
->> 4670d610d Rob Herring 2018-01-17  325  		if (!res) {
->> 4670d610d Rob Herring 2018-01-17  326  			err = -ENOMEM;
->> 4670d610d Rob Herring 2018-01-17  327  			goto parse_failed;
->> 4670d610d Rob Herring 2018-01-17  328  		}
->> 4670d610d Rob Herring 2018-01-17  329
->> 08c1b3b10 Jan Kiszka  2018-04-30  330  		err = of_pci_range_to_resource(&range, dev_node, res);
->> 4670d610d Rob Herring 2018-01-17  331  		if (err) {
->> 4670d610d Rob Herring 2018-01-17 @332  			kfree(res);
->> 4670d610d Rob Herring 2018-01-17  333  			continue;
->> 4670d610d Rob Herring 2018-01-17  334  		}
->> 4670d610d Rob Herring 2018-01-17  335
->> 4670d610d Rob Herring 2018-01-17  336  		if (resource_type(res) == IORESOURCE_IO) {
->> 4670d610d Rob Herring 2018-01-17  337  			if (!io_base) {
->> 877a66649 Jan Kiszka  2018-04-30  338  				dev_err(dev, "I/O range found for %pOF. Please provide an io_base pointer to save CPU base address\n",
->> 08c1b3b10 Jan Kiszka  2018-04-30  339  					dev_node);
->> 4670d610d Rob Herring 2018-01-17  340  				err = -EINVAL;
->> 4670d610d Rob Herring 2018-01-17  341  				goto conversion_failed;
->> 4670d610d Rob Herring 2018-01-17  342  			}
->> 4670d610d Rob Herring 2018-01-17  343  			if (*io_base != (resource_size_t)OF_BAD_ADDR)
->> 877a66649 Jan Kiszka  2018-04-30  344  				dev_warn(dev, "More than one I/O resource converted for %pOF. CPU base address for old range lost!\n",
->> 08c1b3b10 Jan Kiszka  2018-04-30  345  					 dev_node);
->> 4670d610d Rob Herring 2018-01-17  346  			*io_base = range.cpu_addr;
->> 4670d610d Rob Herring 2018-01-17  347  		}
->> 4670d610d Rob Herring 2018-01-17  348
->> 4670d610d Rob Herring 2018-01-17  349  		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
->> 4670d610d Rob Herring 2018-01-17  350  	}
->> 4670d610d Rob Herring 2018-01-17  351
->> 4670d610d Rob Herring 2018-01-17  352  	return 0;
->> 4670d610d Rob Herring 2018-01-17  353
->> 4670d610d Rob Herring 2018-01-17  354  conversion_failed:
->> 4670d610d Rob Herring 2018-01-17  355  	kfree(res);
->> 4670d610d Rob Herring 2018-01-17  356  parse_failed:
->> 4670d610d Rob Herring 2018-01-17  357  	resource_list_for_each_entry(window, resources)
->> 4670d610d Rob Herring 2018-01-17  358  		kfree(window->res);
->> 4670d610d Rob Herring 2018-01-17  359  	pci_free_resource_list(resources);
->> 4670d610d Rob Herring 2018-01-17  360  	return err;
->> 4670d610d Rob Herring 2018-01-17  361  }
->> 83d525c0f Jan Kiszka  2018-04-30  362  EXPORT_SYMBOL_GPL(devm_of_pci_get_host_bridge_resources);
->> 4670d610d Rob Herring 2018-01-17  363  #endif /* CONFIG_OF_ADDRESS */
->> 4670d610d Rob Herring 2018-01-17  364
->>
->> :::::: The code at line 332 was first introduced by commit
->> :::::: 4670d610d59233b017a6ea1fa25bbf06dabbff42 PCI: Move OF-related PCI functions into PCI core
->>
->> :::::: TO: Rob Herring <robh@kernel.org>
->> :::::: CC: Bjorn Helgaas <bhelgaas@google.com>
->>
->> ---
->> 0-DAY kernel test infrastructure                Open Source Technology Center
->> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
->>
-> 
-
-
--- 
-Siemens AG, Corporate Technology, CT RDA IOT SES-DE
-Corporate Competence Center Embedded Linux
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
