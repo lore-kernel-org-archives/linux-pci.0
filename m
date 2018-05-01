@@ -1,117 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:64128 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754459AbeEaKzH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 06:55:07 -0400
-Subject: Re: [PATCH v2 4/7] PCI: dwc: Rework MSI callbacks handler
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
-        <adouglas@cadence.com>, <jesper.nilsson@axis.com>
-References: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
- <9558d4fcd6f888599e3b70133f1f242c7a6664ee.1526576613.git.gustavo.pimentel@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <ba3df388-9ec1-fe87-e575-0eddc5a565b7@ti.com>
-Date: Thu, 31 May 2018 16:24:52 +0530
+Return-Path: <SRS0=cWmm=HU=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=cWmm=HU=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <9558d4fcd6f888599e3b70133f1f242c7a6664ee.1526576613.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 01 May 2018 15:30:57 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
+ <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
+ <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
+ Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
+ <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v14 0/9] Address error and recovery for AER and DPC
+In-Reply-To: <20180430224002.GI95643@bhelgaas-glaptop.roam.corp.google.com>
+References: <1524496993-29799-1-git-send-email-poza@codeaurora.org>
+ <f97676e307fe7a02f1f2059a140a5e32@codeaurora.org>
+ <20180430224002.GI95643@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <42d49b12f1465d6d6c2fdfd182031881@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Thursday 17 May 2018 10:39 PM, Gustavo Pimentel wrote:
-> Remove duplicate defines located on pcie-designware.h file already
-> available on /include/uapi/linux/pci-regs.h file.
+On 2018-05-01 04:10, Bjorn Helgaas wrote:
+> On Thu, Apr 26, 2018 at 11:00:52AM +0530, poza@codeaurora.org wrote:
+>> On 2018-04-23 20:53, Oza Pawandeep wrote:
+>> > This patch set brings in error handling support for DPC
+>> >
+>> > The current implementation of AER and error message broadcasting to the
+>> > EP driver is tightly coupled and limited to AER service driver.
+>> > It is important to factor out broadcasting and other link handling
+>> > callbacks. So that not only when AER gets triggered, but also when DPC
+>> > get
+>> > triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+>> >
+>> > The goal of the patch-set is:
+>> > DPC should handle the error handling and recovery similar to AER,
+>> > because
+>> > finally both are attempting recovery in some or the other way,
+>> > and for that error handling and recovery framework has to be loosely
+>> > coupled.
+>> > ...
 > 
-> Add pci_epc_set_msi() maximum 32 interrupts validation.
+>> Hi Bjorn,
+>> 
+>> I know I need to rebase this whole patch-set to 4.17 now.
+>> 
+>> But before I do that, can you please help to comment.
 > 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
-> Change v1->v2:
->  - Nothing changed, just to follow the patch set version.
+> My overall comment is that I think the series will be simpler and read
+> better if you first change AER to do remove/re-enumerate, before doing
+> anything with DPC.
 > 
->  drivers/pci/dwc/pcie-designware-ep.c | 49 ++++++++++++++++++++++++------------
->  drivers/pci/dwc/pcie-designware.h    | 11 --------
->  drivers/pci/endpoint/pci-epc-core.c  |  3 ++-
->  3 files changed, 35 insertions(+), 28 deletions(-)
+> This could be done by extracting just the AER part of "PCI/AER/DPC:
+> Align FATAL error handling for AER and DPC" (i.e., adding
+> pcie_do_fatal_recovery()) and moving that to be the very first patch.
 > 
-> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> index e5f2377..a4baa0d 100644
-> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> @@ -246,29 +246,38 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
->  
->  static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
->  {
-> -	int val;
->  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	u32 val, reg;
-> +
-> +	if (!ep->msi_cap)
+> It's a small change in terms of code size, but significant to drivers,
+> and it's really the core of the series, so it would be good to clearly
+> establish the policy of:
+> 
+>   ERR_NONFATAL => call driver recovery entry points
+>   ERR_FATAL    => remove and re-enumerate
+> 
+> before bringing DPC into the picture.
+> 
+> Then the subsequent patches would all be more or less mechanical
+> changes to make DPC follow the same model.
 
-Ah, msi_cap is used here.
-> +		return 0;
+ok I have taken care of you comment, please follow v15, coming next.
+I could not make that the first patch, because I needed to unify 
+pci_wait_for_link function.
+hence it is the second patch, but now the order looks quiet obvious and 
+simplified.
 
-return -EINVAL.
->  
-> -	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-> -	if (!(val & MSI_CAP_MSI_EN_MASK))
-> +	reg = ep->msi_cap + PCI_MSI_FLAGS;
-> +	val = dw_pcie_readw_dbi(pci, reg);
-> +	if (!(val & PCI_MSI_FLAGS_ENABLE))
->  		return -EINVAL;
->  
-> -	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
-> +	val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
-> +
->  	return val;
->  }
->  
-> -static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
-> +static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
->  {
-> -	int val;
->  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	u32 val, reg;
->  
-> -	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-> -	val &= ~MSI_CAP_MMC_MASK;
-> -	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
-> +	if (!ep->msi_cap)
-> +		return 0;
+Regards,
+Oza.
 
-return -EINVAL.
-> +
-> +	reg = ep->msi_cap + PCI_MSI_FLAGS;
-> +	val = dw_pcie_readw_dbi(pci, reg);
-> +	val &= ~PCI_MSI_FLAGS_QMASK;
-> +	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
->  	dw_pcie_dbi_ro_wr_en(pci);
-> -	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
-> +	dw_pcie_writew_dbi(pci, reg, val);
->  	dw_pcie_dbi_ro_wr_dis(pci);
->  
->  	return 0;
-> @@ -367,21 +376,29 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
->  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->  	struct pci_epc *epc = ep->epc;
->  	u16 msg_ctrl, msg_data;
-> -	u32 msg_addr_lower, msg_addr_upper;
-> +	u32 msg_addr_lower, msg_addr_upper, reg;
->  	u64 msg_addr;
->  	bool has_upper;
->  	int ret;
->  
-> +	if (!ep->msi_cap)
-> +		return 0;
-
-return -EINVAL.
-
-Thanks
-Kishon
+> 
+> Bjorn
