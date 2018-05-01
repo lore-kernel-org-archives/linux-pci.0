@@ -1,83 +1,76 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: songxiaowei <songxiaowei@hisilicon.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>, "chenyao (F)"
- <chenyao11@huawei.com>
-Subject: reply: [PATCH v3 1/2] PCI: kirin: Add MSI support
-Date: Mon, 14 May 2018 01:11:10 +0000
-Message-ID: <99B4C6BADD9E3241B25E52B02BA737C54127E3BF@DGGEMA505-MBS.china.huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45602 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751920AbeEAK4B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 1 May 2018 06:56:01 -0400
+Date: Tue, 1 May 2018 11:55:56 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Simon Horman <horms@verge.net.au>
+Cc: Marek Vasut <marek.vasut@gmail.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
+Message-ID: <20180501105556.GB19391@e107981-ln.cambridge.arm.com>
+References: <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com>
+ <20180409114159.azxeehjkeuinwrwe@verge.net.au>
+ <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
+ <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
+ <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
+ <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
+ <a5a0d78d-627b-6277-ee75-44e204cbd390@gmail.com>
+ <CAMuHMdX9d29JYVDsghd3Koyg8Aeuv0D2Fx5Lnn0bBZSb9RntDw@mail.gmail.com>
+ <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
+ <20180413124819.tw5436lolpn5eqhw@verge.net.au>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- devicetree <devicetree@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- "dimitrysh@google.com" <dimitrysh@google.com>,
- "guodong.xu@linaro.org" <guodong.xu@linaro.org>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Suzhuangluan <suzhuangluan@hisilicon.com>,
- Wangbinghui <wangbinghui@hisilicon.com>, Will Deacon <will.deacon@arm.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Kongfei <kongfei@hisilicon.com>, Rob Herring <robh+dt@kernel.org>,
- "xuwei \(O\)" <xuwei5@huawei.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180413124819.tw5436lolpn5eqhw@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGksIEFuZHkgU2hldmNoZW5rbw0KDQpZYW8gaXMgb24gbWF0ZXJuaXR5IGxlYXZlLCBhbmQgSSds
-bCB0YWtlIG92ZXIgdGhlIGpvYiBhZnRlciBkaXNjdXNzaW5nIHdpdGggaGVyLg0KDQo+IC0tLS0t
-6YKu5Lu25Y6f5Lu2LS0tLS0NCj4g5Y+R5Lu25Lq6OiBBbmR5IFNoZXZjaGVua28gW21haWx0bzph
-bmR5LnNoZXZjaGVua29AZ21haWwuY29tXQ0KPiDlj5HpgIHml7bpl7Q6IDIwMTjlubQ15pyIMTTm
-l6UgNzoxNg0KPiDmlLbku7bkuro6IGNoZW55YW8gKEYpIDxjaGVueWFvMTFAaHVhd2VpLmNvbT4N
-Cj4g5oqE6YCBOiBzb25neGlhb3dlaSA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT47IFdhbmdi
-aW5naHVpDQo+IDx3YW5nYmluZ2h1aUBoaXNpbGljb24uY29tPjsgTG9yZW56byBQaWVyYWxpc2kg
-PGxvcmVuem8ucGllcmFsaXNpQGFybS5jb20+Ow0KPiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bn
-b29nbGUuY29tPjsgeHV3ZWkgKE8pIDx4dXdlaTVAaHVhd2VpLmNvbT47DQo+IFJvYiBIZXJyaW5n
-IDxyb2JoK2R0QGtlcm5lbC5vcmc+OyBNYXJrIFJ1dGxhbmQgPG1hcmsucnV0bGFuZEBhcm0uY29t
-PjsNCj4gQ2F0YWxpbiBNYXJpbmFzIDxjYXRhbGluLm1hcmluYXNAYXJtLmNvbT47IFdpbGwgRGVh
-Y29uDQo+IDx3aWxsLmRlYWNvbkBhcm0uY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsg
-TGludXggS2VybmVsIE1haWxpbmcgTGlzdA0KPiA8bGludXgta2VybmVsQHZnZXIua2VybmVsLm9y
-Zz47IGxpbnV4LWFybSBNYWlsaW5nIExpc3QNCj4gPGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5m
-cmFkZWFkLm9yZz47IGRldmljZXRyZWUNCj4gPGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnPjsg
-ZGltaXRyeXNoQGdvb2dsZS5jb207DQo+IGd1b2RvbmcueHVAbGluYXJvLm9yZzsgU3V6aHVhbmds
-dWFuIDxzdXpodWFuZ2x1YW5AaGlzaWxpY29uLmNvbT47IEtvbmdmZWkNCj4gPGtvbmdmZWlAaGlz
-aWxpY29uLmNvbT4NCj4g5Li76aKYOiBSZTogW1BBVENIIHYzIDEvMl0gUENJOiBraXJpbjogQWRk
-IE1TSSBzdXBwb3J0DQo+IA0KPiBPbiBGcmksIE1heSAxMSwgMjAxOCBhdCAxMjoxNSBQTSwgWWFv
-IENoZW4gPGNoZW55YW8xMUBodWF3ZWkuY29tPiB3cm90ZToNCj4gPiBBZGQgc3VwcG9ydCBmb3Ig
-TVNJLg0KPiANCj4gDQo+ID4gKyAgICAgICBpbnQgcmV0Ow0KPiA+ICsNCj4gPiArICAgICAgIGlm
-IChJU19FTkFCTEVEKENPTkZJR19QQ0lfTVNJKSkgew0KPiANCj4gPiArICAgICAgICAgICAgICAg
-cGNpLT5wcC5tc2lfaXJxID0gcGxhdGZvcm1fZ2V0X2lycShwZGV2LCAwKTsNCj4gPiArICAgICAg
-ICAgICAgICAgaWYgKHBjaS0+cHAubXNpX2lycSA8IDApIHsNCj4gPiArICAgICAgICAgICAgICAg
-ICAgICAgICBkZXZfZXJyKCZwZGV2LT5kZXYsICJmYWlsZWQgdG8gZ2V0IE1TSSBJUlENCj4gKCVk
-KVxuIiwNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHBjaS0+cHAubXNpX2ly
-cSk7DQo+IA0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIHJldHVybiAtRU5PREVWOw0KPiAN
-Cj4gV2h5IHNoYWRvd2luZyBhY3R1YWwgZXJyb3IgY29kZT8NCltzb25neGlhb3dlaV0gIFNvcnJ5
-LCBJIGNhbid0IGdldCB5b3VyIHBvaW50IGFib3V0IHRoaXMsIHdvdWxkIHlvdSBleHBsYWluIGl0
-IGZvciBtZS4NCj4gDQo+ID4gKyAgICAgICAgICAgICAgIH0NCj4gPiArICAgICAgICAgICAgICAg
-cmV0ID0gZGV2bV9yZXF1ZXN0X2lycSgmcGRldi0+ZGV2LCBwY2ktPnBwLm1zaV9pcnEsDQo+ID4g
-KyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAga2lyaW5fcGNpZV9tc2lfaXJx
-X2hhbmRsZXIsDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgSVJR
-Rl9TSEFSRUQgfA0KPiBJUlFGX05PX1RIUkVBRCwNCj4gPiArICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAia2lyaW5fcGNpZV9tc2kiLCAmcGNpLT5wcCk7DQo+ID4gKyAgICAg
-ICAgICAgICAgIGlmIChyZXQpIHsNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICBkZXZfZXJy
-KCZwZGV2LT5kZXYsICJmYWlsZWQgdG8gcmVxdWVzdCBNU0kNCj4gSVJRICVkXG4iLA0KPiA+ICsg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcGNpLT5wcC5tc2lfaXJxKTsNCj4gPiArICAg
-ICAgICAgICAgICAgICAgICAgICByZXR1cm4gcmV0Ow0KPiA+ICsgICAgICAgICAgICAgICB9DQo+
-IA0KPiBJdCB3b3VsZCBiZSBlYXN5IHRvIHJlYWQgYW5kIG1haW50YWluIGlmIHRoaXMgd291bGQg
-YmUgYSBzZXBhcmF0ZSBmdW5jdGlvbi4NCltzb25neGlhb3dlaV0gWWVzLCBhIHNlcGFyYXRlIGZ1
-bmN0aW9uIHdpbGwgYmUgYmV0dGVyLCBhbmQgSSdsbCBmaXggaXQuDQo+IA0KPiA+ICsgICAgICAg
-fQ0KPiANCj4gDQo+IA0KPiAtLQ0KPiBXaXRoIEJlc3QgUmVnYXJkcywNCj4gQW5keSBTaGV2Y2hl
-bmtvDQoNClRoYW5rcyBhIGxvdCwNCg0KQmVzdCBSZWdhcmRzLA0KWGlhb3dlaSBTb25nDQpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2Vy
-bmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0
-cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVs
-Cg==
+On Fri, Apr 13, 2018 at 02:48:19PM +0200, Simon Horman wrote:
+> On Tue, Apr 10, 2018 at 06:17:04PM +0200, Marek Vasut wrote:
+> > On 04/10/2018 05:28 PM, Geert Uytterhoeven wrote:
+> 
+> ...
+> 
+> > >>> rcar_pcie_get_resources() is called while the device is
+> > >>> runtime-enabled/resumed,
+> > >>> pci_free_resource_list() is called while the device is runtime-disabled.
+> > 
+> > rcar_pcie_get_resources() is NOT a pair function for
+> > pci_free_resource_list() . rcar_pcie_parse_request_of_pci_ranges() is a
+> > pair function for pci_free_resource_list().
+> > 
+> > rcar_pcie_parse_request_of_pci_ranges() calls
+> > of_pci_get_host_bridge_resources() internally, so every single function
+> > called after successful call of rcar_pcie_parse_request_of_pci_ranges()
+> > must call pci_free_resource_list().
+> > 
+> > Both of_pci_get_host_bridge_resources() and pci_free_resource_list() are
+> > called with runtime PM disabled.
+> > 
+> > The naming of the functions is confusing though.
+> 
+> Hi,
+> 
+> thanks everyone for their efforts in preparing/reviewing this patch.
+> 
+> It seems there are some differences of opinion on how best to handle the
+> error paths but unlike earlier versions this one seems correct to me. If
+> that turns out to be false we can address it. But I don't think its likely
+> things will be enhanced by continuing this review.
+> 
+> Lorenzo, please consider taking this patch in its current form.
+> 
+> Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+
+Applied to pci/rcar for v4.18, thanks.
+
+Lorenzo
