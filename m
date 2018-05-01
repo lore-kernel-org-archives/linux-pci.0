@@ -1,44 +1,103 @@
-Return-Path: <SRS0=h3bN=HX=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=h3bN=HX=linux.intel.com=mika.westerberg@kernel.org>
-Date: Fri, 4 May 2018 10:20:44 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v5 3/9] PCI: pciehp: Clear Presence Detect and Data Link
- Layer Status Changed on resume
-Message-ID: <20180504072044.GH17277@lahna.fi.intel.com>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
- <20180416103453.46232-4-mika.westerberg@linux.intel.com>
- <20180501215211.GD11698@bhelgaas-glaptop.roam.corp.google.com>
- <20180502115509.GF2355@lahna.fi.intel.com>
- <20180502134148.GF11698@bhelgaas-glaptop.roam.corp.google.com>
- <20180503104250.GJ2355@lahna.fi.intel.com>
- <20180503230108.GD15790@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yisheng Xie <xieyisheng1@huawei.com>
+Cc: bhelgaas@google.com, lenb@kernel.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        guohanjun@huawei.com, jcm@redhat.com, toshi.kani@hpe.com,
+        tanxiaojun@huawei.com, wangzhou1@hisilicon.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>
+Subject: Re: [PATCH v2 1/2] PCI ACPI: Avoid panic when PCI IO resource's size is not page aligned
+Date: Tue, 01 May 2018 11:28:31 +0200
+Message-ID: <3699960.UXjPS91TgB@aspire.rjw.lan>
+In-Reply-To: <1522480343-37669-1-git-send-email-xieyisheng1@huawei.com>
+References: <1522480343-37669-1-git-send-email-xieyisheng1@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180503230108.GD15790@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 03, 2018 at 06:01:08PM -0500, Bjorn Helgaas wrote:
-> If you think we can remove pciehp_force, that would be awesome.  This
-> should be a separate patch all by itself, of course, and include your
-> reasoning above.
+On Saturday, March 31, 2018 9:12:22 AM CEST Yisheng Xie wrote:
+> Zhou reported a bug on Hisilicon arm64 D06 platform with 64KB page size:
 > 
-> I would also love to revert db63d40017a5 ("PCI: pciehp: Do not clear
-> Presence Detect Changed during initialization") because I'm not
-> convinced that trying to handle interrupts that happened before
-> binding the driver makes sense.  It *would* make sense to me to enable
-> interrupts, clear the "changed" status bits so future changes will
-> cause interrupts, and check the "state" status bits and act on them.
+>  [    2.470908] kernel BUG at lib/ioremap.c:72!
+>  [    2.475079] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+>  [    2.480551] Modules linked in:
+>  [    2.483594] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.16.0-rc7-00062-g0b41260-dirty #23
+>  [    2.491756] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI Nemo 2.0 RC0 - B120 03/23/2018
+>  [    2.500614] pstate: 80c00009 (Nzcv daif +PAN +UAO)
+>  [    2.505395] pc : ioremap_page_range+0x268/0x36c
+>  [    2.509912] lr : pci_remap_iospace+0xe4/0x100
+>  [...]
+>  [    2.603733] Call trace:
+>  [    2.606168]  ioremap_page_range+0x268/0x36c
+>  [    2.610337]  pci_remap_iospace+0xe4/0x100
+>  [    2.614334]  acpi_pci_probe_root_resources+0x1d4/0x214
+>  [    2.619460]  pci_acpi_root_prepare_resources+0x18/0xa8
+>  [    2.624585]  acpi_pci_root_create+0x98/0x214
+>  [    2.628843]  pci_acpi_scan_root+0x124/0x20c
+>  [    2.633013]  acpi_pci_root_add+0x224/0x494
+>  [    2.637096]  acpi_bus_attach+0xf8/0x200
+>  [    2.640918]  acpi_bus_attach+0x98/0x200
+>  [    2.644740]  acpi_bus_attach+0x98/0x200
+>  [    2.648562]  acpi_bus_scan+0x48/0x9c
+>  [    2.652125]  acpi_scan_init+0x104/0x268
+>  [    2.655948]  acpi_init+0x308/0x374
+>  [    2.659337]  do_one_initcall+0x48/0x14c
+>  [    2.663160]  kernel_init_freeable+0x19c/0x250
+>  [    2.667504]  kernel_init+0x10/0x100
+>  [    2.670979]  ret_from_fork+0x10/0x18
+> 
+> The cause is the size of PCI IO resource is 32KB, which is 4K aligned but
+> not 64KB aligned, however, ioremap_page_range() request the range as page
+> aligned or it will trigger a BUG_ON() on ioremap_pte_range() it calls, as
+> ioremap_pte_range increase the addr by PAGE_SIZE, which makes addr != end
+> until trigger BUG_ON, if its incoming end is not page aligned. More detail
+> trace is as following:
+> 
+>  ioremap_page_range
+>  -> ioremap_p4d_range
+>     -> ioremap_p4d_range
+>        -> ioremap_pud_range
+>           -> ioremap_pmd_range
+>              -> ioremap_pte_range
+> 
+> This patch fix the bug by align the size of PCI IO resource to PAGE_SIZE.
+> 
+> Reported-by: Zhou Wang <wangzhou1@hisilicon.com>
+> Tested-by: Xiaojun Tan <tanxiaojun@huawei.com>
+> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+> ---
+> I mark this as v2 for I have post a RFC version:
+> 
+>  https://lkml.org/lkml/2018/3/30/8
+>  
+> v2:
+>  * Let the caller of ioremap_page_range() align the request by PAGE_SIZE - per Toshi
+> 
+> Thanks
+> Yisheng
+> 
+>  drivers/acpi/pci_root.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 6fc204a..b758ca3 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -746,7 +746,7 @@ static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
+>  		goto err;
+>  
+>  	res->start = port;
+> -	res->end = port + length - 1;
+> +	res->end = PAGE_ALIGN(port + length) - 1;
 
-OK, I'll make that a separate patch series completely.
+Shouldn't pci_remap_iospace() sanitize its arguments instead?
 
-Regarding the current patch set, do you have any additional comments /
-converns? I would like to send out v6 next week.
+>  	entry->offset = port - pci_addr;
+>  
+>  	if (pci_remap_iospace(res, cpu_addr) < 0)
+> 
+
+
