@@ -1,121 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Subject: [PATCH v3 3/8] PCI: Rename device node parameter of of_pci_get_host_bridge_resources()
-Date: Tue, 15 May 2018 07:58:11 +0200
-Message-Id: <4df503604897aebbcb6e7ab98ef5f24916c6d382.1526363896.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1526363896.git.jan.kiszka@siemens.com>
-References: <cover.1526363896.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1526363896.git.jan.kiszka@siemens.com>
-References: <cover.1526363896.git.jan.kiszka@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=QH9+=HU=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=QH9+=HU=arm.com=marc.zyngier@kernel.org>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+To: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
+ Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org,
+ kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+ Lukas Wunner <lukas@wunner.de>, Eric Biederman <ebiederm@xmission.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Vivek Goyal <vgoyal@redhat.com>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+ <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
+ <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
+ <20180428005620.GB1675@dhcp-128-65.nay.redhat.com>
+ <20180428011845.GC1675@dhcp-128-65.nay.redhat.com>
+ <3ebc908fb196168bf0373875ffc5679e@codeaurora.org>
+ <d8d134dc-9757-97cd-7a24-cbb21611d6c6@codeaurora.org>
+ <20180430211740.GG95643@bhelgaas-glaptop.roam.corp.google.com>
+ <7285da70-2c3e-c3b7-62e1-fdbb55a77729@codeaurora.org>
+ <3549ffe8-7605-d72c-5c09-1436a4288c7d@codeaurora.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <ffe662be-00c7-ab7f-0e88-8119ccfd9600@arm.com>
+Date: Tue, 1 May 2018 13:59:20 +0100
+MIME-Version: 1.0
+In-Reply-To: <3549ffe8-7605-d72c-5c09-1436a4288c7d@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+On 01/05/18 13:38, Sinan Kaya wrote:
+> +Marc,
+> 
+> On 4/30/2018 5:27 PM, Sinan Kaya wrote:
+>> On 4/30/2018 5:17 PM, Bjorn Helgaas wrote:
+>>>> What should we do about this?
+>>>>
+>>>> Since there is an actual HW errata involved, should we quirk this
+>>>> root port and not wait as if remove/shutdown doesn't exist?
+>>> I was hoping to avoid a quirk because AFAIK all Intel parts have this
+>>> issue so it will be an ongoing maintenance issue.  I tried to avoid
+>>> the timeout delays, e.g., with 40b960831cfa ("PCI: pciehp: Compute
+>>> timeout from hotplug command start time").
+>>>
+>>> But we still see the alarming messages, so we should probably add a
+>>> quirk to get rid of those.
+>>>
+>>> But I haven't given up on the idea of getting rid of the
+>>> pciehp_remove() path.  I'm not convinced yet that we actually need to
+>>> do anything to shut this device down.  I don't like the assumption
+>>> that kexec requires this.  The kexec is fundamentally just a branch,
+>>> and anything we do before the branch (i.e., in the old kernel), we
+>>> should also be able to do after the branch (i.e., in the kexec-ed
+>>> kernel).
+>>>
+>>
+>> In my experience with kexec, MSI type edge interrupts are harmless.
+>> You might just see a few unhandled interrupt messages during boot
+>> if something is pending from the first kernel.
 
-We will add a real device parameter to this function soon.
+Unfortunately, that's not always the case.
 
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
----
- drivers/pci/of.c       | 18 +++++++++---------
- include/linux/of_pci.h |  4 ++--
- 2 files changed, 11 insertions(+), 11 deletions(-)
+A number of GICv3/v4 implementations (a very common interrupt controller
+on ARM servers) cannot be disabled, which means they will keep writing
+to their pending tables long after kexec will have started the new
+kernel. And since we don't track memory allocation across kexec, you
+end-up with significant chances of observing single bit corruption as
+interrupts carry on being delivered. Oh, and you won't actually be able
+to take MSIs because you can't even reprogram the damn thing.
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index a28355c273ae..8d4778ef5806 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -245,7 +245,7 @@ EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
- #if defined(CONFIG_OF_ADDRESS)
- /**
-  * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
-- * @dev: device node of the host bridge having the range property
-+ * @dev_node: device node of the host bridge having the range property
-  * @busno: bus number associated with the bridge root bus
-  * @bus_max: maximum number of buses for this bridge
-  * @resources: list where the range of resources will be added after DT parsing
-@@ -262,7 +262,7 @@ EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
-  * It returns zero if the range parsing has been successful or a standard error
-  * value if it failed.
-  */
--int of_pci_get_host_bridge_resources(struct device_node *dev,
-+int of_pci_get_host_bridge_resources(struct device_node *dev_node,
- 			unsigned char busno, unsigned char bus_max,
- 			struct list_head *resources, resource_size_t *io_base)
- {
-@@ -281,15 +281,15 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
- 	if (!bus_range)
- 		return -ENOMEM;
- 
--	pr_info("host bridge %pOF ranges:\n", dev);
-+	pr_info("host bridge %pOF ranges:\n", dev_node);
- 
--	err = of_pci_parse_bus_range(dev, bus_range);
-+	err = of_pci_parse_bus_range(dev_node, bus_range);
- 	if (err) {
- 		bus_range->start = busno;
- 		bus_range->end = bus_max;
- 		bus_range->flags = IORESOURCE_BUS;
- 		pr_info("  No bus range found for %pOF, using %pR\n",
--			dev, bus_range);
-+			dev_node, bus_range);
- 	} else {
- 		if (bus_range->end > bus_range->start + bus_max)
- 			bus_range->end = bus_range->start + bus_max;
-@@ -297,7 +297,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
- 	pci_add_resource(resources, bus_range);
- 
- 	/* Check for ranges property */
--	err = of_pci_range_parser_init(&parser, dev);
-+	err = of_pci_range_parser_init(&parser, dev_node);
- 	if (err)
- 		goto parse_failed;
- 
-@@ -327,7 +327,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
- 			goto parse_failed;
- 		}
- 
--		err = of_pci_range_to_resource(&range, dev, res);
-+		err = of_pci_range_to_resource(&range, dev_node, res);
- 		if (err) {
- 			kfree(res);
- 			continue;
-@@ -336,13 +336,13 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
- 		if (resource_type(res) == IORESOURCE_IO) {
- 			if (!io_base) {
- 				pr_err("I/O range found for %pOF. Please provide an io_base pointer to save CPU base address\n",
--					dev);
-+					dev_node);
- 				err = -EINVAL;
- 				goto conversion_failed;
- 			}
- 			if (*io_base != (resource_size_t)OF_BAD_ADDR)
- 				pr_warn("More than one I/O resource converted for %pOF. CPU base address for old range lost!\n",
--					dev);
-+					dev_node);
- 			*io_base = range.cpu_addr;
- 		}
- 
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 091033a6b836..74eec1943ad2 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -71,11 +71,11 @@ of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
- #endif
- 
- #if defined(CONFIG_OF_ADDRESS)
--int of_pci_get_host_bridge_resources(struct device_node *dev,
-+int of_pci_get_host_bridge_resources(struct device_node *dev_node,
- 			unsigned char busno, unsigned char bus_max,
- 			struct list_head *resources, resource_size_t *io_base);
- #else
--static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
-+static inline int of_pci_get_host_bridge_resources(struct device_node *dev_node,
- 			unsigned char busno, unsigned char bus_max,
- 			struct list_head *resources, resource_size_t *io_base)
- {
+Yes, this can be considered a HW bug.
+
+>> It is the level interrupts that are more concerning. It remains pending
+>> until the interrupt source is cleared. CPU never returns from the
+>> interrupt handler to actually continue booting the second kernel.
+> 
+> This makes me wonder why kexec doesn't disable all interrupt sources by
+> itself instead of relying on the drivers shutdown routine. Some drivers
+> don't even have a shutdown callback. Kexec could have done both as another
+> example. Something like.
+> 
+> 1. Call shutdown for all drivers if available.
+> 2. Disable all interrupt sources in the interrupt controller
+> 3. Start the new kernel.
+
+See above. Although you can shut off the end-point and to some extent
+mask interrupts before jumping into the payload, it is not always
+possible to go back to a reasonable state where you can take actually MSIs.
+
+Thanks,
+
+	M.
 -- 
-2.13.6
+Jazz is not dead. It just smells funny...
