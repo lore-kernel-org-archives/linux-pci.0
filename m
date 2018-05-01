@@ -1,77 +1,123 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-To: Logan Gunthorpe <logang@deltatee.com>, Stephen Bates
- <sbates@raithlin.com>, Jerome Glisse <jglisse@redhat.com>
-References: <20180423233046.21476-5-logang@deltatee.com>
- <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
- <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
- <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
- <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
- <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
- <20180508133407.57a46902@w520.home>
- <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
- <20180508141331.7cd737cb@w520.home>
- <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
- <20180508205005.GC15608@redhat.com>
- <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
- <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
- <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <2fc61d29-9eb4-d168-a3e5-955c36e5d821@amd.com>
-Date: Thu, 10 May 2018 14:52:46 +0200
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 1 May 2018 14:55:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        1745646@bugs.launchpad.net,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [Regression] PCI / PM: Simplify device wakeup settings code
+Message-ID: <20180501195501.GB11698@bhelgaas-glaptop.roam.corp.google.com>
+References: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
+ <CAJZ5v0j8GAatWoAra37y3c-ti2Ft5am75KONgEkjB6AaypkCqg@mail.gmail.com>
+ <ae84e595-dede-1409-4aff-3a29a310f2ba@canonical.com>
+ <CAJZ5v0gapMMf=KqBAoDTv0SUBeusrUFPyEz6Z4k8Y3Szizdm5Q@mail.gmail.com>
+ <1f67f00a-8141-f9af-2120-c78f7cfecb1d@canonical.com>
+ <CAJZ5v0iPsoxCLxsq156RvyZ1cWtM9jNMLUPMnE3cqi5r1jk8jg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Sagi Grimberg <sagi@grimberg.me>,
- "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <helgaas@kernel.org>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0iPsoxCLxsq156RvyZ1cWtM9jNMLUPMnE3cqi5r1jk8jg@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QW0gMDkuMDUuMjAxOCB1bSAxODo0NSBzY2hyaWViIExvZ2FuIEd1bnRob3JwZToKPgo+IE9uIDA5
-LzA1LzE4IDA3OjQwIEFNLCBDaHJpc3RpYW4gS8O2bmlnIHdyb3RlOgo+PiBUaGUga2V5IHRha2Vh
-d2F5IGlzIHRoYXQgd2hlbiBhbnkgZGV2aWNlIGhhcyBBVFMgZW5hYmxlZCB5b3UgY2FuJ3QKPj4g
-ZGlzYWJsZSBBQ1Mgd2l0aG91dCBicmVha2luZyBpdCAoZXZlbiBpZiB5b3UgdW5wbHVnIGFuZCBy
-ZXBsdWcgaXQpLgo+IEkgZG9uJ3QgZm9sbG93IGhvdyB5b3UgY2FtZSB0byB0aGlzIGNvbmNsdXNp
-b24uLi4KPiAgIFRoZSBBQ1MgYml0cyB3ZSdkIGJlIHR1cm5pbmcgb2ZmIGFyZSB0aGUgb25lcyB0
-aGF0IGZvcmNlIFRMUHMgYWRkcmVzc2VkCj4gYXQgYSBwZWVyIHRvIGdvIHRvIHRoZSBSQy4gSG93
-ZXZlciwgQVRTIHRyYW5zbGF0aW9uIHBhY2tldHMgd2lsbCBiZQo+IGFkZHJlc3NlZCB0byBhbiB1
-bnRyYW5zbGF0ZWQgYWRkcmVzcyB3aGljaCBhIHN3aXRjaCB3aWxsIG5vdCBpZGVudGlmeSBhcwo+
-IGEgcGVlciBhZGRyZXNzIHNvIGl0IHNob3VsZCBzZW5kIHVwc3RyZWFtIHJlZ2FyZGxlc3MgdGhl
-IHN0YXRlIG9mIHRoZQo+IEFDUyBSZXEvQ29tcCByZWRpcmVjdCBiaXRzLgoKV2h5IHdvdWxkIGEg
-c3dpdGNoIG5vdCBpZGVudGlmeSB0aGF0IGFzIGEgcGVlciBhZGRyZXNzPyBXZSB1c2UgdGhlIFBB
-U0lEIAp0b2dldGhlciB3aXRoIEFUUyB0byBpZGVudGlmeSB0aGUgYWRkcmVzcyBzcGFjZSB3aGlj
-aCBhIHRyYW5zYWN0aW9uIApzaG91bGQgdXNlLgoKSWYgSSdtIG5vdCBjb21wbGV0ZWx5IG1pc3Rh
-a2VuIHdoZW4geW91IGRpc2FibGUgQUNTIGl0IGlzIHBlcmZlY3RseSAKcG9zc2libGUgdGhhdCBh
-IGJyaWRnZSBpZGVudGlmaWVzIGEgdHJhbnNhY3Rpb24gYXMgYmVsb25naW5nIHRvIGEgcGVlciAK
-YWRkcmVzcywgd2hpY2ggaXNuJ3Qgd2hhdCB3ZSB3YW50IGhlcmUuCgpDaHJpc3RpYW4uCgo+Cj4g
-T25jZSB0aGUgdHJhbnNsYXRpb24gY29tZXMgYmFjaywgdGhlIEFUUyBlbmRwb2ludCBzaG91bGQg
-c2VuZCB0aGUgVExQIHRvCj4gdGhlIHBlZXIgYWRkcmVzcyB3aXRoIHRoZSBBVCBwYWNrZXQgdHlw
-ZSBhbmQgaXQgd2lsbCBiZSBkaXJlY3RlZCB0byB0aGUKPiBwZWVyIHByb3ZpZGVkIHRoZSBEaXJl
-Y3QgVHJhbnNsYXRlZCBiaXQgaXMgc2V0IChvciB0aGUgcmVkaXJlY3QgYml0cyBhcmUKPiB1bnNl
-dCkuCj4KPiBJIGNhbid0IHNlZSBob3cgdHVybmluZyBvZmYgdGhlIFJlcS9Db21wIHJlZGlyZWN0
-IGJpdHMgY291bGQgYnJlYWsKPiBhbnl0aGluZyBleGNlcHQgZm9yIHRoZSBpc29sYXRpb24gdGhl
-eSBwcm92aWRlLgo+Cj4gTG9nYW4KCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwpMaW51eC1udm1lIG1haWxpbmcgbGlzdApMaW51eC1udm1lQGxpc3RzLmlu
-ZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9s
-aW51eC1udm1lCg==
+On Tue, May 01, 2018 at 10:34:29AM +0200, Rafael J. Wysocki wrote:
+> On Mon, Apr 30, 2018 at 4:22 PM, Joseph Salisbury
+> <joseph.salisbury@canonical.com> wrote:
+> > On 04/16/2018 11:58 AM, Rafael J. Wysocki wrote:
+> >> On Mon, Apr 16, 2018 at 5:31 PM, Joseph Salisbury
+> >> <joseph.salisbury@canonical.com> wrote:
+> >>> On 04/13/2018 05:34 PM, Rafael J. Wysocki wrote:
+> >>>> On Fri, Apr 13, 2018 at 7:56 PM, Joseph Salisbury
+> >>>> <joseph.salisbury@canonical.com> wrote:
+> >>>>> Hi Rafael,
+> >>>>>
+> >>>>> A kernel bug report was opened against Ubuntu [0].  After a kernel
+> >>>>> bisect, it was found that reverting the following two commits resolved
+> >>>>> this bug:
+> >>>>>
+> >>>>> 0ce3fcaff929 ("PCI / PM: Restore PME Enable after config space restoration")
+> >>>>> 0847684cfc5f("PCI / PM: Simplify device wakeup settings code")
+> >>>>>
+> >>>>> This is a regression introduced in v4.13-rc1 and still exists in
+> >>>>> mainline.  The bug causes the battery to drain when the system is
+> >>>>> powered down and unplugged, which does not happed prior to these two
+> >>>>> commits.
+> >>>> What system and what do you mean by "powered down"?  How much time
+> >>>> does it take for the battery to drain now?
+> >>> By powered down, the bug reporter is saying physically powered off and
+> >>> unplugged.  The system is a HP laptop:
+> >>>
+> >>> dmi.chassis.vendor: HP
+> >>> dmi.product.family: 103C_5335KV HP Notebook
+> >>> dmi.product.name: HP Notebook
+> >>> vendor_id    : GenuineIntel
+> >>> cpu family    : 6
+> >>>
+> >>>
+> >>>>> The bisect actually pointed to commit de3ef1e, but reverting
+> >>>>> these two commits fixes the issue.
+> >>>>>
+> >>>>> I was hoping to get your feedback, since you are the patch author.  Do
+> >>>>> you think gathering any additional data will help diagnose this issue,
+> >>>>> or would it be best to submit a revert request?
+> >>>> First, reverting these is not an option or you will break systems
+> >>>> relying on them now.  4.13 is three releases back at this point.
+> >>>>
+> >>>> Second, your issue appears to be related to the suspend/shutdown path
+> >>>> whereas commit 0ce3fcaff929 is mostly about resume, so presumably the
+> >>>> change in pci_enable_wake() causes the problem to happen.  Can you try
+> >>>> to revert this one alone and see if that helps?
+> >>> A test kernel with commits 0ce3fcaff929 and de3ef1eb1cd0 reverted was
+> >>> tested.  However, the test kernel still exhibited the bug.
+> >> So essentially the bisection result cannot be trusted.
+> >
+> > We performed some more testing and confirmed just a revert of the
+> > following commit resolves the bug:
+> >
+> > 0847684cfc5f0 ("PCI / PM: Simplify device wakeup settings code")
+> 
+> Thanks for confirming this!
+> 
+> > Can you think of any suggestions to help debug further?
+> 
+> The root cause of the regression is likely the change in
+> pci_enable_wake() removing the device_may_wakeup() check from it.
+> 
+> Probably, one of the drivers in the platform calls pci_enable_wake()
+> directly from its ->shutdown() callback and that causes the device to
+> be set up for system wakeup which in turn causes the power draw while
+> the system is off to increase.
+> 
+> I would look at the PCI drivers used on that platform to find which of
+> them call pci_enable_wake() directly from ->shutdown() and I would
+> make these calls conditional on device_may_wakeup().
+
+I took a quick look with
+
+  git grep -E "pci_enable_wake\(.*[^0]\);|device_may_wakeup"
+
+and didn't notice any pci_enable_wake() callers that called
+device_may_wakeup() first.
+
+Probably a dumb question, but would it make sense to restore the
+device_may_wakeup() check in pci_enable_wake(), e.g.,
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e597655a5643..9fa64c175f92 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1932,6 +1932,9 @@ int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable)
+ {
+ 	int ret = 0;
+ 
++	if (enable && !device_may_wakeup(&dev->dev))
++		return -EINVAL;
++
+ 	/*
+ 	 * Bridges can only signal wakeup on behalf of subordinate devices,
+ 	 * but that is set up elsewhere, so skip them.
