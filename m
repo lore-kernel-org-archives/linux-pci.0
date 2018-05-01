@@ -1,150 +1,163 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 08/40] iommu/iopf: Handle mm faults
-Date: Fri, 11 May 2018 20:06:09 +0100
-Message-Id: <20180511190641.23008-9-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+Date: Tue, 1 May 2018 15:32:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v5 2/9] PCI: Take bridge window alignment into account
+ when distributing resources
+Message-ID: <20180501201546.GC11698@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
+ <20180416103453.46232-3-mika.westerberg@linux.intel.com>
+ <20180425223853.GA225403@bhelgaas-glaptop.roam.corp.google.com>
+ <20180426122333.GE2173@lahna.fi.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180426122333.GE2173@lahna.fi.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a recoverable page fault is handled by the fault workqueue, find the
-associated mm and call handle_mm_fault.
+On Thu, Apr 26, 2018 at 03:23:33PM +0300, Mika Westerberg wrote:
+> On Wed, Apr 25, 2018 at 05:38:54PM -0500, Bjorn Helgaas wrote:
+> > On Mon, Apr 16, 2018 at 01:34:46PM +0300, Mika Westerberg wrote:
+> > > When hot-adding a PCIe switch the way we currently distribute resources
+> > > does not always work well because devices connected to the switch might
+> > > need to have their MMIO resources aligned to something else than the
+> > > default 1 MB boundary. For example Intel Gigabit ET2 quad port server
+> > > adapter includes PCIe switch leading to 4 x GbE NIC devices that want
+> > > to have their MMIO resources aligned to 2 MB boundary instead.
+> > > 
+> > > The current resource distribution code does not take this alignment into
+> > > account and might try to add too much resources for the extension
+> > > hotplug bridge(s). The resulting bridge window is too big which makes
+> > > the resource assignment operation fail, and we are left with a bridge
+> > > window with minimal amount (1 MB) of MMIO space.
+> > > 
+> > > Here is what happens when an Intel Gigabit ET2 quad port server adapter
+> > > is hot-added:
+> > > 
+> > >   pci 0000:39:00.0: BAR 14: assigned [mem 0x53300000-0x6a0fffff]
+> > >                                           ^^^^^^^^^^
+> > >   pci 0000:3a:01.0: BAR 14: assigned [mem 0x53400000-0x547fffff]
+> > >                                           ^^^^^^^^^^
+> > > The above shows that the downstream bridge (3a:01.0) window is aligned
+> > > to 2 MB instead of 1 MB as is the upstream bridge (39:00.0) window. The
+> > > remaining MMIO space (0x15a00000) is assigned to the hotplug bridge
+> > > (3a:04.0) but it fails:
+> > > 
+> > >   pci 0000:3a:04.0: BAR 14: no space for [mem size 0x15a00000]
+> > >   pci 0000:3a:04.0: BAR 14: failed to assign [mem size 0x15a00000]
+> > > 
+> > > The MMIO resource is calculated as follows:
+> > > 
+> > >   start = 0x54800000
+> > >   end = 0x54800000 + 0x15a00000 - 1 = 0x6a1fffff
+> > > 
+> > > This results bridge window [mem 0x54800000 - 0x6a1fffff] and it ends
+> > > after the upstream bridge window [mem 0x53300000-0x6a0fffff] explaining
+> > > the above failure. Because of this Linux falls back to the default
+> > > allocation of 1 MB as can be seen from 'lspci' output:
+> > > 
+> > >  39:00.0 Memory behind bridge: 53300000-6a0fffff [size=366M]
+> > >    3a:01.0 Memory behind bridge: 53400000-547fffff [size=20M]
+> > >    3a:04.0 Memory behind bridge: 53300000-533fffff [size=1M]
+> > > 
+> > > The hotplug bridge 3a:04.0 only occupies 1 MB MMIO window which is
+> > > clearly not enough for extending the PCIe topology later if more devices
+> > > are to be hot-added.
+> > > 
+> > > Fix this by substracting properly aligned non-hotplug downstream bridge
+> > > window size from the remaining resources used for extension. After this
+> > > change the resource allocation looks like:
+> > > 
+> > >   39:00.0 Memory behind bridge: 53300000-6a0fffff [size=366M]
+> > >     3a:01.0 Memory behind bridge: 53400000-547fffff [size=20M]
+> > >     3a:04.0 Memory behind bridge: 54800000-6a0fffff [size=345M]
+> > > 
+> > > This matches the expectation. All the extra MMIO resource space (345 MB)
+> > > is allocated to the extension hotplug bridge (3a:04.0).
+> > 
+> > Sorry, I've spent a lot of time trying to trace through this code, and
+> > I'm still hopelessly confused.  Can you post the complete "lspci -vv"
+> > output and the dmesg log (including the hot-add event) somewhere and
+> > include a URL to it?
+> 
+> I sent you the logs and lspci output both with and without this patch
+> when I connect a full chain of 6 Thunderbolt devices where 3 of them
+> include those NICs with 4 ethernet ports. The resulting topology
+> includes total of 6 + 3 + 1 PCIe switches.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Thanks, I opened https://bugzilla.kernel.org/show_bug.cgi?id=199581
+and attached the info you sent.
 
----
-v1->v2: let IOMMU drivers deal with Stop PASID
----
- drivers/iommu/io-pgfault.c | 86 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 84 insertions(+), 2 deletions(-)
+> > I think I understand the problem you're solving:
+> > 
+> >   - You have 366M, 1M-aligned, available for things on bus 3a
+> >   - You assign 20M, 2M-aligned to 3a:01.0
+> >   - This leaves 346M for other things on bus 3a, but it's not all
+> >     contiguous because the 20M is in the middle.
+> >   - The remaining 346M might be 1M on one side and 345M on the other
+> >     (and there are many other possibilities, e.g., 3M + 343M, 5M +
+> >     341M, ..., 345M + 1M).
+> >   - The current code tries to assign all 346M to 3a:04.0, which
+> >     fails because that space is not contiguous, so it falls back to
+> >     allocating 1M, which works but is insufficient for future
+> >     hot-adds.
+> 
+> My understanding is that the 20M is aligned to 2M so we need to take
+> that into account when we distribute the remaining space which makes it
+> 345 instead of 346 which it would be without the alignment.
 
-diff --git a/drivers/iommu/io-pgfault.c b/drivers/iommu/io-pgfault.c
-index 321c00dd3a3d..dd2639e5c03b 100644
---- a/drivers/iommu/io-pgfault.c
-+++ b/drivers/iommu/io-pgfault.c
-@@ -7,6 +7,7 @@
- 
- #include <linux/iommu.h>
- #include <linux/list.h>
-+#include <linux/sched/mm.h>
- #include <linux/slab.h>
- #include <linux/workqueue.h>
- 
-@@ -65,8 +66,65 @@ static int iopf_complete(struct device *dev, struct iommu_fault_event *evt,
- static enum page_response_code
- iopf_handle_single(struct iopf_context *fault)
- {
--	/* TODO */
--	return -ENODEV;
-+	int ret;
-+	struct mm_struct *mm;
-+	struct vm_area_struct *vma;
-+	unsigned int access_flags = 0;
-+	unsigned int fault_flags = FAULT_FLAG_REMOTE;
-+	struct iommu_fault_event *evt = &fault->evt;
-+	enum page_response_code status = IOMMU_PAGE_RESP_INVALID;
-+
-+	if (!evt->pasid_valid)
-+		return status;
-+
-+	mm = iommu_sva_find(evt->pasid);
-+	if (!mm)
-+		return status;
-+
-+	down_read(&mm->mmap_sem);
-+
-+	vma = find_extend_vma(mm, evt->addr);
-+	if (!vma)
-+		/* Unmapped area */
-+		goto out_put_mm;
-+
-+	if (evt->prot & IOMMU_FAULT_READ)
-+		access_flags |= VM_READ;
-+
-+	if (evt->prot & IOMMU_FAULT_WRITE) {
-+		access_flags |= VM_WRITE;
-+		fault_flags |= FAULT_FLAG_WRITE;
-+	}
-+
-+	if (evt->prot & IOMMU_FAULT_EXEC) {
-+		access_flags |= VM_EXEC;
-+		fault_flags |= FAULT_FLAG_INSTRUCTION;
-+	}
-+
-+	if (!(evt->prot & IOMMU_FAULT_PRIV))
-+		fault_flags |= FAULT_FLAG_USER;
-+
-+	if (access_flags & ~vma->vm_flags)
-+		/* Access fault */
-+		goto out_put_mm;
-+
-+	ret = handle_mm_fault(vma, evt->addr, fault_flags);
-+	status = ret & VM_FAULT_ERROR ? IOMMU_PAGE_RESP_INVALID :
-+		IOMMU_PAGE_RESP_SUCCESS;
-+
-+out_put_mm:
-+	up_read(&mm->mmap_sem);
-+
-+	/*
-+	 * If the process exits while we're handling the fault on its mm, we
-+	 * can't do mmput(). exit_mmap() would release the MMU notifier, calling
-+	 * iommu_notifier_release(), which has to flush the fault queue that
-+	 * we're executing on... So mmput_async() moves the release of the mm to
-+	 * another thread, if we're the last user.
-+	 */
-+	mmput_async(mm);
-+
-+	return status;
- }
- 
- static void iopf_handle_group(struct work_struct *work)
-@@ -100,6 +158,30 @@ static void iopf_handle_group(struct work_struct *work)
-  * @cookie: struct device, passed to iommu_register_device_fault_handler.
-  *
-  * Add a fault to the device workqueue, to be handled by mm.
-+ *
-+ * This module doesn't handle PCI PASID Stop Marker; IOMMU drivers must discard
-+ * them before reporting faults. A PASID Stop Marker (LRW = 0b100) doesn't
-+ * expect a response. It may be generated when disabling a PASID (issuing a
-+ * PASID stop request) by some PCI devices.
-+ *
-+ * The PASID stop request is triggered by the mm_exit() callback. When the
-+ * callback returns from the device driver, no page request is generated for
-+ * this PASID anymore and outstanding ones have been pushed to the IOMMU (as per
-+ * PCIe 4.0r1.0 - 6.20.1 and 10.4.1.2 - Managing PASID TLP Prefix Usage). Some
-+ * PCI devices will wait for all outstanding page requests to come back with a
-+ * response before completing the PASID stop request. Others do not wait for
-+ * page responses, and instead issue this Stop Marker that tells us when the
-+ * PASID can be reallocated.
-+ *
-+ * It is safe to discard the Stop Marker because it is an optimization.
-+ * a. Page requests, which are posted requests, have been flushed to the IOMMU
-+ *    when mm_exit() returns,
-+ * b. We flush all fault queues after mm_exit() returns and before freeing the
-+ *    PASID.
-+ *
-+ * So even though the Stop Marker might be issued by the device *after* the stop
-+ * request completes, outstanding faults will have been dealt with by the time
-+ * we free the PASID.
-  */
- int iommu_queue_iopf(struct iommu_fault_event *evt, void *cookie)
- {
--- 
-2.17.0
+I think that's what I said above, or did I miss something?
 
+> > Obviously this patch makes *this* situation work: it assigns 345M to
+> > 3a:04.0 and (I assume) leaves the 1M unused.  But I haven't been able
+> > to convince myself that this patch works *in general*.
+> 
+> I've tested this patch with full chain of devices with all my three
+> Intel Gigabit ET2 quad port server adapters connected there along with
+> other devices and the issue does not happen.
+> 
+> > For example, what if we assigned the 20M from the end of the 366M
+> > window instead of the beginning, so the 345M piece is below the 20M
+> > and there's 1M left above it?  That is legal and should work, but I
+> > suspect this patch would ignore the 345M piece and again assign 1M to
+> > 3a:04.0.
+> 
+> It should work so that it first allocates resources for the non-hotplug
+> bridges and after that everything else is put to hotplug bridges.
+> 
+> > Or what if there are several hotplug bridges on bus 3a?  This example
+> > has two, but there could be many more.
+> > 
+> > Or what if there are normal bridges as well as hotplug bridges on bus
+> > 3a?  Or if they're in arbitrary orders?
+> 
+> Thunderbolt host router with two ports has such configuration where
+> there are two hotplug ports and two normal ports (there could be more)
+> and it is hot-added as well. At least that works. With the other
+> arbitrary scenarios, it is hard to say without actually testing it on a
+> real hardware.
+
+This is where it gets hard for me -- I'm not really comfortable if we
+have to convince ourselves that code is correct by testing every
+scenario.  It's a lot better if we can convince ourselves by reasoning
+about what the code does.  That's not very reliable either, but if we
+understand the code, we at least have a hope of being able to fix the
+bugs we missed in our reasoning.
+
+> Also I'm fine dropping this patch altogether and just file a kernel
+> bugzilla with this information attached. Maybe someone else can provide
+> a better fix eventually. This is not really common situation anyway
+> because typically you have only PCIe endpoints included in a Thunderbolt
+> device (not PCIe switches with a bunch of endpoints connected).
+> Furthermore, I tried the same in Windows and it does not handle it
+> properly either ;-)
+
+OK, I opened the bugzilla and attached the info.  Thanks!
