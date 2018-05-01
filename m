@@ -1,75 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39718 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750962AbeEUUKk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 May 2018 16:10:40 -0400
-Date: Mon, 21 May 2018 15:10:38 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Meelis Roos <mroos@linux.ee>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-        sparclinux@vger.kernel.org
-Subject: Re: sparc64 PCI BAR allocation is still problematic
-Message-ID: <20180521201038.GF41790@bhelgaas-glaptop.roam.corp.google.com>
-References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
- <20180410173437.GB24642@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LRH.2.21.1804102144240.32411@math.ut.ee>
- <20180410185610.GD24642@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.LRH.2.21.1804111045330.18432@math.ut.ee>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>
+CC: Stephen Hemminger <sthemmin@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v8] PCI: hv: Make sure the bus domain is really unique
+Date: Tue, 1 May 2018 17:56:32 +0000
+Message-ID: <6E619990-8EFD-4688-8C01-8D9C480B04AF@microsoft.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LRH.2.21.1804111045330.18432@math.ut.ee>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 11, 2018 at 10:59:19AM +0300, Meelis Roos wrote:
-> Fire V210: Video RAM BAR error is gone, these are still here:
-> [    5.061083] pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
-> [    5.061334] pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
-
->From lspci (https://bugzilla.kernel.org/attachment.cgi?id=275239):
-
-  0001:00:06.0 ULi Electronics Inc. M7101 Power Management Controller
-    Region 0: [virtual] I/O ports at <unassigned> [size=16]
-  0001:00:07.0 ISA bridge: ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge
-    Region 0: [virtual] I/O ports at 7fe01000000 [size=64K]
-    Region 1: [virtual] Memory at 7ff00000000 (32-bit, non-prefetchable) [size=1M]
-    Region 2: [virtual] Memory at 7ff00000000 (32-bit, non-prefetchable) [size=1M]
-
->From dmesg log (https://bugzilla.kernel.org/attachment.cgi?id=275237):
-
-  pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
-  pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
-
-The 0001:00:07.0 BAR 0 conflict is with the ali7101 quirk.  I don't
-know how to fix that.  The quirk doesn't match up with the M1543/M7101
-docs I can find, but the quirk has been there forever and I don't
-think we can safely change it.
-
-The BAR 2 conflict is with 0001:00:07.0's own BAR 1.  I think those
-come from OF, not directly from the hardware, and it looks like an OF
-error that BAR 1 and BAR 2 are the same.
-
-We could filter out duplicates like this if they cause a problem.  But
-I'm not sure whether anything actually breaks because of this
-conflict.
-
-After the VGA framebuffer change, do you see anything that's still
-broken (besides the "can't claim" messages, I mean)?
-
-> Fire V240: Video RAM BAR errors is gone, these are still here:
-> [    5.530237] pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
-> [    5.530389] pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
-
-Looks the same as V210.
-
-> Fire V440: Video RAM BAR error is gone, these are still here:
-> [    5.082920] pci 0002:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0002:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
-> [    5.082945] pci 0002:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with 0002:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
-
-Looks the same as V210.
-
-> Blade 100: Video RAM related BAR error is gnone, this is still here:
-> [    6.131499] pci 0000:00:07.0: can't claim BAR 0 [io  0x1fe02000000-0x1fe0200ffff]: address conflict with 0000:00:03.0 [io  0x1fe02000600-0x1fe0200061f]
-
-Looks the same as V210, except that the firmware apparently doesn't
-have the duplicate BAR 1/2 that the other boxes have.
+V2hlbiBMaW51eCBydW5zIGFzIGEgZ3Vlc3QgVk0gaW4gSHlwZXItViBhbmQgSHlwZXItViBhZGRz
+IHRoZSB2aXJ0dWFsIFBDSQ0KYnVzIHRvIHRoZSBndWVzdCwgSHlwZXItViBhbHdheXMgcHJvdmlk
+ZXMgdW5pcXVlIFBDSSBkb21haW4uDQoNCmNvbW1pdCA0YTliMDkzM2JkZmMgKCJQQ0k6IGh2OiBV
+c2UgZGV2aWNlIHNlcmlhbCBudW1iZXIgYXMgUENJIGRvbWFpbiIpDQpvdmVycm9kZSB1bmlxdWUg
+ZG9tYWluIHdpdGggdGhlIHNlcmlhbCBudW1iZXIgb2YgdGhlIGZpcnN0IGRldmljZSBhZGRlZCB0
+bw0KdGhlIHZpcnR1YWwgUENJIGJ1cy4NCg0KVGhlIHJlYXNvbiBmb3IgdGhhdCBwYXRjaCB3YXMg
+dG8gaGF2ZSBhIGNvbnNpc3RlbnQgYW5kIHNob3J0IG5hbWUgZm9yIHRoZQ0KZGV2aWNlLCBidXQg
+SHlwZXItViBkb2Vzbid0IHByb3ZpZGUgdW5pcXVlIHNlcmlhbCBudW1iZXJzLiBVc2luZyBub24t
+dW5pcXVlDQpzZXJpYWwgbnVtYmVycyBhcyBkb21haW4gSURzIGxlYWRzIHRvIGR1cGxpY2F0ZSBk
+ZXZpY2UgYWRkcmVzc2VzLCB3aGljaA0KY2F1c2VzIFBDSSBidXMgcmVnaXN0cmF0aW9uIHRvIGZh
+aWwuDQoNCmNvbW1pdCAwYzE5NTU2N2E4ZjYgKCJuZXR2c2M6IHRyYW5zcGFyZW50IFZGIG1hbmFn
+ZW1lbnQiKSBhdm9pZHMgdGhlIG5lZWQNCmZvciBjb21taXQgNGE5YjA5MzNiZGZjICgiUENJOiBo
+djogVXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSQ0KZG9tYWluIikuICBXaGVuIHNjcmlw
+dHMgd2VyZSB1c2VkIHRvIGNvbmZpZ3VyZSBWRiBkZXZpY2VzLCB0aGUgbmFtZSBvZg0KdGhlIFZG
+IG5lZWRlZCB0byBiZSBjb25zaXN0ZW50IGFuZCBzaG9ydCwgYnV0IHdpdGggY29tbWl0IDBjMTk1
+NTY3YThmNg0KKCJuZXR2c2M6IHRyYW5zcGFyZW50IFZGIG1hbmFnZW1lbnQiKSBhbGwgdGhlIHNl
+dHVwIGlzIGRvbmUgaW4gdGhlIGtlcm5lbCwNCmFuZCB3ZSBkbyBub3QgbmVlZCB0byBtYWludGFp
+biBjb25zaXN0ZW50IG5hbWUuDQoNClJldmVydCBjb21taXQgNGE5YjA5MzNiZGZjICgiUENJOiBo
+djogVXNlIGRldmljZSBzZXJpYWwgbnVtYmVyIGFzIFBDSQ0KZG9tYWluIikgc28gd2UgY2FuIHJl
+bGlhYmx5IHN1cHBvcnQgbXVsdGlwbGUgZGV2aWNlcyBiZWluZyBhc3NpZ25lZCB0bw0KYSBndWVz
+dC4NCg0KVGhpcyByZXZlcnQgc2hvdWxkIG9ubHkgYmUgYmFja3BvcnRlZCB0byBrZXJuZWxzIHRo
+YXQgY29udGFpbiBjb21taXQNCjBjMTk1NTY3YThmNiAoIm5ldHZzYzogdHJhbnNwYXJlbnQgVkYg
+bWFuYWdlbWVudCIpLg0KDQpGaXhlczogNGE5YjA5MzNiZGZjICgiUENJOiBodjogVXNlIGRldmlj
+ZSBzZXJpYWwgbnVtYmVyIGFzIFBDSSBkb21haW4iKQ0KU2lnbmVkLW9mZi1ieTogU3JpZGhhciBQ
+aXRjaGFpIDxzcmlkaGFyLnBpdGNoYWlAbWljcm9zb2Z0LmNvbT4NCkNjOiBzdGFibGVAdmdlci5r
+ZXJuZWwub3JnICMgdjQuMTQrDQpSZXZpZXdlZC1ieTogQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNA
+Z29vZ2xlLmNvbT4NCg0KLS0tDQpDaGFuZ2VzIGluIHY4Og0KKiBmaXggdGhlIGNvbW1pdCBjb21t
+ZW50LiBbTG9yZW56byBQaWVyYWxpc2ksIEJqb3JuIEhlbGdhYXNdDQotLS0NCiBkcml2ZXJzL3Bj
+aS9ob3N0L3BjaS1oeXBlcnYuYyB8IDExIC0tLS0tLS0tLS0tDQogMSBmaWxlIGNoYW5nZWQsIDEx
+IGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2
+LmMgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYw0KaW5kZXggMmZhZjM4ZWFiNzg1Li5h
+YzY3ZTU2ZTQ1MWEgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1oeXBlcnYuYw0K
+KysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaHlwZXJ2LmMNCkBAIC0xNTE4LDE3ICsxNTE4LDYg
+QEAgc3RhdGljIHN0cnVjdCBodl9wY2lfZGV2ICpuZXdfcGNpY2hpbGRfZGV2aWNlKHN0cnVjdCBo
+dl9wY2lidXNfZGV2aWNlICpoYnVzLA0KIAlnZXRfcGNpY2hpbGQoaHBkZXYsIGh2X3BjaWRldl9y
+ZWZfY2hpbGRsaXN0KTsNCiAJc3Bpbl9sb2NrX2lycXNhdmUoJmhidXMtPmRldmljZV9saXN0X2xv
+Y2ssIGZsYWdzKTsNCiANCi0JLyoNCi0JICogV2hlbiBhIGRldmljZSBpcyBiZWluZyBhZGRlZCB0
+byB0aGUgYnVzLCB3ZSBzZXQgdGhlIFBDSSBkb21haW4NCi0JICogbnVtYmVyIHRvIGJlIHRoZSBk
+ZXZpY2Ugc2VyaWFsIG51bWJlciwgd2hpY2ggaXMgbm9uLXplcm8gYW5kDQotCSAqIHVuaXF1ZSBv
+biB0aGUgc2FtZSBWTS4gIFRoZSBzZXJpYWwgbnVtYmVycyBzdGFydCB3aXRoIDEsIGFuZA0KLQkg
+KiBpbmNyZWFzZSBieSAxIGZvciBlYWNoIGRldmljZS4gIFNvIGRldmljZSBuYW1lcyBpbmNsdWRp
+bmcgdGhpcw0KLQkgKiBjYW4gaGF2ZSBzaG9ydGVyIG5hbWVzIHRoYW4gYmFzZWQgb24gdGhlIGJ1
+cyBpbnN0YW5jZSBVVUlELg0KLQkgKiBPbmx5IHRoZSBmaXJzdCBkZXZpY2Ugc2VyaWFsIG51bWJl
+ciBpcyB1c2VkIGZvciBkb21haW4sIHNvIHRoZQ0KLQkgKiBkb21haW4gbnVtYmVyIHdpbGwgbm90
+IGNoYW5nZSBhZnRlciB0aGUgZmlyc3QgZGV2aWNlIGlzIGFkZGVkLg0KLQkgKi8NCi0JaWYgKGxp
+c3RfZW1wdHkoJmhidXMtPmNoaWxkcmVuKSkNCi0JCWhidXMtPnN5c2RhdGEuZG9tYWluID0gZGVz
+Yy0+c2VyOw0KIAlsaXN0X2FkZF90YWlsKCZocGRldi0+bGlzdF9lbnRyeSwgJmhidXMtPmNoaWxk
+cmVuKTsNCiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmaGJ1cy0+ZGV2aWNlX2xpc3RfbG9jaywg
+ZmxhZ3MpOw0KIAlyZXR1cm4gaHBkZXY7DQotLSANCjIuMTQuMQ0KDQoNCg==
