@@ -1,143 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:43739 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S970451AbeEXOge (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 10:36:34 -0400
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH v4 1/6] PCI: rcar: Pull bus clock enable/disable from rcar_pcie_get_resources()
-Date: Thu, 24 May 2018 16:36:19 +0200
-Message-Id: <20180524143624.26718-2-marek.vasut+renesas@gmail.com>
-In-Reply-To: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
-References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:35348 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755068AbeEAMou (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 May 2018 08:44:50 -0400
+Date: Tue, 1 May 2018 07:44:49 -0500
+From: Rob Herring <robh@kernel.org>
+To: Nipun Gupta <nipun.gupta@nxp.com>
+Cc: robin.murphy@arm.com, will.deacon@arm.com, mark.rutland@arm.com,
+        catalin.marinas@arm.com, gregkh@linuxfoundation.org, hch@lst.de,
+        joro@8bytes.org, m.szyprowski@samsung.com, shawnguo@kernel.org,
+        frowand.list@gmail.com, bhelgaas@google.com,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, stuyoder@gmail.com,
+        laurentiu.tudor@nxp.com, leoyang.li@nxp.com
+Subject: Re: [PATCH v4 2/6] iommu: of: make of_pci_map_rid() available for
+ other devices too
+Message-ID: <20180501124449.GA3009@rob-hp-laptop>
+References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
+ <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
+ <1525069641-8523-3-git-send-email-nipun.gupta@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525069641-8523-3-git-send-email-nipun.gupta@nxp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The rcar_pcie_get_resources() is another misnomer with a side effect.
-The function does not only get resources, but also enables/disables bus
-clock. This is forgotten in the probe() function though and if anything
-in probe() fails after rcar_pcie_get_resources() is called, the bus
-clock are never disabled.
+On Mon, Apr 30, 2018 at 11:57:17AM +0530, Nipun Gupta wrote:
+> iommu-map property is also used by devices with fsl-mc. This
+> patch moves the of_pci_map_rid to generic location, so that it
+> can be used by other busses too.
+> 
+> 'of_pci_map_rid' is renamed here to 'of_map_rid' and there is no
+> functional change done in the API.
+> 
+> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+> ---
+>  drivers/iommu/of_iommu.c |   5 +--
+>  drivers/of/base.c        | 102 +++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/of/irq.c         |   5 +--
+>  drivers/pci/of.c         | 101 ----------------------------------------------
+>  include/linux/of.h       |  11 +++++
+>  include/linux/of_pci.h   |  10 -----
+>  6 files changed, 117 insertions(+), 117 deletions(-)
 
-This patch pulls the clock handling out of the rcar_pcie_get_resources()
-and enables clock after all the resources were requested. Moreover, this
-patch also always disables the clock in case of failure.
-
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
----
-V2: No change
-V3: No change
-V4: Rebase on top of Lorenzo's pci/rcar, fix up the rebase breakage
-    induced by patches therein
----
- drivers/pci/host/pcie-rcar.c | 33 ++++++++++++++++-----------------
- 1 file changed, 16 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 8d161563bce8..0879880f7975 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -946,32 +946,22 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
- 		dev_err(dev, "cannot get pcie bus clock\n");
- 		return PTR_ERR(pcie->bus_clk);
- 	}
--	err = clk_prepare_enable(pcie->bus_clk);
--	if (err)
--		return err;
- 
- 	i = irq_of_parse_and_map(dev->of_node, 0);
- 	if (!i) {
- 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
--		err = -ENOENT;
--		goto err_map_reg;
-+		return -ENOENT;
- 	}
- 	pcie->msi.irq1 = i;
- 
- 	i = irq_of_parse_and_map(dev->of_node, 1);
- 	if (!i) {
- 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
--		err = -ENOENT;
--		goto err_map_reg;
-+		return -ENOENT;
- 	}
- 	pcie->msi.irq2 = i;
- 
- 	return 0;
--
--err_map_reg:
--	clk_disable_unprepare(pcie->bus_clk);
--
--	return err;
- }
- 
- static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
-@@ -1115,22 +1105,28 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 		goto err_pm_put;
- 	}
- 
-+	err = clk_prepare_enable(pcie->bus_clk);
-+	if (err) {
-+		dev_err(dev, "failed to enable bus clock: %d\n", err);
-+		goto err_pm_put;
-+	}
-+
- 	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
- 	if (err)
--		goto err_pm_put;
-+		goto err_clk_disable;
- 
- 	phy_init_fn = of_device_get_match_data(dev);
- 	err = phy_init_fn(pcie);
- 	if (err) {
- 		dev_err(dev, "failed to init PCIe PHY\n");
--		goto err_pm_put;
-+		goto err_clk_disable;
- 	}
- 
- 	/* Failure to get a link might just be that no cards are inserted */
- 	if (rcar_pcie_hw_init(pcie)) {
- 		dev_info(dev, "PCIe link down\n");
- 		err = -ENODEV;
--		goto err_pm_put;
-+		goto err_clk_disable;
- 	}
- 
- 	data = rcar_pci_read_reg(pcie, MACSR);
-@@ -1142,16 +1138,19 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 			dev_err(dev,
- 				"failed to enable MSI support: %d\n",
- 				err);
--			goto err_pm_put;
-+			goto err_clk_disable;
- 		}
- 	}
- 
- 	err = rcar_pcie_enable(pcie);
- 	if (err)
--		goto err_pm_put;
-+		goto err_clk_disable;
- 
- 	return 0;
- 
-+err_clk_disable:
-+	clk_disable_unprepare(pcie->bus_clk);
-+
- err_pm_put:
- 	pm_runtime_put(dev);
- 
--- 
-2.16.2
+Reviewed-by: Rob Herring <robh@kernel.org>
