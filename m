@@ -1,46 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:56053 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753994AbeE1Iv1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 May 2018 04:51:27 -0400
-Date: Mon, 28 May 2018 10:51:23 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v4 2/6] PCI: rcar: Add missing irq_dispose_mapping() into
- failpath
-Message-ID: <20180528085122.oufttjzjk6yqe6ts@verge.net.au>
-References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
- <20180524143624.26718-3-marek.vasut+renesas@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 2 May 2018 05:46:17 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Subject: Re: centralize SWIOTLB config symbol and misc other cleanups V3
+Message-ID: <20180502124617.GA22001@infradead.org>
+References: <20180425051539.1989-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180524143624.26718-3-marek.vasut+renesas@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180425051539.1989-1-hch@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-mips@linux-mips.org, sstabellini@kernel.org,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, linux-pci@vger.kernel.org,
+ x86@kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org,
+ sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 24, 2018 at 04:36:20PM +0200, Marek Vasut wrote:
-> The rcar_pcie_get_resources() is another misnomer with a side effect.
-> The function does not only get resources, but also maps MSI IRQs via
-> irq_of_parse_and_map(). In case anything fails afterward, the IRQ
-> mapping must be disposed through irq_dispose_mapping() which is not
-> done.
-> 
-> This patch handles irq_of_parse_and_map() failures in by disposing
-> of the mapping in rcar_pcie_get_resources() as well as in probe.
-> 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
+Any more comments?  Especially from the x86, mips and powerpc arch
+maintainers?  I'd like to merge this in a few days as various other
+patches depend on it.
 
+On Wed, Apr 25, 2018 at 07:15:26AM +0200, Christoph Hellwig wrote:
+> Hi all,
+> 
+> this seris aims for a single defintion of the Kconfig symbol.  To get
+> there various cleanups, mostly about config symbols are included as well.
+> 
+> Changes since V2:
+>  - swiotlb doesn't need the dma_length field by itself, so don't select it
+>  - don't offer a user visible SWIOTLB choice
+> 
+> Chages since V1:
+>  - fixed a incorrect Reviewed-by that should be a Signed-off-by.
+> _______________________________________________
+> iommu mailing list
+> iommu@lists.linux-foundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/iommu
+---end quoted text---
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
