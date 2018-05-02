@@ -1,63 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <f9221fcc3c828e529c470e514046fb05ce16c230.camel@linux.intel.com>
-Subject: Re: [PATCH v7 12/12] ACPI / hotplug / PCI: Drop unnecessary
- parentheses
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Date: Thu, 17 May 2018 14:43:49 +0300
-In-Reply-To: <20180517092903.43701-13-mika.westerberg@linux.intel.com>
-References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
-         <20180517092903.43701-13-mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 2 May 2018 23:20:18 +0100
+From: James Hogan <jhogan@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 11/13] mips, unicore32: swiotlb doesn't need sg->dma_length
+Message-ID: <20180502222017.GC20766@jamesdev>
+References: <20180425051539.1989-1-hch@lst.de>
+ <20180425051539.1989-12-hch@lst.de>
+MIME-Version: 1.0
+In-Reply-To: <20180425051539.1989-12-hch@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-mips@linux-mips.org, sstabellini@kernel.org,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, linux-pci@vger.kernel.org,
+ x86@kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org,
+ sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: multipart/mixed; boundary="===============3237485630161774899=="
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-05-17 at 12:29 +0300, Mika Westerberg wrote:
-> There is no need for them and it makes the code look uglier than it
-> should. Remove them.
-> 
 
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+--===============3237485630161774899==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="Izn7cH1Com+I3R9J"
+Content-Disposition: inline
 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c
-> b/drivers/pci/hotplug/acpiphp_glue.c
-> index db256bb2bd6a..07d511d62296 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -522,7 +522,7 @@ static void enable_slot(struct acpiphp_slot *slot)
->  		if (!dev) {
->  			/* Do not set SLOT_ENABLED flag if some funcs
->  			   are not added. */
-> -			slot->flags &= (~SLOT_ENABLED);
-> +			slot->flags &= ~SLOT_ENABLED;
->  			continue;
->  		}
->  	}
-> @@ -551,7 +551,7 @@ static void disable_slot(struct acpiphp_slot
-> *slot)
->  	list_for_each_entry(func, &slot->funcs, sibling)
->  		acpi_bus_trim(func_to_acpi_device(func));
->  
-> -	slot->flags &= (~SLOT_ENABLED);
-> +	slot->flags &= ~SLOT_ENABLED;
->  }
->  
->  static bool slot_no_hotplug(struct acpiphp_slot *slot)
 
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+--Izn7cH1Com+I3R9J
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+
+On Wed, Apr 25, 2018 at 07:15:37AM +0200, Christoph Hellwig wrote:
+> Only mips and unicore32 select CONFIG_NEED_SG_DMA_LENGTH when building
+> swiotlb.  swiotlb itself never merges segements and doesn't accesses the
+> dma_length field directly, so drop the dependency.
+
+Is that at odds with Documentation/DMA-API-HOWTO.txt, which seems to
+suggest arch ports should enable it for IOMMUs?
+
+Cheers
+James
+
+--Izn7cH1Com+I3R9J
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQS7lRNBWUYtqfDOVL41zuSGKxAj8gUCWuo5nwAKCRA1zuSGKxAj
+8toFAQDILXOi2KhP1yoO3zabIiof3I/tmRomgzUgGA3ESVm5lgEA4elhmn7zDXhX
+YG33reqJ7xyPenaOF8AX63cB5eqjOQ8=
+=UDV2
+-----END PGP SIGNATURE-----
+
+--Izn7cH1Com+I3R9J--
+
+
+--===============3237485630161774899==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+--===============3237485630161774899==--
