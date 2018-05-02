@@ -1,147 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:39289 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752056AbeEGIwK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2018 04:52:10 -0400
-Received: by mail-pg0-f66.google.com with SMTP id e1-v6so8390163pga.6
-        for <linux-pci@vger.kernel.org>; Mon, 07 May 2018 01:52:09 -0700 (PDT)
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com, marc.zyngier@arm.com
-Cc: mingkai.hu@nxp.com, peter.newton@nxp.com, minghuan.lian@nxp.com,
-        rajesh.raina@nxp.com, rajan.kapoor@nxp.com, prabhjot.singh@nxp.com,
-        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
-        devicetree@vger.kernel.org
-Subject: [PATCH v10 1/3] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver DT bindings
-Date: Mon,  7 May 2018 04:51:51 -0400
-Message-Id: <1525683111-9564-1-git-send-email-l.subrahmanya@mobiveil.co.in>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 2 May 2018 08:26:09 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gilles Buloz <Gilles.Buloz@kontron.com>
+Subject: Re: LS1043A : "synchronous abort" at boot due to PCI config read
+Message-ID: <20180502132501.GE11698@bhelgaas-glaptop.roam.corp.google.com>
+References: <5AD0E995.3090802@kontron.com>
+ <CAKv+Gu_v4V8DUa6f4WxvjZHoJbbqT0mKpOwYVmaLaE20CB3U_g@mail.gmail.com>
+ <5AE317AB.4020404@kontron.com>
+ <20180427165627.GA8199@bhelgaas-glaptop.roam.corp.google.com>
+ <5AE6D7E2.9030506@kontron.com> <5AE71BF4.2010200@kontron.com>
+ <20180430170447.GA95643@bhelgaas-glaptop.roam.corp.google.com>
+ <5AE75809.30701@kontron.com> <5AE9B5BB.2080003@kontron.com>
+MIME-Version: 1.0
+In-Reply-To: <5AE9B5BB.2080003@kontron.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "Minghuan.Lian@nxp.com" <Minghuan.Lian@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the DT bindings for Mobiveil PCIe Host Bridge
-IP driver and updates the vendor prefixes file.
+On Wed, May 02, 2018 at 12:57:31PM +0000, Gilles Buloz wrote:
+> Hi Bjorn,
+> See attached patch (tested ok this morning)
 
-Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Acked-by: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org
----
- .../devicetree/bindings/pci/mobiveil-pcie.txt      | 73 ++++++++++++++++++++++
- .../devicetree/bindings/vendor-prefixes.txt        |  1 +
- MAINTAINERS                                        |  7 +++
- 3 files changed, 81 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+This looks good.  Minor comments below.
 
-diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-new file mode 100644
-index 0000000..65038aa
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-@@ -0,0 +1,73 @@
-+* Mobiveil AXI PCIe Root Port Bridge DT description
-+
-+Mobiveil's GPEX 4.0 is a PCIe Gen4 root port bridge IP. This configurable IP
-+has up to 8 outbound and inbound windows for the address translation.
-+
-+Required properties:
-+- #address-cells: Address representation for root ports, set to <3>
-+- #size-cells: Size representation for root ports, set to <2>
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+- compatible: Should contain "mbvl,gpex40-pcie"
-+- reg: Should contain PCIe registers location and length
-+	"config_axi_slave": PCIe controller registers
-+	"csr_axi_slave"	  : Bridge config registers
-+	"gpio_slave"	  : GPIO registers to control slot power
-+	"apb_csr"	  : MSI registers
-+
-+- device_type: must be "pci"
-+- apio-wins : number of requested apio outbound windows
-+		default 2 outbound windows are configured -
-+		1. Config window
-+		2. Memory window
-+- ppio-wins : number of requested ppio inbound windows
-+		default 1 inbound memory window is configured.
-+- bus-range: PCI bus numbers covered
-+- interrupt-controller: identifies the node as an interrupt controller
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+- interrupt-parent : phandle to the interrupt controller that
-+		it is attached to, it should be set to gic to point to
-+		ARM's Generic Interrupt Controller node in system DT.
-+- interrupts: The interrupt line of the PCIe controller
-+		last cell of this field is set to 4 to
-+		denote it as IRQ_TYPE_LEVEL_HIGH type interrupt.
-+- interrupt-map-mask,
-+	interrupt-map: standard PCI properties to define the mapping of the
-+	PCI interface to interrupt numbers.
-+- ranges: ranges for the PCI memory regions (I/O space region is not
-+	supported by hardware)
-+	Please refer to the standard PCI bus binding document for a more
-+	detailed explanation
-+
-+
-+Example:
-+++++++++
-+	pcie0: pcie@a0000000 {
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		compatible = "mbvl,gpex40-pcie";
-+		reg =	<0xa0000000 0x00001000>,
-+			<0xb0000000 0x00010000>,
-+			<0xff000000 0x00200000>,
-+			<0xb0010000 0x00001000>;
-+		reg-names =	"config_axi_slave",
-+				"csr_axi_slave",
-+				"gpio_slave",
-+				"apb_csr";
-+		device_type = "pci";
-+		apio-wins = <2>;
-+		ppio-wins = <1>;
-+		bus-range = <0x00000000 0x000000ff>;
-+		interrupt-controller;
-+		interrupt-parent = <&gic>;
-+		#interrupt-cells = <1>;
-+		interrupts = < 0 89 4 >;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 0 &pci_express 0>,
-+				<0 0 0 1 &pci_express 1>,
-+				<0 0 0 2 &pci_express 2>,
-+				<0 0 0 3 &pci_express 3>;
-+		ranges = < 0x83000000 0 0x00000000 0xa8000000 0 0x8000000>;
-+
-+	};
-diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt b/Documentation/devicetree/bindings/vendor-prefixes.txt
-index 0994bdd..8263cc7 100644
---- a/Documentation/devicetree/bindings/vendor-prefixes.txt
-+++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
-@@ -197,6 +197,7 @@ lwn	Liebherr-Werk Nenzing GmbH
- macnica	Macnica Americas
- marvell	Marvell Technology Group Ltd.
- maxim	Maxim Integrated Products
-+mbvl	Mobiveil Inc.
- mcube	mCube
- meas	Measurement Specialties
- mediatek	MediaTek Inc.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 44512c3..b295080 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9162,6 +9162,13 @@ Q:	http://patchwork.linuxtv.org/project/linux-media/list/
- S:	Maintained
- F:	drivers/media/dvb-frontends/mn88473*
- 
-+PCI DRIVER FOR MOBIVEIL PCIE IP
-+M:	Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-+F:	drivers/pci/host/pcie-mobiveil.c
-+
- MODULE SUPPORT
- M:	Jessica Yu <jeyu@kernel.org>
- M:	Rusty Russell <rusty@rustcorp.com.au>
--- 
-1.8.3.1
+I can fix minor things myself, but I do need a signed-off-by from you
+before applying (see
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst)
+
+Please add a changelog, too, and include the patch inline (as opposed
+to as an attachment) if possible.
+
+> --- include/linux/pci.h.orig	2018-03-26 16:51:18.050000000 +0000
+> +++ include/linux/pci.h	2018-04-30 18:29:14.140000000 +0000
+> @@ -193,6 +193,7 @@
+>  enum pci_bus_flags {
+>  	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
+>  	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
+> +	PCI_BUS_FLAGS_NO_EXTCFG = (__force pci_bus_flags_t) 4,
+
+Best if you can rebase this to v4.17-rc1.
+
+>  };
+>  
+>  /* These values come from the PCI Express Spec */
+> --- drivers/pci/probe.c.orig	2018-01-22 09:29:52.000000000 +0000
+> +++ drivers/pci/probe.c	2018-05-02 13:44:35.530000000 +0000
+> @@ -664,6 +664,23 @@
+>  	}
+>  }
+>  
+> +static bool pci_bridge_child_bus_ext_cfg_accessible(struct pci_dev *bridge)
+> +{
+> +	int pos;
+> +	u32 status;
+> +
+> +	if (!pci_is_pcie(bridge) || /* PCI/PCI bridge */
+> +	    (pci_pcie_type(bridge) == PCI_EXP_TYPE_PCIE_BRIDGE) || /* PCIe/PCI bridge in forward mode */
+> +	    (pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE)) {  /* PCIe/PCI bridge in reverse mode */
+> +		pos = pci_find_capability(bridge, PCI_CAP_ID_PCIX);
+> +		if (pos)
+> +			pci_read_config_dword(bridge, pos + PCI_X_STATUS, &status);
+> +		return pos && (status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ));
+> +	}
+
+Please arrange this so everything fits in 80 columns.
+
+If you can split it into several simpler "if" statements rather
+than one with a complicated expression, that would also be good.
+
+> +
+> +	return true;
+> +}
+> +
+>  static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  					   struct pci_dev *bridge, int busnr)
+>  {
+> @@ -725,6 +742,19 @@
+>  	/* Create legacy_io and legacy_mem files for this bus */
+>  	pci_create_legacy_files(child);
+>  
+> +	/*
+> +	 * if bus_flags inherited from parent bus do not already report lack of extended config
+> +	 * space support, check if supported by child bus by checking its parent bridge
+> +	 */
+
+Wrap to fit in 80 columns.
+
+> +	if (bridge && !(child->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG)) {
+
+The double negative makes this a little bit hard to read.  Maybe it
+could be improved by reversing the sense of something?
+
+> +		if (!pci_bridge_child_bus_ext_cfg_accessible(bridge)) {
+> +			child->bus_flags |= PCI_BUS_FLAGS_NO_EXTCFG;
+> +			dev_info(&child->dev, "extended config space not accessible due to parent bridge\n");
+
+In v4.17-rc1, there's a pci_info() that should work here (instead of
+dev_info()).
+
+> +		}
+> +	} else {
+> +		dev_info(&child->dev, "extended config space not accessible due to parent bus\n");
+> +	}
+> +
+>  	return child;
+>  }
+>  
+> @@ -1084,6 +1114,9 @@
+>  	u32 status;
+>  	u16 class;
+>  
+> +	if (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG)
+> +		return PCI_CFG_SPACE_SIZE;
+> +
+>  	class = dev->class >> 8;
+>  	if (class == PCI_CLASS_BRIDGE_HOST)
+>  		return pci_cfg_space_size_ext(dev);
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
