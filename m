@@ -1,116 +1,198 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37296 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751571AbeEVAav (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 May 2018 20:30:51 -0400
-Subject: [PATCH v1 3/4] sparc32/PCI/PCIC: Converge device enable path
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Meelis Roos <mroos@linux.ee>
-Date: Mon, 21 May 2018 19:30:49 -0500
-Message-ID: <152694904912.59585.12841331398269981947.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152694888798.59585.8779818482732387864.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152694888798.59585.8779818482732387864.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 2 May 2018 17:51:44 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v7 3/9] PCI: endpoint: functions/pci-epf-test: Add second
+ entry
+Message-ID: <20180502165144.GB4871@e107981-ln.cambridge.arm.com>
+References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
+ <c6cfd167838ae8e226dee0820983efe918fa4e1f.1524577064.git.gustavo.pimentel@synopsys.com>
+ <20180426165605.GA6370@e107981-ln.cambridge.arm.com>
+ <b65caf2e-b002-f591-6215-ff2241b2dfb8@ti.com>
+ <20180501115417.GD19391@e107981-ln.cambridge.arm.com>
+ <5d625d04-38fe-7d5a-67fc-5ea92039474c@ti.com>
+ <20180501142607.GA21911@e107981-ln.cambridge.arm.com>
+ <bfaebf3c-2175-f4b2-89c5-336ff9396ed0@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bfaebf3c-2175-f4b2-89c5-336ff9396ed0@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Wed, May 02, 2018 at 11:39:00AM +0100, Gustavo Pimentel wrote:
+> Hi Lorenzo,
+> 
+> On 01/05/2018 15:26, Lorenzo Pieralisi wrote:
+> > On Tue, May 01, 2018 at 05:53:59PM +0530, Kishon Vijay Abraham I wrote:
+> >> Hi Lorenzo,
+> >>
+> >> On Tuesday 01 May 2018 05:24 PM, Lorenzo Pieralisi wrote:
+> >>> On Tue, May 01, 2018 at 03:37:47PM +0530, Kishon Vijay Abraham I wrote:
+> >>>> Hi Lorenzo,
+> >>>>
+> >>>> On Thursday 26 April 2018 10:26 PM, Lorenzo Pieralisi wrote:
+> >>>>> On Tue, Apr 24, 2018 at 02:44:40PM +0100, Gustavo Pimentel wrote:
+> >>>>>> Adds a seconds entry on the pci_epf_test_ids structure that disables the
+> >>>>>
+> >>>>> "Add a second entry to..."
+> >>>>>
+> >>>>>> linkup_notifier parameter on driver for the designware EP.
+> >>>>>>
+> >>>>>> This allows designware EPs that doesn't have linkup notification signal
+> >>>>>> to work with pcitest.
+> >>>>>>
+> >>>>>> Updates the binding documentation accordingly.
+> >>>>>
+> >>>>> Valid for all the series: use imperative sentences.
+> >>>>>
+> >>>>> eg:
+> >>>>>
+> >>>>> "Update the binding documentation accordingly".
+> >>>>>
+> >>>>> not
+> >>>>>
+> >>>>> "Updates the binding documentation accordingly".
+> >>>>>
+> >>>>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> >>>>>> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> >>>>>> ---
+> >>>>>> Change v2->v3:
+> >>>>>>  - Added second entry in pci_epf_test_ids structure.
+> >>>>>>  - Remove test_reg_bar field assignment on second entry.
+> >>>>>> Changes v3->v4:
+> >>>>>>  - Nothing changed, just to follow the patch set version.
+> >>>>>> Changes v4->v5:
+> >>>>>>  - Changed pci_epf_test_cfg2 to pci_epf_test_designware.
+> >>>>>> Changes v5->v6:
+> >>>>>>  - Changed name field from pci_epf_test_designware to pci_epf_test_dw.
+> >>>>>> Changes v6->v7:
+> >>>>>>  - Changed variable name from data_cfg2 to data_linkup_notifier_disabled.
+> >>>>>>
+> >>>>>>  Documentation/PCI/endpoint/function/binding/pci-test.txt | 2 ++
+> >>>>>>  drivers/pci/endpoint/functions/pci-epf-test.c            | 8 ++++++++
+> >>>>>>  2 files changed, 10 insertions(+)
+> >>>>>>
+> >>>>>> diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+> >>>>>> index 3b68b95..dc39f47 100644
+> >>>>>> --- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
+> >>>>>> +++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+> >>>>>> @@ -1,6 +1,8 @@
+> >>>>>>  PCI TEST ENDPOINT FUNCTION
+> >>>>>>  
+> >>>>>>  name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
+> >>>>>> +name: Should be "pci_epf_test_dw" to bind to the pci_epf_test driver
+> >>>>>> +      with a custom configuration for the designware EP.
+> >>>>>
+> >>>>> The link between the "name" and the device created is quite obscure and
+> >>>>> reading pci-test-howto.txt certainly does not clarify it.
+> >>>>>
+> >>>>> In pci-test-howto.txt an explanation should be added to the configs
+> >>>>> device creation paragraph to clarify it.
+> >>>>>
+> >>>>>>  Configurable Fields:
+> >>>>>>  vendorid	 : should be 0x104c
+> >>>>>> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> >>>>>> index 7cef851..4ab463b 100644
+> >>>>>> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> >>>>>> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> >>>>>> @@ -459,10 +459,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+> >>>>>>  	return 0;
+> >>>>>>  }
+> >>>>>>  
+> >>>>>> +static const struct pci_epf_test_data data_linkup_notifier_disabled = {
+> >>>>>> +	.linkup_notifier = false
+> >>>>>> +};
+> >>>>>> +
+> >>>>>>  static const struct pci_epf_device_id pci_epf_test_ids[] = {
+> >>>>>>  	{
+> >>>>>>  		.name = "pci_epf_test",
+> >>>>>>  	},
+> >>>>>> +	{
+> >>>>>> +		.name = "pci_epf_test_dw",
+> >>>>>> +		.driver_data = (kernel_ulong_t)&data_linkup_notifier_disabled,
+> >>>>>> +	},
+> >>>>>>  	{},
+> >>>>>
+> >>>>> Should not this be a property derived from the controller compatible
+> >>>>> property instead of the test device name written in configfs ?
+> >>>>
+> >>>> pci_epf_test is an independent driver on its own that operates in a layer above
+> >>>> the controller driver. So it does not get the controller compatible (which is
+> >>>> used in controller drivers like pcie-designware-plat.c). pci_epf_test uses
+> >>>> "pci_epf_device_id" which is _similar_ to "of_device_id" used by platform drivers.
+> >>>
+> >>> I understand that, the problem is that the independent driver depends on
+> >>> features of the related controller driver as this patch shows. This
+> >>> patch basically says that if you use a specific path in configfs (that
+> >>> includes pci_epf_test_dw) your device has specific HW features (eg
+> >>> linkup notifier above), that obviously depends on the platform HW not on
+> >>> the string you use in configfs.
+> >>>
+> >>> What I am questioning is a) if I understand this right and b) whether
+> >>> this is the right approach.
+> >>
+> >> Your understanding is right. Ideally pci-epf-test driver shouldn't have any HW
+> >> specific configuration. But different HW have different configurations and
+> >> pci-epf-test should be informed of the configuration the HW supports.
+> > 
+> > I am honestly very confused. First off, I do not understand what this
+> > patch really does (or better what DW can't do so that it needs a
+> > specific configfs string and therefore a specific configuration).
+> > 
+> > What's the purpose of the linkup notifier ? What does it mean that
+> > the DW HW can't handle it ?
+> > 
+> > Are we referring to the pci_epf_linkup() function ?
+> > 
+> > If it is a HW configuration (ie the DW HW does not have a signal to
+> > report that the link is up ?) its enablement must depend on HW
+> > controller properties not configfs entries, I do not like what this
+> > patch does (probably because I am confused and I do not understand it).
+> > 
+> > Please let me know your thoughts on this, thanks.
+> 
+> On my setup, the EP is unable generate a signal which is responsible
+> for notify that the link is established, being therefore necessary to
+> emulate it, this is done by setting the linkup_notifier variable to
+> false.
 
-Most architectures turn on PCI_COMMAND_IO and PCI_COMMAND_MEMORY in
-pci_enable_device() when a driver claims the device.  Sparc PCIC did it in
-pcibios_fixup_bus(), which is called during enumeration, before any drivers
-are attached.
+What I do not understand is why the workqueue notification can't be called
+irrespective of the linkup notifier value from pci_epf_test_bind(),
+what's the point in calling it earlier with pci_epf_linkup() (or the
+other way around why is it safe to call it a bind() time if there
+is no notification available - which is the DW case).
 
-Implement pcibios_enable_device() for PCIC so it will do the same as other
-architectures.  This implementation is copied verbatim from sparc64.
+[...]
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/sparc/kernel/pcic.c |   63 ++++++++++++++++++++++------------------------
- 1 file changed, 30 insertions(+), 33 deletions(-)
+> Since the linkup notifier and BAR index (where auxiliary registers are
+> located) may be configurable and is something platform dependent,
+> perhaps the configuration of this variables should be done by module
+> parameter and not by configfs, leaving this configuration
+> responsibility in charge of each platform.
 
-diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
-index 22f8774977d5..5b9244f328aa 100644
---- a/arch/sparc/kernel/pcic.c
-+++ b/arch/sparc/kernel/pcic.c
-@@ -624,39 +624,6 @@ void pcibios_fixup_bus(struct pci_bus *bus)
- 	}
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
--
--		/*
--		 * Comment from i386 branch:
--		 *     There are buggy BIOSes that forget to enable I/O and memory
--		 *     access to PCI devices. We try to fix this, but we need to
--		 *     be sure that the BIOS didn't forget to assign an address
--		 *     to the device. [mj]
--		 * OBP is a case of such BIOS :-)
--		 */
--		has_io = has_mem = 0;
--		for(i=0; i<6; i++) {
--			unsigned long f = dev->resource[i].flags;
--			if (f & IORESOURCE_IO) {
--				has_io = 1;
--			} else if (f & IORESOURCE_MEM)
--				has_mem = 1;
--		}
--		pcic_read_config(dev->bus, dev->devfn, PCI_COMMAND, 2, &cmd);
--		if (has_io && !(cmd & PCI_COMMAND_IO)) {
--			printk("PCIC: Enabling I/O for device %02x:%02x\n",
--				dev->bus->number, dev->devfn);
--			cmd |= PCI_COMMAND_IO;
--			pcic_write_config(dev->bus, dev->devfn,
--			    PCI_COMMAND, 2, cmd);
--		}
--		if (has_mem && !(cmd & PCI_COMMAND_MEMORY)) {
--			printk("PCIC: Enabling memory for device %02x:%02x\n",
--				dev->bus->number, dev->devfn);
--			cmd |= PCI_COMMAND_MEMORY;
--			pcic_write_config(dev->bus, dev->devfn,
--			    PCI_COMMAND, 2, cmd);
--		}
--
- 		node = pdev_to_pnode(&pcic->pbm, dev);
- 		if(node == 0)
- 			node = -1;
-@@ -675,6 +642,36 @@ void pcibios_fixup_bus(struct pci_bus *bus)
- 	}
- }
- 
-+int pcibios_enable_device(struct pci_dev *dev, int mask)
-+{
-+	u16 cmd, oldcmd;
-+	int i;
-+
-+	pci_read_config_word(dev, PCI_COMMAND, &cmd);
-+	oldcmd = cmd;
-+
-+	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+		struct resource *res = &dev->resource[i];
-+
-+		/* Only set up the requested stuff */
-+		if (!(mask & (1<<i)))
-+			continue;
-+
-+		if (res->flags & IORESOURCE_IO)
-+			cmd |= PCI_COMMAND_IO;
-+		if (res->flags & IORESOURCE_MEM)
-+			cmd |= PCI_COMMAND_MEMORY;
-+	}
-+
-+	if (cmd != oldcmd) {
-+		printk(KERN_DEBUG "PCI: Enabling device: (%s), cmd %x\n",
-+		       pci_name(dev), cmd);
-+                /* Enable the appropriate bits in the PCI command register.  */
-+		pci_write_config_word(dev, PCI_COMMAND, cmd);
-+	}
-+	return 0;
-+}
-+
- /* Makes compiler happy */
- static volatile int pcic_timer_dummy;
- 
+They are platform dependent because they depend on the EP controller.
+That's why I said that those are EP controller parameters. I do not
+think they are module parameters either - they should be part of HW
+description in firmware.
+
+Lorenzo
+
+> I think this option is also a good alternative, simple and clean. What
+> do you think?
+> 
+> >>
+> >> Thanks
+> >> Kishon
+> 
+> Regards,
+> Gustavo
+> 
