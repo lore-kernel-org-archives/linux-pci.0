@@ -1,128 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0055.outbound.protection.outlook.com ([104.47.37.55]:43712
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751214AbeEVNdX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 May 2018 09:33:23 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>,
-        <lorenzo.pieralisi@arm.com>, <linux-pci@vger.kernel.org>
-CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.com>,
-        <cyrille.pitchen@free-electrons.com>,
-        Alan Douglas <adouglas@cadence.com>
-Subject: [RESEND PATCH 4/4] PCI: cadence: Add Power Management ops for host and EP
-Date: Tue, 22 May 2018 14:33:15 +0100
-Message-ID: <1526995995-23872-1-git-send-email-adouglas@cadence.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 2 May 2018 23:09:34 +0100
+From: James Hogan <jhogan@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 08/13] arch: define the ARCH_DMA_ADDR_T_64BIT config
+ symbol in lib/Kconfig
+Message-ID: <20180502220933.GB20766@jamesdev>
+References: <20180425051539.1989-1-hch@lst.de>
+ <20180425051539.1989-9-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180425051539.1989-9-hch@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-mips@linux-mips.org, sstabellini@kernel.org,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, linux-pci@vger.kernel.org,
+ x86@kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org,
+ sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: multipart/mixed; boundary="===============2907782717218068276=="
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These PM ops will enable/disable the optional PHYs if present.  The
-AXI link-down register in the host driver is now cleared in
-cdns_pci_map_bus since the link-down bit will be set if the PHY has
-been disabled.  It is not cleared when enabling the PHY, since the
-link will not yet be up.
 
-Signed-off-by: Alan Douglas <adouglas@cadence.com>
----
- drivers/pci/cadence/pcie-cadence-ep.c   |  1 +
- drivers/pci/cadence/pcie-cadence-host.c |  3 +++
- drivers/pci/cadence/pcie-cadence.c      | 30 ++++++++++++++++++++++++++++++
- drivers/pci/cadence/pcie-cadence.h      |  4 ++++
- 4 files changed, 38 insertions(+)
+--===============2907782717218068276==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="wzJLGUyc3ArbnUjN"
+Content-Disposition: inline
 
-diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
-index 2581caf..e74b8a4 100644
---- a/drivers/pci/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/cadence/pcie-cadence-ep.c
-@@ -554,6 +554,7 @@ static struct platform_driver cdns_pcie_ep_driver = {
- 	.driver = {
- 		.name = "cdns-pcie-ep",
- 		.of_match_table = cdns_pcie_ep_of_match,
-+		.pm	= &cdns_pcie_pm_ops,
- 	},
- 	.probe = cdns_pcie_ep_probe,
- 	.shutdown = cdns_pcie_ep_shutdown,
-diff --git a/drivers/pci/cadence/pcie-cadence-host.c b/drivers/pci/cadence/pcie-cadence-host.c
-index 7536926a..a8b5eda 100644
---- a/drivers/pci/cadence/pcie-cadence-host.c
-+++ b/drivers/pci/cadence/pcie-cadence-host.c
-@@ -61,6 +61,8 @@ static void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
- 	/* Check that the link is up */
- 	if (!(cdns_pcie_readl(pcie, CDNS_PCIE_LM_BASE) & 0x1))
- 		return NULL;
-+	/* Clear AXI link-down status */
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_LINKDOWN, 0x0);
- 
- 	/* Update Output registers for AXI region 0. */
- 	addr0 = CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
-@@ -360,6 +362,7 @@ static struct platform_driver cdns_pcie_host_driver = {
- 	.driver = {
- 		.name = "cdns-pcie-host",
- 		.of_match_table = cdns_pcie_host_of_match,
-+		.pm	= &cdns_pcie_pm_ops,
- 	},
- 	.probe = cdns_pcie_host_probe,
- 	.shutdown = cdns_pcie_shutdown,
-diff --git a/drivers/pci/cadence/pcie-cadence.c b/drivers/pci/cadence/pcie-cadence.c
-index 681609a..7a34780 100644
---- a/drivers/pci/cadence/pcie-cadence.c
-+++ b/drivers/pci/cadence/pcie-cadence.c
-@@ -217,3 +217,33 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 
- 	return ret;
- }
-+
-+#ifdef CONFIG_PM_SLEEP
-+static int cdns_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct cdns_pcie *pcie = dev_get_drvdata(dev);
-+
-+	cdns_pcie_disable_phy(pcie);
-+
-+	return 0;
-+}
-+
-+static int cdns_pcie_resume_noirq(struct device *dev)
-+{
-+	struct cdns_pcie *pcie = dev_get_drvdata(dev);
-+	int ret;
-+
-+	ret = cdns_pcie_enable_phy(pcie);
-+	if (ret) {
-+		dev_err(dev, "failed to enable phy\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+#endif
-+
-+const struct dev_pm_ops cdns_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(cdns_pcie_suspend_noirq,
-+				      cdns_pcie_resume_noirq)
-+};
-diff --git a/drivers/pci/cadence/pcie-cadence.h b/drivers/pci/cadence/pcie-cadence.h
-index b342c80..ae6bf2a 100644
---- a/drivers/pci/cadence/pcie-cadence.h
-+++ b/drivers/pci/cadence/pcie-cadence.h
-@@ -166,6 +166,9 @@
- #define CDNS_PCIE_AT_IB_RP_BAR_ADDR1(bar) \
- 	(CDNS_PCIE_AT_BASE + 0x0804 + (bar) * 0x0008)
- 
-+/* AXI link down register */
-+#define CDNS_PCIE_AT_LINKDOWN (CDNS_PCIE_AT_BASE + 0x0824)
-+
- enum cdns_pcie_rp_bar {
- 	RP_BAR0,
- 	RP_BAR1,
-@@ -314,5 +317,6 @@ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r);
- void cdns_pcie_disable_phy(struct cdns_pcie *pcie);
- int cdns_pcie_enable_phy(struct cdns_pcie *pcie);
- int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie);
-+extern const struct dev_pm_ops cdns_pcie_pm_ops;
- 
- #endif /* _PCIE_CADENCE_H */
--- 
-2.2.2
+
+--wzJLGUyc3ArbnUjN
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Apr 25, 2018 at 07:15:34AM +0200, Christoph Hellwig wrote:
+> Define this symbol if the architecture either uses 64-bit pointers or the
+> PHYS_ADDR_T_64BIT is set.  This covers 95% of the old arch magic.  We only
+> need an additional select for Xen on ARM (why anyway?), and we now always
+> set ARCH_DMA_ADDR_T_64BIT on mips boards with 64-bit physical addressing
+> instead of only doing it when highmem is set.
+
+I think this should be fine. It only affects alchemy and Netlogic, and
+Netlogic supports highmem already.
+
+So for MIPS:
+Acked-by: James Hogan <jhogan@kernel.org>
+
+Cheers
+James
+
+> diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+> index 985388078872..e10cc5c7be69 100644
+> --- a/arch/mips/Kconfig
+> +++ b/arch/mips/Kconfig
+> @@ -1101,9 +1101,6 @@ config GPIO_TXX9
+>  config FW_CFE
+>  	bool
+> =20
+> -config ARCH_DMA_ADDR_T_64BIT
+> -	def_bool (HIGHMEM && PHYS_ADDR_T_64BIT) || 64BIT
+> -
+>  config ARCH_SUPPORTS_UPROBES
+>  	bool
+
+> diff --git a/lib/Kconfig b/lib/Kconfig
+> index ce9fa962d59b..1f12faf03819 100644
+> --- a/lib/Kconfig
+> +++ b/lib/Kconfig
+> @@ -435,6 +435,9 @@ config NEED_SG_DMA_LENGTH
+>  config NEED_DMA_MAP_STATE
+>  	bool
+> =20
+> +config ARCH_DMA_ADDR_T_64BIT
+> +	def_bool 64BIT || PHYS_ADDR_T_64BIT
+> +
+>  config IOMMU_HELPER
+>  	bool
+
+--wzJLGUyc3ArbnUjN
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQS7lRNBWUYtqfDOVL41zuSGKxAj8gUCWuo3DwAKCRA1zuSGKxAj
+8tikAQDi/ZUNjW7+epg5yVcHFsdN4zPqszjMfOoZb9Tw0/w5/QD+O0gHySriLqfv
+vZwnsvl5Mx2kzMLvdMNqFC++weR4XwQ=
+=H1g4
+-----END PGP SIGNATURE-----
+
+--wzJLGUyc3ArbnUjN--
+
+
+--===============2907782717218068276==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+--===============2907782717218068276==--
