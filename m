@@ -1,106 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 8 May 2018 07:34:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
-Cc: okaya@codeaurora.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lukas Wunner <lukas@wunner.de>
-Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
- (issued 65284 msec ago)
-Message-ID: <20180508123432.GJ161390@bhelgaas-glaptop.roam.corp.google.com>
-References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
- <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
- <43b8ab4a-f8ee-dc96-40ec-e6fdfedd8309@molgen.mpg.de>
- <20180504024527.GE15790@bhelgaas-glaptop.roam.corp.google.com>
- <aa72d3ba089c76449600c22b58a2cafe@codeaurora.org>
- <20180504133327.GF15790@bhelgaas-glaptop.roam.corp.google.com>
- <20180507213344.GA133147@bhelgaas-glaptop.roam.corp.google.com>
- <903e7c20-fdd7-9cbf-debb-a90e70240c7c@molgen.mpg.de>
+Return-Path: <SRS0=8x9Y=HV=canonical.com=joseph.salisbury@kernel.org>
+Return-Path: <SRS0=8x9Y=HV=canonical.com=joseph.salisbury@kernel.org>
+Subject: Re: [Regression] PCI / PM: Simplify device wakeup settings code
+To: "Rafael J. Wysocki" <rafael@kernel.org>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Linux PCI <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ 1745646@bugs.launchpad.net, Mika Westerberg <mika.westerberg@linux.intel.com>
+References: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
+ <CAJZ5v0j8GAatWoAra37y3c-ti2Ft5am75KONgEkjB6AaypkCqg@mail.gmail.com>
+ <ae84e595-dede-1409-4aff-3a29a310f2ba@canonical.com>
+ <CAJZ5v0gapMMf=KqBAoDTv0SUBeusrUFPyEz6Z4k8Y3Szizdm5Q@mail.gmail.com>
+ <1f67f00a-8141-f9af-2120-c78f7cfecb1d@canonical.com>
+ <CAJZ5v0iPsoxCLxsq156RvyZ1cWtM9jNMLUPMnE3cqi5r1jk8jg@mail.gmail.com>
+ <20180501195501.GB11698@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0geYMuzcEhCKcaCHNP-j_ceeyZM0CqEaOTeE3jqVd6zaA@mail.gmail.com>
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Message-ID: <d83a8403-1916-29bc-20ea-fe21b8ff8c2f@canonical.com>
+Date: Wed, 2 May 2018 07:12:39 -0400
 MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0geYMuzcEhCKcaCHNP-j_ceeyZM0CqEaOTeE3jqVd6zaA@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <903e7c20-fdd7-9cbf-debb-a90e70240c7c@molgen.mpg.de>
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 08, 2018 at 08:59:34AM +0200, Paul Menzel wrote:
-> Dear Bjorn,
-> 
-> 
-> Am 07.05.2018 um 23:33 schrieb Bjorn Helgaas:
-> > On Fri, May 04, 2018 at 08:33:27AM -0500, Bjorn Helgaas wrote:
-> > > commit b0d6f2230e12c85ae3b65a854a53c67c7c1f6406
-> > > Author: Bjorn Helgaas <bhelgaas@google.com>
-> > > Date:   Thu May 3 18:39:38 2018 -0500
-> > > 
-> > >      PCI: pciehp: Add quirk for Intel Command Completed erratum
-> > >      The Intel CF118 erratum means the controller does not set the Command
-> > >      Completed bit unless writes to the Slot Command register change "Control"
-> > >      bits.  Command Completed is never set for writes that only change software
-> > >      notification "Enable" bits.  This results in timeouts like this:
-> > >        pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038 (issued 65284 msec ago)
-> > >      When this erratum is present, avoid these timeouts by marking commands
-> > >      "completed" immediately unless they change the "Control" bits.
-> > >      Here's the text of the erratum from the Intel document:
-> > >        CF118        PCIe Slot Status Register Command Completed bit not always
-> > >                     updated on any configuration write to the Slot Control
-> > >                     Register
-> > >        Problem:     For PCIe root ports (devices 0 - 10) supporting hot-plug,
-> > >                     the Slot Status Register (offset AAh) Command Completed
-> > >                     (bit[4]) status is updated under the following condition:
-> > >                     IOH will set Command Completed bit after delivering the new
-> > >                     commands written in the Slot Controller register (offset
-> > >                     A8h) to VPP. The IOH detects new commands written in Slot
-> > >                     Control register by checking the change of value for Power
-> > >                     Controller Control (bit[10]), Power Indicator Control
-> > >                     (bits[9:8]), Attention Indicator Control (bits[7:6]), or
-> > >                     Electromechanical Interlock Control (bit[11]) fields. Any
-> > >                     other configuration writes to the Slot Control register
-> > >                     without changing the values of these fields will not cause
-> > >                     Command Completed bit to be set.
-> > >                     The PCIe Base Specification Revision 2.0 or later describes
-> > >                     the “Slot Control Register” in section 7.8.10, as follows
-> > >                     (Reference section 7.8.10, Slot Control Register, Offset
-> > >                     18h). In hot-plug capable Downstream Ports, a write to the
-> > >                     Slot Control register must cause a hot-plug command to be
-> > >                     generated (see Section 6.7.3.2 for details on hot-plug
-> > >                     commands). A write to the Slot Control register in a
-> > >                     Downstream Port that is not hotplug capable must not cause a
-> > >                     hot-plug command to be executed.
-> > >                     The PCIe Spec intended that every write to the Slot Control
-> > >                     Register is a command and expected a command complete status
-> > >                     to abstract the VPP implementation specific nuances from the
-> > >                     OS software. IOH PCIe Slot Control Register implementation
-> > >                     is not fully conforming to the PCIe Specification in this
-> > >                     respect.
-> > >        Implication: Software checking on the Command Completed status after
-> > >                     writing to the Slot Control register may time out.
-> > >        Workaround:  Software can read the Slot Control register and compare the
-> > >                     existing and new values to determine if it should check the
-> > >                     Command Completed status after writing to the Slot Control
-> > >                     register.
-> > >      Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
-> > >      Link: https://lkml.kernel.org/r/8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de
-> > >      Reported-by: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
-> > >      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > I applied this with Paul's tested-by on pci/hotplug for v4.18.
-> 
-> Thank you very much. Will this also be picked up by the stable Linux kernel
-> series?
+On 05/02/2018 06:41 AM, Rafael J. Wysocki wrote:
+> On Tue, May 1, 2018 at 9:55 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> On Tue, May 01, 2018 at 10:34:29AM +0200, Rafael J. Wysocki wrote:
+>>> On Mon, Apr 30, 2018 at 4:22 PM, Joseph Salisbury
+>>> <joseph.salisbury@canonical.com> wrote:
+>>>> On 04/16/2018 11:58 AM, Rafael J. Wysocki wrote:
+>>>>> On Mon, Apr 16, 2018 at 5:31 PM, Joseph Salisbury
+>>>>> <joseph.salisbury@canonical.com> wrote:
+>>>>>> On 04/13/2018 05:34 PM, Rafael J. Wysocki wrote:
+>>>>>>> On Fri, Apr 13, 2018 at 7:56 PM, Joseph Salisbury
+>>>>>>> <joseph.salisbury@canonical.com> wrote:
+>>>>>>>> Hi Rafael,
+>>>>>>>>
+>>>>>>>> A kernel bug report was opened against Ubuntu [0].  After a kernel
+>>>>>>>> bisect, it was found that reverting the following two commits resolved
+>>>>>>>> this bug:
+>>>>>>>>
+>>>>>>>> 0ce3fcaff929 ("PCI / PM: Restore PME Enable after config space restoration")
+>>>>>>>> 0847684cfc5f("PCI / PM: Simplify device wakeup settings code")
+>>>>>>>>
+>>>>>>>> This is a regression introduced in v4.13-rc1 and still exists in
+>>>>>>>> mainline.  The bug causes the battery to drain when the system is
+>>>>>>>> powered down and unplugged, which does not happed prior to these two
+>>>>>>>> commits.
+>>>>>>> What system and what do you mean by "powered down"?  How much time
+>>>>>>> does it take for the battery to drain now?
+>>>>>> By powered down, the bug reporter is saying physically powered off and
+>>>>>> unplugged.  The system is a HP laptop:
+>>>>>>
+>>>>>> dmi.chassis.vendor: HP
+>>>>>> dmi.product.family: 103C_5335KV HP Notebook
+>>>>>> dmi.product.name: HP Notebook
+>>>>>> vendor_id    : GenuineIntel
+>>>>>> cpu family    : 6
+>>>>>>
+>>>>>>
+>>>>>>>> The bisect actually pointed to commit de3ef1e, but reverting
+>>>>>>>> these two commits fixes the issue.
+>>>>>>>>
+>>>>>>>> I was hoping to get your feedback, since you are the patch author.  Do
+>>>>>>>> you think gathering any additional data will help diagnose this issue,
+>>>>>>>> or would it be best to submit a revert request?
+>>>>>>> First, reverting these is not an option or you will break systems
+>>>>>>> relying on them now.  4.13 is three releases back at this point.
+>>>>>>>
+>>>>>>> Second, your issue appears to be related to the suspend/shutdown path
+>>>>>>> whereas commit 0ce3fcaff929 is mostly about resume, so presumably the
+>>>>>>> change in pci_enable_wake() causes the problem to happen.  Can you try
+>>>>>>> to revert this one alone and see if that helps?
+>>>>>> A test kernel with commits 0ce3fcaff929 and de3ef1eb1cd0 reverted was
+>>>>>> tested.  However, the test kernel still exhibited the bug.
+>>>>> So essentially the bisection result cannot be trusted.
+>>>> We performed some more testing and confirmed just a revert of the
+>>>> following commit resolves the bug:
+>>>>
+>>>> 0847684cfc5f0 ("PCI / PM: Simplify device wakeup settings code")
+>>> Thanks for confirming this!
+>>>
+>>>> Can you think of any suggestions to help debug further?
+>>> The root cause of the regression is likely the change in
+>>> pci_enable_wake() removing the device_may_wakeup() check from it.
+>>>
+>>> Probably, one of the drivers in the platform calls pci_enable_wake()
+>>> directly from its ->shutdown() callback and that causes the device to
+>>> be set up for system wakeup which in turn causes the power draw while
+>>> the system is off to increase.
+>>>
+>>> I would look at the PCI drivers used on that platform to find which of
+>>> them call pci_enable_wake() directly from ->shutdown() and I would
+>>> make these calls conditional on device_may_wakeup().
+>> I took a quick look with
+>>
+>>   git grep -E "pci_enable_wake\(.*[^0]\);|device_may_wakeup"
+>>
+>> and didn't notice any pci_enable_wake() callers that called
+>> device_may_wakeup() first.
+> I've just look at a bunch of network drivers doing that.
+>
+> It looks like I may need to restore __pci_enable_wake() with an extra
+> "runtime" argument for internal use.
+>
+> Joseph, can you ask the reporter to test the Bjorn's patch, please?
 
-I did not tag it for stable because I didn't think it was a serious enough
-problem, based on this from Documentation/process/stable-kernel-rules.rst:
-
- - It must fix a problem that causes a build error (but not for things
-   marked CONFIG_BROKEN), an oops, a hang, data corruption, a real
-   security issue, or some "oh, that's not good" issue.  In short, something
-   critical.
-
-I know I'm on the conservative end of the stable-tagging spectrum, so maybe
-I could be convinced to add a stable tag.
-
-My impression was that this bug caused annoying messages and annoying
-delays of a couple seconds during shutdown and resume.  Is it more serious
-than that?
-
-Bjorn
+Yes, I'll get him a test kernel and respond with the results.
