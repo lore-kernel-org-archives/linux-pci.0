@@ -1,67 +1,92 @@
-Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
-Date: Tue, 8 May 2018 14:43:41 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>, Bjorn Helgaas
- <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
- linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>, Christoph
- Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
- <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
- <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
- <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
- Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all
- devices behind switches
-Message-ID: <20180508144341.0441b676@w520.home>
-In-Reply-To: <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
-	<20180423233046.21476-5-logang@deltatee.com>
-	<20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
-	<e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
-	<0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
-	<a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
-	<3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
-	<20180508133407.57a46902@w520.home>
-	<5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
-	<20180508141331.7cd737cb@w520.home>
-	<d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v6 1/5] bnx2x: Report PCIe link properties with
+ pcie_print_link_status()
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ariel Elior <ariel.elior@cavium.com>
+Cc: linux-pci@vger.kernel.org, everest-linux-l2@cavium.com,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Tal Gilboa <talgi@mellanox.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Jacob Keller <jacob.e.keller@intel.com>,
+        Jakub Kicinski <kubakici@wp.pl>
+Date: Thu, 03 May 2018 15:00:15 -0500
+Message-ID: <152537761536.62474.4071016337645118753.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152537719056.62474.2571390812509425478.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152537719056.62474.2571390812509425478.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 8 May 2018 14:19:05 -0600
-Logan Gunthorpe <logang@deltatee.com> wrote:
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-> On 08/05/18 02:13 PM, Alex Williamson wrote:
-> > Well, I'm a bit confused, this patch series is specifically disabling
-> > ACS on switches, but per the spec downstream switch ports implementing
-> > ACS MUST implement direct translated P2P.  So it seems the only
-> > potential gap here is the endpoint, which must support ATS or else
-> > there's nothing for direct translated P2P to do.  The switch port plays
-> > no part in the actual translation of the request, ATS on the endpoint
-> > has already cached the translation and is now attempting to use it.
-> > For the switch port, this only becomes a routing decision, the request
-> > is already translated, therefore ACS RR and EC can be ignored to
-> > perform "normal" (direct) routing, as if ACS were not present.  It would
-> > be a shame to go to all the trouble of creating this no-ACS mode to find
-> > out the target hardware supports ATS and should have simply used it, or
-> > we should have disabled the IOMMU altogether, which leaves ACS disabled.  
-> 
-> Ah, ok, I didn't think it was the endpoint that had to implement ATS.
-> But in that case, for our application, we need NVMe cards and RDMA NICs
-> to all have ATS support and I expect that is just as unlikely. At least
-> none of the endpoints on my system support it. Maybe only certain GPUs
-> have this support.
+Previously the driver used pcie_get_minimum_link() to warn when the NIC
+is in a slot that can't supply as much bandwidth as the NIC could use.
 
-Yes, GPUs seem to be leading the pack in implementing ATS.  So now the
-dumb question, why not simply turn off the IOMMU and thus ACS?  The
-argument of using the IOMMU for security is rather diminished if we're
-specifically enabling devices to poke one another directly and clearly
-this isn't favorable for device assignment either.  Are there target
-systems where this is not a simple kernel commandline option?  Thanks,
+pcie_get_minimum_link() can be misleading because it finds the slowest link
+and the narrowest link (which may be different links) without considering
+the total bandwidth of each link.  For a path with a 16 GT/s x1 link and a
+2.5 GT/s x16 link, it returns 2.5 GT/s x1, which corresponds to 250 MB/s of
+bandwidth, not the true available bandwidth of about 1969 MB/s for a
+16 GT/s x1 link.
 
-Alex
+Use pcie_print_link_status() to report PCIe link speed and possible
+limitations instead of implementing this in the driver itself.  This finds
+the slowest link in the path to the device by computing the total bandwidth
+of each link and compares that with the capabilities of the device.
+
+The dmesg change is:
+
+  - %s (%c%d) PCI-E x%d %s found at mem %lx, IRQ %d, node addr %pM
+  + %s (%c%d) PCI-E found at mem %lx, IRQ %d, node addr %pM
+  + %u.%03u Gb/s available PCIe bandwidth (%s x%d link)
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c |   23 ++++++----------------
+ 1 file changed, 6 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+index c766ae23bc74..5b1ed240bf18 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+@@ -13922,8 +13922,6 @@ static int bnx2x_init_one(struct pci_dev *pdev,
+ {
+ 	struct net_device *dev = NULL;
+ 	struct bnx2x *bp;
+-	enum pcie_link_width pcie_width;
+-	enum pci_bus_speed pcie_speed;
+ 	int rc, max_non_def_sbs;
+ 	int rx_count, tx_count, rss_count, doorbell_size;
+ 	int max_cos_est;
+@@ -14091,21 +14089,12 @@ static int bnx2x_init_one(struct pci_dev *pdev,
+ 		dev_addr_add(bp->dev, bp->fip_mac, NETDEV_HW_ADDR_T_SAN);
+ 		rtnl_unlock();
+ 	}
+-	if (pcie_get_minimum_link(bp->pdev, &pcie_speed, &pcie_width) ||
+-	    pcie_speed == PCI_SPEED_UNKNOWN ||
+-	    pcie_width == PCIE_LNK_WIDTH_UNKNOWN)
+-		BNX2X_DEV_INFO("Failed to determine PCI Express Bandwidth\n");
+-	else
+-		BNX2X_DEV_INFO(
+-		       "%s (%c%d) PCI-E x%d %s found at mem %lx, IRQ %d, node addr %pM\n",
+-		       board_info[ent->driver_data].name,
+-		       (CHIP_REV(bp) >> 12) + 'A', (CHIP_METAL(bp) >> 4),
+-		       pcie_width,
+-		       pcie_speed == PCIE_SPEED_2_5GT ? "2.5GHz" :
+-		       pcie_speed == PCIE_SPEED_5_0GT ? "5.0GHz" :
+-		       pcie_speed == PCIE_SPEED_8_0GT ? "8.0GHz" :
+-		       "Unknown",
+-		       dev->base_addr, bp->pdev->irq, dev->dev_addr);
++	BNX2X_DEV_INFO(
++	       "%s (%c%d) PCI-E found at mem %lx, IRQ %d, node addr %pM\n",
++	       board_info[ent->driver_data].name,
++	       (CHIP_REV(bp) >> 12) + 'A', (CHIP_METAL(bp) >> 4),
++	       dev->base_addr, bp->pdev->irq, dev->dev_addr);
++	pcie_print_link_status(bp->pdev);
+ 
+ 	bnx2x_register_phc(bp);
+ 
