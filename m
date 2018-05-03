@@ -1,139 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 30 May 2018 19:22:10 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Tiwei Bie <tiwei.bie@intel.com>
-Cc: bhelgaas@google.com, virtualization@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, virtio-dev@lists.oasis-open.org,
-        linux-pci@vger.kernel.org, dan.daly@intel.com,
-        mark.d.rustad@intel.com, alexander.h.duyck@intel.com,
-        cunming.liang@intel.com, zhihong.wang@intel.com
-Subject: Re: [PATCH] virtio_pci: support enabling VFs
-Message-ID: <20180530192010-mutt-send-email-mst@kernel.org>
-References: <20180530085521.26583-1-tiwei.bie@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180530085521.26583-1-tiwei.bie@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:11756 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751775AbeECFEE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 01:04:04 -0400
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v15 4/9] PCI/AER: Rename error recovery to generic PCI naming
+Date: Thu,  3 May 2018 01:03:53 -0400
+Message-Id: <1525323838-1735-5-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
+References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2018 at 04:55:21PM +0800, Tiwei Bie wrote:
-> There is a new feature bit allocated in virtio spec to
-> support SR-IOV (Single Root I/O Virtualization):
-> 
-> https://github.com/oasis-tcs/virtio-spec/issues/11
-> 
-> This patch enables the support for this feature bit in
-> virtio driver.
-> 
-> Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
-> ---
-> This patch depends on below proposal:
-> https://lists.oasis-open.org/archives/virtio-dev/201805/msg00154.html
-> 
-> This patch depends on below patch:
-> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/virtualization&id=8effc395c2097e258fcedfc02ed4a66d45fb4238
-> 
->  drivers/virtio/virtio_pci_common.c | 20 ++++++++++++++++++++
->  drivers/virtio/virtio_pci_modern.c | 14 ++++++++++++++
->  include/uapi/linux/virtio_config.h |  7 ++++++-
->  3 files changed, 40 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-> index 48d4d1cf1cb6..023da80a7a3e 100644
-> --- a/drivers/virtio/virtio_pci_common.c
-> +++ b/drivers/virtio/virtio_pci_common.c
-> @@ -588,6 +588,25 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
->  	put_device(dev);
->  }
->  
-> +static int virtio_pci_sriov_configure(struct pci_dev *pci_dev, int num_vfs)
-> +{
-> +	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
-> +	struct virtio_device *vdev = &vp_dev->vdev;
-> +	int (*sriov_configure)(struct pci_dev *pci_dev, int num_vfs);
-> +
-> +	if (!(vdev->config->get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK))
-> +		return -EBUSY;
-> +
-> +	if (!__virtio_test_bit(vdev, VIRTIO_F_SR_IOV))
-> +		return -EINVAL;
-> +
-> +	sriov_configure = pci_sriov_configure_simple;
-> +	if (sriov_configure == NULL)
-> +		return -ENOENT;
+This patch renames error recovery to generic name with pcie prefix
 
-BTW what is all this trickery in aid of?
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
 
-> +
-> +	return sriov_configure(pci_dev, num_vfs);
-> +}
-> +
->  static struct pci_driver virtio_pci_driver = {
->  	.name		= "virtio-pci",
->  	.id_table	= virtio_pci_id_table,
-> @@ -596,6 +615,7 @@ static struct pci_driver virtio_pci_driver = {
->  #ifdef CONFIG_PM_SLEEP
->  	.driver.pm	= &virtio_pci_pm_ops,
->  #endif
-> +	.sriov_configure = virtio_pci_sriov_configure,
->  };
->  
->  module_pci_driver(virtio_pci_driver);
-> diff --git a/drivers/virtio/virtio_pci_modern.c b/drivers/virtio/virtio_pci_modern.c
-> index 2555d80f6eec..07571daccfec 100644
-> --- a/drivers/virtio/virtio_pci_modern.c
-> +++ b/drivers/virtio/virtio_pci_modern.c
-> @@ -153,14 +153,28 @@ static u64 vp_get_features(struct virtio_device *vdev)
->  	return features;
->  }
->  
-> +static void vp_transport_features(struct virtio_device *vdev, u64 features)
-> +{
-> +	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
-> +	struct pci_dev *pci_dev = vp_dev->pci_dev;
-> +
-> +	if ((features & BIT_ULL(VIRTIO_F_SR_IOV)) &&
-> +			pci_find_ext_capability(pci_dev, PCI_EXT_CAP_ID_SRIOV))
-> +		__virtio_set_bit(vdev, VIRTIO_F_SR_IOV);
-> +}
-> +
->  /* virtio config->finalize_features() implementation */
->  static int vp_finalize_features(struct virtio_device *vdev)
->  {
->  	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
-> +	u64 features = vdev->features;
->  
->  	/* Give virtio_ring a chance to accept features. */
->  	vring_transport_features(vdev);
->  
-> +	/* Give virtio_pci a chance to accept features. */
-> +	vp_transport_features(vdev, features);
-> +
->  	if (!__virtio_test_bit(vdev, VIRTIO_F_VERSION_1)) {
->  		dev_err(&vdev->dev, "virtio: device uses modern interface "
->  			"but does not have VIRTIO_F_VERSION_1\n");
-> diff --git a/include/uapi/linux/virtio_config.h b/include/uapi/linux/virtio_config.h
-> index 308e2096291f..b7c1f4e7d59e 100644
-> --- a/include/uapi/linux/virtio_config.h
-> +++ b/include/uapi/linux/virtio_config.h
-> @@ -49,7 +49,7 @@
->   * transport being used (eg. virtio_ring), the rest are per-device feature
->   * bits. */
->  #define VIRTIO_TRANSPORT_F_START	28
-> -#define VIRTIO_TRANSPORT_F_END		34
-> +#define VIRTIO_TRANSPORT_F_END		38
->  
->  #ifndef VIRTIO_CONFIG_NO_LEGACY
->  /* Do we get callbacks when the ring is completely used, even if we've
-> @@ -71,4 +71,9 @@
->   * this is for compatibility with legacy systems.
->   */
->  #define VIRTIO_F_IOMMU_PLATFORM		33
-> +
-> +/*
-> + * Does the device support Single Root I/O Virtualization?
-> + */
-> +#define VIRTIO_F_SR_IOV			37
->  #endif /* _UAPI_LINUX_VIRTIO_CONFIG_H */
-> -- 
-> 2.17.0
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index cec9d8c..22a9589 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -353,6 +353,9 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ 
+ void pci_enable_acs(struct pci_dev *dev);
+ 
++/* PCI error reporting and recovery */
++void pcie_do_recovery(struct pci_dev *dev, int severity);
++
+ bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
+ #ifdef CONFIG_PCIEASPM
+ void pcie_aspm_init_link_state(struct pci_dev *pdev);
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 655d4e8..be4ee3b 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -475,7 +475,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ 	return status;
+ }
+ 
+-static pci_ers_result_t do_fatal_recovery(struct pci_dev *dev, int severity)
++static pci_ers_result_t pcie_do_fatal_recovery(struct pci_dev *dev, int severity)
+ {
+ 	struct pci_dev *udev;
+ 	struct pci_bus *parent;
+@@ -514,7 +514,7 @@ static pci_ers_result_t do_fatal_recovery(struct pci_dev *dev, int severity)
+ }
+ 
+ /**
+- * do_recovery - handle nonfatal/fatal error recovery process
++ * pcie_do_recovery - handle nonfatal/fatal error recovery process
+  * @dev: pointer to a pci_dev data structure of agent detecting an error
+  * @severity: error severity type
+  *
+@@ -522,13 +522,13 @@ static pci_ers_result_t do_fatal_recovery(struct pci_dev *dev, int severity)
+  * error detected message to all downstream drivers within a hierarchy in
+  * question and return the returned code.
+  */
+-static void do_recovery(struct pci_dev *dev, int severity)
++void pcie_do_recovery(struct pci_dev *dev, int severity)
+ {
+ 	pci_ers_result_t status;
+ 	enum pci_channel_state state;
+ 
+ 	if (severity == AER_FATAL) {
+-		status = do_fatal_recovery(dev, severity);
++		status = pcie_do_fatal_recovery(dev, severity);
+ 		if (status != PCI_ERS_RESULT_RECOVERED)
+ 			goto failed;
+ 		return;
+@@ -600,7 +600,7 @@ static void handle_error_source(struct pcie_device *aerdev,
+ 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+ 					info->status);
+ 	} else
+-		do_recovery(dev, info->severity);
++		pcie_do_recovery(dev, info->severity);
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+@@ -665,7 +665,7 @@ static void aer_recover_work_func(struct work_struct *work)
+ 		}
+ 		cper_print_aer(pdev, entry.severity, entry.regs);
+ 		if (entry.severity != AER_CORRECTABLE)
+-			do_recovery(pdev, entry.severity);
++			pcie_do_recovery(pdev, entry.severity);
+ 		pci_dev_put(pdev);
+ 	}
+ }
+-- 
+2.7.4
