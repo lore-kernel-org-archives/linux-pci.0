@@ -1,120 +1,32 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:49900 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S937813AbeE1MsC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 May 2018 08:48:02 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v8 2/7] PCI: Introduce shpchp_is_native()
-Date: Mon, 28 May 2018 15:47:51 +0300
-Message-Id: <20180528124756.78512-3-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=TyS8=HW=intel.com=jacob.e.keller@kernel.org>
+Return-Path: <SRS0=TyS8=HW=intel.com=jacob.e.keller@kernel.org>
+From: "Keller, Jacob E" <jacob.e.keller@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, "Kirsher, Jeffrey T"
+	<jeffrey.t.kirsher@intel.com>, Ganesh Goudar <ganeshgr@chelsio.com>,
+	"Michael Chan" <michael.chan@broadcom.com>, Ariel Elior
+	<ariel.elior@cavium.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"everest-linux-l2@cavium.com" <everest-linux-l2@cavium.com>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tal Gilboa
+	<talgi@mellanox.com>, Tariq Toukan <tariqt@mellanox.com>, Jakub Kicinski
+	<kubakici@wp.pl>
+Subject: RE: [PATCH v6 0/5] PCI: Improve PCIe link status reporting
+Date: Thu, 3 May 2018 20:29:38 +0000
+Message-ID: <02874ECE860811409154E81DA85FBB5882DBA48B@ORSMSX115.amr.corp.intel.com>
+References: <152537719056.62474.2571390812509425478.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152537719056.62474.2571390812509425478.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-In the same way we do for pciehp, introduce a new function
-shpchp_is_native() that returns true whether the bridge should be
-handled by the native SHCP driver. Then convert the driver to use this
-function.
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/acpi_pcihp.c  |  4 ++--
- drivers/pci/hotplug/shpchp_core.c |  2 --
- drivers/pci/pci-acpi.c            | 21 +++++++++++++++++++++
- include/linux/pci_hotplug.h       |  2 ++
- 4 files changed, 25 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-index 597d22aeefc1..3979f89b250a 100644
---- a/drivers/pci/hotplug/acpi_pcihp.c
-+++ b/drivers/pci/hotplug/acpi_pcihp.c
-@@ -83,11 +83,11 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
- 	 * OSHP within the scope of the hotplug controller and its parents,
- 	 * up to the host bridge under which this controller exists.
- 	 */
--	host = pci_find_host_bridge(pdev->bus);
--	if (host->native_shpc_hotplug)
-+	if (shpchp_is_native(pdev))
- 		return 0;
- 
- 	/* If _OSC exists, we should not evaluate OSHP */
-+	host = pci_find_host_bridge(pdev->bus);
- 	root = acpi_pci_find_root(ACPI_HANDLE(&host->dev));
- 	if (root->osc_support_set)
- 		goto no_control;
-diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
-index 47decc9b3bb3..0f3711404c2b 100644
---- a/drivers/pci/hotplug/shpchp_core.c
-+++ b/drivers/pci/hotplug/shpchp_core.c
-@@ -275,8 +275,6 @@ static int is_shpc_capable(struct pci_dev *dev)
- 	if (dev->vendor == PCI_VENDOR_ID_AMD &&
- 	    dev->device == PCI_DEVICE_ID_AMD_GOLAM_7450)
- 		return 1;
--	if (!pci_find_capability(dev, PCI_CAP_ID_SHPC))
--		return 0;
- 	if (acpi_get_hp_hw_control_from_firmware(dev))
- 		return 0;
- 	return 1;
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 52b8434d4d6e..bb83be0d0e5b 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -394,6 +394,27 @@ bool pciehp_is_native(struct pci_dev *bridge)
- 	return host->native_pcie_hotplug;
- }
- 
-+/**
-+ * shpchp_is_native - Check whether a hotplug port is handled by the OS
-+ * @bridge: Hotplug port to check
-+ *
-+ * Returns true if the given @bridge is handled by the native SHPC hotplug
-+ * driver.
-+ */
-+bool shpchp_is_native(struct pci_dev *bridge)
-+{
-+	const struct pci_host_bridge *host;
-+
-+	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
-+		return false;
-+
-+	if (!pci_find_capability(bridge, PCI_CAP_ID_SHPC))
-+		return false;
-+
-+	host = pci_find_host_bridge(bridge->bus);
-+	return host->native_shpc_hotplug;
-+}
-+
- /**
-  * pci_acpi_wake_bus - Root bus wakeup notification fork function.
-  * @context: Device wakeup context.
-diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-index 1f5c935eb0de..4c378368215c 100644
---- a/include/linux/pci_hotplug.h
-+++ b/include/linux/pci_hotplug.h
-@@ -164,6 +164,7 @@ struct hotplug_params {
- int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp);
- bool pciehp_is_native(struct pci_dev *bridge);
- int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge);
-+bool shpchp_is_native(struct pci_dev *bridge);
- int acpi_pci_check_ejectable(struct pci_bus *pbus, acpi_handle handle);
- int acpi_pci_detect_ejectable(acpi_handle handle);
- #else
-@@ -178,5 +179,6 @@ static inline int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge)
- 	return 0;
- }
- static inline bool pciehp_is_native(struct pci_dev *bridge) { return true; }
-+static inline bool shpchp_is_native(struct pci_dev *bridge) { return true; }
- #endif
- #endif
--- 
-2.17.0
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBUaGlzIGRvZXMgY2hhbmdlIHRoZSBkbWVz
+ZyByZXBvcnRpbmcgb2YgbGluayBzcGVlZHMsIGFuZCBpbiB0aGUgaXhnYmUgY2FzZSwNCj4gaXQg
+Y2hhbmdlcyB0aGUgcmVwb3J0aW5nIGZyb20gS0VSTl9XQVJOIGxldmVsIHRvIEtFUk5fSU5GTy4g
+IElmIHRoYXQncyBhbg0KPiBpc3N1ZSwgbGV0J3MgdGFsayBhYm91dCBpdC4gIEknbSBob3Bpbmcg
+dGhlIHJlZHVjZSBjb2RlIHNpemUsIGltcHJvdmVkDQo+IGZ1bmN0aW9uYWxpdHksIGFuZCBjb25z
+aXN0ZW5jeSBhY3Jvc3MgZHJpdmVycyBpcyBlbm91Z2ggdG8gbWFrZSB0aGlzDQo+IHdvcnRod2hp
+bGUuDQo+IA0KDQpJIHBlcnNvbmFsbHkgaGF2ZSBubyBpc3N1ZSB3aXRoIHRoaXMgY2hhbmdlLCBi
+dXQgSSBkb24ndCB3b3JrIG9uIHRoZSBpeGdiZSBkcml2ZXIgbXVjaCBhbnltb3JlLg0KDQpUaGFu
+a3MsDQpKYWtlDQoNCg==
