@@ -1,55 +1,87 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: dmeyer@gigaio.com
-To: logang@deltatee.com, kurt.schwemmer@microsemi.com,
-        linux-pci@vger.kernel.org, linux-ntb@googlegroups.com
-Cc: bhelgaas@google.com, jdmason@kudzu.us, dave.jiang@intel.com,
-        allenbh@gmail.com, linux-kernel@vger.kernel.org,
-        Doug Meyer <dmeyer@gigaio.com>
-Subject: [PATCH v2 0/2] PCI Quirk Patchset for Microsemi Switchtec NTB
-Date: Wed, 23 May 2018 13:18:04 -0700
-Message-Id: <1527106686-18852-1-git-send-email-dmeyer@gigaio.com>
+Date: Thu, 3 May 2018 15:16:36 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v7 3/9] PCI: endpoint: functions/pci-epf-test: Add second
+ entry
+Message-ID: <20180503141636.GA23270@e107981-ln.cambridge.arm.com>
+References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
+ <c6cfd167838ae8e226dee0820983efe918fa4e1f.1524577064.git.gustavo.pimentel@synopsys.com>
+ <20180426165605.GA6370@e107981-ln.cambridge.arm.com>
+ <b65caf2e-b002-f591-6215-ff2241b2dfb8@ti.com>
+ <20180501115417.GD19391@e107981-ln.cambridge.arm.com>
+ <5d625d04-38fe-7d5a-67fc-5ea92039474c@ti.com>
+ <20180501142607.GA21911@e107981-ln.cambridge.arm.com>
+ <bfaebf3c-2175-f4b2-89c5-336ff9396ed0@synopsys.com>
+ <20180502165144.GB4871@e107981-ln.cambridge.arm.com>
+ <cf2772d5-26c0-b0e3-1e5b-ace91c1ea105@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cf2772d5-26c0-b0e3-1e5b-ace91c1ea105@ti.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Doug Meyer <dmeyer@gigaio.com>
+On Thu, May 03, 2018 at 12:03:15PM +0530, Kishon Vijay Abraham I wrote:
 
-This is a resend of the patch series to enable Microsemi Switchtec
-NTB configurations to run with the IOMMU in the hosts turned on.
-Because of the nature PCI Quirk implementation, it was preferable
-to migrate the Microsemi PCI vendor and device definitions to the
-Linux canonical location. Logan Gunthorpe requested that this
-migration be done as a separate patch in a set, and so this patch
-series was created as shown here.
+[...]
 
-The first patch encapsulates the movement of constants from
-switchtec.h to pci_ids.h, with commensurate changes to the source
-files. This patch is not dependent on any other work.
+> >> Since the linkup notifier and BAR index (where auxiliary registers are
+> >> located) may be configurable and is something platform dependent,
+> >> perhaps the configuration of this variables should be done by module
+> >> parameter and not by configfs, leaving this configuration
+> >> responsibility in charge of each platform.
+> > 
+> > They are platform dependent because they depend on the EP controller.
+> > That's why I said that those are EP controller parameters. I do not
+> > think they are module parameters either - they should be part of HW
+> > description in firmware.
+> 
+> The problem is because pci-epf-test cannot be described in HW. pci-epf-test is
+> also not automatically bound to the EP controller but is bound by the user like
+> below
+> ln -s functions/pci_epf_test/func1 controllers/51000000.pcie_ep/
+> 
+> So given that user anyways has to bind the epf device to the controller, based
+> on the platform the user can use a different configfs entry like below
+> ln -s functions/pci_epf_test_dw/func1 controllers/51000000.pcie_ep/ or
+> ln -s functions/pci_epf_test_k2g/func1 controllers/21800000.pcie-ep/
+> 
+> If the epf can be described in dt, then something like below can be done
+> pcie1_ep: pcie_ep@51000000 {
+> 	compatible = "ti,dra7-pcie-ep";
+> 	interrupts = <0 232 0x4>;
+> 	num-lanes = <1>;
+> 	num-ib-windows = <4>;
+> 	num-ob-windows = <16>;
+> 	phys = <&pcie1_phy>;
+> 	phy-names = "pcie-phy0";
+> 	pci_epf_test: pci_epf_test@0 {
+> 		name = "pci_epf_test_dw";
+> 		<other properties>;
+> 	}
+> };
+> 
+> With this pci-dra7xx.c driver should create pci_epf_device using
+> pci_epf_create("pci_epf_test_dw");
+> 
+> Then the driver_data corresponding to "pci_epf_test_dw" will select linkup
+> notifier or BAR index etc.
 
-The second patch is the PCI quirk implementation itself, and is
-completely dependent upon the first patch in this series.
+Those two properties are properties of the EP controller (it is not 100%
+clear to me how the test BAR register is defined), is this correct ?
 
-Testing of the quirk was done on with a 2-host x86-64 system
-with all combinations of IOMMU off/on. The ntb_perf module was
-used as test stimulus. 
+If yes, given that those properties are not useful before an EPF is
+bound to an EPC, can't they be retrieved at bind time from the EPC
+controller data (that we can add through DT bindings) ?
 
-Blessings,
-Doug Meyer
-
-Changes since v1:
-- Call pci_device_disable() at return points to clean up properly.
-- Changed all dev_* print macros to pci_* macros.
-- Removed superfluous variable initializations.
-
-Doug Meyer (2):
-  NTB: Migrate PCI Constants to Cannonical PCI Header
-  NTB: PCI Quirk to Enable Switchtec NT Functionality with IOMMU On
-
- drivers/ntb/hw/mscc/ntb_hw_switchtec.c |   3 +-
- drivers/pci/quirks.c                   | 197 +++++++++++++++++++++++++++++++++
- drivers/pci/switch/switchtec.c         |  15 ++-
- include/linux/pci_ids.h                |  32 ++++++
- include/linux/switchtec.h              |   4 -
- 5 files changed, 238 insertions(+), 13 deletions(-)
-
--- 
-1.8.3.1
+Thanks,
+Lorenzo
