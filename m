@@ -1,42 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:42959 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965291AbeEYKEs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 May 2018 06:04:48 -0400
-Date: Fri, 25 May 2018 12:04:44 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar: Remove IRQ mappings in rcar_pcie_enable_msi
- failpath
-Message-ID: <20180525100444.2257mefqsxdhfvfs@verge.net.au>
-References: <20180523105220.25518-1-marek.vasut+renesas@gmail.com>
+Received: from mail-co1nam03on0042.outbound.protection.outlook.com ([104.47.40.42]:46304
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751050AbeECJFk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 May 2018 05:05:40 -0400
+Subject: Re: [PATCH v4 00/14] Copy Offload in NVMe Fabrics with P2P PCI Memory
+To: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <b8acf835-df94-9967-2327-8f0e39d88511@amd.com>
+ <805645c1-ea40-2e57-88eb-5dd34e579b2e@deltatee.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Message-ID: <3e4e0126-f444-8d88-6793-b5eb97c61f76@amd.com>
+Date: Thu, 3 May 2018 11:05:21 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180523105220.25518-1-marek.vasut+renesas@gmail.com>
+In-Reply-To: <805645c1-ea40-2e57-88eb-5dd34e579b2e@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2018 at 12:52:20PM +0200, Marek Vasut wrote:
-> The rcar_pcie_enable_msi() creates IRQ mappings using irq_create_mapping()
-> before requesting the IRQs using devm_request_irq(). If devm_request_irq()
-> fails for some reason, rcar_pcie_enable_msi() does not remove the mapping.
-> 
-> Pull out the code for disposing IRQ mappings from rcar_pcie_teardown_msi()
-> into a separate function and call it from both rcar_pcie_teardown_msi()
-> and rcar_pcie_enable_msi() failpath to remove the mappings correctly.
-> 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
+Am 02.05.2018 um 17:56 schrieb Logan Gunthorpe:
+> Hi Christian,
+>
+> On 5/2/2018 5:51 AM, Christian König wrote:
+>> it would be rather nice to have if you could separate out the 
+>> functions to detect if peer2peer is possible between two devices.
+>
+> This would essentially be pci_p2pdma_distance() in the existing 
+> patchset. It returns the sum of the distance between a list of clients 
+> and a P2PDMA provider. It returns -1 if peer2peer is not possible 
+> between the devices (presently this means they are not behind the same 
+> root port).
 
-Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+Ok, I'm still missing the big picture here. First question is what is 
+the P2PDMA provider?
+
+Second question is how to you want to handle things when device are not 
+behind the same root port (which is perfectly possible in the cases I 
+deal with)?
+
+Third question why multiple clients? That feels a bit like you are 
+pushing something special to your use case into the common PCI 
+subsystem. Something which usually isn't a good idea.
+
+
+
+As far as I can see we need a function which return the distance between 
+a initiator and target device. This function then returns -1 if the 
+transaction can't be made and a positive value otherwise.
+
+We also need to give the direction of the transaction and have a 
+whitelist root complex PCI-IDs which can handle P2P transactions from 
+different ports for a certain DMA direction.
+
+
+Christian.
+
+>
+> Logan
