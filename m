@@ -1,116 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay6.synopsys.com ([198.182.37.59]:38578 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750750AbeENR7S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 13:59:18 -0400
-Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 172261E1376
-        for <linux-pci@vger.kernel.org>; Mon, 14 May 2018 19:59:17 +0200 (CEST)
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH 1/2] misc: pci_endpoint_test: Replace lower into upper case characters
-Date: Mon, 14 May 2018 18:59:11 +0100
-Message-Id: <0410b99106ec925773cadcfbf6c4646d37639a8b.1526311733.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1526311733.git.gustavo.pimentel@synopsys.com>
-References: <cover.1526311733.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1526311733.git.gustavo.pimentel@synopsys.com>
-References: <cover.1526311733.git.gustavo.pimentel@synopsys.com>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:45771 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751246AbeECTgl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 15:36:41 -0400
+Received: by mail-lf0-f68.google.com with SMTP id y14-v6so27301522lfy.12
+        for <linux-pci@vger.kernel.org>; Thu, 03 May 2018 12:36:40 -0700 (PDT)
+Subject: [PATCH v3 1/5] pcie-rcar: poll PHYRDY in rcar_pcie_hw_init()
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
+Message-ID: <89f4bb11-918a-397d-0dd8-5a6e630504f7@cogentembedded.com>
+Date: Thu, 3 May 2018 22:36:37 +0300
+MIME-Version: 1.0
+In-Reply-To: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace all initial lower case character into upper case in comments
-and debug printks.
+In  all the R-Car gen1/2/3 manuals, we are instructed to poll PCIEPHYSR
+for PHYRDY=1  at  an early stage of the PCIEC initialization -- while
+the driver only does this on R-Car H1 (polling a PHY specific register).
+Add the PHYRDY polling to rcar_pcie_hw_init(). Note that without the
+special PHY driver on the R-Car V3H (R8A77980) the PCIEC initialization
+just freezes the kernel -- adding the PHYRDY polling allows the init code
+to exit gracefully on timeout (PHY starts powered down after reset on this
+SoC).
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+
 ---
- drivers/misc/pci_endpoint_test.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+Changes in version 3:
+- used the BIT() macro in #define PHYRDY;
+- added the SoC model # to the patch description;
+- added Rob's and Simon's tags;
+- refreshed atop of Marek's patch.
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index fe8897e..6a75f86 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -233,7 +233,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 	orig_src_addr = dma_alloc_coherent(dev, size + alignment,
- 					   &orig_src_phys_addr, GFP_KERNEL);
- 	if (!orig_src_addr) {
--		dev_err(dev, "failed to allocate source buffer\n");
-+		dev_err(dev, "Failed to allocate source buffer\n");
- 		ret = false;
- 		goto err;
- 	}
-@@ -259,7 +259,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 	orig_dst_addr = dma_alloc_coherent(dev, size + alignment,
- 					   &orig_dst_phys_addr, GFP_KERNEL);
- 	if (!orig_dst_addr) {
--		dev_err(dev, "failed to allocate destination address\n");
-+		dev_err(dev, "Failed to allocate destination address\n");
- 		ret = false;
- 		goto err_orig_src_addr;
- 	}
-@@ -321,7 +321,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
- 				       GFP_KERNEL);
- 	if (!orig_addr) {
--		dev_err(dev, "failed to allocate address\n");
-+		dev_err(dev, "Failed to allocate address\n");
- 		ret = false;
- 		goto err;
- 	}
-@@ -382,7 +382,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
- 				       GFP_KERNEL);
- 	if (!orig_addr) {
--		dev_err(dev, "failed to allocate destination address\n");
-+		dev_err(dev, "Failed to allocate destination address\n");
- 		ret = false;
- 		goto err;
- 	}
-@@ -513,14 +513,14 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	if (!no_msi) {
- 		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
- 		if (irq < 0)
--			dev_err(dev, "failed to get MSI interrupts\n");
-+			dev_err(dev, "Failed to get MSI interrupts\n");
- 		test->num_irqs = irq;
- 	}
+ drivers/pci/host/pcie-rcar.c |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+Index: pci/drivers/pci/host/pcie-rcar.c
+===================================================================
+--- pci.orig/drivers/pci/host/pcie-rcar.c
++++ pci/drivers/pci/host/pcie-rcar.c
+@@ -37,6 +37,8 @@
+ #define PCIECDR			0x000020
+ #define PCIEMSR			0x000028
+ #define PCIEINTXR		0x000400
++#define PCIEPHYSR		0x0007f0
++#define  PHYRDY			BIT(0)
+ #define PCIEMSITXR		0x000840
  
- 	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
- 			       IRQF_SHARED, DRV_MODULE_NAME, test);
- 	if (err) {
--		dev_err(dev, "failed to request IRQ %d\n", pdev->irq);
-+		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
- 		goto err_disable_msi;
- 	}
+ /* Transfer control */
+@@ -527,6 +529,20 @@ static void phy_write_reg(struct rcar_pc
+ 	phy_wait_for_ack(pcie);
+ }
  
-@@ -537,7 +537,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
- 			base = pci_ioremap_bar(pdev, bar);
- 			if (!base) {
--				dev_err(dev, "failed to read BAR%d\n", bar);
-+				dev_err(dev, "Failed to read BAR%d\n", bar);
- 				WARN_ON(bar == test_reg_bar);
- 			}
- 			test->bar[bar] = base;
-@@ -557,7 +557,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	id = ida_simple_get(&pci_endpoint_test_ida, 0, 0, GFP_KERNEL);
- 	if (id < 0) {
- 		err = id;
--		dev_err(dev, "unable to get id\n");
-+		dev_err(dev, "Unable to get id\n");
- 		goto err_iounmap;
- 	}
++static int rcar_pcie_wait_for_phyrdy(struct rcar_pcie *pcie)
++{
++	unsigned int timeout = 10;
++
++	while (timeout--) {
++		if (rcar_pci_read_reg(pcie, PCIEPHYSR) & PHYRDY)
++			return 0;
++
++		msleep(5);
++	}
++
++	return -ETIMEDOUT;
++}
++
+ static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
+ {
+ 	unsigned int timeout = 10;
+@@ -551,6 +567,10 @@ static int rcar_pcie_hw_init(struct rcar
+ 	/* Set mode */
+ 	rcar_pci_write_reg(pcie, 1, PCIEMSR);
  
-@@ -573,7 +573,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 
- 	err = misc_register(misc_device);
- 	if (err) {
--		dev_err(dev, "failed to register device\n");
-+		dev_err(dev, "Failed to register device\n");
- 		goto err_kfree_name;
- 	}
- 
--- 
-2.7.4
++	err = rcar_pcie_wait_for_phyrdy(pcie);
++	if (err)
++		return err;
++
+ 	/*
+ 	 * Initial header for port config space is type 1, set the device
+ 	 * class to match. Hardware takes care of propagating the IDSETR
