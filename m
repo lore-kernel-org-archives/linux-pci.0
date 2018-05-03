@@ -1,42 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:39828 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965487AbeEIQ5m (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2018 12:57:42 -0400
-Received: by mail-qt0-f194.google.com with SMTP id f1-v6so46540135qtj.6
-        for <linux-pci@vger.kernel.org>; Wed, 09 May 2018 09:57:41 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: lorenzo.pieralisi@arm.com
-Cc: bhelgaas@google.com, m-karicheri2@ti.com,
-        linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH] PCI: keystone: Do not treat link up message as error
-Date: Wed,  9 May 2018 13:57:36 -0300
-Message-Id: <1525885056-7528-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 3 May 2018 14:21:47 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Nipun Gupta <nipun.gupta@nxp.com>, robin.murphy@arm.com,
+        hch@lst.de, linux@armlinux.org.uk, gregkh@linuxfoundation.org,
+        m.szyprowski@samsung.com, bhelgaas@google.com, zajec5@gmail.com,
+        andy.gross@linaro.org, david.brown@linaro.org,
+        dan.j.williams@intel.com, vinod.koul@intel.com, robh+dt@kernel.org,
+        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
+        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
+        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
+        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
+        leoyang.li@nxp.com
+Subject: Re: [PATCH v4 1/2] dma-mapping: move dma configuration to bus
+        infrastructure
+Message-ID: <20180503122147.GB18590@lst.de>
+References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com> <1524883919-29484-1-git-send-email-nipun.gupta@nxp.com> <20180430104124.GE2476@ulmo>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180430104124.GE2476@ulmo>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@nxp.com>
+On Mon, Apr 30, 2018 at 12:41:24PM +0200, Thierry Reding wrote:
+> On Sat, Apr 28, 2018 at 08:21:58AM +0530, Nipun Gupta wrote:
+> [...]
+> > diff --git a/drivers/gpu/host1x/bus.c b/drivers/gpu/host1x/bus.c
+> > index 88a3558..a9ec99d 100644
+> > --- a/drivers/gpu/host1x/bus.c
+> > +++ b/drivers/gpu/host1x/bus.c
+> > @@ -314,6 +314,13 @@ static int host1x_device_match(struct device *dev, struct device_driver *drv)
+> >  	return strcmp(dev_name(dev), drv->name) == 0;
+> >  }
+> >  
+> > +static int host1x_dma_configure(struct device *dev)
+> > +{
+> > +	if (dev->of_node)
+> > +		return of_dma_configure(dev, dev->of_node);
+> 
+> The conditional here is somewhat pointless since the of_node should
+> always be set. If it weren't it should be considered a bug and this
+> function welcome to crash to make that very obvious.
 
-The "Link already up" message does not indicate any error, so
-change it to dev_info() level instead.
-
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
----
- drivers/pci/dwc/pci-keystone.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
-index d55ae07..3722a5f 100644
---- a/drivers/pci/dwc/pci-keystone.c
-+++ b/drivers/pci/dwc/pci-keystone.c
-@@ -89,7 +89,7 @@ static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
- 	dw_pcie_setup_rc(pp);
- 
- 	if (dw_pcie_link_up(pci)) {
--		dev_err(dev, "Link already up\n");
-+		dev_info(dev, "Link already up\n");
- 		return 0;
- 	}
- 
--- 
-2.7.4
+Agreed.  Please remove the check for the resend.
