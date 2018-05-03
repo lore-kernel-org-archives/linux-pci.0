@@ -1,32 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:38343 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752057AbeENQ4b (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 12:56:31 -0400
-Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id BDE261E044E
-        for <linux-pci@vger.kernel.org>; Mon, 14 May 2018 18:56:29 +0200 (CEST)
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH 0/2] Replace lower into upper case characters
-Date: Mon, 14 May 2018 17:56:22 +0100
-Message-Id: <cover.1526311733.git.gustavo.pimentel@synopsys.com>
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:37518 "EHLO
+        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751214AbeECTv5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 15:51:57 -0400
+Received: by mail-lf0-f54.google.com with SMTP id b23-v6so27721932lfg.4
+        for <linux-pci@vger.kernel.org>; Thu, 03 May 2018 12:51:56 -0700 (PDT)
+Subject: Re: [PATCH v3 5/5] DT: pci: rcar-pci: document R8A77980 bindings
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Cc: Mark Rutland <mark.rutland@arm.com>
+References: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
+ <eb928983-475a-c238-5a44-505c07472b93@cogentembedded.com>
+Message-ID: <db2a0324-d4c9-93d5-c027-1fa52cf96588@cogentembedded.com>
+Date: Thu, 3 May 2018 22:51:54 +0300
+MIME-Version: 1.0
+In-Reply-To: <eb928983-475a-c238-5a44-505c07472b93@cogentembedded.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replacement of all initial lowercase character in comments and debug
-messages to uppercase to maintain coherence.
+On 05/03/2018 10:44 PM, Sergei Shtylyov wrote:
+> Document the R-Car V3H (R8A77980) SoC in the R-Car PCIe bindings.
+> 
+> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-Gustavo Pimentel (2):
-  misc: pci_endpoint_test: Replace lower into upper case characters
-  PCI: endpoint: functions/pci-epf-test: Replace lower into upper case
-    characters
+   Oops, forgot to add Simon's and Rob's tags:
 
- drivers/misc/pci_endpoint_test.c              | 18 +++++++++---------
- drivers/pci/endpoint/functions/pci-epf-test.c | 26 +++++++++++++-------------
- 2 files changed, 22 insertions(+), 22 deletions(-)
+Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+Reviewed-by: Rob Herring <robh@kernel.org>
 
--- 
-2.7.4
+MBR, Sergei
