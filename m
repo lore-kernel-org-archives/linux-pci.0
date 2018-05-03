@@ -1,113 +1,118 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v7 03/12] PCI: Request control of native PCIe hotplug only if supported
-Date: Thu, 17 May 2018 12:28:54 +0300
-Message-Id: <20180517092903.43701-4-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
-References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=2UQC=HW=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=2UQC=HW=gmail.com=rjwysocki@kernel.org>
+MIME-Version: 1.0
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20180503191126.GA15790@bhelgaas-glaptop.roam.corp.google.com>
+References: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
+ <CAJZ5v0j8GAatWoAra37y3c-ti2Ft5am75KONgEkjB6AaypkCqg@mail.gmail.com>
+ <ae84e595-dede-1409-4aff-3a29a310f2ba@canonical.com> <CAJZ5v0gapMMf=KqBAoDTv0SUBeusrUFPyEz6Z4k8Y3Szizdm5Q@mail.gmail.com>
+ <1f67f00a-8141-f9af-2120-c78f7cfecb1d@canonical.com> <CAJZ5v0iPsoxCLxsq156RvyZ1cWtM9jNMLUPMnE3cqi5r1jk8jg@mail.gmail.com>
+ <20180501195501.GB11698@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0geYMuzcEhCKcaCHNP-j_ceeyZM0CqEaOTeE3jqVd6zaA@mail.gmail.com>
+ <59bc04f8-e819-46c0-651d-a00eef4d34f8@canonical.com> <20180503191126.GA15790@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 3 May 2018 23:29:18 +0200
+Message-ID: <CAJZ5v0gMY03BWN8D0Of=+bHf22jUgnmyDF8_OsRtQTX-YuMdew@mail.gmail.com>
+Subject: Re: [Regression] PCI / PM: Simplify device wakeup settings code
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Joseph Salisbury <joseph.salisbury@canonical.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 1745646@bugs.launchpad.net,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we request control of native PCIe hotplug unconditionally.
-That may cause problems because native PCIe hotplug events are handled
-by pciehp driver and if it is not enabled those events will be lost.
-Make this bit more robust and request control of native PCIe hotplug
-only if we are actually prepared to do so (pciehp driver is enabled).
+On Thu, May 3, 2018 at 9:11 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, May 03, 2018 at 02:29:02PM -0400, Joseph Salisbury wrote:
+>> On 05/02/2018 06:41 AM, Rafael J. Wysocki wrote:
+>> > On Tue, May 1, 2018 at 9:55 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> >> On Tue, May 01, 2018 at 10:34:29AM +0200, Rafael J. Wysocki wrote:
+>> >>> On Mon, Apr 30, 2018 at 4:22 PM, Joseph Salisbury
+>> >>> <joseph.salisbury@canonical.com> wrote:
+>> >>>> On 04/16/2018 11:58 AM, Rafael J. Wysocki wrote:
+>> >>>>> On Mon, Apr 16, 2018 at 5:31 PM, Joseph Salisbury
+>> >>>>> <joseph.salisbury@canonical.com> wrote:
+>> >>>>>> On 04/13/2018 05:34 PM, Rafael J. Wysocki wrote:
+>> >>>>>>> On Fri, Apr 13, 2018 at 7:56 PM, Joseph Salisbury
+>> >>>>>>> <joseph.salisbury@canonical.com> wrote:
+>> >>>>>>>> Hi Rafael,
+>> >>>>>>>>
+>> >>>>>>>> A kernel bug report was opened against Ubuntu [0].  After a kernel
+>> >>>>>>>> bisect, it was found that reverting the following two commits resolved
+>> >>>>>>>> this bug:
+>> >>>>>>>>
+>> >>>>>>>> 0ce3fcaff929 ("PCI / PM: Restore PME Enable after config space restoration")
+>> >>>>>>>> 0847684cfc5f("PCI / PM: Simplify device wakeup settings code")
+>> >>>>>>>>
+>> >>>>>>>> This is a regression introduced in v4.13-rc1 and still exists in
+>> >>>>>>>> mainline.  The bug causes the battery to drain when the system is
+>> >>>>>>>> powered down and unplugged, which does not happed prior to these two
+>> >>>>>>>> commits.
+>> >>>>>>> What system and what do you mean by "powered down"?  How much time
+>> >>>>>>> does it take for the battery to drain now?
+>> >>>>>> By powered down, the bug reporter is saying physically powered off and
+>> >>>>>> unplugged.  The system is a HP laptop:
+>> >>>>>>
+>> >>>>>> dmi.chassis.vendor: HP
+>> >>>>>> dmi.product.family: 103C_5335KV HP Notebook
+>> >>>>>> dmi.product.name: HP Notebook
+>> >>>>>> vendor_id    : GenuineIntel
+>> >>>>>> cpu family    : 6
+>> >>>>>>
+>> >>>>>>
+>> >>>>>>>> The bisect actually pointed to commit de3ef1e, but reverting
+>> >>>>>>>> these two commits fixes the issue.
+>> >>>>>>>>
+>> >>>>>>>> I was hoping to get your feedback, since you are the patch author.  Do
+>> >>>>>>>> you think gathering any additional data will help diagnose this issue,
+>> >>>>>>>> or would it be best to submit a revert request?
+>> >>>>>>> First, reverting these is not an option or you will break systems
+>> >>>>>>> relying on them now.  4.13 is three releases back at this point.
+>> >>>>>>>
+>> >>>>>>> Second, your issue appears to be related to the suspend/shutdown path
+>> >>>>>>> whereas commit 0ce3fcaff929 is mostly about resume, so presumably the
+>> >>>>>>> change in pci_enable_wake() causes the problem to happen.  Can you try
+>> >>>>>>> to revert this one alone and see if that helps?
+>> >>>>>> A test kernel with commits 0ce3fcaff929 and de3ef1eb1cd0 reverted was
+>> >>>>>> tested.  However, the test kernel still exhibited the bug.
+>> >>>>> So essentially the bisection result cannot be trusted.
+>> >>>> We performed some more testing and confirmed just a revert of the
+>> >>>> following commit resolves the bug:
+>> >>>>
+>> >>>> 0847684cfc5f0 ("PCI / PM: Simplify device wakeup settings code")
+>> >>> Thanks for confirming this!
+>> >>>
+>> >>>> Can you think of any suggestions to help debug further?
+>> >>> The root cause of the regression is likely the change in
+>> >>> pci_enable_wake() removing the device_may_wakeup() check from it.
+>> >>>
+>> >>> Probably, one of the drivers in the platform calls pci_enable_wake()
+>> >>> directly from its ->shutdown() callback and that causes the device to
+>> >>> be set up for system wakeup which in turn causes the power draw while
+>> >>> the system is off to increase.
+>> >>>
+>> >>> I would look at the PCI drivers used on that platform to find which of
+>> >>> them call pci_enable_wake() directly from ->shutdown() and I would
+>> >>> make these calls conditional on device_may_wakeup().
+>> >> I took a quick look with
+>> >>
+>> >>   git grep -E "pci_enable_wake\(.*[^0]\);|device_may_wakeup"
+>> >>
+>> >> and didn't notice any pci_enable_wake() callers that called
+>> >> device_may_wakeup() first.
+>> > I've just look at a bunch of network drivers doing that.
+>> >
+>> > It looks like I may need to restore __pci_enable_wake() with an extra
+>> > "runtime" argument for internal use.
+>> >
+>> > Joseph, can you ask the reporter to test the Bjorn's patch, please?
+>>
+>> The bug reporter has testing Bjorn's patch.  It did in fact resolve the
+>> bug.  Thanks for the quick help, Rafael and Bjorn!
+>
+> Just as a word of caution, I think Rafael said my patch was not the
+> right fix because it would break something else.  So I would wait for
+> a better patch from Rafael before actually resolving this issue.
 
-While there rename host->native_hotplug to host->native_pcie_hotplug
-because we do the same for SHPC hotplug in subsequent patches.
-
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/pci_root.c         | 6 ++++--
- drivers/pci/pcie/portdrv_core.c | 2 +-
- drivers/pci/probe.c             | 2 +-
- include/linux/pci.h             | 2 +-
- 4 files changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 0da18bde6a16..02ab96f00952 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -29,6 +29,7 @@
- #include <linux/pci.h>
- #include <linux/pci-acpi.h>
- #include <linux/pci-aspm.h>
-+#include <linux/pci_hotplug.h>
- #include <linux/dmar.h>
- #include <linux/acpi.h>
- #include <linux/slab.h>
-@@ -472,9 +473,10 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- 	}
- 
- 	control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
--		| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
- 		| OSC_PCI_EXPRESS_PME_CONTROL;
- 
-+	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE))
-+		control |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
- 	if (pci_aer_available()) {
- 		if (aer_acpi_firmware_first())
- 			dev_info(&device->dev,
-@@ -900,7 +902,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 
- 	host_bridge = to_pci_host_bridge(bus->bridge);
- 	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
--		host_bridge->native_hotplug = 0;
-+		host_bridge->native_pcie_hotplug = 0;
- 	if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
- 		host_bridge->native_aer = 0;
- 	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index c9c0663db282..6cb30aec2452 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -199,7 +199,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	int services = 0;
- 
- 	if (dev->is_hotplug_bridge &&
--	    (pcie_ports_native || host->native_hotplug)) {
-+	    (pcie_ports_native || host->native_pcie_hotplug)) {
- 		services |= PCIE_PORT_SERVICE_HP;
- 
- 		/*
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7c34a2ccb514..a6c3b8d30f8f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -552,7 +552,7 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
- 	 * OS from interfering.
- 	 */
- 	bridge->native_aer = 1;
--	bridge->native_hotplug = 1;
-+	bridge->native_pcie_hotplug = 1;
- 	bridge->native_pme = 1;
- 
- 	return bridge;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 73178a2fcee0..359a197d0310 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -471,7 +471,7 @@ struct pci_host_bridge {
- 	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
- 	unsigned int	no_ext_tags:1;		/* No Extended Tags */
- 	unsigned int	native_aer:1;		/* OS may use PCIe AER */
--	unsigned int	native_hotplug:1;	/* OS may use PCIe hotplug */
-+	unsigned int	native_pcie_hotplug:1;	/* OS may use PCIe hotplug */
- 	unsigned int	native_pme:1;		/* OS may use PCIe PME */
- 	/* Resource alignment requirements */
- 	resource_size_t (*align_resource)(struct pci_dev *dev,
--- 
-2.17.0
-
+I'll do my best to provide one in the next couple of days.
