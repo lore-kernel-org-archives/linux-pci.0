@@ -1,31 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51440 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752569AbeEJWJJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 May 2018 18:09:09 -0400
-Subject: [PATCH 0/2] PCI: Trivial quirks cleanup
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Date: Thu, 10 May 2018 17:09:06 -0500
-Message-ID: <152599011048.234504.9006188618412032582.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from relay1.mentorg.com ([192.94.38.131]:49932 "EHLO
+        relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751961AbeECHOL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 03:14:11 -0400
+Subject: Re: [PATCH v2 03/10] PCI: Factor out
+ __of_pci_get_host_bridge_resources()
+To: Jan Kiszka <jan.kiszka@siemens.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+ <35efe707d03c886f1ac1e0c9634810c9da59c88a.1525067324.git.jan.kiszka@siemens.com>
+From: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Message-ID: <63e44c62-df98-0e73-5981-fdf2094e2fb2@mentor.com>
+Date: Thu, 3 May 2018 10:14:06 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <35efe707d03c886f1ac1e0c9634810c9da59c88a.1525067324.git.jan.kiszka@siemens.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Sorry for the repost; network hiccup here.]
+On 04/30/2018 08:48 AM, Jan Kiszka wrote:
+> From: Jan Kiszka <jan.kiszka@siemens.com>
+> 
+> This will be needed for sharing the core logic between current
+> of_pci_get_host_bridge_resources() and upcoming
+> devm_of_pci_get_host_bridge_resources().
+> 
+> Already rename the dev parameter to dev_node in order to free the
+> namespace for a real device parameter.
+> 
+> No functional changes.
+> 
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 
-Trivial reorganization (move quirk infrastructure to the top) and
-whitespace/comment style cleanup for consistency.  No functional change
-intended.
+Reviewed-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Tested-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
 
----
-
-Bjorn Helgaas (2):
-      PCI: Reorder quirks infrastructure code
-      PCI: Clean up whitespace in quirks.c
-
-
- drivers/pci/quirks.c |  978 +++++++++++++++++++++++++-------------------------
- 1 file changed, 485 insertions(+), 493 deletions(-)
+--
+With best wishes,
+Vladimir
