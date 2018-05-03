@@ -1,49 +1,66 @@
-Return-Path: <SRS0=c+aK=H6=alien8.de=bp@kernel.org>
-Return-Path: <SRS0=c+aK=H6=alien8.de=bp@kernel.org>
-Date: Fri, 11 May 2018 21:08:42 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci/aer: Get rid of aer_recover_work_func() forward
- declaration
-Message-ID: <20180511190842.GJ12705@pd.tnic>
-References: <20180511163923.22116-1-bp@alien8.de>
- <20180511190013.GI190385@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20180511190013.GI190385@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5665 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751907AbeECFEF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 01:04:05 -0400
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v15 9/9] PCI/DPC: Disable ERR_NONFATAL and enable ERR_FATAL for DPC
+Date: Thu,  3 May 2018 01:03:58 -0400
+Message-Id: <1525323838-1735-10-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
+References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 11, 2018 at 02:00:13PM -0500, Bjorn Helgaas wrote:
-> On Fri, May 11, 2018 at 06:39:23PM +0200, Borislav Petkov wrote:
-> > From: Borislav Petkov <bp@suse.de>
-> > 
-> > Just move the actual function up so that it is visible to its user
-> > aer_recover_queue().
-> 
-> Good idea.
-> 
-> Not *directly* related, but I'm really tired of the clutter of all these
-> separate files, and I'm thinking of squashing
-> 
->   drivers/pci/pcie/aer/*       => drivers/pci/pcie/aer.c
->   drivers/pci/pcie/portdrv*    => drivers/pci/pcie/portdrv.c
->   drivers/pci/hotplug/pciehp*  => drivers/pci/hotplug/pciehp.c
->   drivers/pci/hotplug/shpchp*  => drivers/pci/hotplug/shpchp.c
->   etc.
-> 
-> That would let us make many more things static and (more importantly,
-> IMO), make it easier to browse the code.
+This patch disables ERR_NONFATAL trigger for DPC, so now DPC
+handles only ERR_FATAL.
 
-Yeah, it probably is of no use to have separate compilation units like
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-aerdriver-objs := aerdrv_errprint.o aerdrv_core.o aerdrv.o
-
-for example, which practically get always built together.
-
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index aed7c9f..6966e00 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -263,7 +263,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 		}
+ 	}
+ 
+-	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
++	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN;
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+ 
+ 	dev_info(device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
+@@ -281,7 +281,7 @@ static void dpc_remove(struct pcie_device *dev)
+ 	u16 ctl;
+ 
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
+-	ctl &= ~(PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN);
++	ctl &= ~(PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN);
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+ }
+ 
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 103ba79..86f1cc2 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -981,6 +981,7 @@
+ #define  PCI_EXP_DPC_CAP_DL_ACTIVE	0x1000	/* ERR_COR signal on DL_Active supported */
+ 
+ #define PCI_EXP_DPC_CTL			6	/* DPC control */
++#define	 PCI_EXP_DPC_CTL_EN_FATAL	0x0001	/* Enable trigger on ERR_FATAL message */
+ #define  PCI_EXP_DPC_CTL_EN_NONFATAL 	0x0002	/* Enable trigger on ERR_NONFATAL message */
+ #define  PCI_EXP_DPC_CTL_INT_EN 	0x0008	/* DPC Interrupt Enable */
+ 
 -- 
-Regards/Gruss,
-    Boris.
-
-Good mailing practices for 400: avoid top-posting and trim the reply.
+2.7.4
