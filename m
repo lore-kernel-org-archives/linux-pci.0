@@ -1,139 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com,
-        bhelgaas@google.com
-Subject: [PATCH v2 38/40] PCI: Make "PRG Response PASID Required" handling common
-Date: Fri, 11 May 2018 20:06:39 +0100
-Message-Id: <20180511190641.23008-39-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=3O2m=HW=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=3O2m=HW=codeaurora.org=okaya@kernel.org>
+Subject: Re: [RFC/RFT] Add noats flag to boot parameters
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Gil Kupfer <gilkup@gmail.com>, dwmw2@infradead.org, bhelgaas@google.com,
+ iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, nadav.amit@gmail.com,
+ Gil Kupfer <gilkup@cs.technion.ac.il>, Will Deacon <will.deacon@arm.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <1525025808-2365-1-git-send-email-gilkup@cs.technion.ac.il>
+ <20180503133459.waawna3ebtu3udn6@8bytes.org>
+ <359d736a-a7ac-f0e4-f4db-dc7bb506481c@codeaurora.org>
+ <20180503135920.o2rdh3exai7qmkvu@8bytes.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5cf699f1-90c1-5ad8-07fe-a65042395d05@codeaurora.org>
+Date: Thu, 3 May 2018 10:23:02 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180503135920.o2rdh3exai7qmkvu@8bytes.org>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-The PASID ECN to the PCIe spec added a bit in the PRI status register that
-allows a Function to declare whether a PRG Response should contain the
-PASID prefix or not.
++Bjorn,
 
-Move the helper that accesses it from amd_iommu into the PCI subsystem,
-renaming it to be consistent with the current PCI Express specification
-(PRPR - PRG Response PASID Required).
+On 5/3/2018 9:59 AM, Joerg Roedel wrote:
+> On Thu, May 03, 2018 at 09:46:34AM -0400, Sinan Kaya wrote:
+>> I also like the idea in general.
+>> Minor nit..
+>>
+>> Shouldn't this be an iommu parameter rather than a PCI kernel command line parameter?
+>> We now have an iommu.passthrough argument that prevents page translation.
+>>
+>> Doesn't this fit into the same category especially when it is the IOMMU drivers that
+>> call ATS functions for enablement not the PCI drivers.
+> 
+> ATS is a bit of a grey area between PCI and IOMMU, but since ATS is
+> PCI-specific and the code to enable/disable it is in PCI as well, I
+> think the parameter makes sense for PCI too.
+> 
 
-Cc: bhelgaas@google.com
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/amd_iommu.c     | 19 +------------------
- drivers/pci/ats.c             | 17 +++++++++++++++++
- include/linux/pci-ats.h       |  8 ++++++++
- include/uapi/linux/pci_regs.h |  1 +
- 4 files changed, 27 insertions(+), 18 deletions(-)
+OK. Bjorn was interested in having a command line driven feature enables in driver/pci
+directory with bitmasks for each optional PCI spec capability rather than noXYZ feature.
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 8fb8c737fffe..ac0d97fa514f 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -2043,23 +2043,6 @@ static int pdev_iommuv2_enable(struct pci_dev *pdev)
- 	return ret;
- }
- 
--/* FIXME: Move this to PCI code */
--#define PCI_PRI_TLP_OFF		(1 << 15)
--
--static bool pci_pri_tlp_required(struct pci_dev *pdev)
--{
--	u16 status;
--	int pos;
--
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
--	if (!pos)
--		return false;
--
--	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
--
--	return (status & PCI_PRI_TLP_OFF) ? true : false;
--}
--
- /*
-  * If a device is not yet associated with a domain, this function
-  * assigns it visible for the hardware
-@@ -2088,7 +2071,7 @@ static int attach_device(struct device *dev,
- 
- 			dev_data->ats.enabled = true;
- 			dev_data->ats.qdep    = pci_ats_queue_depth(pdev);
--			dev_data->pri_tlp     = pci_pri_tlp_required(pdev);
-+			dev_data->pri_tlp     = pci_prg_resp_requires_prefix(pdev);
- 		}
- 	} else if (amd_iommu_iotlb_sup &&
- 		   pci_enable_ats(pdev, PAGE_SHIFT) == 0) {
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 89305b569d3d..dc743e2fae7d 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -388,3 +388,20 @@ int pci_max_pasids(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL_GPL(pci_max_pasids);
- #endif /* CONFIG_PCI_PASID */
-+
-+#if defined(CONFIG_PCI_PASID) && defined(CONFIG_PCI_PRI)
-+bool pci_prg_resp_requires_prefix(struct pci_dev *pdev)
-+{
-+	u16 status;
-+	int pos;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
-+	if (!pos)
-+		return false;
-+
-+	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
-+
-+	return !!(status & PCI_PRI_STATUS_PRPR);
-+}
-+EXPORT_SYMBOL_GPL(pci_prg_resp_requires_prefix);
-+#endif /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
-diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-index 7c4b8e27268c..1825ca2c9bf4 100644
---- a/include/linux/pci-ats.h
-+++ b/include/linux/pci-ats.h
-@@ -68,5 +68,13 @@ static inline int pci_max_pasids(struct pci_dev *pdev)
- 
- #endif /* CONFIG_PCI_PASID */
- 
-+#if defined(CONFIG_PCI_PASID) && defined(CONFIG_PCI_PRI)
-+bool pci_prg_resp_requires_prefix(struct pci_dev *pdev);
-+#else
-+static inline bool pci_prg_resp_requires_prefix(struct pci_dev *pdev)
-+{
-+	return false;
-+}
-+#endif /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
- 
- #endif /* LINUX_PCI_ATS_H*/
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 103ba797a8f3..f9a11a13131c 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -871,6 +871,7 @@
- #define  PCI_PRI_STATUS_RF	0x001	/* Response Failure */
- #define  PCI_PRI_STATUS_UPRGI	0x002	/* Unexpected PRG index */
- #define  PCI_PRI_STATUS_STOPPED	0x100	/* PRI Stopped */
-+#define  PCI_PRI_STATUS_PRPR	0x8000	/* PRG Response requires PASID prefix */
- #define PCI_PRI_MAX_REQ		0x08	/* PRI max reqs supported */
- #define PCI_PRI_ALLOC_REQ	0x0c	/* PRI max reqs allowed */
- #define PCI_EXT_CAP_PRI_SIZEOF	16
+This would allow us to troubleshoot code breakage as well as the platform bring up to
+turn off all optional features.
+
+Sounds like this would be a good match for that work.
+
+
+> 
+> 	Joerg
+> 
+> 
+
+
 -- 
-2.17.0
-
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
