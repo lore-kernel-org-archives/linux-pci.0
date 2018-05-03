@@ -1,55 +1,49 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 11 May 2018 12:55:38 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@linux.intel.com>
-Subject: Re: Another NVMe failure, this time with AER info
-Message-ID: <20180511175538.GH190385@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAObL_7G5k7XNqXqDZASChiQd1mt+AJPAdNKz-DE+xQawhUy6ZA@mail.gmail.com>
- <20180511165752.GG190385@bhelgaas-glaptop.roam.corp.google.com>
- <20180511172610.GB7344@localhost.localdomain>
- <20180511174241.GC7344@localhost.localdomain>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:7985 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751371AbeECUNy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 May 2018 16:13:54 -0400
+Date: Thu, 3 May 2018 14:15:08 -0600
+From: Keith Busch <keith.busch@linux.intel.com>
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Sagi Grimberg <sagi@grimberg.me>, Ming Lei <tom.leiming@gmail.com>,
+        linux-nvme <linux-nvme@lists.infradead.org>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] nvme/pci: Use async_schedule for initial reset work
+Message-ID: <20180503201507.GO5938@localhost.localdomain>
+References: <20180427211708.5604-1-keith.busch@intel.com>
+ <CACVXFVNXmzMC9N+EabeXs4-XZLCRSOVdpd901wfojBL_s2YFRQ@mail.gmail.com>
+ <20180430194533.GC5938@localhost.localdomain>
+ <alpine.LRH.2.02.1805011928470.17838@file01.intranet.prod.int.rdu2.redhat.com>
+ <20180502152953.GH5938@localhost.localdomain>
+ <alpine.LRH.2.02.1805021717430.2705@file01.intranet.prod.int.rdu2.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180511174241.GC7344@localhost.localdomain>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jesse Vincent <jesse@fsck.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-pci@vger.kernel.org, Andrew Lutomirski <amluto@gmail.com>,
- linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
- Jens Axboe <axboe@fb.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LRH.2.02.1805021717430.2705@file01.intranet.prod.int.rdu2.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 11, 2018 at 11:42:42AM -0600, Keith Busch wrote:
-> On Fri, May 11, 2018 at 11:26:11AM -0600, Keith Busch wrote:
-> > I trust you know the offsets here, but it's hard to tell what this
-> > is doing with hard-coded addresses. Just to be safe and for clarity,
-> > I recommend the 'CAP_*+<offset>' with a mask.
-> > 
-> > For example, disabling ASPM L1.2 can look like:
-> > 
-> >  # setpci -s <B:D.f> CAP_PM+8.l=0:4
+On Thu, May 03, 2018 at 10:55:09AM -0400, Mikulas Patocka wrote:
+> I think there is still one more bug:
 > 
-> My mistake above: CAP_PM is a different capability, not the intended
-> one. It looks like setpci doesn't even have a convenient symbol for the
-> L1 PM extended capability, so the hard-coded offsets are the only way
-> for this setting. Sorry about the mistake.
+> If nvme_probe is called, it schedules the asynchronous work using 
+> async_schedule - now suppose that the pci system calls the "remove", 
+> "shutdown" or "suspend" method - this method will race with 
+> nvme_async_probe running in the async domain - that will cause 
+> misbehavior.
+> 
+> Or - does the PCI subsystem flush the async queues before calling these 
+> methods? I'm not sure, but it doesn't seem so.
+> 
+> I think, you need to save the cookie returned by async_schedule and wait 
+> for this cookie with async_synchronize_cookie in the other methods.
 
-No problem, would be a nice janitor job to add more of those symbolic
-offsets to setpci.  I recently added more cap ID decoding to lspci, but
-didn't think about updating these things for setpci.
+I think we're fine as-is without syncing the cookie. 
 
-Using the symbols would definitely make this easier and better!
+The remove path should be fine since we already sync with the necessary
+work queues.
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+The shutdown, suspend and reset paths will just cause the initial reset
+work to end early, the same result as what previously would happen.
