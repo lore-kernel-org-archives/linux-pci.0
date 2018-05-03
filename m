@@ -1,124 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: Laurentiu Tudor <laurentiu.tudor@nxp.com>, "robin.murphy@arm.com"
- <robin.murphy@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
- "mark.rutland@arm.com" <mark.rutland@arm.com>, "catalin.marinas@arm.com"
- <catalin.marinas@arm.com>
-Subject: RE: [PATCH 5/6 v3] bus: fsl-mc: supoprt dma configure for devices on
- fsl-mc bus
-Date: Wed, 16 May 2018 08:48:57 +0000
-Message-ID: <HE1PR0401MB24253CF729DDCF3F883AC256E6920@HE1PR0401MB2425.eurprd04.prod.outlook.com>
-References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
- <1524824826-29473-6-git-send-email-nipun.gupta@nxp.com>
- <5AF9916E.8000504@nxp.com>
-In-Reply-To: <5AF9916E.8000504@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf0-f47.google.com ([209.85.215.47]:40121 "EHLO
+        mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751140AbeECP0q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 11:26:46 -0400
+Received: by mail-lf0-f47.google.com with SMTP id j16-v6so26583311lfb.7
+        for <linux-pci@vger.kernel.org>; Thu, 03 May 2018 08:26:46 -0700 (PDT)
+Subject: Re: [PATCH v2 0/5] Add R8A77980 PCIe support & some driver cleanups
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Simon Horman <horms@verge.net.au>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+References: <26e803ca-06b6-28c5-b87c-fc639b322d6f@cogentembedded.com>
+ <20180501055553.3zh4ygux7aqvkmvs@verge.net.au>
+ <20180501105754.GC19391@e107981-ln.cambridge.arm.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <0f5bc40e-a82b-4826-e711-19a83d0bffb7@cogentembedded.com>
+Date: Thu, 3 May 2018 18:26:43 +0300
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Bharat Bhushan <bharat.bhushan@nxp.com>,
- "stuyoder@gmail.com" <stuyoder@gmail.com>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>,
- "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
- "joro@8bytes.org" <joro@8bytes.org>,
- "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Leo Li <leoyang.li@nxp.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>, "hch@lst.de" <hch@lst.de>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180501105754.GC19391@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 05/01/2018 01:57 PM, Lorenzo Pieralisi wrote:
 
-
-> -----Original Message-----
-> From: Laurentiu Tudor
-> Sent: Monday, May 14, 2018 7:10 PM
-> To: Nipun Gupta <nipun.gupta@nxp.com>; robin.murphy@arm.com;
-> will.deacon@arm.com; mark.rutland@arm.com; catalin.marinas@arm.com
-> Cc: hch@lst.de; gregkh@linuxfoundation.org; joro@8bytes.org;
-> robh+dt@kernel.org; m.szyprowski@samsung.com; shawnguo@kernel.org;
-> frowand.list@gmail.com; bhelgaas@google.com; iommu@lists.linux-
-> foundation.org; linux-kernel@vger.kernel.org; devicetree@vger.kernel.org;
-> linux-arm-kernel@lists.infradead.org; linuxppc-dev@lists.ozlabs.org; linux-
-> pci@vger.kernel.org; Bharat Bhushan <bharat.bhushan@nxp.com>;
-> stuyoder@gmail.com; Leo Li <leoyang.li@nxp.com>
-> Subject: Re: [PATCH 5/6 v3] bus: fsl-mc: supoprt dma configure for devices
-> on fsl-mc bus
+>>> Hello!
+>>>
+>>> Here's a set of 5 patches against the 'pci/rcar' branch of Lorenzo Pieralisi's
+>>> 'pci.git' repo. These are the changes needed for better R-Car gen3 support
+>>> (namely for R8A77980 support) plus some PCIe driver re-factoring done in
+>>> the process...
+>>>
+>>> [1/5] pcie-rcar: poll PHYRDY in rcar_pcie_hw_init()
+>>> [2/5] pcie-rcar: remove PHYRDY polling from rcar_pcie_hw_init_h1()
+>>> [3/5] pcie-rcar: add R-Car gen3 PHY support
+>>> [4/5] pcie-rcar: factor out rcar_pcie_hw_init() call
+>>> [5/5] DT: pci: rcar-pci: document R8A77980 bindings
+>>
+>> Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
 > 
-> Hi Nipun,
-> 
-> On 04/27/2018 01:27 PM, Nipun Gupta wrote:
-> > Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-> > ---
-> >   drivers/bus/fsl-mc/fsl-mc-bus.c | 16 ++++++++++++----
-> >   1 file changed, 12 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-
-> bus.c
-> > index 5d8266c..624828b 100644
-> > --- a/drivers/bus/fsl-mc/fsl-mc-bus.c
-> > +++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
-> > @@ -127,6 +127,16 @@ static int fsl_mc_bus_uevent(struct device *dev,
-> struct kobj_uevent_env *env)
-> >   	return 0;
-> >   }
-> >
-> > +static int fsl_mc_dma_configure(struct device *dev)
-> > +{
-> > +	struct device *dma_dev = dev;
-> > +
-> > +	while (dev_is_fsl_mc(dma_dev))
-> > +		dma_dev = dma_dev->parent;
-> > +
-> > +	return of_dma_configure(dev, dma_dev->of_node, 0);
-> > +}
-> > +
-> >   static ssize_t modalias_show(struct device *dev, struct device_attribute
-> *attr,
-> >   			     char *buf)
-> >   {
-> > @@ -148,6 +158,7 @@ struct bus_type fsl_mc_bus_type = {
-> >   	.name = "fsl-mc",
-> >   	.match = fsl_mc_bus_match,
-> >   	.uevent = fsl_mc_bus_uevent,
-> > +	.dma_configure  = fsl_mc_dma_configure,
-> >   	.dev_groups = fsl_mc_dev_groups,
-> >   };
-> >   EXPORT_SYMBOL_GPL(fsl_mc_bus_type);
-> > @@ -616,6 +627,7 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc
-> *obj_desc,
-> >   		mc_dev->icid = parent_mc_dev->icid;
-> >   		mc_dev->dma_mask = FSL_MC_DEFAULT_DMA_MASK;
-> >   		mc_dev->dev.dma_mask = &mc_dev->dma_mask;
-> > +		mc_dev->dev.coherent_dma_mask = mc_dev->dma_mask;
-> 
-> This change seems a bit unrelated to the patch subject. I wonder if it
-> makes sense to split it it in a distinct patch.
+> Sergei, would you mind rebasing this series against my pci/rcar
+> branch please ?
 
-Okay. I will spin a v5 after splitting this patch and adding changelog (Greg's comment), fixing typo (Bjorn's comment).
+   You mean against your updated 'pci/rcar' branch? (The patches were against
+that branch in the 1st place, and they still do apply, though with fuzz in one
+of the patches)...
 
-Regards,
-Nipun
+> I will apply it then.
 
-> 
-> ---
-> Best Regards, Laurentiu
+   OK, thanks.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Thanks,
+> Lorenzo
+
+MBR, Sergei
