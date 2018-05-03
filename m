@@ -1,131 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:51864 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751504AbeEUOvi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 May 2018 10:51:38 -0400
-Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
-To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org, xuzaibo@huawei.com,
-        will.deacon@arm.com, okaya@codeaurora.org, linux-mm@kvack.org,
-        ashok.raj@intel.com, bharatku@xilinx.com,
-        linux-acpi@vger.kernel.org, rfranz@cavium.com,
-        devicetree@vger.kernel.org, rgummal@xilinx.com,
-        linux-arm-kernel@lists.infradead.org, dwmw2@infradead.org,
-        ilias.apalodimas@linaro.org, iommu@lists.linux-foundation.org,
-        christian.koenig@amd.com,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-14-jean-philippe.brucker@arm.com>
- <20180517165845.00000cc9@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <5775e215-9a71-355a-98f5-397f1917b7f7@arm.com>
-Date: Mon, 21 May 2018 15:51:29 +0100
+Received: from smtp.codeaurora.org ([198.145.29.96]:54084 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751265AbeECNqi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 09:46:38 -0400
+Subject: Re: [RFC/RFT] Add noats flag to boot parameters
+To: Joerg Roedel <joro@8bytes.org>, Gil Kupfer <gilkup@gmail.com>
+Cc: dwmw2@infradead.org, bhelgaas@google.com,
+        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, nadav.amit@gmail.com,
+        Gil Kupfer <gilkup@cs.technion.ac.il>,
+        Will Deacon <will.deacon@arm.com>
+References: <1525025808-2365-1-git-send-email-gilkup@cs.technion.ac.il>
+ <20180503133459.waawna3ebtu3udn6@8bytes.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <359d736a-a7ac-f0e4-f4db-dc7bb506481c@codeaurora.org>
+Date: Thu, 3 May 2018 09:46:34 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180517165845.00000cc9@huawei.com>
+In-Reply-To: <20180503133459.waawna3ebtu3udn6@8bytes.org>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17/05/18 16:58, Jonathan Cameron wrote:
->> +static int vfio_iommu_bind_group(struct vfio_iommu *iommu,
->> +				 struct vfio_group *group,
->> +				 struct vfio_mm *vfio_mm)
->> +{
->> +	int ret;
->> +	bool enabled_sva = false;
->> +	struct vfio_iommu_sva_bind_data data = {
->> +		.vfio_mm	= vfio_mm,
->> +		.iommu		= iommu,
->> +		.count		= 0,
->> +	};
->> +
->> +	if (!group->sva_enabled) {
->> +		ret = iommu_group_for_each_dev(group->iommu_group, NULL,
->> +					       vfio_iommu_sva_init);
->> +		if (ret)
->> +			return ret;
->> +
->> +		group->sva_enabled = enabled_sva = true;
->> +	}
->> +
->> +	ret = iommu_group_for_each_dev(group->iommu_group, &data,
->> +				       vfio_iommu_sva_bind_dev);
->> +	if (ret && data.count > 1)
+On 5/3/2018 9:35 AM, Joerg Roedel wrote:
+> On Sun, Apr 29, 2018 at 09:16:48PM +0300, Gil Kupfer wrote:
+>> This patch adds noats option to the pci boot parameter.
+>> When noats is selected, all ATS related functions fail immediately and
+>> the IOMMU is configured to not use device-iotlb.
+>>
+>> Any function that checks for ATS capabilities directly against the
+>> devices should also check this flag. (Currently, such functions exist
+>> only in IOMMU drivers, and they are covered by this patch.)
+>>
+>> The motivation behind this patch is the existence of malicious devices.
+>> Lots of research has been done about how to utilitize the IOMMU as a
+>> protection from such devices. When ATS is supported, any I/O device can
+>> access any physical access by faking device-IOTLB entries.
+>> Adding the ability to ignore these entries lets sysadmins enhance system
+>> security.
+>>
+>> Signed-off-by: Gil Kupfer <gilkup@cs.technion.ac.il>
 > 
-> Are we safe to run this even if data.count == 1?  I assume that at
-> that point we would always not have an iommu domain associated with the
-> device so the initial check would error out.
-
-If data.count == 1, then the first bind didn't succeed. But it's not
-necessarily a domain missing, failure to bind may come from various
-places. If this vfio_mm was already bound to another device then it
-contains a valid PASID and it's safe to call unbind(). Otherwise we call
-it with PASID -1 (VFIO_INVALID_PASID) and that's a bit of a grey area.
--1 is currently invalid everywhere, but in the future someone might
-implement 32 bits of PASIDs, in which case a bond between this dev and
-PASID -1 might exist. But I think it's safe for now, and whoever
-redefines VFIO_INVALID_PASID when such implementation appears will also
-fix this case.
-
-> Just be nice to get rid of the special casing in this error path as then
-> could just do it all under if (ret) and make it visually clearer these
-> are different aspects of the same error path.
-
-[...]
->>  static long vfio_iommu_type1_ioctl(void *iommu_data,
->>  				   unsigned int cmd, unsigned long arg)
->>  {
->> @@ -1728,6 +2097,44 @@ static long vfio_iommu_type1_ioctl(void *iommu_data,
->>  
->>  		return copy_to_user((void __user *)arg, &unmap, minsz) ?
->>  			-EFAULT : 0;
->> +
->> +	} else if (cmd == VFIO_IOMMU_BIND) {
->> +		struct vfio_iommu_type1_bind bind;
->> +
->> +		minsz = offsetofend(struct vfio_iommu_type1_bind, flags);
->> +
->> +		if (copy_from_user(&bind, (void __user *)arg, minsz))
->> +			return -EFAULT;
->> +
->> +		if (bind.argsz < minsz)
->> +			return -EINVAL;
->> +
->> +		switch (bind.flags) {
->> +		case VFIO_IOMMU_BIND_PROCESS:
->> +			return vfio_iommu_type1_bind_process(iommu, (void *)arg,
->> +							     &bind);
+> This has also been on my list, thanks for doing that.
 > 
-> Can we combine these two blocks given it is only this case statement that is different?
-
-That would be nicer, though I don't know yet what's needed for vSVA (by
-Yi Liu on Cc), which will add statements to the switches.
-
-Thanks,
-Jean
-
+> Acked-by: Joerg Roedel <jroedel@suse.de>
 > 
->> +		default:
->> +			return -EINVAL;
->> +		}
->> +
->> +	} else if (cmd == VFIO_IOMMU_UNBIND) {
->> +		struct vfio_iommu_type1_bind bind;
->> +
->> +		minsz = offsetofend(struct vfio_iommu_type1_bind, flags);
->> +
->> +		if (copy_from_user(&bind, (void __user *)arg, minsz))
->> +			return -EFAULT;
->> +
->> +		if (bind.argsz < minsz)
->> +			return -EINVAL;
->> +
->> +		switch (bind.flags) {
->> +		case VFIO_IOMMU_BIND_PROCESS:
->> +			return vfio_iommu_type1_unbind_process(iommu, (void *)arg,
->> +							       &bind);
->> +		default:
->> +			return -EINVAL;
->> +		}
->>  	}
+
+I also like the idea in general.
+Minor nit..
+
+Shouldn't this be an iommu parameter rather than a PCI kernel command line parameter?
+We now have an iommu.passthrough argument that prevents page translation.
+
+Doesn't this fit into the same category especially when it is the IOMMU drivers that
+call ATS functions for enablement not the PCI drivers.
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
