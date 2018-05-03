@@ -1,54 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180529094204.3945660-1-arnd@arndb.de>
-References: <20180529094204.3945660-1-arnd@arndb.de>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 29 May 2018 09:24:16 -0500
-Message-ID: <CAL_JsqKf0nyw0yvw=4brGRvMHgZrrt+nJnBs5KWATcfijhiyug@mail.gmail.com>
-Subject: Re: [PATCH] pci: mvebu: add MVEBU_MBUS dependency
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:52154 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751081AbeECUpY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 May 2018 16:45:24 -0400
+Date: Thu, 3 May 2018 16:45:22 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Keith Busch <keith.busch@linux.intel.com>
+cc: Sagi Grimberg <sagi@grimberg.me>, Ming Lei <tom.leiming@gmail.com>,
+        linux-nvme <linux-nvme@lists.infradead.org>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
-        linux-pci@vger.kernel.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] nvme/pci: Use async_schedule for initial reset work
+In-Reply-To: <20180503201507.GO5938@localhost.localdomain>
+Message-ID: <alpine.LRH.2.02.1805031614210.5215@file01.intranet.prod.int.rdu2.redhat.com>
+References: <20180427211708.5604-1-keith.busch@intel.com> <CACVXFVNXmzMC9N+EabeXs4-XZLCRSOVdpd901wfojBL_s2YFRQ@mail.gmail.com> <20180430194533.GC5938@localhost.localdomain> <alpine.LRH.2.02.1805011928470.17838@file01.intranet.prod.int.rdu2.redhat.com>
+ <20180502152953.GH5938@localhost.localdomain> <alpine.LRH.2.02.1805021717430.2705@file01.intranet.prod.int.rdu2.redhat.com> <20180503201507.GO5938@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 29, 2018 at 4:41 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> Enabling the PCI_MVEBU driver for compile testing caused a build failure
-> on ARM randconfig builds:
->
-> drivers/pci/host/pci-mvebu.c: In function 'mvebu_pcie_del_windows':
-> drivers/pci/host/pci-mvebu.c:341:3: error: implicit declaration of function 'mvebu_mbus_del_window'; did you mean 'mvebu_pcie_del_windows'? [-Werror=implicit-function-declaration]
->    mvebu_mbus_del_window(base, sz);
->    ^~~~~~~~~~~~~~~~~~~~~
->    mvebu_pcie_del_windows
-> drivers/pci/host/pci-mvebu.c: In function 'mvebu_pcie_add_windows':
-> drivers/pci/host/pci-mvebu.c:364:9: error: implicit declaration of function 'mvebu_mbus_add_window_remap_by_id'; did you mean 'mvebu_pcie_add_windows'? [-Werror=implicit-function-declaration]
->    ret = mvebu_mbus_add_window_remap_by_id(target, attribute, base,
->          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->          mvebu_pcie_add_windows
-> drivers/pci/host/pci-mvebu.c: In function 'mvebu_pcie_probe':
-> drivers/pci/host/pci-mvebu.c:1209:2: error: implicit declaration of function 'mvebu_mbus_get_pcie_mem_aperture'; did you mean 'mvebu_mbus_get_io_win_info'? [-Werror=implicit-function-declaration]
-> drivers/pci/host/pci-mvebu.c:1215:2: error: implicit declaration of function 'mvebu_mbus_get_pcie_io_aperture'; did you mean 'mvebu_mbus_get_io_win_info'? [-Werror=implicit-function-declaration]
->
-> The problem is that the mbus helper functions are not declared in the
-> header. There are two ways of solving this: we can change the header
-> to provide empty stub functions for CONFIG_MVEBU_MBUS=n, or we can
-> add back the dependency here.
 
-Probably better to just make these non-standard dependencies explicit.
 
-> I picked the second option since that is simpler, but it somewhat
-> defeats the purpose of the original patch because we still cannot
-> compile test on other platforms this way.
->
-> Fixes: 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+On Thu, 3 May 2018, Keith Busch wrote:
 
-Acked-by: Rob Herring <robh@kernel.org>
+> On Thu, May 03, 2018 at 10:55:09AM -0400, Mikulas Patocka wrote:
+> > I think there is still one more bug:
+> > 
+> > If nvme_probe is called, it schedules the asynchronous work using 
+> > async_schedule - now suppose that the pci system calls the "remove", 
+> > "shutdown" or "suspend" method - this method will race with 
+> > nvme_async_probe running in the async domain - that will cause 
+> > misbehavior.
+> > 
+> > Or - does the PCI subsystem flush the async queues before calling these 
+> > methods? I'm not sure, but it doesn't seem so.
+> > 
+> > I think, you need to save the cookie returned by async_schedule and wait 
+> > for this cookie with async_synchronize_cookie in the other methods.
+> 
+> I think we're fine as-is without syncing the cookie. 
+> 
+> The remove path should be fine since we already sync with the necessary
+> work queues.
+> 
+> The shutdown, suspend and reset paths will just cause the initial reset
+> work to end early, the same result as what previously would happen.
+
+Suppose this:
+task 1: nvme_probe
+task 1: calls async_schedule(nvme_async_probe), that queues the work for 
+	task 2
+task 1: exits (so the device is active from pci subsystem's point of view)
+task 3: the pci subsystem calls nvme_remove
+task 3: calls nvme_change_ctrl_state(&dev->ctrl, NVME_CTRL_DELETING);
+task 3: cancel_work_sync(&dev->ctrl.reset_work); (does nothing because the 
+	work item hasn't started yet)
+task 3: nvme_remove does all the remaining work
+task 3: frees the device
+task 3: exists nvme_remove
+task 2: (in the async domain) runs nvme_async_probe
+task 2: calls nvme_reset_ctrl_sync
+task 2: nvme_reset_ctrl
+task 2: calls nvme_change_ctrl_state and queue_work - on a structure that 
+	was already freed by nvme_remove
+
+This bug is rare - but it may happen if the user too quickly activates and 
+deactivates the device by writing to sysfs.
+
+Mikulas
