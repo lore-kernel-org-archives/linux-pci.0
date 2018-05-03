@@ -1,53 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33078 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751323AbeERVDf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 May 2018 17:03:35 -0400
-Date: Fri, 18 May 2018 16:03:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: kbuild test robot <lkp@intel.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, kbuild-all@01.org,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Jan Kiszka <jan.kiszka@siemens.com>
-Subject: Re: [pci:next 15/20] drivers/pci/host/pcie-altera.c:496:53: sparse:
- incompatible types for operation (&)
-Message-ID: <20180518210332.GC41790@bhelgaas-glaptop.roam.corp.google.com>
-References: <201805190321.nss6j8Jn%fengguang.wu@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 05/10] PCI: Replace pr_*() with dev_*() in
+ __of_pci_get_host_bridge_resources()
+To: Jan Kiszka <jan.kiszka@siemens.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+ <63f2e316090ea3284b4be62e446b3b28f998ac55.1525067324.git.jan.kiszka@siemens.com>
+From: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Message-ID: <57fa1919-80ea-df19-49a7-9d2d3e100d2e@mentor.com>
+Date: Thu, 3 May 2018 10:15:12 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201805190321.nss6j8Jn%fengguang.wu@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <63f2e316090ea3284b4be62e446b3b28f998ac55.1525067324.git.jan.kiszka@siemens.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 19, 2018 at 03:42:27AM +0800, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-> head:   f8d3ac43d8cd4cfba337a50794c26c7ca89d86ac
-> commit: 927da40afdbd6a5fdd31eab6e9aa655dee1f99a4 [15/20] Merge branch 'lorenzo/pci/host/misc'
-> reproduce:
->         # apt-get install sparse
->         git checkout 927da40afdbd6a5fdd31eab6e9aa655dee1f99a4
->         make ARCH=x86_64 allmodconfig
->         make C=1 CF=-D__CHECK_ENDIAN__
+On 04/30/2018 08:48 AM, Jan Kiszka wrote:
+> From: Jan Kiszka <jan.kiszka@siemens.com>
 > 
+> Now that we have a device reference, make use of it for printing. And as
+> long as dev can still be NULL, we will still get some reasonable output
+> nevertheless.
 > 
-> sparse warnings: (new ones prefixed by >>)
-> 
-> >> drivers/pci/host/pcie-altera.c:496:53: sparse: incompatible types for operation (&)
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 
-I think I fixed this; it was missing a comma at the end of the first line:
+Reviewed-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Tested-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
 
-        err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff
-                                                    &pcie->resources, NULL);
+--
+With best wishes,
+Vladimir
 
-This error was in the original patch, so I'm not sure if I forgot to push
-the pci/resource branch or if kbuild didn't test it for some reason.
-
->    /kbuild/src/sparse/drivers/pci/host/pcie-rockchip-host.c:996:15: sparse: undefined identifier 'devm_of_pci_get_host_bridge_resources'
-
-I'm confused about this one because pcie-rockchip-host.c doesn't even exist
-in 927da40afdbd, so the steps to reproduce must not be quite right.
-
-But I'm sure I screwed up a conflict resolution somewhere, so I'll find that,
-too.
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
