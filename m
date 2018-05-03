@@ -1,91 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:49268 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751166AbeEUNDM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 May 2018 09:03:12 -0400
-Date: Mon, 21 May 2018 14:03:04 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: Simon Horman <horms@verge.net.au>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Dien Pham <dien.pham.ry@rvc.renesas.com>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
-Message-ID: <20180521130303.GA1443@e107981-ln.cambridge.arm.com>
-References: <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
- <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
- <a5a0d78d-627b-6277-ee75-44e204cbd390@gmail.com>
- <CAMuHMdX9d29JYVDsghd3Koyg8Aeuv0D2Fx5Lnn0bBZSb9RntDw@mail.gmail.com>
- <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
- <20180413124819.tw5436lolpn5eqhw@verge.net.au>
- <20180501105556.GB19391@e107981-ln.cambridge.arm.com>
- <d03db400-9f3e-906f-7886-a54cccb96a40@gmail.com>
- <20180514154909.GB13324@e107981-ln.cambridge.arm.com>
- <c210df35-ba85-4b22-ae84-fc030ddc094a@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c210df35-ba85-4b22-ae84-fc030ddc094a@gmail.com>
+Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:22401 "EHLO
+        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751872AbeECFEF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 01:04:05 -0400
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v15 6/9] PCI/PORTDRV: Implement generic find service
+Date: Thu,  3 May 2018 01:03:55 -0400
+Message-Id: <1525323838-1735-7-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
+References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 21, 2018 at 01:08:36PM +0200, Marek Vasut wrote:
-> On 05/14/2018 05:49 PM, Lorenzo Pieralisi wrote:
-> > On Mon, May 14, 2018 at 05:32:04PM +0200, Marek Vasut wrote:
-> >> On 05/01/2018 12:55 PM, Lorenzo Pieralisi wrote:
-> >>> On Fri, Apr 13, 2018 at 02:48:19PM +0200, Simon Horman wrote:
-> >>>> On Tue, Apr 10, 2018 at 06:17:04PM +0200, Marek Vasut wrote:
-> >>>>> On 04/10/2018 05:28 PM, Geert Uytterhoeven wrote:
-> >>>>
-> >>>> ...
-> >>>>
-> >>>>>>>> rcar_pcie_get_resources() is called while the device is
-> >>>>>>>> runtime-enabled/resumed,
-> >>>>>>>> pci_free_resource_list() is called while the device is runtime-disabled.
-> >>>>>
-> >>>>> rcar_pcie_get_resources() is NOT a pair function for
-> >>>>> pci_free_resource_list() . rcar_pcie_parse_request_of_pci_ranges() is a
-> >>>>> pair function for pci_free_resource_list().
-> >>>>>
-> >>>>> rcar_pcie_parse_request_of_pci_ranges() calls
-> >>>>> of_pci_get_host_bridge_resources() internally, so every single function
-> >>>>> called after successful call of rcar_pcie_parse_request_of_pci_ranges()
-> >>>>> must call pci_free_resource_list().
-> >>>>>
-> >>>>> Both of_pci_get_host_bridge_resources() and pci_free_resource_list() are
-> >>>>> called with runtime PM disabled.
-> >>>>>
-> >>>>> The naming of the functions is confusing though.
-> >>>>
-> >>>> Hi,
-> >>>>
-> >>>> thanks everyone for their efforts in preparing/reviewing this patch.
-> >>>>
-> >>>> It seems there are some differences of opinion on how best to handle the
-> >>>> error paths but unlike earlier versions this one seems correct to me. If
-> >>>> that turns out to be false we can address it. But I don't think its likely
-> >>>> things will be enhanced by continuing this review.
-> >>>>
-> >>>> Lorenzo, please consider taking this patch in its current form.
-> >>>>
-> >>>> Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
-> >>>
-> >>> Applied to pci/rcar for v4.18, thanks.
-> >>
-> >> Is there any reason why this patch isnt in next yet ?
-> > 
-> > Bjorn will merge it into -next this week.
-> 
-> Seems this got missed last week ?
+This patch implements generic pcie_port_find_service() routine.
 
-It will go into -next as soon as a new -next release will
-be available:
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
 
-https://marc.info/?l=linux-next&m=152654084627146&w=2
-
-Lorenzo
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 51515d1..a525296 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -228,32 +228,6 @@ static bool find_source_device(struct pci_dev *parent,
+ 	return true;
+ }
+ 
+-static int find_aer_service_iter(struct device *device, void *data)
+-{
+-	struct pcie_port_service_driver *service_driver, **drv;
+-
+-	drv = (struct pcie_port_service_driver **) data;
+-
+-	if (device->bus == &pcie_port_bus_type && device->driver) {
+-		service_driver = to_service_driver(device->driver);
+-		if (service_driver->service == PCIE_PORT_SERVICE_AER) {
+-			*drv = service_driver;
+-			return 1;
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+-struct pcie_port_service_driver *find_aer_service(struct pci_dev *dev)
+-{
+-	struct pcie_port_service_driver *drv = NULL;
+-
+-	device_for_each_child(&dev->dev, &drv, find_aer_service_iter);
+-
+-	return drv;
+-}
+-
+ /**
+  * handle_error_source - handle logging error into an event log
+  * @aerdev: pointer to pcie_device data structure of the root port
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 55df974..877785d 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -195,10 +195,8 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ 		udev = dev->bus->self;
+ 	}
+ 
+-#if IS_ENABLED(CONFIG_PCIEAER)
+ 	/* Use the aer driver of the component firstly */
+-	driver = find_aer_service(udev);
+-#endif
++	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
+ 
+ 	if (driver && driver->reset_link) {
+ 		status = driver->reset_link(udev);
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index 47c9824..ba6c963 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -112,5 +112,6 @@ static inline bool pcie_pme_no_msi(void) { return false; }
+ static inline void pcie_pme_interrupt_enable(struct pci_dev *dev, bool en) {}
+ #endif /* !CONFIG_PCIE_PME */
+ 
+-struct pcie_port_service_driver *find_aer_service(struct pci_dev *dev);
++struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
++							u32 service);
+ #endif /* _PORTDRV_H_ */
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index c9c0663..d843055 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -18,6 +18,10 @@
+ 
+ #include "../pci.h"
+ #include "portdrv.h"
++struct portdrv_service_data {
++	struct pcie_port_service_driver *drv;
++	u32 service;
++};
+ 
+ /**
+  * release_pcie_device - free PCI Express port service device structure
+@@ -398,6 +402,46 @@ static int remove_iter(struct device *dev, void *data)
+ 	return 0;
+ }
+ 
++static int find_service_iter(struct device *device, void *data)
++{
++	struct pcie_port_service_driver *service_driver;
++	struct portdrv_service_data *pdrvs;
++	u32 service;
++
++	pdrvs = (struct portdrv_service_data *) data;
++	service = pdrvs->service;
++
++	if (device->bus == &pcie_port_bus_type && device->driver) {
++		service_driver = to_service_driver(device->driver);
++		if (service_driver->service == service) {
++			pdrvs->drv = service_driver;
++			return 1;
++		}
++	}
++
++	return 0;
++}
++/**
++ * pcie_port_find_service - find the service driver
++ * @dev: PCI Express port the service devices associated with
++ * @service: Service to find
++ *
++ * Find PCI Express port service driver associated with given service
++ */
++struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
++							u32 service)
++{
++	struct pcie_port_service_driver *drv;
++	struct portdrv_service_data pdrvs;
++
++	pdrvs.drv = NULL;
++	pdrvs.service = service;
++	device_for_each_child(&dev->dev, &pdrvs, find_service_iter);
++
++	drv = pdrvs.drv;
++	return drv;
++}
++
+ /**
+  * pcie_port_device_remove - unregister PCI Express port service devices
+  * @dev: PCI Express port the service devices to unregister are associated with
+-- 
+2.7.4
