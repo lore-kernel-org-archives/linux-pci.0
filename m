@@ -1,101 +1,67 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 14 May 2018 07:47:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Subject: Re: [PATCH v4 5/6] bus: fsl-mc: supoprt dma configure for devices on
- fsl-mc bus
-Message-ID: <20180514124757.GA253589@bhelgaas-glaptop.roam.corp.google.com>
-References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
- <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
- <1525069641-8523-6-git-send-email-nipun.gupta@nxp.com>
-MIME-Version: 1.0
-In-Reply-To: <1525069641-8523-6-git-send-email-nipun.gupta@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, stuyoder@gmail.com, linux-pci@vger.kernel.org,
- will.deacon@arm.com, shawnguo@kernel.org, bharat.bhushan@nxp.com, hch@lst.de,
- m.szyprowski@samsung.com, robh@kernel.org, frowand.list@gmail.com,
- joro@8bytes.org, catalin.marinas@arm.com, devicetree@vger.kernel.org,
- robin.murphy@arm.com, robh+dt@kernel.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org, laurentiu.tudor@nxp.com,
- gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=D0Hd=HW=gmail.com=nadav.amit@kernel.org>
+Return-Path: <SRS0=D0Hd=HW=gmail.com=nadav.amit@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [RFC/RFT] Add noats flag to boot parameters
+From: Nadav Amit <nadav.amit@gmail.com>
+In-Reply-To: <5cf699f1-90c1-5ad8-07fe-a65042395d05@codeaurora.org>
+Date: Thu, 3 May 2018 15:15:20 -0700
+Cc: Joerg Roedel <joro@8bytes.org>,
+ Gil Kupfer <gilkup@gmail.com>,
+ dwmw2@infradead.org,
+ bhelgaas@google.com,
+ iommu@lists.linux-foundation.org,
+ linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ Gil Kupfer <gilkup@cs.technion.ac.il>,
+ Will Deacon <will.deacon@arm.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Message-Id: <56E6D90C-A85F-42F7-94C5-EF21DA6C656B@gmail.com>
+References: <1525025808-2365-1-git-send-email-gilkup@cs.technion.ac.il>
+ <20180503133459.waawna3ebtu3udn6@8bytes.org>
+ <359d736a-a7ac-f0e4-f4db-dc7bb506481c@codeaurora.org>
+ <20180503135920.o2rdh3exai7qmkvu@8bytes.org>
+ <5cf699f1-90c1-5ad8-07fe-a65042395d05@codeaurora.org>
+To: Sinan Kaya <okaya@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-When you add the changleog, please also fix the subject typo:
+Sinan Kaya <okaya@codeaurora.org> wrote:
 
-- bus: fsl-mc: supoprt dma configure for devices on fsl-mc bus
-               ^^^^^^^
-+ bus: fsl-mc: support dma configure for devices on fsl-mc bus
+> +Bjorn,
+>=20
+> On 5/3/2018 9:59 AM, Joerg Roedel wrote:
+>> On Thu, May 03, 2018 at 09:46:34AM -0400, Sinan Kaya wrote:
+>>> I also like the idea in general.
+>>> Minor nit..
+>>>=20
+>>> Shouldn't this be an iommu parameter rather than a PCI kernel =
+command line parameter?
+>>> We now have an iommu.passthrough argument that prevents page =
+translation.
+>>>=20
+>>> Doesn't this fit into the same category especially when it is the =
+IOMMU drivers that
+>>> call ATS functions for enablement not the PCI drivers.
+>>=20
+>> ATS is a bit of a grey area between PCI and IOMMU, but since ATS is
+>> PCI-specific and the code to enable/disable it is in PCI as well, I
+>> think the parameter makes sense for PCI too.
+>=20
+> OK. Bjorn was interested in having a command line driven feature =
+enables in driver/pci
+> directory with bitmasks for each optional PCI spec capability rather =
+than noXYZ feature.
+>=20
+> This would allow us to troubleshoot code breakage as well as the =
+platform bring up to
+> turn off all optional features.
+>=20
+> Sounds like this would be a good match for that work.
 
-On Mon, Apr 30, 2018 at 11:57:20AM +0530, Nipun Gupta wrote:
-> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-> ---
->  drivers/bus/fsl-mc/fsl-mc-bus.c | 16 ++++++++++++----
->  1 file changed, 12 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
-> index 5d8266c..624828b 100644
-> --- a/drivers/bus/fsl-mc/fsl-mc-bus.c
-> +++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
-> @@ -127,6 +127,16 @@ static int fsl_mc_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
->  	return 0;
->  }
->  
-> +static int fsl_mc_dma_configure(struct device *dev)
-> +{
-> +	struct device *dma_dev = dev;
-> +
-> +	while (dev_is_fsl_mc(dma_dev))
-> +		dma_dev = dma_dev->parent;
-> +
-> +	return of_dma_configure(dev, dma_dev->of_node, 0);
-> +}
-> +
->  static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
->  			     char *buf)
->  {
-> @@ -148,6 +158,7 @@ struct bus_type fsl_mc_bus_type = {
->  	.name = "fsl-mc",
->  	.match = fsl_mc_bus_match,
->  	.uevent = fsl_mc_bus_uevent,
-> +	.dma_configure  = fsl_mc_dma_configure,
->  	.dev_groups = fsl_mc_dev_groups,
->  };
->  EXPORT_SYMBOL_GPL(fsl_mc_bus_type);
-> @@ -616,6 +627,7 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
->  		mc_dev->icid = parent_mc_dev->icid;
->  		mc_dev->dma_mask = FSL_MC_DEFAULT_DMA_MASK;
->  		mc_dev->dev.dma_mask = &mc_dev->dma_mask;
-> +		mc_dev->dev.coherent_dma_mask = mc_dev->dma_mask;
->  		dev_set_msi_domain(&mc_dev->dev,
->  				   dev_get_msi_domain(&parent_mc_dev->dev));
->  	}
-> @@ -633,10 +645,6 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
->  			goto error_cleanup_dev;
->  	}
->  
-> -	/* Objects are coherent, unless 'no shareability' flag set. */
-> -	if (!(obj_desc->flags & FSL_MC_OBJ_FLAG_NO_MEM_SHAREABILITY))
-> -		arch_setup_dma_ops(&mc_dev->dev, 0, 0, NULL, true);
-> -
->  	/*
->  	 * The device-specific probe callback will get invoked by device_add()
->  	 */
-> -- 
-> 1.9.1
-> 
+I think that since this feature (ATS) has security implications, it =
+should
+be controllable through the kernel boot parameters. Otherwise, it can be
+potentially too late to turn it off.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+Nadav=
