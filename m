@@ -1,86 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:48709 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750859AbeEBA7Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 May 2018 20:59:25 -0400
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/9] Add new helper to allocate irq domain for hosts
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1524817322-239028-1-git-send-email-shawn.lin@rock-chips.com>
- <20180430101940.GB32033@e107981-ln.cambridge.arm.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <e83515e8-7eba-15ac-9cfa-4898b645d824@rock-chips.com>
-Date: Wed, 2 May 2018 08:59:22 +0800
+Received: from relay1.mentorg.com ([192.94.38.131]:50345 "EHLO
+        relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750703AbeECHSa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 03:18:30 -0400
+Subject: Re: [PATCH v2 07/10] PCI: Convert of_pci_get_host_bridge_resources()
+ users to devm variant
+To: Jan Kiszka <jan.kiszka@siemens.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+ <ed3e6df4feca5febefa14716d62aaddd5b4a39d1.1525067324.git.jan.kiszka@siemens.com>
+CC: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+From: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Message-ID: <dbfa80fb-5fe8-3ccd-6886-4604ef9e058b@mentor.com>
+Date: Thu, 3 May 2018 10:18:24 +0300
 MIME-Version: 1.0
-In-Reply-To: <20180430101940.GB32033@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+In-Reply-To: <ed3e6df4feca5febefa14716d62aaddd5b4a39d1.1525067324.git.jan.kiszka@siemens.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+Hi Jan,
 
-On 2018/4/30 18:19, Lorenzo Pieralisi wrote:
-> On Fri, Apr 27, 2018 at 04:22:02PM +0800, Shawn Lin wrote:
->>
->> Hi Bjorn and Lorenzo,
->>
->> PCI drivers use highly similar code block to allocate irq domain which
->> leads to code duplication than expected. This patchset adds a new helper,
->> pci_alloc_intx_irqd(), to avoid that as much as possible. Just leave
->> pcie-rockchip out now as it's under re-construct and will add incremental
->> patch for it if this series looks ok and the pcie-rockchip ongoing patches
->> got merge.
+On 04/30/2018 08:48 AM, Jan Kiszka wrote:
+> From: Jan Kiszka <jan.kiszka@siemens.com>
 > 
-> Is this patch series v1 of:
+> Straightforward for all of them, no more leaks afterwards.
 > 
-> https://patchwork.ozlabs.org/patch/906006/
-> 
-> ?
+> CC: Jingoo Han <jingoohan1@gmail.com>
+> CC: Joao Pinto <Joao.Pinto@synopsys.com>
+> CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> Acked-by: Jingoo Han <jingoo1han@gmail.com>
 
-Yes.
+[snip]
 
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 6ab28f29ac6a..6eb36c924983 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -1067,12 +1067,11 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
+>  {
+>  	int err;
+>  	struct device *dev = pci->dev;
+> -	struct device_node *np = dev->of_node;
+>  	resource_size_t iobase;
+>  	struct resource_entry *win, *tmp;
+>  
+> -	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
+> -					       &iobase);
+> +	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+> +						    &pci->resources, &iobase);
+>  	if (err)
+>  		return err;
+>  
+
+this one snippet is obsoleted by https://patchwork.ozlabs.org/patch/904326/
+
+If 08/10 remains a deprecation, then it is sufficient to exclude the R-Car change,
+otherwise I hope maintainers can deal with the proper ordering.
+
+For PCI OF change:
+
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index f16b343d3b85..5a88d46a41b7 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -645,12 +645,12 @@ int pci_parse_request_of_pci_ranges(struct device *dev,
+>  				    struct resource **bus_range)
+>  {
+>  	int err, res_valid = 0;
+> -	struct device_node *np = dev->of_node;
+>  	resource_size_t iobase;
+>  	struct resource_entry *win, *tmp;
+>  
+>  	INIT_LIST_HEAD(resources);
+> -	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
+> +	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, resources,
+> +						    &iobase);
+>  	if (err)
+>  		return err;
+>  
 > 
-> Thanks,
-> Lorenzo
-> 
->>
->>
->>
->>
->> Shawn Lin (9):
->>    PCI: Add new helper for allocating irq domain for INTx
->>    PCI: dra7xx: Use pci_alloc_intx_irqd() helper to simplify the code
->>    PCI: keystone-dw: Use pci_alloc_intx_irqd() helper to get irq domain
->>      for INTx
->>    PCI: aardvark: Use pci_alloc_intx_irqd() helper to get irq domain for
->>      INTx
->>    PCI: faraday: Use pci_alloc_intx_irqd() helper to get irq domain for
->>      INTx
->>    PCI: altera: Use pci_alloc_intx_irqd() helper to get irq domain for
->>      INTx
->>    PCI: mediatek: Use pci_alloc_intx_irqd() helper to get irq domain for
->>      INTx
->>    PCI: xilinx-nwl: Use pci_alloc_intx_irqd() helper to get irq domain
->>      for INTx
->>    PCI: xilinx: Use pci_alloc_intx_irqd() helper to get irq domain for
->>      INTx
->>
->>   drivers/pci/dwc/pci-dra7xx.c       | 41 ++-------------------
->>   drivers/pci/dwc/pci-keystone-dw.c  | 12 +++----
->>   drivers/pci/host/pci-aardvark.c    | 24 +++----------
->>   drivers/pci/host/pci-ftpci100.c    | 15 +++-----
->>   drivers/pci/host/pcie-altera.c     | 38 +++-----------------
->>   drivers/pci/host/pcie-mediatek.c   | 29 ++-------------
->>   drivers/pci/host/pcie-xilinx-nwl.c | 21 +++--------
->>   drivers/pci/host/pcie-xilinx.c     | 43 ++--------------------
->>   include/linux/pci.h                | 74 ++++++++++++++++++++++++++++++++++++++
->>   9 files changed, 104 insertions(+), 193 deletions(-)
->>
->> -- 
->> 1.9.1
->>
->>
-> 
-> 
-> 
+
+Reviewed-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Tested-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+
+--
+With best wishes,
+Vladimir
