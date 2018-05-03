@@ -1,57 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42236 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S969317AbeEXLo5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 May 2018 07:44:57 -0400
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
-To: Xu Zaibo <xuzaibo@huawei.com>,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: will.deacon@arm.com, okaya@codeaurora.org,
-        liguozhu <liguozhu@hisilicon.com>, ashok.raj@intel.com,
-        bharatku@xilinx.com, rfranz@cavium.com, rgummal@xilinx.com,
-        dwmw2@infradead.org, ilias.apalodimas@linaro.org,
-        christian.koenig@amd.com
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-14-jean-philippe.brucker@arm.com>
- <5B0536A3.1000304@huawei.com>
-Message-ID: <cd13f60d-b282-3804-4ca7-2d34476c597f@arm.com>
-Date: Thu, 24 May 2018 12:44:47 +0100
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:35677 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751262AbeECThz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 15:37:55 -0400
+Received: by mail-lf0-f65.google.com with SMTP id y72-v6so13925783lfd.2
+        for <linux-pci@vger.kernel.org>; Thu, 03 May 2018 12:37:54 -0700 (PDT)
+Subject: [PATCH v3 2/5] pcie-rcar: remove PHYRDY polling from
+ rcar_pcie_hw_init_h1()
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
+Message-ID: <c4fb4657-6628-fedc-cecf-0639817f4438@cogentembedded.com>
+Date: Thu, 3 May 2018 22:37:52 +0300
 MIME-Version: 1.0
-In-Reply-To: <5B0536A3.1000304@huawei.com>
+In-Reply-To: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Now that we've added PCIEPHYSR.PHYRDY polling to rcar_pcie_hw_init(),
+there is no need anymore  for polling the PHY specific register in
+rcar_pcie_hw_init_h1() -- remove it.
 
-On 23/05/18 10:38, Xu Zaibo wrote:
->> +static int vfio_iommu_bind_group(struct vfio_iommu *iommu,
->> +                 struct vfio_group *group,
->> +                 struct vfio_mm *vfio_mm)
->> +{
->> +    int ret;
->> +    bool enabled_sva = false;
->> +    struct vfio_iommu_sva_bind_data data = {
->> +        .vfio_mm    = vfio_mm,
->> +        .iommu        = iommu,
->> +        .count        = 0,
->> +    };
->> +
->> +    if (!group->sva_enabled) {
->> +        ret = iommu_group_for_each_dev(group->iommu_group, NULL,
->> +                           vfio_iommu_sva_init);
-> Do we need to do *sva_init here or do anything to avoid repeated
-> initiation?
-> while another process already did initiation at this device, I think
-> that current process will get an EEXIST.
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
 
-Right, sva_init() must be called once for any device that intends to use
-bind(). For the second process though, group->sva_enabled will be true
-so we won't call sva_init() again, only bind().
+---
+Changes in version 3:
+- added Simon's tag;
+- refreshed atop of Marek's patch.
 
-Thanks,
-Jean
+ drivers/pci/host/pcie-rcar.c |   12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+Index: pci/drivers/pci/host/pcie-rcar.c
+===================================================================
+--- pci.orig/drivers/pci/host/pcie-rcar.c
++++ pci/drivers/pci/host/pcie-rcar.c
+@@ -103,7 +103,6 @@
+ #define  LANE_POS		8
+ #define  ADR_POS		0
+ #define H1_PCIEPHYDOUTR		0x040014
+-#define H1_PCIEPHYSR		0x040018
+ 
+ /* R-Car Gen2 PHY */
+ #define GEN2_PCIEPHYADDR	0x780
+@@ -627,8 +626,6 @@ static int rcar_pcie_hw_init(struct rcar
+ 
+ static int rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
+ {
+-	unsigned int timeout = 10;
+-
+ 	/* Initialize the phy */
+ 	phy_write_reg(pcie, 0, 0x42, 0x1, 0x0EC34191);
+ 	phy_write_reg(pcie, 1, 0x42, 0x1, 0x0EC34180);
+@@ -647,14 +644,7 @@ static int rcar_pcie_hw_init_h1(struct r
+ 	phy_write_reg(pcie, 0, 0x64, 0x1, 0x3F0F1F0F);
+ 	phy_write_reg(pcie, 0, 0x66, 0x1, 0x00008000);
+ 
+-	while (timeout--) {
+-		if (rcar_pci_read_reg(pcie, H1_PCIEPHYSR))
+-			return rcar_pcie_hw_init(pcie);
+-
+-		msleep(5);
+-	}
+-
+-	return -ETIMEDOUT;
++	return rcar_pcie_hw_init(pcie);
+ }
+ 
+ static int rcar_pcie_hw_init_gen2(struct rcar_pcie *pcie)
