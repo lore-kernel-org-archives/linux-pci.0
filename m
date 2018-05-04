@@ -1,133 +1,253 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>,
- <linux-acpi@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <iommu@lists.linux-foundation.org>, <kvm@vger.kernel.org>,
- <linux-mm@kvack.org>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-14-jean-philippe.brucker@arm.com>
-From: Xu Zaibo <xuzaibo@huawei.com>
-Message-ID: <5B0536A3.1000304@huawei.com>
-Date: Wed, 23 May 2018 17:38:43 +0800
+Return-Path: <SRS0=n77T=HX=kontron.com=gilles.buloz@kernel.org>
+Return-Path: <SRS0=n77T=HX=kontron.com=gilles.buloz@kernel.org>
+From: Gilles Buloz <Gilles.Buloz@kontron.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci
+	<linux-pci@vger.kernel.org>, "Minghuan.Lian@nxp.com" <Minghuan.Lian@nxp.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, Ard Biesheuvel
+	<ard.biesheuvel@linaro.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Check whether bridges allow access to extended
+ config space
+Date: Fri, 4 May 2018 15:45:07 +0000
+Message-ID: <5AEC8002.5000309@kontron.com>
+References: <20180427165627.GA8199@bhelgaas-glaptop.roam.corp.google.com>
+ <5AE6D7E2.9030506@kontron.com> <5AE71BF4.2010200@kontron.com>
+ <20180430170447.GA95643@bhelgaas-glaptop.roam.corp.google.com>
+ <5AE75809.30701@kontron.com> <5AE9B5BB.2080003@kontron.com>
+ <20180502132501.GE11698@bhelgaas-glaptop.roam.corp.google.com>
+ <5AE9C1AB.8020403@kontron.com>
+ <20180502172341.GA123831@bhelgaas-glaptop.roam.corp.google.com>
+ <5AEB033A.4060407@kontron.com>
+ <20180503223127.GB15790@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180503223127.GB15790@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180511190641.23008-14-jean-philippe.brucker@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: xieyisheng1@huawei.com, liubo95@huawei.com, thunder.leizhen@huawei.com,
- will.deacon@arm.com, okaya@codeaurora.org, liguozhu <liguozhu@hisilicon.com>,
- yi.l.liu@intel.com, ashok.raj@intel.com, tn@semihalf.com, joro@8bytes.org,
- bharatku@xilinx.com, liudongdong3@huawei.com, rfranz@cavium.com,
- kevin.tian@intel.com, jacob.jun.pan@linux.intel.com, jcrouse@codeaurora.org,
- rgummal@xilinx.com, jonathan.cameron@huawei.com,
- shunyong.yang@hxt-semitech.com, dwmw2@infradead.org,
- ilias.apalodimas@linaro.org, alex.williamson@redhat.com, robdclark@gmail.com,
- robin.murphy@arm.com, christian.koenig@amd.com, nwatters@codeaurora.org,
- baolu.lu@linux.intel.com
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=WINDOWS-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Le 04/05/2018 00:31, Bjorn Helgaas a =E9crit :
+> [+cc LKML]
+>
+> On Thu, May 03, 2018 at 12:40:27PM +0000, Gilles Buloz wrote:
+>> Subject:    [PATCH] For exception at PCI probe due to bridge reporting U=
+R
+>>
+>> Even if a device supports extended config access, no such access must be
+>> done to this device If there's a bridge not supporting that in the path
+>> to this device. Doing such access with UR reporting enabled on the root
+>> bridge leads to an exception.
+>>
+>> This is the case on a LS1043A CPU (NXP QorIQ Layerscape) platform with
+>> the following bus topology :
+>>    LS1043 PCIe root
+>>      -> PEX8112 PCIe-to-PCI bridge (not supporting ext cfg on PCI side)
+>>        -> PMC slot connector (for legacy PMC modules)
+>> With a PMC module topology as follows :
+>>    PMC connector
+>>      -> PCI-to-PCIe bridge
+>>        -> PCIe switch (4 ports)
+>>          -> 4 PCIe devices (one on each port)
+>> In this case all devices behind the PEX8112 are supporting extended conf=
+ig
+>> access but this is prohibited by the PEX8112. Without this patch, an
+>> exception (synchronous abort) occurs in pci_cfg_space_size_ext().
+>>
+>> This patch checks the parent bridge of each allocated child bus to know =
+if
+>> extended config access is supported on the child bus, and sets a flag in
+>> child->bus_flags if not supported. This  flag is inherited by all childr=
+en
+>> buses of this child bus and then is checked to avoid this unsupported
+>> accesses to every device on these buses.
+> Hi Gilles,
+>
+> Thanks for the patch!  I reworked it a little bit to simplify the code
+> in pci_alloc_child_bus().  Can you test it and make sure I didn't
+> break anything?
+>
+Hi Bjorn,
 
-On 2018/5/12 3:06, Jean-Philippe Brucker wrote:
-> Add two new ioctls for VFIO containers. VFIO_IOMMU_BIND_PROCESS creates a
-> bond between a container and a process address space, identified by a
-> Process Address Space ID (PASID). Devices in the container append this
-> PASID to DMA transactions in order to access the process' address space.
-> The process page tables are shared with the IOMMU, and mechanisms such as
-> PCI ATS/PRI are used to handle faults. VFIO_IOMMU_UNBIND_PROCESS removes a
-> bond created with VFIO_IOMMU_BIND_PROCESS.
+Your rework works as expected. Tested on LS1043A platform with kernel 4.17-=
+rc1, and with some backport on kernel 4.1.35
+
+Suggestion : maybe change the pci_info() string to have :
+     pci_bus 0000:xx: extended config space not accessible
+instead of
+     pci_bus 0000:xx: extended config space not accessible on secondary bus
+as xx is already the number of the secondary bus
+
+Info : with kernel 4.17-rc1, it turns out I need pcie_aspm=3Doff to have th=
+e PMC devices behind the
+PCI-to-PCIe bridge of the PMC safely detected/configured. But this is not c=
+aused by the patch.
+Without pcie_aspm=3Doff I saw this at one boot :
+    "pci 0000:02:0e.0: ASPM: Could not configure common clock" for this bri=
+dge, but devices
+    correctly detected/configured
+but at most boots I get :
+    no ASPM message but "pci 0000:04:02.0: bridge configuration invalid ([b=
+us ff-ff]), reconfiguring "
+    instead, and some devices are missing. Also lspci show "rev ff" for som=
+e devices.
+I don't see this problem on 4.1.35 with the same backported patch.
+
+Gilles
+> commit cbaaa85b558a8f974e301fa0364d568efaf491ce
+> Author: Gilles Buloz <Gilles.Buloz@kontron.com>
+> Date:   Thu May 3 15:21:44 2018 -0500
 >
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+>      PCI: Check whether bridges allow access to extended config space
+>     =20
+>      Even if a device supports extended config space, i.e., it is a PCI-X=
+ Mode 2
+>      or a PCI Express device, the extended space may not be accessible if
+>      there's a conventional PCI bus in the path to it.
+>     =20
+>      We currently figure that out in pci_cfg_space_size() by reading the =
+first
+>      dword of extended config space.  On most platforms that returns ~0 d=
+ata if
+>      the space is inaccessible, but it may set error bits in PCI status
+>      registers, and on some platforms it causes exceptions that we curren=
+tly
+>      don't recover from.
+>     =20
+>      For example, a PCIe-to-conventional PCI bridge treats config transac=
+tions
+>      with a non-zero Extended Register Address as an Unsupported Request =
+on PCIe
+>      and a received Master-Abort on the destination bus (see PCI Express =
+to
+>      PCI/PCI-X Bridge spec, r1.0, sec 4.1.3).
+>     =20
+>      A sample case is a LS1043A CPU (NXP QorIQ Layerscape) platform with =
+the
+>      following bus topology:
+>     =20
+>        LS1043 PCIe Root Port
+>          -> PEX8112 PCIe-to-PCI bridge (doesn't support ext cfg on PCI si=
+de)
+>            -> PMC slot connector (for legacy PMC modules)
+>     =20
+>      With a PMC module topology as follows:
+>     =20
+>        PMC connector
+>          -> PCI-to-PCIe bridge
+>            -> PCIe switch (4 ports)
+>              -> 4 PCIe devices (one on each port)
+>     =20
+>      The PCIe devices on the PMC module support extended config space, bu=
+t we
+>      can't reach it because the PEX8112 can't generate accesses to the ex=
+tended
+>      space on its secondary bus.  Attempts to access it cause Unsupported
+>      Request errors, which result in synchronous aborts on this platform.
+>     =20
+>      To avoid these errors, check whether bridges are capable of generati=
+ng
+>      extended config space addresses on their secondary interfaces.  If t=
+hey
+>      can't, we restrict devices below the bridge to only the 256-byte
+>      PCI-compatible config space.
+>     =20
+>      Signed-off-by: Gilles Buloz <gilles.buloz@kontron.com>
+>      [bhelgaas: changelog, rework patch so bus_flags testing is all in
+>      pci_bridge_child_ext_cfg_accessible()]
+>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 >
->
->
->
->
->
-> +static int vfio_iommu_bind_group(struct vfio_iommu *iommu,
-> +				 struct vfio_group *group,
-> +				 struct vfio_mm *vfio_mm)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ac91b6fd0bcd..7b1b7b2e01e4 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -882,6 +882,45 @@ static int pci_register_host_bridge(struct pci_host_=
+bridge *bridge)
+>   =09return err;
+>   }
+>  =20
+> +static bool pci_bridge_child_ext_cfg_accessible(struct pci_dev *bridge)
 > +{
-> +	int ret;
-> +	bool enabled_sva = false;
-> +	struct vfio_iommu_sva_bind_data data = {
-> +		.vfio_mm	= vfio_mm,
-> +		.iommu		= iommu,
-> +		.count		= 0,
-> +	};
+> +=09int pos;
+> +=09u32 status;
 > +
-> +	if (!group->sva_enabled) {
-> +		ret = iommu_group_for_each_dev(group->iommu_group, NULL,
-> +					       vfio_iommu_sva_init);
-Do we need to do *sva_init here or do anything to avoid repeated initiation?
-while another process already did initiation at this device, I think 
-that current process will get an EEXIST.
-
-Thanks.
-> +		if (ret)
-> +			return ret;
+> +=09/*
+> +=09 * If extended config space isn't accessible on a bridge's primary
+> +=09 * bus, we certainly can't access it on the secondary bus.
+> +=09 */
+> +=09if (bridge->bus->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG)
+> +=09=09return false;
 > +
-> +		group->sva_enabled = enabled_sva = true;
-> +	}
+> +=09/*
+> +=09 * PCIe Root Ports and switch ports are PCIe on both sides, so if
+> +=09 * extended config space is accessible on the primary, it's also
+> +=09 * accessible on the secondary.
+> +=09 */
+> +=09if (pci_is_pcie(bridge) &&
+> +=09    (pci_pcie_type(bridge) =3D=3D PCI_EXP_TYPE_ROOT_PORT ||
+> +=09     pci_pcie_type(bridge) =3D=3D PCI_EXP_TYPE_UPSTREAM ||
+> +=09     pci_pcie_type(bridge) =3D=3D PCI_EXP_TYPE_DOWNSTREAM))
+> +=09=09return true;
 > +
-> +	ret = iommu_group_for_each_dev(group->iommu_group, &data,
-> +				       vfio_iommu_sva_bind_dev);
-> +	if (ret && data.count > 1)
-> +		iommu_group_for_each_dev(group->iommu_group, vfio_mm,
-> +					 vfio_iommu_sva_unbind_dev);
-> +	if (ret && enabled_sva) {
-> +		iommu_group_for_each_dev(group->iommu_group, NULL,
-> +					 vfio_iommu_sva_shutdown);
-> +		group->sva_enabled = false;
-> +	}
+> +=09/*
+> +=09 * For the other bridge types:
+> +=09 *   - PCI-to-PCI bridges
+> +=09 *   - PCIe-to-PCI/PCI-X forward bridges
+> +=09 *   - PCI/PCI-X-to-PCIe reverse bridges
+> +=09 * extended config space on the secondary side is only accessible
+> +=09 * if the bridge supports PCI-X Mode 2.
+> +=09 */
+> +=09pos =3D pci_find_capability(bridge, PCI_CAP_ID_PCIX);
+> +=09if (!pos)
+> +=09=09return false;
 > +
-> +	return ret;
+> +=09pci_read_config_dword(bridge, pos + PCI_X_STATUS, &status);
+> +=09return status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ);
 > +}
->
->
->   
-> @@ -1442,6 +1636,10 @@ static int vfio_iommu_type1_attach_group(void *iommu_data,
->   	if (ret)
->   		goto out_detach;
->   
-> +	ret = vfio_iommu_replay_bind(iommu, group);
-> +	if (ret)
-> +		goto out_detach;
 > +
->   	if (resv_msi) {
->   		ret = iommu_get_msi_cookie(domain->domain, resv_msi_base);
->   		if (ret)
-> @@ -1547,6 +1745,11 @@ static void vfio_iommu_type1_detach_group(void *iommu_data,
->   			continue;
->   
->   		iommu_detach_group(domain->domain, iommu_group);
-> +		if (group->sva_enabled) {
-> +			iommu_group_for_each_dev(iommu_group, NULL,
-> +						 vfio_iommu_sva_shutdown);
-> +			group->sva_enabled = false;
-> +		}
-Here, why shut down here? If another process is working on the device, 
-there may be a crash?
-
-Thanks.
->   		list_del(&group->next);
->   		kfree(group);
->   		/*
-> @@ -1562,6 +1765,7 @@ static void vfio_iommu_type1_detach_group(void *iommu_data,
+>   static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>   =09=09=09=09=09   struct pci_dev *bridge, int busnr)
+>   {
+> @@ -923,6 +962,16 @@ static struct pci_bus *pci_alloc_child_bus(struct pc=
+i_bus *parent,
+>   =09pci_set_bus_of_node(child);
+>   =09pci_set_bus_speed(child);
+>  =20
+> +=09/*
+> +=09 * Check whether extended config space is accessible on the child
+> +=09 * bus.  Note that we currently assume it is always accessible on
+> +=09 * the root bus.
+> +=09 */
+> +=09if (!pci_bridge_child_ext_cfg_accessible(bridge)) {
+> +=09=09child->bus_flags |=3D PCI_BUS_FLAGS_NO_EXTCFG;
+> +=09=09pci_info(child, "extended config space not accessible on secondary=
+ bus\n");
+> +=09}
+> +
+>   =09/* Set up default resource pointers and names */
+>   =09for (i =3D 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
+>   =09=09child->resource[i] =3D &bridge->resource[PCI_BRIDGE_RESOURCES+i];
+> @@ -1393,6 +1442,9 @@ int pci_cfg_space_size(struct pci_dev *dev)
+>   =09u32 status;
+>   =09u16 class;
+>  =20
+> +=09if (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG)
+> +=09=09return PCI_CFG_SPACE_SIZE;
+> +
+>   =09class =3D dev->class >> 8;
+>   =09if (class =3D=3D PCI_CLASS_BRIDGE_HOST)
+>   =09=09return pci_cfg_space_size_ext(dev);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 230615620a4a..f7aa6d9f8999 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -217,6 +217,7 @@ enum pci_bus_flags {
+>   =09PCI_BUS_FLAGS_NO_MSI=09=3D (__force pci_bus_flags_t) 1,
+>   =09PCI_BUS_FLAGS_NO_MMRBC=09=3D (__force pci_bus_flags_t) 2,
+>   =09PCI_BUS_FLAGS_NO_AERSID=09=3D (__force pci_bus_flags_t) 4,
+> +=09PCI_BUS_FLAGS_NO_EXTCFG=09=3D (__force pci_bus_flags_t) 8,
+>   };
+>  =20
+>   /* Values from Link Status register, PCIe r3.1, sec 7.8.8 */
 >
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> .
+>
