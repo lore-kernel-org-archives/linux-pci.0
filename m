@@ -1,92 +1,403 @@
-Return-Path: <SRS0=Tmks=H5=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Tmks=H5=deltatee.com=logang@kernel.org>
-To: Stephen Bates <sbates@raithlin.com>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- Jerome Glisse <jglisse@redhat.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
- Bjorn Helgaas <helgaas@kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
- "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
- Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>
-References: <20180423233046.21476-5-logang@deltatee.com>
- <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
- <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
- <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
- <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
- <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
- <20180508133407.57a46902@w520.home>
- <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
- <20180508141331.7cd737cb@w520.home>
- <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
- <20180508205005.GC15608@redhat.com>
- <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
- <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
- <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
- <2fc61d29-9eb4-d168-a3e5-955c36e5d821@amd.com>
- <94C8FE12-7FC3-48BD-9DCA-E6A427E71810@raithlin.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <f0101988-cf82-7ffb-2aca-d3b8d2f4b504@deltatee.com>
-Date: Thu, 10 May 2018 10:32:22 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: <honghui.zhang@mediatek.com>
+To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>
+CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
+        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
+        <xinping.qian@mediatek.com>
+Subject: [PATCH v7 2/2] PCI: mediatek: Using chained IRQ to setup IRQ handle
+Date: Fri, 4 May 2018 13:47:33 +0800
+Message-ID: <1525412853-24367-3-git-send-email-honghui.zhang@mediatek.com>
+In-Reply-To: <1525412853-24367-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1525412853-24367-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <94C8FE12-7FC3-48BD-9DCA-E6A427E71810@raithlin.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
+Using irq_chip solution to setup IRQs in order to consist
+with IRQ framework.
 
-On 10/05/18 08:16 AM, Stephen  Bates wrote:
-> Hi Christian
-> 
->> Why would a switch not identify that as a peer address? We use the PASID 
->>    together with ATS to identify the address space which a transaction 
->>    should use.
-> 
-> I think you are conflating two types of TLPs here. If the device supports ATS then it will issue a TR TLP to obtain a translated address from the IOMMU. This TR TLP will be addressed to the RP and so regardless of ACS it is going up to the Root Port. When it gets the response it gets the physical address and can use that with the TA bit set for the p2pdma. In the case of ATS support we also have more control over ACS as we can disable it just for TA addresses (as per 7.7.7.7.2 of the spec).
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ drivers/pci/host/pcie-mediatek.c | 206 ++++++++++++++++++++++-----------------
+ 1 file changed, 115 insertions(+), 91 deletions(-)
 
-Yes. Remember if we are using the IOMMU the EP is being programmed
-(regardless of whether it's a DMA engine, NTB window or GPUVA) with an
-IOVA address which is separate from the device's PCI bus address. Any
-packet addressed to an IOVA address is going to go back to the root
-complex no matter what the ACS bits say. Only once ATS translates the
-addres back into the PCI bus address will the EP send packets to the
-peer and the switch will attempt to root them to the peer and only then
-do the ACS bits apply. And the direct translated ACS bit allows packets
-that have purportedly been translated through.
-
->  >   If I'm not completely mistaken when you disable ACS it is perfectly 
->  >   possible that a bridge identifies a transaction as belonging to a peer 
->  >   address, which isn't what we want here.
->    
-> You are right here and I think this illustrates a problem for using the IOMMU at all when P2PDMA devices do not support ATS. Let me explain:
-> 
-> If we want to do a P2PDMA and the DMA device does not support ATS then I think we have to disable the IOMMU (something Mike suggested earlier). The reason is that since ATS is not an option the EP must initiate the DMA using the addresses passed down to it. If the IOMMU is on then this is an IOVA that could (with some non-zero probability) point to an IO Memory address in the same PCI domain. So if we disable ACS we are in trouble as we might MemWr to the wrong place but if we enable ACS we lose much of the benefit of P2PDMA. Disabling the IOMMU removes the IOVA risk and ironically also resolves the IOMMU grouping issues.
-> So I think if we want to support performant P2PDMA for devices that don't have ATS (and no NVMe SSDs today support ATS) then we have to disable the IOMMU. I know this is problematic for AMDs use case so perhaps we also need to consider a mode for P2PDMA for devices that DO support ATS where we can enable the IOMMU (but in this case EPs without ATS cannot participate as P2PDMA DMA iniators).
-> 
-> Make sense?
-
-Not to me. In the p2pdma code we specifically program DMA engines with
-the PCI bus address. So regardless of whether we are using the IOMMU or
-not, the packets will be forwarded directly to the peer. If the ACS
-Redir bits are on they will be forced back to the RC by the switch and
-the transaction will fail. If we clear the ACS bits, the TLPs will go
-where we want and everything will work (but we lose the isolation of ACS).
-
-For EPs that support ATS, we should (but don't necessarily have to)
-program them with the IOVA address so they can go through the
-translation process which will allow P2P without disabling the ACS Redir
-bits -- provided the ACS direct translation bit is set. (And btw, if it
-is, then we lose the benefit of ACS protecting against malicious EPs).
-But, per above, the ATS transaction should involve only the IOVA address
-so the ACS bits not being set should not break ATS.
-
-Logan
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index c3dc549..dabf1086 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -11,8 +11,10 @@
+ #include <linux/delay.h>
+ #include <linux/iopoll.h>
+ #include <linux/irq.h>
++#include <linux/irqchip/chained_irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
++#include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/of_platform.h>
+@@ -130,14 +132,12 @@ struct mtk_pcie_port;
+ /**
+  * struct mtk_pcie_soc - differentiate between host generations
+  * @need_fix_class_id: whether this host's class ID needed to be fixed or not
+- * @has_msi: whether this host supports MSI interrupts or not
+  * @ops: pointer to configuration access functions
+  * @startup: pointer to controller setting functions
+  * @setup_irq: pointer to initialize IRQ functions
+  */
+ struct mtk_pcie_soc {
+ 	bool need_fix_class_id;
+-	bool has_msi;
+ 	struct pci_ops *ops;
+ 	int (*startup)(struct mtk_pcie_port *port);
+ 	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
+@@ -161,7 +161,9 @@ struct mtk_pcie_soc {
+  * @lane: lane count
+  * @slot: port slot
+  * @irq_domain: legacy INTx IRQ domain
++ * @inner_domain: inner IRQ domain
+  * @msi_domain: MSI IRQ domain
++ * @lock: protect the msi_irq_in_use bitmap
+  * @msi_irq_in_use: bit map for assigned MSI IRQ
+  */
+ struct mtk_pcie_port {
+@@ -179,7 +181,9 @@ struct mtk_pcie_port {
+ 	u32 lane;
+ 	u32 slot;
+ 	struct irq_domain *irq_domain;
++	struct irq_domain *inner_domain;
+ 	struct irq_domain *msi_domain;
++	struct mutex lock;
+ 	DECLARE_BITMAP(msi_irq_in_use, MTK_MSI_IRQS_NUM);
+ };
+ 
+@@ -446,103 +450,130 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+ 	return 0;
+ }
+ 
+-static int mtk_pcie_msi_alloc(struct mtk_pcie_port *port)
++static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+-	int msi;
++	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
++	phys_addr_t addr;
+ 
+-	msi = find_first_zero_bit(port->msi_irq_in_use, MTK_MSI_IRQS_NUM);
+-	if (msi < MTK_MSI_IRQS_NUM)
+-		set_bit(msi, port->msi_irq_in_use);
+-	else
+-		return -ENOSPC;
++	/* MT2712/MT7622 only support 32-bit MSI addresses */
++	addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
++	msg->address_hi = 0;
++	msg->address_lo = lower_32_bits(addr);
++
++	msg->data = data->hwirq;
+ 
+-	return msi;
++	dev_dbg(port->pcie->dev, "msi#%d address_hi %#x address_lo %#x\n",
++		(int)data->hwirq, msg->address_hi, msg->address_lo);
+ }
+ 
+-static void mtk_pcie_msi_free(struct mtk_pcie_port *port, unsigned long hwirq)
++static int mtk_msi_set_affinity(struct irq_data *irq_data,
++				const struct cpumask *mask, bool force)
+ {
+-	clear_bit(hwirq, port->msi_irq_in_use);
++	 return -EINVAL;
+ }
+ 
+-static int mtk_pcie_msi_setup_irq(struct msi_controller *chip,
+-				  struct pci_dev *pdev, struct msi_desc *desc)
++static void mtk_msi_ack_irq(struct irq_data *data)
+ {
+-	struct mtk_pcie_port *port;
+-	struct msi_msg msg;
+-	unsigned int irq;
+-	int hwirq;
+-	phys_addr_t msg_addr;
++	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
++	u32 hwirq = data->hwirq;
+ 
+-	port = mtk_pcie_find_port(pdev->bus, pdev->devfn);
+-	if (!port)
+-		return -EINVAL;
++	writel(1 << hwirq, port->base + PCIE_IMSI_STATUS);
++}
+ 
+-	hwirq = mtk_pcie_msi_alloc(port);
+-	if (hwirq < 0)
+-		return hwirq;
++static struct irq_chip mtk_msi_bottom_irq_chip = {
++	.name			= "MTK MSI",
++	.irq_compose_msi_msg	= mtk_compose_msi_msg,
++	.irq_set_affinity	= mtk_msi_set_affinity,
++	.irq_ack		= mtk_msi_ack_irq,
++};
+ 
+-	irq = irq_create_mapping(port->msi_domain, hwirq);
+-	if (!irq) {
+-		mtk_pcie_msi_free(port, hwirq);
+-		return -EINVAL;
+-	}
++static int mtk_pcie_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
++				     unsigned int nr_irqs, void *args)
++{
++	struct mtk_pcie_port *port = domain->host_data;
++	unsigned long bit;
+ 
+-	chip->dev = &pdev->dev;
++	WARN_ON(nr_irqs != 1);
++	mutex_lock(&port->lock);
+ 
+-	irq_set_msi_desc(irq, desc);
++	bit = find_first_zero_bit(port->msi_irq_in_use, MTK_MSI_IRQS_NUM);
++	if (bit >= MTK_MSI_IRQS_NUM) {
++		mutex_unlock(&port->lock);
++		return -ENOSPC;
++	}
+ 
+-	/* MT2712/MT7622 only support 32-bit MSI addresses */
+-	msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
+-	msg.address_hi = 0;
+-	msg.address_lo = lower_32_bits(msg_addr);
+-	msg.data = hwirq;
++	__set_bit(bit, port->msi_irq_in_use);
++
++	mutex_unlock(&port->lock);
+ 
+-	pci_write_msi_msg(irq, &msg);
++	irq_domain_set_info(domain, virq, bit, &mtk_msi_bottom_irq_chip,
++			    domain->host_data, handle_edge_irq,
++			    NULL, NULL);
+ 
+ 	return 0;
+ }
+ 
+-static void mtk_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
++static void mtk_pcie_irq_domain_free(struct irq_domain *domain,
++				     unsigned int virq, unsigned int nr_irqs)
+ {
+-	struct pci_dev *pdev = to_pci_dev(chip->dev);
+-	struct irq_data *d = irq_get_irq_data(irq);
+-	irq_hw_number_t hwirq = irqd_to_hwirq(d);
+-	struct mtk_pcie_port *port;
++	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
++	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(d);
+ 
+-	port = mtk_pcie_find_port(pdev->bus, pdev->devfn);
+-	if (!port)
+-		return;
++	mutex_lock(&port->lock);
++
++	if (!test_bit(d->hwirq, port->msi_irq_in_use))
++		dev_err(port->pcie->dev, "trying to free unused MSI#%lu\n",
++			d->hwirq);
++	else
++		__clear_bit(d->hwirq, port->msi_irq_in_use);
++
++	mutex_unlock(&port->lock);
+ 
+-	irq_dispose_mapping(irq);
+-	mtk_pcie_msi_free(port, hwirq);
++	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+ }
+ 
+-static struct msi_controller mtk_pcie_msi_chip = {
+-	.setup_irq = mtk_pcie_msi_setup_irq,
+-	.teardown_irq = mtk_msi_teardown_irq,
++static const struct irq_domain_ops msi_domain_ops = {
++	.alloc	= mtk_pcie_irq_domain_alloc,
++	.free	= mtk_pcie_irq_domain_free,
+ };
+ 
+ static struct irq_chip mtk_msi_irq_chip = {
+-	.name = "MTK PCIe MSI",
+-	.irq_enable = pci_msi_unmask_irq,
+-	.irq_disable = pci_msi_mask_irq,
+-	.irq_mask = pci_msi_mask_irq,
+-	.irq_unmask = pci_msi_unmask_irq,
++	.name		= "MTK PCIe MSI",
++	.irq_ack	= irq_chip_ack_parent,
++	.irq_mask	= pci_msi_mask_irq,
++	.irq_unmask	= pci_msi_unmask_irq,
+ };
+ 
+-static int mtk_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+-			    irq_hw_number_t hwirq)
++static struct msi_domain_info mtk_msi_domain_info = {
++	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
++		   MSI_FLAG_PCI_MSIX),
++	.chip	= &mtk_msi_irq_chip,
++};
++
++static int mtk_pcie_allocate_msi_domains(struct mtk_pcie_port *port)
+ {
+-	irq_set_chip_and_handler(irq, &mtk_msi_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
++	struct fwnode_handle *fwnode = of_node_to_fwnode(port->pcie->dev->of_node);
++
++	mutex_init(&port->lock);
++
++	port->inner_domain = irq_domain_create_linear(fwnode, MTK_MSI_IRQS_NUM,
++						      &msi_domain_ops, port);
++	if (!port->inner_domain) {
++		dev_err(port->pcie->dev, "failed to create IRQ domain\n");
++		return -ENOMEM;
++	}
++
++	port->msi_domain = pci_msi_create_irq_domain(fwnode, &mtk_msi_domain_info,
++						     port->inner_domain);
++	if (!port->msi_domain) {
++		dev_err(port->pcie->dev, "failed to create MSI domain\n");
++		irq_domain_remove(port->inner_domain);
++		return -ENOMEM;
++	}
+ 
+ 	return 0;
+ }
+ 
+-static const struct irq_domain_ops msi_domain_ops = {
+-	.map = mtk_pcie_msi_map,
+-};
+-
+ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+ {
+ 	u32 val;
+@@ -575,6 +606,7 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+ {
+ 	struct device *dev = port->pcie->dev;
+ 	struct device_node *pcie_intc_node;
++	int ret;
+ 
+ 	/* Setup INTx */
+ 	pcie_intc_node = of_get_next_child(node, NULL);
+@@ -591,27 +623,28 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+ 	}
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
+-							 &msi_domain_ops,
+-							 &mtk_pcie_msi_chip);
+-		if (!port->msi_domain) {
+-			dev_err(dev, "failed to create MSI IRQ domain\n");
+-			return -ENODEV;
+-		}
++		ret = mtk_pcie_allocate_msi_domains(port);
++		if (ret)
++			return ret;
++
+ 		mtk_pcie_enable_msi(port);
+ 	}
+ 
+ 	return 0;
+ }
+ 
+-static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
++static void mtk_pcie_intr_handler(struct irq_desc *desc)
+ {
+-	struct mtk_pcie_port *port = (struct mtk_pcie_port *)data;
++	struct mtk_pcie_port *port = irq_desc_get_handler_data(desc);
++	struct irq_chip *irqchip = irq_desc_get_chip(desc);
+ 	unsigned long status;
+ 	u32 virq;
+ 	u32 bit = INTX_SHIFT;
+ 
+-	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
++	chained_irq_enter(irqchip, desc);
++
++	status = readl(port->base + PCIE_INT_STATUS);
++	if (status & INTX_MASK) {
+ 		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
+ 			/* Clear the INTx */
+ 			writel(1 << bit, port->base + PCIE_INT_STATUS);
+@@ -622,14 +655,12 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+ 	}
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		while ((status = readl(port->base + PCIE_INT_STATUS)) & MSI_STATUS) {
++		if (status & MSI_STATUS){
+ 			unsigned long imsi_status;
+ 
+ 			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
+ 				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
+-					/* Clear the MSI */
+-					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
+-					virq = irq_find_mapping(port->msi_domain, bit);
++					virq = irq_find_mapping(port->inner_domain, bit);
+ 					generic_handle_irq(virq);
+ 				}
+ 			}
+@@ -638,7 +669,9 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+ 		}
+ 	}
+ 
+-	return IRQ_HANDLED;
++	chained_irq_exit(irqchip, desc);
++
++	return;
+ }
+ 
+ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
+@@ -649,20 +682,15 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	int err, irq;
+ 
+-	irq = platform_get_irq(pdev, port->slot);
+-	err = devm_request_irq(dev, irq, mtk_pcie_intr_handler,
+-			       IRQF_SHARED, "mtk-pcie", port);
+-	if (err) {
+-		dev_err(dev, "unable to request IRQ %d\n", irq);
+-		return err;
+-	}
+-
+ 	err = mtk_pcie_init_irq_domain(port, node);
+ 	if (err) {
+ 		dev_err(dev, "failed to init PCIe IRQ domain\n");
+ 		return err;
+ 	}
+ 
++	irq = platform_get_irq(pdev, port->slot);
++	irq_set_chained_handler_and_data(irq, mtk_pcie_intr_handler, port);
++
+ 	return 0;
+ }
+ 
+@@ -1096,8 +1124,6 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
+ 	host->map_irq = of_irq_parse_and_map_pci;
+ 	host->swizzle_irq = pci_common_swizzle;
+ 	host->sysdata = pcie;
+-	if (IS_ENABLED(CONFIG_PCI_MSI) && pcie->soc->has_msi)
+-		host->msi = &mtk_pcie_msi_chip;
+ 
+ 	err = pci_scan_root_bus_bridge(host);
+ 	if (err < 0)
+@@ -1159,7 +1185,6 @@ static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
+ };
+ 
+ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
+-	.has_msi = true,
+ 	.ops = &mtk_pcie_ops_v2,
+ 	.startup = mtk_pcie_startup_port_v2,
+ 	.setup_irq = mtk_pcie_setup_irq,
+@@ -1167,7 +1192,6 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
+ 
+ static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
+ 	.need_fix_class_id = true,
+-	.has_msi = true,
+ 	.ops = &mtk_pcie_ops_v2,
+ 	.startup = mtk_pcie_startup_port_v2,
+ 	.setup_irq = mtk_pcie_setup_irq,
+-- 
+2.6.4
