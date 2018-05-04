@@ -1,93 +1,73 @@
-Return-Path: <SRS0=5vAC=IL=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=5vAC=IL=codeaurora.org=okaya@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 24 May 2018 09:35:57 -0400
-From: okaya@codeaurora.org
+Return-Path: <SRS0=Iw/I=HX=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=Iw/I=HX=h08.hostsharing.net=foo00@kernel.org>
+Date: Fri, 4 May 2018 09:18:27 +0200
+From: Lukas Wunner <lukas@wunner.de>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, ryan@finnie.org,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J.
- Wysocki" <rafael.j.wysocki@intel.com>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, Kate
- Stewart <kstewart@linuxfoundation.org>, Frederick Lawler
- <fred@fredlawl.com>, Dongdong Liu <liudongdong3@huawei.com>, Mika Westerberg
- <mika.westerberg@linux.intel.com>, open list <linux-kernel@vger.kernel.org>,
- Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com,
- linux-scsi@vger.kernel.org
-Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
-In-Reply-To: <20180524130727.GA85822@bhelgaas-glaptop.roam.corp.google.com>
-References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
- <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
- <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
- <82656e20-e821-1944-3399-1667ceb27719@codeaurora.org>
- <20180524130727.GA85822@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <24846c30ceab15075205b34305b97ba8@codeaurora.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+	Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <YehezkelShB@gmail.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v5 3/9] PCI: pciehp: Clear Presence Detect and Data Link
+ Layer Status Changed on resume
+Message-ID: <20180504071827.GA10888@wunner.de>
+References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
+ <20180416103453.46232-4-mika.westerberg@linux.intel.com>
+ <20180501215211.GD11698@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180501215211.GD11698@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-24 09:07, Bjorn Helgaas wrote:
-> On Thu, May 24, 2018 at 07:43:05AM -0400, Sinan Kaya wrote:
->> On 5/23/2018 6:57 PM, Sinan Kaya wrote:
->> >> The crash seems to indicate that the hpsa device attempted a DMA after
->> >> we cleared the Root Port's PCI_COMMAND_MASTER, which means
->> >> hpsa_shutdown() didn't stop DMA from the device (it looks like *most*
->> >> shutdown methods don't disable device DMA, so it's in good company).
->> > All drivers are expected to shutdown DMA and interrupts in their shutdown()
->> > routines. They can skip removing threads, data structures etc. but DMA and
->> > interrupt disabling are required. This is the difference between shutdown()
->> > and remove() callbacks.
->> 
->> I found this note yesterday to see why we are not disabling the
->> devices in the PCI core itself.
->> 
->> pci_device_remove()
->> 
->> 	/*
->> 	 * We would love to complain here if pci_dev->is_enabled is set, that
->> 	 * the driver should have called pci_disable_device(), but the
->> 	 * unfortunate fact is there are too many odd BIOS and bridge setups
->> 	 * that don't like drivers doing that all of the time.
->> 	 * Oh well, we can dream of sane hardware when we sleep, no matter 
->> how
->> 	 * horrible the crap we have to deal with is when we are awake...
->> 	 */
->> 
->> Ryan, can you discard the previous patch and test this one instead?
->> remove() path in hpsa driver seems to call pci_disable_device() via
->> 
->> hpsa_remove_one()
->> 	hpsa_free_pci_init()
->> 
->> but nothing on the shutdown path.
->> 
->> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
->> index 4ed3d26..3823f04 100644
->> --- a/drivers/scsi/hpsa.c
->> +++ b/drivers/scsi/hpsa.c
->> @@ -8651,6 +8651,7 @@ static void hpsa_shutdown(struct pci_dev *pdev)
->>         h->access.set_intr_mask(h, HPSA_INTR_OFF);
->>         hpsa_free_irqs(h);                      /* init_one 4 */
->>         hpsa_disable_interrupt_mode(h);         /* pci_init 2 */
->> +       pci_disable_device(h->pdev);
->>  }
+On Tue, May 01, 2018 at 04:52:11PM -0500, Bjorn Helgaas wrote:
+> On Mon, Apr 16, 2018 at 01:34:47PM +0300, Mika Westerberg wrote:
+> > After suspend/resume cycle the Presence Detect or Data Link Layer Status
+> > Changed bits might be set and if we don't clear them those events will
+> > not fire anymore and nothing happens for instance when a device is now
+> > hot-unplugged.
+> > 
+> > Fix this by clearing those bits in a newly introduced function
+> > pcie_reenable_notification(). This should be fine because immediately
+> > after we check if the adapter is still present by reading directly from
+> > the status register.
 > 
-> I suspect this will make things "work" (if the device can't attempt
-> DMA, no Unsupported Request error will occur).
+> I want to understand why we need to handle this differently between
+> the boot-time probe path and the resume path.
 > 
-> But I'm concerned that the reason for the DMA might that hpsa is
-> transferring buffers from system memory to the hpsa device, and if we
-> arbitrarily terminate those transfers with pci_disable_device(), we
-> may leave the hpsa device in an inconsistent state, e.g., with a dirty
-> filesystem.
+> This patch clears PCI_EXP_SLTSTA_PDC and PCI_EXP_SLTSTA_DLLSC in the
+> resume path:
 > 
-> But we really need guidance from an hpsa expert.  I don't know the
-> filesystem/SCSI/hpsa details.
+>   pciehp_resume
+>     pcie_reenable_notification
+>       # clear PDC DLLSC
+>       pcie_enable_notification
+>         # set DLLSCE ABPE/PDCE HPIE CCIE
+>     pciehp_get_adapter_status
+>       # read PCI_EXP_SLTSTA
 
-Agreed,
+The Slot Control register is already written during the ->resume_noirq
+phase via:
 
-We can drop shutdown and use the remove callback. Remove is supposed to 
-do a safe cleanup.
+  pci_pm_resume_noirq
+    pci_pm_default_resume_early
+    pci_restore_state
+      pci_restore_pcie_state
 
-> 
-> Bjorn
+>From that point on, slot events are enabled, but they're not received
+because interrupts are disabled until the ->resume_early phase commences.
+
+My guess is that if the hotplug port uses edge-triggered MSI/MSI-X,
+an interrupt may have already been sent during ->resume_noirq, but
+was lost because interrupts were disabled.  Clearing the Slot Status
+register thus acknowledges any lost interrupts.
+
+If this theory is correct, it should probably be included in the
+commit message and/or a code comment so that it's clear what's
+going on.
+
+Thanks,
+
+Lukas
