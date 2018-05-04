@@ -1,138 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:53187 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752387AbeEOJMk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2018 05:12:40 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-        Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v6 03/12] PCI: Request control of native PCIe hotplug only if supported
-Date: Tue, 15 May 2018 11:12:09 +0200
-Message-ID: <2185337.o0mYYtHL4u@aspire.rjw.lan>
-In-Reply-To: <20180510182844.77349-4-mika.westerberg@linux.intel.com>
-References: <20180510182844.77349-1-mika.westerberg@linux.intel.com> <20180510182844.77349-4-mika.westerberg@linux.intel.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:56462 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751454AbeEDQ3j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 May 2018 12:29:39 -0400
+Date: Fri, 4 May 2018 17:29:32 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jia-Ju Bai <baijiaju1990@gmail.com>, kishon@ti.com
+Cc: bhelgaas@google.com, nsekhar@ti.com, john@metanate.com,
+        shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: endpoint: Replace mdelay with usleep_range in
+ pci_epf_test_write
+Message-ID: <20180504162932.GA16953@e107981-ln.cambridge.arm.com>
+References: <1523365446-31563-1-git-send-email-baijiaju1990@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1523365446-31563-1-git-send-email-baijiaju1990@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, May 10, 2018 8:28:35 PM CEST Mika Westerberg wrote:
-> Currently we request control of native PCIe hotplug unconditionally.
-> That may cause problems because native PCIe hotplug events are handled
-> by pciehp driver and if it is not enabled those events will be lost.
-> Make this bit more robust and request control of native PCIe hotplug
-> only if we are actually prepared to do so (pciehp driver is enabled).
+On Tue, Apr 10, 2018 at 09:04:06PM +0800, Jia-Ju Bai wrote:
+> pci_epf_test_write() is never called in atomic context.
 > 
-> While there rename host->native_hotplug to host->native_pcie_hotplug
-> because we do the same for SHPC hotplug in subsequent patches.
+> The call chain ending up at pci_epf_test_write() is:
+> [1] pci_epf_test_write() <- pci_epf_test_cmd_handler()
 > 
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> pci_epf_test_cmd_handler() is set as a parameter of INIT_DELAYED_WORK() 
+> in pci_epf_test_probe().
+> This function is not called in atomic context.
+> 
+> Despite never getting called from atomic context, pci_epf_test_write()
+> calls mdelay() to busily wait.
+> This is not necessary and can be replaced with usleep_range() to
+> avoid busy waiting.
+> 
+> This is found by a static analysis tool named DCNS written by myself.
+> And I also manually check it.
+> 
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 > ---
->  drivers/acpi/pci_root.c         | 6 ++++--
->  drivers/pci/pcie/portdrv_core.c | 2 +-
->  drivers/pci/probe.c             | 2 +-
->  include/linux/pci.h             | 2 +-
->  include/linux/pci_hotplug.h     | 7 +++++++
->  5 files changed, 14 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 0da18bde6a16..97590dff6bd8 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -29,6 +29,7 @@
->  #include <linux/pci.h>
->  #include <linux/pci-acpi.h>
->  #include <linux/pci-aspm.h>
-> +#include <linux/pci_hotplug.h>
->  #include <linux/dmar.h>
->  #include <linux/acpi.h>
->  #include <linux/slab.h>
-> @@ -472,9 +473,10 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
->  	}
->  
->  	control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
-> -		| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
->  		| OSC_PCI_EXPRESS_PME_CONTROL;
->  
-> +	if (pciehp_available())
-> +		control |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
->  	if (pci_aer_available()) {
->  		if (aer_acpi_firmware_first())
->  			dev_info(&device->dev,
-> @@ -900,7 +902,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
->  
->  	host_bridge = to_pci_host_bridge(bus->bridge);
->  	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> -		host_bridge->native_hotplug = 0;
-> +		host_bridge->native_pcie_hotplug = 0;
->  	if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
->  		host_bridge->native_aer = 0;
->  	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index c9c0663db282..6cb30aec2452 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -199,7 +199,7 @@ static int get_port_device_capability(struct pci_dev *dev)
->  	int services = 0;
->  
->  	if (dev->is_hotplug_bridge &&
-> -	    (pcie_ports_native || host->native_hotplug)) {
-> +	    (pcie_ports_native || host->native_pcie_hotplug)) {
->  		services |= PCIE_PORT_SERVICE_HP;
->  
->  		/*
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 7c34a2ccb514..a6c3b8d30f8f 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -552,7 +552,7 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
->  	 * OS from interfering.
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+
+I'd request Kishon's ACK on this.
+
+Thanks,
+Lorenzo
+
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index f9308c2..2f0642e 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -237,7 +237,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+>  	 * wait 1ms inorder for the write to complete. Without this delay L3
+>  	 * error in observed in the host system.
 >  	 */
->  	bridge->native_aer = 1;
-> -	bridge->native_hotplug = 1;
-> +	bridge->native_pcie_hotplug = 1;
->  	bridge->native_pme = 1;
+> -	mdelay(1);
+> +	usleep_range(1000, 2000);
 >  
->  	return bridge;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 73178a2fcee0..359a197d0310 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -471,7 +471,7 @@ struct pci_host_bridge {
->  	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
->  	unsigned int	no_ext_tags:1;		/* No Extended Tags */
->  	unsigned int	native_aer:1;		/* OS may use PCIe AER */
-> -	unsigned int	native_hotplug:1;	/* OS may use PCIe hotplug */
-> +	unsigned int	native_pcie_hotplug:1;	/* OS may use PCIe hotplug */
->  	unsigned int	native_pme:1;		/* OS may use PCIe PME */
->  	/* Resource alignment requirements */
->  	resource_size_t (*align_resource)(struct pci_dev *dev,
-> diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-> index 26213024e81b..46fb90b5164b 100644
-> --- a/include/linux/pci_hotplug.h
-> +++ b/include/linux/pci_hotplug.h
-> @@ -174,4 +174,11 @@ static inline int pci_get_hp_params(struct pci_dev *dev,
->  }
->  static inline bool pciehp_is_native(struct pci_dev *pdev) { return true; }
->  #endif
-> +
-> +#ifdef CONFIG_HOTPLUG_PCI_PCIE
-> +#define pciehp_available()	true
-> +#else
-> +#define pciehp_available()	false
-> +#endif
-> +
->  #endif
+>  	kfree(buf);
+>  
+> -- 
+> 1.9.1
 > 
-
-Modulo the Lucas' comment on using IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE)
-directly instead of the above:
-
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
