@@ -1,433 +1,295 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33840 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750824AbeEFGbi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 6 May 2018 02:31:38 -0400
-Date: Sun, 6 May 2018 14:31:32 +0800
-From: Baoquan He <bhe@redhat.com>
-To: kbuild test robot <lkp@intel.com>
-Cc: kbuild-all@01.org, linux-kernel@vger.kernel.org,
-        akpm@linux-foundation.org, robh+dt@kernel.org,
-        dan.j.williams@intel.com, nicolas.pitre@linaro.org,
-        josh@joshtriplett.org, Brijesh Singh <brijesh.singh@amd.com>,
-        devicetree@vger.kernel.org, David Airlie <airlied@linux.ie>,
-        linux-pci@vger.kernel.org, Wei Yang <richard.weiyang@gmail.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yaowei Bai <baiyaowei@cmss.chinamobile.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        linux-nvdimm@lists.01.org,
-        Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
-        linux-input@vger.kernel.org, Borislav Petkov <bp@suse.de>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        devel@linuxdriverproject.org
-Subject: Re: [PATCH v3 1/3] resource: Use list_head to link sibling resource
-Message-ID: <20180506063132.GH19030@localhost.localdomain>
-References: <20180419001848.3041-2-bhe@redhat.com>
- <201804261045.v9iHAD1T%fengguang.wu@intel.com>
+Received: from mail.kernel.org ([198.145.29.99]:48376 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751172AbeEDNda (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 May 2018 09:33:30 -0400
+Date: Fri, 4 May 2018 08:33:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: okaya@codeaurora.org
+Cc: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+Message-ID: <20180504133327.GF15790@bhelgaas-glaptop.roam.corp.google.com>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+ <43b8ab4a-f8ee-dc96-40ec-e6fdfedd8309@molgen.mpg.de>
+ <20180504024527.GE15790@bhelgaas-glaptop.roam.corp.google.com>
+ <aa72d3ba089c76449600c22b58a2cafe@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201804261045.v9iHAD1T%fengguang.wu@intel.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <aa72d3ba089c76449600c22b58a2cafe@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/26/18 at 11:01am, kbuild test robot wrote:
-> Hi Baoquan,
-> 
-> I love your patch! Yet something to improve:
-> 
-> [auto build test ERROR on linus/master]
-> [also build test ERROR on v4.17-rc2 next-20180424]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180419-223752
-> config: microblaze-mmu_defconfig (attached as .config)
-> compiler: microblaze-linux-gcc (GCC) 7.2.0
-> reproduce:
->         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=microblaze 
-> 
-> All errors (new ones prefixed by >>):
+On Fri, May 04, 2018 at 07:37:40AM +0100, okaya@codeaurora.org wrote:
+> On 2018-05-04 03:45, Bjorn Helgaas wrote:
+> > On Thu, May 03, 2018 at 10:49:24AM +0200, Paul Menzel wrote:
+> > > On 04/27/18 21:22, Bjorn Helgaas wrote:
+> > > > [+cc Lukas, Sinan]
+> > > 
+> > > > On Thu, Apr 26, 2018 at 12:17:53PM +0200, Paul Menzel wrote:
+> > > 
+> > > > > On the Lenovo X60t, during resume from ACPI suspend and during shutdown, the
+> > > > > message below is shown in the logs.
+> > > > >
+> > > > >      pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038 (issued
+> > > > > 65284 msec ago)
+> > > >
+> > > > This is an Intel root port:
+> > > >
+> > > >    00:1c.0 PCI bridge: Intel Corporation NM10/ICH7 Family PCI Express Port 1 (rev 02) (prog-if 00 [Normal decode])
+> > > >
+> > > > and probably has the CF118 erratum (see
+> > > > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3461a068661c
+> > > > for details).  I bet if you changed "msecs" in pcie_wait_cmd() to 30000
+> > > > you'd see a 30 second delay during shutdown because we write a command to
+> > > > tell the port not to generate any more hotplug interrupts, and we wait for
+> > > > that command to complete, but the port never tells us it has completed.
+> > > >
+> > > > Lukas reported a similar issue in
+> > > > https://lkml.kernel.org/r/20180112104929.GA10599@wunner.de, which we sort
+> > > > of worked around by assuming that Thunderbolt controllers never support
+> > > > that "command complete" interrupt (see
+> > > > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=493fb50e958c)
+> > > >
+> > > > Sinan mooted the idea of using a "no-wait" path of sending the "don't
+> > > > generate hotplug interrupts" command.  I think we should work on this
+> > > > idea a little more.  If we're shutting down the whole system, I can't
+> > > > believe there's much value in *anything* we do in the pciehp_remove()
+> > > > path.
+> > > >
+> > > > Maybe we should just get rid of pciehp_remove() (and probably
+> > > > pcie_port_remove_service() and the other service driver remove methods)
+> > > > completely.  That dates from when the service drivers could be modules that
+> > > > could be potentially unloaded, but unloading them hasn't been possible for
+> > > > years.
+> > > >
+> > > > As far as the resume path, my guess is that in pciehp_resume(), we
+> > > > write a command to enable interrupts, then it looks like we get a
+> > > > PCI_EXP_SLTSTA_DLLSC "Link Up" interrupt, and apparently we issue
+> > > > another command.  Not sure exactly what's going on here.
+> > 
+> > > Thank you for the quick reply and sorry for only being able to test
+> > > it now.
+> > > Please find the relevant bits from the ACPI S3 suspend “action”
+> > > below. The
+> > > full log is attached.
+> > 
+> > No problem.  I think we need to bite the bullet and just do a quirk
+> > for the Intel erratum.  I tried to avoid it by waiting for command
+> > completion lazily, but I think that ended up being unnecessarily
+> > clever and it didn't even solve the whole problem.
+> > 
+> > Can you try the patch below?  I think it should solve the problem
+> > you're seeing.
+> > ...
 
-Thanks, below patch can fix it. Will repost including the fix.
+> > +	/* Assume all Intel controllers have erratum CF118 */
+> > +	if (pdev->vendor == PCI_VENDOR_ID_INTEL)
+> > +		ctrl->cc_erratum = 1;
+> > +
+> 
+> Can we build a table like quirks.c?
+> 
+> Qdf2400 root ports have the same problem. I will do a follow up patch once
+> this finds its way in.
+
+Yes, definitely.  I intended to do that but got a little lazy.  What
+do you think about the following?  Paul, if you haven't tested the
+first patch, can you try this one instead?  The logic is pretty much
+the same.
+
+3461a068661c ("PCI: pciehp: Wait for hotplug command completion
+lazily") mentions AMD and Nvidia devices with the same issue, but
+unfortunately doesn't include any specifics.
 
 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 161f9758c631..56d189cb4be4 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -533,7 +533,9 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 			res->flags = range.flags;
- 			res->start = range.cpu_addr;
- 			res->end = range.cpu_addr + range.size - 1;
--			res->parent = res->child = res->sibling = NULL;
-+			res->parent = NULL;
-+			INIT_LIST_HEAD(&res->child);
-+			INIT_LIST_HEAD(&res->sibling);
- 		}
- 	}
+commit b0d6f2230e12c85ae3b65a854a53c67c7c1f6406
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu May 3 18:39:38 2018 -0500
+
+    PCI: pciehp: Add quirk for Intel Command Completed erratum
+    
+    The Intel CF118 erratum means the controller does not set the Command
+    Completed bit unless writes to the Slot Command register change "Control"
+    bits.  Command Completed is never set for writes that only change software
+    notification "Enable" bits.  This results in timeouts like this:
+    
+      pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038 (issued 65284 msec ago)
+    
+    When this erratum is present, avoid these timeouts by marking commands
+    "completed" immediately unless they change the "Control" bits.
+    
+    Here's the text of the erratum from the Intel document:
+    
+      CF118        PCIe Slot Status Register Command Completed bit not always
+                   updated on any configuration write to the Slot Control
+                   Register
+    
+      Problem:     For PCIe root ports (devices 0 - 10) supporting hot-plug,
+                   the Slot Status Register (offset AAh) Command Completed
+                   (bit[4]) status is updated under the following condition:
+                   IOH will set Command Completed bit after delivering the new
+                   commands written in the Slot Controller register (offset
+                   A8h) to VPP. The IOH detects new commands written in Slot
+                   Control register by checking the change of value for Power
+                   Controller Control (bit[10]), Power Indicator Control
+                   (bits[9:8]), Attention Indicator Control (bits[7:6]), or
+                   Electromechanical Interlock Control (bit[11]) fields. Any
+                   other configuration writes to the Slot Control register
+                   without changing the values of these fields will not cause
+                   Command Completed bit to be set.
+    
+                   The PCIe Base Specification Revision 2.0 or later describes
+                   the “Slot Control Register” in section 7.8.10, as follows
+                   (Reference section 7.8.10, Slot Control Register, Offset
+                   18h). In hot-plug capable Downstream Ports, a write to the
+                   Slot Control register must cause a hot-plug command to be
+                   generated (see Section 6.7.3.2 for details on hot-plug
+                   commands). A write to the Slot Control register in a
+                   Downstream Port that is not hotplug capable must not cause a
+                   hot-plug command to be executed.
+    
+                   The PCIe Spec intended that every write to the Slot Control
+                   Register is a command and expected a command complete status
+                   to abstract the VPP implementation specific nuances from the
+                   OS software. IOH PCIe Slot Control Register implementation
+                   is not fully conforming to the PCIe Specification in this
+                   respect.
+    
+      Implication: Software checking on the Command Completed status after
+                   writing to the Slot Control register may time out.
+    
+      Workaround:  Software can read the Slot Control register and compare the
+                   existing and new values to determine if it should check the
+                   Command Completed status after writing to the Slot Control
+                   register.
+    
+    Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
+    Link: https://lkml.kernel.org/r/8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de
+    Reported-by: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 18a42f8f5dc5..e70eba5ea906 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -10,7 +10,6 @@
+  * All rights reserved.
+  *
+  * Send feedback to <greg@kroah.com>,<kristen.c.accardi@intel.com>
+- *
+  */
  
-@@ -625,28 +627,31 @@ EXPORT_SYMBOL(pcibios_add_device);
- static int __init reparent_resources(struct resource *parent,
- 				     struct resource *res)
- {
--	struct resource *p, **pp;
--	struct resource **firstpp = NULL;
-+	struct resource *p, *first = NULL;
+ #include <linux/kernel.h>
+@@ -147,25 +146,22 @@ static void pcie_wait_cmd(struct controller *ctrl)
+ 	else
+ 		rc = pcie_poll_cmd(ctrl, jiffies_to_msecs(timeout));
  
--	for (pp = &parent->child; (p = *pp) != NULL; pp = &p->sibling) {
-+	list_for_each_entry(p, &parent->child, sibling) {
- 		if (p->end < res->start)
- 			continue;
- 		if (res->end < p->start)
- 			break;
- 		if (p->start < res->start || p->end > res->end)
- 			return -1;	/* not completely contained */
--		if (firstpp == NULL)
--			firstpp = pp;
-+		if (first == NULL)
-+			first = p;
- 	}
--	if (firstpp == NULL)
-+	if (first == NULL)
- 		return -1;	/* didn't find any conflicting entries? */
- 	res->parent = parent;
--	res->child = *firstpp;
--	res->sibling = *pp;
--	*firstpp = res;
--	*pp = NULL;
--	for (p = res->child; p != NULL; p = p->sibling) {
--		p->parent = res;
-+	list_add(&res->sibling, &p->sibling.prev);
-+	INIT_LIST_HEAD(&res->child);
+-	/*
+-	 * Controllers with errata like Intel CF118 don't generate
+-	 * completion notifications unless the power/indicator/interlock
+-	 * control bits are changed.  On such controllers, we'll emit this
+-	 * timeout message when we wait for completion of commands that
+-	 * don't change those bits, e.g., commands that merely enable
+-	 * interrupts.
+-	 */
+ 	if (!rc)
+ 		ctrl_info(ctrl, "Timeout on hotplug command %#06x (issued %u msec ago)\n",
+ 			  ctrl->slot_ctrl,
+ 			  jiffies_to_msecs(jiffies - ctrl->cmd_started));
+ }
+ 
++#define CC_ERRATUM_MASK		(PCI_EXP_SLTCTL_PCC |	\
++				 PCI_EXP_SLTCTL_PIC |	\
++				 PCI_EXP_SLTCTL_AIC |	\
++				 PCI_EXP_SLTCTL_EIC)
 +
+ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
+ 			      u16 mask, bool wait)
+ {
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+-	u16 slot_ctrl;
++	u16 slot_ctrl_orig, slot_ctrl;
+ 
+ 	mutex_lock(&ctrl->ctrl_lock);
+ 
+@@ -180,6 +176,7 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
+ 		goto out;
+ 	}
+ 
++	slot_ctrl_orig = slot_ctrl;
+ 	slot_ctrl &= ~mask;
+ 	slot_ctrl |= (cmd & mask);
+ 	ctrl->cmd_busy = 1;
+@@ -188,6 +185,17 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
+ 	ctrl->cmd_started = jiffies;
+ 	ctrl->slot_ctrl = slot_ctrl;
+ 
 +	/*
-+	 * From first to p's previous sibling, they all fall into
-+	 * res's region, change them as res's children.
++	 * Controllers with the Intel CF118 and similar errata advertise
++	 * Command Completed support, but they only set Command Completed
++	 * if we change the "Control" bits for power, power indicator,
++	 * attention indicator, or interlock.  If we only change the
++	 * "Enable" bits, they never set the Command Completed bit.
 +	 */
-+	list_cut_position(&res->child, first->sibling.prev, res->sibling.prev);
-+	list_for_each_entry(p, &new->child, sibling) {
-+                p->parent = new;
- 		pr_debug("PCI: Reparented %s [%llx..%llx] under %s\n",
- 			 p->name,
- 			 (unsigned long long)p->start,
-
-> 
->    arch/microblaze/pci/pci-common.c: In function 'pci_process_bridge_OF_ranges':
-> >> arch/microblaze/pci/pci-common.c:536:44: error: incompatible types when assigning to type 'struct list_head' from type 'void *'
->        res->parent = res->child = res->sibling = NULL;
->                                                ^
->    arch/microblaze/pci/pci-common.c: In function 'reparent_resources':
-> >> arch/microblaze/pci/pci-common.c:631:10: error: assignment from incompatible pointer type [-Werror=incompatible-pointer-types]
->      for (pp = &parent->child; (p = *pp) != NULL; pp = &p->sibling) {
->              ^
->    arch/microblaze/pci/pci-common.c:631:50: error: assignment from incompatible pointer type [-Werror=incompatible-pointer-types]
->      for (pp = &parent->child; (p = *pp) != NULL; pp = &p->sibling) {
->                                                      ^
-> >> arch/microblaze/pci/pci-common.c:644:13: error: incompatible types when assigning to type 'struct list_head' from type 'struct resource *'
->      res->child = *firstpp;
->                 ^
->    arch/microblaze/pci/pci-common.c:645:15: error: incompatible types when assigning to type 'struct list_head' from type 'struct resource *'
->      res->sibling = *pp;
->                   ^
-> >> arch/microblaze/pci/pci-common.c:648:9: error: incompatible types when assigning to type 'struct resource *' from type 'struct list_head'
->      for (p = res->child; p != NULL; p = p->sibling) {
->             ^
->    arch/microblaze/pci/pci-common.c:648:36: error: incompatible types when assigning to type 'struct resource *' from type 'struct list_head'
->      for (p = res->child; p != NULL; p = p->sibling) {
->                                        ^
->    cc1: some warnings being treated as errors
-> 
-> vim +536 arch/microblaze/pci/pci-common.c
-> 
-> d3afa58c Michal Simek        2010-01-18  387  
-> d3afa58c Michal Simek        2010-01-18  388  /**
-> d3afa58c Michal Simek        2010-01-18  389   * pci_process_bridge_OF_ranges - Parse PCI bridge resources from device tree
-> d3afa58c Michal Simek        2010-01-18  390   * @hose: newly allocated pci_controller to be setup
-> d3afa58c Michal Simek        2010-01-18  391   * @dev: device node of the host bridge
-> d3afa58c Michal Simek        2010-01-18  392   * @primary: set if primary bus (32 bits only, soon to be deprecated)
-> d3afa58c Michal Simek        2010-01-18  393   *
-> d3afa58c Michal Simek        2010-01-18  394   * This function will parse the "ranges" property of a PCI host bridge device
-> d3afa58c Michal Simek        2010-01-18  395   * node and setup the resource mapping of a pci controller based on its
-> d3afa58c Michal Simek        2010-01-18  396   * content.
-> d3afa58c Michal Simek        2010-01-18  397   *
-> d3afa58c Michal Simek        2010-01-18  398   * Life would be boring if it wasn't for a few issues that we have to deal
-> d3afa58c Michal Simek        2010-01-18  399   * with here:
-> d3afa58c Michal Simek        2010-01-18  400   *
-> d3afa58c Michal Simek        2010-01-18  401   *   - We can only cope with one IO space range and up to 3 Memory space
-> d3afa58c Michal Simek        2010-01-18  402   *     ranges. However, some machines (thanks Apple !) tend to split their
-> d3afa58c Michal Simek        2010-01-18  403   *     space into lots of small contiguous ranges. So we have to coalesce.
-> d3afa58c Michal Simek        2010-01-18  404   *
-> d3afa58c Michal Simek        2010-01-18  405   *   - We can only cope with all memory ranges having the same offset
-> d3afa58c Michal Simek        2010-01-18  406   *     between CPU addresses and PCI addresses. Unfortunately, some bridges
-> d3afa58c Michal Simek        2010-01-18  407   *     are setup for a large 1:1 mapping along with a small "window" which
-> d3afa58c Michal Simek        2010-01-18  408   *     maps PCI address 0 to some arbitrary high address of the CPU space in
-> d3afa58c Michal Simek        2010-01-18  409   *     order to give access to the ISA memory hole.
-> d3afa58c Michal Simek        2010-01-18  410   *     The way out of here that I've chosen for now is to always set the
-> d3afa58c Michal Simek        2010-01-18  411   *     offset based on the first resource found, then override it if we
-> d3afa58c Michal Simek        2010-01-18  412   *     have a different offset and the previous was set by an ISA hole.
-> d3afa58c Michal Simek        2010-01-18  413   *
-> d3afa58c Michal Simek        2010-01-18  414   *   - Some busses have IO space not starting at 0, which causes trouble with
-> d3afa58c Michal Simek        2010-01-18  415   *     the way we do our IO resource renumbering. The code somewhat deals with
-> d3afa58c Michal Simek        2010-01-18  416   *     it for 64 bits but I would expect problems on 32 bits.
-> d3afa58c Michal Simek        2010-01-18  417   *
-> d3afa58c Michal Simek        2010-01-18  418   *   - Some 32 bits platforms such as 4xx can have physical space larger than
-> d3afa58c Michal Simek        2010-01-18  419   *     32 bits so we need to use 64 bits values for the parsing
-> d3afa58c Michal Simek        2010-01-18  420   */
-> b881bc46 Greg Kroah-Hartman  2012-12-21  421  void pci_process_bridge_OF_ranges(struct pci_controller *hose,
-> b881bc46 Greg Kroah-Hartman  2012-12-21  422  				  struct device_node *dev, int primary)
-> d3afa58c Michal Simek        2010-01-18  423  {
-> d3afa58c Michal Simek        2010-01-18  424  	int memno = 0, isa_hole = -1;
-> d3afa58c Michal Simek        2010-01-18  425  	unsigned long long isa_mb = 0;
-> d3afa58c Michal Simek        2010-01-18  426  	struct resource *res;
-> 4f7b6de4 Andrew Murray       2013-07-27  427  	struct of_pci_range range;
-> 4f7b6de4 Andrew Murray       2013-07-27  428  	struct of_pci_range_parser parser;
-> d3afa58c Michal Simek        2010-01-18  429  
-> f2b8ae0e Rob Herring         2017-06-06  430  	pr_info("PCI host bridge %pOF %s ranges:\n",
-> f2b8ae0e Rob Herring         2017-06-06  431  	       dev, primary ? "(primary)" : "");
-> d3afa58c Michal Simek        2010-01-18  432  
-> 4f7b6de4 Andrew Murray       2013-07-27  433  	/* Check for ranges property */
-> 4f7b6de4 Andrew Murray       2013-07-27  434  	if (of_pci_range_parser_init(&parser, dev))
-> d3afa58c Michal Simek        2010-01-18  435  		return;
-> d3afa58c Michal Simek        2010-01-18  436  
-> d3afa58c Michal Simek        2010-01-18  437  	pr_debug("Parsing ranges property...\n");
-> 4f7b6de4 Andrew Murray       2013-07-27  438  	for_each_of_pci_range(&parser, &range) {
-> d3afa58c Michal Simek        2010-01-18  439  		/* Read next ranges element */
-> 6bd55f0b Michal Simek        2012-12-27  440  		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
-> 4f7b6de4 Andrew Murray       2013-07-27  441  				range.pci_space, range.pci_addr);
-> 6bd55f0b Michal Simek        2012-12-27  442  		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
-> 4f7b6de4 Andrew Murray       2013-07-27  443  					range.cpu_addr, range.size);
-> d3afa58c Michal Simek        2010-01-18  444  
-> d3afa58c Michal Simek        2010-01-18  445  		/* If we failed translation or got a zero-sized region
-> d3afa58c Michal Simek        2010-01-18  446  		 * (some FW try to feed us with non sensical zero sized regions
-> d3afa58c Michal Simek        2010-01-18  447  		 * such as power3 which look like some kind of attempt
-> d3afa58c Michal Simek        2010-01-18  448  		 * at exposing the VGA memory hole)
-> d3afa58c Michal Simek        2010-01-18  449  		 */
-> 4f7b6de4 Andrew Murray       2013-07-27  450  		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-> d3afa58c Michal Simek        2010-01-18  451  			continue;
-> d3afa58c Michal Simek        2010-01-18  452  
-> d3afa58c Michal Simek        2010-01-18  453  		/* Act based on address space type */
-> d3afa58c Michal Simek        2010-01-18  454  		res = NULL;
-> 4f7b6de4 Andrew Murray       2013-07-27  455  		switch (range.flags & IORESOURCE_TYPE_BITS) {
-> 4f7b6de4 Andrew Murray       2013-07-27  456  		case IORESOURCE_IO:
-> 6bd55f0b Michal Simek        2012-12-27  457  			pr_info("  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
-> 4f7b6de4 Andrew Murray       2013-07-27  458  				range.cpu_addr, range.cpu_addr + range.size - 1,
-> 4f7b6de4 Andrew Murray       2013-07-27  459  				range.pci_addr);
-> d3afa58c Michal Simek        2010-01-18  460  
-> d3afa58c Michal Simek        2010-01-18  461  			/* We support only one IO range */
-> d3afa58c Michal Simek        2010-01-18  462  			if (hose->pci_io_size) {
-> 6bd55f0b Michal Simek        2012-12-27  463  				pr_info(" \\--> Skipped (too many) !\n");
-> d3afa58c Michal Simek        2010-01-18  464  				continue;
-> d3afa58c Michal Simek        2010-01-18  465  			}
-> d3afa58c Michal Simek        2010-01-18  466  			/* On 32 bits, limit I/O space to 16MB */
-> 4f7b6de4 Andrew Murray       2013-07-27  467  			if (range.size > 0x01000000)
-> 4f7b6de4 Andrew Murray       2013-07-27  468  				range.size = 0x01000000;
-> d3afa58c Michal Simek        2010-01-18  469  
-> d3afa58c Michal Simek        2010-01-18  470  			/* 32 bits needs to map IOs here */
-> 4f7b6de4 Andrew Murray       2013-07-27  471  			hose->io_base_virt = ioremap(range.cpu_addr,
-> 4f7b6de4 Andrew Murray       2013-07-27  472  						range.size);
-> d3afa58c Michal Simek        2010-01-18  473  
-> d3afa58c Michal Simek        2010-01-18  474  			/* Expect trouble if pci_addr is not 0 */
-> d3afa58c Michal Simek        2010-01-18  475  			if (primary)
-> d3afa58c Michal Simek        2010-01-18  476  				isa_io_base =
-> d3afa58c Michal Simek        2010-01-18  477  					(unsigned long)hose->io_base_virt;
-> d3afa58c Michal Simek        2010-01-18  478  			/* pci_io_size and io_base_phys always represent IO
-> d3afa58c Michal Simek        2010-01-18  479  			 * space starting at 0 so we factor in pci_addr
-> d3afa58c Michal Simek        2010-01-18  480  			 */
-> 4f7b6de4 Andrew Murray       2013-07-27  481  			hose->pci_io_size = range.pci_addr + range.size;
-> 4f7b6de4 Andrew Murray       2013-07-27  482  			hose->io_base_phys = range.cpu_addr - range.pci_addr;
-> d3afa58c Michal Simek        2010-01-18  483  
-> d3afa58c Michal Simek        2010-01-18  484  			/* Build resource */
-> d3afa58c Michal Simek        2010-01-18  485  			res = &hose->io_resource;
-> 4f7b6de4 Andrew Murray       2013-07-27  486  			range.cpu_addr = range.pci_addr;
-> 4f7b6de4 Andrew Murray       2013-07-27  487  
-> d3afa58c Michal Simek        2010-01-18  488  			break;
-> 4f7b6de4 Andrew Murray       2013-07-27  489  		case IORESOURCE_MEM:
-> 6bd55f0b Michal Simek        2012-12-27  490  			pr_info(" MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
-> 4f7b6de4 Andrew Murray       2013-07-27  491  				range.cpu_addr, range.cpu_addr + range.size - 1,
-> 4f7b6de4 Andrew Murray       2013-07-27  492  				range.pci_addr,
-> 4f7b6de4 Andrew Murray       2013-07-27  493  				(range.pci_space & 0x40000000) ?
-> 4f7b6de4 Andrew Murray       2013-07-27  494  				"Prefetch" : "");
-> d3afa58c Michal Simek        2010-01-18  495  
-> d3afa58c Michal Simek        2010-01-18  496  			/* We support only 3 memory ranges */
-> d3afa58c Michal Simek        2010-01-18  497  			if (memno >= 3) {
-> 6bd55f0b Michal Simek        2012-12-27  498  				pr_info(" \\--> Skipped (too many) !\n");
-> d3afa58c Michal Simek        2010-01-18  499  				continue;
-> d3afa58c Michal Simek        2010-01-18  500  			}
-> d3afa58c Michal Simek        2010-01-18  501  			/* Handles ISA memory hole space here */
-> 4f7b6de4 Andrew Murray       2013-07-27  502  			if (range.pci_addr == 0) {
-> 4f7b6de4 Andrew Murray       2013-07-27  503  				isa_mb = range.cpu_addr;
-> d3afa58c Michal Simek        2010-01-18  504  				isa_hole = memno;
-> d3afa58c Michal Simek        2010-01-18  505  				if (primary || isa_mem_base == 0)
-> 4f7b6de4 Andrew Murray       2013-07-27  506  					isa_mem_base = range.cpu_addr;
-> 4f7b6de4 Andrew Murray       2013-07-27  507  				hose->isa_mem_phys = range.cpu_addr;
-> 4f7b6de4 Andrew Murray       2013-07-27  508  				hose->isa_mem_size = range.size;
-> d3afa58c Michal Simek        2010-01-18  509  			}
-> d3afa58c Michal Simek        2010-01-18  510  
-> d3afa58c Michal Simek        2010-01-18  511  			/* We get the PCI/Mem offset from the first range or
-> d3afa58c Michal Simek        2010-01-18  512  			 * the, current one if the offset came from an ISA
-> d3afa58c Michal Simek        2010-01-18  513  			 * hole. If they don't match, bugger.
-> d3afa58c Michal Simek        2010-01-18  514  			 */
-> d3afa58c Michal Simek        2010-01-18  515  			if (memno == 0 ||
-> 4f7b6de4 Andrew Murray       2013-07-27  516  			    (isa_hole >= 0 && range.pci_addr != 0 &&
-> d3afa58c Michal Simek        2010-01-18  517  			     hose->pci_mem_offset == isa_mb))
-> 4f7b6de4 Andrew Murray       2013-07-27  518  				hose->pci_mem_offset = range.cpu_addr -
-> 4f7b6de4 Andrew Murray       2013-07-27  519  							range.pci_addr;
-> 4f7b6de4 Andrew Murray       2013-07-27  520  			else if (range.pci_addr != 0 &&
-> 4f7b6de4 Andrew Murray       2013-07-27  521  				 hose->pci_mem_offset != range.cpu_addr -
-> 4f7b6de4 Andrew Murray       2013-07-27  522  							range.pci_addr) {
-> 6bd55f0b Michal Simek        2012-12-27  523  				pr_info(" \\--> Skipped (offset mismatch) !\n");
-> d3afa58c Michal Simek        2010-01-18  524  				continue;
-> d3afa58c Michal Simek        2010-01-18  525  			}
-> d3afa58c Michal Simek        2010-01-18  526  
-> d3afa58c Michal Simek        2010-01-18  527  			/* Build resource */
-> d3afa58c Michal Simek        2010-01-18  528  			res = &hose->mem_resources[memno++];
-> d3afa58c Michal Simek        2010-01-18  529  			break;
-> d3afa58c Michal Simek        2010-01-18  530  		}
-> 70dcd942 Michal Simek        2014-10-27  531  		if (res != NULL) {
-> 70dcd942 Michal Simek        2014-10-27  532  			res->name = dev->full_name;
-> 70dcd942 Michal Simek        2014-10-27  533  			res->flags = range.flags;
-> 70dcd942 Michal Simek        2014-10-27  534  			res->start = range.cpu_addr;
-> 70dcd942 Michal Simek        2014-10-27  535  			res->end = range.cpu_addr + range.size - 1;
-> 70dcd942 Michal Simek        2014-10-27 @536  			res->parent = res->child = res->sibling = NULL;
-> 70dcd942 Michal Simek        2014-10-27  537  		}
-> d3afa58c Michal Simek        2010-01-18  538  	}
-> d3afa58c Michal Simek        2010-01-18  539  
-> d3afa58c Michal Simek        2010-01-18  540  	/* If there's an ISA hole and the pci_mem_offset is -not- matching
-> d3afa58c Michal Simek        2010-01-18  541  	 * the ISA hole offset, then we need to remove the ISA hole from
-> d3afa58c Michal Simek        2010-01-18  542  	 * the resource list for that brige
-> d3afa58c Michal Simek        2010-01-18  543  	 */
-> d3afa58c Michal Simek        2010-01-18  544  	if (isa_hole >= 0 && hose->pci_mem_offset != isa_mb) {
-> d3afa58c Michal Simek        2010-01-18  545  		unsigned int next = isa_hole + 1;
-> 6bd55f0b Michal Simek        2012-12-27  546  		pr_info(" Removing ISA hole at 0x%016llx\n", isa_mb);
-> d3afa58c Michal Simek        2010-01-18  547  		if (next < memno)
-> d3afa58c Michal Simek        2010-01-18  548  			memmove(&hose->mem_resources[isa_hole],
-> d3afa58c Michal Simek        2010-01-18  549  				&hose->mem_resources[next],
-> d3afa58c Michal Simek        2010-01-18  550  				sizeof(struct resource) * (memno - next));
-> d3afa58c Michal Simek        2010-01-18  551  		hose->mem_resources[--memno].flags = 0;
-> d3afa58c Michal Simek        2010-01-18  552  	}
-> d3afa58c Michal Simek        2010-01-18  553  }
-> d3afa58c Michal Simek        2010-01-18  554  
-> 9413d968 Bharat Kumar Gogada 2016-09-01  555  /* Display the domain number in /proc */
-> d3afa58c Michal Simek        2010-01-18  556  int pci_proc_domain(struct pci_bus *bus)
-> d3afa58c Michal Simek        2010-01-18  557  {
-> 9413d968 Bharat Kumar Gogada 2016-09-01  558  	return pci_domain_nr(bus);
-> d3afa58c Michal Simek        2010-01-18  559  }
-> d3afa58c Michal Simek        2010-01-18  560  
-> d3afa58c Michal Simek        2010-01-18  561  /* This header fixup will do the resource fixup for all devices as they are
-> d3afa58c Michal Simek        2010-01-18  562   * probed, but not for bridge ranges
-> d3afa58c Michal Simek        2010-01-18  563   */
-> b881bc46 Greg Kroah-Hartman  2012-12-21  564  static void pcibios_fixup_resources(struct pci_dev *dev)
-> d3afa58c Michal Simek        2010-01-18  565  {
-> d3afa58c Michal Simek        2010-01-18  566  	struct pci_controller *hose = pci_bus_to_host(dev->bus);
-> d3afa58c Michal Simek        2010-01-18  567  	int i;
-> d3afa58c Michal Simek        2010-01-18  568  
-> d3afa58c Michal Simek        2010-01-18  569  	if (!hose) {
-> 6bd55f0b Michal Simek        2012-12-27  570  		pr_err("No host bridge for PCI dev %s !\n",
-> d3afa58c Michal Simek        2010-01-18  571  		       pci_name(dev));
-> d3afa58c Michal Simek        2010-01-18  572  		return;
-> d3afa58c Michal Simek        2010-01-18  573  	}
-> d3afa58c Michal Simek        2010-01-18  574  	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-> d3afa58c Michal Simek        2010-01-18  575  		struct resource *res = dev->resource + i;
-> d3afa58c Michal Simek        2010-01-18  576  		if (!res->flags)
-> d3afa58c Michal Simek        2010-01-18  577  			continue;
-> e5b36841 Bjorn Helgaas       2012-02-23  578  		if (res->start == 0) {
-> 6bd55f0b Michal Simek        2012-12-27  579  			pr_debug("PCI:%s Resource %d %016llx-%016llx [%x]",
-> d3afa58c Michal Simek        2010-01-18  580  				 pci_name(dev), i,
-> d3afa58c Michal Simek        2010-01-18  581  				 (unsigned long long)res->start,
-> d3afa58c Michal Simek        2010-01-18  582  				 (unsigned long long)res->end,
-> d3afa58c Michal Simek        2010-01-18  583  				 (unsigned int)res->flags);
-> 6bd55f0b Michal Simek        2012-12-27  584  			pr_debug("is unassigned\n");
-> d3afa58c Michal Simek        2010-01-18  585  			res->end -= res->start;
-> d3afa58c Michal Simek        2010-01-18  586  			res->start = 0;
-> d3afa58c Michal Simek        2010-01-18  587  			res->flags |= IORESOURCE_UNSET;
-> d3afa58c Michal Simek        2010-01-18  588  			continue;
-> d3afa58c Michal Simek        2010-01-18  589  		}
-> d3afa58c Michal Simek        2010-01-18  590  
-> aa23bdc0 Bjorn Helgaas       2012-02-23  591  		pr_debug("PCI:%s Resource %d %016llx-%016llx [%x]\n",
-> d3afa58c Michal Simek        2010-01-18  592  			 pci_name(dev), i,
-> 6bd55f0b Michal Simek        2012-12-27  593  			 (unsigned long long)res->start,
-> d3afa58c Michal Simek        2010-01-18  594  			 (unsigned long long)res->end,
-> d3afa58c Michal Simek        2010-01-18  595  			 (unsigned int)res->flags);
-> d3afa58c Michal Simek        2010-01-18  596  	}
-> d3afa58c Michal Simek        2010-01-18  597  }
-> d3afa58c Michal Simek        2010-01-18  598  DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_fixup_resources);
-> d3afa58c Michal Simek        2010-01-18  599  
-> d3afa58c Michal Simek        2010-01-18  600  /*
-> d3afa58c Michal Simek        2010-01-18  601   * We need to avoid collisions with `mirrored' VGA ports
-> d3afa58c Michal Simek        2010-01-18  602   * and other strange ISA hardware, so we always want the
-> d3afa58c Michal Simek        2010-01-18  603   * addresses to be allocated in the 0x000-0x0ff region
-> d3afa58c Michal Simek        2010-01-18  604   * modulo 0x400.
-> d3afa58c Michal Simek        2010-01-18  605   *
-> d3afa58c Michal Simek        2010-01-18  606   * Why? Because some silly external IO cards only decode
-> d3afa58c Michal Simek        2010-01-18  607   * the low 10 bits of the IO address. The 0x00-0xff region
-> d3afa58c Michal Simek        2010-01-18  608   * is reserved for motherboard devices that decode all 16
-> d3afa58c Michal Simek        2010-01-18  609   * bits, so it's ok to allocate at, say, 0x2800-0x28ff,
-> d3afa58c Michal Simek        2010-01-18  610   * but we want to try to avoid allocating at 0x2900-0x2bff
-> d3afa58c Michal Simek        2010-01-18  611   * which might have be mirrored at 0x0100-0x03ff..
-> d3afa58c Michal Simek        2010-01-18  612   */
-> 01cf9d52 Bharat Kumar Gogada 2016-02-11  613  int pcibios_add_device(struct pci_dev *dev)
-> 01cf9d52 Bharat Kumar Gogada 2016-02-11  614  {
-> 01cf9d52 Bharat Kumar Gogada 2016-02-11  615  	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> c86fac43 Michal Simek        2010-04-16  616  
-> 01cf9d52 Bharat Kumar Gogada 2016-02-11  617  	return 0;
-> d3afa58c Michal Simek        2010-01-18  618  }
-> 01cf9d52 Bharat Kumar Gogada 2016-02-11  619  EXPORT_SYMBOL(pcibios_add_device);
-> d3afa58c Michal Simek        2010-01-18  620  
-> d3afa58c Michal Simek        2010-01-18  621  /*
-> d3afa58c Michal Simek        2010-01-18  622   * Reparent resource children of pr that conflict with res
-> d3afa58c Michal Simek        2010-01-18  623   * under res, and make res replace those children.
-> d3afa58c Michal Simek        2010-01-18  624   */
-> d3afa58c Michal Simek        2010-01-18  625  static int __init reparent_resources(struct resource *parent,
-> d3afa58c Michal Simek        2010-01-18  626  				     struct resource *res)
-> d3afa58c Michal Simek        2010-01-18  627  {
-> d3afa58c Michal Simek        2010-01-18  628  	struct resource *p, **pp;
-> d3afa58c Michal Simek        2010-01-18  629  	struct resource **firstpp = NULL;
-> d3afa58c Michal Simek        2010-01-18  630  
-> d3afa58c Michal Simek        2010-01-18 @631  	for (pp = &parent->child; (p = *pp) != NULL; pp = &p->sibling) {
-> d3afa58c Michal Simek        2010-01-18  632  		if (p->end < res->start)
-> d3afa58c Michal Simek        2010-01-18  633  			continue;
-> d3afa58c Michal Simek        2010-01-18  634  		if (res->end < p->start)
-> d3afa58c Michal Simek        2010-01-18  635  			break;
-> d3afa58c Michal Simek        2010-01-18  636  		if (p->start < res->start || p->end > res->end)
-> d3afa58c Michal Simek        2010-01-18  637  			return -1;	/* not completely contained */
-> d3afa58c Michal Simek        2010-01-18  638  		if (firstpp == NULL)
-> d3afa58c Michal Simek        2010-01-18  639  			firstpp = pp;
-> d3afa58c Michal Simek        2010-01-18  640  	}
-> d3afa58c Michal Simek        2010-01-18  641  	if (firstpp == NULL)
-> d3afa58c Michal Simek        2010-01-18  642  		return -1;	/* didn't find any conflicting entries? */
-> d3afa58c Michal Simek        2010-01-18  643  	res->parent = parent;
-> d3afa58c Michal Simek        2010-01-18 @644  	res->child = *firstpp;
-> d3afa58c Michal Simek        2010-01-18  645  	res->sibling = *pp;
-> d3afa58c Michal Simek        2010-01-18  646  	*firstpp = res;
-> d3afa58c Michal Simek        2010-01-18  647  	*pp = NULL;
-> d3afa58c Michal Simek        2010-01-18 @648  	for (p = res->child; p != NULL; p = p->sibling) {
-> d3afa58c Michal Simek        2010-01-18  649  		p->parent = res;
-> d3afa58c Michal Simek        2010-01-18  650  		pr_debug("PCI: Reparented %s [%llx..%llx] under %s\n",
-> d3afa58c Michal Simek        2010-01-18  651  			 p->name,
-> d3afa58c Michal Simek        2010-01-18  652  			 (unsigned long long)p->start,
-> d3afa58c Michal Simek        2010-01-18  653  			 (unsigned long long)p->end, res->name);
-> d3afa58c Michal Simek        2010-01-18  654  	}
-> d3afa58c Michal Simek        2010-01-18  655  	return 0;
-> d3afa58c Michal Simek        2010-01-18  656  }
-> d3afa58c Michal Simek        2010-01-18  657  
-> 
-> :::::: The code at line 536 was first introduced by commit
-> :::::: 70dcd942dc4af3cc6c3dcc2ba499cd841c7f65a7 microblaze: Fix IO space breakage after of_pci_range_to_resource() change
-> 
-> :::::: TO: Michal Simek <michal.simek@xilinx.com>
-> :::::: CC: Michal Simek <michal.simek@xilinx.com>
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
++	if (pdev->broken_cmd_compl &&
++	    (slot_ctrl_orig & CC_ERRATUM_MASK) == (slot_ctrl & CC_ERRATUM_MASK))
++		ctrl->cmd_busy = 0;
++
+ 	/*
+ 	 * Optionally wait for the hardware to be ready for a new command,
+ 	 * indicating completion of the above issued command.
+@@ -861,7 +869,7 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_CC |
+ 		PCI_EXP_SLTSTA_DLLSC);
+ 
+-	ctrl_info(ctrl, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c\n",
++	ctrl_info(ctrl, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c%s\n",
+ 		(slot_cap & PCI_EXP_SLTCAP_PSN) >> 19,
+ 		FLAG(slot_cap, PCI_EXP_SLTCAP_ABP),
+ 		FLAG(slot_cap, PCI_EXP_SLTCAP_PCP),
+@@ -872,7 +880,8 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 		FLAG(slot_cap, PCI_EXP_SLTCAP_HPS),
+ 		FLAG(slot_cap, PCI_EXP_SLTCAP_EIP),
+ 		FLAG(slot_cap, PCI_EXP_SLTCAP_NCCS),
+-		FLAG(link_cap, PCI_EXP_LNKCAP_DLLLARC));
++		FLAG(link_cap, PCI_EXP_LNKCAP_DLLLARC),
++		pdev->broken_cmd_compl ? " (with Cmd Compl erratum)" : "");
+ 
+ 	if (pcie_init_slot(ctrl))
+ 		goto abort_ctrl;
+@@ -891,3 +900,17 @@ void pciehp_release_ctrl(struct controller *ctrl)
+ 	pcie_cleanup_slot(ctrl);
+ 	kfree(ctrl);
+ }
++
++static void quirk_cmd_compl(struct pci_dev *pdev)
++{
++	u32 slot_cap;
++
++	if (pci_is_pcie(pdev)) {
++		pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
++		if (slot_cap & PCI_EXP_SLTCAP_HPC &&
++		    !(slot_cap & PCI_EXP_SLTCAP_NCCS))
++			pdev->broken_cmd_compl = 1;
++	}
++}
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
++			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 73178a2fcee0..60cb5350ad28 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -406,6 +406,9 @@ struct pci_dev {
+ 	struct bin_attribute *res_attr[DEVICE_COUNT_RESOURCE]; /* sysfs file for resources */
+ 	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
+ 
++#ifdef CONFIG_HOTPLUG_PCI_PCIE
++	unsigned int	broken_cmd_compl:1;	/* Command Complete broken */
++#endif
+ #ifdef CONFIG_PCIE_PTM
+ 	unsigned int	ptm_root:1;
+ 	unsigned int	ptm_enabled:1;
