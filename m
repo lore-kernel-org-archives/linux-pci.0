@@ -1,40 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:37949 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752311AbeENPK1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 11:10:27 -0400
-Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 41A411E044E
-        for <linux-pci@vger.kernel.org>; Mon, 14 May 2018 17:10:26 +0200 (CEST)
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com
-Cc: linux-pci@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH 0/3] PCI: dwc: Code clean up
-Date: Mon, 14 May 2018 16:09:47 +0100
-Message-Id: <cover.1526310453.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 4 May 2018 17:44:01 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Subject: Re: [PATCH v2 07/10] PCI: Convert of_pci_get_host_bridge_resources()
+ users to devm variant
+Message-ID: <20180504164401.GA17043@e107981-ln.cambridge.arm.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+ <ed3e6df4feca5febefa14716d62aaddd5b4a39d1.1525067324.git.jan.kiszka@siemens.com>
+ <dbfa80fb-5fe8-3ccd-6886-4604ef9e058b@mentor.com>
+MIME-Version: 1.0
+In-Reply-To: <dbfa80fb-5fe8-3ccd-6886-4604ef9e058b@mentor.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jan Kiszka <jan.kiszka@siemens.com>,
+ linux-pci@vger.kernel.org,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Does a code cleanup on DesignWare driver, which involves:
- - Replacement of magic numbers by a self-explained define to ease human
-comprehension.
- - Replacement a division by 2 operation for a right shift rotation of 1
-bit.
- - Replacement of all initial lowercase character in comments and debug
-messages to uppercase to maintain coherence.
+On Thu, May 03, 2018 at 10:18:24AM +0300, Vladimir Zapolskiy wrote:
+> Hi Jan,
+> 
+> On 04/30/2018 08:48 AM, Jan Kiszka wrote:
+> > From: Jan Kiszka <jan.kiszka@siemens.com>
+> > 
+> > Straightforward for all of them, no more leaks afterwards.
+> > 
+> > CC: Jingoo Han <jingoohan1@gmail.com>
+> > CC: Joao Pinto <Joao.Pinto@synopsys.com>
+> > CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> > Acked-by: Jingoo Han <jingoo1han@gmail.com>
+> 
+> [snip]
+> 
+> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> > index 6ab28f29ac6a..6eb36c924983 100644
+> > --- a/drivers/pci/host/pcie-rcar.c
+> > +++ b/drivers/pci/host/pcie-rcar.c
+> > @@ -1067,12 +1067,11 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
+> >  {
+> >  	int err;
+> >  	struct device *dev = pci->dev;
+> > -	struct device_node *np = dev->of_node;
+> >  	resource_size_t iobase;
+> >  	struct resource_entry *win, *tmp;
+> >  
+> > -	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
+> > -					       &iobase);
+> > +	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+> > +						    &pci->resources, &iobase);
+> >  	if (err)
+> >  		return err;
+> >  
+> 
+> this one snippet is obsoleted by https://patchwork.ozlabs.org/patch/904326/
+> 
+> If 08/10 remains a deprecation, then it is sufficient to exclude the R-Car change,
+> otherwise I hope maintainers can deal with the proper ordering.
 
-Gustavo Pimentel (3):
-  PCI: dwc: Replace lower into upper case characters
-  PCI: dwc: Small computation improvement
-  PCI: dwc: Replace magic number by defines
+Isn't applying your patch:
 
- drivers/pci/dwc/pcie-designware-ep.c   | 16 +++----
- drivers/pci/dwc/pcie-designware-host.c | 77 +++++++++++++++++++---------------
- drivers/pci/dwc/pcie-designware.c      | 22 +++++-----
- drivers/pci/dwc/pcie-designware.h      |  1 +
- 4 files changed, 63 insertions(+), 53 deletions(-)
+https://patchwork.ozlabs.org/patch/904326/
 
--- 
-2.7.4
+and dropping the rcar hunk from this patch enough ?
+
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
