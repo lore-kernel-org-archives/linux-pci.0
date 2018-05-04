@@ -1,81 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64187 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751010AbeFAD7y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 May 2018 23:59:54 -0400
-Date: Fri, 1 Jun 2018 12:00:07 +0800
-From: Tiwei Bie <tiwei.bie@intel.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>, stefanha@redhat.com
-Cc: bhelgaas@google.com, virtualization@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, virtio-dev@lists.oasis-open.org,
-        linux-pci@vger.kernel.org, dan.daly@intel.com,
-        mark.d.rustad@intel.com, alexander.h.duyck@intel.com,
-        cunming.liang@intel.com, zhihong.wang@intel.com
-Subject: Re: [PATCH v2] virtio_pci: support enabling VFs
-Message-ID: <20180601040007.GA32070@debian>
-References: <20180601020921.30957-1-tiwei.bie@intel.com>
- <20180601063224-mutt-send-email-mst@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: <honghui.zhang@mediatek.com>
+To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>
+CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
+        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
+        <xinping.qian@mediatek.com>
+Subject: [PATCH v7 0/2] PCI: mediatek: Fixups for the IRQ handle routine and MT7622's class code
+Date: Fri, 4 May 2018 13:47:31 +0800
+Message-ID: <1525412853-24367-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20180601063224-mutt-send-email-mst@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 01, 2018 at 06:47:01AM +0300, Michael S. Tsirkin wrote:
-> On Fri, Jun 01, 2018 at 10:09:21AM +0800, Tiwei Bie wrote:
-> > There is a new feature bit allocated in virtio spec to
-> > support SR-IOV (Single Root I/O Virtualization):
-> > 
-> > https://github.com/oasis-tcs/virtio-spec/issues/11
-> > 
-> > This patch enables the support for this feature bit in
-> > virtio driver.
-> > 
-> > Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
-> > Acked-by: Stefan Hajnoczi <stefanha@redhat.com>
-> > Acked-by: Michael S. Tsirkin <mst@redhat.com>
-> > ---
-> 
-> Generally you aren't supposed to carry forward acks
-> when you make major changes.
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Got it! Thank you very much!
+Two fixups for mediatek's host bridge:
+The first patch fixup class type and vendor ID for MT7622.
+The second patch fixup the IRQ handle routine by using irq_chip solution
+to avoid IRQ reentry which may exist for both MT2712 and MT7622.
 
-> 
-> In this case I'm fine with the patch, so never mind.
+Change since v6:
+ - Remove the irq_mask, irq_unmask callback in lower layer irq_chip since we
+   have set the MSI_FLAG_USE_DEF_CHIP_OPS flags.
+ - Add irq_ack callback in irq_chip to handle edge IRQ.
+ - Uing handle_edge_irq to handle the MSI IRQs.
 
-Thank you so much! Anyway, it's my fault.
-I'll send a new version dropping all acks.
+Change since v5:
+ - Make the comments consistend with the code modification in the first patch.
+ - Using writew to performing a 16-bit write.
+ - Using irq_chip solution to fix the IRQ issue.
 
-> 
-[...]
-> >  
-> > +static int virtio_pci_sriov_configure(struct pci_dev *pci_dev, int num_vfs)
-> > +{
-> > +	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
-> > +	struct virtio_device *vdev = &vp_dev->vdev;
-> > +	int ret;
-> > +
-> > +	if (!(vdev->config->get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK))
-> > +		return -EBUSY;
-> > +
-> > +	if (!__virtio_test_bit(vdev, VIRTIO_F_SR_IOV))
-> > +		return -EINVAL;
-> > +
-> > +	if (pci_vfs_assigned(pci_dev))
-> > +		return -EPERM;
-> 
-> Not a comment on this patch - existing code has the
-> same race - but generally
-> 
-> 1. this seems racy since assigning vfs does not seem
->    to take device lock
-> 2. does this work correctly for kvm at all?
->    pci_set_dev_assigned seems to be only called by xen.
-> 
-> Can you look at addressing this pls?
+The v5 patchset could be found in:
+ https://patchwork.kernel.org/patch/10133303
+ https://patchwork.kernel.org/patch/10133305
 
-Sure! I'll do it!
+Change since v4:
+ - Only setup vendor ID for MT7622, igorning the device ID since mediatek's
+   host bridge driver does not cares about the device ID.
 
-Best regards,
-Tiwei Bie
+Change since v3:
+ - Setup the class type and vendor ID at the beginning of startup instead
+   of in a quirk.
+ - Add mediatek's vendor ID, it could be found in:
+   https://pcisig.com/membership/member-companies?combine=&page=4
+
+Change since v2:
+ - Move the initialize of the iterate before the loop to fix an
+   INTx IRQ issue in the first patch
+
+Change since v1:
+ - Add the second patch.
+ - Make the first patch's commit message more standard.
+
+Honghui Zhang (2):
+  PCI: mediatek: Set up vendor ID and class type for MT7622
+  PCI: mediatek: Using chained IRQ to setup IRQ handle
+
+ drivers/pci/host/pcie-mediatek.c | 234 +++++++++++++++++++++++----------------
+ include/linux/pci_ids.h          |   2 +
+ 2 files changed, 143 insertions(+), 93 deletions(-)
+
+-- 
+2.6.4
