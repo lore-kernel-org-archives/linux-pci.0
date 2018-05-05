@@ -1,56 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from david.siemens.de ([192.35.17.14]:33505 "EHLO david.siemens.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752374AbeEOIkF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 May 2018 04:40:05 -0400
-Subject: Re: [PATCH v3 0/8] PCI: leak fixes, removable generic PCI host,
- assorted stuff
-To: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>
-References: <cover.1526363896.git.jan.kiszka@siemens.com>
- <72f23e5f-4641-9ef3-09e6-70c4724f21a4@mentor.com>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-Message-ID: <8f40ba94-d730-5f45-c113-2cd53c722467@siemens.com>
-Date: Tue, 15 May 2018 10:39:30 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] pci: endpoint: Replace mdelay with usleep_range in
+ pci_epf_test_write
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+References: <1523365446-31563-1-git-send-email-baijiaju1990@gmail.com>
+ <20180504162932.GA16953@e107981-ln.cambridge.arm.com>
+CC: <bhelgaas@google.com>, <nsekhar@ti.com>, <john@metanate.com>,
+        <shawn.lin@rock-chips.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <de84ea55-5949-dec5-ad8b-5845b99285c0@ti.com>
+Date: Sat, 5 May 2018 15:33:11 +0530
 MIME-Version: 1.0
-In-Reply-To: <72f23e5f-4641-9ef3-09e6-70c4724f21a4@mentor.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180504162932.GA16953@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-15 09:58, Vladimir Zapolskiy wrote:
-> Hi Jan,
+
+
+On Friday 04 May 2018 09:59 PM, Lorenzo Pieralisi wrote:
+> On Tue, Apr 10, 2018 at 09:04:06PM +0800, Jia-Ju Bai wrote:
+>> pci_epf_test_write() is never called in atomic context.
+>>
+>> The call chain ending up at pci_epf_test_write() is:
+>> [1] pci_epf_test_write() <- pci_epf_test_cmd_handler()
+>>
+>> pci_epf_test_cmd_handler() is set as a parameter of INIT_DELAYED_WORK() 
+>> in pci_epf_test_probe().
+>> This function is not called in atomic context.
+>>
+>> Despite never getting called from atomic context, pci_epf_test_write()
+>> calls mdelay() to busily wait.
+>> This is not necessary and can be replaced with usleep_range() to
+>> avoid busy waiting.
+>>
+>> This is found by a static analysis tool named DCNS written by myself.
+>> And I also manually check it.
+>>
+>> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+>> ---
+>>  drivers/pci/endpoint/functions/pci-epf-test.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> On 05/15/2018 08:58 AM, Jan Kiszka wrote:
->> Changes in v3:
->>  - refactor series to be both bisectable and simpler while reworking
->>    of_pci_get_host_bridge_resources()
->>  - include of_pci_get_host_bridge_resources() removal
->>  - include devm_of_pci_get_host_bridge_resources() error path fixes
->>  - effectively, no functional changes to v2
+> I'd request Kishon's ACK on this.
+
+sorry, missed this before.
+
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 > 
-> while the previous version of the changeset plus the fixup found on Bjorn's
-> pci/resource branch is sufficient, I can't argue with the fact that this
-> series is way better.
-
-0day-testing found a build breakage in the middle of the old series.
-Wasn't straightforward to fix, so Bjorn suggested a different series
-structure which I try to implement with v3.
-
+> Thanks,
+> Lorenzo
 > 
-> In case if this series is accepted I'll review and test the fix of
-> of_pci_get_host_bridge_resources() memleak again, no worries.
-
-Thanks, will address that issue first.
-
-Jan
-
--- 
-Siemens AG, Corporate Technology, CT RDA IOT SES-DE
-Corporate Competence Center Embedded Linux
+>> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+>> index f9308c2..2f0642e 100644
+>> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+>> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+>> @@ -237,7 +237,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+>>  	 * wait 1ms inorder for the write to complete. Without this delay L3
+>>  	 * error in observed in the host system.
+>>  	 */
+>> -	mdelay(1);
+>> +	usleep_range(1000, 2000);
+>>  
+>>  	kfree(buf);
+>>  
+>> -- 
+>> 1.9.1
+>>
