@@ -1,106 +1,105 @@
-Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
-Date: Tue, 8 May 2018 16:03:36 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Stephen  Bates" <sbates@raithlin.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>, Christian =?UTF-8?B?S8O2bmln?=
- <christian.koenig@amd.com>, "Bjorn Helgaas" <helgaas@kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
- "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Christoph
- Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
- <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
- <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
- <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
- Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all
- devices behind switches
-Message-ID: <20180508160336.0935ddde@w520.home>
-In-Reply-To: <354F7407-0DC7-470C-B9AA-74FDF9C46B08@raithlin.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
-	<20180423233046.21476-5-logang@deltatee.com>
-	<20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
-	<e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
-	<0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
-	<a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
-	<3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
-	<20180508133407.57a46902@w520.home>
-	<5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
-	<20180508141331.7cd737cb@w520.home>
-	<d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
-	<20180508144341.0441b676@w520.home>
-	<a524127a-3557-3dff-971c-dfe94ba5a01c@deltatee.com>
-	<20180508152631.50fd583c@w520.home>
-	<354F7407-0DC7-470C-B9AA-74FDF9C46B08@raithlin.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 07/10] PCI: Convert of_pci_get_host_bridge_resources()
+ users to devm variant
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+ <ed3e6df4feca5febefa14716d62aaddd5b4a39d1.1525067324.git.jan.kiszka@siemens.com>
+ <dbfa80fb-5fe8-3ccd-6886-4604ef9e058b@mentor.com>
+ <20180504164401.GA17043@e107981-ln.cambridge.arm.com>
+From: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Message-ID: <0b7bf715-63dc-e2dc-a614-02d88bdc0254@mentor.com>
+Date: Sat, 5 May 2018 10:42:16 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20180504164401.GA17043@e107981-ln.cambridge.arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jan Kiszka <jan.kiszka@siemens.com>,
+ linux-pci@vger.kernel.org,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 8 May 2018 21:42:27 +0000
-"Stephen  Bates" <sbates@raithlin.com> wrote:
+Hi Lorenzo,
 
-> Hi Alex
+On 05/04/2018 07:44 PM, Lorenzo Pieralisi wrote:
+> On Thu, May 03, 2018 at 10:18:24AM +0300, Vladimir Zapolskiy wrote:
+>> Hi Jan,
+>>
+>> On 04/30/2018 08:48 AM, Jan Kiszka wrote:
+>>> From: Jan Kiszka <jan.kiszka@siemens.com>
+>>>
+>>> Straightforward for all of them, no more leaks afterwards.
+>>>
+>>> CC: Jingoo Han <jingoohan1@gmail.com>
+>>> CC: Joao Pinto <Joao.Pinto@synopsys.com>
+>>> CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+>>> Acked-by: Jingoo Han <jingoo1han@gmail.com>
+>>
+>> [snip]
+>>
+>>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+>>> index 6ab28f29ac6a..6eb36c924983 100644
+>>> --- a/drivers/pci/host/pcie-rcar.c
+>>> +++ b/drivers/pci/host/pcie-rcar.c
+>>> @@ -1067,12 +1067,11 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
+>>>  {
+>>>  	int err;
+>>>  	struct device *dev = pci->dev;
+>>> -	struct device_node *np = dev->of_node;
+>>>  	resource_size_t iobase;
+>>>  	struct resource_entry *win, *tmp;
+>>>  
+>>> -	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
+>>> -					       &iobase);
+>>> +	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+>>> +						    &pci->resources, &iobase);
+>>>  	if (err)
+>>>  		return err;
+>>>  
+>>
+>> this one snippet is obsoleted by https://patchwork.ozlabs.org/patch/904326/
+>>
+>> If 08/10 remains a deprecation, then it is sufficient to exclude the R-Car change,
+>> otherwise I hope maintainers can deal with the proper ordering.
 > 
-> >    But it would be a much easier proposal to disable ACS when the
-> > IOMMU is not enabled, ACS has no real purpose in that case.  
+> Isn't applying your patch:
 > 
-> I guess one issue I have with this is that it disables IOMMU groups
-> for all Root Ports and not just the one(s) we wish to do p2pdma on. 
-
-But as I understand this series, we're not really targeting specific
-sets of devices either.  It's more of a shotgun approach that we
-disable ACS on downstream switch ports and hope that we get the right
-set of devices, but with the indecisiveness that we might later
-white-list select root ports to further increase the blast radius.
-
-> >    The IOMMU and P2P are already not exclusive, we can bounce off
-> > the IOMMU or make use of ATS as we've previously discussed.  We were
-> >    previously talking about a build time config option that you
-> > didn't expect distros to use, so I don't think intervention for the
-> > user to disable the IOMMU if it's enabled by default is a serious
-> > concern either.  
+> https://patchwork.ozlabs.org/patch/904326/
 > 
-> ATS definitely makes things more interesting for the cases where the
-> EPs support it. However I don't really have a handle on how common
-> ATS support is going to be in the kinds of devices we have been
-> focused on (NVMe SSDs and RDMA NICs mostly). 
->
-> > What you're trying to do is enabled direct peer-to-peer for
-> > endpoints which do not support ATS when the IOMMU is enabled, which
-> > is not something that necessarily makes sense to me.   
+> and dropping the rcar hunk from this patch enough ?
 > 
-> As above the advantage of leaving the IOMMU on is that it allows for
-> both p2pdma PCI domains and IOMMU groupings PCI domains in the same
-> system. It is just that these domains will be separate to each other.
 
-That argument makes sense if we had the ability to select specific sets
-of devices, but that's not the case here, right?  With the shotgun
-approach, we're clearly favoring one at the expense of the other and
-it's not clear why we don't simple force the needle all the way in that
-direction such that the results are at least predictable.
+absolutely, but it relies on any of two assumptions that
+* my unmodified change is applied first, then Jan's adjusted change is applied,
+* Jan's unmodified change is applied first, then my adjusted change is applied.
 
-> >  So that leaves avoiding bounce buffers as the remaining IOMMU
-> > feature  
-> 
-> I agree with you here that the devices we will want to use for p2p
-> will probably not require a bounce buffer and will support 64 bit DMA
-> addressing. 
->
-> > I'm still not seeing why it's terribly undesirable to require
-> > devices to support ATS if they want to do direct P2P with an IOMMU
-> > enabled.  
-> 
-> I think the one reason is for the use-case above. Allowing IOMMU
-> groupings on one domain and p2pdma on another domain.... 
+Otherwise there will be a trivial merge conflict, or even worse, if R-Car hunk
+is removed as suggested, then of_pci_get_host_bridge_resources() is removed
+instead of deprecation, and then my unmodified change is applied on top, it will
+result in a window of commits, where R-Car PCIe driver won't be buildable, and
+git-bisect users can be disappointed.
 
-If IOMMU grouping implies device assignment (because nobody else uses
-it to the same extent as device assignment) then the build-time option
-falls to pieces, we need a single kernel that can do both.  I think we
-need to get more clever about allowing the user to specify exactly at
-which points in the topology they want to disable isolation.  Thanks,
+It makes little sense to include my change into Jan's series, thus I rely on
+maintainers' awareness and smooth resolution of the issue by maintainers.
 
-Alex
+For what it's worth, I vote for of_pci_get_host_bridge_resources() removal.
+
+--
+With best wishes,
+Vladimir
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
