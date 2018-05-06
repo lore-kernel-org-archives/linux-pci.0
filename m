@@ -1,381 +1,225 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:54356 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750859AbeEBA5w (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 May 2018 20:57:52 -0400
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v6 2/7] PCI: rockchip: Split out common function to parse
- DT
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1524796697-160764-1-git-send-email-shawn.lin@rock-chips.com>
- <1524796751-161084-1-git-send-email-shawn.lin@rock-chips.com>
- <20180430145132.GD32033@e107981-ln.cambridge.arm.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <0fd4a946-b9f1-5921-7815-5667a923e71c@rock-chips.com>
-Date: Wed, 2 May 2018 08:57:43 +0800
+Received: from bombadil.infradead.org ([198.137.202.133]:42684 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751123AbeEFMDk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 6 May 2018 08:03:40 -0400
+Date: Sun, 6 May 2018 05:03:39 -0700
+From: Matthew Wilcox <willy@infradead.org>
+To: linux-pci@vger.kernel.org
+Cc: Martin Mares <mj@ucw.cz>
+Subject: decode-tlp.c
+Message-ID: <20180506120339.GA7362@bombadil.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20180430145132.GD32033@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+A friend recently had his kernel spit out a message:
 
-On 2018/4/30 22:51, Lorenzo Pieralisi wrote:
-> On Fri, Apr 27, 2018 at 10:39:11AM +0800, Shawn Lin wrote:
->> Most of the DT properties are used for both of host and
->> EP drivrs, so this patch spilt them out to new function,
->> rockchip_pcie_parse_dt in pcie-rockchip.c and rename the
->> original function to rockchip_pcie_parse_host_dt to avoid
->> confusion. No functional changed intended.
-> 
-> If you read this commit log again you would notice that there
-> are typos and the formatting is non-compliant with:
-> 
-> https://marc.info/?l=linux-pci&m=150905742808166&w=2
-> 
-> I am fine with updating commit logs myself, that's not a problem, but I
-> wanted to make clear that you can easily spot these issues for future
-> postings too ;-)
-> 
+pcieport 0000:00:1d.0: AER: Multiple Uncorrected (Non-Fatal) error received: id=00e8
+pcieport 0000:00:1d.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=00e8(Requester ID)
+pcieport 0000:00:1d.0:   device [8086:a298] error status/mask=00100000/00010000
+pcieport 0000:00:1d.0:    [20] Unsupported Request    (First)
+pcieport 0000:00:1d.0:   TLP Header: 34000000 70000010 00000000 88468846
+pcieport 0000:00:1d.0: broadcast error_detected message
+pcieport 0000:00:1d.0: broadcast mmio_enabled message
+pcieport 0000:00:1d.0: broadcast resume message
+pcieport 0000:00:1d.0: AER: Device recovery successful
 
-My bad. Will be more careful for future postings. :)
+and that wasn't really quite enough information to go on.  I decoded
+this TLP by hand into a Latency Tolerance Reporting message, but this
+is really something we should have a program for.
 
-> Lorenzo
-> 
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
->> ---
->>
->> Changes in v6: None
->> Changes in v5: None
->> Changes in v4: None
->>
->>   drivers/pci/host/pcie-rockchip-host.c | 119 ++-----------------------------
->>   drivers/pci/host/pcie-rockchip.c      | 129 ++++++++++++++++++++++++++++++++++
->>   drivers/pci/host/pcie-rockchip.h      |   2 +
->>   3 files changed, 136 insertions(+), 114 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-rockchip-host.c b/drivers/pci/host/pcie-rockchip-host.c
->> index fae9ecc..cf97130 100644
->> --- a/drivers/pci/host/pcie-rockchip-host.c
->> +++ b/drivers/pci/host/pcie-rockchip-host.c
->> @@ -705,130 +705,20 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
->>   }
->>   
->>   /**
->> - * rockchip_pcie_parse_dt - Parse Device Tree
->> + * rockchip_pcie_parse_host_dt - Parse Device Tree
->>    * @rockchip: PCIe port information
->>    *
->>    * Return: '0' on success and error value on failure
->>    */
->> -static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
->> +static int rockchip_pcie_parse_host_dt(struct rockchip_pcie *rockchip)
->>   {
->>   	struct device *dev = rockchip->dev;
->> -	struct platform_device *pdev = to_platform_device(dev);
->> -	struct device_node *node = dev->of_node;
->> -	struct resource *regs;
->>   	int err;
->>   
->> -	regs = platform_get_resource_byname(pdev,
->> -					    IORESOURCE_MEM,
->> -					    "axi-base");
->> -	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
->> -	if (IS_ERR(rockchip->reg_base))
->> -		return PTR_ERR(rockchip->reg_base);
->> -
->> -	regs = platform_get_resource_byname(pdev,
->> -					    IORESOURCE_MEM,
->> -					    "apb-base");
->> -	rockchip->apb_base = devm_ioremap_resource(dev, regs);
->> -	if (IS_ERR(rockchip->apb_base))
->> -		return PTR_ERR(rockchip->apb_base);
->> -
->> -	err = rockchip_pcie_get_phys(rockchip);
->> +	err = rockchip_pcie_parse_dt(rockchip);
->>   	if (err)
->>   		return err;
->>   
->> -	rockchip->lanes = 1;
->> -	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
->> -	if (!err && (rockchip->lanes == 0 ||
->> -		     rockchip->lanes == 3 ||
->> -		     rockchip->lanes > 4)) {
->> -		dev_warn(dev, "invalid num-lanes, default to use one lane\n");
->> -		rockchip->lanes = 1;
->> -	}
->> -
->> -	rockchip->link_gen = of_pci_get_max_link_speed(node);
->> -	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
->> -		rockchip->link_gen = 2;
->> -
->> -	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
->> -	if (IS_ERR(rockchip->core_rst)) {
->> -		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
->> -			dev_err(dev, "missing core reset property in node\n");
->> -		return PTR_ERR(rockchip->core_rst);
->> -	}
->> -
->> -	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
->> -	if (IS_ERR(rockchip->mgmt_rst)) {
->> -		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
->> -			dev_err(dev, "missing mgmt reset property in node\n");
->> -		return PTR_ERR(rockchip->mgmt_rst);
->> -	}
->> -
->> -	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
->> -								     "mgmt-sticky");
->> -	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
->> -		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
->> -			dev_err(dev, "missing mgmt-sticky reset property in node\n");
->> -		return PTR_ERR(rockchip->mgmt_sticky_rst);
->> -	}
->> -
->> -	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
->> -	if (IS_ERR(rockchip->pipe_rst)) {
->> -		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
->> -			dev_err(dev, "missing pipe reset property in node\n");
->> -		return PTR_ERR(rockchip->pipe_rst);
->> -	}
->> -
->> -	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
->> -	if (IS_ERR(rockchip->pm_rst)) {
->> -		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
->> -			dev_err(dev, "missing pm reset property in node\n");
->> -		return PTR_ERR(rockchip->pm_rst);
->> -	}
->> -
->> -	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
->> -	if (IS_ERR(rockchip->pclk_rst)) {
->> -		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
->> -			dev_err(dev, "missing pclk reset property in node\n");
->> -		return PTR_ERR(rockchip->pclk_rst);
->> -	}
->> -
->> -	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
->> -	if (IS_ERR(rockchip->aclk_rst)) {
->> -		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
->> -			dev_err(dev, "missing aclk reset property in node\n");
->> -		return PTR_ERR(rockchip->aclk_rst);
->> -	}
->> -
->> -	rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
->> -	if (IS_ERR(rockchip->ep_gpio)) {
->> -		dev_err(dev, "missing ep-gpios property in node\n");
->> -		return PTR_ERR(rockchip->ep_gpio);
->> -	}
->> -
->> -	rockchip->aclk_pcie = devm_clk_get(dev, "aclk");
->> -	if (IS_ERR(rockchip->aclk_pcie)) {
->> -		dev_err(dev, "aclk clock not found\n");
->> -		return PTR_ERR(rockchip->aclk_pcie);
->> -	}
->> -
->> -	rockchip->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
->> -	if (IS_ERR(rockchip->aclk_perf_pcie)) {
->> -		dev_err(dev, "aclk_perf clock not found\n");
->> -		return PTR_ERR(rockchip->aclk_perf_pcie);
->> -	}
->> -
->> -	rockchip->hclk_pcie = devm_clk_get(dev, "hclk");
->> -	if (IS_ERR(rockchip->hclk_pcie)) {
->> -		dev_err(dev, "hclk clock not found\n");
->> -		return PTR_ERR(rockchip->hclk_pcie);
->> -	}
->> -
->> -	rockchip->clk_pcie_pm = devm_clk_get(dev, "pm");
->> -	if (IS_ERR(rockchip->clk_pcie_pm)) {
->> -		dev_err(dev, "pm clock not found\n");
->> -		return PTR_ERR(rockchip->clk_pcie_pm);
->> -	}
->> -
->>   	err = rockchip_pcie_setup_irq(rockchip);
->>   	if (err)
->>   		return err;
->> @@ -1195,8 +1085,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->>   
->>   	platform_set_drvdata(pdev, rockchip);
->>   	rockchip->dev = dev;
->> +	rockchip->is_rc = true;
->>   
->> -	err = rockchip_pcie_parse_dt(rockchip);
->> +	err = rockchip_pcie_parse_host_dt(rockchip);
->>   	if (err)
->>   		return err;
->>   
->> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
->> index 3d46da9..bcc222b 100644
->> --- a/drivers/pci/host/pcie-rockchip.c
->> +++ b/drivers/pci/host/pcie-rockchip.c
->> @@ -12,10 +12,139 @@
->>    */
->>   
->>   #include <linux/clk.h>
->> +#include <linux/gpio/consumer.h>
->> +#include <linux/of_pci.h>
->>   #include <linux/phy/phy.h>
->> +#include <linux/platform_device.h>
->> +#include <linux/reset.h>
->>   
->>   #include "pcie-rockchip.h"
->>   
->> +int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
->> +{
->> +	struct device *dev = rockchip->dev;
->> +	struct platform_device *pdev = to_platform_device(dev);
->> +	struct device_node *node = dev->of_node;
->> +	struct resource *regs;
->> +	int err;
->> +
->> +	regs = platform_get_resource_byname(pdev,
->> +					    IORESOURCE_MEM,
->> +					    "axi-base");
->> +	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
->> +	if (IS_ERR(rockchip->reg_base))
->> +		return PTR_ERR(rockchip->reg_base);
->> +
->> +	regs = platform_get_resource_byname(pdev,
->> +					    IORESOURCE_MEM,
->> +					    "apb-base");
->> +	rockchip->apb_base = devm_ioremap_resource(dev, regs);
->> +	if (IS_ERR(rockchip->apb_base))
->> +		return PTR_ERR(rockchip->apb_base);
->> +
->> +	err = rockchip_pcie_get_phys(rockchip);
->> +	if (err)
->> +		return err;
->> +
->> +	rockchip->lanes = 1;
->> +	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
->> +	if (!err && (rockchip->lanes == 0 ||
->> +		     rockchip->lanes == 3 ||
->> +		     rockchip->lanes > 4)) {
->> +		dev_warn(dev, "invalid num-lanes, default to use one lane\n");
->> +		rockchip->lanes = 1;
->> +	}
->> +
->> +	rockchip->link_gen = of_pci_get_max_link_speed(node);
->> +	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
->> +		rockchip->link_gen = 2;
->> +
->> +	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
->> +	if (IS_ERR(rockchip->core_rst)) {
->> +		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
->> +			dev_err(dev, "missing core reset property in node\n");
->> +		return PTR_ERR(rockchip->core_rst);
->> +	}
->> +
->> +	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
->> +	if (IS_ERR(rockchip->mgmt_rst)) {
->> +		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
->> +			dev_err(dev, "missing mgmt reset property in node\n");
->> +		return PTR_ERR(rockchip->mgmt_rst);
->> +	}
->> +
->> +	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
->> +								     "mgmt-sticky");
->> +	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
->> +		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
->> +			dev_err(dev, "missing mgmt-sticky reset property in node\n");
->> +		return PTR_ERR(rockchip->mgmt_sticky_rst);
->> +	}
->> +
->> +	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
->> +	if (IS_ERR(rockchip->pipe_rst)) {
->> +		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
->> +			dev_err(dev, "missing pipe reset property in node\n");
->> +		return PTR_ERR(rockchip->pipe_rst);
->> +	}
->> +
->> +	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
->> +	if (IS_ERR(rockchip->pm_rst)) {
->> +		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
->> +			dev_err(dev, "missing pm reset property in node\n");
->> +		return PTR_ERR(rockchip->pm_rst);
->> +	}
->> +
->> +	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
->> +	if (IS_ERR(rockchip->pclk_rst)) {
->> +		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
->> +			dev_err(dev, "missing pclk reset property in node\n");
->> +		return PTR_ERR(rockchip->pclk_rst);
->> +	}
->> +
->> +	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
->> +	if (IS_ERR(rockchip->aclk_rst)) {
->> +		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
->> +			dev_err(dev, "missing aclk reset property in node\n");
->> +		return PTR_ERR(rockchip->aclk_rst);
->> +	}
->> +
->> +	if (rockchip->is_rc) {
->> +		rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
->> +		if (IS_ERR(rockchip->ep_gpio)) {
->> +			dev_err(dev, "missing ep-gpios property in node\n");
->> +			return PTR_ERR(rockchip->ep_gpio);
->> +		}
->> +	}
->> +
->> +	rockchip->aclk_pcie = devm_clk_get(dev, "aclk");
->> +	if (IS_ERR(rockchip->aclk_pcie)) {
->> +		dev_err(dev, "aclk clock not found\n");
->> +		return PTR_ERR(rockchip->aclk_pcie);
->> +	}
->> +
->> +	rockchip->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
->> +	if (IS_ERR(rockchip->aclk_perf_pcie)) {
->> +		dev_err(dev, "aclk_perf clock not found\n");
->> +		return PTR_ERR(rockchip->aclk_perf_pcie);
->> +	}
->> +
->> +	rockchip->hclk_pcie = devm_clk_get(dev, "hclk");
->> +	if (IS_ERR(rockchip->hclk_pcie)) {
->> +		dev_err(dev, "hclk clock not found\n");
->> +		return PTR_ERR(rockchip->hclk_pcie);
->> +	}
->> +
->> +	rockchip->clk_pcie_pm = devm_clk_get(dev, "pm");
->> +	if (IS_ERR(rockchip->clk_pcie_pm)) {
->> +		dev_err(dev, "pm clock not found\n");
->> +		return PTR_ERR(rockchip->clk_pcie_pm);
->> +	}
->> +
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(rockchip_pcie_parse_dt);
->> +
->>   int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
->>   {
->>   	struct device *dev = rockchip->dev;
->> diff --git a/drivers/pci/host/pcie-rockchip.h b/drivers/pci/host/pcie-rockchip.h
->> index d27941e..473e74f 100644
->> --- a/drivers/pci/host/pcie-rockchip.h
->> +++ b/drivers/pci/host/pcie-rockchip.h
->> @@ -222,6 +222,7 @@ struct rockchip_pcie {
->>   	u32     mem_size;
->>   	phys_addr_t msg_bus_addr;
->>   	phys_addr_t mem_bus_addr;
->> +	bool is_rc;
->>   };
->>   
->>   static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
->> @@ -235,6 +236,7 @@ static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val,
->>   	writel(val, rockchip->apb_base + reg);
->>   }
->>   
->> +int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip);
->>   int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip);
->>   void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip);
->>   int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip);
->> -- 
->> 1.9.1
->>
->>
-> 
-> 
-> 
+This solves my immediate needs; I'm sure it can be extended to be more
+useful for other people.  Martin, do you want to include it in pciutils?
+
+
+/*
+ * Decode TLPs as reported by Linux's AER support
+ *
+ * Copyright (c) Matthew Wilcox 2018
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * The format of the report looks like this:
+ *
+ * TLP Header: 34000000 70000010 00000000 88468846
+ *
+ * That's a stream of bytes, *not* 32-bit words.  In that example, the
+ * byte 0x34 is byte 0, not byte 3.
+ */
+
+#define _GNU_SOURCE
+
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+bool debug = false;
+
+static int parse_header(unsigned char *header)
+{
+	char s[256];
+	char *p;
+	int i;
+
+	p = fgets(s, 256, stdin);
+	if (p)
+		p = strstr(p, "TLP Header: ");
+	if (!p) {
+		fprintf(stderr, "Can\'t find \"TLP Header: \"\n");
+		return 1;
+	}
+
+	p += 12;
+
+	for (i = 0; i < 4; i++) {
+		unsigned long val = strtoul(p, NULL, 16);
+		header[0] = val >> 24;
+		header[1] = val >> 16;
+		header[2] = val >> 8;
+		header[3] = val;
+		p += 9;
+		header += 4;
+	}
+
+	return 0;
+}
+
+static void decode_msg(unsigned char *header)
+{
+	unsigned char code = header[7];
+
+	if (code == 0x00)
+		printf("Unlock Message\n");
+	if (code == 0x10)
+		printf("Latency Tolerance Reporting Message\n");
+	if (code == 0x12)
+		printf("Optimised Buffer Flush/Fill Message\n");
+	if (code == 0x14)
+		printf("PM NAK Message\n");
+	if (code == 0x18)
+		printf("PM PME Message\n");
+	if (code == 0x19)
+		printf("PM Turn Off Message\n");
+	if (code == 0x1b)
+		printf("PM Ack Turn Off Message\n");
+	if (code >= 0x20 && code <= 0x27)
+		printf("Legacy Interrupt Message (%d)\n", code & 7);
+	if (code == 0x30)
+		printf("Error Detected (Correctable) Message\n");
+	if (code == 0x31)
+		printf("Error Detected (NonFatal) Message\n");
+	if (code == 0x33)
+		printf("Error Detected (Fatal) Message\n");
+	if (code >= 0x40 && code <= 0x48)
+		printf("Hotplug Signalling Message\n");
+	if (code == 0x7e || code == 0x7f)
+		printf("Vendor Defined (Type %d) Message\n", code - 0x7e);
+	if (code == 0x90)
+		printf("Set Slot Power Limit Message\n");
+}
+
+static void decode_type(unsigned char *header)
+{
+	unsigned char type = *header;
+
+	if (type == 0x00 || type == 0x20)
+		printf("Memory Read Request\n");
+	if (type == 0x01 || type == 0x21)
+		printf("Memory Read Request Locked\n");
+	if (type == 0x40 || type == 0x60)
+		printf("Memory Write Request\n");
+	if (type == 0x02)
+		printf("I/O Read Request\n");
+	if (type == 0x42)
+		printf("I/O Write Request\n");
+	if (type == 0x04)
+		printf("Cfg0 Read Request\n");
+	if (type == 0x44)
+		printf("Cfg0 Write Request\n");
+	if (type == 0x05)
+		printf("Cfg1 Read Request\n");
+	if (type == 0x45)
+		printf("Cfg1 Write Request\n");
+	if (type == 0x1b)
+		printf("TCfg Read Request\n");
+	if (type == 0x5b)
+		printf("TCfg Write Request\n");
+	if (type >= 0x30 && type <= 0x37)
+		return decode_msg(header);
+	if (type >= 0x70 && type <= 0x77)
+		printf("Msg with Data Request\n");
+	if (type == 0x0a)
+		printf("Completion\n");
+	if (type == 0x4a)
+		printf("Completion with Data\n");
+	if (type == 0x0b)
+		printf("Completion of Locked Read without Data\n");
+	if (type == 0x4b)
+		printf("Completion of Locked Read with Data\n");
+	if (type == 0x4c || type == 0x6c)
+		printf("FetchAdd Request\n");
+	if (type == 0x4d || type == 0x6d)
+		printf("Swap Request\n");
+	if (type == 0x4e || type == 0x6e)
+		printf("CAS Request\n");
+	if (type >= 0x80 && type <= 0x8f) {
+		printf("Local TLP Prefix %d\n", type & 0xf);
+		return decode_type(header + 1);
+	}
+	if (type >= 0x90 && type <= 0x9f) {
+		printf("End-End TLP Prefix %d\n", type & 0xf);
+		return decode_type(header + 1);
+	}
+}
+
+static int usage(char **argv)
+{
+	fprintf(stderr, "Usage: %s [-d]\n", argv[0]);
+	return 1;
+}
+
+int main(int argc, char **argv)
+{
+	unsigned char header[16];
+	int opt;
+
+	while ((opt = getopt(argc, argv, "d")) != -1) {
+		switch (opt) {
+		case 'd':
+			debug = true;
+			break;
+		default:
+			return usage(argv);
+		}
+	}
+
+	if (argc > optind)
+		return usage(argv);
+
+	if (parse_header(header))
+		return 1;
+
+	if (debug)
+		printf("TLP Header: %02x%02x%02x%02x %02x%02x%02x%02x "
+			"%02x%02x%02x%02x %02x%02x%02x%02x\n",
+			header[0], header[1], header[2], header[3],
+			header[4], header[5], header[6], header[7],
+			header[8], header[9], header[10], header[11],
+			header[12], header[13], header[14], header[15]);
+
+	decode_type(header);
+
+	return 0;
+}
