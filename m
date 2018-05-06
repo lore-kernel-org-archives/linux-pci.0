@@ -1,157 +1,237 @@
-Return-Path: <SRS0=4w1L=IL=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=4w1L=IL=intel.com=jonathan.derrick@kernel.org>
-From: "Derrick, Jonathan" <jonathan.derrick@intel.com>
-To: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>
-CC: "myron.stowe@redhat.com" <myron.stowe@redhat.com>, "hch@lst.de"
-	<hch@lst.de>, "helgaas@kernel.org" <helgaas@kernel.org>, "Bauer, Scott"
-	<scott.bauer@intel.com>, "jroedel@suse.de" <jroedel@suse.de>, "Fugate, David"
-	<david.fugate@intel.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "Busch, Keith" <keith.busch@intel.com>
-Subject: Re: [PATCH 0/5] Enable an additional VMD device id
-Date: Thu, 24 May 2018 16:36:48 +0000
-Message-ID: <1527179806.8026.1.camel@intel.com>
-References: <20180518192802.20371-1-jonathan.derrick@intel.com>
-	 <20180524114452.GA20732@e107981-ln.cambridge.arm.com>
-	 <1527178507.20527.2.camel@intel.com>
-	 <20180524163420.GA24940@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20180524163420.GA24940@e107981-ln.cambridge.arm.com>
-Content-Type: multipart/signed; micalg=sha-1;
-	protocol="application/x-pkcs7-signature"; boundary="=-mncgF3VHNpcK3U4uyDOe"
+Return-Path: <SRS0=f0oV=HZ=molgen.mpg.de=pmenzel@kernel.org>
+Return-Path: <SRS0=f0oV=HZ=molgen.mpg.de=pmenzel@kernel.org>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: okaya@codeaurora.org, Pavel Machek <pavel@ucw.cz>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+ <43b8ab4a-f8ee-dc96-40ec-e6fdfedd8309@molgen.mpg.de>
+ <20180504024527.GE15790@bhelgaas-glaptop.roam.corp.google.com>
+ <aa72d3ba089c76449600c22b58a2cafe@codeaurora.org>
+ <20180504133327.GF15790@bhelgaas-glaptop.roam.corp.google.com>
+From: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+Message-ID: <f60a69c1-865e-e919-48ce-92416e44879d@molgen.mpg.de>
+Date: Sun, 6 May 2018 11:35:01 +0200
 MIME-Version: 1.0
+In-Reply-To: <20180504133327.GF15790@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
---=-mncgF3VHNpcK3U4uyDOe
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2018-05-24 at 17:34 +0100, Lorenzo Pieralisi wrote:
-> On Thu, May 24, 2018 at 04:15:08PM +0000, Derrick, Jonathan wrote:
-> > Hi Lorenzo,
-> >=20
-> > On Thu, 2018-05-24 at 12:44 +0100, Lorenzo Pieralisi wrote:
-> > > On Fri, May 18, 2018 at 01:27:57PM -0600, Jon Derrick wrote:
-> > > > This patchset enables an additional VMD device ID to the VMD
-> > > > driver
-> > > > supporting assignment of the membar addresses from shadow
-> > > > registers
-> > > > and
-> > > > allows more flexibility in assigning bus numbers to a VMD PCIe
-> > > > domain.
-> > > > Additional VMD root port device ids have been added to the VMD
-> > > > AER
-> > > > quirk.
-> > > >=20
-> > > > Changes from rfc include comments, code structure, and using
-> > > > pci_add_resource_offset to correctly assign addresses while
-> > > > virtualized.
-> > > >=20
-> > > > Applies to Bjorn's next branch
-> > >=20
-> > > Hi Jon,
-> > >=20
-> > > You should base it on v4.17-rc1 and if there is a dependency on
-> > > later -rc* or a branch in Bjorn/my queue please let us know.
-> >=20
-> > It looks like it applies cleanly to 4.17-rc1 and rc6.
-> >=20
-> > > > Jon Derrick (5):
-> > > >   PCI: Add Intel VMD devices to pci ids
-> > > >   PCI/VMD: Assign membar addresses from shadow registers
-> > > >   PCI/VMD: Add offset to bus numbers if necessary
-> > > >   x86/PCI: Add additional VMD device root ports to VMD AER
-> > > > quirk
-> > > >   PCI/VMD: Add an additional VMD device id to driver device id
-> > > > table
-> > > >=20
-> > > >  arch/x86/pci/fixup.c    |  4 +++
-> > > >  drivers/pci/host/vmd.c  | 91
-> > > > +++++++++++++++++++++++++++++++++++++++++++------
-> > > >  include/linux/pci_ids.h |  2 ++
-> > > >  3 files changed, 87 insertions(+), 10 deletions(-)
-> > >=20
-> > > I need Bjorn's ACK on patch (4), or if Bjorn is keen on pulling
-> > > the
-> > > series, here's mine on the series:
-> > >=20
-> > > Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> >=20
-> > Would you like me to rebase it and resend with Bjorn's ack?
->=20
-> No need to resend but I need Bjorn's ACK on patch (4) in order to
-> queue it.
->=20
-> Thanks,
-> Lorenzo
-
-Here's Bjorn's ack since you may not have it seen it yet:
-https://patchwork.ozlabs.org/patch/916565/
+Dear Bjorn,
 
 
-Thanks,
-Jon
---=-mncgF3VHNpcK3U4uyDOe
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
+Am 04.05.2018 um 15:33 schrieb Bjorn Helgaas:
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIKeTCCBOsw
-ggPToAMCAQICEFLpAsoR6ESdlGU4L6MaMLswDQYJKoZIhvcNAQEFBQAwbzELMAkGA1UEBhMCU0Ux
-FDASBgNVBAoTC0FkZFRydXN0IEFCMSYwJAYDVQQLEx1BZGRUcnVzdCBFeHRlcm5hbCBUVFAgTmV0
-d29yazEiMCAGA1UEAxMZQWRkVHJ1c3QgRXh0ZXJuYWwgQ0EgUm9vdDAeFw0xMzAzMTkwMDAwMDBa
-Fw0yMDA1MzAxMDQ4MzhaMHkxCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJDQTEUMBIGA1UEBxMLU2Fu
-dGEgQ2xhcmExGjAYBgNVBAoTEUludGVsIENvcnBvcmF0aW9uMSswKQYDVQQDEyJJbnRlbCBFeHRl
-cm5hbCBCYXNpYyBJc3N1aW5nIENBIDRBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
-4LDMgJ3YSVX6A9sE+jjH3b+F3Xa86z3LLKu/6WvjIdvUbxnoz2qnvl9UKQI3sE1zURQxrfgvtP0b
-Pgt1uDwAfLc6H5eqnyi+7FrPsTGCR4gwDmq1WkTQgNDNXUgb71e9/6sfq+WfCDpi8ScaglyLCRp7
-ph/V60cbitBvnZFelKCDBh332S6KG3bAdnNGB/vk86bwDlY6omDs6/RsfNwzQVwo/M3oPrux6y6z
-yIoRulfkVENbM0/9RrzQOlyK4W5Vk4EEsfW2jlCV4W83QKqRccAKIUxw2q/HoHVPbbETrrLmE6RR
-Z/+eWlkGWl+mtx42HOgOmX0BRdTRo9vH7yeBowIDAQABo4IBdzCCAXMwHwYDVR0jBBgwFoAUrb2Y
-ejS0Jvf6xCZU7wO94CTLVBowHQYDVR0OBBYEFB5pKrTcKP5HGE4hCz+8rBEv8Jj1MA4GA1UdDwEB
-/wQEAwIBhjASBgNVHRMBAf8ECDAGAQH/AgEAMDYGA1UdJQQvMC0GCCsGAQUFBwMEBgorBgEEAYI3
-CgMEBgorBgEEAYI3CgMMBgkrBgEEAYI3FQUwFwYDVR0gBBAwDjAMBgoqhkiG+E0BBQFpMEkGA1Ud
-HwRCMEAwPqA8oDqGOGh0dHA6Ly9jcmwudHJ1c3QtcHJvdmlkZXIuY29tL0FkZFRydXN0RXh0ZXJu
-YWxDQVJvb3QuY3JsMDoGCCsGAQUFBwEBBC4wLDAqBggrBgEFBQcwAYYeaHR0cDovL29jc3AudHJ1
-c3QtcHJvdmlkZXIuY29tMDUGA1UdHgQuMCygKjALgQlpbnRlbC5jb20wG6AZBgorBgEEAYI3FAID
-oAsMCWludGVsLmNvbTANBgkqhkiG9w0BAQUFAAOCAQEAKcLNo/2So1Jnoi8G7W5Q6FSPq1fmyKW3
-sSDf1amvyHkjEgd25n7MKRHGEmRxxoziPKpcmbfXYU+J0g560nCo5gPF78Wd7ZmzcmCcm1UFFfIx
-fw6QA19bRpTC8bMMaSSEl8y39Pgwa+HENmoPZsM63DdZ6ziDnPqcSbcfYs8qd/m5d22rpXq5IGVU
-tX6LX7R/hSSw/3sfATnBLgiJtilVyY7OGGmYKCAS2I04itvSS1WtecXTt9OZDyNbl7LtObBrgMLh
-ZkpJW+pOR9f3h5VG2S5uKkA7Th9NC9EoScdwQCAIw+UWKbSQ0Isj2UFL7fHKvmqWKVTL98sRzvI3
-seNC4DCCBYYwggRuoAMCAQICEzMAAKye+0C3syvSXOcAAAAArJ4wDQYJKoZIhvcNAQEFBQAweTEL
-MAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtTYW50YSBDbGFyYTEaMBgGA1UEChMR
-SW50ZWwgQ29ycG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFsIEJhc2ljIElzc3Vpbmcg
-Q0EgNEEwHhcNMTcxMDE5MTcyNzI3WhcNMTgxMDE0MTcyNzI3WjBHMRowGAYDVQQDExFEZXJyaWNr
-LCBKb25hdGhhbjEpMCcGCSqGSIb3DQEJARYaam9uYXRoYW4uZGVycmlja0BpbnRlbC5jb20wggEi
-MA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCz4TvOwEKxVEgGst/n3LricX9KG2YbHHvorBFb
-ggk/Wm7ZV9v/w5I5+M7SFD1CVS+MD24tlcL0mjddPXklsjPNmFb7TCXhppQMWqxwlS44iokDpHEF
-wx6DtwcIlfmvgPormri3U5V0gkRvnmiFSlQ2bUycWgxttAvR4sYjxLas7hE3jZJ1LJ9IxiD7VMNJ
-QWXSxxnOGZVf1tUTqC5uNv9wSvr8N7ZRYldP4nJ9JUFO7bazyoplxGlgxIR3+7I9TgbrUOziQCja
-AG6qjTBc2iB2iz6IVnzrBtQT5DR3KM6EqbMTwur8keTC11xls7lwWexzsSgt37V9UNKAqfsZPgcX
-AgMBAAGjggI3MIICMzAdBgNVHQ4EFgQUJRdznv8EeAa3g+3F5NKtNNctuBcwHwYDVR0jBBgwFoAU
-HmkqtNwo/kcYTiELP7ysES/wmPUwZQYDVR0fBF4wXDBaoFigVoZUaHR0cDovL3d3dy5pbnRlbC5j
-b20vcmVwb3NpdG9yeS9DUkwvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENB
-JTIwNEEuY3JsMIGfBggrBgEFBQcBAQSBkjCBjzBpBggrBgEFBQcwAoZdaHR0cDovL3d3dy5pbnRl
-bC5jb20vcmVwb3NpdG9yeS9jZXJ0aWZpY2F0ZXMvSW50ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIw
-SXNzdWluZyUyMENBJTIwNEEuY3J0MCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5pbnRlbC5jb20v
-MAsGA1UdDwQEAwIHgDA8BgkrBgEEAYI3FQcELzAtBiUrBgEEAYI3FQiGw4x1hJnlUYP9gSiFjp9T
-gpHACWeB3r05lfBDAgFkAgEJMB8GA1UdJQQYMBYGCCsGAQUFBwMEBgorBgEEAYI3CgMMMCkGCSsG
-AQQBgjcVCgQcMBowCgYIKwYBBQUHAwQwDAYKKwYBBAGCNwoDDDBRBgNVHREESjBIoCoGCisGAQQB
-gjcUAgOgHAwaam9uYXRoYW4uZGVycmlja0BpbnRlbC5jb22BGmpvbmF0aGFuLmRlcnJpY2tAaW50
-ZWwuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQA5LNb+VnWY0V21FlNjnQ2BIb5gmlED29zwQiC5yezn
-2SexgvN31129iJSkXuiBHdcVJiUAUPHYuxPRwumwbrkY6m+sYi9kIzKt+ZKNNAN4WbnavsbyRBlb
-cIn2E5swqD+sks8AmKivHmg+gFeboLaOf+EqVihIz1Wec1PpbX98R1t2ep7Y/81DD1fIjAWHl6Mq
-TJwjKQuYB01kkJdXZAGPXUQSARR1y2D1YpCkDqfGH2STaB4nenD4INSyhTGo5RV9wwTAibyrIq50
-rnmvBnHTmICQVdHuIhG1gGmDLUAGqfrU3W2QJr9gkICdrTMgIEdd8s73wknaZxZKqfRxnMVQMYIC
-FzCCAhMCAQEwgZAweTELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtTYW50YSBD
-bGFyYTEaMBgGA1UEChMRSW50ZWwgQ29ycG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFs
-IEJhc2ljIElzc3VpbmcgQ0EgNEECEzMAAKye+0C3syvSXOcAAAAArJ4wCQYFKw4DAhoFAKBdMBgG
-CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE4MDUyNDE2MzY0NlowIwYJ
-KoZIhvcNAQkEMRYEFM5f9XOyjJvIyUbKUHHLXVwsvxFyMA0GCSqGSIb3DQEBAQUABIIBAI5yctUV
-2AyDQCFVteeQQwxpGb3KUdT30WFUSk5sHBUjY9lvMHGgyukaUfg1Z4xVcUPOMiUYAphTVJ3aNBk0
-625+uvtccrkEEj4ZiaA5ykklp4hKre7YDw12jxNbP4/Ty7bsrfIeTR9pryVdXn42/aw3oYvlqh8g
-UIqk27mrnHRjhpGGrPrYPyoS2om8ZtA8kMNbxt6CKxb03fGP+RmXevZN/5vowkUNVD8lSeBW7/pM
-JgIagFl9XoGZgEPEbxrvJFefpY698Zdqtlvnvt9fei+IPM260GuFi4jgRtocm9PHshtg/h6DZ9Lo
-aZRAesNVry8u1Hpn6Cdf8gLlyBhWyP8AAAAAAAA=
+[…]
+
+> Yes, definitely.  I intended to do that but got a little lazy.  What
+> do you think about the following?  Paul, if you haven't tested the
+> first patch, can you try this one instead?  The logic is pretty much
+> the same.
+> 
+> 3461a068661c ("PCI: pciehp: Wait for hotplug command completion
+> lazily") mentions AMD and Nvidia devices with the same issue, but
+> unfortunately doesn't include any specifics.
+> 
+> 
+> commit b0d6f2230e12c85ae3b65a854a53c67c7c1f6406
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Thu May 3 18:39:38 2018 -0500
+> 
+>      PCI: pciehp: Add quirk for Intel Command Completed erratum
+>      
+>      The Intel CF118 erratum means the controller does not set the Command
+>      Completed bit unless writes to the Slot Command register change "Control"
+>      bits.  Command Completed is never set for writes that only change software
+>      notification "Enable" bits.  This results in timeouts like this:
+>      
+>        pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038 (issued 65284 msec ago)
+>      
+>      When this erratum is present, avoid these timeouts by marking commands
+>      "completed" immediately unless they change the "Control" bits.
+>      
+>      Here's the text of the erratum from the Intel document:
+>      
+>        CF118        PCIe Slot Status Register Command Completed bit not always
+>                     updated on any configuration write to the Slot Control
+>                     Register
+>      
+>        Problem:     For PCIe root ports (devices 0 - 10) supporting hot-plug,
+>                     the Slot Status Register (offset AAh) Command Completed
+>                     (bit[4]) status is updated under the following condition:
+>                     IOH will set Command Completed bit after delivering the new
+>                     commands written in the Slot Controller register (offset
+>                     A8h) to VPP. The IOH detects new commands written in Slot
+>                     Control register by checking the change of value for Power
+>                     Controller Control (bit[10]), Power Indicator Control
+>                     (bits[9:8]), Attention Indicator Control (bits[7:6]), or
+>                     Electromechanical Interlock Control (bit[11]) fields. Any
+>                     other configuration writes to the Slot Control register
+>                     without changing the values of these fields will not cause
+>                     Command Completed bit to be set.
+>      
+>                     The PCIe Base Specification Revision 2.0 or later describes
+>                     the “Slot Control Register” in section 7.8.10, as follows
+>                     (Reference section 7.8.10, Slot Control Register, Offset
+>                     18h). In hot-plug capable Downstream Ports, a write to the
+>                     Slot Control register must cause a hot-plug command to be
+>                     generated (see Section 6.7.3.2 for details on hot-plug
+>                     commands). A write to the Slot Control register in a
+>                     Downstream Port that is not hotplug capable must not cause a
+>                     hot-plug command to be executed.
+>      
+>                     The PCIe Spec intended that every write to the Slot Control
+>                     Register is a command and expected a command complete status
+>                     to abstract the VPP implementation specific nuances from the
+>                     OS software. IOH PCIe Slot Control Register implementation
+>                     is not fully conforming to the PCIe Specification in this
+>                     respect.
+>      
+>        Implication: Software checking on the Command Completed status after
+>                     writing to the Slot Control register may time out.
+>      
+>        Workaround:  Software can read the Slot Control register and compare the
+>                     existing and new values to determine if it should check the
+>                     Command Completed status after writing to the Slot Control
+>                     register.
+>      
+>      Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
+>      Link: https://lkml.kernel.org/r/8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de
+>      Reported-by: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 18a42f8f5dc5..e70eba5ea906 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -10,7 +10,6 @@
+>    * All rights reserved.
+>    *
+>    * Send feedback to <greg@kroah.com>,<kristen.c.accardi@intel.com>
+> - *
+>    */
+>   
+>   #include <linux/kernel.h>
+> @@ -147,25 +146,22 @@ static void pcie_wait_cmd(struct controller *ctrl)
+>   	else
+>   		rc = pcie_poll_cmd(ctrl, jiffies_to_msecs(timeout));
+>   
+> -	/*
+> -	 * Controllers with errata like Intel CF118 don't generate
+> -	 * completion notifications unless the power/indicator/interlock
+> -	 * control bits are changed.  On such controllers, we'll emit this
+> -	 * timeout message when we wait for completion of commands that
+> -	 * don't change those bits, e.g., commands that merely enable
+> -	 * interrupts.
+> -	 */
+>   	if (!rc)
+>   		ctrl_info(ctrl, "Timeout on hotplug command %#06x (issued %u msec ago)\n",
+>   			  ctrl->slot_ctrl,
+>   			  jiffies_to_msecs(jiffies - ctrl->cmd_started));
+>   }
+>   
+> +#define CC_ERRATUM_MASK		(PCI_EXP_SLTCTL_PCC |	\
+> +				 PCI_EXP_SLTCTL_PIC |	\
+> +				 PCI_EXP_SLTCTL_AIC |	\
+> +				 PCI_EXP_SLTCTL_EIC)
+> +
+>   static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
+>   			      u16 mask, bool wait)
+>   {
+>   	struct pci_dev *pdev = ctrl_dev(ctrl);
+> -	u16 slot_ctrl;
+> +	u16 slot_ctrl_orig, slot_ctrl;
+>   
+>   	mutex_lock(&ctrl->ctrl_lock);
+>   
+> @@ -180,6 +176,7 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
+>   		goto out;
+>   	}
+>   
+> +	slot_ctrl_orig = slot_ctrl;
+>   	slot_ctrl &= ~mask;
+>   	slot_ctrl |= (cmd & mask);
+>   	ctrl->cmd_busy = 1;
+> @@ -188,6 +185,17 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
+>   	ctrl->cmd_started = jiffies;
+>   	ctrl->slot_ctrl = slot_ctrl;
+>   
+> +	/*
+> +	 * Controllers with the Intel CF118 and similar errata advertise
+> +	 * Command Completed support, but they only set Command Completed
+> +	 * if we change the "Control" bits for power, power indicator,
+> +	 * attention indicator, or interlock.  If we only change the
+> +	 * "Enable" bits, they never set the Command Completed bit.
+> +	 */
+> +	if (pdev->broken_cmd_compl &&
+> +	    (slot_ctrl_orig & CC_ERRATUM_MASK) == (slot_ctrl & CC_ERRATUM_MASK))
+> +		ctrl->cmd_busy = 0;
+> +
+>   	/*
+>   	 * Optionally wait for the hardware to be ready for a new command,
+>   	 * indicating completion of the above issued command.
+> @@ -861,7 +869,7 @@ struct controller *pcie_init(struct pcie_device *dev)
+>   		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_CC |
+>   		PCI_EXP_SLTSTA_DLLSC);
+>   
+> -	ctrl_info(ctrl, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c\n",
+> +	ctrl_info(ctrl, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c%s\n",
+>   		(slot_cap & PCI_EXP_SLTCAP_PSN) >> 19,
+>   		FLAG(slot_cap, PCI_EXP_SLTCAP_ABP),
+>   		FLAG(slot_cap, PCI_EXP_SLTCAP_PCP),
+> @@ -872,7 +880,8 @@ struct controller *pcie_init(struct pcie_device *dev)
+>   		FLAG(slot_cap, PCI_EXP_SLTCAP_HPS),
+>   		FLAG(slot_cap, PCI_EXP_SLTCAP_EIP),
+>   		FLAG(slot_cap, PCI_EXP_SLTCAP_NCCS),
+> -		FLAG(link_cap, PCI_EXP_LNKCAP_DLLLARC));
+> +		FLAG(link_cap, PCI_EXP_LNKCAP_DLLLARC),
+> +		pdev->broken_cmd_compl ? " (with Cmd Compl erratum)" : "");
+>   
+>   	if (pcie_init_slot(ctrl))
+>   		goto abort_ctrl;
+> @@ -891,3 +900,17 @@ void pciehp_release_ctrl(struct controller *ctrl)
+>   	pcie_cleanup_slot(ctrl);
+>   	kfree(ctrl);
+>   }
+> +
+> +static void quirk_cmd_compl(struct pci_dev *pdev)
+> +{
+> +	u32 slot_cap;
+> +
+> +	if (pci_is_pcie(pdev)) {
+> +		pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
+> +		if (slot_cap & PCI_EXP_SLTCAP_HPC &&
+> +		    !(slot_cap & PCI_EXP_SLTCAP_NCCS))
+> +			pdev->broken_cmd_compl = 1;
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+> +			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 73178a2fcee0..60cb5350ad28 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -406,6 +406,9 @@ struct pci_dev {
+>   	struct bin_attribute *res_attr[DEVICE_COUNT_RESOURCE]; /* sysfs file for resources */
+>   	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
+>   
+> +#ifdef CONFIG_HOTPLUG_PCI_PCIE
+> +	unsigned int	broken_cmd_compl:1;	/* Command Complete broken */
+> +#endif
+>   #ifdef CONFIG_PCIE_PTM
+>   	unsigned int	ptm_root:1;
+>   	unsigned int	ptm_enabled:1;
+> 
+
+With this change, the message is also not shown anymore on the Lenovo 
+X60. Thank you.
+
+Tested-by: Paul Menzel <pmenzel@molgen.mpg.de>
 
 
---=-mncgF3VHNpcK3U4uyDOe--
+Kind regards,
+
+Paul
