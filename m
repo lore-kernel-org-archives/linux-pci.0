@@ -1,77 +1,77 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	ryan@finnie.org,
-	timur@codeaurora.org
-Subject: [PATCH V3 2/2] scsi: hpsa: drop shutdown callback
-Date: Mon, 28 May 2018 17:21:11 -0400
-Message-Id: <1527542471-10316-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1527542471-10316-1-git-send-email-okaya@codeaurora.org>
-References: <1527542471-10316-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: AER: Malformed TLP recovery deadlock with NVMe drives
+To: okaya@codeaurora.org
+References: <8cf4e563-5f84-f8bd-88a6-8369cdf07b29@gmail.com>
+ <7afd280ad80a73b39e6c9b9a9e29abcc@codeaurora.org>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <5c97a7c2-cb53-4740-fda0-50ba92288c5c@gmail.com>
+Date: Mon, 7 May 2018 15:16:02 -0500
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Don Brace <don.brace@microsemi.com>,
- "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
- "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER hpsa"
- <linux-scsi@vger.kernel.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-arm-msm@vger.kernel.org,
- "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER hpsa"
- <esc.storagedev@microsemi.com>, open list <linux-kernel@vger.kernel.org>,
- stable@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- linux-arm-kernel@lists.infradead.org
+In-Reply-To: <7afd280ad80a73b39e6c9b9a9e29abcc@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Alex_Gagniuc@dellteam.com, linux-pci@vger.kernel.org, shyam_iyer@dell.com,
+ linux-nvme@lists.infradead.org, Keith Busch <keith.busch@intel.com>,
+ austin_bolen@dell.com, linux-pci-owner@vger.kernel.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
-shutdown")' has been added to kernel to shutdown pending PCIe port
-service interrupts during reboot so that a newly started kexec kernel
-wouldn't observe pending interrupts.
+On 05/07/2018 01:46 PM, okaya@codeaurora.org wrote:
+> On 2018-05-07 19:36, Alex G. wrote:
+>> Hi! Me again!
+>>
+>> I'm seeing what appears to be a deadlock in the AER recovery path. It
+>> seems that the device_lock() call in report_slot_reset() never returns.
+>> How we get there is interesting:
+> 
+> Can you give this patch a try?
+> 
+Oh! Patches so soon? Yay!
 
-pcie_port_device_remove() is disabling the root port and switches by
-calling pci_disable_device() after all PCIe service drivers are shutdown.
+> https://patchwork.kernel.org/patch/10351515/
 
-This has been found to cause crashes on HP DL360 Gen9 machines during
-reboot due to hpsa driver not clearing the bus master bit during the
-shutdown procedure by calling pci_disable_device().
+Thank you! I tried a few runs. there was one run where we didn't lock
+up, but the other runs all went like before.
 
-Drop the shutdown API and do an orderly clean up by using the remove.
+For comparison, the run that didn't deadlock looked like [2].
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
-Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-Cc: stable@vger.kernel.org
-Reported-by: Ryan Finnie <ryan@finnie.org>
----
- drivers/scsi/hpsa.c | 1 -
- 1 file changed, 1 deletion(-)
+Alex
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3a9eca1..3dbef28 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -8970,7 +8970,6 @@ static struct pci_driver hpsa_pci_driver = {
- 	.probe = hpsa_init_one,
- 	.remove = hpsa_remove_one,
- 	.id_table = hpsa_pci_device_id,	/* id_table */
--	.shutdown = hpsa_shutdown,
- 	.suspend = hpsa_suspend,
- 	.resume = hpsa_resume,
- };
--- 
-2.7.4
+[2] http://gtech.myftp.org/~mrnuke/nvme_logs/log-20180507-1429.log
 
+>> Injection of the error happens by changing the maximum payload size to
+>> 128 bytes from 256. This is on the switch upstream port.
+>> When there's IO to the drive, switch sees a malformed TLP. Switch
+>> reports error, AER handles it.
+>> More IO goes, another error is triggered, and this time the root port
+>> reports it. AER recovery hits the NVMe drive behind the affetced
+>> upstream port and deadlocks.
+>>
+>> I've added some printks in the AER handler to see which lock dies, and I
+>> have a fairly succinct log[1], also pasted below. It appears somebody is
+>> already holding the lock to the PCI device behind the sick upstream
+>> port, and never releases it.
+>>
+>>
+>> I'm not sure how to track down other users of the lock, and I"m hoping
+>> somebody may have a brighter idea.
+>>
+>> Alex
+>>
+>>
+>> [1] http://gtech.myftp.org/~mrnuke/nvme_logs/log-20180507-1308.log
+>>
+``
 
 _______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
