@@ -1,34 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:45970 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750957AbeERRVb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 May 2018 13:21:31 -0400
-Date: Fri, 18 May 2018 11:23:35 -0600
-From: Keith Busch <keith.busch@linux.intel.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: bhelgaas@google.com, arjan@linux.intel.com, jthumshirn@suse.de,
-        ming.lei@redhat.com, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org
-Subject: Re: [PATCH] PCI/sysfs: do not allow enabling/disabling a device with
- a driver
-Message-ID: <20180518172335.GB27795@localhost.localdomain>
-References: <20180518165624.13993-1-hch@lst.de>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-2-logang@deltatee.com>
+ <20180507230034.GE161390@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <092f3da9-764e-2ece-b3a8-a9b3ab3c49a8@deltatee.com>
+Date: Mon, 7 May 2018 17:09:46 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180518165624.13993-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180507230034.GE161390@bhelgaas-glaptop.roam.corp.google.com>
+Subject: Re: [PATCH v4 01/14] PCI/P2PDMA: Support peer-to-peer memory
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 18, 2018 at 06:56:24PM +0200, Christoph Hellwig wrote:
-> Manpulating the enable_cnt behind the back of the driver will wreck
-> complete havok with the kernel state, so disallow it.
+Thanks for the review. I'll apply all of these for the changes for next
+version of the set.
+>> +/*
+>> + * If a device is behind a switch, we try to find the upstream bridge
+>> + * port of the switch. This requires two calls to pci_upstream_bridge():
+>> + * one for the upstream port on the switch, one on the upstream port
+>> + * for the next level in the hierarchy. Because of this, devices connected
+>> + * to the root port will be rejected.
+>> + */
+>> +static struct pci_dev *get_upstream_bridge_port(struct pci_dev *pdev)
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> This function doesn't seem to be used anymore.  Thanks for all your hard
+> work to get rid of it!
 
-Nice, looks like you beat me to it, and used device locking that I
-missed.
+Oops, I thought I had gotten rid of it entirely, but I guess I messed it
+up a bit and it gets removed in patch 4. I'll fix it for v5.
 
-Acked-by: Keith Busch <keith.busch@intel.com>
+Logan
 
-Bjorn,
-Please disregard https://marc.info/?l=linux-pci&m=152666267830742&w=2
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
