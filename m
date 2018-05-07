@@ -1,169 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35288 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753604AbeE3R1j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 May 2018 13:27:39 -0400
-Date: Wed, 30 May 2018 12:27:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-kernel@vger.kernel.org,
-        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        Ray Jui <rjui@broadcom.com>
-Subject: Re: [PATCH INTERNAL 2/3] PCI: iproc: Fix up corrupted PAXC root
- complex config registers
-Message-ID: <20180530172733.GN39853@bhelgaas-glaptop.roam.corp.google.com>
-References: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
- <1526577692-21104-3-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Baoquan He <bhe@redhat.com>
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+        robh+dt@kernel.org, dan.j.williams@intel.com,
+        nicolas.pitre@linaro.org, josh@joshtriplett.org,
+        fengguang.wu@intel.com, bp@suse.de
+Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com,
+        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
+        keith.busch@intel.com, jonathan.derrick@intel.com,
+        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
+        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
+        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
+        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
+        yinghai@kernel.org, kexec@lists.infradead.org, monstr@monstr.eu,
+        davem@davemloft.net, chris@zankel.net, jcmvbkbc@gmail.com,
+        gustavo@padovan.org, maarten.lankhorst@linux.intel.com,
+        seanpaul@chromium.org, linux-parisc@vger.kernel.org,
+        Baoquan He <bhe@redhat.com>
+Subject: [PATCH v4 0/3] resource: Use list_head to link sibling resource
+Date: Mon,  7 May 2018 14:32:21 +0800
+Message-Id: <20180507063224.24229-1-bhe@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1526577692-21104-3-git-send-email-ray.jui@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 17, 2018 at 10:21:31AM -0700, Ray Jui wrote:
-> On certain versions of Broadcom PAXC based root complexes, certain
-> regions of the configuration space are corrupted. As a result, it
-> prevents the Linux PCIe stack from traversing the linked list of the
-> capability registers completely and therefore the root complex is
-> not advertised as "PCIe capable". This prevents the correct PCIe RID
-> from being parsed in the kernel PCIe stack. A correct RID is required
-> for mapping to a stream ID from the SMMU or the device ID from the
-> GICv3 ITS
-> 
-> This patch fixes up the issue by manually populating the related
-> PCIe capabilities based on readings from the PCIe capability structure
-> 
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> Reviewed-by: Anup Patel <anup.patel@broadcom.com>
-> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-> ---
->  drivers/pci/quirks.c | 95 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 95 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 47dfea0..0cdbd0a 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2198,6 +2198,101 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0, quirk_paxc_bridge);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd750, quirk_paxc_bridge);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802, quirk_paxc_bridge);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804, quirk_paxc_bridge);
-> +
-> +/*
-> + * The PCI capabilities list for certain revisions of Broadcom PAXC root
-> + * complexes is incorrectly terminated due to corrupted configuration space
-> + * registers in the range of 0x50 - 0x5f
-> + *
-> + * As a result, the capability list becomes broken and prevent standard PCI
-> + * stack from being able to traverse to the PCIe capability structure
-> + */
-> +static void quirk_paxc_pcie_capability(struct pci_dev *pdev)
-> +{
-> +	int pos, i = 0;
-> +	u8 next_cap;
-> +	u16 reg16, *cap;
-> +	struct pci_cap_saved_state *state;
-> +
-> +	/* bail out if PCIe capability can be found */
-> +	if (pdev->pcie_cap || pci_find_capability(pdev, PCI_CAP_ID_EXP))
-> +		return;
-> +
-> +	/* locate the power management capability */
-> +	pos = pci_find_capability(pdev, PCI_CAP_ID_PM);
-> +	if (!pos)
-> +		return;
-> +
-> +	/* bail out if the next capability pointer is not 0x50/0x58 */
-> +	pci_read_config_byte(pdev, pos + 1, &next_cap);
-> +	if (next_cap != 0x50 && next_cap != 0x58)
-> +		return;
-> +
-> +	/* bail out if we do not terminate at 0x50/0x58 */
-> +	pos = next_cap;
-> +	pci_read_config_byte(pdev, pos + 1, &next_cap);
-> +	if (next_cap != 0x00)
-> +		return;
-> +
-> +	/*
-> +	 * On these buggy HW, PCIe capability structure is expected to be at
-> +	 * 0xac and should terminate the list
-> +	 *
-> +	 * Borrow the similar logic from theIntel DH895xCC VFs fixup to save
-> +	 * the PCIe capability list
-> +	 */
-> +	pos = 0xac;
-> +	pci_read_config_word(pdev, pos, &reg16);
-> +	if (reg16 == (0x0000 | PCI_CAP_ID_EXP)) {
-> +		u32 status;
-> +
-> +#ifndef PCI_EXP_SAVE_REGS
-> +#define PCI_EXP_SAVE_REGS     7
-> +#endif
-> +		int size = PCI_EXP_SAVE_REGS * sizeof(u16);
-> +
-> +		pdev->pcie_cap = pos;
-> +		pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
-> +		pdev->pcie_flags_reg = reg16;
-> +		pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
-> +		pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
+This patchset is doing:
+1) Replace struct resource's sibling list from singly linked list to
+list_head. Clearing out those pointer operation within singly linked
+list for better code readability.
+2) Based on list_head replacement, add a new function
+walk_system_ram_res_rev() which can does reversed iteration on
+iomem_resource's siblings.
+3) Change kexec_file loading to search system RAM top down for kernel
+loadin, using walk_system_ram_res_rev().
 
-Is there any way you can fix this in iproc_pcie_config_read() instead,
-by making it notice when we're reading a corrupted part of config
-space, and then returning the correct data instead?  Is it just the
-next capability pointer that's corrupted?
+Note:
+This patchset passed testing on my kvm guest, x86_64 arch with network
+enabling. The thing we need pay attetion to is that a root resource's
+child member need be initialized specifically with LIST_HEAD_INIT() if
+statically defined or INIT_LIST_HEAD() for dynamically definition. Here
+Just like we do for iomem_resource/ioport_resource, or the change in
+get_pci_domain_busn_res().
 
-If you could fix it in the config accessor, lspci would automatically
-show all the correct data (I think lspci will still show the wrong
-data with this patch).
 
-The quirk seems like a maintenance issue because anything that calls
+Links of the old posting(Boris pointed out that we should use
+https://lkml.kernel.org/r/Message-ID, while it can't be opened from
+my side, so paste all of them here.):
+v3:
+https://lkml.kernel.org/r/20180419001848.3041-1-bhe@redhat.com
+https://lkml.org/lkml/2018/4/18/767
 
-  pci_find_capability(pdev, PCI_CAP_ID_EXP)
+v2:
+https://lkml.kernel.org/r/20180408024724.16812-1-bhe@redhat.com
+https://lkml.org/lkml/2018/4/7/169
 
-will get the wrong answer.
+v1:
+https://lkml.kernel.org/r/20180322033722.9279-1-bhe@redhat.com
+https://lkml.org/lkml/2018/3/21/952
 
-> +
-> +		pdev->cfg_size = PCI_CFG_SPACE_EXP_SIZE;
-> +		if (pci_read_config_dword(pdev, PCI_CFG_SPACE_SIZE, &status) !=
-> +		    PCIBIOS_SUCCESSFUL || (status == 0xffffffff))
-> +			pdev->cfg_size = PCI_CFG_SPACE_SIZE;
-> +
-> +		if (pci_find_saved_cap(pdev, PCI_CAP_ID_EXP))
-> +			return;
-> +
-> +		state = kzalloc(sizeof(*state) + size, GFP_KERNEL);
-> +		if (!state)
-> +			return;
-> +
-> +		state->cap.cap_nr = PCI_CAP_ID_EXP;
-> +		state->cap.cap_extended = 0;
-> +		state->cap.size = size;
-> +		cap = (u16 *)&state->cap.data[0];
-> +		pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &cap[i++]);
-> +		pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &cap[i++]);
-> +		pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &cap[i++]);
-> +		pcie_capability_read_word(pdev, PCI_EXP_RTCTL,  &cap[i++]);
-> +		pcie_capability_read_word(pdev, PCI_EXP_DEVCTL2, &cap[i++]);
-> +		pcie_capability_read_word(pdev, PCI_EXP_LNKCTL2, &cap[i++]);
-> +		pcie_capability_read_word(pdev, PCI_EXP_SLTCTL2, &cap[i++]);
-> +		hlist_add_head(&state->next, &pdev->saved_cap_space);
-> +	}
-> +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_NX2_57810,
-> +			quirk_paxc_pcie_capability);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16cd,
-> +			quirk_paxc_pcie_capability);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0,
-> +			quirk_paxc_pcie_capability);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802,
-> +			quirk_paxc_pcie_capability);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804,
-> +			quirk_paxc_pcie_capability);
->  #endif
->  
->  /* Originally in EDAC sources for i82875P:
-> -- 
-> 2.1.4
-> 
+Changelog:
+v3->v4:
+  Fix several bugs test robot reported. Rewrite cover letter and patch
+  log according to reviewer's comment.
+
+v2->v3:
+  Rename resource functions first_child() and sibling() to
+  resource_first_chils() and resource_sibling(). Dan suggested this.
+
+  Move resource_first_chils() and resource_sibling() to linux/ioport.h
+  and make them as inline function. Rob suggested this. Accordingly add
+  linux/list.h including in linux/ioport.h, please help review if this
+  bring efficiency degradation or code redundancy.
+
+  The change on struct resource {} bring two pointers of size increase,
+  mention this in git log to make it more specifically, Rob suggested
+  this.
+
+v1->v2:
+  Use list_head instead to link resource siblings. This is suggested by
+  Andrew.
+
+  Rewrite walk_system_ram_res_rev() after list_head is taken to link
+  resouce siblings.
+
+Baoquan He (3):
+  resource: Use list_head to link sibling resource
+  resource: add walk_system_ram_res_rev()
+  kexec_file: Load kernel at top of system RAM if required
+
+ arch/microblaze/pci/pci-common.c            |  31 ++--
+ arch/sparc/kernel/ioport.c                  |   2 +-
+ arch/xtensa/include/asm/pci-bridge.h        |   4 +-
+ drivers/eisa/eisa-bus.c                     |   2 +
+ drivers/gpu/drm/drm_memory.c                |   3 +-
+ drivers/gpu/drm/gma500/gtt.c                |   5 +-
+ drivers/hv/vmbus_drv.c                      |  52 +++----
+ drivers/input/joystick/iforce/iforce-main.c |   4 +-
+ drivers/nvdimm/e820.c                       |   2 +-
+ drivers/nvdimm/namespace_devs.c             |   6 +-
+ drivers/nvdimm/nd.h                         |   5 +-
+ drivers/of/address.c                        |   4 +-
+ drivers/parisc/lba_pci.c                    |   4 +-
+ drivers/pci/host/vmd.c                      |   8 +-
+ drivers/pci/probe.c                         |   2 +
+ drivers/pci/setup-bus.c                     |   2 +-
+ include/linux/ioport.h                      |  20 ++-
+ kernel/kexec_file.c                         |   2 +
+ kernel/resource.c                           | 221 ++++++++++++++++------------
+ 19 files changed, 215 insertions(+), 164 deletions(-)
+
+-- 
+2.13.6
