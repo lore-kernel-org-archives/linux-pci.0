@@ -1,168 +1,714 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 25/40] iommu/arm-smmu-v3: Add support for VHE
-Date: Fri, 11 May 2018 20:06:26 +0100
-Message-Id: <20180511190641.23008-26-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:41382 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752009AbeEGI6H (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2018 04:58:07 -0400
+Received: by mail-pf0-f195.google.com with SMTP id v63so22323276pfk.8
+        for <linux-pci@vger.kernel.org>; Mon, 07 May 2018 01:58:07 -0700 (PDT)
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, marc.zyngier@arm.com
+Cc: mingkai.hu@nxp.com, peter.newton@nxp.com, minghuan.lian@nxp.com,
+        rajesh.raina@nxp.com, rajan.kapoor@nxp.com, prabhjot.singh@nxp.com,
+        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
+        devicetree@vger.kernel.org
+Subject: [PATCH v10 2/3] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver
+Date: Mon,  7 May 2018 04:57:58 -0400
+Message-Id: <1525683478-9893-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ARMv8.1 extensions added Virtualization Host Extensions (VHE), which allow
-to run a host kernel at EL2. When using normal DMA, Device and CPU address
-spaces are dissociated, and do not need to implement the same
-capabilities, so VHE hasn't been used in the SMMU until now.
+Adds driver for Mobiveil AXI PCIe Host Bridge Soft IP - GPEX 4.0,
+a PCIe gen4 IP. This IP has upto 8 outbound and inbound windows
+for the address translation.
 
-With shared address spaces however, ASIDs are shared between MMU and SMMU,
-and broadcast TLB invalidations issued by a CPU are taken into account by
-the SMMU. TLB entries on both sides need to have identical exception level
-in order to be cleared with a single invalidation.
-
-When the CPU is using VHE, enable VHE in the SMMU for all STEs. Normal DMA
-mappings will need to use TLBI_EL2 commands instead of TLBI_NH, but
-shouldn't be otherwise affected by this change.
-
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org
 ---
- drivers/iommu/arm-smmu-v3.c | 32 ++++++++++++++++++++++++++------
- 1 file changed, 26 insertions(+), 6 deletions(-)
+ drivers/pci/host/pcie-mobiveil.c | 671 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 671 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-mobiveil.c
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 16b08f2fb8ac..280a5d9be839 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -24,6 +24,7 @@
- #include <linux/acpi_iort.h>
- #include <linux/bitfield.h>
- #include <linux/bitops.h>
-+#include <linux/cpufeature.h>
- #include <linux/delay.h>
- #include <linux/dma-iommu.h>
- #include <linux/err.h>
-@@ -400,6 +401,8 @@ struct arm_smmu_cmdq_ent {
- 		#define CMDQ_OP_TLBI_NH_ASID	0x11
- 		#define CMDQ_OP_TLBI_NH_VA	0x12
- 		#define CMDQ_OP_TLBI_EL2_ALL	0x20
-+		#define CMDQ_OP_TLBI_EL2_ASID	0x21
-+		#define CMDQ_OP_TLBI_EL2_VA	0x22
- 		#define CMDQ_OP_TLBI_S12_VMALL	0x28
- 		#define CMDQ_OP_TLBI_S2_IPA	0x2a
- 		#define CMDQ_OP_TLBI_NSNH_ALL	0x30
-@@ -519,6 +522,7 @@ struct arm_smmu_device {
- #define ARM_SMMU_FEAT_HYP		(1 << 12)
- #define ARM_SMMU_FEAT_STALL_FORCE	(1 << 13)
- #define ARM_SMMU_FEAT_VAX		(1 << 14)
-+#define ARM_SMMU_FEAT_E2H		(1 << 15)
- 	u32				features;
- 
- #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
-@@ -777,6 +781,7 @@ static int arm_smmu_cmdq_build_cmd(u64 *cmd, struct arm_smmu_cmdq_ent *ent)
- 		cmd[1] |= FIELD_PREP(CMDQ_CFGI_1_RANGE, 31);
- 		break;
- 	case CMDQ_OP_TLBI_NH_VA:
-+	case CMDQ_OP_TLBI_EL2_VA:
- 		cmd[0] |= FIELD_PREP(CMDQ_TLBI_0_ASID, ent->tlbi.asid);
- 		cmd[1] |= FIELD_PREP(CMDQ_TLBI_1_LEAF, ent->tlbi.leaf);
- 		cmd[1] |= ent->tlbi.addr & CMDQ_TLBI_1_VA_MASK;
-@@ -792,6 +797,9 @@ static int arm_smmu_cmdq_build_cmd(u64 *cmd, struct arm_smmu_cmdq_ent *ent)
- 	case CMDQ_OP_TLBI_S12_VMALL:
- 		cmd[0] |= FIELD_PREP(CMDQ_TLBI_0_VMID, ent->tlbi.vmid);
- 		break;
-+	case CMDQ_OP_TLBI_EL2_ASID:
-+		cmd[0] |= FIELD_PREP(CMDQ_TLBI_0_ASID, ent->tlbi.asid);
-+		break;
- 	case CMDQ_OP_PRI_RESP:
- 		cmd[0] |= FIELD_PREP(CMDQ_0_SSV, ent->substream_valid);
- 		cmd[0] |= FIELD_PREP(CMDQ_PRI_0_SSID, ent->pri.ssid);
-@@ -1064,6 +1072,8 @@ static void arm_smmu_write_strtab_ent(struct arm_smmu_device *smmu, u32 sid,
- 
- 	if (ste->s1_cfg) {
- 		struct iommu_pasid_table_cfg *cfg = &ste->s1_cfg->tables;
-+		int strw = smmu->features & ARM_SMMU_FEAT_E2H ?
-+			STRTAB_STE_1_STRW_EL2 : STRTAB_STE_1_STRW_NSEL1;
- 
- 		BUG_ON(ste_live);
- 		dst[1] = cpu_to_le64(
-@@ -1074,7 +1084,7 @@ static void arm_smmu_write_strtab_ent(struct arm_smmu_device *smmu, u32 sid,
- #ifdef CONFIG_PCI_ATS
- 			 FIELD_PREP(STRTAB_STE_1_EATS, STRTAB_STE_1_EATS_TRANS) |
- #endif
--			 FIELD_PREP(STRTAB_STE_1_STRW, STRTAB_STE_1_STRW_NSEL1));
-+			 FIELD_PREP(STRTAB_STE_1_STRW, strw));
- 
- 		if (smmu->features & ARM_SMMU_FEAT_STALLS &&
- 		   !(smmu->features & ARM_SMMU_FEAT_STALL_FORCE))
-@@ -1325,7 +1335,8 @@ static void arm_smmu_tlb_inv_context(void *cookie)
- 	if (smmu_domain->stage == ARM_SMMU_DOMAIN_S1) {
- 		if (unlikely(!smmu_domain->s1_cfg.cd0))
- 			return;
--		cmd.opcode	= CMDQ_OP_TLBI_NH_ASID;
-+		cmd.opcode	= smmu->features & ARM_SMMU_FEAT_E2H ?
-+				  CMDQ_OP_TLBI_EL2_ASID : CMDQ_OP_TLBI_NH_ASID;
- 		cmd.tlbi.asid	= smmu_domain->s1_cfg.cd0->tag;
- 		cmd.tlbi.vmid	= 0;
- 	} else {
-@@ -1352,7 +1363,8 @@ static void arm_smmu_tlb_inv_range_nosync(unsigned long iova, size_t size,
- 	if (smmu_domain->stage == ARM_SMMU_DOMAIN_S1) {
- 		if (unlikely(!smmu_domain->s1_cfg.cd0))
- 			return;
--		cmd.opcode	= CMDQ_OP_TLBI_NH_VA;
-+		cmd.opcode	= smmu->features & ARM_SMMU_FEAT_E2H ?
-+				  CMDQ_OP_TLBI_EL2_VA : CMDQ_OP_TLBI_NH_VA;
- 		cmd.tlbi.asid	= smmu_domain->s1_cfg.cd0->tag;
- 	} else {
- 		cmd.opcode	= CMDQ_OP_TLBI_S2_IPA;
-@@ -1422,7 +1434,8 @@ static void arm_smmu_tlb_inv_ssid(void *cookie, int ssid,
- 	struct arm_smmu_domain *smmu_domain = cookie;
- 	struct arm_smmu_device *smmu = smmu_domain->smmu;
- 	struct arm_smmu_cmdq_ent cmd = {
--		.opcode		= CMDQ_OP_TLBI_NH_ASID,
-+		.opcode		= smmu->features & ARM_SMMU_FEAT_E2H ?
-+				  CMDQ_OP_TLBI_EL2_ASID : CMDQ_OP_TLBI_NH_ASID,
- 		.tlbi.asid	= entry->tag,
- 	};
- 
-@@ -2446,7 +2459,11 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
- 	writel_relaxed(reg, smmu->base + ARM_SMMU_CR1);
- 
- 	/* CR2 (random crap) */
--	reg = CR2_PTM | CR2_RECINVSID | CR2_E2H;
-+	reg = CR2_PTM | CR2_RECINVSID;
+diff --git a/drivers/pci/host/pcie-mobiveil.c b/drivers/pci/host/pcie-mobiveil.c
+new file mode 100644
+index 0000000..02b1f5d
+--- /dev/null
++++ b/drivers/pci/host/pcie-mobiveil.c
+@@ -0,0 +1,671 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * PCIe host controller driver for Mobiveil PCIe Host controller
++ *
++ * Copyright (c) 2018 Mobiveil Inc.
++ * Author: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
++ */
 +
-+	if (smmu->features & ARM_SMMU_FEAT_E2H)
-+		reg |= CR2_E2H;
++#include <linux/delay.h>
++#include <linux/init.h>
++#include <linux/interrupt.h>
++#include <linux/irq.h>
++#include <linux/irqchip/chained_irq.h>
++#include <linux/irqdomain.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
++#include <linux/of_platform.h>
++#include <linux/of_pci.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
 +
- 	writel_relaxed(reg, smmu->base + ARM_SMMU_CR2);
- 
- 	/* Stream table */
-@@ -2594,8 +2611,11 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- 	if (reg & IDR0_MSI)
- 		smmu->features |= ARM_SMMU_FEAT_MSI;
- 
--	if (reg & IDR0_HYP)
-+	if (reg & IDR0_HYP) {
- 		smmu->features |= ARM_SMMU_FEAT_HYP;
-+		if (cpus_have_cap(ARM64_HAS_VIRT_HOST_EXTN))
-+			smmu->features |= ARM_SMMU_FEAT_E2H;
++/* register offsets and bit positions */
++
++/*
++ * translation tables are grouped into windows, each window registers are
++ * grouped into blocks of 4 or 16 registers each
++ */
++#define PAB_REG_BLOCK_SIZE	16
++#define PAB_EXT_REG_BLOCK_SIZE	4
++
++#define PAB_REG_ADDR(offset, win) (offset + (win * PAB_REG_BLOCK_SIZE))
++#define PAB_EXT_REG_ADDR(offset, win) (offset + (win * PAB_EXT_REG_BLOCK_SIZE))
++
++#define LTSSM_STATUS		0x0404
++#define  LTSSM_STATUS_L0_MASK	0x3f
++#define  LTSSM_STATUS_L0	0x2d
++
++#define PAB_CTRL		0x0808
++#define  AMBA_PIO_ENABLE_SHIFT	0
++#define  PEX_PIO_ENABLE_SHIFT	1
++#define  PAGE_SEL_SHIFT		13
++#define  PAGE_SEL_MASK		0x3f
++#define  PAGE_LO_MASK		0x3ff
++#define  PAGE_SEL_EN		0xc00
++#define  PAGE_SEL_OFFSET_SHIFT	10
++
++#define PAB_AXI_PIO_CTRL	0x0840
++#define  APIO_EN_MASK		0xf
++
++#define PAB_PEX_PIO_CTRL	0x08c0
++#define  PIO_ENABLE_SHIFT	0
++
++#define PAB_INTP_AMBA_MISC_ENB	0x0b0c
++#define PAB_INTP_AMBA_MISC_STAT	0x0b1c
++#define  PAB_INTP_INTX_MASK	0x1e0
++
++#define PAB_AXI_AMAP_CTRL(win)	PAB_REG_ADDR(0x0ba0, win)
++#define  WIN_ENABLE_SHIFT	0
++#define  WIN_TYPE_SHIFT		1
++
++#define PAB_EXT_AXI_AMAP_SIZE(win)	PAB_EXT_REG_ADDR(0xbaf0, win)
++
++#define PAB_AXI_AMAP_AXI_WIN(win)	PAB_REG_ADDR(0x0ba4, win)
++#define  AXI_WINDOW_ALIGN_MASK		3
++
++#define PAB_AXI_AMAP_PEX_WIN_L(win)	PAB_REG_ADDR(0x0ba8, win)
++#define  PAB_BUS_SHIFT			24
++#define  PAB_DEVICE_SHIFT		19
++#define  PAB_FUNCTION_SHIFT		16
++
++#define PAB_AXI_AMAP_PEX_WIN_H(win)	PAB_REG_ADDR(0x0bac, win)
++#define PAB_INTP_AXI_PIO_CLASS		0x474
++
++#define PAB_PEX_AMAP_CTRL(win)		PAB_REG_ADDR(0x4ba0, win)
++#define  AMAP_CTRL_EN_SHIFT		0
++#define  AMAP_CTRL_TYPE_SHIFT		1
++
++#define PAB_EXT_PEX_AMAP_SIZEN(win)	PAB_EXT_REG_ADDR(0xbef0, win)
++#define PAB_PEX_AMAP_AXI_WIN(win)	PAB_REG_ADDR(0x4ba4, win)
++#define PAB_PEX_AMAP_PEX_WIN_L(win)	PAB_REG_ADDR(0x4ba8, win)
++#define PAB_PEX_AMAP_PEX_WIN_H(win)	PAB_REG_ADDR(0x4bac, win)
++
++/* supported number of interrupts */
++#define PAB_INTX_START		5
++
++/* outbound and inbound window definitions */
++#define WIN_NUM_0		0
++#define WIN_NUM_1		1
++#define CFG_WINDOW_TYPE		0
++#define IO_WINDOW_TYPE		1
++#define MEM_WINDOW_TYPE		2
++#define IB_WIN_SIZE		(256 * 1024 * 1024 * 1024)
++#define MAX_PIO_WINDOWS		8
++
++/* Parameters for the waiting for link up routine */
++#define LINK_WAIT_MAX_RETRIES	10
++#define LINK_WAIT_MIN		90000
++#define LINK_WAIT_MAX		100000
++
++struct mobiveil_pcie {
++	struct platform_device *pdev;
++	struct list_head resources;
++	void __iomem *config_axi_slave_base;	/* endpoint config base */
++	void __iomem *csr_axi_slave_base;	/* root port config base */
++	void __iomem *pcie_reg_base;	/* Physical PCIe Controller Base */
++	struct irq_domain *intx_domain;
++	raw_spinlock_t intx_mask_lock;
++	int irq;
++	int apio_wins;
++	int ppio_wins;
++	int ob_wins_configured;		/* configured outbound windows */
++	int ib_wins_configured;		/* configured inbound windows */
++	struct resource *ob_io_res;
++	char root_bus_nr;
++};
++
++static inline void csr_writel(struct mobiveil_pcie *pcie, const u32 value,
++		const u32 reg)
++{
++	writel_relaxed(value, pcie->csr_axi_slave_base + reg);
++}
++
++static inline u32 csr_readl(struct mobiveil_pcie *pcie, const u32 reg)
++{
++	return readl_relaxed(pcie->csr_axi_slave_base + reg);
++}
++
++static bool mobiveil_pcie_link_up(struct mobiveil_pcie *pcie)
++{
++	return (csr_readl(pcie, LTSSM_STATUS) &
++		LTSSM_STATUS_L0_MASK) == LTSSM_STATUS_L0;
++}
++
++static bool mobiveil_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
++{
++	struct mobiveil_pcie *pcie = bus->sysdata;
++
++	/* Only one device down on each root port */
++	if ((bus->number == pcie->root_bus_nr) && (devfn > 0))
++		return false;
++
++	/*
++	 * Do not read more than one device on the bus directly
++	 * attached to RC
++	 */
++	if ((bus->primary == pcie->root_bus_nr) && (devfn > 0))
++		return false;
++
++	return true;
++}
++
++/*
++ * mobiveil_pcie_map_bus - routine to get the configuration base of either
++ * root port or endpoint
++ */
++static void __iomem *mobiveil_pcie_map_bus(struct pci_bus *bus,
++					unsigned int devfn, int where)
++{
++	struct mobiveil_pcie *pcie = bus->sysdata;
++
++	if (!mobiveil_pcie_valid_device(bus, devfn))
++		return NULL;
++
++	if (bus->number == pcie->root_bus_nr) {
++		/* RC config access */
++		return pcie->csr_axi_slave_base + where;
 +	}
- 
- 	/*
- 	 * The coherency feature as set by FW is used in preference to the ID
++
++	/*
++	 * EP config access (in Config/APIO space)
++	 * Program PEX Address base (31..16 bits) with appropriate value
++	 * (BDF) in PAB_AXI_AMAP_PEX_WIN_L0 Register.
++	 * Relies on pci_lock serialization
++	 */
++	csr_writel(pcie,
++			bus->number << PAB_BUS_SHIFT |
++			PCI_SLOT(devfn) << PAB_DEVICE_SHIFT |
++			PCI_FUNC(devfn) << PAB_FUNCTION_SHIFT,
++			PAB_AXI_AMAP_PEX_WIN_L(WIN_NUM_0));
++	return pcie->config_axi_slave_base + where;
++}
++
++static struct pci_ops mobiveil_pcie_ops = {
++	.map_bus = mobiveil_pcie_map_bus,
++	.read = pci_generic_config_read,
++	.write = pci_generic_config_write,
++};
++
++static void mobiveil_pcie_isr(struct irq_desc *desc)
++{
++	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct mobiveil_pcie *pcie = irq_desc_get_handler_data(desc);
++	struct device *dev = &pcie->pdev->dev;
++	u32 intr_status;
++	unsigned long shifted_status;
++	u32 bit, virq, val, mask;
++
++	/*
++	 * The core provides interrupt for INTx.
++	 * So we'll read INTx status.
++	 */
++
++	chained_irq_enter(chip, desc);
++
++	/* read INTx status */
++	val = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT);
++	mask = csr_readl(pcie, PAB_INTP_AMBA_MISC_ENB);
++	intr_status = val & mask;
++
++	/* Handle INTx */
++	if (intr_status & PAB_INTP_INTX_MASK) {
++		shifted_status = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT) >>
++			PAB_INTX_START;
++		do {
++			for_each_set_bit(bit, &shifted_status, PCI_NUM_INTX) {
++				virq = irq_find_mapping(pcie->intx_domain,
++						bit + 1);
++				if (virq)
++					generic_handle_irq(virq);
++				else
++					dev_err_ratelimited(dev,
++						"unexpected IRQ, INT%d\n", bit);
++
++				/* clear interrupt */
++				csr_writel(pcie,
++					shifted_status << PAB_INTX_START,
++					PAB_INTP_AMBA_MISC_STAT);
++			}
++		} while ((shifted_status >> PAB_INTX_START) != 0);
++	}
++
++	/* Clear the interrupt status */
++	csr_writel(pcie, intr_status, PAB_INTP_AMBA_MISC_STAT);
++	chained_irq_exit(chip, desc);
++}
++
++static int mobiveil_pcie_parse_dt(struct mobiveil_pcie *pcie)
++{
++	struct device *dev = &pcie->pdev->dev;
++	struct platform_device *pdev = pcie->pdev;
++	struct device_node *node = dev->of_node;
++	struct resource *res;
++	const char *type;
++
++	type = of_get_property(node, "device_type", NULL);
++	if (!type || strcmp(type, "pci")) {
++		dev_err(dev, "invalid \"device_type\" %s\n", type);
++		return -EINVAL;
++	}
++
++	/* map config resource */
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++			"config_axi_slave");
++	pcie->config_axi_slave_base = devm_pci_remap_cfg_resource(dev, res);
++	if (IS_ERR(pcie->config_axi_slave_base))
++		return PTR_ERR(pcie->config_axi_slave_base);
++	pcie->ob_io_res = res;
++
++	/* map csr resource */
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++			"csr_axi_slave");
++	pcie->csr_axi_slave_base = devm_pci_remap_cfg_resource(dev, res);
++	if (IS_ERR(pcie->csr_axi_slave_base))
++		return PTR_ERR(pcie->csr_axi_slave_base);
++	pcie->pcie_reg_base = res->start;
++
++	/* read the number of windows requested */
++	if (of_property_read_u32(node, "apio-wins", &pcie->apio_wins))
++		pcie->apio_wins = MAX_PIO_WINDOWS;
++
++	if (of_property_read_u32(node, "ppio-wins", &pcie->ppio_wins))
++		pcie->ppio_wins = MAX_PIO_WINDOWS;
++
++	pcie->irq = platform_get_irq(pdev, 0);
++	if (pcie->irq <= 0) {
++		dev_err(dev, "failed to map IRQ: %d\n", pcie->irq);
++		return -ENODEV;
++	}
++
++	irq_set_chained_handler_and_data(pcie->irq, mobiveil_pcie_isr, pcie);
++
++	return 0;
++}
++
++/*
++ * select_paged_register - routine to access paged register of root complex
++ *
++ * registers of RC are paged, for this scheme to work
++ * extracted higher 6 bits of the offset will be written to pg_sel
++ * field of PAB_CTRL register and rest of the lower 10 bits enabled with
++ * PAGE_SEL_EN are used as offset of the register.
++ */
++static void select_paged_register(struct mobiveil_pcie *pcie, u32 offset)
++{
++	int pab_ctrl_dw, pg_sel;
++
++	/* clear pg_sel field */
++	pab_ctrl_dw = csr_readl(pcie, PAB_CTRL);
++	pab_ctrl_dw = (pab_ctrl_dw & ~(PAGE_SEL_MASK << PAGE_SEL_SHIFT));
++
++	/* set pg_sel field */
++	pg_sel = (offset >> PAGE_SEL_OFFSET_SHIFT) & PAGE_SEL_MASK;
++	pab_ctrl_dw |= ((pg_sel << PAGE_SEL_SHIFT));
++	csr_writel(pcie, pab_ctrl_dw, PAB_CTRL);
++}
++
++static void write_paged_register(struct mobiveil_pcie *pcie,
++		u32 val, u32 offset)
++{
++	u32 off = (offset & PAGE_LO_MASK) | PAGE_SEL_EN;
++
++	select_paged_register(pcie, offset);
++	csr_writel(pcie, val, off);
++}
++
++static u32 read_paged_register(struct mobiveil_pcie *pcie, u32 offset)
++{
++	u32 off = (offset & PAGE_LO_MASK) | PAGE_SEL_EN;
++
++	select_paged_register(pcie, offset);
++	return csr_readl(pcie, off);
++}
++
++static void program_ib_windows(struct mobiveil_pcie *pcie, int win_num,
++		int pci_addr, u32 type, u64 size)
++{
++	int pio_ctrl_val;
++	int amap_ctrl_dw;
++	u64 size64 = ~(size-1);
++
++	if ((pcie->ib_wins_configured + 1) > pcie->ppio_wins) {
++		dev_err(&pcie->pdev->dev,
++			"ERROR: max inbound windows reached !\n");
++		return;
++	}
++
++	pio_ctrl_val = csr_readl(pcie, PAB_PEX_PIO_CTRL);
++	csr_writel(pcie,
++		pio_ctrl_val | (1 << PIO_ENABLE_SHIFT), PAB_PEX_PIO_CTRL);
++	amap_ctrl_dw = read_paged_register(pcie, PAB_PEX_AMAP_CTRL(win_num));
++	amap_ctrl_dw = (amap_ctrl_dw | (type << AMAP_CTRL_TYPE_SHIFT));
++	amap_ctrl_dw = (amap_ctrl_dw | (1 << AMAP_CTRL_EN_SHIFT));
++
++	write_paged_register(pcie, amap_ctrl_dw | lower_32_bits(size64),
++				PAB_PEX_AMAP_CTRL(win_num));
++
++	write_paged_register(pcie, upper_32_bits(size64),
++				PAB_EXT_PEX_AMAP_SIZEN(win_num));
++
++	write_paged_register(pcie, pci_addr, PAB_PEX_AMAP_AXI_WIN(win_num));
++	write_paged_register(pcie, pci_addr, PAB_PEX_AMAP_PEX_WIN_L(win_num));
++	write_paged_register(pcie, 0, PAB_PEX_AMAP_PEX_WIN_H(win_num));
++}
++
++/*
++ * routine to program the outbound windows
++ */
++static void program_ob_windows(struct mobiveil_pcie *pcie, int win_num,
++		u64 cpu_addr, u64 pci_addr, u32 config_io_bit, u64 size)
++{
++
++	u32 value, type;
++	u64 size64 = ~(size-1);
++
++	if ((pcie->ob_wins_configured + 1) > pcie->apio_wins) {
++		dev_err(&pcie->pdev->dev,
++			"ERROR: max outbound windows reached !\n");
++		return;
++	}
++
++	/*
++	 * program Enable Bit to 1, Type Bit to (00) base 2, AXI Window Size Bit
++	 * to 4 KB in PAB_AXI_AMAP_CTRL register
++	 */
++	type = config_io_bit;
++	value = csr_readl(pcie, PAB_AXI_AMAP_CTRL(win_num));
++	csr_writel(pcie, 1 << WIN_ENABLE_SHIFT | type << WIN_TYPE_SHIFT |
++			lower_32_bits(size64), PAB_AXI_AMAP_CTRL(win_num));
++
++	write_paged_register(pcie, upper_32_bits(size64),
++				PAB_EXT_AXI_AMAP_SIZE(win_num));
++
++	/*
++	 * program AXI window base with appropriate value in
++	 * PAB_AXI_AMAP_AXI_WIN0 register
++	 */
++	value = csr_readl(pcie, PAB_AXI_AMAP_AXI_WIN(win_num));
++	csr_writel(pcie, cpu_addr & (~AXI_WINDOW_ALIGN_MASK),
++			PAB_AXI_AMAP_AXI_WIN(win_num));
++
++	value = csr_readl(pcie, PAB_AXI_AMAP_PEX_WIN_H(win_num));
++
++	csr_writel(pcie, lower_32_bits(pci_addr),
++			PAB_AXI_AMAP_PEX_WIN_L(win_num));
++	csr_writel(pcie, upper_32_bits(pci_addr),
++			PAB_AXI_AMAP_PEX_WIN_H(win_num));
++
++	pcie->ob_wins_configured++;
++}
++
++static int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
++{
++	int retries;
++
++	/* check if the link is up or not */
++	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
++		if (mobiveil_pcie_link_up(pcie))
++			return 0;
++
++		usleep_range(LINK_WAIT_MIN, LINK_WAIT_MAX);
++	}
++	dev_err(&pcie->pdev->dev, "link never came up\n");
++	return -ETIMEDOUT;
++}
++
++static int mobiveil_host_init(struct mobiveil_pcie *pcie)
++{
++	u32 value, pab_ctrl, type = 0;
++	int err;
++	struct resource_entry *win, *tmp;
++
++	err = mobiveil_bringup_link(pcie);
++	if (err) {
++		dev_info(&pcie->pdev->dev, "link bring-up failed\n");
++		return err;
++	}
++
++	/*
++	 * program Bus Master Enable Bit in Command Register in PAB Config
++	 * Space
++	 */
++	value = csr_readl(pcie, PCI_COMMAND);
++	csr_writel(pcie, value | PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
++		PCI_COMMAND_MASTER, PCI_COMMAND);
++
++	/*
++	 * program PIO Enable Bit to 1 (and PEX PIO Enable to 1) in PAB_CTRL
++	 * register
++	 */
++	pab_ctrl = csr_readl(pcie, PAB_CTRL);
++	csr_writel(pcie, pab_ctrl | (1 << AMBA_PIO_ENABLE_SHIFT) |
++		(1 << PEX_PIO_ENABLE_SHIFT),
++		PAB_CTRL);
++
++	csr_writel(pcie, (PAB_INTP_INTX_MASK),
++		PAB_INTP_AMBA_MISC_ENB);
++
++	/*
++	 * program PIO Enable Bit to 1 and Config Window Enable Bit to 1 in
++	 * PAB_AXI_PIO_CTRL Register
++	 */
++	value = csr_readl(pcie, PAB_AXI_PIO_CTRL);
++	csr_writel(pcie, value | APIO_EN_MASK, PAB_AXI_PIO_CTRL);
++
++	/*
++	 * we'll program one outbound window for config reads and
++	 * another default inbound window for all the upstream traffic
++	 * rest of the outbound windows will be configured according to
++	 * the "ranges" field defined in device tree
++	 */
++
++	/* config outbound translation window */
++	program_ob_windows(pcie, pcie->ob_wins_configured,
++			pcie->ob_io_res->start, 0, CFG_WINDOW_TYPE,
++			resource_size(pcie->ob_io_res));
++
++	/* memory inbound translation window */
++	program_ib_windows(pcie, WIN_NUM_1, 0, MEM_WINDOW_TYPE, IB_WIN_SIZE);
++
++	/* Get the I/O and memory ranges from DT */
++	resource_list_for_each_entry_safe(win, tmp, &pcie->resources) {
++		type = 0;
++		if (resource_type(win->res) == IORESOURCE_MEM)
++			type = MEM_WINDOW_TYPE;
++		if (resource_type(win->res) == IORESOURCE_IO)
++			type = IO_WINDOW_TYPE;
++		if (type) {
++			/* configure outbound translation window */
++			program_ob_windows(pcie, pcie->ob_wins_configured,
++				win->res->start, 0, type,
++				resource_size(win->res));
++		}
++	}
++
++	return err;
++}
++
++static void mobiveil_mask_intx_irq(struct irq_data *data)
++{
++	struct irq_desc *desc = irq_to_desc(data->irq);
++	struct mobiveil_pcie *pcie;
++	unsigned long flags;
++	u32 mask, shifted_val;
++
++	pcie = irq_desc_get_chip_data(desc);
++	mask = 1 << ((data->hwirq + PAB_INTX_START) - 1);
++	raw_spin_lock_irqsave(&pcie->intx_mask_lock, flags);
++	shifted_val = csr_readl(pcie, PAB_INTP_AMBA_MISC_ENB);
++	csr_writel(pcie, (shifted_val & (~mask)), PAB_INTP_AMBA_MISC_ENB);
++	raw_spin_unlock_irqrestore(&pcie->intx_mask_lock, flags);
++}
++
++static void mobiveil_unmask_intx_irq(struct irq_data *data)
++{
++	struct irq_desc *desc = irq_to_desc(data->irq);
++	struct mobiveil_pcie *pcie;
++	unsigned long flags;
++	u32 shifted_val, mask;
++
++	pcie = irq_desc_get_chip_data(desc);
++	mask = 1 << ((data->hwirq + PAB_INTX_START) - 1);
++	raw_spin_lock_irqsave(&pcie->intx_mask_lock, flags);
++	shifted_val = csr_readl(pcie, PAB_INTP_AMBA_MISC_ENB);
++	csr_writel(pcie, (shifted_val | mask), PAB_INTP_AMBA_MISC_ENB);
++	raw_spin_unlock_irqrestore(&pcie->intx_mask_lock, flags);
++}
++
++static struct irq_chip intx_irq_chip = {
++	.name = "mobiveil_pcie:intx",
++	.irq_enable = mobiveil_unmask_intx_irq,
++	.irq_disable = mobiveil_mask_intx_irq,
++	.irq_mask = mobiveil_mask_intx_irq,
++	.irq_unmask = mobiveil_unmask_intx_irq,
++};
++
++/* routine to setup the INTx related data */
++static int mobiveil_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
++		irq_hw_number_t hwirq)
++{
++	irq_set_chip_and_handler(irq, &intx_irq_chip, handle_level_irq);
++	irq_set_chip_data(irq, domain->host_data);
++	return 0;
++}
++
++/* INTx domain operations structure */
++static const struct irq_domain_ops intx_domain_ops = {
++	.map = mobiveil_pcie_intx_map,
++};
++
++static int mobiveil_pcie_init_irq_domain(struct mobiveil_pcie *pcie)
++{
++	struct device *dev = &pcie->pdev->dev;
++	struct device_node *node = dev->of_node;
++	int ret;
++
++	/* setup INTx */
++	pcie->intx_domain = irq_domain_add_linear(node,
++				PCI_NUM_INTX, &intx_domain_ops, pcie);
++
++	if (!pcie->intx_domain) {
++		dev_err(dev, "Failed to get a INTx IRQ domain\n");
++		return -ENODEV;
++	}
++
++	raw_spin_lock_init(&pcie->intx_mask_lock);
++
++	return 0;
++}
++
++static int mobiveil_pcie_probe(struct platform_device *pdev)
++{
++	struct mobiveil_pcie *pcie;
++	struct pci_bus *bus;
++	struct pci_bus *child;
++	struct pci_host_bridge *bridge;
++	struct device *dev = &pdev->dev;
++	struct device_node *node = dev->of_node;
++	resource_size_t iobase;
++	int ret;
++
++	/* allocate the PCIe port */
++	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
++	if (!bridge)
++		return -ENODEV;
++
++	pcie = pci_host_bridge_priv(bridge);
++	if (!pcie)
++		return -ENOMEM;
++
++	pcie->pdev = pdev;
++
++	ret = mobiveil_pcie_parse_dt(pcie);
++	if (ret) {
++		dev_err(dev, "Parsing DT failed, ret: %x\n", ret);
++		return ret;
++	}
++
++	INIT_LIST_HEAD(&pcie->resources);
++
++	/* parse the host bridge base addresses from the device tree file */
++	ret = of_pci_get_host_bridge_resources(node,
++			0, 0xff, &pcie->resources, &iobase);
++	if (ret) {
++		dev_err(dev, "Getting bridge resources failed\n");
++		return -ENOMEM;
++	}
++
++	/*
++	 * configure all inbound and outbound windows and prepare the RC for
++	 * config access
++	 */
++	ret = mobiveil_host_init(pcie);
++	if (ret) {
++		dev_err(dev, "Failed to initialize host\n");
++		goto error;
++	}
++
++	/* fixup for PCIe class register */
++	csr_writel(pcie, 0x060402ab, PAB_INTP_AXI_PIO_CLASS);
++
++	/* initialize the IRQ domains */
++	ret = mobiveil_pcie_init_irq_domain(pcie);
++	if (ret) {
++		dev_err(dev, "Failed creating IRQ Domain\n");
++		goto error;
++	}
++
++	ret = devm_request_pci_bus_resources(dev, &pcie->resources);
++	if (ret)
++		goto error;
++
++	/* Initialize bridge */
++	list_splice_init(&pcie->resources, &bridge->windows);
++	bridge->dev.parent = dev;
++	bridge->sysdata = pcie;
++	bridge->busnr = pcie->root_bus_nr;
++	bridge->ops = &mobiveil_pcie_ops;
++	bridge->map_irq = of_irq_parse_and_map_pci;
++	bridge->swizzle_irq = pci_common_swizzle;
++
++	/* setup the kernel resources for the newly added PCIe root bus */
++	ret = pci_scan_root_bus_bridge(bridge);
++	if (ret)
++		goto error;
++
++	bus = bridge->bus;
++
++	pci_assign_unassigned_bus_resources(bus);
++	list_for_each_entry(child, &bus->children, node)
++		pcie_bus_configure_settings(child);
++	pci_bus_add_devices(bus);
++
++	return 0;
++error:
++	pci_free_resource_list(&pcie->resources);
++	return ret;
++}
++
++static const struct of_device_id mobiveil_pcie_of_match[] = {
++	{.compatible = "mbvl,gpex40-pcie",},
++};
++
++MODULE_DEVICE_TABLE(of, mobiveil_pcie_of_match);
++
++static struct platform_driver mobiveil_pcie_driver = {
++	.probe = mobiveil_pcie_probe,
++	.driver = {
++			.name = "mobiveil-pcie",
++			.of_match_table = mobiveil_pcie_of_match,
++			.suppress_bind_attrs = true,
++		},
++};
++
++builtin_platform_driver(mobiveil_pcie_driver);
++
++MODULE_LICENSE("GPL v2");
++MODULE_DESCRIPTION("Mobiveil PCIe host controller driver");
++MODULE_AUTHOR("Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>");
 -- 
-2.17.0
-
+1.8.3.1
