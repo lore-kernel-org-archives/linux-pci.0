@@ -1,33 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f47.google.com ([209.85.215.47]:40836 "EHLO
-        mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751181AbeECTcp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 15:32:45 -0400
-Received: by mail-lf0-f47.google.com with SMTP id j16-v6so27650050lfb.7
-        for <linux-pci@vger.kernel.org>; Thu, 03 May 2018 12:32:44 -0700 (PDT)
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: [PATCH v3 0/5] Add R8A77980 PCIe support & some driver cleanups
-To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Message-ID: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
-Date: Thu, 3 May 2018 22:32:41 +0300
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 7 May 2018 18:02:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCH v4 03/14] PCI/P2PDMA: Add PCI p2pmem dma mappings to
+ adjust the bus offset
+Message-ID: <20180507230208.GF161390@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-4-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180423233046.21476-4-logang@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+s/dma/DMA/ (in subject)
 
-Here's a set of 5 patches against the 'pci/rcar' branch of Lorenzo Pieralisi's
-'pci.git' repo. These are the changes needed for better R-Car gen3 support
-(namely for R8A77980 support) plus some PCIe driver re-factoring done in
-the process...
+On Mon, Apr 23, 2018 at 05:30:35PM -0600, Logan Gunthorpe wrote:
+> The DMA address used when mapping PCI P2P memory must be the PCI bus
+> address. Thus, introduce pci_p2pmem_[un]map_sg() to map the correct
+> addresses when using P2P memory.
+> 
+> For this, we assume that an SGL passed to these functions contain all
+> P2P memory or no P2P memory.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 
-[1/5] pcie-rcar: poll PHYRDY in rcar_pcie_hw_init()
-[2/5] pcie-rcar: remove PHYRDY polling from rcar_pcie_hw_init_h1()
-[3/5] pcie-rcar: add R-Car gen3 PHY support
-[4/5] pcie-rcar: factor out rcar_pcie_hw_init() call
-[5/5] DT: pci: rcar-pci: document R8A77980 bindings
-
-MBR, Sergei
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
