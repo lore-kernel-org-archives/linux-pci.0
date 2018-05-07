@@ -1,62 +1,40 @@
-Return-Path: <SRS0=4YfD=IF=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=4YfD=IF=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Return-Path: <SRS0=IJn3=H2=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=IJn3=H2=deltatee.com=logang@kernel.org>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com, Michael Jamet <michael.jamet@intel.com>, Yehezkel Bernat <YehezkelShB@gmail.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org, Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v7 03/12] PCI: Request control of native PCIe hotplug only if supported
-Date: Fri, 18 May 2018 22:30:49 +0200
-Message-ID: <3561170.f2F6eoZUb8@aspire.rjw.lan>
-In-Reply-To: <20180518130726.GA41790@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180517092903.43701-1-mika.westerberg@linux.intel.com> <20180518125706.GA34002@bhelgaas-glaptop.roam.corp.google.com> <20180518130726.GA41790@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+ linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+ Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
+ Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
+ <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180507232346.GI161390@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <dc207a94-35a6-6182-1331-154ece9ac00d@deltatee.com>
+Date: Mon, 7 May 2018 17:34:53 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20180507232346.GI161390@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v4 00/14] Copy Offload in NVMe Fabrics with P2P PCI Memory
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, May 18, 2018 3:07:26 PM CEST Bjorn Helgaas wrote:
-> On Fri, May 18, 2018 at 07:57:07AM -0500, Bjorn Helgaas wrote:
-> > On Fri, May 18, 2018 at 09:48:54AM +0200, Rafael J. Wysocki wrote:
-> > > On Thursday, May 17, 2018 4:13:24 PM CEST Bjorn Helgaas wrote:
-> > > > On Thu, May 17, 2018 at 12:28:54PM +0300, Mika Westerberg wrote:
-> > 
-> > > > >  	host_bridge = to_pci_host_bridge(bus->bridge);
-> > > > >  	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> > > > > -		host_bridge->native_hotplug = 0;
-> > > > > +		host_bridge->native_pcie_hotplug = 0;
-> > > > >  	if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
-> > > > >  		host_bridge->native_aer = 0;
-> > > > >  	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
-> > > > 
-> > > > Rafael, I noticed that the PCI Firmware Spec, r3.2, sec 4.5.2.2, says
-> > > > we're required to evaluate _OSC when resuming from S4.  I don't see a
-> > > > path where we do that today.
-> > > 
-> > > No, we don't do that today.
-> > > 
-> > > > Am I missing it?  If not, what resume hook do we need to use to do
-> > > > this?
-> > > 
-> > > We could do that in the ->restore_noirq callback of the host bridge
-> > > device I suppose.  Basically, before resuming all of the PCI devices
-> > > on the bus.
-> > > 
-> > > However, question is on what conditions.  Do the previous versions of the
-> > > spec have this requirement or is it just a new thing?
-> > 
-> > I think the requirement has been there since the beginning of _OSC.
-> > The first reference I can find is ACPI 3.0, sec 6.2.9, which says we
-> > should evaluate _OSC on wake from S4 and when a Notify(<device>, 8) is
-> > delivered.  AFAICT, this applies to all _OSC methods, not just those
-> > for PCI host bridges.
-> > 
-> > The OSHP description (PCI Firmware Spec r3.2, sec 4.8) talks about
-> > interrupt reconfiguration that may be needed when the OS takes over
-> > control of SHPC.  I assume this kind of reconfiguration needs to be
-> > done on wake from S4.
+
+> How do you envison merging this?  There's a big chunk in drivers/pci, but
+> really no opportunity for conflicts there, and there's significant stuff in
+> block and nvme that I don't really want to merge.
 > 
-> Forgot to mention: I wonder if this omission could be related to mysterious
-> resume issues like https://bugzilla.kernel.org/show_bug.cgi?id=99751
+> If Alex is OK with the ACS situation, I can ack the PCI parts and you could
+> merge it elsewhere?
 
-I don't quite think so.  For this particular machine the _OSC done by the
-restore kernel (see my previous reply in this thread) should be sufficient.
+Honestly, I don't know. I guess with your ACK on the PCI parts, the vast
+balance is NVMe stuff so we could look at merging it through that tree.
+The block patch and IB patch are pretty small.
 
-Besides, I don't think this one is about hibernation.
+Thanks,
+
+Logan
