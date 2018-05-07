@@ -1,63 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:56112 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754051AbeE1Iyi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 May 2018 04:54:38 -0400
-Date: Mon, 28 May 2018 10:54:34 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Marek Vasut <marek.vasut@gmail.com>, linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v4 0/6] PCI: rcar: Failpath fixes
-Message-ID: <20180528085433.nl3thty2jk6y3e2n@verge.net.au>
-References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
- <20180525164313.GA13284@e107981-ln.cambridge.arm.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 7 May 2018 18:23:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Subject: Re: [PATCH v4 00/14] Copy Offload in NVMe Fabrics with P2P PCI Memory
+Message-ID: <20180507232346.GI161390@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180525164313.GA13284@e107981-ln.cambridge.arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180423233046.21476-1-logang@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2018 at 05:43:13PM +0100, Lorenzo Pieralisi wrote:
-> On Thu, May 24, 2018 at 04:36:18PM +0200, Marek Vasut wrote:
-> > Multiple minor failpath fixes for the R-Car PCIe driver.
-> > 
-> > V4: Sync up the version numbers
-> >     Rebase on top of Lorenzo's tree
-> >     Add new patch fixing bug in the PHY code
-> > 
-> > Marek Vasut (6):
-> >   PCI: rcar: Pull bus clock enable/disable from
-> >     rcar_pcie_get_resources()
-> >   PCI: rcar: Add missing irq_dispose_mapping() into failpath
-> >   PCI: rcar: Teardown MSI setup if rcar_pcie_enable() fails
-> >   PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
-> >   PCI: rcar: Remove IRQ mappings in rcar_pcie_enable_msi failpath
-> >   PCI: rcar: Shut the PHY down in failpath
-> > 
-> >  drivers/pci/host/pcie-rcar.c | 82 +++++++++++++++++++++++++++++++++++---------
-> >  1 file changed, 66 insertions(+), 16 deletions(-)
+On Mon, Apr 23, 2018 at 05:30:32PM -0600, Logan Gunthorpe wrote:
+> Hi Everyone,
 > 
-> Marek,
+> Here's v4 of our series to introduce P2P based copy offload to NVMe
+> fabrics. This version has been rebased onto v4.17-rc2. A git repo
+> is here:
 > 
-> I have applied patches [1-5] to pci/rcar for v4.18, I could not
-> apply patch 6 since it is missing Simon's ACK (please have a look
-> at what I queued to check it is OK).
+> https://github.com/sbates130272/linux-p2pmem pci-p2p-v4
+> ...
 
-Sorry for the delay. You should have that now.
-
-If not, for the entire series:
-
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
-
-
+> Logan Gunthorpe (14):
+>   PCI/P2PDMA: Support peer-to-peer memory
+>   PCI/P2PDMA: Add sysfs group to display p2pmem stats
+>   PCI/P2PDMA: Add PCI p2pmem dma mappings to adjust the bus offset
+>   PCI/P2PDMA: Clear ACS P2P flags for all devices behind switches
+>   docs-rst: Add a new directory for PCI documentation
+>   PCI/P2PDMA: Add P2P DMA driver writer's documentation
+>   block: Introduce PCI P2P flags for request and request queue
+>   IB/core: Ensure we map P2P memory correctly in
+>     rdma_rw_ctx_[init|destroy]()
+>   nvme-pci: Use PCI p2pmem subsystem to manage the CMB
+>   nvme-pci: Add support for P2P memory in requests
+>   nvme-pci: Add a quirk for a pseudo CMB
+>   nvmet: Introduce helper functions to allocate and free request SGLs
+>   nvmet-rdma: Use new SGL alloc/free helper for requests
+>   nvmet: Optionally use PCI P2P memory
 > 
-> Bjorn will be merging the branch into -next shortly, I do not know if
-> there is room for adding additional patches on top of it, as I mentioned
-> on linux-pci I will be offline for two weeks so it is possible that
-> what's in pci/rcar at present will be what gets into v4.18, apologies,
-> that's all I can do.
+>  Documentation/ABI/testing/sysfs-bus-pci    |  25 +
+>  Documentation/PCI/index.rst                |  14 +
+>  Documentation/driver-api/index.rst         |   2 +-
+>  Documentation/driver-api/pci/index.rst     |  20 +
+>  Documentation/driver-api/pci/p2pdma.rst    | 166 ++++++
+>  Documentation/driver-api/{ => pci}/pci.rst |   0
+>  Documentation/index.rst                    |   3 +-
+>  block/blk-core.c                           |   3 +
+>  drivers/infiniband/core/rw.c               |  13 +-
+>  drivers/nvme/host/core.c                   |   4 +
+>  drivers/nvme/host/nvme.h                   |   8 +
+>  drivers/nvme/host/pci.c                    | 118 +++--
+>  drivers/nvme/target/configfs.c             |  67 +++
+>  drivers/nvme/target/core.c                 | 143 ++++-
+>  drivers/nvme/target/io-cmd.c               |   3 +
+>  drivers/nvme/target/nvmet.h                |  15 +
+>  drivers/nvme/target/rdma.c                 |  22 +-
+>  drivers/pci/Kconfig                        |  26 +
+>  drivers/pci/Makefile                       |   1 +
+>  drivers/pci/p2pdma.c                       | 814 +++++++++++++++++++++++++++++
+>  drivers/pci/pci.c                          |   6 +
+>  include/linux/blk_types.h                  |  18 +-
+>  include/linux/blkdev.h                     |   3 +
+>  include/linux/memremap.h                   |  19 +
+>  include/linux/pci-p2pdma.h                 | 118 +++++
+>  include/linux/pci.h                        |   4 +
+>  26 files changed, 1579 insertions(+), 56 deletions(-)
+>  create mode 100644 Documentation/PCI/index.rst
+>  create mode 100644 Documentation/driver-api/pci/index.rst
+>  create mode 100644 Documentation/driver-api/pci/p2pdma.rst
+>  rename Documentation/driver-api/{ => pci}/pci.rst (100%)
+>  create mode 100644 drivers/pci/p2pdma.c
+>  create mode 100644 include/linux/pci-p2pdma.h
+
+How do you envison merging this?  There's a big chunk in drivers/pci, but
+really no opportunity for conflicts there, and there's significant stuff in
+block and nvme that I don't really want to merge.
+
+If Alex is OK with the ACS situation, I can ack the PCI parts and you could
+merge it elsewhere?
+
+Bjorn
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
