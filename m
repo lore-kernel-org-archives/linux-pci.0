@@ -1,75 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ua0-f193.google.com ([209.85.217.193]:35840 "EHLO
-        mail-ua0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753872AbeEWGSe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 02:18:34 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 7 May 2018 15:43:49 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH] PCI: pciehp: Add quirk for QDF2400 Command Completed
+ erratum
+Message-ID: <20180507124349.GC2879@lahna.fi.intel.com>
+References: <1525602662-1873-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <f4622ab5-3c94-bb99-cfc3-1929dd88092e@gmail.com>
-References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
- <20180521131123.2009-4-marek.vasut+renesas@gmail.com> <CAMuHMdVhrb_dR7TP3PU=rsbne+9BZu=BHA9XAK=L1so98HogtA@mail.gmail.com>
- <f4622ab5-3c94-bb99-cfc3-1929dd88092e@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Wed, 23 May 2018 08:18:33 +0200
-Message-ID: <CAMuHMdVOEe_PFcCpk_yYRZaBicSToEBZjhJ1Z+88Ct8a1HbXZA@mail.gmail.com>
-Subject: Re: [PATCH 4/4] PCI: rcar: Teardown MSI setup if rcar_pcie_enable() fails
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1525602662-1873-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: sulrich@codeaurora.org, Kees Cook <keescook@chromium.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, open list <linux-kernel@vger.kernel.org>,
+ stable@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+ Lukas Wunner <lukas@wunner.de>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Markus Elfring <elfring@users.sourceforge.net>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek,
+On Sun, May 06, 2018 at 06:30:53AM -0400, Sinan Kaya wrote:
+> The QDF2400 controller does not set the Command Completed bit unless
+> writes to the Slot Command register change "Control" bits.  Command
+> Completed is never set for writes that only change software notification
+> "Enable" bits.  This results in timeouts like this:
+> 
+> pciehp 0000:00:00.0:pcie004: Timeout on hotplug command 0x1038
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-On Tue, May 22, 2018 at 11:53 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
-> On 05/22/2018 08:36 PM, Geert Uytterhoeven wrote:
->> On Mon, May 21, 2018 at 3:11 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
->>> --- a/drivers/pci/host/pcie-rcar.c
->>> +++ b/drivers/pci/host/pcie-rcar.c
->>> @@ -900,6 +900,28 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
->>>         return err;
->>>  }
->>>
->>> +static void rcar_pcie_teardown_msi(struct rcar_pcie *pcie)
->>> +{
->>> +       struct rcar_msi *msi = &pcie->msi;
->>> +       int irq, i;
->>> +
->>> +       /* Disable all MSI interrupts */
->>> +       rcar_pci_write_reg(pcie, 0, PCIEMSIIER);
->>> +
->>> +       /* Disable address decoding of the MSI interrupt, MSIFE */
->>> +       rcar_pci_write_reg(pcie, 0, PCIEMSIALR);
->>> +
->>> +       free_pages(msi->pages, 0);
->>> +
->>> +       for (i = 0; i < INT_PCI_MSI_NR; i++) {
->>> +               irq = irq_find_mapping(msi->domain, i);
->>> +               if (irq > 0)
->>> +                       irq_dispose_mapping(irq);
->>> +       }
->>
->> Note that similar calls to irq_dispose_mapping() should be added to the
->> failure path of rcar_pcie_enable_msi(), too.
->
-> There are no failures happening in rcar_pcie_enable_msi() after the
-> mapping is created, just memory writes, so no. Did I miss something there ?
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-In my copy, there are two calls to devm_request_irq(). If they fail, the
-IRQ domain is removed, but the mappings are never disposed of.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
