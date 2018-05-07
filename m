@@ -1,54 +1,69 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 8 May 2018 13:01:35 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39780 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752797AbeEGWHC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 May 2018 18:07:02 -0400
+Date: Mon, 7 May 2018 17:06:59 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: "Alex G." <mr.nuke.me@gmail.com>
-Subject: Re: AER: Malformed TLP recovery deadlock with NVMe drives
-Message-ID: <20180508180135.GM161390@bhelgaas-glaptop.roam.corp.google.com>
-References: <8cf4e563-5f84-f8bd-88a6-8369cdf07b29@gmail.com>
- <7afd280ad80a73b39e6c9b9a9e29abcc@codeaurora.org>
- <5c97a7c2-cb53-4740-fda0-50ba92288c5c@gmail.com>
- <9fc90040d5712282ea223807ace39312@codeaurora.org>
- <1125ddf8-f342-3f8f-90ee-0aa94287360c@gmail.com>
- <16bdb0febb842ad0980db9214c8076c5@codeaurora.org>
- <3d4991bc2948430d910a16da36c90b91@ausx13mps321.AMER.DELL.COM>
- <1fdfaaa47ad782ee864f24c5a75a355a@codeaurora.org>
- <20180508165849.GC9529@bhelgaas-glaptop.roam.corp.google.com>
- <bb358683-79fc-0590-eb93-70f4c3c922da@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        gregkh@linuxfoundation.org, fred@fredlawl.com,
+        linux-kernel@vger.kernel.org, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, keith.busch@intel.com
+Subject: Re: [PATCH RESEND] PCI/AER: Use a common function to print AER error
+ bits
+Message-ID: <20180507220659.GB161390@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180417170943.1767-1-mr.nuke.me@gmail.com>
+ <20180427224337.GC73256@bhelgaas-glaptop.roam.corp.google.com>
+ <12343e44-2d8a-51e1-a0be-e6804e9bd8a3@gmail.com>
+ <220bb125-b933-abf3-7b30-63446634e8d6@gmail.com>
+ <20180430171531.GB95643@bhelgaas-glaptop.roam.corp.google.com>
+ <8e8a8de1-a90c-ab88-c8ac-bbe8bcc7d49c@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <bb358683-79fc-0590-eb93-70f4c3c922da@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Alex_Gagniuc@dellteam.com, linux-pci@vger.kernel.org,
- linux-nvme@lists.infradead.org, okaya@codeaurora.org, Austin.Bolen@dell.com,
- Shyam.Iyer@dell.com, keith.busch@intel.com, linux-pci-owner@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8e8a8de1-a90c-ab88-c8ac-bbe8bcc7d49c@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 08, 2018 at 12:32:28PM -0500, Alex G. wrote:
-> On 05/08/2018 11:58 AM, Bjorn Helgaas wrote:
-> > (looks like maybe colorizing escape sequences?).
+On Mon, Apr 30, 2018 at 12:41:26PM -0500, Alex G. wrote:
+> On 04/30/2018 12:15 PM, Bjorn Helgaas wrote:
+> > On Sat, Apr 28, 2018 at 12:07:48PM -0500, Alex G. wrote:
 > 
-> You mean the ANSI escape sequences. wget and cat in a color terminal.
-> You will get so used to this, you will love it so much, you won't ever
-> again want to open a a web page.
+> (snip)
+> >> I could update the offending line to say:
+> >>  +	info.first_error = PCI_ERR_CAP_FEP(aer->cap_control);
+> > 
+> > That's what I would have expected.  So I'd say either do this, or add
+> > a comment about why it's not the right thing to do.
+> 
+> Okay.
+> 
+> >> Though I still have the concerns with validating CPER data:
+> >>
+> >>> I can see a way to use even more common printk code, but that requires
+> >>> validating the PCI regs we get from firmware. That means we need to make
+> >>> a guarantee about CPER that is beyond the scope of this patch.
+> > 
+> > Sounds like this is material for another patch, but if/when you do
+> > that, I'd like to understand your concern about validating the
+> > registers we get from firmware.  Are you worried about getting
+> > incorrect register contents, then printing the wrong info, making
+> > the wrong decision about how to recover, something else?
+> 
+> I don't trust firmware, and I have daymares about firmware leaving these
+> fields uninitialized. In jargon, I'd like to treat it as external
+> untrusted serialized data.
 
-Hey, you're right!  If I download it and look at it with "less", it *is*
-pretty!  It'd be cool if Chrome would do that.  Maybe.
+That makes good sense to me.
 
-I'm really glad you're looking at this stuff and raising issues.  I'm not
-at all confident in the correctness or robustness of this code.
+In this particular case, we only test first_error for equality:
 
-Bjorn
+  __aer_print_error(...)
+  {
+    ...
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+      pci_err(dev, "   [%2d] %-22s%s\n", i, errmsg,
+	info->first_error == i ? " (First)" : "");
+
+so I don't think there's any danger.  If we were using it to index an
+array or something, we should certainly validate it first.
