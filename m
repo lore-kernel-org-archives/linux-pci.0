@@ -1,113 +1,79 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 31/40] iommu/arm-smmu-v3: Improve add_device error handling
-Date: Fri, 11 May 2018 20:06:32 +0100
-Message-Id: <20180511190641.23008-32-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:37565 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750716AbeEGGLc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 May 2018 02:11:32 -0400
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+To: bhelgaas@google.com, rafael.j.wysocki@intel.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        stable@vger.kernel.org
+Subject: [PATCH v4] PCI / PM: Always check PME wakeup capability for runtime wakeup support
+Date: Mon,  7 May 2018 14:11:20 +0800
+Message-Id: <20180507061120.3683-1-kai.heng.feng@canonical.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As add_device becomes more likely to fail when adding new features, let it
-clean up behind itself. The iommu_bus_init function does call
-remove_device on error, but other sites (e.g. of_iommu) do not.
+USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
+core: Drop run_wake flag from struct dev_pm_info").
 
-Don't free level-2 stream tables because we'd have to track if we
-allocated each of them or if they are used by other endpoints. It's not
-worth the hassle since they are managed resources.
+The device in question is not power managed by platform firmware,
+furthermore, it only supports PME# from D3cold:
+Capabilities: [78] Power Management version 3
+       Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+       Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Before commit de3ef1eb1cd0, the device never gets runtime suspended.
+After that commit, the device gets runtime suspended to D3hot, which can
+not generate any PME#.
 
+usb_hcd_pci_probe() unconditionally calls device_wakeup_enable(), hence
+device_can_wakeup() in pci_dev_run_wake() always returns true.
+
+So pci_dev_run_wake() needs to check PME wakeup capability as its first
+condition.
+
+In addition, change wakeup flag passed to pci_target_state() from false
+to true, because we want to find the deepest state that the device can
+still generate PME#. In this case, it's D0 for the device in question.
+
+Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct dev_pm_info")
+Cc: stable@vger.kernel.org # 4.13+
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 ---
-v1->v2: new
----
- drivers/iommu/arm-smmu-v3.c | 36 ++++++++++++++++++++++++++++--------
- 1 file changed, 28 insertions(+), 8 deletions(-)
+v4: Correct some errors in commit log.
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 5d57f41f79b4..d5f3875abfb9 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2123,26 +2123,43 @@ static int arm_smmu_add_device(struct device *dev)
- 	for (i = 0; i < fwspec->num_ids; i++) {
- 		u32 sid = fwspec->ids[i];
+v3: State the reason why the wakeup flag gets changed.
+
+v2: Explicitly check dev->pme_support.
+
+ drivers/pci/pci.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a04197ce767d..c2616cad3a1d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2138,16 +2138,16 @@ bool pci_dev_run_wake(struct pci_dev *dev)
+ {
+ 	struct pci_bus *bus = dev->bus;
  
--		if (!arm_smmu_sid_in_range(smmu, sid))
--			return -ERANGE;
-+		if (!arm_smmu_sid_in_range(smmu, sid)) {
-+			ret = -ERANGE;
-+			goto err_free_master;
-+		}
+-	if (device_can_wakeup(&dev->dev))
+-		return true;
+-
+ 	if (!dev->pme_support)
+ 		return false;
  
- 		/* Ensure l2 strtab is initialised */
- 		if (smmu->features & ARM_SMMU_FEAT_2_LVL_STRTAB) {
- 			ret = arm_smmu_init_l2_strtab(smmu, sid);
- 			if (ret)
--				return ret;
-+				goto err_free_master;
- 		}
- 	}
+ 	/* PME-capable in principle, but not from the target power state */
+-	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
++	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
+ 		return false;
  
- 	master->ssid_bits = min(smmu->ssid_bits, fwspec->num_pasid_bits);
- 
-+	ret = iommu_device_link(&smmu->iommu, dev);
-+	if (ret)
-+		goto err_free_master;
++	if (device_can_wakeup(&dev->dev))
++		return true;
 +
- 	group = iommu_group_get_for_dev(dev);
--	if (!IS_ERR(group)) {
--		iommu_group_put(group);
--		iommu_device_link(&smmu->iommu, dev);
-+	if (IS_ERR(group)) {
-+		ret = PTR_ERR(group);
-+		goto err_unlink;
- 	}
+ 	while (bus->parent) {
+ 		struct pci_dev *bridge = bus->self;
  
--	return PTR_ERR_OR_ZERO(group);
-+	iommu_group_put(group);
-+
-+	return 0;
-+
-+err_unlink:
-+	iommu_device_unlink(&smmu->iommu, dev);
-+
-+err_free_master:
-+	kfree(master);
-+	fwspec->iommu_priv = NULL;
-+
-+	return ret;
- }
- 
- static void arm_smmu_remove_device(struct device *dev)
-@@ -2155,9 +2172,12 @@ static void arm_smmu_remove_device(struct device *dev)
- 		return;
- 
- 	master = fwspec->iommu_priv;
-+	if (!master)
-+		return;
-+
- 	smmu = master->smmu;
- 	iopf_queue_remove_device(dev);
--	if (master && master->ste.assigned)
-+	if (master->ste.assigned)
- 		arm_smmu_detach_dev(dev);
- 	iommu_group_remove_device(dev);
- 	iommu_device_unlink(&smmu->iommu, dev);
 -- 
 2.17.0
-
