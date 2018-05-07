@@ -1,238 +1,128 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 7 May 2018 08:16:27 -0700
-From: Matthew Wilcox <willy@infradead.org>
-To: Keith Busch <keith.busch@linux.intel.com>
-Subject: Re: PCIe unsupported request with Intel 760p
-Message-ID: <20180507151627.GA1401@bombadil.infradead.org>
-References: <CAKDfzeD5_AV=YtWqTPr=40vvW4oMFAs4gJs_r42PJWcb815zyQ@mail.gmail.com>
- <20180507123035.GA20097@gmail.com>
- <20180507134354.GF18116@bombadil.infradead.org>
- <20180507151246.GB20686@localhost.localdomain>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 7 May 2018 18:20:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH v4 06/14] PCI/P2PDMA: Add P2P DMA driver writer's
+ documentation
+Message-ID: <20180507232029.GH161390@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-7-logang@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <20180507151246.GB20686@localhost.localdomain>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Aron Griffis <aron@arongriffis.com>, linux-nvme@lists.infradead.org,
- linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180423233046.21476-7-logang@deltatee.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 07, 2018 at 09:12:47AM -0600, Keith Busch wrote:
-> Hi Willy,
+On Mon, Apr 23, 2018 at 05:30:38PM -0600, Logan Gunthorpe wrote:
+> Add a restructured text file describing how to write drivers
+> with support for P2P DMA transactions. The document describes
+> how to use the APIs that were added in the previous few
+> commits.
 > 
-> Thank you for the detailed analysis. :)
+> Also adds an index for the PCI documentation tree even though this
+> is the only PCI document that has been converted to restructured text
+> at this time.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Cc: Jonathan Corbet <corbet@lwn.net>
+> ---
+>  Documentation/PCI/index.rst             |  14 +++
+>  Documentation/driver-api/pci/index.rst  |   1 +
+>  Documentation/driver-api/pci/p2pdma.rst | 166 ++++++++++++++++++++++++++++++++
+>  Documentation/index.rst                 |   3 +-
+>  4 files changed, 183 insertions(+), 1 deletion(-)
+>  create mode 100644 Documentation/PCI/index.rst
+>  create mode 100644 Documentation/driver-api/pci/p2pdma.rst
+> 
+> diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
+> new file mode 100644
+> index 000000000000..2fdc4b3c291d
+> --- /dev/null
+> +++ b/Documentation/PCI/index.rst
+> @@ -0,0 +1,14 @@
+> +==================================
+> +Linux PCI Driver Developer's Guide
+> +==================================
+> +
+> +.. toctree::
+> +
+> +   p2pdma
+> +
+> +.. only::  subproject and html
+> +
+> +   Indices
+> +   =======
+> +
+> +   * :ref:`genindex`
+> diff --git a/Documentation/driver-api/pci/index.rst b/Documentation/driver-api/pci/index.rst
+> index 03b57cbf8cc2..d12eeafbfc90 100644
+> --- a/Documentation/driver-api/pci/index.rst
+> +++ b/Documentation/driver-api/pci/index.rst
+> @@ -10,6 +10,7 @@ The Linux PCI driver implementer's API guide
+>     :maxdepth: 2
+>  
+>     pci
+> +   p2pdma
+>  
+>  .. only::  subproject and html
+>  
+> diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
+> new file mode 100644
+> index 000000000000..49a512c405b2
+> --- /dev/null
+> +++ b/Documentation/driver-api/pci/p2pdma.rst
+> @@ -0,0 +1,166 @@
+> +============================
+> +PCI Peer-to-Peer DMA Support
+> +============================
+> +
+> +The PCI bus has pretty decent support for performing DMA transfers
+> +between two endpoints on the bus. This type of transaction is
 
-You're welcome!  Here's the program I wrote to decode the TLP.  It's not
-exactly fleshed out, but it could be used as the basis for a more
-fully-featured TLP decoder in the future.
+s/endpoints/devices/
 
-/*
- * Decode TLPs as reported by Linux's AER support
- *
- * Copyright (c) Matthew Wilcox 2018
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * The format of the report looks like this:
- *
- * TLP Header: 34000000 70000010 00000000 88468846
- *
- * That's a stream of bytes, *not* 32-bit words.  In that example, the
- * byte 0x34 is byte 0, not byte 3.
- */
+> +henceforth called Peer-to-Peer (or P2P). However, there are a number of
+> +issues that make P2P transactions tricky to do in a perfectly safe way.
+> +
+> +One of the biggest issues is that PCI Root Complexes are not required
 
-#define _GNU_SOURCE
+s/PCI Root Complexes .../
+  PCI doesn't require forwarding transactions between hierarchy domains,
+and in PCIe, each Root Port defines a separate hierarchy domain./
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+> +to support forwarding packets between Root Ports. To make things worse,
+> +there is no simple way to determine if a given Root Complex supports
+> +this or not. (See PCIe r4.0, sec 1.3.1). Therefore, as of this writing,
+> +the kernel only supports doing P2P when the endpoints involved are all
+> +behind the same PCIe root port as the spec guarantees that all
+> +packets will always be routable but does not require routing between
+> +root ports.
 
-bool debug = false;
+s/endpoints involved .../
+  devices involved are all behind the same PCI bridge, as such devices are
+  all in the same PCI hierarchy domain, and the spec guarantees that all
+  transactions within the hierarchy will be routable, but it does not
+  require routing between hierarchies./
 
-static int parse_header(unsigned char *header)
-{
-	char s[256];
-	char *p;
-	int i;
-
-	p = fgets(s, 256, stdin);
-	if (p)
-		p = strstr(p, "TLP Header: ");
-	if (!p) {
-		fprintf(stderr, "Can\'t find \"TLP Header: \"\n");
-		return 1;
-	}
-
-	p += 12;
-
-	for (i = 0; i < 4; i++) {
-		unsigned long val = strtoul(p, NULL, 16);
-		header[0] = val >> 24;
-		header[1] = val >> 16;
-		header[2] = val >> 8;
-		header[3] = val;
-		p += 9;
-		header += 4;
-	}
-
-	return 0;
-}
-
-static void decode_requester(unsigned char *header)
-{
-	printf("Requester ID %02x:%02x.%d\n", header[4], header[5] >> 3,
-			header[5] & 7);
-}
-
-static void decode_msg(unsigned char *header)
-{
-	unsigned char code = header[7];
-
-	if (code == 0x00)
-		printf("Unlock Message\n");
-	if (code == 0x10)
-		printf("Latency Tolerance Reporting Message\n");
-	if (code == 0x12)
-		printf("Optimised Buffer Flush/Fill Message\n");
-	if (code == 0x14)
-		printf("PM NAK Message\n");
-	if (code == 0x18)
-		printf("PM PME Message\n");
-	if (code == 0x19)
-		printf("PM Turn Off Message\n");
-	if (code == 0x1b)
-		printf("PM Ack Turn Off Message\n");
-	if (code >= 0x20 && code <= 0x27)
-		printf("Legacy Interrupt Message (%d)\n", code & 7);
-	if (code == 0x30)
-		printf("Error Detected (Correctable) Message\n");
-	if (code == 0x31)
-		printf("Error Detected (NonFatal) Message\n");
-	if (code == 0x33)
-		printf("Error Detected (Fatal) Message\n");
-	if (code >= 0x40 && code <= 0x48)
-		printf("Hotplug Signalling Message\n");
-	if (code == 0x7e || code == 0x7f)
-		printf("Vendor Defined (Type %d) Message\n", code - 0x7e);
-	if (code == 0x90)
-		printf("Set Slot Power Limit Message\n");
-
-	decode_requester(header);
-}
-
-static void decode_type(unsigned char *header)
-{
-	unsigned char type = *header;
-
-	if (type == 0x00 || type == 0x20)
-		printf("Memory Read Request\n");
-	if (type == 0x01 || type == 0x21)
-		printf("Memory Read Request Locked\n");
-	if (type == 0x40 || type == 0x60)
-		printf("Memory Write Request\n");
-	if (type == 0x02)
-		printf("I/O Read Request\n");
-	if (type == 0x42)
-		printf("I/O Write Request\n");
-	if (type == 0x04)
-		printf("Cfg0 Read Request\n");
-	if (type == 0x44)
-		printf("Cfg0 Write Request\n");
-	if (type == 0x05)
-		printf("Cfg1 Read Request\n");
-	if (type == 0x45)
-		printf("Cfg1 Write Request\n");
-	if (type == 0x1b)
-		printf("TCfg Read Request\n");
-	if (type == 0x5b)
-		printf("TCfg Write Request\n");
-	if (type >= 0x30 && type <= 0x37)
-		return decode_msg(header);
-	if (type >= 0x70 && type <= 0x77)
-		printf("Msg with Data Request\n");
-	if (type == 0x0a)
-		printf("Completion\n");
-	if (type == 0x4a)
-		printf("Completion with Data\n");
-	if (type == 0x0b)
-		printf("Completion of Locked Read without Data\n");
-	if (type == 0x4b)
-		printf("Completion of Locked Read with Data\n");
-	if (type == 0x4c || type == 0x6c)
-		printf("FetchAdd Request\n");
-	if (type == 0x4d || type == 0x6d)
-		printf("Swap Request\n");
-	if (type == 0x4e || type == 0x6e)
-		printf("CAS Request\n");
-	if (type >= 0x80 && type <= 0x8f) {
-		printf("Local TLP Prefix %d\n", type & 0xf);
-		return decode_type(header + 1);
-	}
-	if (type >= 0x90 && type <= 0x9f) {
-		printf("End-End TLP Prefix %d\n", type & 0xf);
-		return decode_type(header + 1);
-	}
-}
-
-static int usage(char **argv)
-{
-	fprintf(stderr, "Usage: %s [-d]\n", argv[0]);
-	return 1;
-}
-
-int main(int argc, char **argv)
-{
-	unsigned char header[16];
-	int opt;
-
-	while ((opt = getopt(argc, argv, "d")) != -1) {
-		switch (opt) {
-		case 'd':
-			debug = true;
-			break;
-		default:
-			return usage(argv);
-		}
-	}
-
-	if (argc > optind)
-		return usage(argv);
-
-	if (parse_header(header))
-		return 1;
-
-	if (debug)
-		printf("TLP Header: %02x%02x%02x%02x %02x%02x%02x%02x "
-			"%02x%02x%02x%02x %02x%02x%02x%02x\n",
-			header[0], header[1], header[2], header[3],
-			header[4], header[5], header[6], header[7],
-			header[8], header[9], header[10], header[11],
-			header[12], header[13], header[14], header[15]);
-
-	decode_type(header);
-
-	return 0;
-}
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+> +
+> +The second issue is that to make use of existing interfaces in Linux,
+> +memory that is used for P2P transactions needs to be backed by struct
+> +pages. However, PCI BARs are not typically cache coherent so there are
+> +a few corner case gotchas with these pages so developers need to
+> +be careful about what they do with them.
