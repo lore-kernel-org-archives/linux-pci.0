@@ -1,401 +1,204 @@
-Return-Path: <SRS0=sGOI=ID=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=sGOI=ID=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=LPBa=H2=canonical.com=joseph.salisbury@kernel.org>
+Return-Path: <SRS0=LPBa=H2=canonical.com=joseph.salisbury@kernel.org>
+Subject: Re: [Regression] PCI / PM: Simplify device wakeup settings code
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Linux PCI <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ 1745646@bugs.launchpad.net, Mika Westerberg <mika.westerberg@linux.intel.com>
+References: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
+ <20180503191126.GA15790@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0gMY03BWN8D0Of=+bHf22jUgnmyDF8_OsRtQTX-YuMdew@mail.gmail.com>
+ <3450120.zJjNP64voh@aspire.rjw.lan>
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Message-ID: <405049ce-5ea4-48b6-40da-4775daa94aea@canonical.com>
+Date: Mon, 7 May 2018 12:15:01 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 16 May 2018 20:28:39 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
- <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
- <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
- Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
- <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>,
- linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH v16 8/9] PCI/DPC: Unify and plumb error handling into DPC
-In-Reply-To: <20180516130455.GA233993@bhelgaas-glaptop.roam.corp.google.com>
-References: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
- <1526035408-31328-9-git-send-email-poza@codeaurora.org>
- <a497fae20a326bdf67395c907a5b6b0d@codeaurora.org>
- <20180515235632.GB11156@bhelgaas-glaptop.roam.corp.google.com>
- <2ca65f6b38668cfcf553833409ee38e3@codeaurora.org>
- <20180516105236.GA217390@bhelgaas-glaptop.roam.corp.google.com>
- <3822b5ea0b05f9836b991ce18f16a30f@codeaurora.org>
- <20180516130455.GA233993@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <33496e8d8c663240c9db51b98ef6dd52@codeaurora.org>
+In-Reply-To: <3450120.zJjNP64voh@aspire.rjw.lan>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-16 18:34, Bjorn Helgaas wrote:
-> On Wed, May 16, 2018 at 05:45:58PM +0530, poza@codeaurora.org wrote:
->> On 2018-05-16 16:22, Bjorn Helgaas wrote:
->> > On Wed, May 16, 2018 at 01:46:25PM +0530, poza@codeaurora.org wrote:
->> > > On 2018-05-16 05:26, Bjorn Helgaas wrote:
->> > > > On Fri, May 11, 2018 at 05:22:08PM +0530, poza@codeaurora.org wrote:
->> > > > > On 2018-05-11 16:13, Oza Pawandeep wrote:
->> > > > > > DPC driver implements link_reset callback, and calls
->> > > > > > pci_do_fatal_recovery().
->> > > > > >
->> > > > > > Which follows standard path of ERR_FATAL recovery.
->> > > > > >
->> > > > > > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> > > > > >
->> > > > > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> > > > > > index 5e8857a..6af7595 100644
->> > > > > > --- a/drivers/pci/pci.h
->> > > > > > +++ b/drivers/pci/pci.h
->> > > > > > @@ -354,7 +354,7 @@ static inline resource_size_t
->> > > > > > pci_resource_alignment(struct pci_dev *dev,
->> > > > > >  void pci_enable_acs(struct pci_dev *dev);
->> > > > > >
->> > > > > >  /* PCI error reporting and recovery */
->> > > > > > -void pcie_do_fatal_recovery(struct pci_dev *dev);
->> > > > > > +void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service);
->> > > > > >  void pcie_do_nonfatal_recovery(struct pci_dev *dev);
->> > > > > >
->> > > > > >  bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
->> > > > > > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c
->> > > > > > b/drivers/pci/pcie/aer/aerdrv_core.c
->> > > > > > index fdfc474..36e622d 100644
->> > > > > > --- a/drivers/pci/pcie/aer/aerdrv_core.c
->> > > > > > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->> > > > > > @@ -254,7 +254,7 @@ static void handle_error_source(struct pcie_device
->> > > > > > *aerdev,
->> > > > > >  	} else if (info->severity == AER_NONFATAL)
->> > > > > >  		pcie_do_nonfatal_recovery(dev);
->> > > > > >  	else if (info->severity == AER_FATAL)
->> > > > > > -		pcie_do_fatal_recovery(dev);
->> > > > > > +		pcie_do_fatal_recovery(dev, PCIE_PORT_SERVICE_AER);
->> > > > > >  }
->> > > > > >
->> > > > > >  #ifdef CONFIG_ACPI_APEI_PCIEAER
->> > > > > > @@ -321,7 +321,7 @@ static void aer_recover_work_func(struct work_struct
->> > > > > > *work)
->> > > > > >  		if (entry.severity == AER_NONFATAL)
->> > > > > >  			pcie_do_nonfatal_recovery(pdev);
->> > > > > >  		else if (entry.severity == AER_FATAL)
->> > > > > > -			pcie_do_fatal_recovery(pdev);
->> > > > > > +			pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_AER);
->> > > > > >  		pci_dev_put(pdev);
->> > > > > >  	}
->> > > > > >  }
->> > > > > > diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
->> > > > > > index 80ec384..5680c13 100644
->> > > > > > --- a/drivers/pci/pcie/dpc.c
->> > > > > > +++ b/drivers/pci/pcie/dpc.c
->> > > > > > @@ -73,29 +73,31 @@ static void dpc_wait_link_inactive(struct dpc_dev
->> > > > > > *dpc)
->> > > > > >  	pcie_wait_for_link(pdev, false);
->> > > > > >  }
->> > > > > >
->> > > > > > -static void dpc_work(struct work_struct *work)
->> > > > > > +static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
->> > > > > >  {
->> > > > > > -	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->> > > > > > -	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
->> > > > > > -	struct pci_bus *parent = pdev->subordinate;
->> > > > > > -	u16 cap = dpc->cap_pos, ctl;
->> > > > > > -
->> > > > > > -	pci_lock_rescan_remove();
->> > > > > > -	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
->> > > > > > -					 bus_list) {
->> > > > > > -		pci_dev_get(dev);
->> > > > > > -		pci_dev_set_disconnected(dev, NULL);
->> > > > > > -		if (pci_has_subordinate(dev))
->> > > > > > -			pci_walk_bus(dev->subordinate,
->> > > > > > -				     pci_dev_set_disconnected, NULL);
->> > > > > > -		pci_stop_and_remove_bus_device(dev);
->> > > > > > -		pci_dev_put(dev);
->> > > > > > -	}
->> > > > > > -	pci_unlock_rescan_remove();
->> > > > > > -
->> > > > > > +	struct dpc_dev *dpc;
->> > > > > > +	struct pcie_device *pciedev;
->> > > > > > +	struct device *devdpc;
->> > > > > > +	u16 cap, ctl;
->> > > > > > +
->> > > > > > +	/*
->> > > > > > +	 * DPC disables the Link automatically in hardware, so it has
->> > > > > > +	 * already been reset by the time we get here.
->> > > > > > +	 */
->> > > > > > +
->> > > > > > +	devdpc = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_DPC);
->> > > > > > +	pciedev = to_pcie_device(devdpc);
->> > > > > > +	dpc = get_service_data(pciedev);
->> > > > > > +	cap = dpc->cap_pos;
->> > > > > > +
->> > > > > > +	/*
->> > > > > > +	 * Waiting until the link is inactive, then clearing DPC
->> > > > > > +	 * trigger status to allow the port to leave DPC.
->> > > > > > +	 */
->> > > > > >  	dpc_wait_link_inactive(dpc);
->> > > > > > +
->> > > > > >  	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
->> > > > > > -		return;
->> > > > > > +		return PCI_ERS_RESULT_DISCONNECT;
->> > > > > >  	if (dpc->rp_extensions && dpc->rp_pio_status) {
->> > > > > >  		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
->> > > > > >  				       dpc->rp_pio_status);
->> > > > > > @@ -108,6 +110,17 @@ static void dpc_work(struct work_struct *work)
->> > > > > >  	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
->> > > > > >  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
->> > > > > >  			      ctl | PCI_EXP_DPC_CTL_INT_EN);
->> > > > > > +
->> > > > > > +	return PCI_ERS_RESULT_RECOVERED;
->> > > > > > +}
->> > > > > > +
->> > > > > > +static void dpc_work(struct work_struct *work)
->> > > > > > +{
->> > > > > > +	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->> > > > > > +	struct pci_dev *pdev = dpc->dev->port;
->> > > > > > +
->> > > > > > +	/* From DPC point of view error is always FATAL. */
->> > > > > > +	pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_DPC);
->> > > > > >  }
->> > > > > >
->> > > > > >  static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
->> > > > > > @@ -288,6 +301,7 @@ static struct pcie_port_service_driver dpcdriver = {
->> > > > > >  	.service	= PCIE_PORT_SERVICE_DPC,
->> > > > > >  	.probe		= dpc_probe,
->> > > > > >  	.remove		= dpc_remove,
->> > > > > > +	.reset_link	= dpc_reset_link,
->> > > > > >  };
->> > > > > >
->> > > > > >  static int __init dpc_service_init(void)
->> > > > > > diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
->> > > > > > index 33a16b1..29ff148 100644
->> > > > > > --- a/drivers/pci/pcie/err.c
->> > > > > > +++ b/drivers/pci/pcie/err.c
->> > > > > > @@ -185,7 +185,7 @@ static pci_ers_result_t default_reset_link(struct
->> > > > > > pci_dev *dev)
->> > > > > >  	return PCI_ERS_RESULT_RECOVERED;
->> > > > > >  }
->> > > > > >
->> > > > > > -static pci_ers_result_t reset_link(struct pci_dev *dev)
->> > > > > > +static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
->> > > > > >  {
->> > > > > >  	struct pci_dev *udev;
->> > > > > >  	pci_ers_result_t status;
->> > > > > > @@ -200,7 +200,7 @@ static pci_ers_result_t reset_link(struct pci_dev
->> > > > > > *dev)
->> > > > > >  	}
->> > > > > >
->> > > > > >  	/* Use the aer driver of the component firstly */
->> > > > > > -	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
->> > > > > > +	driver = pcie_port_find_service(udev, service);
->> > > > > >
->> > > > > >  	if (driver && driver->reset_link) {
->> > > > > >  		status = driver->reset_link(udev);
->> > > > > > @@ -287,7 +287,7 @@ static pci_ers_result_t
->> > > > > > broadcast_error_message(struct pci_dev *dev,
->> > > > > >   * followed by re-enumeration of devices.
->> > > > > >   */
->> > > > > >
->> > > > > > -void pcie_do_fatal_recovery(struct pci_dev *dev)
->> > > > > > +void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
->> > > > > >  {
->> > > > > >  	struct pci_dev *udev;
->> > > > > >  	struct pci_bus *parent;
->> > > > > > @@ -313,7 +313,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev)
->> > > > > >  		pci_dev_put(pdev);
->> > > > > >  	}
->> > > > > >
->> > > > > > -	result = reset_link(udev);
->> > > > > > +	result = reset_link(udev, service);
->> > > > > >
->> > > > > >  	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> > > > > >  		/*
->> > > > > > diff --git a/include/linux/aer.h b/include/linux/aer.h
->> > > > > > index 8f87bbe..0c506fe 100644
->> > > > > > --- a/include/linux/aer.h
->> > > > > > +++ b/include/linux/aer.h
->> > > > > > @@ -14,6 +14,7 @@
->> > > > > >  #define AER_NONFATAL			0
->> > > > > >  #define AER_FATAL			1
->> > > > > >  #define AER_CORRECTABLE			2
->> > > > > > +#define DPC_FATAL			4
->> > > >
->> > > > I think DPC_FATAL can be 3, since these values are not used as a bit
->> > > > mask.
->> > > >
->> > > > > >  struct pci_dev;
->> > > > >
->> > > > >
->> > > > > Hi Bjorn,
->> > > > >
->> > > > >
->> > > > > I have addressed all the comments, and I hope we are heading towards
->> > > > > closure.
->> > > > >
->> > > > > I just figure that pcie_do_fatal_recovery  (which is getting
->> > > > > executed for
->> > > > > DPC as well)
->> > > > >
->> > > > > if (result == PCI_ERS_RESULT_RECOVERED) {
->> > > > >                 if (pcie_wait_for_link(udev, true))
->> > > > >                         pci_rescan_bus(udev->bus);
->> > > > >                 pci_info(dev, "Device recovery successful\n");
->> > > > >         }
->> > > > >
->> > > > > I have to correct it to
->> > > > >
->> > > > > if (service==AER  && result == PCI_ERS_RESULT_RECOVERED) {
->> > > > >                 if (pcie_wait_for_link(udev, true))
->> > > > >                         pci_rescan_bus(udev->bus);
->> > > > >                 pci_info(dev, "Device recovery successful\n");
->> > > > >         }
->> > > >
->> > > > This patch is mostly a restructuring of DPC and doesn't really change
->> > > > its
->> > > > behavior.  DPC didn't previously call pcie_wait_for_link() or
->> > > > pci_rescan_bus(), so I agree that adding the "service==AER" test will
->> > > > help preserve the existing DPC behavior.
->> > > >
->> > > > However, the rescan should happen with DPC *somewhere* and we should
->> > > > clarify where that is.  Maybe for now we only need a comment about where
->> > > > that happens.  Ideally, we could eventually converge this so the same
->> > > > mechanism is used for AER and DPC, so we wouldn't need a test like
->> > > > "service=AER".
->> >
->> > Please still add a comment here about why the rescan behavior is
->> > different.
->> >
->> > > I am sorry I pasted the wrong snippet.
->> > > following needs to be fixed in v17.
->> > > from:
->> > >    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> > >                 /*
->> > >                  * If the error is reported by a bridge, we think
->> > > this error
->> > >                  * is related to the downstream link of the bridge,
->> > > so we
->> > >                  * do error recovery on all subordinates of the bridge
->> > > instead
->> > >                  * of the bridge and clear the error status of the
->> > > bridge.
->> > >                  */
->> > >                 pci_walk_bus(dev->subordinate, report_resume,
->> > > &result_data);
->> > >                 pci_cleanup_aer_uncorrect_error_status(dev);
->> > >         }
->> > >
->> > >
->> > > to
->> > >
->> > >    if (service==AER  && dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> > >                 /*
->> > >                  * If the error is reported by a bridge, we think
->> > > this error
->> > >                  * is related to the downstream link of the bridge,
->> > > so we
->> > >                  * do error recovery on all subordinates of the bridge
->> > > instead
->> > >                  * of the bridge and clear the error status of the
->> > > bridge.
->> > >                  */
->> > >                 pci_walk_bus(dev->subordinate, report_resume,
->> > > &result_data);
->> > >                 pci_cleanup_aer_uncorrect_error_status(dev);
->> > >         }
->> > >
->> > > this is only needed in case of AER.
->> >
->> > Oh, I missed this before.  It makes sense to clear the AER status
->> > here, but why do we need to call report_resume()?  We just called all
->> > the driver .remove() methods and detached the drivers from the
->> > devices.  So I don't think report_resume() will do anything
->> > ("dev->driver" should be NULL) except set the dev->error_state to
->> > pci_channel_io_normal.  We probably don't need that because we didn't
->> > change error_state in this fatal error path.
->> 
->> if you remember, the path ends up calling
->> aer_error_resume
->> 
->> the existing code ends up calling aer_error_resume as follows.
->> 
->> do_recovery(pci_dev)
->>     broadcast_error_message(..., error_detected, ...)
->>     if (AER_FATAL)
->>       reset_link(pci_dev)
->>         udev = BRIDGE ? pci_dev : pci_dev->bus->self
->>         driver->reset_link(udev)
->>           aer_root_reset(udev)
->>     if (CAN_RECOVER)
->>       broadcast_error_message(..., mmio_enabled, ...)
->>     if (NEED_RESET)
->>       broadcast_error_message(..., slot_reset, ...)
->>     broadcast_error_message(dev, ..., report_resume, ...)
->>       if (BRIDGE)
->>         report_resume
->>           driver->resume
->>             pcie_portdrv_err_resume
->>               device_for_each_child(..., resume_iter)
->>                 resume_iter
->>                   driver->error_resume
->>                     aer_error_resume
->>         pci_cleanup_aer_uncorrect_error_status(pci_dev)       # only 
->> if
->> BRIDGE
->>           pci_write_config_dword(PCI_ERR_UNCOR_STATUS)
->> 
->> hence I think we have to call it in order to clear the root port
->> PCI_ERR_UNCOR_STATUS and PCI_EXP_DEVSTA.
->> makes sense ?
-> 
-> I know I sent you the call graph above, so you would think I might
-> understand it, but you would be mistaken :)  This still doesn't make
-> sense to me.
-> 
-> I think your point is that we need to call aer_error_resume().  That
-> is the aerdriver.error_resume() method.  The AER driver only binds to
-> root ports.
-> 
-> This path:
-> 
->   pcie_do_fatal_recovery
->     pci_walk_bus(dev->subordinate, report_resume, &result_data)
-> 
-> calls report_resume() for every device on the dev->subordinate bus
-> (and for anything below those devices).  There are no root ports on
-> that dev->subordinate bus, because root ports are always on a root
-> bus, never on a subordinate bus.
-> 
-> So I don't see how report_resume() can ever get to aer_error_resume().
-> Can you instrument that path and verify that it actually does get
-> there somehow?
+On 05/04/2018 07:14 AM, Rafael J. Wysocki wrote:
+> On Thursday, May 3, 2018 11:29:18 PM CEST Rafael J. Wysocki wrote:
+>> On Thu, May 3, 2018 at 9:11 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>> On Thu, May 03, 2018 at 02:29:02PM -0400, Joseph Salisbury wrote:
+>>>> On 05/02/2018 06:41 AM, Rafael J. Wysocki wrote:
+>>>>> On Tue, May 1, 2018 at 9:55 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>>>>> On Tue, May 01, 2018 at 10:34:29AM +0200, Rafael J. Wysocki wrote:
+>>>>>>> On Mon, Apr 30, 2018 at 4:22 PM, Joseph Salisbury
+>>>>>>> <joseph.salisbury@canonical.com> wrote:
+>>>>>>>> On 04/16/2018 11:58 AM, Rafael J. Wysocki wrote:
+>>>>>>>>> On Mon, Apr 16, 2018 at 5:31 PM, Joseph Salisbury
+>>>>>>>>> <joseph.salisbury@canonical.com> wrote:
+>>>>>>>>>> On 04/13/2018 05:34 PM, Rafael J. Wysocki wrote:
+>>>>>>>>>>> On Fri, Apr 13, 2018 at 7:56 PM, Joseph Salisbury
+>>>>>>>>>>> <joseph.salisbury@canonical.com> wrote:
+>>>>>>>>>>>> Hi Rafael,
+>>>>>>>>>>>>
+>>>>>>>>>>>> A kernel bug report was opened against Ubuntu [0].  After a kernel
+>>>>>>>>>>>> bisect, it was found that reverting the following two commits resolved
+>>>>>>>>>>>> this bug:
+>>>>>>>>>>>>
+>>>>>>>>>>>> 0ce3fcaff929 ("PCI / PM: Restore PME Enable after config space restoration")
+>>>>>>>>>>>> 0847684cfc5f("PCI / PM: Simplify device wakeup settings code")
+>>>>>>>>>>>>
+>>>>>>>>>>>> This is a regression introduced in v4.13-rc1 and still exists in
+>>>>>>>>>>>> mainline.  The bug causes the battery to drain when the system is
+>>>>>>>>>>>> powered down and unplugged, which does not happed prior to these two
+>>>>>>>>>>>> commits.
+>>>>>>>>>>> What system and what do you mean by "powered down"?  How much time
+>>>>>>>>>>> does it take for the battery to drain now?
+>>>>>>>>>> By powered down, the bug reporter is saying physically powered off and
+>>>>>>>>>> unplugged.  The system is a HP laptop:
+>>>>>>>>>>
+>>>>>>>>>> dmi.chassis.vendor: HP
+>>>>>>>>>> dmi.product.family: 103C_5335KV HP Notebook
+>>>>>>>>>> dmi.product.name: HP Notebook
+>>>>>>>>>> vendor_id    : GenuineIntel
+>>>>>>>>>> cpu family    : 6
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>>> The bisect actually pointed to commit de3ef1e, but reverting
+>>>>>>>>>>>> these two commits fixes the issue.
+>>>>>>>>>>>>
+>>>>>>>>>>>> I was hoping to get your feedback, since you are the patch author.  Do
+>>>>>>>>>>>> you think gathering any additional data will help diagnose this issue,
+>>>>>>>>>>>> or would it be best to submit a revert request?
+>>>>>>>>>>> First, reverting these is not an option or you will break systems
+>>>>>>>>>>> relying on them now.  4.13 is three releases back at this point.
+>>>>>>>>>>>
+>>>>>>>>>>> Second, your issue appears to be related to the suspend/shutdown path
+>>>>>>>>>>> whereas commit 0ce3fcaff929 is mostly about resume, so presumably the
+>>>>>>>>>>> change in pci_enable_wake() causes the problem to happen.  Can you try
+>>>>>>>>>>> to revert this one alone and see if that helps?
+>>>>>>>>>> A test kernel with commits 0ce3fcaff929 and de3ef1eb1cd0 reverted was
+>>>>>>>>>> tested.  However, the test kernel still exhibited the bug.
+>>>>>>>>> So essentially the bisection result cannot be trusted.
+>>>>>>>> We performed some more testing and confirmed just a revert of the
+>>>>>>>> following commit resolves the bug:
+>>>>>>>>
+>>>>>>>> 0847684cfc5f0 ("PCI / PM: Simplify device wakeup settings code")
+>>>>>>> Thanks for confirming this!
+>>>>>>>
+>>>>>>>> Can you think of any suggestions to help debug further?
+>>>>>>> The root cause of the regression is likely the change in
+>>>>>>> pci_enable_wake() removing the device_may_wakeup() check from it.
+>>>>>>>
+>>>>>>> Probably, one of the drivers in the platform calls pci_enable_wake()
+>>>>>>> directly from its ->shutdown() callback and that causes the device to
+>>>>>>> be set up for system wakeup which in turn causes the power draw while
+>>>>>>> the system is off to increase.
+>>>>>>>
+>>>>>>> I would look at the PCI drivers used on that platform to find which of
+>>>>>>> them call pci_enable_wake() directly from ->shutdown() and I would
+>>>>>>> make these calls conditional on device_may_wakeup().
+>>>>>> I took a quick look with
+>>>>>>
+>>>>>>   git grep -E "pci_enable_wake\(.*[^0]\);|device_may_wakeup"
+>>>>>>
+>>>>>> and didn't notice any pci_enable_wake() callers that called
+>>>>>> device_may_wakeup() first.
+>>>>> I've just look at a bunch of network drivers doing that.
+>>>>>
+>>>>> It looks like I may need to restore __pci_enable_wake() with an extra
+>>>>> "runtime" argument for internal use.
+>>>>>
+>>>>> Joseph, can you ask the reporter to test the Bjorn's patch, please?
+>>>> The bug reporter has testing Bjorn's patch.  It did in fact resolve the
+>>>> bug.  Thanks for the quick help, Rafael and Bjorn!
+>>> Just as a word of caution, I think Rafael said my patch was not the
+>>> right fix because it would break something else.  So I would wait for
+>>> a better patch from Rafael before actually resolving this issue.
+>> I'll do my best to provide one in the next couple of days.
+> Something like the appended one (compiled-only at this point).
+>
+> Joseph, this should be functionally equivalent to the Bjorn's patch except
+> for the runtime PM part which is irrelevant for the issue in question, but
+> please ask the reported to test this one too.
+>
+> If it is confirmed to work, I'll repost it with a proper changelog.
+The bug reporter confirms that your latest patch also resolves the bug. 
+Thanks!
 
-
-you are right....the call
-pci_walk_bus(dev->subordinate, report_resume, &result_data);
-does not call aer_error_resume()
-
-but
-pci_walk_bus(udev->bus, report_resume, &result_data);
-does call aer_error_resume()
-
-now if you look at the comment of the function:
-/**
-  * aer_error_resume - clean up corresponding error status bits
-  * @dev: pointer to Root Port's pci_dev data structure
-  *
-  * Invoked by Port Bus driver during nonfatal recovery.
-  */
-
-it is invoked during nonfatal recovery.
-but the code handles both fatal and nonfatal clearing of error bits.
-
-if (dev->error_state == pci_channel_io_normal)
-		status &= ~mask; /* Clear corresponding nonfatal bits */
-	else
-		status &= mask; /* Clear corresponding fatal bits */
-	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
-
-
-so the question is, should we not call aer_error_resume during fatal 
-recovery ?
-so that it clears the root port status, if of course the error is 
-triggered by AER running agent (RP, Switch)
-
-Regards,
-Oza.
+>
+> ---
+>  drivers/pci/pci.c |   31 ++++++++++++++++++++++++-------
+>  1 file changed, 24 insertions(+), 7 deletions(-)
+>
+> Index: linux-pm/drivers/pci/pci.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci.c
+> +++ linux-pm/drivers/pci/pci.c
+> @@ -1910,7 +1910,7 @@ void pci_pme_active(struct pci_dev *dev,
+>  EXPORT_SYMBOL(pci_pme_active);
+>  
+>  /**
+> - * pci_enable_wake - enable PCI device as wakeup event source
+> + * __pci_enable_wake - enable PCI device as wakeup event source
+>   * @dev: PCI device affected
+>   * @state: PCI state from which device will issue wakeup events
+>   * @enable: True to enable event generation; false to disable
+> @@ -1928,7 +1928,7 @@ EXPORT_SYMBOL(pci_pme_active);
+>   * Error code depending on the platform is returned if both the platform and
+>   * the native mechanism fail to enable the generation of wake-up events
+>   */
+> -int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable)
+> +static int __pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable)
+>  {
+>  	int ret = 0;
+>  
+> @@ -1969,6 +1969,23 @@ int pci_enable_wake(struct pci_dev *dev,
+>  
+>  	return ret;
+>  }
+> +
+> +/**
+> + * pci_enable_wake - enable PCI device as wakeup event source
+> + * @pci_dev: Target device
+> + * @state: PCI state from which device will issue wakeup events
+> + * @enable: Whether or not to enable event generation
+> + *
+> + * If @enable is set and device_may_wakeup() returns false for the device, it
+> + * will not be enabled to generate wakeup events.
+> + */
+> +int pci_enable_wake(struct pci_dev *pci_dev, pci_power_t state, bool enable)
+> +{
+> +	if (enable && !device_may_wakeup(&pci_dev->dev))
+> +		return -EINVAL;
+> +
+> +	return __pci_enable_wake(pci_dev, state, enable);
+> +}
+>  EXPORT_SYMBOL(pci_enable_wake);
+>  
+>  /**
+> @@ -1981,9 +1998,9 @@ EXPORT_SYMBOL(pci_enable_wake);
+>   * should not be called twice in a row to enable wake-up due to PCI PM vs ACPI
+>   * ordering constraints.
+>   *
+> - * This function only returns error code if the device is not capable of
+> - * generating PME# from both D3_hot and D3_cold, and the platform is unable to
+> - * enable wake-up power for it.
+> + * This function only returns error code if the device is not allowed to wake
+> + * up the system from sleep or it is not capable of generating PME# from both
+> + * D3_hot and D3_cold and the platform is unable to enable wake-up power for it.
+>   */
+>  int pci_wake_from_d3(struct pci_dev *dev, bool enable)
+>  {
+> @@ -2114,12 +2131,12 @@ int pci_finish_runtime_suspend(struct pc
+>  
+>  	dev->runtime_d3cold = target_state == PCI_D3cold;
+>  
+> -	pci_enable_wake(dev, target_state, pci_dev_run_wake(dev));
+> +	__pci_enable_wake(dev, target_state, pci_dev_run_wake(dev));
+>  
+>  	error = pci_set_power_state(dev, target_state);
+>  
+>  	if (error) {
+> -		pci_enable_wake(dev, target_state, false);
+> +		__pci_enable_wake(dev, target_state, false);
+>  		dev->runtime_d3cold = false;
+>  	}
+>  
+>
