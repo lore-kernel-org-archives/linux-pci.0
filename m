@@ -1,44 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:47322 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S934764AbeEWWUy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 18:20:54 -0400
-Date: Wed, 23 May 2018 15:20:39 -0700
-From: Kyle McMartin <jkkm@fb.com>
-To: Rajat Jain <rajatja@google.com>
-CC: Jes Sorensen <jsorensen@fb.com>, Sinan Kaya <okaya@codeaurora.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: RFC: Counters for PCI Express AERs
-Message-ID: <20180523222039.GA1014@boosh.jkkm.org>
-References: <CACK8Z6Hjxd+6qRthHEQRuo0_NXX06iDqggrVN83O0QkN=3+9gg@mail.gmail.com>
- <dee623fb19f82f3a600dd816cba9f489@codeaurora.org>
- <CACK8Z6FGxkO5JGQs3Rs2-2dtqDFnFgsmq5HT2D4nv0eGUZSg8g@mail.gmail.com>
- <CACK8Z6F+PN=aoRaApRnG6To8JcFUUXXBok4QNS5Nziwt4We01A@mail.gmail.com>
- <cf07f933-5fd9-918d-4cb2-a9a79285801f@fb.com>
- <CACK8Z6HKyQ-wZfUpStha0ZYcn9z5F63ohnXPHwBowq0_SC=mHA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CACK8Z6HKyQ-wZfUpStha0ZYcn9z5F63ohnXPHwBowq0_SC=mHA@mail.gmail.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36900 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751010AbeEGGdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 May 2018 02:33:45 -0400
+From: Baoquan He <bhe@redhat.com>
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+        robh+dt@kernel.org, dan.j.williams@intel.com,
+        nicolas.pitre@linaro.org, josh@joshtriplett.org,
+        fengguang.wu@intel.com, bp@suse.de
+Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com,
+        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
+        keith.busch@intel.com, jonathan.derrick@intel.com,
+        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
+        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
+        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
+        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
+        yinghai@kernel.org, kexec@lists.infradead.org, monstr@monstr.eu,
+        davem@davemloft.net, chris@zankel.net, jcmvbkbc@gmail.com,
+        gustavo@padovan.org, maarten.lankhorst@linux.intel.com,
+        seanpaul@chromium.org, linux-parisc@vger.kernel.org,
+        Baoquan He <bhe@redhat.com>
+Subject: [PATCH v4 3/3] kexec_file: Load kernel at top of system RAM if required
+Date: Mon,  7 May 2018 14:32:24 +0800
+Message-Id: <20180507063224.24229-4-bhe@redhat.com>
+In-Reply-To: <20180507063224.24229-1-bhe@redhat.com>
+References: <20180507063224.24229-1-bhe@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 18, 2018 at 09:31:11AM -0700, Rajat Jain wrote:
-> >>> Jes: did anything come out of the proposal? I'm wondering if you have
-> >>> any patch that in work-in-progress that I could use may be as a
-> >>> starting point?
-> >
-> > Kyle McMartin was working on this, I don't know the current status.
-> 
-> 
-> Never mind, I think I'm more than halfway there and will be sending a
-> patch in a day or two.
-> 
+For kexec_file loading, if kexec_buf.top_down is 'true', the memory which
+is used to load kernel/initrd/purgatory is supposed to be allocated from
+top to down. This is what we have been doing all along in the old kexec
+loading interface and the kexec loading is still default setting in some
+distributions. However, the current kexec_file loading interface doesn't
+do likt this. The function arch_kexec_walk_mem() it calls ignores checking
+kexec_buf.top_down, but calls walk_system_ram_res() directly to go through
+all resources of System RAM from bottom to up, to try to find memory region
+which can contain the specific kexec buffer, then call locate_mem_hole_callback()
+to allocate memory in that found memory region from top to down. This brings
+confusion especially when KASLR is widely supported , users have to make clear
+why kexec/kdump kernel loading position is different between these two
+interfaces in order to exclude unnecessary noises. Hence these two interfaces
+need be unified on behaviour.
 
-Patch set looks good to me, it's pretty analogous to what I came up with
-in the fall. I ended up using the tracepoints instead of patching in sysfs
-to enable it across all of our kernel versions in production.
+Here add checking if kexec_buf.top_down is 'true' in arch_kexec_walk_mem(),
+if yes, call the newly added walk_system_ram_res_rev() to find memory region
+from top to down to load kernel.
 
-Really glad you did this work, hopefully it gets merged.
+Signed-off-by: Baoquan He <bhe@redhat.com>
+Cc: Eric Biederman <ebiederm@xmission.com>
+Cc: Vivek Goyal <vgoyal@redhat.com>
+Cc: Dave Young <dyoung@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: kexec@lists.infradead.org
+---
+ kernel/kexec_file.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-cheers, Kyle
+diff --git a/kernel/kexec_file.c b/kernel/kexec_file.c
+index 75d8e7cf040e..7a66d9d5a534 100644
+--- a/kernel/kexec_file.c
++++ b/kernel/kexec_file.c
+@@ -518,6 +518,8 @@ int __weak arch_kexec_walk_mem(struct kexec_buf *kbuf,
+ 					   IORESOURCE_SYSTEM_RAM | IORESOURCE_BUSY,
+ 					   crashk_res.start, crashk_res.end,
+ 					   kbuf, func);
++	else if (kbuf->top_down)
++		return walk_system_ram_res_rev(0, ULONG_MAX, kbuf, func);
+ 	else
+ 		return walk_system_ram_res(0, ULONG_MAX, kbuf, func);
+ }
+-- 
+2.13.6
