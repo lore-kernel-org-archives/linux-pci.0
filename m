@@ -1,184 +1,253 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 2 May 2018 12:23:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gilles Buloz <Gilles.Buloz@kontron.com>
-Subject: Re: LS1043A : "synchronous abort" at boot due to PCI config read
-Message-ID: <20180502172341.GA123831@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAKv+Gu_v4V8DUa6f4WxvjZHoJbbqT0mKpOwYVmaLaE20CB3U_g@mail.gmail.com>
- <5AE317AB.4020404@kontron.com>
- <20180427165627.GA8199@bhelgaas-glaptop.roam.corp.google.com>
- <5AE6D7E2.9030506@kontron.com> <5AE71BF4.2010200@kontron.com>
- <20180430170447.GA95643@bhelgaas-glaptop.roam.corp.google.com>
- <5AE75809.30701@kontron.com> <5AE9B5BB.2080003@kontron.com>
- <20180502132501.GE11698@bhelgaas-glaptop.roam.corp.google.com>
- <5AE9C1AB.8020403@kontron.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 7 May 2018 09:14:29 +0800
+From: Baoquan He <bhe@redhat.com>
+To: Wei Yang <richard.weiyang@gmail.com>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+        robh+dt@kernel.org, dan.j.williams@intel.com,
+        nicolas.pitre@linaro.org, josh@joshtriplett.org,
+        Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
+        David Airlie <airlied@linux.ie>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Brijesh Singh <brijesh.singh@amd.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Borislav Petkov <bp@suse.de>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Yaowei Bai <baiyaowei@cmss.chinamobile.com>,
+        devel@linuxdriverproject.org, linux-input@vger.kernel.org,
+        linux-nvdimm@lists.01.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] resource: Use list_head to link sibling resource
+Message-ID: <20180507011429.GG30581@MiWiFi-R3L-srv>
+References: <20180419001848.3041-1-bhe@redhat.com>
+ <20180419001848.3041-2-bhe@redhat.com>
+ <20180426011837.GA79340@WeideMacBook-Pro.local>
 MIME-Version: 1.0
-In-Reply-To: <5AE9C1AB.8020403@kontron.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci <linux-pci@vger.kernel.org>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "Minghuan.Lian@nxp.com" <Minghuan.Lian@nxp.com>
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180426011837.GA79340@WeideMacBook-Pro.local>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 02, 2018 at 01:48:27PM +0000, Gilles Buloz wrote:
-> Le 02/05/2018 15:26, Bjorn Helgaas a =E9crit :
-> > On Wed, May 02, 2018 at 12:57:31PM +0000, Gilles Buloz wrote:
-> >> Hi Bjorn,
-> >> See attached patch (tested ok this morning)
-> > This looks good.  Minor comments below.
+Hi Wei Yang,
+
+On 04/26/18 at 09:18am, Wei Yang wrote:
+> On Thu, Apr 19, 2018 at 08:18:46AM +0800, Baoquan He wrote:
+> >The struct resource uses singly linked list to link siblings. It's not
+> >easy to do reverse iteration on sibling list. So replace it with list_head.
 > >
-> > I can fix minor things myself, but I do need a signed-off-by from you
-> > before applying (see
-> > https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Do=
-cumentation/process/submitting-patches.rst)
-> >
-> > Please add a changelog, too, and include the patch inline (as opposed
-> > to as an attachment) if possible.
-> >
-> >> --- include/linux/pci.h.orig	2018-03-26 16:51:18.050000000 +0000
-> >> +++ include/linux/pci.h	2018-04-30 18:29:14.140000000 +0000
-> >> @@ -193,6 +193,7 @@
-> >>   enum pci_bus_flags {
-> >>   	PCI_BUS_FLAGS_NO_MSI   =3D (__force pci_bus_flags_t) 1,
-> >>   	PCI_BUS_FLAGS_NO_MMRBC =3D (__force pci_bus_flags_t) 2,
-> >> +	PCI_BUS_FLAGS_NO_EXTCFG =3D (__force pci_bus_flags_t) 4,
-> > Best if you can rebase this to v4.17-rc1.
-> >
-> >>   };
-> >>   =
+> 
+> Hi, Baoquan
+> 
+> Besides changing the data structure, I have another proposal to do the reverse
+> iteration. Which means it would not affect other users, if you just want a
+> reverse iteration.
+> 
+> BTW, I don't think Andrew suggest to use linked-list directly. What he wants
+> is a better solution to your first proposal in
+> https://patchwork.kernel.org/patch/10300819/.
+> 
+> Below is my proposal of resource reverse iteration without changing current
+> design.
 
-> >>   /* These values come from the PCI Express Spec */
-> >> --- drivers/pci/probe.c.orig	2018-01-22 09:29:52.000000000 +0000
-> >> +++ drivers/pci/probe.c	2018-05-02 13:44:35.530000000 +0000
-> >> @@ -664,6 +664,23 @@
-> >>   	}
-> >>   }
-> >>   =
+I got your mail and read it, then interrupted by other thing and forgot
+replying, sorry.
 
-> >> +static bool pci_bridge_child_bus_ext_cfg_accessible(struct pci_dev *b=
-ridge)
-> >> +{
-> >> +	int pos;
-> >> +	u32 status;
-> >> +
-> >> +	if (!pci_is_pcie(bridge) || /* PCI/PCI bridge */
-> >> +	    (pci_pcie_type(bridge) =3D=3D PCI_EXP_TYPE_PCIE_BRIDGE) || /* PC=
-Ie/PCI bridge in forward mode */
-> >> +	    (pci_pcie_type(bridge) =3D=3D PCI_EXP_TYPE_PCI_BRIDGE)) {  /* PC=
-Ie/PCI bridge in reverse mode */
-> >> +		pos =3D pci_find_capability(bridge, PCI_CAP_ID_PCIX);
-> >> +		if (pos)
-> >> +			pci_read_config_dword(bridge, pos + PCI_X_STATUS, &status);
-> >> +		return pos && (status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ)=
-);
-> >> +	}
-> > Please arrange this so everything fits in 80 columns.
-> >
-> > If you can split it into several simpler "if" statements rather
-> > than one with a complicated expression, that would also be good.
-> >
-> >> +
-> >> +	return true;
-> >> +}
-> >> +
-> >>   static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
-> >>   					   struct pci_dev *bridge, int busnr)
-> >>   {
-> >> @@ -725,6 +742,19 @@
-> >>   	/* Create legacy_io and legacy_mem files for this bus */
-> >>   	pci_create_legacy_files(child);
-> >>   =
+I am fine with your code change. As I said before, I have tried to change
+code per reviewers' comment, then let reviewers decide which way is
+better. Please feel free to post formal patches and joining discussion
+about this issue.
 
-> >> +	/*
-> >> +	 * if bus_flags inherited from parent bus do not already report lack=
- of extended config
-> >> +	 * space support, check if supported by child bus by checking its pa=
-rent bridge
-> >> +	 */
-> > Wrap to fit in 80 columns.
-> >
-> >> +	if (bridge && !(child->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG)) {
-> > The double negative makes this a little bit hard to read.  Maybe it
-> > could be improved by reversing the sense of something?
-> >
-> >> +		if (!pci_bridge_child_bus_ext_cfg_accessible(bridge)) {
-> >> +			child->bus_flags |=3D PCI_BUS_FLAGS_NO_EXTCFG;
-> >> +			dev_info(&child->dev, "extended config space not accessible due to=
- parent bridge\n");
-> > In v4.17-rc1, there's a pci_info() that should work here (instead of
-> > dev_info()).
-> >
-> >> +		}
-> >> +	} else {
-> >> +		dev_info(&child->dev, "extended config space not accessible due to =
-parent bus\n");
-> >> +	}
-> >> +
-> >>   	return child;
-> >>   }
-> >>   =
+Thanks
+Baoquan
 
-> >> @@ -1084,6 +1114,9 @@
-> >>   	u32 status;
-> >>   	u16 class;
-> >>   =
-
-> >> +	if (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG)
-> >> +		return PCI_CFG_SPACE_SIZE;
-> >> +
-> >>   	class =3D dev->class >> 8;
-> >>   	if (class =3D=3D PCI_CLASS_BRIDGE_HOST)
-> >>   		return pci_cfg_space_size_ext(dev);
-> > .
-> >
-> OK I'm going to learn about signing (sorry this is my first
-> "official" patch).
-
-Great, welcome!  The signoff is no big deal -- it's just plain text
-(no crypto signature or anything) and it's basically just an assertion
-that you wrote it and have the right to contribute it.
-
-> I'll download kernel v4.17-rc1 and write the patch for it; however I
-> hope I'll be able to test it on my platform without the freescale
-> addons I have on 4.1.35, because I don't want to send an untested
-> patch.
-
-Don't worry too much about the 4.1 vs 4.17 issue.  If you tested it
-on 4.1.35 that should be fine.
-
-> For "if (bridge && !(child->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG))",
-> I don't understand what you mean with "double negative", as I only
-> have one "!"
-
-The "!" and the "NO" part of "NO_EXTCFG" is what I meant.  E.g., maybe
-the flag could be something like "COMPAT_CFG_ONLY" so there's no
-negation in the test at all.
-
-> Do you think it's worth keeping the two dev_info() ? The code would
-> be smaller without; however this may help to have it for debug.
-> Maybe use _dbg instead of _info ?
-
-Probably one pci_info() is enough as a clue that extended config space =
-
-isn't available below this point in the hierarchy.
-
-I personally don't like the _dbg() version because it's so complicated
-to figure out when the output is enabled.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> From 5d7145d44fe48b98572a03884fa3a3aa82e3cef9 Mon Sep 17 00:00:00 2001
+> From: Wei Yang <richard.weiyang@gmail.com>
+> Date: Sat, 24 Mar 2018 23:25:46 +0800
+> Subject: [PATCH] kernel/resource: add walk_system_ram_res_rev()
+> 
+> As discussed on https://patchwork.kernel.org/patch/10300819/, this patch
+> comes up with a variant implementation of walk_system_ram_res_rev(), which
+> uses iteration instead of allocating array to store those resources.
+> 
+> Signed-off-by: Wei Yang <richard.weiyang@gmail.com>
+> ---
+>  include/linux/ioport.h |   3 ++
+>  kernel/resource.c      | 113 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 116 insertions(+)
+> 
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index da0ebaec25f0..473f1d9cb97e 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -277,6 +277,9 @@ extern int
+>  walk_system_ram_res(u64 start, u64 end, void *arg,
+>  		    int (*func)(struct resource *, void *));
+>  extern int
+> +walk_system_ram_res_rev(u64 start, u64 end, void *arg,
+> +		    int (*func)(struct resource *, void *));
+> +extern int
+>  walk_iomem_res_desc(unsigned long desc, unsigned long flags, u64 start, u64 end,
+>  		    void *arg, int (*func)(struct resource *, void *));
+>  
+> diff --git a/kernel/resource.c b/kernel/resource.c
+> index 769109f20fb7..d4ec5fbc6875 100644
+> --- a/kernel/resource.c
+> +++ b/kernel/resource.c
+> @@ -73,6 +73,38 @@ static struct resource *next_resource(struct resource *p, bool sibling_only)
+>  	return p->sibling;
+>  }
+>  
+> +static struct resource *prev_resource(struct resource *p, bool sibling_only)
+> +{
+> +	struct resource *prev;
+> +	if (NULL == iomem_resource.child)
+> +		return NULL;
+> +
+> +	if (p == NULL) {
+> +		prev = iomem_resource.child;
+> +		while (prev->sibling)
+> +			prev = prev->sibling;
+> +	} else {
+> +		if (p->parent->child == p) {
+> +			return p->parent;
+> +		}
+> +
+> +		for (prev = p->parent->child; prev->sibling != p;
+> +			prev = prev->sibling) {}
+> +	}
+> +
+> +	/* Caller wants to traverse through siblings only */
+> +	if (sibling_only)
+> +		return prev;
+> +
+> +	for (;prev->child;) {
+> +		prev = prev->child;
+> +
+> +		while (prev->sibling)
+> +			prev = prev->sibling;
+> +	}
+> +	return prev;
+> +}
+> +
+>  static void *r_next(struct seq_file *m, void *v, loff_t *pos)
+>  {
+>  	struct resource *p = v;
+> @@ -401,6 +433,47 @@ static int find_next_iomem_res(struct resource *res, unsigned long desc,
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Finds the highest iomem resource existing within [res->start.res->end).
+> + * The caller must specify res->start, res->end, res->flags, and optionally
+> + * desc.  If found, returns 0, res is overwritten, if not found, returns -1.
+> + * This function walks the whole tree and not just first level children until
+> + * and unless first_level_children_only is true.
+> + */
+> +static int find_prev_iomem_res(struct resource *res, unsigned long desc,
+> +			       bool first_level_children_only)
+> +{
+> +	struct resource *p;
+> +
+> +	BUG_ON(!res);
+> +	BUG_ON(res->start >= res->end);
+> +
+> +	read_lock(&resource_lock);
+> +
+> +	for (p = prev_resource(NULL, first_level_children_only); p;
+> +		p = prev_resource(p, first_level_children_only)) {
+> +		if ((p->flags & res->flags) != res->flags)
+> +			continue;
+> +		if ((desc != IORES_DESC_NONE) && (desc != p->desc))
+> +			continue;
+> +		if (p->end < res->start || p->child == iomem_resource.child) {
+> +			p = NULL;
+> +			break;
+> +		}
+> +		if ((p->end >= res->start) && (p->start < res->end))
+> +			break;
+> +	}
+> +
+> +	read_unlock(&resource_lock);
+> +	if (!p)
+> +		return -1;
+> +	/* copy data */
+> +	resource_clip(res, p->start, p->end);
+> +	res->flags = p->flags;
+> +	res->desc = p->desc;
+> +	return 0;
+> +}
+> +
+>  static int __walk_iomem_res_desc(struct resource *res, unsigned long desc,
+>  				 bool first_level_children_only,
+>  				 void *arg,
+> @@ -422,6 +495,27 @@ static int __walk_iomem_res_desc(struct resource *res, unsigned long desc,
+>  	return ret;
+>  }
+>  
+> +static int __walk_iomem_res_rev_desc(struct resource *res, unsigned long desc,
+> +				 bool first_level_children_only,
+> +				 void *arg,
+> +				 int (*func)(struct resource *, void *))
+> +{
+> +	u64 orig_start = res->start;
+> +	int ret = -1;
+> +
+> +	while ((res->start < res->end) &&
+> +	       !find_prev_iomem_res(res, desc, first_level_children_only)) {
+> +		ret = (*func)(res, arg);
+> +		if (ret)
+> +			break;
+> +
+> +		res->end = res->start?(res->start - 1):0;
+> +		res->start = orig_start;
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+>  /*
+>   * Walks through iomem resources and calls func() with matching resource
+>   * ranges. This walks through whole tree and not just first level children.
+> @@ -468,6 +562,25 @@ int walk_system_ram_res(u64 start, u64 end, void *arg,
+>  				     arg, func);
+>  }
+>  
+> +/*
+> + * This function, being a variant of walk_system_ram_res(), calls the @func
+> + * callback against all memory ranges of type System RAM which are marked as
+> + * IORESOURCE_SYSTEM_RAM and IORESOUCE_BUSY in reversed order, i.e., from
+> + * higher to lower.
+> + */
+> +int walk_system_ram_res_rev(u64 start, u64 end, void *arg,
+> +				int (*func)(struct resource *, void *))
+> +{
+> +	struct resource res;
+> +
+> +	res.start = start;
+> +	res.end = end;
+> +	res.flags = IORESOURCE_SYSTEM_RAM | IORESOURCE_BUSY;
+> +
+> +	return __walk_iomem_res_rev_desc(&res, IORES_DESC_NONE, true,
+> +				     arg, func);
+> +}
+> +
+>  /*
+>   * This function calls the @func callback against all memory ranges, which
+>   * are ranges marked as IORESOURCE_MEM and IORESOUCE_BUSY.
+> -- 
+> 2.15.1
+> 
+> 
+> -- 
+> Wei Yang
+> Help you, Help me
