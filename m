@@ -1,137 +1,110 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
-To: Xu Zaibo <xuzaibo@huawei.com>, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-mm@kvack.org" <linux-mm@kvack.org>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-14-jean-philippe.brucker@arm.com>
- <5B0536A3.1000304@huawei.com> <cd13f60d-b282-3804-4ca7-2d34476c597f@arm.com>
- <5B06B17C.1090809@huawei.com> <205c1729-8026-3efe-c363-d37d7150d622@arm.com>
- <5B077765.30703@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <fea420ff-e738-e2ed-ab1e-a3f4dde4b6ef@arm.com>
-Date: Fri, 25 May 2018 10:47:43 +0100
+Return-Path: <SRS0=fKT2=H2=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=fKT2=H2=codeaurora.org=okaya@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <5B077765.30703@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "rgummal@xilinx.com" <rgummal@xilinx.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>,
- "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 07 May 2018 22:41:40 +0100
+From: okaya@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, sulrich@codeaurora.org,
+ Keith Busch <keith.busch@intel.com>, Kees Cook <keescook@chromium.org>,
+ linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ stable@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>, Mika
+ Westerberg <mika.westerberg@linux.intel.com>, Markus Elfring
+ <elfring@users.sourceforge.net>, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: pciehp: Add quirk for QDF2400 Command Completed
+ erratum
+In-Reply-To: <20180507213531.GB133147@bhelgaas-glaptop.roam.corp.google.com>
+References: <1525602662-1873-1-git-send-email-okaya@codeaurora.org>
+ <20180507213531.GB133147@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <15288037a0316d181d6fd12813f468ad@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25/05/18 03:39, Xu Zaibo wrote:
-> Hi,
+On 2018-05-07 22:35, Bjorn Helgaas wrote:
+> On Sun, May 06, 2018 at 06:30:53AM -0400, Sinan Kaya wrote:
+>> The QDF2400 controller does not set the Command Completed bit unless
+>> writes to the Slot Command register change "Control" bits.  Command
+>> Completed is never set for writes that only change software 
+>> notification
+>> "Enable" bits.  This results in timeouts like this:
+>> 
+>> pciehp 0000:00:00.0:pcie004: Timeout on hotplug command 0x1038
+>> 
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 > 
-> On 2018/5/24 23:04, Jean-Philippe Brucker wrote:
->> On 24/05/18 13:35, Xu Zaibo wrote:
->>>> Right, sva_init() must be called once for any device that intends to use
->>>> bind(). For the second process though, group->sva_enabled will be true
->>>> so we won't call sva_init() again, only bind().
->>> Well, while I create mediated devices based on one parent device to support multiple
->>> processes(a new process will create a new 'vfio_group' for the corresponding mediated device,
->>> and 'sva_enabled' cannot work any more), in fact, *sva_init and *sva_shutdown are basically
->>> working on parent device, so, as a result, I just only need sva initiation and shutdown on the
->>> parent device only once. So I change the two as following:
->>>
->>> @@ -551,8 +565,18 @@ int iommu_sva_device_init(struct device *dev, unsigned long features,
->>>        if (features & ~IOMMU_SVA_FEAT_IOPF)
->>>           return -EINVAL;
->>>
->>> +    /* If already exists, do nothing  */
->>> +    mutex_lock(&dev->iommu_param->lock);
->>> +    if (dev->iommu_param->sva_param) {
->>> +        mutex_unlock(&dev->iommu_param->lock);
->>> +        return 0;
->>> +    }
->>> +    mutex_unlock(&dev->iommu_param->lock);
->>>
->>>       if (features & IOMMU_SVA_FEAT_IOPF) {
->>>           ret = iommu_register_device_fault_handler(dev, iommu_queue_iopf,
->>>
->>>
->>> @@ -621,6 +646,14 @@ int iommu_sva_device_shutdown(struct device *dev)
->>>       if (!domain)
->>>           return -ENODEV;
->>>
->>> +    /* If any other process is working on the device, shut down does nothing. */
->>> +    mutex_lock(&dev->iommu_param->lock);
->>> +    if (!list_empty(&dev->iommu_param->sva_param->mm_list)) {
->>> +        mutex_unlock(&dev->iommu_param->lock);
->>> +        return 0;
->>> +    }
->>> +    mutex_unlock(&dev->iommu_param->lock);
->> I don't think iommu-sva.c is the best place for this, it's probably
->> better to implement an intermediate layer (the mediating driver), that
->> calls iommu_sva_device_init() and iommu_sva_device_shutdown() once. Then
->> vfio-pci would still call these functions itself, but for mdev the
->> mediating driver keeps a refcount of groups, and calls device_shutdown()
->> only when freeing the last mdev.
->>
->> A device driver (non mdev in this example) expects to be able to free
->> all its resources after sva_device_shutdown() returns. Imagine the
->> mm_list isn't empty (mm_exit() is running late), and instead of waiting
->> in unbind_dev_all() below, we return 0 immediately. Then the calling
->> driver frees its resources, and the mm_exit callback along with private
->> data passed to bind() disappear. If a mm_exit() is still running in
->> parallel, then it will try to access freed data and corrupt memory. So
->> in this function if mm_list isn't empty, the only thing we can do is wait.
->>
-> I still don't understand why we should 'unbind_dev_all', is it possible 
-> to do a 'unbind_dev_pasid'?
+> Since there's no bisection benefit for keeping these separate, I folded
+> this into the original quirk and added Mika's reviewed-by.
+> 
+> I also added the following ID patch and used PCI_VENDOR_ID_QCOM:
 
-Not in sva_device_shutdown(), it needs to clean up everything. For
-example you want to physically unplug the device, or assign it to a VM.
-To prevent any leak sva_device_shutdown() needs to remove all bonds. In
-theory there shouldn't be any, since either the driver did unbind_dev(),
-or all process exited. This is a safety net.
+Thanks for the clean up.
 
-> Then we can do other things instead of waiting that user may not like. :)
-
-They may not like it, but it's for their own good :) At the moment we're
-waiting that:
-
-* All exit_mm() callback for this device have finished. If we don't wait
-  then the caller will free the private data passed to bind and the
-  mm_exit() callback while they are still being used.
-
-* All page requests targeting this device are dealt with. If we don't
-  wait then some requests, that are lingering in the IOMMU PRI queue,
-  may hit the next contexts bound to this device, possibly in a
-  different VM. It may not be too risky (though probably exploitable in
-  some way), but is incredibly messy.
-
-All of this is bounded in time, and normally should be over pretty fast
-unless the device driver's exit_mm() does something strange. If the
-driver did the right thing, there shouldn't be any wait here (although
-there may be one in unbind_dev() for the same reasons - prevent use
-after free).
-
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> commit 333c8c1216c1e7ead6af7b3d667b43eb425b5034
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Mon May 7 15:52:55 2018 -0500
+> 
+>     PCI: Add Qualcomm vendor ID
+> 
+>     Add the Qualcomm vendor ID to pci_ids.h and use it in quirks.
+> 
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 2990ad1e7c99..e7bf44515fd6 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4361,8 +4361,8 @@ static const struct pci_dev_acs_enabled {
+>  	{ PCI_VENDOR_ID_INTEL, 0x15b7, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x15b8, pci_quirk_mf_endpoint_acs },
+>  	/* QCOM QDF2xxx root ports */
+> -	{ 0x17cb, 0x400, pci_quirk_qcom_rp_acs },
+> -	{ 0x17cb, 0x401, pci_quirk_qcom_rp_acs },
+> +	{ PCI_VENDOR_ID_QCOM, 0x0400, pci_quirk_qcom_rp_acs },
+> +	{ PCI_VENDOR_ID_QCOM, 0x0401, pci_quirk_qcom_rp_acs },
+>  	/* Intel PCH root ports */
+>  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+>  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_spt_pch_acs },
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index cc608fc55334..883cb7bf78aa 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2387,6 +2387,8 @@
+> 
+>  #define PCI_VENDOR_ID_LENOVO		0x17aa
+> 
+> +#define PCI_VENDOR_ID_QCOM		0x17cb
+> +
+>  #define PCI_VENDOR_ID_CDNS		0x17cd
+> 
+>  #define PCI_VENDOR_ID_ARECA		0x17d3
+> 
+>> ---
+>>  drivers/pci/hotplug/pciehp_hpc.c | 6 ++++++
+>>  1 file changed, 6 insertions(+)
+>> 
+>> diff --git a/drivers/pci/hotplug/pciehp_hpc.c 
+>> b/drivers/pci/hotplug/pciehp_hpc.c
+>> index e70eba5..974a8f1 100644
+>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>> @@ -914,3 +914,9 @@ static void quirk_cmd_compl(struct pci_dev *pdev)
+>>  }
+>>  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+>>  			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
+>> +
+>> +DECLARE_PCI_FIXUP_CLASS_EARLY(0x17cb, 0x400,
+>> +			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
+>> +
+>> +DECLARE_PCI_FIXUP_CLASS_EARLY(0x17cb, 0x401,
+>> +			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
+>> --
+>> 2.7.4
+>> 
+>> 
+>> _______________________________________________
+>> linux-arm-kernel mailing list
+>> linux-arm-kernel@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
