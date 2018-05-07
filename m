@@ -1,423 +1,85 @@
-Return-Path: <SRS0=U2L5=HV=kontron.com=gilles.buloz@kernel.org>
-Return-Path: <SRS0=U2L5=HV=kontron.com=gilles.buloz@kernel.org>
-From: Gilles Buloz <Gilles.Buloz@kontron.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci
-	<linux-pci@vger.kernel.org>, "Minghuan.Lian@nxp.com" <Minghuan.Lian@nxp.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, Ard Biesheuvel
-	<ard.biesheuvel@linaro.org>
-Subject: Re: LS1043A : "synchronous abort" at boot due to PCI config read
-Date: Wed, 2 May 2018 12:57:31 +0000
-Message-ID: <5AE9B5BB.2080003@kontron.com>
-References: <5AD0E995.3090802@kontron.com>
- <CAKv+Gu_v4V8DUa6f4WxvjZHoJbbqT0mKpOwYVmaLaE20CB3U_g@mail.gmail.com>
- <5AE317AB.4020404@kontron.com>
- <20180427165627.GA8199@bhelgaas-glaptop.roam.corp.google.com>
- <5AE6D7E2.9030506@kontron.com> <5AE71BF4.2010200@kontron.com>
- <20180430170447.GA95643@bhelgaas-glaptop.roam.corp.google.com>
- <5AE75809.30701@kontron.com>
-In-Reply-To: <5AE75809.30701@kontron.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 7 May 2018 09:12:47 -0600
+From: Keith Busch <keith.busch@linux.intel.com>
+To: Matthew Wilcox <willy@infradead.org>
+Subject: Re: PCIe unsupported request with Intel 760p
+Message-ID: <20180507151246.GB20686@localhost.localdomain>
+References: <CAKDfzeD5_AV=YtWqTPr=40vvW4oMFAs4gJs_r42PJWcb815zyQ@mail.gmail.com>
+ <20180507123035.GA20097@gmail.com>
+ <20180507134354.GF18116@bombadil.infradead.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="_002_5AE9B5BB2080003kontroncom_"
+In-Reply-To: <20180507134354.GF18116@bombadil.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Aron Griffis <aron@arongriffis.com>, linux-nvme@lists.infradead.org,
+ linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_002_5AE9B5BB2080003kontroncom_
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-ID: <91FAFBB7DD65294797F08D39A6576EF7@Kontron.com>
-Content-Transfer-Encoding: quoted-printable
+On Mon, May 07, 2018 at 06:43:54AM -0700, Matthew Wilcox wrote:
+> On Mon, May 07, 2018 at 08:30:35AM -0400, Aron Griffis wrote:
+> > I'm getting this error continuously with an Intel 760p on 4.16.5 (Fedora 28)
+> > 
+> > pcieport 0000:00:1d.0: AER: Uncorrected (Non-Fatal) error received: id=00e8
+> > pcieport 0000:00:1d.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=00e8(Requester ID)
+> > pcieport 0000:00:1d.0:   device [8086:a298] error status/mask=00100000/00010000
+> > pcieport 0000:00:1d.0:    [20] Unsupported Request    (First)
+> > pcieport 0000:00:1d.0:   TLP Header: 34000000 70000010 00000000 88468846
+> > pcieport 0000:00:1d.0: broadcast error_detected message
+> > pcieport 0000:00:1d.0: broadcast mmio_enabled message
+> > pcieport 0000:00:1d.0: broadcast resume message
+> > pcieport 0000:00:1d.0: AER: Device recovery successful
+> > 
+> > Willy graciously decoded this for me to a "Latency Tolerance Reporting
+> > Message," and suggested I send email to this list to check whether it's a
+> > problem with the device or driver.
+> 
+> Decoding this further, the Requester ID is 70:00.0 (ie the NVMe device is
+> sending the LTR message) so the Root Port is the one saying "Unsupported
+> Request".  Which is fair enough, because ...
+> 
+> > 00:1d.0 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #9 (rev f0) (prog-if 00 [Normal decode])
+> > 	Bus: primary=00, secondary=70, subordinate=70, sec-latency=0
+> > 		DevCap2: Completion Timeout: Range ABC, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd+
+> > 			 AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
+> > 		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+> > 			 AtomicOpsCtl: ReqEn- EgressBlck-
+> 
+> the Root Port doesn't know what LTR is.
+> 
+> > 70:00.0 Non-Volatile memory controller: Intel Corporation Device f1a6 (rev 03) (prog-if 02 [NVM Express])
+> > 	Capabilities: [70] Express (v2) Endpoint, MSI 00
+> > 		DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR+, OBFF Not Supported
+> > 			 AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+> > 		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+> > 			 AtomicOpsCtl: ReqEn-
+> 
+> The device *does* know what LTR is, but it's supposed to be disabled.
+> 
+> Is there more recent firmware for this device?
 
-Le 30/04/2018 19:53, Gilles BULOZ a =E9crit :
-> Le 30/04/2018 19:04, Bjorn Helgaas a =E9crit :
->> On Mon, Apr 30, 2018 at 01:36:53PM +0000, Gilles Buloz wrote:
->>> Le 30/04/2018 10:46, Gilles BULOZ a =E9crit :
->>>> Le 27/04/2018 18:56, Bjorn Helgaas a =E9crit :
->>>>> On Fri, Apr 27, 2018 at 12:29:32PM +0000, Gilles Buloz wrote:
->>>>>> Le 27/04/2018 10:43, Ard Biesheuvel a =E9crit :
->>>>>>> (add Bjorn and linux-pci)
->>>>>>>
->>>>>>> On 13 April 2018 at 19:32, Gilles Buloz <Gilles.Buloz@kontron.com> =
-wrote:
->>>>>>>> Dear developers,
->>>>>>>>
->>>>>>>> I currently have two functional workarounds for this issue but
->>>>>>>> would like to know which one you would recommend, if any :-) I'm
->>>>>>>> using a LS1043A CPU (NXP QorIQ Layerscape) and get a "synchronous
->>>>>>>> external abort" when booting because of a PCI config read during
->>>>>>>> PCI scan.
->>>>>>>>
->>>>>>>> I'm using a custom hardware (based on LS1043ARDB) having a
->>>>>>>> PEX8112 PCIe-to-PCI bridge connected to the LS1043A to have a PCI
->>>>>>>> slot for legacy devices. This bridge only supports PCI-Compatible
->>>>>>>> config accesses (offset 0x00-0xFF).
->>>>> I would guess the PEX8112 itself has 4K of config space, but it only
->>>>> forwards 256 bytes of config space to the conventional PCI secondary
->>>>> bus.
->>>>>
->>>>>>>> On this PCI slot I connect a PCI module made of a PCI-to-PCIe
->>>>>>>> bridge plus PCIe devices behind.
->>>>>>>>
->>>>>>>> The problem occurs when the kernel probes the PCIe devices : as
->>>>>>>> they are PCIe devices, the kernel does a PCI config read access
->>>>>>>> at offset 0x100 to check if "PCIe extended capability registers"
->>>>>>>> are accessible (see drivers/pci/probe.c, function
->>>>>>>> pci_cfg_space_size_ext()). Unfortunately the PEX8112 PCIe-to-PCI
->>>>>>>> bridge that is in the path reports an error to the CPU for this
->>>>>>>> access, and it seems there's no way to disable that on this
->>>>>>>> bridge.
->>>>>>>>
->>>>>>>> The first workaround I found was to patch
->>>>>>>> drivers/pci/host/pci-layerscape.c to have PCIE_ABSERR_SETTING set
->>>>>>>> to 0x9400 instead of 0x9401 (for PCIE_ABSERR register) to disable
->>>>>>>> error reporting. This only impacts an NXP part of the Linux
->>>>>>>> kernel code, but I'm not sure this is a good idea (however it
->>>>>>>> seems to be like that on Intel platforms where even MEM accesses
->>>>>>>> to a no-device address return FF without any error).
->>>>>>>>
->>>>>>>> I've also tried another workaround that works : patch
->>>>>>>> drivers/pci/probe.c to use bus_flags to remember if a bus is
->>>>>>>> behind a bridge without extended address capability, to avoid PCi
->>>>>>>> config read accesses at offset 0x100 in pci_cfg_space_size() /
->>>>>>>> pci_cfg_space_size_ext(). But this patch impacts the generic PCI
->>>>>>>> probe method of Linux.
->>>>>>>>
->>>>>>>> Any Idea to properly handle that issue ?
->>>>>>>>
->>>>>>> This seems like a rather unusual configuration, but I guess that
->>>>>>> if the first bridge/switch advertises its inability to support
->>>>>>> extended config space accesses, we should not be performing them
->>>>>>> on any of its subordinate buses. How does the PEX8112 advertise
->>>>>>> this limitation?
->>>>>>>
->>>>>>> That said, I wonder if it is reasonable in the first place to
->>>>>>> expect that a PCIe device works as expected passing through a
->>>>>>> legacy PCI layer like that.
->>>>>>>
->>>>>> The PEX8112 PCIe-to-PCI bridge has capability PCI_CAP_ID_EXP, but
->>>>>> has no PCI_CAP_ID_PCIX capability.  As I understand the lack of
->>>>>> PCI_CAP_ID_PCIX is advertising this limitation on the PCI side (no
->>>>>> support for PCI config offset >=3D0x100).
->>>>> Sounds right to me.
->>>>>
->>>>>> Also I guess in the case of a bridge having PCI_CAP_ID_PCIX, this
->>>>>> limitation would be advertised by the lack of PCI_X_STATUS_266MHZ
->>>>>> and PCI_X_STATUS_533MHZ (as done in drivers/pci/probe.c at
->>>>>> pci_cfg_space_size())
->>>>> Also sounds right.  Per the PCI-X spec, checking for PCI_X_STATUS_266=
-MHZ
->>>>> should be enough, but it shouldn't hurt to check for either
->>>>> PCI_X_STATUS_266MHZ or PCI_X_STATUS_533MHZ.
->>>>>
->>>>>> I'm currently using the attached patch (for kernel 4.1.35-rt41 from
->>>>>> NXP Yocto BSP). It uses bus_flags to remember if a bus is behind a
->>>>>> bridge without extended address capability to avoid PCi config
->>>>>> accesses at offset >=3D 0x100. Thanks to this patch I now have a
->>>>>> functional system with functional PCI/PCIe devices.
->>>>> The patch seems like it's looking at the right things, but I don't
->>>>> want to build it into pci_scan_bridge_extend() because that function
->>>>> is much too complicated already.
->>>>>
->>>>> I'd rather build it into pci_cfg_space_size() or
->>>>> pci_cfg_space_size_ext() somehow.  Maybe something along these lines?
->>>>> This doesn't account for the case of a PCIe-to-PCI-X Mode 2 bridge; i=
-n
->>>>> that case, I think all 4K would be accessible on the PCI-X side.
->>>>>
->>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>>>> index ac91b6fd0bcd..d8b091f0bcd1 100644
->>>>> --- a/drivers/pci/probe.c
->>>>> +++ b/drivers/pci/probe.c
->>>>> @@ -1367,7 +1367,7 @@ static bool pci_ext_cfg_is_aliased(struct pci_d=
-ev *dev)
->>>>>     * pci_cfg_space_size - Get the configuration space size of the PC=
-I device
->>>>>     * @dev: PCI device
->>>>>     *
->>>>> - * Regular PCI devices have 256 bytes, but PCI-X 2 and PCI Express d=
-evices
->>>>> + * Regular PCI devices have 256 bytes, but PCI-X Mode 2 and PCI Expr=
-ess devices
->>>>>     * have 4096 bytes.  Even if the device is capable, that doesn't m=
-ean we can
->>>>>     * access it.  Maybe we don't have a way to generate extended conf=
-ig space
->>>>>     * accesses, or the device is behind a reverse Express bridge.  So=
- we try
->>>>> @@ -1376,9 +1376,14 @@ static bool pci_ext_cfg_is_aliased(struct pci_=
-dev *dev)
->>>>>     */
->>>>>    static int pci_cfg_space_size_ext(struct pci_dev *dev)
->>>>>    {
->>>>> +    struct pci_dev *bridge =3D pci_upstream_bridge(dev);
->>>>>        u32 status;
->>>>>        int pos =3D PCI_CFG_SPACE_SIZE;
->>>>>    +    if (bridge && pci_is_pcie(bridge) &&
->>>>> +        pci_pcie_type(bridge) =3D=3D PCI_EXP_TYPE_PCI_BRIDGE)
->>>>> +        return PCI_CFG_SPACE_SIZE;
->>>>> +
->>>>>        if (pci_read_config_dword(dev, pos, &status) !=3D PCIBIOS_SUCC=
-ESSFUL)
->>>>>            return PCI_CFG_SPACE_SIZE;
->>>>>        if (status =3D=3D 0xffffffff || pci_ext_cfg_is_aliased(dev))
->>>>>
->>>>>> --- include/linux/pci.h.orig 2018-03-26 16:51:18.050000000 +0000
->>>>>> +++ include/linux/pci.h    2018-03-26 16:51:27.660000000 +0000
->>>>>> @@ -193,6 +193,7 @@
->>>>>>    enum pci_bus_flags {
->>>>>>        PCI_BUS_FLAGS_NO_MSI   =3D (__force pci_bus_flags_t) 1,
->>>>>>        PCI_BUS_FLAGS_NO_MMRBC =3D (__force pci_bus_flags_t) 2,
->>>>>> +    PCI_BUS_FLAGS_COMPAT_CFG_SPACE =3D (__force pci_bus_flags_t) 4,
->>>>>>    };
->>>>>>      /* These values come from the PCI Express Spec */
->>>>>> --- drivers/pci/probe.c.orig    2018-01-22 09:29:52.000000000 +0000
->>>>>> +++ drivers/pci/probe.c    2018-03-26 16:54:30.830000000 +0000
->>>>>> @@ -827,6 +827,28 @@
->>>>>>                child->primary =3D primary;
->>>>>>                pci_bus_insert_busn_res(child, secondary, subordinate=
-);
->>>>>>                child->bridge_ctl =3D bctl;
->>>>>> +
->>>>>> +            {
->>>>>> +                int pos;
->>>>>> +                u32 status;
->>>>>> +                bool pci_compat_cfg_space =3D false;
->>>>>> +
->>>>>> +                if (!pci_is_pcie(dev) || (pci_pcie_type(dev) =3D=3D=
- PCI_EXP_TYPE_PCIE_BRIDGE) || (pci_pcie_type(dev) =3D=3D
->>>>>> PCI_EXP_TYPE_PCI_BRIDGE)) {
->>>>>> +                    /* for PCI/PCI bridges, or PCIe/PCI bridge in f=
-orward or reverse mode, we have to check for PCI-X
->>>>>> capabilities */
->>>>>> +                    pos =3D pci_find_capability(dev, PCI_CAP_ID_PCI=
-X);
->>>>>> +                    if (pos) {
->>>>>> +                        pci_read_config_dword(dev, pos + PCI_X_STAT=
-US, &status);
->>>>>> +                        if (!(status & (PCI_X_STATUS_266MHZ | PCI_X=
-_STATUS_533MHZ)))
->>>>>> +                            pci_compat_cfg_space =3D true;
->>>>>> +                    } else {
->>>>>> +                        pci_compat_cfg_space =3D true;
->>>>>> +                    }
->>>>>> +                    if (pci_compat_cfg_space) {
->>>>>> +                        dev_info(&dev->dev, "[%04x:%04x] Child bus =
-limited to PCI-Compatible config space\n", dev->vendor,
->>>>>> dev->device);
->>>>>> +                        child->bus_flags |=3D PCI_BUS_FLAGS_COMPAT_=
-CFG_SPACE;
->>>>>> +                    }
->>>>>> +                }
->>>>>> +            }
->>>>>>            }
->>>>>>              cmax =3D pci_scan_child_bus(child);
->>>>>> @@ -1098,6 +1120,11 @@
->>>>>>                goto fail;
->>>>>>        }
->>>>>>    +    if (dev->bus->bus_flags & PCI_BUS_FLAGS_COMPAT_CFG_SPACE) {
->>>>>> +        dev_info(&dev->dev, "[%04x:%04x] PCI-Compatible config spac=
-e only due to parent bus(es)\n", dev->vendor, dev->device);
->>>>>> +        return PCI_CFG_SPACE_SIZE;
->>>>>> +    }
->>>>>> +
->>>>>>        return pci_cfg_space_size_ext(dev);
->>>>>>       fail:
->>>> Bjorn,
->>>> If I'm right about your proposed patch to
->>>> pci_cfg_space_size_ext(), *bridge is pointing to the upper device
->>>> of device *dev being checked. I understand the purpose, but I
->>>> think this fails for my config that is :
->>>>
->>>> LS1043 PCIe root -> PEX8112 PCIe-to-PCI bridge -> PMC slot connector -=
-> PCI-to-PCIe bridge -> PCIe switch (4 ports) -> 4 PCIe
->>>> devices (one on each port)
->>>>
->>>> because :
->>>> - when pci_cfg_space_size_ext() is run on the 4 PCIe devices,
->>>> *bridge is the PCIe switch which is not matching
->>>> PCI_EXP_TYPE_PCI_BRIDGE. In this case *bridge should also be
->>>> checked for the parent bus of the PCIe switch, and so on.
->>>> - when pci_cfg_space_size_ext() is run for the PCI-to-PCIe bridge,
->>>> *bridge is the PEX8112 that is also not matching
->>>> PCI_EXP_TYPE_PCI_BRIDGE but PCI_EXP_TYPE_PCIE_BRIDGE. This leads
->>>> to a config access at offset 0x100 to the PCI-to-PCIe bridge, so a
->>>> crash (because of the PEX8112)
->>>>
->>>> I think setting a bit in bus_flags when creating a child bus is
->>>> very efficient because once set it is automatically inherited by
->>>> all child buses and then the only thing that pci_cfg_space_size()
->>>> has to do for each device is to check for this bit. Also this
->>>> PCI_BUS_FLAGS_COMPAT_CFG_SPACE flag is actually a bus property
->>>> that is compliant with the purpose of bus_flags.
->> Yeah, it needs to be inherited somehow, and I don't like the idea of
->> traversing up the tree, so I prefer your idea.  Although I don't
->> actually see the inheritance in the patch below -- I thought there
->> would be something like this:
->>
->>    dev =3D bus->self;
->>    parent_bus =3D dev->bus;
->>    if (parent_bus && parent_bus->bus_flags & PCI_BUS_FLAGS_COMPAT_CFG_SP=
-ACE)
->>      bus->bus_flags |=3D PCI_BUS_FLAGS_COMPAT_CFG_SPACE;
->>
->> pci_scan_bridge_extend() calls pci_add_new_bus() from two places.  You
->> added a call to pci_bus_check_compat_cfg_space() at one of them, and
->> it's not obvious why we wouldn't need it at the other place, too.
->>
->> Can you set this up in pci_alloc_child_bus()?  If you can put it
->> there, it would be clear that every time we allocate a secondary bus,
->> we figure out whether extended config space is accessible on that bus.
->>
->> That doesn't cover the root bus case, where we currently assume the
->> host bridge can generate config accesses to all config space supported
->> by devices on the root bus.  But we don't have a problem there, so I
->> guess we don't need to worry about it now.
->>
->> If you can put it in pci_alloc_child_bus(), could you make your new
->> function return a boolean, e.g., pci_bus_ext_cfg_accessible(), or
->> similar, and then use the result to set the
->> PCI_BUS_FLAGS_COMPAT_CFG_SPACE flag?  Names like "*_check_*()" don't
->> tell the reader much about what's happening.
->>
->>>> I agree that pci_scan_bridge_extend() is already too complicated,
->>>> so would you be okay to only add one line to it :
->>>>    pci_bus_set_compat_cfg_space(child);
->>>> and put all the code I suggested in this new function
->>>> pci_bus_set_compat_cfg_space() ? (also supporting PCI-X Mode 2
->>>> devices)
->>>>
->>>> Improvement : this function can return immediately if the child
->>>> bus has already inherited the flag from its parent.
->>> I mean something like the attached patch I tested this morning...
->>> Sorry, this is for old kernel 4.1.35 but just to clarify what I
->>> propose (also applies to 4.16.6 by changing value of
->>> PCI_BUS_FLAGS_COMPAT_CFG_SPACE in pci.h to 8).
->>> --- include/linux/pci.h.orig    2018-03-26 16:51:18.050000000 +0000
->>> +++ include/linux/pci.h    2018-04-30 09:50:57.660000000 +0000
->>> @@ -193,6 +193,7 @@
->>>   enum pci_bus_flags {
->>>       PCI_BUS_FLAGS_NO_MSI   =3D (__force pci_bus_flags_t) 1,
->>>       PCI_BUS_FLAGS_NO_MMRBC =3D (__force pci_bus_flags_t) 2,
->>> +    PCI_BUS_FLAGS_COMPAT_CFG_SPACE =3D (__force pci_bus_flags_t) 4,
->>>   };
->>>     /* These values come from the PCI Express Spec */
->>> --- drivers/pci/probe.c.orig    2018-01-22 09:29:52.000000000 +0000
->>> +++ drivers/pci/probe.c    2018-04-30 13:29:50.600000000 +0000
->>> @@ -754,6 +754,35 @@
->>>                        PCI_EXP_RTCTL_CRSSVE);
->>>   }
->>>   +static void pci_bus_check_compat_cfg_space(struct pci_bus *bus)
->>> +{
->>> +    struct pci_dev *dev =3D bus->self;
->>> +    bool pci_compat_cfg_space =3D false;
->>> +    int pos;
->>> +    u32 status;
->>> +
->>> +    if (bus->bus_flags & PCI_BUS_FLAGS_COMPAT_CFG_SPACE)
->>> +        return;
->>> +
->>> +    if (!pci_is_pcie(dev) || /* PCI/PCI bridge */
->>> +        (pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_PCIE_BRIDGE) || /* PCI=
-e/PCI bridge in forward mode */
->>> +        (pci_pcie_type(dev) =3D=3D PCI_EXP_TYPE_PCI_BRIDGE)) { /* PCIe=
-/PCI bridge in reverse mode */
->>> +        pos =3D pci_find_capability(dev, PCI_CAP_ID_PCIX);
->>> +        if (pos) {
->>> +            pci_read_config_dword(dev, pos + PCI_X_STATUS, &status);
->>> +            if (!(status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ)=
-))
->>> +                pci_compat_cfg_space =3D true;
->>> +        } else {
->>> +            pci_compat_cfg_space =3D true;
->>> +        }
->>> +        if (pci_compat_cfg_space) {
->>> +            dev_info(&dev->dev, "bus %02x limited to PCI-Compatible co=
-nfig space\n",
->>> +                 bus->number);
->>> +            bus->bus_flags |=3D PCI_BUS_FLAGS_COMPAT_CFG_SPACE;
->>> +        }
->>> +    }
->>> +}
->>> +
->>>   /*
->>>    * If it's a bridge, configure it and scan the bus behind it.
->>>    * For CardBus bridges, we don't scan behind as the devices will
->>> @@ -827,6 +856,7 @@
->>>               child->primary =3D primary;
->>>               pci_bus_insert_busn_res(child, secondary, subordinate);
->>>               child->bridge_ctl =3D bctl;
->>> +            pci_bus_check_compat_cfg_space(child);
->>>           }
->>>             cmax =3D pci_scan_child_bus(child);
->>> @@ -1084,6 +1114,9 @@
->>>       u32 status;
->>>       u16 class;
->>>   +    if (dev->bus->bus_flags & PCI_BUS_FLAGS_COMPAT_CFG_SPACE)
->>> +        return PCI_CFG_SPACE_SIZE;
->>> +
->>>       class =3D dev->class >> 8;
->>>       if (class =3D=3D PCI_CLASS_BRIDGE_HOST)
->>>           return pci_cfg_space_size_ext(dev);
->>
-> The inheritence is made by this line in pci_alloc_child_bus() :
->     child->bus_flags =3D parent->bus_flags;
-> So once we detect a limitation on a bridge impacting a child bus and that=
- we set the flag in child->bus_flags, this flag is=20
-> automatically present in the child->bus_flags of all its children buses.
->
-> I agree with your remarks and will create a function named pci_bus_check_=
-compat_cfg_space() that will be called from=20
-> pci_alloc_child_bus().
-> I'll test that on Wednesday 2th and will give you my feedback.
-Hi Bjorn,
-See attached patch (tested ok this morning)
+Hi Willy,
 
---_002_5AE9B5BB2080003kontroncom_
-Content-Type: text/x-patch; name=cfgspace3_4.1.35.patch
-Content-Description: cfgspace3_4.1.35.patch
-Content-Disposition: attachment; filename="cfgspace3_4.1.35.patch"; size=2246;
-	creation-date="Wed, 02 May 2018 12:57:31 GMT";
-	modification-date="Wed, 02 May 2018 12:57:31 GMT"
-Content-ID: <14D15F00BA816742830047709F328530@Kontron.com>
-Content-Transfer-Encoding: base64
+Thank you for the detailed analysis. :)
 
-LS0tIGluY2x1ZGUvbGludXgvcGNpLmgub3JpZwkyMDE4LTAzLTI2IDE2OjUxOjE4LjA1MDAwMDAw
-MCArMDAwMA0KKysrIGluY2x1ZGUvbGludXgvcGNpLmgJMjAxOC0wNC0zMCAxODoyOToxNC4xNDAw
-MDAwMDAgKzAwMDANCkBAIC0xOTMsNiArMTkzLDcgQEANCiBlbnVtIHBjaV9idXNfZmxhZ3Mgew0K
-IAlQQ0lfQlVTX0ZMQUdTX05PX01TSSAgID0gKF9fZm9yY2UgcGNpX2J1c19mbGFnc190KSAxLA0K
-IAlQQ0lfQlVTX0ZMQUdTX05PX01NUkJDID0gKF9fZm9yY2UgcGNpX2J1c19mbGFnc190KSAyLA0K
-KwlQQ0lfQlVTX0ZMQUdTX05PX0VYVENGRyA9IChfX2ZvcmNlIHBjaV9idXNfZmxhZ3NfdCkgNCwN
-CiB9Ow0KIA0KIC8qIFRoZXNlIHZhbHVlcyBjb21lIGZyb20gdGhlIFBDSSBFeHByZXNzIFNwZWMg
-Ki8NCi0tLSBkcml2ZXJzL3BjaS9wcm9iZS5jLm9yaWcJMjAxOC0wMS0yMiAwOToyOTo1Mi4wMDAw
-MDAwMDAgKzAwMDANCisrKyBkcml2ZXJzL3BjaS9wcm9iZS5jCTIwMTgtMDUtMDIgMTM6NDQ6MzUu
-NTMwMDAwMDAwICswMDAwDQpAQCAtNjY0LDYgKzY2NCwyMyBAQA0KIAl9DQogfQ0KIA0KK3N0YXRp
-YyBib29sIHBjaV9icmlkZ2VfY2hpbGRfYnVzX2V4dF9jZmdfYWNjZXNzaWJsZShzdHJ1Y3QgcGNp
-X2RldiAqYnJpZGdlKQ0KK3sNCisJaW50IHBvczsNCisJdTMyIHN0YXR1czsNCisNCisJaWYgKCFw
-Y2lfaXNfcGNpZShicmlkZ2UpIHx8IC8qIFBDSS9QQ0kgYnJpZGdlICovDQorCSAgICAocGNpX3Bj
-aWVfdHlwZShicmlkZ2UpID09IFBDSV9FWFBfVFlQRV9QQ0lFX0JSSURHRSkgfHwgLyogUENJZS9Q
-Q0kgYnJpZGdlIGluIGZvcndhcmQgbW9kZSAqLw0KKwkgICAgKHBjaV9wY2llX3R5cGUoYnJpZGdl
-KSA9PSBQQ0lfRVhQX1RZUEVfUENJX0JSSURHRSkpIHsgIC8qIFBDSWUvUENJIGJyaWRnZSBpbiBy
-ZXZlcnNlIG1vZGUgKi8NCisJCXBvcyA9IHBjaV9maW5kX2NhcGFiaWxpdHkoYnJpZGdlLCBQQ0lf
-Q0FQX0lEX1BDSVgpOw0KKwkJaWYgKHBvcykNCisJCQlwY2lfcmVhZF9jb25maWdfZHdvcmQoYnJp
-ZGdlLCBwb3MgKyBQQ0lfWF9TVEFUVVMsICZzdGF0dXMpOw0KKwkJcmV0dXJuIHBvcyAmJiAoc3Rh
-dHVzICYgKFBDSV9YX1NUQVRVU18yNjZNSFogfCBQQ0lfWF9TVEFUVVNfNTMzTUhaKSk7DQorCX0N
-CisNCisJcmV0dXJuIHRydWU7DQorfQ0KKw0KIHN0YXRpYyBzdHJ1Y3QgcGNpX2J1cyAqcGNpX2Fs
-bG9jX2NoaWxkX2J1cyhzdHJ1Y3QgcGNpX2J1cyAqcGFyZW50LA0KIAkJCQkJICAgc3RydWN0IHBj
-aV9kZXYgKmJyaWRnZSwgaW50IGJ1c25yKQ0KIHsNCkBAIC03MjUsNiArNzQyLDE5IEBADQogCS8q
-IENyZWF0ZSBsZWdhY3lfaW8gYW5kIGxlZ2FjeV9tZW0gZmlsZXMgZm9yIHRoaXMgYnVzICovDQog
-CXBjaV9jcmVhdGVfbGVnYWN5X2ZpbGVzKGNoaWxkKTsNCiANCisJLyoNCisJICogaWYgYnVzX2Zs
-YWdzIGluaGVyaXRlZCBmcm9tIHBhcmVudCBidXMgZG8gbm90IGFscmVhZHkgcmVwb3J0IGxhY2sg
-b2YgZXh0ZW5kZWQgY29uZmlnDQorCSAqIHNwYWNlIHN1cHBvcnQsIGNoZWNrIGlmIHN1cHBvcnRl
-ZCBieSBjaGlsZCBidXMgYnkgY2hlY2tpbmcgaXRzIHBhcmVudCBicmlkZ2UNCisJICovDQorCWlm
-IChicmlkZ2UgJiYgIShjaGlsZC0+YnVzX2ZsYWdzICYgUENJX0JVU19GTEFHU19OT19FWFRDRkcp
-KSB7DQorCQlpZiAoIXBjaV9icmlkZ2VfY2hpbGRfYnVzX2V4dF9jZmdfYWNjZXNzaWJsZShicmlk
-Z2UpKSB7DQorCQkJY2hpbGQtPmJ1c19mbGFncyB8PSBQQ0lfQlVTX0ZMQUdTX05PX0VYVENGRzsN
-CisJCQlkZXZfaW5mbygmY2hpbGQtPmRldiwgImV4dGVuZGVkIGNvbmZpZyBzcGFjZSBub3QgYWNj
-ZXNzaWJsZSBkdWUgdG8gcGFyZW50IGJyaWRnZVxuIik7DQorCQl9DQorCX0gZWxzZSB7DQorCQlk
-ZXZfaW5mbygmY2hpbGQtPmRldiwgImV4dGVuZGVkIGNvbmZpZyBzcGFjZSBub3QgYWNjZXNzaWJs
-ZSBkdWUgdG8gcGFyZW50IGJ1c1xuIik7DQorCX0NCisNCiAJcmV0dXJuIGNoaWxkOw0KIH0NCiAN
-CkBAIC0xMDg0LDYgKzExMTQsOSBAQA0KIAl1MzIgc3RhdHVzOw0KIAl1MTYgY2xhc3M7DQogDQor
-CWlmIChkZXYtPmJ1cy0+YnVzX2ZsYWdzICYgUENJX0JVU19GTEFHU19OT19FWFRDRkcpDQorCQly
-ZXR1cm4gUENJX0NGR19TUEFDRV9TSVpFOw0KKw0KIAljbGFzcyA9IGRldi0+Y2xhc3MgPj4gODsN
-CiAJaWYgKGNsYXNzID09IFBDSV9DTEFTU19CUklER0VfSE9TVCkNCiAJCXJldHVybiBwY2lfY2Zn
-X3NwYWNlX3NpemVfZXh0KGRldik7DQo=
---_002_5AE9B5BB2080003kontroncom_--
+I'm not familiar with this device, but I'll check internally to see if
+this a later firmware release address this.
+
+Aron,
+Could you let me know the firmware revision you're currently running?
+
+Thanks,
+Keith
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
