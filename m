@@ -1,148 +1,157 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:57577 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752393AbeEQHnP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2018 03:43:15 -0400
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH v17 1/9] PCI: Add generic pcie_wait_for_link() interface
-Date: Thu, 17 May 2018 03:43:03 -0400
-Message-Id: <1526542991-5291-2-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
-References: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 7 May 2018 16:56:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gilles Buloz <Gilles.Buloz@kontron.com>
+Subject: Re: [PATCH] PCI: Check whether bridges allow access to extended
+ config space
+Message-ID: <20180507215619.GA161390@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180504200600.GA9529@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+In-Reply-To: <20180504200600.GA9529@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Frederick Lawler <fred@fredlawl.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>,
+ "Minghuan.Lian@nxp.com" <Minghuan.Lian@nxp.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Clients such as hotplug and Downstream Port Containment (DPC) both need to
-wait until a link becomes active or inactive.
+On Fri, May 04, 2018 at 03:06:00PM -0500, Bjorn Helgaas wrote:
+> On Fri, May 04, 2018 at 03:45:07PM +0000, Gilles Buloz wrote:
+> > Le 04/05/2018 00:31, Bjorn Helgaas a =E9crit :
+> > > [+cc LKML]
+> > >
+> > > On Thu, May 03, 2018 at 12:40:27PM +0000, Gilles Buloz wrote:
+> > >> Subject:    [PATCH] For exception at PCI probe due to bridge reporti=
+ng UR
+> > >>
+> > >> Even if a device supports extended config access, no such access mus=
+t be
+> > >> done to this device If there's a bridge not supporting that in the p=
+ath
+> > >> to this device. Doing such access with UR reporting enabled on the r=
+oot
+> > >> bridge leads to an exception.
+> > >>
+> > >> This is the case on a LS1043A CPU (NXP QorIQ Layerscape) platform wi=
+th
+> > >> the following bus topology :
+> > >>    LS1043 PCIe root
+> > >>      -> PEX8112 PCIe-to-PCI bridge (not supporting ext cfg on PCI si=
+de)
+> > >>        -> PMC slot connector (for legacy PMC modules)
+> > >> With a PMC module topology as follows :
+> > >>    PMC connector
+> > >>      -> PCI-to-PCIe bridge
+> > >>        -> PCIe switch (4 ports)
+> > >>          -> 4 PCIe devices (one on each port)
+> > >> In this case all devices behind the PEX8112 are supporting extended =
+config
+> > >> access but this is prohibited by the PEX8112. Without this patch, an
+> > >> exception (synchronous abort) occurs in pci_cfg_space_size_ext().
+> > >>
+> > >> This patch checks the parent bridge of each allocated child bus to k=
+now if
+> > >> extended config access is supported on the child bus, and sets a fla=
+g in
+> > >> child->bus_flags if not supported. This  flag is inherited by all ch=
+ildren
+> > >> buses of this child bus and then is checked to avoid this unsupported
+> > >> accesses to every device on these buses.
+> > > Hi Gilles,
+> > >
+> > > Thanks for the patch!  I reworked it a little bit to simplify the code
+> > > in pci_alloc_child_bus().  Can you test it and make sure I didn't
+> > > break anything?
+> > >
+> > Hi Bjorn,
+> > =
 
-Add a generic pcie_wait_link_active() interface and use it instead of
-duplicating the code.
+> > Your rework works as expected. Tested on LS1043A platform with kernel
+> > 4.17-rc1, and with some backport on kernel 4.1.35
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
+Thanks for testing it!  I applied it to pci/enumeration for v4.18.
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 18a42f8..e0c2b8e 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -231,25 +231,11 @@ bool pciehp_check_link_active(struct controller *ctrl)
- 	return ret;
- }
- 
--static void __pcie_wait_link_active(struct controller *ctrl, bool active)
--{
--	int timeout = 1000;
--
--	if (pciehp_check_link_active(ctrl) == active)
--		return;
--	while (timeout > 0) {
--		msleep(10);
--		timeout -= 10;
--		if (pciehp_check_link_active(ctrl) == active)
--			return;
--	}
--	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
--			active ? "set" : "cleared");
--}
--
- static void pcie_wait_link_active(struct controller *ctrl)
- {
--	__pcie_wait_link_active(ctrl, true);
-+	struct pci_dev *pdev = ctrl_dev(ctrl);
-+
-+	pcie_wait_for_link(pdev, true);
- }
- 
- static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e597655..764bf64 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4138,6 +4138,35 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 
- 	return pci_dev_wait(dev, "PM D3->D0", PCIE_RESET_READY_POLL_MS);
- }
-+/**
-+ * pcie_wait_for_link - Wait until link is active or inactive
-+ * @pdev: Bridge device
-+ * @active: waiting for active or inactive?
-+ *
-+ * Use this to wait till link becomes active or inactive.
-+ */
-+bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
-+{
-+	int timeout = 1000;
-+	bool ret;
-+	u16 lnk_status;
-+
-+	for (;;) {
-+		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-+		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
-+		if (ret == active)
-+			return true;
-+		if (timeout <= 0)
-+			break;
-+		msleep(10);
-+		timeout -= 10;
-+	}
-+
-+	pci_info(pdev, "Data Link Layer Link Active not %s in 1000 msec\n",
-+		 active ? "set" : "cleared");
-+
-+	return false;
-+}
- 
- void pci_reset_secondary_bus(struct pci_dev *dev)
- {
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 023f7cf..cec9d8c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -353,6 +353,7 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- 
- void pci_enable_acs(struct pci_dev *dev);
- 
-+bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
- #ifdef CONFIG_PCIEASPM
- void pcie_aspm_init_link_state(struct pci_dev *pdev);
- void pcie_aspm_exit_link_state(struct pci_dev *pdev);
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index 8c57d60..80ec384 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -68,19 +68,9 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
- 
- static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- {
--	unsigned long timeout = jiffies + HZ;
- 	struct pci_dev *pdev = dpc->dev->port;
--	struct device *dev = &dpc->dev->device;
--	u16 lnk_status;
- 
--	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
--	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
--					!time_after(jiffies, timeout)) {
--		msleep(10);
--		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
--	}
--	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
--		dev_warn(dev, "Link state not disabled for DPC event\n");
-+	pcie_wait_for_link(pdev, false);
- }
- 
- static void dpc_work(struct work_struct *work)
--- 
-2.7.4
+I think the ASPM issue below is unrelated.  But I would like to figure out
+what's going on there, too, if you have any more information.
+
+> > Info : with kernel 4.17-rc1, it turns out I need pcie_aspm=3Doff to
+> > have the PMC devices behind the PCI-to-PCIe bridge of the PMC safely
+> > detected/configured. But this is not caused by the patch.
+> =
+
+> > Without pcie_aspm=3Doff I saw this at one boot :
+> >     "pci 0000:02:0e.0: ASPM: Could not configure common clock" for this=
+ bridge, but devices
+> >     correctly detected/configured
+> > but at most boots I get :
+> >     no ASPM message but "pci 0000:04:02.0: bridge configuration invalid=
+ ([bus ff-ff]), reconfiguring "
+> >     instead, and some devices are missing. Also lspci show "rev ff" for=
+ some devices.
+> > I don't see this problem on 4.1.35 with the same backported patch.
+> =
+
+> This is interesting, especially since you have this unusual topology
+> of a path to the device that is PCIe, then conventional PCI, then PCIe
+> again.  We *should* be able to use ASPM on the PCIe links, but it's
+> definitely not a well-tested scenario.
+> =
+
+> Can you tell if something is actually broken?  Sinan's recent change,
+> 04875177dbe0 ("PCI/ASPM: Don't warn if already in common clock mode"),
+> which appeared in v4.17-rc1, turns off the message in some cases.
+> =
+
+> The "bridge configuration invalid" message just means the firmware
+> didn't configure the bridge.  We *should* still set it up correctly,
+> but please report a bug if we don't.
+> =
+
+> lspci showing "ff" for some devices might be a symptom of the devices
+> being powered off.  In that case config reads normally return ~0 data
+> (though on your platform maybe it would cause exceptions).  I've seen
+> this in other situations and wondered if it would be worth adding a
+> hint to lspci so it could say "device may be powered off".
+> =
+
+> Anyway, if you are seeing something broken (more than just the
+> messages), please start a new thread about each one.  If you do, could
+> you please:
+> =
+
+>   - open a report at https://bugzilla.kernel.org/, in the Drivers/PCI
+>     component (open a separate bug for each issue you see)
+> =
+
+>   - use kernel version 4.17-rc1 and mark it as a regression if
+>     appropriate
+> =
+
+>   - attach (don't paste inline) the complete dmesg log and "lspci -vv"
+>     output (as root) to the bug
+> =
+
+>   - post a note to linux-pci@vger.kernel.org, cc Fred, Sinan, and me,
+>     and include the link to the bugzilla
+> =
+
+> Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
