@@ -1,62 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sg2apc01on0093.outbound.protection.outlook.com ([104.47.125.93]:63552
-        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S966689AbeE2V2p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 May 2018 17:28:45 -0400
-From: Dexuan Cui <decui@microsoft.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>
-Subject: RE: [PATCH] PCI: hv: Do not wait forever on a device that has
- disappeared
-Date: Tue, 29 May 2018 21:28:27 +0000
-Message-ID: <KL1P15301MB00062308DD0D900D9A8943FDBF6D0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-References: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <CAHp75Vd9kiyOaSbaK6c4b7ucF23kgP0yQxKpUAGrjHgKfJprXA@mail.gmail.com>
-In-Reply-To: <CAHp75Vd9kiyOaSbaK6c4b7ucF23kgP0yQxKpUAGrjHgKfJprXA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=hUex=H3=intel.com=dan.j.williams@kernel.org>
+Return-Path: <SRS0=hUex=H3=intel.com=dan.j.williams@kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180508163206.7d3bf383@w520.home>
+References: <20180423233046.21476-1-logang@deltatee.com> <20180423233046.21476-5-logang@deltatee.com>
+ <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+ <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com> <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+ <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com> <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+ <20180508133407.57a46902@w520.home> <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+ <20180508141331.7cd737cb@w520.home> <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508144341.0441b676@w520.home> <a524127a-3557-3dff-971c-dfe94ba5a01c@deltatee.com>
+ <20180508152631.50fd583c@w520.home> <354F7407-0DC7-470C-B9AA-74FDF9C46B08@raithlin.com>
+ <20180508160336.0935ddde@w520.home> <20905682-9440-7d4b-0260-99d3dc794c3d@deltatee.com>
+ <20180508163206.7d3bf383@w520.home>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 8 May 2018 16:00:33 -0700
+Message-ID: <CAPcyv4i1ksiu1pExF=EE21P2Wz1a9LaDaG247oG_WSbYgcR93g@mail.gmail.com>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>, Stephen Bates <sbates@raithlin.com>,
+	=?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+	Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
+	=?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBGcm9tOiBBbmR5IFNoZXZjaGVua28gPGFuZHkuc2hldmNoZW5rb0BnbWFpbC5jb20+DQo+IFNl
-bnQ6IFR1ZXNkYXksIE1heSAyOSwgMjAxOCAxNDoyMQ0KPiBPbiBUaHUsIE1heSAyNCwgMjAxOCBh
-dCAxMjoxMiBBTSwgRGV4dWFuIEN1aSA8ZGVjdWlAbWljcm9zb2Z0LmNvbT4NCj4gd3JvdGU6DQo+
-ID4NCj4gPiBCZWZvcmUgdGhlIGd1ZXN0IGZpbmlzaGVzIHRoZSBkZXZpY2UgaW5pdGlhbGl6YXRp
-b24sIHRoZSBkZXZpY2UgY2FuIGJlDQo+ID4gcmVtb3ZlZCBhbnl0aW1lIGJ5IHRoZSBob3N0LCBh
-bmQgYWZ0ZXIgdGhhdCB0aGUgaG9zdCB3b24ndCByZXNwb25kIHRvDQo+ID4gdGhlIGd1ZXN0J3Mg
-cmVxdWVzdCwgc28gdGhlIGd1ZXN0IHNob3VsZCBiZSBwcmVwYXJlZCB0byBoYW5kbGUgdGhpcw0K
-PiA+IGNhc2UuDQo+IA0KPiA+ICsgICAgICAgd2hpbGUgKHRydWUpIHsNCj4gPiArICAgICAgICAg
-ICAgICAgaWYgKGhkZXYtPmNoYW5uZWwtPnJlc2NpbmQpIHsNCj4gPiArICAgICAgICAgICAgICAg
-ICAgICAgICBkZXZfd2Fybl9vbmNlKCZoZGV2LT5kZXZpY2UsICJUaGUgZGV2aWNlIGlzDQo+IGdv
-bmUuXG4iKTsNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gLUVOT0RFVjsNCj4g
-PiArICAgICAgICAgICAgICAgfQ0KPiA+ICsNCj4gPiArICAgICAgICAgICAgICAgaWYgKHdhaXRf
-Zm9yX2NvbXBsZXRpb25fdGltZW91dChjb21wLCBIWiAvIDEwKSkNCj4gPiArICAgICAgICAgICAg
-ICAgICAgICAgICBicmVhazsNCj4gPiArICAgICAgIH0NCj4gDQo+IEluZmluaXRlIGxvb3BzIGFy
-ZSB1c3VhbGx5IGEgcmVkIGZsYWdzLg0KPiANCj4gV2hhdCdzIHdyb25nIHdpdGggc2ltcGxlOg0K
-PiANCj4gZG8gew0KPiAgIC4uLg0KPiB9IHdoaWxlICh3YWl0Xy4uLiguLi4pID09IDApOw0KPiAN
-Cj4gPw0KVGhhbmtzIGZvciB0aGUgc3VnZ2VzdGlvbiwgQW5keSENClRoZSBjb2Rpbmcgc3R5bGUg
-eW91IHN1Z2dlc3RlZCBsb29rcyBiZXR0ZXIgdG8gbWUuIDotKQ0KDQo+ID4gKyAgICAgICBpZiAo
-IXJldCkNCj4gPiArICAgICAgICAgICAgICAgcmV0ID0gd2FpdF9mb3JfcmVzcG9uc2UoaGRldiwg
-JmNvbXApOw0KPiANCj4gQmV0dGVyIHRvIHVzZSB3ZWxsIGVzdGFibGlzaGVkIHBhdHRlcm5zLCBp
-LmUuDQo+IA0KPiBpZiAocmV0KQ0KPiAgcmV0dXJuIHJldDsNCkFncmVlZC4NCg0KPiANCj4gPiAr
-ICAgICAgICAgICAgICAgaWYgKCFyZXQpDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgcmV0
-ID0gd2FpdF9mb3JfcmVzcG9uc2UoaGRldiwNCj4gJmNvbXBfcGt0Lmhvc3RfZXZlbnQpOw0KPiAN
-Cj4gSGVyZSBpdCBsb29rcyBva2F5IG9uIHRoZSBmaXJzdCBnbGFuY2UsIGJ1dCBiZXR0ZXIgdG8g
-dGhpbmsgYWJvdXQgaXQNCj4gYWdhaW4gYW5kIHJlZmFjdG9yLg0KDQo+IFdpdGggQmVzdCBSZWdh
-cmRzLA0KPiBBbmR5IFNoZXZjaGVua28NCg0KSSdsbCB0cnkgdG8gc2VuZCBvdXQgYSBwYXRjaCB0
-byBpbXByb3ZlIHRoZSBjb2Rpbmcgc3R5bGUsIGFmdGVyIEkgYWRkcmVzcw0KTWljaGFlbCBLZWxs
-ZXkncyBjb25jZXJuIG9mIGEgcmFjZS4NCg0KVGhhbmtzLA0KLS0gRGV4dWFuDQo=
+On Tue, May 8, 2018 at 3:32 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Tue, 8 May 2018 16:10:19 -0600
+> Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+>> On 08/05/18 04:03 PM, Alex Williamson wrote:
+>> > If IOMMU grouping implies device assignment (because nobody else uses
+>> > it to the same extent as device assignment) then the build-time option
+>> > falls to pieces, we need a single kernel that can do both.  I think we
+>> > need to get more clever about allowing the user to specify exactly at
+>> > which points in the topology they want to disable isolation.  Thanks,
+>>
+>>
+>> Yeah, so based on the discussion I'm leaning toward just having a
+>> command line option that takes a list of BDFs and disables ACS for them.
+>> (Essentially as Dan has suggested.) This avoids the shotgun.
+>>
+>> Then, the pci_p2pdma_distance command needs to check that ACS is
+>> disabled for all bridges between the two devices. If this is not the
+>> case, it returns -1. Future work can check if the EP has ATS support, in
+>> which case it has to check for the ACS direct translated bit.
+>>
+>> A user then needs to either disable the IOMMU and/or add the command
+>> line option to disable ACS for the specific downstream ports in the PCI
+>> hierarchy. This means the IOMMU groups will be less granular but
+>> presumably the person adding the command line argument understands this.
+>>
+>> We may also want to do some work so that there's informative dmesgs on
+>> which BDFs need to be specified on the command line so it's not so
+>> difficult for the user to figure out.
+>
+> I'd advise caution with a user supplied BDF approach, we have no
+> guaranteed persistence for a device's PCI address.  Adding a device
+> might renumber the buses, replacing a device with one that consumes
+> more/less bus numbers can renumber the buses, motherboard firmware
+> updates could renumber the buses, pci=assign-buses can renumber the
+> buses, etc.  This is why the VT-d spec makes use of device paths when
+> describing PCI hierarchies, firmware can't know what bus number will be
+> assigned to a device, but it does know the base bus number and the path
+> of devfns needed to get to it.  I don't know how we come up with an
+> option that's easy enough for a user to understand, but reasonably
+> robust against hardware changes.  Thanks,
+
+True, but at the same time this feature is for "users with custom
+hardware designed for purpose", I assume they would be willing to take
+on the bus renumbering risk. It's already the case that
+/sys/bus/pci/drivers/<x>/bind takes BDF, which is why it seemed to
+make a similar interface for the command line. Ideally we could later
+get something into ACPI or other platform firmware to arrange for
+bridges to disable ACS by default if we see p2p becoming a
+common-off-the-shelf feature. I.e. a BIOS switch to enable p2p in a
+given PCI-E sub-domain.
