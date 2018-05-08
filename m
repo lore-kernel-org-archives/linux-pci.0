@@ -1,259 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:46714 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751804AbeEQMAx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2018 08:00:53 -0400
-Received: by mail-pf0-f193.google.com with SMTP id p12-v6so1986657pff.13
-        for <linux-pci@vger.kernel.org>; Thu, 17 May 2018 05:00:53 -0700 (PDT)
-From: dmeyer@gigaio.com
-To: logang@deltatee.com, kurt.schwemmer@microsemi.com,
-        linux-pci@vger.kernel.org, linux-ntb@googlegroups.com
-Cc: bhelgaas@google.com, jdmason@kudzu.us, dave.jiang@intel.com,
-        allenbh@gmail.com, linux-kernel@vger.kernel.org,
-        Doug Meyer <dmeyer@gigaio.com>
-Subject: [PATCH 2/2] NTB: PCI Quirk to Enable Switchtec NT Functionality with IOMMU On
-Date: Thu, 17 May 2018 05:00:13 -0700
-Message-Id: <1526558413-23113-3-git-send-email-dmeyer@gigaio.com>
-In-Reply-To: <1526558413-23113-1-git-send-email-dmeyer@gigaio.com>
-References: <1526558413-23113-1-git-send-email-dmeyer@gigaio.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=rCEc=H3=oracle.com=thomas.tai@kernel.org>
+Return-Path: <SRS0=rCEc=H3=oracle.com=thomas.tai@kernel.org>
+Subject: Re: [PATCH] PCI/AER: add pcie TLP header information in the
+ tracepoint
+To: Steven Rostedt <rostedt@goodmis.org>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Alexandru Gagniuc <mr.nuke.me@gmail.com>
+References: <20180402154708.5032-1-thomas.tai@oracle.com>
+ <20180507222136.GD161390@bhelgaas-glaptop.roam.corp.google.com>
+ <20180508090756.57f38d17@gandalf.local.home>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <a5578a08-2434-af48-7910-6f858e5477d6@oracle.com>
+Date: Tue, 8 May 2018 09:25:01 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180508090756.57f38d17@gandalf.local.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Doug Meyer <dmeyer@gigaio.com>
+[ ... ]
+>>> --- a/include/ras/ras_event.h
+>>> +++ b/include/ras/ras_event.h
+>>> @@ -298,30 +298,42 @@ TRACE_EVENT(non_standard_event,
+>>>   TRACE_EVENT(aer_event,
+>>>   	TP_PROTO(const char *dev_name,
+>>>   		 const u32 status,
+>>> -		 const u8 severity),
+>>> +		 const u8 severity,
+>>> +		 const u32 tlp_header_valid,
+>>> +		 struct aer_header_log_regs *tlp),
+>>>   
+>>> -	TP_ARGS(dev_name, status, severity),
+>>> +	TP_ARGS(dev_name, status, severity, tlp_header_valid, tlp),
+>>>   
+>>>   	TP_STRUCT__entry(
+>>>   		__string(	dev_name,	dev_name	)
+>>>   		__field(	u32,		status		)
+>>>   		__field(	u8,		severity	)
+>>> +		__field(	u32, 		tlp_header_valid)
+> 
+> I'm guessing tlp_header_valid is just a boolean. It's after severity
+> which is just one byte long. Why not make this one byte as well,
+> otherwise you are wasting 3 bytes.
 
-Here we add the PCI quirk for the Microsemi Switchtec parts to allow
-non-transparent bridging to work when the IOMMU is turned on.
+Thanks Steven. Yes boolean is fine.
 
-When a requestor on one NT endpoint accesses memory on another NT
-endpoint, it does this via a devfn proxy ID. Proxy IDs are uniquely
-assigned on a per-requestor basis within the NT hardware, and are not
-visible via PCI enumeration. As a result, a memory access from a peer
-NT endpoint will have an unrecognized requestor ID devfn which the
-IOMMU will reject.
+> 
+> 
+>>> +		__array(	u32, 		buf, 4		)
+>>>   	),
+>>>   
+>>>   	TP_fast_assign(
+>>>   		__assign_str(dev_name, dev_name);
+>>>   		__entry->status		= status;
+>>>   		__entry->severity	= severity;
+>>> +		__entry->tlp_header_valid = tlp_header_valid;
+> 
+>>> +		__entry->buf[0] = tlp->dw0;
+>>> +		__entry->buf[1] = tlp->dw1;
+>>> +		__entry->buf[2] = tlp->dw2;
+>>> +		__entry->buf[3] = tlp->dw3;
+> 
+> Should this assignment be dependent on whether or not tlp_header_valid
+> is true? Could tlp be pointing to some random memory if it isn't? What
+> about:
 
-The quirk introduced here interrogates each configured remote NT
-endpoint at runtime to obtain the proxy IDs that have been assigned,
-and aliases every proxy ID to the local (enumerated) NT endpoint's
-device. The IOMMU then accepts the remote proxy IDs as if they were
-requests coming directly from the enumerated endpoint, giving remote
-requestors access to memory resources which a given host has made
-available. Operation with the IOMMU off is unchanged by this quirk.
+Good catch! will do so.
 
-Signed-off-by: Doug Meyer <dmeyer@gigaio.com>
----
- drivers/pci/quirks.c | 196 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 196 insertions(+)
+> 
+> 	if ((__entry->tlp_header_valid = tlp_header_valid)) {
+> 		__entry->buf[0] = tlp->dw0;
+> 		__entry->buf[1] = tlp->dw1;
+> 		__entry->buf[2] = tlp->dw2;
+> 		__entry->buf[3] = tlp->dw3;
+> 	}
+> 
+> 
+>>>   	),
+>>>   
+>>> -	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
+>>> +	TP_printk("%s PCIe Bus Error: severity=%s, %s, TLP Header=%s\n",
+>>>   		__get_str(dev_name),
+>>>   		__entry->severity == AER_CORRECTABLE ? "Corrected" :
+>>>   			__entry->severity == AER_FATAL ?
+>>>   			"Fatal" : "Uncorrected, non-fatal",
+>>>   		__entry->severity == AER_CORRECTABLE ?
+>>>   		__print_flags(__entry->status, "|", aer_correctable_errors) :
+>>> -		__print_flags(__entry->status, "|", aer_uncorrectable_errors))
+>>> +		__print_flags(__entry->status, "|", aer_uncorrectable_errors),
+>>> +		__entry->tlp_header_valid ?
+>>> +			__print_array(__entry->buf, 4, sizeof(unsigned int)) :
+> 
+> Note, "sizeof" will be shown in the format file that perf and trace-cmd
+> read to parse this event. They currently do not know how to parse that
+> (although I could add that in the future).
+> 
+> Since sizeof(unsigned int) is always 4 in Linux, just use 4.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 2990ad1..c7e27b3 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -27,6 +27,7 @@
- #include <linux/mm.h>
- #include <linux/platform_data/x86/apple.h>
- #include <linux/pm_runtime.h>
-+#include <linux/switchtec.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
- #include "pci.h"
- 
-@@ -4741,3 +4742,198 @@ static void quirk_gpu_hda(struct pci_dev *hda)
- 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
- 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
-+
-+/*
-+ * Microsemi Switchtec NTB uses devfn proxy IDs to move TLPs between
-+ * NT endpoints via the internal switch fabric. These IDs replace the
-+ * originating requestor ID TLPs which access host memory on peer NTB
-+ * ports. Therefore, all proxy IDs must be aliased to the NTB device
-+ * to permit access when the IOMMU is turned on.
-+ */
-+static void quirk_switchtec_ntb_dma_alias(struct pci_dev *pdev)
-+{
-+	void __iomem *mmio = NULL;
-+	struct ntb_info_regs __iomem *mmio_ntb = NULL;
-+	struct ntb_ctrl_regs __iomem *mmio_ctrl = NULL;
-+	struct sys_info_regs __iomem *mmio_sys_info = NULL;
-+
-+	u64 partition_map;
-+	u8 partition;
-+	int pp;
-+
-+	if (pci_enable_device(pdev)) {
-+		dev_err(&pdev->dev, "Cannot enable Switchtec device\n");
-+		return;
-+	}
-+
-+	mmio = pci_iomap(pdev, 0, 0);
-+	if (mmio == NULL) {
-+		dev_err(&pdev->dev, "Cannot iomap Switchtec device\n");
-+		return;
-+	}
-+
-+	dev_info(&pdev->dev, "Setting Switchtec proxy ID aliases\n");
-+
-+	mmio_ntb = mmio + SWITCHTEC_GAS_NTB_OFFSET;
-+	mmio_ctrl = (void * __iomem) mmio_ntb + SWITCHTEC_NTB_REG_CTRL_OFFSET;
-+	mmio_sys_info = mmio + SWITCHTEC_GAS_SYS_INFO_OFFSET;
-+
-+	partition = ioread8(&mmio_ntb->partition_id);
-+
-+	partition_map = (u64) ioread32((void * __iomem) &mmio_ntb->ep_map);
-+	partition_map |=
-+		((u64) ioread32((void * __iomem) &mmio_ntb->ep_map + 4)) << 32;
-+	partition_map &= ~(1ULL << partition);
-+
-+	for (pp = 0; pp < (sizeof(partition_map) * 8); pp++) {
-+		struct ntb_ctrl_regs __iomem *mmio_peer_ctrl;
-+		u32 table_sz = 0;
-+		int te;
-+
-+		if (!(partition_map & (1ULL << pp)))
-+			continue;
-+
-+		dev_dbg(&pdev->dev, "Processing partition %d\n", pp);
-+
-+		mmio_peer_ctrl = &mmio_ctrl[pp];
-+
-+		table_sz = ioread16(&mmio_peer_ctrl->req_id_table_size);
-+		if (!table_sz) {
-+			dev_warn(&pdev->dev, "Partition %d table_sz 0\n", pp);
-+			continue;
-+		}
-+
-+		if (table_sz > 512) {
-+			dev_warn(&pdev->dev,
-+				 "Invalid Switchtec partition %d table_sz %d\n",
-+				 pp, table_sz);
-+			continue;
-+		}
-+
-+		for (te = 0; te < table_sz; te++) {
-+			u32 rid_entry;
-+			u8 devfn;
-+
-+			rid_entry = ioread32(&mmio_peer_ctrl->req_id_table[te]);
-+			devfn = (rid_entry >> 1) & 0xFF;
-+			dev_dbg(&pdev->dev,
-+				"Aliasing Partition %d Proxy ID %02d.%d\n",
-+				pp, PCI_SLOT(devfn), PCI_FUNC(devfn));
-+			pci_add_dma_alias(pdev, devfn);
-+		}
-+	}
-+
-+	pci_iounmap(pdev, mmio);
-+}
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFX24XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFX32XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFX48XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFX64XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFX80XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFX96XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PSX48XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PSX64XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PSX80XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PSX96XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PAX24XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PAX32XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PAX48XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PAX64XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PAX80XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PAX96XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFXL24XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFXL32XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFXL48XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFXL64XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFXL80XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFXL96XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFXI24XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFXI32XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFXI48XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFXI64XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFXI80XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI,
-+			      PCI_DEVICE_ID_MICROSEMI_PFXI96XG3,
-+			      PCI_CLASS_BRIDGE_OTHER, 8,
-+			      quirk_switchtec_ntb_dma_alias);
--- 
-1.8.3.1
+Yes, I will make the aboves changes and send out V2 patch. Thank you for 
+your time and comments.
+
+Thomas
+
+> 
+> 			__print_array(__entry->buf, 4, 4)
+> 
+> -- Steve
+> 
+> 
+>>> +			"Not available")
+>>>   );
+>>>   
+>>>   /*
+>>> -- 
+>>> 2.14.1
+>>>    
+> 
