@@ -1,270 +1,106 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1525404358.22948.29.camel@mhfsdcap03>
-Subject: Re: [PATCH 2/2] PCI: mediatek: Using chained IRQ to setup IRQ handle
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Date: Fri, 4 May 2018 11:25:58 +0800
-In-Reply-To: <7efd1486-9f65-a647-5ab0-9a97b10c2ec7@arm.com>
-References: <1524201910-22836-1-git-send-email-honghui.zhang@mediatek.com>
- <1524201910-22836-3-git-send-email-honghui.zhang@mediatek.com>
- <a2f7e70a-fdef-d925-8838-be3051c2e96d@arm.com>
- <1525254064.22948.11.camel@mhfsdcap03>
- <e04ea8b1-731f-e72b-8944-5c067e1a04da@arm.com>
- <1525340514.22948.25.camel@mhfsdcap03>
- <7efd1486-9f65-a647-5ab0-9a97b10c2ec7@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 8 May 2018 07:34:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+Cc: okaya@codeaurora.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+Message-ID: <20180508123432.GJ161390@bhelgaas-glaptop.roam.corp.google.com>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+ <43b8ab4a-f8ee-dc96-40ec-e6fdfedd8309@molgen.mpg.de>
+ <20180504024527.GE15790@bhelgaas-glaptop.roam.corp.google.com>
+ <aa72d3ba089c76449600c22b58a2cafe@codeaurora.org>
+ <20180504133327.GF15790@bhelgaas-glaptop.roam.corp.google.com>
+ <20180507213344.GA133147@bhelgaas-glaptop.roam.corp.google.com>
+ <903e7c20-fdd7-9cbf-debb-a90e70240c7c@molgen.mpg.de>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, lorenzo.pieralisi@arm.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, xinping.qian@mediatek.com,
- linux-kernel@vger.kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
- ryder.lee@mediatek.com, linux-mediatek@lists.infradead.org,
- yong.wu@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
- eddie.huang@mediatek.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <903e7c20-fdd7-9cbf-debb-a90e70240c7c@molgen.mpg.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-05-03 at 14:05 +0100, Marc Zyngier wrote:
-> On 03/05/18 10:41, Honghui Zhang wrote:
-> > On Wed, 2018-05-02 at 11:09 +0100, Marc Zyngier wrote:
-> >> On 02/05/18 10:41, Honghui Zhang wrote:
-> >>> On Mon, 2018-04-30 at 12:03 +0100, Marc Zyngier wrote:
-> >>>> Hi Zhang,
-> >>>>
-> >>>> On 20/04/18 06:25, honghui.zhang@mediatek.com wrote:
-> >>>>> From: Honghui Zhang <honghui.zhang@mediatek.com>
-> >>>>>
-> >>>>> Using irq_chip solution to setup IRQs for the consistent with IRQ framework.
-> >>>>>
-> >>>>> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> >>>>> ---
-> >>>>>  drivers/pci/host/pcie-mediatek.c | 192 +++++++++++++++++++++------------------
-> >>>>>  1 file changed, 105 insertions(+), 87 deletions(-)
-> >>>>>
-> >>>>> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> >>>>> index c3dc549..1d9c6f1 100644
-> >>>>> --- a/drivers/pci/host/pcie-mediatek.c
-> >>>>> +++ b/drivers/pci/host/pcie-mediatek.c
-> >>>>> @@ -11,8 +11,10 @@
-> >>>>>  #include <linux/delay.h>
-> >>>>>  #include <linux/iopoll.h>
-> >>>>>  #include <linux/irq.h>
-> >>>>> +#include <linux/irqchip/chained_irq.h>
-> >>>>>  #include <linux/irqdomain.h>
-> >>>>>  #include <linux/kernel.h>
-> >>>>> +#include <linux/msi.h>
-> >>>>>  #include <linux/of_address.h>
-> >>>>>  #include <linux/of_pci.h>
-> >>>>>  #include <linux/of_platform.h>
-> >>>>> @@ -130,14 +132,12 @@ struct mtk_pcie_port;
-> >>>>>  /**
-> >>>>>   * struct mtk_pcie_soc - differentiate between host generations
-> >>>>>   * @need_fix_class_id: whether this host's class ID needed to be fixed or not
-> >>>>> - * @has_msi: whether this host supports MSI interrupts or not
-> >>>>>   * @ops: pointer to configuration access functions
-> >>>>>   * @startup: pointer to controller setting functions
-> >>>>>   * @setup_irq: pointer to initialize IRQ functions
-> >>>>>   */
-> >>>>>  struct mtk_pcie_soc {
-> >>>>>  	bool need_fix_class_id;
-> >>>>> -	bool has_msi;
-> >>>>>  	struct pci_ops *ops;
-> >>>>>  	int (*startup)(struct mtk_pcie_port *port);
-> >>>>>  	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
-> >>>>> @@ -161,7 +161,9 @@ struct mtk_pcie_soc {
-> >>>>>   * @lane: lane count
-> >>>>>   * @slot: port slot
-> >>>>>   * @irq_domain: legacy INTx IRQ domain
-> >>>>> + * @inner_domain: inner IRQ domain
-> >>>>>   * @msi_domain: MSI IRQ domain
-> >>>>> + * @lock: protect the msi_irq_in_use bitmap
-> >>>>>   * @msi_irq_in_use: bit map for assigned MSI IRQ
-> >>>>>   */
-> >>>>>  struct mtk_pcie_port {
-> >>>>> @@ -179,7 +181,9 @@ struct mtk_pcie_port {
-> >>>>>  	u32 lane;
-> >>>>>  	u32 slot;
-> >>>>>  	struct irq_domain *irq_domain;
-> >>>>> +	struct irq_domain *inner_domain;
-> >>>>>  	struct irq_domain *msi_domain;
-> >>>>> +	struct mutex lock;
-> >>>>>  	DECLARE_BITMAP(msi_irq_in_use, MTK_MSI_IRQS_NUM);
-> >>>>>  };
-> >>>>>  
-> >>>>> @@ -446,103 +450,122 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-> >>>>>  	return 0;
-> >>>>>  }
-> >>>>>  
-> >>>>> -static int mtk_pcie_msi_alloc(struct mtk_pcie_port *port)
-> >>>>> +static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> >>>>>  {
-> >>>>> -	int msi;
-> >>>>> +	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
-> >>>>> +	phys_addr_t addr;
-> >>>>>  
-> >>>>> -	msi = find_first_zero_bit(port->msi_irq_in_use, MTK_MSI_IRQS_NUM);
-> >>>>> -	if (msi < MTK_MSI_IRQS_NUM)
-> >>>>> -		set_bit(msi, port->msi_irq_in_use);
-> >>>>> -	else
-> >>>>> -		return -ENOSPC;
-> >>>>> +	/* MT2712/MT7622 only support 32-bit MSI addresses */
-> >>>>> +	addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-> >>>>> +	msg->address_hi = 0;
-> >>>>> +	msg->address_lo = lower_32_bits(addr);
-> >>>>>  
-> >>>>> -	return msi;
-> >>>>> +	msg->data = data->hwirq;
-> >>>>> +
-> >>>>> +	dev_dbg(port->pcie->dev, "msi#%d address_hi %#x address_lo %#x\n",
-> >>>>> +		(int)data->hwirq, msg->address_hi, msg->address_lo);
-> >>>>>  }
-> >>>>>  
-> >>>>> -static void mtk_pcie_msi_free(struct mtk_pcie_port *port, unsigned long hwirq)
-> >>>>> +static int mtk_msi_set_affinity(struct irq_data *irq_data,
-> >>>>> +				   const struct cpumask *mask, bool force)
-> >>>>>  {
-> >>>>> -	clear_bit(hwirq, port->msi_irq_in_use);
-> >>>>> +	return -EINVAL;
-> >>>>>  }
-> >>>>>  
-> >>>>> -static int mtk_pcie_msi_setup_irq(struct msi_controller *chip,
-> >>>>> -				  struct pci_dev *pdev, struct msi_desc *desc)
-> >>>>> -{
-> >>>>> -	struct mtk_pcie_port *port;
-> >>>>> -	struct msi_msg msg;
-> >>>>> -	unsigned int irq;
-> >>>>> -	int hwirq;
-> >>>>> -	phys_addr_t msg_addr;
-> >>>>> +static struct irq_chip mtk_msi_bottom_irq_chip = {
-> >>>>> +	.name			= "MTK MSI",
-> >>>>> +	.irq_compose_msi_msg	= mtk_compose_msi_msg,
-> >>>>> +	.irq_set_affinity	= mtk_msi_set_affinity,
-> >>>>> +	.irq_mask		= pci_msi_mask_irq,
-> >>>>> +	.irq_unmask	= pci_msi_unmask_irq,
-> >>>>> +};
-> >>>>>  
-> >>>>> -	port = mtk_pcie_find_port(pdev->bus, pdev->devfn);
-> >>>>> -	if (!port)
-> >>>>> -		return -EINVAL;
-> >>>>> +static int mtk_pcie_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
-> >>>>> +				     unsigned int nr_irqs, void *args)
-> >>>>> +{
-> >>>>> +	struct mtk_pcie_port *port = domain->host_data;
-> >>>>> +	unsigned long bit;
-> >>>>>  
-> >>>>> -	hwirq = mtk_pcie_msi_alloc(port);
-> >>>>> -	if (hwirq < 0)
-> >>>>> -		return hwirq;
-> >>>>> +	WARN_ON(nr_irqs != 1);
-> >>>>> +	mutex_lock(&port->lock);
-> >>>>>  
-> >>>>> -	irq = irq_create_mapping(port->msi_domain, hwirq);
-> >>>>> -	if (!irq) {
-> >>>>> -		mtk_pcie_msi_free(port, hwirq);
-> >>>>> -		return -EINVAL;
-> >>>>> +	bit = find_first_zero_bit(port->msi_irq_in_use, MTK_MSI_IRQS_NUM);
-> >>>>> +	if (bit >= MTK_MSI_IRQS_NUM) {
-> >>>>> +		mutex_unlock(&port->lock);
-> >>>>> +		return -ENOSPC;
-> >>>>>  	}
-> >>>>>  
-> >>>>> -	chip->dev = &pdev->dev;
-> >>>>> -
-> >>>>> -	irq_set_msi_desc(irq, desc);
-> >>>>> +	__set_bit(bit, port->msi_irq_in_use);
-> >>>>>  
-> >>>>> -	/* MT2712/MT7622 only support 32-bit MSI addresses */
-> >>>>> -	msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-> >>>>> -	msg.address_hi = 0;
-> >>>>> -	msg.address_lo = lower_32_bits(msg_addr);
-> >>>>> -	msg.data = hwirq;
-> >>>>> +	mutex_unlock(&port->lock);
-> >>>>>  
-> >>>>> -	pci_write_msi_msg(irq, &msg);
-> >>>>> +	irq_domain_set_info(domain, virq, bit, &mtk_msi_bottom_irq_chip,
-> >>>>> +			    domain->host_data, handle_simple_irq,
-> >>>>
-> >>>> Why don't you handle the interrupt as an edge interrupt
-> >>>> (handle_edge_irq)? That's what it really is, and the fact that you use
-> >>>> "handle_simple_irq" makes me think that wou're papering over some other
-> >>>> issue (see below).
-> >>>
-> >>> Hi, Marc,
-> >>>
-> >>> Thanks very much for your comments.
-> >>>
-> >>> I guess the MSI irq is more like a level IRQ instead of edge IRQ.
-> >>> When a MSI IRQ arrived, the corresponding bit of MSI status register
-> >>> will be asserted and stay asserted until it's been cleared by software.
-> >>
-> >> There is some confusion here. The MSI itself is always edge-triggered.
-> >> That's by definition, and you cannot change it. The interrupt that is
-> >> used to signal that MSIs are pending (the multiplexing interrupt) can
-> >> itself be level triggered (and goes low once all the MSIs have been
-> >> acknowledged).
+On Tue, May 08, 2018 at 08:59:34AM +0200, Paul Menzel wrote:
+> Dear Bjorn,
+> 
+> 
+> Am 07.05.2018 um 23:33 schrieb Bjorn Helgaas:
+> > On Fri, May 04, 2018 at 08:33:27AM -0500, Bjorn Helgaas wrote:
+> > > commit b0d6f2230e12c85ae3b65a854a53c67c7c1f6406
+> > > Author: Bjorn Helgaas <bhelgaas@google.com>
+> > > Date:   Thu May 3 18:39:38 2018 -0500
+> > > 
+> > >      PCI: pciehp: Add quirk for Intel Command Completed erratum
+> > >      The Intel CF118 erratum means the controller does not set the Command
+> > >      Completed bit unless writes to the Slot Command register change "Control"
+> > >      bits.  Command Completed is never set for writes that only change software
+> > >      notification "Enable" bits.  This results in timeouts like this:
+> > >        pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038 (issued 65284 msec ago)
+> > >      When this erratum is present, avoid these timeouts by marking commands
+> > >      "completed" immediately unless they change the "Control" bits.
+> > >      Here's the text of the erratum from the Intel document:
+> > >        CF118        PCIe Slot Status Register Command Completed bit not always
+> > >                     updated on any configuration write to the Slot Control
+> > >                     Register
+> > >        Problem:     For PCIe root ports (devices 0 - 10) supporting hot-plug,
+> > >                     the Slot Status Register (offset AAh) Command Completed
+> > >                     (bit[4]) status is updated under the following condition:
+> > >                     IOH will set Command Completed bit after delivering the new
+> > >                     commands written in the Slot Controller register (offset
+> > >                     A8h) to VPP. The IOH detects new commands written in Slot
+> > >                     Control register by checking the change of value for Power
+> > >                     Controller Control (bit[10]), Power Indicator Control
+> > >                     (bits[9:8]), Attention Indicator Control (bits[7:6]), or
+> > >                     Electromechanical Interlock Control (bit[11]) fields. Any
+> > >                     other configuration writes to the Slot Control register
+> > >                     without changing the values of these fields will not cause
+> > >                     Command Completed bit to be set.
+> > >                     The PCIe Base Specification Revision 2.0 or later describes
+> > >                     the “Slot Control Register” in section 7.8.10, as follows
+> > >                     (Reference section 7.8.10, Slot Control Register, Offset
+> > >                     18h). In hot-plug capable Downstream Ports, a write to the
+> > >                     Slot Control register must cause a hot-plug command to be
+> > >                     generated (see Section 6.7.3.2 for details on hot-plug
+> > >                     commands). A write to the Slot Control register in a
+> > >                     Downstream Port that is not hotplug capable must not cause a
+> > >                     hot-plug command to be executed.
+> > >                     The PCIe Spec intended that every write to the Slot Control
+> > >                     Register is a command and expected a command complete status
+> > >                     to abstract the VPP implementation specific nuances from the
+> > >                     OS software. IOH PCIe Slot Control Register implementation
+> > >                     is not fully conforming to the PCIe Specification in this
+> > >                     respect.
+> > >        Implication: Software checking on the Command Completed status after
+> > >                     writing to the Slot Control register may time out.
+> > >        Workaround:  Software can read the Slot Control register and compare the
+> > >                     existing and new values to determine if it should check the
+> > >                     Command Completed status after writing to the Slot Control
+> > >                     register.
+> > >      Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
+> > >      Link: https://lkml.kernel.org/r/8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de
+> > >      Reported-by: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+> > >      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > > 
-> > Hi, Marc, thanks for your comments.
-> > 
-> > Yes, PCIe SPEC have defined that the MSI must be edge trigged. But I'm
-> > not sure whether the HW design needed to following some edge irq
-> > standard. 
+> > I applied this with Paul's tested-by on pci/hotplug for v4.18.
 > 
-> 
-> Given that the device is writing to the MSI doorbell, this can only be
-> an edge (one way to look at it is that you cannot "unwrite" something,
-> so you can't drop the level).
-> 
-Thanks for your explain in this point of view. I will handle it as edge
-IRQ in the next version.
+> Thank you very much. Will this also be picked up by the stable Linux kernel
+> series?
 
-> > In our design, when there's MSI irq trigged(which may is edge
-> > trigged in hw implemented), the corresponding msi irq status bits will
-> > be asserted until it's been cleared by software. It's more like that the
-> > HW IP have translate the edge irq to level status. Do you think using
-> > handle_level_irq or handle_simple_irq(which most of the pci host driver
-> > now doing) is acceptable in this case?
-> 
-> This is how it is supposed to work:
-> 
-> Device --edge--> MSI-controller --level--> primary controller
-> 
-> When you're handling the MSI, it has to be edge. When handling the
-> interrupt between the MSI controller and the main irqchip, this is level.
-> 
-> At the moment, you have handle that first interrupt as level, which is
-> wrong.
-> 
-> > BTW, I'm still struggling in trying the handle_edge_irq solution. Seems
-> > that I could not get the msi index in irq_ack callback from
-> > irq_data->hwirq, the hwirq was set by pci_msi_domain_calc_hwirq() which
-> > I'm still try to figure out the proper routine in my driver.
-> 
-> That's because you've plugged it in the wrong irqchip. Your top-level
-> irqchip (the one backing the PCI domain) must be implemented with
-> irq_chip_ack_parent, and you them implement the ack logic in the
-> HW-specific irqchip.
-> 
+I did not tag it for stable because I didn't think it was a serious enough
+problem, based on this from Documentation/process/stable-kernel-rules.rst:
 
-Thanks very much for your advise, that's exactly the mistake that I
-made. Now it's works fine, I will check it again and send the next
-version.
+ - It must fix a problem that causes a build error (but not for things
+   marked CONFIG_BROKEN), an oops, a hang, data corruption, a real
+   security issue, or some "oh, that's not good" issue.  In short, something
+   critical.
 
-thanks.
+I know I'm on the conservative end of the stable-tagging spectrum, so maybe
+I could be convinced to add a stable tag.
 
-> 	M.
+My impression was that this bug caused annoying messages and annoying
+delays of a couple seconds during shutdown and resume.  Is it more serious
+than that?
 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
