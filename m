@@ -1,53 +1,58 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 25 May 2018 17:10:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
-Message-ID: <20180525221024.GC92995@bhelgaas-glaptop.roam.corp.google.com>
-References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
- <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
- <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
- <20180524183502.GB85822@bhelgaas-glaptop.roam.corp.google.com>
- <984b9734-244d-04e9-946f-7524f148ff7c@codeaurora.org>
+Return-Path: <SRS0=u1aH=H3=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=u1aH=H3=deltatee.com=logang@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+ Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-5-logang@deltatee.com>
+ <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+ <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+ <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+ <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+ <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+ <20180508133407.57a46902@w520.home>
+ <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+ <20180508141331.7cd737cb@w520.home>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+Date: Tue, 8 May 2018 14:19:05 -0600
 MIME-Version: 1.0
-In-Reply-To: <984b9734-244d-04e9-946f-7524f148ff7c@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: ryan@finnie.org, Kate Stewart <kstewart@linuxfoundation.org>,
- linux-scsi@vger.kernel.org, Frederick Lawler <fred@fredlawl.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- esc.storagedev@microsemi.com, open list <linux-kernel@vger.kernel.org>,
- stable@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Thomas Gleixner <tglx@linutronix.de>, Don Brace <don.brace@microsemi.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180508141331.7cd737cb@w520.home>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2018 at 09:30:59AM -0400, Sinan Kaya wrote:
-> On 5/24/2018 2:35 PM, Bjorn Helgaas wrote:
-> > That sounds like a reasonable idea, and it is definitely another can
-> > of worms.  I looked briefly at some of the .shutdown() cases:
-> 
-> should we throw it into 4.18 and see what happens?
 
-It wouldn't solve this particular problem because hpsa *does* have a
-.shutdown() method.  The problem is that it doesn't work -- it's
-supposed to stop DMA and interrupts but it apparently doesn't.
 
-I think we need to fix hpsa first.
+On 08/05/18 02:13 PM, Alex Williamson wrote:
+> Well, I'm a bit confused, this patch series is specifically disabling
+> ACS on switches, but per the spec downstream switch ports implementing
+> ACS MUST implement direct translated P2P.  So it seems the only
+> potential gap here is the endpoint, which must support ATS or else
+> there's nothing for direct translated P2P to do.  The switch port plays
+> no part in the actual translation of the request, ATS on the endpoint
+> has already cached the translation and is now attempting to use it.
+> For the switch port, this only becomes a routing decision, the request
+> is already translated, therefore ACS RR and EC can be ignored to
+> perform "normal" (direct) routing, as if ACS were not present.  It would
+> be a shame to go to all the trouble of creating this no-ACS mode to find
+> out the target hardware supports ATS and should have simply used it, or
+> we should have disabled the IOMMU altogether, which leaves ACS disabled.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Ah, ok, I didn't think it was the endpoint that had to implement ATS.
+But in that case, for our application, we need NVMe cards and RDMA NICs
+to all have ATS support and I expect that is just as unlikely. At least
+none of the endpoints on my system support it. Maybe only certain GPUs
+have this support.
+
+Logan
