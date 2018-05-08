@@ -1,124 +1,56 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 40/40] iommu/arm-smmu-v3: Add support for PCI PASID
-Date: Fri, 11 May 2018 20:06:41 +0100
-Message-Id: <20180511190641.23008-41-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 8 May 2018 08:29:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Subject: Re: [PATCH v2 08/10] PCI: Deprecate of_pci_get_host_bridge_resources()
+Message-ID: <20180508132930.GL161390@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1525067324.git.jan.kiszka@siemens.com>
+ <aca0d89cd8c1551a83b87ffab29fcd6e1d59a61c.1525067324.git.jan.kiszka@siemens.com>
+ <20180502123923.GA10783@infradead.org>
+ <b13dd4b5-61c4-3acb-c194-3e448cb8b3d2@siemens.com>
+MIME-Version: 1.0
+In-Reply-To: <b13dd4b5-61c4-3acb-c194-3e448cb8b3d2@siemens.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable PASID for PCI devices that support it. Unlike PRI, we can't enable
-PASID lazily in iommu_sva_device_init(), because it has to be enabled
-before ATS, and because we have to allocate substream tables early.
+On Thu, May 03, 2018 at 09:53:58AM +0200, Jan Kiszka wrote:
+> On 2018-05-02 14:39, Christoph Hellwig wrote:
+> > On Mon, Apr 30, 2018 at 07:48:42AM +0200, Jan Kiszka wrote:
+> >> From: Jan Kiszka <jan.kiszka@siemens.com>
+> >>
+> >> There are no in-tree users remaining, all are converted to the managed
+> >> variant. And it is unlikely that any out-of-tree user got the resource
+> >> management right as well. So deprecate the interface and push users to
+> >> the managed version instead.
+> >>
+> >> To avoid raising a warning when exporting a deprecated symbol, wrap the
+> >> API with an inline and export an internal name.
+> > 
+> > Don't deprecated it, just remove it.
+> 
+> I see a clear favorite now: consider this patch obsolete. I'll send a
+> separate removal patch, or a v3 of this series when otherwise needed.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 54 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 54 insertions(+)
+Can you just send an update to this patch to remove it?  I've got these on
+a branch and will just update my branch with the removal.
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 0edbb8d19579..ac6e69f25893 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2542,6 +2542,52 @@ static bool arm_smmu_sid_in_range(struct arm_smmu_device *smmu, u32 sid)
- 	return sid < limit;
- }
- 
-+static int arm_smmu_enable_pasid(struct arm_smmu_master_data *master)
-+{
-+	int ret;
-+	int features;
-+	u8 pasid_bits;
-+	int num_pasids;
-+	struct pci_dev *pdev;
-+
-+	if (!dev_is_pci(master->dev))
-+		return -ENOSYS;
-+
-+	pdev = to_pci_dev(master->dev);
-+
-+	features = pci_pasid_features(pdev);
-+	if (features < 0)
-+		return -ENOSYS;
-+
-+	num_pasids = pci_max_pasids(pdev);
-+	if (num_pasids <= 0)
-+		return -ENOSYS;
-+
-+	pasid_bits = min_t(u8, ilog2(num_pasids), master->smmu->ssid_bits);
-+
-+	dev_dbg(&pdev->dev, "device supports %#x PASID bits [%s%s]\n", pasid_bits,
-+		(features & PCI_PASID_CAP_EXEC) ? "x" : "",
-+		(features & PCI_PASID_CAP_PRIV) ? "p" : "");
-+
-+	ret = pci_enable_pasid(pdev, features);
-+	return ret ? ret : pasid_bits;
-+}
-+
-+static void arm_smmu_disable_pasid(struct arm_smmu_master_data *master)
-+{
-+	struct pci_dev *pdev;
-+
-+	if (!dev_is_pci(master->dev))
-+		return;
-+
-+	pdev = to_pci_dev(master->dev);
-+
-+	if (!pdev->pasid_enabled)
-+		return;
-+
-+	pci_disable_pasid(pdev);
-+}
-+
- static int arm_smmu_enable_ats(struct arm_smmu_master_data *master)
- {
- 	size_t stu;
-@@ -2712,6 +2758,11 @@ static int arm_smmu_add_device(struct device *dev)
- 		master->ste.can_stall = true;
- 	}
- 
-+	/* PASID must be enabled before ATS */
-+	ret = arm_smmu_enable_pasid(master);
-+	if (ret > 0)
-+		master->ssid_bits = ret;
-+
- 	arm_smmu_enable_ats(master);
- 
- 	ret = iommu_device_link(&smmu->iommu, dev);
-@@ -2740,6 +2791,7 @@ static int arm_smmu_add_device(struct device *dev)
- 
- err_disable_ats:
- 	arm_smmu_disable_ats(master);
-+	arm_smmu_disable_pasid(master);
- 
- err_free_master:
- 	kfree(master);
-@@ -2769,7 +2821,9 @@ static void arm_smmu_remove_device(struct device *dev)
- 	arm_smmu_remove_master(smmu, master);
- 	iommu_device_unlink(&smmu->iommu, dev);
- 	arm_smmu_disable_pri(master);
-+	/* PASID must be disabled after ATS */
- 	arm_smmu_disable_ats(master);
-+	arm_smmu_disable_pasid(master);
- 	kfree(master);
- 	iommu_fwspec_free(dev);
- }
--- 
-2.17.0
+Then I'll coordinate with Lorenzo and make sure the dependency issue is
+resolved.
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
