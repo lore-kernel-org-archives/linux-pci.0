@@ -1,46 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39230 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751196AbeEVNKW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 May 2018 09:10:22 -0400
-Subject: [PATCH v1 2/3] xtensa/PCI: Make variables static
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>,
-        linux-xtensa@linux-xtensa.org, linux-kernel@vger.kernel.org
-Date: Tue, 22 May 2018 08:10:21 -0500
-Message-ID: <152699462102.162480.10622776995414606885.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152699456050.162480.13521209483758803324.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152699456050.162480.13521209483758803324.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
+Date: Tue, 8 May 2018 10:57:59 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>, Christoph
+ Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
+ <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
+ <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
+ <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
+ Herrenschmidt <benh@kernel.crashing.org>, Christian =?UTF-8?B?S8O2bmln?=
+ <christian.koenig@amd.com>
+Subject: Re: [PATCH v4 00/14] Copy Offload in NVMe Fabrics with P2P PCI
+ Memory
+Message-ID: <20180508105759.7dbaa8fe@w520.home>
+In-Reply-To: <20180507232346.GI161390@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+	<20180507232346.GI161390@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Mon, 7 May 2018 18:23:46 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-Make these variables static, since they're only used in this file:
+> On Mon, Apr 23, 2018 at 05:30:32PM -0600, Logan Gunthorpe wrote:
+> > Hi Everyone,
+> > 
+> > Here's v4 of our series to introduce P2P based copy offload to NVMe
+> > fabrics. This version has been rebased onto v4.17-rc2. A git repo
+> > is here:
+> > 
+> > https://github.com/sbates130272/linux-p2pmem pci-p2p-v4
+> > ...  
+> 
+> > Logan Gunthorpe (14):
+> >   PCI/P2PDMA: Support peer-to-peer memory
+> >   PCI/P2PDMA: Add sysfs group to display p2pmem stats
+> >   PCI/P2PDMA: Add PCI p2pmem dma mappings to adjust the bus offset
+> >   PCI/P2PDMA: Clear ACS P2P flags for all devices behind switches
+> >   docs-rst: Add a new directory for PCI documentation
+> >   PCI/P2PDMA: Add P2P DMA driver writer's documentation
+> >   block: Introduce PCI P2P flags for request and request queue
+> >   IB/core: Ensure we map P2P memory correctly in
+> >     rdma_rw_ctx_[init|destroy]()
+> >   nvme-pci: Use PCI p2pmem subsystem to manage the CMB
+> >   nvme-pci: Add support for P2P memory in requests
+> >   nvme-pci: Add a quirk for a pseudo CMB
+> >   nvmet: Introduce helper functions to allocate and free request SGLs
+> >   nvmet-rdma: Use new SGL alloc/free helper for requests
+> >   nvmet: Optionally use PCI P2P memory
+> > 
+> >  Documentation/ABI/testing/sysfs-bus-pci    |  25 +
+> >  Documentation/PCI/index.rst                |  14 +
+> >  Documentation/driver-api/index.rst         |   2 +-
+> >  Documentation/driver-api/pci/index.rst     |  20 +
+> >  Documentation/driver-api/pci/p2pdma.rst    | 166 ++++++
+> >  Documentation/driver-api/{ => pci}/pci.rst |   0
+> >  Documentation/index.rst                    |   3 +-
+> >  block/blk-core.c                           |   3 +
+> >  drivers/infiniband/core/rw.c               |  13 +-
+> >  drivers/nvme/host/core.c                   |   4 +
+> >  drivers/nvme/host/nvme.h                   |   8 +
+> >  drivers/nvme/host/pci.c                    | 118 +++--
+> >  drivers/nvme/target/configfs.c             |  67 +++
+> >  drivers/nvme/target/core.c                 | 143 ++++-
+> >  drivers/nvme/target/io-cmd.c               |   3 +
+> >  drivers/nvme/target/nvmet.h                |  15 +
+> >  drivers/nvme/target/rdma.c                 |  22 +-
+> >  drivers/pci/Kconfig                        |  26 +
+> >  drivers/pci/Makefile                       |   1 +
+> >  drivers/pci/p2pdma.c                       | 814 +++++++++++++++++++++++++++++
+> >  drivers/pci/pci.c                          |   6 +
+> >  include/linux/blk_types.h                  |  18 +-
+> >  include/linux/blkdev.h                     |   3 +
+> >  include/linux/memremap.h                   |  19 +
+> >  include/linux/pci-p2pdma.h                 | 118 +++++
+> >  include/linux/pci.h                        |   4 +
+> >  26 files changed, 1579 insertions(+), 56 deletions(-)
+> >  create mode 100644 Documentation/PCI/index.rst
+> >  create mode 100644 Documentation/driver-api/pci/index.rst
+> >  create mode 100644 Documentation/driver-api/pci/p2pdma.rst
+> >  rename Documentation/driver-api/{ => pci}/pci.rst (100%)
+> >  create mode 100644 drivers/pci/p2pdma.c
+> >  create mode 100644 include/linux/pci-p2pdma.h  
+> 
+> How do you envison merging this?  There's a big chunk in drivers/pci, but
+> really no opportunity for conflicts there, and there's significant stuff in
+> block and nvme that I don't really want to merge.
+> 
+> If Alex is OK with the ACS situation, I can ack the PCI parts and you could
+> merge it elsewhere?
 
-  pci_ctrl_head
-  pci_ctrl_tail
+AIUI from previously questioning this, the change is hidden behind a
+build-time config option and only custom kernels or distros optimized
+for this sort of support would enable that build option.  I'm more than
+a little dubious though that we're not going to have a wave of distros
+enabling this only to get user complaints that they can no longer make
+effective use of their devices for assignment due to the resulting span
+of the IOMMU groups, nor is there any sort of compromise, configure
+the kernel for p2p or device assignment, not both.  Is this really such
+a unique feature that distro users aren't going to be asking for both
+features?  Thanks,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/xtensa/kernel/pci.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-index d451b4f5b1e0..e121b555fdb4 100644
---- a/arch/xtensa/kernel/pci.c
-+++ b/arch/xtensa/kernel/pci.c
-@@ -41,8 +41,8 @@
-  * pci_bus_add_device
-  */
- 
--struct pci_controller* pci_ctrl_head;
--struct pci_controller** pci_ctrl_tail = &pci_ctrl_head;
-+static struct pci_controller *pci_ctrl_head;
-+static struct pci_controller **pci_ctrl_tail = &pci_ctrl_head;
- 
- static int pci_bus_count;
- 
+Alex
