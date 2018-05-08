@@ -1,82 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v7 11/12] PCI: Improve "partially hidden behind bridge" log message
-Date: Thu, 17 May 2018 12:29:02 +0300
-Message-Id: <20180517092903.43701-12-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
-References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
+Date: Tue, 8 May 2018 17:11:50 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Stephen  Bates" <sbates@raithlin.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>, Christian =?UTF-8?B?S8O2bmln?=
+ <christian.koenig@amd.com>, "Bjorn Helgaas" <helgaas@kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Christoph
+ Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
+ <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
+ <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
+ <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
+ Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all
+ devices behind switches
+Message-ID: <20180508171150.0e8fd291@w520.home>
+In-Reply-To: <C3CEE4DB-A001-4E4C-B9B9-4B160E4C5367@raithlin.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+	<20180423233046.21476-5-logang@deltatee.com>
+	<20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+	<e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+	<0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+	<a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+	<3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+	<20180508133407.57a46902@w520.home>
+	<5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+	<20180508141331.7cd737cb@w520.home>
+	<d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+	<20180508144341.0441b676@w520.home>
+	<a524127a-3557-3dff-971c-dfe94ba5a01c@deltatee.com>
+	<20180508152631.50fd583c@w520.home>
+	<354F7407-0DC7-470C-B9AA-74FDF9C46B08@raithlin.com>
+	<20180508160336.0935ddde@w520.home>
+	<20905682-9440-7d4b-0260-99d3dc794c3d@deltatee.com>
+	<C3CEE4DB-A001-4E4C-B9B9-4B160E4C5367@raithlin.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-There is a sanity checker in the end of pci_scan_child_bus_extend() that
-tries to detect badly configured bridges. For example given the below
-topology:
+On Tue, 8 May 2018 22:25:06 +0000
+"Stephen  Bates" <sbates@raithlin.com> wrote:
 
-  +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
-                                  +-01.0-[04-39]--
-                                  \-02.0-[3a]----00.0
+> >    Yeah, so based on the discussion I'm leaning toward just having a
+> >    command line option that takes a list of BDFs and disables ACS
+> > for them. (Essentially as Dan has suggested.) This avoids the
+> > shotgun.  
+> 
+> I concur that this seems to be where the conversation is taking us.
+> 
+> @Alex - Before we go do this can you provide input on the approach? I
+> don't want to re-spin only to find we are still not converging on the
+> ACS issue....
 
-The sanity checker notices this and logs following messages:
+I can envision numerous implementation details that makes this less
+trivial than it sounds, but it seems like the thing we need to decide
+first is if intentionally leaving windows between devices with the
+intention of exploiting them for direct P2P DMA in an otherwise IOMMU
+managed address space is something we want to do.  From a security
+perspective, we already handle this with IOMMU groups because many
+devices do not support ACS, the new thing is embracing this rather than
+working around it.  It makes me a little twitchy, but so long as the
+IOMMU groups match the expected worst case routing between devices,
+it's really no different than if we could wipe the ACS capability from
+the device.
 
-  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
-  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
+On to the implementation details... I already mentioned the BDF issue
+in my other reply.  If we had a way to persistently identify a device,
+would we specify the downstream points at which we want to disable ACS
+or the endpoints that we want to connect?  The latter has a problem
+that the grouping upstream of an endpoint is already set by the time we
+discover the endpoint, so we might need to unwind to get the grouping
+correct.  The former might be more difficult for users to find the
+necessary nodes, but easier for the kernel to deal with during
+discovery.  A runtime, sysfs approach has some benefits here,
+especially in identifying the device assuming we're ok with leaving
+the persistence problem to userspace tools.  I'm still a little fond of
+the idea of exposing an acs_flags attribute for devices in sysfs where
+a write would do a soft unplug and re-add of all affected devices to
+automatically recreate the proper grouping.  Any dynamic change in
+routing and grouping would require all DMA be re-established anyway and
+a soft hotplug seems like an elegant way of handling it.  Thanks,
 
-This is not really helpful to users and the information above is not
-even correct (0000:02 is a bus not bridge). Make this a bit more
-understandable by changing the sanity checker to log following message
-in place of the above two messages:
-
-  pci 0000:02:02.0: devices behind bridge are unusable, because [bus 3a] cannot be assigned for them
-
-While there update the comment on top of the sanity checker block to
-make it clear that it is not only restricted to CardBus.
-
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/probe.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index a0c48aa1c42f..10084990fbc3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1191,20 +1191,16 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 		(is_cardbus ? "PCI CardBus %04x:%02x" : "PCI Bus %04x:%02x"),
- 		pci_domain_nr(bus), child->number);
- 
--	/* Has only triggered on CardBus, fixup is in yenta_socket */
-+	/* Check that all devices are accessible */
- 	while (bus->parent) {
- 		if ((child->busn_res.end > bus->busn_res.end) ||
- 		    (child->number > bus->busn_res.end) ||
- 		    (child->number < bus->number) ||
- 		    (child->busn_res.end < bus->number)) {
--			dev_info(&child->dev, "%pR %s hidden behind%s bridge %s %pR\n",
--				&child->busn_res,
--				(bus->number > child->busn_res.end &&
--				 bus->busn_res.end < child->number) ?
--					"wholly" : "partially",
--				bus->self->transparent ? " transparent" : "",
--				dev_name(&bus->dev),
--				&bus->busn_res);
-+			dev_info(&dev->dev,
-+				 "devices behind bridge are unusable, because %pR cannot be assigned for them\n",
-+				 &child->busn_res);
-+			break;
- 		}
- 		bus = bus->parent;
- 	}
--- 
-2.17.0
-
+Alex
