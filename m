@@ -1,86 +1,85 @@
-Return-Path: <SRS0=tf3/=H5=redhat.com=jglisse@kernel.org>
-Return-Path: <SRS0=tf3/=H5=redhat.com=jglisse@kernel.org>
-Date: Thu, 10 May 2018 10:41:37 -0400
-From: Jerome Glisse <jglisse@redhat.com>
-To: Stephen Bates <sbates@raithlin.com>
-Cc: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Keith Busch <keith.busch@intel.com>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgg@mellanox.com>,
-	Max Gurtovoy <maxg@mellanox.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-Message-ID: <20180510144137.GA3652@redhat.com>
-References: <20180508133407.57a46902@w520.home>
- <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
- <20180508141331.7cd737cb@w520.home>
- <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
- <20180508205005.GC15608@redhat.com>
- <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
- <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
- <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
- <2fc61d29-9eb4-d168-a3e5-955c36e5d821@amd.com>
- <94C8FE12-7FC3-48BD-9DCA-E6A427E71810@raithlin.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:39195 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753368AbeEHLsu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 May 2018 07:48:50 -0400
+Date: Tue, 8 May 2018 20:48:45 +0900
+From: Wei Yang <richard.weiyang@gmail.com>
+To: Baoquan He <bhe@redhat.com>
+Cc: Wei Yang <richard.weiyang@gmail.com>, linux-kernel@vger.kernel.org,
+        akpm@linux-foundation.org, robh+dt@kernel.org,
+        dan.j.williams@intel.com, nicolas.pitre@linaro.org,
+        josh@joshtriplett.org,
+        Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
+        David Airlie <airlied@linux.ie>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Brijesh Singh <brijesh.singh@amd.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Borislav Petkov <bp@suse.de>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Yaowei Bai <baiyaowei@cmss.chinamobile.com>,
+        devel@linuxdriverproject.org, linux-input@vger.kernel.org,
+        linux-nvdimm@lists.01.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] resource: Use list_head to link sibling resource
+Message-ID: <20180508114845.GA19459@WeideMacBook-Pro.local>
+Reply-To: Wei Yang <richard.weiyang@gmail.com>
+References: <20180419001848.3041-1-bhe@redhat.com>
+ <20180419001848.3041-2-bhe@redhat.com>
+ <20180426011837.GA79340@WeideMacBook-Pro.local>
+ <20180507011429.GG30581@MiWiFi-R3L-srv>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <94C8FE12-7FC3-48BD-9DCA-E6A427E71810@raithlin.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180507011429.GG30581@MiWiFi-R3L-srv>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 10, 2018 at 02:16:25PM +0000, Stephen  Bates wrote:
-> Hi Christian
-> 
-> > Why would a switch not identify that as a peer address? We use the PASID 
-> >    together with ATS to identify the address space which a transaction 
-> >    should use.
-> 
-> I think you are conflating two types of TLPs here. If the device supports ATS then it will issue a TR TLP to obtain a translated address from the IOMMU. This TR TLP will be addressed to the RP and so regardless of ACS it is going up to the Root Port. When it gets the response it gets the physical address and can use that with the TA bit set for the p2pdma. In the case of ATS support we also have more control over ACS as we can disable it just for TA addresses (as per 7.7.7.7.2 of the spec).
->     
->  >   If I'm not completely mistaken when you disable ACS it is perfectly 
->  >   possible that a bridge identifies a transaction as belonging to a peer 
->  >   address, which isn't what we want here.
->    
-> You are right here and I think this illustrates a problem for using the IOMMU at all when P2PDMA devices do not support ATS. Let me explain:
-> 
-> If we want to do a P2PDMA and the DMA device does not support ATS then I think we have to disable the IOMMU (something Mike suggested earlier). The reason is that since ATS is not an option the EP must initiate the DMA using the addresses passed down to it. If the IOMMU is on then this is an IOVA that could (with some non-zero probability) point to an IO Memory address in the same PCI domain. So if we disable ACS we are in trouble as we might MemWr to the wrong place but if we enable ACS we lose much of the benefit of P2PDMA. Disabling the IOMMU removes the IOVA risk and ironically also resolves the IOMMU grouping issues.
-> 
-> So I think if we want to support performant P2PDMA for devices that don't have ATS (and no NVMe SSDs today support ATS) then we have to disable the IOMMU. I know this is problematic for AMDs use case so perhaps we also need to consider a mode for P2PDMA for devices that DO support ATS where we can enable the IOMMU (but in this case EPs without ATS cannot participate as P2PDMA DMA iniators).
-> 
-> Make sense?
-> 
+On Mon, May 07, 2018 at 09:14:29AM +0800, Baoquan He wrote:
+>Hi Wei Yang,
+>
+>On 04/26/18 at 09:18am, Wei Yang wrote:
+>> On Thu, Apr 19, 2018 at 08:18:46AM +0800, Baoquan He wrote:
+>> >The struct resource uses singly linked list to link siblings. It's not
+>> >easy to do reverse iteration on sibling list. So replace it with list_head.
+>> >
+>> 
+>> Hi, Baoquan
+>> 
+>> Besides changing the data structure, I have another proposal to do the reverse
+>> iteration. Which means it would not affect other users, if you just want a
+>> reverse iteration.
+>> 
+>> BTW, I don't think Andrew suggest to use linked-list directly. What he wants
+>> is a better solution to your first proposal in
+>> https://patchwork.kernel.org/patch/10300819/.
+>> 
+>> Below is my proposal of resource reverse iteration without changing current
+>> design.
+>
+>I got your mail and read it, then interrupted by other thing and forgot
+>replying, sorry.
+>
+>I am fine with your code change. As I said before, I have tried to change
+>code per reviewers' comment, then let reviewers decide which way is
+>better. Please feel free to post formal patches and joining discussion
+>about this issue.
 
-Note on GPU we do would not rely on ATS for peer to peer. Some part
-of the GPU (DMA engines) do not necessarily support ATS. Yet those
-are the part likely to be use in peer to peer.
+Yep, while I don't have a real requirement to add the reverse version, so what
+is the proper way to send a patch?
 
-However here this is a distinction in objective that i believe is lost.
-We (ake GPU people aka the good guys ;)) do no want to do peer to peer
-for performance reasons ie we do not care having our transaction going
-to the root complex and back down the destination. At least in use case
-i am working on this is fine.
+A patch reply to this thread is ok?
 
-Reasons is that GPU are giving up on PCIe (see all specialize link like
-NVlink that are popping up in GPU space). So for fast GPU inter-connect
-we have this new links. Yet for legacy and inter-operability we would
-like to do peer to peer with other devices like RDMA ... going through
-the root complex would be fine from performance point of view. Worst
-case is that it is slower than existing design where system memory is
-use as bounce buffer.
-
-Also the IOMMU isolation do matter a lot to us. Think someone using this
-peer to peer to gain control of a server in the cloud.
-
-Cheers,
-Jérôme
+>
+>Thanks
+>Baoquan
+>
