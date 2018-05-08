@@ -1,130 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:33655 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753298AbeEVW2Y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 18:28:24 -0400
-Received: by mail-pl0-f68.google.com with SMTP id n10-v6so11741616plp.0
-        for <linux-pci@vger.kernel.org>; Tue, 22 May 2018 15:28:24 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rajat Jain <rajatja@google.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Kyle McMartin <jkkm@fb.com>
-Cc: rajatxjain@gmail.com, Rajat Jain <rajatj@google.com>
-Subject: [PATCH 3/5] PCP/AER: Add sysfs attributes to provide breakdown of AERs
-Date: Tue, 22 May 2018 15:28:03 -0700
-Message-Id: <20180522222805.80314-4-rajatja@google.com>
-In-Reply-To: <20180522222805.80314-1-rajatja@google.com>
-References: <20180522222805.80314-1-rajatja@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
+Date: Tue, 8 May 2018 14:43:41 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>, Bjorn Helgaas
+ <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>, Christoph
+ Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
+ <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
+ <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
+ <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
+ Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all
+ devices behind switches
+Message-ID: <20180508144341.0441b676@w520.home>
+In-Reply-To: <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+	<20180423233046.21476-5-logang@deltatee.com>
+	<20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+	<e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+	<0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+	<a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+	<3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+	<20180508133407.57a46902@w520.home>
+	<5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+	<20180508141331.7cd737cb@w520.home>
+	<d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-Add sysfs attributes to provide breakdown of the AERs seen,
-into different type of correctable or uncorrectable errors:
+On Tue, 8 May 2018 14:19:05 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-dev_breakdown_correctable
-dev_breakdown_uncorrectable
+> On 08/05/18 02:13 PM, Alex Williamson wrote:
+> > Well, I'm a bit confused, this patch series is specifically disabling
+> > ACS on switches, but per the spec downstream switch ports implementing
+> > ACS MUST implement direct translated P2P.  So it seems the only
+> > potential gap here is the endpoint, which must support ATS or else
+> > there's nothing for direct translated P2P to do.  The switch port plays
+> > no part in the actual translation of the request, ATS on the endpoint
+> > has already cached the translation and is now attempting to use it.
+> > For the switch port, this only becomes a routing decision, the request
+> > is already translated, therefore ACS RR and EC can be ignored to
+> > perform "normal" (direct) routing, as if ACS were not present.  It would
+> > be a shame to go to all the trouble of creating this no-ACS mode to find
+> > out the target hardware supports ATS and should have simply used it, or
+> > we should have disabled the IOMMU altogether, which leaves ACS disabled.  
+> 
+> Ah, ok, I didn't think it was the endpoint that had to implement ATS.
+> But in that case, for our application, we need NVMe cards and RDMA NICs
+> to all have ATS support and I expect that is just as unlikely. At least
+> none of the endpoints on my system support it. Maybe only certain GPUs
+> have this support.
 
-Signed-off-by: Rajat Jain <rajatj@google.com>
----
- drivers/pci/pcie/aer/aerdrv.h          |  6 ++++++
- drivers/pci/pcie/aer/aerdrv_errprint.c |  6 ++++--
- drivers/pci/pcie/aer/aerdrv_stats.c    | 25 +++++++++++++++++++++++++
- 3 files changed, 35 insertions(+), 2 deletions(-)
+Yes, GPUs seem to be leading the pack in implementing ATS.  So now the
+dumb question, why not simply turn off the IOMMU and thus ACS?  The
+argument of using the IOMMU for security is rather diminished if we're
+specifically enabling devices to poke one another directly and clearly
+this isn't favorable for device assignment either.  Are there target
+systems where this is not a simple kernel commandline option?  Thanks,
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index b5d5ad6f2c03..048fbd7c9633 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -89,6 +89,12 @@ int pci_aer_stats_init(struct pci_dev *pdev);
- void pci_aer_stats_exit(struct pci_dev *pdev);
- void pci_dev_aer_stats_incr(struct pci_dev *pdev, struct aer_err_info *info);
- 
-+extern const char
-+*aer_correctable_error_string[AER_MAX_TYPEOF_CORRECTABLE_ERRS];
-+
-+extern const char
-+*aer_uncorrectable_error_string[AER_MAX_TYPEOF_UNCORRECTABLE_ERRS];
-+
- #ifdef CONFIG_ACPI_APEI
- int pcie_aer_get_firmware_first(struct pci_dev *pci_dev);
- #else
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 5e8b98deda08..5585f309f1a8 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -68,7 +68,8 @@ static const char *aer_error_layer[] = {
- 	"Transaction Layer"
- };
- 
--static const char *aer_correctable_error_string[] = {
-+const char
-+*aer_correctable_error_string[AER_MAX_TYPEOF_CORRECTABLE_ERRS] = {
- 	"Receiver Error",		/* Bit Position 0	*/
- 	NULL,
- 	NULL,
-@@ -87,7 +88,8 @@ static const char *aer_correctable_error_string[] = {
- 	"Header Log Overflow",		/* Bit Position 15	*/
- };
- 
--static const char *aer_uncorrectable_error_string[] = {
-+const char
-+*aer_uncorrectable_error_string[AER_MAX_TYPEOF_UNCORRECTABLE_ERRS] = {
- 	"Undefined",			/* Bit Position 0	*/
- 	NULL,
- 	NULL,
-diff --git a/drivers/pci/pcie/aer/aerdrv_stats.c b/drivers/pci/pcie/aer/aerdrv_stats.c
-index 87b7119d0a86..5f0a6e144f56 100644
---- a/drivers/pci/pcie/aer/aerdrv_stats.c
-+++ b/drivers/pci/pcie/aer/aerdrv_stats.c
-@@ -61,10 +61,35 @@ aer_stats_aggregate_attr(dev_total_cor_errs);
- aer_stats_aggregate_attr(dev_total_fatal_errs);
- aer_stats_aggregate_attr(dev_total_nonfatal_errs);
- 
-+#define aer_stats_breakdown_attr(field, stats_array, strings_array)            \
-+	static ssize_t                                                         \
-+	field##_show(struct device *dev, struct device_attribute *attr,        \
-+		     char *buf)                                                \
-+{                                                                              \
-+	unsigned int i;                                                        \
-+	char *str = buf;                                                       \
-+	struct pci_dev *pdev = to_pci_dev(dev);                                \
-+	u64 *stats = pdev->aer_stats->stats_array;                             \
-+	for (i = 0; i < ARRAY_SIZE(strings_array); i++) {                      \
-+		if (strings_array[i])                                          \
-+			str += sprintf(str, "%s = 0x%llx\n",                   \
-+				       strings_array[i], stats[i]);            \
-+	}                                                                      \
-+	return str-buf;                                                        \
-+}                                                                              \
-+static DEVICE_ATTR_RO(field)
-+
-+aer_stats_breakdown_attr(dev_breakdown_correctable, dev_cor_errs,
-+			 aer_correctable_error_string);
-+aer_stats_breakdown_attr(dev_breakdown_uncorrectable, dev_uncor_errs,
-+			 aer_uncorrectable_error_string);
-+
- static struct attribute *aer_stats_attrs[] __ro_after_init = {
- 	&dev_attr_dev_total_cor_errs.attr,
- 	&dev_attr_dev_total_fatal_errs.attr,
- 	&dev_attr_dev_total_nonfatal_errs.attr,
-+	&dev_attr_dev_breakdown_correctable.attr,
-+	&dev_attr_dev_breakdown_uncorrectable.attr,
- 	NULL
- };
- 
--- 
-2.17.0.441.gb46fe60e1d-goog
+Alex
