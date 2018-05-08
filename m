@@ -1,56 +1,95 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 21 May 2018 16:30:06 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Fabio Estevam <festevam@gmail.com>
-Subject: Re: [PATCH] MAINTAINERS: Update Layerscape PCIe driver maintainers
- list
-Message-ID: <20180521153006.GA4137@e107981-ln.cambridge.arm.com>
-References: <1522288381-470803-1-git-send-email-Minghuan.Lian@nxp.com>
- <CAOMZO5DfHK=2x6+7T1x4n3A4uK5naWkQ_0dmjVt5JyeMAZPGyQ@mail.gmail.com>
- <CAOMZO5A-b_uiU9ci7Nts1EekOYXw9jAtSLu4uTEDkS8sHFWXAA@mail.gmail.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <CAOMZO5A-b_uiU9ci7Nts1EekOYXw9jAtSLu4uTEDkS8sHFWXAA@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>, linux-pci@vger.kernel.org,
- Minghuan Lian <Minghuan.Lian@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Date: Tue, 08 May 2018 01:21:38 +0100
+From: okaya@codeaurora.org
+To: Alex_Gagniuc@dellteam.com
+Subject: Re: AER: Malformed TLP recovery deadlock with NVMe drives
+In-Reply-To: <3d4991bc2948430d910a16da36c90b91@ausx13mps321.AMER.DELL.COM>
+References: <8cf4e563-5f84-f8bd-88a6-8369cdf07b29@gmail.com>
+ <7afd280ad80a73b39e6c9b9a9e29abcc@codeaurora.org>
+ <5c97a7c2-cb53-4740-fda0-50ba92288c5c@gmail.com>
+ <9fc90040d5712282ea223807ace39312@codeaurora.org>
+ <1125ddf8-f342-3f8f-90ee-0aa94287360c@gmail.com>
+ <16bdb0febb842ad0980db9214c8076c5@codeaurora.org>
+ <3d4991bc2948430d910a16da36c90b91@ausx13mps321.AMER.DELL.COM>
+Message-ID: <1fdfaaa47ad782ee864f24c5a75a355a@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Shyam.Iyer@dell.com, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, keith.busch@intel.com, mr.nuke.me@gmail.com,
+ Austin.Bolen@dell.com, linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 20, 2018 at 12:04:51PM -0300, Fabio Estevam wrote:
-> Hi Lorenzo,
+On 2018-05-08 00:57, Alex_Gagniuc@Dellteam.com wrote:
+> On 5/7/2018 5:46 PM, okaya@codeaurora.org wrote:
+> [snip]
+>>> If it were easy, somebody would have patched it by now ;)
+>> 
+>> Can you file a bugzilla CC me, keith and bjorn and attach all of your
+>> logs?
 > 
-> On Wed, May 2, 2018 at 2:55 PM, Fabio Estevam <festevam@gmail.com> wrote:
-> > [Adding Lorenzo]
-> >
-> > On Wed, Mar 28, 2018 at 10:53 PM, Minghuan Lian <Minghuan.Lian@nxp.com> wrote:
-> >> Change Layerscape PCIe driver maintainers' email address
-> >> from freescale to nxp.
-> >>
-> >> Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
-> >
-> > Yes, freescale.com emails are no longer reachable, so hopefully this
-> > one can land into 4.17.
+> Sure. Which bugzilla?
 > 
-> A gentle ping on this one.
 
-I queued in pci/host/misc, will be in -next on 26th when -next release
-restarts.
+https://bugzilla.kernel.org
 
-Lorenzo
+Drivers -> pci
+
+
+> 
+>> Let's debug this there.
+> 
+
+Bugzilla is more organized for keeping track of which log is for what.
+
+My experience is that bugzilla is preferred unless Keith or Bjorn has a 
+different opinion.
+
+> Debugging over email not fun enough?
+> 
+> Alex
+> 
+> 
+>>>> With this patch, you shouldn't
+>>>> see link down and up interrupts during reset but i do see them in 
+>>>> the
+>>>> log.
+>>> 
+>>> You will see the messages from the link up/down events regardless if
+>>> any
+>>> action is actually taken.
+>>> 
+>>>> Can you also share a fail case log with this patch and a diff of 
+>>>> your
+>>>> hacks so that we know where prints are coming from.
+>>> 
+>>> Of course. Example of failing case [3], and is identical to the fail
+>>> log
+>>> without any patches. Although prints have the function name, the diff
+>>> is
+>>> in [4].
+>>> 
+>>> Alex
+>>> 
+>>> [3] http://gtech.myftp.org/~mrnuke/nvme_logs/log-20180507-1509.log
+>>> [4] http://gtech.myftp.org/~mrnuke/nvme_logs/print_hacks.patch
+>>> 
+>>> 
+>>>>> [2] http://gtech.myftp.org/~mrnuke/nvme_logs/log-20180507-1429.log
+>>>>>>> [1] 
+>>>>>>> http://gtech.myftp.org/~mrnuke/nvme_logs/log-20180507-1308.log
+>> 
 
 _______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
