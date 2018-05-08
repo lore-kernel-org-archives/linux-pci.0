@@ -1,81 +1,190 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-Date: Thu, 10 May 2018 18:41:09 +0000
-Message-ID: <B525870A-B25E-46BB-B501-DAA39F1741DC@raithlin.com>
-References: <20180508133407.57a46902@w520.home>
- <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
- <20180508141331.7cd737cb@w520.home>
- <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
- <20180508205005.GC15608@redhat.com>
- <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
- <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
- <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
- <2fc61d29-9eb4-d168-a3e5-955c36e5d821@amd.com>
- <94C8FE12-7FC3-48BD-9DCA-E6A427E71810@raithlin.com>
- <20180510144137.GA3652@redhat.com>
-In-Reply-To: <20180510144137.GA3652@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:46104 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754148AbeEHXxc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 May 2018 19:53:32 -0400
+Date: Tue, 8 May 2018 18:53:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v15 3/9] PCI/AER: Handle ERR_FATAL with removal and
+ re-enumeration of devices
+Message-ID: <20180508235330.GN161390@bhelgaas-glaptop.roam.corp.google.com>
+References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
+ <1525323838-1735-4-git-send-email-poza@codeaurora.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Sagi Grimberg <sagi@grimberg.me>,
- "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, Christoph
- Hellwig <hch@lst.de>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <helgaas@kernel.org>,
- Benjamin
- Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Logan Gunthorpe <logang@deltatee.com>,
- =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525323838-1735-4-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jerome
+On Thu, May 03, 2018 at 01:03:52AM -0400, Oza Pawandeep wrote:
+> This patch alters the behavior of handling of ERR_FATAL, where removal
+> of devices is initiated, followed by reset link, followed by
+> re-enumeration.
+> 
+> So the errors are handled in a different way as follows:
+> ERR_NONFATAL => call driver recovery entry points
+> ERR_FATAL    => remove and re-enumerate
+> 
+> please refer to Documentation/PCI/pci-error-recovery.txt for more details.
+> 
+> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+> index 779b387..206f590 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.c
+> +++ b/drivers/pci/pcie/aer/aerdrv.c
+> @@ -330,6 +330,13 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+>  	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
+>  	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
+>  
+> +	/*
+> +	 * This function is called only on ERR_FATAL now, and since
+> +	 * the pci_report_resume is called only in ERR_NONFATAL case,
+> +	 * the clearing part has to be taken care here.
+> +	 */
+> +	aer_error_resume(dev);
 
->    Note on GPU we do would not rely on ATS for peer to peer. Some part
->    of the GPU (DMA engines) do not necessarily support ATS. Yet those
->    are the part likely to be use in peer to peer.
+I don't understand this part.  Previously the ERR_FATAL path looked like
+this:
 
-OK this is good to know. I agree the DMA engine is probably one of the GPU components most applicable to p2pdma.
-    
->    We (ake GPU people aka the good guys ;)) do no want to do peer to peer
->    for performance reasons ie we do not care having our transaction going
->    to the root complex and back down the destination. At least in use case
->    i am working on this is fine.
+  do_recovery
+    reset_link
+      driver->reset_link
+        aer_root_reset
+          pci_reset_bridge_secondary_bus                # <-- reset
+    broadcast_error_message(..., report_resume)
+      pci_walk_bus(..., report_resume, ...)
+        report_resume
+      if (cb == report_resume)
+        pci_cleanup_aer_uncorrect_error_status
+          pci_write_config_dword(PCI_ERR_UNCOR_STATUS)  # <-- clear status
 
-If the GPU people are the good guys does that make the NVMe people the bad guys ;-). If so, what are the RDMA people??? Again good to know.
-    
->    Reasons is that GPU are giving up on PCIe (see all specialize link like
->    NVlink that are popping up in GPU space). So for fast GPU inter-connect
->    we have this new links. 
+After this patch, it will look like this:
 
-I look forward to Nvidia open-licensing NVLink to anyone who wants to use it ;-). Or maybe we'll all just switch to OpenGenCCIX when the time comes.
-    
->    Also the IOMMU isolation do matter a lot to us. Think someone using this
->    peer to peer to gain control of a server in the cloud.
-    
-I agree that IOMMU isolation is very desirable. Hence the desire to ensure we can keep the IOMMU on while doing p2pdma if at all possible whilst still delivering the desired performance to the user.
+  do_recovery
+    do_fatal_recovery
+      pci_cleanup_aer_uncorrect_error_status
+        pci_write_config_dword(PCI_ERR_UNCOR_STATUS)    # <-- clear status
+      reset_link
+        driver->reset_link
+          aer_root_reset
+            pci_reset_bridge_secondary_bus              # <-- reset
+            aer_error_resume
+              pcie_capability_write_word(PCI_EXP_DEVSTA)        # <-- clear more
+              pci_write_config_dword(PCI_ERR_UNCOR_STATUS)      # <-- clear status
 
-Stephen    
+So if I'm understanding correctly, the new path clears the status too
+early, then clears it again (plus clearing DEVSTA, which we didn't do
+before) later.
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+I would think we would want to leave aer_root_reset() alone, and just move
+the pci_cleanup_aer_uncorrect_error_status() in do_fatal_recovery() down so
+it happens after we call reset_link().  That way the reset/clear sequence
+would be the same as it was before.
+
+>  	return PCI_ERS_RESULT_RECOVERED;
+>  }
+>  
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index 0ea5acc..655d4e8 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -20,6 +20,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/kfifo.h>
+>  #include "aerdrv.h"
+> +#include "../../pci.h"
+>  
+>  #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
+>  				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
+> @@ -474,6 +475,44 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+>  	return status;
+>  }
+>  
+> +static pci_ers_result_t do_fatal_recovery(struct pci_dev *dev, int severity)
+> +{
+> +	struct pci_dev *udev;
+> +	struct pci_bus *parent;
+> +	struct pci_dev *pdev, *temp;
+> +	pci_ers_result_t result = PCI_ERS_RESULT_RECOVERED;
+> +
+> +	if (severity == AER_FATAL)
+> +		pci_cleanup_aer_uncorrect_error_status(dev);
+> +
+> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+> +		udev = dev;
+> +	else
+> +		udev = dev->bus->self;
+> +
+> +	parent = udev->subordinate;
+> +	pci_lock_rescan_remove();
+> +	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+> +				 bus_list) {
+> +		pci_dev_get(pdev);
+> +		pci_dev_set_disconnected(pdev, NULL);
+> +		if (pci_has_subordinate(pdev))
+> +			pci_walk_bus(pdev->subordinate,
+> +				     pci_dev_set_disconnected, NULL);
+> +		pci_stop_and_remove_bus_device(pdev);
+> +		pci_dev_put(pdev);
+> +	}
+> +
+> +	result = reset_link(udev);
+> +	if (result == PCI_ERS_RESULT_RECOVERED)
+> +		if (pcie_wait_for_link(udev, true))
+> +			pci_rescan_bus(udev->bus);
+> +
+> +	pci_unlock_rescan_remove();
+> +
+> +	return result;
+> +}
+> +
+>  /**
+>   * do_recovery - handle nonfatal/fatal error recovery process
+>   * @dev: pointer to a pci_dev data structure of agent detecting an error
+> @@ -485,11 +524,15 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+>   */
+>  static void do_recovery(struct pci_dev *dev, int severity)
+>  {
+> -	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
+> +	pci_ers_result_t status;
+>  	enum pci_channel_state state;
+>  
+> -	if (severity == AER_FATAL)
+> -		state = pci_channel_io_frozen;
+> +	if (severity == AER_FATAL) {
+> +		status = do_fatal_recovery(dev, severity);
+> +		if (status != PCI_ERS_RESULT_RECOVERED)
+> +			goto failed;
+> +		return;
+> +	}
+>  	else
+>  		state = pci_channel_io_normal;
+>  
+> @@ -498,12 +541,6 @@ static void do_recovery(struct pci_dev *dev, int severity)
+>  			"error_detected",
+>  			report_error_detected);
+>  
+> -	if (severity == AER_FATAL) {
+> -		result = reset_link(dev);
+> -		if (result != PCI_ERS_RESULT_RECOVERED)
+> -			goto failed;
+> -	}
+> -
+>  	if (status == PCI_ERS_RESULT_CAN_RECOVER)
+>  		status = broadcast_error_message(dev,
+>  				state,
+> -- 
+> 2.7.4
+> 
