@@ -1,82 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 36/40] iommu/arm-smmu-v3: Hook up ATC invalidation to mm ops
-Date: Fri, 11 May 2018 20:06:37 +0100
-Message-Id: <20180511190641.23008-37-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 8 May 2018 11:58:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: okaya@codeaurora.org
+Subject: Re: AER: Malformed TLP recovery deadlock with NVMe drives
+Message-ID: <20180508165849.GC9529@bhelgaas-glaptop.roam.corp.google.com>
+References: <8cf4e563-5f84-f8bd-88a6-8369cdf07b29@gmail.com>
+ <7afd280ad80a73b39e6c9b9a9e29abcc@codeaurora.org>
+ <5c97a7c2-cb53-4740-fda0-50ba92288c5c@gmail.com>
+ <9fc90040d5712282ea223807ace39312@codeaurora.org>
+ <1125ddf8-f342-3f8f-90ee-0aa94287360c@gmail.com>
+ <16bdb0febb842ad0980db9214c8076c5@codeaurora.org>
+ <3d4991bc2948430d910a16da36c90b91@ausx13mps321.AMER.DELL.COM>
+ <1fdfaaa47ad782ee864f24c5a75a355a@codeaurora.org>
+MIME-Version: 1.0
+In-Reply-To: <1fdfaaa47ad782ee864f24c5a75a355a@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Alex_Gagniuc@dellteam.com, linux-pci@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Shyam.Iyer@dell.com, mr.nuke.me@gmail.com,
+ Austin.Bolen@dell.com, keith.busch@intel.com, linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The core calls us when an mm is modified. Perform the required ATC
-invalidations.
+On Tue, May 08, 2018 at 01:21:38AM +0100, okaya@codeaurora.org wrote:
+> On 2018-05-08 00:57, Alex_Gagniuc@Dellteam.com wrote:
+> > On 5/7/2018 5:46 PM, okaya@codeaurora.org wrote:
+> > [snip]
+> > > > If it were easy, somebody would have patched it by now ;)
+> > > 
+> > > Can you file a bugzilla CC me, keith and bjorn and attach all of your
+> > > logs?
+> > 
+> > Sure. Which bugzilla?
+> > 
+> 
+> https://bugzilla.kernel.org
+> 
+> Drivers -> pci
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+https://bugzilla.kernel.org/show_bug.cgi?id=199657
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 7034b0bdcbdf..6cb69ace371b 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -1735,6 +1735,15 @@ static int arm_smmu_atc_inv_master_all(struct arm_smmu_master_data *master,
- 	return arm_smmu_atc_inv_master(master, &cmd);
- }
- 
-+static int arm_smmu_atc_inv_master_range(struct arm_smmu_master_data *master,
-+					 int ssid, unsigned long iova, size_t size)
-+{
-+	struct arm_smmu_cmdq_ent cmd;
-+
-+	arm_smmu_atc_inv_to_cmd(ssid, iova, size, &cmd);
-+	return arm_smmu_atc_inv_master(master, &cmd);
-+}
-+
- static size_t
- arm_smmu_atc_inv_domain(struct arm_smmu_domain *smmu_domain, int ssid,
- 			unsigned long iova, size_t size)
-@@ -2389,11 +2398,12 @@ static void arm_smmu_mm_detach(struct iommu_domain *domain, struct device *dev,
- 	struct arm_smmu_mm *smmu_mm = to_smmu_mm(io_mm);
- 	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
- 	struct iommu_pasid_table_ops *ops = smmu_domain->s1_cfg.ops;
-+	struct arm_smmu_master_data *master = dev->iommu_fwspec->iommu_priv;
- 
- 	if (detach_domain)
- 		ops->clear_entry(ops, io_mm->pasid, smmu_mm->cd);
- 
--	/* TODO: Invalidate ATC. */
-+	arm_smmu_atc_inv_master_all(master, io_mm->pasid);
- 	/* TODO: Invalidate all mappings if last and not DVM. */
- }
- 
-@@ -2401,8 +2411,10 @@ static void arm_smmu_mm_invalidate(struct iommu_domain *domain,
- 				   struct device *dev, struct io_mm *io_mm,
- 				   unsigned long iova, size_t size)
- {
-+	struct arm_smmu_master_data *master = dev->iommu_fwspec->iommu_priv;
-+
-+	arm_smmu_atc_inv_master_range(master, io_mm->pasid, iova, size);
- 	/*
--	 * TODO: Invalidate ATC.
- 	 * TODO: Invalidate mapping if not DVM
- 	 */
- }
--- 
-2.17.0
+Thanks for the bugzilla.  Can you add the "lspci -vv" output (the
+"lspci -tvnn" output doesn't have the details about individual
+devices) and also the specifics about how you inject the error (I
+assume you're using setpci to update MPS, but it would help others
+reproduce it to see the exact command and the lspci output so they can
+adjust to their local topology).
 
+I don't know how you collected the dmesg logs, but they have a bunch
+of gunk in them (looks like maybe colorizing escape sequences?).  I
+always think it's nice to have the plain ASCII complete log from
+beginning of boot, e.g., from "dmesg" command or similar.  But I
+probably won't have time to look at them myself, and maybe what's
+there is enough.
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
