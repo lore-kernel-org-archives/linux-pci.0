@@ -1,174 +1,82 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 24 May 2018 13:35:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
-Message-ID: <20180524183502.GB85822@bhelgaas-glaptop.roam.corp.google.com>
-References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
- <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
- <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
+Return-Path: <SRS0=u1aH=H3=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=u1aH=H3=deltatee.com=logang@kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>
+Cc: Stephen Bates <sbates@raithlin.com>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Bjorn Helgaas <helgaas@kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
+ Max Gurtovoy <maxg@mellanox.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
+ <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-5-logang@deltatee.com>
+ <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+ <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+ <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+ <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+ <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+ <20180508133407.57a46902@w520.home>
+ <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+ <20180508141331.7cd737cb@w520.home>
+ <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508144341.0441b676@w520.home>
+ <a524127a-3557-3dff-971c-dfe94ba5a01c@deltatee.com>
+ <20180508152631.50fd583c@w520.home>
+ <354F7407-0DC7-470C-B9AA-74FDF9C46B08@raithlin.com>
+ <20180508160336.0935ddde@w520.home>
+ <20905682-9440-7d4b-0260-99d3dc794c3d@deltatee.com>
+ <20180508163206.7d3bf383@w520.home>
+ <CAPcyv4i1ksiu1pExF=EE21P2Wz1a9LaDaG247oG_WSbYgcR93g@mail.gmail.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <2ce7908d-1422-55f8-aeba-94ccce2cb484@deltatee.com>
+Date: Tue, 8 May 2018 17:15:21 -0600
 MIME-Version: 1.0
-In-Reply-To: <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: ryan@finnie.org, Kate Stewart <kstewart@linuxfoundation.org>,
- linux-scsi@vger.kernel.org, Frederick Lawler <fred@fredlawl.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- esc.storagedev@microsemi.com, open list <linux-kernel@vger.kernel.org>,
- stable@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Thomas Gleixner <tglx@linutronix.de>, Don Brace <don.brace@microsemi.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAPcyv4i1ksiu1pExF=EE21P2Wz1a9LaDaG247oG_WSbYgcR93g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2018 at 06:57:18PM -0400, Sinan Kaya wrote:
-> On 5/23/2018 5:32 PM, Bjorn Helgaas wrote:
-> > 
-> > The crash seems to indicate that the hpsa device attempted a DMA after
-> > we cleared the Root Port's PCI_COMMAND_MASTER, which means
-> > hpsa_shutdown() didn't stop DMA from the device (it looks like *most*
-> > shutdown methods don't disable device DMA, so it's in good company).
-> 
-> All drivers are expected to shutdown DMA and interrupts in their shutdown()
-> routines. They can skip removing threads, data structures etc. but DMA and
-> interrupt disabling are required. This is the difference between shutdown()
-> and remove() callbacks.
-> 
-> If you see that this is not being done in HPSA, then that is where the
-> bugfix should be.
-> 
-> Counter argument is that if shutdown() is not implemented, at least remove()
-> should be called. Expecting all drivers to implement shutdown() callbacks
-> is just bad by design in my opinion. 
-> 
-> Code should have fallen back to remove() if shutdown() doesn't exist.
-> I can propose a patch for this but this is yet another story to chase.
 
-That sounds like a reasonable idea, and it is definitely another can
-of worms.  I looked briefly at some of the .shutdown() cases:
 
-  - device_shutdown() doesn't fall back to remove().
+On 08/05/18 05:00 PM, Dan Williams wrote:
+>> I'd advise caution with a user supplied BDF approach, we have no
+>> guaranteed persistence for a device's PCI address.  Adding a device
+>> might renumber the buses, replacing a device with one that consumes
+>> more/less bus numbers can renumber the buses, motherboard firmware
+>> updates could renumber the buses, pci=assign-buses can renumber the
+>> buses, etc.  This is why the VT-d spec makes use of device paths when
+>> describing PCI hierarchies, firmware can't know what bus number will be
+>> assigned to a device, but it does know the base bus number and the path
+>> of devfns needed to get to it.  I don't know how we come up with an
+>> option that's easy enough for a user to understand, but reasonably
+>> robust against hardware changes.  Thanks,
+> 
+> True, but at the same time this feature is for "users with custom
+> hardware designed for purpose", I assume they would be willing to take
+> on the bus renumbering risk. It's already the case that
+> /sys/bus/pci/drivers/<x>/bind takes BDF, which is why it seemed to
+> make a similar interface for the command line. Ideally we could later
+> get something into ACPI or other platform firmware to arrange for
+> bridges to disable ACS by default if we see p2p becoming a
+> common-off-the-shelf feature. I.e. a BIOS switch to enable p2p in a
+> given PCI-E sub-domain.
 
-  - It looks like most bus_types don't implement .shutdown() at all (I
-    didn't look at them all).
+Yeah, I'm having a hard time coming up with an easy enough solution for
+the user. I agree with Dan though, the bus renumbering risk would be
+fairly low in the custom hardware seeing the switches are likely going
+to be directly soldered to the same board with the CPU.
 
-  - Of the bus_types that do implement .shutdown(), most do not fall
-    back to .remove().  ps3_system_bus_type() is an example of one
-    that *does* fall back to a driver's .remove() if there is no
-    .shutdown().
+That being said, I supposed we could allow the command line to take both
+a BDF or a BaseBus/DF/DF/DF path. Though, implementing this sounds like
+a bit of a challenge.
 
-Implement shutdown (no fallback unless indicated):
-
-  ecard_bus_type
-  gio_bus_type
-  ps3_system_bus_type	# does fallback to remove
-  ibmebus_bus_type
-  isa_bus_type
-  platform_bus_type	# not direct implementation
-  fmc_bus_type		# fmc_shutdown() looks spurious
-  mipi_dsi_bus_type
-  hv_bus
-
-> >> This has been found to cause crashes on HP DL360 Gen9 machines during
-> >> reboot. Besides, kexec is already clearing the bus master bit in
-> >> pci_device_shutdown() after all PCI drivers are removed.
-> > 
-> > The original path was:
-> > 
-> >   pci_device_shutdown(hpsa)
-> >     drv->shutdown
-> >       hpsa_shutdown                     # hpsa_pci_driver.shutdown
-> >   ...
-> >   pci_device_shutdown(RP)               # root port
-> >     drv->shutdown
-> >       pcie_portdrv_remove               # pcie_portdriver.shutdown
-> >         pcie_port_device_remove
-> >           pci_disable_device
-> >             do_pci_disable_device
-> >               # clear RP PCI_COMMAND_MASTER
-> >     if (kexec)
-> >       pci_clear_master(RP)
-> >         # clear RP PCI_COMMAND_MASTER
-> > 
-> > If I understand correctly, the new path after this patch is:
-> > 
-> >   pci_device_shutdown(hpsa)
-> >     drv->shutdown
-> >       hpsa_shutdown                     # hpsa_pci_driver.shutdown
-> >   ...
-> >   pci_device_shutdown(RP)               # root port
-> >     drv->shutdown
-> >       pcie_portdrv_shutdown             # pcie_portdriver.shutdown
-> >         __pcie_portdrv_remove(RP, false)
-> >           pcie_port_device_remove(RP, false)
-> >             # do NOT clear RP PCI_COMMAND_MASTER
-> 
-> yup
-> 
-> >     if (kexec)
-> >       pci_clear_master(RP)
-> >         # clear RP PCI_COMMAND_MASTER
-> > 
-> > I guess this patch avoids the panic during reboot because we're not in
-> > the kexec path, so we never clear PCI_COMMAND_MASTER for the Root
-> > Port, so the hpsa device can DMA happily until the lights go out.
-> > 
-> > But DMA continuing for some random amount of time before the reboot or
-> > shutdown happens makes me a little queasy.  That doesn't sound safe.
-> > The more I think about this, the more confused I get.  What am I
-> > missing?  
-> 
-> see above.
-> 
-> > 
-> >> Just remove the extra clear in shutdown path by seperating the remove and
-> >> shutdown APIs in the PORTDRV.
-> >>
-> >>  static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
-> >> @@ -218,7 +228,7 @@ static struct pci_driver pcie_portdriver = {
-> >>  
-> >>  	.probe		= pcie_portdrv_probe,
-> >>  	.remove		= pcie_portdrv_remove,
-> >> -	.shutdown	= pcie_portdrv_remove,
-> >> +	.shutdown	= pcie_portdrv_shutdown,
-> > 
-> > What are the circumstances when we call .remove() vs .shutdown()?
-> > 
-> > I guess the main (maybe only) way to call .remove() is to hot-remove
-> > the port?  And .shutdown() is basically used in the reboot and kexec
-> > paths?
-> 
-> Correct. shutdown() is only called during reboot/shutdown calls. If you echo
-> 1 into the remove file, remove() gets called. Handy for hotplug use cases.
-> It needs to be the exact opposite of the probe. It needs to clean up resources
-> etc. and have the HW in a state where it can be reinitialized via probe again.
-> 
-> > 
-> >>  	.err_handler	= &pcie_portdrv_err_handler,
-> >>  
-> >> -- 
-> >> 2.7.4
-> >>
-> > 
-> 
-> 
-> -- 
-> Sinan Kaya
-> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Logan
