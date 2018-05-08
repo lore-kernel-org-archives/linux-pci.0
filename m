@@ -1,198 +1,156 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 2 May 2018 17:51:44 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v7 3/9] PCI: endpoint: functions/pci-epf-test: Add second
- entry
-Message-ID: <20180502165144.GB4871@e107981-ln.cambridge.arm.com>
-References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
- <c6cfd167838ae8e226dee0820983efe918fa4e1f.1524577064.git.gustavo.pimentel@synopsys.com>
- <20180426165605.GA6370@e107981-ln.cambridge.arm.com>
- <b65caf2e-b002-f591-6215-ff2241b2dfb8@ti.com>
- <20180501115417.GD19391@e107981-ln.cambridge.arm.com>
- <5d625d04-38fe-7d5a-67fc-5ea92039474c@ti.com>
- <20180501142607.GA21911@e107981-ln.cambridge.arm.com>
- <bfaebf3c-2175-f4b2-89c5-336ff9396ed0@synopsys.com>
+Return-Path: <SRS0=UZgS=H3=goodmis.org=rostedt@kernel.org>
+Return-Path: <SRS0=UZgS=H3=goodmis.org=rostedt@kernel.org>
+Date: Tue, 8 May 2018 09:07:56 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Alexandru Gagniuc
+ <mr.nuke.me@gmail.com>
+Subject: Re: [PATCH] PCI/AER: add pcie TLP header information in the
+ tracepoint
+Message-ID: <20180508090756.57f38d17@gandalf.local.home>
+In-Reply-To: <20180507222136.GD161390@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180402154708.5032-1-thomas.tai@oracle.com>
+	<20180507222136.GD161390@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <bfaebf3c-2175-f4b2-89c5-336ff9396ed0@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 02, 2018 at 11:39:00AM +0100, Gustavo Pimentel wrote:
-> Hi Lorenzo,
+On Mon, 7 May 2018 17:21:37 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
+
+> [+cc Steve, Alex]
 > 
-> On 01/05/2018 15:26, Lorenzo Pieralisi wrote:
-> > On Tue, May 01, 2018 at 05:53:59PM +0530, Kishon Vijay Abraham I wrote:
-> >> Hi Lorenzo,
-> >>
-> >> On Tuesday 01 May 2018 05:24 PM, Lorenzo Pieralisi wrote:
-> >>> On Tue, May 01, 2018 at 03:37:47PM +0530, Kishon Vijay Abraham I wrote:
-> >>>> Hi Lorenzo,
-> >>>>
-> >>>> On Thursday 26 April 2018 10:26 PM, Lorenzo Pieralisi wrote:
-> >>>>> On Tue, Apr 24, 2018 at 02:44:40PM +0100, Gustavo Pimentel wrote:
-> >>>>>> Adds a seconds entry on the pci_epf_test_ids structure that disables the
-> >>>>>
-> >>>>> "Add a second entry to..."
-> >>>>>
-> >>>>>> linkup_notifier parameter on driver for the designware EP.
-> >>>>>>
-> >>>>>> This allows designware EPs that doesn't have linkup notification signal
-> >>>>>> to work with pcitest.
-> >>>>>>
-> >>>>>> Updates the binding documentation accordingly.
-> >>>>>
-> >>>>> Valid for all the series: use imperative sentences.
-> >>>>>
-> >>>>> eg:
-> >>>>>
-> >>>>> "Update the binding documentation accordingly".
-> >>>>>
-> >>>>> not
-> >>>>>
-> >>>>> "Updates the binding documentation accordingly".
-> >>>>>
-> >>>>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> >>>>>> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> >>>>>> ---
-> >>>>>> Change v2->v3:
-> >>>>>>  - Added second entry in pci_epf_test_ids structure.
-> >>>>>>  - Remove test_reg_bar field assignment on second entry.
-> >>>>>> Changes v3->v4:
-> >>>>>>  - Nothing changed, just to follow the patch set version.
-> >>>>>> Changes v4->v5:
-> >>>>>>  - Changed pci_epf_test_cfg2 to pci_epf_test_designware.
-> >>>>>> Changes v5->v6:
-> >>>>>>  - Changed name field from pci_epf_test_designware to pci_epf_test_dw.
-> >>>>>> Changes v6->v7:
-> >>>>>>  - Changed variable name from data_cfg2 to data_linkup_notifier_disabled.
-> >>>>>>
-> >>>>>>  Documentation/PCI/endpoint/function/binding/pci-test.txt | 2 ++
-> >>>>>>  drivers/pci/endpoint/functions/pci-epf-test.c            | 8 ++++++++
-> >>>>>>  2 files changed, 10 insertions(+)
-> >>>>>>
-> >>>>>> diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-> >>>>>> index 3b68b95..dc39f47 100644
-> >>>>>> --- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
-> >>>>>> +++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-> >>>>>> @@ -1,6 +1,8 @@
-> >>>>>>  PCI TEST ENDPOINT FUNCTION
-> >>>>>>  
-> >>>>>>  name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
-> >>>>>> +name: Should be "pci_epf_test_dw" to bind to the pci_epf_test driver
-> >>>>>> +      with a custom configuration for the designware EP.
-> >>>>>
-> >>>>> The link between the "name" and the device created is quite obscure and
-> >>>>> reading pci-test-howto.txt certainly does not clarify it.
-> >>>>>
-> >>>>> In pci-test-howto.txt an explanation should be added to the configs
-> >>>>> device creation paragraph to clarify it.
-> >>>>>
-> >>>>>>  Configurable Fields:
-> >>>>>>  vendorid	 : should be 0x104c
-> >>>>>> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> >>>>>> index 7cef851..4ab463b 100644
-> >>>>>> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> >>>>>> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> >>>>>> @@ -459,10 +459,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
-> >>>>>>  	return 0;
-> >>>>>>  }
-> >>>>>>  
-> >>>>>> +static const struct pci_epf_test_data data_linkup_notifier_disabled = {
-> >>>>>> +	.linkup_notifier = false
-> >>>>>> +};
-> >>>>>> +
-> >>>>>>  static const struct pci_epf_device_id pci_epf_test_ids[] = {
-> >>>>>>  	{
-> >>>>>>  		.name = "pci_epf_test",
-> >>>>>>  	},
-> >>>>>> +	{
-> >>>>>> +		.name = "pci_epf_test_dw",
-> >>>>>> +		.driver_data = (kernel_ulong_t)&data_linkup_notifier_disabled,
-> >>>>>> +	},
-> >>>>>>  	{},
-> >>>>>
-> >>>>> Should not this be a property derived from the controller compatible
-> >>>>> property instead of the test device name written in configfs ?
-> >>>>
-> >>>> pci_epf_test is an independent driver on its own that operates in a layer above
-> >>>> the controller driver. So it does not get the controller compatible (which is
-> >>>> used in controller drivers like pcie-designware-plat.c). pci_epf_test uses
-> >>>> "pci_epf_device_id" which is _similar_ to "of_device_id" used by platform drivers.
-> >>>
-> >>> I understand that, the problem is that the independent driver depends on
-> >>> features of the related controller driver as this patch shows. This
-> >>> patch basically says that if you use a specific path in configfs (that
-> >>> includes pci_epf_test_dw) your device has specific HW features (eg
-> >>> linkup notifier above), that obviously depends on the platform HW not on
-> >>> the string you use in configfs.
-> >>>
-> >>> What I am questioning is a) if I understand this right and b) whether
-> >>> this is the right approach.
-> >>
-> >> Your understanding is right. Ideally pci-epf-test driver shouldn't have any HW
-> >> specific configuration. But different HW have different configurations and
-> >> pci-epf-test should be informed of the configuration the HW supports.
+> On Mon, Apr 02, 2018 at 11:47:08AM -0400, Thomas Tai wrote:
+> > When a PCIe AER occurs, the TLP header information is
+> > printed in the kernel message but it is missing from
+> > the tracepoint. A userspace program can use this information
+> > in the tracepoint to better analyze problems.
 > > 
-> > I am honestly very confused. First off, I do not understand what this
-> > patch really does (or better what DW can't do so that it needs a
-> > specific configfs string and therefore a specific configuration).
+> > Example tracepoint output:
+> > aer_event: 0000:01:00.0
+> > PCIe Bus Error: severity=Uncorrected, non-fatal, Completer Abort
+> > TLP Header={0x0,0x1,0x2,0x3}
 > > 
-> > What's the purpose of the linkup notifier ? What does it mean that
-> > the DW HW can't handle it ?
-> > 
-> > Are we referring to the pci_epf_linkup() function ?
-> > 
-> > If it is a HW configuration (ie the DW HW does not have a signal to
-> > report that the link is up ?) its enablement must depend on HW
-> > controller properties not configfs entries, I do not like what this
-> > patch does (probably because I am confused and I do not understand it).
-> > 
-> > Please let me know your thoughts on this, thanks.
+> > Signed-off-by: Thomas Tai <thomas.tai@oracle.com>  
 > 
-> On my setup, the EP is unable generate a signal which is responsible
-> for notify that the link is established, being therefore necessary to
-> emulate it, this is done by setting the linkup_notifier variable to
-> false.
-
-What I do not understand is why the workqueue notification can't be called
-irrespective of the linkup notifier value from pci_epf_test_bind(),
-what's the point in calling it earlier with pci_epf_linkup() (or the
-other way around why is it safe to call it a bind() time if there
-is no notification available - which is the DW case).
-
-[...]
-
-> Since the linkup notifier and BAR index (where auxiliary registers are
-> located) may be configurable and is something platform dependent,
-> perhaps the configuration of this variables should be done by module
-> parameter and not by configfs, leaving this configuration
-> responsibility in charge of each platform.
-
-They are platform dependent because they depend on the EP controller.
-That's why I said that those are EP controller parameters. I do not
-think they are module parameters either - they should be part of HW
-description in firmware.
-
-Lorenzo
-
-> I think this option is also a good alternative, simple and clean. What
-> do you think?
+> I tentatively applied this to pci/aer for v4.18, thanks!
 > 
-> >>
-> >> Thanks
-> >> Kishon
+> Steve, let me know if you have any comments.
 > 
-> Regards,
-> Gustavo
+> Alex, I just copied you because you've been unifying the AER native and
+> CPER paths, and this is another case of code that appears in both paths.
+> FYI only, no action required :)
 > 
+> > ---
+> >  drivers/pci/pcie/aer/aerdrv_errprint.c |  4 ++--
+> >  include/ras/ras_event.h                | 20 ++++++++++++++++----
+> >  2 files changed, 18 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> > index 6a352e638699..0a78a773bd25 100644
+> > --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> > +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> > @@ -192,7 +192,7 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+> >  		pci_err(dev, "  Error of this Agent(%04x) is reported first\n", id);
+> >  
+> >  	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
+> > -			info->severity);
+> > +			info->severity, info->tlp_header_valid, &info->tlp);
+> >  }
+> >  
+> >  void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+> > @@ -252,6 +252,6 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
+> >  		__print_tlp_header(dev, &aer->header_log);
+> >  
+> >  	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
+> > -			aer_severity);
+> > +			aer_severity, tlp_header_valid, &aer->header_log);
+> >  }
+> >  #endif
+> > diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
+> > index 9c689868eb4d..90f59556f595 100644
+> > --- a/include/ras/ras_event.h
+> > +++ b/include/ras/ras_event.h
+> > @@ -298,30 +298,42 @@ TRACE_EVENT(non_standard_event,
+> >  TRACE_EVENT(aer_event,
+> >  	TP_PROTO(const char *dev_name,
+> >  		 const u32 status,
+> > -		 const u8 severity),
+> > +		 const u8 severity,
+> > +		 const u32 tlp_header_valid,
+> > +		 struct aer_header_log_regs *tlp),
+> >  
+> > -	TP_ARGS(dev_name, status, severity),
+> > +	TP_ARGS(dev_name, status, severity, tlp_header_valid, tlp),
+> >  
+> >  	TP_STRUCT__entry(
+> >  		__string(	dev_name,	dev_name	)
+> >  		__field(	u32,		status		)
+> >  		__field(	u8,		severity	)
+> > +		__field(	u32, 		tlp_header_valid)
+
+I'm guessing tlp_header_valid is just a boolean. It's after severity
+which is just one byte long. Why not make this one byte as well,
+otherwise you are wasting 3 bytes.
+
+
+> > +		__array(	u32, 		buf, 4		)
+> >  	),
+> >  
+> >  	TP_fast_assign(
+> >  		__assign_str(dev_name, dev_name);
+> >  		__entry->status		= status;
+> >  		__entry->severity	= severity;
+> > +		__entry->tlp_header_valid = tlp_header_valid;
+
+> > +		__entry->buf[0] = tlp->dw0;
+> > +		__entry->buf[1] = tlp->dw1;
+> > +		__entry->buf[2] = tlp->dw2;
+> > +		__entry->buf[3] = tlp->dw3;
+
+Should this assignment be dependent on whether or not tlp_header_valid
+is true? Could tlp be pointing to some random memory if it isn't? What
+about:
+
+	if ((__entry->tlp_header_valid = tlp_header_valid)) {
+		__entry->buf[0] = tlp->dw0;
+		__entry->buf[1] = tlp->dw1;
+		__entry->buf[2] = tlp->dw2;
+		__entry->buf[3] = tlp->dw3;
+	}
+
+
+> >  	),
+> >  
+> > -	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
+> > +	TP_printk("%s PCIe Bus Error: severity=%s, %s, TLP Header=%s\n",
+> >  		__get_str(dev_name),
+> >  		__entry->severity == AER_CORRECTABLE ? "Corrected" :
+> >  			__entry->severity == AER_FATAL ?
+> >  			"Fatal" : "Uncorrected, non-fatal",
+> >  		__entry->severity == AER_CORRECTABLE ?
+> >  		__print_flags(__entry->status, "|", aer_correctable_errors) :
+> > -		__print_flags(__entry->status, "|", aer_uncorrectable_errors))
+> > +		__print_flags(__entry->status, "|", aer_uncorrectable_errors),
+> > +		__entry->tlp_header_valid ?
+> > +			__print_array(__entry->buf, 4, sizeof(unsigned int)) :
+
+Note, "sizeof" will be shown in the format file that perf and trace-cmd
+read to parse this event. They currently do not know how to parse that
+(although I could add that in the future).
+
+Since sizeof(unsigned int) is always 4 in Linux, just use 4.
+
+			__print_array(__entry->buf, 4, 4)
+
+-- Steve
+
+
+> > +			"Not available")
+> >  );
+> >  
+> >  /*
+> > -- 
+> > 2.14.1
+> >   
