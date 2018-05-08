@@ -1,141 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:47008 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752218AbeEKTKB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 May 2018 15:10:01 -0400
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 27/40] iommu/arm-smmu-v3: Add SVA feature checking
-Date: Fri, 11 May 2018 20:06:28 +0100
-Message-Id: <20180511190641.23008-28-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=DTHM=H3=molgen.mpg.de=pmenzel@kernel.org>
+Return-Path: <SRS0=DTHM=H3=molgen.mpg.de=pmenzel@kernel.org>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: okaya@codeaurora.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Lukas Wunner <lukas@wunner.de>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
+ <43b8ab4a-f8ee-dc96-40ec-e6fdfedd8309@molgen.mpg.de>
+ <20180504024527.GE15790@bhelgaas-glaptop.roam.corp.google.com>
+ <aa72d3ba089c76449600c22b58a2cafe@codeaurora.org>
+ <20180504133327.GF15790@bhelgaas-glaptop.roam.corp.google.com>
+ <20180507213344.GA133147@bhelgaas-glaptop.roam.corp.google.com>
+ <903e7c20-fdd7-9cbf-debb-a90e70240c7c@molgen.mpg.de>
+ <20180508123432.GJ161390@bhelgaas-glaptop.roam.corp.google.com>
+From: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+Message-ID: <302b3ac9-b34f-c061-8c59-6b3b0c56b1f7@molgen.mpg.de>
+Date: Tue, 8 May 2018 15:22:54 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180508123432.GJ161390@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Aggregate all sanity-checks for sharing CPU page tables with the SMMU
-under a single ARM_SMMU_FEAT_SVA bit. For PCIe SVA, users also need to
-check FEAT_ATS and FEAT_PRI. For platform SVM, they will most likely have
-to check FEAT_STALLS.
+Dear Bjorn,
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 
----
-v1->v2: Add 52-bit PA cap and debug message
----
- drivers/iommu/arm-smmu-v3.c | 72 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 72 insertions(+)
+Am 08.05.2018 um 14:34 schrieb Bjorn Helgaas:
+> On Tue, May 08, 2018 at 08:59:34AM +0200, Paul Menzel wrote:
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 073cba33ae6c..2716e4a4d3f7 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -525,6 +525,7 @@ struct arm_smmu_device {
- #define ARM_SMMU_FEAT_VAX		(1 << 14)
- #define ARM_SMMU_FEAT_E2H		(1 << 15)
- #define ARM_SMMU_FEAT_BTM		(1 << 16)
-+#define ARM_SMMU_FEAT_SVA		(1 << 17)
- 	u32				features;
- 
- #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
-@@ -2565,6 +2566,74 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
- 	return 0;
- }
- 
-+static bool arm_smmu_supports_sva(struct arm_smmu_device *smmu)
-+{
-+	unsigned long reg, fld;
-+	unsigned long oas;
-+	unsigned long asid_bits;
-+
-+	u32 feat_mask = ARM_SMMU_FEAT_BTM | ARM_SMMU_FEAT_COHERENCY;
-+
-+	if ((smmu->features & feat_mask) != feat_mask)
-+		return false;
-+
-+	if (!(smmu->pgsize_bitmap & PAGE_SIZE))
-+		return false;
-+
-+	/*
-+	 * Get the smallest PA size of all CPUs (sanitized by cpufeature). We're
-+	 * not even pretending to support AArch32 here.
-+	 */
-+	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
-+	fld = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
-+	switch (fld) {
-+	case 0x0:
-+		oas = 32;
-+		break;
-+	case 0x1:
-+		oas = 36;
-+		break;
-+	case 0x2:
-+		oas = 40;
-+		break;
-+	case 0x3:
-+		oas = 42;
-+		break;
-+	case 0x4:
-+		oas = 44;
-+		break;
-+	case 0x5:
-+		oas = 48;
-+		break;
-+	case 0x6:
-+		oas = 52;
-+		break;
-+	default:
-+		return false;
-+	}
-+
-+	/* abort if MMU outputs addresses greater than what we support. */
-+	if (smmu->oas < oas)
-+		return false;
-+
-+	/* We can support bigger ASIDs than the CPU, but not smaller */
-+	fld = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_ASID_SHIFT);
-+	asid_bits = fld ? 16 : 8;
-+	if (smmu->asid_bits < asid_bits)
-+		return false;
-+
-+	/*
-+	 * See max_pinned_asids in arch/arm64/mm/context.c. The following is
-+	 * generally the maximum number of bindable processes.
-+	 */
-+	if (IS_ENABLED(CONFIG_UNMAP_KERNEL_AT_EL0))
-+		asid_bits--;
-+	dev_dbg(smmu->dev, "%d shared contexts\n", (1 << asid_bits) -
-+		num_possible_cpus() - 2);
-+
-+	return true;
-+}
-+
- static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- {
- 	u32 reg;
-@@ -2766,6 +2835,9 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- 
- 	smmu->ias = max(smmu->ias, smmu->oas);
- 
-+	if (arm_smmu_supports_sva(smmu))
-+		smmu->features |= ARM_SMMU_FEAT_SVA;
-+
- 	dev_info(smmu->dev, "ias %lu-bit, oas %lu-bit (features 0x%08x)\n",
- 		 smmu->ias, smmu->oas, smmu->features);
- 	return 0;
--- 
-2.17.0
+>> Am 07.05.2018 um 23:33 schrieb Bjorn Helgaas:
+>>> On Fri, May 04, 2018 at 08:33:27AM -0500, Bjorn Helgaas wrote:
+>>>> commit b0d6f2230e12c85ae3b65a854a53c67c7c1f6406
+>>>> Author: Bjorn Helgaas <bhelgaas@google.com>
+>>>> Date:   Thu May 3 18:39:38 2018 -0500
+>>>>
+>>>>       PCI: pciehp: Add quirk for Intel Command Completed erratum
+>>>>       The Intel CF118 erratum means the controller does not set the Command
+>>>>       Completed bit unless writes to the Slot Command register change "Control"
+>>>>       bits.  Command Completed is never set for writes that only change software
+>>>>       notification "Enable" bits.  This results in timeouts like this:
+>>>>         pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038 (issued 65284 msec ago)
+>>>>       When this erratum is present, avoid these timeouts by marking commands
+>>>>       "completed" immediately unless they change the "Control" bits.
+>>>>       Here's the text of the erratum from the Intel document:
+>>>>         CF118        PCIe Slot Status Register Command Completed bit not always
+>>>>                      updated on any configuration write to the Slot Control
+>>>>                      Register
+>>>>         Problem:     For PCIe root ports (devices 0 - 10) supporting hot-plug,
+>>>>                      the Slot Status Register (offset AAh) Command Completed
+>>>>                      (bit[4]) status is updated under the following condition:
+>>>>                      IOH will set Command Completed bit after delivering the new
+>>>>                      commands written in the Slot Controller register (offset
+>>>>                      A8h) to VPP. The IOH detects new commands written in Slot
+>>>>                      Control register by checking the change of value for Power
+>>>>                      Controller Control (bit[10]), Power Indicator Control
+>>>>                      (bits[9:8]), Attention Indicator Control (bits[7:6]), or
+>>>>                      Electromechanical Interlock Control (bit[11]) fields. Any
+>>>>                      other configuration writes to the Slot Control register
+>>>>                      without changing the values of these fields will not cause
+>>>>                      Command Completed bit to be set.
+>>>>                      The PCIe Base Specification Revision 2.0 or later describes
+>>>>                      the “Slot Control Register” in section 7.8.10, as follows
+>>>>                      (Reference section 7.8.10, Slot Control Register, Offset
+>>>>                      18h). In hot-plug capable Downstream Ports, a write to the
+>>>>                      Slot Control register must cause a hot-plug command to be
+>>>>                      generated (see Section 6.7.3.2 for details on hot-plug
+>>>>                      commands). A write to the Slot Control register in a
+>>>>                      Downstream Port that is not hotplug capable must not cause a
+>>>>                      hot-plug command to be executed.
+>>>>                      The PCIe Spec intended that every write to the Slot Control
+>>>>                      Register is a command and expected a command complete status
+>>>>                      to abstract the VPP implementation specific nuances from the
+>>>>                      OS software. IOH PCIe Slot Control Register implementation
+>>>>                      is not fully conforming to the PCIe Specification in this
+>>>>                      respect.
+>>>>         Implication: Software checking on the Command Completed status after
+>>>>                      writing to the Slot Control register may time out.
+>>>>         Workaround:  Software can read the Slot Control register and compare the
+>>>>                      existing and new values to determine if it should check the
+>>>>                      Command Completed status after writing to the Slot Control
+>>>>                      register.
+>>>>       Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
+>>>>       Link: https://lkml.kernel.org/r/8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de
+>>>>       Reported-by: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+>>>>       Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>
+>>> I applied this with Paul's tested-by on pci/hotplug for v4.18.
+>>
+>> Thank you very much. Will this also be picked up by the stable Linux kernel
+>> series?
+> 
+> I did not tag it for stable because I didn't think it was a serious enough
+> problem, based on this from Documentation/process/stable-kernel-rules.rst:
+> 
+>   - It must fix a problem that causes a build error (but not for things
+>     marked CONFIG_BROKEN), an oops, a hang, data corruption, a real
+>     security issue, or some "oh, that's not good" issue.  In short, something
+>     critical.
+> 
+> I know I'm on the conservative end of the stable-tagging spectrum, so maybe
+> I could be convinced to add a stable tag.
+> 
+> My impression was that this bug caused annoying messages and annoying
+> delays of a couple seconds during shutdown and resume.  Is it more serious
+> than that?
+
+No, not more then that. But “oh, that’s not good” fits in my opinion. My 
+impression was, that’s how most stable patches get in.
+
+
+Kind regards,
+
+Paul
