@@ -1,68 +1,61 @@
-Return-Path: <jhogan@kernel.org>
-Return-Path: <jhogan@kernel.org>
-Date: Wed, 23 May 2018 09:14:48 +0100
-From: James Hogan <jhogan@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	linux-mips@linux-mips.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1] MIPS: PCI: Use dev_printk() when possible
-Message-ID: <20180523081447.GA15645@jamesdev>
-References: <152699466671.162686.1029992586935534102.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152699470263.162686.16975145205315900817.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
+Date: Tue, 8 May 2018 13:34:07 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>, Bjorn Helgaas
+ <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>, Christoph
+ Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
+ <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
+ <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
+ <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
+ Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all
+ devices behind switches
+Message-ID: <20180508133407.57a46902@w520.home>
+In-Reply-To: <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+	<20180423233046.21476-5-logang@deltatee.com>
+	<20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+	<e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+	<0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+	<a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+	<3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="OXfL5xGRrasGEqWY"
-In-Reply-To: <152699470263.162686.16975145205315900817.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, 8 May 2018 13:13:40 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
---OXfL5xGRrasGEqWY
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, May 22, 2018 at 08:11:42AM -0500, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
+> On 08/05/18 10:50 AM, Christian K=C3=B6nig wrote:
+> > E.g. transactions are initially send to the root complex for=20
+> > translation, that's for sure. But at least for AMD GPUs the root comple=
+x=20
+> > answers with the translated address which is then cached in the device.
+> >=20
+> > So further transactions for the same address range then go directly to=
+=20
+> > the destination. =20
 >=20
-> Use the pci_info() and pci_err() wrappers for dev_printk() when possible.
->=20
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/mips/pci/pci-legacy.c |    7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
->=20
-> diff --git a/arch/mips/pci/pci-legacy.c b/arch/mips/pci/pci-legacy.c
-> index 0c65c38e05d6..73643e80f02d 100644
-> --- a/arch/mips/pci/pci-legacy.c
-> +++ b/arch/mips/pci/pci-legacy.c
-> @@ -263,9 +263,7 @@ static int pcibios_enable_resources(struct pci_dev *d=
-ev, int mask)
->  				(!(r->flags & IORESOURCE_ROM_ENABLE)))
->  			continue;
->  		if (!r->start && r->end) {
-> -			printk(KERN_ERR "PCI: Device %s not available "
-> -			       "because of resource collisions\n",
-> -			       pci_name(dev));
-> +			pci_err(dev, "can't enable device: resource collisions\n");
+> Sounds like you are referring to Address Translation Services (ATS).
+> This is quite separate from ACS and, to my knowledge, isn't widely
+> supported by switch hardware.
 
-The pedantic side of me wants to point out that you could wrap that line
-after the comma to keep it within 80 columns.
+They are not so unrelated, see the ACS Direct Translated P2P
+capability, which in fact must be implemented by switch downstream
+ports implementing ACS and works specifically with ATS.  This appears to
+be the way the PCI SIG would intend for P2P to occur within an IOMMU
+managed topology, routing pre-translated DMA directly between peer
+devices while requiring non-translated requests to bounce through the
+IOMMU.  Really, what's the value of having an I/O virtual address space
+provided by an IOMMU if we're going to allow physical DMA between
+downstream devices, couldn't we just turn off the IOMMU altogether?  Of
+course ATS is not without holes itself, basically that we trust the
+endpoint's implementation of ATS implicitly.  Thanks,
 
-Either way though:
-Acked-by: James Hogan <jhogan@kernel.org>
-
-Cheers
-James
-
---OXfL5xGRrasGEqWY
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYIAB0WIQS7lRNBWUYtqfDOVL41zuSGKxAj8gUCWwUi9QAKCRA1zuSGKxAj
-8l/hAP9wRhKTLcj7bgyBloqtW+lACwcm1L6ZG8rvMTYeyETdsQD/Ub0CM0qhhbwf
-dcBrWIGOv/N8paHxgYfocG/YUmMdTgE=
-=PUQd
------END PGP SIGNATURE-----
-
---OXfL5xGRrasGEqWY--
+Alex
