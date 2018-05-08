@@ -1,74 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:38456 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753022AbeENRck (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 13:32:40 -0400
-Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 1E0E71E05BB
-        for <linux-pci@vger.kernel.org>; Mon, 14 May 2018 19:32:39 +0200 (CEST)
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com, kishon@ti.com,
-        jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH 2/2] PCI: dwc: dra7xx: Use devm_ioremap_resource instead of devm_ioremap
-Date: Mon, 14 May 2018 18:32:35 +0100
-Message-Id: <b6fe7c189b76376b9ecf60c859b0bb61cf79a690.1526319075.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1526319075.git.gustavo.pimentel@synopsys.com>
-References: <cover.1526319075.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1526319075.git.gustavo.pimentel@synopsys.com>
-References: <cover.1526319075.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=u1aH=H3=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=u1aH=H3=deltatee.com=logang@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+ Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-5-logang@deltatee.com>
+ <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+ <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+ <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+ <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+ <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+ <20180508133407.57a46902@w520.home>
+ <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+ <20180508141331.7cd737cb@w520.home>
+ <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508144341.0441b676@w520.home>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <a524127a-3557-3dff-971c-dfe94ba5a01c@deltatee.com>
+Date: Tue, 8 May 2018 14:49:23 -0600
+MIME-Version: 1.0
+In-Reply-To: <20180508144341.0441b676@w520.home>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
 List-ID: <linux-pci.vger.kernel.org>
 
-This fix aims to replace the use of devm_ioremap() by
-devm_ioremap_resource() already discussed on [1].
 
-[1] -> https://lkml.kernel.org/r/20180120001645.GA21343@lenoch
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+On 08/05/18 02:43 PM, Alex Williamson wrote:
+> Yes, GPUs seem to be leading the pack in implementing ATS.  So now the
+> dumb question, why not simply turn off the IOMMU and thus ACS?  The
+> argument of using the IOMMU for security is rather diminished if we're
+> specifically enabling devices to poke one another directly and clearly
+> this isn't favorable for device assignment either.  Are there target
+> systems where this is not a simple kernel commandline option?  Thanks,
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index ed8558d..b410bb4 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -406,14 +406,14 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
- 	ep->ops = &pcie_ep_ops;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
--	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
--	if (!pci->dbi_base)
--		return -ENOMEM;
-+	pci->dbi_base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(pci->dbi_base))
-+		return PTR_ERR(pci->dbi_base);
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
--	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
--	if (!pci->dbi_base2)
--		return -ENOMEM;
-+	pci->dbi_base2 = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(pci->dbi_base2))
-+		return PTR_ERR(pci->dbi_base2);
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
- 	if (!res)
-@@ -459,9 +459,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 		return ret;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
--	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
--	if (!pci->dbi_base)
--		return -ENOMEM;
-+	pci->dbi_base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(pci->dbi_base))
-+		return PTR_ERR(pci->dbi_base);
- 
- 	pp->ops = &dra7xx_pcie_host_ops;
- 
--- 
-2.7.4
+Well, turning off the IOMMU doesn't necessarily turn off ACS. We've run
+into some bios's that set the bits on boot (which is annoying).
+
+I also don't expect people will respond well to making the IOMMU and P2P
+exclusive. The IOMMU is often used for more than just security and on
+many platforms it's enabled by default. I'd much rather allow IOMMU use
+but have fewer isolation groups in much the same way as if you had PCI
+bridges that didn't support ACS.
+
+Logan
