@@ -1,91 +1,104 @@
-Return-Path: <SRS0=uItE=IE=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=uItE=IE=broadcom.com=ray.jui@kernel.org>
-From: Ray Jui <ray.jui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Ray Jui <ray.jui@broadcom.com>
-Subject: [PATCH INTERNAL 3/3] PCI: iproc: Disable MSI parsing in certain PAXC blocks
-Date: Thu, 17 May 2018 10:21:32 -0700
-Message-Id: <1526577692-21104-4-git-send-email-ray.jui@broadcom.com>
-In-Reply-To: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
-References: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <20180423233046.21476-5-logang@deltatee.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-5-logang@deltatee.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 8 May 2018 07:31:30 -0700
+Message-ID: <CAPcyv4g+5N_n03J-VhmJfrr60Sqk95ZapLKBkwSsGvV4nQ+ZRw@mail.gmail.com>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+To: Logan Gunthorpe <logang@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm <linux-nvdimm@lists.01.org>,
+ linux-rdma <linux-rdma@vger.kernel.org>, linux-pci@vger.kernel.org,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
+ linux-block@vger.kernel.org,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The internal MSI parsing logic in certain revisions of PAXC root
-complexes does not work properly and can casue corruptions on the
-writes. They need to be disabled
+On Mon, Apr 23, 2018 at 4:30 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+> For peer-to-peer transactions to work the downstream ports in each
+> switch must not have the ACS flags set. At this time there is no way
+> to dynamically change the flags and update the corresponding IOMMU
+> groups so this is done at enumeration time before the groups are
+> assigned.
+>
+> This effectively means that if CONFIG_PCI_P2PDMA is selected then
+> all devices behind any PCIe switch heirarchy will be in the same IOMMU
+> group. Which implies that individual devices behind any switch
+> heirarchy will not be able to be assigned to separate VMs because
+> there is no isolation between them. Additionally, any malicious PCIe
+> devices will be able to DMA to memory exposed by other EPs in the same
+> domain as TLPs will not be checked by the IOMMU.
+>
+> Given that the intended use case of P2P Memory is for users with
+> custom hardware designed for purpose, we do not expect distributors
+> to ever need to enable this option. Users that want to use P2P
+> must have compiled a custom kernel with this configuration option
+> and understand the implications regarding ACS. They will either
+> not require ACS or will have design the system in such a way that
+> devices that require isolation will be separate from those using P2P
+> transactions.
 
-Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
----
- drivers/pci/host/pcie-iproc.c | 34 ++++++++++++++++++++++++++++++++--
- 1 file changed, 32 insertions(+), 2 deletions(-)
+>
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> ---
+>  drivers/pci/Kconfig        |  9 +++++++++
+>  drivers/pci/p2pdma.c       | 45 ++++++++++++++++++++++++++++++---------------
+>  drivers/pci/pci.c          |  6 ++++++
+>  include/linux/pci-p2pdma.h |  5 +++++
+>  4 files changed, 50 insertions(+), 15 deletions(-)
+>
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index b2396c22b53e..b6db41d4b708 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -139,6 +139,15 @@ config PCI_P2PDMA
+>           transations must be between devices behind the same root port.
+>           (Typically behind a network of PCIe switches).
+>
+> +         Enabling this option will also disable ACS on all ports behind
+> +         any PCIe switch. This effectively puts all devices behind any
+> +         switch heirarchy into the same IOMMU group. Which implies that
+> +         individual devices behind any switch will not be able to be
+> +         assigned to separate VMs because there is no isolation between
+> +         them. Additionally, any malicious PCIe devices will be able to
+> +         DMA to memory exposed by other EPs in the same domain as TLPs
+> +         will not be checked by the IOMMU.
+> +
+>           If unsure, say N.
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 3c76c5f..b906d80 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -1144,10 +1144,22 @@ static int iproc_pcie_paxb_v2_msi_steer(struct iproc_pcie *pcie, u64 msi_addr)
- 	return ret;
- }
- 
--static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64 msi_addr)
-+static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64 msi_addr,
-+					 bool enable)
- {
- 	u32 val;
- 
-+	if (!enable) {
-+		/*
-+		 * Disable PAXC MSI steering. All write transfers will be
-+		 * treated as non-MSI transfers
-+		 */
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
-+		val &= ~MSI_ENABLE_CFG;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
-+		return;
-+	}
-+
- 	/*
- 	 * Program bits [43:13] of address of GITS_TRANSLATER register into
- 	 * bits [30:0] of the MSI base address register.  In fact, in all iProc
-@@ -1201,7 +1213,7 @@ static int iproc_pcie_msi_steer(struct iproc_pcie *pcie,
- 			return ret;
- 		break;
- 	case IPROC_PCIE_PAXC_V2:
--		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
-+		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr, true);
- 		break;
- 	default:
- 		return -EINVAL;
-@@ -1427,6 +1439,24 @@ int iproc_pcie_remove(struct iproc_pcie *pcie)
- }
- EXPORT_SYMBOL(iproc_pcie_remove);
- 
-+/*
-+ * The MSI parsing logic in certain revisions of Broadcom PAXC based root
-+ * complex does not work and needs to be disabled
-+ */
-+static void quirk_paxc_disable_msi_parsing(struct pci_dev *pdev)
-+{
-+	struct iproc_pcie *pcie = iproc_data(pdev->bus);
-+
-+	if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-+		iproc_pcie_paxc_v2_msi_steer(pcie, 0, false);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0,
-+			quirk_paxc_disable_msi_parsing);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802,
-+			quirk_paxc_disable_msi_parsing);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804,
-+			quirk_paxc_disable_msi_parsing);
-+
- MODULE_AUTHOR("Ray Jui <rjui@broadcom.com>");
- MODULE_DESCRIPTION("Broadcom iPROC PCIe common driver");
- MODULE_LICENSE("GPL v2");
--- 
-2.1.4
+It seems unwieldy that this is a compile time option and not a runtime
+option. Can't we have a kernel command line option to opt-in to this
+behavior rather than require a wholly separate kernel image?
+
+Why is this text added in a follow on patch and not the patch that
+introduced the config option?
+
+I'm also wondering if that command line option can take a 'bus device
+function' address of a switch to limit the scope of where ACS is
+disabled.
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
