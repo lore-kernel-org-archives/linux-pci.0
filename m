@@ -1,60 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 3 May 2018 22:06:22 +0530
-From: Vinod Koul <vinod.koul@intel.com>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
-        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
-        david.brown@linaro.org, dan.j.williams@intel.com,
-        thierry.reding@gmail.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
-        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
-        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
-        leoyang.li@nxp.com
-Subject: Re: [PATCH v4 2/2] drivers: remove force dma flag from buses
-Message-ID: <20180503163622.GA6014@localhost>
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com>
- <1524883919-29484-1-git-send-email-nipun.gupta@nxp.com>
- <1524883919-29484-2-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.131]:44177 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755288AbeEHO3j (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 May 2018 10:29:39 -0400
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6 0/7] Add endpoint driver for Rockchip PCIe controller
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1524796697-160764-1-git-send-email-shawn.lin@rock-chips.com>
+ <20180508115229.GA10653@e107981-ln.cambridge.arm.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <abbd0c7a-c592-b628-e2ab-3df6a5ca33a4@rock-chips.com>
+Date: Tue, 8 May 2018 22:28:57 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524883919-29484-2-git-send-email-nipun.gupta@nxp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180508115229.GA10653@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 28, 2018 at 08:21:59AM +0530, Nipun Gupta wrote:
-> With each bus implementing its own DMA configuration callback,
-> there is no need for bus to explicitly have force_dma in its
-> global structure. This patch modifies of_dma_configure API to
-> accept an input parameter which specifies if implicit DMA
-> configuration is required even when it is not described by the
-> firmware.
-> 
-> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>  # PCI parts
-> ---
-> Changes in v2:
->   - This is a new change suggested by Robin and Christoph
->     and is added to the series.
-> 
-> Changes in v3:
->   - Rebase and changes corresponding to the changes in patch 1/2
-> 
-> Changes in v4:
->   - Rebased on top of 4.17-rc2
-> 
->  drivers/amba/bus.c            | 1 -
->  drivers/base/platform.c       | 3 +--
->  drivers/bcma/main.c           | 2 +-
->  drivers/dma/qcom/hidma_mgmt.c | 2 +-
+Hi Lorenzo,
 
-This one:
-Acked-by: Vinod Koul <vkoul@kernel.org>
+On 2018/5/8 19:52, Lorenzo Pieralisi wrote:
+> Hi Shawn,
+> 
+> On Fri, Apr 27, 2018 at 10:38:17AM +0800, Shawn Lin wrote:
+>>
+>> Hi Lorenzo,
+>>
+>> This's the 6th try to upstream endpoint driver for Rockchip PCIe
+>> controller. V6 is rebased by droping the rename change.
+>>
+>> Thanks.
+>>
+>>
+>> Changes in v6:
+>> - rebase
+>>
+>> Changes in v5:
+>> - export symbol to fix error reported by Kbuild robot
+>> - PCIE_ROCKCHIP depends on PCI
+>>
+>> Changes in v4:
+>> - remove empty line
+>> - keep rockchip's order next to cadence and dwc, but
+>>    we will try to resort it later when reconstructing
+>>    the directories
+>>
+>> Shawn Lin (7):
+>>    PCI: rockchip: Separate common code from RC driver
+> 
+> There seems to be no patch (1) on linux-pci list, not sure what
+> happened, mind resending the whole series possibly with
+> commit logs updated as discussed ?
+
+Sure! Will send v7 for updating commit logs.
+
+> 
+> Thanks,
+> Lorenzo
+> 
+>>    PCI: rockchip: Split out common function to parse DT
+>>    PCI: rockchip: Split out common function to init controller
+>>    dt-bindings: PCI: rockchip: Rename rockchip-pcie.txt to
+>>      rockchip-pcie-host.txt
+>>    PCI: rockchip: Add Endpoint controller driver for Rockchip PCIe
+>>      controller
+>>    dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe endpoint
+>>      controller
+>>    arm64: defconfig: update config for Rockchip PCIe
+>>
+>>   .../devicetree/bindings/pci/rockchip-pcie-ep.txt   |   62 +
+>>   .../{rockchip-pcie.txt => rockchip-pcie-host.txt}  |    0
+>>   MAINTAINERS                                        |    4 +-
+>>   arch/arm64/configs/defconfig                       |    3 +-
+>>   drivers/pci/host/Kconfig                           |   19 +-
+>>   drivers/pci/host/Makefile                          |    2 +
+>>   drivers/pci/host/pcie-rockchip-ep.c                |  642 ++++++++
+>>   drivers/pci/host/pcie-rockchip-host.c              | 1141 +++++++++++++
+>>   drivers/pci/host/pcie-rockchip.c                   | 1683 +++-----------------
+>>   drivers/pci/host/pcie-rockchip.h                   |  338 ++++
+>>   10 files changed, 2406 insertions(+), 1488 deletions(-)
+>>   create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
+>>   rename Documentation/devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} (100%)
+>>   create mode 100644 drivers/pci/host/pcie-rockchip-ep.c
+>>   create mode 100644 drivers/pci/host/pcie-rockchip-host.c
+>>   create mode 100644 drivers/pci/host/pcie-rockchip.h
+>>
+>> -- 
+>> 1.9.1
+>>
+>>
+> 
+> 
+> 
+
 
 -- 
-~Vinod
+Best Regards
+Shawn Lin
