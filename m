@@ -1,194 +1,127 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v8 4/7] ACPI/hotplug/PCI: Do not scan all bridges when native PCIe hotplug is used
-Date: Tue, 29 May 2018 19:01:55 +0300
-Message-Id: <20180529160155.1738-1-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=MMDq=H3=redhat.com=ddutile@kernel.org>
+Return-Path: <SRS0=MMDq=H3=redhat.com=ddutile@kernel.org>
+Subject: Re: [PATCH v4 00/14] Copy Offload in NVMe Fabrics with P2P PCI Memory
+To: Alex Williamson <alex.williamson@redhat.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+ Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180507232346.GI161390@bhelgaas-glaptop.roam.corp.google.com>
+ <20180508105759.7dbaa8fe@w520.home>
+From: Don Dutile <ddutile@redhat.com>
+Message-ID: <c16ecc49-a0f3-152d-785b-a646a3dab60d@redhat.com>
+Date: Tue, 8 May 2018 17:25:24 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180508105759.7dbaa8fe@w520.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-When a system is using native PCIe hotplug for Thunderbolt it will be
-only present in the system when there is a device connected. This pretty
-much follows the BIOS assisted hotplug behaviour.
+On 05/08/2018 12:57 PM, Alex Williamson wrote:
+> On Mon, 7 May 2018 18:23:46 -0500
+> Bjorn Helgaas <helgaas@kernel.org> wrote:
+> 
+>> On Mon, Apr 23, 2018 at 05:30:32PM -0600, Logan Gunthorpe wrote:
+>>> Hi Everyone,
+>>>
+>>> Here's v4 of our series to introduce P2P based copy offload to NVMe
+>>> fabrics. This version has been rebased onto v4.17-rc2. A git repo
+>>> is here:
+>>>
+>>> https://github.com/sbates130272/linux-p2pmem pci-p2p-v4
+>>> ...
+>>
+>>> Logan Gunthorpe (14):
+>>>    PCI/P2PDMA: Support peer-to-peer memory
+>>>    PCI/P2PDMA: Add sysfs group to display p2pmem stats
+>>>    PCI/P2PDMA: Add PCI p2pmem dma mappings to adjust the bus offset
+>>>    PCI/P2PDMA: Clear ACS P2P flags for all devices behind switches
+>>>    docs-rst: Add a new directory for PCI documentation
+>>>    PCI/P2PDMA: Add P2P DMA driver writer's documentation
+>>>    block: Introduce PCI P2P flags for request and request queue
+>>>    IB/core: Ensure we map P2P memory correctly in
+>>>      rdma_rw_ctx_[init|destroy]()
+>>>    nvme-pci: Use PCI p2pmem subsystem to manage the CMB
+>>>    nvme-pci: Add support for P2P memory in requests
+>>>    nvme-pci: Add a quirk for a pseudo CMB
+>>>    nvmet: Introduce helper functions to allocate and free request SGLs
+>>>    nvmet-rdma: Use new SGL alloc/free helper for requests
+>>>    nvmet: Optionally use PCI P2P memory
+>>>
+>>>   Documentation/ABI/testing/sysfs-bus-pci    |  25 +
+>>>   Documentation/PCI/index.rst                |  14 +
+>>>   Documentation/driver-api/index.rst         |   2 +-
+>>>   Documentation/driver-api/pci/index.rst     |  20 +
+>>>   Documentation/driver-api/pci/p2pdma.rst    | 166 ++++++
+>>>   Documentation/driver-api/{ => pci}/pci.rst |   0
+>>>   Documentation/index.rst                    |   3 +-
+>>>   block/blk-core.c                           |   3 +
+>>>   drivers/infiniband/core/rw.c               |  13 +-
+>>>   drivers/nvme/host/core.c                   |   4 +
+>>>   drivers/nvme/host/nvme.h                   |   8 +
+>>>   drivers/nvme/host/pci.c                    | 118 +++--
+>>>   drivers/nvme/target/configfs.c             |  67 +++
+>>>   drivers/nvme/target/core.c                 | 143 ++++-
+>>>   drivers/nvme/target/io-cmd.c               |   3 +
+>>>   drivers/nvme/target/nvmet.h                |  15 +
+>>>   drivers/nvme/target/rdma.c                 |  22 +-
+>>>   drivers/pci/Kconfig                        |  26 +
+>>>   drivers/pci/Makefile                       |   1 +
+>>>   drivers/pci/p2pdma.c                       | 814 +++++++++++++++++++++++++++++
+>>>   drivers/pci/pci.c                          |   6 +
+>>>   include/linux/blk_types.h                  |  18 +-
+>>>   include/linux/blkdev.h                     |   3 +
+>>>   include/linux/memremap.h                   |  19 +
+>>>   include/linux/pci-p2pdma.h                 | 118 +++++
+>>>   include/linux/pci.h                        |   4 +
+>>>   26 files changed, 1579 insertions(+), 56 deletions(-)
+>>>   create mode 100644 Documentation/PCI/index.rst
+>>>   create mode 100644 Documentation/driver-api/pci/index.rst
+>>>   create mode 100644 Documentation/driver-api/pci/p2pdma.rst
+>>>   rename Documentation/driver-api/{ => pci}/pci.rst (100%)
+>>>   create mode 100644 drivers/pci/p2pdma.c
+>>>   create mode 100644 include/linux/pci-p2pdma.h
+>>
+>> How do you envison merging this?  There's a big chunk in drivers/pci, but
+>> really no opportunity for conflicts there, and there's significant stuff in
+>> block and nvme that I don't really want to merge.
+>>
+>> If Alex is OK with the ACS situation, I can ack the PCI parts and you could
+>> merge it elsewhere?
+> 
+> AIUI from previously questioning this, the change is hidden behind a
+> build-time config option and only custom kernels or distros optimized
+> for this sort of support would enable that build option.  I'm more than
+> a little dubious though that we're not going to have a wave of distros
+> enabling this only to get user complaints that they can no longer make
+> effective use of their devices for assignment due to the resulting span
+> of the IOMMU groups, nor is there any sort of compromise, configure
+> the kernel for p2p or device assignment, not both.  Is this really such
+> a unique feature that distro users aren't going to be asking for both
+> features?  Thanks,
+> 
+> Alex
+At least 1/2 the cases presented to me by existing customers want it in a tunable kernel,
+and tunable btwn two points, if the hw allows it to be 'contained' in that manner, which
+a (layer of) switch(ing) provides.
+To me, that means a kernel cmdline parameter to _enable_, and another sysfs (configfs? ... i'm not a configfs afficionato to say which is best),
+method to make two points p2p dma capable.
 
-Thunderbolt host router integrated PCIe switch has two additional PCIe
-downstream bridges that lead to NHI (Thunderbolt host controller) and xHCI
-(USB 3 host controller) respectively. These downstream bridges are not
-marked being hotplug capable. Reason for that is to preserve resources.
-Otherwise the OS would distribute remaining resources between all
-downstream bridges making these two bridges consume precious resources
-of the actual hotplug bridges.
+Worse case, the whole system is one large IOMMU group (current mindset of this static or run-time config option),
+or best case (over time, more hw), a secure set of the primary system with p2p-enabled sections, that are deemed 'safe' or 'self-inflicting-unsecure',
+the latter the case of today's VM with an assigned device -- can scribble all over the VM, but no other VM and not the host/HV.
 
-Now, because these two bridges are not marked being hotplug capable the OS
-will not enable hotplug interrupt for them either and will not receive
-interrupt when devices behind them are hot-added. Solution to this is
-that the BIOS sends ACPI Notify() to the root port let the OS know it
-needs to rescan for added and/or removed devices.
 
-Here is how the mechanism is supposed to work when a Thunderbolt
-endpoint is connected to one of the ports. In case of a standard USB-C
-device only the xHCI is hot-added otherwise steps are the same.
-
-1. Initially there is only the PCIe root port that is controlled by
-   the pciehp driver
-
-  00:1b.0 (Hotplug+) --
-
-2. Then we get native PCIe hotplug interrupt and once it is handled the
-   topology looks as following
-
-  00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 --
-                                  +- 02:01.0 (HotPlug+)
-                                  \- 02:02.0 --
-
-3. Bridges 02:00.0 and 02:02.0 are not marked as hotplug capable and
-   they don't have anything behind them currently. Bridge 02:01.0 is
-   hotplug capable and used for extending the topology. At this point
-   the required PCIe devices are enabled and ACPI Notify() is sent to
-   the root port. The resulting topology is expected to look like
-
-  00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 -- Thunderbolt host controller
-                                  +- 02:01.0 (HotPlug+)
-                                  \- 02:02.0 -- xHCI host controller
-
-However, the current ACPI hotplug implementation scans the whole 00:1b.0
-hotplug slot and everything behind it regardless whether native PCIe is
-used or not, and it expects that the BIOS has configured bridge
-resources upfront. If that's not the case it assigns resources using
-minimal allocation (everything currently found just barely fit)
-preventing future extension. In addition to that, if there is another
-native PCIe hotplug going on we may find the new PCIe switch only
-partially ready (all links are not fully trained yet) confusing pciehp
-when it finally starts to enumerate for new devices.
-
-To make this work better with the native PCIe (pciehp) and standard PCI
-(shpchp) hotplug drivers, we let them handle all slot management and
-resource allocation for hotplug bridges and restrict ACPI hotplug to
-non-hotplug bridges.
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c | 75 +++++++++++++++++++++++-------
- 1 file changed, 58 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 318b6a6f6341..e2bcd9fc3fd2 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -287,11 +287,12 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
- 	/*
- 	 * Expose slots to user space for functions that have _EJ0 or _RMV or
- 	 * are located in dock stations.  Do not expose them for devices handled
--	 * by the native PCIe hotplug (PCIeHP), becuase that code is supposed to
--	 * expose slots to user space in those cases.
-+	 * by the native PCIe hotplug (PCIeHP) or standard PCI hotplug
-+	 * (SHPCHP), because that code is supposed to expose slots to user
-+	 * space in those cases.
- 	 */
- 	if ((acpi_pci_check_ejectable(pbus, handle) || is_dock_device(adev))
--	    && !(pdev && pdev->is_hotplug_bridge && pciehp_is_native(pdev))) {
-+	    && !(pdev && hotplug_is_native(pdev))) {
- 		unsigned long long sun;
- 		int retval;
- 
-@@ -430,6 +431,29 @@ static int acpiphp_rescan_slot(struct acpiphp_slot *slot)
- 	return pci_scan_slot(slot->bus, PCI_DEVFN(slot->device, 0));
- }
- 
-+static void acpiphp_native_scan_bridge(struct pci_dev *bridge)
-+{
-+	struct pci_bus *bus = bridge->subordinate;
-+	struct pci_dev *dev;
-+	int max;
-+
-+	if (!bus)
-+		return;
-+
-+	max = bus->busn_res.start;
-+	/* Scan already configured non-hotplug bridges */
-+	for_each_pci_bridge(dev, bus) {
-+		if (!dev->is_hotplug_bridge)
-+			max = pci_scan_bridge(bus, dev, max, 0);
-+	}
-+
-+	/* Scan non-hotplug bridges that need to be reconfigured */
-+	for_each_pci_bridge(dev, bus) {
-+		if (!dev->is_hotplug_bridge)
-+			max = pci_scan_bridge(bus, dev, max, 1);
-+	}
-+}
-+
- /**
-  * enable_slot - enable, configure a slot
-  * @slot: slot to be enabled
-@@ -442,25 +466,42 @@ static void enable_slot(struct acpiphp_slot *slot)
- 	struct pci_dev *dev;
- 	struct pci_bus *bus = slot->bus;
- 	struct acpiphp_func *func;
--	int max, pass;
--	LIST_HEAD(add_list);
- 
--	acpiphp_rescan_slot(slot);
--	max = acpiphp_max_busnr(bus);
--	for (pass = 0; pass < 2; pass++) {
-+	if (bus->self && hotplug_is_native(bus->self)) {
-+		/*
-+		 * If native hotplug is used, it will take care of hotplug
-+		 * slot management and resource allocation for hotplug
-+		 * bridges. However, ACPI hotplug may still be used for
-+		 * non-hotplug bridges to bring in additional devices such
-+		 * as Thunderbolt host controller.
-+		 */
- 		for_each_pci_bridge(dev, bus) {
--			if (PCI_SLOT(dev->devfn) != slot->device)
--				continue;
--
--			max = pci_scan_bridge(bus, dev, max, pass);
--			if (pass && dev->subordinate) {
--				check_hotplug_bridge(slot, dev);
--				pcibios_resource_survey_bus(dev->subordinate);
--				__pci_bus_size_bridges(dev->subordinate, &add_list);
-+			if (PCI_SLOT(dev->devfn) == slot->device)
-+				acpiphp_native_scan_bridge(dev);
-+		}
-+		pci_assign_unassigned_bridge_resources(bus->self);
-+	} else {
-+		LIST_HEAD(add_list);
-+		int max, pass;
-+
-+		acpiphp_rescan_slot(slot);
-+		max = acpiphp_max_busnr(bus);
-+		for (pass = 0; pass < 2; pass++) {
-+			for_each_pci_bridge(dev, bus) {
-+				if (PCI_SLOT(dev->devfn) != slot->device)
-+					continue;
-+
-+				max = pci_scan_bridge(bus, dev, max, pass);
-+				if (pass && dev->subordinate) {
-+					check_hotplug_bridge(slot, dev);
-+					pcibios_resource_survey_bus(dev->subordinate);
-+					__pci_bus_size_bridges(dev->subordinate,
-+							       &add_list);
-+				}
- 			}
- 		}
-+		__pci_bus_assign_resources(bus, &add_list, NULL);
- 	}
--	__pci_bus_assign_resources(bus, &add_list, NULL);
- 
- 	acpiphp_sanitize_bus(bus);
- 	pcie_bus_configure_settings(bus);
--- 
-2.17.0
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
