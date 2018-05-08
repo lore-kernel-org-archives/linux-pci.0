@@ -1,73 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 15/40] iommu/of: Add stall and pasid properties to iommu_fwspec
-Date: Fri, 11 May 2018 20:06:16 +0100
-Message-Id: <20180511190641.23008-16-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+To: Stephen Bates <sbates@raithlin.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ Logan Gunthorpe <logang@deltatee.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-5-logang@deltatee.com>
+ <CAPcyv4g+5N_n03J-VhmJfrr60Sqk95ZapLKBkwSsGvV4nQ+ZRw@mail.gmail.com>
+ <64C231F5-DE36-415F-B308-3A423B0BBACB@raithlin.com>
+From: Don Dutile <ddutile@redhat.com>
+Message-ID: <15433946-f7f5-f610-4e80-380fb59920e5@redhat.com>
+Date: Tue, 8 May 2018 17:04:01 -0400
+MIME-Version: 1.0
+In-Reply-To: <64C231F5-DE36-415F-B308-3A423B0BBACB@raithlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvdimm <linux-nvdimm@lists.01.org>,
+ linux-rdma <linux-rdma@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add stall and pasid properties to iommu_fwspec, and fill them when
-dma-can-stall and pasid-bits properties are present in the device tree.
+On 05/08/2018 10:44 AM, Stephen  Bates wrote:
+> Hi Dan
+> 
+>>     It seems unwieldy that this is a compile time option and not a runtime
+>>     option. Can't we have a kernel command line option to opt-in to this
+>>     behavior rather than require a wholly separate kernel image?
+>    
+> I think because of the security implications associated with p2pdma and ACS we wanted to make it very clear people were choosing one (p2pdma) or the other (IOMMU groupings and isolation). However personally I would prefer including the option of a run-time kernel parameter too. In fact a few months ago I proposed a small patch that did just that [1]. It never really went anywhere but if people were open to the idea we could look at adding it to the series.
+> 
+It is clear if it is a kernel command-line option or a CONFIG option.
+One does not have access to the kernel command-line w/o a few privs.
+A CONFIG option prevents a distribution to have a default, locked-down kernel _and_ the ability to be 'unlocked' if the customer/site is 'secure' via other means.
+A run/boot-time option is more flexible and achieves the best of both.
+    
+>> Why is this text added in a follow on patch and not the patch that
+>>   introduced the config option?
+> 
+> Because the ACS section was added later in the series and this information is associated with that additional functionality.
+>      
+>> I'm also wondering if that command line option can take a 'bus device
+>> function' address of a switch to limit the scope of where ACS is
+>> disabled.
+> 
+Well, p2p DMA is a function of a cooperating 'agent' somewhere above the two devices.
+That agent should 'request' to the kernel that ACS be removed/circumvented (p2p enabled) btwn two endpoints.
+I recommend doing so via a sysfs method.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/of_iommu.c | 12 ++++++++++++
- include/linux/iommu.h    |  2 ++
- 2 files changed, 14 insertions(+)
+That way, the system can limit the 'unsecure' space btwn two devices, likely configured on a separate switch, from the rest of the still-secured/ACS-enabled PCIe tree.
+PCIe is pt-to-pt, effectively; maybe one would have multiple nics/fabrics p2p to/from NVME, but one could look at it as a list of pairs (nic1<->nvme1; nic2<->nvme2; ....).
+A pair-listing would be optimal, allowing the kernel to figure out the ACS path, and not making it endpoint-switch-switch...-switch-endpt error-entry prone.
+Additionally, systems that can/prefer to do so via a RP's IOMMU, albeit not optimal, but better then all the way to/from memory, and a security/iova-check possible,
+can modify the pt-to-pt ACS algorithm to accomodate over time (e.g., cap bits be they hw or device-driver/extension/quirk defined for each bridge/RP in a PCI domain).
 
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index 5c36a8b7656a..9b6b55f3cccd 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -204,6 +204,18 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
- 			if (err)
- 				break;
- 		}
-+
-+		fwspec = dev->iommu_fwspec;
-+		if (!err && fwspec) {
-+			const __be32 *prop;
-+
-+			if (of_get_property(master_np, "dma-can-stall", NULL))
-+				fwspec->can_stall = true;
-+
-+			prop = of_get_property(master_np, "pasid-num-bits", NULL);
-+			if (prop)
-+				fwspec->num_pasid_bits = be32_to_cpu(*prop);
-+		}
- 	}
- 
- 	/*
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 933100678f64..bcce44455117 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -656,6 +656,8 @@ struct iommu_fwspec {
- 	struct fwnode_handle	*iommu_fwnode;
- 	void			*iommu_priv;
- 	unsigned int		num_ids;
-+	unsigned int		num_pasid_bits;
-+	bool			can_stall;
- 	u32			ids[1];
- };
- 
--- 
-2.17.0
+Kernels that never want to support P2P could build w/o it enabled.... cmdline option is moot.
+Kernels built with it on, *still* need cmdline option, to be blunt that the kernel is enabling a feature that could render the entire (IO sub)system unsecure.
 
+> By this you mean the address for either a RP, DSP, USP or MF EP below which we disable ACS? We could do that but I don't think it avoids the issue of changes in IOMMU groupings as devices are added/removed. It simply changes the problem from affecting and entire PCI domain to a sub-set of the domain. We can already handle this by doing p2pdma on one RP and normal IOMMU isolation on the other RPs in the system.
+> 
+as devices are added, they start in ACS-enabled, secured mode.
+As sysfs entry modifies p2p ability, IOMMU group is modified as well.
+
+
+btw -- IOMMU grouping is a host/HV control issue, not a VM control/knowledge issue.
+        So I don't understand the comments why VMs should need to know.
+        -- configure p2p _before_ assigning devices to VMs. ... iommu groups are checked at assignment time.
+           -- so even if hot-add, separate iommu group, then enable p2p, becomes same IOMMU group, then can only assign to same VM.
+        -- VMs don't know IOMMU's & ACS are involved now, and won't later, even if device's dynamically added/removed
+
+Is there a thread I need to read up to explain /clear-up the thoughts above?
+
+> Stephen
+> 
+> [1] https://marc.info/?l=linux-doc&m=150907188310838&w=2
+>      
+> 
+
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
