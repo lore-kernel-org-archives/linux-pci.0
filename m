@@ -1,130 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45930 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751584AbeEKTHy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 May 2018 15:07:54 -0400
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 04/40] iommu/sva: Add a mm_exit callback for device drivers
-Date: Fri, 11 May 2018 20:06:05 +0100
-Message-Id: <20180511190641.23008-5-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>, "Bjorn
+ Helgaas" <helgaas@kernel.org>, Logan Gunthorpe <logang@deltatee.com>, "Alex
+ Williamson" <alex.williamson@redhat.com>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+Date: Tue, 8 May 2018 14:25:10 +0000
+Message-ID: <479F2F93-903B-4A8A-8989-A4BD0E5E1471@raithlin.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-5-logang@deltatee.com>
+ <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+ <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+In-Reply-To: <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When an mm exits, devices that were bound to it must stop performing DMA
-on its PASID. Let device drivers register a callback to be notified on mm
-exit. Add the callback to the sva_param structure attached to struct
-device.
+    
+Hi Christian
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+> AMD APUs mandatory need the ACS flag set for the GPU integrated in the 
+> CPU when IOMMU is enabled or otherwise you will break SVM.
 
----
-v1->v2: use iommu_sva_device_init instead of a separate function
----
- drivers/iommu/iommu-sva.c | 11 ++++++++++-
- include/linux/iommu.h     |  9 +++++++--
- 2 files changed, 17 insertions(+), 3 deletions(-)
+OK but in this case aren't you losing (many of) the benefits of P2P since all DMAs will now get routed up to the IOMMU before being passed down to the destination PCIe EP?
 
-diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
-index 6ac679c48f3c..0700893c679d 100644
---- a/drivers/iommu/iommu-sva.c
-+++ b/drivers/iommu/iommu-sva.c
-@@ -303,6 +303,7 @@ static void io_mm_detach_locked(struct iommu_bond *bond)
-  * @dev: the device
-  * @features: bitmask of features that need to be initialized
-  * @max_pasid: max PASID value supported by the device
-+ * @mm_exit: callback to notify the device driver of an mm exiting
-  *
-  * Users of the bind()/unbind() API must call this function to initialize all
-  * features required for SVA.
-@@ -313,13 +314,20 @@ static void io_mm_detach_locked(struct iommu_bond *bond)
-  * description. Setting @max_pasid to a non-zero value smaller than this limit
-  * overrides it.
-  *
-+ * If the driver intends to share process address spaces, it should pass a valid
-+ * @mm_exit handler. Otherwise @mm_exit can be NULL. After @mm_exit returns, the
-+ * device must not issue any more transaction with the PASID given as argument.
-+ * The handler gets an opaque pointer corresponding to the drvdata passed as
-+ * argument of bind().
-+ *
-  * The device should not be performing any DMA while this function is running,
-  * otherwise the behavior is undefined.
-  *
-  * Return 0 if initialization succeeded, or an error.
-  */
- int iommu_sva_device_init(struct device *dev, unsigned long features,
--			  unsigned int max_pasid)
-+			  unsigned int max_pasid,
-+			  iommu_mm_exit_handler_t mm_exit)
- {
- 	int ret;
- 	struct iommu_sva_param *param;
-@@ -337,6 +345,7 @@ int iommu_sva_device_init(struct device *dev, unsigned long features,
+> Similar problems arise when you do this for dedicated GPU, but we 
+> haven't upstreamed the support for this yet.
+
+Hmm, as above. With ACS enabled on all downstream ports any P2P enabled DMA will be routed to the IOMMU which removes a lot of the benefit. 
+    
+> So that is a clear NAK from my side for the approach.
+
+Do you have an alternative? This is the approach we arrived it after a reasonably lengthy discussion on the mailing lists. Alex, are you still comfortable with this approach?
+    
+> And what exactly is the problem here?
  
- 	param->features		= features;
- 	param->max_pasid	= max_pasid;
-+	param->mm_exit		= mm_exit;
- 	INIT_LIST_HEAD(&param->mm_list);
- 
- 	/*
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index d5f21719a5a0..439c8fffd836 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -61,6 +61,7 @@ struct iommu_fault_event;
- typedef int (*iommu_fault_handler_t)(struct iommu_domain *,
- 			struct device *, unsigned long, int, void *);
- typedef int (*iommu_dev_fault_handler_t)(struct iommu_fault_event *, void *);
-+typedef int (*iommu_mm_exit_handler_t)(struct device *dev, int pasid, void *);
- 
- struct iommu_domain_geometry {
- 	dma_addr_t aperture_start; /* First address that can be mapped    */
-@@ -231,6 +232,7 @@ struct iommu_sva_param {
- 	unsigned int min_pasid;
- 	unsigned int max_pasid;
- 	struct list_head mm_list;
-+	iommu_mm_exit_handler_t mm_exit;
- };
- 
- /**
-@@ -980,17 +982,20 @@ static inline int iommu_sva_unbind_device(struct device *dev, int pasid)
- 
- #ifdef CONFIG_IOMMU_SVA
- extern int iommu_sva_device_init(struct device *dev, unsigned long features,
--				 unsigned int max_pasid);
-+				 unsigned int max_pasid,
-+				 iommu_mm_exit_handler_t mm_exit);
- extern int iommu_sva_device_shutdown(struct device *dev);
- extern int __iommu_sva_bind_device(struct device *dev, struct mm_struct *mm,
- 				   int *pasid, unsigned long flags,
- 				   void *drvdata);
- extern int __iommu_sva_unbind_device(struct device *dev, int pasid);
- extern void __iommu_sva_unbind_dev_all(struct device *dev);
-+
- #else /* CONFIG_IOMMU_SVA */
- static inline int iommu_sva_device_init(struct device *dev,
- 					unsigned long features,
--					unsigned int max_pasid)
-+					unsigned int max_pasid,
-+					iommu_mm_exit_handler_t mm_exit)
- {
- 	return -ENODEV;
- }
--- 
-2.17.0
+We had a pretty lengthy discussion on this topic on one of the previous revisions. The issue is that currently there is no mechanism in the IOMMU code to inform VMs if IOMMU groupings change. Since p2pdma can dynamically change its topology (due to PCI hotplug) we had to be cognizant of the fact that ACS settings could change. Since there is no way to currently handle changing ACS settings and hence IOMMU groupings the consensus was to simply disable ACS on all ports in a p2pdma domain. This effectively makes all the devices in the p2pdma domain part of the same IOMMU grouping. The plan will be to address this in time and add a mechanism for IOMMU grouping changes and notification to VMs but that's not part of this series. Note you are still allowed to have ACS functioning on other PCI domains so if you do not a plurality of IOMMU groupings you can still achieve it (but you can't do p2pdma across IOMMU groupings, which is safe).
+
+> I'm currently testing P2P with  GPUs in different IOMMU domains and at least with AMD IOMMUs that works perfectly fine.
+
+Yup that should work though again I have to ask are you disabling ACS on the ports between the two peer devices to get the p2p benefit? If not you are not getting all the performance benefit (due to IOMMU routing), if you are then there are obviously security implications between those IOMMU domains if they are assigned to different VMs. And now the issue is if new devices are added and the p2p topology needed to change there would be no way to inform the VMs of any IOMMU group change. 
+
+Cheers
+
+Stephen
+    
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
