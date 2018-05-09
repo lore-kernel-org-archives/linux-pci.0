@@ -1,40 +1,43 @@
-Return-Path: <SRS0=IJn3=H2=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=IJn3=H2=deltatee.com=logang@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
- linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
- Stephen Bates <sbates@raithlin.com>, Christoph Hellwig <hch@lst.de>,
- Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
- <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
- <20180507232346.GI161390@bhelgaas-glaptop.roam.corp.google.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <dc207a94-35a6-6182-1331-154ece9ac00d@deltatee.com>
-Date: Mon, 7 May 2018 17:34:53 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180507232346.GI161390@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v4 00/14] Copy Offload in NVMe Fabrics with P2P PCI Memory
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:42786 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750903AbeEIFmc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2018 01:42:32 -0400
+Received: by mail-pg0-f65.google.com with SMTP id p9-v6so19262531pgc.9
+        for <linux-pci@vger.kernel.org>; Tue, 08 May 2018 22:42:32 -0700 (PDT)
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH 6/9] PCI: designware-plat: Drop unnecessary root_bus_nr setting
+Date: Wed,  9 May 2018 13:39:43 +0800
+Message-Id: <1525844386-5433-6-git-send-email-shawn.guo@linaro.org>
+In-Reply-To: <1525844386-5433-1-git-send-email-shawn.guo@linaro.org>
+References: <1525844386-5433-1-git-send-email-shawn.guo@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The root_bus_nr initialization has already been done in function
+dw_pcie_host_init().  The -1 assignment in platform driver before
+calling into dw_pcie_host_init() is not really needed.  Drop it.
 
-> How do you envison merging this?  There's a big chunk in drivers/pci, but
-> really no opportunity for conflicts there, and there's significant stuff in
-> block and nvme that I don't really want to merge.
-> 
-> If Alex is OK with the ACS situation, I can ack the PCI parts and you could
-> merge it elsewhere?
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+---
+ drivers/pci/dwc/pcie-designware-plat.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Honestly, I don't know. I guess with your ACK on the PCI parts, the vast
-balance is NVMe stuff so we could look at merging it through that tree.
-The block patch and IB patch are pretty small.
-
-Thanks,
-
-Logan
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index 5416aa8a07a5..6e39afefd6db 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -58,7 +58,6 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+ 			return pp->msi_irq;
+ 	}
+ 
+-	pp->root_bus_nr = -1;
+ 	pp->ops = &dw_plat_pcie_host_ops;
+ 
+ 	ret = dw_pcie_host_init(pp);
+-- 
+1.9.1
