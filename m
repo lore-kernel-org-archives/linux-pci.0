@@ -1,88 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 7 May 2018 16:48:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc: bhelgaas@google.com, rafael.j.wysocki@intel.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH v4] PCI / PM: Always check PME wakeup capability for
- runtime wakeup support
-Message-ID: <20180507214817.GC133147@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180507061120.3683-1-kai.heng.feng@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180507061120.3683-1-kai.heng.feng@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36165 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751198AbeEIFmj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2018 01:42:39 -0400
+Received: by mail-pf0-f195.google.com with SMTP id w129so19650607pfd.3
+        for <linux-pci@vger.kernel.org>; Tue, 08 May 2018 22:42:39 -0700 (PDT)
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>
+Subject: [PATCH 8/9] PCI: qcom: Drop unnecessary root_bus_nr setting
+Date: Wed,  9 May 2018 13:39:45 +0800
+Message-Id: <1525844386-5433-8-git-send-email-shawn.guo@linaro.org>
+In-Reply-To: <1525844386-5433-1-git-send-email-shawn.guo@linaro.org>
+References: <1525844386-5433-1-git-send-email-shawn.guo@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 07, 2018 at 02:11:20PM +0800, Kai-Heng Feng wrote:
-> USB controller ASM1042 stops working after commit de3ef1eb1cd0 ("PM /
-> core: Drop run_wake flag from struct dev_pm_info").
-> 
-> The device in question is not power managed by platform firmware,
-> furthermore, it only supports PME# from D3cold:
-> Capabilities: [78] Power Management version 3
->        Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
->        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-> 
-> Before commit de3ef1eb1cd0, the device never gets runtime suspended.
-> After that commit, the device gets runtime suspended to D3hot, which can
-> not generate any PME#.
-> 
-> usb_hcd_pci_probe() unconditionally calls device_wakeup_enable(), hence
-> device_can_wakeup() in pci_dev_run_wake() always returns true.
-> 
-> So pci_dev_run_wake() needs to check PME wakeup capability as its first
-> condition.
-> 
-> In addition, change wakeup flag passed to pci_target_state() from false
-> to true, because we want to find the deepest state that the device can
-> still generate PME#. In this case, it's D0 for the device in question.
-> 
-> Fixes: de3ef1eb1cd0 ("PM / core: Drop run_wake flag from struct dev_pm_info")
-> Cc: stable@vger.kernel.org # 4.13+
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+The root_bus_nr initialization has already been done in function
+dw_pcie_host_init().  The -1 assignment in platform driver before
+calling into dw_pcie_host_init() is not really needed.  Drop it.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+---
+ drivers/pci/dwc/pcie-qcom.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Rafael, can you queue this up?  de3ef1eb1cd0 went through your tree,
-and I don't really understand the patch, so I'll rely on your review.
-
-> ---
-> v4: Correct some errors in commit log.
-> 
-> v3: State the reason why the wakeup flag gets changed.
-> 
-> v2: Explicitly check dev->pme_support.
-> 
->  drivers/pci/pci.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a04197ce767d..c2616cad3a1d 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2138,16 +2138,16 @@ bool pci_dev_run_wake(struct pci_dev *dev)
->  {
->  	struct pci_bus *bus = dev->bus;
->  
-> -	if (device_can_wakeup(&dev->dev))
-> -		return true;
-> -
->  	if (!dev->pme_support)
->  		return false;
->  
->  	/* PME-capable in principle, but not from the target power state */
-> -	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
-> +	if (!pci_pme_capable(dev, pci_target_state(dev, true)))
->  		return false;
->  
-> +	if (device_can_wakeup(&dev->dev))
-> +		return true;
-> +
->  	while (bus->parent) {
->  		struct pci_dev *bridge = bus->self;
->  
-> -- 
-> 2.17.0
-> 
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index 5897af7d3355..a32aa024e907 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -1247,7 +1247,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	pp->root_bus_nr = -1;
+ 	pp->ops = &qcom_pcie_dw_ops;
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-- 
+1.9.1
