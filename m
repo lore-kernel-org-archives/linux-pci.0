@@ -1,92 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga17.intel.com ([192.55.52.151]:42031 "EHLO mga17.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:44260 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753805AbeE3QoJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 May 2018 12:44:09 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-CC: "Bie, Tiwei" <tiwei.bie@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "virtualization@lists.linux-foundation.org"
-        <virtualization@lists.linux-foundation.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        "Liang, Cunming" <cunming.liang@intel.com>,
-        "Wang, Zhihong" <zhihong.wang@intel.com>
-Subject: Re: [PATCH] virtio_pci: support enabling VFs
-Date: Wed, 30 May 2018 16:44:07 +0000
-Message-ID: <414C18B1-30FA-4AC0-B47D-F0FBF9832737@intel.com>
-References: <20180530085521.26583-1-tiwei.bie@intel.com>
- <20180530192010-mutt-send-email-mst@kernel.org>
-In-Reply-To: <20180530192010-mutt-send-email-mst@kernel.org>
-Content-Type: multipart/signed;
-        boundary="Apple-Mail=_FB4DAD04-C672-49EE-BC0F-E8F33D4948E7";
-        protocol="application/pgp-signature"; micalg=pgp-sha256
+        id S935037AbeEINHd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 May 2018 09:07:33 -0400
+Date: Wed, 9 May 2018 08:07:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v15 3/9] PCI/AER: Handle ERR_FATAL with removal and
+ re-enumeration of devices
+Message-ID: <20180509130730.GA236548@bhelgaas-glaptop.roam.corp.google.com>
+References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
+ <1525323838-1735-4-git-send-email-poza@codeaurora.org>
+ <20180508235330.GN161390@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180508235330.GN161390@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_FB4DAD04-C672-49EE-BC0F-E8F33D4948E7
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=us-ascii;
-	delsp=yes;
-	format=flowed
+On Tue, May 08, 2018 at 06:53:30PM -0500, Bjorn Helgaas wrote:
+> On Thu, May 03, 2018 at 01:03:52AM -0400, Oza Pawandeep wrote:
+> > This patch alters the behavior of handling of ERR_FATAL, where removal
+> > of devices is initiated, followed by reset link, followed by
+> > re-enumeration.
+> > 
+> > So the errors are handled in a different way as follows:
+> > ERR_NONFATAL => call driver recovery entry points
+> > ERR_FATAL    => remove and re-enumerate
+> > 
+> > please refer to Documentation/PCI/pci-error-recovery.txt for more details.
+> > 
+> > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> > 
+> > diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+> > index 779b387..206f590 100644
+> > --- a/drivers/pci/pcie/aer/aerdrv.c
+> > +++ b/drivers/pci/pcie/aer/aerdrv.c
+> > @@ -330,6 +330,13 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+> >  	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
+> >  	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
+> >  
+> > +	/*
+> > +	 * This function is called only on ERR_FATAL now, and since
+> > +	 * the pci_report_resume is called only in ERR_NONFATAL case,
+> > +	 * the clearing part has to be taken care here.
+> > +	 */
+> > +	aer_error_resume(dev);
+> 
+> I don't understand this part.  Previously the ERR_FATAL path looked like
+> this:
+> 
+>   do_recovery
+>     reset_link
+>       driver->reset_link
+>         aer_root_reset
+>           pci_reset_bridge_secondary_bus                # <-- reset
+>     broadcast_error_message(..., report_resume)
+>       pci_walk_bus(..., report_resume, ...)
+>         report_resume
+>       if (cb == report_resume)
+>         pci_cleanup_aer_uncorrect_error_status
+>           pci_write_config_dword(PCI_ERR_UNCOR_STATUS)  # <-- clear status
+> 
+> After this patch, it will look like this:
+> 
+>   do_recovery
+>     do_fatal_recovery
+>       pci_cleanup_aer_uncorrect_error_status
+>         pci_write_config_dword(PCI_ERR_UNCOR_STATUS)    # <-- clear status
+>       reset_link
+>         driver->reset_link
+>           aer_root_reset
+>             pci_reset_bridge_secondary_bus              # <-- reset
+>             aer_error_resume
+>               pcie_capability_write_word(PCI_EXP_DEVSTA)        # <-- clear more
+>               pci_write_config_dword(PCI_ERR_UNCOR_STATUS)      # <-- clear status
+> 
+> So if I'm understanding correctly, the new path clears the status too
+> early, then clears it again (plus clearing DEVSTA, which we didn't do
+> before) later.
+> 
+> I would think we would want to leave aer_root_reset() alone, and just move
+> the pci_cleanup_aer_uncorrect_error_status() in do_fatal_recovery() down so
+> it happens after we call reset_link().  That way the reset/clear sequence
+> would be the same as it was before.
 
-On May 30, 2018, at 9:22 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
-
->> +static int virtio_pci_sriov_configure(struct pci_dev *pci_dev, int  
->> num_vfs)
->> +{
->> +	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
->> +	struct virtio_device *vdev = &vp_dev->vdev;
->> +	int (*sriov_configure)(struct pci_dev *pci_dev, int num_vfs);
->> +
->> +	if (!(vdev->config->get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK))
->> +		return -EBUSY;
->> +
->> +	if (!__virtio_test_bit(vdev, VIRTIO_F_SR_IOV))
->> +		return -EINVAL;
->> +
->> +	sriov_configure = pci_sriov_configure_simple;
->> +	if (sriov_configure == NULL)
->> +		return -ENOENT;
->
-> BTW what is all this trickery in aid of?
-
-When SR-IOV support is not compiled into the kernel,  
-pci_sriov_configure_simple is #defined as NULL. This allows it to compile  
-in that case, even though there is utterly no way for it to be called in  
-that case. It is an alternative to #ifs in the code.
-
---
-Mark Rustad, Networking Division, Intel Corporation
-
---Apple-Mail=_FB4DAD04-C672-49EE-BC0F-E8F33D4948E7
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEE6ug8b0Wg+ULmnksNPA7/547j7m4FAlsO1NQACgkQPA7/547j
-7m7fOBAApqkdKjNkDMyc4Fo/KLviVZCiv3VXJ6ftdR6iQcJPCj4fBJQkHYcs9hoH
-FUc4GIuo6hFl84OgsbvVDfCQFg0yaO+rZp2lSNjTrEQ+By6Oh4vXe6wCPcu7/sDE
-IDFR04g3U5dm/HohkQbbcNW/Um/CcBLdHgmJXWpsifNr8j+Au3SafiFbalfv7UFr
-WUSGPKwCPzGJoGYIia824sWkUI/HdGRrhvxXefnq3DSObrxxX+Hj7lqxgfg7r8c7
-CfZ0NmeykKIyuGLHZLyKhOispM3cw9145QiquP8tHVnvxUTqrYNhzMiSZTYqsBY2
-VQSGCf+paHgFPIKqJIZpNIAN/A3YKynFZA+qq8XrDr5AT5UA9HrLbe8fheooamV5
-r21k4+05AIwDOTV1AlYMHdpzUTNs8SLe5mwNL+4RpvQlKV3Kptv2NFzv13fmSPEo
-SHcRexSpBP4eSxVOIhW3j64M4aY7vg5MQshD+geqhgA4wVpb6Wqct3GHdnxqSoEt
-z5wQrQD8jB8glt8HpIrWzMDyp774QKYnqlpddA6U9keUYP1NS5iNMzbCdT2/TZIx
-s266G3ckoi0E5qs72bEgYSyd2g4yvmLl7vZ+FWJqpypFUE4Dj7cbGXlBu4Ib8haq
-IZBRPVopLACSRpAl2exZXwnT41mvznompRSHxigfe79w64JHwgM=
-=kV9d
------END PGP SIGNATURE-----
-
---Apple-Mail=_FB4DAD04-C672-49EE-BC0F-E8F33D4948E7--
+I've been fiddling with this a bit myself and will post the results to see
+what you think.
