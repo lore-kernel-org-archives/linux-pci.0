@@ -1,96 +1,56 @@
-Return-Path: <SRS0=92Ow=IE=qualcomm.com=poza@kernel.org>
-Return-Path: <SRS0=92Ow=IE=qualcomm.com=poza@kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Philippe Ombredanne <pombredanne@nexb.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Kate Stewart <kstewart@linuxfoundation.org>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Dongdong Liu <liudongdong3@huawei.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Wei Zhang <wzhang@fb.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH v17 3/9] PCI/AER: Rename error recovery interfaces to generic PCI naming
-Date: Thu, 17 May 2018 03:43:05 -0400
-Message-Id: <1526542991-5291-4-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
-References: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr670139.outbound.protection.outlook.com ([40.107.67.139]:60364
+        "EHLO CAN01-TO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S934914AbeEIQaf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 May 2018 12:30:35 -0400
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: Jerome Glisse <jglisse@redhat.com>
+CC: =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>,
+        "Logan Gunthorpe" <logang@deltatee.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "Christoph Hellwig" <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Benjamin Herrenschmidt" <benh@kernel.crashing.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+Date: Wed, 9 May 2018 16:30:32 +0000
+Message-ID: <366A8132-B88A-40F7-BDE3-DA542E45FC0C@raithlin.com>
+References: <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+ <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+ <20180508133407.57a46902@w520.home>
+ <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+ <20180508141331.7cd737cb@w520.home>
+ <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508205005.GC15608@redhat.com>
+ <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
+ <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
+ <1775CC56-4651-422F-953A-18E024D3717C@raithlin.com>
+ <20180509160722.GB4140@redhat.com>
+In-Reply-To: <20180509160722.GB4140@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename error recovery interfaces with "pcie_" prefix so they can be made
-non-static.
-
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-[bhelgaas: move declaration to later patch, leave functions static]
-Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index b56f9c1..a2d7cc7 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -476,14 +476,14 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
- }
- 
- /**
-- * do_fatal_recovery - handle fatal error recovery process
-+ * pcie_do_fatal_recovery - handle fatal error recovery process
-  * @dev: pointer to a pci_dev data structure of agent detecting an error
-  *
-  * Invoked when an error is fatal. Once being invoked, removes the devices
-  * beneath this AER agent, followed by reset link e.g. secondary bus reset
-  * followed by re-enumeration of devices.
-  */
--static void do_fatal_recovery(struct pci_dev *dev)
-+static void pcie_do_fatal_recovery(struct pci_dev *dev)
- {
- 	struct pci_dev *udev;
- 	struct pci_bus *parent;
-@@ -533,14 +533,14 @@ static void do_fatal_recovery(struct pci_dev *dev)
- }
- 
- /**
-- * do_nonfatal_recovery - handle nonfatal error recovery process
-+ * pcie_do_nonfatal_recovery - handle nonfatal error recovery process
-  * @dev: pointer to a pci_dev data structure of agent detecting an error
-  *
-  * Invoked when an error is nonfatal. Once being invoked, broadcast
-  * error detected message to all downstream drivers within a hierarchy in
-  * question and return the returned code.
-  */
--static void do_nonfatal_recovery(struct pci_dev *dev)
-+static void pcie_do_nonfatal_recovery(struct pci_dev *dev)
- {
- 	pci_ers_result_t status;
- 	enum pci_channel_state state;
-@@ -611,9 +611,9 @@ static void handle_error_source(struct pcie_device *aerdev,
- 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
- 					info->status);
- 	} else if (info->severity == AER_NONFATAL)
--		do_nonfatal_recovery(dev);
-+		pcie_do_nonfatal_recovery(dev);
- 	else if (info->severity == AER_FATAL)
--		do_fatal_recovery(dev);
-+		pcie_do_fatal_recovery(dev);
- }
- 
- #ifdef CONFIG_ACPI_APEI_PCIEAER
-@@ -678,9 +678,9 @@ static void aer_recover_work_func(struct work_struct *work)
- 		}
- 		cper_print_aer(pdev, entry.severity, entry.regs);
- 		if (entry.severity == AER_NONFATAL)
--			do_nonfatal_recovery(pdev);
-+			pcie_do_nonfatal_recovery(pdev);
- 		else if (entry.severity == AER_FATAL)
--			do_fatal_recovery(pdev);
-+			pcie_do_fatal_recovery(pdev);
- 		pci_dev_put(pdev);
- 	}
- }
--- 
-2.7.4
+SGkgSmVyb21lDQoNCj4gTm93IGluc2lkZSB0aGF0IHBhZ2UgdGFibGUgeW91IGNhbiBwb2ludCBH
+UFUgdmlydHVhbCBhZGRyZXNzDQo+IHRvIHVzZSBHUFUgbWVtb3J5IG9yIHVzZSBzeXN0ZW0gbWVt
+b3J5LiBUaG9zZSBzeXN0ZW0gbWVtb3J5IGVudHJ5IGNhbg0KPiBhbHNvIGJlIG1hcmsgYXMgQVRT
+IGFnYWluc3QgYSBnaXZlbiBQQVNJRC4NCiAgICANClRoYW5rcy4gVGhpcyBhbGwgbWFrZXMgc2Vu
+c2UuIA0KDQpCdXQgZG8geW91IGhhdmUgZXhhbXBsZXMgb2YgdGhpcyBpbiBhIGtlcm5lbCBkcml2
+ZXIgKGlmIHNvIGNhbiB5b3UgcG9pbnQgbWUgdG9vIGl0KSBvciBpcyB0aGlzIGFsbCBkb25lIHZp
+YSB1c2VyLXNwYWNlPyBCYXNlZCBvbiBteSBncmVwcGluZyBvZiB0aGUga2VybmVsIGNvZGUgSSBz
+ZWUgemVybyBFUCBkcml2ZXJzIHVzaW5nIGluLWtlcm5lbCBBVFMgZnVuY3Rpb25hbGl0eSByaWdo
+dCBub3cuLi4NCg0KU3RlcGhlbg0KICAgIA0KDQo=
