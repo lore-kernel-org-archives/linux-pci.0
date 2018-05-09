@@ -1,63 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] PCI: move early dump functionality from x86 arch into the
- common code
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-References: <1527654876-26716-1-git-send-email-okaya@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <dc9133a4-7085-e663-172a-87601ee8775d@codeaurora.org>
-Date: Tue, 29 May 2018 21:36:15 -0700
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+To: Alex Williamson <alex.williamson@redhat.com>,
+        Stephen Bates <sbates@raithlin.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-5-logang@deltatee.com>
+ <CAPcyv4g+5N_n03J-VhmJfrr60Sqk95ZapLKBkwSsGvV4nQ+ZRw@mail.gmail.com>
+ <64C231F5-DE36-415F-B308-3A423B0BBACB@raithlin.com>
+ <15433946-f7f5-f610-4e80-380fb59920e5@redhat.com>
+ <3C9FB262-A93C-4C8F-B1E0-85C6D6F78BC2@raithlin.com>
+ <c5f30ced-7bbf-9420-db1a-72519fc78b3a@redhat.com>
+ <20180508180157.7c7b393f@w520.home>
+ <B5BFCF39-6BB4-4E45-B805-C8FCC8B79EF3@raithlin.com>
+ <20180509084445.626d2732@w520.home>
+From: Don Dutile <ddutile@redhat.com>
+Message-ID: <1c5b4a06-25bc-457a-8569-a5ae5eaa6e00@redhat.com>
+Date: Wed, 9 May 2018 11:52:04 -0400
 MIME-Version: 1.0
-In-Reply-To: <1527654876-26716-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- Petr Tesarik <ptesarik@suse.cz>, Ram Pai <linuxram@us.ibm.com>,
- Kai-Heng Feng <kai.heng.feng@canonical.com>, "H. Peter Anvin" <hpa@zytor.com>,
- Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- "maintainer:X86 ARCHITECTURE \(32-BIT AND 64-BIT\)" <x86@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
- Thymo van Beers <thymovanbeers@gmail.com>, Borislav Petkov <bp@suse.de>,
- Tom Lendacky <thomas.lendacky@amd.com>,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
- Frederic Weisbecker <frederic@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org, Juergen Gross <jgross@suse.com>,
- Dou Liyang <douly.fnst@cn.fujitsu.com>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- open list <linux-kernel@vger.kernel.org>,
- Philippe Ombredanne <pombredanne@nexb.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180509084445.626d2732@w520.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/29/2018 9:34 PM, Sinan Kaya wrote:
-> -int early_pci_allowed(void)
-> -{
-> -	return (pci_probe & (PCI_PROBE_CONF1|PCI_PROBE_NOEARLY)) ==
-> -			PCI_PROBE_CONF1;
-> -}
-
-I should have kept this. I'll wait for more feedback before posting the
-next rev. 
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 05/09/2018 10:44 AM, Alex Williamson wrote:
+> On Wed, 9 May 2018 12:35:56 +0000
+> "Stephen  Bates" <sbates@raithlin.com> wrote:
+> 
+>> Hi Alex and Don
+>>
+>>>     Correct, the VM has no concept of the host's IOMMU groups, only
+>>> the hypervisor knows about the groups,
+>>
+>> But as I understand it these groups are usually passed through to VMs
+>> on a pre-group basis by the hypervisor? So IOMMU group 1 might be
+>> passed to VM A and IOMMU group 2 passed to VM B. So I agree the VM is
+>> not aware of IOMMU groupings but it is impacted by them in the sense
+>> that if the groupings change the PCI topology presented to the VM
+>> needs to change too.
+> 
+> Hypervisors don't currently expose any topology based on the grouping,
+> the only case where such a concept even makes sense is when a vIOMMU is
+> present as devices within the same group cannot have separate address
+> spaces.  Our options for exposing such information is also limited, our
+> only real option would seem to be placing devices within the same group
+> together on a conventional PCI bus to denote the address space
+> granularity.  Currently we strongly recommend singleton groups for this
+> case and leave any additional configuration constraints to the admin.
+> 
+> The case you note of a group passed to VM A and another passed to VM B
+> is exactly an example of why any sort of dynamic routing change needs to
+> have the groups fully released, such as via hot-unplug.  For instance,
+> a routing change at a shared node above groups 1 & 2 could result in
+> the merging of these groups and there is absolutely no way to handle
+> that with portions of the group being owned by two separate VMs after
+> the merge.  Thanks,
+> 
+> Alex
+> 
+The above is why I stated the host/HV has to do p2p setup *before* device-assignment
+is done.
+Now, that could be done at boot time (with a mod.conf-like config in host/HV, before VM startup)
+as well.
+Dynamically, if such a feature is needed, requires a hot-unplug/plug cycling as Alex states.
