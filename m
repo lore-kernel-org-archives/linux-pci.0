@@ -1,68 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 22 May 2018 17:01:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH] PCI / PM: Do not clear state_saved for devices that
- remain suspended
-Message-ID: <20180522220149.GB22385@bhelgaas-glaptop.roam.corp.google.com>
-References: <11415287.ki0m5Bqgns@aspire.rjw.lan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 9 May 2018 07:03:06 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@infradead.org>
+Subject: Re: centralize SWIOTLB config symbol and misc other cleanups V3
+Message-ID: <20180509050306.GA18336@lst.de>
+References: <20180425051539.1989-1-hch@lst.de>
+ <20180502124617.GA22001@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <11415287.ki0m5Bqgns@aspire.rjw.lan>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180502124617.GA22001@infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-mips@linux-mips.org, sstabellini@kernel.org,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, linux-pci@vger.kernel.org,
+ x86@kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org,
+ sparclinux@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 18, 2018 at 10:17:42AM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> The state_saved flag should not be cleared in pci_pm_suspend() if the
-> given device is going to remain suspended, or the device's config
-> space will not be restored properly during the subsequent resume.
-> 
-> Namely, if the device is going to stay in suspend, both the late
-> and noirq callbacks return early for it, so if its state_saved flag
-> is cleared in pci_pm_suspend(), it will remain unset throughout the
-> remaining part of suspend and resume and pci_restore_state() called
-> for the device going forward will return without doing anything.
-> 
-> For this reason, change pci_pm_suspend() to only clear state_saved
-> if the given device is not going to remain suspended.  [This is
-> analogous to what commit ae860a19f37c (PCI / PM: Do not clear
-> state_saved in pci_pm_freeze() when smart suspend is set) did for
-> hibernation.]
-> 
-> Fixes: c4b65157aeef (PCI / PM: Take SMART_SUSPEND driver flag into account)
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, May 02, 2018 at 05:46:17AM -0700, Christoph Hellwig wrote:
+> Any more comments?  Especially from the x86, mips and powerpc arch
+> maintainers?  I'd like to merge this in a few days as various other
+> patches depend on it.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+I've pulled it in to make forward progress.  Any additional comments
+will have to be sent in the form of incremental patches.
 
-I assume you'll take this one, too.
-
-> ---
->  drivers/pci/pci-driver.c |    5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/pci-driver.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-driver.c
-> +++ linux-pm/drivers/pci/pci-driver.c
-> @@ -753,10 +753,11 @@ static int pci_pm_suspend(struct device
->  	 * better to resume the device from runtime suspend here.
->  	 */
->  	if (!dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) ||
-> -	    !pci_dev_keep_suspended(pci_dev))
-> +	    !pci_dev_keep_suspended(pci_dev)) {
->  		pm_runtime_resume(dev);
-> +		pci_dev->state_saved = false;
-> +	}
->  
-> -	pci_dev->state_saved = false;
->  	if (pm->suspend) {
->  		pci_power_t prev = pci_dev->current_state;
->  		int error;
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
