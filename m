@@ -1,87 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 3 May 2018 15:16:36 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v7 3/9] PCI: endpoint: functions/pci-epf-test: Add second
- entry
-Message-ID: <20180503141636.GA23270@e107981-ln.cambridge.arm.com>
-References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
- <c6cfd167838ae8e226dee0820983efe918fa4e1f.1524577064.git.gustavo.pimentel@synopsys.com>
- <20180426165605.GA6370@e107981-ln.cambridge.arm.com>
- <b65caf2e-b002-f591-6215-ff2241b2dfb8@ti.com>
- <20180501115417.GD19391@e107981-ln.cambridge.arm.com>
- <5d625d04-38fe-7d5a-67fc-5ea92039474c@ti.com>
- <20180501142607.GA21911@e107981-ln.cambridge.arm.com>
- <bfaebf3c-2175-f4b2-89c5-336ff9396ed0@synopsys.com>
- <20180502165144.GB4871@e107981-ln.cambridge.arm.com>
- <cf2772d5-26c0-b0e3-1e5b-ace91c1ea105@ti.com>
+Return-Path: <SRS0=1CN8=H4=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=1CN8=H4=redhat.com=alex.williamson@kernel.org>
+Date: Tue, 8 May 2018 18:17:33 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Stephen Bates <sbates@raithlin.com>, Christian =?UTF-8?B?S8O2bmln?=
+ <christian.koenig@amd.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Christoph
+ Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
+ <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
+ <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
+ <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
+ Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all
+ devices behind switches
+Message-ID: <20180508181733.13cbee8b@w520.home>
+In-Reply-To: <0a0a1782-04b2-c571-63c7-bfff68312946@deltatee.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+	<20180423233046.21476-5-logang@deltatee.com>
+	<20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+	<e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+	<0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+	<a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+	<3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+	<20180508133407.57a46902@w520.home>
+	<5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+	<20180508141331.7cd737cb@w520.home>
+	<d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+	<20180508144341.0441b676@w520.home>
+	<a524127a-3557-3dff-971c-dfe94ba5a01c@deltatee.com>
+	<20180508152631.50fd583c@w520.home>
+	<354F7407-0DC7-470C-B9AA-74FDF9C46B08@raithlin.com>
+	<20180508160336.0935ddde@w520.home>
+	<20905682-9440-7d4b-0260-99d3dc794c3d@deltatee.com>
+	<C3CEE4DB-A001-4E4C-B9B9-4B160E4C5367@raithlin.com>
+	<20180508171150.0e8fd291@w520.home>
+	<0a0a1782-04b2-c571-63c7-bfff68312946@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cf2772d5-26c0-b0e3-1e5b-ace91c1ea105@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 03, 2018 at 12:03:15PM +0530, Kishon Vijay Abraham I wrote:
-
-[...]
-
-> >> Since the linkup notifier and BAR index (where auxiliary registers are
-> >> located) may be configurable and is something platform dependent,
-> >> perhaps the configuration of this variables should be done by module
-> >> parameter and not by configfs, leaving this configuration
-> >> responsibility in charge of each platform.
-> > 
-> > They are platform dependent because they depend on the EP controller.
-> > That's why I said that those are EP controller parameters. I do not
-> > think they are module parameters either - they should be part of HW
-> > description in firmware.
+On Tue, 8 May 2018 17:31:48 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
+> On 08/05/18 05:11 PM, Alex Williamson wrote:
+> > A runtime, sysfs approach has some benefits here,
+> > especially in identifying the device assuming we're ok with leaving
+> > the persistence problem to userspace tools.  I'm still a little fond of
+> > the idea of exposing an acs_flags attribute for devices in sysfs where
+> > a write would do a soft unplug and re-add of all affected devices to
+> > automatically recreate the proper grouping.  Any dynamic change in
+> > routing and grouping would require all DMA be re-established anyway and
+> > a soft hotplug seems like an elegant way of handling it.  Thanks,  
 > 
-> The problem is because pci-epf-test cannot be described in HW. pci-epf-test is
-> also not automatically bound to the EP controller but is bound by the user like
-> below
-> ln -s functions/pci_epf_test/func1 controllers/51000000.pcie_ep/
+> This approach sounds like it has a lot more issues to contend with:
 > 
-> So given that user anyways has to bind the epf device to the controller, based
-> on the platform the user can use a different configfs entry like below
-> ln -s functions/pci_epf_test_dw/func1 controllers/51000000.pcie_ep/ or
-> ln -s functions/pci_epf_test_k2g/func1 controllers/21800000.pcie-ep/
+> For starters, a soft unplug/re-add of all the devices behind a switch is
+> going to be difficult if a lot of those devices have had drivers
+> installed and their respective resources are now mounted or otherwise in
+> use.
 > 
-> If the epf can be described in dt, then something like below can be done
-> pcie1_ep: pcie_ep@51000000 {
-> 	compatible = "ti,dra7-pcie-ep";
-> 	interrupts = <0 232 0x4>;
-> 	num-lanes = <1>;
-> 	num-ib-windows = <4>;
-> 	num-ob-windows = <16>;
-> 	phys = <&pcie1_phy>;
-> 	phy-names = "pcie-phy0";
-> 	pci_epf_test: pci_epf_test@0 {
-> 		name = "pci_epf_test_dw";
-> 		<other properties>;
-> 	}
-> };
-> 
-> With this pci-dra7xx.c driver should create pci_epf_device using
-> pci_epf_create("pci_epf_test_dw");
-> 
-> Then the driver_data corresponding to "pci_epf_test_dw" will select linkup
-> notifier or BAR index etc.
+> Then, do we have to redo a the soft-replace every time we change the ACS
+> bit for every downstream port? That could mean you have to do dozens
+> soft-replaces before you have all the ACS bits set which means you have
+> a storm of drivers being added and removed.
 
-Those two properties are properties of the EP controller (it is not 100%
-clear to me how the test BAR register is defined), is this correct ?
+True, anything requiring tweaking multiple downstream ports would
+induce a hot-unplug/replug for each.  A better sysfs interface would
+allow multiple downstream ports to be updated in a single shot.
 
-If yes, given that those properties are not useful before an EPF is
-bound to an EPC, can't they be retrieved at bind time from the EPC
-controller data (that we can add through DT bindings) ?
+> This would require some kind of fancy custom setup software that runs at
+> just the right time in the boot sequence or a lot of work on the users
+> part to unbind all the resources, setup the ACS bits and then rebind
+> everything (assuming the soft re-add doesn't rebind it every time you
+> adjust one ACS bit). Ugly.
+> 
+> IMO, if we need to do the sysfs approach then we need to be able to
+> adjust the groups dynamically in a sensible way and not through the
+> large hammer that is soft-replaces. I think this would be great but I
+> don't think we will be tackling that with this patch set.
 
-Thanks,
-Lorenzo
+OTOH, I think the only sensible way to dynamically adjust groups is
+through hotplug, we cannot have running drivers attached to downstream
+endpoints as we're adjusting the routing.  Thanks,
+
+Alex
