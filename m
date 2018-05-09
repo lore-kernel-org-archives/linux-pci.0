@@ -1,144 +1,354 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr40083.outbound.protection.outlook.com ([40.107.4.83]:12149
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751428AbeETNup (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 20 May 2018 09:50:45 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
-        robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
-        gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com,
-        bhelgaas@google.com
-Cc: hch@lst.de, joro@8bytes.org, m.szyprowski@samsung.com,
-        shawnguo@kernel.org, frowand.list@gmail.com,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bharat.bhushan@nxp.com, stuyoder@gmail.com, leoyang.li@nxp.com,
-        Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH 4/7 v5] iommu: arm-smmu: Add support for the fsl-mc bus
-Date: Sun, 20 May 2018 19:19:48 +0530
-Message-Id: <1526824191-7000-5-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
-References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from lucky1.263xmail.com ([211.157.147.130]:50905 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932988AbeEIBUU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 May 2018 21:20:20 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v7 2/7] PCI: rockchip: Split out rockchip_pcie_parse_dt() to parse DT
+Date: Wed,  9 May 2018 09:12:05 +0800
+Message-Id: <1525828325-69906-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1525828278-69800-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1525828278-69800-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement bus specific support for the fsl-mc bus including
-registering arm_smmu_ops and bus specific device add operations.
+Most of the DT properties are used for both of RC driver and
+EP driver, so this patch split them out to a new function,
+rockchip_pcie_parse_dt(), in pcie-rockchip.c and rename the
+original function to rockchip_pcie_parse_host_dt() to avoid
+confusion. No functional changed intended.
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 ---
- drivers/iommu/arm-smmu.c |  7 +++++++
- drivers/iommu/iommu.c    | 21 +++++++++++++++++++++
- include/linux/fsl/mc.h   |  8 ++++++++
- include/linux/iommu.h    |  2 ++
- 4 files changed, 38 insertions(+)
 
-diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-index 69e7c60..e1d5090 100644
---- a/drivers/iommu/arm-smmu.c
-+++ b/drivers/iommu/arm-smmu.c
-@@ -52,6 +52,7 @@
- #include <linux/spinlock.h>
- 
- #include <linux/amba/bus.h>
-+#include <linux/fsl/mc.h>
- 
- #include "io-pgtable.h"
- #include "arm-smmu-regs.h"
-@@ -1459,6 +1460,8 @@ static struct iommu_group *arm_smmu_device_group(struct device *dev)
- 
- 	if (dev_is_pci(dev))
- 		group = pci_device_group(dev);
-+	else if (dev_is_fsl_mc(dev))
-+		group = fsl_mc_device_group(dev);
- 	else
- 		group = generic_device_group(dev);
- 
-@@ -2037,6 +2040,10 @@ static void arm_smmu_bus_init(void)
- 		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
- 	}
- #endif
-+#ifdef CONFIG_FSL_MC_BUS
-+	if (!iommu_present(&fsl_mc_bus_type))
-+		bus_set_iommu(&fsl_mc_bus_type, &arm_smmu_ops);
-+#endif
+Changes in v7: None
+Changes in v6: None
+Changes in v5: None
+Changes in v4: None
+
+ drivers/pci/host/pcie-rockchip-host.c | 119 ++-----------------------------
+ drivers/pci/host/pcie-rockchip.c      | 129 ++++++++++++++++++++++++++++++++++
+ drivers/pci/host/pcie-rockchip.h      |   2 +
+ 3 files changed, 136 insertions(+), 114 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip-host.c b/drivers/pci/host/pcie-rockchip-host.c
+index fae9ecc..cf97130 100644
+--- a/drivers/pci/host/pcie-rockchip-host.c
++++ b/drivers/pci/host/pcie-rockchip-host.c
+@@ -705,130 +705,20 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
  }
  
- static int arm_smmu_device_probe(struct platform_device *pdev)
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index d2aa2320..6d4ce35 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -32,6 +32,7 @@
- #include <linux/pci.h>
- #include <linux/bitops.h>
- #include <linux/property.h>
-+#include <linux/fsl/mc.h>
- #include <trace/events/iommu.h>
+ /**
+- * rockchip_pcie_parse_dt - Parse Device Tree
++ * rockchip_pcie_parse_host_dt - Parse Device Tree
+  * @rockchip: PCIe port information
+  *
+  * Return: '0' on success and error value on failure
+  */
+-static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
++static int rockchip_pcie_parse_host_dt(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+-	struct platform_device *pdev = to_platform_device(dev);
+-	struct device_node *node = dev->of_node;
+-	struct resource *regs;
+ 	int err;
  
- static struct kset *iommu_group_kset;
-@@ -987,6 +988,26 @@ struct iommu_group *pci_device_group(struct device *dev)
- 	return iommu_group_alloc();
- }
+-	regs = platform_get_resource_byname(pdev,
+-					    IORESOURCE_MEM,
+-					    "axi-base");
+-	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
+-	if (IS_ERR(rockchip->reg_base))
+-		return PTR_ERR(rockchip->reg_base);
+-
+-	regs = platform_get_resource_byname(pdev,
+-					    IORESOURCE_MEM,
+-					    "apb-base");
+-	rockchip->apb_base = devm_ioremap_resource(dev, regs);
+-	if (IS_ERR(rockchip->apb_base))
+-		return PTR_ERR(rockchip->apb_base);
+-
+-	err = rockchip_pcie_get_phys(rockchip);
++	err = rockchip_pcie_parse_dt(rockchip);
+ 	if (err)
+ 		return err;
  
-+/* Get the IOMMU group for device on fsl-mc bus */
-+struct iommu_group *fsl_mc_device_group(struct device *dev)
+-	rockchip->lanes = 1;
+-	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
+-	if (!err && (rockchip->lanes == 0 ||
+-		     rockchip->lanes == 3 ||
+-		     rockchip->lanes > 4)) {
+-		dev_warn(dev, "invalid num-lanes, default to use one lane\n");
+-		rockchip->lanes = 1;
+-	}
+-
+-	rockchip->link_gen = of_pci_get_max_link_speed(node);
+-	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
+-		rockchip->link_gen = 2;
+-
+-	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
+-	if (IS_ERR(rockchip->core_rst)) {
+-		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing core reset property in node\n");
+-		return PTR_ERR(rockchip->core_rst);
+-	}
+-
+-	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
+-	if (IS_ERR(rockchip->mgmt_rst)) {
+-		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing mgmt reset property in node\n");
+-		return PTR_ERR(rockchip->mgmt_rst);
+-	}
+-
+-	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
+-								     "mgmt-sticky");
+-	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
+-		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing mgmt-sticky reset property in node\n");
+-		return PTR_ERR(rockchip->mgmt_sticky_rst);
+-	}
+-
+-	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
+-	if (IS_ERR(rockchip->pipe_rst)) {
+-		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing pipe reset property in node\n");
+-		return PTR_ERR(rockchip->pipe_rst);
+-	}
+-
+-	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
+-	if (IS_ERR(rockchip->pm_rst)) {
+-		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing pm reset property in node\n");
+-		return PTR_ERR(rockchip->pm_rst);
+-	}
+-
+-	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
+-	if (IS_ERR(rockchip->pclk_rst)) {
+-		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing pclk reset property in node\n");
+-		return PTR_ERR(rockchip->pclk_rst);
+-	}
+-
+-	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
+-	if (IS_ERR(rockchip->aclk_rst)) {
+-		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
+-			dev_err(dev, "missing aclk reset property in node\n");
+-		return PTR_ERR(rockchip->aclk_rst);
+-	}
+-
+-	rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
+-	if (IS_ERR(rockchip->ep_gpio)) {
+-		dev_err(dev, "missing ep-gpios property in node\n");
+-		return PTR_ERR(rockchip->ep_gpio);
+-	}
+-
+-	rockchip->aclk_pcie = devm_clk_get(dev, "aclk");
+-	if (IS_ERR(rockchip->aclk_pcie)) {
+-		dev_err(dev, "aclk clock not found\n");
+-		return PTR_ERR(rockchip->aclk_pcie);
+-	}
+-
+-	rockchip->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
+-	if (IS_ERR(rockchip->aclk_perf_pcie)) {
+-		dev_err(dev, "aclk_perf clock not found\n");
+-		return PTR_ERR(rockchip->aclk_perf_pcie);
+-	}
+-
+-	rockchip->hclk_pcie = devm_clk_get(dev, "hclk");
+-	if (IS_ERR(rockchip->hclk_pcie)) {
+-		dev_err(dev, "hclk clock not found\n");
+-		return PTR_ERR(rockchip->hclk_pcie);
+-	}
+-
+-	rockchip->clk_pcie_pm = devm_clk_get(dev, "pm");
+-	if (IS_ERR(rockchip->clk_pcie_pm)) {
+-		dev_err(dev, "pm clock not found\n");
+-		return PTR_ERR(rockchip->clk_pcie_pm);
+-	}
+-
+ 	err = rockchip_pcie_setup_irq(rockchip);
+ 	if (err)
+ 		return err;
+@@ -1195,8 +1085,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, rockchip);
+ 	rockchip->dev = dev;
++	rockchip->is_rc = true;
+ 
+-	err = rockchip_pcie_parse_dt(rockchip);
++	err = rockchip_pcie_parse_host_dt(rockchip);
+ 	if (err)
+ 		return err;
+ 
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 3d46da9..bcc222b 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -12,10 +12,139 @@
+  */
+ 
+ #include <linux/clk.h>
++#include <linux/gpio/consumer.h>
++#include <linux/of_pci.h>
+ #include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++#include <linux/reset.h>
+ 
+ #include "pcie-rockchip.h"
+ 
++int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
 +{
-+	struct device *cont_dev = fsl_mc_cont_dev(dev);
-+	struct iommu_group *group;
++	struct device *dev = rockchip->dev;
++	struct platform_device *pdev = to_platform_device(dev);
++	struct device_node *node = dev->of_node;
++	struct resource *regs;
++	int err;
 +
-+	/* Container device is responsible for creating the iommu group */
-+	if (fsl_mc_is_cont_dev(dev)) {
-+		group = iommu_group_alloc();
-+		if (IS_ERR(group))
-+			return NULL;
-+	} else {
-+		get_device(cont_dev);
-+		group = iommu_group_get(cont_dev);
-+		put_device(cont_dev);
++	regs = platform_get_resource_byname(pdev,
++					    IORESOURCE_MEM,
++					    "axi-base");
++	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
++	if (IS_ERR(rockchip->reg_base))
++		return PTR_ERR(rockchip->reg_base);
++
++	regs = platform_get_resource_byname(pdev,
++					    IORESOURCE_MEM,
++					    "apb-base");
++	rockchip->apb_base = devm_ioremap_resource(dev, regs);
++	if (IS_ERR(rockchip->apb_base))
++		return PTR_ERR(rockchip->apb_base);
++
++	err = rockchip_pcie_get_phys(rockchip);
++	if (err)
++		return err;
++
++	rockchip->lanes = 1;
++	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
++	if (!err && (rockchip->lanes == 0 ||
++		     rockchip->lanes == 3 ||
++		     rockchip->lanes > 4)) {
++		dev_warn(dev, "invalid num-lanes, default to use one lane\n");
++		rockchip->lanes = 1;
 +	}
 +
-+	return group;
++	rockchip->link_gen = of_pci_get_max_link_speed(node);
++	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
++		rockchip->link_gen = 2;
++
++	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
++	if (IS_ERR(rockchip->core_rst)) {
++		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing core reset property in node\n");
++		return PTR_ERR(rockchip->core_rst);
++	}
++
++	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
++	if (IS_ERR(rockchip->mgmt_rst)) {
++		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing mgmt reset property in node\n");
++		return PTR_ERR(rockchip->mgmt_rst);
++	}
++
++	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
++								     "mgmt-sticky");
++	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
++		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing mgmt-sticky reset property in node\n");
++		return PTR_ERR(rockchip->mgmt_sticky_rst);
++	}
++
++	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
++	if (IS_ERR(rockchip->pipe_rst)) {
++		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing pipe reset property in node\n");
++		return PTR_ERR(rockchip->pipe_rst);
++	}
++
++	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
++	if (IS_ERR(rockchip->pm_rst)) {
++		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing pm reset property in node\n");
++		return PTR_ERR(rockchip->pm_rst);
++	}
++
++	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
++	if (IS_ERR(rockchip->pclk_rst)) {
++		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing pclk reset property in node\n");
++		return PTR_ERR(rockchip->pclk_rst);
++	}
++
++	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
++	if (IS_ERR(rockchip->aclk_rst)) {
++		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
++			dev_err(dev, "missing aclk reset property in node\n");
++		return PTR_ERR(rockchip->aclk_rst);
++	}
++
++	if (rockchip->is_rc) {
++		rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
++		if (IS_ERR(rockchip->ep_gpio)) {
++			dev_err(dev, "missing ep-gpios property in node\n");
++			return PTR_ERR(rockchip->ep_gpio);
++		}
++	}
++
++	rockchip->aclk_pcie = devm_clk_get(dev, "aclk");
++	if (IS_ERR(rockchip->aclk_pcie)) {
++		dev_err(dev, "aclk clock not found\n");
++		return PTR_ERR(rockchip->aclk_pcie);
++	}
++
++	rockchip->aclk_perf_pcie = devm_clk_get(dev, "aclk-perf");
++	if (IS_ERR(rockchip->aclk_perf_pcie)) {
++		dev_err(dev, "aclk_perf clock not found\n");
++		return PTR_ERR(rockchip->aclk_perf_pcie);
++	}
++
++	rockchip->hclk_pcie = devm_clk_get(dev, "hclk");
++	if (IS_ERR(rockchip->hclk_pcie)) {
++		dev_err(dev, "hclk clock not found\n");
++		return PTR_ERR(rockchip->hclk_pcie);
++	}
++
++	rockchip->clk_pcie_pm = devm_clk_get(dev, "pm");
++	if (IS_ERR(rockchip->clk_pcie_pm)) {
++		dev_err(dev, "pm clock not found\n");
++		return PTR_ERR(rockchip->clk_pcie_pm);
++	}
++
++	return 0;
 +}
++EXPORT_SYMBOL_GPL(rockchip_pcie_parse_dt);
 +
- /**
-  * iommu_group_get_for_dev - Find or create the IOMMU group for a device
-  * @dev: target device
-diff --git a/include/linux/fsl/mc.h b/include/linux/fsl/mc.h
-index f27cb14..dddaca1 100644
---- a/include/linux/fsl/mc.h
-+++ b/include/linux/fsl/mc.h
-@@ -351,6 +351,14 @@ struct fsl_mc_io {
- #define dev_is_fsl_mc(_dev) (0)
- #endif
+ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+diff --git a/drivers/pci/host/pcie-rockchip.h b/drivers/pci/host/pcie-rockchip.h
+index d27941e..473e74f 100644
+--- a/drivers/pci/host/pcie-rockchip.h
++++ b/drivers/pci/host/pcie-rockchip.h
+@@ -222,6 +222,7 @@ struct rockchip_pcie {
+ 	u32     mem_size;
+ 	phys_addr_t msg_bus_addr;
+ 	phys_addr_t mem_bus_addr;
++	bool is_rc;
+ };
  
-+/* Macro to check if a device is a container device */
-+#define fsl_mc_is_cont_dev(_dev) (to_fsl_mc_device(_dev)->flags & \
-+	FSL_MC_IS_DPRC)
-+
-+/* Macro to get the container device of a MC device */
-+#define fsl_mc_cont_dev(_dev) (fsl_mc_is_cont_dev(_dev) ? \
-+	(_dev) : (_dev)->parent)
-+
- /*
-  * module_fsl_mc_driver() - Helper macro for drivers that don't do
-  * anything special in module init/exit.  This eliminates a lot of
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 19938ee..2981200 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -389,6 +389,8 @@ static inline size_t iommu_map_sg(struct iommu_domain *domain,
- extern struct iommu_group *pci_device_group(struct device *dev);
- /* Generic device grouping function */
- extern struct iommu_group *generic_device_group(struct device *dev);
-+/* FSL-MC device grouping function */
-+struct iommu_group *fsl_mc_device_group(struct device *dev);
+ static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
+@@ -235,6 +236,7 @@ static void rockchip_pcie_write(struct rockchip_pcie *rockchip, u32 val,
+ 	writel(val, rockchip->apb_base + reg);
+ }
  
- /**
-  * struct iommu_fwspec - per-device IOMMU instance data
++int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip);
+ int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip);
+ void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip);
+ int rockchip_pcie_enable_clocks(struct rockchip_pcie *rockchip);
 -- 
 1.9.1
