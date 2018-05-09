@@ -1,77 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:47939 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935287AbeEIPZH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 May 2018 11:25:07 -0400
+Date: Wed, 9 May 2018 09:26:53 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
- <b8acf835-df94-9967-2327-8f0e39d88511@amd.com>
- <805645c1-ea40-2e57-88eb-5dd34e579b2e@deltatee.com>
- <3e4e0126-f444-8d88-6793-b5eb97c61f76@amd.com>
- <ce2e5351-f32a-bd80-1c77-b7fc38842175@deltatee.com>
- <38d866cf-f7b4-7118-d737-5a5dcd9f3784@amd.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <2d59aa02-f2fa-bd88-1b6c-923117a6ad28@deltatee.com>
-Date: Thu, 3 May 2018 12:43:21 -0600
+        "Bauer, Scott" <scott.bauer@intel.com>,
+        "Derrick, Jonathan" <jonathan.derrick@intel.com>
+Subject: Re: [PATCH] PCI/VMD: White list for fast interrupt handlers
+Message-ID: <20180509152652.GA823@localhost.localdomain>
+References: <20180508160022.30954-1-keith.busch@intel.com>
+ <20180509043828.GA9413@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <38d866cf-f7b4-7118-d737-5a5dcd9f3784@amd.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v4 00/14] Copy Offload in NVMe Fabrics with P2P PCI Memory
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180509043828.GA9413@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 03/05/18 11:29 AM, Christian König wrote:
-> Ok, that is the point where I'm stuck. Why do we need that in one 
-> function call in the PCIe subsystem?
+On Tue, May 08, 2018 at 09:38:28PM -0700, Christoph Hellwig wrote:
+> On Tue, May 08, 2018 at 10:00:22AM -0600, Keith Busch wrote:
+> > Devices with slow interrupt handlers are significantly harming performance
+> > when their interrupt vector is shared with a fast device. This patch
+> > creates a class code white list for devices with known fast interrupt
+> > handlers, and all other devices will share a single vector so they don't
+> > interfere with performance.
+> > 
+> > At the moment, only the NVM Express class code is on the list, but more
+> > may be added if VMD users desire to use other low-latency devices in
+> > these domains.
 > 
-> The problem at least with GPUs is that we seriously don't have that 
-> information here, cause the PCI subsystem might not be aware of all the 
-> interconnections.
-> 
-> For example it isn't uncommon to put multiple GPUs on one board. To the 
-> PCI subsystem that looks like separate devices, but in reality all GPUs 
-> are interconnected and can access each others memory directly without 
-> going over the PCIe bus.
-> 
-> I seriously don't want to model that in the PCI subsystem, but rather 
-> the driver. That's why it feels like a mistake to me to push all that 
-> into the PCI function.
+> I think this is far too much of a hack.   Just don't use VMD if your
+> care about performance.
 
-Huh? I'm lost. If you have a bunch of PCI devices you can send them as a
-list to this API, if you want. If the driver is _sure_ they are all the
-same, you only have to send one. In your terminology, you'd just have to
-call the interface with:
-
-pci_p2pdma_distance(target, [initiator, target])
-
-> Why can't we model that as two separate transactions?
-
-You could, but this is more convenient for users of the API that need to
-deal with multiple devices (and manage devices that may be added or
-removed at any time).
-
-> Yeah, same for me. If Bjorn is ok with that specialized NVM functions 
-> that I'm fine with that as well.
-> 
-> I think it would just be more convenient when we can come up with 
-> functions which can handle all use cases, cause there still seems to be 
-> a lot of similarities.
-
-The way it's implemented is more general and can handle all use cases.
-You are arguing for a function that can handle your case (albeit with a
-bit more fuss) but can't handle mine and is therefore less general.
-Calling my interface specialized is wrong.
-
-Logan
+I'm not aware of an easier way you can direct-assign an entire PCIe domain
+to a virtual machine. :)
