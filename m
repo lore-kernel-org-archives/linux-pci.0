@@ -1,46 +1,41 @@
-Return-Path: <SRS0=CtTX=IF=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=CtTX=IF=intel.com=jonathan.derrick@kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Keith Busch <keith.busch@intel.com>,
-	<linux-pci@vger.kernel.org>
-Cc: Joerg Roedel <jroedel@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Dave Fugate <david.fugate@intel.com>,
-	Scott Bauer <scott.bauer@intel.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH 4/5] x86/PCI: Add additional VMD device root ports to VMD AER quirk
-Date: Fri, 18 May 2018 13:28:01 -0600
-Message-Id: <20180518192802.20371-5-jonathan.derrick@intel.com>
-In-Reply-To: <20180518192802.20371-1-jonathan.derrick@intel.com>
-References: <20180518192802.20371-1-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:33547 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750903AbeEIFmQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2018 01:42:16 -0400
+Received: by mail-pg0-f65.google.com with SMTP id i194-v6so22170260pgd.0
+        for <linux-pci@vger.kernel.org>; Tue, 08 May 2018 22:42:16 -0700 (PDT)
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
+        Jingoo Han <jingoohan1@gmail.com>
+Subject: [PATCH 1/9] PCI: exynos: Drop unnecessary root_bus_nr setting
+Date: Wed,  9 May 2018 13:39:38 +0800
+Message-Id: <1525844386-5433-1-git-send-email-shawn.guo@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VMD devices change the source id of messages from child devices to the
-VMD endpoint. This patch adds additional VMD root port device ids to the
-AER quirk which requires walking the bus to determine which devices were
-throwing the error.
+The root_bus_nr initialization has already been done in function
+dw_pcie_host_init().  The -1 assignment in platform driver before
+calling into dw_pcie_host_init() is not really needed.  Drop it.
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>
 ---
- arch/x86/pci/fixup.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/dwc/pci-exynos.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 54ef19e90705..13f4485ca388 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -636,6 +636,10 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334a, quirk_no_aersid);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334b, quirk_no_aersid);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334c, quirk_no_aersid);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334d, quirk_no_aersid);
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index 4cc1e5df8c79..cee5f2f590e2 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -421,7 +421,6 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
+ 		}
+ 	}
  
- #ifdef CONFIG_PHYS_ADDR_T_64BIT
+-	pp->root_bus_nr = -1;
+ 	pp->ops = &exynos_pcie_host_ops;
  
+ 	ret = dw_pcie_host_init(pp);
 -- 
-2.14.3
+1.9.1
