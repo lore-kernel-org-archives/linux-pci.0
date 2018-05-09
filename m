@@ -1,13 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 1 Jun 2018 08:42:27 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-To: honghui.zhang@mediatek.com
-Subject: [RFC PATCH] PCI: mediatek: mtk_pcie_pm_ops can be static
-Message-ID: <20180601004227.GA98217@lkp-sb05>
-References: <1527647736-19986-1-git-send-email-honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-In-Reply-To: <1527647736-19986-1-git-send-email-honghui.zhang@mediatek.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v7 7/7] arm64: defconfig: update config for Rockchip PCIe
+Date: Wed,  9 May 2018 09:13:37 +0800
+Message-Id: <1525828417-70201-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1525828278-69800-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1525828278-69800-1-git-send-email-shawn.lin@rock-chips.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,39 +15,53 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, lorenzo.pieralisi@arm.com, yt.shen@mediatek.com,
- marc.zyngier@arm.com, linux-pci@vger.kernel.org, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, linux-kernel@vger.kernel.org, yong.wu@mediatek.com,
- matthias.bgg@gmail.com, ryder.lee@mediatek.com,
- linux-mediatek@lists.infradead.org, kbuild-all@01.org,
- honghui.zhang@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
- eddie.huang@mediatek.com, linux-arm-kernel@lists.infradead.org
+Cc: devicetree@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
+ linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+ linux-rockchip@lists.infradead.org, Rob Herring <robh+dt@kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Now Rockchip PCIe drivers could support both of RC mode and EP
+mode, so we need rename the config name. This patch updates
+defconfig to reflect the fact that we want to build Rockchip PCIe
+controller as RC mode, into a module as before.
 
-Fixes: 24dc21cd1e9d ("PCI: mediatek: Add system pm support for MT2712")
-Signed-off-by: kbuild test robot <fengguang.wu@intel.com>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: Heiko Stuebner <heiko@sntech.de>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+
 ---
- pcie-mediatek.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index e3b16b0..e01cc66 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -1256,7 +1256,7 @@ static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
- 	return 0;
- }
- 
--const struct dev_pm_ops mtk_pcie_pm_ops = {
-+static const struct dev_pm_ops mtk_pcie_pm_ops = {
- 	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
- 				      mtk_pcie_resume_noirq)
- };
+Changes in v7: None
+Changes in v6: None
+Changes in v5: None
+Changes in v4: None
+
+ arch/arm64/configs/defconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 1d3b406..8fd8bae 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -78,7 +78,8 @@ CONFIG_PCIE_ARMADA_8K=y
+ CONFIG_PCI_AARDVARK=y
+ CONFIG_PCI_TEGRA=y
+ CONFIG_PCIE_RCAR=y
+-CONFIG_PCIE_ROCKCHIP=m
++CONFIG_PCIE_ROCKCHIP=y
++CONFIG_PCIE_ROCKCHIP_HOST=m
+ CONFIG_PCI_HOST_GENERIC=y
+ CONFIG_PCI_XGENE=y
+ CONFIG_PCI_HOST_THUNDER_PEM=y
+-- 
+1.9.1
+
+
 
 _______________________________________________
 linux-arm-kernel mailing list
