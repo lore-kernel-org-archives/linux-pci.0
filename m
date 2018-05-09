@@ -1,74 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:39500 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932714AbeEaQu1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 12:50:27 -0400
-Subject: Re: [PATCH] PCI: Check for PCIe downtraining conditions
-From: "Alex G." <mr.nuke.me@gmail.com>
-To: Sinan Kaya <okaya@codeaurora.org>, Alex_Gagniuc@Dellteam.com,
-        bhelgaas@google.com
-Cc: Austin.Bolen@dell.com, Shyam.Iyer@dell.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180531150535.9684-1-mr.nuke.me@gmail.com>
- <28004506-24f0-6d10-2d1e-074e0483d2f9@codeaurora.org>
- <4e0611c872054e768daa96b302651db3@ausx13mps321.AMER.DELL.COM>
- <f260078b-6918-7fd9-39d6-e9f300e4c048@codeaurora.org>
- <3b8a895b-3080-7ddb-cbfd-5aa972e9bf65@gmail.com>
- <35563ce3-e235-096c-4b9b-5f3664d67d0f@codeaurora.org>
- <093b2789-39a1-db9e-5783-b0488b3c9ccd@gmail.com>
- <32d58835-2f35-0b80-38d0-b9ff603619dd@codeaurora.org>
- <54071f83-5d0d-04a0-d448-0c99ec0ffc4f@gmail.com>
-Message-ID: <dbe16533-1878-13ed-709a-04b3a75fe477@gmail.com>
-Date: Thu, 31 May 2018 11:50:25 -0500
+Return-Path: <SRS0=6Bva=H4=redhat.com=ddutile@kernel.org>
+Return-Path: <SRS0=6Bva=H4=redhat.com=ddutile@kernel.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+To: Stephen Bates <sbates@raithlin.com>,
+ Alex Williamson <alex.williamson@redhat.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Bjorn Helgaas <helgaas@kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-5-logang@deltatee.com>
+ <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+ <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+ <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+ <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+ <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+ <20180508133407.57a46902@w520.home>
+ <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+ <20180508141331.7cd737cb@w520.home>
+ <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508144341.0441b676@w520.home>
+ <a524127a-3557-3dff-971c-dfe94ba5a01c@deltatee.com>
+ <20180508152631.50fd583c@w520.home>
+ <354F7407-0DC7-470C-B9AA-74FDF9C46B08@raithlin.com>
+ <20180508160336.0935ddde@w520.home>
+ <11819753-af26-4632-8580-d4a47127a3b2@redhat.com>
+ <C6D0BD3A-FA82-425A-899C-C2DBDCBC7EEC@raithlin.com>
+From: Don Dutile <ddutile@redhat.com>
+Message-ID: <09b4088a-838a-48f5-4395-f261de483dbf@redhat.com>
+Date: Wed, 9 May 2018 11:58:46 -0400
 MIME-Version: 1.0
-In-Reply-To: <54071f83-5d0d-04a0-d448-0c99ec0ffc4f@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <C6D0BD3A-FA82-425A-899C-C2DBDCBC7EEC@raithlin.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 05/31/2018 11:49 AM, Alex G. wrote:
+On 05/09/2018 08:44 AM, Stephen  Bates wrote:
+> Hi Don
 > 
+>>     RDMA VFs lend themselves to NVMEoF w/device-assignment.... need a way to
+>>     put NVME 'resources' into an assignable/manageable object for 'IOMMU-grouping',
+>>     which is really a 'DMA security domain' and less an 'IOMMU grouping domain'.
+>      
+> Ha, I like your term "DMA Security Domain" which sounds about right for what we are discussing with p2pdma and ACS disablement ;-). The problem is that ACS is, in some ways, too big of hammer for what we want here in the sense that it is either on or off for the bridge or MF EP we enable/disable it for. ACS can't filter the TLPs by address or ID though PCI-SIG are having some discussions on extending ACS. That's a long term solution and won't be applicable to us for some time.
 > 
-> On 05/31/2018 11:13 AM, Sinan Kaya wrote:
->> On 5/31/2018 12:01 PM, Alex G. wrote:
->>>>       PCI: Add pcie_print_link_status() to log link speed and whether it's limited
->>> This one, I have, but it's not what I need. This looks at the available
->>> bandwidth from root port to endpoint, whereas I'm only interested in
->>> downtraining between endpoint and upstream port.
->>
->> I see what you are saying. 
->>
->> With a little bit of effort, you can reuse the same code.
->>
->> Here is an attempt.
->>
->> You can probably extend pcie_bandwidth_available() to put an optional parent bridge
->> device for your own use case and terminate the loop around here.
->>
->> https://elixir.bootlin.com/linux/v4.17-rc7/source/drivers/pci/pci.c#L5182
->>
->> Then, you can use the existing code to achieve what you are looking for via
->> pcie_print_link_status() by adding an optional parent parameter.
->>
->> 	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
->> 	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width, *parent*);
+> NVMe SSDs that support SR-IOV are coming to market but we can't assume all NVMe SSDs with support SR-IOV. That will probably be a pretty high end-feature...
 > 
-> That's confusing.
-
-"confusing" refers to the way the code currently works. It doesn't refer
-to your proposal.
-
-
-Alex
-
- I'd expect _capable() and _available() to be
-> symmetrical. They either both look at one link only, or both go down to
-> the root port. Though it seems _capable() is link-local, and
-> _available() is down to root port.
+> Stephen
+>      
+>      
 > 
->>
->> If parent parameter is NULL, code can walk all the way to root as it is doing today.
->> If it is not, then will terminate the loop on the first iteration.
->>
+Sure, we could provide unsecure enablement for development and kick-the-tires deployment ..
+device-assignment started that way (no ACS, no intr-remapping, etc.), but for secure setups,
+VF's for both p2p EPs is the best security model.
+So, we should have a design goal for the secure configuration.
+workarounds/unsecure modes to deal with near-term what-we-have-to-work-with can be employed, but they shoudn't be
+the only/defacto/final-solution.
