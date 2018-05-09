@@ -1,175 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:47268 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752057AbeENRdy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 May 2018 13:33:54 -0400
-Date: Mon, 14 May 2018 18:33:46 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Fengguang Wu <fengguang.wu@intel.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] PCI: dwc: move CONFIG_PCI depends to menu
-Message-ID: <20180514173346.GA16508@e107981-ln.cambridge.arm.com>
-References: <20180511171530.16068-1-robh@kernel.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 8 May 2018 18:01:57 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Don Dutile <ddutile@redhat.com>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all
+ devices behind switches
+Message-ID: <20180508180157.7c7b393f@w520.home>
+In-Reply-To: <c5f30ced-7bbf-9420-db1a-72519fc78b3a@redhat.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-5-logang@deltatee.com>
+ <CAPcyv4g+5N_n03J-VhmJfrr60Sqk95ZapLKBkwSsGvV4nQ+ZRw@mail.gmail.com>
+ <64C231F5-DE36-415F-B308-3A423B0BBACB@raithlin.com>
+ <15433946-f7f5-f610-4e80-380fb59920e5@redhat.com>
+ <3C9FB262-A93C-4C8F-B1E0-85C6D6F78BC2@raithlin.com>
+ <c5f30ced-7bbf-9420-db1a-72519fc78b3a@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180511171530.16068-1-robh@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>, linux-nvdimm <linux-nvdimm@lists.01.org>,
+ linux-rdma <linux-rdma@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ Stephen Bates <sbates@raithlin.com>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ =?UTF-8?B?SsOpcsO0?= =?UTF-8?B?bWU=?= Glisse <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Logan Gunthorpe <logang@deltatee.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 11, 2018 at 12:15:29PM -0500, Rob Herring wrote:
-> There's no need for every config option to explicitly depend on
-> CONFIG_PCI, so move it out of individual option to the menu option.
-> 
-> Acked-by: Jingoo Han <jingoohan1@gmail.com>
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> ---
-> Looks like these 2 patches slipped thru the cracks.
+On Tue, 8 May 2018 19:06:17 -0400
+Don Dutile <ddutile@redhat.com> wrote:
+> On 05/08/2018 05:27 PM, Stephen  Bates wrote:
+> > As I understand it VMs need to know because VFIO passes IOMMU
+> > grouping up into the VMs. So if a IOMMU grouping changes the VM's
+> > view of its PCIe topology changes. I think we even have to be
+> > cognizant of the fact the OS running on the VM may not even support
+> > hot-plug of PCI devices.  
+> Alex:
+> Really? IOMMU groups are created by the kernel, so don't know how
+> they would be passed into the VMs, unless indirectly via  PCI(e)
+> layout. At best, twiddling w/ACS enablement (emulation) would cause
+> VMs to see different IOMMU groups, but again, VMs are not the
+> security point/level, the host/HV's are.
 
-I have applied both of them to pci/dwc for v4.18, thanks.
+Correct, the VM has no concept of the host's IOMMU groups, only the
+hypervisor knows about the groups, but really only to the extent of
+which device belongs to which group and whether the group is viable.
+Any runtime change to grouping though would require DMA mapping
+updates, which I don't see how we can reasonably do with drivers,
+vfio-pci or native host drivers, bound to the affected devices.  Thanks,
 
-Lorenzo
+Alex
 
->  drivers/pci/dwc/Kconfig | 17 +++--------------
->  1 file changed, 3 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> index 2f3f5c50aa48..8c1a5167fb5b 100644
-> --- a/drivers/pci/dwc/Kconfig
-> +++ b/drivers/pci/dwc/Kconfig
-> @@ -1,13 +1,13 @@
->  # SPDX-License-Identifier: GPL-2.0
->  
->  menu "DesignWare PCI Core Support"
-> +	depends on PCI
->  
->  config PCIE_DW
->  	bool
->  
->  config PCIE_DW_HOST
->          bool
-> -	depends on PCI
->  	depends on PCI_MSI_IRQ_DOMAIN
->          select PCIE_DW
->  
-> @@ -22,7 +22,7 @@ config PCI_DRA7XX
->  config PCI_DRA7XX_HOST
->  	bool "TI DRA7xx PCIe controller Host Mode"
->  	depends on SOC_DRA7XX || COMPILE_TEST
-> -	depends on PCI && PCI_MSI_IRQ_DOMAIN
-> +	depends on PCI_MSI_IRQ_DOMAIN
->  	depends on OF && HAS_IOMEM && TI_PIPE3
->  	select PCIE_DW_HOST
->  	select PCI_DRA7XX
-> @@ -52,7 +52,6 @@ config PCI_DRA7XX_EP
->  
->  config PCIE_DW_PLAT
->  	bool "Platform bus based DesignWare PCIe Controller"
-> -	depends on PCI
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIE_DW_HOST
->  	---help---
-> @@ -65,7 +64,6 @@ config PCIE_DW_PLAT
->  
->  config PCI_EXYNOS
->  	bool "Samsung Exynos PCIe controller"
-> -	depends on PCI
->  	depends on SOC_EXYNOS5440
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> @@ -73,7 +71,6 @@ config PCI_EXYNOS
->  
->  config PCI_IMX6
->  	bool "Freescale i.MX6 PCIe controller"
-> -	depends on PCI
->  	depends on SOC_IMX6Q
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> @@ -81,7 +78,6 @@ config PCI_IMX6
->  
->  config PCIE_SPEAR13XX
->  	bool "STMicroelectronics SPEAr PCIe controller"
-> -	depends on PCI
->  	depends on ARCH_SPEAR13XX
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> @@ -91,7 +87,6 @@ config PCIE_SPEAR13XX
->  
->  config PCI_KEYSTONE
->  	bool "TI Keystone PCIe controller"
-> -	depends on PCI
->  	depends on ARCH_KEYSTONE
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> @@ -104,7 +99,6 @@ config PCI_KEYSTONE
->  
->  config PCI_LAYERSCAPE
->  	bool "Freescale Layerscape PCIe controller"
-> -	depends on PCI
->  	depends on OF && (ARM || ARCH_LAYERSCAPE)
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select MFD_SYSCON
-> @@ -115,7 +109,6 @@ config PCI_LAYERSCAPE
->  config PCI_HISI
->  	depends on OF && ARM64
->  	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
-> -	depends on PCI
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
->  	select PCIE_DW_HOST
-> @@ -126,7 +119,6 @@ config PCI_HISI
->  
->  config PCIE_QCOM
->  	bool "Qualcomm PCIe controller"
-> -	depends on PCI
->  	depends on ARCH_QCOM && OF
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> @@ -138,7 +130,6 @@ config PCIE_QCOM
->  
->  config PCIE_ARMADA_8K
->  	bool "Marvell Armada-8K PCIe controller"
-> -	depends on PCI
->  	depends on ARCH_MVEBU
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
-> @@ -155,7 +146,7 @@ config PCIE_ARTPEC6
->  config PCIE_ARTPEC6_HOST
->  	bool "Axis ARTPEC-6 PCIe controller Host Mode"
->  	depends on MACH_ARTPEC6
-> -	depends on PCI && PCI_MSI_IRQ_DOMAIN
-> +	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
->  	select PCIE_DW_HOST
->  	select PCIE_ARTPEC6
-> @@ -177,7 +168,6 @@ config PCIE_KIRIN
->  	depends on OF && ARM64
->  	bool "HiSilicon Kirin series SoCs PCIe controllers"
->  	depends on PCI_MSI_IRQ_DOMAIN
-> -	depends on PCI
->  	select PCIEPORTBUS
->  	select PCIE_DW_HOST
->  	help
-> @@ -187,7 +177,6 @@ config PCIE_KIRIN
->  config PCIE_HISI_STB
->  	bool "HiSilicon STB SoCs PCIe controllers"
->  	depends on ARCH_HISI
-> -	depends on PCI
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
->  	select PCIE_DW_HOST
-> -- 
-> 2.17.0
-> 
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
