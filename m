@@ -1,118 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v8 1/7] PCI: Take all bridges into account when calculating bus numbers for extension
-Date: Mon, 28 May 2018 15:47:50 +0300
-Message-Id: <20180528124756.78512-2-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+To: Stephen Bates <sbates@raithlin.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-5-logang@deltatee.com>
+ <CAPcyv4g+5N_n03J-VhmJfrr60Sqk95ZapLKBkwSsGvV4nQ+ZRw@mail.gmail.com>
+ <64C231F5-DE36-415F-B308-3A423B0BBACB@raithlin.com>
+ <15433946-f7f5-f610-4e80-380fb59920e5@redhat.com>
+ <3C9FB262-A93C-4C8F-B1E0-85C6D6F78BC2@raithlin.com>
+From: Don Dutile <ddutile@redhat.com>
+Message-ID: <9c85f5a1-a6dc-4a59-4162-03749088a87d@redhat.com>
+Date: Wed, 9 May 2018 11:53:19 -0400
+MIME-Version: 1.0
+In-Reply-To: <3C9FB262-A93C-4C8F-B1E0-85C6D6F78BC2@raithlin.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When distributing extra buses between hotplug bridges for future
-extension we currently fail to take into account the fact that there
-might be non-hotplug bridges on the bus after the hotplug bridges. In
-this particular system we have following topology:
+On 05/08/2018 05:27 PM, Stephen  Bates wrote:
+> Hi Don
+> 
+>> Well, p2p DMA is a function of a cooperating 'agent' somewhere above the two devices.
+>>     That agent should 'request' to the kernel that ACS be removed/circumvented (p2p enabled) btwn two endpoints.
+>>     I recommend doing so via a sysfs method.
+> 
+> Yes we looked at something like this in the past but it does hit the IOMMU grouping issue I discussed earlier today which is not acceptable right now. In the long term, once we get IOMMU grouping callbacks to VMs we can look at extending p2pdma in this way. But I don't think this is viable for the initial series.
+> 
+>      
+>>             So I don't understand the comments why VMs should need to know.
+> 
+> As I understand it VMs need to know because VFIO passes IOMMU grouping up into the VMs. So if a IOMMU grouping changes the VM's view of its PCIe topology changes. I think we even have to be cognizant of the fact the OS running on the VM may not even support hot-plug of PCI devices.
+>      
+>> Is there a thread I need to read up to explain /clear-up the thoughts above?
+> 
+> If you search for p2pdma you should find the previous discussions. Thanks for the input!
+> 
+under linux-pci I'm assuming...
+you cc'd a number of upstream lists; I picked this thread up via rdma-list.
 
-  01:00.0 --+- 02:00.0 -- Thunderbolt host controller
-            +- 02:01.0 (HotPlug+)
-            \- 02:02.0 -- xHCI host controller
-
-Now, pci_scan_child_bus_extend() is supposed to distribute remaining bus
-numbers to the hotplug bridge at 02:01.0 but only after all bridges on
-that bus have been been accounted for. Since we don't check upfront that
-there will be another non-hotplug bridge after the hotplug bridge
-02:01.0 it will inadvertently extend over the bus space of the
-non-hotplug bridge:
-
-  pci 0000:01:00.0: PCI bridge to [bus 02-39]
-  ...
-  pci_bus 0000:04: [bus 04-39] extended by 0x35
-  pci_bus 0000:04: bus scan returning with max=39
-  pci_bus 0000:04: busn_res: [bus 04-39] end is updated to 39
-  pci 0000:02:02.0: scanning [bus 00-00] behind bridge, pass 1
-  pci_bus 0000:3a: scanning bus
-  pci_bus 0000:3a: bus scan returning with max=3a
-  pci_bus 0000:3a: busn_res: [bus 3a] end is updated to 3a
-  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
-  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
-  pci_bus 0000:02: bus scan returning with max=3a
-  pci_bus 0000:02: busn_res: [bus 02-39] end can not be updated to 3a
-
-Resulting 'lspci -t' output looks like this:
-
-  +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
-                             ^^   +-01.0-[04-39]--
-                                  \-02.0-[3a]----00.0
-                                          ^^
-The xHCI host controller (3a:00.0) behind downstream bridge at 02:02.0
-is not usable anymore.
-
-To fix this reserve at least one bus for each bridge during scanning of
-already configured bridges. Then we use this information in the second
-scan to correct the available extra bus space for hotplug bridges.
-
-After this change the 'lspci -t' output is what is expected:
-
-  +-1b.0-[01-39]----00.0-[02-39]--+-00.0-[03]----00.0
-                                  +-01.0-[04-38]--
-                                  \-02.0-[39]----00.0
-
-Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
-Reported-by: Mario Limonciello <mario.limonciello@dell.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: stable@vger.kernel.org
----
- drivers/pci/probe.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index d14e8f827d53..8f384e7ca2c2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2634,7 +2634,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 	for_each_pci_bridge(dev, bus) {
- 		cmax = max;
- 		max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
--		used_buses += cmax - max;
-+		/*
-+		 * Reserve one bus for each bridge now to avoid
-+		 * extending hotplug bridges too much during the second
-+		 * scan below.
-+		 */
-+		used_buses++;
-+		if (cmax - max > 1)
-+			used_buses += cmax - max - 1;
- 	}
- 
- 	/* Scan bridges that need to be reconfigured */
-@@ -2657,12 +2664,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 			 * bridges if any.
- 			 */
- 			buses = available_buses / hotplug_bridges;
--			buses = min(buses, available_buses - used_buses);
-+			buses = min(buses, available_buses - used_buses + 1);
- 		}
- 
- 		cmax = max;
- 		max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
--		used_buses += max - cmax;
-+		/* One bus is already accounted so don't add it again */
-+		if (max - cmax > 1)
-+			used_buses += max - cmax - 1;
- 	}
- 
- 	/*
--- 
-2.17.0
-
+> Stephen
+>      
+>      
+> 
