@@ -1,38 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:49960 "EHLO
-        relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750849AbeECHOY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 03:14:24 -0400
-Subject: Re: [PATCH v2 04/10] PCI: Add dev parameter to
- __of_pci_get_host_bridge_resources()
-To: Jan Kiszka <jan.kiszka@siemens.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-References: <cover.1525067324.git.jan.kiszka@siemens.com>
- <cfab525f3d0436f75187fbd65907ada909d7692f.1525067324.git.jan.kiszka@siemens.com>
-From: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Message-ID: <e06087fd-3258-89d4-cdc3-06196bd61dbe@mentor.com>
-Date: Thu, 3 May 2018 10:14:20 +0300
+Return-Path: <SRS0=MNFI=H4=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=MNFI=H4=h08.hostsharing.net=foo00@kernel.org>
+Date: Wed, 9 May 2018 13:41:24 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
+ (issued 65284 msec ago)
+Message-ID: <20180509114124.GA20639@wunner.de>
+References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
+ <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <cfab525f3d0436f75187fbd65907ada909d7692f.1525067324.git.jan.kiszka@siemens.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/30/2018 08:48 AM, Jan Kiszka wrote:
-> From: Jan Kiszka <jan.kiszka@siemens.com>
+On Fri, Apr 27, 2018 at 02:22:07PM -0500, Bjorn Helgaas wrote:
+> Sinan mooted the idea of using a "no-wait" path of sending the "don't
+> generate hotplug interrupts" command.  I think we should work on this
+> idea a little more.  If we're shutting down the whole system, I can't
+> believe there's much value in *anything* we do in the pciehp_remove()
+> path.
 > 
-> When non-NULL, use the new dev parameter of
-> __of_pci_get_host_bridge_resources() to allocate the resource data
-> structures via devm_kzalloc. That allows to release them automatically
-> during device destruction.
-> 
-> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> Maybe we should just get rid of pciehp_remove() (and probably
+> pcie_port_remove_service() and the other service driver remove methods)
+> completely.  That dates from when the service drivers could be modules that
+> could be potentially unloaded, but unloading them hasn't been possible for
+> years.
 
-Reviewed-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Tested-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Every Thunderbolt device contains a PCIe switch with at least one
+(downstream) hotplug port, so pciehp_remove() is executed on unplug
+of a Thunderbolt device and the assumption that it's unnecessary
+simply because it's builtin isn't correct.
 
---
-With best wishes,
-Vladimir
+Thanks,
+
+Lukas
