@@ -1,84 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sg2apc01on0091.outbound.protection.outlook.com ([104.47.125.91]:55520
-        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750711AbeEaVBt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 May 2018 17:01:49 -0400
-From: Dexuan Cui <decui@microsoft.com>
-To: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
-        'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "'olaf@aepfle.de'" <olaf@aepfle.de>,
-        "'apw@canonical.com'" <apw@canonical.com>,
-        "'jasowang@redhat.com'" <jasowang@redhat.com>
-CC: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'driverdev-devel@linuxdriverproject.org'"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
-        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
-Subject: RE: [PATCH] PCI: hv: Do not wait forever on a device that has
- disappeared
-Date: Thu, 31 May 2018 21:01:34 +0000
-Message-ID: <KL1P15301MB0006F8A3E876E7BEB5973B94BF630@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-References: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <SN6PR2101MB112020C6F949F7C72F52D6BEDC6D0@SN6PR2101MB1120.namprd21.prod.outlook.com>
- <KL1P15301MB0006B36AD458D43907DF82B0BF6D0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <SN6PR2101MB1120FF4297B3C7ED5E3AE032DC630@SN6PR2101MB1120.namprd21.prod.outlook.com>
-In-Reply-To: <SN6PR2101MB1120FF4297B3C7ED5E3AE032DC630@SN6PR2101MB1120.namprd21.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: Alex Williamson <alex.williamson@redhat.com>, Don Dutile
+ <ddutile@redhat.com>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+Date: Wed, 9 May 2018 12:35:56 +0000
+Message-ID: <B5BFCF39-6BB4-4E45-B805-C8FCC8B79EF3@raithlin.com>
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-5-logang@deltatee.com>
+ <CAPcyv4g+5N_n03J-VhmJfrr60Sqk95ZapLKBkwSsGvV4nQ+ZRw@mail.gmail.com>
+ <64C231F5-DE36-415F-B308-3A423B0BBACB@raithlin.com>
+ <15433946-f7f5-f610-4e80-380fb59920e5@redhat.com>
+ <3C9FB262-A93C-4C8F-B1E0-85C6D6F78BC2@raithlin.com>
+ <c5f30ced-7bbf-9420-db1a-72519fc78b3a@redhat.com>
+ <20180508180157.7c7b393f@w520.home>
+In-Reply-To: <20180508180157.7c7b393f@w520.home>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>, linux-nvdimm <linux-nvdimm@lists.01.org>,
+ linux-rdma <linux-rdma@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ =?utf-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Logan Gunthorpe <logang@deltatee.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Michael Kelley (EOSG)
-> Sent: Thursday, May 31, 2018 09:41
-> >
-> > IMO we can disable the per-channel tasklet to exclude the race:
-> > This way, when we exit the loop, we're sure hv_pci_onchannelcallback() =
-can
-> > not run anymore. What do you think of this?
->=20
-> I've stared at this and the tasklet code over a couple of days now.  Addi=
-ng the
-> call to tasklet_disable() solves the immediate problem of preventing
-> hv_pci_onchannelcallback() from calling complete() against a completion
-> packet
-> that has been popped off the stack.  But in doing so, it simply pushes th=
-e core
-> problem further down the road and leaves it unresolved.
->=20
-> tasklet_disable() does not prevent the tasklet from being scheduled.  So =
-if
-> there
-> is a response from Hyper-V to the original message, the tasklet still get=
-s
-> scheduled.  Because it is disabled, it will sit in the tasklet queue and =
-be
-> skipped
-> over each time the queue is processed.  Later,  when the channel is
-> eventually
-> deleted in free_channel(), tasklet_kill() is called.  Unfortunately, task=
-let_kill()
-> will get stuck in an infinite loop, waiting for the tasklet to run.   The=
-re aren't
-> any tasklet interfaces to dequeue an already scheduled tasklet.
+Hi Alex and Don
 
-I think you're correct.
-=20
-> Please double-check my reasoning.  To solve this problem, I think the VMb=
-us
-> driver code will need some additional synchronization between rescind
-> notifications and a response, which may or may not have been sent, and
-> which could be processed after the rescind.  I haven't yet thought about
-> what this synchronization might need to look like.
->=20
-> Michael
+>    Correct, the VM has no concept of the host's IOMMU groups, only the
+>   hypervisor knows about the groups, 
 
-Yes, it looks the VMBus driver needs to provide an API to cope with this.
-I'll try to further investigate the issue.
+But as I understand it these groups are usually passed through to VMs on a pre-group basis by the hypervisor? So IOMMU group 1 might be passed to VM A and IOMMU group 2 passed to VM B. So I agree the VM is not aware of IOMMU groupings but it is impacted by them in the sense that if the groupings change the PCI topology presented to the VM needs to change too.
 
--- Dexuan
+Stephen
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
