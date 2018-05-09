@@ -1,253 +1,174 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 7 May 2018 09:14:29 +0800
-From: Baoquan He <bhe@redhat.com>
-To: Wei Yang <richard.weiyang@gmail.com>
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-        robh+dt@kernel.org, dan.j.williams@intel.com,
-        nicolas.pitre@linaro.org, josh@joshtriplett.org,
-        Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
-        David Airlie <airlied@linux.ie>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Brijesh Singh <brijesh.singh@amd.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Borislav Petkov <bp@suse.de>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Yaowei Bai <baiyaowei@cmss.chinamobile.com>,
-        devel@linuxdriverproject.org, linux-input@vger.kernel.org,
-        linux-nvdimm@lists.01.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] resource: Use list_head to link sibling resource
-Message-ID: <20180507011429.GG30581@MiWiFi-R3L-srv>
-References: <20180419001848.3041-1-bhe@redhat.com>
- <20180419001848.3041-2-bhe@redhat.com>
- <20180426011837.GA79340@WeideMacBook-Pro.local>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35169 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933480AbeEIChq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 May 2018 22:37:46 -0400
+Received: by mail-wm0-f67.google.com with SMTP id o78-v6so24865150wmg.0
+        for <linux-pci@vger.kernel.org>; Tue, 08 May 2018 19:37:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180426011837.GA79340@WeideMacBook-Pro.local>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180508161824.GB13724@e107981-ln.cambridge.arm.com>
+References: <1525683134-9611-1-git-send-email-l.subrahmanya@mobiveil.co.in> <20180508161824.GB13724@e107981-ln.cambridge.arm.com>
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Wed, 9 May 2018 08:07:44 +0530
+Message-ID: <CAFZiPx1iB3pYF-3yqry+h1oBrsDocsTTRx5Y6ULEHQYs_XC_5A@mail.gmail.com>
+Subject: Re: [PATCH v10 1/3] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
+ driver DT bindings
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        Peter W Newton <peter.newton@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Raj Raina <rajesh.raina@nxp.com>,
+        Rajan Kapoor <rajan.kapoor@nxp.com>,
+        Prabhjot Singh <prabhjot.singh@nxp.com>,
+        devicetree@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Wei Yang,
+Lorenzo,
+my apologies; I will make sure not to send multiple copies of same
+patch next time.
 
-On 04/26/18 at 09:18am, Wei Yang wrote:
-> On Thu, Apr 19, 2018 at 08:18:46AM +0800, Baoquan He wrote:
-> >The struct resource uses singly linked list to link siblings. It's not
-> >easy to do reverse iteration on sibling list. So replace it with list_head.
-> >
-> 
-> Hi, Baoquan
-> 
-> Besides changing the data structure, I have another proposal to do the reverse
-> iteration. Which means it would not affect other users, if you just want a
-> reverse iteration.
-> 
-> BTW, I don't think Andrew suggest to use linked-list directly. What he wants
-> is a better solution to your first proposal in
-> https://patchwork.kernel.org/patch/10300819/.
-> 
-> Below is my proposal of resource reverse iteration without changing current
-> design.
+Thanks.
 
-I got your mail and read it, then interrupted by other thing and forgot
-replying, sorry.
-
-I am fine with your code change. As I said before, I have tried to change
-code per reviewers' comment, then let reviewers decide which way is
-better. Please feel free to post formal patches and joining discussion
-about this issue.
-
-Thanks
-Baoquan
-
-> 
-> From 5d7145d44fe48b98572a03884fa3a3aa82e3cef9 Mon Sep 17 00:00:00 2001
-> From: Wei Yang <richard.weiyang@gmail.com>
-> Date: Sat, 24 Mar 2018 23:25:46 +0800
-> Subject: [PATCH] kernel/resource: add walk_system_ram_res_rev()
-> 
-> As discussed on https://patchwork.kernel.org/patch/10300819/, this patch
-> comes up with a variant implementation of walk_system_ram_res_rev(), which
-> uses iteration instead of allocating array to store those resources.
-> 
-> Signed-off-by: Wei Yang <richard.weiyang@gmail.com>
-> ---
->  include/linux/ioport.h |   3 ++
->  kernel/resource.c      | 113 +++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 116 insertions(+)
-> 
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index da0ebaec25f0..473f1d9cb97e 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -277,6 +277,9 @@ extern int
->  walk_system_ram_res(u64 start, u64 end, void *arg,
->  		    int (*func)(struct resource *, void *));
->  extern int
-> +walk_system_ram_res_rev(u64 start, u64 end, void *arg,
-> +		    int (*func)(struct resource *, void *));
-> +extern int
->  walk_iomem_res_desc(unsigned long desc, unsigned long flags, u64 start, u64 end,
->  		    void *arg, int (*func)(struct resource *, void *));
->  
-> diff --git a/kernel/resource.c b/kernel/resource.c
-> index 769109f20fb7..d4ec5fbc6875 100644
-> --- a/kernel/resource.c
-> +++ b/kernel/resource.c
-> @@ -73,6 +73,38 @@ static struct resource *next_resource(struct resource *p, bool sibling_only)
->  	return p->sibling;
->  }
->  
-> +static struct resource *prev_resource(struct resource *p, bool sibling_only)
-> +{
-> +	struct resource *prev;
-> +	if (NULL == iomem_resource.child)
-> +		return NULL;
-> +
-> +	if (p == NULL) {
-> +		prev = iomem_resource.child;
-> +		while (prev->sibling)
-> +			prev = prev->sibling;
-> +	} else {
-> +		if (p->parent->child == p) {
-> +			return p->parent;
-> +		}
-> +
-> +		for (prev = p->parent->child; prev->sibling != p;
-> +			prev = prev->sibling) {}
-> +	}
-> +
-> +	/* Caller wants to traverse through siblings only */
-> +	if (sibling_only)
-> +		return prev;
-> +
-> +	for (;prev->child;) {
-> +		prev = prev->child;
-> +
-> +		while (prev->sibling)
-> +			prev = prev->sibling;
-> +	}
-> +	return prev;
-> +}
-> +
->  static void *r_next(struct seq_file *m, void *v, loff_t *pos)
->  {
->  	struct resource *p = v;
-> @@ -401,6 +433,47 @@ static int find_next_iomem_res(struct resource *res, unsigned long desc,
->  	return 0;
->  }
->  
-> +/*
-> + * Finds the highest iomem resource existing within [res->start.res->end).
-> + * The caller must specify res->start, res->end, res->flags, and optionally
-> + * desc.  If found, returns 0, res is overwritten, if not found, returns -1.
-> + * This function walks the whole tree and not just first level children until
-> + * and unless first_level_children_only is true.
-> + */
-> +static int find_prev_iomem_res(struct resource *res, unsigned long desc,
-> +			       bool first_level_children_only)
-> +{
-> +	struct resource *p;
-> +
-> +	BUG_ON(!res);
-> +	BUG_ON(res->start >= res->end);
-> +
-> +	read_lock(&resource_lock);
-> +
-> +	for (p = prev_resource(NULL, first_level_children_only); p;
-> +		p = prev_resource(p, first_level_children_only)) {
-> +		if ((p->flags & res->flags) != res->flags)
-> +			continue;
-> +		if ((desc != IORES_DESC_NONE) && (desc != p->desc))
-> +			continue;
-> +		if (p->end < res->start || p->child == iomem_resource.child) {
-> +			p = NULL;
-> +			break;
-> +		}
-> +		if ((p->end >= res->start) && (p->start < res->end))
-> +			break;
-> +	}
-> +
-> +	read_unlock(&resource_lock);
-> +	if (!p)
-> +		return -1;
-> +	/* copy data */
-> +	resource_clip(res, p->start, p->end);
-> +	res->flags = p->flags;
-> +	res->desc = p->desc;
-> +	return 0;
-> +}
-> +
->  static int __walk_iomem_res_desc(struct resource *res, unsigned long desc,
->  				 bool first_level_children_only,
->  				 void *arg,
-> @@ -422,6 +495,27 @@ static int __walk_iomem_res_desc(struct resource *res, unsigned long desc,
->  	return ret;
->  }
->  
-> +static int __walk_iomem_res_rev_desc(struct resource *res, unsigned long desc,
-> +				 bool first_level_children_only,
-> +				 void *arg,
-> +				 int (*func)(struct resource *, void *))
-> +{
-> +	u64 orig_start = res->start;
-> +	int ret = -1;
-> +
-> +	while ((res->start < res->end) &&
-> +	       !find_prev_iomem_res(res, desc, first_level_children_only)) {
-> +		ret = (*func)(res, arg);
-> +		if (ret)
-> +			break;
-> +
-> +		res->end = res->start?(res->start - 1):0;
-> +		res->start = orig_start;
-> +	}
-> +
-> +	return ret;
-> +}
-> +
->  /*
->   * Walks through iomem resources and calls func() with matching resource
->   * ranges. This walks through whole tree and not just first level children.
-> @@ -468,6 +562,25 @@ int walk_system_ram_res(u64 start, u64 end, void *arg,
->  				     arg, func);
->  }
->  
-> +/*
-> + * This function, being a variant of walk_system_ram_res(), calls the @func
-> + * callback against all memory ranges of type System RAM which are marked as
-> + * IORESOURCE_SYSTEM_RAM and IORESOUCE_BUSY in reversed order, i.e., from
-> + * higher to lower.
-> + */
-> +int walk_system_ram_res_rev(u64 start, u64 end, void *arg,
-> +				int (*func)(struct resource *, void *))
-> +{
-> +	struct resource res;
-> +
-> +	res.start = start;
-> +	res.end = end;
-> +	res.flags = IORESOURCE_SYSTEM_RAM | IORESOURCE_BUSY;
-> +
-> +	return __walk_iomem_res_rev_desc(&res, IORES_DESC_NONE, true,
-> +				     arg, func);
-> +}
-> +
->  /*
->   * This function calls the @func callback against all memory ranges, which
->   * are ranges marked as IORESOURCE_MEM and IORESOUCE_BUSY.
-> -- 
-> 2.15.1
-> 
-> 
-> -- 
-> Wei Yang
-> Help you, Help me
+On Tue, May 8, 2018 at 9:48 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Mon, May 07, 2018 at 04:52:14AM -0400, Subrahmanya Lingappa wrote:
+>> This patch adds the DT bindings for Mobiveil PCIe Host Bridge
+>> IP driver and updates the vendor prefixes file.
+>>
+>> Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+>> Acked-by: Rob Herring <robh@kernel.org>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Cc: linux-pci@vger.kernel.org
+>> Cc: devicetree@vger.kernel.org
+>> ---
+>>  .../devicetree/bindings/pci/mobiveil-pcie.txt      | 73 ++++++++++++++++++++++
+>>  .../devicetree/bindings/vendor-prefixes.txt        |  1 +
+>>  MAINTAINERS                                        |  7 +++
+>>  3 files changed, 81 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+>
+> You sent this patch twice, which confused patchwork (which we use to
+> apply patches), please send the series to yourself to test it is right
+> before sending it to the list.
+>
+> Thanks,
+> Lorenzo
+>
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+>> new file mode 100644
+>> index 0000000..65038aa
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+>> @@ -0,0 +1,73 @@
+>> +* Mobiveil AXI PCIe Root Port Bridge DT description
+>> +
+>> +Mobiveil's GPEX 4.0 is a PCIe Gen4 root port bridge IP. This configurable IP
+>> +has up to 8 outbound and inbound windows for the address translation.
+>> +
+>> +Required properties:
+>> +- #address-cells: Address representation for root ports, set to <3>
+>> +- #size-cells: Size representation for root ports, set to <2>
+>> +- #interrupt-cells: specifies the number of cells needed to encode an
+>> +     interrupt source. The value must be 1.
+>> +- compatible: Should contain "mbvl,gpex40-pcie"
+>> +- reg: Should contain PCIe registers location and length
+>> +     "config_axi_slave": PCIe controller registers
+>> +     "csr_axi_slave"   : Bridge config registers
+>> +     "gpio_slave"      : GPIO registers to control slot power
+>> +     "apb_csr"         : MSI registers
+>> +
+>> +- device_type: must be "pci"
+>> +- apio-wins : number of requested apio outbound windows
+>> +             default 2 outbound windows are configured -
+>> +             1. Config window
+>> +             2. Memory window
+>> +- ppio-wins : number of requested ppio inbound windows
+>> +             default 1 inbound memory window is configured.
+>> +- bus-range: PCI bus numbers covered
+>> +- interrupt-controller: identifies the node as an interrupt controller
+>> +- #interrupt-cells: specifies the number of cells needed to encode an
+>> +     interrupt source. The value must be 1.
+>> +- interrupt-parent : phandle to the interrupt controller that
+>> +             it is attached to, it should be set to gic to point to
+>> +             ARM's Generic Interrupt Controller node in system DT.
+>> +- interrupts: The interrupt line of the PCIe controller
+>> +             last cell of this field is set to 4 to
+>> +             denote it as IRQ_TYPE_LEVEL_HIGH type interrupt.
+>> +- interrupt-map-mask,
+>> +     interrupt-map: standard PCI properties to define the mapping of the
+>> +     PCI interface to interrupt numbers.
+>> +- ranges: ranges for the PCI memory regions (I/O space region is not
+>> +     supported by hardware)
+>> +     Please refer to the standard PCI bus binding document for a more
+>> +     detailed explanation
+>> +
+>> +
+>> +Example:
+>> +++++++++
+>> +     pcie0: pcie@a0000000 {
+>> +             #address-cells = <3>;
+>> +             #size-cells = <2>;
+>> +             compatible = "mbvl,gpex40-pcie";
+>> +             reg =   <0xa0000000 0x00001000>,
+>> +                     <0xb0000000 0x00010000>,
+>> +                     <0xff000000 0x00200000>,
+>> +                     <0xb0010000 0x00001000>;
+>> +             reg-names =     "config_axi_slave",
+>> +                             "csr_axi_slave",
+>> +                             "gpio_slave",
+>> +                             "apb_csr";
+>> +             device_type = "pci";
+>> +             apio-wins = <2>;
+>> +             ppio-wins = <1>;
+>> +             bus-range = <0x00000000 0x000000ff>;
+>> +             interrupt-controller;
+>> +             interrupt-parent = <&gic>;
+>> +             #interrupt-cells = <1>;
+>> +             interrupts = < 0 89 4 >;
+>> +             interrupt-map-mask = <0 0 0 7>;
+>> +             interrupt-map = <0 0 0 0 &pci_express 0>,
+>> +                             <0 0 0 1 &pci_express 1>,
+>> +                             <0 0 0 2 &pci_express 2>,
+>> +                             <0 0 0 3 &pci_express 3>;
+>> +             ranges = < 0x83000000 0 0x00000000 0xa8000000 0 0x8000000>;
+>> +
+>> +     };
+>> diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt b/Documentation/devicetree/bindings/vendor-prefixes.txt
+>> index 0994bdd..8263cc7 100644
+>> --- a/Documentation/devicetree/bindings/vendor-prefixes.txt
+>> +++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
+>> @@ -197,6 +197,7 @@ lwn       Liebherr-Werk Nenzing GmbH
+>>  macnica      Macnica Americas
+>>  marvell      Marvell Technology Group Ltd.
+>>  maxim        Maxim Integrated Products
+>> +mbvl Mobiveil Inc.
+>>  mcube        mCube
+>>  meas Measurement Specialties
+>>  mediatek     MediaTek Inc.
+>> diff --git a/MAINTAINERS b/MAINTAINERS
+>> index 44512c3..b295080 100644
+>> --- a/MAINTAINERS
+>> +++ b/MAINTAINERS
+>> @@ -9162,6 +9162,13 @@ Q:     http://patchwork.linuxtv.org/project/linux-media/list/
+>>  S:   Maintained
+>>  F:   drivers/media/dvb-frontends/mn88473*
+>>
+>> +PCI DRIVER FOR MOBIVEIL PCIE IP
+>> +M:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+>> +L:   linux-pci@vger.kernel.org
+>> +S:   Supported
+>> +F:   Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+>> +F:   drivers/pci/host/pcie-mobiveil.c
+>> +
+>>  MODULE SUPPORT
+>>  M:   Jessica Yu <jeyu@kernel.org>
+>>  M:   Rusty Russell <rusty@rustcorp.com.au>
+>> --
+>> 1.8.3.1
+>>
