@@ -1,60 +1,167 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 8 May 2018 11:53:57 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: kishon@ti.com, bhelgaas@google.com, nsekhar@ti.com,
-        john@metanate.com, shawn.lin@rock-chips.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: endpoint: Replace mdelay with usleep_range in
- pci_epf_test_write
-Message-ID: <20180508105357.GA9394@e107981-ln.cambridge.arm.com>
-References: <1523365446-31563-1-git-send-email-baijiaju1990@gmail.com>
+Date: Wed, 9 May 2018 18:21:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: poza@codeaurora.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>,
+        linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v15 3/9] PCI/AER: Handle ERR_FATAL with removal and
+ re-enumeration of devices
+Message-ID: <20180509232111.GA43216@bhelgaas-glaptop.roam.corp.google.com>
+References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
+ <1525323838-1735-4-git-send-email-poza@codeaurora.org>
+ <20180508235330.GN161390@bhelgaas-glaptop.roam.corp.google.com>
+ <20180509130730.GA236548@bhelgaas-glaptop.roam.corp.google.com>
+ <b1f9aaf43300ef7a829001e964bf4e72@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1523365446-31563-1-git-send-email-baijiaju1990@gmail.com>
+In-Reply-To: <b1f9aaf43300ef7a829001e964bf4e72@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 10, 2018 at 09:04:06PM +0800, Jia-Ju Bai wrote:
-> pci_epf_test_write() is never called in atomic context.
+On Wed, May 09, 2018 at 06:44:53PM +0530, poza@codeaurora.org wrote:
+> On 2018-05-09 18:37, Bjorn Helgaas wrote:
+> > On Tue, May 08, 2018 at 06:53:30PM -0500, Bjorn Helgaas wrote:
+> > > On Thu, May 03, 2018 at 01:03:52AM -0400, Oza Pawandeep wrote:
+> > > > This patch alters the behavior of handling of ERR_FATAL, where removal
+> > > > of devices is initiated, followed by reset link, followed by
+> > > > re-enumeration.
+> > > >
+> > > > So the errors are handled in a different way as follows:
+> > > > ERR_NONFATAL => call driver recovery entry points
+> > > > ERR_FATAL    => remove and re-enumerate
+> > > >
+> > > > please refer to Documentation/PCI/pci-error-recovery.txt for more details.
+> > > >
+> > > > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> > > >
+> > > > diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+> > > > index 779b387..206f590 100644
+> > > > --- a/drivers/pci/pcie/aer/aerdrv.c
+> > > > +++ b/drivers/pci/pcie/aer/aerdrv.c
+> > > > @@ -330,6 +330,13 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+> > > >         reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
+> > > >         pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
+> > > >
+> > > > +       /*
+> > > > +        * This function is called only on ERR_FATAL now, and since
+> > > > +        * the pci_report_resume is called only in ERR_NONFATAL case,
+> > > > +        * the clearing part has to be taken care here.
+> > > > +        */
+> > > > +       aer_error_resume(dev);
+> > > 
+> > > I don't understand this part.  Previously the ERR_FATAL path looked
+> > > like
+> > > this:
+> > > 
+> > >   do_recovery
+> > >     reset_link
+> > >       driver->reset_link
+> > >         aer_root_reset
+> > >           pci_reset_bridge_secondary_bus                # <-- reset
+> > >     broadcast_error_message(..., report_resume)
+> > >       pci_walk_bus(..., report_resume, ...)
+> > >         report_resume
+> > >       if (cb == report_resume)
+> > >         pci_cleanup_aer_uncorrect_error_status
+> > >           pci_write_config_dword(PCI_ERR_UNCOR_STATUS)  # <-- clear
+> > > status
+> > > 
+> > > After this patch, it will look like this:
+> > > 
+> > >   do_recovery
+> > >     do_fatal_recovery
+> > >       pci_cleanup_aer_uncorrect_error_status
+> > >         pci_write_config_dword(PCI_ERR_UNCOR_STATUS)    # <-- clear
+> > > status
+> > >       reset_link
+> > >         driver->reset_link
+> > >           aer_root_reset
+> > >             pci_reset_bridge_secondary_bus              # <-- reset
+> > >             aer_error_resume
+> > >               pcie_capability_write_word(PCI_EXP_DEVSTA)        #
+> > > <-- clear more
+> > >               pci_write_config_dword(PCI_ERR_UNCOR_STATUS)      #
+> > > <-- clear status
+> > > 
+> > > So if I'm understanding correctly, the new path clears the status too
+> > > early, then clears it again (plus clearing DEVSTA, which we didn't do
+> > > before) later.
+> > > 
+> > > I would think we would want to leave aer_root_reset() alone, and
+> > > just move
+> > > the pci_cleanup_aer_uncorrect_error_status() in do_fatal_recovery()
+> > > down so
+> > > it happens after we call reset_link().  That way the reset/clear
+> > > sequence
+> > > would be the same as it was before.
+> > 
+> > I've been fiddling with this a bit myself and will post the results to
+> > see
+> > what you think.
 > 
-> The call chain ending up at pci_epf_test_write() is:
-> [1] pci_epf_test_write() <- pci_epf_test_cmd_handler()
 > 
-> pci_epf_test_cmd_handler() is set as a parameter of INIT_DELAYED_WORK() 
-> in pci_epf_test_probe().
-> This function is not called in atomic context.
+> ok so you are suggesting to move pci_cleanup_aer_uncorrect_error_status down
+> which I can do.
 > 
-> Despite never getting called from atomic context, pci_epf_test_write()
-> calls mdelay() to busily wait.
-> This is not necessary and can be replaced with usleep_range() to
-> avoid busy waiting.
+> And not to call aer_error_resume, because you think its clearing the status
+> again.
 > 
-> This is found by a static analysis tool named DCNS written by myself.
-> And I also manually check it.
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
-> ---
->  drivers/pci/endpoint/functions/pci-epf-test.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> following code: calls aer_error_resume.
+> pci_broadcast_error_message()
+>  /*
+>                  * If the error is reported by an end point, we think this
+>                  * error is related to the upstream link of the end point.
+>                  */
+>                 if (state == pci_channel_io_normal)
+>                         /*
+>                          * the error is non fatal so the bus is ok, just
+> invoke
+>                          * the callback for the function that logged the
+> error.
+>                          */
+>                         cb(dev, &result_data);
+>                 else
+>                         pci_walk_bus(dev->bus, cb, &result_data);
 
-Applied to pci/endpoint for v4.18, thanks.
+Holy crap, I thought this could not possibly get any more complicated,
+but you're right; we do actually call aer_error_resume() today via an
+extremely convoluted path:
 
-Lorenzo
+  do_recovery(pci_dev)
+    broadcast_error_message(..., error_detected, ...)
+    if (AER_FATAL)
+      reset_link(pci_dev)
+        udev = BRIDGE ? pci_dev : pci_dev->bus->self
+        driver->reset_link(udev)
+          aer_root_reset(udev)
+    if (CAN_RECOVER)
+      broadcast_error_message(..., mmio_enabled, ...)
+    if (NEED_RESET)
+      broadcast_error_message(..., slot_reset, ...)
+    broadcast_error_message(dev, ..., report_resume, ...)
+      if (BRIDGE)
+        report_resume
+          driver->resume
+            pcie_portdrv_err_resume
+              device_for_each_child(..., resume_iter)
+                resume_iter
+                  driver->error_resume
+                    aer_error_resume
+        pci_cleanup_aer_uncorrect_error_status(pci_dev)       # only if BRIDGE
+          pci_write_config_dword(PCI_ERR_UNCOR_STATUS)
 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index f9308c2..2f0642e 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -237,7 +237,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
->  	 * wait 1ms inorder for the write to complete. Without this delay L3
->  	 * error in observed in the host system.
->  	 */
-> -	mdelay(1);
-> +	usleep_range(1000, 2000);
->  
->  	kfree(buf);
->  
-> -- 
-> 1.9.1
-> 
+aerdriver is the only port service driver that implements
+.error_resume(), and aerdriver only binds to root ports.  I can't
+really believe all these device_for_each_child()/resume_iter()
+gyrations are necessary when this is AER code calling AER code.
+
+Bjorn
