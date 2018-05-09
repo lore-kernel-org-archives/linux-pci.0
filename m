@@ -1,135 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v7 04/12] PCI: Make pciehp_is_native() stricter
-Date: Thu, 17 May 2018 12:28:55 +0300
-Message-Id: <20180517092903.43701-5-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
-References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga05-in.huawei.com ([45.249.212.191]:7244 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933614AbeEIDrZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 May 2018 23:47:25 -0400
+Subject: Re: [PATCH v2 1/2] PCI ACPI: Avoid panic when PCI IO resource's size
+ is not page aligned
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <1522480343-37669-1-git-send-email-xieyisheng1@huawei.com>
+ <3699960.UXjPS91TgB@aspire.rjw.lan>
+ <a8398da8-2f69-5694-69d6-224b547a378a@huawei.com>
+ <CAJZ5v0h4DLNBJz1QmgmCitj2_UfMBLxboZ2i9rpFZ4+qZPf+eA@mail.gmail.com>
+CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Len Brown <lenb@kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Hanjun Guo <guohanjun@huawei.com>,
+        "Jon Masters" <jcm@redhat.com>, Toshi Kani <toshi.kani@hpe.com>,
+        <tanxiaojun@huawei.com>, Zhou Wang <wangzhou1@hisilicon.com>,
+        "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Message-ID: <31dd8592-635c-ec88-2734-2fa9d4ce373e@huawei.com>
+Date: Wed, 9 May 2018 11:46:50 +0800
+MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0h4DLNBJz1QmgmCitj2_UfMBLxboZ2i9rpFZ4+qZPf+eA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently pciehp_is_native() returns true for any PCI device in a
-hierarchy where _OSC says we can use pciehp. This is not correct because
-there may be bridges without PCI_EXP_SLTCAP_HPC capability and those
-should be managed by acpiphp instead.
+Hi Rafael,
 
-Improve pciehp_is_native() to return true only if the given bridge is
-actually expected to be handled by pciehp. In any other case return
-false instead to let acpiphp handle those.
+On 2018/5/9 5:20, Rafael J. Wysocki wrote:
+> On Mon, May 7, 2018 at 10:06 AM, Yisheng Xie <xieyisheng1@huawei.com> wrote:
+>>
+>>
+>> On 2018/5/1 17:28, Rafael J. Wysocki wrote:
+>>>>  drivers/acpi/pci_root.c | 2 +-
+>>>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>>
+>>>>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>>>>> index 6fc204a..b758ca3 100644
+>>>>> --- a/drivers/acpi/pci_root.c
+>>>>> +++ b/drivers/acpi/pci_root.c
+>>>>> @@ -746,7 +746,7 @@ static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
+>>>>>            goto err;
+>>>>>
+>>>>>    res->start = port;
+>>>>> -  res->end = port + length - 1;
+>>>>> +  res->end = PAGE_ALIGN(port + length) - 1;
+>>> Shouldn't pci_remap_iospace() sanitize its arguments instead?
+>>
+>> Yeah, I thought that pci_remap_iospace() will be called at many place, and presently I
+>> had not seen any problem at other place except acpi_pci_root_remap_iospace(). Anyway,
+>> sanitize arguments in pci_remap_iospace() can resolve the problem more thoroughly, but
+>> should more common, right?
+>>
+>> Therefore, is the follow change ok from your point of view?
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index e597655..8607298 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -3527,6 +3527,9 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+>>         if (res->end > IO_SPACE_LIMIT)
+>>                 return -EINVAL;
+>>
+>> +       if (!PAGE_ALIGNED(vaddr) || !PAGE_ALIGNED(resource_size(res)))
+>> +               return -EINVAL;
+>> +
+>>         return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
+>>                                   pgprot_device(PAGE_KERNEL));
+>>  #else
+> 
+> I'd rather apply PAGE_ALIGN() to the arguments of ioremap_page_range()
+> and call it anyway.  It will fail if the mapping cannot be created.
+> 
+Hmm, here is a corner case which take 64k page size as an example:
+ step 1. someone call pci_remap_iospace() with res:
+		res->start 0x1000, resource_size(res) 0x1000
+	after PAGE_ALIGN(), the arguments of ioremap_page_range() will be
+		addr: (PCI_IOBASE + PAGE_SIZE), end: (PCI_IOBASE + 2*PAGE_SIZE)
+	and ioremap_page_range will be ok.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci-acpi.c      | 26 ++++++++++++++------------
- drivers/pci/pcie/portdrv.h  |  2 --
- include/linux/pci.h         |  2 ++
- include/linux/pci_hotplug.h |  4 ++--
- 4 files changed, 18 insertions(+), 16 deletions(-)
+ step 2. another one call pci_remap_iospace() with res:
+		res->start 0x2000, resource_size(res) 0x1000
+	after PAGE_ALIGN(), the arguments of ioremap_page_range() also will be:
+		addr: (PCI_IOBASE + PAGE_SIZE), end: (PCI_IOBASE + 2*PAGE_SIZE)
+	then ioremap_page_range() will also trigger BUG_ON(!pte_none(*pte));
+	for the pte is not none after step 1, right?
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 1abdbf267c19..2fd96d008960 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -370,26 +370,28 @@ EXPORT_SYMBOL_GPL(pci_get_hp_params);
- 
- /**
-  * pciehp_is_native - Check whether a hotplug port is handled by the OS
-- * @pdev: Hotplug port to check
-+ * @bridge: Hotplug port to check
-  *
-- * Walk up from @pdev to the host bridge, obtain its cached _OSC Control Field
-- * and return the value of the "PCI Express Native Hot Plug control" bit.
-- * On failure to obtain the _OSC Control Field return %false.
-+ * Returns true if the given @bridge is handled by the native PCIe hotplug
-+ * driver.
-  */
--bool pciehp_is_native(struct pci_dev *pdev)
-+bool pciehp_is_native(struct pci_dev *bridge)
- {
--	struct acpi_pci_root *root;
--	acpi_handle handle;
-+	const struct pci_host_bridge *host;
-+	u32 slot_cap;
- 
--	handle = acpi_find_root_bridge_handle(pdev);
--	if (!handle)
-+	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE) || !bridge)
- 		return false;
- 
--	root = acpi_pci_find_root(handle);
--	if (!root)
-+	pcie_capability_read_dword(bridge, PCI_EXP_SLTCAP, &slot_cap);
-+	if (!(slot_cap & PCI_EXP_SLTCAP_HPC))
- 		return false;
- 
--	return root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
-+	if (pcie_ports_native)
-+		return true;
-+
-+	host = pci_find_host_bridge(bridge->bus);
-+	return host->native_pcie_hotplug;
- }
- 
- /**
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index d0c6783dbfe3..aa542dc10d23 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -11,8 +11,6 @@
- 
- #include <linux/compiler.h>
- 
--extern bool pcie_ports_native;
--
- /* Service Type */
- #define PCIE_PORT_SERVICE_PME_SHIFT	0	/* Power Management Event */
- #define PCIE_PORT_SERVICE_PME		(1 << PCIE_PORT_SERVICE_PME_SHIFT)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 359a197d0310..2f6689a14e8d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1451,8 +1451,10 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
- 
- #ifdef CONFIG_PCIEPORTBUS
- extern bool pcie_ports_disabled;
-+extern bool pcie_ports_native;
- #else
- #define pcie_ports_disabled	true
-+#define pcie_ports_native	false
- #endif
- 
- #ifdef CONFIG_PCIEASPM
-diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-index 26213024e81b..3f32575d1ce8 100644
---- a/include/linux/pci_hotplug.h
-+++ b/include/linux/pci_hotplug.h
-@@ -162,7 +162,7 @@ struct hotplug_params {
- #ifdef CONFIG_ACPI
- #include <linux/acpi.h>
- int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp);
--bool pciehp_is_native(struct pci_dev *pdev);
-+bool pciehp_is_native(struct pci_dev *bridge);
- int acpi_get_hp_hw_control_from_firmware(struct pci_dev *dev, u32 flags);
- int acpi_pci_check_ejectable(struct pci_bus *pbus, acpi_handle handle);
- int acpi_pci_detect_ejectable(acpi_handle handle);
-@@ -172,6 +172,6 @@ static inline int pci_get_hp_params(struct pci_dev *dev,
- {
- 	return -ENODEV;
- }
--static inline bool pciehp_is_native(struct pci_dev *pdev) { return true; }
-+static inline bool pciehp_is_native(struct pci_dev *bridge) { return true; }
- #endif
- #endif
--- 
-2.17.0
+ ps, if let addr = vaddr && PAGE_MASK, above case seems also will trigger BUG_ON.
 
+Actually, I am not sure whether the above case is exist in real system.
+
+Thanks
+Yisheng
+
+> .
+> 
