@@ -1,131 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45928 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754571AbeEALyW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 1 May 2018 07:54:22 -0400
-Date: Tue, 1 May 2018 12:54:17 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        bhelgaas@google.com, Joao.Pinto@synopsys.com, jingoohan1@gmail.com,
-        robh+dt@kernel.org, mark.rutland@arm.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v7 3/9] PCI: endpoint: functions/pci-epf-test: Add second
- entry
-Message-ID: <20180501115417.GD19391@e107981-ln.cambridge.arm.com>
-References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
- <c6cfd167838ae8e226dee0820983efe918fa4e1f.1524577064.git.gustavo.pimentel@synopsys.com>
- <20180426165605.GA6370@e107981-ln.cambridge.arm.com>
- <b65caf2e-b002-f591-6215-ff2241b2dfb8@ti.com>
+Received: from mail.kernel.org ([198.145.29.99]:37956 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932875AbeEIMiR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 May 2018 08:38:17 -0400
+Date: Wed, 9 May 2018 08:38:14 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Thomas Tai <thomas.tai@oracle.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mr.nuke.me@gmail.com
+Subject: Re: [PATCH V3 1/1] PCI/AER: add pcie TLP header information in the
+ tracepoint
+Message-ID: <20180509083814.149e8d8f@gandalf.local.home>
+In-Reply-To: <1525820696-31967-2-git-send-email-thomas.tai@oracle.com>
+References: <1525820696-31967-1-git-send-email-thomas.tai@oracle.com>
+        <1525820696-31967-2-git-send-email-thomas.tai@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b65caf2e-b002-f591-6215-ff2241b2dfb8@ti.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 01, 2018 at 03:37:47PM +0530, Kishon Vijay Abraham I wrote:
-> Hi Lorenzo,
+On Tue,  8 May 2018 19:04:56 -0400
+Thomas Tai <thomas.tai@oracle.com> wrote:
+
+> When a PCIe AER occurs, the TLP header information is
+> printed in the kernel message but it is missing from
+> the tracepoint. A userspace program can use this information
+> in the tracepoint to better analyze problems.
 > 
-> On Thursday 26 April 2018 10:26 PM, Lorenzo Pieralisi wrote:
-> > On Tue, Apr 24, 2018 at 02:44:40PM +0100, Gustavo Pimentel wrote:
-> >> Adds a seconds entry on the pci_epf_test_ids structure that disables the
-> > 
-> > "Add a second entry to..."
-> > 
-> >> linkup_notifier parameter on driver for the designware EP.
-> >>
-> >> This allows designware EPs that doesn't have linkup notification signal
-> >> to work with pcitest.
-> >>
-> >> Updates the binding documentation accordingly.
-> > 
-> > Valid for all the series: use imperative sentences.
-> > 
-> > eg:
-> > 
-> > "Update the binding documentation accordingly".
-> > 
-> > not
-> > 
-> > "Updates the binding documentation accordingly".
-> > 
-> >> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> >> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> >> ---
-> >> Change v2->v3:
-> >>  - Added second entry in pci_epf_test_ids structure.
-> >>  - Remove test_reg_bar field assignment on second entry.
-> >> Changes v3->v4:
-> >>  - Nothing changed, just to follow the patch set version.
-> >> Changes v4->v5:
-> >>  - Changed pci_epf_test_cfg2 to pci_epf_test_designware.
-> >> Changes v5->v6:
-> >>  - Changed name field from pci_epf_test_designware to pci_epf_test_dw.
-> >> Changes v6->v7:
-> >>  - Changed variable name from data_cfg2 to data_linkup_notifier_disabled.
-> >>
-> >>  Documentation/PCI/endpoint/function/binding/pci-test.txt | 2 ++
-> >>  drivers/pci/endpoint/functions/pci-epf-test.c            | 8 ++++++++
-> >>  2 files changed, 10 insertions(+)
-> >>
-> >> diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-> >> index 3b68b95..dc39f47 100644
-> >> --- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
-> >> +++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-> >> @@ -1,6 +1,8 @@
-> >>  PCI TEST ENDPOINT FUNCTION
-> >>  
-> >>  name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
-> >> +name: Should be "pci_epf_test_dw" to bind to the pci_epf_test driver
-> >> +      with a custom configuration for the designware EP.
-> > 
-> > The link between the "name" and the device created is quite obscure and
-> > reading pci-test-howto.txt certainly does not clarify it.
-> > 
-> > In pci-test-howto.txt an explanation should be added to the configs
-> > device creation paragraph to clarify it.
-> > 
-> >>  Configurable Fields:
-> >>  vendorid	 : should be 0x104c
-> >> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> >> index 7cef851..4ab463b 100644
-> >> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> >> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> >> @@ -459,10 +459,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
-> >>  	return 0;
-> >>  }
-> >>  
-> >> +static const struct pci_epf_test_data data_linkup_notifier_disabled = {
-> >> +	.linkup_notifier = false
-> >> +};
-> >> +
-> >>  static const struct pci_epf_device_id pci_epf_test_ids[] = {
-> >>  	{
-> >>  		.name = "pci_epf_test",
-> >>  	},
-> >> +	{
-> >> +		.name = "pci_epf_test_dw",
-> >> +		.driver_data = (kernel_ulong_t)&data_linkup_notifier_disabled,
-> >> +	},
-> >>  	{},
-> > 
-> > Should not this be a property derived from the controller compatible
-> > property instead of the test device name written in configfs ?
+> To enable the tracepoint:
+> echo 1 > /sys/kernel/debug/tracing/events/ras/aer_event/enable
 > 
-> pci_epf_test is an independent driver on its own that operates in a layer above
-> the controller driver. So it does not get the controller compatible (which is
-> used in controller drivers like pcie-designware-plat.c). pci_epf_test uses
-> "pci_epf_device_id" which is _similar_ to "of_device_id" used by platform drivers.
+> Example tracepoint output:
+> cat /sys/kernel/debug/tracing/trace
+> aer_event: 0000:01:00.0
+> PCIe Bus Error: severity=Uncorrected, non-fatal, Completer Abort
+> TLP Header={0x0,0x1,0x2,0x3}
+> 
+> Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
+> ---
 
-I understand that, the problem is that the independent driver depends on
-features of the related controller driver as this patch shows. This
-patch basically says that if you use a specific path in configfs (that
-includes pci_epf_test_dw) your device has specific HW features (eg
-linkup notifier above), that obviously depends on the platform HW not on
-the string you use in configfs.
+Reviewed-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
 
-What I am questioning is a) if I understand this right and b) whether
-this is the right approach.
-
-Lorenzo
+-- Steve
