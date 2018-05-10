@@ -1,101 +1,137 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v15 2/9] pci-error-recovery: Add AER_FATAL handling
-Date: Thu,  3 May 2018 01:03:51 -0400
-Message-Id: <1525323838-1735-3-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
-References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v6 04/12] PCI: Make pciehp_is_native() stricter
+Date: Thu, 10 May 2018 21:28:36 +0300
+Message-Id: <20180510182844.77349-5-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
+References: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It adds description on AER_FATAL error handling.
+Currently pciehp_is_native() returns true for any PCI device in a
+hierarchy where _OSC says we can use pciehp. This is not correct because
+there may be bridges without PCI_EXP_SLTCAP_HPC capability and those
+should be managed by acpiphp instead.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Improve pciehp_is_native() to return true only if the given bridge is
+actually expected to be handled by pciehp. In any other case return
+false instead to let acpiphp handle those.
 
-diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
-index 0b6bb3e..688b691 100644
---- a/Documentation/PCI/pci-error-recovery.txt
-+++ b/Documentation/PCI/pci-error-recovery.txt
-@@ -110,7 +110,7 @@ The actual steps taken by a platform to recover from a PCI error
- event will be platform-dependent, but will follow the general
- sequence described below.
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/pci-acpi.c      | 28 ++++++++++++++++------------
+ drivers/pci/pcie/portdrv.h  |  2 --
+ include/linux/pci.h         |  2 ++
+ include/linux/pci_hotplug.h |  4 ++--
+ 4 files changed, 20 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 1abdbf267c19..d3114f3a7ab8 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -370,26 +370,30 @@ EXPORT_SYMBOL_GPL(pci_get_hp_params);
  
--STEP 0: Error Event
-+STEP 0: Error Event: ERR_NONFATAL
- -------------------
- A PCI bus error is detected by the PCI hardware.  On powerpc, the slot
- is isolated, in that all I/O is blocked: all reads return 0xffffffff,
-@@ -228,13 +228,7 @@ proceeds to either STEP3 (Link Reset) or to STEP 5 (Resume Operations).
- If any driver returned PCI_ERS_RESULT_NEED_RESET, then the platform
- proceeds to STEP 4 (Slot Reset)
+ /**
+  * pciehp_is_native - Check whether a hotplug port is handled by the OS
+- * @pdev: Hotplug port to check
++ * @bridge: Hotplug port to check
+  *
+- * Walk up from @pdev to the host bridge, obtain its cached _OSC Control Field
+- * and return the value of the "PCI Express Native Hot Plug control" bit.
+- * On failure to obtain the _OSC Control Field return %false.
++ * Returns true if the given @bridge is handled by the native PCIe hotplug
++ * driver.
+  */
+-bool pciehp_is_native(struct pci_dev *pdev)
++bool pciehp_is_native(struct pci_dev *bridge)
+ {
+-	struct acpi_pci_root *root;
+-	acpi_handle handle;
++	const struct pci_host_bridge *host;
++	u32 slot_cap;
  
--STEP 3: Link Reset
--------------------
--The platform resets the link.  This is a PCI-Express specific step
--and is done whenever a fatal error has been detected that can be
--"solved" by resetting the link.
+-	handle = acpi_find_root_bridge_handle(pdev);
+-	if (!handle)
++	if (!pciehp_available())
++		return false;
++	if (!bridge)
+ 		return false;
+ 
+-	root = acpi_pci_find_root(handle);
+-	if (!root)
++	pcie_capability_read_dword(bridge, PCI_EXP_SLTCAP, &slot_cap);
++	if (!(slot_cap & PCI_EXP_SLTCAP_HPC))
+ 		return false;
+ 
+-	return root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
++	if (pcie_ports_native)
++		return true;
++
++	host = pci_find_host_bridge(bridge->bus);
++	return host->native_pcie_hotplug;
+ }
+ 
+ /**
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index d0c6783dbfe3..aa542dc10d23 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -11,8 +11,6 @@
+ 
+ #include <linux/compiler.h>
+ 
+-extern bool pcie_ports_native;
 -
--STEP 4: Slot Reset
-+STEP 3: Slot Reset
- ------------------
+ /* Service Type */
+ #define PCIE_PORT_SERVICE_PME_SHIFT	0	/* Power Management Event */
+ #define PCIE_PORT_SERVICE_PME		(1 << PCIE_PORT_SERVICE_PME_SHIFT)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 359a197d0310..2f6689a14e8d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1451,8 +1451,10 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
  
- In response to a return value of PCI_ERS_RESULT_NEED_RESET, the
-@@ -320,7 +314,7 @@ Failure).
- >>> However, it probably should.
+ #ifdef CONFIG_PCIEPORTBUS
+ extern bool pcie_ports_disabled;
++extern bool pcie_ports_native;
+ #else
+ #define pcie_ports_disabled	true
++#define pcie_ports_native	false
+ #endif
  
+ #ifdef CONFIG_PCIEASPM
+diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+index 46fb90b5164b..ee2b1674a601 100644
+--- a/include/linux/pci_hotplug.h
++++ b/include/linux/pci_hotplug.h
+@@ -162,7 +162,7 @@ struct hotplug_params {
+ #ifdef CONFIG_ACPI
+ #include <linux/acpi.h>
+ int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp);
+-bool pciehp_is_native(struct pci_dev *pdev);
++bool pciehp_is_native(struct pci_dev *bridge);
+ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *dev, u32 flags);
+ int acpi_pci_check_ejectable(struct pci_bus *pbus, acpi_handle handle);
+ int acpi_pci_detect_ejectable(acpi_handle handle);
+@@ -172,7 +172,7 @@ static inline int pci_get_hp_params(struct pci_dev *dev,
+ {
+ 	return -ENODEV;
+ }
+-static inline bool pciehp_is_native(struct pci_dev *pdev) { return true; }
++static inline bool pciehp_is_native(struct pci_dev *bridge) { return true; }
+ #endif
  
--STEP 5: Resume Operations
-+STEP 4: Resume Operations
- -------------------------
- The platform will call the resume() callback on all affected device
- drivers if all drivers on the segment have returned
-@@ -332,7 +326,7 @@ a result code.
- At this point, if a new error happens, the platform will restart
- a new error recovery sequence.
- 
--STEP 6: Permanent Failure
-+STEP 5: Permanent Failure
- -------------------------
- A "permanent failure" has occurred, and the platform cannot recover
- the device.  The platform will call error_detected() with a
-@@ -355,6 +349,27 @@ errors. See the discussion in powerpc/eeh-pci-error-recovery.txt
- for additional detail on real-life experience of the causes of
- software errors.
- 
-+STEP 0: Error Event: ERR_FATAL
-+-------------------
-+PCI bus error is detected by the PCI hardware. On powerpc, the slot is
-+isolated, in that all I/O is blocked: all reads return 0xffffffff, all
-+writes are ignored.
-+
-+STEP 1: Remove devices
-+--------------------
-+Platform removes the devices depending on the error agent, it could be
-+this port for all subordinates or upstream component (likely downstream
-+port)
-+
-+STEP 2: Reset link
-+--------------------
-+The platform resets the link.  This is a PCI-Express specific step and is
-+done whenever a fatal error has been detected that can be "solved" by
-+resetting the link.
-+
-+STEP 3: Re-enumerate the devices
-+--------------------
-+Initiates the re-enumeration.
- 
- Conclusion; General Remarks
- ---------------------------
+ #ifdef CONFIG_HOTPLUG_PCI_PCIE
 -- 
-2.7.4
+2.17.0
+
