@@ -1,103 +1,244 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yisheng Xie <xieyisheng1@huawei.com>
-Cc: bhelgaas@google.com, lenb@kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        guohanjun@huawei.com, jcm@redhat.com, toshi.kani@hpe.com,
-        tanxiaojun@huawei.com, wangzhou1@hisilicon.com,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        Hanjun Guo <hanjun.guo@linaro.org>
-Subject: Re: [PATCH v2 1/2] PCI ACPI: Avoid panic when PCI IO resource's size is not page aligned
-Date: Tue, 01 May 2018 11:28:31 +0200
-Message-ID: <3699960.UXjPS91TgB@aspire.rjw.lan>
-In-Reply-To: <1522480343-37669-1-git-send-email-xieyisheng1@huawei.com>
-References: <1522480343-37669-1-git-send-email-xieyisheng1@huawei.com>
+Return-Path: <SRS0=nY3x=H5=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=nY3x=H5=codeaurora.org=okaya@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 10 May 2018 14:15:10 +0100
+From: okaya@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: poza@codeaurora.org, Bjorn Helgaas <bhelgaas@google.com>, Philippe
+ Ombredanne <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
+ <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
+ Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Timur Tabi
+ <timur@codeaurora.org>, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v15 3/9] PCI/AER: Handle ERR_FATAL with removal and
+ re-enumeration of devices
+In-Reply-To: <20180510131027.GB173327@bhelgaas-glaptop.roam.corp.google.com>
+References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
+ <1525323838-1735-4-git-send-email-poza@codeaurora.org>
+ <20180508235330.GN161390@bhelgaas-glaptop.roam.corp.google.com>
+ <20180509130730.GA236548@bhelgaas-glaptop.roam.corp.google.com>
+ <b1f9aaf43300ef7a829001e964bf4e72@codeaurora.org>
+ <20180509232111.GA43216@bhelgaas-glaptop.roam.corp.google.com>
+ <c2238d174e550250b0b93a497c40cf6a@codeaurora.org>
+ <20180510131027.GB173327@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <3cb8c2046967fd9a81a8f846dbafaa82@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, March 31, 2018 9:12:22 AM CEST Yisheng Xie wrote:
-> Zhou reported a bug on Hisilicon arm64 D06 platform with 64KB page size:
+On 2018-05-10 14:10, Bjorn Helgaas wrote:
+> On Thu, May 10, 2018 at 12:31:16PM +0530, poza@codeaurora.org wrote:
+>> On 2018-05-10 04:51, Bjorn Helgaas wrote:
+>> > On Wed, May 09, 2018 at 06:44:53PM +0530, poza@codeaurora.org wrote:
+>> > > On 2018-05-09 18:37, Bjorn Helgaas wrote:
+>> > > > On Tue, May 08, 2018 at 06:53:30PM -0500, Bjorn Helgaas wrote:
+>> > > > > On Thu, May 03, 2018 at 01:03:52AM -0400, Oza Pawandeep wrote:
+>> > > > > > This patch alters the behavior of handling of ERR_FATAL, where removal
+>> > > > > > of devices is initiated, followed by reset link, followed by
+>> > > > > > re-enumeration.
+>> > > > > >
+>> > > > > > So the errors are handled in a different way as follows:
+>> > > > > > ERR_NONFATAL => call driver recovery entry points
+>> > > > > > ERR_FATAL    => remove and re-enumerate
+>> > > > > >
+>> > > > > > please refer to Documentation/PCI/pci-error-recovery.txt for more details.
+>> > > > > >
+>> > > > > > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+>> > > > > >
+>> > > > > > diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+>> > > > > > index 779b387..206f590 100644
+>> > > > > > --- a/drivers/pci/pcie/aer/aerdrv.c
+>> > > > > > +++ b/drivers/pci/pcie/aer/aerdrv.c
+>> > > > > > @@ -330,6 +330,13 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+>> > > > > >         reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
+>> > > > > >         pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
+>> > > > > >
+>> > > > > > +       /*
+>> > > > > > +        * This function is called only on ERR_FATAL now, and since
+>> > > > > > +        * the pci_report_resume is called only in ERR_NONFATAL case,
+>> > > > > > +        * the clearing part has to be taken care here.
+>> > > > > > +        */
+>> > > > > > +       aer_error_resume(dev);
+>> > > > >
+>> > > > > I don't understand this part.  Previously the ERR_FATAL path looked
+>> > > > > like
+>> > > > > this:
+>> > > > >
+>> > > > >   do_recovery
+>> > > > >     reset_link
+>> > > > >       driver->reset_link
+>> > > > >         aer_root_reset
+>> > > > >           pci_reset_bridge_secondary_bus                # <-- reset
+>> > > > >     broadcast_error_message(..., report_resume)
+>> > > > >       pci_walk_bus(..., report_resume, ...)
+>> > > > >         report_resume
+>> > > > >       if (cb == report_resume)
+>> > > > >         pci_cleanup_aer_uncorrect_error_status
+>> > > > >           pci_write_config_dword(PCI_ERR_UNCOR_STATUS)  # <-- clear
+>> > > > > status
+>> > > > >
+>> > > > > After this patch, it will look like this:
+>> > > > >
+>> > > > >   do_recovery
+>> > > > >     do_fatal_recovery
+>> > > > >       pci_cleanup_aer_uncorrect_error_status
+>> > > > >         pci_write_config_dword(PCI_ERR_UNCOR_STATUS)    # <-- clear
+>> > > > > status
+>> > > > >       reset_link
+>> > > > >         driver->reset_link
+>> > > > >           aer_root_reset
+>> > > > >             pci_reset_bridge_secondary_bus              # <-- reset
+>> > > > >             aer_error_resume
+>> > > > >               pcie_capability_write_word(PCI_EXP_DEVSTA)        #
+>> > > > > <-- clear more
+>> > > > >               pci_write_config_dword(PCI_ERR_UNCOR_STATUS)      #
+>> > > > > <-- clear status
+>> > > > >
+>> > > > > So if I'm understanding correctly, the new path clears the status too
+>> > > > > early, then clears it again (plus clearing DEVSTA, which we didn't do
+>> > > > > before) later.
+>> > > > >
+>> > > > > I would think we would want to leave aer_root_reset() alone, and
+>> > > > > just move
+>> > > > > the pci_cleanup_aer_uncorrect_error_status() in do_fatal_recovery()
+>> > > > > down so
+>> > > > > it happens after we call reset_link().  That way the reset/clear
+>> > > > > sequence
+>> > > > > would be the same as it was before.
+>> > > >
+>> > > > I've been fiddling with this a bit myself and will post the results to
+>> > > > see
+>> > > > what you think.
+>> > >
+>> > >
+>> > > ok so you are suggesting to move
+>> > > pci_cleanup_aer_uncorrect_error_status down
+>> > > which I can do.
+>> > >
+>> > > And not to call aer_error_resume, because you think its clearing the
+>> > > status
+>> > > again.
+>> > >
+>> > > following code: calls aer_error_resume.
+>> > > pci_broadcast_error_message()
+>> > >  /*
+>> > >                  * If the error is reported by an end point, we
+>> > > think this
+>> > >                  * error is related to the upstream link of the end
+>> > > point.
+>> > >                  */
+>> > >                 if (state == pci_channel_io_normal)
+>> > >                         /*
+>> > >                          * the error is non fatal so the bus is ok,
+>> > > just
+>> > > invoke
+>> > >                          * the callback for the function that logged
+>> > > the
+>> > > error.
+>> > >                          */
+>> > >                         cb(dev, &result_data);
+>> > >                 else
+>> > >                         pci_walk_bus(dev->bus, cb, &result_data);
+>> >
+>> > Holy crap, I thought this could not possibly get any more complicated,
+>> > but you're right; we do actually call aer_error_resume() today via an
+>> > extremely convoluted path:
+>> >
+>> >   do_recovery(pci_dev)
+>> >     broadcast_error_message(..., error_detected, ...)
+>> >     if (AER_FATAL)
+>> >       reset_link(pci_dev)
+>> >         udev = BRIDGE ? pci_dev : pci_dev->bus->self
+>> >         driver->reset_link(udev)
+>> >           aer_root_reset(udev)
+>> >     if (CAN_RECOVER)
+>> >       broadcast_error_message(..., mmio_enabled, ...)
+>> >     if (NEED_RESET)
+>> >       broadcast_error_message(..., slot_reset, ...)
+>> >     broadcast_error_message(dev, ..., report_resume, ...)
+>> >       if (BRIDGE)
+>> >         report_resume
+>> >           driver->resume
+>> >             pcie_portdrv_err_resume
+>> >               device_for_each_child(..., resume_iter)
+>> >                 resume_iter
+>> >                   driver->error_resume
+>> >                     aer_error_resume
+>> >         pci_cleanup_aer_uncorrect_error_status(pci_dev)       # only if
+>> > BRIDGE
+>> >           pci_write_config_dword(PCI_ERR_UNCOR_STATUS)
+>> >
+>> > aerdriver is the only port service driver that implements
+>> > .error_resume(), and aerdriver only binds to root ports.  I can't
+>> > really believe all these device_for_each_child()/resume_iter()
+>> > gyrations are necessary when this is AER code calling AER code.
+>> >
+>> > Bjorn
+>> 
+>> here is the code of do_fatal_recovery, where I have moved the things 
+>> down
+>> and doing only if it is bridge.
+>> let me know how this looks to you, so then I can post v16.
 > 
->  [    2.470908] kernel BUG at lib/ioremap.c:72!
->  [    2.475079] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
->  [    2.480551] Modules linked in:
->  [    2.483594] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.16.0-rc7-00062-g0b41260-dirty #23
->  [    2.491756] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI Nemo 2.0 RC0 - B120 03/23/2018
->  [    2.500614] pstate: 80c00009 (Nzcv daif +PAN +UAO)
->  [    2.505395] pc : ioremap_page_range+0x268/0x36c
->  [    2.509912] lr : pci_remap_iospace+0xe4/0x100
->  [...]
->  [    2.603733] Call trace:
->  [    2.606168]  ioremap_page_range+0x268/0x36c
->  [    2.610337]  pci_remap_iospace+0xe4/0x100
->  [    2.614334]  acpi_pci_probe_root_resources+0x1d4/0x214
->  [    2.619460]  pci_acpi_root_prepare_resources+0x18/0xa8
->  [    2.624585]  acpi_pci_root_create+0x98/0x214
->  [    2.628843]  pci_acpi_scan_root+0x124/0x20c
->  [    2.633013]  acpi_pci_root_add+0x224/0x494
->  [    2.637096]  acpi_bus_attach+0xf8/0x200
->  [    2.640918]  acpi_bus_attach+0x98/0x200
->  [    2.644740]  acpi_bus_attach+0x98/0x200
->  [    2.648562]  acpi_bus_scan+0x48/0x9c
->  [    2.652125]  acpi_scan_init+0x104/0x268
->  [    2.655948]  acpi_init+0x308/0x374
->  [    2.659337]  do_one_initcall+0x48/0x14c
->  [    2.663160]  kernel_init_freeable+0x19c/0x250
->  [    2.667504]  kernel_init+0x10/0x100
->  [    2.670979]  ret_from_fork+0x10/0x18
+> This looks superficially OK.  It is very difficult for me to verify 
+> that
+> the behavior is equivalent to the current code, but that's not your 
+> fault;
+> it's just a consequence of the existing design.
 > 
-> The cause is the size of PCI IO resource is 32KB, which is 4K aligned but
-> not 64KB aligned, however, ioremap_page_range() request the range as page
-> aligned or it will trigger a BUG_ON() on ioremap_pte_range() it calls, as
-> ioremap_pte_range increase the addr by PAGE_SIZE, which makes addr != end
-> until trigger BUG_ON, if its incoming end is not page aligned. More detail
-> trace is as following:
+> I have a couple trivial comments elsewhere, and I'll respond to those
+> patches individually.
 > 
->  ioremap_page_range
->  -> ioremap_p4d_range
->     -> ioremap_p4d_range
->        -> ioremap_pud_range
->           -> ioremap_pmd_range
->              -> ioremap_pte_range
-> 
-> This patch fix the bug by align the size of PCI IO resource to PAGE_SIZE.
-> 
-> Reported-by: Zhou Wang <wangzhou1@hisilicon.com>
-> Tested-by: Xiaojun Tan <tanxiaojun@huawei.com>
-> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
-> ---
-> I mark this as v2 for I have post a RFC version:
-> 
->  https://lkml.org/lkml/2018/3/30/8
->  
-> v2:
->  * Let the caller of ioremap_page_range() align the request by PAGE_SIZE - per Toshi
-> 
-> Thanks
-> Yisheng
-> 
->  drivers/acpi/pci_root.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 6fc204a..b758ca3 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -746,7 +746,7 @@ static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
->  		goto err;
->  
->  	res->start = port;
-> -	res->end = port + length - 1;
-> +	res->end = PAGE_ALIGN(port + length) - 1;
+>> static pci_ers_result_t do_fatal_recovery(struct pci_dev *dev, int 
+>> severity)
+>> {
+>>         struct pci_dev *udev;
+>>         struct pci_bus *parent;
+>>         struct pci_dev *pdev, *temp;
+>>         struct aer_broadcast_data result_data;
+>>         pci_ers_result_t result = PCI_ERS_RESULT_RECOVERED;
+>> 
+>> 
+>>         if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+>>                 udev = dev;
+>>         else
+>>                 udev = dev->bus->self;
+>> 
+>>         parent = udev->subordinate;
+>>         pci_lock_rescan_remove();
+>>         list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+>>                                  bus_list) {
+>>                 pci_dev_get(pdev);
+>>                 pci_dev_set_disconnected(pdev, NULL);
+>>                 if (pci_has_subordinate(pdev))
+>>                         pci_walk_bus(pdev->subordinate,
+>>                                      pci_dev_set_disconnected, NULL);
+>>                 pci_stop_and_remove_bus_device(pdev);
+>>                 pci_dev_put(pdev);
+>>         }
+>> 
+>>         result = reset_link(udev, severity);
+>>         if (severity == AER_FATAL && dev->hdr_type ==
+>> PCI_HEADER_TYPE_BRIDGE) {
+>>                 pci_walk_bus(dev->subordinate, report_resume, 
+>> &result_data);
 
-Shouldn't pci_remap_iospace() sanitize its arguments instead?
+Why are we calling resume?
 
->  	entry->offset = port - pci_addr;
->  
->  	if (pci_remap_iospace(res, cpu_addr) < 0)
-> 
-
-
+>>                 pci_cleanup_aer_uncorrect_error_status(dev);
+>>                 dev->error_state = pci_channel_io_normal;
+>>         }
+>>         if (result == PCI_ERS_RESULT_RECOVERED)
+>>                 if (pcie_wait_for_link(udev, true))
+>>                         pci_rescan_bus(udev->bus);
+>> 
+>>         pci_unlock_rescan_remove();
+>> 
+>>         return result;
+>> }
+>> 
+>> Regards,
+>> Oza.
+>> 
+>> 
