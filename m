@@ -1,93 +1,211 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46110 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752608AbeEJVqS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 May 2018 17:46:18 -0400
-Subject: [PATCH] PCI/portdrv: Remove unused pcie_port_acpi_setup()
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Date: Thu, 10 May 2018 16:46:15 -0500
-Message-ID: <152598877588.228994.16423836714969302381.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=OpPG=H5=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=OpPG=H5=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 10 May 2018 19:56:00 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
+ <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
+ <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
+ Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
+ <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>,
+ linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v15 8/9] PCI/DPC: Unify and plumb error handling into DPC
+In-Reply-To: <20180510132222.GE173327@bhelgaas-glaptop.roam.corp.google.com>
+References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
+ <1525323838-1735-9-git-send-email-poza@codeaurora.org>
+ <20180510132222.GE173327@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <29c21a3fbaeb56c0581da66b9203dfd1@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On 2018-05-10 18:52, Bjorn Helgaas wrote:
+> On Thu, May 03, 2018 at 01:03:57AM -0400, Oza Pawandeep wrote:
+>> Current DPC driver does not do recovery, e.g. calling end-point's 
+>> driver's
+>> callbacks, which sanitize the sw.
+>> 
+>> DPC driver implements link_reset callback, and calls 
+>> pci_do_recovery().
+>> 
+>> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+>> 
+>> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+>> index 80ec384..aed7c9f 100644
+>> --- a/drivers/pci/pcie/dpc.c
+>> +++ b/drivers/pci/pcie/dpc.c
+>> @@ -73,29 +73,21 @@ static void dpc_wait_link_inactive(struct dpc_dev 
+>> *dpc)
+>>  	pcie_wait_for_link(pdev, false);
+>>  }
+>> 
+>> -static void dpc_work(struct work_struct *work)
+>> +static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+>>  {
+>> -	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+>> -	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+>> -	struct pci_bus *parent = pdev->subordinate;
+>> -	u16 cap = dpc->cap_pos, ctl;
+>> -
+>> -	pci_lock_rescan_remove();
+>> -	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+>> -					 bus_list) {
+>> -		pci_dev_get(dev);
+>> -		pci_dev_set_disconnected(dev, NULL);
+>> -		if (pci_has_subordinate(dev))
+>> -			pci_walk_bus(dev->subordinate,
+>> -				     pci_dev_set_disconnected, NULL);
+>> -		pci_stop_and_remove_bus_device(dev);
+>> -		pci_dev_put(dev);
+>> -	}
+>> -	pci_unlock_rescan_remove();
+> 
+> I think it would be good to have a comment here about why this 
+> "reset_link"
+> function doesn't actually reset the link, e.g.,
+> 
+>   /*
+>    * DPC disables the Link automatically in hardware, so it has
+>    * already been reset by the time we get here.
+>    */
+> 
+>> +	struct dpc_dev *dpc;
+>> +	struct pcie_device *pciedev;
+>> +	struct device *devdpc;
+>> +	u16 cap, ctl;
+>> +
+>> +	devdpc = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_DPC);
+>> +	pciedev = to_pcie_device(devdpc);
+>> +	dpc = get_service_data(pciedev);
+>> +	cap = dpc->cap_pos;
+> 
+> And maybe one about waiting until the link is inactive, then clearing 
+> DPC
+> Trigger Status to allow the port to leave DPC.
+> 
+>>  	dpc_wait_link_inactive(dpc);
+>>  	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
+>> -		return;
+>> +		return PCI_ERS_RESULT_DISCONNECT;
+>>  	if (dpc->rp_extensions && dpc->rp_pio_status) {
+>>  		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
+>>  				       dpc->rp_pio_status);
+>> @@ -108,6 +100,17 @@ static void dpc_work(struct work_struct *work)
+>>  	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+>>  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+>>  			      ctl | PCI_EXP_DPC_CTL_INT_EN);
+>> +
+>> +	return PCI_ERS_RESULT_RECOVERED;
+>> +}
+>> +
+>> +static void dpc_work(struct work_struct *work)
+>> +{
+>> +	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+>> +	struct pci_dev *pdev = dpc->dev->port;
+>> +
+>> +	/* From DPC point of view error is always FATAL. */
+>> +	pcie_do_recovery(pdev, DPC_FATAL);
+>>  }
+>> 
+>>  static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
+>> @@ -288,6 +291,7 @@ static struct pcie_port_service_driver dpcdriver = 
+>> {
+>>  	.service	= PCIE_PORT_SERVICE_DPC,
+>>  	.probe		= dpc_probe,
+>>  	.remove		= dpc_remove,
+>> +	.reset_link	= dpc_reset_link,
+>>  };
+>> 
+>>  static int __init dpc_service_init(void)
+>> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+>> index 877785d..526aba8 100644
+>> --- a/drivers/pci/pcie/err.c
+>> +++ b/drivers/pci/pcie/err.c
+>> @@ -181,11 +181,12 @@ static pci_ers_result_t 
+>> default_reset_link(struct pci_dev *dev)
+>>  	return PCI_ERS_RESULT_RECOVERED;
+>>  }
+>> 
+>> -static pci_ers_result_t reset_link(struct pci_dev *dev)
+>> +static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+>>  {
+>>  	struct pci_dev *udev;
+>>  	pci_ers_result_t status;
+>>  	struct pcie_port_service_driver *driver;
+>> +	u32 service;
+>> 
+>>  	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+>>  		/* Reset this port for all subordinates */
+>> @@ -196,7 +197,12 @@ static pci_ers_result_t reset_link(struct pci_dev 
+>> *dev)
+>>  	}
+>> 
+>>  	/* Use the aer driver of the component firstly */
+>> -	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
+>> +	if (severity == DPC_FATAL)
+>> +		service = PCIE_PORT_SERVICE_DPC;
+>> +	else
+>> +		service = PCIE_PORT_SERVICE_AER;
+>> +
+>> +	driver = pcie_port_find_service(udev, service);
+> 
+> This is where I was wondering about passing in "service" directly 
+> instead
+> of "severity".
 
-02bfeb484230 ("PCI/portdrv: Simplify PCIe feature permission checking")
-removed the only call of pcie_port_acpi_setup() and removed portdrv_acpi.o
-from the Makefile, but I forgot to remove pcie_port_acpi_setup() itself.
+I will take care of all your comments made on all the patches.
+but this one I do not understand.
 
-Remove pcie_port_acpi_setup() and the drivers/pci/pcie/portdrv_acpi.c file.
+passing service directly instead of severity ? (I do not think you meant 
+to write severity there)
+perhaps do you mean following ?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/portdrv_acpi.c |   57 ---------------------------------------
- 1 file changed, 57 deletions(-)
- delete mode 100644 drivers/pci/pcie/portdrv_acpi.c
+if (severity == DPC_FATAL)
+          pcie_port_find_service(udev, PCIE_PORT_SERVICE_DPC);
+else
+          pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
 
-diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
-deleted file mode 100644
-index 8ab5d434b9c6..000000000000
---- a/drivers/pci/pcie/portdrv_acpi.c
-+++ /dev/null
-@@ -1,57 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- * PCIe Port Native Services Support, ACPI-Related Part
-- *
-- * Copyright (C) 2010 Rafael J. Wysocki <rjw@sisk.pl>, Novell Inc.
-- */
--
--#include <linux/pci.h>
--#include <linux/kernel.h>
--#include <linux/errno.h>
--#include <linux/acpi.h>
--#include <linux/pci-acpi.h>
--
--#include "aer/aerdrv.h"
--#include "../pci.h"
--#include "portdrv.h"
--
--/**
-- * pcie_port_acpi_setup - Request the BIOS to release control of PCIe services.
-- * @port: PCIe Port service for a root port or event collector.
-- * @srv_mask: Bit mask of services that can be enabled for @port.
-- *
-- * Invoked when @port is identified as a PCIe port device.  To avoid conflicts
-- * with the BIOS PCIe port native services support requires the BIOS to yield
-- * control of these services to the kernel.  The mask of services that the BIOS
-- * allows to be enabled for @port is written to @srv_mask.
-- *
-- * NOTE: It turns out that we cannot do that for individual port services
-- * separately, because that would make some systems work incorrectly.
-- */
--void pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
--{
--	struct acpi_pci_root *root;
--	acpi_handle handle;
--	u32 flags;
--
--	if (acpi_pci_disabled)
--		return;
--
--	handle = acpi_find_root_bridge_handle(port);
--	if (!handle)
--		return;
--
--	root = acpi_pci_find_root(handle);
--	if (!root)
--		return;
--
--	flags = root->osc_control_set;
--
--	*srv_mask = 0;
--	if (flags & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
--		*srv_mask |= PCIE_PORT_SERVICE_HP;
--	if (flags & OSC_PCI_EXPRESS_PME_CONTROL)
--		*srv_mask |= PCIE_PORT_SERVICE_PME;
--	if (flags & OSC_PCI_EXPRESS_AER_CONTROL)
--		*srv_mask |= PCIE_PORT_SERVICE_AER | PCIE_PORT_SERVICE_DPC;
--}
+
+
+> 
+>>  	if (driver && driver->reset_link) {
+>>  		status = driver->reset_link(udev);
+>> @@ -302,7 +308,7 @@ static pci_ers_result_t do_fatal_recovery(struct 
+>> pci_dev *dev, int severity)
+>>  		pci_dev_put(pdev);
+>>  	}
+>> 
+>> -	result = reset_link(udev);
+>> +	result = reset_link(udev, severity);
+>>  	if (result == PCI_ERS_RESULT_RECOVERED)
+>>  		if (pcie_wait_for_link(udev, true))
+>>  			pci_rescan_bus(udev->bus);
+>> @@ -326,7 +332,8 @@ void pcie_do_recovery(struct pci_dev *dev, int 
+>> severity)
+>>  	pci_ers_result_t status;
+>>  	enum pci_channel_state state;
+>> 
+>> -	if (severity == AER_FATAL) {
+>> +	if ((severity == AER_FATAL) ||
+>> +	   (severity == DPC_FATAL)) {
+>>  		status = do_fatal_recovery(dev, severity);
+>>  		if (status != PCI_ERS_RESULT_RECOVERED)
+>>  			goto failed;
+>> diff --git a/include/linux/aer.h b/include/linux/aer.h
+>> index 8f87bbe..0c506fe 100644
+>> --- a/include/linux/aer.h
+>> +++ b/include/linux/aer.h
+>> @@ -14,6 +14,7 @@
+>>  #define AER_NONFATAL			0
+>>  #define AER_FATAL			1
+>>  #define AER_CORRECTABLE			2
+>> +#define DPC_FATAL			4
+>> 
+>>  struct pci_dev;
+>> 
+>> --
+>> 2.7.4
+>> 
