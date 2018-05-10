@@ -1,60 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42680 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751198AbeEPWo0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 May 2018 18:44:26 -0400
-Subject: Re: [PATCH] PCI: DPC: Clear AER status bits before disabling port
- containment
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>, bhelgaas@google.com
-Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, Keith Busch <keith.busch@intel.com>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180516213306.27027-1-mr.nuke.me@gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <605540c0-b6c5-89a2-9d50-12a3005d9f88@codeaurora.org>
-Date: Wed, 16 May 2018 18:44:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46110 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752608AbeEJVqS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 May 2018 17:46:18 -0400
+Subject: [PATCH] PCI/portdrv: Remove unused pcie_port_acpi_setup()
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Thu, 10 May 2018 16:46:15 -0500
+Message-ID: <152598877588.228994.16423836714969302381.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180516213306.27027-1-mr.nuke.me@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/16/2018 5:33 PM, Alexandru Gagniuc wrote:
-> AER status bits are sticky, and they survive system resets. Downstream
-> devices are usually taken care of after re-enumerating the downstream
-> busses, as the AER bits are cleared during probe().
-> 
-> However, nothing clears the bits of the port which contained the
-> error. These sticky bits may leave some BIOSes to think that something
-> bad happened, and print ominous messages on next boot. To prevent this,
-> tidy up the AER status bits before releasing containment.
-> 
-> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> ---
->  drivers/pci/pcie/dpc.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-> index 8c57d607e603..bf82d6936556 100644
-> --- a/drivers/pci/pcie/dpc.c
-> +++ b/drivers/pci/pcie/dpc.c
-> @@ -112,6 +112,10 @@ static void dpc_work(struct work_struct *work)
->  		dpc->rp_pio_status = 0;
->  	}
->  
-> +	/* DPC event made a mess of our AER status bits. Clean them up. */
-> +	pci_cleanup_aer_error_status_regs(pdev);
-> +	/* TODO: Should we also use aer_print_error to log the event? */
-> +
->  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
->  		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
->  
-> 
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-I think Keith has a patch to fix this. It was under review at some point.
+02bfeb484230 ("PCI/portdrv: Simplify PCIe feature permission checking")
+removed the only call of pcie_port_acpi_setup() and removed portdrv_acpi.o
+from the Makefile, but I forgot to remove pcie_port_acpi_setup() itself.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Remove pcie_port_acpi_setup() and the drivers/pci/pcie/portdrv_acpi.c file.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/portdrv_acpi.c |   57 ---------------------------------------
+ 1 file changed, 57 deletions(-)
+ delete mode 100644 drivers/pci/pcie/portdrv_acpi.c
+
+diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+deleted file mode 100644
+index 8ab5d434b9c6..000000000000
+--- a/drivers/pci/pcie/portdrv_acpi.c
++++ /dev/null
+@@ -1,57 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * PCIe Port Native Services Support, ACPI-Related Part
+- *
+- * Copyright (C) 2010 Rafael J. Wysocki <rjw@sisk.pl>, Novell Inc.
+- */
+-
+-#include <linux/pci.h>
+-#include <linux/kernel.h>
+-#include <linux/errno.h>
+-#include <linux/acpi.h>
+-#include <linux/pci-acpi.h>
+-
+-#include "aer/aerdrv.h"
+-#include "../pci.h"
+-#include "portdrv.h"
+-
+-/**
+- * pcie_port_acpi_setup - Request the BIOS to release control of PCIe services.
+- * @port: PCIe Port service for a root port or event collector.
+- * @srv_mask: Bit mask of services that can be enabled for @port.
+- *
+- * Invoked when @port is identified as a PCIe port device.  To avoid conflicts
+- * with the BIOS PCIe port native services support requires the BIOS to yield
+- * control of these services to the kernel.  The mask of services that the BIOS
+- * allows to be enabled for @port is written to @srv_mask.
+- *
+- * NOTE: It turns out that we cannot do that for individual port services
+- * separately, because that would make some systems work incorrectly.
+- */
+-void pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
+-{
+-	struct acpi_pci_root *root;
+-	acpi_handle handle;
+-	u32 flags;
+-
+-	if (acpi_pci_disabled)
+-		return;
+-
+-	handle = acpi_find_root_bridge_handle(port);
+-	if (!handle)
+-		return;
+-
+-	root = acpi_pci_find_root(handle);
+-	if (!root)
+-		return;
+-
+-	flags = root->osc_control_set;
+-
+-	*srv_mask = 0;
+-	if (flags & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
+-		*srv_mask |= PCIE_PORT_SERVICE_HP;
+-	if (flags & OSC_PCI_EXPRESS_PME_CONTROL)
+-		*srv_mask |= PCIE_PORT_SERVICE_PME;
+-	if (flags & OSC_PCI_EXPRESS_AER_CONTROL)
+-		*srv_mask |= PCIE_PORT_SERVICE_AER | PCIE_PORT_SERVICE_DPC;
+-}
