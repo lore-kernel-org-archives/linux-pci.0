@@ -1,82 +1,93 @@
-Return-Path: <SRS0=u1aH=H3=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=u1aH=H3=deltatee.com=logang@kernel.org>
-To: Dan Williams <dan.j.williams@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>
-Cc: Stephen Bates <sbates@raithlin.com>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- Bjorn Helgaas <helgaas@kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
- "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
- Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
- Max Gurtovoy <maxg@mellanox.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?=
- <jglisse@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
-References: <20180423233046.21476-1-logang@deltatee.com>
- <20180423233046.21476-5-logang@deltatee.com>
- <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
- <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
- <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
- <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
- <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
- <20180508133407.57a46902@w520.home>
- <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
- <20180508141331.7cd737cb@w520.home>
- <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
- <20180508144341.0441b676@w520.home>
- <a524127a-3557-3dff-971c-dfe94ba5a01c@deltatee.com>
- <20180508152631.50fd583c@w520.home>
- <354F7407-0DC7-470C-B9AA-74FDF9C46B08@raithlin.com>
- <20180508160336.0935ddde@w520.home>
- <20905682-9440-7d4b-0260-99d3dc794c3d@deltatee.com>
- <20180508163206.7d3bf383@w520.home>
- <CAPcyv4i1ksiu1pExF=EE21P2Wz1a9LaDaG247oG_WSbYgcR93g@mail.gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <2ce7908d-1422-55f8-aeba-94ccce2cb484@deltatee.com>
-Date: Tue, 8 May 2018 17:15:21 -0600
-MIME-Version: 1.0
-In-Reply-To: <CAPcyv4i1ksiu1pExF=EE21P2Wz1a9LaDaG247oG_WSbYgcR93g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
+Return-Path: <SRS0=w04b=H5=intel.com=jeffrey.t.kirsher@kernel.org>
+Return-Path: <SRS0=w04b=H5=intel.com=jeffrey.t.kirsher@kernel.org>
+Message-ID: <ea4c716024a30ed834b1121adb8c2cb1deff2c97.camel@intel.com>
+Subject: Re: [PATCH v6 5/5] PCI: Remove unused pcie_get_minimum_link()
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Reply-To: jeffrey.t.kirsher@intel.com
+To: Bjorn Helgaas <helgaas@kernel.org>, Ganesh Goudar
+ <ganeshgr@chelsio.com>,  Michael Chan <michael.chan@broadcom.com>, Ariel
+ Elior <ariel.elior@cavium.com>
+Cc: linux-pci@vger.kernel.org, everest-linux-l2@cavium.com,
+ intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Tal Gilboa <talgi@mellanox.com>, Tariq Toukan
+ <tariqt@mellanox.com>, Jacob Keller <jacob.e.keller@intel.com>, Jakub
+ Kicinski <kubakici@wp.pl>
+Date: Thu, 10 May 2018 13:34:47 -0700
+In-Reply-To: <20180510163357.GB190385@bhelgaas-glaptop.roam.corp.google.com>
+References: 
+	<152537719056.62474.2571390812509425478.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	 <152537764322.62474.552711932384023140.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	 <20180510163357.GB190385@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-ezjtuMDbw9aM3nX0qUyk"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
 
+--=-ezjtuMDbw9aM3nX0qUyk
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 08/05/18 05:00 PM, Dan Williams wrote:
->> I'd advise caution with a user supplied BDF approach, we have no
->> guaranteed persistence for a device's PCI address.  Adding a device
->> might renumber the buses, replacing a device with one that consumes
->> more/less bus numbers can renumber the buses, motherboard firmware
->> updates could renumber the buses, pci=assign-buses can renumber the
->> buses, etc.  This is why the VT-d spec makes use of device paths when
->> describing PCI hierarchies, firmware can't know what bus number will be
->> assigned to a device, but it does know the base bus number and the path
->> of devfns needed to get to it.  I don't know how we come up with an
->> option that's easy enough for a user to understand, but reasonably
->> robust against hardware changes.  Thanks,
-> 
-> True, but at the same time this feature is for "users with custom
-> hardware designed for purpose", I assume they would be willing to take
-> on the bus renumbering risk. It's already the case that
-> /sys/bus/pci/drivers/<x>/bind takes BDF, which is why it seemed to
-> make a similar interface for the command line. Ideally we could later
-> get something into ACPI or other platform firmware to arrange for
-> bridges to disable ACS by default if we see p2p becoming a
-> common-off-the-shelf feature. I.e. a BIOS switch to enable p2p in a
-> given PCI-E sub-domain.
+On Thu, 2018-05-10 at 11:33 -0500, Bjorn Helgaas wrote:
+> On Thu, May 03, 2018 at 03:00:43PM -0500, Bjorn Helgaas wrote:
+> > From: Bjorn Helgaas <bhelgaas@google.com>
+> >=20
+> > In some cases pcie_get_minimum_link() returned misleading
+> > information
+> > because it found the slowest link and the narrowest link without
+> > considering the total bandwidth of the link.
+> >=20
+> > For example, consider a path with these two links:
+> >=20
+> >    - 16.0 GT/s  x1 link  (16.0 * 10^9 * 128 / 130) *  1 / 8 =3D 1969
+> > MB/s
+> >    -  2.5 GT/s x16 link  ( 2.5 * 10^9 *   8 /  10) * 16 / 8 =3D 4000
+> > MB/s
+> >=20
+> > The available bandwidth of the path is limited by the 16 GT/s link
+> > to about
+> > 1969 MB/s, but pcie_get_minimum_link() returned 2.5 GT/s x1, which
+> > corresponds to only 250 MB/s.
+> >=20
+> > Callers should use pcie_print_link_status() instead, or
+> > pcie_bandwidth_available() if they need more detailed information.
+> >=20
+> > Remove pcie_get_minimum_link() since there are no callers left.
+> >=20
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>=20
+> Hi Jeff,
+>=20
+> I got your note that you applied this to dev-queue.  I assume that
+> means you also applied the preceding patches that removed all the
+> users.  I got a note about ixgbe, but not the others, so I'm just
+> double-checking.
 
-Yeah, I'm having a hard time coming up with an easy enough solution for
-the user. I agree with Dan though, the bus renumbering risk would be
-fairly low in the custom hardware seeing the switches are likely going
-to be directly soldered to the same board with the CPU.
+I did initially apply it, but realized that I would have to apply the
+earlier patches as well, which did not pertain to the Intel wired LAN
+drivers.  So I have removed this patch from queue and will only be
+testing the ixgbe patch of the series, which Andrew has already tested
+and responded to.
+--=-ezjtuMDbw9aM3nX0qUyk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-That being said, I supposed we could allow the command line to take both
-a BDF or a BaseBus/DF/DF/DF path. Though, implementing this sounds like
-a bit of a challenge.
+-----BEGIN PGP SIGNATURE-----
 
-Logan
+iQIzBAABCAAdFiEEiTyZWz+nnTrOJ1LZ5W/vlVpL7c4FAlr0rOcACgkQ5W/vlVpL
+7c42xBAAlFSF0qz3Go3dVfEzbDD1YlmobU8AzSTOONIuP3aFmggcNMR0pX+uoHLb
+QdqhMeh6/I3wUUpMX+eV0wF39hj6WOMAHOJiORU8SLa0SFRGiLzXnzKHprdIDTiJ
+isdNzJ/EkrogVu5QsuOMYA5O3bCc37SfwSSoaTJJU4w7MS1UvUjfwT2ZWT1bqxoI
+cM1UKUF+FKVv6QvgUf1JuLqpFtauyfJTy8/EnqPMPtkodxrp8F7dpui+NXt1gUM1
+WbwW25ZqRcCsvMEFAC7Jf0YrRgnkkn/KUrNqBzL3LdgEbmeVcdWnrVqWHXlUplYJ
+Qt/x5NQ1E0uh4B5A3CeUVuuUHaZI3MPK1/MffHR1ja4NyI19o2KEAGPgmrajOEcK
+TFrKFyYCZOHO9flhVOUzbA6vReaz5ELELNwlNiS//4Qazp/YI/2u03a8LHQuSal/
+2aUkA+qYfTNzTvkupp52kCnStE1qB2mwu/10cxUAg2tqtq9ZiOoNbjs/JuQw6NWJ
+QP8waunF2r7r9+5fn1+X3tpDzoL65uZXwLQP92pEX9xlVYQcOIx9wf9ZCF/zHAGo
+VtUbNCtGwJnp1EypI9/PiGmFKHwnsOjhqAg2+yAJxuKlIeDtnVZRE9c/OXR++6aI
+1ROAd/ODYha5ssWy+0hygaaZNrEPaF7G/k5ARPne4Yzo5c2geiQ=
+=9ryB
+-----END PGP SIGNATURE-----
+
+--=-ezjtuMDbw9aM3nX0qUyk--
