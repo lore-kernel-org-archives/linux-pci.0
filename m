@@ -1,147 +1,132 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
- <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH v2] PCI: mediatek: Add system pm support for MT2712
-Date: Thu, 31 May 2018 16:15:45 +0800
-Message-ID: <1527754545-32378-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <SRS0=tf3/=H5=redhat.com=jglisse@kernel.org>
+Return-Path: <SRS0=tf3/=H5=redhat.com=jglisse@kernel.org>
+Date: Thu, 10 May 2018 10:59:46 -0400
+From: Jerome Glisse <jglisse@redhat.com>
+To: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Cc: Stephen Bates <sbates@raithlin.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Keith Busch <keith.busch@intel.com>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgg@mellanox.com>,
+	Max Gurtovoy <maxg@mellanox.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+Message-ID: <20180510145946.GB3652@redhat.com>
+References: <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508205005.GC15608@redhat.com>
+ <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
+ <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
+ <1775CC56-4651-422F-953A-18E024D3717C@raithlin.com>
+ <20180509160722.GB4140@redhat.com>
+ <366A8132-B88A-40F7-BDE3-DA542E45FC0C@raithlin.com>
+ <20180509174952.GC4140@redhat.com>
+ <405531AE-8315-4A4F-9B0C-8DBE49BFCAB4@raithlin.com>
+ <73b6a454-bf84-1640-0b5e-137d03c0ad8c@amd.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <73b6a454-bf84-1640-0b5e-137d03c0ad8c@amd.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Thu, May 10, 2018 at 04:29:44PM +0200, Christian König wrote:
+> Am 10.05.2018 um 16:20 schrieb Stephen Bates:
+> > Hi Jerome
+> > 
+> > > As it is tie to PASID this is done using IOMMU so looks for caller
+> > > of amd_iommu_bind_pasid() or intel_svm_bind_mm() in GPU the existing
+> > >   user is the AMD GPU driver see:
+> > Ah thanks. This cleared things up for me. A quick search shows there are still no users of intel_svm_bind_mm() but I see the AMD version used in that GPU driver.
+> 
+> Just FYI: There is also another effort ongoing to give both the AMD, Intel
+> as well as ARM IOMMUs a common interface so that drivers can use whatever
+> the platform offers fro SVM support.
+> 
+> > One thing I could not grok from the code how the GPU driver indicates which DMA events require ATS translations and which do not. I am assuming the driver implements someway of indicating that and its not just a global ON or OFF for all DMAs? The reason I ask is that I looking at if NVMe was to support ATS what would need to be added in the NVMe spec above and beyond what we have in PCI ATS to support efficient use of ATS (for example would we need a flag in the submission queue entries to indicate a particular IO's SGL/PRP should undergo ATS).
+> 
+> Oh, well that is complicated at best.
+> 
+> On very old hardware it wasn't a window, but instead you had to use special
+> commands in your shader which indicated that you want to use an ATS
+> transaction instead of a normal PCIe transaction for your read/write/atomic.
+> 
+> As Jerome explained on most hardware we have a window inside the internal
+> GPU address space which when accessed issues a ATS transaction with a
+> configurable PASID.
+> 
+> But on very newer hardware that window became a bit in the GPUVM page
+> tables, so in theory we now can control it on a 4K granularity basis for the
+> internal 48bit GPU address space.
+> 
 
-The MTCMOS of PCIe Host for MT2712 will be off when system suspend, and all
-the internal control register will be reset after system resume. The PCIe
-link should be re-established and the related control register values
-should be re-set after system resume.
+To complete this a 50 lines primer on GPU:
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-CC: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/pci/host/pcie-mediatek.c | 61 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 61 insertions(+)
+GPUVA - GPU virtual address
+GPUPA - GPU physical address
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index dabf1086..6bf7f5a 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -132,12 +132,14 @@ struct mtk_pcie_port;
- /**
-  * struct mtk_pcie_soc - differentiate between host generations
-  * @need_fix_class_id: whether this host's class ID needed to be fixed or not
-+ * @pm_support: whether the host's MTCMOS will be off when suspend
-  * @ops: pointer to configuration access functions
-  * @startup: pointer to controller setting functions
-  * @setup_irq: pointer to initialize IRQ functions
-  */
- struct mtk_pcie_soc {
- 	bool need_fix_class_id;
-+	bool pm_support;
- 	struct pci_ops *ops;
- 	int (*startup)(struct mtk_pcie_port *port);
- 	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
-@@ -1179,12 +1181,70 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int mtk_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-+	const struct mtk_pcie_soc *soc = pcie->soc;
-+	struct mtk_pcie_port *port;
-+
-+	if (!soc->pm_support)
-+		return 0;
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		clk_disable_unprepare(port->ahb_ck);
-+		clk_disable_unprepare(port->sys_ck);
-+		phy_power_off(port->phy);
-+	}
-+
-+	return 0;
-+}
-+
-+static int mtk_pcie_resume_noirq(struct device *dev)
-+{
-+	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-+	const struct mtk_pcie_soc *soc = pcie->soc;
-+	struct mtk_pcie_port *port;
-+	int ret;
-+
-+	soc = pcie->soc;
-+	if (!soc->pm_support)
-+		return 0;
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		phy_power_on(port->phy);
-+		clk_prepare_enable(port->sys_ck);
-+		clk_prepare_enable(port->ahb_ck);
-+
-+		ret = soc->startup(port);
-+		if (ret) {
-+			dev_err(dev, "Port%d link down\n", port->slot);
-+			phy_power_off(port->phy);
-+			clk_disable_unprepare(port->sys_ck);
-+			clk_disable_unprepare(port->ahb_ck);
-+			return ret;
-+		}
-+
-+		if (IS_ENABLED(CONFIG_PCI_MSI))
-+			mtk_pcie_enable_msi(port);
-+	}
-+
-+	return 0;
-+}
-+#endif
-+
-+const struct dev_pm_ops mtk_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
-+				      mtk_pcie_resume_noirq)
-+};
-+
- static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
- 	.ops = &mtk_pcie_ops,
- 	.startup = mtk_pcie_startup_port,
- };
- 
- static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-+	.pm_support = true,
- 	.ops = &mtk_pcie_ops_v2,
- 	.startup = mtk_pcie_startup_port_v2,
- 	.setup_irq = mtk_pcie_setup_irq,
-@@ -1211,6 +1271,7 @@ static struct platform_driver mtk_pcie_driver = {
- 		.name = "mtk-pcie",
- 		.of_match_table = mtk_pcie_ids,
- 		.suppress_bind_attrs = true,
-+		.pm = &mtk_pcie_pm_ops,
- 	},
- };
- builtin_platform_driver(mtk_pcie_driver);
--- 
-2.6.4
+GPU run programs very much like CPU program expect a program will have
+many thousands of threads running concurrently. There is a hierarchy of
+groups for a given program ie threads are grouped together, the lowest
+hierarchy level have a group size in <= 64 threads on most GPUs.
+
+Those programs (call shader for graphic program think OpenGL, Vulkan
+or compute for GPGPU think OpenCL CUDA) are submited by the userspace
+against a given address space. In the "old" days (couple years back
+when dinausor were still roaming the earth) this address space was
+specific to the GPU and each user space program could create multiple
+GPU address space. All the memory operation done by the program was
+against this address space. Hence all PCIE transactions are spawn from
+a program + address space.
+
+GPU use page table + window aperture (the window aperture is going away
+so you can focus on page table). To translate GPU virtual address into
+a physical address. The physical address can point to GPU local memory
+or to system memory or to another PCIE device memory (ie some PCIE BAR).
+
+So all PCIE transaction are spawn through this process of GPUVA to GPUPA
+then GPUPA is handled by the GPU mmu unit that either spawn a PCIE
+transaction for non local GPUPA or access local memory otherwise.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+So per say the kernel driver does not configure which transaction is
+using ATS or peer to peer. Userspace program create a GPU virtual address
+space and bind object into it. This object can be system memory or some
+other PCIE device memory in which case we would to do a peer to peer.
+
+
+So you won't find any logic in the kernel. What you find is creating
+virtual address space and binding object.
+
+
+Above i talk about the old days, nowadays we want the GPU virtual address
+space to be exactly the same as the CPU virtual address space as the
+process which initiate the GPU program is using. This is where we use the
+PASID and ATS. So here userspace create a special "GPU context" that says
+that the GPU virtual address space will be the same as the program that
+create the GPU context. A process ID is then allocated and the mm_struct
+is bind to this process ID in the IOMMU driver. Then all program executed
+on the GPU use the process ID to identify the address space against which
+they are running.
+
+
+All of the above i did not talk about DMA engine which are on the "side"
+of the GPU to copy memory around. GPU have multiple DMA engines with
+different capabilities, some of those DMA engine use the same GPU address
+space as describe above, other use directly GPUPA.
+
+
+Hopes this helps understanding the big picture. I over simplify thing and
+devils is in the details.
+
+Cheers,
+Jérôme
