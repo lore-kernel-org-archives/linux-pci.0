@@ -1,46 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:40131 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934820AbeEIRBw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2018 13:01:52 -0400
-Received: by mail-qk0-f194.google.com with SMTP id h138so27325934qke.7
-        for <linux-pci@vger.kernel.org>; Wed, 09 May 2018 10:01:52 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: lorenzo.pieralisi@arm.com
-Cc: l.stach@pengutronix.de, linux-pci@vger.kernel.org,
-        Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH] PCI: imx6: Remove space before tabs
-Date: Wed,  9 May 2018 14:01:48 -0300
-Message-Id: <1525885308-7824-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v6 02/12] PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
+Date: Thu, 10 May 2018 21:28:34 +0300
+Message-Id: <20180510182844.77349-3-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
+References: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@nxp.com>
+After suspend/resume cycle the Presence Detect or Data Link Layer Status
+Changed bits might be set and if we don't clear them those events will
+not fire anymore and nothing happens for instance when a device is now
+hot-unplugged.
 
-Remove space before tabs to fix the following checkpatch
-warning:
+Fix this by clearing those bits in a newly introduced function
+pcie_reenable_notification(). This should be fine because immediately
+after we check if the adapter is still present by reading directly from
+the status register.
 
-WARNING: please, no space before tabs
-#341: FILE: drivers/pci/dwc/pci-imx6.c:341:
-+^Icase IMX6QP: ^I^I/* FALLTHROUGH */$
-
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: stable@vger.kernel.org
 ---
- drivers/pci/dwc/pci-imx6.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Regarding this:
 
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index 4818ef8..80f6046 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -338,7 +338,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
- 		break;
--	case IMX6QP: 		/* FALLTHROUGH */
-+	case IMX6QP:		/* FALLTHROUGH */
- 	case IMX6Q:
- 		/* power up core phy and enable ref clock */
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+  https://www.spinics.net/lists/linux-pci/msg72017.html
+
+I added debug print to pci_restore_pcie_state() right before PCI_EXP_SLTCTL
+is restored that reads PCI_EXP_SLTSTA. Both flags (PCI_EXP_SLTSTA_PDC and
+PCI_EXP_SLTSTA_DLLSC) are alread set so they don't happen after we restore
+PCI_EXP_SLTCTL.
+
+ drivers/pci/hotplug/pciehp.h      |  2 +-
+ drivers/pci/hotplug/pciehp_core.c |  2 +-
+ drivers/pci/hotplug/pciehp_hpc.c  | 13 ++++++++++++-
+ 3 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 88e917c9120f..5f892065585e 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -121,7 +121,7 @@ struct controller *pcie_init(struct pcie_device *dev);
+ int pcie_init_notification(struct controller *ctrl);
+ int pciehp_enable_slot(struct slot *p_slot);
+ int pciehp_disable_slot(struct slot *p_slot);
+-void pcie_enable_notification(struct controller *ctrl);
++void pcie_reenable_notification(struct controller *ctrl);
+ int pciehp_power_on_slot(struct slot *slot);
+ void pciehp_power_off_slot(struct slot *slot);
+ void pciehp_get_power_status(struct slot *slot, u8 *status);
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 332b723ff9e6..44a6a63802d5 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -283,7 +283,7 @@ static int pciehp_resume(struct pcie_device *dev)
+ 	ctrl = get_service_data(dev);
+ 
+ 	/* reinitialize the chipset's event detection logic */
+-	pcie_enable_notification(ctrl);
++	pcie_reenable_notification(ctrl);
+ 
+ 	slot = ctrl->slot;
+ 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 18a42f8f5dc5..98ea75aa32c7 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -659,7 +659,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 	return handled;
+ }
+ 
+-void pcie_enable_notification(struct controller *ctrl)
++static void pcie_enable_notification(struct controller *ctrl)
+ {
+ 	u16 cmd, mask;
+ 
+@@ -697,6 +697,17 @@ void pcie_enable_notification(struct controller *ctrl)
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
+ }
+ 
++void pcie_reenable_notification(struct controller *ctrl)
++{
++	/*
++	 * Clear both Presence and Data Link Layer Changed to make sure
++	 * those events still fire after we have re-enabled them.
++	 */
++	pcie_capability_write_word(ctrl->pcie->port, PCI_EXP_SLTSTA,
++				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
++	pcie_enable_notification(ctrl);
++}
++
+ static void pcie_disable_notification(struct controller *ctrl)
+ {
+ 	u16 mask;
 -- 
-2.7.4
+2.17.0
+
