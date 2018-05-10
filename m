@@ -1,211 +1,92 @@
-Return-Path: <SRS0=OpPG=H5=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=OpPG=H5=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=Tmks=H5=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Tmks=H5=deltatee.com=logang@kernel.org>
+To: Stephen Bates <sbates@raithlin.com>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Jerome Glisse <jglisse@redhat.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+ Bjorn Helgaas <helgaas@kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180423233046.21476-5-logang@deltatee.com>
+ <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+ <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+ <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+ <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+ <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+ <20180508133407.57a46902@w520.home>
+ <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+ <20180508141331.7cd737cb@w520.home>
+ <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508205005.GC15608@redhat.com>
+ <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
+ <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
+ <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
+ <2fc61d29-9eb4-d168-a3e5-955c36e5d821@amd.com>
+ <94C8FE12-7FC3-48BD-9DCA-E6A427E71810@raithlin.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <f0101988-cf82-7ffb-2aca-d3b8d2f4b504@deltatee.com>
+Date: Thu, 10 May 2018 10:32:22 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 10 May 2018 19:56:00 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
- <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
- <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
- Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
- <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>,
- linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH v15 8/9] PCI/DPC: Unify and plumb error handling into DPC
-In-Reply-To: <20180510132222.GE173327@bhelgaas-glaptop.roam.corp.google.com>
-References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
- <1525323838-1735-9-git-send-email-poza@codeaurora.org>
- <20180510132222.GE173327@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <29c21a3fbaeb56c0581da66b9203dfd1@codeaurora.org>
+In-Reply-To: <94C8FE12-7FC3-48BD-9DCA-E6A427E71810@raithlin.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-10 18:52, Bjorn Helgaas wrote:
-> On Thu, May 03, 2018 at 01:03:57AM -0400, Oza Pawandeep wrote:
->> Current DPC driver does not do recovery, e.g. calling end-point's 
->> driver's
->> callbacks, which sanitize the sw.
->> 
->> DPC driver implements link_reset callback, and calls 
->> pci_do_recovery().
->> 
->> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> 
->> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
->> index 80ec384..aed7c9f 100644
->> --- a/drivers/pci/pcie/dpc.c
->> +++ b/drivers/pci/pcie/dpc.c
->> @@ -73,29 +73,21 @@ static void dpc_wait_link_inactive(struct dpc_dev 
->> *dpc)
->>  	pcie_wait_for_link(pdev, false);
->>  }
->> 
->> -static void dpc_work(struct work_struct *work)
->> +static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
->>  {
->> -	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->> -	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
->> -	struct pci_bus *parent = pdev->subordinate;
->> -	u16 cap = dpc->cap_pos, ctl;
->> -
->> -	pci_lock_rescan_remove();
->> -	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
->> -					 bus_list) {
->> -		pci_dev_get(dev);
->> -		pci_dev_set_disconnected(dev, NULL);
->> -		if (pci_has_subordinate(dev))
->> -			pci_walk_bus(dev->subordinate,
->> -				     pci_dev_set_disconnected, NULL);
->> -		pci_stop_and_remove_bus_device(dev);
->> -		pci_dev_put(dev);
->> -	}
->> -	pci_unlock_rescan_remove();
-> 
-> I think it would be good to have a comment here about why this 
-> "reset_link"
-> function doesn't actually reset the link, e.g.,
-> 
->   /*
->    * DPC disables the Link automatically in hardware, so it has
->    * already been reset by the time we get here.
->    */
-> 
->> +	struct dpc_dev *dpc;
->> +	struct pcie_device *pciedev;
->> +	struct device *devdpc;
->> +	u16 cap, ctl;
->> +
->> +	devdpc = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_DPC);
->> +	pciedev = to_pcie_device(devdpc);
->> +	dpc = get_service_data(pciedev);
->> +	cap = dpc->cap_pos;
-> 
-> And maybe one about waiting until the link is inactive, then clearing 
-> DPC
-> Trigger Status to allow the port to leave DPC.
-> 
->>  	dpc_wait_link_inactive(dpc);
->>  	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
->> -		return;
->> +		return PCI_ERS_RESULT_DISCONNECT;
->>  	if (dpc->rp_extensions && dpc->rp_pio_status) {
->>  		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
->>  				       dpc->rp_pio_status);
->> @@ -108,6 +100,17 @@ static void dpc_work(struct work_struct *work)
->>  	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
->>  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
->>  			      ctl | PCI_EXP_DPC_CTL_INT_EN);
->> +
->> +	return PCI_ERS_RESULT_RECOVERED;
->> +}
->> +
->> +static void dpc_work(struct work_struct *work)
->> +{
->> +	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->> +	struct pci_dev *pdev = dpc->dev->port;
->> +
->> +	/* From DPC point of view error is always FATAL. */
->> +	pcie_do_recovery(pdev, DPC_FATAL);
->>  }
->> 
->>  static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
->> @@ -288,6 +291,7 @@ static struct pcie_port_service_driver dpcdriver = 
->> {
->>  	.service	= PCIE_PORT_SERVICE_DPC,
->>  	.probe		= dpc_probe,
->>  	.remove		= dpc_remove,
->> +	.reset_link	= dpc_reset_link,
->>  };
->> 
->>  static int __init dpc_service_init(void)
->> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
->> index 877785d..526aba8 100644
->> --- a/drivers/pci/pcie/err.c
->> +++ b/drivers/pci/pcie/err.c
->> @@ -181,11 +181,12 @@ static pci_ers_result_t 
->> default_reset_link(struct pci_dev *dev)
->>  	return PCI_ERS_RESULT_RECOVERED;
->>  }
->> 
->> -static pci_ers_result_t reset_link(struct pci_dev *dev)
->> +static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
->>  {
->>  	struct pci_dev *udev;
->>  	pci_ers_result_t status;
->>  	struct pcie_port_service_driver *driver;
->> +	u32 service;
->> 
->>  	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->>  		/* Reset this port for all subordinates */
->> @@ -196,7 +197,12 @@ static pci_ers_result_t reset_link(struct pci_dev 
->> *dev)
->>  	}
->> 
->>  	/* Use the aer driver of the component firstly */
->> -	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
->> +	if (severity == DPC_FATAL)
->> +		service = PCIE_PORT_SERVICE_DPC;
->> +	else
->> +		service = PCIE_PORT_SERVICE_AER;
->> +
->> +	driver = pcie_port_find_service(udev, service);
-> 
-> This is where I was wondering about passing in "service" directly 
-> instead
-> of "severity".
-
-I will take care of all your comments made on all the patches.
-but this one I do not understand.
-
-passing service directly instead of severity ? (I do not think you meant 
-to write severity there)
-perhaps do you mean following ?
-
-if (severity == DPC_FATAL)
-          pcie_port_find_service(udev, PCIE_PORT_SERVICE_DPC);
-else
-          pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
 
 
-
+On 10/05/18 08:16 AM, Stephen  Bates wrote:
+> Hi Christian
 > 
->>  	if (driver && driver->reset_link) {
->>  		status = driver->reset_link(udev);
->> @@ -302,7 +308,7 @@ static pci_ers_result_t do_fatal_recovery(struct 
->> pci_dev *dev, int severity)
->>  		pci_dev_put(pdev);
->>  	}
->> 
->> -	result = reset_link(udev);
->> +	result = reset_link(udev, severity);
->>  	if (result == PCI_ERS_RESULT_RECOVERED)
->>  		if (pcie_wait_for_link(udev, true))
->>  			pci_rescan_bus(udev->bus);
->> @@ -326,7 +332,8 @@ void pcie_do_recovery(struct pci_dev *dev, int 
->> severity)
->>  	pci_ers_result_t status;
->>  	enum pci_channel_state state;
->> 
->> -	if (severity == AER_FATAL) {
->> +	if ((severity == AER_FATAL) ||
->> +	   (severity == DPC_FATAL)) {
->>  		status = do_fatal_recovery(dev, severity);
->>  		if (status != PCI_ERS_RESULT_RECOVERED)
->>  			goto failed;
->> diff --git a/include/linux/aer.h b/include/linux/aer.h
->> index 8f87bbe..0c506fe 100644
->> --- a/include/linux/aer.h
->> +++ b/include/linux/aer.h
->> @@ -14,6 +14,7 @@
->>  #define AER_NONFATAL			0
->>  #define AER_FATAL			1
->>  #define AER_CORRECTABLE			2
->> +#define DPC_FATAL			4
->> 
->>  struct pci_dev;
->> 
->> --
->> 2.7.4
->> 
+>> Why would a switch not identify that as a peer address? We use the PASID 
+>>    together with ATS to identify the address space which a transaction 
+>>    should use.
+> 
+> I think you are conflating two types of TLPs here. If the device supports ATS then it will issue a TR TLP to obtain a translated address from the IOMMU. This TR TLP will be addressed to the RP and so regardless of ACS it is going up to the Root Port. When it gets the response it gets the physical address and can use that with the TA bit set for the p2pdma. In the case of ATS support we also have more control over ACS as we can disable it just for TA addresses (as per 7.7.7.7.2 of the spec).
+
+Yes. Remember if we are using the IOMMU the EP is being programmed
+(regardless of whether it's a DMA engine, NTB window or GPUVA) with an
+IOVA address which is separate from the device's PCI bus address. Any
+packet addressed to an IOVA address is going to go back to the root
+complex no matter what the ACS bits say. Only once ATS translates the
+addres back into the PCI bus address will the EP send packets to the
+peer and the switch will attempt to root them to the peer and only then
+do the ACS bits apply. And the direct translated ACS bit allows packets
+that have purportedly been translated through.
+
+>  >   If I'm not completely mistaken when you disable ACS it is perfectly 
+>  >   possible that a bridge identifies a transaction as belonging to a peer 
+>  >   address, which isn't what we want here.
+>    
+> You are right here and I think this illustrates a problem for using the IOMMU at all when P2PDMA devices do not support ATS. Let me explain:
+> 
+> If we want to do a P2PDMA and the DMA device does not support ATS then I think we have to disable the IOMMU (something Mike suggested earlier). The reason is that since ATS is not an option the EP must initiate the DMA using the addresses passed down to it. If the IOMMU is on then this is an IOVA that could (with some non-zero probability) point to an IO Memory address in the same PCI domain. So if we disable ACS we are in trouble as we might MemWr to the wrong place but if we enable ACS we lose much of the benefit of P2PDMA. Disabling the IOMMU removes the IOVA risk and ironically also resolves the IOMMU grouping issues.
+> So I think if we want to support performant P2PDMA for devices that don't have ATS (and no NVMe SSDs today support ATS) then we have to disable the IOMMU. I know this is problematic for AMDs use case so perhaps we also need to consider a mode for P2PDMA for devices that DO support ATS where we can enable the IOMMU (but in this case EPs without ATS cannot participate as P2PDMA DMA iniators).
+> 
+> Make sense?
+
+Not to me. In the p2pdma code we specifically program DMA engines with
+the PCI bus address. So regardless of whether we are using the IOMMU or
+not, the packets will be forwarded directly to the peer. If the ACS
+Redir bits are on they will be forced back to the RC by the switch and
+the transaction will fail. If we clear the ACS bits, the TLPs will go
+where we want and everything will work (but we lose the isolation of ACS).
+
+For EPs that support ATS, we should (but don't necessarily have to)
+program them with the IOVA address so they can go through the
+translation process which will allow P2P without disabling the ACS Redir
+bits -- provided the ACS direct translation bit is set. (And btw, if it
+is, then we lose the benefit of ACS protecting against malicious EPs).
+But, per above, the ATS transaction should involve only the IOVA address
+so the ACS bits not being set should not break ATS.
+
+Logan
