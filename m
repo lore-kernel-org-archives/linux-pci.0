@@ -1,75 +1,141 @@
-Return-Path: <SRS0=dq6g=H4=redhat.com=jglisse@kernel.org>
-Return-Path: <SRS0=dq6g=H4=redhat.com=jglisse@kernel.org>
-Date: Wed, 9 May 2018 12:07:23 -0400
-From: Jerome Glisse <jglisse@redhat.com>
-To: Stephen Bates <sbates@raithlin.com>
-Cc: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Keith Busch <keith.busch@intel.com>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgg@mellanox.com>,
-	Max Gurtovoy <maxg@mellanox.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-Message-ID: <20180509160722.GB4140@redhat.com>
-References: <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
- <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
- <20180508133407.57a46902@w520.home>
- <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
- <20180508141331.7cd737cb@w520.home>
- <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
- <20180508205005.GC15608@redhat.com>
- <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
- <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
- <1775CC56-4651-422F-953A-18E024D3717C@raithlin.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1775CC56-4651-422F-953A-18E024D3717C@raithlin.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v6 09/12] PCI: Move resource distribution for a single bridge outside of the loop
+Date: Thu, 10 May 2018 21:28:41 +0300
+Message-Id: <20180510182844.77349-10-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
+References: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 09, 2018 at 03:41:44PM +0000, Stephen  Bates wrote:
-> Christian
-> 
-> >    Interesting point, give me a moment to check that. That finally makes 
-> >    all the hardware I have standing around here valuable :)
->     
-> Yes. At the very least it provides an initial standards based path
-> for P2P DMAs across RPs which is something we have discussed on this
-> list in the past as being desirable.
-> 
-> BTW I am trying to understand how an ATS capable EP function determines
-> when to perform an ATS Translation Request (ATS TR). Is there an
-> upstream example of the driver for your APU that uses ATS? If so, can
-> you provide a pointer to it. Do you provide some type of entry in the
-> submission queues for commands going to the APU to indicate if the
-> address associated with a specific command should be translated using
-> ATS or not? Or do you simply enable ATS and then all addresses passed
-> to your APU that miss the local cache result in a ATS TR?
+There is a special case where there is only single bridge on the bus. In
+that case we just assign all resources to it. Currently this is done as
+a part of the resource distribution loop but it does not have to be
+there, and moving it outside actually improves readability because we
+can then save one indent level in the loop.
 
-On GPU ATS is always tie to a PASID. You do not do the former without
-the latter (AFAICT this is not doable, maybe through some JTAG but not
-in normal operation).
+While there we can add hotplug_bridges == 1 && normal_bridges == 0 to
+the same block because they are dealt the same way.
 
-GPU are like CPU, so you have GPU threads that run against an address
-space. This address space use a page table (very much like the CPU page
-table). Now inside that page table you can point GPU virtual address
-to use GPU memory or use system memory. Those system memory entry can
-also be mark as ATS against a given PASID.
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/setup-bus.c | 82 ++++++++++++++++++++---------------------
+ 1 file changed, 41 insertions(+), 41 deletions(-)
 
-On some GPU you define a window of GPU virtual address that goes through
-PASID & ATS (so access in that window do not go through the page table
-but directly through PASID & ATS).
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 072784f55ea5..79b1824e83b4 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1942,57 +1942,57 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 			remaining_mmio_pref -= resource_size(res);
+ 	}
+ 
++	/*
++	 * There is only one bridge on the bus so it gets all available
++	 * resources which it can then distribute to the possible
++	 * hotplug bridges below.
++	 */
++	if (hotplug_bridges + normal_bridges == 1) {
++		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
++		if (dev->subordinate) {
++			pci_bus_distribute_available_resources(dev->subordinate,
++				add_list, available_io, available_mmio,
++				available_mmio_pref);
++		}
++		return;
++	}
++
+ 	/*
+ 	 * Go over devices on this bus and distribute the remaining
+ 	 * resource space between hotplug bridges.
+ 	 */
+ 	for_each_pci_bridge(dev, bus) {
++		resource_size_t align, io, mmio, mmio_pref;
+ 		struct pci_bus *b;
+ 
+ 		b = dev->subordinate;
+-		if (!b)
++		if (!b || !dev->is_hotplug_bridge)
+ 			continue;
+ 
+-		if (!hotplug_bridges && normal_bridges == 1) {
+-			/*
+-			 * There is only one bridge on the bus (upstream
+-			 * port) so it gets all available resources
+-			 * which it can then distribute to the possible
+-			 * hotplug bridges below.
+-			 */
+-			pci_bus_distribute_available_resources(b, add_list,
+-				available_io, available_mmio,
+-				available_mmio_pref);
+-		} else if (dev->is_hotplug_bridge) {
+-			resource_size_t align, io, mmio, mmio_pref;
+-
+-			/*
+-			 * Distribute available extra resources equally
+-			 * between hotplug-capable downstream ports
+-			 * taking alignment into account.
+-			 *
+-			 * Here hotplug_bridges is always != 0.
+-			 */
+-			align = pci_resource_alignment(bridge, io_res);
+-			io = div64_ul(available_io, hotplug_bridges);
+-			io = min(ALIGN(io, align), remaining_io);
+-			remaining_io -= io;
+-
+-			align = pci_resource_alignment(bridge, mmio_res);
+-			mmio = div64_ul(available_mmio, hotplug_bridges);
+-			mmio = min(ALIGN(mmio, align), remaining_mmio);
+-			remaining_mmio -= mmio;
+-
+-			align = pci_resource_alignment(bridge, mmio_pref_res);
+-			mmio_pref = div64_ul(available_mmio_pref,
+-					     hotplug_bridges);
+-			mmio_pref = min(ALIGN(mmio_pref, align),
+-					remaining_mmio_pref);
+-			remaining_mmio_pref -= mmio_pref;
+-
+-			pci_bus_distribute_available_resources(b, add_list, io,
+-							       mmio, mmio_pref);
+-		}
++		/*
++		 * Distribute available extra resources equally between
++		 * hotplug-capable downstream ports taking alignment into
++		 * account.
++		 *
++		 * Here hotplug_bridges is always != 0.
++		 */
++		align = pci_resource_alignment(bridge, io_res);
++		io = div64_ul(available_io, hotplug_bridges);
++		io = min(ALIGN(io, align), remaining_io);
++		remaining_io -= io;
++
++		align = pci_resource_alignment(bridge, mmio_res);
++		mmio = div64_ul(available_mmio, hotplug_bridges);
++		mmio = min(ALIGN(mmio, align), remaining_mmio);
++		remaining_mmio -= mmio;
++
++		align = pci_resource_alignment(bridge, mmio_pref_res);
++		mmio_pref = div64_ul(available_mmio_pref, hotplug_bridges);
++		mmio_pref = min(ALIGN(mmio_pref, align), remaining_mmio_pref);
++		remaining_mmio_pref -= mmio_pref;
++
++		pci_bus_distribute_available_resources(b, add_list, io, mmio,
++						       mmio_pref);
+ 	}
+ }
+ 
+-- 
+2.17.0
 
-Jérôme
