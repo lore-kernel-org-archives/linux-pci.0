@@ -1,63 +1,110 @@
-Return-Path: <SRS0=EpY8=H4=raithlin.com=sbates@kernel.org>
-Return-Path: <SRS0=EpY8=H4=raithlin.com=sbates@kernel.org>
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Jerome Glisse <jglisse@redhat.com>, Logan Gunthorpe <logang@deltatee.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	=?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>, "Bjorn
- Helgaas" <helgaas@kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-nvme@lists.infradead.org"
-	<linux-nvme@lists.infradead.org>, "linux-rdma@vger.kernel.org"
-	<linux-rdma@vger.kernel.org>, "linux-nvdimm@lists.01.org"
-	<linux-nvdimm@lists.01.org>, "linux-block@vger.kernel.org"
-	<linux-block@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe
-	<axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>, Sagi Grimberg
-	<sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe
-	<jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Dan Williams
-	<dan.j.williams@intel.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-Date: Wed, 9 May 2018 13:12:53 +0000
-Message-ID: <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
-References: <20180423233046.21476-5-logang@deltatee.com>
- <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
- <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
- <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
- <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
- <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
- <20180508133407.57a46902@w520.home>
- <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
- <20180508141331.7cd737cb@w520.home>
- <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
- <20180508205005.GC15608@redhat.com>
-In-Reply-To: <20180508205005.GC15608@redhat.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 10 May 2018 09:04:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yao Chen <chenyao11@huawei.com>
+Subject: Re: [PATCH v2 1/2] PCI: kirin: Add MSI support
+Message-ID: <20180510140431.GJ173327@bhelgaas-glaptop.roam.corp.google.com>
+References: <1525854012-24228-1-git-send-email-chenyao11@huawei.com>
+ <1525854012-24228-2-git-send-email-chenyao11@huawei.com>
 MIME-Version: 1.0
+In-Reply-To: <1525854012-24228-2-git-send-email-chenyao11@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
+ dimitrysh@google.com, guodong.xu@linaro.org, linux-pci@vger.kernel.org,
+ catalin.marinas@arm.com, suzhuangluan@hisilicon.com, wangbinghui@hisilicon.com,
+ will.deacon@arm.com, linux-kernel@vger.kernel.org, xuwei5@hisilicon.com,
+ kongfei@hisilicon.com, Wolfram Sang <wsa+renesas@sang-engineering.com>,
+ robh+dt@kernel.org, songxiaowei@hisilicon.com, bhelgaas@google.com,
+ Tejun Heo <tj@kernel.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SmVyb21lIGFuZCBDaHJpc3RpYW4NCiAgICANCj4gSSB0aGluayB0aGVyZSBpcyBjb25mdXNpb24g
-aGVyZSwgQWxleCBwcm9wZXJseSBleHBsYWluZWQgdGhlIHNjaGVtZQ0KPiBQQ0lFLWRldmljZSBk
-byBhIEFUUyByZXF1ZXN0IHRvIHRoZSBJT01NVSB3aGljaCByZXR1cm5zIGEgdmFsaWQNCj4gdHJh
-bnNsYXRpb24gZm9yIGEgdmlydHVhbCBhZGRyZXNzLiBEZXZpY2UgY2FuIHRoZW4gdXNlIHRoYXQg
-YWRkcmVzcw0KPiBkaXJlY3RseSB3aXRob3V0IGdvaW5nIHRocm91Z2ggSU9NTVUgZm9yIHRyYW5z
-bGF0aW9uLg0KDQpTbyBJIHdlbnQgdGhyb3VnaCBBVFMgaW4gdmVyc2lvbiA0LjByMSBvZiB0aGUg
-UENJIHNwZWMuIEl0IGxvb2tzIGxpa2UgZXZlbiBhIEFUUyB0cmFuc2xhdGVkIFRMUCBpcyBzdGls
-bCBpbXBhY3RlZCBieSBBQ1MgdGhvdWdoIGl0IGhhcyBhIHNlcGFyYXRlIGNvbnRyb2wga25vYiBm
-b3IgdHJhbnNsYXRlZCBhZGRyZXNzIFRMUHMgKHNlZSA3LjcuNy4yIG9mIDQuMHIxIG9mIHRoZSBz
-cGVjKS4gU28gZXZlbiBpZiB5b3VyIGRldmljZSBzdXBwb3J0cyBBVFMgYSBQMlAgRE1BIHdpbGwg
-c3RpbGwgYmUgcm91dGVkIHRvIHRoZSBhc3NvY2lhdGVkIFJQIG9mIHRoZSBkb21haW4gYW5kIGRv
-d24gYWdhaW4gdW5sZXNzIHdlIGRpc2FibGUgQUNTIERUIFAyUCBvbiBhbGwgYnJpZGdlcyBiZXR3
-ZWVuIHRoZSB0d28gZGV2aWNlcyBpbnZvbHZlZCBpbiB0aGUgUDJQIERNQS4gDQoNClNvIHdlIHN0
-aWxsIGRvbid0IGdldCBmaW5lIGdyYWluZWQgY29udHJvbCB3aXRoIEFUUyBhbmQgSSBndWVzcyB3
-ZSBzdGlsbCBoYXZlIHNlY3VyaXR5IGlzc3VlcyBiZWNhdXNlIGEgcm9ndWUgb3IgbWFsZnVuY3Rp
-b25pbmcgRVAgY291bGQganVzdCBhcyBlYXNpbHkgaXNzdWUgVExQcyB3aXRoIFRBIHNldCB2cyBu
-b3Qgc2V0Lg0KDQo+IEFsc28gQVRTIGlzIG1lYW5pbmdsZXNzIHdpdGhvdXQgc29tZXRoaW5nIGxp
-a2UgUEFTSUQgYXMgZmFyIGFzIGkga25vdy4NCiAgICANCkFUUyBpcyBzdGlsbCBzb21ld2hhdCB2
-YWx1YWJsZSB3aXRob3V0IFBTQUlEIGluIHRoZSBzZW5zZSB5b3UgY2FuIGNhY2hlIElPTU1VIGFk
-ZHJlc3MgdHJhbnNsYXRpb25zIGF0IHRoZSBFUC4gVGhpcyBzYXZlcyBoYW1tZXJpbmcgb24gdGhl
-IElPTU1VIGFzIG11Y2ggaW4gY2VydGFpbiB3b3JrbG9hZHMuDQoNCkludGVyZXN0aW5nbHkgU2Vj
-dGlvbiA3LjcuNy4yIGFsbW9zdCBtZW50aW9ucyB0aGF0IFJvb3QgUG9ydHMgdGhhdCBzdXBwb3J0
-IEFUUyBBTkQgY2FuIGltcGxlbWVudCBQMlAgYmV0d2VlbiByb290IHBvcnRzIHNob3VsZCBhZHZl
-cnRpc2UgIkFDUyBEaXJlY3QgVHJhbnNsYXRlZCBQMlAgKFQpIiBjYXBhYmlsaXR5LiBUaGlzIHRp
-ZXMgaW50byB0aGUgZGlzY3Vzc2lvbiBhcm91bmQgUDJQIGJldHdlZW4gcm91dGUgcG9ydHMgd2Ug
-aGFkIGEgZmV3IHdlZWtzIGFnby4uLg0KDQpTdGVwaGVuICAgIA0KDQo=
+[+cc Tejun, Wolfram]
+
+On Wed, May 09, 2018 at 04:20:11PM +0800, Yao Chen wrote:
+> Add support for MSI.
+> ...
+
+> @@ -448,6 +467,26 @@ static int kirin_pcie_host_init(struct pcie_port *pp)
+>  static int __init kirin_add_pcie_port(struct dw_pcie *pci,
+>  				      struct platform_device *pdev)
+>  {
+> +	int ret;
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		pci->pp.msi_irq = platform_get_irq(pdev, 0);
+> +		if (!pci->pp.msi_irq) {
+
+I think this test is incorrect.  platform_get_irq() returns a negative
+errno value when it fails.  Most calls test "irq < 0" to check for failure.
+
+There's a lot of duplicated code like this, so maybe we should consider
+putting that check into devm_request_irq(), similar to what
+devm_ioremap_resource() does, so the driver code could look like this:
+
+  pci->pp.msi_irq = platform_get_irq(pdev, 0);
+  ret = devm_request_irq(&pdev->dev, pci->pp.msi_irq, ...);
+  if (ret) {
+    dev_err(&pdev->dev, "failed to request MSI IRQ\n");
+    return ret;
+  }
+
+The basic devm_ioremap_resource() motivation is here: 72f8c0bfa0de ("lib:
+devres: add convenience function to remap a resource") and the same
+considerations seem to apply here.
+
+But that's more than you need to do for *this* series.  So for now, I would
+simply fix the test to check for "irq < 0" and update the messages as I
+mention below.
+
+> +			dev_err(&pdev->dev, "failed to get msi irq[%d]\n",
+> +				pci->pp.msi_irq);
+> +			return -ENODEV;
+> +		}
+> +		ret = devm_request_irq(&pdev->dev, pci->pp.msi_irq,
+> +				       kirin_pcie_msi_irq_handler,
+> +				       IRQF_SHARED | IRQF_NO_THREAD,
+> +				       "kirin_pcie_msi", &pci->pp);
+> +		if (ret) {
+> +			dev_err(&pdev->dev, "failed to request msi irq[%d]\n",
+
+s/msi irq/MSI IRQ/ in both dev_err() messages above.  This is because the
+message is English text (not code), and the convention is that non-words
+like these initialisms written in all caps.
+
+I would style the first one as "failed to get MSI IRQ (%d)" because the %d
+there is a return code, probably -ENXIO.
+
+The second one should be "failed to request MSI IRQ %d" because here the %d
+is the actual IRQ.
+
+> +				pci->pp.msi_irq);
+> +			return ret;
+> +		}
+> +	}
+> +
+>  	pci->pp.ops = &kirin_pcie_host_ops;
+>  
+>  	return dw_pcie_host_init(&pci->pp);
+> -- 
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
