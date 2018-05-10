@@ -1,33 +1,31 @@
-Return-Path: <SRS0=uItE=IE=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=uItE=IE=broadcom.com=ray.jui@kernel.org>
-From: Ray Jui <ray.jui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Ray Jui <ray.jui@broadcom.com>
-Subject: [PATCH INTERNAL 0/3] Add Broadcom PAXC related quirks
-Date: Thu, 17 May 2018 10:21:29 -0700
-Message-Id: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:51440 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752569AbeEJWJJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 May 2018 18:09:09 -0400
+Subject: [PATCH 0/2] PCI: Trivial quirks cleanup
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Thu, 10 May 2018 17:09:06 -0500
+Message-ID: <152599011048.234504.9006188618412032582.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds quirks to work around a few issues related to
-certain revisions of Broadcom PAXC based PCIe root complexes
+[Sorry for the repost; network hiccup here.]
 
-This patch series is based off v4.17-rc5 and is available on GIHUB:
-repo: https://github.com/Broadcom/arm64-linux.git
-branch: sr-paxc-quirk-v1
+Trivial reorganization (move quirk infrastructure to the top) and
+whitespace/comment style cleanup for consistency.  No functional change
+intended.
 
-Ray Jui (3):
-  PCI: iproc: Activate PAXC bridge quirk for more devices
-  PCI: iproc: Fix up corrupted PAXC root complex config registers
-  PCI: iproc: Disable MSI parsing in certain PAXC blocks
+---
 
- drivers/pci/host/pcie-iproc.c | 34 ++++++++++++++-
- drivers/pci/quirks.c          | 98 +++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 130 insertions(+), 2 deletions(-)
+Bjorn Helgaas (2):
+      PCI: Reorder quirks infrastructure code
+      PCI: Clean up whitespace in quirks.c
 
--- 
-2.1.4
+
+ drivers/pci/quirks.c |  978 +++++++++++++++++++++++++-------------------------
+ 1 file changed, 485 insertions(+), 493 deletions(-)
