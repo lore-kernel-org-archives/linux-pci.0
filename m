@@ -1,75 +1,184 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:46350 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932071AbeEWLOZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 07:14:25 -0400
-Subject: Re: [PATCH 4/4] PCI: rcar: Teardown MSI setup if rcar_pcie_enable()
- fails
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
- <20180521131123.2009-4-marek.vasut+renesas@gmail.com>
- <CAMuHMdVhrb_dR7TP3PU=rsbne+9BZu=BHA9XAK=L1so98HogtA@mail.gmail.com>
- <f4622ab5-3c94-bb99-cfc3-1929dd88092e@gmail.com>
- <CAMuHMdVOEe_PFcCpk_yYRZaBicSToEBZjhJ1Z+88Ct8a1HbXZA@mail.gmail.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <b492dc3d-a2e6-e538-5a4f-05e636fe214e@gmail.com>
-Date: Wed, 23 May 2018 12:38:36 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 10 May 2018 08:22:22 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v15 8/9] PCI/DPC: Unify and plumb error handling into DPC
+Message-ID: <20180510132222.GE173327@bhelgaas-glaptop.roam.corp.google.com>
+References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
+ <1525323838-1735-9-git-send-email-poza@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdVOEe_PFcCpk_yYRZaBicSToEBZjhJ1Z+88Ct8a1HbXZA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525323838-1735-9-git-send-email-poza@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/23/2018 08:18 AM, Geert Uytterhoeven wrote:
-> Hi Marek,
+On Thu, May 03, 2018 at 01:03:57AM -0400, Oza Pawandeep wrote:
+> Current DPC driver does not do recovery, e.g. calling end-point's driver's
+> callbacks, which sanitize the sw.
 > 
-> On Tue, May 22, 2018 at 11:53 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
->> On 05/22/2018 08:36 PM, Geert Uytterhoeven wrote:
->>> On Mon, May 21, 2018 at 3:11 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
->>>> --- a/drivers/pci/host/pcie-rcar.c
->>>> +++ b/drivers/pci/host/pcie-rcar.c
->>>> @@ -900,6 +900,28 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
->>>>         return err;
->>>>  }
->>>>
->>>> +static void rcar_pcie_teardown_msi(struct rcar_pcie *pcie)
->>>> +{
->>>> +       struct rcar_msi *msi = &pcie->msi;
->>>> +       int irq, i;
->>>> +
->>>> +       /* Disable all MSI interrupts */
->>>> +       rcar_pci_write_reg(pcie, 0, PCIEMSIIER);
->>>> +
->>>> +       /* Disable address decoding of the MSI interrupt, MSIFE */
->>>> +       rcar_pci_write_reg(pcie, 0, PCIEMSIALR);
->>>> +
->>>> +       free_pages(msi->pages, 0);
->>>> +
->>>> +       for (i = 0; i < INT_PCI_MSI_NR; i++) {
->>>> +               irq = irq_find_mapping(msi->domain, i);
->>>> +               if (irq > 0)
->>>> +                       irq_dispose_mapping(irq);
->>>> +       }
->>>
->>> Note that similar calls to irq_dispose_mapping() should be added to the
->>> failure path of rcar_pcie_enable_msi(), too.
->>
->> There are no failures happening in rcar_pcie_enable_msi() after the
->> mapping is created, just memory writes, so no. Did I miss something there ?
+> DPC driver implements link_reset callback, and calls pci_do_recovery().
 > 
-> In my copy, there are two calls to devm_request_irq(). If they fail, the
-> IRQ domain is removed, but the mappings are never disposed of.
+> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> 
+> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> index 80ec384..aed7c9f 100644
+> --- a/drivers/pci/pcie/dpc.c
+> +++ b/drivers/pci/pcie/dpc.c
+> @@ -73,29 +73,21 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+>  	pcie_wait_for_link(pdev, false);
+>  }
+>  
+> -static void dpc_work(struct work_struct *work)
+> +static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+>  {
+> -	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+> -	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+> -	struct pci_bus *parent = pdev->subordinate;
+> -	u16 cap = dpc->cap_pos, ctl;
+> -
+> -	pci_lock_rescan_remove();
+> -	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+> -					 bus_list) {
+> -		pci_dev_get(dev);
+> -		pci_dev_set_disconnected(dev, NULL);
+> -		if (pci_has_subordinate(dev))
+> -			pci_walk_bus(dev->subordinate,
+> -				     pci_dev_set_disconnected, NULL);
+> -		pci_stop_and_remove_bus_device(dev);
+> -		pci_dev_put(dev);
+> -	}
+> -	pci_unlock_rescan_remove();
 
-Ah, true, I'll pull out a bit of the rcar_pcie_teardown_msi and call it
-in the failpath to remove the mapping. Thanks
+I think it would be good to have a comment here about why this "reset_link"
+function doesn't actually reset the link, e.g.,
 
--- 
-Best regards,
-Marek Vasut
+  /*
+   * DPC disables the Link automatically in hardware, so it has
+   * already been reset by the time we get here.
+   */
+
+> +	struct dpc_dev *dpc;
+> +	struct pcie_device *pciedev;
+> +	struct device *devdpc;
+> +	u16 cap, ctl;
+> +
+> +	devdpc = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_DPC);
+> +	pciedev = to_pcie_device(devdpc);
+> +	dpc = get_service_data(pciedev);
+> +	cap = dpc->cap_pos;
+
+And maybe one about waiting until the link is inactive, then clearing DPC
+Trigger Status to allow the port to leave DPC.
+
+>  	dpc_wait_link_inactive(dpc);
+>  	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
+> -		return;
+> +		return PCI_ERS_RESULT_DISCONNECT;
+>  	if (dpc->rp_extensions && dpc->rp_pio_status) {
+>  		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
+>  				       dpc->rp_pio_status);
+> @@ -108,6 +100,17 @@ static void dpc_work(struct work_struct *work)
+>  	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+>  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+>  			      ctl | PCI_EXP_DPC_CTL_INT_EN);
+> +
+> +	return PCI_ERS_RESULT_RECOVERED;
+> +}
+> +
+> +static void dpc_work(struct work_struct *work)
+> +{
+> +	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+> +	struct pci_dev *pdev = dpc->dev->port;
+> +
+> +	/* From DPC point of view error is always FATAL. */
+> +	pcie_do_recovery(pdev, DPC_FATAL);
+>  }
+>  
+>  static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
+> @@ -288,6 +291,7 @@ static struct pcie_port_service_driver dpcdriver = {
+>  	.service	= PCIE_PORT_SERVICE_DPC,
+>  	.probe		= dpc_probe,
+>  	.remove		= dpc_remove,
+> +	.reset_link	= dpc_reset_link,
+>  };
+>  
+>  static int __init dpc_service_init(void)
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index 877785d..526aba8 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -181,11 +181,12 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
+>  	return PCI_ERS_RESULT_RECOVERED;
+>  }
+>  
+> -static pci_ers_result_t reset_link(struct pci_dev *dev)
+> +static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+>  {
+>  	struct pci_dev *udev;
+>  	pci_ers_result_t status;
+>  	struct pcie_port_service_driver *driver;
+> +	u32 service;
+>  
+>  	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+>  		/* Reset this port for all subordinates */
+> @@ -196,7 +197,12 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+>  	}
+>  
+>  	/* Use the aer driver of the component firstly */
+> -	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
+> +	if (severity == DPC_FATAL)
+> +		service = PCIE_PORT_SERVICE_DPC;
+> +	else
+> +		service = PCIE_PORT_SERVICE_AER;
+> +
+> +	driver = pcie_port_find_service(udev, service);
+
+This is where I was wondering about passing in "service" directly instead
+of "severity".
+
+>  	if (driver && driver->reset_link) {
+>  		status = driver->reset_link(udev);
+> @@ -302,7 +308,7 @@ static pci_ers_result_t do_fatal_recovery(struct pci_dev *dev, int severity)
+>  		pci_dev_put(pdev);
+>  	}
+>  
+> -	result = reset_link(udev);
+> +	result = reset_link(udev, severity);
+>  	if (result == PCI_ERS_RESULT_RECOVERED)
+>  		if (pcie_wait_for_link(udev, true))
+>  			pci_rescan_bus(udev->bus);
+> @@ -326,7 +332,8 @@ void pcie_do_recovery(struct pci_dev *dev, int severity)
+>  	pci_ers_result_t status;
+>  	enum pci_channel_state state;
+>  
+> -	if (severity == AER_FATAL) {
+> +	if ((severity == AER_FATAL) ||
+> +	   (severity == DPC_FATAL)) {
+>  		status = do_fatal_recovery(dev, severity);
+>  		if (status != PCI_ERS_RESULT_RECOVERED)
+>  			goto failed;
+> diff --git a/include/linux/aer.h b/include/linux/aer.h
+> index 8f87bbe..0c506fe 100644
+> --- a/include/linux/aer.h
+> +++ b/include/linux/aer.h
+> @@ -14,6 +14,7 @@
+>  #define AER_NONFATAL			0
+>  #define AER_FATAL			1
+>  #define AER_CORRECTABLE			2
+> +#define DPC_FATAL			4
+>  
+>  struct pci_dev;
+>  
+> -- 
+> 2.7.4
+> 
