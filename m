@@ -1,52 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ua0-f194.google.com ([209.85.217.194]:39425 "EHLO
-        mail-ua0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932391AbeEWLMb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 07:12:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54648 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966262AbeEJQ1t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 May 2018 12:27:49 -0400
+Date: Thu, 10 May 2018 11:27:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: poza@codeaurora.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>,
+        linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v15 8/9] PCI/DPC: Unify and plumb error handling into DPC
+Message-ID: <20180510162746.GA190385@bhelgaas-glaptop.roam.corp.google.com>
+References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
+ <1525323838-1735-9-git-send-email-poza@codeaurora.org>
+ <20180510132222.GE173327@bhelgaas-glaptop.roam.corp.google.com>
+ <29c21a3fbaeb56c0581da66b9203dfd1@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20180523105220.25518-1-marek.vasut+renesas@gmail.com>
-References: <20180523105220.25518-1-marek.vasut+renesas@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Wed, 23 May 2018 13:12:29 +0200
-Message-ID: <CAMuHMdXAgeat-vL0Cvh-w9+Fnvru_WW5g1qYu=ewM_b7fcJ8iQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: rcar: Remove IRQ mappings in rcar_pcie_enable_msi failpath
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <29c21a3fbaeb56c0581da66b9203dfd1@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek,
+On Thu, May 10, 2018 at 07:56:00PM +0530, poza@codeaurora.org wrote:
+> On 2018-05-10 18:52, Bjorn Helgaas wrote:
+> > On Thu, May 03, 2018 at 01:03:57AM -0400, Oza Pawandeep wrote:
+> ...
 
-On Wed, May 23, 2018 at 12:52 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
-> The rcar_pcie_enable_msi() creates IRQ mappings using irq_create_mapping()
-> before requesting the IRQs using devm_request_irq(). If devm_request_irq()
-> fails for some reason, rcar_pcie_enable_msi() does not remove the mapping.
->
-> Pull out the code for disposing IRQ mappings from rcar_pcie_teardown_msi()
-> into a separate function and call it from both rcar_pcie_teardown_msi()
-> and rcar_pcie_enable_msi() failpath to remove the mappings correctly.
->
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > > -static pci_ers_result_t reset_link(struct pci_dev *dev)
+> > > +static pci_ers_result_t reset_link(struct pci_dev *dev, int severity)
+> > >  {
+> > >  	struct pci_dev *udev;
+> > >  	pci_ers_result_t status;
+> > >  	struct pcie_port_service_driver *driver;
+> > > +	u32 service;
+> > > 
+> > >  	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> > >  		/* Reset this port for all subordinates */
+> > > @@ -196,7 +197,12 @@ static pci_ers_result_t reset_link(struct
+> > > pci_dev *dev)
+> > >  	}
+> > > 
+> > >  	/* Use the aer driver of the component firstly */
+> > > -	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
+> > > +	if (severity == DPC_FATAL)
+> > > +		service = PCIE_PORT_SERVICE_DPC;
+> > > +	else
+> > > +		service = PCIE_PORT_SERVICE_AER;
+> > > +
+> > > +	driver = pcie_port_find_service(udev, service);
+> > 
+> > This is where I was wondering about passing in "service" directly
+> > instead
+> > of "severity".
+> 
+> passing service directly instead of severity ? (I do not think you meant to
+> write severity there)
 
-Thanks a lot!
+I did mean "severity".
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> perhaps do you mean following ?
+> 
+> if (severity == DPC_FATAL)
+>          pcie_port_find_service(udev, PCIE_PORT_SERVICE_DPC);
+> else
+>          pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
 
-Gr{oetje,eeting}s,
+No, my thought was that most of the places that use "severity" only
+use it to decide between PCIE_PORT_SERVICE_DPC and
+PCIE_PORT_SERVICE_AER, so if you just passed in "service" directly,
+you wouldn't need this "if" statement.
 
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Bjorn
