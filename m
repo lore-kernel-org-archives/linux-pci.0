@@ -1,97 +1,127 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 11 May 2018 11:57:52 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andrew Lutomirski <amluto@gmail.com>
-Subject: Re: Another NVMe failure, this time with AER info
-Message-ID: <20180511165752.GG190385@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=UDHC=H5=oracle.com=thomas.tai@kernel.org>
+Return-Path: <SRS0=UDHC=H5=oracle.com=thomas.tai@kernel.org>
+Subject: Re: [PATCH V3 1/1] PCI/AER: add pcie TLP header information in the
+ tracepoint
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, rostedt@goodmis.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mr.nuke.me@gmail.com
+References: <1525820696-31967-1-git-send-email-thomas.tai@oracle.com>
+ <1525820696-31967-2-git-send-email-thomas.tai@oracle.com>
+ <20180510133739.GI173327@bhelgaas-glaptop.roam.corp.google.com>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <d20f3744-807f-9079-f3a9-28c33772eb13@oracle.com>
+Date: Thu, 10 May 2018 09:47:18 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAObL_7G5k7XNqXqDZASChiQd1mt+AJPAdNKz-DE+xQawhUy6ZA@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jesse Vincent <jesse@fsck.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180510133739.GI173327@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Andrew wrote:
-> A friend of mine has a brand new LG laptop that has intermittent NVMe
-> failures.  They mostly happen during a suspend/resume cycle
-> (apparently during suspend, not resume).  Unlike the earlier
-> Dell/Samsung issue, the NVMe device isn't completely gone -- MMIO
-> reads fail, but PCI configuration space is apparently still there:
 
-> nvme nvme0: controller is down; will reset: CSTS=0xffffffff, PCI_STATUS=0x10
 
-> and it comes with a nice AER dump:
+On 2018-05-10 09:37 AM, Bjorn Helgaas wrote:
+> On Tue, May 08, 2018 at 07:04:56PM -0400, Thomas Tai wrote:
+>> When a PCIe AER occurs, the TLP header information is
+>> printed in the kernel message but it is missing from
+>> the tracepoint. A userspace program can use this information
+>> in the tracepoint to better analyze problems.
+>>
+>> To enable the tracepoint:
+>> echo 1 > /sys/kernel/debug/tracing/events/ras/aer_event/enable
+>>
+>> Example tracepoint output:
+>> cat /sys/kernel/debug/tracing/trace
+>> aer_event: 0000:01:00.0
+>> PCIe Bus Error: severity=Uncorrected, non-fatal, Completer Abort
+>> TLP Header={0x0,0x1,0x2,0x3}
+>>
+>> Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
+> 
+> Applied with Steven's reviewed-by to pci/aer for v4.18, thanks!
 
-> [12720.894411] pcieport 0000:00:1c.0: AER: Multiple Corrected error received: id=00e0
-> [12720.909747] pcieport 0000:00:1c.0: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e0(Transmitter ID)
-> [12720.909751] pcieport 0000:00:1c.0:   device [8086:9d14] error status/mask=00001001/00002000
-> [12720.909754] pcieport 0000:00:1c.0:    [ 0] Receiver Error         (First)
-> [12720.909756] pcieport 0000:00:1c.0:    [12] Replay Timer Timeout
+Thank you Bjorn.
 
-I opened this bugzilla and attached the dmesg and lspci -vv output to
-it: https://bugzilla.kernel.org/show_bug.cgi?id=199695
+-Thomas
 
-The root port at 00:1c.0 leads to the NVMe device at 01:00.0 (this is
-nvme0):
-
-  00:1c.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port #5 (rev f1) (prog-if 00 [Normal decode])
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-  01:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller SM961/PM961 (prog-if 02 [NVM Express])
-        Subsystem: Samsung Electronics Co Ltd Device a801
-
-We reported several corrected errors before the nvme timeout:
-
-  [12750.281158] nvme nvme0: controller is down; will reset: CSTS=0xffffffff, PCI_STATUS=0x10
-  [12750.297594] nvme nvme0: I/O 455 QID 2 timeout, disable controller
-  [12750.305196] nvme 0000:01:00.0: enabling device (0000 -> 0002)
-  [12750.305465] nvme nvme0: Removing after probe failure status: -19
-  [12750.313188] nvme nvme0: I/O 456 QID 2 timeout, disable controller
-  [12750.329152] nvme nvme0: I/O 457 QID 2 timeout, disable controller
-
-The corrected errors are supposedly recovered in hardware without
-software intervention, and AER logs them for informational purposes.
-
-But it seems very likely that these corrected errors are related to
-the nvme timeout: the first corrected errors were logged at
-12720.894411, nvme_io_timeout defaults to 30 seconds, and the nvme
-timeout was at 12750.281158.
-
-I don't have any good ideas.  As a shot in the dark, you could try
-running these commands before doing a suspend:
-
-  # setpci -s01:00.0 0x98.W
-  # setpci -s00:1c.0 0x68.W
-  # setpci -s01:00.0 0x198.L
-  # setpci -s00:1c.0 0x208.L
-
-  # setpci -s01:00.0 0x198.L=0x00000000
-  # setpci -s01:00.0 0x98.W=0x0000
-  # setpci -s00:1c.0 0x208.L=0x00000000
-  # setpci -s00:1c.0 0x68.W=0x0000
-
-  # lspci -vv -s00:1c.0
-  # lspci -vv -s01:00.0
-
-The idea is to turn off ASPM L1.2 and LTR, just because that's new and
-we've had issues with it before.  If you try this, please collect the
-output of the commands above in addition to the dmesg log, in case my
-math is bad.
-
-Bjorn
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+> 
+>> ---
+>>   drivers/pci/pcie/aer/aerdrv_errprint.c |  4 ++--
+>>   include/ras/ras_event.h                | 22 ++++++++++++++++++----
+>>   2 files changed, 20 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> index cfc89dd..fd49a8d 100644
+>> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> @@ -189,7 +189,7 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+>>   		pci_err(dev, "  Error of this Agent(%04x) is reported first\n", id);
+>>   
+>>   	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
+>> -			info->severity);
+>> +			info->severity, info->tlp_header_valid, &info->tlp);
+>>   }
+>>   
+>>   void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+>> @@ -249,6 +249,6 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
+>>   		__print_tlp_header(dev, &aer->header_log);
+>>   
+>>   	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
+>> -			aer_severity);
+>> +			aer_severity, tlp_header_valid, &aer->header_log);
+>>   }
+>>   #endif
+>> diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
+>> index 9c68986..a079463 100644
+>> --- a/include/ras/ras_event.h
+>> +++ b/include/ras/ras_event.h
+>> @@ -298,30 +298,44 @@
+>>   TRACE_EVENT(aer_event,
+>>   	TP_PROTO(const char *dev_name,
+>>   		 const u32 status,
+>> -		 const u8 severity),
+>> +		 const u8 severity,
+>> +		 const u8 tlp_header_valid,
+>> +		 struct aer_header_log_regs *tlp),
+>>   
+>> -	TP_ARGS(dev_name, status, severity),
+>> +	TP_ARGS(dev_name, status, severity, tlp_header_valid, tlp),
+>>   
+>>   	TP_STRUCT__entry(
+>>   		__string(	dev_name,	dev_name	)
+>>   		__field(	u32,		status		)
+>>   		__field(	u8,		severity	)
+>> +		__field(	u8, 		tlp_header_valid)
+>> +		__array(	u32, 		tlp_header, 4	)
+>>   	),
+>>   
+>>   	TP_fast_assign(
+>>   		__assign_str(dev_name, dev_name);
+>>   		__entry->status		= status;
+>>   		__entry->severity	= severity;
+>> +		__entry->tlp_header_valid = tlp_header_valid;
+>> +		if (tlp_header_valid) {
+>> +			__entry->tlp_header[0] = tlp->dw0;
+>> +			__entry->tlp_header[1] = tlp->dw1;
+>> +			__entry->tlp_header[2] = tlp->dw2;
+>> +			__entry->tlp_header[3] = tlp->dw3;
+>> +		}
+>>   	),
+>>   
+>> -	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
+>> +	TP_printk("%s PCIe Bus Error: severity=%s, %s, TLP Header=%s\n",
+>>   		__get_str(dev_name),
+>>   		__entry->severity == AER_CORRECTABLE ? "Corrected" :
+>>   			__entry->severity == AER_FATAL ?
+>>   			"Fatal" : "Uncorrected, non-fatal",
+>>   		__entry->severity == AER_CORRECTABLE ?
+>>   		__print_flags(__entry->status, "|", aer_correctable_errors) :
+>> -		__print_flags(__entry->status, "|", aer_uncorrectable_errors))
+>> +		__print_flags(__entry->status, "|", aer_uncorrectable_errors),
+>> +		__entry->tlp_header_valid ?
+>> +			__print_array(__entry->tlp_header, 4, 4) :
+>> +			"Not available")
+>>   );
+>>   
+>>   /*
+>> -- 
+>> 1.8.3.1
+>>
