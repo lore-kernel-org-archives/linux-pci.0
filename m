@@ -1,179 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41224 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965059AbeEXX5u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 May 2018 19:57:50 -0400
-Date: Thu, 24 May 2018 18:57:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jakub Kicinski <jakub.kicinski@netronome.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, Sathya Perla <sathya.perla@broadcom.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        alexander.duyck@gmail.com, john.fastabend@gmail.com,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Donald Dutile <ddutile@redhat.com>, oss-drivers@netronome.com,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
-Message-ID: <20180524235748.GD15320@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180402224652.4058-1-jakub.kicinski@netronome.com>
+Return-Path: <SRS0=tf3/=H5=redhat.com=jglisse@kernel.org>
+Return-Path: <SRS0=tf3/=H5=redhat.com=jglisse@kernel.org>
+Date: Thu, 10 May 2018 15:24:54 -0400
+From: Jerome Glisse <jglisse@redhat.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Stephen Bates <sbates@raithlin.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Keith Busch <keith.busch@intel.com>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgg@mellanox.com>,
+	Max Gurtovoy <maxg@mellanox.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+Message-ID: <20180510192454.GC3652@redhat.com>
+References: <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508205005.GC15608@redhat.com>
+ <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
+ <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
+ <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
+ <2fc61d29-9eb4-d168-a3e5-955c36e5d821@amd.com>
+ <94C8FE12-7FC3-48BD-9DCA-E6A427E71810@raithlin.com>
+ <20180510144137.GA3652@redhat.com>
+ <B525870A-B25E-46BB-B501-DAA39F1741DC@raithlin.com>
+ <20180510131015.4ad59477@w520.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180402224652.4058-1-jakub.kicinski@netronome.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20180510131015.4ad59477@w520.home>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jakub,
-
-On Mon, Apr 02, 2018 at 03:46:52PM -0700, Jakub Kicinski wrote:
-> Some user space depends on enabling sriov_totalvfs number of VFs
-> to not fail, e.g.:
+On Thu, May 10, 2018 at 01:10:15PM -0600, Alex Williamson wrote:
+> On Thu, 10 May 2018 18:41:09 +0000
+> "Stephen  Bates" <sbates@raithlin.com> wrote:    
+> > >    Reasons is that GPU are giving up on PCIe (see all specialize link like
+> > >    NVlink that are popping up in GPU space). So for fast GPU inter-connect
+> > >    we have this new links.   
+> > 
+> > I look forward to Nvidia open-licensing NVLink to anyone who wants to use it ;-).
 > 
-> $ cat .../sriov_totalvfs > .../sriov_numvfs
+> No doubt, the marketing for it is quick to point out the mesh topology
+> of NVLink, but I haven't seen any technical documents that describe the
+> isolation capabilities or IOMMU interaction.  Whether this is included
+> or an afterthought, I have no idea.
+
+AFAIK there is no IOMMU on NVLink between devices, walking a page table and
+being able to sustain 80GB/s or 160GB/s is hard to achieve :) I think idea
+behind those interconnect is that devices in the mesh are inherently secure
+ie each single device is suppose to make sure that no one can abuse it.
+
+GPU with their virtual address space and contextualize program executions
+unit are suppose to be secure (a specter like bug might be lurking on those
+but i doubt it).
+
+So for those interconnect you program physical address directly in the page
+table of the devices and those physical address are un-translated from hard-
+ware perspective.
+
+Note that the kernel driver that do the actual GPU page table programming
+can do sanity check on value it is setting. So checks can also happens at
+setup time. But after that assumption is hardware is secure and no one can
+abuse it AFAICT.
+
 > 
-> For devices which VF support depends on loaded FW we have the
-> pci_sriov_{g,s}et_totalvfs() API.  However, this API uses 0 as
-> a special "unset" value, meaning drivers can't limit sriov_totalvfs
-> to 0.  Remove the special values completely and simply initialize
-> driver_max_VFs to total_VFs.  Then always use driver_max_VFs.
-> Add a helper for drivers to reset the VF limit back to total.
-
-I still can't really make sense out of the changelog.
-
-I think part of the reason it's confusing is because there are two
-things going on:
-
-  1) You want this:
-  
-       pci_sriov_set_totalvfs(dev, 0);
-       x = pci_sriov_get_totalvfs(dev) 
-
-     to return 0 instead of total_VFs.  That seems to connect with
-     your subject line.  It means "sriov_totalvfs" in sysfs could be
-     0, but I don't know how that is useful (I'm sure it is; just
-     educate me :))
-
-  2) You're adding the pci_sriov_reset_totalvfs() interface.  I'm not
-     sure what you intend for this.  Is *every* driver supposed to
-     call it in .remove()?  Could/should this be done in the core
-     somehow instead of depending on every driver?
-
-I'm also having a hard time connecting your user-space command example
-with the rest of this.  Maybe it will make more sense to me tomorrow
-after some coffee.
-
-> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
-> ---
->  drivers/net/ethernet/netronome/nfp/nfp_main.c |  6 +++---
->  drivers/pci/iov.c                             | 27 +++++++++++++++++++++------
->  include/linux/pci.h                           |  2 ++
->  3 files changed, 26 insertions(+), 9 deletions(-)
+> > >    Also the IOMMU isolation do matter a lot to us. Think someone using this
+> > >    peer to peer to gain control of a server in the cloud.  
 > 
-> diff --git a/drivers/net/ethernet/netronome/nfp/nfp_main.c b/drivers/net/ethernet/netronome/nfp/nfp_main.c
-> index c4b1f344b4da..a76d177e40dd 100644
-> --- a/drivers/net/ethernet/netronome/nfp/nfp_main.c
-> +++ b/drivers/net/ethernet/netronome/nfp/nfp_main.c
-> @@ -123,7 +123,7 @@ static int nfp_pcie_sriov_read_nfd_limit(struct nfp_pf *pf)
->  		return pci_sriov_set_totalvfs(pf->pdev, pf->limit_vfs);
->  
->  	pf->limit_vfs = ~0;
-> -	pci_sriov_set_totalvfs(pf->pdev, 0); /* 0 is unset */
-> +	pci_sriov_reset_totalvfs(pf->pdev);
->  	/* Allow any setting for backwards compatibility if symbol not found */
->  	if (err == -ENOENT)
->  		return 0;
-> @@ -537,7 +537,7 @@ static int nfp_pci_probe(struct pci_dev *pdev,
->  err_net_remove:
->  	nfp_net_pci_remove(pf);
->  err_sriov_unlimit:
-> -	pci_sriov_set_totalvfs(pf->pdev, 0);
-> +	pci_sriov_reset_totalvfs(pf->pdev);
->  err_fw_unload:
->  	kfree(pf->rtbl);
->  	nfp_mip_close(pf->mip);
-> @@ -570,7 +570,7 @@ static void nfp_pci_remove(struct pci_dev *pdev)
->  	nfp_hwmon_unregister(pf);
->  
->  	nfp_pcie_sriov_disable(pdev);
-> -	pci_sriov_set_totalvfs(pf->pdev, 0);
-> +	pci_sriov_reset_totalvfs(pf->pdev);
->  
->  	nfp_net_pci_remove(pf);
->  
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 677924ae0350..c63ea870d8be 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -443,6 +443,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
->  	iov->nres = nres;
->  	iov->ctrl = ctrl;
->  	iov->total_VFs = total;
-> +	iov->driver_max_VFs = total;
->  	pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_device);
->  	iov->pgsz = pgsz;
->  	iov->self = dev;
-> @@ -788,12 +789,29 @@ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
->  }
->  EXPORT_SYMBOL_GPL(pci_sriov_set_totalvfs);
->  
-> +/**
-> + * pci_sriov_reset_totalvfs -- return the TotalVFs value to the default
-> + * @dev: the PCI PF device
-> + *
-> + * Should be called from PF driver's remove routine with
-> + * device's mutex held.
-> + */
-> +void pci_sriov_reset_totalvfs(struct pci_dev *dev)
-> +{
-> +	/* Shouldn't change if VFs already enabled */
-> +	if (!dev->is_physfn || dev->sriov->ctrl & PCI_SRIOV_CTRL_VFE)
-> +		return;
-> +
-> +	dev->sriov->driver_max_VFs = dev->sriov->total_VFs;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_sriov_reset_totalvfs);
-> +
->  /**
->   * pci_sriov_get_totalvfs -- get total VFs supported on this device
->   * @dev: the PCI PF device
->   *
-> - * For a PCIe device with SRIOV support, return the PCIe
-> - * SRIOV capability value of TotalVFs or the value of driver_max_VFs
-> + * For a PCIe device with SRIOV support, return the value of driver_max_VFs
-> + * which can be equal to the PCIe SRIOV capability value of TotalVFs or lower
->   * if the driver reduced it.  Otherwise 0.
->   */
->  int pci_sriov_get_totalvfs(struct pci_dev *dev)
-> @@ -801,9 +819,6 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
->  	if (!dev->is_physfn)
->  		return 0;
->  
-> -	if (dev->sriov->driver_max_VFs)
-> -		return dev->sriov->driver_max_VFs;
-> -
-> -	return dev->sriov->total_VFs;
-> +	return dev->sriov->driver_max_VFs;
->  }
->  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 024a1beda008..95fde8850393 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1952,6 +1952,7 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id);
->  int pci_num_vf(struct pci_dev *dev);
->  int pci_vfs_assigned(struct pci_dev *dev);
->  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
-> +void pci_sriov_reset_totalvfs(struct pci_dev *dev);
->  int pci_sriov_get_totalvfs(struct pci_dev *dev);
->  resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
->  void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
-> @@ -1978,6 +1979,7 @@ static inline int pci_vfs_assigned(struct pci_dev *dev)
->  { return 0; }
->  static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
->  { return 0; }
-> +static inline void pci_sriov_reset_totalvfs(struct pci_dev *dev) { }
->  static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
->  { return 0; }
->  static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
-> -- 
-> 2.16.2
-> 
+> From that perspective, do we have any idea what NVLink means for
+> topology and IOMMU provided isolation and translation?  I've seen a
+> device assignment user report that seems to suggest it might pretend to
+> be PCIe compatible, but the assigned GPU ultimately doesn't work
+> correctly in a VM, so perhaps the software compatibility is only so
+> deep. Thanks,
+
+Note that each single GPU (in configurations i am aware of) also have a
+PCIE link with the CPU/main memory. So from that point of view they very
+much behave like a regular PCIE devices. It is just that each GPUs in
+the mesh can access each other memory through high bandwidth interconnect.
+
+I am not sure how much is public beyond that, i will ask NVidia to try to
+have someone chime in this thread and shed light on this, if possible.
+
+Cheers,
+Jérôme
