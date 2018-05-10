@@ -1,45 +1,62 @@
-Return-Path: <SRS0=T3Dv=H6=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=T3Dv=H6=intel.com=jonathan.derrick@kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Keith Busch <keith.busch@intel.com>,
-	<linux-pci@vger.kernel.org>
-Cc: Joerg Roedel <jroedel@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Dave Fugate <david.fugate@intel.com>,
-	Scott Bauer <scott.bauer@intel.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [RFC PATCH 3/4] x86/PCI: Add new VMD device root ports to VMD AER quirk
-Date: Thu, 10 May 2018 18:49:02 -0600
-Message-Id: <20180511004903.19892-4-jonathan.derrick@intel.com>
-In-Reply-To: <20180511004903.19892-1-jonathan.derrick@intel.com>
-References: <20180511004903.19892-1-jonathan.derrick@intel.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: Jerome Glisse <jglisse@redhat.com>, =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?=
+ <christian.koenig@amd.com>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+Date: Thu, 10 May 2018 18:44:25 +0000
+Message-ID: <0E894398-041D-4FA6-966F-BB37866A9AF2@raithlin.com>
+References: <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508205005.GC15608@redhat.com>
+ <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
+ <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
+ <1775CC56-4651-422F-953A-18E024D3717C@raithlin.com>
+ <20180509160722.GB4140@redhat.com>
+ <366A8132-B88A-40F7-BDE3-DA542E45FC0C@raithlin.com>
+ <20180509174952.GC4140@redhat.com>
+ <405531AE-8315-4A4F-9B0C-8DBE49BFCAB4@raithlin.com>
+ <73b6a454-bf84-1640-0b5e-137d03c0ad8c@amd.com>
+ <20180510145946.GB3652@redhat.com>
+In-Reply-To: <20180510145946.GB3652@redhat.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Benjamin
+ Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VMD devices change the source id of messages from child devices to the
-VMD endpoint. This patch adds the new VMD device id to the AER quirk
-which requires walking the bus to determine which devices were throwing
-the error.
+Hi Jerome
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- arch/x86/pci/fixup.c | 4 ++++
- 1 file changed, 4 insertions(+)
+>    Hopes this helps understanding the big picture. I over simplify thing and
+>    devils is in the details.
+    
+This was a great primer thanks for putting it together. An LWN.net article perhaps ;-)??
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 54ef19e90705..13f4485ca388 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -636,6 +636,10 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334a, quirk_no_aersid);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334b, quirk_no_aersid);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334c, quirk_no_aersid);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334d, quirk_no_aersid);
- 
- #ifdef CONFIG_PHYS_ADDR_T_64BIT
- 
--- 
-2.14.3
+Stephen
+    
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
