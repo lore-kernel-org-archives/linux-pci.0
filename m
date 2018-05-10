@@ -1,82 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-To: svarbanov@mm-sol.com, lorenzo.pieralisi@arm.com,
-        bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bjorn.andersson@linaro.org, vkoul@kernel.org,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: [PATCH v2] PCI: qcom: add runtime pm support to pcie_port
-Date: Wed, 23 May 2018 11:44:25 +0100
-Message-Id: <20180523104425.6650-1-srinivas.kandagatla@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=FEnp=H5=raithlin.com=sbates@kernel.org>
+Return-Path: <SRS0=FEnp=H5=raithlin.com=sbates@kernel.org>
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: Logan Gunthorpe <logang@deltatee.com>,
+	=?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>, "Jerome
+ Glisse" <jglisse@redhat.com>
+CC: Alex Williamson <alex.williamson@redhat.com>, Bjorn Helgaas
+	<helgaas@kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-nvme@lists.infradead.org"
+	<linux-nvme@lists.infradead.org>, "linux-rdma@vger.kernel.org"
+	<linux-rdma@vger.kernel.org>, "linux-nvdimm@lists.01.org"
+	<linux-nvdimm@lists.01.org>, "linux-block@vger.kernel.org"
+	<linux-block@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe
+	<axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>, Sagi Grimberg
+	<sagi@grimberg.me>, Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe
+	<jgg@mellanox.com>, Max Gurtovoy <maxg@mellanox.com>, Dan Williams
+	<dan.j.williams@intel.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+Date: Thu, 10 May 2018 17:11:14 +0000
+Message-ID: <868B49CE-4F0E-4A48-BE78-12149F85F1A4@raithlin.com>
+References: <20180423233046.21476-5-logang@deltatee.com>
+ <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+ <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+ <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+ <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+ <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+ <20180508133407.57a46902@w520.home>
+ <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+ <20180508141331.7cd737cb@w520.home>
+ <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508205005.GC15608@redhat.com>
+ <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
+ <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
+ <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
+ <2fc61d29-9eb4-d168-a3e5-955c36e5d821@amd.com>
+ <94C8FE12-7FC3-48BD-9DCA-E6A427E71810@raithlin.com>
+ <f0101988-cf82-7ffb-2aca-d3b8d2f4b504@deltatee.com>
+In-Reply-To: <f0101988-cf82-7ffb-2aca-d3b8d2f4b504@deltatee.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is required when the pcie controller sits on a bus with
-its own power domain and clocks which are controlled via a bus driver
-like simple pm bus. As these bus driver have runtime pm enabled, it makes
-sense to update the usage counter so that the runtime pm does not suspend
-the clks or power domain associated with the bus driver.
-
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/pci/dwc/pcie-qcom.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 5897af7d3355..d6ed5aeeae9c 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -19,6 +19,7 @@
- #include <linux/of_device.h>
- #include <linux/of_gpio.h>
- #include <linux/pci.h>
-+#include <linux/pm_runtime.h>
- #include <linux/platform_device.h>
- #include <linux/phy/phy.h>
- #include <linux/regulator/consumer.h>
-@@ -1088,6 +1089,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 	struct qcom_pcie *pcie = to_qcom_pcie(pci);
- 	int ret;
- 
-+	pm_runtime_get_sync(pci->dev);
- 	qcom_ep_reset_assert(pcie);
- 
- 	ret = pcie->ops->init(pcie);
-@@ -1124,6 +1126,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 	phy_power_off(pcie->phy);
- err_deinit:
- 	pcie->ops->deinit(pcie);
-+	pm_runtime_put(pci->dev);
- 
- 	return ret;
- }
-@@ -1212,6 +1215,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	if (!pci)
- 		return -ENOMEM;
- 
-+	pm_runtime_enable(dev);
- 	pci->dev = dev;
- 	pci->ops = &dw_pcie_ops;
- 	pp = &pci->pp;
-@@ -1257,14 +1261,17 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	ret = phy_init(pcie->phy);
--	if (ret)
-+	if (ret) {
-+		pm_runtime_disable(&pdev->dev);
- 		return ret;
-+	}
- 
- 	platform_set_drvdata(pdev, pcie);
- 
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(dev, "cannot initialize host\n");
-+		pm_runtime_disable(&pdev->dev);
- 		return ret;
- 	}
- 
--- 
-2.16.2
+PiBOb3QgdG8gbWUuIEluIHRoZSBwMnBkbWEgY29kZSB3ZSBzcGVjaWZpY2FsbHkgcHJvZ3JhbSBE
+TUEgZW5naW5lcyB3aXRoDQo+IHRoZSBQQ0kgYnVzIGFkZHJlc3MuIA0KDQpBaCB5ZXMgb2YgY291
+cnNlLiBCcmFpbiBmYXJ0IG9uIG15IHBhcnQuIFdlIGFyZSBub3QgcHJvZ3JhbW1pbmcgdGhlIFAy
+UERNQSBpbml0aWF0b3Igd2l0aCBhbiBJT1ZBIGJ1dCB3aXRoIHRoZSBQQ0kgYnVzIGFkZHJlc3Mu
+Li4NCg0KPiBTbyByZWdhcmRsZXNzIG9mIHdoZXRoZXIgd2UgYXJlIHVzaW5nIHRoZSBJT01NVSBv
+cg0KPiBub3QsIHRoZSBwYWNrZXRzIHdpbGwgYmUgZm9yd2FyZGVkIGRpcmVjdGx5IHRvIHRoZSBw
+ZWVyLiBJZiB0aGUgQUNTDQo+ICBSZWRpciBiaXRzIGFyZSBvbiB0aGV5IHdpbGwgYmUgZm9yY2Vk
+IGJhY2sgdG8gdGhlIFJDIGJ5IHRoZSBzd2l0Y2ggYW5kDQo+ICB0aGUgdHJhbnNhY3Rpb24gd2ls
+bCBmYWlsLiBJZiB3ZSBjbGVhciB0aGUgQUNTIGJpdHMsIHRoZSBUTFBzIHdpbGwgZ28NCj4gIHdo
+ZXJlIHdlIHdhbnQgYW5kIGV2ZXJ5dGhpbmcgd2lsbCB3b3JrIChidXQgd2UgbG9zZSB0aGUgaXNv
+bGF0aW9uIG9mIEFDUykuDQoNCkFncmVlZC4NCiAgICANCj4gICAgRm9yIEVQcyB0aGF0IHN1cHBv
+cnQgQVRTLCB3ZSBzaG91bGQgKGJ1dCBkb24ndCBuZWNlc3NhcmlseSBoYXZlIHRvKQ0KPiAgICBw
+cm9ncmFtIHRoZW0gd2l0aCB0aGUgSU9WQSBhZGRyZXNzIHNvIHRoZXkgY2FuIGdvIHRocm91Z2gg
+dGhlDQo+ICAgIHRyYW5zbGF0aW9uIHByb2Nlc3Mgd2hpY2ggd2lsbCBhbGxvdyBQMlAgd2l0aG91
+dCBkaXNhYmxpbmcgdGhlIEFDUyBSZWRpcg0KPiAgICBiaXRzIC0tIHByb3ZpZGVkIHRoZSBBQ1Mg
+ZGlyZWN0IHRyYW5zbGF0aW9uIGJpdCBpcyBzZXQuIChBbmQgYnR3LCBpZiBpdA0KPiAgICBpcywg
+dGhlbiB3ZSBsb3NlIHRoZSBiZW5lZml0IG9mIEFDUyBwcm90ZWN0aW5nIGFnYWluc3QgbWFsaWNp
+b3VzIEVQcykuDQo+ICAgIEJ1dCwgcGVyIGFib3ZlLCB0aGUgQVRTIHRyYW5zYWN0aW9uIHNob3Vs
+ZCBpbnZvbHZlIG9ubHkgdGhlIElPVkEgYWRkcmVzcw0KPiAgICBzbyB0aGUgQUNTIGJpdHMgbm90
+IGJlaW5nIHNldCBzaG91bGQgbm90IGJyZWFrIEFUUy4NCiAgICANCldlbGwgd2Ugd291bGQgc3Rp
+bGwgaGF2ZSB0byBjbGVhciBzb21lIEFDUyBiaXRzIGJ1dCBub3cgd2UgY2FuIGNsZWFyIG9ubHkg
+Zm9yIHRyYW5zbGF0ZWQgYWRkcmVzc2VzLg0KDQpTdGVwaGVuDQogICAgDQoNCg==
