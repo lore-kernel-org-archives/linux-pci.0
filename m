@@ -1,135 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH v17 9/9] PCI/DPC: Use the generic pcie_do_fatal_recovery() path
-Date: Thu, 17 May 2018 03:43:11 -0400
-Message-Id: <1526542991-5291-10-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
-References: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 10 May 2018 08:33:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Guo <shawn.guo@linaro.org>
+Subject: Re: [PATCH] Kirin-PCIe: Add kirin pcie msi feature.
+Message-ID: <20180510133350.GH173327@bhelgaas-glaptop.roam.corp.google.com>
+References: <1525763028-107417-1-git-send-email-chenyao11@huawei.com>
+ <20180508125658.GK161390@bhelgaas-glaptop.roam.corp.google.com>
+ <20180509045151.GA24899@dragon>
+MIME-Version: 1.0
+In-Reply-To: <20180509045151.GA24899@dragon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
+ dimitrysh@google.com, guodong.xu@linaro.org, linux-pci@vger.kernel.org,
+ catalin.marinas@arm.com, wangbinghui@hisilicon.com, will.deacon@arm.com,
+ linux-kernel@vger.kernel.org, xuwei5@hisilicon.com,
+ Stanimir Varbanov <svarbanov@mm-sol.com>, Jianguo Sun <sunjianguo1@huawei.com>,
+ robh+dt@kernel.org, songxiaowei@hisilicon.com, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org, Yao Chen <chenyao11@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Our goal is to handle ERR_FATAL errors similarly, whether they are reported
-via AER or via DPC.  A previous commit changed AER so it handles ERR_FATAL
-by calling driver .remove() methods and resetting the Link.  DPC already
-does that (although the Link reset is done automatically by hardware and
-happens before we call the driver .remove() methods).
+On Wed, May 09, 2018 at 12:51:53PM +0800, Shawn Guo wrote:
+> Hi Bjorn,
+> 
+> On Tue, May 08, 2018 at 07:56:58AM -0500, Bjorn Helgaas wrote:
+> ...
+> > > +			return ret;
+> > > +		}
+> > > +	}
+> > > +
+> > > +	pci->pp.root_bus_nr = -1;
+> > 
+> > Setting root_bus_nr looks like an unrelated change that should be in a
+> > separate patch.
+> > 
+> > But I'm not sure why you need to set root_bus_nr at all, since
+> > dw_pcie_host_init() always sets it.
+> > 
+> > Some other callers of dw_pcie_host_init() do set it:
+> > 
+> >   exynos_add_pcie_port()
+> >   imx6_add_pcie_port()
+> >   armada8k_add_pcie_port()
+> >   artpec6_add_pcie_port()
+> >   dw_plat_add_pcie_port()
+> >   histb_pcie_probe()
+> >   qcom_pcie_probe()
+> >   spear13xx_add_pcie_port()
+> > 
+> > But I don't see *why* any of these need to set it.  If they don't need to
+> > set it, they shouldn't.
+> 
+> Mostly it's a blind copy of unnecessary code.  I tested histb driver
+> by dropping the line, and did not see anything broken.  I will cook up
+> a series to remove the code from all above drivers, and copy
+> corresponding driver owner to comment.
 
-Restructure the DPC code so it calls the same pcie_do_fatal_recovery()
-interface used by AER.  This makes it clearer that we want to use the same
-path.
+Thanks, Shawn, I really appreciate that!
 
-Implement the .reset_link() method used by pcie_do_fatal_recovery().  For
-DPC, the actual reset is done automatically by hardware, so we really only
-have to wait for the Link to be inactive, then release the Port from DPC.
+> > And it would be nice if histb and qcom followed the structure and naming
+> > conventions of the other drivers, i.e., they should have
+> > histb_add_pcie_port() and qcom_add_pcie_port().
+> 
+> I can create a patch for histb driver, but will leave qcom one to
+> Stanimir to decide.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-[bhelgaas: changelog, DPC_FATAL is not a bitfield, can be sequential]
-Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
+Sounds good, thanks again!
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index 361903f..6064041 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -73,29 +73,30 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- 	pcie_wait_for_link(pdev, false);
- }
- 
--static void dpc_work(struct work_struct *work)
-+static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
- {
--	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
--	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
--	struct pci_bus *parent = pdev->subordinate;
--	u16 cap = dpc->cap_pos, ctl;
--
--	pci_lock_rescan_remove();
--	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
--					 bus_list) {
--		pci_dev_get(dev);
--		pci_dev_set_disconnected(dev, NULL);
--		if (pci_has_subordinate(dev))
--			pci_walk_bus(dev->subordinate,
--				     pci_dev_set_disconnected, NULL);
--		pci_stop_and_remove_bus_device(dev);
--		pci_dev_put(dev);
--	}
--	pci_unlock_rescan_remove();
--
-+	struct dpc_dev *dpc;
-+	struct pcie_device *pciedev;
-+	struct device *devdpc;
-+	u16 cap, ctl;
-+
-+	/*
-+	 * DPC disables the Link automatically in hardware, so it has
-+	 * already been reset by the time we get here.
-+	 */
-+	devdpc = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_DPC);
-+	pciedev = to_pcie_device(devdpc);
-+	dpc = get_service_data(pciedev);
-+	cap = dpc->cap_pos;
-+
-+	/*
-+	 * Wait until the Link is inactive, then clear DPC Trigger Status
-+	 * to allow the Port to leave DPC.
-+	 */
- 	dpc_wait_link_inactive(dpc);
-+
- 	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
--		return;
-+		return PCI_ERS_RESULT_DISCONNECT;
- 	if (dpc->rp_extensions && dpc->rp_pio_status) {
- 		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
- 				       dpc->rp_pio_status);
-@@ -108,6 +109,17 @@ static void dpc_work(struct work_struct *work)
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
- 			      ctl | PCI_EXP_DPC_CTL_INT_EN);
-+
-+	return PCI_ERS_RESULT_RECOVERED;
-+}
-+
-+static void dpc_work(struct work_struct *work)
-+{
-+	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
-+	struct pci_dev *pdev = dpc->dev->port;
-+
-+	/* We configure DPC so it only triggers on ERR_FATAL */
-+	pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_DPC);
- }
- 
- static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
-@@ -288,6 +300,7 @@ static struct pcie_port_service_driver dpcdriver = {
- 	.service	= PCIE_PORT_SERVICE_DPC,
- 	.probe		= dpc_probe,
- 	.remove		= dpc_remove,
-+	.reset_link	= dpc_reset_link,
- };
- 
- static int __init dpc_service_init(void)
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 8f87bbe..514bffa 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -14,6 +14,7 @@
- #define AER_NONFATAL			0
- #define AER_FATAL			1
- #define AER_CORRECTABLE			2
-+#define DPC_FATAL			3
- 
- struct pci_dev;
- 
--- 
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
