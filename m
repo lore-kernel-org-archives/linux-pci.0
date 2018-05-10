@@ -1,102 +1,172 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "linux-acpi@vger.kernel.org"
- <linux-acpi@vger.kernel.org>, "devicetree@vger.kernel.org"
- <devicetree@vger.kernel.org>, "iommu@lists.linux-foundation.org"
- <iommu@lists.linux-foundation.org>, "kvm@vger.kernel.org"
- <kvm@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-14-jean-philippe.brucker@arm.com>
- <5B0536A3.1000304@huawei.com> <cd13f60d-b282-3804-4ca7-2d34476c597f@arm.com>
- <5B06B17C.1090809@huawei.com> <205c1729-8026-3efe-c363-d37d7150d622@arm.com>
- <5B077765.30703@huawei.com> <fea420ff-e738-e2ed-ab1e-a3f4dde4b6ef@arm.com>
- <5B08DA21.3070507@huawei.com> <99ff4f89-86ef-a251-894c-8aa8a47d2a69@arm.com>
-From: Xu Zaibo <xuzaibo@huawei.com>
-Message-ID: <5B0D467C.90206@huawei.com>
-Date: Tue, 29 May 2018 20:24:28 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:58268 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750746AbeEJXJv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 May 2018 19:09:51 -0400
+Date: Thu, 10 May 2018 18:09:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gil Kupfer <gilkup@gmail.com>
+Cc: joro@8bytes.org, dwmw2@infradead.org, bhelgaas@google.com,
+        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, nadav.amit@gmail.com,
+        Gil Kupfer <gilkup@cs.technion.ac.il>
+Subject: Re: [RFC/RFT] Add noats flag to boot parameters
+Message-ID: <20180510230948.GF190385@bhelgaas-glaptop.roam.corp.google.com>
+References: <1525025808-2365-1-git-send-email-gilkup@cs.technion.ac.il>
 MIME-Version: 1.0
-In-Reply-To: <99ff4f89-86ef-a251-894c-8aa8a47d2a69@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "rgummal@xilinx.com" <rgummal@xilinx.com>,
- Jonathan Cameron <Jonathan.Cameron@huawei.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>,
- "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525025808-2365-1-git-send-email-gilkup@cs.technion.ac.il>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGksCgpPbiAyMDE4LzUvMjkgMTk6NTUsIEplYW4tUGhpbGlwcGUgQnJ1Y2tlciB3cm90ZToKPiAo
-SWYgcG9zc2libGUsIHBsZWFzZSByZXBseSBpbiBwbGFpbiB0ZXh0IHRvIHRoZSBsaXN0LiBSZWFk
-aW5nIHRoaXMgaW4gYQo+IHRleHQtb25seSByZWFkZXIgaXMgY29uZnVzaW5nLCBiZWNhdXNlIGFs
-bCBxdW90ZXMgaGF2ZSB0aGUgc2FtZSBsZXZlbCkKU29ycnkgZm9yIHRoYXTvvIwgSSBoYXZlIHJl
-c2V0IHRoZSB0aHVuZGVyYmlyZCwgOikgdGhhbmtzLgo+IE9uIDI2LzA1LzE4IDA0OjUzLCBYdSBa
-YWlibyB3cm90ZToKPj4gSSBndWVzcyB0aGVyZSBtYXkgYmUgc29tZSBtaXN1bmRlcnN0YW5kaW5n
-cyA6KS4KPj4KPj4gIEZyb20gdGhlIGN1cnJlbnQgcGF0Y2hlcywgJ2lvbW11X3N2YV9kZXZpY2Vf
-c2h1dGRvd24nIGlzIGNhbGxlZCBieSAndmZpb19pb21tdV9zdmFfc2h1dGRvd24nLCB3aGljaAo+
-PiBpcyBtYWlubHkgdXNlZCBieSAndmZpb19pb21tdV90eXBlMV9kZXRhY2hfZ3JvdXAnIHRoYXQg
-aXMgZmluYWxseSBjYWxsZWQgYnkgcHJvY2Vzc2VzJyByZWxlYXNlIG9mIHZmaW8gZmFjaWxpdGl5
-Cj4+IGF1dG9tYXRpY2FsbHkgb3IgY2FsbGVkIGJ5ICdWRklPX0dST1VQX1VOU0VUX0NPTlRBSU5F
-UicgbWFudWFsbHkgaW4gdGhlIHByb2Nlc3Nlcy4KPj4KPj4gU28sIGp1c3QgaW1hZ2UgdGhhdCAy
-IHByb2Nlc3NlcyBpcyB3b3JraW5nIG9uIHRoZSBkZXZpY2Ugd2l0aCBJT1BGIGZlYXR1cmUsIGFu
-ZCB0aGUgMiBkbyB0aGUgZm9sbG93aW5nIHRvIGVuYWJsZSBTVkE6Cj4+Cj4+ICAgICAgMS5vcGVu
-KCIvZGV2L3ZmaW8vdmZpbyIpIDsKPj4KPj4gICAgIDIub3BlbiB0aGUgZ3JvdXAgb2YgdGhlIGRl
-dmNpZSBieSBjYWxsaW5nIG9wZW4oIi9kZXYvdmZpby94IiksIGJ1dCBub3csCj4+ICAgICAgIEkg
-dGhpbmsgdGhlIHNlY29uZCBwcm9jZXNzZXMgd2lsbCBmYWlsIHRvIG9wZW4gdGhlIGdyb3VwIGJl
-Y2F1c2UgY3VycmVudCBWRklPIHRoaW5rcyB0aGF0IG9uZSBncm91cCBvbmx5IGNhbiBiZSB1c2Vk
-IGJ5IG9uZSBwcm9jZXNzL3ZtLAo+PiAgICAgICBhdCBwcmVzZW50LCBJIHVzZSBtZWRpYXRlZCBk
-ZXZpY2UgdG8gY3JlYXRlIG1vcmUgZ3JvdXBzIG9uIHRoZSBwYXJlbnQgZGV2aWNlIHRvIHN1cHBv
-cnQgbXVsdGlwbGUgcHJvY2Vzc2VzOwo+Pgo+PiAgICAgIDMuVkZJT19HUk9VUF9TRVRfQ09OVEFJ
-TkVSOwo+Pgo+PiAgICAgIDQuVkZJT19TRVRfSU9NTVU7Cj4+Cj4+ICAgICAgNS5WRklPX0lPTU1V
-X0JJTkQ7Cj4gSSBoYXZlIGEgY29uY2VybiByZWdhcmRpbmcgeW91ciBkcml2ZXIuIFdpdGggbWRl
-diB5b3UgY2FuJ3QgYWxsb3cKPiBwcm9jZXNzZXMgdG8gcHJvZ3JhbSB0aGUgUEFTSUQgdGhlbXNl
-bHZlcywgc2luY2UgdGhlIHBhcmVudCBkZXZpY2UgaGFzIGEKPiBzaW5nbGUgUEFTSUQgdGFibGUu
-IFlvdSBsb3NlIGFsbCBpc29sYXRpb24gc2luY2UgcHJvY2Vzc2VzIGNvdWxkIHdyaXRlCj4gYW55
-IHZhbHVlIGluIHRoZSBQQVNJRCBmaWVsZCBhbmQgYWNjZXNzIGFkZHJlc3Mgc3BhY2VzIG9mIG90
-aGVyCj4gcHJvY2Vzc2VzIGJvdW5kIHRvIHRoaXMgcGFyZW50IGRldmljZSAoZXZlbiBpZiB0aGUg
-QklORCBjYWxsIHdhcyBmb3IKPiBvdGhlciBtZGV2cykuClllcywgaWYgd3JhcGRyaXZlIGRvIG5v
-dGhpbmcgb24gdGhpcyBQQVNJRCBzZXR0aW5nIHByb2NlZHVyZSBpbiBrZXJuZWwgCnNwYWNlLCBJ
-IHRoaW5rCnRoZXJlIGRlZmluaXRlbHkgZXhpc3RzIHRoaXMgc2VjdXJpdHkgcmlzay4KPiBUaGUg
-d3JhcCBkcml2ZXIgaGFzIHRvIG1lZGlhdGUgY2FsbHMgdG8gYmluZCgpLCBhbmQgZWl0aGVyIHBy
-b2dyYW0gdGhlCj4gUEFTSUQgaW50byB0aGUgZGV2aWNlIGl0c2VsZiwgb3IgYXQgbGVhc3QgY2hl
-Y2sgdGhhdCwgd2hlbiByZWNlaXZpbmcgYQo+IFNFVF9QQVNJRCBpb2N0bCBmcm9tIGEgcHJvY2Vz
-cywgdGhlIGdpdmVuIFBBU0lEIHdhcyBhY3R1YWxseSBhbGxvY2F0ZWQKPiB0byB0aGUgcHJvY2Vz
-cy4KWWVzLCBnb29kIGFkdmljZSwgdGhhbmtzLgo+Cj4+ICAgICAgNi5EbyBzb21lIHdvcmtzIHdp
-dGggdGhlIGhhcmR3YXJlIHdvcmtpbmcgdW5pdCBmaWxsZWQgYnkgUEFTSUQgb24gdGhlIGRldmlj
-ZTsKPj4KPj4gICAgIDcuVkZJT19JT01NVV9VTkJJTkQ7Cj4+Cj4+ICAgICAgOC5WRklPX0dST1VQ
-X1VOU0VUX0NPTlRBSU5FUjstLS1oZXJlLCBoYXZlIHRvIHNsZWVwIHRvIHdhaXQgYW5vdGhlciBw
-cm9jZXNzIHRvIGZpbmlzaCB3b3JrcyBvZiB0aGUgc3RlcCA2Owo+Pgo+PiAgICAgIDkuIGNsb3Nl
-KGdyb3VwKTsgY2xvc2UoY29udGFpbm5lcik7Cj4+Cj4+Cj4+IFNvLCBteSBpZGVhIGlzOiBJZiBp
-dCBpcyBwb3NzaWJsZSB0byBqdXN0IHJlbGVhc2UgdGhlIHBhcmFtcyBvciBmYWNpbGl0aWVzIHRo
-YXQgb25seSBiZWxvbmcgdG8gdGhlIGN1cnJlbnQgcHJvY2VzcyB3aGlsZSB0aGUgcHJvY2VzcyBz
-aHV0ZG93biB0aGUgZGV2aWNlLAo+PiBhbmQgd2hpbGUgdGhlIGxhc3QgcHJvY2VzcyByZWxlYXNl
-cyB0aGVtIGFsbC4gVGhlbiwgYXMgaW4gdGhlIGFib3ZlIHN0ZXAgOCwgd2UKPj4gZG9uJ3QgbmVl
-ZCB0byB3YWl0LCBvciBtYXliZSB3YWl0IGZvciBhIHZlcnkgbG9uZyB0aW1lIGlmIHRoZSBvdGhl
-ciBwcm9jZXNzIGlzIGRvaW5nIGxvdHMgb2Ygd29yayBvbiB0aGUgZGV2aWNlLgo+IEdpdmVuIHRo
-YXQgeW91IG5lZWQgdG8gbm90aWZ5IHRoZSBtZWRpYXRpbmcgZHJpdmVyIG9mIElPTU1VX0JJTkQg
-Y2FsbHMKPiBhcyBleHBsYWluZWQgYWJvdmUsIHlvdSBjb3VsZCBkbyBzb21ldGhpbmcgc2ltaWxh
-ciBmb3Igc2h1dGRvd246IGZyb20KPiB0aGUgbWRldiBkcml2ZXIsIGNhbGwgaW9tbXVfc3ZhX3No
-dXRkb3duX2RldmljZSgpIG9ubHkgZm9yIHRoZSBsYXN0IG1kZXYuCkN1cnJlbnRseSwgSSBhZGQg
-YW4gQVBJIHRvIGNoZWNrIGlmIGl0IGlzIHRoZSBsYXN0IG1kZXYgaW4gd3JhcGRyaXZlLCBhcyAK
-dmZpbyBzaHV0ZG93bnMgdGhlIGRldmljZSwKaXQgY2FsbCB0aGUgQVBJIHRvIGRvIHRoZSBjaGVj
-ayBhdCBmaXJzdC4KClRoYW5rcwpaYWlibwoKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1h
-cm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcv
-bWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+On Sun, Apr 29, 2018 at 09:16:48PM +0300, Gil Kupfer wrote:
+> This patch adds noats option to the pci boot parameter.
+> When noats is selected, all ATS related functions fail immediately and
+> the IOMMU is configured to not use device-iotlb.
+> 
+> Any function that checks for ATS capabilities directly against the
+> devices should also check this flag. (Currently, such functions exist
+> only in IOMMU drivers, and they are covered by this patch.)
+> 
+> The motivation behind this patch is the existence of malicious devices.
+> Lots of research has been done about how to utilitize the IOMMU as a
+> protection from such devices. When ATS is supported, any I/O device can
+> access any physical access by faking device-IOTLB entries.
+> Adding the ability to ignore these entries lets sysadmins enhance system
+> security.
+> 
+> Signed-off-by: Gil Kupfer <gilkup@cs.technion.ac.il>
+
+Applied with Joerg's ack to pci/virtualization for v4.18, thanks!
+
+> ---
+> This patch is intended to add the ability to disable ATS at boot time.
+> 
+> My IOMMU has the ATS ecap but I don't have any PCI device that supports
+> ATS so I can't fully test it. However, I did ran it (with and without the
+> new boot flag) on QEMU with virtualized IOMMU with the device-iotlb flag
+> and it seems that at least the machine does not crush.
+> 
+> QEMU version:
+> 	master branch from Jul 11 2017
+> 	commit aa916e409c04 ("Merge 29741be b876804")
+> ---
+>  Documentation/admin-guide/kernel-parameters.txt |  2 ++
+>  drivers/iommu/amd_iommu.c                       | 11 ++++++++---
+>  drivers/iommu/intel-iommu.c                     |  3 ++-
+>  drivers/pci/ats.c                               |  3 +++
+>  drivers/pci/pci.c                               |  7 +++++++
+>  include/linux/pci.h                             |  2 ++
+>  6 files changed, 24 insertions(+), 4 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 7737ab5..f443362 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -3000,6 +3000,8 @@
+>  		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
+>  				only look for one device below a PCIe downstream
+>  				port.
+> +		noats		[PCIE, Intel-IOMMU, AMD-IOMMU]
+> +				do not use PCIe ATS (and IOMMU device-iotlb).
+>  
+>  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+>  			Management.
+> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+> index 0f1219f..2aa757e 100644
+> --- a/drivers/iommu/amd_iommu.c
+> +++ b/drivers/iommu/amd_iommu.c
+> @@ -388,6 +388,9 @@ static bool pci_iommuv2_capable(struct pci_dev *pdev)
+>  	};
+>  	int i, pos;
+>  
+> +	if (is_pcie_ats_disabled())
+> +		return false;
+> +
+>  	for (i = 0; i < 3; ++i) {
+>  		pos = pci_find_ext_capability(pdev, caps[i]);
+>  		if (pos == 0)
+> @@ -3602,9 +3605,11 @@ int amd_iommu_device_info(struct pci_dev *pdev,
+>  
+>  	memset(info, 0, sizeof(*info));
+>  
+> -	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ATS);
+> -	if (pos)
+> -		info->flags |= AMD_IOMMU_DEVICE_FLAG_ATS_SUP;
+> +	if (!is_pcie_ats_disabled()) {
+> +		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ATS);
+> +		if (pos)
+> +			info->flags |= AMD_IOMMU_DEVICE_FLAG_ATS_SUP;
+> +	}
+>  
+>  	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
+>  	if (pos)
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index fc2765c..7ac4adc 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -2434,7 +2434,8 @@ static struct dmar_domain *dmar_insert_one_dev_info(struct intel_iommu *iommu,
+>  	if (dev && dev_is_pci(dev)) {
+>  		struct pci_dev *pdev = to_pci_dev(info->dev);
+>  
+> -		if (ecap_dev_iotlb_support(iommu->ecap) &&
+> +		if (!is_pcie_ats_disabled() &&
+> +		    ecap_dev_iotlb_support(iommu->ecap) &&
+>  		    pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ATS) &&
+>  		    dmar_find_matched_atsr_unit(pdev))
+>  			info->ats_supported = 1;
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index eeb9fb2..619024d 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -21,6 +21,9 @@ void pci_ats_init(struct pci_dev *dev)
+>  {
+>  	int pos;
+>  
+> +	if (is_pcie_ats_disabled())
+> +		return;
+> +
+>  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
+>  	if (!pos)
+>  		return;
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 563901c..eb77590 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -109,6 +109,10 @@ unsigned int pcibios_max_latency = 255;
+>  /* If set, the PCIe ARI capability will not be used. */
+>  static bool pcie_ari_disabled;
+>  
+> +/* If set, the PCIe ATS capability will not be used. */
+> +static bool pcie_ats_disabled;
+> +bool is_pcie_ats_disabled(void) { return pcie_ats_disabled; }
+> +
+>  /* Disable bridge_d3 for all PCIe ports */
+>  static bool pci_bridge_d3_disable;
+>  /* Force bridge_d3 for all PCIe ports */
+> @@ -5430,6 +5434,9 @@ static int __init pci_setup(char *str)
+>  		if (*str && (str = pcibios_setup(str)) && *str) {
+>  			if (!strcmp(str, "nomsi")) {
+>  				pci_no_msi();
+> +			} else if (!strncmp(str, "noats", 5)) {
+> +				pr_info("PCIe: ATS is disabled\n");
+> +				pcie_ats_disabled = true;
+>  			} else if (!strcmp(str, "noaer")) {
+>  				pci_no_aer();
+>  			} else if (!strncmp(str, "realloc=", 8)) {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 8039f9f..58fe5fb 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1420,6 +1420,8 @@ int  ht_create_irq(struct pci_dev *dev, int idx);
+>  void ht_destroy_irq(unsigned int irq);
+>  #endif /* CONFIG_HT_IRQ */
+>  
+> +bool is_pcie_ats_disabled(void);
+> +
+>  #ifdef CONFIG_PCI_ATS
+>  /* Address Translation Service */
+>  void pci_ats_init(struct pci_dev *dev);
+> -- 
+> 2.7.4
+> 
