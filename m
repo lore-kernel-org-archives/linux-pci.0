@@ -1,149 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH] PCI: Remove host driver Kconfig selection of
- CONFIG_PCIEPORTBUS
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Shawn Guo <shawn.guo@linaro.org>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        linux-kernel@vger.kernel.org
-Date: Fri, 18 May 2018 17:31:07 -0500
-Message-ID: <152668266782.118010.15462515170612275250.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=87y8=H5=amd.com=Christian.Koenig@kernel.org>
+Return-Path: <SRS0=87y8=H5=amd.com=Christian.Koenig@kernel.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+To: Stephen Bates <sbates@raithlin.com>, Jerome Glisse <jglisse@redhat.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Bjorn Helgaas <helgaas@kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <20180508133407.57a46902@w520.home>
+ <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+ <20180508141331.7cd737cb@w520.home>
+ <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508205005.GC15608@redhat.com>
+ <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
+ <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
+ <1775CC56-4651-422F-953A-18E024D3717C@raithlin.com>
+ <20180509160722.GB4140@redhat.com>
+ <366A8132-B88A-40F7-BDE3-DA542E45FC0C@raithlin.com>
+ <20180509174952.GC4140@redhat.com>
+ <405531AE-8315-4A4F-9B0C-8DBE49BFCAB4@raithlin.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Message-ID: <73b6a454-bf84-1640-0b5e-137d03c0ad8c@amd.com>
+Date: Thu, 10 May 2018 16:29:44 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <405531AE-8315-4A4F-9B0C-8DBE49BFCAB4@raithlin.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Am 10.05.2018 um 16:20 schrieb Stephen Bates:
+> Hi Jerome
+>
+>> As it is tie to PASID this is done using IOMMU so looks for caller
+>> of amd_iommu_bind_pasid() or intel_svm_bind_mm() in GPU the existing
+>>   user is the AMD GPU driver see:
+>      
+> Ah thanks. This cleared things up for me. A quick search shows there are still no users of intel_svm_bind_mm() but I see the AMD version used in that GPU driver.
 
-Host bridge drivers do not use the portdrv interfaces (struct pcie_device,
-struct pcie_port_service_driver, pcie_port_service_register(), etc), and
-they should not select CONFIG_PCIEPORTBUS.
+Just FYI: There is also another effort ongoing to give both the AMD, 
+Intel as well as ARM IOMMUs a common interface so that drivers can use 
+whatever the platform offers fro SVM support.
 
-If users need the portdrv services, they can select CONFIG_PCIEPORTBUS just
-like all other PCI users.
+> One thing I could not grok from the code how the GPU driver indicates which DMA events require ATS translations and which do not. I am assuming the driver implements someway of indicating that and its not just a global ON or OFF for all DMAs? The reason I ask is that I looking at if NVMe was to support ATS what would need to be added in the NVMe spec above and beyond what we have in PCI ATS to support efficient use of ATS (for example would we need a flag in the submission queue entries to indicate a particular IO's SGL/PRP should undergo ATS).
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/dwc/Kconfig  |   10 ----------
- drivers/pci/host/Kconfig |    2 --
- 2 files changed, 12 deletions(-)
+Oh, well that is complicated at best.
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 2f3f5c50aa48..678390a77ba1 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -68,7 +68,6 @@ config PCI_EXYNOS
- 	depends on PCI
- 	depends on SOC_EXYNOS5440
- 	depends on PCI_MSI_IRQ_DOMAIN
--	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 
- config PCI_IMX6
-@@ -76,7 +75,6 @@ config PCI_IMX6
- 	depends on PCI
- 	depends on SOC_IMX6Q
- 	depends on PCI_MSI_IRQ_DOMAIN
--	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 
- config PCIE_SPEAR13XX
-@@ -84,7 +82,6 @@ config PCIE_SPEAR13XX
- 	depends on PCI
- 	depends on ARCH_SPEAR13XX
- 	depends on PCI_MSI_IRQ_DOMAIN
--	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	help
- 	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
-@@ -94,7 +91,6 @@ config PCI_KEYSTONE
- 	depends on PCI
- 	depends on ARCH_KEYSTONE
- 	depends on PCI_MSI_IRQ_DOMAIN
--	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	help
- 	  Say Y here if you want to enable PCI controller support on Keystone
-@@ -117,7 +113,6 @@ config PCI_HISI
- 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
- 	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
--	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	select PCI_HOST_COMMON
- 	help
-@@ -129,7 +124,6 @@ config PCIE_QCOM
- 	depends on PCI
- 	depends on ARCH_QCOM && OF
- 	depends on PCI_MSI_IRQ_DOMAIN
--	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	help
- 	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
-@@ -141,7 +135,6 @@ config PCIE_ARMADA_8K
- 	depends on PCI
- 	depends on ARCH_MVEBU
- 	depends on PCI_MSI_IRQ_DOMAIN
--	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	help
- 	  Say Y here if you want to enable PCIe controller support on
-@@ -156,7 +149,6 @@ config PCIE_ARTPEC6_HOST
- 	bool "Axis ARTPEC-6 PCIe controller Host Mode"
- 	depends on MACH_ARTPEC6
- 	depends on PCI && PCI_MSI_IRQ_DOMAIN
--	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	select PCIE_ARTPEC6
- 	help
-@@ -178,7 +170,6 @@ config PCIE_KIRIN
- 	bool "HiSilicon Kirin series SoCs PCIe controllers"
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	depends on PCI
--	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	help
- 	  Say Y here if you want PCIe controller support
-@@ -189,7 +180,6 @@ config PCIE_HISI_STB
- 	depends on ARCH_HISI
- 	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
--	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	help
-           Say Y here if you want PCIe controller support on HiSilicon STB SoCs
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 0d0177ce436c..90f0cc9dfd95 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -83,7 +83,6 @@ config PCI_XGENE
- 	bool "X-Gene PCIe controller"
- 	depends on ARM64
- 	depends on OF || (ACPI && PCI_QUIRKS)
--	select PCIEPORTBUS
- 	help
- 	  Say Y here if you want internal PCI support on APM X-Gene SoC.
- 	  There are 5 internal PCIe ports available. Each port is GEN3 capable
-@@ -194,7 +193,6 @@ config PCIE_MEDIATEK
- 	depends on (ARM || ARM64) && (ARCH_MEDIATEK || COMPILE_TEST)
- 	depends on OF
- 	depends on PCI
--	select PCIEPORTBUS
- 	help
- 	  Say Y here if you want to enable PCIe controller support on
- 	  MediaTek SoCs.
+On very old hardware it wasn't a window, but instead you had to use 
+special commands in your shader which indicated that you want to use an 
+ATS transaction instead of a normal PCIe transaction for your 
+read/write/atomic.
+
+As Jerome explained on most hardware we have a window inside the 
+internal GPU address space which when accessed issues a ATS transaction 
+with a configurable PASID.
+
+But on very newer hardware that window became a bit in the GPUVM page 
+tables, so in theory we now can control it on a 4K granularity basis for 
+the internal 48bit GPU address space.
+
+Christian.
+
+>
+> Cheers
+>
+> Stephen
+>
