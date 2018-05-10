@@ -1,83 +1,342 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 9 May 2018 08:44:45 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Stephen  Bates" <sbates@raithlin.com>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all
- devices behind switches
-Message-ID: <20180509084445.626d2732@w520.home>
-In-Reply-To: <B5BFCF39-6BB4-4E45-B805-C8FCC8B79EF3@raithlin.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
- <20180423233046.21476-5-logang@deltatee.com>
- <CAPcyv4g+5N_n03J-VhmJfrr60Sqk95ZapLKBkwSsGvV4nQ+ZRw@mail.gmail.com>
- <64C231F5-DE36-415F-B308-3A423B0BBACB@raithlin.com>
- <15433946-f7f5-f610-4e80-380fb59920e5@redhat.com>
- <3C9FB262-A93C-4C8F-B1E0-85C6D6F78BC2@raithlin.com>
- <c5f30ced-7bbf-9420-db1a-72519fc78b3a@redhat.com>
- <20180508180157.7c7b393f@w520.home>
- <B5BFCF39-6BB4-4E45-B805-C8FCC8B79EF3@raithlin.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Sagi Grimberg <sagi@grimberg.me>, linux-nvdimm <linux-nvdimm@lists.01.org>,
- linux-rdma <linux-rdma@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- =?UTF-8?B?SsOpcsO0?= =?UTF-8?B?bWU=?= Glisse <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Don Dutile <ddutile@redhat.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, Logan Gunthorpe <logang@deltatee.com>,
- Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:45901 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750854AbeEJEfe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 May 2018 00:35:34 -0400
+Received: by mail-pg0-f67.google.com with SMTP id w3-v6so391342pgv.12
+        for <linux-pci@vger.kernel.org>; Wed, 09 May 2018 21:35:33 -0700 (PDT)
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, marc.zyngier@arm.com
+Cc: mingkai.hu@nxp.com, peter.newton@nxp.com, minghuan.lian@nxp.com,
+        rajesh.raina@nxp.com, rajan.kapoor@nxp.com, prabhjot.singh@nxp.com,
+        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Subject: [PATCH v11 3/3] PCI: mobiveil: Add MSI support
+Date: Thu, 10 May 2018 00:35:26 -0400
+Message-Id: <1525926926-29211-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 9 May 2018 12:35:56 +0000
-"Stephen  Bates" <sbates@raithlin.com> wrote:
+Implement MSI support for Mobiveil PCIe Host Bridge IP device driver.
 
-> Hi Alex and Don
-> 
-> >    Correct, the VM has no concept of the host's IOMMU groups, only
-> > the hypervisor knows about the groups,   
-> 
-> But as I understand it these groups are usually passed through to VMs
-> on a pre-group basis by the hypervisor? So IOMMU group 1 might be
-> passed to VM A and IOMMU group 2 passed to VM B. So I agree the VM is
-> not aware of IOMMU groupings but it is impacted by them in the sense
-> that if the groupings change the PCI topology presented to the VM
-> needs to change too.
+Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/host/pcie-mobiveil.c | 206 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 202 insertions(+), 4 deletions(-)
 
-Hypervisors don't currently expose any topology based on the grouping,
-the only case where such a concept even makes sense is when a vIOMMU is
-present as devices within the same group cannot have separate address
-spaces.  Our options for exposing such information is also limited, our
-only real option would seem to be placing devices within the same group
-together on a conventional PCI bus to denote the address space
-granularity.  Currently we strongly recommend singleton groups for this
-case and leave any additional configuration constraints to the admin.
-
-The case you note of a group passed to VM A and another passed to VM B
-is exactly an example of why any sort of dynamic routing change needs to
-have the groups fully released, such as via hot-unplug.  For instance,
-a routing change at a shared node above groups 1 & 2 could result in
-the merging of these groups and there is absolutely no way to handle
-that with portions of the group being owned by two separate VMs after
-the merge.  Thanks,
-
-Alex
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+diff --git a/drivers/pci/host/pcie-mobiveil.c b/drivers/pci/host/pcie-mobiveil.c
+index a15a531..707b9bb 100644
+--- a/drivers/pci/host/pcie-mobiveil.c
++++ b/drivers/pci/host/pcie-mobiveil.c
+@@ -14,6 +14,7 @@
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+@@ -56,6 +57,7 @@
+ #define PAB_INTP_AMBA_MISC_ENB		0x0b0c
+ #define PAB_INTP_AMBA_MISC_STAT	0x0b1c
+ #define  PAB_INTP_INTX_MASK		0x01e0
++#define  PAB_INTP_MSI_MASK		0x8
+ 
+ #define PAB_AXI_AMAP_CTRL(win)	PAB_REG_ADDR(0x0ba0, win)
+ #define  WIN_ENABLE_SHIFT	0
+@@ -86,6 +88,19 @@
+ /* starting offset of INTX bits in status register */
+ #define PAB_INTX_START	5
+ 
++/* supported number of MSI interrupts */
++#define PCI_NUM_MSI	16
++
++/* MSI registers */
++#define MSI_BASE_LO_OFFSET	0x04
++#define MSI_BASE_HI_OFFSET	0x08
++#define MSI_SIZE_OFFSET	0x0c
++#define MSI_ENABLE_OFFSET	0x14
++#define MSI_STATUS_OFFSET	0x18
++#define MSI_DATA_OFFSET	0x20
++#define MSI_ADDR_L_OFFSET	0x24
++#define MSI_ADDR_H_OFFSET	0x28
++
+ /* outbound and inbound window definitions */
+ #define WIN_NUM_0		0
+ #define WIN_NUM_1		1
+@@ -100,11 +115,21 @@
+ #define LINK_WAIT_MIN	90000
+ #define LINK_WAIT_MAX	100000
+ 
++struct mobiveil_msi {			/* MSI information */
++	struct mutex lock;		/* protect bitmap variable */
++	struct irq_domain *msi_domain;
++	struct irq_domain *dev_domain;
++	phys_addr_t msi_pages_phys;
++	int num_of_vectors;
++	DECLARE_BITMAP(msi_irq_in_use, PCI_NUM_MSI);
++};
++
+ struct mobiveil_pcie {
+ 	struct platform_device *pdev;
+ 	struct list_head resources;
+ 	void __iomem *config_axi_slave_base;	/* endpoint config base */
+ 	void __iomem *csr_axi_slave_base;	/* root port config base */
++	void __iomem *apb_csr_base;	/* MSI register base */
+ 	void __iomem *pcie_reg_base;	/* Physical PCIe Controller Base */
+ 	struct irq_domain *intx_domain;
+ 	raw_spinlock_t intx_mask_lock;
+@@ -115,6 +140,7 @@ struct mobiveil_pcie {
+ 	int ib_wins_configured;		/* configured inbound windows */
+ 	struct resource *ob_io_res;
+ 	char root_bus_nr;
++	struct mobiveil_msi msi;
+ };
+ 
+ static inline void csr_writel(struct mobiveil_pcie *pcie, const u32 value,
+@@ -193,13 +219,15 @@ static void mobiveil_pcie_isr(struct irq_desc *desc)
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	struct mobiveil_pcie *pcie = irq_desc_get_handler_data(desc);
+ 	struct device *dev = &pcie->pdev->dev;
+-	u32 intr_status;
++	struct mobiveil_msi *msi = &pcie->msi;
++	u32 msi_data, msi_addr_lo, msi_addr_hi;
++	u32 intr_status, msi_status;
+ 	unsigned long shifted_status;
+ 	u32 bit, virq, val, mask;
+ 
+ 	/*
+-	 * The core provides interrupt for INTx.
+-	 * So we'll read INTx status.
++	 * The core provides a single interrupt for both INTx/MSI messages.
++	 * So we'll read both INTx and MSI status
+ 	 */
+ 
+ 	chained_irq_enter(chip, desc);
+@@ -231,6 +259,35 @@ static void mobiveil_pcie_isr(struct irq_desc *desc)
+ 		} while ((shifted_status >> PAB_INTX_START) != 0);
+ 	}
+ 
++	/* read extra MSI status register */
++	msi_status = readl_relaxed(pcie->apb_csr_base + MSI_STATUS_OFFSET);
++
++	/* handle MSI interrupts */
++	while (msi_status & 1) {
++		msi_data = readl_relaxed(pcie->apb_csr_base
++				+ MSI_DATA_OFFSET);
++
++		/*
++		 * MSI_STATUS_OFFSET register gets updated to zero
++		 * once we pop not only the MSI data but also address
++		 * from MSI hardware FIFO. So keeping these following
++		 * two dummy reads.
++		 */
++		msi_addr_lo = readl_relaxed(pcie->apb_csr_base +
++				MSI_ADDR_L_OFFSET);
++		msi_addr_hi = readl_relaxed(pcie->apb_csr_base +
++				MSI_ADDR_H_OFFSET);
++		dev_dbg(dev, "MSI registers, data: %08x, addr: %08x:%08x\n",
++				msi_data, msi_addr_hi, msi_addr_lo);
++
++		virq = irq_find_mapping(msi->dev_domain, msi_data);
++		if (virq)
++			generic_handle_irq(virq);
++
++		msi_status = readl_relaxed(pcie->apb_csr_base +
++				MSI_STATUS_OFFSET);
++	}
++
+ 	/* Clear the interrupt status */
+ 	csr_writel(pcie, intr_status, PAB_INTP_AMBA_MISC_STAT);
+ 	chained_irq_exit(chip, desc);
+@@ -266,6 +323,12 @@ static int mobiveil_pcie_parse_dt(struct mobiveil_pcie *pcie)
+ 		return PTR_ERR(pcie->csr_axi_slave_base);
+ 	pcie->pcie_reg_base = res->start;
+ 
++	/* map MSI config resource */
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "apb_csr");
++	pcie->apb_csr_base = devm_pci_remap_cfg_resource(dev, res);
++	if (IS_ERR(pcie->apb_csr_base))
++		return PTR_ERR(pcie->apb_csr_base);
++
+ 	/* read the number of windows requested */
+ 	if (of_property_read_u32(node, "apio-wins", &pcie->apio_wins))
+ 		pcie->apio_wins = MAX_PIO_WINDOWS;
+@@ -415,6 +478,22 @@ static int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
+ 	return -ETIMEDOUT;
+ }
+ 
++static void mobiveil_pcie_enable_msi(struct mobiveil_pcie *pcie)
++{
++	phys_addr_t msg_addr = pcie->pcie_reg_base;
++	struct mobiveil_msi *msi = &pcie->msi;
++
++	pcie->msi.num_of_vectors = PCI_NUM_MSI;
++	msi->msi_pages_phys = (phys_addr_t)msg_addr;
++
++	writel_relaxed(lower_32_bits(msg_addr),
++		pcie->apb_csr_base + MSI_BASE_LO_OFFSET);
++	writel_relaxed(upper_32_bits(msg_addr),
++		pcie->apb_csr_base + MSI_BASE_HI_OFFSET);
++	writel_relaxed(4096, pcie->apb_csr_base + MSI_SIZE_OFFSET);
++	writel_relaxed(1, pcie->apb_csr_base + MSI_ENABLE_OFFSET);
++}
++
+ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
+ {
+ 	u32 value, pab_ctrl, type = 0;
+@@ -443,7 +522,8 @@ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
+ 	csr_writel(pcie, pab_ctrl | (1 << AMBA_PIO_ENABLE_SHIFT) |
+ 		(1 << PEX_PIO_ENABLE_SHIFT), PAB_CTRL);
+ 
+-	csr_writel(pcie, PAB_INTP_INTX_MASK, PAB_INTP_AMBA_MISC_ENB);
++	csr_writel(pcie, (PAB_INTP_INTX_MASK | PAB_INTP_MSI_MASK),
++		PAB_INTP_AMBA_MISC_ENB);
+ 
+ 	/*
+ 	 * program PIO Enable Bit to 1 and Config Window Enable Bit to 1 in
+@@ -482,6 +562,9 @@ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
+ 		}
+ 	}
+ 
++	/* setup MSI hardware registers */
++	mobiveil_pcie_enable_msi(pcie);
++
+ 	return err;
+ }
+ 
+@@ -537,6 +620,116 @@ static int mobiveil_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+ 	.map = mobiveil_pcie_intx_map,
+ };
+ 
++static struct irq_chip mobiveil_msi_irq_chip = {
++	.name = "Mobiveil PCIe MSI",
++	.irq_mask = pci_msi_mask_irq,
++	.irq_unmask = pci_msi_unmask_irq,
++};
++
++static struct msi_domain_info mobiveil_msi_domain_info = {
++	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
++		MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX),
++	.chip	= &mobiveil_msi_irq_chip,
++};
++
++static void mobiveil_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
++{
++	struct mobiveil_pcie *pcie = irq_data_get_irq_chip_data(data);
++	phys_addr_t addr = pcie->pcie_reg_base + (data->hwirq * sizeof(int));
++
++	msg->address_lo = lower_32_bits(addr);
++	msg->address_hi = upper_32_bits(addr);
++	msg->data = data->hwirq;
++
++	dev_dbg(&pcie->pdev->dev, "msi#%d address_hi %#x address_lo %#x\n",
++		(int)data->hwirq, msg->address_hi, msg->address_lo);
++}
++
++static int mobiveil_msi_set_affinity(struct irq_data *irq_data,
++		const struct cpumask *mask, bool force)
++{
++	return -EINVAL;
++}
++
++static struct irq_chip mobiveil_msi_bottom_irq_chip = {
++	.name			= "Mobiveil MSI",
++	.irq_compose_msi_msg	= mobiveil_compose_msi_msg,
++	.irq_set_affinity	= mobiveil_msi_set_affinity,
++};
++
++static int mobiveil_irq_msi_domain_alloc(struct irq_domain *domain,
++		unsigned int virq, unsigned int nr_irqs, void *args)
++{
++	struct mobiveil_pcie *pcie = domain->host_data;
++	struct mobiveil_msi *msi = &pcie->msi;
++	unsigned long bit;
++
++	WARN_ON(nr_irqs != 1);
++	mutex_lock(&msi->lock);
++
++	bit = find_first_zero_bit(msi->msi_irq_in_use, msi->num_of_vectors);
++	if (bit >= msi->num_of_vectors) {
++		mutex_unlock(&msi->lock);
++		return -ENOSPC;
++	}
++
++	set_bit(bit, msi->msi_irq_in_use);
++
++	mutex_unlock(&msi->lock);
++
++	irq_domain_set_info(domain, virq, bit, &mobiveil_msi_bottom_irq_chip,
++				domain->host_data, handle_level_irq,
++				NULL, NULL);
++	return 0;
++}
++
++static void mobiveil_irq_msi_domain_free(struct irq_domain *domain,
++		unsigned int virq, unsigned int nr_irqs)
++{
++	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
++	struct mobiveil_pcie *pcie = irq_data_get_irq_chip_data(d);
++	struct mobiveil_msi *msi = &pcie->msi;
++
++	mutex_lock(&msi->lock);
++
++	if (!test_bit(d->hwirq, msi->msi_irq_in_use)) {
++		dev_err(&pcie->pdev->dev, "trying to free unused MSI#%lu\n",
++			d->hwirq);
++	} else {
++		__clear_bit(d->hwirq, msi->msi_irq_in_use);
++	}
++
++	mutex_unlock(&msi->lock);
++}
++static const struct irq_domain_ops msi_domain_ops = {
++	.alloc	= mobiveil_irq_msi_domain_alloc,
++	.free	= mobiveil_irq_msi_domain_free,
++};
++
++static int mobiveil_allocate_msi_domains(struct mobiveil_pcie *pcie)
++{
++	struct device *dev = &pcie->pdev->dev;
++	struct fwnode_handle *fwnode = of_node_to_fwnode(dev->of_node);
++	struct mobiveil_msi *msi = &pcie->msi;
++
++	mutex_init(&pcie->msi.lock);
++	msi->dev_domain = irq_domain_add_linear(NULL, msi->num_of_vectors,
++						&msi_domain_ops, pcie);
++	if (!msi->dev_domain) {
++		dev_err(dev, "failed to create IRQ domain\n");
++		return -ENOMEM;
++	}
++
++	msi->msi_domain = pci_msi_create_irq_domain(fwnode,
++				&mobiveil_msi_domain_info, msi->dev_domain);
++	if (!msi->msi_domain) {
++		dev_err(dev, "failed to create MSI domain\n");
++		irq_domain_remove(msi->dev_domain);
++		return -ENOMEM;
++	}
++	return 0;
++}
++
+ static int mobiveil_pcie_init_irq_domain(struct mobiveil_pcie *pcie)
+ {
+ 	struct device *dev = &pcie->pdev->dev;
+@@ -554,6 +747,11 @@ static int mobiveil_pcie_init_irq_domain(struct mobiveil_pcie *pcie)
+ 
+ 	raw_spin_lock_init(&pcie->intx_mask_lock);
+ 
++	/* setup MSI */
++	ret = mobiveil_allocate_msi_domains(pcie);
++	if (ret)
++		return ret;
++
+ 	return 0;
+ }
+ 
+-- 
+1.8.3.1
