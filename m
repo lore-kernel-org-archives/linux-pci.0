@@ -1,129 +1,77 @@
-Return-Path: <SRS0=Jy+Z=IJ=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=Jy+Z=IJ=broadcom.com=ray.jui@kernel.org>
-From: Ray Jui <ray.jui@broadcom.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Ray Jui <ray.jui@broadcom.com>
-Subject: [PATCH 1/2] PCI: iproc: Reject unconfigured physical functions from PAXC
-Date: Tue, 22 May 2018 10:05:08 -0700
-Message-Id: <1527008709-20786-2-git-send-email-ray.jui@broadcom.com>
-In-Reply-To: <1527008709-20786-1-git-send-email-ray.jui@broadcom.com>
-References: <1527008709-20786-1-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+To: Logan Gunthorpe <logang@deltatee.com>, Stephen Bates
+ <sbates@raithlin.com>, Jerome Glisse <jglisse@redhat.com>
+References: <20180423233046.21476-5-logang@deltatee.com>
+ <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+ <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+ <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+ <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+ <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+ <20180508133407.57a46902@w520.home>
+ <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+ <20180508141331.7cd737cb@w520.home>
+ <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508205005.GC15608@redhat.com>
+ <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
+ <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
+ <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Message-ID: <2fc61d29-9eb4-d168-a3e5-955c36e5d821@amd.com>
+Date: Thu, 10 May 2018 14:52:46 +0200
+MIME-Version: 1.0
+In-Reply-To: <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ Sagi Grimberg <sagi@grimberg.me>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PAXC is an emulated PCIe root complex internally in various Broadcom
-based SoCs. PAXC internally connects to the embedded network processor
-within these SoCs, with the embedeed network processor exposed as an
-endpoint device
-
-The number of physical functions from the embedded network processor
-that can be accessed depend on the firmware configuration.
-Unfortunately, due to an ASIC bug, unconfigured physical functions cannot
-be properly hidden from the root complex during enumerattion. As a
-result, config write access to these unconfigured physical functions
-during enumeration will cause a bus lock up on the embedded network
-processor
-
-Fortunately, these unconfigured physical functions contain a very
-specific, staled PCIe device ID 0x168e. By making use of this device ID,
-one is able to terminate the enumeration early in the vendor/device ID
-config read
-
-Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
----
- drivers/pci/host/pcie-iproc.c | 26 +++++++++++++++++++++++++-
- drivers/pci/host/pcie-iproc.h |  5 +++++
- 2 files changed, 30 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index b906d80..b1d8c60 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -529,6 +529,25 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
- 	if (size <= 2)
- 		*val = (data >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
- 
-+	/*
-+	 * For PAXC and PAXCv2, the total number of PFs that one can enumerate
-+	 * depends on the firmware configuration. Unfortunately, due to an ASIC
-+	 * bug, unconfigured PFs cannot be properly hidden from the root
-+	 * complex. As a result, write access to these PFs will cause bus lock
-+	 * up on the embedded processor
-+	 *
-+	 * Since all unconfigured PFs are left with an incorrect, staled device
-+	 * ID of 0x168e (PCI_DEVICE_ID_NX2_57810), we try to catch those access
-+	 * early here and reject them all
-+	 */
-+#define DEVICE_ID_MASK     0xffff0000
-+#define DEVICE_ID_SHIFT    16
-+	if (pcie->rej_unconfig_pf &&
-+	    (where & CFG_ADDR_REG_NUM_MASK) == PCI_VENDOR_ID)
-+		if ((*val & DEVICE_ID_MASK) ==
-+		    (PCI_DEVICE_ID_NX2_57810 << DEVICE_ID_SHIFT))
-+			return PCIBIOS_FUNC_NOT_SUPPORTED;
-+
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
-@@ -628,7 +647,7 @@ static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
- 	struct iproc_pcie *pcie = iproc_data(bus);
- 
- 	iproc_pcie_apb_err_disable(bus, true);
--	if (pcie->type == IPROC_PCIE_PAXB_V2)
-+	if (pcie->iproc_cfg_read)
- 		ret = iproc_pcie_config_read(bus, devfn, where, size, val);
- 	else
- 		ret = pci_generic_config_read32(bus, devfn, where, size, val);
-@@ -1283,6 +1302,7 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
- 		break;
- 	case IPROC_PCIE_PAXB:
- 		regs = iproc_pcie_reg_paxb;
-+		pcie->iproc_cfg_read = true;
- 		pcie->has_apb_err_disable = true;
- 		if (pcie->need_ob_cfg) {
- 			pcie->ob_map = paxb_ob_map;
-@@ -1305,10 +1325,14 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
- 	case IPROC_PCIE_PAXC:
- 		regs = iproc_pcie_reg_paxc;
- 		pcie->ep_is_internal = true;
-+		pcie->iproc_cfg_read = true;
-+		pcie->rej_unconfig_pf = true;
- 		break;
- 	case IPROC_PCIE_PAXC_V2:
- 		regs = iproc_pcie_reg_paxc_v2;
- 		pcie->ep_is_internal = true;
-+		pcie->iproc_cfg_read = true;
-+		pcie->rej_unconfig_pf = true;
- 		pcie->need_msi_steer = true;
- 		break;
- 	default:
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index 814b600..67081cb 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -58,6 +58,9 @@ struct iproc_msi;
-  * @phy: optional PHY device that controls the Serdes
-  * @map_irq: function callback to map interrupts
-  * @ep_is_internal: indicates an internal emulated endpoint device is connected
-+ * @iproc_cfg_read: indicates the iProc config read function should be used
-+ * @rej_unconfig_pf: indicates the root complex needs to detect and reject
-+ * enumeration against unconfigured physical functions emulated in the ASIC
-  * @has_apb_err_disable: indicates the controller can be configured to prevent
-  * unsupported request from being forwarded as an APB bus error
-  *
-@@ -84,6 +87,8 @@ struct iproc_pcie {
- 	struct phy *phy;
- 	int (*map_irq)(const struct pci_dev *, u8, u8);
- 	bool ep_is_internal;
-+	bool iproc_cfg_read;
-+	bool rej_unconfig_pf;
- 	bool has_apb_err_disable;
- 
- 	bool need_ob_cfg;
--- 
-2.1.4
+QW0gMDkuMDUuMjAxOCB1bSAxODo0NSBzY2hyaWViIExvZ2FuIEd1bnRob3JwZToKPgo+IE9uIDA5
+LzA1LzE4IDA3OjQwIEFNLCBDaHJpc3RpYW4gS8O2bmlnIHdyb3RlOgo+PiBUaGUga2V5IHRha2Vh
+d2F5IGlzIHRoYXQgd2hlbiBhbnkgZGV2aWNlIGhhcyBBVFMgZW5hYmxlZCB5b3UgY2FuJ3QKPj4g
+ZGlzYWJsZSBBQ1Mgd2l0aG91dCBicmVha2luZyBpdCAoZXZlbiBpZiB5b3UgdW5wbHVnIGFuZCBy
+ZXBsdWcgaXQpLgo+IEkgZG9uJ3QgZm9sbG93IGhvdyB5b3UgY2FtZSB0byB0aGlzIGNvbmNsdXNp
+b24uLi4KPiAgIFRoZSBBQ1MgYml0cyB3ZSdkIGJlIHR1cm5pbmcgb2ZmIGFyZSB0aGUgb25lcyB0
+aGF0IGZvcmNlIFRMUHMgYWRkcmVzc2VkCj4gYXQgYSBwZWVyIHRvIGdvIHRvIHRoZSBSQy4gSG93
+ZXZlciwgQVRTIHRyYW5zbGF0aW9uIHBhY2tldHMgd2lsbCBiZQo+IGFkZHJlc3NlZCB0byBhbiB1
+bnRyYW5zbGF0ZWQgYWRkcmVzcyB3aGljaCBhIHN3aXRjaCB3aWxsIG5vdCBpZGVudGlmeSBhcwo+
+IGEgcGVlciBhZGRyZXNzIHNvIGl0IHNob3VsZCBzZW5kIHVwc3RyZWFtIHJlZ2FyZGxlc3MgdGhl
+IHN0YXRlIG9mIHRoZQo+IEFDUyBSZXEvQ29tcCByZWRpcmVjdCBiaXRzLgoKV2h5IHdvdWxkIGEg
+c3dpdGNoIG5vdCBpZGVudGlmeSB0aGF0IGFzIGEgcGVlciBhZGRyZXNzPyBXZSB1c2UgdGhlIFBB
+U0lEIAp0b2dldGhlciB3aXRoIEFUUyB0byBpZGVudGlmeSB0aGUgYWRkcmVzcyBzcGFjZSB3aGlj
+aCBhIHRyYW5zYWN0aW9uIApzaG91bGQgdXNlLgoKSWYgSSdtIG5vdCBjb21wbGV0ZWx5IG1pc3Rh
+a2VuIHdoZW4geW91IGRpc2FibGUgQUNTIGl0IGlzIHBlcmZlY3RseSAKcG9zc2libGUgdGhhdCBh
+IGJyaWRnZSBpZGVudGlmaWVzIGEgdHJhbnNhY3Rpb24gYXMgYmVsb25naW5nIHRvIGEgcGVlciAK
+YWRkcmVzcywgd2hpY2ggaXNuJ3Qgd2hhdCB3ZSB3YW50IGhlcmUuCgpDaHJpc3RpYW4uCgo+Cj4g
+T25jZSB0aGUgdHJhbnNsYXRpb24gY29tZXMgYmFjaywgdGhlIEFUUyBlbmRwb2ludCBzaG91bGQg
+c2VuZCB0aGUgVExQIHRvCj4gdGhlIHBlZXIgYWRkcmVzcyB3aXRoIHRoZSBBVCBwYWNrZXQgdHlw
+ZSBhbmQgaXQgd2lsbCBiZSBkaXJlY3RlZCB0byB0aGUKPiBwZWVyIHByb3ZpZGVkIHRoZSBEaXJl
+Y3QgVHJhbnNsYXRlZCBiaXQgaXMgc2V0IChvciB0aGUgcmVkaXJlY3QgYml0cyBhcmUKPiB1bnNl
+dCkuCj4KPiBJIGNhbid0IHNlZSBob3cgdHVybmluZyBvZmYgdGhlIFJlcS9Db21wIHJlZGlyZWN0
+IGJpdHMgY291bGQgYnJlYWsKPiBhbnl0aGluZyBleGNlcHQgZm9yIHRoZSBpc29sYXRpb24gdGhl
+eSBwcm92aWRlLgo+Cj4gTG9nYW4KCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwpMaW51eC1udm1lIG1haWxpbmcgbGlzdApMaW51eC1udm1lQGxpc3RzLmlu
+ZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9s
+aW51eC1udm1lCg==
