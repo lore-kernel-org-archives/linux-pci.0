@@ -1,91 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47160 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751907AbeEQPEO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2018 11:04:14 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 17 May 2018 20:34:13 +0530
-From: poza@codeaurora.org
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCHv2 7/7] PCI/DPC: Print AER status in DPC event handling
-In-Reply-To: <12ab6f9ef1ab79fd09ff7ec583e1d2da@codeaurora.org>
-References: <20180402162203.3370-1-keith.busch@intel.com>
- <20180402162203.3370-8-keith.busch@intel.com>
- <12ab6f9ef1ab79fd09ff7ec583e1d2da@codeaurora.org>
-Message-ID: <f9bb09d1d73b19231017a42258eef340@codeaurora.org>
+Received: from mga14.intel.com ([192.55.52.115]:41617 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757401AbeEJS2x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 May 2018 14:28:53 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v6 11/12] PCI: Improve "partially hidden behind bridge" log message
+Date: Thu, 10 May 2018 21:28:43 +0300
+Message-Id: <20180510182844.77349-12-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
+References: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-17 20:32, poza@codeaurora.org wrote:
-> On 2018-04-02 21:52, Keith Busch wrote:
->> A DPC enabled device suppresses ERR_(NON)FATAL messages, preventing 
->> the
->> AER handler from reporting error details. If the DPC trigger reason 
->> says
->> the downstream port detected the error, this patch has the DPC driver
->> collect the AER uncorrectable status for logging, then clears the 
->> status.
->> 
->> Signed-off-by: Keith Busch <keith.busch@intel.com>
->> ---
->>  drivers/pci/pcie/pcie-dpc.c | 7 ++++++-
->>  1 file changed, 6 insertions(+), 1 deletion(-)
->> 
->> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
->> index e12837ee4f1c..76f963a5089e 100644
->> --- a/drivers/pci/pcie/pcie-dpc.c
->> +++ b/drivers/pci/pcie/pcie-dpc.c
->> @@ -85,6 +85,7 @@ static void dpc_wait_link_inactive(struct dpc_dev 
->> *dpc)
->> 
->>  static void dpc_work(struct work_struct *work)
->>  {
->> +	struct aer_err_info info;
->>  	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->>  	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
->>  	struct pci_bus *parent = pdev->subordinate;
->> @@ -108,8 +109,12 @@ static void dpc_work(struct work_struct *work)
->>  		 (ext_reason == 1) ? "software trigger" :
->>  				     "reserved error");
->> 
->> -	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
->> +	if (dpc->rp_extensions && reason == 3 && ext_reason == 0) {
->>  		pio_status = dpc_process_rp_pio_error(dpc);
->> +	} else if (reason == 0 && aer_get_device_error_info(pdev, &info)) {
->> +		aer_print_error(pdev, &info);
->> +		pci_cleanup_aer_uncorrect_error_status(pdev);
->> +	}
->> 
->>  	pci_lock_rescan_remove();
->>  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-> 
-> 
-> I am not sure if this series is in pursuit. but was wondering why do
-> we need to clear aer status in DPC (when DPC is triggered)?
-> because
-> 
-> 6.2.10 for Downstream Port Containment:
-> 
->   When DPC is triggered due to receipt of an uncorrectable error 
-> Message,
->   the Requester ID from the Message is recorded in the DPC Error
->   Source ID register and that Message is discarded and not forwarded
->   Upstream. When DPC is triggered by an unmasked uncorrectable error,
->   that error will not be signaled with an uncorrectable error Message,
->   even if otherwise enabled.
-> 
-> so when DPC is active, the msg is discarded and not forwarded to 
-> upstream.
-> which means that we should find AER status set in RP or Switch.
-> 
-> Regards,
-> Oza.
+There is a sanity checker in the end of pci_scan_child_bus_extend() that
+tries to detect badly configured bridges. For example given the below
+topology:
 
-Correction: which means that we should *not* find AER status set in RP 
-or Switch.
+  +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
+                                  +-01.0-[04-39]--
+                                  \-02.0-[3a]----00.0
+
+The sanity checker notices this and logs following messages:
+
+  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
+  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
+
+This is not really helpful to users and the information above is not
+even correct (0000:02 is a bus not bridge). Make this a bit more
+understandable by changing the sanity checker to log following message
+in place of the above two messages:
+
+  pci 0000:02:02.0: devices behind bridge are unusable, because [bus 3a] cannot be assigned for them
+
+While there update the comment on top of the sanity checker block to
+make it clear that it is not only restricted to CardBus.
+
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/probe.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index a0c48aa1c42f..10084990fbc3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1191,20 +1191,16 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+ 		(is_cardbus ? "PCI CardBus %04x:%02x" : "PCI Bus %04x:%02x"),
+ 		pci_domain_nr(bus), child->number);
+ 
+-	/* Has only triggered on CardBus, fixup is in yenta_socket */
++	/* Check that all devices are accessible */
+ 	while (bus->parent) {
+ 		if ((child->busn_res.end > bus->busn_res.end) ||
+ 		    (child->number > bus->busn_res.end) ||
+ 		    (child->number < bus->number) ||
+ 		    (child->busn_res.end < bus->number)) {
+-			dev_info(&child->dev, "%pR %s hidden behind%s bridge %s %pR\n",
+-				&child->busn_res,
+-				(bus->number > child->busn_res.end &&
+-				 bus->busn_res.end < child->number) ?
+-					"wholly" : "partially",
+-				bus->self->transparent ? " transparent" : "",
+-				dev_name(&bus->dev),
+-				&bus->busn_res);
++			dev_info(&dev->dev,
++				 "devices behind bridge are unusable, because %pR cannot be assigned for them\n",
++				 &child->busn_res);
++			break;
+ 		}
+ 		bus = bus->parent;
+ 	}
+-- 
+2.17.0
