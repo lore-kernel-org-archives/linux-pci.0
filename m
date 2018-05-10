@@ -1,162 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 29/40] iommu/arm-smmu-v3: Add support for Hardware Translation Table Update
-Date: Fri, 11 May 2018 20:06:30 +0100
-Message-Id: <20180511190641.23008-30-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:11578 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757305AbeEJS2x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 May 2018 14:28:53 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v6 10/12] PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
+Date: Thu, 10 May 2018 21:28:42 +0300
+Message-Id: <20180510182844.77349-11-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
+References: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the SMMU supports it and the kernel was built with HTTU support, enable
-hardware update of access and dirty flags. This is essential for shared
-page tables, to reduce the number of access faults on the fault queue.
+It is not immediately clear what the two functions actually return so
+add kernel-doc comment explaining it a bit better.
 
-We can enable HTTU even if CPUs don't support it, because the kernel
-always checks for HW dirty bit and updates the PTE flags atomically.
-
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/iommu/arm-smmu-v3-context.c | 16 ++++++++++++++--
- drivers/iommu/arm-smmu-v3.c         | 12 ++++++++++++
- drivers/iommu/iommu-pasid-table.h   |  4 ++++
- 3 files changed, 30 insertions(+), 2 deletions(-)
+ drivers/pci/probe.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/iommu/arm-smmu-v3-context.c b/drivers/iommu/arm-smmu-v3-context.c
-index 0e12f6804e16..bdc9bfd1f35d 100644
---- a/drivers/iommu/arm-smmu-v3-context.c
-+++ b/drivers/iommu/arm-smmu-v3-context.c
-@@ -52,6 +52,11 @@
- #define CTXDESC_CD_0_TCR_TBI0		(1ULL << 38)
- #define ARM64_TCR_TBI0			(1ULL << 37)
- 
-+#define CTXDESC_CD_0_TCR_HA		(1UL << 43)
-+#define ARM64_TCR_HA			(1ULL << 39)
-+#define CTXDESC_CD_0_TCR_HD		(1UL << 42)
-+#define ARM64_TCR_HD			(1ULL << 40)
-+
- #define CTXDESC_CD_0_AA64		(1UL << 41)
- #define CTXDESC_CD_0_S			(1UL << 44)
- #define CTXDESC_CD_0_R			(1UL << 45)
-@@ -182,7 +187,7 @@ static __le64 *arm_smmu_get_cd_ptr(struct arm_smmu_cd_tables *tbl, u32 ssid)
- 	return l1_desc->ptr + idx * CTXDESC_CD_DWORDS;
- }
- 
--static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
-+static u64 arm_smmu_cpu_tcr_to_cd(struct arm_smmu_context_cfg *cfg, u64 tcr)
- {
- 	u64 val = 0;
- 
-@@ -197,6 +202,12 @@ static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
- 	val |= ARM_SMMU_TCR2CD(tcr, IPS);
- 	val |= ARM_SMMU_TCR2CD(tcr, TBI0);
- 
-+	if (cfg->hw_access)
-+		val |= ARM_SMMU_TCR2CD(tcr, HA);
-+
-+	if (cfg->hw_dirty)
-+		val |= ARM_SMMU_TCR2CD(tcr, HD);
-+
- 	return val;
- }
- 
-@@ -250,7 +261,7 @@ static int __arm_smmu_write_ctx_desc(struct arm_smmu_cd_tables *tbl, int ssid,
- 		iommu_pasid_flush(&tbl->pasid, ssid, true);
- 
- 
--		val = arm_smmu_cpu_tcr_to_cd(cd->tcr) |
-+		val = arm_smmu_cpu_tcr_to_cd(cfg, cd->tcr) |
- #ifdef __BIG_ENDIAN
- 		      CTXDESC_CD_0_ENDI |
- #endif
-@@ -455,6 +466,7 @@ arm_smmu_alloc_shared_cd(struct iommu_pasid_table_ops *ops, struct mm_struct *mm
- 	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
- 	par = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
- 	tcr |= par << ARM_LPAE_TCR_IPS_SHIFT;
-+	tcr |= TCR_HA | TCR_HD;
- 
- 	cd->ttbr	= virt_to_phys(mm->pgd);
- 	cd->tcr		= tcr;
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index c2c96025ac3b..7c839d305d97 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -66,6 +66,8 @@
- #define IDR0_ASID16			(1 << 12)
- #define IDR0_ATS			(1 << 10)
- #define IDR0_HYP			(1 << 9)
-+#define IDR0_HD				(1 << 7)
-+#define IDR0_HA				(1 << 6)
- #define IDR0_BTM			(1 << 5)
- #define IDR0_COHACC			(1 << 4)
- #define IDR0_TTF			GENMASK(3, 2)
-@@ -528,6 +530,8 @@ struct arm_smmu_device {
- #define ARM_SMMU_FEAT_E2H		(1 << 15)
- #define ARM_SMMU_FEAT_BTM		(1 << 16)
- #define ARM_SMMU_FEAT_SVA		(1 << 17)
-+#define ARM_SMMU_FEAT_HA		(1 << 18)
-+#define ARM_SMMU_FEAT_HD		(1 << 19)
- 	u32				features;
- 
- #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
-@@ -1567,6 +1571,8 @@ static int arm_smmu_domain_finalise_s1(struct arm_smmu_domain *smmu_domain,
- 		.arm_smmu = {
- 			.stall		= !!(smmu->features & ARM_SMMU_FEAT_STALL_FORCE),
- 			.asid_bits	= smmu->asid_bits,
-+			.hw_access	= !!(smmu->features & ARM_SMMU_FEAT_HA),
-+			.hw_dirty	= !!(smmu->features & ARM_SMMU_FEAT_HD),
- 		},
- 	};
- 
-@@ -2818,6 +2824,12 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- 			smmu->features |= ARM_SMMU_FEAT_E2H;
- 	}
- 
-+	if (reg & (IDR0_HA | IDR0_HD)) {
-+		smmu->features |= ARM_SMMU_FEAT_HA;
-+		if (reg & IDR0_HD)
-+			smmu->features |= ARM_SMMU_FEAT_HD;
-+	}
-+
- 	/*
- 	 * If the CPU is using VHE, but the SMMU doesn't support it, the SMMU
- 	 * will create TLB entries for NH-EL1 world and will miss the
-diff --git a/drivers/iommu/iommu-pasid-table.h b/drivers/iommu/iommu-pasid-table.h
-index b84709e297bc..a7243579a4cb 100644
---- a/drivers/iommu/iommu-pasid-table.h
-+++ b/drivers/iommu/iommu-pasid-table.h
-@@ -78,12 +78,16 @@ struct iommu_pasid_sync_ops {
-  * SMMU properties:
-  * @stall: devices attached to the domain are allowed to stall.
-  * @asid_bits: number of ASID bits supported by the SMMU
-+ * @hw_dirty: hardware may update dirty flag
-+ * @hw_access: hardware may update access flag
-  *
-  * @s1fmt: PASID table format, chosen by the allocator.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cd28ab122748..a0c48aa1c42f 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -999,6 +999,8 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+  * already configured by the BIOS and after we are done with all of
+  * them, we proceed to assigning numbers to the remaining buses in
+  * order to avoid overlaps between old and new bus numbers.
++ *
++ * Return: New subordinate number covering all buses behind this bridge.
   */
- struct arm_smmu_context_cfg {
- 	u8				stall:1;
- 	u8				asid_bits;
-+	u8				hw_dirty:1;
-+	u8				hw_access:1;
- 
- #define ARM_SMMU_S1FMT_LINEAR		0x0
- #define ARM_SMMU_S1FMT_4K_L2		0x1
+ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+ 				  int max, unsigned int available_buses,
+@@ -1231,6 +1233,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+  * already configured by the BIOS and after we are done with all of
+  * them, we proceed to assigning numbers to the remaining buses in
+  * order to avoid overlaps between old and new bus numbers.
++ *
++ * Return: New subordinate number covering all buses behind this bridge.
+  */
+ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ {
 -- 
 2.17.0
-
