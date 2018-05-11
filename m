@@ -1,162 +1,282 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 3 May 2018 18:01:08 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v5 3/9] PCI: pciehp: Clear Presence Detect and Data Link
- Layer Status Changed on resume
-Message-ID: <20180503230108.GD15790@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
- <20180416103453.46232-4-mika.westerberg@linux.intel.com>
- <20180501215211.GD11698@bhelgaas-glaptop.roam.corp.google.com>
- <20180502115509.GF2355@lahna.fi.intel.com>
- <20180502134148.GF11698@bhelgaas-glaptop.roam.corp.google.com>
- <20180503104250.GJ2355@lahna.fi.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180503104250.GJ2355@lahna.fi.intel.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-mm@kvack.org
+Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
+        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
+        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
+        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
+        baolu.lu@linux.intel.com, robdclark@gmail.com,
+        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
+Subject: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
+Date: Fri, 11 May 2018 20:06:02 +0100
+Message-Id: <20180511190641.23008-2-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 03, 2018 at 01:42:50PM +0300, Mika Westerberg wrote:
-> On Wed, May 02, 2018 at 08:41:48AM -0500, Bjorn Helgaas wrote:
-> > On Wed, May 02, 2018 at 02:55:09PM +0300, Mika Westerberg wrote:
-> > > On Tue, May 01, 2018 at 04:52:11PM -0500, Bjorn Helgaas wrote:
-> > > > Hi Mika,
-> > > > 
-> > > > On Mon, Apr 16, 2018 at 01:34:47PM +0300, Mika Westerberg wrote:
-> > > > > After suspend/resume cycle the Presence Detect or Data Link Layer Status
-> > > > > Changed bits might be set and if we don't clear them those events will
-> > > > > not fire anymore and nothing happens for instance when a device is now
-> > > > > hot-unplugged.
-> > > > > 
-> > > > > Fix this by clearing those bits in a newly introduced function
-> > > > > pcie_reenable_notification(). This should be fine because immediately
-> > > > > after we check if the adapter is still present by reading directly from
-> > > > > the status register.
-> > > > > 
-> > > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > > > Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > > Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > > > > Cc: stable@vger.kernel.org
-> > > > 
-> > > > I want to understand why we need to handle this differently between
-> > > > the boot-time probe path and the resume path.
-> > > > 
-> > > > This patch clears PCI_EXP_SLTSTA_PDC and PCI_EXP_SLTSTA_DLLSC in the
-> > > > resume path:
-> > > > 
-> > > >   pciehp_resume
-> > > >     pcie_reenable_notification
-> > > >       # clear PDC DLLSC
-> > > >       pcie_enable_notification
-> > > >         # set DLLSCE ABPE/PDCE HPIE CCIE
-> > > >     pciehp_get_adapter_status
-> > > >       # read PCI_EXP_SLTSTA
-> > > > 
-> > > > We used to clear PCI_EXP_SLTSTA_PDC and PCI_EXP_SLTSTA_DLLSC in the
-> > > > probe path:
-> > > > 
-> > > >   pciehp_probe
-> > > >     pcie_init
-> > > >       # clear PDC ABP PFD MRLSC CC DLSCC
-> > > >     pcie_init_notification
-> > > >       pciehp_request_irq
-> > > >       pcie_enable_notification
-> > > >         # set DLLSCE ABPE/PDCE HPIE CCIE
-> > > >     pciehp_get_adapter_status
-> > > >       # read PCI_EXP_SLTSTA
-> > > >     pciehp_get_power_status
-> > > > 
-> > > > db63d40017a5 ("PCI: pciehp: Do not clear Presence Detect Changed
-> > > > during initialization") changed the probe path so we don't clear
-> > > > PCI_EXP_SLTSTA_PDC there anymore.  This was so we wouldn't miss a PDC
-> > > > interrupt that happened before probe.
-> > > > 
-> > > > Why can't we handle probe and resume the same way?  They look quite
-> > > > similar.
-> > > > 
-> > > > You say this patch should be fine because we read SLTSTA immediately
-> > > > after clearing PDC and DLLSC.  But we also read SLTSTA in the probe
-> > > > path, so I'm not sure why we need to clear PDC and DLLSC for resume
-> > > > but not for probe.
-> > > 
-> > > On probe path we read status but here is what it does:
-> > > 
-> > > 	pcie_init_notification()
-> > > 	...
-> > >         pciehp_get_adapter_status(slot, &occupied);
-> > > 	...
-> > >         if (occupied && pciehp_force) {
-> > >                 mutex_lock(&slot->hotplug_lock);
-> > >                 pciehp_enable_slot(slot);
-> > >                 mutex_unlock(&slot->hotplug_lock);
-> > >         }
-> > > 
-> > > If you don't have "pciehp.pciehp_force=1" in your kernel command line
-> > > you miss the fact that the card is already there. Obviously you can't
-> > > expect ordinary users to pass random command line options to get their
-> > > already connected device detected by Linux.
-> > 
-> > Yeah, definitely not, that's really ugly.
-> > 
-> > > So the reason why in probe we don't clear PDC is that once the interrupt
-> > > is unmasked, you get an interrupt and the card gets detected properly.
-> > > 
-> > > On resume path we already check whether the card is there or not and
-> > > handle it accordingly. However, if we don't clear PDC and DLLSC bits we
-> > > will never get hotplug interrupt again.
-> > > 
-> > > Now, you ask why can't we handle probe and resume the same way? I think
-> > > we can if we could get rid of that pciehp_force thing but it seems to
-> > > fix an issue on some HP hardware. See 9e5858244926 ("pciehp: don't
-> > > enable slot unless forced").
-> > 
-> > Ugh.  That's really ancient history.  I would *love* to get rid of
-> > pciehp.pciehp_force.  There's not much detail in 9e5858244926, but
-> > maybe with some digging we can figure out something.
-> > 
-> > I'd rather do the digging now and try to simplify this area instead of
-> > adding another tweak.
-> 
-> I did some digging but unfortunately it is still not clear what issue
-> 9e5858244926 is fixing. There is no bugzilla link and I was not able to
-> find any discussion around this either.
-> 
-> However, I think currently pciehp_force=1 does not actually do what it
-> was intended to do. Reason is that portdrv core already asks BIOS
-> whether native PCIe is allowed and if not, it does not set
-> PCIE_PORT_SERVICE_HP and that prevents the whole device to be created.
-> So even if you specify pciehp_force=1 in the command line, it does not
-> bypass the BIOS setting.
-> 
-> Furthermore we have had similar check in pciehp_resume() but it was
-> removed with 87683e22c646 ("PCI: pciehp: Always implement resume,
-> regardless of pciehp_force param") because it broke resume.
-> 
-> If I understand correctly you want me to change the driver so that I
-> remove pciehp_force check from probe. Then I can revert db63d40017a5
-> ("PCI: pciehp: Do not clear Presence Detect Changed during
-> initialization") and that makes both probe path and resume path similar
-> (when this patch is included). Is that correct? I can do that in the
-> next version of the patch series.
+Shared Virtual Addressing (SVA) provides a way for device drivers to bind
+process address spaces to devices. This requires the IOMMU to support page
+table format and features compatible with the CPUs, and usually requires
+the system to support I/O Page Faults (IOPF) and Process Address Space ID
+(PASID). When all of these are available, DMA can access virtual addresses
+of a process. A PASID is allocated for each process, and the device driver
+programs it into the device in an implementation-specific way.
 
-If you think we can remove pciehp_force, that would be awesome.  This
-should be a separate patch all by itself, of course, and include your
-reasoning above.
+Add a new API for sharing process page tables with devices. Introduce two
+IOMMU operations, sva_device_init() and sva_device_shutdown(), that
+prepare the IOMMU driver for SVA. For example allocate PASID tables and
+fault queues. Subsequent patches will implement the bind() and unbind()
+operations.
 
-I would also love to revert db63d40017a5 ("PCI: pciehp: Do not clear
-Presence Detect Changed during initialization") because I'm not
-convinced that trying to handle interrupts that happened before
-binding the driver makes sense.  It *would* make sense to me to enable
-interrupts, clear the "changed" status bits so future changes will
-cause interrupts, and check the "state" status bits and act on them.
+Support for I/O Page Faults will be added in a later patch using a new
+feature bit (IOMMU_SVA_FEAT_IOPF). With the current API users must pin
+down all shared mappings. Other feature bits that may be added in the
+future are IOMMU_SVA_FEAT_PRIVATE, to support private PASID address
+spaces, and IOMMU_SVA_FEAT_NO_PASID, to bind the whole device address
+space to a process.
 
-Bjorn
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+
+---
+v1->v2:
+* Add sva_param structure to iommu_param
+* CONFIG option is only selectable by IOMMU drivers
+---
+ drivers/iommu/Kconfig     |   4 ++
+ drivers/iommu/Makefile    |   1 +
+ drivers/iommu/iommu-sva.c | 110 ++++++++++++++++++++++++++++++++++++++
+ include/linux/iommu.h     |  32 +++++++++++
+ 4 files changed, 147 insertions(+)
+ create mode 100644 drivers/iommu/iommu-sva.c
+
+diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+index 7564237f788d..cca8e06903c7 100644
+--- a/drivers/iommu/Kconfig
++++ b/drivers/iommu/Kconfig
+@@ -74,6 +74,10 @@ config IOMMU_DMA
+ 	select IOMMU_IOVA
+ 	select NEED_SG_DMA_LENGTH
+ 
++config IOMMU_SVA
++	bool
++	select IOMMU_API
++
+ config FSL_PAMU
+ 	bool "Freescale IOMMU support"
+ 	depends on PCI
+diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
+index 1fb695854809..1dbcc89ebe4c 100644
+--- a/drivers/iommu/Makefile
++++ b/drivers/iommu/Makefile
+@@ -3,6 +3,7 @@ obj-$(CONFIG_IOMMU_API) += iommu.o
+ obj-$(CONFIG_IOMMU_API) += iommu-traces.o
+ obj-$(CONFIG_IOMMU_API) += iommu-sysfs.o
+ obj-$(CONFIG_IOMMU_DMA) += dma-iommu.o
++obj-$(CONFIG_IOMMU_SVA) += iommu-sva.o
+ obj-$(CONFIG_IOMMU_IO_PGTABLE) += io-pgtable.o
+ obj-$(CONFIG_IOMMU_IO_PGTABLE_ARMV7S) += io-pgtable-arm-v7s.o
+ obj-$(CONFIG_IOMMU_IO_PGTABLE_LPAE) += io-pgtable-arm.o
+diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
+new file mode 100644
+index 000000000000..8b4afb7c63ae
+--- /dev/null
++++ b/drivers/iommu/iommu-sva.c
+@@ -0,0 +1,110 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Manage PASIDs and bind process address spaces to devices.
++ *
++ * Copyright (C) 2018 ARM Ltd.
++ */
++
++#include <linux/iommu.h>
++#include <linux/slab.h>
++
++/**
++ * iommu_sva_device_init() - Initialize Shared Virtual Addressing for a device
++ * @dev: the device
++ * @features: bitmask of features that need to be initialized
++ * @max_pasid: max PASID value supported by the device
++ *
++ * Users of the bind()/unbind() API must call this function to initialize all
++ * features required for SVA.
++ *
++ * The device must support multiple address spaces (e.g. PCI PASID). By default
++ * the PASID allocated during bind() is limited by the IOMMU capacity, and by
++ * the device PASID width defined in the PCI capability or in the firmware
++ * description. Setting @max_pasid to a non-zero value smaller than this limit
++ * overrides it.
++ *
++ * The device should not be performing any DMA while this function is running,
++ * otherwise the behavior is undefined.
++ *
++ * Return 0 if initialization succeeded, or an error.
++ */
++int iommu_sva_device_init(struct device *dev, unsigned long features,
++			  unsigned int max_pasid)
++{
++	int ret;
++	struct iommu_sva_param *param;
++	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
++
++	if (!domain || !domain->ops->sva_device_init)
++		return -ENODEV;
++
++	if (features)
++		return -EINVAL;
++
++	param = kzalloc(sizeof(*param), GFP_KERNEL);
++	if (!param)
++		return -ENOMEM;
++
++	param->features		= features;
++	param->max_pasid	= max_pasid;
++
++	/*
++	 * IOMMU driver updates the limits depending on the IOMMU and device
++	 * capabilities.
++	 */
++	ret = domain->ops->sva_device_init(dev, param);
++	if (ret)
++		goto err_free_param;
++
++	mutex_lock(&dev->iommu_param->lock);
++	if (dev->iommu_param->sva_param)
++		ret = -EEXIST;
++	else
++		dev->iommu_param->sva_param = param;
++	mutex_unlock(&dev->iommu_param->lock);
++	if (ret)
++		goto err_device_shutdown;
++
++	return 0;
++
++err_device_shutdown:
++	if (domain->ops->sva_device_shutdown)
++		domain->ops->sva_device_shutdown(dev, param);
++
++err_free_param:
++	kfree(param);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(iommu_sva_device_init);
++
++/**
++ * iommu_sva_device_shutdown() - Shutdown Shared Virtual Addressing for a device
++ * @dev: the device
++ *
++ * Disable SVA. Device driver should ensure that the device isn't performing any
++ * DMA while this function is running.
++ */
++int iommu_sva_device_shutdown(struct device *dev)
++{
++	struct iommu_sva_param *param;
++	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
++
++	if (!domain)
++		return -ENODEV;
++
++	mutex_lock(&dev->iommu_param->lock);
++	param = dev->iommu_param->sva_param;
++	dev->iommu_param->sva_param = NULL;
++	mutex_unlock(&dev->iommu_param->lock);
++	if (!param)
++		return -ENODEV;
++
++	if (domain->ops->sva_device_shutdown)
++		domain->ops->sva_device_shutdown(dev, param);
++
++	kfree(param);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iommu_sva_device_shutdown);
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 0933f726d2e6..2efe7738bedb 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -212,6 +212,12 @@ struct page_response_msg {
+ 	u64 private_data;
+ };
+ 
++struct iommu_sva_param {
++	unsigned long features;
++	unsigned int min_pasid;
++	unsigned int max_pasid;
++};
++
+ /**
+  * struct iommu_ops - iommu ops and capabilities
+  * @capable: check capability
+@@ -219,6 +225,8 @@ struct page_response_msg {
+  * @domain_free: free iommu domain
+  * @attach_dev: attach device to an iommu domain
+  * @detach_dev: detach device from an iommu domain
++ * @sva_device_init: initialize Shared Virtual Adressing for a device
++ * @sva_device_shutdown: shutdown Shared Virtual Adressing for a device
+  * @map: map a physically contiguous memory region to an iommu domain
+  * @unmap: unmap a physically contiguous memory region from an iommu domain
+  * @map_sg: map a scatter-gather list of physically contiguous memory chunks
+@@ -256,6 +264,10 @@ struct iommu_ops {
+ 
+ 	int (*attach_dev)(struct iommu_domain *domain, struct device *dev);
+ 	void (*detach_dev)(struct iommu_domain *domain, struct device *dev);
++	int (*sva_device_init)(struct device *dev,
++			       struct iommu_sva_param *param);
++	void (*sva_device_shutdown)(struct device *dev,
++				    struct iommu_sva_param *param);
+ 	int (*map)(struct iommu_domain *domain, unsigned long iova,
+ 		   phys_addr_t paddr, size_t size, int prot);
+ 	size_t (*unmap)(struct iommu_domain *domain, unsigned long iova,
+@@ -413,6 +425,7 @@ struct iommu_fault_param {
+  * struct iommu_param - collection of per-device IOMMU data
+  *
+  * @fault_param: IOMMU detected device fault reporting data
++ * @sva_param: SVA parameters
+  *
+  * TODO: migrate other per device data pointers under iommu_dev_data, e.g.
+  *	struct iommu_group	*iommu_group;
+@@ -421,6 +434,7 @@ struct iommu_fault_param {
+ struct iommu_param {
+ 	struct mutex lock;
+ 	struct iommu_fault_param *fault_param;
++	struct iommu_sva_param *sva_param;
+ };
+ 
+ int  iommu_device_register(struct iommu_device *iommu);
+@@ -920,4 +934,22 @@ static inline int iommu_sva_invalidate(struct iommu_domain *domain,
+ 
+ #endif /* CONFIG_IOMMU_API */
+ 
++#ifdef CONFIG_IOMMU_SVA
++extern int iommu_sva_device_init(struct device *dev, unsigned long features,
++				 unsigned int max_pasid);
++extern int iommu_sva_device_shutdown(struct device *dev);
++#else /* CONFIG_IOMMU_SVA */
++static inline int iommu_sva_device_init(struct device *dev,
++					unsigned long features,
++					unsigned int max_pasid)
++{
++	return -ENODEV;
++}
++
++static inline int iommu_sva_device_shutdown(struct device *dev)
++{
++	return -ENODEV;
++}
++#endif /* CONFIG_IOMMU_SVA */
++
+ #endif /* __LINUX_IOMMU_H */
+-- 
+2.17.0
+
