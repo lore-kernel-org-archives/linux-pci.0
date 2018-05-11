@@ -1,188 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:39517 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753299AbeEVW2V (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 18:28:21 -0400
-Received: by mail-pl0-f67.google.com with SMTP id c19-v6so11734827pls.6
-        for <linux-pci@vger.kernel.org>; Tue, 22 May 2018 15:28:21 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rajat Jain <rajatja@google.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Kyle McMartin <jkkm@fb.com>
-Cc: rajatxjain@gmail.com
-Subject: [PATCH 2/5] PCI/AER: Add sysfs stats for AER capable devices
-Date: Tue, 22 May 2018 15:28:02 -0700
-Message-Id: <20180522222805.80314-3-rajatja@google.com>
-In-Reply-To: <20180522222805.80314-1-rajatja@google.com>
-References: <20180522222805.80314-1-rajatja@google.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:46160 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751489AbeEKTIV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 May 2018 15:08:21 -0400
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-mm@kvack.org
+Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
+        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
+        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
+        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
+        baolu.lu@linux.intel.com, robdclark@gmail.com,
+        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
+Subject: [PATCH v2 09/40] iommu/sva: Register page fault handler
+Date: Fri, 11 May 2018 20:06:10 +0100
+Message-Id: <20180511190641.23008-10-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the following AER sysfs stats to represent the counters for each
-kind of error as seen by the device:
+Let users call iommu_sva_device_init() with the IOMMU_SVA_FEAT_IOPF flag,
+that enables the I/O Page Fault queue. The IOMMU driver checks is the
+device supports a form of page fault, in which case they add the device to
+a fault queue. If the device doesn't support page faults, the IOMMU driver
+aborts iommu_sva_device_init().
 
-dev_total_cor_errs
-dev_total_fatal_errs
-dev_total_nonfatal_errs
+The fault queue must be flushed before any io_mm is freed, to make sure
+that its PASID isn't used in any fault queue, and can be reallocated.
+Add iopf_queue_flush() calls in a few strategic locations.
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+
 ---
- drivers/pci/pci-sysfs.c                |  3 ++
- drivers/pci/pci.h                      |  4 +-
- drivers/pci/pcie/aer/aerdrv.h          |  1 +
- drivers/pci/pcie/aer/aerdrv_errprint.c |  1 +
- drivers/pci/pcie/aer/aerdrv_stats.c    | 72 ++++++++++++++++++++++++++
- 5 files changed, 80 insertions(+), 1 deletion(-)
+v1->v2: new
+---
+ drivers/iommu/iommu-sva.c | 36 ++++++++++++++++++++++++++++++++----
+ drivers/iommu/iommu.c     |  6 +++---
+ include/linux/iommu.h     |  2 ++
+ 3 files changed, 37 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 366d93af051d..730f985a3dc9 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1743,6 +1743,9 @@ static const struct attribute_group *pci_dev_attr_groups[] = {
- #endif
- 	&pci_bridge_attr_group,
- 	&pcie_dev_attr_group,
-+#ifdef CONFIG_PCIEAER
-+	&aer_stats_attr_group,
-+#endif
- 	NULL,
- };
+diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
+index 5abe0f0b445c..e98b994c15f1 100644
+--- a/drivers/iommu/iommu-sva.c
++++ b/drivers/iommu/iommu-sva.c
+@@ -441,6 +441,8 @@ static void iommu_notifier_release(struct mmu_notifier *mn, struct mm_struct *mm
+ 			dev_WARN(bond->dev, "possible leak of PASID %u",
+ 				 io_mm->pasid);
  
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c358e7a07f3f..9a28ec600225 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -181,7 +181,9 @@ extern const struct attribute_group *pci_dev_groups[];
- extern const struct attribute_group *pcibus_groups[];
- extern const struct device_type pci_dev_type;
- extern const struct attribute_group *pci_bus_groups[];
--
-+#ifdef CONFIG_PCIEAER
-+extern const struct attribute_group aer_stats_attr_group;
-+#endif
++		iopf_queue_flush_dev(bond->dev);
++
+ 		spin_lock(&iommu_sva_lock);
+ 		next = list_next_entry(bond, mm_head);
  
- /**
-  * pci_match_one_device - Tell if a PCI device structure has a matching
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index d8b9fba536ed..b5d5ad6f2c03 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -87,6 +87,7 @@ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info);
- irqreturn_t aer_irq(int irq, void *context);
- int pci_aer_stats_init(struct pci_dev *pdev);
- void pci_aer_stats_exit(struct pci_dev *pdev);
-+void pci_dev_aer_stats_incr(struct pci_dev *pdev, struct aer_err_info *info);
+@@ -518,6 +520,9 @@ static struct mmu_notifier_ops iommu_mmu_notifier = {
+  * description. Setting @max_pasid to a non-zero value smaller than this limit
+  * overrides it.
+  *
++ * If the device should support recoverable I/O Page Faults (e.g. PCI PRI), the
++ * IOMMU_SVA_FEAT_IOPF feature must be requested.
++ *
+  * If the driver intends to share process address spaces, it should pass a valid
+  * @mm_exit handler. Otherwise @mm_exit can be NULL. After @mm_exit returns, the
+  * device must not issue any more transaction with the PASID given as argument.
+@@ -546,12 +551,21 @@ int iommu_sva_device_init(struct device *dev, unsigned long features,
+ 	if (!domain || !domain->ops->sva_device_init)
+ 		return -ENODEV;
  
- #ifdef CONFIG_ACPI_APEI
- int pcie_aer_get_firmware_first(struct pci_dev *pci_dev);
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 21ca5e1b0ded..5e8b98deda08 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -155,6 +155,7 @@ static void __aer_print_error(struct pci_dev *dev,
- 			pci_err(dev, "   [%2d] Unknown Error Bit%s\n",
- 				i, info->first_error == i ? " (First)" : "");
- 	}
-+	pci_dev_aer_stats_incr(dev, info);
- }
+-	if (features)
++	if (features & ~IOMMU_SVA_FEAT_IOPF)
+ 		return -EINVAL;
  
- void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
-diff --git a/drivers/pci/pcie/aer/aerdrv_stats.c b/drivers/pci/pcie/aer/aerdrv_stats.c
-index b9f251992209..87b7119d0a86 100644
---- a/drivers/pci/pcie/aer/aerdrv_stats.c
-+++ b/drivers/pci/pcie/aer/aerdrv_stats.c
-@@ -47,6 +47,78 @@ struct aer_stats {
- 	u64 rootport_total_nonfatal_errs;
- };
- 
-+#define aer_stats_aggregate_attr(field)                                        \
-+	static ssize_t                                                         \
-+	field##_show(struct device *dev, struct device_attribute *attr,        \
-+		     char *buf)                                                \
-+{                                                                              \
-+	struct pci_dev *pdev = to_pci_dev(dev);                                \
-+	return sprintf(buf, "0x%llx\n", pdev->aer_stats->field);               \
-+}                                                                              \
-+static DEVICE_ATTR_RO(field)
-+
-+aer_stats_aggregate_attr(dev_total_cor_errs);
-+aer_stats_aggregate_attr(dev_total_fatal_errs);
-+aer_stats_aggregate_attr(dev_total_nonfatal_errs);
-+
-+static struct attribute *aer_stats_attrs[] __ro_after_init = {
-+	&dev_attr_dev_total_cor_errs.attr,
-+	&dev_attr_dev_total_fatal_errs.attr,
-+	&dev_attr_dev_total_nonfatal_errs.attr,
-+	NULL
-+};
-+
-+static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
-+					   struct attribute *a, int n)
-+{
-+	struct device *dev = kobj_to_dev(kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (!pdev->aer_stats)
-+		return 0;
-+
-+	return a->mode;
-+}
-+
-+const struct attribute_group aer_stats_attr_group = {
-+	.name  = "aer_stats",
-+	.attrs  = aer_stats_attrs,
-+	.is_visible = aer_stats_attrs_are_visible,
-+};
-+
-+void pci_dev_aer_stats_incr(struct pci_dev *pdev, struct aer_err_info *info)
-+{
-+	int status, i, max = -1;
-+	u64 *counter = NULL;
-+	struct aer_stats *aer_stats = pdev->aer_stats;
-+
-+	if (unlikely(!aer_stats))
-+		return;
-+
-+	switch (info->severity) {
-+	case AER_CORRECTABLE:
-+		aer_stats->dev_total_cor_errs++;
-+		counter = &aer_stats->dev_cor_errs[0];
-+		max = AER_MAX_TYPEOF_CORRECTABLE_ERRS;
-+		break;
-+	case AER_NONFATAL:
-+		aer_stats->dev_total_nonfatal_errs++;
-+		counter = &aer_stats->dev_uncor_errs[0];
-+		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
-+		break;
-+	case AER_FATAL:
-+		aer_stats->dev_total_fatal_errs++;
-+		counter = &aer_stats->dev_uncor_errs[0];
-+		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
-+		break;
++	if (features & IOMMU_SVA_FEAT_IOPF) {
++		ret = iommu_register_device_fault_handler(dev, iommu_queue_iopf,
++							  dev);
++		if (ret)
++			return ret;
 +	}
 +
-+	status = (info->status & ~info->mask);
-+	for (i = 0; i < max; i++)
-+		if (status & (1 << i))
-+			counter[i]++;
-+}
+ 	param = kzalloc(sizeof(*param), GFP_KERNEL);
+-	if (!param)
+-		return -ENOMEM;
++	if (!param) {
++		ret = -ENOMEM;
++		goto err_remove_handler;
++	}
+ 
+ 	param->features		= features;
+ 	param->max_pasid	= max_pasid;
+@@ -584,6 +598,9 @@ int iommu_sva_device_init(struct device *dev, unsigned long features,
+ err_free_param:
+ 	kfree(param);
+ 
++err_remove_handler:
++	iommu_unregister_device_fault_handler(dev);
 +
- int pci_aer_stats_init(struct pci_dev *pdev)
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(iommu_sva_device_init);
+@@ -593,7 +610,8 @@ EXPORT_SYMBOL_GPL(iommu_sva_device_init);
+  * @dev: the device
+  *
+  * Disable SVA. Device driver should ensure that the device isn't performing any
+- * DMA while this function is running.
++ * DMA while this function is running. In addition all faults should have been
++ * flushed to the IOMMU.
+  */
+ int iommu_sva_device_shutdown(struct device *dev)
  {
- 	pdev->aer_stats = kzalloc(sizeof(struct aer_stats), GFP_KERNEL);
+@@ -617,6 +635,8 @@ int iommu_sva_device_shutdown(struct device *dev)
+ 
+ 	kfree(param);
+ 
++	iommu_unregister_device_fault_handler(dev);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(iommu_sva_device_shutdown);
+@@ -694,6 +714,12 @@ int __iommu_sva_unbind_device(struct device *dev, int pasid)
+ 	if (!param || WARN_ON(!domain))
+ 		return -EINVAL;
+ 
++	/*
++	 * Caller stopped the device from issuing PASIDs, now make sure they are
++	 * out of the fault queue.
++	 */
++	iopf_queue_flush_dev(dev);
++
+ 	/* spin_lock_irq matches the one in wait_event_lock_irq */
+ 	spin_lock_irq(&iommu_sva_lock);
+ 	list_for_each_entry(bond, &param->mm_list, dev_head) {
+@@ -721,6 +747,8 @@ void __iommu_sva_unbind_dev_all(struct device *dev)
+ 	struct iommu_sva_param *param;
+ 	struct iommu_bond *bond, *next;
+ 
++	iopf_queue_flush_dev(dev);
++
+ 	/*
+ 	 * io_mm_detach_locked might wait, so we shouldn't call it with the dev
+ 	 * param lock held. It's fine to read sva_param outside the lock because
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 333801e1519c..13f705df0725 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -2278,9 +2278,9 @@ EXPORT_SYMBOL_GPL(iommu_fwspec_add_ids);
+  * iommu_sva_device_init() must be called first, to initialize the required SVA
+  * features. @flags is a subset of these features.
+  *
+- * The caller must pin down using get_user_pages*() all mappings shared with the
+- * device. mlock() isn't sufficient, as it doesn't prevent minor page faults
+- * (e.g. copy-on-write).
++ * If IOMMU_SVA_FEAT_IOPF isn't requested, the caller must pin down using
++ * get_user_pages*() all mappings shared with the device. mlock() isn't
++ * sufficient, as it doesn't prevent minor page faults (e.g. copy-on-write).
+  *
+  * On success, 0 is returned and @pasid contains a valid ID. Otherwise, an error
+  * is returned.
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index fad3a60e1c14..933100678f64 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -64,6 +64,8 @@ typedef int (*iommu_fault_handler_t)(struct iommu_domain *,
+ typedef int (*iommu_dev_fault_handler_t)(struct iommu_fault_event *, void *);
+ typedef int (*iommu_mm_exit_handler_t)(struct device *dev, int pasid, void *);
+ 
++#define IOMMU_SVA_FEAT_IOPF		(1 << 0)
++
+ struct iommu_domain_geometry {
+ 	dma_addr_t aperture_start; /* First address that can be mapped    */
+ 	dma_addr_t aperture_end;   /* Last address that can be mapped     */
 -- 
-2.17.0.441.gb46fe60e1d-goog
+2.17.0
