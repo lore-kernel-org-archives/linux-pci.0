@@ -1,46 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from thoth.sbs.de ([192.35.17.2]:43313 "EHLO thoth.sbs.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752599AbeEOJIe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 May 2018 05:08:34 -0400
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Subject: [PATCH v4 8/8] PCI: Enable PCI_DOMAINS along with generic PCI host controller
-Date: Tue, 15 May 2018 11:07:07 +0200
-Message-Id: <4896b00d5f8142aff8f928863364c770b5c5156d.1526375226.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
-References: <cover.1526375226.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
-References: <cover.1526375226.git.jan.kiszka@siemens.com>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:36172 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751000AbeEKAVW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 May 2018 20:21:22 -0400
+Received: by mail-pg0-f68.google.com with SMTP id z70-v6so1661643pgz.3
+        for <linux-pci@vger.kernel.org>; Thu, 10 May 2018 17:21:22 -0700 (PDT)
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>
+Subject: [PATCH v2 8/9] PCI: qcom: Drop unnecessary root_bus_nr setting
+Date: Fri, 11 May 2018 08:20:18 +0800
+Message-Id: <1525998019-28634-9-git-send-email-shawn.guo@linaro.org>
+In-Reply-To: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
+References: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+Function dw_pcie_host_init() already initializes the root_bus_nr field
+of 'struct pcie_port', so the -1 assignment prior to calling
+dw_pcie_host_init() in platform specific driver is not really needed.
+Drop it.
 
-This controller is often instantiated by hypervisors, and they may add
-multiple of them or add them in addition to a physical host controller
-like the Jailhouse hypervisor is doing. Therefore allow for multiple
-domains so that we can handle them all.
-
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
 ---
- drivers/pci/host/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/dwc/pcie-qcom.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 0d0177ce436c..3d25b35bb5ab 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -68,6 +68,7 @@ config PCI_HOST_GENERIC
- 	depends on (ARM || ARM64) && OF
- 	select PCI_HOST_COMMON
- 	select IRQ_DOMAIN
-+	select PCI_DOMAINS
- 	help
- 	  Say Y here if you want to support a simple generic PCI host
- 	  controller, such as the one emulated by kvmtool.
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index 5897af7d3355..a32aa024e907 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -1247,7 +1247,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	pp->root_bus_nr = -1;
+ 	pp->ops = &qcom_pcie_dw_ops;
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
 -- 
-2.13.6
+1.9.1
