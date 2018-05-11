@@ -1,130 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:46790 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751141AbeEUNLm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2018 09:11:42 -0400
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH 2/4] PCI: rcar: Pull bus clock enable/disable from rcar_pcie_get_resources()
-Date: Mon, 21 May 2018 15:11:21 +0200
-Message-Id: <20180521131123.2009-2-marek.vasut+renesas@gmail.com>
-In-Reply-To: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
-References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-mm@kvack.org
+Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
+        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
+        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
+        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
+        baolu.lu@linux.intel.com, robdclark@gmail.com,
+        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
+Subject: [PATCH v2 31/40] iommu/arm-smmu-v3: Improve add_device error handling
+Date: Fri, 11 May 2018 20:06:32 +0100
+Message-Id: <20180511190641.23008-32-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The rcar_pcie_get_resources() is another misnomer with a side effect.
-The function does not only get resources, but also enables/disables bus
-clock. This is forgotten in the probe() function though and if anything
-in probe() fails after rcar_pcie_get_resources() is called, the bus
-clock are never disabled.
+As add_device becomes more likely to fail when adding new features, let it
+clean up behind itself. The iommu_bus_init function does call
+remove_device on error, but other sites (e.g. of_iommu) do not.
 
-This patch pulls the clock handling out of the rcar_pcie_get_resources()
-and enables clock after all the resources were requested. Moreover, this
-patch also always disables the clock in case of failure.
+Don't free level-2 stream tables because we'd have to track if we
+allocated each of them or if they are used by other endpoints. It's not
+worth the hassle since they are managed resources.
 
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+
 ---
- drivers/pci/host/pcie-rcar.c | 31 +++++++++++++++----------------
- 1 file changed, 15 insertions(+), 16 deletions(-)
+v1->v2: new
+---
+ drivers/iommu/arm-smmu-v3.c | 36 ++++++++++++++++++++++++++++--------
+ 1 file changed, 28 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index dbc80e457f95..eac4b71d9c60 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -919,32 +919,22 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
- 		dev_err(dev, "cannot get pcie bus clock\n");
- 		return PTR_ERR(pcie->bus_clk);
- 	}
--	err = clk_prepare_enable(pcie->bus_clk);
--	if (err)
--		return err;
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 5d57f41f79b4..d5f3875abfb9 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -2123,26 +2123,43 @@ static int arm_smmu_add_device(struct device *dev)
+ 	for (i = 0; i < fwspec->num_ids; i++) {
+ 		u32 sid = fwspec->ids[i];
  
- 	i = irq_of_parse_and_map(dev->of_node, 0);
- 	if (!i) {
- 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
--		err = -ENOENT;
--		goto err_map_reg;
-+		return -ENOENT;
- 	}
- 	pcie->msi.irq1 = i;
+-		if (!arm_smmu_sid_in_range(smmu, sid))
+-			return -ERANGE;
++		if (!arm_smmu_sid_in_range(smmu, sid)) {
++			ret = -ERANGE;
++			goto err_free_master;
++		}
  
- 	i = irq_of_parse_and_map(dev->of_node, 1);
- 	if (!i) {
- 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
--		err = -ENOENT;
--		goto err_map_reg;
-+		return -ENOENT;
- 	}
- 	pcie->msi.irq2 = i;
- 
- 	return 0;
--
--err_map_reg:
--	clk_disable_unprepare(pcie->bus_clk);
--
--	return err;
- }
- 
- static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
-@@ -1125,9 +1115,15 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 		goto err_pm_put;
- 	}
- 
-+	err = clk_prepare_enable(pcie->bus_clk);
-+	if (err) {
-+		dev_err(dev, "failed to enable bus clock: %d\n", err);
-+		goto err_pm_put;
-+	}
-+
- 	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
- 	if (err)
--		goto err_pm_put;
-+		goto err_clk_disable;
- 
- 	/* Failure to get a link might just be that no cards are inserted */
- 	hw_init_fn = of_device_get_match_data(dev);
-@@ -1135,7 +1131,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	if (err) {
- 		dev_info(dev, "PCIe link down\n");
- 		err = -ENODEV;
--		goto err_pm_put;
-+		goto err_clk_disable;
- 	}
- 
- 	data = rcar_pci_read_reg(pcie, MACSR);
-@@ -1147,16 +1143,19 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 			dev_err(dev,
- 				"failed to enable MSI support: %d\n",
- 				err);
--			goto err_pm_put;
-+			goto err_clk_disable;
+ 		/* Ensure l2 strtab is initialised */
+ 		if (smmu->features & ARM_SMMU_FEAT_2_LVL_STRTAB) {
+ 			ret = arm_smmu_init_l2_strtab(smmu, sid);
+ 			if (ret)
+-				return ret;
++				goto err_free_master;
  		}
  	}
  
- 	err = rcar_pcie_enable(pcie);
- 	if (err)
--		goto err_pm_put;
-+		goto err_clk_disable;
+ 	master->ssid_bits = min(smmu->ssid_bits, fwspec->num_pasid_bits);
  
- 	return 0;
- 
-+err_clk_disable:
-+	clk_disable_unprepare(pcie->bus_clk);
++	ret = iommu_device_link(&smmu->iommu, dev);
++	if (ret)
++		goto err_free_master;
 +
- err_pm_put:
- 	pm_runtime_put(dev);
+ 	group = iommu_group_get_for_dev(dev);
+-	if (!IS_ERR(group)) {
+-		iommu_group_put(group);
+-		iommu_device_link(&smmu->iommu, dev);
++	if (IS_ERR(group)) {
++		ret = PTR_ERR(group);
++		goto err_unlink;
+ 	}
  
+-	return PTR_ERR_OR_ZERO(group);
++	iommu_group_put(group);
++
++	return 0;
++
++err_unlink:
++	iommu_device_unlink(&smmu->iommu, dev);
++
++err_free_master:
++	kfree(master);
++	fwspec->iommu_priv = NULL;
++
++	return ret;
+ }
+ 
+ static void arm_smmu_remove_device(struct device *dev)
+@@ -2155,9 +2172,12 @@ static void arm_smmu_remove_device(struct device *dev)
+ 		return;
+ 
+ 	master = fwspec->iommu_priv;
++	if (!master)
++		return;
++
+ 	smmu = master->smmu;
+ 	iopf_queue_remove_device(dev);
+-	if (master && master->ste.assigned)
++	if (master->ste.assigned)
+ 		arm_smmu_detach_dev(dev);
+ 	iommu_group_remove_device(dev);
+ 	iommu_device_unlink(&smmu->iommu, dev);
 -- 
-2.16.2
+2.17.0
+
