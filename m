@@ -1,138 +1,199 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:34690 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933880AbeEWR6w (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 13:58:52 -0400
-Received: by mail-pl0-f67.google.com with SMTP id ay10-v6so13494224plb.1
-        for <linux-pci@vger.kernel.org>; Wed, 23 May 2018 10:58:52 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Oza Pawandeep <poza@codeaurora.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
         Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
         Thomas Gleixner <tglx@linutronix.de>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rajat Jain <rajatja@google.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Kyle McMartin <jkkm@fb.com>
-Cc: rajatxjain@gmail.com
-Subject: [PATCH v2 4/5] PCI/AER: Add sysfs attributes for rootport cumulative stats
-Date: Wed, 23 May 2018 10:58:07 -0700
-Message-Id: <20180523175808.28030-5-rajatja@google.com>
-In-Reply-To: <20180523175808.28030-1-rajatja@google.com>
-References: <20180522222805.80314-1-rajatja@google.com>
- <20180523175808.28030-1-rajatja@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v16 8/9] PCI/DPC: Unify and plumb error handling into DPC
+Date: Fri, 11 May 2018 06:43:27 -0400
+Message-Id: <1526035408-31328-9-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
+References: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add sysfs attributes for rootport statistics (that are cumulative
-of all the ERR_* messages seen on this PCI hierarchy).
+DPC driver implements link_reset callback, and calls
+pci_do_fatal_recovery().
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
-v2: same as v1
+Which follows standard path of ERR_FATAL recovery.
 
- drivers/pci/pcie/aer/aerdrv.h       |  2 ++
- drivers/pci/pcie/aer/aerdrv_core.c  |  2 ++
- drivers/pci/pcie/aer/aerdrv_stats.c | 31 +++++++++++++++++++++++++++++
- 3 files changed, 35 insertions(+)
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index 048fbd7c9633..77d8355551d9 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -88,6 +88,8 @@ irqreturn_t aer_irq(int irq, void *context);
- int pci_aer_stats_init(struct pci_dev *pdev);
- void pci_aer_stats_exit(struct pci_dev *pdev);
- void pci_dev_aer_stats_incr(struct pci_dev *pdev, struct aer_err_info *info);
-+void pci_rootport_aer_stats_incr(struct pci_dev *pdev,
-+				 struct aer_err_source *e_src);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 5e8857a..6af7595 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -354,7 +354,7 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ void pci_enable_acs(struct pci_dev *dev);
  
- extern const char
- *aer_correctable_error_string[AER_MAX_TYPEOF_CORRECTABLE_ERRS];
+ /* PCI error reporting and recovery */
+-void pcie_do_fatal_recovery(struct pci_dev *dev);
++void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service);
+ void pcie_do_nonfatal_recovery(struct pci_dev *dev);
+ 
+ bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
 diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 42a6f913069a..0f70e22563f3 100644
+index fdfc474..36e622d 100644
 --- a/drivers/pci/pcie/aer/aerdrv_core.c
 +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -424,6 +424,8 @@ static void aer_isr_one_error(struct pcie_device *p_device,
- 	struct aer_rpc *rpc = get_service_data(p_device);
- 	struct aer_err_info *e_info = &rpc->e_info;
- 
-+	pci_rootport_aer_stats_incr(p_device->port, e_src);
-+
- 	/*
- 	 * There is a possibility that both correctable error and
- 	 * uncorrectable error being logged. Report correctable error first.
-diff --git a/drivers/pci/pcie/aer/aerdrv_stats.c b/drivers/pci/pcie/aer/aerdrv_stats.c
-index e47321b267f6..898c9bc02ec2 100644
---- a/drivers/pci/pcie/aer/aerdrv_stats.c
-+++ b/drivers/pci/pcie/aer/aerdrv_stats.c
-@@ -57,6 +57,9 @@ static DEVICE_ATTR_RO(field)
- aer_stats_aggregate_attr(dev_total_cor_errs);
- aer_stats_aggregate_attr(dev_total_fatal_errs);
- aer_stats_aggregate_attr(dev_total_nonfatal_errs);
-+aer_stats_aggregate_attr(rootport_total_cor_errs);
-+aer_stats_aggregate_attr(rootport_total_fatal_errs);
-+aer_stats_aggregate_attr(rootport_total_nonfatal_errs);
- 
- #define aer_stats_breakdown_attr(field, stats_array, strings_array)	\
- 	static ssize_t							\
-@@ -90,6 +93,9 @@ static struct attribute *aer_stats_attrs[] __ro_after_init = {
- 	&dev_attr_dev_total_nonfatal_errs.attr,
- 	&dev_attr_dev_breakdown_correctable.attr,
- 	&dev_attr_dev_breakdown_uncorrectable.attr,
-+	&dev_attr_rootport_total_cor_errs.attr,
-+	&dev_attr_rootport_total_fatal_errs.attr,
-+	&dev_attr_rootport_total_nonfatal_errs.attr,
- 	NULL
- };
- 
-@@ -102,6 +108,12 @@ static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
- 	if (!pdev->aer_stats)
- 		return 0;
- 
-+	if ((a == &dev_attr_rootport_total_cor_errs.attr ||
-+	     a == &dev_attr_rootport_total_fatal_errs.attr ||
-+	     a == &dev_attr_rootport_total_nonfatal_errs.attr) &&
-+	    pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT)
-+		return 0;
-+
- 	return a->mode;
+@@ -254,7 +254,7 @@ static void handle_error_source(struct pcie_device *aerdev,
+ 	} else if (info->severity == AER_NONFATAL)
+ 		pcie_do_nonfatal_recovery(dev);
+ 	else if (info->severity == AER_FATAL)
+-		pcie_do_fatal_recovery(dev);
++		pcie_do_fatal_recovery(dev, PCIE_PORT_SERVICE_AER);
  }
  
-@@ -144,6 +156,25 @@ void pci_dev_aer_stats_incr(struct pci_dev *pdev, struct aer_err_info *info)
- 			counter[i]++;
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+@@ -321,7 +321,7 @@ static void aer_recover_work_func(struct work_struct *work)
+ 		if (entry.severity == AER_NONFATAL)
+ 			pcie_do_nonfatal_recovery(pdev);
+ 		else if (entry.severity == AER_FATAL)
+-			pcie_do_fatal_recovery(pdev);
++			pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_AER);
+ 		pci_dev_put(pdev);
+ 	}
+ }
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 80ec384..5680c13 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -73,29 +73,31 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ 	pcie_wait_for_link(pdev, false);
  }
  
-+void pci_rootport_aer_stats_incr(struct pci_dev *pdev,
-+				 struct aer_err_source *e_src)
-+{
-+	struct aer_stats *aer_stats = pdev->aer_stats;
+-static void dpc_work(struct work_struct *work)
++static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+ {
+-	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+-	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+-	struct pci_bus *parent = pdev->subordinate;
+-	u16 cap = dpc->cap_pos, ctl;
+-
+-	pci_lock_rescan_remove();
+-	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+-					 bus_list) {
+-		pci_dev_get(dev);
+-		pci_dev_set_disconnected(dev, NULL);
+-		if (pci_has_subordinate(dev))
+-			pci_walk_bus(dev->subordinate,
+-				     pci_dev_set_disconnected, NULL);
+-		pci_stop_and_remove_bus_device(dev);
+-		pci_dev_put(dev);
+-	}
+-	pci_unlock_rescan_remove();
+-
++	struct dpc_dev *dpc;
++	struct pcie_device *pciedev;
++	struct device *devdpc;
++	u16 cap, ctl;
 +
-+	if (!aer_stats)
-+		return;
++	/*
++	 * DPC disables the Link automatically in hardware, so it has
++	 * already been reset by the time we get here.
++	 */
 +
-+	if (e_src->status & PCI_ERR_ROOT_COR_RCV)
-+		aer_stats->rootport_total_cor_errs++;
++	devdpc = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_DPC);
++	pciedev = to_pcie_device(devdpc);
++	dpc = get_service_data(pciedev);
++	cap = dpc->cap_pos;
 +
-+	if (e_src->status & PCI_ERR_ROOT_UNCOR_RCV) {
-+		if (e_src->status & PCI_ERR_ROOT_FATAL_RCV)
-+			aer_stats->rootport_total_fatal_errs++;
-+		else
-+			aer_stats->rootport_total_nonfatal_errs++;
-+	}
++	/*
++	 * Waiting until the link is inactive, then clearing DPC
++	 * trigger status to allow the port to leave DPC.
++	 */
+ 	dpc_wait_link_inactive(dpc);
++
+ 	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
+-		return;
++		return PCI_ERS_RESULT_DISCONNECT;
+ 	if (dpc->rp_extensions && dpc->rp_pio_status) {
+ 		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
+ 				       dpc->rp_pio_status);
+@@ -108,6 +110,17 @@ static void dpc_work(struct work_struct *work)
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+ 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+ 			      ctl | PCI_EXP_DPC_CTL_INT_EN);
++
++	return PCI_ERS_RESULT_RECOVERED;
 +}
 +
- int pci_aer_stats_init(struct pci_dev *pdev)
++static void dpc_work(struct work_struct *work)
++{
++	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
++	struct pci_dev *pdev = dpc->dev->port;
++
++	/* From DPC point of view error is always FATAL. */
++	pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_DPC);
+ }
+ 
+ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
+@@ -288,6 +301,7 @@ static struct pcie_port_service_driver dpcdriver = {
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
++	.reset_link	= dpc_reset_link,
+ };
+ 
+ static int __init dpc_service_init(void)
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 33a16b1..29ff148 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -185,7 +185,7 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+-static pci_ers_result_t reset_link(struct pci_dev *dev)
++static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
  {
- 	pdev->aer_stats = kzalloc(sizeof(struct aer_stats), GFP_KERNEL);
+ 	struct pci_dev *udev;
+ 	pci_ers_result_t status;
+@@ -200,7 +200,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ 	}
+ 
+ 	/* Use the aer driver of the component firstly */
+-	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
++	driver = pcie_port_find_service(udev, service);
+ 
+ 	if (driver && driver->reset_link) {
+ 		status = driver->reset_link(udev);
+@@ -287,7 +287,7 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+  * followed by re-enumeration of devices.
+  */
+ 
+-void pcie_do_fatal_recovery(struct pci_dev *dev)
++void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+ {
+ 	struct pci_dev *udev;
+ 	struct pci_bus *parent;
+@@ -313,7 +313,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev)
+ 		pci_dev_put(pdev);
+ 	}
+ 
+-	result = reset_link(udev);
++	result = reset_link(udev, service);
+ 
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+ 		/*
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 8f87bbe..0c506fe 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -14,6 +14,7 @@
+ #define AER_NONFATAL			0
+ #define AER_FATAL			1
+ #define AER_CORRECTABLE			2
++#define DPC_FATAL			4
+ 
+ struct pci_dev;
+ 
 -- 
-2.17.0.441.gb46fe60e1d-goog
+2.7.4
