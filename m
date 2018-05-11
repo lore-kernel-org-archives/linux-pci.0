@@ -1,49 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:38148 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1031263AbeEXRvG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 May 2018 13:51:06 -0400
-To: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-ntb@googlegroups.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Doug Meyer <dmeyer@gigaio.com>
-References: <20180524173913.4506-1-logang@deltatee.com>
- <b2481367-3acc-4d54-bae7-cc27fb38232e@infradead.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <2ab7b5f8-f068-026a-bc79-5c589dcdb07e@deltatee.com>
-Date: Thu, 24 May 2018 11:51:03 -0600
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 11 May 2018 11:57:52 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andrew Lutomirski <amluto@gmail.com>
+Subject: Re: Another NVMe failure, this time with AER info
+Message-ID: <20180511165752.GG190385@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <b2481367-3acc-4d54-bae7-cc27fb38232e@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v2] PCI: Expand documentation for pci_add_dma_alias()
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAObL_7G5k7XNqXqDZASChiQd1mt+AJPAdNKz-DE+xQawhUy6ZA@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jesse Vincent <jesse@fsck.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Andrew wrote:
+> A friend of mine has a brand new LG laptop that has intermittent NVMe
+> failures.  They mostly happen during a suspend/resume cycle
+> (apparently during suspend, not resume).  Unlike the earlier
+> Dell/Samsung issue, the NVMe device isn't completely gone -- MMIO
+> reads fail, but PCI configuration space is apparently still there:
 
+> nvme nvme0: controller is down; will reset: CSTS=0xffffffff, PCI_STATUS=0x10
 
-On 24/05/18 11:44 AM, Randy Dunlap wrote:
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index dbfe7c4f3776..1c0c1ea23b90 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -5395,8 +5395,19 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
->>   * @dev: the PCI device for which alias is added
->>   * @devfn: alias slot and function
->>   *
->> - * This helper encodes 8-bit devfn as bit number in dma_alias_mask.
->> - * It should be called early, preferably as PCI fixup header quirk.
->> + * This helper encodes an 8-bit devfn as a bit number in dma_alias_mask
->> + * which is used to program permissible BDF source addresses for DMA
-> 
-> It took me a few seconds to decode BDF.  FWIW, I would prefer to see
-> bus-devfn or bus-dev-fn or bus-dev-func or bus-dev-function.
+> and it comes with a nice AER dump:
 
-Yes, there's a lot of overlapping terminology here. In circles I've
-discussed this stuff, BDF is a common acronym. The kernel uses
-Bus/Slot/Function in some places, but devfn is also common. In any case,
-I like bus-devfn so I'll make these changes and send a v3 shortly.
+> [12720.894411] pcieport 0000:00:1c.0: AER: Multiple Corrected error received: id=00e0
+> [12720.909747] pcieport 0000:00:1c.0: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e0(Transmitter ID)
+> [12720.909751] pcieport 0000:00:1c.0:   device [8086:9d14] error status/mask=00001001/00002000
+> [12720.909754] pcieport 0000:00:1c.0:    [ 0] Receiver Error         (First)
+> [12720.909756] pcieport 0000:00:1c.0:    [12] Replay Timer Timeout
 
-Thanks,
+I opened this bugzilla and attached the dmesg and lspci -vv output to
+it: https://bugzilla.kernel.org/show_bug.cgi?id=199695
 
-Logan
+The root port at 00:1c.0 leads to the NVMe device at 01:00.0 (this is
+nvme0):
+
+  00:1c.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port #5 (rev f1) (prog-if 00 [Normal decode])
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+  01:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller SM961/PM961 (prog-if 02 [NVM Express])
+        Subsystem: Samsung Electronics Co Ltd Device a801
+
+We reported several corrected errors before the nvme timeout:
+
+  [12750.281158] nvme nvme0: controller is down; will reset: CSTS=0xffffffff, PCI_STATUS=0x10
+  [12750.297594] nvme nvme0: I/O 455 QID 2 timeout, disable controller
+  [12750.305196] nvme 0000:01:00.0: enabling device (0000 -> 0002)
+  [12750.305465] nvme nvme0: Removing after probe failure status: -19
+  [12750.313188] nvme nvme0: I/O 456 QID 2 timeout, disable controller
+  [12750.329152] nvme nvme0: I/O 457 QID 2 timeout, disable controller
+
+The corrected errors are supposedly recovered in hardware without
+software intervention, and AER logs them for informational purposes.
+
+But it seems very likely that these corrected errors are related to
+the nvme timeout: the first corrected errors were logged at
+12720.894411, nvme_io_timeout defaults to 30 seconds, and the nvme
+timeout was at 12750.281158.
+
+I don't have any good ideas.  As a shot in the dark, you could try
+running these commands before doing a suspend:
+
+  # setpci -s01:00.0 0x98.W
+  # setpci -s00:1c.0 0x68.W
+  # setpci -s01:00.0 0x198.L
+  # setpci -s00:1c.0 0x208.L
+
+  # setpci -s01:00.0 0x198.L=0x00000000
+  # setpci -s01:00.0 0x98.W=0x0000
+  # setpci -s00:1c.0 0x208.L=0x00000000
+  # setpci -s00:1c.0 0x68.W=0x0000
+
+  # lspci -vv -s00:1c.0
+  # lspci -vv -s01:00.0
+
+The idea is to turn off ASPM L1.2 and LTR, just because that's new and
+we've had issues with it before.  If you try this, please collect the
+output of the commands above in addition to the dmesg log, in case my
+math is bad.
+
+Bjorn
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
