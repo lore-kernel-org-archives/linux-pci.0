@@ -1,141 +1,101 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Oza Pawandeep <poza@codeaurora.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v7 09/12] PCI: Move resource distribution for a single bridge outside of the loop
-Date: Thu, 17 May 2018 12:29:00 +0300
-Message-Id: <20180517092903.43701-10-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
-References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v16 2/9] pci-error-recovery: Add AER_FATAL handling
+Date: Fri, 11 May 2018 06:43:21 -0400
+Message-Id: <1526035408-31328-3-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
+References: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is a special case where there is only single bridge on the bus. In
-that case we just assign all resources to it. Currently this is done as
-a part of the resource distribution loop but it does not have to be
-there, and moving it outside actually improves readability because we
-can then save one indent level in the loop.
+It adds description on AER_FATAL error handling.
 
-While there we can add hotplug_bridges == 1 && normal_bridges == 0 to
-the same block because they are dealt the same way.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/setup-bus.c | 82 ++++++++++++++++++++---------------------
- 1 file changed, 41 insertions(+), 41 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 072784f55ea5..79b1824e83b4 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1942,57 +1942,57 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 			remaining_mmio_pref -= resource_size(res);
- 	}
+diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
+index 0b6bb3e..688b691 100644
+--- a/Documentation/PCI/pci-error-recovery.txt
++++ b/Documentation/PCI/pci-error-recovery.txt
+@@ -110,7 +110,7 @@ The actual steps taken by a platform to recover from a PCI error
+ event will be platform-dependent, but will follow the general
+ sequence described below.
  
-+	/*
-+	 * There is only one bridge on the bus so it gets all available
-+	 * resources which it can then distribute to the possible
-+	 * hotplug bridges below.
-+	 */
-+	if (hotplug_bridges + normal_bridges == 1) {
-+		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
-+		if (dev->subordinate) {
-+			pci_bus_distribute_available_resources(dev->subordinate,
-+				add_list, available_io, available_mmio,
-+				available_mmio_pref);
-+		}
-+		return;
-+	}
-+
- 	/*
- 	 * Go over devices on this bus and distribute the remaining
- 	 * resource space between hotplug bridges.
- 	 */
- 	for_each_pci_bridge(dev, bus) {
-+		resource_size_t align, io, mmio, mmio_pref;
- 		struct pci_bus *b;
+-STEP 0: Error Event
++STEP 0: Error Event: ERR_NONFATAL
+ -------------------
+ A PCI bus error is detected by the PCI hardware.  On powerpc, the slot
+ is isolated, in that all I/O is blocked: all reads return 0xffffffff,
+@@ -228,13 +228,7 @@ proceeds to either STEP3 (Link Reset) or to STEP 5 (Resume Operations).
+ If any driver returned PCI_ERS_RESULT_NEED_RESET, then the platform
+ proceeds to STEP 4 (Slot Reset)
  
- 		b = dev->subordinate;
--		if (!b)
-+		if (!b || !dev->is_hotplug_bridge)
- 			continue;
+-STEP 3: Link Reset
+-------------------
+-The platform resets the link.  This is a PCI-Express specific step
+-and is done whenever a fatal error has been detected that can be
+-"solved" by resetting the link.
+-
+-STEP 4: Slot Reset
++STEP 3: Slot Reset
+ ------------------
  
--		if (!hotplug_bridges && normal_bridges == 1) {
--			/*
--			 * There is only one bridge on the bus (upstream
--			 * port) so it gets all available resources
--			 * which it can then distribute to the possible
--			 * hotplug bridges below.
--			 */
--			pci_bus_distribute_available_resources(b, add_list,
--				available_io, available_mmio,
--				available_mmio_pref);
--		} else if (dev->is_hotplug_bridge) {
--			resource_size_t align, io, mmio, mmio_pref;
--
--			/*
--			 * Distribute available extra resources equally
--			 * between hotplug-capable downstream ports
--			 * taking alignment into account.
--			 *
--			 * Here hotplug_bridges is always != 0.
--			 */
--			align = pci_resource_alignment(bridge, io_res);
--			io = div64_ul(available_io, hotplug_bridges);
--			io = min(ALIGN(io, align), remaining_io);
--			remaining_io -= io;
--
--			align = pci_resource_alignment(bridge, mmio_res);
--			mmio = div64_ul(available_mmio, hotplug_bridges);
--			mmio = min(ALIGN(mmio, align), remaining_mmio);
--			remaining_mmio -= mmio;
--
--			align = pci_resource_alignment(bridge, mmio_pref_res);
--			mmio_pref = div64_ul(available_mmio_pref,
--					     hotplug_bridges);
--			mmio_pref = min(ALIGN(mmio_pref, align),
--					remaining_mmio_pref);
--			remaining_mmio_pref -= mmio_pref;
--
--			pci_bus_distribute_available_resources(b, add_list, io,
--							       mmio, mmio_pref);
--		}
-+		/*
-+		 * Distribute available extra resources equally between
-+		 * hotplug-capable downstream ports taking alignment into
-+		 * account.
-+		 *
-+		 * Here hotplug_bridges is always != 0.
-+		 */
-+		align = pci_resource_alignment(bridge, io_res);
-+		io = div64_ul(available_io, hotplug_bridges);
-+		io = min(ALIGN(io, align), remaining_io);
-+		remaining_io -= io;
-+
-+		align = pci_resource_alignment(bridge, mmio_res);
-+		mmio = div64_ul(available_mmio, hotplug_bridges);
-+		mmio = min(ALIGN(mmio, align), remaining_mmio);
-+		remaining_mmio -= mmio;
-+
-+		align = pci_resource_alignment(bridge, mmio_pref_res);
-+		mmio_pref = div64_ul(available_mmio_pref, hotplug_bridges);
-+		mmio_pref = min(ALIGN(mmio_pref, align), remaining_mmio_pref);
-+		remaining_mmio_pref -= mmio_pref;
-+
-+		pci_bus_distribute_available_resources(b, add_list, io, mmio,
-+						       mmio_pref);
- 	}
- }
+ In response to a return value of PCI_ERS_RESULT_NEED_RESET, the
+@@ -320,7 +314,7 @@ Failure).
+ >>> However, it probably should.
  
+ 
+-STEP 5: Resume Operations
++STEP 4: Resume Operations
+ -------------------------
+ The platform will call the resume() callback on all affected device
+ drivers if all drivers on the segment have returned
+@@ -332,7 +326,7 @@ a result code.
+ At this point, if a new error happens, the platform will restart
+ a new error recovery sequence.
+ 
+-STEP 6: Permanent Failure
++STEP 5: Permanent Failure
+ -------------------------
+ A "permanent failure" has occurred, and the platform cannot recover
+ the device.  The platform will call error_detected() with a
+@@ -355,6 +349,27 @@ errors. See the discussion in powerpc/eeh-pci-error-recovery.txt
+ for additional detail on real-life experience of the causes of
+ software errors.
+ 
++STEP 0: Error Event: ERR_FATAL
++-------------------
++PCI bus error is detected by the PCI hardware. On powerpc, the slot is
++isolated, in that all I/O is blocked: all reads return 0xffffffff, all
++writes are ignored.
++
++STEP 1: Remove devices
++--------------------
++Platform removes the devices depending on the error agent, it could be
++this port for all subordinates or upstream component (likely downstream
++port)
++
++STEP 2: Reset link
++--------------------
++The platform resets the link.  This is a PCI-Express specific step and is
++done whenever a fatal error has been detected that can be "solved" by
++resetting the link.
++
++STEP 3: Re-enumerate the devices
++--------------------
++Initiates the re-enumeration.
+ 
+ Conclusion; General Remarks
+ ---------------------------
 -- 
-2.17.0
-
+2.7.4
