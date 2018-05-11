@@ -1,60 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59784 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933791AbeEWV42 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 May 2018 17:56:28 -0400
-Date: Wed, 23 May 2018 16:56:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH 1/4] PCI: rcar: Rename
- rcar_pcie_parse_request_of_pci_ranges()
-Message-ID: <20180523215626.GG150632@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
- <20180523161711.GA8113@e107981-ln.cambridge.arm.com>
- <5fc7b4ff-1c75-4d3f-6cb7-fda4559a3635@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5fc7b4ff-1c75-4d3f-6cb7-fda4559a3635@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v16 7/9] PCI/PORTDRV: Implement generic find device
+Date: Fri, 11 May 2018 06:43:26 -0400
+Message-Id: <1526035408-31328-8-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
+References: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2018 at 07:05:06PM +0200, Marek Vasut wrote:
-> On 05/23/2018 06:17 PM, Lorenzo Pieralisi wrote:
-> > On Mon, May 21, 2018 at 03:11:20PM +0200, Marek Vasut wrote:
-> >> The function name is just too confusing, rename it, no functional change.
-> >> Rename the function to rcar_pcie_alloc_and_parse_pci_resource_list() as
-> >> it's matching failpath function is pci_free_resource_list() so the names
-> >> align much better and the new name also describes what the function does
-> >> much better.
-> >>
-> >> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> >> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> >> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> >> Cc: Simon Horman <horms+renesas@verge.net.au>
-> >> Cc: Wolfram Sang <wsa@the-dreams.de>
-> >> Cc: linux-renesas-soc@vger.kernel.org
-> >> ---
-> >>  drivers/pci/host/pcie-rcar.c | 4 ++--
-> >>  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > Can you rebase this series against my pci/rcar branch please ?
-> > 
-> > I will merge it then, thanks.
-> 
-> Where is that tree/branch located ?
-> 
-> It applies fine on current next 20180517, is there a problem ?
+This patch implements generic pcie_port_find_device() routine.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/log/?h=pci/rcar
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
 
-I don't think next 20180517 includes Lorenzo's pci/rcar branch, so
-there might be conflicts.  I think Stephen is on vacation until next
-week, so there isn't a newer -next tree yet.
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index ba6c963..896608a 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -114,4 +114,6 @@ static inline void pcie_pme_interrupt_enable(struct pci_dev *dev, bool en) {}
+ 
+ struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
+ 							u32 service);
++struct device *pcie_port_find_device(struct pci_dev *dev,
++				     u32 service);
+ #endif /* _PORTDRV_H_ */
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index d843055..bc2c337 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -20,6 +20,7 @@
+ #include "portdrv.h"
+ struct portdrv_service_data {
+ 	struct pcie_port_service_driver *drv;
++	struct device *dev;
+ 	u32 service;
+ };
+ 
+@@ -415,6 +416,7 @@ static int find_service_iter(struct device *device, void *data)
+ 		service_driver = to_service_driver(device->driver);
+ 		if (service_driver->service == service) {
+ 			pdrvs->drv = service_driver;
++			pdrvs->dev = device;
+ 			return 1;
+ 		}
+ 	}
+@@ -443,6 +445,27 @@ struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
+ }
+ 
+ /**
++ * pcie_port_find_device - find the struct device
++ * @dev: PCI Express port the service devices associated with
++ * @service: For the service to find
++ *
++ * Find PCI Express port service driver associated with given service
++ */
++struct device *pcie_port_find_device(struct pci_dev *dev,
++				      u32 service)
++{
++	struct device *device;
++	struct portdrv_service_data pdrvs;
++
++	pdrvs.dev = NULL;
++	pdrvs.service = service;
++	device_for_each_child(&dev->dev, &pdrvs, find_service_iter);
++
++	device = pdrvs.dev;
++	return device;
++}
++
++/**
+  * pcie_port_device_remove - unregister PCI Express port service devices
+  * @dev: PCI Express port the service devices to unregister are associated with
+  *
+-- 
+2.7.4
