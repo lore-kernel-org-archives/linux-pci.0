@@ -1,55 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:42387 "EHLO
-        mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965712AbeEYKBp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 May 2018 06:01:45 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180525095616.GC6507@e107981-ln.cambridge.arm.com>
-References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
- <20180525093541.GB6507@e107981-ln.cambridge.arm.com> <CAMuHMdWaxcyed2K_Ce86uqJSHsv4htC1zdrszKJKBRn21K-qoQ@mail.gmail.com>
- <20180525095616.GC6507@e107981-ln.cambridge.arm.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Fri, 25 May 2018 12:01:44 +0200
-Message-ID: <CAMuHMdWH0a3KMQrzwqhyR_+3hc6Om-NN9TK8z56F7TwkK00cvg@mail.gmail.com>
-Subject: Re: [PATCH v4 0/6] PCI: rcar: Failpath fixes
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Marek Vasut <marek.vasut@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:40944 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751000AbeEKAVI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 May 2018 20:21:08 -0400
+Received: by mail-pl0-f65.google.com with SMTP id t12-v6so2237375plo.7
+        for <linux-pci@vger.kernel.org>; Thu, 10 May 2018 17:21:08 -0700 (PDT)
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>
+Subject: [PATCH v2 4/9] PCI: armada8k: Drop unnecessary root_bus_nr setting
+Date: Fri, 11 May 2018 08:20:14 +0800
+Message-Id: <1525998019-28634-5-git-send-email-shawn.guo@linaro.org>
+In-Reply-To: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
+References: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+Function dw_pcie_host_init() already initializes the root_bus_nr field
+of 'struct pcie_port', so the -1 assignment prior to calling
+dw_pcie_host_init() in platform specific driver is not really needed.
+Drop it.
 
-On Fri, May 25, 2018 at 11:56 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Fri, May 25, 2018 at 11:39:08AM +0200, Geert Uytterhoeven wrote:
->> On Fri, May 25, 2018 at 11:35 AM, Lorenzo Pieralisi
->> <lorenzo.pieralisi@arm.com> wrote:
->> > Can I retain your review tags on this series so that I can queue
->> > the patches ? I already added them apart from the last patch that
->> > is new, please let me know asap.
->>
->> Yes, please.
->
-> I assume that's valid also for the last patch, I need Simon's ACK
-> to proceed too.
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+Acked-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+---
+ drivers/pci/dwc/pcie-armada8k.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-I haven't reviewed the last patch yet.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
+diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
+index b587352f8b9f..2d8eb88fd4f8 100644
+--- a/drivers/pci/dwc/pcie-armada8k.c
++++ b/drivers/pci/dwc/pcie-armada8k.c
+@@ -171,7 +171,6 @@ static int armada8k_add_pcie_port(struct armada8k_pcie *pcie,
+ 	struct device *dev = &pdev->dev;
+ 	int ret;
+ 
+-	pp->root_bus_nr = -1;
+ 	pp->ops = &armada8k_pcie_host_ops;
+ 
+ 	pp->irq = platform_get_irq(pdev, 0);
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+1.9.1
