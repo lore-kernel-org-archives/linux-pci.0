@@ -1,61 +1,60 @@
-Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
-Date: Tue, 8 May 2018 13:34:07 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>, Bjorn Helgaas
- <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
- linux-block@vger.kernel.org, Stephen Bates <sbates@raithlin.com>, Christoph
- Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
- <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
- <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
- <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
- Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all
- devices behind switches
-Message-ID: <20180508133407.57a46902@w520.home>
-In-Reply-To: <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
-	<20180423233046.21476-5-logang@deltatee.com>
-	<20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
-	<e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
-	<0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
-	<a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
-	<3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:7667 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752592AbeEKOJ5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 May 2018 10:09:57 -0400
+Subject: Re: [PATCH v3 2/2] arm64: dts: hi3660: Add pcie msi interrupt
+ attribute
+To: Yao Chen <chenyao11@huawei.com>, <songxiaowei@hisilicon.com>,
+        <wangbinghui@hisilicon.com>, <lorenzo.pieralisi@arm.com>,
+        <bhelgaas@google.com>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <devicetree@vger.kernel.org>
+References: <1526030149-23985-1-git-send-email-chenyao11@huawei.com>
+ <1526030149-23985-3-git-send-email-chenyao11@huawei.com>
+CC: <dimitrysh@google.com>, <guodong.xu@linaro.org>,
+        <suzhuangluan@hisilicon.com>, <kongfei@hisilicon.com>,
+        <xuwei5@hisilicon.com>
+From: Wei Xu <xuwei5@hisilicon.com>
+Message-ID: <5AF5A411.4010507@hisilicon.com>
+Date: Fri, 11 May 2018 15:09:21 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1526030149-23985-3-git-send-email-chenyao11@huawei.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 8 May 2018 13:13:40 -0600
-Logan Gunthorpe <logang@deltatee.com> wrote:
+Hi Yao,
 
-> On 08/05/18 10:50 AM, Christian K=C3=B6nig wrote:
-> > E.g. transactions are initially send to the root complex for=20
-> > translation, that's for sure. But at least for AMD GPUs the root comple=
-x=20
-> > answers with the translated address which is then cached in the device.
-> >=20
-> > So further transactions for the same address range then go directly to=
-=20
-> > the destination. =20
->=20
-> Sounds like you are referring to Address Translation Services (ATS).
-> This is quite separate from ACS and, to my knowledge, isn't widely
-> supported by switch hardware.
+On 2018/5/11 10:15, Yao Chen wrote:
+> Add pcie msi interrupt attribute for hi3660 SOC.
+> 
+> Signed-off-by: Yao Chen <chenyao11@huawei.com>
 
-They are not so unrelated, see the ACS Direct Translated P2P
-capability, which in fact must be implemented by switch downstream
-ports implementing ACS and works specifically with ATS.  This appears to
-be the way the PCI SIG would intend for P2P to occur within an IOMMU
-managed topology, routing pre-translated DMA directly between peer
-devices while requiring non-translated requests to bounce through the
-IOMMU.  Really, what's the value of having an I/O virtual address space
-provided by an IOMMU if we're going to allow physical DMA between
-downstream devices, couldn't we just turn off the IOMMU altogether?  Of
-course ATS is not without holes itself, basically that we trust the
-endpoint's implementation of ATS implicitly.  Thanks,
+Applied patch 2 into the hisilicon dt tree.
+Thanks!
 
-Alex
+BR,
+Wei
+
+> ---
+>  arch/arm64/boot/dts/hisilicon/hi3660.dtsi | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+> index ec3eb8e..2cef8f4 100644
+> --- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+> +++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+> @@ -872,6 +872,8 @@
+>  				  0x0 0x02000000>;
+>  			num-lanes = <1>;
+>  			#interrupt-cells = <1>;
+> +			interrupts = <0 283 4>;
+> +			interrupt-names = "msi";
+>  			interrupt-map-mask = <0xf800 0 0 7>;
+>  			interrupt-map = <0x0 0 0 1
+>  					 &gic GIC_SPI 282 IRQ_TYPE_LEVEL_HIGH>,
+> 
