@@ -1,58 +1,99 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-To: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
- linux-block@vger.kernel.org
-References: <20180423233046.21476-1-logang@deltatee.com>
- <20180423233046.21476-7-logang@deltatee.com>
- <59b7762e-6d38-7746-20f3-22fd762ecfe7@infradead.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <9e20024d-8b32-61ff-4b9a-c9392082987f@deltatee.com>
-Date: Tue, 22 May 2018 15:28:19 -0600
-MIME-Version: 1.0
-In-Reply-To: <59b7762e-6d38-7746-20f3-22fd762ecfe7@infradead.org>
-Subject: Re: [PATCH v4 06/14] PCI/P2PDMA: Add P2P DMA driver writer's
- documentation
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Jonathan Corbet <corbet@lwn.net>, Alex Williamson <alex.williamson@redhat.com>,
- Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.skyhub.de ([5.9.137.197]:58960 "EHLO mail.skyhub.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750950AbeEKQjr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 May 2018 12:39:47 -0400
+From: Borislav Petkov <bp@alien8.de>
+To: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH] pci/aer: Get rid of aer_recover_work_func() forward declaration
+Date: Fri, 11 May 2018 18:39:23 +0200
+Message-Id: <20180511163923.22116-1-bp@alien8.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the review Randy! I'll make the changes for the next time we
-post the series.
+From: Borislav Petkov <bp@suse.de>
 
-On 22/05/18 03:24 PM, Randy Dunlap wrote:
->> +The first task an orchestrator driver must do is compile a list of
->> +all client drivers that will be involved in a given transaction. For
->> +example, the NVMe Target driver creates a list including all NVMe drives
->                                                                      ^^^^^^
->                                                                    or drivers ?
-> Could be either, I guess, but the previous sentence says "compile a list of drivers."
+Just move the actual function up so that it is visible to its user
+aer_recover_queue().
 
-I did mean "drives". But perhaps "devices" would be more clear. A list
-of all NVMe drivers doesn't make much sense as I'm pretty sure there is
-only one NVMe driver.
+No functional changes.
 
-Logan
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ drivers/pci/pcie/aer/aerdrv_core.c | 45 +++++++++++++++---------------
+ 1 file changed, 22 insertions(+), 23 deletions(-)
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 0ea5acc40323..a9e575189571 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -567,8 +567,6 @@ static void handle_error_source(struct pcie_device *aerdev,
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+-static void aer_recover_work_func(struct work_struct *work);
+-
+ #define AER_RECOVER_RING_ORDER		4
+ #define AER_RECOVER_RING_SIZE		(1 << AER_RECOVER_RING_ORDER)
+ 
+@@ -582,6 +580,28 @@ struct aer_recover_entry {
+ 
+ static DEFINE_KFIFO(aer_recover_ring, struct aer_recover_entry,
+ 		    AER_RECOVER_RING_SIZE);
++
++static void aer_recover_work_func(struct work_struct *work)
++{
++	struct aer_recover_entry entry;
++	struct pci_dev *pdev;
++
++	while (kfifo_get(&aer_recover_ring, &entry)) {
++		pdev = pci_get_domain_bus_and_slot(entry.domain, entry.bus,
++						   entry.devfn);
++		if (!pdev) {
++			pr_err("AER recover: Can not find pci_dev for %04x:%02x:%02x:%x\n",
++			       entry.domain, entry.bus,
++			       PCI_SLOT(entry.devfn), PCI_FUNC(entry.devfn));
++			continue;
++		}
++		cper_print_aer(pdev, entry.severity, entry.regs);
++		if (entry.severity != AER_CORRECTABLE)
++			do_recovery(pdev, entry.severity);
++		pci_dev_put(pdev);
++	}
++}
++
+ /*
+  * Mutual exclusion for writers of aer_recover_ring, reader side don't
+  * need lock, because there is only one reader and lock is not needed
+@@ -611,27 +631,6 @@ void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+ 	spin_unlock_irqrestore(&aer_recover_ring_lock, flags);
+ }
+ EXPORT_SYMBOL_GPL(aer_recover_queue);
+-
+-static void aer_recover_work_func(struct work_struct *work)
+-{
+-	struct aer_recover_entry entry;
+-	struct pci_dev *pdev;
+-
+-	while (kfifo_get(&aer_recover_ring, &entry)) {
+-		pdev = pci_get_domain_bus_and_slot(entry.domain, entry.bus,
+-						   entry.devfn);
+-		if (!pdev) {
+-			pr_err("AER recover: Can not find pci_dev for %04x:%02x:%02x:%x\n",
+-			       entry.domain, entry.bus,
+-			       PCI_SLOT(entry.devfn), PCI_FUNC(entry.devfn));
+-			continue;
+-		}
+-		cper_print_aer(pdev, entry.severity, entry.regs);
+-		if (entry.severity != AER_CORRECTABLE)
+-			do_recovery(pdev, entry.severity);
+-		pci_dev_put(pdev);
+-	}
+-}
+ #endif
+ 
+ /**
+-- 
+2.17.0.391.g1f1cddd558b5
