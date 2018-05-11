@@ -1,39 +1,383 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 17/40] iommu/arm-smmu-v3: Link domains and devices
-To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org, xuzaibo@huawei.com,
-        will.deacon@arm.com, okaya@codeaurora.org, linux-mm@kvack.org,
-        ashok.raj@intel.com, bharatku@xilinx.com,
-        linux-acpi@vger.kernel.org, rfranz@cavium.com,
-        devicetree@vger.kernel.org, rgummal@xilinx.com,
-        linux-arm-kernel@lists.infradead.org, dwmw2@infradead.org,
-        ilias.apalodimas@linaro.org, iommu@lists.linux-foundation.org,
-        christian.koenig@amd.com
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-18-jean-philippe.brucker@arm.com>
- <20180517170748.00004927@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <652e5b8c-fa51-0fec-01fe-0fccc999ecf6@arm.com>
-Date: Mon, 21 May 2018 15:49:51 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180517170748.00004927@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:35739 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751147AbeEKRPd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 May 2018 13:15:33 -0400
+Received: by mail-ot0-f194.google.com with SMTP id h8-v6so7045100otb.2
+        for <linux-pci@vger.kernel.org>; Fri, 11 May 2018 10:15:33 -0700 (PDT)
+From: Rob Herring <robh@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Ley Foon Tan <lftan@altera.com>,
+        Fengguang Wu <fengguang.wu@intel.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v3 2/2] PCI: Move private DT related functions into private header
+Date: Fri, 11 May 2018 12:15:30 -0500
+Message-Id: <20180511171530.16068-2-robh@kernel.org>
+In-Reply-To: <20180511171530.16068-1-robh@kernel.org>
+References: <20180511171530.16068-1-robh@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17/05/18 17:07, Jonathan Cameron wrote:
->> +++ b/drivers/iommu/arm-smmu-v3.c
->> @@ -595,6 +595,11 @@ struct arm_smmu_device {
->>  struct arm_smmu_master_data {
->>  	struct arm_smmu_device		*smmu;
->>  	struct arm_smmu_strtab_ent	ste;
->> +
->> +	struct arm_smmu_domain		*domain;
->> +	struct list_head		list; /* domain->devices */
-> 
-> More meaningful name perhaps to avoid the need for the comment?
+The functions in linux/of_pci.h are primarily used by host bridge
+drivers, so they can be private to drivers/pci/.
 
-Sure
+The remaining functions are still used mostly in host bridge drivers
+that still live in arch specific code. Hopefully someday, those will get
+moved into drivers/pci as well.
 
-Thanks,
-Jean
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
+Signed-off-by: Rob Herring <robh@kernel.org>
+---
+Looks like these 2 patches slipped thru the cracks.
+
+ drivers/pci/dwc/pci-dra7xx.c           |  1 +
+ drivers/pci/dwc/pcie-designware-host.c |  1 +
+ drivers/pci/host/pci-aardvark.c        |  2 ++
+ drivers/pci/host/pci-ftpci100.c        |  2 ++
+ drivers/pci/host/pci-mvebu.c           |  2 ++
+ drivers/pci/host/pci-rcar-gen2.c       |  2 ++
+ drivers/pci/host/pci-tegra.c           |  2 ++
+ drivers/pci/host/pci-v3-semi.c         |  2 ++
+ drivers/pci/host/pci-xgene.c           |  2 ++
+ drivers/pci/host/pcie-altera.c         |  2 ++
+ drivers/pci/host/pcie-iproc-platform.c |  1 +
+ drivers/pci/host/pcie-mediatek.c       |  2 ++
+ drivers/pci/host/pcie-rcar.c           |  2 ++
+ drivers/pci/host/pcie-rockchip.c       |  2 ++
+ drivers/pci/host/pcie-xilinx-nwl.c     |  2 ++
+ drivers/pci/host/pcie-xilinx.c         |  2 ++
+ drivers/pci/pci.h                      | 40 ++++++++++++++++++++++++++
+ include/linux/of_pci.h                 | 34 ----------------------
+ 18 files changed, 69 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index ed8558d638e5..620709d38a64 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -27,6 +27,7 @@
+ #include <linux/mfd/syscon.h>
+ #include <linux/regmap.h>
+ 
++#include "../pci.h"
+ #include "pcie-designware.h"
+ 
+ /* PCIe controller wrapper DRA7XX configuration registers */
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 6c409079d514..4392dd2e5e0e 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -15,6 +15,7 @@
+ #include <linux/pci_regs.h>
+ #include <linux/platform_device.h>
+ 
++#include "../pci.h"
+ #include "pcie-designware.h"
+ 
+ static struct pci_ops dw_pcie_ops;
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 9abf549631b4..6571422c9c5b 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -19,6 +19,8 @@
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ 
++#include "../pci.h"
++
+ /* PCIe core registers */
+ #define PCIE_CORE_CMD_STATUS_REG				0x4
+ #define     PCIE_CORE_CMD_IO_ACCESS_EN				BIT(0)
+diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+index 5008fd87956a..474faa2e922e 100644
+--- a/drivers/pci/host/pci-ftpci100.c
++++ b/drivers/pci/host/pci-ftpci100.c
+@@ -28,6 +28,8 @@
+ #include <linux/irq.h>
+ #include <linux/clk.h>
+ 
++#include "../pci.h"
++
+ /*
+  * Special configuration registers directly in the first few words
+  * in I/O space.
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 5d4dccfc9d81..23e270839e6a 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -21,6 +21,8 @@
+ #include <linux/of_pci.h>
+ #include <linux/of_platform.h>
+ 
++#include "../pci.h"
++
+ /*
+  * PCIe unit register offsets.
+  */
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index dd4f1a6b57c5..326171cb1a97 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -21,6 +21,8 @@
+ #include <linux/sizes.h>
+ #include <linux/slab.h>
+ 
++#include "../pci.h"
++
+ /* AHB-PCI Bridge PCI communication registers */
+ #define RCAR_AHBPCI_PCICOM_OFFSET	0x800
+ 
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 389e74be846c..f4f53d092e00 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -40,6 +40,8 @@
+ #include <soc/tegra/cpuidle.h>
+ #include <soc/tegra/pmc.h>
+ 
++#include "../pci.h"
++
+ #define INT_PCI_MSI_NR (8 * 32)
+ 
+ /* register definitions */
+diff --git a/drivers/pci/host/pci-v3-semi.c b/drivers/pci/host/pci-v3-semi.c
+index 0a4dea796663..04bf53d02f23 100644
+--- a/drivers/pci/host/pci-v3-semi.c
++++ b/drivers/pci/host/pci-v3-semi.c
+@@ -33,6 +33,8 @@
+ #include <linux/regmap.h>
+ #include <linux/clk.h>
+ 
++#include "../pci.h"
++
+ #define V3_PCI_VENDOR			0x00000000
+ #define V3_PCI_DEVICE			0x00000002
+ #define V3_PCI_CMD			0x00000004
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 0a0d7ee6d3c9..648a50243022 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -22,6 +22,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
+ 
++#include "../pci.h"
++
+ #define PCIECORE_CTLANDSTATUS		0x50
+ #define PIM1_1L				0x80
+ #define IBAR2				0x98
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index a6af62e0256d..dc4985087e04 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -17,6 +17,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
+ 
++#include "../pci.h"
++
+ #define RP_TX_REG0			0x2000
+ #define RP_TX_REG1			0x2004
+ #define RP_TX_CNTRL			0x2008
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index e764a2a2693c..fb23fdf919c8 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -16,6 +16,7 @@
+ #include <linux/of_platform.h>
+ #include <linux/phy/phy.h>
+ 
++#include "../pci.h"
+ #include "pcie-iproc.h"
+ 
+ static const struct of_device_id iproc_pcie_of_match_table[] = {
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index a8b20c5012a9..5b3da5856ca2 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -22,6 +22,8 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/reset.h>
+ 
++#include "../pci.h"
++
+ /* PCIe shared registers */
+ #define PCIE_SYS_CFG		0x00
+ #define PCIE_INT_ENABLE		0x0c
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 6ab28f29ac6a..9629ec039deb 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -28,6 +28,8 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ 
++#include "../pci.h"
++
+ #define PCIECAR			0x000010
+ #define PCIECCTLR		0x000018
+ #define  CONFIG_SEND_ENABLE	(1 << 31)
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index f1e8f97ea1fb..daf9120a4350 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -36,6 +36,8 @@
+ #include <linux/reset.h>
+ #include <linux/regmap.h>
+ 
++#include "../pci.h"
++
+ /*
+  * The upper 16 bits of PCIE_CLIENT_CONFIG are a write mask for the lower 16
+  * bits.  This allows atomic updates of the register without locking.
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 4839ae578711..9505bb9649d0 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -21,6 +21,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/irqchip/chained_irq.h>
+ 
++#include "../pci.h"
++
+ /* Bridge core config registers */
+ #define BRCFG_PCIE_RX0			0x00000000
+ #define BRCFG_INTERRUPT			0x00000010
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 0ad188effc09..ec193e930caa 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -23,6 +23,8 @@
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ 
++#include "../pci.h"
++
+ /* Register definitions */
+ #define XILINX_PCIE_REG_BIR		0x00000130
+ #define XILINX_PCIE_REG_IDR		0x00000138
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 023f7cf25bff..6c7cd16a1d1c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -407,4 +407,44 @@ static inline u64 pci_rebar_size_to_bytes(int size)
+ 	return 1ULL << (size + 20);
+ }
+ 
++struct device_node;
++
++#ifdef CONFIG_OF
++int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
++int of_get_pci_domain_nr(struct device_node *node);
++int of_pci_get_max_link_speed(struct device_node *node);
++
++#else
++static inline int
++of_pci_parse_bus_range(struct device_node *node, struct resource *res)
++{
++	return -EINVAL;
++}
++
++static inline int
++of_get_pci_domain_nr(struct device_node *node)
++{
++	return -1;
++}
++
++static inline int
++of_pci_get_max_link_speed(struct device_node *node)
++{
++	return -EINVAL;
++}
++#endif /* CONFIG_OF */
++
++#if defined(CONFIG_OF_ADDRESS)
++int of_pci_get_host_bridge_resources(struct device_node *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base);
++#else
++static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
++			unsigned char busno, unsigned char bus_max,
++			struct list_head *resources, resource_size_t *io_base)
++{
++	return -EINVAL;
++}
++#endif
++
+ #endif /* DRIVERS_PCI_H */
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 091033a6b836..e83d87fc5673 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -13,9 +13,6 @@ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
+ int of_pci_get_devfn(struct device_node *np);
+-int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+-int of_get_pci_domain_nr(struct device_node *node);
+-int of_pci_get_max_link_speed(struct device_node *node);
+ void of_pci_check_probe_only(void);
+ int of_pci_map_rid(struct device_node *np, u32 rid,
+ 		   const char *map_name, const char *map_mask_name,
+@@ -32,18 +29,6 @@ static inline int of_pci_get_devfn(struct device_node *np)
+ 	return -EINVAL;
+ }
+ 
+-static inline int
+-of_pci_parse_bus_range(struct device_node *node, struct resource *res)
+-{
+-	return -EINVAL;
+-}
+-
+-static inline int
+-of_get_pci_domain_nr(struct device_node *node)
+-{
+-	return -1;
+-}
+-
+ static inline int of_pci_map_rid(struct device_node *np, u32 rid,
+ 			const char *map_name, const char *map_mask_name,
+ 			struct device_node **target, u32 *id_out)
+@@ -51,12 +36,6 @@ static inline int of_pci_map_rid(struct device_node *np, u32 rid,
+ 	return -EINVAL;
+ }
+ 
+-static inline int
+-of_pci_get_max_link_speed(struct device_node *node)
+-{
+-	return -EINVAL;
+-}
+-
+ static inline void of_pci_check_probe_only(void) { }
+ #endif
+ 
+@@ -70,17 +49,4 @@ of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+ }
+ #endif
+ 
+-#if defined(CONFIG_OF_ADDRESS)
+-int of_pci_get_host_bridge_resources(struct device_node *dev,
+-			unsigned char busno, unsigned char bus_max,
+-			struct list_head *resources, resource_size_t *io_base);
+-#else
+-static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
+-			unsigned char busno, unsigned char bus_max,
+-			struct list_head *resources, resource_size_t *io_base)
+-{
+-	return -EINVAL;
+-}
+-#endif
+-
+ #endif
+-- 
+2.17.0
