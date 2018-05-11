@@ -1,106 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Laurentiu Tudor <laurentiu.tudor@nxp.com>
-To: Nipun Gupta <nipun.gupta@nxp.com>, "robin.murphy@arm.com"
- <robin.murphy@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>, "robh@kernel.org"
- <robh@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v4 6/6] arm64: dts: ls208xa: comply with the iommu map
- binding for fsl_mc
-Date: Wed, 2 May 2018 09:14:18 +0000
-Message-ID: <5AE98169.7060102@nxp.com>
-References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
- <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
- <1525069641-8523-7-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1525069641-8523-7-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42160 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753137AbeEKOSn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 May 2018 10:18:43 -0400
+Date: Fri, 11 May 2018 15:18:36 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jia-Ju Bai <baijiaju1990@gmail.com>
+Cc: kishon@ti.com, bhelgaas@google.com, nsekhar@ti.com,
+        john@metanate.com, shawn.lin@rock-chips.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: endpoint: Replace mdelay with usleep_range in
+ pci_epf_test_write
+Message-ID: <20180511141836.GA29104@e107981-ln.cambridge.arm.com>
+References: <1523365446-31563-1-git-send-email-baijiaju1990@gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "stuyoder@gmail.com" <stuyoder@gmail.com>,
- Bharat Bhushan <bharat.bhushan@nxp.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- "joro@8bytes.org" <joro@8bytes.org>,
- "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Leo Li <leoyang.li@nxp.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>, "hch@lst.de" <hch@lst.de>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1523365446-31563-1-git-send-email-baijiaju1990@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Nipun,
-
-On 04/30/2018 09:27 AM, Nipun Gupta wrote:
-> fsl-mc bus support the new iommu-map property. Comply to this binding
-> for fsl_mc bus.
->
-> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-
-This looks good to me, so:
-
-Reviewed-By: Laurentiu Tudor <laurentiu.tudor@nxp.com>
-
----
-Best Regards, Laurentiu
-
+On Tue, Apr 10, 2018 at 09:04:06PM +0800, Jia-Ju Bai wrote:
+> pci_epf_test_write() is never called in atomic context.
+> 
+> The call chain ending up at pci_epf_test_write() is:
+> [1] pci_epf_test_write() <- pci_epf_test_cmd_handler()
+> 
+> pci_epf_test_cmd_handler() is set as a parameter of INIT_DELAYED_WORK() 
+> in pci_epf_test_probe().
+> This function is not called in atomic context.
+> 
+> Despite never getting called from atomic context, pci_epf_test_write()
+> calls mdelay() to busily wait.
+> This is not necessary and can be replaced with usleep_range() to
+> avoid busy waiting.
+> 
+> This is found by a static analysis tool named DCNS written by myself.
+> And I also manually check it.
+> 
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 > ---
->   arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 6 +++++-
->   1 file changed, 5 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-> index 137ef4d..6010505 100644
-> --- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-> +++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-> @@ -184,6 +184,7 @@
->   		#address-cells = <2>;
->   		#size-cells = <2>;
->   		ranges;
-> +		dma-ranges = <0x0 0x0 0x0 0x0 0x10000 0x00000000>;
->
->   		clockgen: clocking@1300000 {
->   			compatible = "fsl,ls2080a-clockgen";
-> @@ -357,6 +358,8 @@
->   			reg = <0x00000008 0x0c000000 0 0x40>,	 /* MC portal base */
->   			      <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
->   			msi-parent = <&its>;
-> +			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by u-boot */
-> +			dma-coherent;
->   			#address-cells = <3>;
->   			#size-cells = <1>;
->
-> @@ -460,6 +463,8 @@
->   			compatible = "arm,mmu-500";
->   			reg = <0 0x5000000 0 0x800000>;
->   			#global-interrupts = <12>;
-> +			#iommu-cells = <1>;
-> +			stream-match-mask = <0x7C00>;
->   			interrupts = <0 13 4>, /* global secure fault */
->   				     <0 14 4>, /* combined secure interrupt */
->   				     <0 15 4>, /* global non-secure fault */
-> @@ -502,7 +507,6 @@
->   				     <0 204 4>, <0 205 4>,
->   				     <0 206 4>, <0 207 4>,
->   				     <0 208 4>, <0 209 4>;
-> -			mmu-masters = <&fsl_mc 0x300 0>;
->   		};
->
->   		dspi: dspi@2100000 {
->
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+
+Applied to pci/endpoint for v4.18, thanks.
+
+Lorenzo
+
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index f9308c2..2f0642e 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -237,7 +237,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+>  	 * wait 1ms inorder for the write to complete. Without this delay L3
+>  	 * error in observed in the host system.
+>  	 */
+> -	mdelay(1);
+> +	usleep_range(1000, 2000);
+>  
+>  	kfree(buf);
+>  
+> -- 
+> 1.9.1
+> 
