@@ -1,248 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 30 May 2018 10:23:29 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Christoffer Dall <cdall@linaro.org>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>
-Subject: Re: [PATCH 2/3] PCI: Allow specifying devices using a base bus and
- path of devfns
-Message-ID: <20180530102329.7423dc57@w520.home>
-In-Reply-To: <20180524214816.14485-3-logang@deltatee.com>
-References: <20180524214816.14485-1-logang@deltatee.com>
-        <20180524214816.14485-3-logang@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:47322 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752372AbeEKTKl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 May 2018 15:10:41 -0400
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-mm@kvack.org
+Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
+        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
+        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
+        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
+        baolu.lu@linux.intel.com, robdclark@gmail.com,
+        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com
+Subject: [PATCH v2 34/40] ACPI/IORT: Check ATS capability in root complex nodes
+Date: Fri, 11 May 2018 20:06:35 +0100
+Message-Id: <20180511190641.23008-35-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 24 May 2018 15:48:15 -0600
-Logan Gunthorpe <logang@deltatee.com> wrote:
+Root complex node in IORT has a bit telling whether it supports ATS or
+not. Store this bit in the IOMMU fwspec when setting up a device, so it
+can be accessed later by an IOMMU driver.
 
-> When specifying PCI devices on the kernel command line using a
-> BDF, the bus numbers can change when adding or replacing a device,
-> changing motherboard firmware, or applying kernel parameters like
-> pci=assign-buses. When this happens, it is usually undesirable to
-> apply whatever command line tweak to the wrong device.
-> 
-> Therefore, it is useful to be able to specify devices with a base
-> bus number and the path of devfns needed to get to it. (Similar to
-> the "device scope" structure in the Intel VT-d spec, Section 8.3.1.)
-> 
-> Thus, we add an option to specify devices in the following format:
-> 
-> path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
-> 
-> The path can be any segment within the PCI hierarchy of any length and
-> determined through the use of 'lspci -t'. When specified this way, it is
-> less likely that a renumbered bus will result in a valid device specification
-> and the tweak won't be applied to the wrong device.
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Reviewed-by: Stephen Bates <sbates@raithlin.com>
-> ---
->  Documentation/admin-guide/kernel-parameters.txt |  12 ++-
->  drivers/pci/pci.c                               | 106 +++++++++++++++++++++++-
->  2 files changed, 112 insertions(+), 6 deletions(-)
-> 
-> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-> index 894aa516ceab..519ab95bb418 100644
-> --- a/Documentation/admin-guide/kernel-parameters.txt
-> +++ b/Documentation/admin-guide/kernel-parameters.txt
-> @@ -2986,9 +2986,10 @@
->  
->  				Some options herein operate on a specific device
->  				or a set of devices (<pci_dev>). These are
-> -				specified in one of two formats:
-> +				specified in one of three formats:
->  
->  				[<domain>:]<bus>:<slot>.<func>
-> +				path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
->  				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
->  
->  				Note: the first format specifies a PCI
-> @@ -2996,9 +2997,12 @@
->  				if new hardware is inserted, if motherboard
->  				firmware changes, or due to changes caused
->  				by other kernel parameters. The second format
-> -				selects devices using IDs from the
-> -				configuration space which may match multiple
-> -				devices in the system.
-> +				specifies a path from a device through
-> +				a path of multiple slot/function addresses
-> +				(this is more robust against renumbering
-> +				issues). The third format selects devices using
-> +				IDs from the configuration space which may match
-> +				multiple devices in the system.
->  
->  		earlydump	[X86] dump PCI config space before the kernel
->  			        changes anything
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 85fec5e2640b..53ea0d7b02ce 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -184,22 +184,116 @@ EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
->  #endif
->  
->  /**
-> + * pci_dev_str_match_path - test if a path string matches a device
-> + * @dev:    the PCI device to test
-> + * @p:      string to match the device against
-> + * @endptr: pointer to the string after the match
-> + *
-> + * Test if a string (typically from a kernel parameter) formated as a
-> + * path of slot/function addresses matches a PCI device. The string must
-> + * be of the form:
-> + *
-> + *   [<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
-> + *
-> + * A path for a device can be obtained using 'lspci -t'. Using a path
-> + * is more robust against renumbering of devices than using only
-> + * a single bus, slot and function address.
-> + *
-> + * Returns 1 if the string matches the device, 0 if it does not and
-> + * a negative error code if it fails to parse the string.
-> + */
-> +static int pci_dev_str_match_path(struct pci_dev *dev, const char *p,
-> +				  const char **endptr)
-> +{
-> +	int ret;
-> +	int seg, bus, slot, func, count;
-> +	u8 *devfn_path;
-> +	int num_devfn = 0;
-> +	struct pci_dev *tmp;
-> +
-> +	ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
-> +		     &func, &count);
-> +	if (ret != 4) {
-> +		seg = 0;
-> +		ret = sscanf(p, "%x:%x.%x%n", &bus, &slot,
-> +			     &func, &count);
-> +		if (ret != 3)
-> +			return -EINVAL;
-> +	}
-> +
-> +	p += count;
-> +
-> +	devfn_path = kmalloc(PAGE_SIZE, GFP_KERNEL);
-> +	devfn_path[num_devfn++] = PCI_DEVFN(slot, func);
-> +
-> +	while (*p && *p != ',' && *p != ';') {
-> +		ret = sscanf(p, "/%x.%x%n", &slot, &func, &count);
-> +		if (ret != 2) {
-> +			ret = -EINVAL;
-> +			goto free_and_exit;
-> +		}
-> +
-> +		p += count;
-> +		devfn_path[num_devfn++] = PCI_DEVFN(slot, func);
-> +		if (num_devfn >= PAGE_SIZE) {
-> +			ret = -EINVAL;
-> +			goto free_and_exit;
-> +		}
-> +	}
-> +
-> +	*endptr = p;
-> +	ret = 0;
-> +
-> +	if (seg != pci_domain_nr(dev->bus))
-> +		goto free_and_exit;
-> +
-> +	pci_dev_get(dev);
-> +	while (num_devfn > 0 && dev) {
-> +		num_devfn--;
-> +
-> +		if (devfn_path[num_devfn] != dev->devfn)
-> +			goto put_and_exit;
-> +
-> +		if (num_devfn == 0 && bus == dev->bus->number) {
-> +			ret = 1;
-> +			goto put_and_exit;
-> +		}
-> +
-> +		tmp = pci_dev_get(pci_upstream_bridge(dev));
-> +		pci_dev_put(dev);
-> +		dev = tmp;
-> +	}
-> +
-> +put_and_exit:
-> +	pci_dev_put(dev);
-> +free_and_exit:
-> +	kfree(devfn_path);
-> +	return ret;
-> +}
+Use the negative version (NO_ATS) at the moment because it's not clear
+if/how the bit needs to be integrated in other firmware descriptions. The
+SMMU has a feature bit telling if it supports ATS, which might be
+sufficient in most systems for deciding whether or not we should enable
+the ATS capability in endpoints.
 
-I like the idea, but can't we improve the implementation?  It seems
-that we shouldn't need to allocate more than a working copy of the
-original path string.  We can use strrchr() to find the last path
-divider ('/'), match the slot.fn after that to the current devfn, set
-that path divider to null, step to the next upstream device and
-repeat.  Also, since we're working from a downstream device up, I
-suspect we don't need to get and put references at each step, the
-downstream device probably already holds a reference to the upstream
-device for each step along the way.  It would be interesting to adapt
-this to allow specifying a driver_override for a specific device as
-well, I can think of a bunch of vfio users that would prefer that to
-initrd scripts, but I know how much Bjorn loves more commandline
-bloat ;)  Thanks,
+Cc: lorenzo.pieralisi@arm.com
+Cc: hanjun.guo@linaro.org
+Cc: sudeep.holla@arm.com
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/acpi/arm64/iort.c | 11 +++++++++++
+ include/linux/iommu.h     |  4 ++++
+ 2 files changed, 15 insertions(+)
 
-Alex
-
-> +
-> +/**
->   * pci_dev_str_match - test if a string matches a device
->   * @dev:    the PCI device to test
->   * @p:      string to match the device against
->   * @endptr: pointer to the string after the match
->   *
->   * Test if a string (typically from a kernel parameter) matches a
-> - * specified. The string may be of one of two forms formats:
-> + * specified. The string may be of one of three formats:
->   *
->   *   [<domain>:]<bus>:<slot>.<func>
-> + *   path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
->   *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
->   *
->   * The first format specifies a PCI bus/slot/function address which
->   * may change if new hardware is inserted, if motherboard firmware changes,
->   * or due to changes caused in kernel parameters.
->   *
-> - * The second format matches devices using IDs in the configuration
-> + * The second format specifies a PCI bus/slot/function root address and
-> + * a path of slot/function addresses to the specific device from the root.
-> + * The path for a device can be determined through the use of 'lspci -t'.
-> + * This format is more robust against renumbering issues than the first format.
-> +
-> + * The third format matches devices using IDs in the configuration
->   * space which may match multiple devices in the system. A value of 0
->   * for any field will match all devices.
->   *
-> @@ -236,7 +330,15 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
->  		    (!subsystem_device ||
->  			    subsystem_device == dev->subsystem_device))
->  			goto found;
-> +	} else if (strncmp(p, "path:", 5) == 0) {
-> +		/* PCI Root Bus and a path of Slot,Function IDs */
-> +		p += 5;
->  
-> +		ret = pci_dev_str_match_path(dev, p, &p);
-> +		if (ret < 0)
-> +			return ret;
-> +		else if (ret)
-> +			goto found;
->  	} else {
->  		/* PCI Bus,Slot,Function ids are specified */
->  		ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 7a3a541046ed..4f4907e58cc8 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -1004,6 +1004,14 @@ void iort_dma_setup(struct device *dev, u64 *dma_addr, u64 *dma_size)
+ 	dev_dbg(dev, "dma_pfn_offset(%#08llx)\n", offset);
+ }
+ 
++static bool iort_pci_rc_supports_ats(struct acpi_iort_node *node)
++{
++	struct acpi_iort_root_complex *pci_rc;
++
++	pci_rc = (struct acpi_iort_root_complex *)node->node_data;
++	return pci_rc->ats_attribute & ACPI_IORT_ATS_SUPPORTED;
++}
++
+ /**
+  * iort_iommu_configure - Set-up IOMMU configuration for a device.
+  *
+@@ -1039,6 +1047,9 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+ 		info.node = node;
+ 		err = pci_for_each_dma_alias(to_pci_dev(dev),
+ 					     iort_pci_iommu_init, &info);
++
++		if (!err && !iort_pci_rc_supports_ats(node))
++			dev->iommu_fwspec->flags |= IOMMU_FWSPEC_PCI_NO_ATS;
+ 	} else {
+ 		int i = 0;
+ 
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index bcce44455117..d7e2f54086e4 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -655,12 +655,16 @@ struct iommu_fwspec {
+ 	const struct iommu_ops	*ops;
+ 	struct fwnode_handle	*iommu_fwnode;
+ 	void			*iommu_priv;
++	u32			flags;
+ 	unsigned int		num_ids;
+ 	unsigned int		num_pasid_bits;
+ 	bool			can_stall;
+ 	u32			ids[1];
+ };
+ 
++/* Firmware disabled ATS in the root complex */
++#define IOMMU_FWSPEC_PCI_NO_ATS			(1 << 0)
++
+ int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
+ 		      const struct iommu_ops *ops);
+ void iommu_fwspec_free(struct device *dev);
+-- 
+2.17.0
