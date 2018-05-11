@@ -1,59 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45064 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752936AbeEVVv2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 May 2018 17:51:28 -0400
-Date: Tue, 22 May 2018 16:51:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Doug Meyer <dmeyer@gigaio.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        kurt.schwemmer@microsemi.com, linux-pci@vger.kernel.org,
-        linux-ntb <linux-ntb@googlegroups.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jon Mason <jdmason@kudzu.us>,
-        "Jiang, Dave" <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>, linux-kernel@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH 2/2] NTB: PCI Quirk to Enable Switchtec NT Functionality
- with IOMMU On
-Message-ID: <20180522215126.GA22385@bhelgaas-glaptop.roam.corp.google.com>
-References: <1526558413-23113-1-git-send-email-dmeyer@gigaio.com>
- <1526558413-23113-3-git-send-email-dmeyer@gigaio.com>
- <20180517134521.GC19955@bhelgaas-glaptop.roam.corp.google.com>
- <9dd68ac0-5b9e-b257-49d2-20327c2ab282@deltatee.com>
- <CA+GK6en+g+T9H0sOMdVXv-_aD3rRcuzZ1JdfK0moEoTuuJnrqQ@mail.gmail.com>
+Received: from mail-ot0-f173.google.com ([74.125.82.173]:45819 "EHLO
+        mail-ot0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752592AbeEKNqO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 May 2018 09:46:14 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+GK6en+g+T9H0sOMdVXv-_aD3rRcuzZ1JdfK0moEoTuuJnrqQ@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 11 May 2018 15:46:12 +0200
+Message-ID: <CAJZ5v0itrpj0DKaLqQXuavA4_zffVDtgMZoAm4WDOReLRvMUTg@mail.gmail.com>
+Subject: [GIT PULL] Power management fixes for v4.17-rc5
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex]
+Hi Linus,
 
-On Tue, May 22, 2018 at 02:09:59PM -0700, Doug Meyer wrote:
-> Logan answered the questions quite thoroughly. (Thanks, Logan!)
+Please pull from the tag
 
-When you repost it, please rework the commit log so it answers the
-questions directly.  Otherwise the next reader may have the same
-questions again.  E.g., say something about how the proxy IDs are not
-programmable and are fixed in the hardware so all we have to do is
-read them.
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ pm-4.17-rc5
 
-I don't think the question of when the aliases need to be added is
-quite closed.  Logan said "it seems pci_add_dma_alias() must be called
-before the driver is initialized and therefore in a quirk", but that
-doesn't make clear *why* the alias needs to be added before the driver
-is initialized.  The alias shouldn't be needed until the device does a
-DMA, and it shouldn't do that until after the driver initializes.
+with top-most commit ef050374e1eedec45bd260e0ac9eb98f699267d2
 
-I suspect the reason the existing quirks are in drivers/pci/quirks.c
-is because the IOMMU driver is in the host OS, but the host may not
-have a driver for the device if the device is passed through to a
-guest OS.  In that case, the only way to add the alias is by using a
-quirk that is always built into the host OS.
+ Merge branches 'pm-pci' and 'pm-docs'
 
-We could argue that the driver in the guest should be able to tell the
-host's IOMMU driver about these aliases, but I doubt there's an
-interface for that.
+on top of commit 75bc37fefc4471e718ba8e651aa74673d4e0a9eb
 
-Bjorn
+ Linux 4.17-rc4
+
+to receive power management fixes for 4.17-rc5.
+
+These fix two PCI power management regressions from the 4.13 cycle
+and one cpufreq schedutil governor bug introduced during the 4.12
+cycle, drop a stale comment from the schedutil code and fix two
+mistakes in docs.
+
+Specifics:
+
+ - Restore device_may_wakeup() check in pci_enable_wake() removed
+   inadvertently during the 4.13 cycle to prevent systems from
+   drawing excessive power when suspended or off, among other
+   things (Rafael Wysocki).
+
+ - Fix pci_dev_run_wake() to properly handle devices that only can
+   signal PME# when in the D3cold power state (Kai Heng Feng).
+
+ - Fix the schedutil cpufreq governor to avoid using UINT_MAX
+   as the new CPU frequency in some cases due to a missing check
+   (Rafael Wysocki).
+
+ - Remove a stale comment regarding worker kthreads from the
+   schedutil cpufreq governor (Juri Lelli).
+
+ - Fix a copy-paste mistake in the intel_pstate driver documentation
+   (Juri Lelli).
+
+ - Fix a typo in the system sleep states documentation (Jonathan
+   Neusch=C3=A4fer).
+
+Thanks!
+
+
+---------------
+
+Jonathan Neusch=C3=A4fer (1):
+      PM: docs: sleep-states: Fix a typo ("includig")
+
+Juri Lelli (2):
+      PM: docs: intel_pstate: fix Active Mode w/o HWP paragraph
+      cpufreq: schedutil: remove stale comment
+
+Kai Heng Feng (1):
+      PCI / PM: Always check PME wakeup capability for runtime wakeup suppo=
+rt
+
+Rafael J. Wysocki (2):
+      cpufreq: schedutil: Avoid using invalid next_freq
+      PCI / PM: Check device_may_wakeup() in pci_enable_wake()
+
+---------------
+
+ Documentation/admin-guide/pm/intel_pstate.rst |  2 +-
+ Documentation/admin-guide/pm/sleep-states.rst |  2 +-
+ drivers/pci/pci.c                             | 37 +++++++++++++++++++----=
+----
+ kernel/sched/cpufreq_schedutil.c              | 16 ++----------
+ 4 files changed, 31 insertions(+), 26 deletions(-)
