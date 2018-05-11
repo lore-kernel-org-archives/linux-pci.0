@@ -1,50 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42964 "EHLO
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:47476 "EHLO
         foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753234AbeENNlz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 May 2018 09:41:55 -0400
-Date: Mon, 14 May 2018 14:41:48 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, m-karicheri2@ti.com,
-        linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: Re: [PATCH] PCI: keystone: Do not treat link up message as error
-Message-ID: <20180514134148.GA12029@e107981-ln.cambridge.arm.com>
-References: <1525885056-7528-1-git-send-email-festevam@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1525885056-7528-1-git-send-email-festevam@gmail.com>
+        id S1752418AbeEKTK5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 May 2018 15:10:57 -0400
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-mm@kvack.org
+Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
+        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
+        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
+        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
+        baolu.lu@linux.intel.com, robdclark@gmail.com,
+        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
+Subject: [PATCH v2 37/40] iommu/arm-smmu-v3: Disable tagged pointers
+Date: Fri, 11 May 2018 20:06:38 +0100
+Message-Id: <20180511190641.23008-38-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 09, 2018 at 01:57:36PM -0300, Fabio Estevam wrote:
-> From: Fabio Estevam <fabio.estevam@nxp.com>
-> 
-> The "Link already up" message does not indicate any error, so
-> change it to dev_info() level instead.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
-> ---
->  drivers/pci/dwc/pci-keystone.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+The ARM architecture has a "Top Byte Ignore" (TBI) option that makes the
+MMU mask out bits [63:56] of an address, allowing a userspace application
+to store data in its pointers. This option is incompatible with PCI ATS.
 
-Applied to pci/dwc for v4.18, thanks.
+If TBI is enabled in the SMMU and userspace triggers DMA transactions on
+tagged pointers, the endpoint might create ATC entries for addresses that
+include a tag. Software would then have to send ATC invalidation packets
+for each 255 possible alias of an address, or just wipe the whole address
+space. This is not a viable option, so disable TBI.
 
-Lorenzo
+The impact of this change is unclear, since there are very few users of
+tagged pointers, much less SVA. But the requirement introduced by this
+patch doesn't seem excessive: a userspace application using both tagged
+pointers and SVA should now sanitize addresses (clear the tag) before
+using them for device DMA.
 
-> diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
-> index d55ae07..3722a5f 100644
-> --- a/drivers/pci/dwc/pci-keystone.c
-> +++ b/drivers/pci/dwc/pci-keystone.c
-> @@ -89,7 +89,7 @@ static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
->  	dw_pcie_setup_rc(pp);
->  
->  	if (dw_pcie_link_up(pci)) {
-> -		dev_err(dev, "Link already up\n");
-> +		dev_info(dev, "Link already up\n");
->  		return 0;
->  	}
->  
-> -- 
-> 2.7.4
-> 
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3-context.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/iommu/arm-smmu-v3-context.c b/drivers/iommu/arm-smmu-v3-context.c
+index bdc9bfd1f35d..22e7b80a7682 100644
+--- a/drivers/iommu/arm-smmu-v3-context.c
++++ b/drivers/iommu/arm-smmu-v3-context.c
+@@ -200,7 +200,6 @@ static u64 arm_smmu_cpu_tcr_to_cd(struct arm_smmu_context_cfg *cfg, u64 tcr)
+ 	val |= ARM_SMMU_TCR2CD(tcr, EPD0);
+ 	val |= ARM_SMMU_TCR2CD(tcr, EPD1);
+ 	val |= ARM_SMMU_TCR2CD(tcr, IPS);
+-	val |= ARM_SMMU_TCR2CD(tcr, TBI0);
+ 
+ 	if (cfg->hw_access)
+ 		val |= ARM_SMMU_TCR2CD(tcr, HA);
+-- 
+2.17.0
