@@ -1,128 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v6 00/12] PCI: Fixes and cleanups for native PCIe, SHPC and ACPI hotplug
-Date: Thu, 10 May 2018 21:28:32 +0300
-Message-Id: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:46732 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750974AbeEKTjZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 May 2018 15:39:25 -0400
+Date: Fri, 11 May 2018 14:39:23 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@linux.intel.com>
+Cc: Matthew Wilcox <willy@infradead.org>,
+        Aron Griffis <aron@arongriffis.com>,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: PCIe unsupported request with Intel 760p
+Message-ID: <20180511193923.GJ190385@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAKDfzeD5_AV=YtWqTPr=40vvW4oMFAs4gJs_r42PJWcb815zyQ@mail.gmail.com>
+ <20180507123035.GA20097@gmail.com>
+ <20180507134354.GF18116@bombadil.infradead.org>
+ <20180507151246.GB20686@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180507151246.GB20686@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Mon, May 07, 2018 at 09:12:47AM -0600, Keith Busch wrote:
+> On Mon, May 07, 2018 at 06:43:54AM -0700, Matthew Wilcox wrote:
+> > On Mon, May 07, 2018 at 08:30:35AM -0400, Aron Griffis wrote:
+> > > I'm getting this error continuously with an Intel 760p on 4.16.5 (Fedora 28)
+> > > 
+> > > pcieport 0000:00:1d.0: AER: Uncorrected (Non-Fatal) error received: id=00e8
+> > > pcieport 0000:00:1d.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=00e8(Requester ID)
+> > > pcieport 0000:00:1d.0:   device [8086:a298] error status/mask=00100000/00010000
+> > > pcieport 0000:00:1d.0:    [20] Unsupported Request    (First)
+> > > pcieport 0000:00:1d.0:   TLP Header: 34000000 70000010 00000000 88468846
+> > > pcieport 0000:00:1d.0: broadcast error_detected message
+> > > pcieport 0000:00:1d.0: broadcast mmio_enabled message
+> > > pcieport 0000:00:1d.0: broadcast resume message
+> > > pcieport 0000:00:1d.0: AER: Device recovery successful
+> > > 
+> > > Willy graciously decoded this for me to a "Latency Tolerance Reporting
+> > > Message," and suggested I send email to this list to check whether it's a
+> > > problem with the device or driver.
+> > 
+> > Decoding this further, the Requester ID is 70:00.0 (ie the NVMe device is
+> > sending the LTR message) so the Root Port is the one saying "Unsupported
+> > Request".  Which is fair enough, because ...
+> > 
+> > > 00:1d.0 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #9 (rev f0) (prog-if 00 [Normal decode])
+> > > 	Bus: primary=00, secondary=70, subordinate=70, sec-latency=0
+> > > 		DevCap2: Completion Timeout: Range ABC, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd+
+> > > 			 AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
+> > > 		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+> > > 			 AtomicOpsCtl: ReqEn- EgressBlck-
+> > 
+> > the Root Port doesn't know what LTR is.
+> > 
+> > > 70:00.0 Non-Volatile memory controller: Intel Corporation Device f1a6 (rev 03) (prog-if 02 [NVM Express])
+> > > 	Capabilities: [70] Express (v2) Endpoint, MSI 00
+> > > 		DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR+, OBFF Not Supported
+> > > 			 AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+> > > 		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+> > > 			 AtomicOpsCtl: ReqEn-
+> > 
+> > The device *does* know what LTR is, but it's supposed to be disabled.
+> > 
+> > Is there more recent firmware for this device?
+> 
+> Hi Willy,
+> 
+> Thank you for the detailed analysis. :)
+> 
+> I'm not familiar with this device, but I'll check internally to see if
+> this a later firmware release address this.
 
-When Thunderbolt host router is configured to be in native enumeration mode
-it is only present in the system if there is something connected to the
-ports. This pretty much follows how the BIOS assisted mode works.
+Any update on this?  I'm pretty concerned about this issue because it
+*looks* like we're not doing anything that should cause this problem,
+and I don't know what we *could* do to avoid it.
 
-In native enumeration mode the Thunderbolt host controller (NHI) and USB
-host controller (xHCI) are not hot-added using native PCIe hotplug but
-instead they will be hotplugged via BIOS triggered ACPI Notify() to the
-root port. This is done to preserve resources since NHI and xHCI only need
-1 MB of MMIO space and no additional buses. Currently Linux does not
-support this very well and ends up failing the hotplug in one way or
-another. More detailed explanation is in changelog of patch [7/12].
+The theory is that the Intel 760p NVMe is sending LTR messages even
+though it's configured to *not* send them.  It happens that Aron's
+system has a root port that doesn't support LTR, and it complains when
+it sees the messages.
 
-This series fixes this issue and in addition includes fixes for few other
-issues found during testing on a system that has Thunderbolt controller in
-native PCIe enumeration mode. However, the fixes here are not in any way
-Thunderbolt specific and should be applicable to other systems as well.
+Anybody who has the Intel 760p NVMe should be able to reproduce this.
+If the root port leading to the NVMe doesn't support LTR (its DevCap2
+would say "LTR-"), the same problem should occur.
 
-The previous versions of the patch series can be found here:
+If your root port *does* support LTR, you might be able to force this
+to happen by booting with "pcie_aspm=off" and then running this
+command where "bb:dd.f" is the bus/domain/function of the root port:
 
-  v5: https://www.spinics.net/lists/linux-pci/msg71339.html
-  v4: https://www.spinics.net/lists/linux-pci/msg71006.html
-  v3: https://www.spinics.net/lists/linux-acpi/msg80876.html
-  v2: https://www.spinics.net/lists/linux-pci/msg69186.html
-  v1: https://www.spinics.net/lists/linux-acpi/msg80607.html
+  # setpci -sbb:dd.f CAP_EXP+0x28.W=0:0x400
 
-Changes from v5:
+But I tried this on a root port leading to a different (non-NVMe)
+device with LTR enabled, and I didn't see any AER complaints about
+unexpected LTR messages, so maybe there's something I'm missing.
 
-  - Dropped patch "PCI: Take bridge window alignment into account when
-    distributing resources"
-  - Rework pciehp_is_native() to be more stricter
-  - Make standard PCI hotplug driver (SHPC) builtin
-  - Rework the way we request OS control of native PCIe
-    hotplug (pciehp) and standard PCI hotplug (SHPC)
-  - Make acpiphp to avoid bridges where hotplug_is_native() returns true
-    (this is combined from pciehp and SHPC)
-  - Updated changelog of patch [7/12]
-  - Use hotplug_bridges + normal_bridges == 1 in patch [9/12] and also
-    remove one indent level from the loop.
-
-Because patch [7/12] looks quite different now I dropped Reviewed-by and
-stable tag (it now depends on reworked pciehp/SHCP support that most
-probably is not suitable for stable trees).
-
-I also was not able to test that SHPC really works because I don't have
-hardware that supports it.
-
-Changes from v4:
-
-  - Updated message in patch [8/9] following Rafael's suggestion
-  - Added Rafael's tag to patches 6, 7, 9.
-
-Changes from v3:
-
-  - Added Andy's tag to patches [1-5]
-  - Improved changelog and subject line of patch [1/9] to match better what
-    it is trying to solve
-  - Improved comment in patch [1/9]
-  - Improved changelog of patches [2/9] and [4/9] accordingly to match
-    better why they are needed
-  - Added cleanup patches [6-9/9]
-
-Changes from v2:
-
-  - Added Rafael's tag to patch [1/5]
-  - Updated changelog of patch [1/5] to include more details about how the
-    problem can be observed from dmesg and lspci output
-
-Changes from v1:
-
-  - Drop 'cmax - max ?: 1' and use similar construct than we use in second
-    pass loop in patch [1/5]
-  - Drop unnecessary parentheses in patch [1/5]
-  - Added Rafael's tag to patches [2-5/5]
-
-Mika Westerberg (12):
-  PCI: Take all bridges into account when calculating bus numbers for extension
-  PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
-  PCI: Request control of native PCIe hotplug only if supported
-  PCI: Make pciehp_is_native() stricter
-  PCI: hotplug: Convert SHPC to be builtin only
-  PCI: Request control of native SHPC hotplug similarly to pciehp
-  ACPI / hotplug / PCI: Do not scan all bridges when native PCIe hotplug is used
-  ACPI / hotplug / PCI: Mark stale PCI devices disconnected
-  PCI: Move resource distribution for a single bridge outside of the loop
-  PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
-  PCI: Improve "partially hidden behind bridge" log message
-  ACPI / hotplug / PCI: Drop unnecessary parentheses
-
- drivers/acpi/pci_root.c            | 10 +++-
- drivers/pci/hotplug/Kconfig        |  5 +-
- drivers/pci/hotplug/acpi_pcihp.c   | 34 +++++-------
- drivers/pci/hotplug/acpiphp_glue.c | 84 +++++++++++++++++++++++-------
- drivers/pci/hotplug/pciehp.h       |  2 +-
- drivers/pci/hotplug/pciehp_core.c  |  2 +-
- drivers/pci/hotplug/pciehp_hpc.c   | 13 ++++-
- drivers/pci/hotplug/shpchp.h       | 11 ----
- drivers/pci/hotplug/shpchp_core.c  |  2 +-
- drivers/pci/pci-acpi.c             | 51 +++++++++++++-----
- drivers/pci/pcie/portdrv.h         |  2 -
- drivers/pci/pcie/portdrv_core.c    |  2 +-
- drivers/pci/probe.c                | 36 ++++++++-----
- drivers/pci/setup-bus.c            | 82 ++++++++++++++---------------
- include/linux/pci.h                |  5 +-
- include/linux/pci_hotplug.h        | 31 +++++++++--
- 16 files changed, 237 insertions(+), 135 deletions(-)
-
--- 
-2.17.0
-
+(BTW, thanks for the really cool setpci syntax, Keith!  I didn't know
+it could do the masked read/modify/write thing.)
