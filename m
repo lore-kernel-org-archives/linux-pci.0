@@ -1,370 +1,302 @@
-Return-Path: <SRS0=sGOI=ID=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=sGOI=ID=codeaurora.org=poza@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 16 May 2018 13:46:25 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
- <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
- <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
- Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
- <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v16 8/9] PCI/DPC: Unify and plumb error handling into DPC
-In-Reply-To: <20180515235632.GB11156@bhelgaas-glaptop.roam.corp.google.com>
-References: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
- <1526035408-31328-9-git-send-email-poza@codeaurora.org>
- <a497fae20a326bdf67395c907a5b6b0d@codeaurora.org>
- <20180515235632.GB11156@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <2ca65f6b38668cfcf553833409ee38e3@codeaurora.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-mm@kvack.org
+Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
+        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
+        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
+        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
+        baolu.lu@linux.intel.com, robdclark@gmail.com,
+        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
+Subject: [PATCH v2 23/40] iommu/arm-smmu-v3: Share process page tables
+Date: Fri, 11 May 2018 20:06:24 +0100
+Message-Id: <20180511190641.23008-24-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-16 05:26, Bjorn Helgaas wrote:
-> On Fri, May 11, 2018 at 05:22:08PM +0530, poza@codeaurora.org wrote:
->> On 2018-05-11 16:13, Oza Pawandeep wrote:
->> > DPC driver implements link_reset callback, and calls
->> > pci_do_fatal_recovery().
->> >
->> > Which follows standard path of ERR_FATAL recovery.
->> >
->> > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> >
->> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> > index 5e8857a..6af7595 100644
->> > --- a/drivers/pci/pci.h
->> > +++ b/drivers/pci/pci.h
->> > @@ -354,7 +354,7 @@ static inline resource_size_t
->> > pci_resource_alignment(struct pci_dev *dev,
->> >  void pci_enable_acs(struct pci_dev *dev);
->> >
->> >  /* PCI error reporting and recovery */
->> > -void pcie_do_fatal_recovery(struct pci_dev *dev);
->> > +void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service);
->> >  void pcie_do_nonfatal_recovery(struct pci_dev *dev);
->> >
->> >  bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
->> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c
->> > b/drivers/pci/pcie/aer/aerdrv_core.c
->> > index fdfc474..36e622d 100644
->> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
->> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->> > @@ -254,7 +254,7 @@ static void handle_error_source(struct pcie_device
->> > *aerdev,
->> >  	} else if (info->severity == AER_NONFATAL)
->> >  		pcie_do_nonfatal_recovery(dev);
->> >  	else if (info->severity == AER_FATAL)
->> > -		pcie_do_fatal_recovery(dev);
->> > +		pcie_do_fatal_recovery(dev, PCIE_PORT_SERVICE_AER);
->> >  }
->> >
->> >  #ifdef CONFIG_ACPI_APEI_PCIEAER
->> > @@ -321,7 +321,7 @@ static void aer_recover_work_func(struct work_struct
->> > *work)
->> >  		if (entry.severity == AER_NONFATAL)
->> >  			pcie_do_nonfatal_recovery(pdev);
->> >  		else if (entry.severity == AER_FATAL)
->> > -			pcie_do_fatal_recovery(pdev);
->> > +			pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_AER);
->> >  		pci_dev_put(pdev);
->> >  	}
->> >  }
->> > diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
->> > index 80ec384..5680c13 100644
->> > --- a/drivers/pci/pcie/dpc.c
->> > +++ b/drivers/pci/pcie/dpc.c
->> > @@ -73,29 +73,31 @@ static void dpc_wait_link_inactive(struct dpc_dev
->> > *dpc)
->> >  	pcie_wait_for_link(pdev, false);
->> >  }
->> >
->> > -static void dpc_work(struct work_struct *work)
->> > +static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
->> >  {
->> > -	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->> > -	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
->> > -	struct pci_bus *parent = pdev->subordinate;
->> > -	u16 cap = dpc->cap_pos, ctl;
->> > -
->> > -	pci_lock_rescan_remove();
->> > -	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
->> > -					 bus_list) {
->> > -		pci_dev_get(dev);
->> > -		pci_dev_set_disconnected(dev, NULL);
->> > -		if (pci_has_subordinate(dev))
->> > -			pci_walk_bus(dev->subordinate,
->> > -				     pci_dev_set_disconnected, NULL);
->> > -		pci_stop_and_remove_bus_device(dev);
->> > -		pci_dev_put(dev);
->> > -	}
->> > -	pci_unlock_rescan_remove();
->> > -
->> > +	struct dpc_dev *dpc;
->> > +	struct pcie_device *pciedev;
->> > +	struct device *devdpc;
->> > +	u16 cap, ctl;
->> > +
->> > +	/*
->> > +	 * DPC disables the Link automatically in hardware, so it has
->> > +	 * already been reset by the time we get here.
->> > +	 */
->> > +
->> > +	devdpc = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_DPC);
->> > +	pciedev = to_pcie_device(devdpc);
->> > +	dpc = get_service_data(pciedev);
->> > +	cap = dpc->cap_pos;
->> > +
->> > +	/*
->> > +	 * Waiting until the link is inactive, then clearing DPC
->> > +	 * trigger status to allow the port to leave DPC.
->> > +	 */
->> >  	dpc_wait_link_inactive(dpc);
->> > +
->> >  	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
->> > -		return;
->> > +		return PCI_ERS_RESULT_DISCONNECT;
->> >  	if (dpc->rp_extensions && dpc->rp_pio_status) {
->> >  		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
->> >  				       dpc->rp_pio_status);
->> > @@ -108,6 +110,17 @@ static void dpc_work(struct work_struct *work)
->> >  	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
->> >  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
->> >  			      ctl | PCI_EXP_DPC_CTL_INT_EN);
->> > +
->> > +	return PCI_ERS_RESULT_RECOVERED;
->> > +}
->> > +
->> > +static void dpc_work(struct work_struct *work)
->> > +{
->> > +	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->> > +	struct pci_dev *pdev = dpc->dev->port;
->> > +
->> > +	/* From DPC point of view error is always FATAL. */
->> > +	pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_DPC);
->> >  }
->> >
->> >  static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
->> > @@ -288,6 +301,7 @@ static struct pcie_port_service_driver dpcdriver = {
->> >  	.service	= PCIE_PORT_SERVICE_DPC,
->> >  	.probe		= dpc_probe,
->> >  	.remove		= dpc_remove,
->> > +	.reset_link	= dpc_reset_link,
->> >  };
->> >
->> >  static int __init dpc_service_init(void)
->> > diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
->> > index 33a16b1..29ff148 100644
->> > --- a/drivers/pci/pcie/err.c
->> > +++ b/drivers/pci/pcie/err.c
->> > @@ -185,7 +185,7 @@ static pci_ers_result_t default_reset_link(struct
->> > pci_dev *dev)
->> >  	return PCI_ERS_RESULT_RECOVERED;
->> >  }
->> >
->> > -static pci_ers_result_t reset_link(struct pci_dev *dev)
->> > +static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
->> >  {
->> >  	struct pci_dev *udev;
->> >  	pci_ers_result_t status;
->> > @@ -200,7 +200,7 @@ static pci_ers_result_t reset_link(struct pci_dev
->> > *dev)
->> >  	}
->> >
->> >  	/* Use the aer driver of the component firstly */
->> > -	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
->> > +	driver = pcie_port_find_service(udev, service);
->> >
->> >  	if (driver && driver->reset_link) {
->> >  		status = driver->reset_link(udev);
->> > @@ -287,7 +287,7 @@ static pci_ers_result_t
->> > broadcast_error_message(struct pci_dev *dev,
->> >   * followed by re-enumeration of devices.
->> >   */
->> >
->> > -void pcie_do_fatal_recovery(struct pci_dev *dev)
->> > +void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
->> >  {
->> >  	struct pci_dev *udev;
->> >  	struct pci_bus *parent;
->> > @@ -313,7 +313,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev)
->> >  		pci_dev_put(pdev);
->> >  	}
->> >
->> > -	result = reset_link(udev);
->> > +	result = reset_link(udev, service);
->> >
->> >  	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> >  		/*
->> > diff --git a/include/linux/aer.h b/include/linux/aer.h
->> > index 8f87bbe..0c506fe 100644
->> > --- a/include/linux/aer.h
->> > +++ b/include/linux/aer.h
->> > @@ -14,6 +14,7 @@
->> >  #define AER_NONFATAL			0
->> >  #define AER_FATAL			1
->> >  #define AER_CORRECTABLE			2
->> > +#define DPC_FATAL			4
-> 
-> I think DPC_FATAL can be 3, since these values are not used as a bit 
-> mask.
-> 
->> >  struct pci_dev;
->> 
->> 
->> Hi Bjorn,
->> 
->> 
->> I have addressed all the comments, and I hope we are heading towards
->> closure.
->> 
->> I just figure that pcie_do_fatal_recovery  (which is getting executed 
->> for
->> DPC as well)
->> 
->> if (result == PCI_ERS_RESULT_RECOVERED) {
->>                 if (pcie_wait_for_link(udev, true))
->>                         pci_rescan_bus(udev->bus);
->>                 pci_info(dev, "Device recovery successful\n");
->>         }
->> 
->> I have to correct it to
->> 
->> if (service==AER  && result == PCI_ERS_RESULT_RECOVERED) {
->>                 if (pcie_wait_for_link(udev, true))
->>                         pci_rescan_bus(udev->bus);
->>                 pci_info(dev, "Device recovery successful\n");
->>         }
-> 
-> This patch is mostly a restructuring of DPC and doesn't really change 
-> its
-> behavior.  DPC didn't previously call pcie_wait_for_link() or
-> pci_rescan_bus(), so I agree that adding the "service==AER" test will
-> help preserve the existing DPC behavior.
-> 
-> However, the rescan should happen with DPC *somewhere* and we should
-> clarify where that is.  Maybe for now we only need a comment about 
-> where
-> that happens.  Ideally, we could eventually converge this so the same
-> mechanism is used for AER and DPC, so we wouldn't need a test like
-> "service=AER".
-> 
->> rest of the things look okay to me.
->> If you have any more comments,
->> I can fix them with this one and hopefully v17 will be the final one.
+With Shared Virtual Addressing (SVA), we need to mirror CPU TTBR, TCR,
+MAIR and ASIDs in SMMU contexts. Each SMMU has a single ASID space split
+into two sets, shared and private. Shared ASIDs correspond to those
+obtained from the arch ASID allocator, and private ASIDs are used for
+"classic" map/unmap DMA.
 
+Replace the ASID IDA with an IDR, allowing to keep information about each
+context. Initialize shared contexts with info obtained from the mm.
 
-I am sorry I pasted the wrong snippet.
-following needs to be fixed in v17.
-from:
-    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-                 /*
-                  * If the error is reported by a bridge, we think this 
-error
-                  * is related to the downstream link of the bridge, so 
-we
-                  * do error recovery on all subordinates of the bridge 
-instead
-                  * of the bridge and clear the error status of the 
-bridge.
-                  */
-                 pci_walk_bus(dev->subordinate, report_resume, 
-&result_data);
-                 pci_cleanup_aer_uncorrect_error_status(dev);
-         }
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3-context.c | 182 ++++++++++++++++++++++++++--
+ 1 file changed, 172 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/iommu/arm-smmu-v3-context.c b/drivers/iommu/arm-smmu-v3-context.c
+index d68da99aa472..352cba3c1a62 100644
+--- a/drivers/iommu/arm-smmu-v3-context.c
++++ b/drivers/iommu/arm-smmu-v3-context.c
+@@ -10,8 +10,10 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/idr.h>
+ #include <linux/kernel.h>
++#include <linux/mmu_context.h>
+ #include <linux/slab.h>
+ 
++#include "io-pgtable-arm.h"
+ #include "iommu-pasid-table.h"
+ 
+ /*
+@@ -69,6 +71,9 @@ struct arm_smmu_cd {
+ 	u64				ttbr;
+ 	u64				tcr;
+ 	u64				mair;
++
++	refcount_t			refs;
++	struct mm_struct		*mm;
+ };
+ 
+ #define pasid_entry_to_cd(entry) \
+@@ -100,7 +105,8 @@ struct arm_smmu_cd_tables {
+ #define pasid_ops_to_tables(ops) \
+ 	pasid_to_cd_tables(iommu_pasid_table_ops_to_table(ops))
+ 
+-static DEFINE_IDA(asid_ida);
++static DEFINE_SPINLOCK(asid_lock);
++static DEFINE_IDR(asid_idr);
+ 
+ static int arm_smmu_alloc_cd_leaf_table(struct device *dev,
+ 					struct arm_smmu_cd_table *desc,
+@@ -239,7 +245,8 @@ static int arm_smmu_write_ctx_desc(struct arm_smmu_cd_tables *tbl, int ssid,
+ #ifdef __BIG_ENDIAN
+ 		      CTXDESC_CD_0_ENDI |
+ #endif
+-		      CTXDESC_CD_0_R | CTXDESC_CD_0_A | CTXDESC_CD_0_ASET |
++		      CTXDESC_CD_0_R | CTXDESC_CD_0_A |
++		      (cd->mm ? 0 : CTXDESC_CD_0_ASET) |
+ 		      CTXDESC_CD_0_AA64 |
+ 		      FIELD_PREP(CTXDESC_CD_0_ASID, cd->entry.tag) |
+ 		      CTXDESC_CD_0_V;
+@@ -255,18 +262,161 @@ static int arm_smmu_write_ctx_desc(struct arm_smmu_cd_tables *tbl, int ssid,
+ 	return 0;
+ }
+ 
++static bool arm_smmu_free_asid(struct arm_smmu_cd *cd)
++{
++	bool free;
++	struct arm_smmu_cd *old_cd;
++
++	spin_lock(&asid_lock);
++	free = refcount_dec_and_test(&cd->refs);
++	if (free) {
++		old_cd = idr_remove(&asid_idr, (u16)cd->entry.tag);
++		WARN_ON(old_cd != cd);
++	}
++	spin_unlock(&asid_lock);
++
++	return free;
++}
++
+ static void arm_smmu_free_cd(struct iommu_pasid_entry *entry)
+ {
+ 	struct arm_smmu_cd *cd = pasid_entry_to_cd(entry);
+ 
+-	ida_simple_remove(&asid_ida, (u16)entry->tag);
++	if (!arm_smmu_free_asid(cd))
++		return;
++
++	if (cd->mm) {
++		/* Unpin ASID */
++		mm_context_put(cd->mm);
++	}
++
+ 	kfree(cd);
+ }
+ 
++static struct arm_smmu_cd *arm_smmu_alloc_cd(struct arm_smmu_cd_tables *tbl)
++{
++	struct arm_smmu_cd *cd;
++
++	cd = kzalloc(sizeof(*cd), GFP_KERNEL);
++	if (!cd)
++		return NULL;
++
++	cd->entry.release = arm_smmu_free_cd;
++	refcount_set(&cd->refs, 1);
++
++	return cd;
++}
++
++static struct arm_smmu_cd *arm_smmu_share_asid(u16 asid)
++{
++	struct arm_smmu_cd *cd;
++
++	cd = idr_find(&asid_idr, asid);
++	if (!cd)
++		return NULL;
++
++	if (cd->mm) {
++		/*
++		 * It's pretty common to find a stale CD when doing unbind-bind,
++		 * given that the release happens after a RCU grace period.
++		 * Simply reuse it.
++		 */
++		refcount_inc(&cd->refs);
++		return cd;
++	}
++
++	/*
++	 * Ouch, ASID is already in use for a private cd.
++	 * TODO: seize it, for the common good.
++	 */
++	return ERR_PTR(-EEXIST);
++}
++
+ static struct iommu_pasid_entry *
+ arm_smmu_alloc_shared_cd(struct iommu_pasid_table_ops *ops, struct mm_struct *mm)
+ {
+-	return ERR_PTR(-ENODEV);
++	u16 asid;
++	u64 tcr, par, reg;
++	int ret = -ENOMEM;
++	struct arm_smmu_cd *cd;
++	struct arm_smmu_cd *old_cd = NULL;
++	struct arm_smmu_cd_tables *tbl = pasid_ops_to_tables(ops);
++
++	asid = mm_context_get(mm);
++	if (!asid)
++		return ERR_PTR(-ESRCH);
++
++	cd = arm_smmu_alloc_cd(tbl);
++	if (!cd)
++		goto err_put_context;
++
++	idr_preload(GFP_KERNEL);
++	spin_lock(&asid_lock);
++	old_cd = arm_smmu_share_asid(asid);
++	if (!old_cd)
++		ret = idr_alloc(&asid_idr, cd, asid, asid + 1, GFP_ATOMIC);
++	spin_unlock(&asid_lock);
++	idr_preload_end();
++
++	if (!IS_ERR_OR_NULL(old_cd)) {
++		if (WARN_ON(old_cd->mm != mm)) {
++			ret = -EINVAL;
++			goto err_free_cd;
++		}
++		kfree(cd);
++		mm_context_put(mm);
++		return &old_cd->entry;
++	} else if (old_cd) {
++		ret = PTR_ERR(old_cd);
++		goto err_free_cd;
++	}
++
++	tcr = TCR_T0SZ(VA_BITS) | TCR_IRGN0_WBWA | TCR_ORGN0_WBWA |
++		TCR_SH0_INNER | ARM_LPAE_TCR_EPD1;
++
++	switch (PAGE_SIZE) {
++	case SZ_4K:
++		tcr |= TCR_TG0_4K;
++		break;
++	case SZ_16K:
++		tcr |= TCR_TG0_16K;
++		break;
++	case SZ_64K:
++		tcr |= TCR_TG0_64K;
++		break;
++	default:
++		WARN_ON(1);
++		ret = -EINVAL;
++		goto err_free_asid;
++	}
++
++	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
++	par = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
++	tcr |= par << ARM_LPAE_TCR_IPS_SHIFT;
++
++	cd->ttbr	= virt_to_phys(mm->pgd);
++	cd->tcr		= tcr;
++	/*
++	 * MAIR value is pretty much constant and global, so we can just get it
++	 * from the current CPU register
++	 */
++	cd->mair	= read_sysreg(mair_el1);
++
++	cd->mm		= mm;
++	cd->entry.tag	= asid;
++
++	return &cd->entry;
++
++err_free_asid:
++	arm_smmu_free_asid(cd);
++
++err_free_cd:
++	kfree(cd);
++
++err_put_context:
++	mm_context_put(mm);
++
++	return ERR_PTR(ret);
+ }
+ 
+ static struct iommu_pasid_entry *
+@@ -280,20 +430,23 @@ arm_smmu_alloc_priv_cd(struct iommu_pasid_table_ops *ops,
+ 	struct arm_smmu_cd_tables *tbl = pasid_ops_to_tables(ops);
+ 	struct arm_smmu_context_cfg *ctx_cfg = &tbl->pasid.cfg.arm_smmu;
+ 
+-	cd = kzalloc(sizeof(*cd), GFP_KERNEL);
++	cd = arm_smmu_alloc_cd(tbl);
+ 	if (!cd)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	asid = ida_simple_get(&asid_ida, 0, 1 << ctx_cfg->asid_bits,
+-			      GFP_KERNEL);
++	idr_preload(GFP_KERNEL);
++	spin_lock(&asid_lock);
++	asid = idr_alloc_cyclic(&asid_idr, cd, 0, 1 << ctx_cfg->asid_bits,
++				GFP_ATOMIC);
++	cd->entry.tag = asid;
++	spin_unlock(&asid_lock);
++	idr_preload_end();
++
+ 	if (asid < 0) {
+ 		kfree(cd);
+ 		return ERR_PTR(asid);
+ 	}
+ 
+-	cd->entry.tag = asid;
+-	cd->entry.release = arm_smmu_free_cd;
+-
+ 	switch (fmt) {
+ 	case ARM_64_LPAE_S1:
+ 		cd->ttbr	= cfg->arm_lpae_s1_cfg.ttbr[0];
+@@ -330,11 +483,20 @@ static void arm_smmu_clear_cd(struct iommu_pasid_table_ops *ops, int pasid,
+ 			      struct iommu_pasid_entry *entry)
+ {
+ 	struct arm_smmu_cd_tables *tbl = pasid_ops_to_tables(ops);
++	struct arm_smmu_cd *cd = pasid_entry_to_cd(entry);
+ 
+ 	if (WARN_ON(pasid > (1 << tbl->pasid.cfg.order)))
+ 		return;
+ 
+ 	arm_smmu_write_ctx_desc(tbl, pasid, NULL);
++
++	/*
++	 * The ASID allocator won't broadcast the final TLB invalidations for
++	 * this ASID, so we need to do it manually. For private contexts,
++	 * freeing io-pgtable ops performs the invalidation.
++	 */
++	if (cd->mm)
++		iommu_pasid_flush_tlbs(&tbl->pasid, pasid, entry);
+ }
+ 
+ static struct iommu_pasid_table *
+-- 
+2.17.0
 
-to
-
-    if (service==AER  && dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-                 /*
-                  * If the error is reported by a bridge, we think this 
-error
-                  * is related to the downstream link of the bridge, so 
-we
-                  * do error recovery on all subordinates of the bridge 
-instead
-                  * of the bridge and clear the error status of the 
-bridge.
-                  */
-                 pci_walk_bus(dev->subordinate, report_resume, 
-&result_data);
-                 pci_cleanup_aer_uncorrect_error_status(dev);
-         }
-
-this is only needed in case of AER.
-
-by the way I can not find pci/oza-v16 branch when I cloned
-  git clone 
-https://kernel.googlesource.com/pub/scm/linux/kernel/git/helgaas/pci
-
-Regards,
-Oza.
-
-
->> 
->> 
->> PS: I am going though the code more, and we can have some follow up 
->> patches
->> (probably some cleanup)
->> for e.g. pcie_portdrv_slot_reset()  checks
->> if (dev->error_state == pci_channel_io_frozen) {
->> 		dev->state_saved = true;
->> 		pci_restore_state(dev);
->> 		pcie_portdrv_restore_config(dev);
->> 		pci_enable_pcie_error_reporting(dev);
->> 	}
->> 
->> 
->> but now since the ERR_FATAL path does not call pcie_portdrv_slot_reset 
->> the
->> check is meaning less.
->> 
->> besides driver's shut_down callbacks might want to handle
->> pci_channel_io_frozen, but that something left to be discussed later.
->> So, I am not touching dev->error_state anywhere as of now in ERR_FATAL 
->> case.
->> 
->> Regards,
->> Oza.
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
->> 
