@@ -1,109 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 2/4] sparc32/PCI/LEON: Converge device enable path
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Meelis Roos <mroos@linux.ee>
-Date: Mon, 21 May 2018 19:30:42 -0500
-Message-ID: <152694904250.59585.8988716469460021131.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152694888798.59585.8779818482732387864.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152694888798.59585.8779818482732387864.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: Logan Gunthorpe <logang@deltatee.com>, =?iso-8859-1?Q?Christian_K=F6nig?=
+ <christian.koenig@amd.com>, Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
+ behind switches
+Date: Fri, 11 May 2018 22:24:59 +0000
+Message-ID: <YTXPR0101MB2045DC0248A9B125CA276969AA9F0@YTXPR0101MB2045.CANPRD01.PROD.OUTLOOK.COM>
+References: <20180423233046.21476-5-logang@deltatee.com>
+ <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
+ <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
+ <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
+ <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
+ <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
+ <20180508133407.57a46902@w520.home>
+ <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
+ <20180508141331.7cd737cb@w520.home>
+ <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
+ <20180508205005.GC15608@redhat.com>
+ <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
+ <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
+ <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
+ <2fc61d29-9eb4-d168-a3e5-955c36e5d821@amd.com>
+ <94C8FE12-7FC3-48BD-9DCA-E6A427E71810@raithlin.com>
+ <f0101988-cf82-7ffb-2aca-d3b8d2f4b504@deltatee.com>
+ <868B49CE-4F0E-4A48-BE78-12149F85F1A4@raithlin.com>
+ <8113cba8-62b9-1801-7a77-f82be223b183@deltatee.com>
+ <cf2b92c9-7c5b-f19c-b5b1-2f2d435296d1@amd.com>
+ <53fa38ce-40dd-6bc1-9b83-c6ccf228b755@deltatee.com>,
+ <A50EA568-81E7-4AD7-8C1B-1029FEA92F49@raithlin.com>
+In-Reply-To: <A50EA568-81E7-4AD7-8C1B-1029FEA92F49@raithlin.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ Keith Busch <keith.busch@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Bjorn
+ Helgaas <helgaas@kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="iso-8859-1"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+All
 
-Most architectures turn on PCI_COMMAND_IO and PCI_COMMAND_MEMORY in
-pci_enable_device() when a driver claims the device.  Sparc LEON did it in
-pcibios_fixup_bus(), which is called during enumeration, before any drivers
-are attached.
+>=A0Alex (or anyone else) can you point to where IOVA addresses are generat=
+ed?
 
-Implement pcibios_enable_device() for LEON so it will do the same as other
-architectures.  This implementation is copied verbatim from sparc64.
+A case of RTFM perhaps (though a pointer to the code would still be appreci=
+ated).
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/sparc/kernel/leon_pci.c |   64 +++++++++++++++---------------------------
- 1 file changed, 23 insertions(+), 41 deletions(-)
+https://www.kernel.org/doc/Documentation/Intel-IOMMU.txt
 
-diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
-index 15b59169c535..c2a5033b07c3 100644
---- a/arch/sparc/kernel/leon_pci.c
-+++ b/arch/sparc/kernel/leon_pci.c
-@@ -60,50 +60,32 @@ void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
- 	pci_bus_add_devices(root_bus);
- }
- 
--void pcibios_fixup_bus(struct pci_bus *pbus)
-+int pcibios_enable_device(struct pci_dev *dev, int mask)
- {
--	struct pci_dev *dev;
--	int i, has_io, has_mem;
--	u16 cmd;
-+	u16 cmd, oldcmd;
-+	int i;
- 
--	list_for_each_entry(dev, &pbus->devices, bus_list) {
--		/*
--		 * We can not rely on that the bootloader has enabled I/O
--		 * or memory access to PCI devices. Instead we enable it here
--		 * if the device has BARs of respective type.
--		 */
--		has_io = has_mem = 0;
--		for (i = 0; i < PCI_ROM_RESOURCE; i++) {
--			unsigned long f = dev->resource[i].flags;
--			if (f & IORESOURCE_IO)
--				has_io = 1;
--			else if (f & IORESOURCE_MEM)
--				has_mem = 1;
--		}
--		/* ROM BARs are mapped into 32-bit memory space */
--		if (dev->resource[PCI_ROM_RESOURCE].end != 0) {
--			dev->resource[PCI_ROM_RESOURCE].flags |=
--							IORESOURCE_ROM_ENABLE;
--			has_mem = 1;
--		}
--		pci_bus_read_config_word(pbus, dev->devfn, PCI_COMMAND, &cmd);
--		if (has_io && !(cmd & PCI_COMMAND_IO)) {
--#ifdef CONFIG_PCI_DEBUG
--			printk(KERN_INFO "LEONPCI: Enabling I/O for dev %s\n",
--					 pci_name(dev));
--#endif
-+	pci_read_config_word(dev, PCI_COMMAND, &cmd);
-+	oldcmd = cmd;
-+
-+	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+		struct resource *res = &dev->resource[i];
-+
-+		/* Only set up the requested stuff */
-+		if (!(mask & (1<<i)))
-+			continue;
-+
-+		if (res->flags & IORESOURCE_IO)
- 			cmd |= PCI_COMMAND_IO;
--			pci_bus_write_config_word(pbus, dev->devfn, PCI_COMMAND,
--									cmd);
--		}
--		if (has_mem && !(cmd & PCI_COMMAND_MEMORY)) {
--#ifdef CONFIG_PCI_DEBUG
--			printk(KERN_INFO "LEONPCI: Enabling MEMORY for dev"
--					 "%s\n", pci_name(dev));
--#endif
-+		if (res->flags & IORESOURCE_MEM)
- 			cmd |= PCI_COMMAND_MEMORY;
--			pci_bus_write_config_word(pbus, dev->devfn, PCI_COMMAND,
--									cmd);
--		}
- 	}
-+
-+	if (cmd != oldcmd) {
-+		printk(KERN_DEBUG "PCI: Enabling device: (%s), cmd %x\n",
-+		       pci_name(dev), cmd);
-+                /* Enable the appropriate bits in the PCI command register.  */
-+		pci_write_config_word(dev, PCI_COMMAND, cmd);
-+	}
-+	return 0;
- }
+Some exceptions to IOVA
+-----------------------
+Interrupt ranges are not address translated, (0xfee00000 - 0xfeefffff).
+The same is true for peer to peer transactions. Hence we reserve the
+address from PCI MMIO ranges so they are not allocated for IOVA addresses.
+
+Cheers
+
+Stephen
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
