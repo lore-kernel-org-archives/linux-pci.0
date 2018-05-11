@@ -1,78 +1,167 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com,
-        robh@kernel.org, mark.rutland@arm.com
-Subject: [PATCH v2 14/40] dt-bindings: document stall and PASID properties for IOMMU masters
-Date: Fri, 11 May 2018 20:06:15 +0100
-Message-Id: <20180511190641.23008-15-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:43080 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751147AbeEKRPc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 May 2018 13:15:32 -0400
+Received: by mail-ot0-f195.google.com with SMTP id y10-v6so7027792otg.10
+        for <linux-pci@vger.kernel.org>; Fri, 11 May 2018 10:15:32 -0700 (PDT)
+From: Rob Herring <robh@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Ley Foon Tan <lftan@altera.com>,
+        Fengguang Wu <fengguang.wu@intel.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v3 1/2] PCI: dwc: move CONFIG_PCI depends to menu
+Date: Fri, 11 May 2018 12:15:29 -0500
+Message-Id: <20180511171530.16068-1-robh@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On ARM systems, some platform devices behind an IOMMU may support stall
-and PASID features. Stall is the ability to recover from page faults and
-PASID offers multiple process address spaces to the device. Together they
-allow to do paging with a device. Let the firmware tell us when a device
-supports stall and PASID.
+There's no need for every config option to explicitly depend on
+CONFIG_PCI, so move it out of individual option to the menu option.
 
-Cc: robh@kernel.org
-Cc: mark.rutland@arm.com
-Reviewed-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
+Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- .../devicetree/bindings/iommu/iommu.txt       | 24 +++++++++++++++++++
- 1 file changed, 24 insertions(+)
+Looks like these 2 patches slipped thru the cracks.
 
-diff --git a/Documentation/devicetree/bindings/iommu/iommu.txt b/Documentation/devicetree/bindings/iommu/iommu.txt
-index 5a8b4624defc..ec3ea3a97b77 100644
---- a/Documentation/devicetree/bindings/iommu/iommu.txt
-+++ b/Documentation/devicetree/bindings/iommu/iommu.txt
-@@ -86,6 +86,30 @@ have a means to turn off translation. But it is invalid in such cases to
- disable the IOMMU's device tree node in the first place because it would
- prevent any driver from properly setting up the translations.
+ drivers/pci/dwc/Kconfig | 17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 2f3f5c50aa48..8c1a5167fb5b 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -1,13 +1,13 @@
+ # SPDX-License-Identifier: GPL-2.0
  
-+Optional properties:
-+--------------------
-+- dma-can-stall: When present, the master can wait for a transaction to
-+  complete for an indefinite amount of time. Upon translation fault some
-+  IOMMUs, instead of aborting the translation immediately, may first
-+  notify the driver and keep the transaction in flight. This allows the OS
-+  to inspect the fault and, for example, make physical pages resident
-+  before updating the mappings and completing the transaction. Such IOMMU
-+  accepts a limited number of simultaneous stalled transactions before
-+  having to either put back-pressure on the master, or abort new faulting
-+  transactions.
-+
-+  Firmware has to opt-in stalling, because most buses and masters don't
-+  support it. In particular it isn't compatible with PCI, where
-+  transactions have to complete before a time limit. More generally it
-+  won't work in systems and masters that haven't been designed for
-+  stalling. For example the OS, in order to handle a stalled transaction,
-+  may attempt to retrieve pages from secondary storage in a stalled
-+  domain, leading to a deadlock.
-+
-+- pasid-num-bits: Some masters support multiple address spaces for DMA, by
-+  tagging DMA transactions with an address space identifier. By default,
-+  this is 0, which means that the device only has one address space.
-+
+ menu "DesignWare PCI Core Support"
++	depends on PCI
  
- Notes:
- ======
+ config PCIE_DW
+ 	bool
+ 
+ config PCIE_DW_HOST
+         bool
+-	depends on PCI
+ 	depends on PCI_MSI_IRQ_DOMAIN
+         select PCIE_DW
+ 
+@@ -22,7 +22,7 @@ config PCI_DRA7XX
+ config PCI_DRA7XX_HOST
+ 	bool "TI DRA7xx PCIe controller Host Mode"
+ 	depends on SOC_DRA7XX || COMPILE_TEST
+-	depends on PCI && PCI_MSI_IRQ_DOMAIN
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
+ 	select PCIE_DW_HOST
+ 	select PCI_DRA7XX
+@@ -52,7 +52,6 @@ config PCI_DRA7XX_EP
+ 
+ config PCIE_DW_PLAT
+ 	bool "Platform bus based DesignWare PCIe Controller"
+-	depends on PCI
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW_HOST
+ 	---help---
+@@ -65,7 +64,6 @@ config PCIE_DW_PLAT
+ 
+ config PCI_EXYNOS
+ 	bool "Samsung Exynos PCIe controller"
+-	depends on PCI
+ 	depends on SOC_EXYNOS5440
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+@@ -73,7 +71,6 @@ config PCI_EXYNOS
+ 
+ config PCI_IMX6
+ 	bool "Freescale i.MX6 PCIe controller"
+-	depends on PCI
+ 	depends on SOC_IMX6Q
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+@@ -81,7 +78,6 @@ config PCI_IMX6
+ 
+ config PCIE_SPEAR13XX
+ 	bool "STMicroelectronics SPEAr PCIe controller"
+-	depends on PCI
+ 	depends on ARCH_SPEAR13XX
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+@@ -91,7 +87,6 @@ config PCIE_SPEAR13XX
+ 
+ config PCI_KEYSTONE
+ 	bool "TI Keystone PCIe controller"
+-	depends on PCI
+ 	depends on ARCH_KEYSTONE
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+@@ -104,7 +99,6 @@ config PCI_KEYSTONE
+ 
+ config PCI_LAYERSCAPE
+ 	bool "Freescale Layerscape PCIe controller"
+-	depends on PCI
+ 	depends on OF && (ARM || ARCH_LAYERSCAPE)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select MFD_SYSCON
+@@ -115,7 +109,6 @@ config PCI_LAYERSCAPE
+ config PCI_HISI
+ 	depends on OF && ARM64
+ 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+-	depends on PCI
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+@@ -126,7 +119,6 @@ config PCI_HISI
+ 
+ config PCIE_QCOM
+ 	bool "Qualcomm PCIe controller"
+-	depends on PCI
+ 	depends on ARCH_QCOM && OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+@@ -138,7 +130,6 @@ config PCIE_QCOM
+ 
+ config PCIE_ARMADA_8K
+ 	bool "Marvell Armada-8K PCIe controller"
+-	depends on PCI
+ 	depends on ARCH_MVEBU
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+@@ -155,7 +146,7 @@ config PCIE_ARTPEC6
+ config PCIE_ARTPEC6_HOST
+ 	bool "Axis ARTPEC-6 PCIe controller Host Mode"
+ 	depends on MACH_ARTPEC6
+-	depends on PCI && PCI_MSI_IRQ_DOMAIN
++	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	select PCIE_ARTPEC6
+@@ -177,7 +168,6 @@ config PCIE_KIRIN
+ 	depends on OF && ARM64
+ 	bool "HiSilicon Kirin series SoCs PCIe controllers"
+ 	depends on PCI_MSI_IRQ_DOMAIN
+-	depends on PCI
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	help
+@@ -187,7 +177,6 @@ config PCIE_KIRIN
+ config PCIE_HISI_STB
+ 	bool "HiSilicon STB SoCs PCIe controllers"
+ 	depends on ARCH_HISI
+-	depends on PCI
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
 -- 
 2.17.0
-
