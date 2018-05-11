@@ -1,92 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59968 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754168AbeEWIZS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 May 2018 04:25:18 -0400
-Date: Wed, 23 May 2018 10:24:58 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Rajat Jain <rajatja@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com
-Subject: Re: [PATCH 2/5] PCI/AER: Add sysfs stats for AER capable devices
-Message-ID: <20180523082458.GE7247@kroah.com>
-References: <20180522222805.80314-1-rajatja@google.com>
- <20180522222805.80314-3-rajatja@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180522222805.80314-3-rajatja@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=T3Dv=H6=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=T3Dv=H6=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Keith Busch <keith.busch@intel.com>,
+	<linux-pci@vger.kernel.org>
+Cc: Joerg Roedel <jroedel@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Dave Fugate <david.fugate@intel.com>,
+	Scott Bauer <scott.bauer@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [RFC PATCH 4/4] PCI/VMD: Add new VMD device id to driver device id table
+Date: Thu, 10 May 2018 18:49:03 -0600
+Message-Id: <20180511004903.19892-5-jonathan.derrick@intel.com>
+In-Reply-To: <20180511004903.19892-1-jonathan.derrick@intel.com>
+References: <20180511004903.19892-1-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 22, 2018 at 03:28:02PM -0700, Rajat Jain wrote:
-> +#define aer_stats_aggregate_attr(field)                                        \
-> +	static ssize_t                                                         \
-> +	field##_show(struct device *dev, struct device_attribute *attr,        \
-> +		     char *buf)                                                \
-> +{                                                                              \
-> +	struct pci_dev *pdev = to_pci_dev(dev);                                \
-> +	return sprintf(buf, "0x%llx\n", pdev->aer_stats->field);               \
-> +}                                                                              \
+Allow new VMD hardware to bind to VMD driver.
 
-Use tabs at the end please, otherwise your trailing \ look horrid.
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ drivers/pci/host/vmd.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> +static DEVICE_ATTR_RO(field)
-> +
-> +aer_stats_aggregate_attr(dev_total_cor_errs);
-> +aer_stats_aggregate_attr(dev_total_fatal_errs);
-> +aer_stats_aggregate_attr(dev_total_nonfatal_errs);
-> +
-> +static struct attribute *aer_stats_attrs[] __ro_after_init = {
-> +	&dev_attr_dev_total_cor_errs.attr,
-> +	&dev_attr_dev_total_fatal_errs.attr,
-> +	&dev_attr_dev_total_nonfatal_errs.attr,
-> +	NULL
-> +};
-> +
-> +static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
-> +					   struct attribute *a, int n)
-> +{
-> +	struct device *dev = kobj_to_dev(kobj);
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	if (!pdev->aer_stats)
-> +		return 0;
-> +
-> +	return a->mode;
-> +}
-> +
-> +const struct attribute_group aer_stats_attr_group = {
-> +	.name  = "aer_stats",
-> +	.attrs  = aer_stats_attrs,
-> +	.is_visible = aer_stats_attrs_are_visible,
-> +};
-> +
-> +void pci_dev_aer_stats_incr(struct pci_dev *pdev, struct aer_err_info *info)
-> +{
-> +	int status, i, max = -1;
-> +	u64 *counter = NULL;
-> +	struct aer_stats *aer_stats = pdev->aer_stats;
-> +
-> +	if (unlikely(!aer_stats))
-> +		return;
-
-Can you measure the speed difference with and without that unlikely()
-macro?  If not, please don't use it.  Hint, the cpu and compiler are
-always always better at this than we are...
-
-thanks,
-
-greg k-h
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index fdfc286a1c9e..add940eedc56 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -831,6 +831,7 @@ static SIMPLE_DEV_PM_OPS(vmd_dev_pm_ops, vmd_suspend, vmd_resume);
+ 
+ static const struct pci_device_id vmd_ids[] = {
+ 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x201d),},
++	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x28c0),},
+ 	{0,}
+ };
+ MODULE_DEVICE_TABLE(pci, vmd_ids);
+-- 
+2.14.3
