@@ -1,64 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:32844 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933290AbeEWOdp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 10:33:45 -0400
-Subject: Re: [PATCH 1/5] PCI/AER: Define and allocate aer_stats structure for
- AER capable devices
-To: Matthew Wilcox <willy@infradead.org>
-CC: Rajat Jain <rajatja@google.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Kyle McMartin <jkkm@fb.com>,
-        <rajatxjain@gmail.com>
-References: <20180522222805.80314-1-rajatja@google.com>
- <20180522222805.80314-2-rajatja@google.com>
- <62fae8eb-aaed-65b2-19ad-7c57b3a9bfdc@fb.com>
- <20180523142656.GE19987@bombadil.infradead.org>
-From: Jes Sorensen <jsorensen@fb.com>
-Message-ID: <46f0a2fa-9b48-c6d3-05ac-a75168b1998c@fb.com>
-Date: Wed, 23 May 2018 10:32:24 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yao Chen <chenyao11@huawei.com>
+To: <songxiaowei@hisilicon.com>, <wangbinghui@hisilicon.com>,
+        <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <xuwei5@hisilicon.com>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <devicetree@vger.kernel.org>
+CC: <dimitrysh@google.com>, <guodong.xu@linaro.org>,
+        <chenyao11@huawei.com>, <suzhuangluan@hisilicon.com>,
+        <kongfei@hisilicon.com>
+Subject: [PATCH v3 1/2] PCI: kirin: Add MSI support
+Date: Fri, 11 May 2018 17:15:48 +0800
+Message-ID: <1526030149-23985-2-git-send-email-chenyao11@huawei.com>
+In-Reply-To: <1526030149-23985-1-git-send-email-chenyao11@huawei.com>
+References: <1526030149-23985-1-git-send-email-chenyao11@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20180523142656.GE19987@bombadil.infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/23/2018 10:26 AM, Matthew Wilcox wrote:
-> On Wed, May 23, 2018 at 10:20:10AM -0400, Jes Sorensen wrote:
->>> +++ b/drivers/pci/pcie/aer/aerdrv_stats.c
->>> @@ -0,0 +1,64 @@
->>> +// SPDX-License-Identifier: GPL-2.0
->>
->> Fix the formatting please - that gross // gibberish doesn't belong there.
-> 
-> Sorry, Jes.  The Chief Penguin has Spoken, and that's the preferred
-> syntax:
-> 
-> 2. Style:
-> 
->    The SPDX license identifier is added in form of a comment.  The comment
->    style depends on the file type::
-> 
->       C source: // SPDX-License-Identifier: <SPDX License Expression>
-> 
-> (you can dig up the discussion around this on the mailing list if you
-> like.  Linus actually thinks that C++ single-line comments are one of
-> the few things that language got right)
+Add support for MSI.
 
-Well I'll agree to disagree with Linus on this one. It's ugly as fsck
-and allows for ambiguous statements in the code.
+Signed-off-by: Yao Chen <chenyao11@huawei.com>
+---
+ drivers/pci/dwc/pcie-kirin.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-Jes
+diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
+index d2970a0..8daab1f 100644
+--- a/drivers/pci/dwc/pcie-kirin.c
++++ b/drivers/pci/dwc/pcie-kirin.c
+@@ -426,9 +426,28 @@ static int kirin_pcie_establish_link(struct pcie_port *pp)
+ 	return 0;
+ }
+ 
++static irqreturn_t kirin_pcie_msi_irq_handler(int irq, void *arg)
++{
++	struct pcie_port *pp = arg;
++
++	return dw_handle_msi_irq(pp);
++}
++
++static void kirin_pcie_msi_init(struct pcie_port *pp)
++{
++	dw_pcie_msi_init(pp);
++}
++
++static void kirin_pcie_enable_interrupts(struct pcie_port *pp)
++{
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		kirin_pcie_msi_init(pp);
++}
++
+ static int kirin_pcie_host_init(struct pcie_port *pp)
+ {
+ 	kirin_pcie_establish_link(pp);
++	kirin_pcie_enable_interrupts(pp);
+ 
+ 	return 0;
+ }
+@@ -448,6 +467,26 @@ static int kirin_pcie_host_init(struct pcie_port *pp)
+ static int __init kirin_add_pcie_port(struct dw_pcie *pci,
+ 				      struct platform_device *pdev)
+ {
++	int ret;
++
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		pci->pp.msi_irq = platform_get_irq(pdev, 0);
++		if (pci->pp.msi_irq < 0) {
++			dev_err(&pdev->dev, "failed to get MSI IRQ (%d)\n",
++				pci->pp.msi_irq);
++			return -ENODEV;
++		}
++		ret = devm_request_irq(&pdev->dev, pci->pp.msi_irq,
++				       kirin_pcie_msi_irq_handler,
++				       IRQF_SHARED | IRQF_NO_THREAD,
++				       "kirin_pcie_msi", &pci->pp);
++		if (ret) {
++			dev_err(&pdev->dev, "failed to request MSI IRQ %d\n",
++				pci->pp.msi_irq);
++			return ret;
++		}
++	}
++
+ 	pci->pp.ops = &kirin_pcie_host_ops;
+ 
+ 	return dw_pcie_host_init(&pci->pp);
+-- 
+1.9.1
