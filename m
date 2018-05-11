@@ -1,73 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:57948 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754629AbeEWQRR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 May 2018 12:17:17 -0400
-Date: Wed, 23 May 2018 17:17:11 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH 1/4] PCI: rcar: Rename
- rcar_pcie_parse_request_of_pci_ranges()
-Message-ID: <20180523161711.GA8113@e107981-ln.cambridge.arm.com>
-References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-mm@kvack.org
+Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
+        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
+        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
+        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
+        baolu.lu@linux.intel.com, robdclark@gmail.com,
+        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
+Subject: [PATCH v2 15/40] iommu/of: Add stall and pasid properties to iommu_fwspec
+Date: Fri, 11 May 2018 20:06:16 +0100
+Message-Id: <20180511190641.23008-16-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 21, 2018 at 03:11:20PM +0200, Marek Vasut wrote:
-> The function name is just too confusing, rename it, no functional change.
-> Rename the function to rcar_pcie_alloc_and_parse_pci_resource_list() as
-> it's matching failpath function is pci_free_resource_list() so the names
-> align much better and the new name also describes what the function does
-> much better.
-> 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> ---
->  drivers/pci/host/pcie-rcar.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+Add stall and pasid properties to iommu_fwspec, and fill them when
+dma-can-stall and pasid-bits properties are present in the device tree.
 
-Can you rebase this series against my pci/rcar branch please ?
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/of_iommu.c | 12 ++++++++++++
+ include/linux/iommu.h    |  2 ++
+ 2 files changed, 14 insertions(+)
 
-I will merge it then, thanks.
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 5c36a8b7656a..9b6b55f3cccd 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -204,6 +204,18 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
+ 			if (err)
+ 				break;
+ 		}
++
++		fwspec = dev->iommu_fwspec;
++		if (!err && fwspec) {
++			const __be32 *prop;
++
++			if (of_get_property(master_np, "dma-can-stall", NULL))
++				fwspec->can_stall = true;
++
++			prop = of_get_property(master_np, "pasid-num-bits", NULL);
++			if (prop)
++				fwspec->num_pasid_bits = be32_to_cpu(*prop);
++		}
+ 	}
+ 
+ 	/*
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 933100678f64..bcce44455117 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -656,6 +656,8 @@ struct iommu_fwspec {
+ 	struct fwnode_handle	*iommu_fwnode;
+ 	void			*iommu_priv;
+ 	unsigned int		num_ids;
++	unsigned int		num_pasid_bits;
++	bool			can_stall;
+ 	u32			ids[1];
+ };
+ 
+-- 
+2.17.0
 
-Lorenzo
-
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index e403c5206b24..dbc80e457f95 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -1051,7 +1051,7 @@ static const struct of_device_id rcar_pcie_of_match[] = {
->  	{},
->  };
->  
-> -static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
-> +static int rcar_pcie_alloc_and_parse_pci_resource_list(struct rcar_pcie *pci)
->  {
->  	int err;
->  	struct device *dev = pci->dev;
-> @@ -1108,7 +1108,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  
->  	INIT_LIST_HEAD(&pcie->resources);
->  
-> -	err = rcar_pcie_parse_request_of_pci_ranges(pcie);
-> +	err = rcar_pcie_alloc_and_parse_pci_resource_list(pcie);
->  	if (err)
->  		goto err_free_bridge;
->  
-> -- 
-> 2.16.2
-> 
