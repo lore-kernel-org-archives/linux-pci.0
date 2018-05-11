@@ -1,435 +1,225 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:38680 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751564AbeEQRF5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 May 2018 13:05:57 -0400
-Date: Thu, 17 May 2018 18:05:53 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Alan Douglas <adouglas@cadence.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "cyrille.pitchen@free-electrons.com"
-        <cyrille.pitchen@free-electrons.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "nsekhar@ti.com" <nsekhar@ti.com>
-Subject: Re: [PATCH] pci: cadence: Host and EP driver updates for PHY and
- power management
-Message-ID: <20180517170553.GB3173@e107981-ln.cambridge.arm.com>
-References: <SN6PR07MB451229DF639238CD7F15FDCFD8920@SN6PR07MB4512.namprd07.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <SN6PR07MB451229DF639238CD7F15FDCFD8920@SN6PR07MB4512.namprd07.prod.outlook.com>
+Received: from foss.arm.com ([217.140.101.70]:46848 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752146AbeEKTJp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 May 2018 15:09:45 -0400
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-mm@kvack.org
+Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
+        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
+        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
+        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
+        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
+        baolu.lu@linux.intel.com, robdclark@gmail.com,
+        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
+Subject: [PATCH v2 24/40] iommu/arm-smmu-v3: Seize private ASID
+Date: Fri, 11 May 2018 20:06:25 +0100
+Message-Id: <20180511190641.23008-25-jean-philippe.brucker@arm.com>
+In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 16, 2018 at 01:06:05PM +0000, Alan Douglas wrote:
-> From: Alan Douglas <adouglas@cadence.com>
-> 
-> This patch is based on next branch in Bjorn Helgaas' linux-pci git repository.
-This sentence does not belong in a commit log and you should not be
-basing patches on top of Bjorn's next branch, use v4.17-rc1, that is
-an immutable commit.
+The SMMU has a single ASID space, the union of shared and private ASID
+sets. This means that the context table module competes with the arch
+allocator for ASIDs. Shared ASIDs are those of Linux processes, allocated
+by the arch, and contribute in broadcast TLB maintenance. Private ASIDs
+are allocated by the SMMU driver and used for "classic" map/unmap DMA.
+They require explicit TLB invalidations.
 
-> Allow optional list of generic PHYs to be provided via DTS for cadence
-> RP and EP drivers.  Added power management ops which will
-> enable/disable these PHYs.  Corrected parameters for cdns_pcie_writel
-> function, value to be written had too small width.
+When we pin down an mm_context and get an ASID that is already in use by
+the SMMU, it belongs to a private context. We used to simply abort the
+bind, but this is unfair to users that would be unable to bind a few
+seemingly random processes. Try to allocate a new private ASID for the
+context in use, and make the old ASID shared.
 
-Too many things at once. Each patch must solve one logical problem
-and one only - it is easier to understand why if you think that
-a patch may need to be reverted - if many changes are lumped together
-this becomes complicated, that's one of the reasons.
+Introduce a new lock to prevent races when rewriting context descriptors.
 
-So, please split this patch and send a v2, thank you.
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3-context.c | 90 ++++++++++++++++++++++++++---
+ 1 file changed, 83 insertions(+), 7 deletions(-)
 
-Lorenzo
-
-> Signed-off-by: Alan Douglas <adouglas@cadence.com>
-> ---
->  .../devicetree/bindings/pci/cdns,cdns-pcie-ep.txt  |    4 +
->  .../bindings/pci/cdns,cdns-pcie-host.txt           |    5 +
->  drivers/pci/cadence/pcie-cadence-ep.c              |   15 +++-
->  drivers/pci/cadence/pcie-cadence-host.c            |   36 ++++++-
->  drivers/pci/cadence/pcie-cadence.c                 |  123 ++++++++++++++++++++
->  drivers/pci/cadence/pcie-cadence.h                 |   13 ++-
->  6 files changed, 193 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
-> index 9a30523..e40c635 100644
-> --- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
-> +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
-> @@ -9,6 +9,8 @@ Required properties:
->  
->  Optional properties:
->  - max-functions: Maximum number of functions that can be configured (default 1).
-> +- phys: From PHY bindings: List of Generic PHY phandles.
-> +- phy-names:  List of names to identify the PHY.
->  
->  Example:
->  
-> @@ -19,4 +21,6 @@ pcie@fc000000 {
->  	reg-names = "reg", "mem";
->  	cdns,max-outbound-regions = <16>;
->  	max-functions = /bits/ 8 <8>;
-> +	phys = <&ep_phy0 &ep_phy1>;
-> +	phy-names = "pcie-lane0","pcie-lane1";
->  };
-> diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
-> index 20a33f3..13be218 100644
-> --- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
-> +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
-> @@ -24,6 +24,8 @@ Optional properties:
->    translations (default 32)
->  - vendor-id: The PCI vendor ID (16 bits, default is design dependent)
->  - device-id: The PCI device ID (16 bits, default is design dependent)
-> +- phys: From PHY bindings: List of Generic PHY phandles.
-> +- phy-names:  List of names to identify the PHY.
->  
->  Example:
->  
-> @@ -57,4 +59,7 @@ pcie@fb000000 {
->  	interrupt-map-mask = <0x0 0x0 0x0  0x7>;
->  
->  	msi-parent = <&its_pci>;
-> +
-> +	phys = <&pcie_phy0>;
-> +	phy-names = "pcie-phy";
->  };
-> diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
-> index 3d8283e..e74b8a4 100644
-> --- a/drivers/pci/cadence/pcie-cadence-ep.c
-> +++ b/drivers/pci/cadence/pcie-cadence-ep.c
-> @@ -439,6 +439,7 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
->  	struct pci_epc *epc;
->  	struct resource *res;
->  	int ret;
-> +	int phy_count;
->  
->  	ep = devm_kzalloc(dev, sizeof(*ep), GFP_KERNEL);
->  	if (!ep)
-> @@ -472,6 +473,12 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
->  	if (!ep->ob_addr)
->  		return -ENOMEM;
->  
-> +	ret = cdns_pcie_init_phy(dev, pcie);
-> +	if (ret) {
-> +		dev_err(dev, "failed to init phy\n");
-> +		return ret;
-> +	}
-> +	platform_set_drvdata(pdev, pcie);
->  	pm_runtime_enable(dev);
->  	ret = pm_runtime_get_sync(dev);
->  	if (ret < 0) {
-> @@ -520,6 +527,10 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
->  
->   err_get_sync:
->  	pm_runtime_disable(dev);
-> +	cdns_pcie_disable_phy(pcie);
-> +	phy_count = pcie->phy_count;
-> +	while (phy_count--)
-> +		device_link_del(pcie->link[phy_count]);
->  
->  	return ret;
->  }
-> @@ -527,6 +538,7 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
->  static void cdns_pcie_ep_shutdown(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
-> +	struct cdns_pcie *pcie = dev_get_drvdata(dev);
->  	int ret;
->  
->  	ret = pm_runtime_put_sync(dev);
-> @@ -535,13 +547,14 @@ static void cdns_pcie_ep_shutdown(struct platform_device *pdev)
->  
->  	pm_runtime_disable(dev);
->  
-> -	/* The PCIe controller can't be disabled. */
-> +	cdns_pcie_disable_phy(pcie);
->  }
->  
->  static struct platform_driver cdns_pcie_ep_driver = {
->  	.driver = {
->  		.name = "cdns-pcie-ep",
->  		.of_match_table = cdns_pcie_ep_of_match,
-> +		.pm	= &cdns_pcie_pm_ops,
->  	},
->  	.probe = cdns_pcie_ep_probe,
->  	.shutdown = cdns_pcie_ep_shutdown,
-> diff --git a/drivers/pci/cadence/pcie-cadence-host.c b/drivers/pci/cadence/pcie-cadence-host.c
-> index a4ebbd3..992ebe2 100644
-> --- a/drivers/pci/cadence/pcie-cadence-host.c
-> +++ b/drivers/pci/cadence/pcie-cadence-host.c
-> @@ -37,7 +37,6 @@ struct cdns_pcie_rc {
->  	u16			vendor_id;
->  	u16			device_id;
->  };
-> -
->  static void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
->  				      int where)
->  {
-> @@ -46,6 +45,7 @@ struct cdns_pcie_rc {
->  	struct cdns_pcie *pcie = &rc->pcie;
->  	unsigned int busn = bus->number;
->  	u32 addr0, desc0;
-> +	u32 link_status;
->  
->  	if (busn == rc->bus_range->start) {
->  		/*
-> @@ -58,6 +58,11 @@ struct cdns_pcie_rc {
->  
->  		return pcie->reg_base + (where & 0xfff);
->  	}
-> +	/* Check that the link is up. Clear AXI link-down status  */
-> +	link_status = cdns_pcie_readl(pcie, CDNS_PCIE_LM_BASE);
-> +	if (!(link_status & 0x1))
-> +		return NULL;
-> +	cdns_pcie_writel(pcie, CDNS_PCIE_AT_LINKDOWN, 0x0);
->  
->  	/* Update Output registers for AXI region 0. */
->  	addr0 = CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
-> @@ -239,6 +244,7 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
->  	struct cdns_pcie *pcie;
->  	struct resource *res;
->  	int ret;
-> +	int phy_count;
->  
->  	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*rc));
->  	if (!bridge)
-> @@ -290,6 +296,13 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
->  	}
->  	pcie->mem_res = res;
->  
-> +	ret = cdns_pcie_init_phy(dev, pcie);
-> +	if (ret) {
-> +		dev_err(dev, "failed to init phy\n");
-> +		return ret;
-> +	}
-> +	platform_set_drvdata(pdev, pcie);
-> +
->  	pm_runtime_enable(dev);
->  	ret = pm_runtime_get_sync(dev);
->  	if (ret < 0) {
-> @@ -322,15 +335,36 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
->  
->   err_get_sync:
->  	pm_runtime_disable(dev);
-> +	cdns_pcie_disable_phy(pcie);
-> +	phy_count = pcie->phy_count;
-> +	while (phy_count--)
-> +		device_link_del(pcie->link[phy_count]);
->  
->  	return ret;
->  }
->  
-> +static void cdns_pcie_shutdown(struct platform_device *pdev)
-> +{
-> +	struct device *dev = &pdev->dev;
-> +	struct cdns_pcie *pcie = dev_get_drvdata(dev);
-> +	int ret;
-> +
-> +	ret = pm_runtime_put_sync(dev);
-> +	if (ret < 0)
-> +		dev_dbg(dev, "pm_runtime_put_sync failed\n");
-> +
-> +	pm_runtime_disable(dev);
-> +	cdns_pcie_disable_phy(pcie);
-> +}
-> +
-> +
->  static struct platform_driver cdns_pcie_host_driver = {
->  	.driver = {
->  		.name = "cdns-pcie-host",
->  		.of_match_table = cdns_pcie_host_of_match,
-> +		.pm	= &cdns_pcie_pm_ops,
->  	},
->  	.probe = cdns_pcie_host_probe,
-> +	.shutdown = cdns_pcie_shutdown,
->  };
->  builtin_platform_driver(cdns_pcie_host_driver);
-> diff --git a/drivers/pci/cadence/pcie-cadence.c b/drivers/pci/cadence/pcie-cadence.c
-> index 138d113..7a34780 100644
-> --- a/drivers/pci/cadence/pcie-cadence.c
-> +++ b/drivers/pci/cadence/pcie-cadence.c
-> @@ -124,3 +124,126 @@ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
->  	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), 0);
->  	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), 0);
->  }
-> +
-> +void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
-> +{
-> +	int i = pcie->phy_count;
-> +
-> +	while (i--) {
-> +		phy_power_off(pcie->phy[i]);
-> +		phy_exit(pcie->phy[i]);
-> +	}
-> +}
-> +
-> +int cdns_pcie_enable_phy(struct cdns_pcie *pcie)
-> +{
-> +	int ret;
-> +	int i;
-> +
-> +	for (i = 0; i < pcie->phy_count; i++) {
-> +		ret = phy_init(pcie->phy[i]);
-> +		if (ret < 0)
-> +			goto err_phy;
-> +
-> +		ret = phy_power_on(pcie->phy[i]);
-> +		if (ret < 0) {
-> +			phy_exit(pcie->phy[i]);
-> +			goto err_phy;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +
-> +err_phy:
-> +	while (--i >= 0) {
-> +		phy_power_off(pcie->phy[i]);
-> +		phy_exit(pcie->phy[i]);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
-> +{
-> +	struct device_node *np = dev->of_node;
-> +	int phy_count;
-> +	struct phy **phy;
-> +	struct device_link **link;
-> +	int i;
-> +	int ret;
-> +	const char *name;
-> +
-> +	phy_count = of_property_count_strings(np, "phy-names");
-> +	if (phy_count < 1) {
-> +		dev_err(dev, "no phy-names.  PHY will not be initialized\n");
-> +		pcie->phy_count = 0;
-> +		return 0;
-> +	}
-> +
-> +	phy = devm_kzalloc(dev, sizeof(*phy) * phy_count, GFP_KERNEL);
-> +	if (!phy)
-> +		return -ENOMEM;
-> +
-> +	link = devm_kzalloc(dev, sizeof(*link) * phy_count, GFP_KERNEL);
-> +	if (!link)
-> +		return -ENOMEM;
-> +
-> +	for (i = 0; i < phy_count; i++) {
-> +		of_property_read_string_index(np, "phy-names", i, &name);
-> +		phy[i] = devm_phy_get(dev, name);
-> +		if (IS_ERR(phy))
-> +			return PTR_ERR(phy);
-> +
-> +		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
-> +		if (!link[i]) {
-> +			ret = -EINVAL;
-> +			goto err_link;
-> +		}
-> +	}
-> +
-> +	pcie->phy_count = phy_count;
-> +	pcie->phy = phy;
-> +	pcie->link = link;
-> +
-> +	ret =  cdns_pcie_enable_phy(pcie);
-> +	if (ret)
-> +		goto err_link;
-> +
-> +	return 0;
-> +
-> +err_link:
-> +	while (--i >= 0)
-> +		device_link_del(link[i]);
-> +
-> +	return ret;
-> +}
-> +
-> +#ifdef CONFIG_PM_SLEEP
-> +static int cdns_pcie_suspend_noirq(struct device *dev)
-> +{
-> +	struct cdns_pcie *pcie = dev_get_drvdata(dev);
-> +
-> +	cdns_pcie_disable_phy(pcie);
-> +
-> +	return 0;
-> +}
-> +
-> +static int cdns_pcie_resume_noirq(struct device *dev)
-> +{
-> +	struct cdns_pcie *pcie = dev_get_drvdata(dev);
-> +	int ret;
-> +
-> +	ret = cdns_pcie_enable_phy(pcie);
-> +	if (ret) {
-> +		dev_err(dev, "failed to enable phy\n");
-> +		return ret;
-> +	}
-> +
-> +	return 0;
-> +}
-> +#endif
-> +
-> +const struct dev_pm_ops cdns_pcie_pm_ops = {
-> +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(cdns_pcie_suspend_noirq,
-> +				      cdns_pcie_resume_noirq)
-> +};
-> diff --git a/drivers/pci/cadence/pcie-cadence.h b/drivers/pci/cadence/pcie-cadence.h
-> index 4bb2733..ae6bf2a 100644
-> --- a/drivers/pci/cadence/pcie-cadence.h
-> +++ b/drivers/pci/cadence/pcie-cadence.h
-> @@ -8,6 +8,7 @@
->  
->  #include <linux/kernel.h>
->  #include <linux/pci.h>
-> +#include <linux/phy/phy.h>
->  
->  /*
->   * Local Management Registers
-> @@ -165,6 +166,9 @@
->  #define CDNS_PCIE_AT_IB_RP_BAR_ADDR1(bar) \
->  	(CDNS_PCIE_AT_BASE + 0x0804 + (bar) * 0x0008)
->  
-> +/* AXI link down register */
-> +#define CDNS_PCIE_AT_LINKDOWN (CDNS_PCIE_AT_BASE + 0x0824)
-> +
->  enum cdns_pcie_rp_bar {
->  	RP_BAR0,
->  	RP_BAR1,
-> @@ -229,6 +233,9 @@ struct cdns_pcie {
->  	struct resource		*mem_res;
->  	bool			is_rc;
->  	u8			bus;
-> +	int			phy_count;
-> +	struct phy		**phy;
-> +	struct device_link	**link;
->  };
->  
->  /* Register access */
-> @@ -279,7 +286,7 @@ static inline void cdns_pcie_ep_fn_writew(struct cdns_pcie *pcie, u8 fn,
->  }
->  
->  static inline void cdns_pcie_ep_fn_writel(struct cdns_pcie *pcie, u8 fn,
-> -					  u32 reg, u16 value)
-> +					  u32 reg, u32 value)
->  {
->  	writel(value, pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg);
->  }
-> @@ -307,5 +314,9 @@ void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie, u8 fn,
->  						  u32 r, u64 cpu_addr);
->  
->  void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r);
-> +void cdns_pcie_disable_phy(struct cdns_pcie *pcie);
-> +int cdns_pcie_enable_phy(struct cdns_pcie *pcie);
-> +int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie);
-> +extern const struct dev_pm_ops cdns_pcie_pm_ops;
->  
->  #endif /* _PCIE_CADENCE_H */
-> -- 
-> 1.7.1
-> 
+diff --git a/drivers/iommu/arm-smmu-v3-context.c b/drivers/iommu/arm-smmu-v3-context.c
+index 352cba3c1a62..0e12f6804e16 100644
+--- a/drivers/iommu/arm-smmu-v3-context.c
++++ b/drivers/iommu/arm-smmu-v3-context.c
+@@ -65,6 +65,8 @@
+ #define ARM_SMMU_TCR2CD(tcr, fld)	FIELD_PREP(CTXDESC_CD_0_TCR_##fld, \
+ 					FIELD_GET(ARM64_TCR_##fld, tcr))
+ 
++#define ARM_SMMU_NO_PASID		(-1)
++
+ struct arm_smmu_cd {
+ 	struct iommu_pasid_entry	entry;
+ 
+@@ -72,8 +74,14 @@ struct arm_smmu_cd {
+ 	u64				tcr;
+ 	u64				mair;
+ 
++	int				pasid;
++
++	/* 'refs' tracks alloc/free */
+ 	refcount_t			refs;
++	/* 'users' tracks attach/detach, and is only used for sanity checking */
++	unsigned int			users;
+ 	struct mm_struct		*mm;
++	struct arm_smmu_cd_tables	*tbl;
+ };
+ 
+ #define pasid_entry_to_cd(entry) \
+@@ -105,6 +113,7 @@ struct arm_smmu_cd_tables {
+ #define pasid_ops_to_tables(ops) \
+ 	pasid_to_cd_tables(iommu_pasid_table_ops_to_table(ops))
+ 
++static DEFINE_SPINLOCK(contexts_lock);
+ static DEFINE_SPINLOCK(asid_lock);
+ static DEFINE_IDR(asid_idr);
+ 
+@@ -191,8 +200,8 @@ static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
+ 	return val;
+ }
+ 
+-static int arm_smmu_write_ctx_desc(struct arm_smmu_cd_tables *tbl, int ssid,
+-				   struct arm_smmu_cd *cd)
++static int __arm_smmu_write_ctx_desc(struct arm_smmu_cd_tables *tbl, int ssid,
++				     struct arm_smmu_cd *cd)
+ {
+ 	u64 val;
+ 	bool cd_live;
+@@ -262,6 +271,18 @@ static int arm_smmu_write_ctx_desc(struct arm_smmu_cd_tables *tbl, int ssid,
+ 	return 0;
+ }
+ 
++static int arm_smmu_write_ctx_desc(struct arm_smmu_cd_tables *tbl, int ssid,
++				   struct arm_smmu_cd *cd)
++{
++	int ret;
++
++	spin_lock(&contexts_lock);
++	ret = __arm_smmu_write_ctx_desc(tbl, ssid, cd);
++	spin_unlock(&contexts_lock);
++
++	return ret;
++}
++
+ static bool arm_smmu_free_asid(struct arm_smmu_cd *cd)
+ {
+ 	bool free;
+@@ -301,15 +322,26 @@ static struct arm_smmu_cd *arm_smmu_alloc_cd(struct arm_smmu_cd_tables *tbl)
+ 	if (!cd)
+ 		return NULL;
+ 
+-	cd->entry.release = arm_smmu_free_cd;
++	cd->pasid		= ARM_SMMU_NO_PASID;
++	cd->tbl			= tbl;
++	cd->entry.release	= arm_smmu_free_cd;
+ 	refcount_set(&cd->refs, 1);
+ 
+ 	return cd;
+ }
+ 
++/*
++ * Try to reserve this ASID in the SMMU. If it is in use, try to steal it from
++ * the private entry. Careful here, we may be modifying the context tables of
++ * another SMMU!
++ */
+ static struct arm_smmu_cd *arm_smmu_share_asid(u16 asid)
+ {
++	int ret;
+ 	struct arm_smmu_cd *cd;
++	struct arm_smmu_cd_tables *tbl;
++	struct arm_smmu_context_cfg *cfg;
++	struct iommu_pasid_entry old_entry;
+ 
+ 	cd = idr_find(&asid_idr, asid);
+ 	if (!cd)
+@@ -319,17 +351,47 @@ static struct arm_smmu_cd *arm_smmu_share_asid(u16 asid)
+ 		/*
+ 		 * It's pretty common to find a stale CD when doing unbind-bind,
+ 		 * given that the release happens after a RCU grace period.
+-		 * Simply reuse it.
++		 * Simply reuse it, but check that it isn't active, because it's
++		 * going to be assigned a different PASID.
+ 		 */
++		if (WARN_ON(cd->users))
++			return ERR_PTR(-EINVAL);
++
+ 		refcount_inc(&cd->refs);
+ 		return cd;
+ 	}
+ 
++	tbl = cd->tbl;
++	cfg = &tbl->pasid.cfg.arm_smmu;
++
++	ret = idr_alloc_cyclic(&asid_idr, cd, 0, 1 << cfg->asid_bits,
++			       GFP_ATOMIC);
++	if (ret < 0)
++		return ERR_PTR(-ENOSPC);
++
++	/* Save the previous ASID */
++	old_entry = cd->entry;
++
+ 	/*
+-	 * Ouch, ASID is already in use for a private cd.
+-	 * TODO: seize it, for the common good.
++	 * Race with unmap; TLB invalidations will start targeting the new ASID,
++	 * which isn't assigned yet. We'll do an invalidate-all on the old ASID
++	 * later, so it doesn't matter.
+ 	 */
+-	return ERR_PTR(-EEXIST);
++	cd->entry.tag = ret;
++
++	/*
++	 * Update ASID and invalidate CD in all associated masters. There will
++	 * be some overlap between use of both ASIDs, until we invalidate the
++	 * TLB.
++	 */
++	arm_smmu_write_ctx_desc(tbl, cd->pasid, cd);
++
++	/* Invalidate TLB entries previously associated with that context */
++	iommu_pasid_flush_tlbs(&tbl->pasid, cd->pasid, &old_entry);
++
++	idr_remove(&asid_idr, asid);
++
++	return NULL;
+ }
+ 
+ static struct iommu_pasid_entry *
+@@ -476,6 +538,15 @@ static int arm_smmu_set_cd(struct iommu_pasid_table_ops *ops, int pasid,
+ 	if (WARN_ON(pasid > (1 << tbl->pasid.cfg.order)))
+ 		return -EINVAL;
+ 
++	if (WARN_ON(cd->pasid != ARM_SMMU_NO_PASID && cd->pasid != pasid))
++		return -EEXIST;
++
++	/*
++	 * There is a single cd structure for each address space, multiple
++	 * devices may use the same in different tables.
++	 */
++	cd->users++;
++	cd->pasid = pasid;
+ 	return arm_smmu_write_ctx_desc(tbl, pasid, cd);
+ }
+ 
+@@ -488,6 +559,11 @@ static void arm_smmu_clear_cd(struct iommu_pasid_table_ops *ops, int pasid,
+ 	if (WARN_ON(pasid > (1 << tbl->pasid.cfg.order)))
+ 		return;
+ 
++	WARN_ON(cd->pasid != pasid);
++
++	if (!(--cd->users))
++		cd->pasid = ARM_SMMU_NO_PASID;
++
+ 	arm_smmu_write_ctx_desc(tbl, pasid, NULL);
+ 
+ 	/*
+-- 
+2.17.0
