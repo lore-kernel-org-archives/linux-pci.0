@@ -1,56 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:29567 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751699AbeE3Q0c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 May 2018 12:26:32 -0400
-From: "Duyck, Alexander H" <alexander.h.duyck@intel.com>
-To: "mst@redhat.com" <mst@redhat.com>,
-        "alexander.duyck@gmail.com" <alexander.duyck@gmail.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "virtualization@lists.linux-foundation.org"
-        <virtualization@lists.linux-foundation.org>,
-        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        "Rustad, Mark D" <mark.d.rustad@intel.com>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        "Bie, Tiwei" <tiwei.bie@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Liang, Cunming" <cunming.liang@intel.com>,
-        "Wang, Zhihong" <zhihong.wang@intel.com>
-Subject: Re: [virtio-dev] [PATCH] virtio_pci: support enabling VFs
-Date: Wed, 30 May 2018 16:26:30 +0000
-Message-ID: <1527697588.16245.136.camel@intel.com>
-References: <20180530085521.26583-1-tiwei.bie@intel.com>
-         <CAKgT0UcRZd5ajpTyC3KMvNFACVAb6D8A9Tss3m0r+UdamvVeRA@mail.gmail.com>
-         <20180530192215-mutt-send-email-mst@kernel.org>
-In-Reply-To: <20180530192215-mutt-send-email-mst@kernel.org>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=T3Dv=H6=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=T3Dv=H6=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Keith Busch <keith.busch@intel.com>,
+	<linux-pci@vger.kernel.org>
+Cc: Joerg Roedel <jroedel@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Dave Fugate <david.fugate@intel.com>,
+	Scott Bauer <scott.bauer@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [RFC PATCH 1/4] PCI/VMD: Assign membar addresses from shadow registers
+Date: Thu, 10 May 2018 18:49:00 -0600
+Message-Id: <20180511004903.19892-2-jonathan.derrick@intel.com>
+In-Reply-To: <20180511004903.19892-1-jonathan.derrick@intel.com>
+References: <20180511004903.19892-1-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gV2VkLCAyMDE4LTA1LTMwIGF0IDE5OjIyICswMzAwLCBNaWNoYWVsIFMuIFRzaXJraW4gd3Jv
-dGU6DQo+IE9uIFdlZCwgTWF5IDMwLCAyMDE4IGF0IDA5OjEwOjU3QU0gLTA3MDAsIEFsZXhhbmRl
-ciBEdXljayB3cm90ZToNCj4gPiBPbiBXZWQsIE1heSAzMCwgMjAxOCBhdCAxOjU1IEFNLCBUaXdl
-aSBCaWUgPHRpd2VpLmJpZUBpbnRlbC5jb20+IHdyb3RlOg0KPiA+ID4gVGhlcmUgaXMgYSBuZXcg
-ZmVhdHVyZSBiaXQgYWxsb2NhdGVkIGluIHZpcnRpbyBzcGVjIHRvDQo+ID4gPiBzdXBwb3J0IFNS
-LUlPViAoU2luZ2xlIFJvb3QgSS9PIFZpcnR1YWxpemF0aW9uKToNCj4gPiA+IA0KPiA+ID4gaHR0
-cHM6Ly9naXRodWIuY29tL29hc2lzLXRjcy92aXJ0aW8tc3BlYy9pc3N1ZXMvMTENCj4gPiA+IA0K
-PiA+ID4gVGhpcyBwYXRjaCBlbmFibGVzIHRoZSBzdXBwb3J0IGZvciB0aGlzIGZlYXR1cmUgYml0
-IGluDQo+ID4gPiB2aXJ0aW8gZHJpdmVyLg0KPiA+ID4gDQo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBU
-aXdlaSBCaWUgPHRpd2VpLmJpZUBpbnRlbC5jb20+DQo+ID4gDQo+ID4gU28gZnJvbSBhIHF1aWNr
-IGdsYW5jZSBpdCBsb29rcyBsaWtlIHdlIGFyZSBsZWF2aW5nIFNSLUlPViBlbmFibGVkIGlmDQo+
-ID4gdGhlIGRyaXZlciBpcyByZW1vdmVkLiBEbyB3ZSB3YW50IHRvIGhhdmUgdGhhdCBiZWhhdmlv
-ciBvciBzaG91bGQgd2UNCj4gPiBiZSBhZGRpbmcgdGhlIGNvZGUgdG8gZGlzYWJsZSBTUi1JT1Yg
-YW5kIGZyZWUgdGhlIFZGcyBvbiBkcml2ZXINCj4gPiByZW1vdmFsPw0KPiANCj4gQ291bGQgcGNp
-IGNvcmUgaGFuZGxlIGl0IGZvciB1cyBzb21laG93Pw0KDQpNYXliZSwgYnV0IGl0IHdvdWxkIHJl
-cXVpcmUgY2hhbmdlcyB0byB0aGUgcGNpIGNvcmUgdG8gZG8gaXQuDQoNClRoZSBwcm9ibGVtIGlz
-IHNvbWUgZHJpdmVycyB3YW50IHRvIGxlYXZlIHRoZSBWRnMgdGhlcmUgc2luY2UgdGhlIFBGDQpk
-b2Vzbid0IHJlYWxseSBkbyBhbnl0aGluZywgb3IgdGhleSBoYXZlIHRoZSBvcHRpb24gb2YgZXNz
-ZW50aWFsbHkNCnB1dHRpbmcgdGhlIFZGcyBpbnRvIGEgc3RhbmRieSBzdGF0ZSB3aGVuIHRoZSBQ
-RiBpcyBnb25lLg0KDQpNeSBtYWluIGNvbmNlcm4gaXMgZG8gd2UgY2FyZSBpZiBWRnMgYXJlIGFs
-bG9jYXRlZCBhbmQgdGhlbiBzb21lYm9keQ0KcmVtb3ZlcyB0aGUgZHJpdmVyIGFuZCBiaW5kcyBh
-IGRpZmZlcmVudCBkcml2ZXIgdG8gdGhlIGludGVyZmFjZT8gSWYNCm5vdCB0aGVuIHRoaXMgY29k
-ZSBhbmQgYmUgbGVmdCBhcyBpcywgYnV0IEkganVzdCB3YW50ZWQgdG8gYmUgY2VydGFpbg0Kc2lu
-Y2UgSSBrbm93IHRoaXMgaXNuJ3QganVzdCBlbmFibGluZyBTUi1JT1Ygd2UgYXJlIGhhdmluZyB0
-byBkbyBhDQpudW1iZXIgb2Ygb3RoZXIgY2hlY2tzIGFnYWluc3QgdGhlIHZpcnRpbyBkZXZpY2Uu
+The new VMD device has registers within membar 2 which may shadow the
+membar 1 and membar 2 addresses. These are intended to be used in
+virtualization, where assigning a guest address wouldn't be translated
+in the assignment to root port and child devices because the addresses
+exist within the assignment message.
+
+These values will only reflect the membars when enabled in the BIOS, as
+determined by a register in the VMD device.
+
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ drivers/pci/host/vmd.c | 52 +++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 43 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index 930a8fa08bd6..62270aeb7a2e 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -24,6 +24,9 @@
+ #define VMD_MEMBAR1	2
+ #define VMD_MEMBAR2	4
+ 
++#define PCI_REG_VMLOCK		0x70
++#define MB2_SHADOW_EN(vmlock)	(vmlock & 0x2)
++
+ /*
+  * Lock for manipulating VMD IRQ lists.
+  */
+@@ -551,9 +554,9 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+ 	struct pci_sysdata *sd = &vmd->sysdata;
+ 	struct fwnode_handle *fn;
+ 	struct resource *res;
+-	u32 upper_bits;
+ 	unsigned long flags;
+ 	LIST_HEAD(resources);
++	resource_size_t start, end, membar2_offset;
+ 
+ 	res = &vmd->dev->resource[VMD_CFGBAR];
+ 	vmd->resources[0] = (struct resource) {
+@@ -581,27 +584,34 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+ 	 * according to the platform needs.
+ 	 */
+ 	res = &vmd->dev->resource[VMD_MEMBAR1];
+-	upper_bits = upper_32_bits(res->end);
++	start = vmd->resources[1].start;
++	end = start + resource_size(res) - 1;
+ 	flags = res->flags & ~IORESOURCE_SIZEALIGN;
+-	if (!upper_bits)
++	if (upper_32_bits(end))
++		flags |= IORESOURCE_MEM_64;
++	else
+ 		flags &= ~IORESOURCE_MEM_64;
+ 	vmd->resources[1] = (struct resource) {
+ 		.name  = "VMD MEMBAR1",
+-		.start = res->start,
+-		.end   = res->end,
++		.start = start,
++		.end   = end,
+ 		.flags = flags,
+ 		.parent = res,
+ 	};
+ 
+ 	res = &vmd->dev->resource[VMD_MEMBAR2];
+-	upper_bits = upper_32_bits(res->end);
++	start = vmd->resources[2].start;
++	end = start + resource_size(res) - 1;
+ 	flags = res->flags & ~IORESOURCE_SIZEALIGN;
+-	if (!upper_bits)
++	if (upper_32_bits(end))
++		flags |= IORESOURCE_MEM_64;
++	else
+ 		flags &= ~IORESOURCE_MEM_64;
++	membar2_offset = (vmd->dev->device == 0x28c0) ? 0x2018 : 0x2000;
+ 	vmd->resources[2] = (struct resource) {
+ 		.name  = "VMD MEMBAR2",
+-		.start = res->start + 0x2000,
+-		.end   = res->end,
++		.start = start + membar2_offset,
++		.end   = end,
+ 		.flags = flags,
+ 		.parent = res,
+ 	};
+@@ -662,6 +672,7 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ {
+ 	struct vmd_dev *vmd;
+ 	int i, err;
++	u32 vmlock = 0;
+ 
+ 	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
+ 		return -ENOMEM;
+@@ -711,6 +722,29 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 			return err;
+ 	}
+ 
++	/*
++	 * For the new VMD device id, shadow registers exist within the MEMBAR2
++	 * which allow guests to correctly assign host physical addresses to
++	 * the root ports and child devices. These registers will either return
++	 * the host value or 0, depending on an enable bit in the VMD device.
++	 */
++	if (id->device == 0x28c0)
++		pci_read_config_dword(dev, PCI_REG_VMLOCK, &vmlock);
++
++	if (MB2_SHADOW_EN(vmlock)) {
++		void __iomem *membar2;
++
++		membar2 = pci_iomap(dev, VMD_MEMBAR2, 0);
++		if (!membar2)
++			return -ENOMEM;
++		vmd->resources[1].start = readq(membar2 + 0x2008);
++		vmd->resources[2].start = readq(membar2 + 0x2010);
++		pci_iounmap(dev, membar2);
++	} else {
++		vmd->resources[1].start = vmd->dev->resource[VMD_MEMBAR1].start;
++		vmd->resources[2].start = vmd->dev->resource[VMD_MEMBAR2].start;
++	}
++
+ 	spin_lock_init(&vmd->cfg_lock);
+ 	pci_set_drvdata(dev, vmd);
+ 	err = vmd_enable_domain(vmd);
+-- 
+2.14.3
