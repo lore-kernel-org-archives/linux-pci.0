@@ -1,78 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43494 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755417AbeEaPiR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 11:38:17 -0400
-Subject: Re: [PATCH] PCI: Check for PCIe downtraining conditions
-To: Alex_Gagniuc@Dellteam.com, mr.nuke.me@gmail.com,
-        bhelgaas@google.com
-Cc: Austin.Bolen@dell.com, Shyam.Iyer@dell.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180531150535.9684-1-mr.nuke.me@gmail.com>
- <28004506-24f0-6d10-2d1e-074e0483d2f9@codeaurora.org>
- <4e0611c872054e768daa96b302651db3@ausx13mps321.AMER.DELL.COM>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <f260078b-6918-7fd9-39d6-e9f300e4c048@codeaurora.org>
-Date: Thu, 31 May 2018 11:38:13 -0400
+Return-Path: <SRS0=mAxC=H7=gmail.com=tom.leiming@kernel.org>
+Return-Path: <SRS0=mAxC=H7=gmail.com=tom.leiming@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <4e0611c872054e768daa96b302651db3@ausx13mps321.AMER.DELL.COM>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180511165752.GG190385@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAObL_7G5k7XNqXqDZASChiQd1mt+AJPAdNKz-DE+xQawhUy6ZA@mail.gmail.com>
+ <20180511165752.GG190385@bhelgaas-glaptop.roam.corp.google.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Date: Sat, 12 May 2018 10:38:05 +0800
+Message-ID: <CACVXFVOieYJ3EJDNydoWWX91n7o8RT7UXvTfo0ExEPLsit9mxg@mail.gmail.com>
+Subject: Re: Another NVMe failure, this time with AER info
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Andrew Lutomirski <amluto@gmail.com>, Jesse Vincent <jesse@fsck.com>, Sagi Grimberg <sagi@grimberg.me>,
+	linux-pci@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvme <linux-nvme@lists.infradead.org>,
+	Jens Axboe <axboe@fb.com>, Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/31/2018 11:29 AM, Alex_Gagniuc@Dellteam.com wrote:
-> On 5/31/2018 10:28 AM, Sinan Kaya wrote:
->> On 5/31/2018 11:05 AM, Alexandru Gagniuc wrote:
->>> +static void pcie_max_link_cap(struct pci_dev *dev, enum pci_bus_speed *speed,
->>> +				enum pcie_link_width *width)
->>> +{
->>> +	uint32_t lnkcap;
->>> +
->>> +	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
->>> +
->>> +	*speed = pcie_link_speed[lnkcap & PCI_EXP_LNKCAP_SLS];
->>> +	*width = (lnkcap & PCI_EXP_LNKCAP_MLW) >> PCI_EXP_LNKCAP_MLW_SHIFT;
->>> +}
->>> +
->>> +static void pcie_cur_link_sta(struct pci_dev *dev, enum pci_bus_speed *speed,
->>> +				enum pcie_link_width *width)
->>> +{
->>> +	uint16_t lnksta;
->>> +
->>> +	pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
->>> +	*speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
->>> +	*width = (lnksta & PCI_EXP_LNKSTA_NLW) >> PCI_EXP_LNKSTA_NLW_SHIFT;
->>> +}
->>> +
->>> +static const char *pcie_bus_speed_name(enum pci_bus_speed speed)
->>> +{
->>> +	switch (speed) {
->>> +	case PCIE_SPEED_2_5GT:
->>> +		return "2.5 GT/s";
->>> +	case PCIE_SPEED_5_0GT:
->>> +		return "5.0 GT/s";
->>> +	case PCIE_SPEED_8_0GT:
->>> +		return "8.0 GT/s";
->>> +	default:
->>> +		return "unknown";
->>> +	}
->>> +}
->>
->> I thought Bjorn added some functions to retrieve this now.
-> 
-> Hmm. I couldn't find them.
+On Sat, May 12, 2018 at 12:57 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> Andrew wrote:
+>> A friend of mine has a brand new LG laptop that has intermittent NVMe
+>> failures.  They mostly happen during a suspend/resume cycle
+>> (apparently during suspend, not resume).  Unlike the earlier
+>> Dell/Samsung issue, the NVMe device isn't completely gone -- MMIO
+>> reads fail, but PCI configuration space is apparently still there:
+>
+>> nvme nvme0: controller is down; will reset: CSTS=0xffffffff, PCI_STATUS=0x10
+>
+>> and it comes with a nice AER dump:
+>
+>> [12720.894411] pcieport 0000:00:1c.0: AER: Multiple Corrected error received: id=00e0
+>> [12720.909747] pcieport 0000:00:1c.0: PCIe Bus Error: severity=Corrected, type=Physical Layer, id=00e0(Transmitter ID)
+>> [12720.909751] pcieport 0000:00:1c.0:   device [8086:9d14] error status/mask=00001001/00002000
+>> [12720.909754] pcieport 0000:00:1c.0:    [ 0] Receiver Error         (First)
+>> [12720.909756] pcieport 0000:00:1c.0:    [12] Replay Timer Timeout
+>
+> I opened this bugzilla and attached the dmesg and lspci -vv output to
+> it: https://bugzilla.kernel.org/show_bug.cgi?id=199695
+>
+> The root port at 00:1c.0 leads to the NVMe device at 01:00.0 (this is
+> nvme0):
+>
+>   00:1c.0 PCI bridge: Intel Corporation Sunrise Point-LP PCI Express Root Port #5 (rev f1) (prog-if 00 [Normal decode])
+>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+>   01:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller SM961/PM961 (prog-if 02 [NVM Express])
+>         Subsystem: Samsung Electronics Co Ltd Device a801
+>
+> We reported several corrected errors before the nvme timeout:
+>
+>   [12750.281158] nvme nvme0: controller is down; will reset: CSTS=0xffffffff, PCI_STATUS=0x10
+>   [12750.297594] nvme nvme0: I/O 455 QID 2 timeout, disable controller
+>   [12750.305196] nvme 0000:01:00.0: enabling device (0000 -> 0002)
+>   [12750.305465] nvme nvme0: Removing after probe failure status: -19
+>   [12750.313188] nvme nvme0: I/O 456 QID 2 timeout, disable controller
+>   [12750.329152] nvme nvme0: I/O 457 QID 2 timeout, disable controller
+>
+> The corrected errors are supposedly recovered in hardware without
+> software intervention, and AER logs them for informational purposes.
+>
+> But it seems very likely that these corrected errors are related to
+> the nvme timeout: the first corrected errors were logged at
+> 12720.894411, nvme_io_timeout defaults to 30 seconds, and the nvme
+> timeout was at 12750.281158.
 
-https://lkml.org/lkml/2018/3/30/553
+The following patchset might help this issue:
 
-are you working on linux-next?
+https://marc.info/?l=linux-block&m=152604179903505&w=2
 
-> 
-> Alex
-> 
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+--
+Ming Lei
