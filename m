@@ -1,104 +1,71 @@
-Return-Path: <SRS0=DTHM=H3=molgen.mpg.de=pmenzel@kernel.org>
-Return-Path: <SRS0=DTHM=H3=molgen.mpg.de=pmenzel@kernel.org>
-Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
- (issued 65284 msec ago)
-To: Bjorn Helgaas <helgaas@kernel.org>, okaya@codeaurora.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>
-References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
- <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
- <43b8ab4a-f8ee-dc96-40ec-e6fdfedd8309@molgen.mpg.de>
- <20180504024527.GE15790@bhelgaas-glaptop.roam.corp.google.com>
- <aa72d3ba089c76449600c22b58a2cafe@codeaurora.org>
- <20180504133327.GF15790@bhelgaas-glaptop.roam.corp.google.com>
- <20180507213344.GA133147@bhelgaas-glaptop.roam.corp.google.com>
-From: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
-Message-ID: <903e7c20-fdd7-9cbf-debb-a90e70240c7c@molgen.mpg.de>
-Date: Tue, 8 May 2018 08:59:34 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: songxiaowei <songxiaowei@hisilicon.com>
+To: "xuwei (O)" <xuwei5@huawei.com>, "chenyao (F)" <chenyao11@huawei.com>,
+ Wangbinghui <wangbinghui@hisilicon.com>, "lorenzo.pieralisi@arm.com"
+ <lorenzo.pieralisi@arm.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>, "mark.rutland@arm.com"
+ <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org"
+ <devicetree@vger.kernel.org>
+Subject: =?gb2312?B?tPC4tDogW1BBVENIIHYzIDIvMl0gYXJtNjQ6IGR0czogaGkzNjYwOiBBZGQg?=
+ =?gb2312?Q?pcie_msi_interrupt_attribute?=
+Date: Sat, 12 May 2018 00:52:56 +0000
+Message-ID: <99B4C6BADD9E3241B25E52B02BA737C54127E1D9@DGGEMA505-MBS.china.huawei.com>
+References: <1526030149-23985-1-git-send-email-chenyao11@huawei.com>
+ <1526030149-23985-3-git-send-email-chenyao11@huawei.com>
+ <5AF5A411.4010507@hisilicon.com>
+In-Reply-To: <5AF5A411.4010507@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <20180507213344.GA133147@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Suzhuangluan <suzhuangluan@hisilicon.com>,
+ "dimitrysh@google.com" <dimitrysh@google.com>,
+ "guodong.xu@linaro.org" <guodong.xu@linaro.org>,
+ Kongfei <kongfei@hisilicon.com>
+Content-Type: text/plain; charset="gb2312"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn,
-
-
-Am 07.05.2018 um 23:33 schrieb Bjorn Helgaas:
-> On Fri, May 04, 2018 at 08:33:27AM -0500, Bjorn Helgaas wrote:
->> commit b0d6f2230e12c85ae3b65a854a53c67c7c1f6406
->> Author: Bjorn Helgaas <bhelgaas@google.com>
->> Date:   Thu May 3 18:39:38 2018 -0500
->>
->>      PCI: pciehp: Add quirk for Intel Command Completed erratum
->>      
->>      The Intel CF118 erratum means the controller does not set the Command
->>      Completed bit unless writes to the Slot Command register change "Control"
->>      bits.  Command Completed is never set for writes that only change software
->>      notification "Enable" bits.  This results in timeouts like this:
->>      
->>        pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038 (issued 65284 msec ago)
->>      
->>      When this erratum is present, avoid these timeouts by marking commands
->>      "completed" immediately unless they change the "Control" bits.
->>      
->>      Here's the text of the erratum from the Intel document:
->>      
->>        CF118        PCIe Slot Status Register Command Completed bit not always
->>                     updated on any configuration write to the Slot Control
->>                     Register
->>      
->>        Problem:     For PCIe root ports (devices 0 - 10) supporting hot-plug,
->>                     the Slot Status Register (offset AAh) Command Completed
->>                     (bit[4]) status is updated under the following condition:
->>                     IOH will set Command Completed bit after delivering the new
->>                     commands written in the Slot Controller register (offset
->>                     A8h) to VPP. The IOH detects new commands written in Slot
->>                     Control register by checking the change of value for Power
->>                     Controller Control (bit[10]), Power Indicator Control
->>                     (bits[9:8]), Attention Indicator Control (bits[7:6]), or
->>                     Electromechanical Interlock Control (bit[11]) fields. Any
->>                     other configuration writes to the Slot Control register
->>                     without changing the values of these fields will not cause
->>                     Command Completed bit to be set.
->>      
->>                     The PCIe Base Specification Revision 2.0 or later describes
->>                     the “Slot Control Register” in section 7.8.10, as follows
->>                     (Reference section 7.8.10, Slot Control Register, Offset
->>                     18h). In hot-plug capable Downstream Ports, a write to the
->>                     Slot Control register must cause a hot-plug command to be
->>                     generated (see Section 6.7.3.2 for details on hot-plug
->>                     commands). A write to the Slot Control register in a
->>                     Downstream Port that is not hotplug capable must not cause a
->>                     hot-plug command to be executed.
->>      
->>                     The PCIe Spec intended that every write to the Slot Control
->>                     Register is a command and expected a command complete status
->>                     to abstract the VPP implementation specific nuances from the
->>                     OS software. IOH PCIe Slot Control Register implementation
->>                     is not fully conforming to the PCIe Specification in this
->>                     respect.
->>      
->>        Implication: Software checking on the Command Completed status after
->>                     writing to the Slot Control register may time out.
->>      
->>        Workaround:  Software can read the Slot Control register and compare the
->>                     existing and new values to determine if it should check the
->>                     Command Completed status after writing to the Slot Control
->>                     register.
->>      
->>      Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
->>      Link: https://lkml.kernel.org/r/8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de
->>      Reported-by: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
->>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> I applied this with Paul's tested-by on pci/hotplug for v4.18.
-
-Thank you very much. Will this also be picked up by the stable Linux 
-kernel series?
-
-[…]
-
-
-Kind regards,
-
-Paul
+SGkgV2VpLA0KDQpUaGFua3MgYSBsb3QuDQoNClhpYW93ZWkuDQoNCj4gLS0tLS3Tyrz+1K28/i0t
+LS0tDQo+ILeivP7IyzogeHV3ZWkgKE8pDQo+ILeiy83KsbzkOiAyMDE4xOo11MIxMcjVIDIyOjA5
+DQo+IMrVvP7IyzogY2hlbnlhbyAoRikgPGNoZW55YW8xMUBodWF3ZWkuY29tPjsgc29uZ3hpYW93
+ZWkNCj4gPHNvbmd4aWFvd2VpQGhpc2lsaWNvbi5jb20+OyBXYW5nYmluZ2h1aSA8d2FuZ2Jpbmdo
+dWlAaGlzaWxpY29uLmNvbT47DQo+IGxvcmVuem8ucGllcmFsaXNpQGFybS5jb207IGJoZWxnYWFz
+QGdvb2dsZS5jb207IHJvYmgrZHRAa2VybmVsLm9yZzsNCj4gbWFyay5ydXRsYW5kQGFybS5jb207
+IGNhdGFsaW4ubWFyaW5hc0Bhcm0uY29tOyB3aWxsLmRlYWNvbkBhcm0uY29tOw0KPiBsaW51eC1w
+Y2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiBsaW51
+eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IGRldmljZXRyZWVAdmdlci5rZXJuZWwu
+b3JnDQo+ILOty806IGRpbWl0cnlzaEBnb29nbGUuY29tOyBndW9kb25nLnh1QGxpbmFyby5vcmc7
+IFN1emh1YW5nbHVhbg0KPiA8c3V6aHVhbmdsdWFuQGhpc2lsaWNvbi5jb20+OyBLb25nZmVpIDxr
+b25nZmVpQGhpc2lsaWNvbi5jb20+OyB4dXdlaSAoTykNCj4gPHh1d2VpNUBodWF3ZWkuY29tPg0K
+PiDW98ziOiBSZTogW1BBVENIIHYzIDIvMl0gYXJtNjQ6IGR0czogaGkzNjYwOiBBZGQgcGNpZSBt
+c2kgaW50ZXJydXB0IGF0dHJpYnV0ZQ0KPiANCj4gSGkgWWFvLA0KPiANCj4gT24gMjAxOC81LzEx
+IDEwOjE1LCBZYW8gQ2hlbiB3cm90ZToNCj4gPiBBZGQgcGNpZSBtc2kgaW50ZXJydXB0IGF0dHJp
+YnV0ZSBmb3IgaGkzNjYwIFNPQy4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFlhbyBDaGVuIDxj
+aGVueWFvMTFAaHVhd2VpLmNvbT4NCj4gDQo+IEFwcGxpZWQgcGF0Y2ggMiBpbnRvIHRoZSBoaXNp
+bGljb24gZHQgdHJlZS4NCj4gVGhhbmtzIQ0KPiANCj4gQlIsDQo+IFdlaQ0KPiANCj4gPiAtLS0N
+Cj4gPiAgYXJjaC9hcm02NC9ib290L2R0cy9oaXNpbGljb24vaGkzNjYwLmR0c2kgfCAyICsrDQo+
+ID4gIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1naXQg
+YS9hcmNoL2FybTY0L2Jvb3QvZHRzL2hpc2lsaWNvbi9oaTM2NjAuZHRzaQ0KPiBiL2FyY2gvYXJt
+NjQvYm9vdC9kdHMvaGlzaWxpY29uL2hpMzY2MC5kdHNpDQo+ID4gaW5kZXggZWMzZWI4ZS4uMmNl
+ZjhmNCAxMDA2NDQNCj4gPiAtLS0gYS9hcmNoL2FybTY0L2Jvb3QvZHRzL2hpc2lsaWNvbi9oaTM2
+NjAuZHRzaQ0KPiA+ICsrKyBiL2FyY2gvYXJtNjQvYm9vdC9kdHMvaGlzaWxpY29uL2hpMzY2MC5k
+dHNpDQo+ID4gQEAgLTg3Miw2ICs4NzIsOCBAQA0KPiA+ICAJCQkJICAweDAgMHgwMjAwMDAwMD47
+DQo+ID4gIAkJCW51bS1sYW5lcyA9IDwxPjsNCj4gPiAgCQkJI2ludGVycnVwdC1jZWxscyA9IDwx
+PjsNCj4gPiArCQkJaW50ZXJydXB0cyA9IDwwIDI4MyA0PjsNCj4gPiArCQkJaW50ZXJydXB0LW5h
+bWVzID0gIm1zaSI7DQo+ID4gIAkJCWludGVycnVwdC1tYXAtbWFzayA9IDwweGY4MDAgMCAwIDc+
+Ow0KPiA+ICAJCQlpbnRlcnJ1cHQtbWFwID0gPDB4MCAwIDAgMQ0KPiA+ICAJCQkJCSAmZ2ljIEdJ
+Q19TUEkgMjgyIElSUV9UWVBFX0xFVkVMX0hJR0g+LA0KPiA+DQoNCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBs
+aXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5m
+cmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
