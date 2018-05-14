@@ -1,422 +1,379 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0083.outbound.protection.outlook.com ([104.47.32.83]:23904
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S936158AbeEYOIZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 May 2018 10:08:25 -0400
-From: Bharat Kumar Gogada <bharatku@xilinx.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>
-CC: "joro@8bytes.org" <joro@8bytes.org>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "liubo95@huawei.com" <liubo95@huawei.com>,
-        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
-        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
-        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
-        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
-        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-        "robdclark@gmail.com" <robdclark@gmail.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH v2 39/40] iommu/arm-smmu-v3: Add support for PRI
-Date: Fri, 25 May 2018 14:08:11 +0000
-Message-ID: <BLUPR0201MB150513BBAA161355DE9B3A48A5690@BLUPR0201MB1505.namprd02.prod.outlook.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-40-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-40-jean-philippe.brucker@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtprelay.synopsys.com ([198.182.37.59]:38211 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752254AbeENQX5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 12:23:57 -0400
+Subject: Re: [PATCH 2/4] PCI: dwc: Add support for EP mode
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>, <kishon@ti.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+References: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
+ <dbfaccc9902e43b659584e4638a26549a363292a.1526314398.git.gustavo.pimentel@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <6a0efa0b-a724-4617-439c-f9f876c1db6a@synopsys.com>
+Date: Mon, 14 May 2018 17:23:48 +0100
 MIME-Version: 1.0
+In-Reply-To: <dbfaccc9902e43b659584e4638a26549a363292a.1526314398.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->=20
-> For PCI devices that support it, enable the PRI capability and handle PRI=
- Page
-> Requests with the generic fault handler. It is enabled on demand by
-> iommu_sva_device_init().
->=20
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
->=20
+Às 5:17 PM de 5/14/2018, Gustavo Pimentel escreveu:
+> The PCIe controller dual mode is capable of operating in RC mode as well
+> as EP mode by configuration option. Till now only RC mode was supported,
+> with this patch is add EP support to the DesignWare driver.
+> 
+> Add new property on pci_epc structure which allow to configure
+> pci_epf_test driver accordingly to the controller specific requirements.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 > ---
-> v1->v2:
-> * Terminate the page request and disable PRI if no handler is registered
-> * Enable and disable PRI in sva_device_init/shutdown, instead of
->   add/remove_device
-> ---
->  drivers/iommu/arm-smmu-v3.c | 192 +++++++++++++++++++++++++++-------
-> --
->  1 file changed, 145 insertions(+), 47 deletions(-)
->=20
-> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-> index 6cb69ace371b..0edbb8d19579 100644
-> --- a/drivers/iommu/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm-smmu-v3.c
-> @@ -248,6 +248,7 @@
->  #define STRTAB_STE_1_S1COR		GENMASK_ULL(5, 4)
->  #define STRTAB_STE_1_S1CSH		GENMASK_ULL(7, 6)
->=20
-> +#define STRTAB_STE_1_PPAR		(1UL << 18)
->  #define STRTAB_STE_1_S1STALLD		(1UL << 27)
->=20
->  #define STRTAB_STE_1_EATS		GENMASK_ULL(29, 28)
-> @@ -309,6 +310,9 @@
->  #define CMDQ_PRI_0_SID			GENMASK_ULL(63, 32)
->  #define CMDQ_PRI_1_GRPID		GENMASK_ULL(8, 0)
->  #define CMDQ_PRI_1_RESP			GENMASK_ULL(13, 12)
-> +#define CMDQ_PRI_1_RESP_FAILURE
-> 	FIELD_PREP(CMDQ_PRI_1_RESP, 0UL)
-> +#define CMDQ_PRI_1_RESP_INVALID
-> 	FIELD_PREP(CMDQ_PRI_1_RESP, 1UL)
-> +#define CMDQ_PRI_1_RESP_SUCCESS
-> 	FIELD_PREP(CMDQ_PRI_1_RESP, 2UL)
->=20
->  #define CMDQ_RESUME_0_SID		GENMASK_ULL(63, 32)
->  #define CMDQ_RESUME_0_ACTION_RETRY	(1UL << 12)
-> @@ -383,12 +387,6 @@ module_param_named(disable_ats_check,
-> disable_ats_check, bool, S_IRUGO);
-> MODULE_PARM_DESC(disable_ats_check,
->  	"By default, the SMMU checks whether each incoming transaction
-> marked as translated is allowed by the stream configuration. This option
-> disables the check.");
->=20
-> -enum pri_resp {
-> -	PRI_RESP_DENY =3D 0,
-> -	PRI_RESP_FAIL =3D 1,
-> -	PRI_RESP_SUCC =3D 2,
-> -};
-> -
->  enum arm_smmu_msi_index {
->  	EVTQ_MSI_INDEX,
->  	GERROR_MSI_INDEX,
-> @@ -471,7 +469,7 @@ struct arm_smmu_cmdq_ent {
->  			u32			sid;
->  			u32			ssid;
->  			u16			grpid;
-> -			enum pri_resp		resp;
-> +			enum page_response_code	resp;
->  		} pri;
->=20
->  		#define CMDQ_OP_RESUME		0x44
-> @@ -556,6 +554,7 @@ struct arm_smmu_strtab_ent {
->  	struct arm_smmu_s2_cfg		*s2_cfg;
->=20
->  	bool				can_stall;
-> +	bool				prg_resp_needs_ssid;
+>  drivers/pci/dwc/Kconfig                       |  41 +++++--
+>  drivers/pci/dwc/pcie-designware-ep.c          |   3 +
+>  drivers/pci/dwc/pcie-designware-plat.c        | 149 ++++++++++++++++++++++++--
+>  drivers/pci/endpoint/functions/pci-epf-test.c |   7 ++
+>  include/linux/pci-epc.h                       |   8 ++
+>  5 files changed, 187 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> index 2f3f5c5..62f7cdf 100644
+> --- a/drivers/pci/dwc/Kconfig
+> +++ b/drivers/pci/dwc/Kconfig
+> @@ -7,8 +7,7 @@ config PCIE_DW
+>  
+>  config PCIE_DW_HOST
+>          bool
+> -	depends on PCI
+> -	depends on PCI_MSI_IRQ_DOMAIN
+> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
+>          select PCIE_DW
+>  
+>  config PCIE_DW_EP
+> @@ -51,17 +50,37 @@ config PCI_DRA7XX_EP
+>  	  This uses the DesignWare core.
+>  
+>  config PCIE_DW_PLAT
+> -	bool "Platform bus based DesignWare PCIe Controller"
+> -	depends on PCI
+> -	depends on PCI_MSI_IRQ_DOMAIN
+> -	select PCIE_DW_HOST
+> -	---help---
+> -	 This selects the DesignWare PCIe controller support. Select this if
+> -	 you have a PCIe controller on Platform bus.
+> +	bool
+>  
+> -	 If you have a controller with this interface, say Y or M here.
+> +config PCIE_DW_PLAT_HOST
+> +	bool "Platform bus based DesignWare PCIe Controller - Host mode"
+> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
+> +	select PCIE_DW_HOST
+> +	select PCIE_DW_PLAT
+> +	default y
+> +	help
+> +	  Enables support for the PCIe controller in the Designware IP to
+> +	  work in host mode. There are two instances of PCIe controller in
+> +	  Designware IP.
+> +	  This controller can work either as EP or RC. In order to enable
+> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
+> +	  order to enable device-specific features PCI_DW_PLAT_EP must be
+> +	  selected.
+>  
+> -	 If unsure, say N.
+> +config PCIE_DW_PLAT_EP
+> +	bool "Platform bus based DesignWare PCIe Controller - Endpoint mode"
+> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
+> +	depends on PCI_ENDPOINT
+> +	select PCIE_DW_EP
+> +	select PCIE_DW_PLAT
+> +	help
+> +	  Enables support for the PCIe controller in the Designware IP to
+> +	  work in endpoint mode. There are two instances of PCIe controller
+> +	  in Designware IP.
+> +	  This controller can work either as EP or RC. In order to enable
+> +	  host-specific features PCIE_DW_PLAT_HOST must be selected and in
+> +	  order to enable device-specific features PCI_DW_PLAT_EP must be
+> +	  selected.
+>  
+>  config PCI_EXYNOS
+>  	bool "Samsung Exynos PCIe controller"
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index f07678b..2c05a08 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -411,6 +411,9 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>  		return -ENOMEM;
+>  	}
+>  
+> +	epc->features = EPC_FEATURE_NO_LINKUP_NOTIFIER;
+> +	EPC_FEATURE_SET_BAR(epc->features, BAR0);
+> +
+>  	ep->epc = epc;
+>  	epc_set_drvdata(epc, ep);
+>  	dw_pcie_setup(pci);
+> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+> index 5416aa8..efc315c 100644
+> --- a/drivers/pci/dwc/pcie-designware-plat.c
+> +++ b/drivers/pci/dwc/pcie-designware-plat.c
+> @@ -12,19 +12,29 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/kernel.h>
+>  #include <linux/init.h>
+> +#include <linux/of_device.h>
+>  #include <linux/of_gpio.h>
+>  #include <linux/pci.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/resource.h>
+>  #include <linux/signal.h>
+>  #include <linux/types.h>
+> +#include <linux/regmap.h>
+>  
+>  #include "pcie-designware.h"
+>  
+>  struct dw_plat_pcie {
+> -	struct dw_pcie		*pci;
+> +	struct dw_pcie			*pci;
+> +	struct regmap			*regmap;
+> +	enum dw_pcie_device_mode	mode;
 >  };
->=20
->  struct arm_smmu_strtab_cfg {
-> @@ -907,14 +906,18 @@ static int arm_smmu_cmdq_build_cmd(u64 *cmd,
-> struct arm_smmu_cmdq_ent *ent)
->  		cmd[0] |=3D FIELD_PREP(CMDQ_PRI_0_SID, ent->pri.sid);
->  		cmd[1] |=3D FIELD_PREP(CMDQ_PRI_1_GRPID, ent->pri.grpid);
->  		switch (ent->pri.resp) {
-> -		case PRI_RESP_DENY:
-> -		case PRI_RESP_FAIL:
-> -		case PRI_RESP_SUCC:
-> +		case IOMMU_PAGE_RESP_FAILURE:
-> +			cmd[1] |=3D CMDQ_PRI_1_RESP_FAILURE;
-> +			break;
-> +		case IOMMU_PAGE_RESP_INVALID:
-> +			cmd[1] |=3D CMDQ_PRI_1_RESP_INVALID;
-> +			break;
-> +		case IOMMU_PAGE_RESP_SUCCESS:
-> +			cmd[1] |=3D CMDQ_PRI_1_RESP_SUCCESS;
->  			break;
->  		default:
->  			return -EINVAL;
->  		}
-> -		cmd[1] |=3D FIELD_PREP(CMDQ_PRI_1_RESP, ent->pri.resp);
->  		break;
->  	case CMDQ_OP_RESUME:
->  		cmd[0] |=3D FIELD_PREP(CMDQ_RESUME_0_SID, ent-
-> >resume.sid); @@ -1114,8 +1117,15 @@ static int
-> arm_smmu_page_response(struct device *dev,
->  		cmd.resume.sid		=3D sid;
->  		cmd.resume.stag		=3D resp->page_req_group_id;
->  		cmd.resume.resp		=3D resp->resp_code;
-> +	} else if (master->can_fault) {
-> +		cmd.opcode		=3D CMDQ_OP_PRI_RESP;
-> +		cmd.substream_valid	=3D resp->pasid_present &&
-> +					  master->ste.prg_resp_needs_ssid;
-> +		cmd.pri.sid		=3D sid;
-> +		cmd.pri.ssid		=3D resp->pasid;
-> +		cmd.pri.grpid		=3D resp->page_req_group_id;
-> +		cmd.pri.resp		=3D resp->resp_code;
->  	} else {
-> -		/* TODO: put PRI response here */
->  		return -ENODEV;
->  	}
->=20
-> @@ -1236,6 +1246,9 @@ static void arm_smmu_write_strtab_ent(struct
-> arm_smmu_device *smmu, u32 sid,
->  			 FIELD_PREP(STRTAB_STE_1_S1CSH,
-> ARM_SMMU_SH_ISH) |
->  			 FIELD_PREP(STRTAB_STE_1_STRW, strw));
->=20
-> +		if (ste->prg_resp_needs_ssid)
-> +			dst[1] |=3D STRTAB_STE_1_PPAR;
+>  
+> +struct dw_plat_pcie_of_data {
+> +	enum dw_pcie_device_mode	mode;
+> +};
 > +
->  		if (smmu->features & ARM_SMMU_FEAT_STALLS &&
->  		   !(smmu->features & ARM_SMMU_FEAT_STALL_FORCE) &&
->  		   !ste->can_stall)
-> @@ -1471,39 +1484,54 @@ static irqreturn_t arm_smmu_evtq_thread(int
-> irq, void *dev)
->=20
->  static void arm_smmu_handle_ppr(struct arm_smmu_device *smmu, u64
-> *evt)  {
-> -	u32 sid, ssid;
-> -	u16 grpid;
-> -	bool ssv, last;
-> -
-> -	sid =3D FIELD_GET(PRIQ_0_SID, evt[0]);
-> -	ssv =3D FIELD_GET(PRIQ_0_SSID_V, evt[0]);
-> -	ssid =3D ssv ? FIELD_GET(PRIQ_0_SSID, evt[0]) : 0;
-> -	last =3D FIELD_GET(PRIQ_0_PRG_LAST, evt[0]);
-> -	grpid =3D FIELD_GET(PRIQ_1_PRG_IDX, evt[1]);
-> -
-> -	dev_info(smmu->dev, "unexpected PRI request received:\n");
-> -	dev_info(smmu->dev,
-> -		 "\tsid 0x%08x.0x%05x: [%u%s] %sprivileged %s%s%s access
-> at iova 0x%016llx\n",
-> -		 sid, ssid, grpid, last ? "L" : "",
-> -		 evt[0] & PRIQ_0_PERM_PRIV ? "" : "un",
-> -		 evt[0] & PRIQ_0_PERM_READ ? "R" : "",
-> -		 evt[0] & PRIQ_0_PERM_WRITE ? "W" : "",
-> -		 evt[0] & PRIQ_0_PERM_EXEC ? "X" : "",
-> -		 evt[1] & PRIQ_1_ADDR_MASK);
-> -
-> -	if (last) {
-> -		struct arm_smmu_cmdq_ent cmd =3D {
-> -			.opcode			=3D
-> CMDQ_OP_PRI_RESP,
-> -			.substream_valid	=3D ssv,
-> -			.pri			=3D {
-> -				.sid	=3D sid,
-> -				.ssid	=3D ssid,
-> -				.grpid	=3D grpid,
-> -				.resp	=3D PRI_RESP_DENY,
-> -			},
-> +	u32 sid =3D FIELD_PREP(PRIQ_0_SID, evt[0]);
+> +static const struct of_device_id dw_plat_pcie_of_match[];
 > +
-> +	struct arm_smmu_master_data *master;
-> +	struct iommu_fault_event fault =3D {
-> +		.type			=3D IOMMU_FAULT_PAGE_REQ,
-> +		.last_req		=3D FIELD_GET(PRIQ_0_PRG_LAST,
-> evt[0]),
-> +		.pasid_valid		=3D FIELD_GET(PRIQ_0_SSID_V, evt[0]),
-> +		.pasid			=3D FIELD_GET(PRIQ_0_SSID, evt[0]),
-> +		.page_req_group_id	=3D FIELD_GET(PRIQ_1_PRG_IDX,
-> evt[1]),
-> +		.addr			=3D evt[1] & PRIQ_1_ADDR_MASK,
-> +	};
+>  static int dw_plat_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> @@ -42,9 +52,53 @@ static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
+>  	.host_init = dw_plat_pcie_host_init,
+>  };
+>  
+> -static int dw_plat_add_pcie_port(struct pcie_port *pp,
+> +static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
+> +{
+> +	return 0;
+> +}
 > +
-> +	if (evt[0] & PRIQ_0_PERM_READ)
-> +		fault.prot |=3D IOMMU_FAULT_READ;
-> +	if (evt[0] & PRIQ_0_PERM_WRITE)
-> +		fault.prot |=3D IOMMU_FAULT_WRITE;
-> +	if (evt[0] & PRIQ_0_PERM_EXEC)
-> +		fault.prot |=3D IOMMU_FAULT_EXEC;
-> +	if (evt[0] & PRIQ_0_PERM_PRIV)
-> +		fault.prot |=3D IOMMU_FAULT_PRIV;
+> +static const struct dw_pcie_ops dw_pcie_ops = {
+> +	.start_link = dw_plat_pcie_establish_link,
+> +};
 > +
-> +	/* Discard Stop PASID marker, it isn't used */
-> +	if (!(fault.prot & (IOMMU_FAULT_READ|IOMMU_FAULT_WRITE)) &&
-> +	    fault.last_req)
-> +		return;
+> +static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	enum pci_barno bar;
 > +
-> +	master =3D arm_smmu_find_master(smmu, sid);
-> +	if (WARN_ON(!master))
-> +		return;
+> +	for (bar = BAR_0; bar <= BAR_5; bar++)
+> +		dw_pcie_ep_reset_bar(pci, bar);
+> +}
 > +
-> +	if (iommu_report_device_fault(master->dev, &fault)) {
-> +		/*
-> +		 * No handler registered, so subsequent faults won't produce
-> +		 * better results. Try to disable PRI.
-> +		 */
-> +		struct page_response_msg page_response =3D {
-> +			.addr			=3D fault.addr,
-> +			.pasid			=3D fault.pasid,
-> +			.pasid_present		=3D fault.pasid_valid,
-> +			.page_req_group_id	=3D fault.page_req_group_id,
-> +			.resp_code		=3D
-> IOMMU_PAGE_RESP_FAILURE,
->  		};
->=20
-> -		arm_smmu_cmdq_issue_cmd(smmu, &cmd);
-> +		dev_warn(master->dev,
-> +			 "PPR 0x%x:0x%llx 0x%x: nobody cared, disabling
-> PRI\n",
-> +			 fault.pasid_valid ? fault.pasid : 0, fault.addr,
-> +			 fault.prot);
-> +		arm_smmu_page_response(master->dev, &page_response);
->  	}
->  }
->=20
-> @@ -1529,6 +1557,11 @@ static irqreturn_t arm_smmu_priq_thread(int irq,
-> void *dev)
->  		}
->=20
->  		if (queue_sync_prod(q) =3D=3D -EOVERFLOW)
-> +			/*
-> +			 * TODO: flush pending faults, since the SMMU might
-> have
-> +			 * auto-responded to the Last request of a pending
-> +			 * group
-> +			 */
->  			dev_err(smmu->dev, "PRIQ overflow detected --
-> requests lost\n");
->  	} while (!queue_empty(q));
->=20
-> @@ -1577,7 +1610,8 @@ static int arm_smmu_flush_queues(void *cookie,
-> struct device *dev)
->  		master =3D dev->iommu_fwspec->iommu_priv;
->  		if (master->ste.can_stall)
->  			arm_smmu_flush_queue(smmu, &smmu->evtq.q,
-> "evtq");
-> -		/* TODO: add support for PRI */
-> +		else if (master->can_fault)
-> +			arm_smmu_flush_queue(smmu, &smmu->priq.q,
-> "priq");
->  		return 0;
->  	}
->=20
-> @@ -2301,6 +2335,59 @@ arm_smmu_iova_to_phys(struct iommu_domain
-> *domain, dma_addr_t iova)
->  	return ops->iova_to_phys(ops, iova);
->  }
->=20
-> +static int arm_smmu_enable_pri(struct arm_smmu_master_data *master) {
-> +	int ret, pos;
-> +	struct pci_dev *pdev;
-> +	/*
-> +	 * TODO: find a good inflight PPR number. We should divide the PRI
-> queue
-> +	 * by the number of PRI-capable devices, but it's impossible to know
-> +	 * about current and future (hotplugged) devices. So we're at risk of
-> +	 * dropping PPRs (and leaking pending requests in the FQ).
-> +	 */
-> +	size_t max_inflight_pprs =3D 16;
-> +	struct arm_smmu_device *smmu =3D master->smmu;
+> +static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+> +				     enum pci_epc_irq_type type,
+> +				     u8 interrupt_num)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
 > +
-> +	if (!(smmu->features & ARM_SMMU_FEAT_PRI) ||
-> !dev_is_pci(master->dev))
-> +		return -ENOSYS;
-> +
-> +	pdev =3D to_pci_dev(master->dev);
-> +
-> +	ret =3D pci_reset_pri(pdev);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret =3D pci_enable_pri(pdev, max_inflight_pprs);
-> +	if (ret) {
-> +		dev_err(master->dev, "cannot enable PRI: %d\n", ret);
-> +		return ret;
+> +	switch (type) {
+> +	case PCI_EPC_IRQ_LEGACY:
+> +		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
+> +		return -EINVAL;
+> +	case PCI_EPC_IRQ_MSI:
+> +		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
+> +	default:
+> +		dev_err(pci->dev, "UNKNOWN IRQ type\n");
 > +	}
-> +
-> +	master->can_fault =3D true;
-> +	master->ste.prg_resp_needs_ssid =3D
-> pci_prg_resp_requires_prefix(pdev);
-
-Any reason why this is not cleared in arm_smmu_disable_pri ?
-
-> +
-> +	dev_dbg(master->dev, "enabled PRI\n");
 > +
 > +	return 0;
 > +}
 > +
-> +static void arm_smmu_disable_pri(struct arm_smmu_master_data
-> *master) {
-> +	struct pci_dev *pdev;
+> +static struct dw_pcie_ep_ops pcie_ep_ops = {
+> +	.ep_init = dw_plat_pcie_ep_init,
+> +	.raise_irq = dw_plat_pcie_ep_raise_irq,
+> +};
 > +
-> +	if (!dev_is_pci(master->dev))
-> +		return;
-> +
-> +	pdev =3D to_pci_dev(master->dev);
-> +
-> +	if (!pdev->pri_enabled)
-> +		return;
-> +
-> +	pci_disable_pri(pdev);
-> +	dev_dbg(master->dev, "disabled PRI\n");
-> +	master->can_fault =3D false;
-> +}
-> +
->  static int arm_smmu_sva_init(struct device *dev, struct iommu_sva_param
-> *param)  {
->  	int ret;
-> @@ -2314,11 +2401,15 @@ static int arm_smmu_sva_init(struct device
-> *dev, struct iommu_sva_param *param)
->  		return -EINVAL;
->=20
->  	if (param->features & IOMMU_SVA_FEAT_IOPF) {
-> -		if (!master->can_fault)
-> -			return -EINVAL;
-> +		arm_smmu_enable_pri(master);
-> +		if (!master->can_fault) {
-> +			ret =3D -ENODEV;
-> +			goto err_disable_pri;
-> +		}
-> +
->  		ret =3D iopf_queue_add_device(master->smmu->iopf_queue,
-> dev);
->  		if (ret)
-> -			return ret;
-> +			goto err_disable_pri;
->  	}
->=20
->  	if (!param->max_pasid)
-> @@ -2329,11 +2420,17 @@ static int arm_smmu_sva_init(struct device
-> *dev, struct iommu_sva_param *param)
->  	param->max_pasid =3D min(param->max_pasid, (1U << master-
-> >ssid_bits) - 1);
->=20
->  	return 0;
-> +
-> +err_disable_pri:
-> +	arm_smmu_disable_pri(master);
-> +
-> +	return ret;
->  }
->=20
->  static void arm_smmu_sva_shutdown(struct device *dev,
->  				  struct iommu_sva_param *param)
+> +static int dw_plat_add_pcie_port(struct dw_plat_pcie *dw_plat_pcie,
+>  				 struct platform_device *pdev)
 >  {
-> +	arm_smmu_disable_pri(dev->iommu_fwspec->iommu_priv);
->  	iopf_queue_remove_device(dev);
+> +	struct dw_pcie *pci = dw_plat_pcie->pci;
+> +	struct pcie_port *pp = &pci->pp;
+>  	struct device *dev = &pdev->dev;
+>  	int ret;
+>  
+> @@ -63,15 +117,44 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+>  
+>  	ret = dw_pcie_host_init(pp);
+>  	if (ret) {
+> -		dev_err(dev, "failed to initialize host\n");
+> +		dev_err(dev, "Failed to initialize host\n");
+>  		return ret;
+>  	}
+>  
+>  	return 0;
 >  }
->=20
-> @@ -2671,6 +2768,7 @@ static void arm_smmu_remove_device(struct
-> device *dev)
->  	iommu_group_remove_device(dev);
->  	arm_smmu_remove_master(smmu, master);
->  	iommu_device_unlink(&smmu->iommu, dev);
-> +	arm_smmu_disable_pri(master);
->  	arm_smmu_disable_ats(master);
->  	kfree(master);
->  	iommu_fwspec_free(dev);
-> --
-> 2.17.0
+>  
+> -static const struct dw_pcie_ops dw_pcie_ops = {
+> -};
+> +static int dw_plat_add_pcie_ep(struct dw_plat_pcie *dw_plat_pcie,
+> +			       struct platform_device *pdev)
+> +{
+> +	int ret;
+> +	struct dw_pcie_ep *ep;
+> +	struct resource *res;
+> +	struct device *dev = &pdev->dev;
+> +	struct dw_pcie *pci = dw_plat_pcie->pci;
+> +
+> +	ep = &pci->ep;
+> +	ep->ops = &pcie_ep_ops;
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
+> +	pci->dbi_base2 = devm_ioremap_resource(dev, res);
+> +	if (IS_ERR(pci->dbi_base2))
+> +		return PTR_ERR(pci->dbi_base2);
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+> +	if (!res)
+> +		return -EINVAL;
+> +
+> +	ep->phys_base = res->start;
+> +	ep->addr_size = resource_size(res);
+> +
+> +	ret = dw_pcie_ep_init(ep);
+> +	if (ret) {
+> +		dev_err(dev, "Failed to initialize endpoint\n");
+> +		return ret;
+> +	}
+> +	return 0;
+> +}
+>  
+>  static int dw_plat_pcie_probe(struct platform_device *pdev)
+>  {
+> @@ -80,6 +163,16 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+>  	struct dw_pcie *pci;
+>  	struct resource *res;  /* Resource from DT */
+>  	int ret;
+> +	const struct of_device_id *match;
+> +	const struct dw_plat_pcie_of_data *data;
+> +	enum dw_pcie_device_mode mode;
+> +
+> +	match = of_match_device(dw_plat_pcie_of_match, dev);
+> +	if (!match)
+> +		return -EINVAL;
+> +
+> +	data = (struct dw_plat_pcie_of_data *)match->data;
+> +	mode = (enum dw_pcie_device_mode)data->mode;
+>  
+>  	dw_plat_pcie = devm_kzalloc(dev, sizeof(*dw_plat_pcie), GFP_KERNEL);
+>  	if (!dw_plat_pcie)
+> @@ -93,23 +186,59 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+>  	pci->ops = &dw_pcie_ops;
+>  
+>  	dw_plat_pcie->pci = pci;
+> +	dw_plat_pcie->mode = mode;
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+> +	if (!res)
+> +		res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>  
+> -	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>  	pci->dbi_base = devm_ioremap_resource(dev, res);
+>  	if (IS_ERR(pci->dbi_base))
+>  		return PTR_ERR(pci->dbi_base);
+>  
+>  	platform_set_drvdata(pdev, dw_plat_pcie);
+>  
+> -	ret = dw_plat_add_pcie_port(&pci->pp, pdev);
+> -	if (ret < 0)
+> -		return ret;
+> +	switch (dw_plat_pcie->mode) {
+> +	case DW_PCIE_RC_TYPE:
+> +		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_HOST))
+> +			return -ENODEV;
+> +
+> +		ret = dw_plat_add_pcie_port(dw_plat_pcie, pdev);
+> +		if (ret < 0)
+> +			return ret;
+> +		break;
+> +	case DW_PCIE_EP_TYPE:
+> +		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_EP))
+> +			return -ENODEV;
+> +
+> +		ret = dw_plat_add_pcie_ep(dw_plat_pcie, pdev);
+> +		if (ret < 0)
+> +			return ret;
+> +		break;
+> +	default:
+> +		dev_err(dev, "INVALID device type %d\n", dw_plat_pcie->mode);
+> +	}
+>  
+>  	return 0;
+>  }
+>  
+> +static const struct dw_plat_pcie_of_data dw_plat_pcie_rc_of_data = {
+> +	.mode = DW_PCIE_RC_TYPE,
+> +};
+> +
+> +static const struct dw_plat_pcie_of_data dw_plat_pcie_ep_of_data = {
+> +	.mode = DW_PCIE_EP_TYPE,
+> +};
+> +
+>  static const struct of_device_id dw_plat_pcie_of_match[] = {
+> -	{ .compatible = "snps,dw-pcie", },
+> +	{
+> +		.compatible = "snps,dw-pcie",
+> +		.data = &dw_plat_pcie_rc_of_data,
+> +	},
+> +	{
+> +		.compatible = "snps,dw-pcie-ep",
+> +		.data = &dw_plat_pcie_ep_of_data,
+> +	},
+>  	{},
+>  };
+>  
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 7cef851..bee401d 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -435,6 +435,13 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+>  	if (WARN_ON_ONCE(!epc))
+>  		return -EINVAL;
+>  
+> +	if (epc->features & EPC_FEATURE_NO_LINKUP_NOTIFIER)
+> +		epf_test->linkup_notifier = false;
+> +	else
+> +		epf_test->linkup_notifier = true;
+> +
+> +	epf_test->test_reg_bar = EPC_FEATURE_GET_BAR(epc->features);
+> +
+>  	ret = pci_epc_write_header(epc, epf->func_no, header);
+>  	if (ret) {
+>  		dev_err(dev, "configuration header write failed\n");
+> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+> index af657ca..243eaa5 100644
+> --- a/include/linux/pci-epc.h
+> +++ b/include/linux/pci-epc.h
+> @@ -90,8 +90,16 @@ struct pci_epc {
+>  	struct config_group		*group;
+>  	/* spinlock to protect against concurrent access of EP controller */
+>  	spinlock_t			lock;
+> +	unsigned int			features;
+>  };
+>  
+> +#define EPC_FEATURE_NO_LINKUP_NOTIFIER		BIT(0)
+> +#define EPC_FEATURE_BAR_MASK			(BIT(1) | BIT(2) | BIT(3))
+> +#define EPC_FEATURE_SET_BAR(features, bar)	\
+> +		(features |= (EPC_FEATURE_BAR_MASK & (bar << 1)))
+> +#define EPC_FEATURE_GET_BAR(features)		\
+> +		((features & EPC_FEATURE_BAR_MASK) >> 1)
+> +
+>  #define to_pci_epc(device) container_of((device), struct pci_epc, dev)
+>  
+>  #define pci_epc_create(dev, ops)    \
+> 
+
+
+Acked-by: Joao Pinto <jpinto@synopsys.com>
