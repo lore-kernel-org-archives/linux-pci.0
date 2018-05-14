@@ -1,54 +1,74 @@
-Return-Path: <SRS0=rZ3w=IL=linux.ee=mroos@kernel.org>
-Return-Path: <SRS0=rZ3w=IL=linux.ee=mroos@kernel.org>
-Date: Thu, 24 May 2018 11:34:26 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-Sender: mroos@math.ut.ee
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-    "David S. Miller" <davem@davemloft.net>, sparclinux@vger.kernel.org
-Subject: Re: [PATCH v1 0/4] sparc/PCI: VGA resource and other fixes
-In-Reply-To: <20180522130217.GA161672@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.LRH.2.21.1805241133450.13830@math.ut.ee>
-References: <152694888798.59585.8779818482732387864.stgit@bhelgaas-glaptop.roam.corp.google.com> <20180522130217.GA161672@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-7
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay6.synopsys.com ([198.182.37.59]:37984 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753689AbeENPQk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 11:16:40 -0400
+Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
+        by smtprelay.synopsys.com (Postfix) with ESMTP id A2C9A1E073A
+        for <linux-pci@vger.kernel.org>; Mon, 14 May 2018 17:16:39 +0200 (CEST)
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com, kishon@ti.com,
+        jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH 2/2] PCI: dwc: dra7xx: Use devm_ioremap_resource instead of devm_ioremap_resource
+Date: Mon, 14 May 2018 16:16:33 +0100
+Message-Id: <bccf4c75653ecf95f536c09db0845418810bd051.1526310842.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526310842.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526310842.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526310842.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526310842.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> [+cc sparclinux, sorry I missed this first time around]
+This fix aims to replace the use of devm_ioremap() by
+devm_ioremap_resource() already discussed on [1].
 
-> >       sparc/PCI: Use dev_printk() when possible
+[1] -> https://lkml.kernel.org/r/20180120001645.GA21343@lenoch
 
-This patch causes compile errors for me:
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-  CC      arch/sparc/kernel/pci.o
-In file included from ./include/linux/pci.h:31:0,
-                 from arch/sparc/kernel/pci.c:18:
-arch/sparc/kernel/pci.c: In function =A1pcibios_enable_device=A2:
-arch/sparc/kernel/pci.c:754:53: error: =A1old_cmd=A2 undeclared (first us=
-e in this function)
-   pci_info(dev, "enabling device (%04x -> %04x)\n", old_cmd, cmd);
-                                                     ^
-./include/linux/device.h:1384:58: note: in definition of macro =A1dev_inf=
-o=A2
- #define dev_info(dev, fmt, arg...) _dev_info(dev, fmt, ##arg)
-                                                          ^
-arch/sparc/kernel/pci.c:754:3: note: in expansion of macro =A1pci_info=A2
-   pci_info(dev, "enabling device (%04x -> %04x)\n", old_cmd, cmd);
-   ^
-arch/sparc/kernel/pci.c:754:53: note: each undeclared identifier is repor=
-ted only once for each function it appears in
-   pci_info(dev, "enabling device (%04x -> %04x)\n", old_cmd, cmd);
-                                                     ^
-./include/linux/device.h:1384:58: note: in definition of macro =A1dev_inf=
-o=A2
- #define dev_info(dev, fmt, arg...) _dev_info(dev, fmt, ##arg)
-                                                          ^
-arch/sparc/kernel/pci.c:754:3: note: in expansion of macro =A1pci_info=A2
-   pci_info(dev, "enabling device (%04x -> %04x)\n", old_cmd, cmd);
-   ^
-scripts/Makefile.build:312: recipe for target 'arch/sparc/kernel/pci.o' f=
-ailed
-
-
---=20
-Meelis Roos (mroos@linux.ee)
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index ed8558d..b410bb4 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -406,14 +406,14 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
+ 	ep->ops = &pcie_ep_ops;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
+-	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+-	if (!pci->dbi_base)
+-		return -ENOMEM;
++	pci->dbi_base = devm_ioremap_resource(dev, res);
++	if (IS_ERR(pci->dbi_base))
++		return PTR_ERR(pci->dbi_base);
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
+-	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
+-	if (!pci->dbi_base2)
+-		return -ENOMEM;
++	pci->dbi_base2 = devm_ioremap_resource(dev, res);
++	if (IS_ERR(pci->dbi_base2))
++		return PTR_ERR(pci->dbi_base2);
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+ 	if (!res)
+@@ -459,9 +459,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 		return ret;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
+-	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+-	if (!pci->dbi_base)
+-		return -ENOMEM;
++	pci->dbi_base = devm_ioremap_resource(dev, res);
++	if (IS_ERR(pci->dbi_base))
++		return PTR_ERR(pci->dbi_base);
+ 
+ 	pp->ops = &dra7xx_pcie_host_ops;
+ 
+-- 
+2.7.4
