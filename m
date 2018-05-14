@@ -1,43 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:39979 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753107AbeEIFmn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2018 01:42:43 -0400
-Received: by mail-pl0-f68.google.com with SMTP id t22-v6so3627903plo.7
-        for <linux-pci@vger.kernel.org>; Tue, 08 May 2018 22:42:43 -0700 (PDT)
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
-        Pratyush Anand <pratyush.anand@gmail.com>
-Subject: [PATCH 9/9] PCI: spear13xx: Drop unnecessary root_bus_nr setting
-Date: Wed,  9 May 2018 13:39:46 +0800
-Message-Id: <1525844386-5433-9-git-send-email-shawn.guo@linaro.org>
-In-Reply-To: <1525844386-5433-1-git-send-email-shawn.guo@linaro.org>
-References: <1525844386-5433-1-git-send-email-shawn.guo@linaro.org>
+Received: from smtprelay6.synopsys.com ([198.182.37.59]:38184 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932668AbeENQRj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 12:17:39 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH 0/4] Add DesignWare EP support
+Date: Mon, 14 May 2018 17:17:24 +0100
+Message-Id: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The root_bus_nr initialization has already been done in function
-dw_pcie_host_init().  The -1 assignment in platform driver before
-calling into dw_pcie_host_init() is not really needed.  Drop it.
+The PCIe controller dual mode is capable of operating in RC mode as well
+as EP mode by configuration option. Till now only RC mode was supported,
+with this patch is add EP support to the DesignWare driver.
 
-Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
----
- drivers/pci/dwc/pcie-spear13xx.c | 1 -
- 1 file changed, 1 deletion(-)
+Gustavo Pimentel (4):
+  bindings: PCI: designware: Example update
+  PCI: dwc: Add support for EP mode
+  bindings: PCI: designware: Add support for EP in DesignWare driver
+  misc: pci_endpoint_test: Add DesignWare EP entry
 
-diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
-index ecb58f7b7566..7d0cdfd8138b 100644
---- a/drivers/pci/dwc/pcie-spear13xx.c
-+++ b/drivers/pci/dwc/pcie-spear13xx.c
-@@ -210,7 +210,6 @@ static int spear13xx_add_pcie_port(struct spear13xx_pcie *spear13xx_pcie,
- 		return ret;
- 	}
- 
--	pp->root_bus_nr = -1;
- 	pp->ops = &spear13xx_pcie_host_ops;
- 
- 	ret = dw_pcie_host_init(pp);
+ .../devicetree/bindings/pci/designware-pcie.txt    |  24 +++-
+ drivers/misc/pci_endpoint_test.c                   |   1 +
+ drivers/pci/dwc/Kconfig                            |  41 ++++--
+ drivers/pci/dwc/pcie-designware-ep.c               |   3 +
+ drivers/pci/dwc/pcie-designware-plat.c             | 149 +++++++++++++++++++--
+ drivers/pci/endpoint/functions/pci-epf-test.c      |   7 +
+ include/linux/pci-epc.h                            |   8 ++
+ 7 files changed, 206 insertions(+), 27 deletions(-)
+
 -- 
-1.9.1
+2.7.4
