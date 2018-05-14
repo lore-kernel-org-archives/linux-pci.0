@@ -1,41 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 23 May 2018 04:24:31 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, ryan@finnie.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, stable@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Keith Busch <keith.busch@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI/portdrv: do not disable device on remove()
-Message-ID: <20180523022431.GA15069@wunner.de>
-References: <1527011883-21320-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45376 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753500AbeENPtO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 May 2018 11:49:14 -0400
+Date: Mon, 14 May 2018 16:49:09 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: Simon Horman <horms@verge.net.au>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
+Message-ID: <20180514154909.GB13324@e107981-ln.cambridge.arm.com>
+References: <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
+ <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
+ <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
+ <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
+ <a5a0d78d-627b-6277-ee75-44e204cbd390@gmail.com>
+ <CAMuHMdX9d29JYVDsghd3Koyg8Aeuv0D2Fx5Lnn0bBZSb9RntDw@mail.gmail.com>
+ <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
+ <20180413124819.tw5436lolpn5eqhw@verge.net.au>
+ <20180501105556.GB19391@e107981-ln.cambridge.arm.com>
+ <d03db400-9f3e-906f-7886-a54cccb96a40@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1527011883-21320-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <d03db400-9f3e-906f-7886-a54cccb96a40@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 22, 2018 at 01:58:00PM -0400, Sinan Kaya wrote:
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -409,7 +409,6 @@ void pcie_port_device_remove(struct pci_dev *dev)
->  {
->  	device_for_each_child(&dev->dev, NULL, remove_iter);
->  	pci_free_irq_vectors(dev);
-> -	pci_disable_device(dev);
->  }
+On Mon, May 14, 2018 at 05:32:04PM +0200, Marek Vasut wrote:
+> On 05/01/2018 12:55 PM, Lorenzo Pieralisi wrote:
+> > On Fri, Apr 13, 2018 at 02:48:19PM +0200, Simon Horman wrote:
+> >> On Tue, Apr 10, 2018 at 06:17:04PM +0200, Marek Vasut wrote:
+> >>> On 04/10/2018 05:28 PM, Geert Uytterhoeven wrote:
+> >>
+> >> ...
+> >>
+> >>>>>> rcar_pcie_get_resources() is called while the device is
+> >>>>>> runtime-enabled/resumed,
+> >>>>>> pci_free_resource_list() is called while the device is runtime-disabled.
+> >>>
+> >>> rcar_pcie_get_resources() is NOT a pair function for
+> >>> pci_free_resource_list() . rcar_pcie_parse_request_of_pci_ranges() is a
+> >>> pair function for pci_free_resource_list().
+> >>>
+> >>> rcar_pcie_parse_request_of_pci_ranges() calls
+> >>> of_pci_get_host_bridge_resources() internally, so every single function
+> >>> called after successful call of rcar_pcie_parse_request_of_pci_ranges()
+> >>> must call pci_free_resource_list().
+> >>>
+> >>> Both of_pci_get_host_bridge_resources() and pci_free_resource_list() are
+> >>> called with runtime PM disabled.
+> >>>
+> >>> The naming of the functions is confusing though.
+> >>
+> >> Hi,
+> >>
+> >> thanks everyone for their efforts in preparing/reviewing this patch.
+> >>
+> >> It seems there are some differences of opinion on how best to handle the
+> >> error paths but unlike earlier versions this one seems correct to me. If
+> >> that turns out to be false we can address it. But I don't think its likely
+> >> things will be enhanced by continuing this review.
+> >>
+> >> Lorenzo, please consider taking this patch in its current form.
+> >>
+> >> Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+> > 
+> > Applied to pci/rcar for v4.18, thanks.
+> 
+> Is there any reason why this patch isnt in next yet ?
 
-Shutdown aside, pci_disable_device() is also not called in the ->remove
-path with this patch, right?  Seems wrong.  E.g. when unbinding the driver
-from the root port device, or when unplugging a port (happens all the time
-with Thunderbolt).
+Bjorn will merge it into -next this week.
 
 Thanks,
-
-Lukas
+Lorenzo
