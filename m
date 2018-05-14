@@ -1,87 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:54347 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935346AbeEXHXg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 03:23:36 -0400
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH 3/6] PCI: rcar: Teardown MSI setup if rcar_pcie_enable() fails
-Date: Thu, 24 May 2018 09:23:20 +0200
-Message-Id: <20180524072323.22115-3-marek.vasut+renesas@gmail.com>
-In-Reply-To: <20180524072323.22115-1-marek.vasut+renesas@gmail.com>
-References: <20180524072323.22115-1-marek.vasut+renesas@gmail.com>
+Received: from smtprelay.synopsys.com ([198.182.37.59]:37985 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753690AbeENPQk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 11:16:40 -0400
+Received: from mailhost.synopsys.com (mailhost2.synopsys.com [10.13.184.66])
+        by smtprelay.synopsys.com (Postfix) with ESMTP id B01E31E1376
+        for <linux-pci@vger.kernel.org>; Mon, 14 May 2018 17:16:39 +0200 (CEST)
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com, kishon@ti.com,
+        jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH 0/2] PCI: dwc: Use devm_ioremap_resource instead of devm_ioremap_resource
+Date: Mon, 14 May 2018 16:16:31 +0100
+Message-Id: <cover.1526310842.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the rcar_pcie_enable() fails and MSIs are enabled, the setup done in
-rcar_pcie_enable_msi() is never undone. Add a function to tear down the
-MSI setup by disabling the MSI handling in the PCIe block, deallocating
-the pages requested for the MSIs and zapping the IRQ mapping.
+This fix aims to replace the use of devm_ioremap() by
+devm_ioremap_resource() already discussed on [1].
 
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
----
- drivers/pci/host/pcie-rcar.c | 28 +++++++++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
+[1] -> https://lkml.kernel.org/r/20180120001645.GA21343@lenoch
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 6bb1cdec26be..d6a7e8482dcf 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -923,6 +923,28 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
- 	return err;
- }
- 
-+static void rcar_pcie_teardown_msi(struct rcar_pcie *pcie)
-+{
-+	struct rcar_msi *msi = &pcie->msi;
-+	int irq, i;
-+
-+	/* Disable all MSI interrupts */
-+	rcar_pci_write_reg(pcie, 0, PCIEMSIIER);
-+
-+	/* Disable address decoding of the MSI interrupt, MSIFE */
-+	rcar_pci_write_reg(pcie, 0, PCIEMSIALR);
-+
-+	free_pages(msi->pages, 0);
-+
-+	for (i = 0; i < INT_PCI_MSI_NR; i++) {
-+		irq = irq_find_mapping(msi->domain, i);
-+		if (irq > 0)
-+			irq_dispose_mapping(irq);
-+	}
-+
-+	irq_domain_remove(msi->domain);
-+}
-+
- static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
-@@ -1151,10 +1173,14 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 
- 	err = rcar_pcie_enable(pcie);
- 	if (err)
--		goto err_clk_disable;
-+		goto err_msi_teardown;
- 
- 	return 0;
- 
-+err_msi_teardown:
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		rcar_pcie_teardown_msi(pcie);
-+
- err_clk_disable:
- 	clk_disable_unprepare(pcie->bus_clk);
- 
+Gustavo Pimentel (2):
+  PCI: dwc: artpec6: Use devm_ioremap_resource instead of
+    devm_ioremap_resource
+  PCI: dwc: dra7xx: Use devm_ioremap_resource instead of
+    devm_ioremap_resource
+
+ drivers/pci/dwc/pci-dra7xx.c   | 18 +++++++++---------
+ drivers/pci/dwc/pcie-artpec6.c |  6 +++---
+ 2 files changed, 12 insertions(+), 12 deletions(-)
+
 -- 
-2.16.2
+2.7.4
