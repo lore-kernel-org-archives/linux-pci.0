@@ -1,72 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:48376 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033920AbeEXREU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 May 2018 13:04:20 -0400
-Date: Thu, 24 May 2018 18:04:15 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marek Vasut <marek.vasut@gmail.com>
+Received: from smtprelay.synopsys.com ([198.182.37.59]:38456 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753022AbeENRck (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 13:32:40 -0400
+Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
+        by smtprelay.synopsys.com (Postfix) with ESMTP id 1E0E71E05BB
+        for <linux-pci@vger.kernel.org>; Mon, 14 May 2018 19:32:39 +0200 (CEST)
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com, kishon@ti.com,
+        jesper.nilsson@axis.com
 Cc: linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH V3] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
-Message-ID: <20180524170415.GB26309@e107981-ln.cambridge.arm.com>
-References: <20180522122420.24002-1-marek.vasut+renesas@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180522122420.24002-1-marek.vasut+renesas@gmail.com>
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH 2/2] PCI: dwc: dra7xx: Use devm_ioremap_resource instead of devm_ioremap
+Date: Mon, 14 May 2018 18:32:35 +0100
+Message-Id: <b6fe7c189b76376b9ecf60c859b0bb61cf79a690.1526319075.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526319075.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526319075.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526319075.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526319075.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 22, 2018 at 02:24:20PM +0200, Marek Vasut wrote:
-> The data link active signal usually takes ~20 uSec to be asserted,
-> poll the bit more often to avoid useless delays in this function.
-> Use udelay() instead of usleep() for such a small delay as suggested
-> by the timer documentation and because this will be used in atomic
-> context later on when the suspend/resume patches land.
-> 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> ---
-> V2: s/content/context in commit message
-> V3: Add cpu_relax()
-> ---
->  drivers/pci/host/pcie-rcar.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+This fix aims to replace the use of devm_ioremap() by
+devm_ioremap_resource() already discussed on [1].
 
-Applied to pci/rcar for v4.18, thanks.
+[1] -> https://lkml.kernel.org/r/20180120001645.GA21343@lenoch
 
-Lorenzo
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 5c365f743df5..3aa6fe5f2d64 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -529,13 +529,14 @@ static void phy_write_reg(struct rcar_pcie *pcie,
->  
->  static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
->  {
-> -	unsigned int timeout = 10;
-> +	unsigned int timeout = 10000;
->  
->  	while (timeout--) {
->  		if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
->  			return 0;
->  
-> -		msleep(5);
-> +		udelay(5);
-> +		cpu_relax();
->  	}
->  
->  	return -ETIMEDOUT;
-> -- 
-> 2.16.2
-> 
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index ed8558d..b410bb4 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -406,14 +406,14 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
+ 	ep->ops = &pcie_ep_ops;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
+-	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+-	if (!pci->dbi_base)
+-		return -ENOMEM;
++	pci->dbi_base = devm_ioremap_resource(dev, res);
++	if (IS_ERR(pci->dbi_base))
++		return PTR_ERR(pci->dbi_base);
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
+-	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
+-	if (!pci->dbi_base2)
+-		return -ENOMEM;
++	pci->dbi_base2 = devm_ioremap_resource(dev, res);
++	if (IS_ERR(pci->dbi_base2))
++		return PTR_ERR(pci->dbi_base2);
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+ 	if (!res)
+@@ -459,9 +459,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 		return ret;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
+-	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+-	if (!pci->dbi_base)
+-		return -ENOMEM;
++	pci->dbi_base = devm_ioremap_resource(dev, res);
++	if (IS_ERR(pci->dbi_base))
++		return PTR_ERR(pci->dbi_base);
+ 
+ 	pp->ops = &dra7xx_pcie_host_ops;
+ 
+-- 
+2.7.4
