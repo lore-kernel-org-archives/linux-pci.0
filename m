@@ -1,270 +1,83 @@
-Return-Path: <SRS0=04Et=H2=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=04Et=H2=linux.intel.com=mika.westerberg@kernel.org>
-Date: Mon, 7 May 2018 14:34:49 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v5 4/9] ACPI / hotplug / PCI: Do not scan all bridges
- when native PCIe hotplug is used
-Message-ID: <20180507113449.GR17277@lahna.fi.intel.com>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
- <20180416103453.46232-5-mika.westerberg@linux.intel.com>
- <20180502204932.GG11698@bhelgaas-glaptop.roam.corp.google.com>
- <20180503102241.GI2355@lahna.fi.intel.com>
- <20180505000420.GB9529@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: songxiaowei <songxiaowei@hisilicon.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>, "chenyao (F)"
+ <chenyao11@huawei.com>
+Subject: reply: [PATCH v3 1/2] PCI: kirin: Add MSI support
+Date: Mon, 14 May 2018 01:11:10 +0000
+Message-ID: <99B4C6BADD9E3241B25E52B02BA737C54127E3BF@DGGEMA505-MBS.china.huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180505000420.GB9529@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ devicetree <devicetree@vger.kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ "dimitrysh@google.com" <dimitrysh@google.com>,
+ "guodong.xu@linaro.org" <guodong.xu@linaro.org>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Suzhuangluan <suzhuangluan@hisilicon.com>,
+ Wangbinghui <wangbinghui@hisilicon.com>, Will Deacon <will.deacon@arm.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Kongfei <kongfei@hisilicon.com>, Rob Herring <robh+dt@kernel.org>,
+ "xuwei \(O\)" <xuwei5@huawei.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 04, 2018 at 07:04:20PM -0500, Bjorn Helgaas wrote:
-> On Thu, May 03, 2018 at 01:22:41PM +0300, Mika Westerberg wrote:
-> > On Wed, May 02, 2018 at 03:49:32PM -0500, Bjorn Helgaas wrote:
-> > > On Mon, Apr 16, 2018 at 01:34:48PM +0300, Mika Westerberg wrote:
-> > > > When a system is using native PCIe hotplug for Thunderbolt and the
-> > > > controller is not enabled for full RTD3 (runtime D3) it will be only
-> > > > present in the system when there is a device connected. This pretty much
-> > > > follows the BIOS assisted hotplug behaviour.
-> > > 
-> > > This is a tangent, but what exactly does "controller is not enabled
-> > > for full RTD3 (runtime D3)" mean?  The way that's worded sounds like
-> > > it *could* be a setting in a PCI config register, but I suspect it's
-> > > really something in Linux, e.g., some bit in struct pci_dev or device?
-> > 
-> > It means that the controller can to into D3 runtime. With BIOS assisted
-> > mode and native PCIe mode, the controller is hot-removed when there is
-> > nothing connected. In RTD3 mode it is there always and the OS expected
-> > to put it into D3 when idle using standard PCI PM registers.
-> 
-> How do I tell if a controller is enabled for runtime D3?
-> 
-> I'm still struggling to figure out exactly how this runtime D3 part is
-> relevant to this patch.  It might be behavior that happens in this
-> particular scenario, but I'm not sure yet that it is a required part
-> of the picture.
-> 
-> I think you're trying to separate enumeration handled by pciehp from
-> enumeration handled by acpiphp, and runtime D3 sounds like an
-> orthogonal issue.
-
-It is not an issue at all. I just thought it is good to mention where
-this all comes from in the changelog. In can reword it to:
-
-  When a system is using native PCIe hotplug for Thunderbolt it will be
-  only present in the system when there is a device connected. This pretty
-  much follows the BIOS assisted hotplug behaviour.
-
-if that is more understandable.
-
-> > > > Thunderbolt host router integrated PCIe switch has two additional PCIe
-> > > > downstream bridges that lead to NHI (Thunderbolt host controller) and xHCI
-> > > > (USB 3 host controller) respectively. These downstream bridges are not
-> > > > marked being hotplug capable. Reason for that is to preserve resources.
-> > > > Otherwise the OS would distribute remaining resources between all
-> > > > downstream bridges making these two bridges consume precious resources
-> > > > of the actual hotplug bridges.
-> > > > 
-> > > > Now, because these two bridges are not marked being hotplug capable the OS
-> > > > will not enable hotplug interrupt for them either and will not receive
-> > > > interrupt when devices behind them are hot-added. Solution to this is
-> > > > that the BIOS sends ACPI Notify() to the root port let the OS know it
-> > > > needs to rescan for added and/or removed devices.
-> > > 
-> > > We're building stuff based on "is_hotplug_bridge", but I'm not sure
-> > > that bit is really useful.
-> > > 
-> > > set_pcie_hotplug_bridge() sets it for downstream ports with
-> > > PCI_EXP_SLTCAP_HPC, which is easy enough to understand.
-> > > 
-> > > In acpiphp, check_hotplug_bridge() sets in some scenario that I can't
-> > > quite figure out.  I assume it's based on something in the namespace.
-> > > 
-> > > But it seems like the whole point of this patch is that even if a
-> > > bridge doesn't have "is_hotplug_bridge" set, ACPI hotplug can hot-add
-> > > devices below it.
-> > 
-> > Correct.
-> > 
-> > > So I'm not sure what "is_hotplug_bridge" is really telling us.  Is it
-> > > just a hint about how many resources we want to assign to the bridge,
-> > > i.e., we assign only a few when it's not set and more if it is set?
-> > 
-> > Good question. I did not invent the flag so hard to say. I've been using
-> > it because IIRC you prefer it.
-> 
-> It's not a question of whether I prefer it.  It's only useful if it
-> means something specific and we agree on what that is.
-> 
-> So what do you think it means?
-
-I think it currently means a bridge that may get new devices behind it
-as a result of hot-add.
-
-In case of ACPI based hotplug, it is not always possible to determine
-and set it upfront so it would make more sense to me if is_hotplug_bridge 
-means that this bridge is used only as part of native PCIe hotplug.
-
-> In this code:
-> 
-> > > > @@ -291,7 +294,7 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
-> > > >          * expose slots to user space in those cases.
-> > > >          */
-> > > >         if ((acpi_pci_check_ejectable(pbus, handle) || is_dock_device(adev))
-> > > > -           && !(pdev && pdev->is_hotplug_bridge && pciehp_is_native(pdev))) {
-> > > > +           && !(slot->flags & SLOT_IS_NATIVE && pdev->is_hotplug_bridge)) {
-> 
-> I *think* this part:
-> 
->   slot->flags & SLOT_IS_NATIVE && pdev->is_hotplug_bridge
-> 
-> means "this bridge supports hotplug but it is handled by pciehp, and
-> acpiphp should not expose the slot to user space".
-
-Yes, I specifically added SLOT_IS_NATIVE flag there so we can get rid of
-one condition. Note that:
-
-  pdev && pdev->is_hotplug_bridge && pciehp_is_native(pdev)
-
-and
-
-  slot->flags & SLOT_IS_NATIVE && pdev->is_hotplug_bridge
-
-are equivalent.
-
-There are no functional changes in that hunk.
-
-> If that's the case, maybe we should rework pciehp_is_native(bridge) so
-> instead of answering the question "does the OS have permission to
-> control PCIe hotplug in the hierarchy containing <bridge>?", it could
-> answer the specific question "does pciehp handle hotplug for
-> <bridge>?", e.g., something along these lines:
-> 
->   bool pciehp_is_native(struct pci_dev *bridge)
->   {
->   #ifdef CONFIG_HOTPLUG_PCI_PCIE
->     u32 slot_cap;
->     struct pci_host_bridge *host;
-> 
->     if (!pci_is_pcie(bridge))
->       return false;
-> 
->     pcie_capability_read_dword(bridge, PCI_EXP_SLTCAP, &slot_cap);
->     if (!(slot_cap & PCI_EXP_SLTCAP_HPC))
->       return false;
-> 
->     if (pcie_ports_native)
->       return true;
-> 
->     host = pci_find_host_bridge(bridge->bus);
->     return host->native_hotplug;
->   #else
->     return false;
->   #endif
->   }
-> 
-> Then your test for whether acpiphp should expose the slot to user
-> space could be:
-
-[That test was there already before this patch.]
-
->   -   && !(pdev && pdev->is_hotplug_bridge && pciehp_is_native(pdev))) {
->   +   && !pciehp_is_native(pdev)) {
->  
-> We could also use pciehp_is_native() directly in
-> get_port_device_capability(), which is essentially the condition that
-> allows pciehp to claim the device.
-
-Fine, I agree it makes sense.
-
-However, I intended *this* patch to be *fix* and thus did not want to
-start reworking things too much. Especially code that is not related to
-the issue at all (pciehp_is_native()).
-
-> > > > Here is how the mechanism is supposed to work when a Thunderbolt
-> > > > endpoint is connected to one of the ports. In case of a standard USB-C
-> > > > device only the xHCI is hot-added otherwise steps are the same.
-> > > > 
-> > > > 1. Initially there is only the PCIe root port that is controlled by
-> > > >    the pciehp driver
-> > > > 
-> > > >   00:1b.0 (Hotplug+) --
-> > > > 
-> > > > 2. Then we get native PCIe hotplug interrupt and once it is handled the
-> > > >    topology looks as following
-> > > > 
-> > > >   00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 --
-> > > >                                   +- 02:01.0 (HotPlug+)
-> > > >                                   \- 02:02.0 --
-> > > > 
-> > > > 3. Bridges 02:00.0 and 02:02.0 are not marked as hotplug capable and
-> > > 
-> > > By "not marked as hotplug capable", I guess you mean
-> > > PCI_EXP_SLTCAP_HPC is not set, right?
-> > 
-> > Right.
-> > 
-> > > >    they don't have anything behind them currently. Bridge 02:01.0 is
-> > > >    hotplug capable and used for extending the topology. At this point
-> > > >    the required PCIe devices are enabled and ACPI Notify() is sent to
-> > > >    the root port. The resulting topology is expected to look like
-> > > > 
-> > > >   00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 -- Thunderbolt host controller
-> > > >                                   +- 02:01.0 (HotPlug+)
-> > > >                                   \- 02:02.0 -- xHCI host controller
-> > > > 
-> > > > However, the current ACPI hotplug implementation scans the whole 00:1b.0
-> > > > hotplug slot and everything behind it regardless whether native PCIe is
-> > > > used or not, and it expects that the BIOS has configured bridge
-> > > > resources upfront. If that's not the case it assigns resources using
-> > > > minimal allocation (everything currently found just barely fit)
-> > > > preventing future extension. In addition to that, if there is another
-> > > > native PCIe hotplug going on we may find the new PCIe switch only
-> > > > partially ready (all links are not fully trained yet) confusing pciehp
-> > > > when it finally starts to enumerate for new devices.
-> > > > 
-> > > > To make this work better with the native PCIe hotplug driver (pciehp),
-> > > > we let it handle all slot management and resource allocation for hotplug
-> > > > bridges and restrict ACPI hotplug to non-hotplug bridges.
-> 
-> I *think* the point of this patch is that:
-> 
->   If X is a bridge, and pciehp manages hotplug on X, i.e., X has
->   PCI_EXP_SLTCAP_HPC set and the OS owns PCIe hotplug in this
->   hierarchy per _OSC, acpiphp should not enumerate devices on X's
->   secondary bus.
-> 
->   Furthermore, acpiphp should avoid this enumeration no matter where X
->   is in the hierarchy.  So if the Notify() goes to a bridge Y far
->   above X, acpiphp should look at every existing bridge in the
->   hierarchy below Y.  If the bridge is managed by pciehp, acpiphp
->   should ignore it.  Otherwise, acpiphp should scan for new devices
->   below it.
-> 
-> This enumeration by acpiphp is recursive, and it has to avoid the
-> pciehp-managed bridges at every level.  Your changes to enable_slot()
-> check for SLOT_IS_NATIVE at the top level, but I don't see how they
-> avoid pciehp-managed bridges at lower levels that may be scanned by
-> pci_scan_bridge().
-
-This is pretty special case. For example below the code scans only the
-two bridges (02:00.0 and 02:02.0) and they only have one bus reserved.
-There won't be any further bridges downstream. The hotplug bridge
-(02:01.0) is left for pciehp:
-
-  00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 --
-                                  +- 02:01.0 (HotPlug+)
-                                  \- 02:02.0 --
-
-In theory of course it is possible that there will be another hotplug
-bridge added behind those two bridges but in practice this is only used
-for this special case to bring in the two devices (NHI, xHCI). I don't
-think it makes much sense to complicate pci_scan_bridge() and friends
-just to make more "generic" support for a case that in practice never
-happens.
+SGksIEFuZHkgU2hldmNoZW5rbw0KDQpZYW8gaXMgb24gbWF0ZXJuaXR5IGxlYXZlLCBhbmQgSSds
+bCB0YWtlIG92ZXIgdGhlIGpvYiBhZnRlciBkaXNjdXNzaW5nIHdpdGggaGVyLg0KDQo+IC0tLS0t
+6YKu5Lu25Y6f5Lu2LS0tLS0NCj4g5Y+R5Lu25Lq6OiBBbmR5IFNoZXZjaGVua28gW21haWx0bzph
+bmR5LnNoZXZjaGVua29AZ21haWwuY29tXQ0KPiDlj5HpgIHml7bpl7Q6IDIwMTjlubQ15pyIMTTm
+l6UgNzoxNg0KPiDmlLbku7bkuro6IGNoZW55YW8gKEYpIDxjaGVueWFvMTFAaHVhd2VpLmNvbT4N
+Cj4g5oqE6YCBOiBzb25neGlhb3dlaSA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT47IFdhbmdi
+aW5naHVpDQo+IDx3YW5nYmluZ2h1aUBoaXNpbGljb24uY29tPjsgTG9yZW56byBQaWVyYWxpc2kg
+PGxvcmVuem8ucGllcmFsaXNpQGFybS5jb20+Ow0KPiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bn
+b29nbGUuY29tPjsgeHV3ZWkgKE8pIDx4dXdlaTVAaHVhd2VpLmNvbT47DQo+IFJvYiBIZXJyaW5n
+IDxyb2JoK2R0QGtlcm5lbC5vcmc+OyBNYXJrIFJ1dGxhbmQgPG1hcmsucnV0bGFuZEBhcm0uY29t
+PjsNCj4gQ2F0YWxpbiBNYXJpbmFzIDxjYXRhbGluLm1hcmluYXNAYXJtLmNvbT47IFdpbGwgRGVh
+Y29uDQo+IDx3aWxsLmRlYWNvbkBhcm0uY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsg
+TGludXggS2VybmVsIE1haWxpbmcgTGlzdA0KPiA8bGludXgta2VybmVsQHZnZXIua2VybmVsLm9y
+Zz47IGxpbnV4LWFybSBNYWlsaW5nIExpc3QNCj4gPGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5m
+cmFkZWFkLm9yZz47IGRldmljZXRyZWUNCj4gPGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnPjsg
+ZGltaXRyeXNoQGdvb2dsZS5jb207DQo+IGd1b2RvbmcueHVAbGluYXJvLm9yZzsgU3V6aHVhbmds
+dWFuIDxzdXpodWFuZ2x1YW5AaGlzaWxpY29uLmNvbT47IEtvbmdmZWkNCj4gPGtvbmdmZWlAaGlz
+aWxpY29uLmNvbT4NCj4g5Li76aKYOiBSZTogW1BBVENIIHYzIDEvMl0gUENJOiBraXJpbjogQWRk
+IE1TSSBzdXBwb3J0DQo+IA0KPiBPbiBGcmksIE1heSAxMSwgMjAxOCBhdCAxMjoxNSBQTSwgWWFv
+IENoZW4gPGNoZW55YW8xMUBodWF3ZWkuY29tPiB3cm90ZToNCj4gPiBBZGQgc3VwcG9ydCBmb3Ig
+TVNJLg0KPiANCj4gDQo+ID4gKyAgICAgICBpbnQgcmV0Ow0KPiA+ICsNCj4gPiArICAgICAgIGlm
+IChJU19FTkFCTEVEKENPTkZJR19QQ0lfTVNJKSkgew0KPiANCj4gPiArICAgICAgICAgICAgICAg
+cGNpLT5wcC5tc2lfaXJxID0gcGxhdGZvcm1fZ2V0X2lycShwZGV2LCAwKTsNCj4gPiArICAgICAg
+ICAgICAgICAgaWYgKHBjaS0+cHAubXNpX2lycSA8IDApIHsNCj4gPiArICAgICAgICAgICAgICAg
+ICAgICAgICBkZXZfZXJyKCZwZGV2LT5kZXYsICJmYWlsZWQgdG8gZ2V0IE1TSSBJUlENCj4gKCVk
+KVxuIiwNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHBjaS0+cHAubXNpX2ly
+cSk7DQo+IA0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIHJldHVybiAtRU5PREVWOw0KPiAN
+Cj4gV2h5IHNoYWRvd2luZyBhY3R1YWwgZXJyb3IgY29kZT8NCltzb25neGlhb3dlaV0gIFNvcnJ5
+LCBJIGNhbid0IGdldCB5b3VyIHBvaW50IGFib3V0IHRoaXMsIHdvdWxkIHlvdSBleHBsYWluIGl0
+IGZvciBtZS4NCj4gDQo+ID4gKyAgICAgICAgICAgICAgIH0NCj4gPiArICAgICAgICAgICAgICAg
+cmV0ID0gZGV2bV9yZXF1ZXN0X2lycSgmcGRldi0+ZGV2LCBwY2ktPnBwLm1zaV9pcnEsDQo+ID4g
+KyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAga2lyaW5fcGNpZV9tc2lfaXJx
+X2hhbmRsZXIsDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgSVJR
+Rl9TSEFSRUQgfA0KPiBJUlFGX05PX1RIUkVBRCwNCj4gPiArICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAia2lyaW5fcGNpZV9tc2kiLCAmcGNpLT5wcCk7DQo+ID4gKyAgICAg
+ICAgICAgICAgIGlmIChyZXQpIHsNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICBkZXZfZXJy
+KCZwZGV2LT5kZXYsICJmYWlsZWQgdG8gcmVxdWVzdCBNU0kNCj4gSVJRICVkXG4iLA0KPiA+ICsg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcGNpLT5wcC5tc2lfaXJxKTsNCj4gPiArICAg
+ICAgICAgICAgICAgICAgICAgICByZXR1cm4gcmV0Ow0KPiA+ICsgICAgICAgICAgICAgICB9DQo+
+IA0KPiBJdCB3b3VsZCBiZSBlYXN5IHRvIHJlYWQgYW5kIG1haW50YWluIGlmIHRoaXMgd291bGQg
+YmUgYSBzZXBhcmF0ZSBmdW5jdGlvbi4NCltzb25neGlhb3dlaV0gWWVzLCBhIHNlcGFyYXRlIGZ1
+bmN0aW9uIHdpbGwgYmUgYmV0dGVyLCBhbmQgSSdsbCBmaXggaXQuDQo+IA0KPiA+ICsgICAgICAg
+fQ0KPiANCj4gDQo+IA0KPiAtLQ0KPiBXaXRoIEJlc3QgUmVnYXJkcywNCj4gQW5keSBTaGV2Y2hl
+bmtvDQoNClRoYW5rcyBhIGxvdCwNCg0KQmVzdCBSZWdhcmRzLA0KWGlhb3dlaSBTb25nDQpfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2Vy
+bmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0
+cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVs
+Cg==
