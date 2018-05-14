@@ -1,171 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:47774 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755316AbeEAO0f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 1 May 2018 10:26:35 -0400
-Date: Tue, 1 May 2018 15:26:07 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        bhelgaas@google.com, Joao.Pinto@synopsys.com, jingoohan1@gmail.com,
-        robh+dt@kernel.org, mark.rutland@arm.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v7 3/9] PCI: endpoint: functions/pci-epf-test: Add second
- entry
-Message-ID: <20180501142607.GA21911@e107981-ln.cambridge.arm.com>
-References: <cover.1524577064.git.gustavo.pimentel@synopsys.com>
- <c6cfd167838ae8e226dee0820983efe918fa4e1f.1524577064.git.gustavo.pimentel@synopsys.com>
- <20180426165605.GA6370@e107981-ln.cambridge.arm.com>
- <b65caf2e-b002-f591-6215-ff2241b2dfb8@ti.com>
- <20180501115417.GD19391@e107981-ln.cambridge.arm.com>
- <5d625d04-38fe-7d5a-67fc-5ea92039474c@ti.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:52965 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752019AbeENPcH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 11:32:07 -0400
+Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Simon Horman <horms@verge.net.au>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com>
+ <20180409114159.azxeehjkeuinwrwe@verge.net.au>
+ <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
+ <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
+ <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
+ <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
+ <a5a0d78d-627b-6277-ee75-44e204cbd390@gmail.com>
+ <CAMuHMdX9d29JYVDsghd3Koyg8Aeuv0D2Fx5Lnn0bBZSb9RntDw@mail.gmail.com>
+ <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
+ <20180413124819.tw5436lolpn5eqhw@verge.net.au>
+ <20180501105556.GB19391@e107981-ln.cambridge.arm.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <d03db400-9f3e-906f-7886-a54cccb96a40@gmail.com>
+Date: Mon, 14 May 2018 17:32:04 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5d625d04-38fe-7d5a-67fc-5ea92039474c@ti.com>
+In-Reply-To: <20180501105556.GB19391@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 01, 2018 at 05:53:59PM +0530, Kishon Vijay Abraham I wrote:
-> Hi Lorenzo,
+On 05/01/2018 12:55 PM, Lorenzo Pieralisi wrote:
+> On Fri, Apr 13, 2018 at 02:48:19PM +0200, Simon Horman wrote:
+>> On Tue, Apr 10, 2018 at 06:17:04PM +0200, Marek Vasut wrote:
+>>> On 04/10/2018 05:28 PM, Geert Uytterhoeven wrote:
+>>
+>> ...
+>>
+>>>>>> rcar_pcie_get_resources() is called while the device is
+>>>>>> runtime-enabled/resumed,
+>>>>>> pci_free_resource_list() is called while the device is runtime-disabled.
+>>>
+>>> rcar_pcie_get_resources() is NOT a pair function for
+>>> pci_free_resource_list() . rcar_pcie_parse_request_of_pci_ranges() is a
+>>> pair function for pci_free_resource_list().
+>>>
+>>> rcar_pcie_parse_request_of_pci_ranges() calls
+>>> of_pci_get_host_bridge_resources() internally, so every single function
+>>> called after successful call of rcar_pcie_parse_request_of_pci_ranges()
+>>> must call pci_free_resource_list().
+>>>
+>>> Both of_pci_get_host_bridge_resources() and pci_free_resource_list() are
+>>> called with runtime PM disabled.
+>>>
+>>> The naming of the functions is confusing though.
+>>
+>> Hi,
+>>
+>> thanks everyone for their efforts in preparing/reviewing this patch.
+>>
+>> It seems there are some differences of opinion on how best to handle the
+>> error paths but unlike earlier versions this one seems correct to me. If
+>> that turns out to be false we can address it. But I don't think its likely
+>> things will be enhanced by continuing this review.
+>>
+>> Lorenzo, please consider taking this patch in its current form.
+>>
+>> Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
 > 
-> On Tuesday 01 May 2018 05:24 PM, Lorenzo Pieralisi wrote:
-> > On Tue, May 01, 2018 at 03:37:47PM +0530, Kishon Vijay Abraham I wrote:
-> >> Hi Lorenzo,
-> >>
-> >> On Thursday 26 April 2018 10:26 PM, Lorenzo Pieralisi wrote:
-> >>> On Tue, Apr 24, 2018 at 02:44:40PM +0100, Gustavo Pimentel wrote:
-> >>>> Adds a seconds entry on the pci_epf_test_ids structure that disables the
-> >>>
-> >>> "Add a second entry to..."
-> >>>
-> >>>> linkup_notifier parameter on driver for the designware EP.
-> >>>>
-> >>>> This allows designware EPs that doesn't have linkup notification signal
-> >>>> to work with pcitest.
-> >>>>
-> >>>> Updates the binding documentation accordingly.
-> >>>
-> >>> Valid for all the series: use imperative sentences.
-> >>>
-> >>> eg:
-> >>>
-> >>> "Update the binding documentation accordingly".
-> >>>
-> >>> not
-> >>>
-> >>> "Updates the binding documentation accordingly".
-> >>>
-> >>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> >>>> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> >>>> ---
-> >>>> Change v2->v3:
-> >>>>  - Added second entry in pci_epf_test_ids structure.
-> >>>>  - Remove test_reg_bar field assignment on second entry.
-> >>>> Changes v3->v4:
-> >>>>  - Nothing changed, just to follow the patch set version.
-> >>>> Changes v4->v5:
-> >>>>  - Changed pci_epf_test_cfg2 to pci_epf_test_designware.
-> >>>> Changes v5->v6:
-> >>>>  - Changed name field from pci_epf_test_designware to pci_epf_test_dw.
-> >>>> Changes v6->v7:
-> >>>>  - Changed variable name from data_cfg2 to data_linkup_notifier_disabled.
-> >>>>
-> >>>>  Documentation/PCI/endpoint/function/binding/pci-test.txt | 2 ++
-> >>>>  drivers/pci/endpoint/functions/pci-epf-test.c            | 8 ++++++++
-> >>>>  2 files changed, 10 insertions(+)
-> >>>>
-> >>>> diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-> >>>> index 3b68b95..dc39f47 100644
-> >>>> --- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
-> >>>> +++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-> >>>> @@ -1,6 +1,8 @@
-> >>>>  PCI TEST ENDPOINT FUNCTION
-> >>>>  
-> >>>>  name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
-> >>>> +name: Should be "pci_epf_test_dw" to bind to the pci_epf_test driver
-> >>>> +      with a custom configuration for the designware EP.
-> >>>
-> >>> The link between the "name" and the device created is quite obscure and
-> >>> reading pci-test-howto.txt certainly does not clarify it.
-> >>>
-> >>> In pci-test-howto.txt an explanation should be added to the configs
-> >>> device creation paragraph to clarify it.
-> >>>
-> >>>>  Configurable Fields:
-> >>>>  vendorid	 : should be 0x104c
-> >>>> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> >>>> index 7cef851..4ab463b 100644
-> >>>> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> >>>> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> >>>> @@ -459,10 +459,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
-> >>>>  	return 0;
-> >>>>  }
-> >>>>  
-> >>>> +static const struct pci_epf_test_data data_linkup_notifier_disabled = {
-> >>>> +	.linkup_notifier = false
-> >>>> +};
-> >>>> +
-> >>>>  static const struct pci_epf_device_id pci_epf_test_ids[] = {
-> >>>>  	{
-> >>>>  		.name = "pci_epf_test",
-> >>>>  	},
-> >>>> +	{
-> >>>> +		.name = "pci_epf_test_dw",
-> >>>> +		.driver_data = (kernel_ulong_t)&data_linkup_notifier_disabled,
-> >>>> +	},
-> >>>>  	{},
-> >>>
-> >>> Should not this be a property derived from the controller compatible
-> >>> property instead of the test device name written in configfs ?
-> >>
-> >> pci_epf_test is an independent driver on its own that operates in a layer above
-> >> the controller driver. So it does not get the controller compatible (which is
-> >> used in controller drivers like pcie-designware-plat.c). pci_epf_test uses
-> >> "pci_epf_device_id" which is _similar_ to "of_device_id" used by platform drivers.
-> > 
-> > I understand that, the problem is that the independent driver depends on
-> > features of the related controller driver as this patch shows. This
-> > patch basically says that if you use a specific path in configfs (that
-> > includes pci_epf_test_dw) your device has specific HW features (eg
-> > linkup notifier above), that obviously depends on the platform HW not on
-> > the string you use in configfs.
-> > 
-> > What I am questioning is a) if I understand this right and b) whether
-> > this is the right approach.
-> 
-> Your understanding is right. Ideally pci-epf-test driver shouldn't have any HW
-> specific configuration. But different HW have different configurations and
-> pci-epf-test should be informed of the configuration the HW supports.
+> Applied to pci/rcar for v4.18, thanks.
 
-I am honestly very confused. First off, I do not understand what this
-patch really does (or better what DW can't do so that it needs a
-specific configfs string and therefore a specific configuration).
+Is there any reason why this patch isnt in next yet ?
 
-What's the purpose of the linkup notifier ? What does it mean that
-the DW HW can't handle it ?
-
-Are we referring to the pci_epf_linkup() function ?
-
-If it is a HW configuration (ie the DW HW does not have a signal to
-report that the link is up ?) its enablement must depend on HW
-controller properties not configfs entries, I do not like what this
-patch does (probably because I am confused and I do not understand it).
-
-Please let me know your thoughts on this, thanks.
-
-Lorenzo
-
-> 
-> configfs is just one way of creating epf_device and it was mainly added since
-> pci-epf-test cannot have a dt entry because it doesn't represent anything in
-> the HW.
-> 
-> The other option was to have a callback to EPC driver to get the features it
-> supports. But a particular feature that is required might be specific to a EPF
-> driver.
-> 
-> I find the driver_data approach in pci_epf_device_id to be more clean.
-> 
-> Thanks
-> Kishon
+-- 
+Best regards,
+Marek Vasut
