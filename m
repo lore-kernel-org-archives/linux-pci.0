@@ -1,69 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54652 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751329AbeEVR62 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 13:58:28 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: ryan@finnie.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>, stable@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Keith Busch <keith.busch@intel.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] PCI/portdrv: do not disable device on remove()
-Date: Tue, 22 May 2018 13:58:00 -0400
-Message-Id: <1527011883-21320-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
+Received: from smtprelay.synopsys.com ([198.182.37.59]:38185 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932681AbeENQRk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 12:17:40 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH 3/4] bindings: PCI: designware: Add support for EP in DesignWare driver
+Date: Mon, 14 May 2018 17:17:27 +0100
+Message-Id: <d14a48a1c9f554d78a8a93532f288259de032fc5.1526314398.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
-shutdown")' has been added to kernel to shutdown pending PCIe port
-service interrupts during reboot so that a newly started kexec kernel
-wouldn't observe pending interrupts.
+Add device tree binding documentation for the EP in PCIe DesignWare driver.
 
-pcie_port_device_remove() is disabling the root port and switches by
-calling pci_disable_device() after all PCIe service drivers are shutdown.
-
-pci_disable_device() has a much wider impact then port service itself and
-it prevents all inbound transactions to reach to the system and impacts
-the entire PCI traffic behind the bridge.
-
-Issue is that pcie_port_device_remove() doesn't maintain any coordination
-with the rest of the PCI device drivers in the system before clearing the
-bus master bit.
-
-This has been found to cause crashes on HP DL360 Gen9 machines during
-reboot. Besides, kexec is already clearing the bus master bit in
-pci_device_shutdown() after all PCI drivers are removed.
-
-Just remove the extra clear here.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
-Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-Cc: stable@vger.kernel.org
-Reported-by: Ryan Finnie <ryan@finnie.org>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/pcie/portdrv_core.c | 1 -
- 1 file changed, 1 deletion(-)
+ Documentation/devicetree/bindings/pci/designware-pcie.txt | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index c9c0663..d22a95d 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -409,7 +409,6 @@ void pcie_port_device_remove(struct pci_dev *dev)
- {
- 	device_for_each_child(&dev->dev, NULL, remove_iter);
- 	pci_free_irq_vectors(dev);
--	pci_disable_device(dev);
- }
- 
- /**
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index 7f9804d..c124f9b 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -3,6 +3,7 @@
+ Required properties:
+ - compatible:
+ 	"snps,dw-pcie" for RC mode;
++	"snps,dw-pcie-ep" for EP mode;
+ - reg: Should contain the configuration address space.
+ - reg-names: Must be "config" for the PCIe configuration space.
+     (The old way of getting the configuration address space from "ranges"
+@@ -56,3 +57,14 @@ Example configuration:
+ 		#interrupt-cells = <1>;
+ 		num-lanes = <1>;
+ 	};
++or
++	pcie: pcie@dfc00000 {
++		compatible = "snps,dw-pcie-ep";
++		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
++		      <0xdfc01000 0x0001000>, /* IP registers 2 */
++		      <0xd0000000 0x2000000>; /* Configuration space */
++		reg-names = "dbi", "dbi2", "addr_space";
++		num-ib-windows = <6>;
++		num-ob-windows = <2>;
++		num-lanes = <1>;
++	};
 -- 
 2.7.4
