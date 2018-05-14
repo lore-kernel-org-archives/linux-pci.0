@@ -1,86 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0065.outbound.protection.outlook.com ([104.47.40.65]:6688
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S935989AbeEYI2s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 May 2018 04:28:48 -0400
-Subject: Re: [PATCH 0/3] Add parameter for disabling ACS redirection for P2P
-To: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Christoffer Dall <cdall@linaro.org>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <20180524214816.14485-1-logang@deltatee.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <2aec7435-e59b-9ef8-825f-029188f6e549@amd.com>
-Date: Fri, 25 May 2018 10:28:31 +0200
+Received: from mail.kernel.org ([198.145.29.99]:34028 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751977AbeENLZF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 May 2018 07:25:05 -0400
+Date: Mon, 14 May 2018 13:24:48 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Nipun Gupta <nipun.gupta@nxp.com>
+Cc: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+        hch@lst.de, joro@8bytes.org, m.szyprowski@samsung.com,
+        shawnguo@kernel.org, frowand.list@gmail.com, bhelgaas@google.com,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, stuyoder@gmail.com,
+        laurentiu.tudor@nxp.com, leoyang.li@nxp.com
+Subject: Re: [PATCH v4 5/6] bus: fsl-mc: supoprt dma configure for devices on
+ fsl-mc bus
+Message-ID: <20180514112448.GA26428@kroah.com>
+References: <1524824826-29473-1-git-send-email-nipun.gupta@nxp.com>
+ <1525069641-8523-1-git-send-email-nipun.gupta@nxp.com>
+ <1525069641-8523-6-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <20180524214816.14485-1-logang@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525069641-8523-6-git-send-email-nipun.gupta@nxp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 24.05.2018 um 23:48 schrieb Logan Gunthorpe:
-> Hi,
->
-> As discussed in our PCI P2PDMA series, we'd like to add a kernel
-> parameter for selectively disabling ACS redirection for select
-> bridges. Seeing this turned out to be a small series in itself, we've
-> decided to send this separately from the P2P work.
->
-> This series generalizes the code already done for the resource_alignment
-> option that already exists. The first patch creates a helper function
-> to match PCI devices against strings based on the code that already
-> existed in pci_specified_resource_alignment().
->
-> The second patch expands the new helper to optionally take a path of
-> PCI devfns. This is to address Alex's renumbering concern when using
-> simple bus-devfns. The implementation is essentially how he described it and
-> similar to the Intel VT-d spec (Section 8.3.1).
->
-> The final patch adds the disable_acs_redir kernel parameter which takes
-> a list of PCI devices and will disable the ACS P2P Request Redirect,
-> ACS P2P Completion Redirect and ACS P2P Egress Control bits for the
-> selected devices. This allows P2P traffic between selected bridges and
-> seeing it's done at boot, before IOMMU group creating the IOMMU groups
-> will be created correctly based on the bits.
->
-> Thanks,
->
-> Logan
->
->
-> Logan Gunthorpe (3):
->    PCI: Make specifying PCI devices in kernel parameters reusable
->    PCI: Allow specifying devices using a base bus and path of devfns
->    PCI: Introduce the disable_acs_redir parameter
+On Mon, Apr 30, 2018 at 11:57:20AM +0530, Nipun Gupta wrote:
+> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+> ---
 
-Thanks a lot of taking care of it like that. It looks much cleaner to me 
-than just trying to disable ACS without a parameter.
+I can't take patches without any changelog text at all, sorry.  Please
+fix up and resend.
 
-Series is Acked-by: Christian König <christian.koenig@amd.com>.
-
-Thanks,
-Christian.
-
-
->
->   Documentation/admin-guide/kernel-parameters.txt |  39 ++-
->   drivers/pci/pci.c                               | 358 ++++++++++++++++++++----
->   2 files changed, 336 insertions(+), 61 deletions(-)
->
-> --
-> 2.11.0
+greg k-h
