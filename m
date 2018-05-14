@@ -1,66 +1,32 @@
-Return-Path: <SRS0=SNMF=II=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=SNMF=II=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Mon, 21 May 2018 15:03:36 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: honghui.zhang@mediatek.com, marc.zyngier@arm.com, bhelgaas@google.com,
-	matthias.bgg@gmail.com, linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
-	ryder.lee@mediatek.com, hongkun.cao@mediatek.com,
-	youlin.pei@mediatek.com, yong.wu@mediatek.com, yt.shen@mediatek.com,
-	sean.wang@mediatek.com, xinping.qian@mediatek.com
-Subject: Re: [PATCH v7 2/2] PCI: mediatek: Using chained IRQ to setup IRQ
- handle
-Message-ID: <20180521140336.GA3149@e107981-ln.cambridge.arm.com>
-References: <1525412853-24367-1-git-send-email-honghui.zhang@mediatek.com>
- <1525412853-24367-3-git-send-email-honghui.zhang@mediatek.com>
- <20180518195154.GB41790@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180518195154.GB41790@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.37.59]:38343 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752057AbeENQ4b (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 12:56:31 -0400
+Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
+        by smtprelay.synopsys.com (Postfix) with ESMTP id BDE261E044E
+        for <linux-pci@vger.kernel.org>; Mon, 14 May 2018 18:56:29 +0200 (CEST)
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com, kishon@ti.com
+Cc: linux-pci@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH 0/2] Replace lower into upper case characters
+Date: Mon, 14 May 2018 17:56:22 +0100
+Message-Id: <cover.1526311733.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 18, 2018 at 02:51:54PM -0500, Bjorn Helgaas wrote:
-> On Fri, May 04, 2018 at 01:47:33PM +0800, honghui.zhang@mediatek.com wrote:
-> > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> > 
-> > Using irq_chip solution to setup IRQs in order to consist
-> > with IRQ framework.
-> > 
-> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> > Acked-by: Ryder Lee <ryder.lee@mediatek.com>
-> > ---
-> >  drivers/pci/host/pcie-mediatek.c | 206 ++++++++++++++++++++++-----------------
-> >  1 file changed, 115 insertions(+), 91 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> > index c3dc549..dabf1086 100644
-> > --- a/drivers/pci/host/pcie-mediatek.c
-> > +++ b/drivers/pci/host/pcie-mediatek.c
-> > ...
-> 
-> > -static int mtk_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
-> > -			    irq_hw_number_t hwirq)
-> > +static struct msi_domain_info mtk_msi_domain_info = {
-> 
-> I think this patch should be amended to include this:
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 0d0177ce436c..368b70d9371b 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -193,7 +193,7 @@ config PCIE_MEDIATEK
->  	bool "MediaTek PCIe controller"
->  	depends on (ARM || ARM64) && (ARCH_MEDIATEK || COMPILE_TEST)
->  	depends on OF
-> -	depends on PCI
+Replacement of all initial lowercase character in comments and debug
+messages to uppercase to maintain coherence.
 
-Actually I amended your patch, since I do not think the deletion above
-belongs in this commit (I agree that's completely useless but that's
-not this patch that we should remove it).
+Gustavo Pimentel (2):
+  misc: pci_endpoint_test: Replace lower into upper case characters
+  PCI: endpoint: functions/pci-epf-test: Replace lower into upper case
+    characters
 
-Lorenzo
+ drivers/misc/pci_endpoint_test.c              | 18 +++++++++---------
+ drivers/pci/endpoint/functions/pci-epf-test.c | 26 +++++++++++++-------------
+ 2 files changed, 22 insertions(+), 22 deletions(-)
 
-> +	depends on PCI_MSI_IRQ_DOMAIN
+-- 
+2.7.4
