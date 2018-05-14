@@ -1,44 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:39940 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751000AbeEKAVQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 May 2018 20:21:16 -0400
-Received: by mail-pl0-f66.google.com with SMTP id t12-v6so2237576plo.7
-        for <linux-pci@vger.kernel.org>; Thu, 10 May 2018 17:21:16 -0700 (PDT)
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v2 6/9] PCI: designware-plat: Drop unnecessary root_bus_nr setting
-Date: Fri, 11 May 2018 08:20:16 +0800
-Message-Id: <1525998019-28634-7-git-send-email-shawn.guo@linaro.org>
-In-Reply-To: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
-References: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:43086 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752690AbeENNrI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 May 2018 09:47:08 -0400
+Date: Mon, 14 May 2018 14:47:04 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: l.stach@pengutronix.de, linux-pci@vger.kernel.org,
+        Fabio Estevam <fabio.estevam@nxp.com>
+Subject: Re: [PATCH] PCI: imx6: Remove space before tabs
+Message-ID: <20180514134704.GB12029@e107981-ln.cambridge.arm.com>
+References: <1525885308-7824-1-git-send-email-festevam@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525885308-7824-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function dw_pcie_host_init() already initializes the root_bus_nr field
-of 'struct pcie_port', so the -1 assignment prior to calling
-dw_pcie_host_init() in platform specific driver is not really needed.
-Drop it.
+On Wed, May 09, 2018 at 02:01:48PM -0300, Fabio Estevam wrote:
+> From: Fabio Estevam <fabio.estevam@nxp.com>
+> 
+> Remove space before tabs to fix the following checkpatch
+> warning:
+> 
+> WARNING: please, no space before tabs
+> #341: FILE: drivers/pci/dwc/pci-imx6.c:341:
+> +^Icase IMX6QP: ^I^I/* FALLTHROUGH */$
+> 
+> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+> ---
+>  drivers/pci/dwc/pci-imx6.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
----
- drivers/pci/dwc/pcie-designware-plat.c | 1 -
- 1 file changed, 1 deletion(-)
+Applied to pci/dwc for v4.18, thanks.
 
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 5416aa8a07a5..6e39afefd6db 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -58,7 +58,6 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
- 			return pp->msi_irq;
- 	}
- 
--	pp->root_bus_nr = -1;
- 	pp->ops = &dw_plat_pcie_host_ops;
- 
- 	ret = dw_pcie_host_init(pp);
--- 
-1.9.1
+Lorenzo
+
+> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+> index 4818ef8..80f6046 100644
+> --- a/drivers/pci/dwc/pci-imx6.c
+> +++ b/drivers/pci/dwc/pci-imx6.c
+> @@ -338,7 +338,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+>  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+>  				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
+>  		break;
+> -	case IMX6QP: 		/* FALLTHROUGH */
+> +	case IMX6QP:		/* FALLTHROUGH */
+>  	case IMX6Q:
+>  		/* power up core phy and enable ref clock */
+>  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> -- 
+> 2.7.4
+> 
