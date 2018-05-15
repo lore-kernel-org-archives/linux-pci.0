@@ -1,57 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35308 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755456AbeEaQNy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 12:13:54 -0400
-Subject: Re: [PATCH] PCI: Check for PCIe downtraining conditions
-To: "Alex G." <mr.nuke.me@gmail.com>, Alex_Gagniuc@Dellteam.com,
-        bhelgaas@google.com
-Cc: Austin.Bolen@dell.com, Shyam.Iyer@dell.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180531150535.9684-1-mr.nuke.me@gmail.com>
- <28004506-24f0-6d10-2d1e-074e0483d2f9@codeaurora.org>
- <4e0611c872054e768daa96b302651db3@ausx13mps321.AMER.DELL.COM>
- <f260078b-6918-7fd9-39d6-e9f300e4c048@codeaurora.org>
- <3b8a895b-3080-7ddb-cbfd-5aa972e9bf65@gmail.com>
- <35563ce3-e235-096c-4b9b-5f3664d67d0f@codeaurora.org>
- <093b2789-39a1-db9e-5783-b0488b3c9ccd@gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <32d58835-2f35-0b80-38d0-b9ff603619dd@codeaurora.org>
-Date: Thu, 31 May 2018 12:13:51 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Jan Kiszka'" <jan.kiszka@siemens.com>,
+ "'Bjorn Helgaas'" <bhelgaas@google.com>,
+ "'Linux Kernel Mailing List'" <linux-kernel@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+References: <cover.1526375226.git.jan.kiszka@siemens.com>
+ <3aeb2ed038cbce8fe744b614dc19d414555a7e8f.1526375226.git.jan.kiszka@siemens.com>
+In-Reply-To: <3aeb2ed038cbce8fe744b614dc19d414555a7e8f.1526375226.git.jan.kiszka@siemens.com>
+Subject: Re: [PATCH v4 6/8] PCI: Rework of_pci_get_host_bridge_resources() to
+ devm_of_pci_get_host_bridge_resources()
+Date: Tue, 15 May 2018 11:31:47 -0400
+Message-ID: <000001d3ec61$d70e2e50$852a8af0$@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <093b2789-39a1-db9e-5783-b0488b3c9ccd@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: 'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
+ 'Joao Pinto' <Joao.Pinto@synopsys.com>,
+ 'Vladimir Zapolskiy' <vladimir_zapolskiy@mentor.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/31/2018 12:01 PM, Alex G. wrote:
->>       PCI: Add pcie_print_link_status() to log link speed and whether it's limited
-> This one, I have, but it's not what I need. This looks at the available
-> bandwidth from root port to endpoint, whereas I'm only interested in
-> downtraining between endpoint and upstream port.
+On Tuesday, May 15, 2018 5:07 AM, Jan Kiszka wrote:
+> 
+> From: Jan Kiszka <jan.kiszka@siemens.com>
+> 
+> of_pci_get_host_bridge_resources() allocates the resource structures it
+> fills dynamically, but none of its callers care to release them so far.
+> Rather than requiring everyone to do this explicitly, convert the
+> existing function to a managed version.
+> 
+> CC: Jingoo Han <jingoohan1@gmail.com>
+> CC: Joao Pinto <Joao.Pinto@synopsys.com>
+> CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 
-I see what you are saying. 
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
-With a little bit of effort, you can reuse the same code.
+Best regards,
+Jingoo Han
 
-Here is an attempt.
+> ---
+>  drivers/pci/dwc/pcie-designware-host.c |  2 +-
+>  drivers/pci/host/pci-aardvark.c        |  2 +-
+>  drivers/pci/host/pci-ftpci100.c        |  2 +-
+>  drivers/pci/host/pci-v3-semi.c         |  2 +-
+>  drivers/pci/host/pci-versatile.c       |  2 +-
+>  drivers/pci/host/pci-xgene.c           |  2 +-
+>  drivers/pci/host/pcie-altera.c         |  2 +-
+>  drivers/pci/host/pcie-iproc-platform.c |  2 +-
+>  drivers/pci/host/pcie-rcar.c           |  2 +-
+>  drivers/pci/host/pcie-rockchip.c       |  2 +-
+>  drivers/pci/host/pcie-xilinx-nwl.c     |  2 +-
+>  drivers/pci/host/pcie-xilinx.c         |  2 +-
+>  drivers/pci/of.c                       | 30
+++++++++++++------------------
+>  include/linux/of_pci.h                 |  4 ++--
+>  14 files changed, 26 insertions(+), 32 deletions(-)
+> 
 
-You can probably extend pcie_bandwidth_available() to put an optional parent bridge
-device for your own use case and terminate the loop around here.
 
-https://elixir.bootlin.com/linux/v4.17-rc7/source/drivers/pci/pci.c#L5182
-
-Then, you can use the existing code to achieve what you are looking for via
-pcie_print_link_status() by adding an optional parent parameter.
-
-	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
-	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width, *parent*);
-
-
-If parent parameter is NULL, code can walk all the way to root as it is doing today.
-If it is not, then will terminate the loop on the first iteration.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
