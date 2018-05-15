@@ -1,76 +1,89 @@
-Return-Path: <SRS0=Tmks=H5=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Tmks=H5=deltatee.com=logang@kernel.org>
-To: Stephen Bates <sbates@raithlin.com>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- Jerome Glisse <jglisse@redhat.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
- Bjorn Helgaas <helgaas@kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
- "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
- Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>
-References: <20180423233046.21476-5-logang@deltatee.com>
- <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
- <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
- <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
- <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
- <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
- <20180508133407.57a46902@w520.home>
- <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
- <20180508141331.7cd737cb@w520.home>
- <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
- <20180508205005.GC15608@redhat.com>
- <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
- <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
- <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
- <2fc61d29-9eb4-d168-a3e5-955c36e5d821@amd.com>
- <94C8FE12-7FC3-48BD-9DCA-E6A427E71810@raithlin.com>
- <f0101988-cf82-7ffb-2aca-d3b8d2f4b504@deltatee.com>
- <868B49CE-4F0E-4A48-BE78-12149F85F1A4@raithlin.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <8113cba8-62b9-1801-7a77-f82be223b183@deltatee.com>
-Date: Thu, 10 May 2018 11:15:44 -0600
-MIME-Version: 1.0
-In-Reply-To: <868B49CE-4F0E-4A48-BE78-12149F85F1A4@raithlin.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Subject: [PATCH v4 1/8] PCI: Make pci_get_new_domain_nr() static
+Date: Tue, 15 May 2018 11:07:00 +0200
+Message-Id: <80a86454baa7a240c859d6623a6e498d4003e417.1526375226.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
+References: <cover.1526375226.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
+References: <cover.1526375226.git.jan.kiszka@siemens.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
+The only user of pci_get_new_domain_nr() is of_pci_bus_find_domain_nr().
+Since they are defined in the same compilation unit,
+pci_get_new_domain_nr() can be made static, which also simplifies
+preprocessor conditionals.
 
-On 10/05/18 11:11 AM, Stephen  Bates wrote:
->> Not to me. In the p2pdma code we specifically program DMA engines with
->> the PCI bus address. 
-> 
-> Ah yes of course. Brain fart on my part. We are not programming the P2PDMA initiator with an IOVA but with the PCI bus address...
-> 
->> So regardless of whether we are using the IOMMU or
->> not, the packets will be forwarded directly to the peer. If the ACS
->>  Redir bits are on they will be forced back to the RC by the switch and
->>  the transaction will fail. If we clear the ACS bits, the TLPs will go
->>  where we want and everything will work (but we lose the isolation of ACS).
-> 
-> Agreed.
->     
->>    For EPs that support ATS, we should (but don't necessarily have to)
->>    program them with the IOVA address so they can go through the
->>    translation process which will allow P2P without disabling the ACS Redir
->>    bits -- provided the ACS direct translation bit is set. (And btw, if it
->>    is, then we lose the benefit of ACS protecting against malicious EPs).
->>    But, per above, the ATS transaction should involve only the IOVA address
->>    so the ACS bits not being set should not break ATS.
->     
-> Well we would still have to clear some ACS bits but now we can clear only for translated addresses.
+No functional change intended.
 
-We don't have to clear the ACS Redir bits as we did in the first case.
-We just have to make sure the ACS Direct Translated bit is set.
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ drivers/pci/pci.c   | 6 ++----
+ include/linux/pci.h | 3 ---
+ 2 files changed, 2 insertions(+), 7 deletions(-)
 
-Logan
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index dbfe7c4f3776..fe28cd76eacd 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5719,15 +5719,14 @@ static void pci_no_domains(void)
+ #endif
+ }
+ 
+-#ifdef CONFIG_PCI_DOMAINS
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
+ static atomic_t __domain_nr = ATOMIC_INIT(-1);
+ 
+-int pci_get_new_domain_nr(void)
++static int pci_get_new_domain_nr(void)
+ {
+ 	return atomic_inc_return(&__domain_nr);
+ }
+ 
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+ static int of_pci_bus_find_domain_nr(struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+@@ -5782,7 +5781,6 @@ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
+ 			       acpi_pci_bus_find_domain_nr(bus);
+ }
+ #endif
+-#endif
+ 
+ /**
+  * pci_ext_cfg_avail - can we access extended PCI config space?
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 73178a2fcee0..963232a6cd2e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1510,12 +1510,10 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
+  */
+ #ifdef CONFIG_PCI_DOMAINS
+ extern int pci_domains_supported;
+-int pci_get_new_domain_nr(void);
+ #else
+ enum { pci_domains_supported = 0 };
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+-static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ #endif /* CONFIG_PCI_DOMAINS */
+ 
+ /*
+@@ -1670,7 +1668,6 @@ static inline struct pci_dev *pci_get_domain_bus_and_slot(int domain,
+ 
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
+-static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ 
+ #define dev_is_pci(d) (false)
+ #define dev_is_pf(d) (false)
+-- 
+2.13.6
