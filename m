@@ -1,132 +1,65 @@
-Return-Path: <SRS0=tf3/=H5=redhat.com=jglisse@kernel.org>
-Return-Path: <SRS0=tf3/=H5=redhat.com=jglisse@kernel.org>
-Date: Thu, 10 May 2018 10:59:46 -0400
-From: Jerome Glisse <jglisse@redhat.com>
-To: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
-Cc: Stephen Bates <sbates@raithlin.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Keith Busch <keith.busch@intel.com>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgg@mellanox.com>,
-	Max Gurtovoy <maxg@mellanox.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-Message-ID: <20180510145946.GB3652@redhat.com>
-References: <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
- <20180508205005.GC15608@redhat.com>
- <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
- <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
- <1775CC56-4651-422F-953A-18E024D3717C@raithlin.com>
- <20180509160722.GB4140@redhat.com>
- <366A8132-B88A-40F7-BDE3-DA542E45FC0C@raithlin.com>
- <20180509174952.GC4140@redhat.com>
- <405531AE-8315-4A4F-9B0C-8DBE49BFCAB4@raithlin.com>
- <73b6a454-bf84-1640-0b5e-137d03c0ad8c@amd.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v3 2/8] PCI: Fix memory leak of devm_pci_alloc_host_bridge()
+Date: Tue, 15 May 2018 07:58:10 +0200
+Message-Id: <b8a0bde43293c275094df6d3611cd401353d7f12.1526363896.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1526363896.git.jan.kiszka@siemens.com>
+References: <cover.1526363896.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1526363896.git.jan.kiszka@siemens.com>
+References: <cover.1526363896.git.jan.kiszka@siemens.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <73b6a454-bf84-1640-0b5e-137d03c0ad8c@amd.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 10, 2018 at 04:29:44PM +0200, Christian König wrote:
-> Am 10.05.2018 um 16:20 schrieb Stephen Bates:
-> > Hi Jerome
-> > 
-> > > As it is tie to PASID this is done using IOMMU so looks for caller
-> > > of amd_iommu_bind_pasid() or intel_svm_bind_mm() in GPU the existing
-> > >   user is the AMD GPU driver see:
-> > Ah thanks. This cleared things up for me. A quick search shows there are still no users of intel_svm_bind_mm() but I see the AMD version used in that GPU driver.
-> 
-> Just FYI: There is also another effort ongoing to give both the AMD, Intel
-> as well as ARM IOMMUs a common interface so that drivers can use whatever
-> the platform offers fro SVM support.
-> 
-> > One thing I could not grok from the code how the GPU driver indicates which DMA events require ATS translations and which do not. I am assuming the driver implements someway of indicating that and its not just a global ON or OFF for all DMAs? The reason I ask is that I looking at if NVMe was to support ATS what would need to be added in the NVMe spec above and beyond what we have in PCI ATS to support efficient use of ATS (for example would we need a flag in the submission queue entries to indicate a particular IO's SGL/PRP should undergo ATS).
-> 
-> Oh, well that is complicated at best.
-> 
-> On very old hardware it wasn't a window, but instead you had to use special
-> commands in your shader which indicated that you want to use an ATS
-> transaction instead of a normal PCIe transaction for your read/write/atomic.
-> 
-> As Jerome explained on most hardware we have a window inside the internal
-> GPU address space which when accessed issues a ATS transaction with a
-> configurable PASID.
-> 
-> But on very newer hardware that window became a bit in the GPUVM page
-> tables, so in theory we now can control it on a 4K granularity basis for the
-> internal 48bit GPU address space.
-> 
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-To complete this a 50 lines primer on GPU:
+devm_pci_release_host_bridge_dev() failed to release the resource list.
 
-GPUVA - GPU virtual address
-GPUPA - GPU physical address
+Fixes: 5c3f18cce083 ("PCI: Add devm_pci_alloc_host_bridge() interface")
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+---
+ drivers/pci/probe.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-GPU run programs very much like CPU program expect a program will have
-many thousands of threads running concurrently. There is a hierarchy of
-groups for a given program ie threads are grouped together, the lowest
-hierarchy level have a group size in <= 64 threads on most GPUs.
-
-Those programs (call shader for graphic program think OpenGL, Vulkan
-or compute for GPGPU think OpenCL CUDA) are submited by the userspace
-against a given address space. In the "old" days (couple years back
-when dinausor were still roaming the earth) this address space was
-specific to the GPU and each user space program could create multiple
-GPU address space. All the memory operation done by the program was
-against this address space. Hence all PCIE transactions are spawn from
-a program + address space.
-
-GPU use page table + window aperture (the window aperture is going away
-so you can focus on page table). To translate GPU virtual address into
-a physical address. The physical address can point to GPU local memory
-or to system memory or to another PCIE device memory (ie some PCIE BAR).
-
-So all PCIE transaction are spawn through this process of GPUVA to GPUPA
-then GPUPA is handled by the GPU mmu unit that either spawn a PCIE
-transaction for non local GPUPA or access local memory otherwise.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ac91b6fd0bcd..eccf204c9160 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -526,12 +526,14 @@ static void devm_pci_release_host_bridge_dev(struct device *dev)
+ 
+ 	if (bridge->release_fn)
+ 		bridge->release_fn(bridge);
++
++	pci_free_resource_list(&bridge->windows);
+ }
+ 
+ static void pci_release_host_bridge_dev(struct device *dev)
+ {
+ 	devm_pci_release_host_bridge_dev(dev);
+-	pci_free_host_bridge(to_pci_host_bridge(dev));
++	kfree(to_pci_host_bridge(dev));
+ }
+ 
+ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
+-- 
+2.13.6
 
 
-So per say the kernel driver does not configure which transaction is
-using ATS or peer to peer. Userspace program create a GPU virtual address
-space and bind object into it. This object can be system memory or some
-other PCIE device memory in which case we would to do a peer to peer.
-
-
-So you won't find any logic in the kernel. What you find is creating
-virtual address space and binding object.
-
-
-Above i talk about the old days, nowadays we want the GPU virtual address
-space to be exactly the same as the CPU virtual address space as the
-process which initiate the GPU program is using. This is where we use the
-PASID and ATS. So here userspace create a special "GPU context" that says
-that the GPU virtual address space will be the same as the program that
-create the GPU context. A process ID is then allocated and the mm_struct
-is bind to this process ID in the IOMMU driver. Then all program executed
-on the GPU use the process ID to identify the address space against which
-they are running.
-
-
-All of the above i did not talk about DMA engine which are on the "side"
-of the GPU to copy memory around. GPU have multiple DMA engines with
-different capabilities, some of those DMA engine use the same GPU address
-space as describe above, other use directly GPUPA.
-
-
-Hopes this helps understanding the big picture. I over simplify thing and
-devils is in the details.
-
-Cheers,
-Jérôme
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
