@@ -1,89 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Subject: [PATCH v3 1/8] PCI: Make pci_get_new_domain_nr() static
-Date: Tue, 15 May 2018 07:58:09 +0200
-Message-Id: <80a86454baa7a240c859d6623a6e498d4003e417.1526363896.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1526363896.git.jan.kiszka@siemens.com>
-References: <cover.1526363896.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1526363896.git.jan.kiszka@siemens.com>
-References: <cover.1526363896.git.jan.kiszka@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Jan Kiszka'" <jan.kiszka@siemens.com>,
+ "'Bjorn Helgaas'" <bhelgaas@google.com>,
+ "'Linux Kernel Mailing List'" <linux-kernel@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+References: <cover.1526375226.git.jan.kiszka@siemens.com>
+ <5f2226585c6af9920b266d0503e32042d4c9e440.1526375226.git.jan.kiszka@siemens.com>
+In-Reply-To: <5f2226585c6af9920b266d0503e32042d4c9e440.1526375226.git.jan.kiszka@siemens.com>
+Subject: Re: [PATCH v4 4/8] PCI: Replace dev_node parameter of
+ of_pci_get_host_bridge_resources with device
+Date: Tue, 15 May 2018 11:34:38 -0400
+Message-ID: <000101d3ec62$3ca4f4b0$b5eede10$@gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: 'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
+ 'Joao Pinto' <Joao.Pinto@synopsys.com>,
+ 'Vladimir Zapolskiy' <vladimir_zapolskiy@mentor.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+On Tuesday, May 15, 2018 5:07 AM, Jan Kiszka wrote:
+> 
+> From: Jan Kiszka <jan.kiszka@siemens.com>
+> 
+> Another step towards a managed version of
+> of_pci_get_host_bridge_resources(): Feed in the underlying device,
+> rather than just the OF node. This will allow to use managed resource
+> allocation internally later on.
+> 
+> CC: Jingoo Han <jingoohan1@gmail.com>
+> CC: Joao Pinto <Joao.Pinto@synopsys.com>
+> CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 
-The only user of pci_get_new_domain_nr() is of_pci_bus_find_domain_nr().
-Since they are defined in the same compilation unit,
-pci_get_new_domain_nr() can be made static, which also simplifies
-preprocessor conditionals.
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
-No functional change intended.
+Best regards,
+Jingoo Han
 
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- drivers/pci/pci.c   | 6 ++----
- include/linux/pci.h | 3 ---
- 2 files changed, 2 insertions(+), 7 deletions(-)
+> ---
+>  drivers/pci/dwc/pcie-designware-host.c | 2 +-
+>  drivers/pci/host/pci-aardvark.c        | 5 ++---
+>  drivers/pci/host/pci-ftpci100.c        | 4 ++--
+>  drivers/pci/host/pci-v3-semi.c         | 3 ++-
+>  drivers/pci/host/pci-versatile.c       | 3 +--
+>  drivers/pci/host/pci-xgene.c           | 3 ++-
+>  drivers/pci/host/pcie-altera.c         | 5 ++---
+>  drivers/pci/host/pcie-iproc-platform.c | 4 ++--
+>  drivers/pci/host/pcie-rcar.c           | 5 ++---
+>  drivers/pci/host/pcie-rockchip.c       | 4 ++--
+>  drivers/pci/host/pcie-xilinx-nwl.c     | 4 ++--
+>  drivers/pci/host/pcie-xilinx.c         | 4 ++--
+>  drivers/pci/of.c                       | 9 +++++----
+>  include/linux/of_pci.h                 | 4 ++--
+>  14 files changed, 29 insertions(+), 30 deletions(-)
+> 
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index dbfe7c4f3776..fe28cd76eacd 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5719,15 +5719,14 @@ static void pci_no_domains(void)
- #endif
- }
- 
--#ifdef CONFIG_PCI_DOMAINS
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
- static atomic_t __domain_nr = ATOMIC_INIT(-1);
- 
--int pci_get_new_domain_nr(void)
-+static int pci_get_new_domain_nr(void)
- {
- 	return atomic_inc_return(&__domain_nr);
- }
- 
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
- static int of_pci_bus_find_domain_nr(struct device *parent)
- {
- 	static int use_dt_domains = -1;
-@@ -5782,7 +5781,6 @@ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
- 			       acpi_pci_bus_find_domain_nr(bus);
- }
- #endif
--#endif
- 
- /**
-  * pci_ext_cfg_avail - can we access extended PCI config space?
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 73178a2fcee0..963232a6cd2e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1510,12 +1510,10 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
-  */
- #ifdef CONFIG_PCI_DOMAINS
- extern int pci_domains_supported;
--int pci_get_new_domain_nr(void);
- #else
- enum { pci_domains_supported = 0 };
- static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
- static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
--static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- #endif /* CONFIG_PCI_DOMAINS */
- 
- /*
-@@ -1670,7 +1668,6 @@ static inline struct pci_dev *pci_get_domain_bus_and_slot(int domain,
- 
- static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
- static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
--static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- 
- #define dev_is_pci(d) (false)
- #define dev_is_pf(d) (false)
--- 
-2.13.6
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
