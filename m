@@ -1,225 +1,333 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:34769 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933144AbeEWRsY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 13:48:24 -0400
-Received: by mail-pl0-f66.google.com with SMTP id ay10-v6so13478548plb.1
-        for <linux-pci@vger.kernel.org>; Wed, 23 May 2018 10:48:24 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: bhelgaas@google.com, kys@microsoft.com, haiyangz@microsoft.com,
-        lorenzo.pieralisi@arm.com
-Cc: devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>
-Subject: [PATCH 1/3] PCI: hv: remove unused reason for refcount handler
-Date: Wed, 23 May 2018 10:11:12 -0700
-Message-Id: <20180523171114.5136-2-sthemmin@microsoft.com>
-In-Reply-To: <20180523171114.5136-1-sthemmin@microsoft.com>
-References: <20180523171114.5136-1-sthemmin@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v4 6/8] PCI: Rework of_pci_get_host_bridge_resources() to devm_of_pci_get_host_bridge_resources()
+Date: Tue, 15 May 2018 11:07:05 +0200
+Message-Id: <3aeb2ed038cbce8fe744b614dc19d414555a7e8f.1526375226.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
+References: <cover.1526375226.git.jan.kiszka@siemens.com>
+In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
+References: <cover.1526375226.git.jan.kiszka@siemens.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The get/put functions were taking a reason code. This appears to be
-a debug infrastructure that is no longer used.
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-Move the functions to start of file to eliminate need for
-forward declaration. Forward declarations are discouraged on
-Linux.
+of_pci_get_host_bridge_resources() allocates the resource structures it
+fills dynamically, but none of its callers care to release them so far.
+Rather than requiring everyone to do this explicitly, convert the
+existing function to a managed version.
 
-Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+CC: Jingoo Han <jingoohan1@gmail.com>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 ---
- drivers/pci/host/pci-hyperv.c | 70 +++++++++++++----------------------
- 1 file changed, 26 insertions(+), 44 deletions(-)
+ drivers/pci/dwc/pcie-designware-host.c |  2 +-
+ drivers/pci/host/pci-aardvark.c        |  2 +-
+ drivers/pci/host/pci-ftpci100.c        |  2 +-
+ drivers/pci/host/pci-v3-semi.c         |  2 +-
+ drivers/pci/host/pci-versatile.c       |  2 +-
+ drivers/pci/host/pci-xgene.c           |  2 +-
+ drivers/pci/host/pcie-altera.c         |  2 +-
+ drivers/pci/host/pcie-iproc-platform.c |  2 +-
+ drivers/pci/host/pcie-rcar.c           |  2 +-
+ drivers/pci/host/pcie-rockchip.c       |  2 +-
+ drivers/pci/host/pcie-xilinx-nwl.c     |  2 +-
+ drivers/pci/host/pcie-xilinx.c         |  2 +-
+ drivers/pci/of.c                       | 30 ++++++++++++------------------
+ include/linux/of_pci.h                 |  4 ++--
+ 14 files changed, 26 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 50cdefe3f6d3..505453e23c22 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -488,17 +488,6 @@ enum hv_pcichild_state {
- 	hv_pcichild_maximum
- };
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 5a535690b7b5..a8f6ab54b4c0 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -342,7 +342,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	if (!bridge)
+ 		return -ENOMEM;
  
--enum hv_pcidev_ref_reason {
--	hv_pcidev_ref_invalid = 0,
--	hv_pcidev_ref_initial,
--	hv_pcidev_ref_by_slot,
--	hv_pcidev_ref_packet,
--	hv_pcidev_ref_pnp,
--	hv_pcidev_ref_childlist,
--	hv_pcidev_irqdata,
--	hv_pcidev_ref_max
--};
--
- struct hv_pci_dev {
- 	/* List protected by pci_rescan_remove_lock */
- 	struct list_head list_entry;
-@@ -548,10 +537,17 @@ static void hv_pci_generic_compl(void *context, struct pci_response *resp,
+-	ret = of_pci_get_host_bridge_resources(dev, 0, 0xff,
++	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+ 					&bridge->windows, &pp->io_base);
+ 	if (ret)
+ 		return ret;
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 39d8fc2a8a76..1e048dd806dc 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -827,7 +827,7 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
  
- static struct hv_pci_dev *get_pcichild_wslot(struct hv_pcibus_device *hbus,
- 						u32 wslot);
--static void get_pcichild(struct hv_pci_dev *hv_pcidev,
--			 enum hv_pcidev_ref_reason reason);
--static void put_pcichild(struct hv_pci_dev *hv_pcidev,
--			 enum hv_pcidev_ref_reason reason);
-+
-+static void get_pcichild(struct hv_pci_dev *hpdev)
-+{
-+	refcount_inc(&hpdev->refs);
-+}
-+
-+static void put_pcichild(struct hv_pci_dev *hpdev)
-+{
-+	if (refcount_dec_and_test(&hpdev->refs))
-+		kfree(hpdev);
-+}
+ 	INIT_LIST_HEAD(&pcie->resources);
  
- static void get_hvpcibus(struct hv_pcibus_device *hv_pcibus);
- static void put_hvpcibus(struct hv_pcibus_device *hv_pcibus);
-@@ -762,7 +758,7 @@ static int hv_pcifront_read_config(struct pci_bus *bus, unsigned int devfn,
+-	err = of_pci_get_host_bridge_resources(dev, 0, 0xff,
++	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+ 						    &pcie->resources, &iobase);
+ 	if (err)
+ 		return err;
+diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+index 5c176f806fe5..87748eaeaaed 100644
+--- a/drivers/pci/host/pci-ftpci100.c
++++ b/drivers/pci/host/pci-ftpci100.c
+@@ -476,7 +476,7 @@ static int faraday_pci_probe(struct platform_device *pdev)
+ 	if (IS_ERR(p->base))
+ 		return PTR_ERR(p->base);
  
- 	_hv_pcifront_read_config(hpdev, where, size, val);
+-	ret = of_pci_get_host_bridge_resources(dev, 0, 0xff,
++	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+ 						    &res, &io_base);
+ 	if (ret)
+ 		return ret;
+diff --git a/drivers/pci/host/pci-v3-semi.c b/drivers/pci/host/pci-v3-semi.c
+index f3f39935ac2f..167bf6f6b378 100644
+--- a/drivers/pci/host/pci-v3-semi.c
++++ b/drivers/pci/host/pci-v3-semi.c
+@@ -791,7 +791,7 @@ static int v3_pci_probe(struct platform_device *pdev)
+ 	if (IS_ERR(v3->config_base))
+ 		return PTR_ERR(v3->config_base);
  
--	put_pcichild(hpdev, hv_pcidev_ref_by_slot);
-+	put_pcichild(hpdev);
- 	return PCIBIOS_SUCCESSFUL;
- }
+-	ret = of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
++	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
+ 						    &io_base);
+ 	if (ret)
+ 		return ret;
+diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
+index ef33ec0a9e1b..ff2cd12b3978 100644
+--- a/drivers/pci/host/pci-versatile.c
++++ b/drivers/pci/host/pci-versatile.c
+@@ -67,7 +67,7 @@ static int versatile_pci_parse_request_of_pci_ranges(struct device *dev,
+ 	resource_size_t iobase;
+ 	struct resource_entry *win, *tmp;
  
-@@ -790,7 +786,7 @@ static int hv_pcifront_write_config(struct pci_bus *bus, unsigned int devfn,
+-	err = of_pci_get_host_bridge_resources(dev, 0, 0xff, res, &iobase);
++	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, res, &iobase);
+ 	if (err)
+ 		return err;
  
- 	_hv_pcifront_write_config(hpdev, where, size, val);
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 88e9a6d315b3..7b3ed6e34b6c 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -632,7 +632,7 @@ static int xgene_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
  
--	put_pcichild(hpdev, hv_pcidev_ref_by_slot);
-+	put_pcichild(hpdev);
- 	return PCIBIOS_SUCCESSFUL;
- }
+-	ret = of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
++	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
+ 						    &iobase);
+ 	if (ret)
+ 		return ret;
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index 61802e55a00c..49410c7ba0cc 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -490,7 +490,7 @@ static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
+ 	struct device *dev = &pcie->pdev->dev;
+ 	struct resource_entry *win;
  
-@@ -856,7 +852,7 @@ static void hv_msi_free(struct irq_domain *domain, struct msi_domain_info *info,
+-	err = of_pci_get_host_bridge_resources(dev, 0, 0xff
++	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff
+ 						    &pcie->resources, NULL);
+ 	if (err)
+ 		return err;
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index cec0130326c9..99c2022813e4 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -99,7 +99,7 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+ 		pcie->phy = NULL;
  	}
  
- 	hv_int_desc_free(hpdev, int_desc);
--	put_pcichild(hpdev, hv_pcidev_ref_by_slot);
-+	put_pcichild(hpdev);
- }
+-	ret = of_pci_get_host_bridge_resources(dev, 0, 0xff, &resources,
++	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &resources,
+ 						    &iobase);
+ 	if (ret) {
+ 		dev_err(dev, "unable to get PCI host bridge resources\n");
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 4c1787e021fd..6eb36c924983 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -1070,7 +1070,7 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
+ 	resource_size_t iobase;
+ 	struct resource_entry *win, *tmp;
  
- static int hv_set_affinity(struct irq_data *data, const struct cpumask *dest,
-@@ -1186,13 +1182,13 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- 	msg->address_lo = comp.int_desc.address & 0xffffffff;
- 	msg->data = comp.int_desc.data;
+-	err = of_pci_get_host_bridge_resources(dev, 0, 0xff,
++	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+ 						    &pci->resources, &iobase);
+ 	if (err)
+ 		return err;
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index abac972f0dc2..27b97fcddf15 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -1560,7 +1560,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	if (err < 0)
+ 		goto err_deinit_port;
  
--	put_pcichild(hpdev, hv_pcidev_ref_by_slot);
-+	put_pcichild(hpdev);
- 	return;
+-	err = of_pci_get_host_bridge_resources(dev, 0, 0xff,
++	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+ 						    &res, &io_base);
+ 	if (err)
+ 		goto err_remove_irq_domain;
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 6aea997cd21b..64df768c795c 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -854,7 +854,7 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 		return err;
+ 	}
  
- free_int_desc:
- 	kfree(int_desc);
- drop_reference:
--	put_pcichild(hpdev, hv_pcidev_ref_by_slot);
-+	put_pcichild(hpdev);
- return_null_message:
- 	msg->address_hi = 0;
- 	msg->address_lo = 0;
-@@ -1508,19 +1504,6 @@ static void q_resource_requirements(void *context, struct pci_response *resp,
- 	complete(&completion->host_event);
- }
+-	err = of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
++	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
+ 						    &iobase);
+ 	if (err) {
+ 		dev_err(dev, "Getting bridge resources failed\n");
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index fa5e44a480a4..88c96e5669e0 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -643,7 +643,7 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ 		return err;
+ 	}
  
--static void get_pcichild(struct hv_pci_dev *hpdev,
--			    enum hv_pcidev_ref_reason reason)
--{
--	refcount_inc(&hpdev->refs);
--}
--
--static void put_pcichild(struct hv_pci_dev *hpdev,
--			    enum hv_pcidev_ref_reason reason)
--{
--	if (refcount_dec_and_test(&hpdev->refs))
--		kfree(hpdev);
--}
--
+-	err = of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
++	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
+ 						    &iobase);
+ 	if (err) {
+ 		dev_err(dev, "Getting bridge resources failed\n");
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 4f21514cb4e4..b06585a1da75 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -244,7 +244,8 @@ EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
+ 
+ #if defined(CONFIG_OF_ADDRESS)
  /**
-  * new_pcichild_device() - Create a new child device
-  * @hbus:	The internal struct tracking this root PCI bus.
-@@ -1572,7 +1555,7 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
- 
- 	hpdev->desc = *desc;
- 	refcount_set(&hpdev->refs, 1);
--	get_pcichild(hpdev, hv_pcidev_ref_childlist);
-+	get_pcichild(hpdev);
- 	spin_lock_irqsave(&hbus->device_list_lock, flags);
- 
- 	/*
-@@ -1618,7 +1601,7 @@ static struct hv_pci_dev *get_pcichild_wslot(struct hv_pcibus_device *hbus,
- 	list_for_each_entry(iter, &hbus->children, list_entry) {
- 		if (iter->desc.win_slot.slot == wslot) {
- 			hpdev = iter;
--			get_pcichild(hpdev, hv_pcidev_ref_by_slot);
-+			get_pcichild(hpdev);
- 			break;
- 		}
- 	}
-@@ -1735,7 +1718,7 @@ static void pci_devices_present_work(struct work_struct *work)
- 					     list_entry);
- 			if (hpdev->reported_missing) {
- 				found = true;
--				put_pcichild(hpdev, hv_pcidev_ref_childlist);
-+				put_pcichild(hpdev);
- 				list_move_tail(&hpdev->list_entry, &removed);
- 				break;
- 			}
-@@ -1748,7 +1731,7 @@ static void pci_devices_present_work(struct work_struct *work)
- 		hpdev = list_first_entry(&removed, struct hv_pci_dev,
- 					 list_entry);
- 		list_del(&hpdev->list_entry);
--		put_pcichild(hpdev, hv_pcidev_ref_initial);
-+		put_pcichild(hpdev);
- 	}
- 
- 	switch (hbus->state) {
-@@ -1883,8 +1866,8 @@ static void hv_eject_device_work(struct work_struct *work)
- 			 sizeof(*ejct_pkt), (unsigned long)&ctxt.pkt,
- 			 VM_PKT_DATA_INBAND, 0);
- 
--	put_pcichild(hpdev, hv_pcidev_ref_childlist);
--	put_pcichild(hpdev, hv_pcidev_ref_pnp);
-+	put_pcichild(hpdev);
-+	put_pcichild(hpdev);
- 	put_hvpcibus(hpdev->hbus);
- }
- 
-@@ -1899,7 +1882,7 @@ static void hv_eject_device_work(struct work_struct *work)
- static void hv_pci_eject_device(struct hv_pci_dev *hpdev)
+- * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
++ * devm_of_pci_get_host_bridge_resources() - Resource-managed parsing of PCI
++ *                                           host bridge resources from DT
+  * @dev: host bridge device
+  * @busno: bus number associated with the bridge root bus
+  * @bus_max: maximum number of buses for this bridge
+@@ -253,8 +254,6 @@ EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
+  * address for the start of the I/O range. Can be NULL if the caller doesn't
+  * expect I/O ranges to be present in the device tree.
+  *
+- * It is the caller's job to free the @resources list.
+- *
+  * This function will parse the "ranges" property of a PCI host bridge device
+  * node and setup the resource mapping based on its content. It is expected
+  * that the property conforms with the Power ePAPR document.
+@@ -262,12 +261,11 @@ EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
+  * It returns zero if the range parsing has been successful or a standard error
+  * value if it failed.
+  */
+-int of_pci_get_host_bridge_resources(struct device *dev,
++int devm_of_pci_get_host_bridge_resources(struct device *dev,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base)
  {
- 	hpdev->state = hv_pcichild_ejecting;
--	get_pcichild(hpdev, hv_pcidev_ref_pnp);
-+	get_pcichild(hpdev);
- 	INIT_WORK(&hpdev->wrk, hv_eject_device_work);
- 	get_hvpcibus(hpdev->hbus);
- 	queue_work(hpdev->hbus->wq, &hpdev->wrk);
-@@ -1999,8 +1982,7 @@ static void hv_pci_onchannelcallback(void *context)
- 						      dev_message->wslot.slot);
- 				if (hpdev) {
- 					hv_pci_eject_device(hpdev);
--					put_pcichild(hpdev,
--							hv_pcidev_ref_by_slot);
-+					put_pcichild(hpdev);
- 				}
- 				break;
+ 	struct device_node *dev_node = dev->of_node;
+-	struct resource_entry *window;
+ 	struct resource *res;
+ 	struct resource *bus_range;
+ 	struct of_pci_range range;
+@@ -278,7 +276,7 @@ int of_pci_get_host_bridge_resources(struct device *dev,
+ 	if (io_base)
+ 		*io_base = (resource_size_t)OF_BAD_ADDR;
  
-@@ -2398,7 +2380,7 @@ static int hv_send_resources_allocated(struct hv_device *hdev)
- 				PCI_RESOURCES_ASSIGNED2;
- 			res_assigned2->wslot.slot = hpdev->desc.win_slot.slot;
+-	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
++	bus_range = devm_kzalloc(dev, sizeof(*bus_range), GFP_KERNEL);
+ 	if (!bus_range)
+ 		return -ENOMEM;
+ 
+@@ -300,7 +298,7 @@ int of_pci_get_host_bridge_resources(struct device *dev,
+ 	/* Check for ranges property */
+ 	err = of_pci_range_parser_init(&parser, dev_node);
+ 	if (err)
+-		goto parse_failed;
++		goto failed;
+ 
+ 	dev_dbg(dev, "Parsing ranges property...\n");
+ 	for_each_of_pci_range(&parser, &range) {
+@@ -322,15 +320,15 @@ int of_pci_get_host_bridge_resources(struct device *dev,
+ 		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+ 			continue;
+ 
+-		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
++		res = devm_kzalloc(dev, sizeof(struct resource), GFP_KERNEL);
+ 		if (!res) {
+ 			err = -ENOMEM;
+-			goto parse_failed;
++			goto failed;
  		}
--		put_pcichild(hpdev, hv_pcidev_ref_by_slot);
-+		put_pcichild(hpdev);
  
- 		ret = vmbus_sendpacket(hdev->channel, &pkt->message,
- 				size_res, (unsigned long)pkt,
-@@ -2446,7 +2428,7 @@ static int hv_send_resources_released(struct hv_device *hdev)
- 		pkt.message_type.type = PCI_RESOURCES_RELEASED;
- 		pkt.wslot.slot = hpdev->desc.win_slot.slot;
+ 		err = of_pci_range_to_resource(&range, dev_node, res);
+ 		if (err) {
+-			kfree(res);
++			devm_kfree(dev, res);
+ 			continue;
+ 		}
  
--		put_pcichild(hpdev, hv_pcidev_ref_by_slot);
-+		put_pcichild(hpdev);
+@@ -340,7 +338,7 @@ int of_pci_get_host_bridge_resources(struct device *dev,
+ 					"I/O range found for %pOF. Please provide an io_base pointer to save CPU base address\n",
+ 					dev_node);
+ 				err = -EINVAL;
+-				goto conversion_failed;
++				goto failed;
+ 			}
+ 			if (*io_base != (resource_size_t)OF_BAD_ADDR)
+ 				dev_warn(dev,
+@@ -354,15 +352,11 @@ int of_pci_get_host_bridge_resources(struct device *dev,
  
- 		ret = vmbus_sendpacket(hdev->channel, &pkt, sizeof(pkt), 0,
- 				       VM_PKT_DATA_INBAND, 0);
+ 	return 0;
+ 
+-conversion_failed:
+-	kfree(res);
+-parse_failed:
+-	resource_list_for_each_entry(window, resources)
+-		kfree(window->res);
++failed:
+ 	pci_free_resource_list(resources);
+ 	return err;
+ }
+-EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
++EXPORT_SYMBOL_GPL(devm_of_pci_get_host_bridge_resources);
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+ /**
+@@ -606,7 +600,7 @@ int pci_parse_request_of_pci_ranges(struct device *dev,
+ 	struct resource_entry *win, *tmp;
+ 
+ 	INIT_LIST_HEAD(resources);
+-	err = of_pci_get_host_bridge_resources(dev, 0, 0xff, resources,
++	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, resources,
+ 						    &iobase);
+ 	if (err)
+ 		return err;
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index e6684c68cb94..fa4463a52900 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -71,11 +71,11 @@ of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+ #endif
+ 
+ #if defined(CONFIG_OF_ADDRESS)
+-int of_pci_get_host_bridge_resources(struct device *dev,
++int devm_of_pci_get_host_bridge_resources(struct device *dev,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base);
+ #else
+-static inline int of_pci_get_host_bridge_resources(struct device *dev,
++static inline int devm_of_pci_get_host_bridge_resources(struct device *dev,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base)
+ {
 -- 
-2.17.0
+2.13.6
