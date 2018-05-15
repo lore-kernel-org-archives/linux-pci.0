@@ -1,33 +1,35 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 05/40] iommu/sva: Track mm changes with an MMU notifier
-To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org, xuzaibo@huawei.com,
-        will.deacon@arm.com, okaya@codeaurora.org, linux-mm@kvack.org,
-        ashok.raj@intel.com, bharatku@xilinx.com,
-        linux-acpi@vger.kernel.org, rfranz@cavium.com,
-        devicetree@vger.kernel.org, rgummal@xilinx.com,
-        linux-arm-kernel@lists.infradead.org, dwmw2@infradead.org,
-        ilias.apalodimas@linaro.org, iommu@lists.linux-foundation.org,
-        christian.koenig@amd.com
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-6-jean-philippe.brucker@arm.com>
- <20180517152514.00004247@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <73fc27e8-9d20-b996-908d-cf3459acf372@arm.com>
-Date: Mon, 21 May 2018 15:44:23 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relay1.mentorg.com ([192.94.38.131]:60996 "EHLO
+        relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752162AbeEOH5K (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2018 03:57:10 -0400
+Subject: Re: [PATCH v3 5/8] PCI: Replace pr_*() with dev_*() in
+ of_pci_get_host_bridge_resources()
+To: Jan Kiszka <jan.kiszka@siemens.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+References: <cover.1526363896.git.jan.kiszka@siemens.com>
+ <95f6ca417e2bc74d15f707e577b098e46b4b3ba4.1526363896.git.jan.kiszka@siemens.com>
+From: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Message-ID: <ae4ea7f6-b9a5-40ca-b0b3-4e55e7741fc4@mentor.com>
+Date: Tue, 15 May 2018 10:57:05 +0300
 MIME-Version: 1.0
-In-Reply-To: <20180517152514.00004247@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <95f6ca417e2bc74d15f707e577b098e46b4b3ba4.1526363896.git.jan.kiszka@siemens.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17/05/18 15:25, Jonathan Cameron wrote:
->> +		 * already have been removed from the list. Check is someone is
+On 05/15/2018 08:58 AM, Jan Kiszka wrote:
+> From: Jan Kiszka <jan.kiszka@siemens.com>
 > 
-> Check if someone...
+> Now that we have a device reference, make use of it for printing.
+> 
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 
-Ok
+Tested-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Reviewed-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
 
-Thanks,
-Jean
-
+--
+With best wishes,
+Vladimir
