@@ -1,138 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37978 "EHLO mail.kernel.org"
+Received: from david.siemens.de ([192.35.17.14]:33505 "EHLO david.siemens.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755556AbeEaQz7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 May 2018 12:55:59 -0400
-Date: Thu, 31 May 2018 11:55:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 2/7] PCI: Introduce shpchp_is_native()
-Message-ID: <20180531165556.GA99633@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
- <20180528124756.78512-3-mika.westerberg@linux.intel.com>
- <20180530202343.GO39853@bhelgaas-glaptop.roam.corp.google.com>
- <20180531065852.GV15419@lahna.fi.intel.com>
- <20180531131202.GA76395@bhelgaas-glaptop.roam.corp.google.com>
- <20180531135117.GX15419@lahna.fi.intel.com>
+        id S1752374AbeEOIkF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 May 2018 04:40:05 -0400
+Subject: Re: [PATCH v3 0/8] PCI: leak fixes, removable generic PCI host,
+ assorted stuff
+To: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>
+References: <cover.1526363896.git.jan.kiszka@siemens.com>
+ <72f23e5f-4641-9ef3-09e6-70c4724f21a4@mentor.com>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+Message-ID: <8f40ba94-d730-5f45-c113-2cd53c722467@siemens.com>
+Date: Tue, 15 May 2018 10:39:30 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180531135117.GX15419@lahna.fi.intel.com>
+In-Reply-To: <72f23e5f-4641-9ef3-09e6-70c4724f21a4@mentor.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 31, 2018 at 04:51:17PM +0300, Mika Westerberg wrote:
-> On Thu, May 31, 2018 at 08:12:02AM -0500, Bjorn Helgaas wrote:
-> > Maybe I'm reading your patches wrong.  It looks to me like shpchp will
-> > claim GOLAM_7450, which means shpchp will register slots, program the
-> > SHPC, handle hotplug interrupts, etc.
-> > 
-> > But since shpchp_is_native() returns false, acpiphp thinks *it* should
-> > handle hotplug.  For example, I think that given some ACPI
-> > prerequisites (_EJ0/_RMV/etc), both will call pci_hp_register():
-> > 
-> >   shpc_probe
-> >     is_shpc_capable             # true for GOLAM_7450
-> >     init_slots
-> >       pci_hp_register
-> > 
-> >   acpi_pci_add_slots
-> >     acpiphp_enumerate_slots
-> >       acpi_walk_namespace(..., acpiphp_add_context)
-> >         acpiphp_add_context
-> >           hotplug_is_native     # false for GOLAM_7450
-> >           acpiphp_register_hotplug_slot
-> >             pci_hp_register
-> > 
-> > It is true that the same situation occurred before your patches, since
-> > acpiphp_add_context() only checked pciehp_is_native().  In fact, with
-> > the existing code, shpchp and acpiphp could both try to manage *any*
-> > SHPC, not just GOLAM_7450.
-> > 
-> > I think the current series fixes 99% of that problem and it seems like
-> > we should try to do that last 1% at the same time so the SHPC code
-> > makes more sense.
+On 2018-05-15 09:58, Vladimir Zapolskiy wrote:
+> Hi Jan,
 > 
-> Would the following fix the last 1% for you? Applies on top of this
-> patch.
+> On 05/15/2018 08:58 AM, Jan Kiszka wrote:
+>> Changes in v3:
+>>  - refactor series to be both bisectable and simpler while reworking
+>>    of_pci_get_host_bridge_resources()
+>>  - include of_pci_get_host_bridge_resources() removal
+>>  - include devm_of_pci_get_host_bridge_resources() error path fixes
+>>  - effectively, no functional changes to v2
+> 
+> while the previous version of the changeset plus the fixup found on Bjorn's
+> pci/resource branch is sufficient, I can't argue with the fact that this
+> series is way better.
 
-Yes, that's exactly what I was looking for!  Thanks!
+0day-testing found a build breakage in the middle of the old series.
+Wasn't straightforward to fix, so Bjorn suggested a different series
+structure which I try to implement with v3.
 
-> diff --git a/drivers/pci/hotplug/shpchp.h b/drivers/pci/hotplug/shpchp.h
-> index 9675ab757323..516e4835019c 100644
-> --- a/drivers/pci/hotplug/shpchp.h
-> +++ b/drivers/pci/hotplug/shpchp.h
-> @@ -105,7 +105,6 @@ struct controller {
->  };
->  
->  /* Define AMD SHPC ID  */
-> -#define PCI_DEVICE_ID_AMD_GOLAM_7450	0x7450
->  #define PCI_DEVICE_ID_AMD_POGO_7458	0x7458
->  
->  /* AMD PCI-X bridge registers */
-> diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
-> index 0f3711404c2b..e91be287f292 100644
-> --- a/drivers/pci/hotplug/shpchp_core.c
-> +++ b/drivers/pci/hotplug/shpchp_core.c
-> @@ -270,22 +270,12 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
->  	return 0;
->  }
->  
-> -static int is_shpc_capable(struct pci_dev *dev)
-> -{
-> -	if (dev->vendor == PCI_VENDOR_ID_AMD &&
-> -	    dev->device == PCI_DEVICE_ID_AMD_GOLAM_7450)
-> -		return 1;
-> -	if (acpi_get_hp_hw_control_from_firmware(dev))
-> -		return 0;
-> -	return 1;
-> -}
-> -
->  static int shpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->  {
->  	int rc;
->  	struct controller *ctrl;
->  
-> -	if (!is_shpc_capable(pdev))
-> +	if (acpi_get_hp_hw_control_from_firmware(pdev))
->  		return -ENODEV;
->  
->  	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index bbc4ea70505a..fd1c0ee33805 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -408,6 +408,14 @@ bool shpchp_is_native(struct pci_dev *bridge)
->  	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
->  		return false;
->  
-> +	/*
-> +	 * It is assumed that AMD GOLAM chips support SHPC but they do not
-> +	 * have SHPC capability.
-> +	 */
-> +	if (bridge->vendor == PCI_VENDOR_ID_AMD &&
-> +	    bridge->device == PCI_DEVICE_ID_AMD_GOLAM_7450)
-> +		return true;
-> +
->  	if (!pci_find_capability(bridge, PCI_CAP_ID_SHPC))
->  		return false;
->  
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 883cb7bf78aa..5aace6cca0d7 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -561,6 +561,7 @@
->  #define PCI_DEVICE_ID_AMD_OPUS_7443	0x7443
->  #define PCI_DEVICE_ID_AMD_VIPER_7443	0x7443
->  #define PCI_DEVICE_ID_AMD_OPUS_7445	0x7445
-> +#define PCI_DEVICE_ID_AMD_GOLAM_7450	0x7450
->  #define PCI_DEVICE_ID_AMD_8111_PCI	0x7460
->  #define PCI_DEVICE_ID_AMD_8111_LPC	0x7468
->  #define PCI_DEVICE_ID_AMD_8111_IDE	0x7469
+> 
+> In case if this series is accepted I'll review and test the fix of
+> of_pci_get_host_bridge_resources() memleak again, no worries.
+
+Thanks, will address that issue first.
+
+Jan
+
+-- 
+Siemens AG, Corporate Technology, CT RDA IOT SES-DE
+Corporate Competence Center Embedded Linux
