@@ -1,97 +1,85 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH] PCI: Do not enable PASID when End-to-End TLP is not supported
-Date: Sat, 19 May 2018 12:52:49 -0400
-Message-Id: <1526748769-701-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v6 11/12] PCI: Improve "partially hidden behind bridge" log message
+Date: Tue, 15 May 2018 11:22:01 +0200
+Message-ID: <13762149.Hxv4uEjImQ@aspire.rjw.lan>
+In-Reply-To: <20180510182844.77349-12-mika.westerberg@linux.intel.com>
+References: <20180510182844.77349-1-mika.westerberg@linux.intel.com> <20180510182844.77349-12-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A PCIe endpoint carries the process address space identifier (PASID) in
-the TLP prefix as part of the memory read/write transaction. The address
-information in the TLP is relevant only for a given PASID context.
+On Thursday, May 10, 2018 8:28:43 PM CEST Mika Westerberg wrote:
+> There is a sanity checker in the end of pci_scan_child_bus_extend() that
+> tries to detect badly configured bridges. For example given the below
+> topology:
+> 
+>   +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
+>                                   +-01.0-[04-39]--
+>                                   \-02.0-[3a]----00.0
+> 
+> The sanity checker notices this and logs following messages:
+> 
+>   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
+>   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
+> 
+> This is not really helpful to users and the information above is not
+> even correct (0000:02 is a bus not bridge). Make this a bit more
+> understandable by changing the sanity checker to log following message
+> in place of the above two messages:
+> 
+>   pci 0000:02:02.0: devices behind bridge are unusable, because [bus 3a] cannot be assigned for them
+> 
+> While there update the comment on top of the sanity checker block to
+> make it clear that it is not only restricted to CardBus.
+> 
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/pci/probe.c | 14 +++++---------
+>  1 file changed, 5 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index a0c48aa1c42f..10084990fbc3 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1191,20 +1191,16 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+>  		(is_cardbus ? "PCI CardBus %04x:%02x" : "PCI Bus %04x:%02x"),
+>  		pci_domain_nr(bus), child->number);
+>  
+> -	/* Has only triggered on CardBus, fixup is in yenta_socket */
+> +	/* Check that all devices are accessible */
+>  	while (bus->parent) {
+>  		if ((child->busn_res.end > bus->busn_res.end) ||
+>  		    (child->number > bus->busn_res.end) ||
+>  		    (child->number < bus->number) ||
+>  		    (child->busn_res.end < bus->number)) {
+> -			dev_info(&child->dev, "%pR %s hidden behind%s bridge %s %pR\n",
+> -				&child->busn_res,
+> -				(bus->number > child->busn_res.end &&
+> -				 bus->busn_res.end < child->number) ?
+> -					"wholly" : "partially",
+> -				bus->self->transparent ? " transparent" : "",
+> -				dev_name(&bus->dev),
+> -				&bus->busn_res);
+> +			dev_info(&dev->dev,
+> +				 "devices behind bridge are unusable, because %pR cannot be assigned for them\n",
+> +				 &child->busn_res);
+> +			break;
+>  		}
+>  		bus = bus->parent;
+>  	}
+> 
 
-A translation agent takes PASID value and the address information from the
-TLP to look up the physical address in the system.
-
-If a bridge drops the TLP prefix, the translation agent can resolve the
-address to an incorrect location and cause data corruption. Prevent
-this condition by requiring End-to-End TLP prefix to be supported on the
-entire data path between the endpoint and the root port.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/ats.c             | 16 ++++++++++++++++
- include/uapi/linux/pci_regs.h |  1 +
- 2 files changed, 17 insertions(+)
-
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 89305b5..0bcded5 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -265,7 +265,9 @@ EXPORT_SYMBOL_GPL(pci_reset_pri);
- int pci_enable_pasid(struct pci_dev *pdev, int features)
- {
- 	u16 control, supported;
-+	struct pci_dev *bridge;
- 	int pos;
-+	u32 cap;
- 
- 	if (WARN_ON(pdev->pasid_enabled))
- 		return -EBUSY;
-@@ -274,6 +276,20 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
- 	if (!pos)
- 		return -EINVAL;
- 
-+	bridge = pci_upstream_bridge(pdev);
-+	while (bridge) {
-+		if (!pci_find_capability(bridge, PCI_CAP_ID_EXP))
-+			return -EINVAL;
-+
-+		if (pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap))
-+			return -EINVAL;
-+
-+		if (!(cap & PCI_EXP_DEVCAP2_E2ETLP))
-+			return -EINVAL;
-+
-+		bridge = pci_upstream_bridge(bridge);
-+	}
-+
- 	pci_read_config_word(pdev, pos + PCI_PASID_CAP, &supported);
- 	supported &= PCI_PASID_CAP_EXEC | PCI_PASID_CAP_PRIV;
- 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 103ba79..d91dea5 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -634,6 +634,7 @@
- #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
- #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
- #define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x00080000 /* Re-use WAKE# for OBFF */
-+#define PCI_EXP_DEVCAP2_E2ETLP		0x00200000 /* End-to-End TLP Prefix */
- #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
- #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout Value */
- #define  PCI_EXP_DEVCTL2_COMP_TMOUT_DIS	0x0010	/* Completion Timeout Disable */
--- 
-2.7.4
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
