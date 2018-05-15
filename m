@@ -1,97 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:56670 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752777AbeEHLXW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 May 2018 07:23:22 -0400
-Date: Tue, 8 May 2018 12:23:15 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Cc: Simon Horman <horms@verge.net.au>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar: Reuse generic
- pci_parse_request_of_pci_ranges() function
-Message-ID: <20180508112315.GA9920@e107981-ln.cambridge.arm.com>
-References: <1524669685-8265-1-git-send-email-vladimir_zapolskiy@mentor.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v4 6/8] PCI: Rework of_pci_get_host_bridge_resources() to
+ devm_of_pci_get_host_bridge_resources()
+To: Jan Kiszka <jan.kiszka@siemens.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+References: <cover.1526375226.git.jan.kiszka@siemens.com>
+ <3aeb2ed038cbce8fe744b614dc19d414555a7e8f.1526375226.git.jan.kiszka@siemens.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <73eb2628-0d45-f23b-72c2-e463aef71f3f@synopsys.com>
+Date: Tue, 15 May 2018 15:28:39 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524669685-8265-1-git-send-email-vladimir_zapolskiy@mentor.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3aeb2ed038cbce8fe744b614dc19d414555a7e8f.1526375226.git.jan.kiszka@siemens.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Lorenzo  Pieralisi <lorenzo.pieralisi@arm.com>,
+ Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 25, 2018 at 06:21:25PM +0300, Vladimir Zapolskiy wrote:
-> The non-functional change removes a custom function to parse and
-> allocate PCI resources in favour of pci_parse_request_of_pci_ranges().
-> 
-> Signed-off-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-> ---
->  drivers/pci/host/pcie-rcar.c | 42 +-----------------------------------------
->  1 file changed, 1 insertion(+), 41 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 6ab28f29ac6a..66863b587380 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -1063,44 +1063,6 @@ static const struct of_device_id rcar_pcie_of_match[] = {
->  	{},
->  };
-
-Applied to pci/rcar for v4.18, thanks.
-
-Lorenzo
-
-> -static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
-> -{
-> -	int err;
-> -	struct device *dev = pci->dev;
-> -	struct device_node *np = dev->of_node;
-> -	resource_size_t iobase;
-> -	struct resource_entry *win, *tmp;
-> -
-> -	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
-> -					       &iobase);
-> -	if (err)
-> -		return err;
-> -
-> -	err = devm_request_pci_bus_resources(dev, &pci->resources);
-> -	if (err)
-> -		goto out_release_res;
-> -
-> -	resource_list_for_each_entry_safe(win, tmp, &pci->resources) {
-> -		struct resource *res = win->res;
-> -
-> -		if (resource_type(res) == IORESOURCE_IO) {
-> -			err = pci_remap_iospace(res, iobase);
-> -			if (err) {
-> -				dev_warn(dev, "error %d: failed to map resource %pR\n",
-> -					 err, res);
-> -
-> -				resource_list_destroy_entry(win);
-> -			}
-> -		}
-> -	}
-> -
-> -	return 0;
-> -
-> -out_release_res:
-> -	pci_free_resource_list(&pci->resources);
-> -	return err;
-> -}
-> -
->  static int rcar_pcie_probe(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
-> @@ -1118,9 +1080,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  
->  	pcie->dev = dev;
->  
-> -	INIT_LIST_HEAD(&pcie->resources);
-> -
-> -	err = rcar_pcie_parse_request_of_pci_ranges(pcie);
-> +	err = pci_parse_request_of_pci_ranges(dev, &pcie->resources, NULL);
->  	if (err)
->  		goto err_free_bridge;
->  
-> -- 
-> 2.8.1
-> 
+CkhpIEphbiwKCsOAcyAxMDowNyBBTSBkZSA1LzE1LzIwMTgsIEphbiBLaXN6a2EgZXNjcmV2ZXU6
+Cj4gRnJvbTogSmFuIEtpc3prYSA8amFuLmtpc3prYUBzaWVtZW5zLmNvbT4KPiAKPiBvZl9wY2lf
+Z2V0X2hvc3RfYnJpZGdlX3Jlc291cmNlcygpIGFsbG9jYXRlcyB0aGUgcmVzb3VyY2Ugc3RydWN0
+dXJlcyBpdAo+IGZpbGxzIGR5bmFtaWNhbGx5LCBidXQgbm9uZSBvZiBpdHMgY2FsbGVycyBjYXJl
+IHRvIHJlbGVhc2UgdGhlbSBzbyBmYXIuCj4gUmF0aGVyIHRoYW4gcmVxdWlyaW5nIGV2ZXJ5b25l
+IHRvIGRvIHRoaXMgZXhwbGljaXRseSwgY29udmVydCB0aGUKPiBleGlzdGluZyBmdW5jdGlvbiB0
+byBhIG1hbmFnZWQgdmVyc2lvbi4KPiAKPiBDQzogSmluZ29vIEhhbiA8amluZ29vaGFuMUBnbWFp
+bC5jb20+Cj4gQ0M6IEpvYW8gUGludG8gPEpvYW8uUGludG9Ac3lub3BzeXMuY29tPgo+IENDOiBM
+b3JlbnpvIFBpZXJhbGlzaSA8bG9yZW56by5waWVyYWxpc2lAYXJtLmNvbT4KPiBTaWduZWQtb2Zm
+LWJ5OiBKYW4gS2lzemthIDxqYW4ua2lzemthQHNpZW1lbnMuY29tPgo+IC0tLQo+ICBkcml2ZXJz
+L3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLWhvc3QuYyB8ICAyICstCj4gIGRyaXZlcnMvcGNpL2hv
+c3QvcGNpLWFhcmR2YXJrLmMgICAgICAgIHwgIDIgKy0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2kt
+ZnRwY2kxMDAuYyAgICAgICAgfCAgMiArLQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaS12My1zZW1p
+LmMgICAgICAgICB8ICAyICstCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpLXZlcnNhdGlsZS5jICAg
+ICAgIHwgIDIgKy0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2kteGdlbmUuYyAgICAgICAgICAgfCAg
+MiArLQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtYWx0ZXJhLmMgICAgICAgICB8ICAyICstCj4g
+IGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1pcHJvYy1wbGF0Zm9ybS5jIHwgIDIgKy0KPiAgZHJpdmVy
+cy9wY2kvaG9zdC9wY2llLXJjYXIuYyAgICAgICAgICAgfCAgMiArLQo+ICBkcml2ZXJzL3BjaS9o
+b3N0L3BjaWUtcm9ja2NoaXAuYyAgICAgICB8ICAyICstCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNp
+ZS14aWxpbngtbndsLmMgICAgIHwgIDIgKy0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2llLXhpbGlu
+eC5jICAgICAgICAgfCAgMiArLQo+ICBkcml2ZXJzL3BjaS9vZi5jICAgICAgICAgICAgICAgICAg
+ICAgICB8IDMwICsrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLQo+ICBpbmNsdWRlL2xpbnV4
+L29mX3BjaS5oICAgICAgICAgICAgICAgICB8ICA0ICsrLS0KPiAgMTQgZmlsZXMgY2hhbmdlZCwg
+MjYgaW5zZXJ0aW9ucygrKSwgMzIgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvcGNpL2R3Yy9wY2llLWRlc2lnbndhcmUtaG9zdC5jIGIvZHJpdmVycy9wY2kvZHdjL3BjaWUt
+ZGVzaWdud2FyZS1ob3N0LmMKPiBpbmRleCA1YTUzNTY5MGI3YjUuLmE4ZjZhYjU0YjRjMCAxMDA2
+NDQKPiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLWhvc3QuYwo+ICsrKyBi
+L2RyaXZlcnMvcGNpL2R3Yy9wY2llLWRlc2lnbndhcmUtaG9zdC5jCj4gQEAgLTM0Miw3ICszNDIs
+NyBAQCBpbnQgZHdfcGNpZV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApCj4gIAlpZiAo
+IWJyaWRnZSkKPiAgCQlyZXR1cm4gLUVOT01FTTsKPiAgCj4gLQlyZXQgPSBvZl9wY2lfZ2V0X2hv
+c3RfYnJpZGdlX3Jlc291cmNlcyhkZXYsIDAsIDB4ZmYsCj4gKwlyZXQgPSBkZXZtX29mX3BjaV9n
+ZXRfaG9zdF9icmlkZ2VfcmVzb3VyY2VzKGRldiwgMCwgMHhmZiwKPiAgCQkJCQkmYnJpZGdlLT53
+aW5kb3dzLCAmcHAtPmlvX2Jhc2UpOwo+ICAJaWYgKHJldCkKPiAgCQlyZXR1cm4gcmV0OwoKKHNu
+aXAuLi4pCgpUaGFua3MgZm9yIHRoaXMgcGF0Y2ghCgpBY2tlZC1ieTogSm9hbyBQaW50byA8anBp
+bnRvQHN5bm9wc3lzLmNvbT4KCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVs
+QGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9s
+aXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
