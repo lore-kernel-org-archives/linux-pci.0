@@ -1,35 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:43368 "EHLO
-        relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752313AbeEOKFe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2018 06:05:34 -0400
-Subject: Re: [PATCH v4 5/8] PCI: Replace pr_*() with dev_*() in
- of_pci_get_host_bridge_resources()
-To: Jan Kiszka <jan.kiszka@siemens.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-References: <cover.1526375226.git.jan.kiszka@siemens.com>
- <95f6ca417e2bc74d15f707e577b098e46b4b3ba4.1526375226.git.jan.kiszka@siemens.com>
-From: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Message-ID: <f5a8fd42-6de7-8aa2-fdc7-a5d43e3e4d98@mentor.com>
-Date: Tue, 15 May 2018 13:05:29 +0300
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 15 May 2018 15:16:58 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [PATCH v2 16/40] arm64: mm: Pin down ASIDs for sharing mm with
+ devices
+Message-ID: <20180515141658.vivrgcyww2pxumye@armageddon.cambridge.arm.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-17-jean-philippe.brucker@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <95f6ca417e2bc74d15f707e577b098e46b4b3ba4.1526375226.git.jan.kiszka@siemens.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180511190641.23008-17-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: xieyisheng1@huawei.com, ilias.apalodimas@linaro.org, kvm@vger.kernel.org,
+ linux-pci@vger.kernel.org, xuzaibo@huawei.com, jonathan.cameron@huawei.com,
+ will.deacon@arm.com, okaya@codeaurora.org, linux-mm@kvack.org,
+ yi.l.liu@intel.com, ashok.raj@intel.com, tn@semihalf.com, joro@8bytes.org,
+ robdclark@gmail.com, bharatku@xilinx.com, linux-acpi@vger.kernel.org,
+ liudongdong3@huawei.com, rfranz@cavium.com, devicetree@vger.kernel.org,
+ kevin.tian@intel.com, jacob.jun.pan@linux.intel.com, jcrouse@codeaurora.org,
+ rgummal@xilinx.com, thunder.leizhen@huawei.com,
+ linux-arm-kernel@lists.infradead.org, shunyong.yang@hxt-semitech.com,
+ dwmw2@infradead.org, liubo95@huawei.com, alex.williamson@redhat.com,
+ iommu@lists.linux-foundation.org, robin.murphy@arm.com,
+ christian.koenig@amd.com, nwatters@codeaurora.org, baolu.lu@linux.intel.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/15/2018 12:07 PM, Jan Kiszka wrote:
-> From: Jan Kiszka <jan.kiszka@siemens.com>
-> 
-> Now that we have a device reference, make use of it for printing.
-> 
-> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Hi Jean-Philippe,
 
-Tested-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Reviewed-by: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+On Fri, May 11, 2018 at 08:06:17PM +0100, Jean-Philippe Brucker wrote:
+> +unsigned long mm_context_get(struct mm_struct *mm)
+> +{
+> +	unsigned long flags;
+> +	u64 asid;
+> +
+> +	raw_spin_lock_irqsave(&cpu_asid_lock, flags);
+> +
+> +	asid = atomic64_read(&mm->context.id);
+> +
+> +	if (mm->context.pinned) {
+> +		mm->context.pinned++;
+> +		asid &= ~ASID_MASK;
+> +		goto out_unlock;
+> +	}
+> +
+> +	if (nr_pinned_asids >= max_pinned_asids) {
+> +		asid = 0;
+> +		goto out_unlock;
+> +	}
+> +
+> +	if (!asid_gen_match(asid)) {
+> +		/*
+> +		 * We went through one or more rollover since that ASID was
+> +		 * used. Ensure that it is still valid, or generate a new one.
+> +		 * The cpu argument isn't used by new_context.
+> +		 */
+> +		asid = new_context(mm, 0);
+> +		atomic64_set(&mm->context.id, asid);
+> +	}
+> +
+> +	asid &= ~ASID_MASK;
+> +
+> +	nr_pinned_asids++;
+> +	__set_bit(asid2idx(asid), pinned_asid_map);
+> +	mm->context.pinned++;
+> +
+> +out_unlock:
+> +	raw_spin_unlock_irqrestore(&cpu_asid_lock, flags);
+> +
+> +	return asid;
+> +}
 
---
-With best wishes,
-Vladimir
+With CONFIG_UNMAP_KERNEL_AT_EL0 (a.k.a. KPTI), the hardware ASID has bit
+0 set automatically when entering user space (and cleared when getting
+back to the kernel). If the returned asid value here is going to be used
+as is in the calling code, you should probably set bit 0 when KPTI is
+enabled.
+
+-- 
+Catalin
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
