@@ -1,62 +1,47 @@
-Return-Path: <SRS0=4386=H4=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=4386=H4=deltatee.com=logang@kernel.org>
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- Stephen Bates <sbates@raithlin.com>, Jerome Glisse <jglisse@redhat.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
- Bjorn Helgaas <helgaas@kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
- "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- Keith Busch <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>,
- Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>
-References: <20180423233046.21476-5-logang@deltatee.com>
- <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
- <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
- <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
- <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
- <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
- <20180508133407.57a46902@w520.home>
- <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
- <20180508141331.7cd737cb@w520.home>
- <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
- <20180508205005.GC15608@redhat.com>
- <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
- <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
-Date: Wed, 9 May 2018 10:45:16 -0600
-MIME-Version: 1.0
-In-Reply-To: <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.37.59]:42928 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754065AbeEOOlu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2018 10:41:50 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v2 4/4] misc: pci_endpoint_test: Add DesignWare EP entry
+Date: Tue, 15 May 2018 15:41:44 +0100
+Message-Id: <c632de4b23a03f0e37d80d51c88fae404b58c45a.1526395185.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526395185.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526395185.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526395185.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526395185.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Add the DesignWare EP device ID entry to pci_endpoint_test driver table.
 
+Allow the device to be recognize and handle by the pci_endpoint_test
+driver.
 
-On 09/05/18 07:40 AM, Christian König wrote:
-> The key takeaway is that when any device has ATS enabled you can't 
-> disable ACS without breaking it (even if you unplug and replug it).
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/misc/pci_endpoint_test.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I don't follow how you came to this conclusion...
- The ACS bits we'd be turning off are the ones that force TLPs addressed
-at a peer to go to the RC. However, ATS translation packets will be
-addressed to an untranslated address which a switch will not identify as
-a peer address so it should send upstream regardless the state of the
-ACS Req/Comp redirect bits.
-
-Once the translation comes back, the ATS endpoint should send the TLP to
-the peer address with the AT packet type and it will be directed to the
-peer provided the Direct Translated bit is set (or the redirect bits are
-unset).
-
-I can't see how turning off the Req/Comp redirect bits could break
-anything except for the isolation they provide.
-
-Logan
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index fe8897e..58a88ba 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -634,6 +634,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, 0xedda) },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
+-- 
+2.7.4
