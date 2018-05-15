@@ -1,46 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:46301 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750798AbeEKAVB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 May 2018 20:21:01 -0400
-Received: by mail-pg0-f68.google.com with SMTP id z4-v6so1649352pgu.13
-        for <linux-pci@vger.kernel.org>; Thu, 10 May 2018 17:21:01 -0700 (PDT)
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>
-Subject: [PATCH v2 2/9] PCI: imx6: Drop unnecessary root_bus_nr setting
-Date: Fri, 11 May 2018 08:20:12 +0800
-Message-Id: <1525998019-28634-3-git-send-email-shawn.guo@linaro.org>
-In-Reply-To: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
-References: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH 1/4] bindings: PCI: designware: Example update
+Date: Tue, 15 May 2018 08:13:26 +0100
+Message-Id: <daccd2d9da8f4467680649b4226be7be711f32e8.1526368369.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526368368.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526368368.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526368368.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526368368.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function dw_pcie_host_init() already initializes the root_bus_nr field
-of 'struct pcie_port', so the -1 assignment prior to calling
-dw_pcie_host_init() in platform specific driver is not really needed.
-Drop it.
+Replace "ctrlreg" reg-name by "dbi" to be coherent with similar drivers,
+however it still be compatible with any previous DT that uses the old
+reg-name.
 
-Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
+Replace the PCIe base address example by a real PCIe base address in use.
+
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/dwc/pci-imx6.c | 1 -
- 1 file changed, 1 deletion(-)
+ Documentation/devicetree/bindings/pci/designware-pcie.txt | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index 4818ef875f8a..f330e322c1e7 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -667,7 +667,6 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
- 		}
- 	}
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index 1da7ade..7f9804d 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -1,7 +1,8 @@
+ * Synopsys DesignWare PCIe interface
  
--	pp->root_bus_nr = -1;
- 	pp->ops = &imx6_pcie_host_ops;
+ Required properties:
+-- compatible: should contain "snps,dw-pcie" to identify the core.
++- compatible:
++	"snps,dw-pcie" for RC mode;
+ - reg: Should contain the configuration address space.
+ - reg-names: Must be "config" for the PCIe configuration space.
+     (The old way of getting the configuration address space from "ranges"
+@@ -41,11 +42,11 @@ EP mode:
  
- 	ret = dw_pcie_host_init(pp);
+ Example configuration:
+ 
+-	pcie: pcie@dffff000 {
++	pcie: pcie@dfc00000 {
+ 		compatible = "snps,dw-pcie";
+-		reg = <0xdffff000 0x1000>, /* Controller registers */
+-		      <0xd0000000 0x2000>; /* PCI config space */
+-		reg-names = "ctrlreg", "config";
++		reg = <0xdfc00000 0x0001000>, /* IP registers */
++		      <0xd0000000 0x0002000>; /* Configuration space */
++		reg-names = "dbi", "config";
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+ 		device_type = "pci";
+@@ -54,5 +55,4 @@ Example configuration:
+ 		interrupts = <25>, <24>;
+ 		#interrupt-cells = <1>;
+ 		num-lanes = <1>;
+-		num-viewport = <3>;
+ 	};
 -- 
-1.9.1
+2.7.4
