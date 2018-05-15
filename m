@@ -1,59 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:50498 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752128AbeEUVF2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2018 17:05:28 -0400
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
-Date: Mon, 21 May 2018 23:05:22 +0200
-Message-Id: <20180521210522.29346-1-marek.vasut+renesas@gmail.com>
+Received: from smtprelay.synopsys.com ([198.182.37.59]:41330 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752188AbeEOHNg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2018 03:13:36 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH 4/4] misc: pci_endpoint_test: Add DesignWare EP entry
+Date: Tue, 15 May 2018 08:13:29 +0100
+Message-Id: <3458479563ea4db2372d13cab4e6645790f69736.1526368369.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526368368.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526368368.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526368368.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526368368.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The data link active signal usually takes ~20 uSec to be asserted,
-poll the bit more often to avoid useless delays in this function.
-Use udelay() instead of usleep() for such a small delay as suggested
-by the timer documentation and because this will be used in atomic
-context later on when the suspend/resume patches land.
+Add the DesignWare EP device ID entry to pci_endpoint_test driver table.
 
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
----
-V2: s/content/context in commit message
----
- drivers/pci/host/pcie-rcar.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Allow the device to be recognize and handle by the pci_endpoint_test
+driver.
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 5c365f743df5..65ebe7aa3488 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -529,13 +529,13 @@ static void phy_write_reg(struct rcar_pcie *pcie,
- 
- static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
- {
--	unsigned int timeout = 10;
-+	unsigned int timeout = 10000;
- 
- 	while (timeout--) {
- 		if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
- 			return 0;
- 
--		msleep(5);
-+		udelay(5);
- 	}
- 
- 	return -ETIMEDOUT;
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/misc/pci_endpoint_test.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index fe8897e..58a88ba 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -634,6 +634,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, 0xedda) },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
 -- 
-2.16.2
+2.7.4
