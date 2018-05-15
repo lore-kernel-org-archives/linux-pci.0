@@ -1,47 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34160 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753482AbeEOPK6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 May 2018 11:10:58 -0400
-Date: Tue, 15 May 2018 16:10:50 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: bhelgaas@google.com, Joao.Pinto@synopsys.com, jingoohan1@gmail.com,
-        kishon@ti.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 0/4] Add DesignWare EP support
-Message-ID: <20180515151050.GA31726@e107981-ln.cambridge.arm.com>
-References: <cover.1526395185.git.gustavo.pimentel@synopsys.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v6 04/12] PCI: Make pciehp_is_native() stricter
+Date: Tue, 15 May 2018 11:17:14 +0200
+Message-ID: <3307721.MagQsabiPK@aspire.rjw.lan>
+In-Reply-To: <20180510182844.77349-5-mika.westerberg@linux.intel.com>
+References: <20180510182844.77349-1-mika.westerberg@linux.intel.com> <20180510182844.77349-5-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1526395185.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 15, 2018 at 03:41:40PM +0100, Gustavo Pimentel wrote:
-> Patch set was made against the Lorenzo's pci/dwc branch.
+On Thursday, May 10, 2018 8:28:36 PM CEST Mika Westerberg wrote:
+> Currently pciehp_is_native() returns true for any PCI device in a
+> hierarchy where _OSC says we can use pciehp. This is not correct because
+> there may be bridges without PCI_EXP_SLTCAP_HPC capability and those
+> should be managed by acpiphp instead.
 > 
-> The PCIe controller dual mode is capable of operating in RC mode as well
-> as EP mode by configuration option. Till now only RC mode was supported,
-> with this patch is add EP support to the DesignWare driver.
+> Improve pciehp_is_native() to return true only if the given bridge is
+> actually expected to be handled by pciehp. In any other case return
+> false instead to let acpiphp handle those.
 > 
-> Gustavo Pimentel (4):
->   bindings: PCI: designware: Example update
->   PCI: dwc: Add support for EP mode
->   bindings: PCI: designware: Add support for EP in DesignWare driver
->   misc: pci_endpoint_test: Add DesignWare EP entry
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/pci/pci-acpi.c      | 28 ++++++++++++++++------------
+>  drivers/pci/pcie/portdrv.h  |  2 --
+>  include/linux/pci.h         |  2 ++
+>  include/linux/pci_hotplug.h |  4 ++--
+>  4 files changed, 20 insertions(+), 16 deletions(-)
 > 
->  .../devicetree/bindings/pci/designware-pcie.txt    |  24 +++-
->  drivers/misc/pci_endpoint_test.c                   |   1 +
->  drivers/pci/dwc/Kconfig                            |  37 +++--
->  drivers/pci/dwc/pcie-designware-ep.c               |   3 +
->  drivers/pci/dwc/pcie-designware-plat.c             | 149 +++++++++++++++++++--
->  drivers/pci/endpoint/functions/pci-epf-test.c      |   7 +
->  include/linux/pci-epc.h                            |   8 ++
->  7 files changed, 205 insertions(+), 24 deletions(-)
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 1abdbf267c19..d3114f3a7ab8 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -370,26 +370,30 @@ EXPORT_SYMBOL_GPL(pci_get_hp_params);
+>  
+>  /**
+>   * pciehp_is_native - Check whether a hotplug port is handled by the OS
+> - * @pdev: Hotplug port to check
+> + * @bridge: Hotplug port to check
+>   *
+> - * Walk up from @pdev to the host bridge, obtain its cached _OSC Control Field
+> - * and return the value of the "PCI Express Native Hot Plug control" bit.
+> - * On failure to obtain the _OSC Control Field return %false.
+> + * Returns true if the given @bridge is handled by the native PCIe hotplug
+> + * driver.
+>   */
+> -bool pciehp_is_native(struct pci_dev *pdev)
+> +bool pciehp_is_native(struct pci_dev *bridge)
+>  {
+> -	struct acpi_pci_root *root;
+> -	acpi_handle handle;
+> +	const struct pci_host_bridge *host;
+> +	u32 slot_cap;
+>  
+> -	handle = acpi_find_root_bridge_handle(pdev);
+> -	if (!handle)
+> +	if (!pciehp_available())
+> +		return false;
+> +	if (!bridge)
+>  		return false;
 
-Applied to pci/dwc for v4.18 with some small commit log tweaks.
+You could write this as 
 
-Thanks,
-Lorenzo
+    if (!pciehp_available() || !bridge)
+        return false;
+
+Would be equivalent, but more concise IMO.
+
+But anyway
+
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
