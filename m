@@ -1,138 +1,197 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37800 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751794AbeE3Nzx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 May 2018 09:55:53 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w4UDsHmm196569
-        for <linux-pci@vger.kernel.org>; Wed, 30 May 2018 09:55:53 -0400
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2j9ve1asnw-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 30 May 2018 09:55:52 -0400
-Received: from localhost
-        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <bryantly@linux.ibm.com>;
-        Wed, 30 May 2018 07:55:52 -0600
-Subject: Re: [PATCH v2 1/1] powerpc/pseries: fix EEH recovery of some IOV
- devices
-To: Sam Bobroff <sbobroff@linux.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Cc: mpe@ellerman.id.au, bhelgaas@google.com,
-        bryantly@linux.vnet.ibm.com
-References: <7598ffeb48c16c88a34937ad93b18f806222b8df.1527208281.git.sbobroff@linux.ibm.com>
-From: "Bryant G. Ly" <bryantly@linux.ibm.com>
-Date: Wed, 30 May 2018 08:55:46 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v6 07/12] ACPI / hotplug / PCI: Do not scan all bridges when native PCIe hotplug is used
+Date: Tue, 15 May 2018 11:26:58 +0200
+Message-ID: <2559220.ne7pF0237J@aspire.rjw.lan>
+In-Reply-To: <20180510182844.77349-8-mika.westerberg@linux.intel.com>
+References: <20180510182844.77349-1-mika.westerberg@linux.intel.com> <20180510182844.77349-8-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <7598ffeb48c16c88a34937ad93b18f806222b8df.1527208281.git.sbobroff@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <6cc94197-7b29-1a73-e9d5-f99f97e1a2c1@linux.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 5/24/18 7:31 PM, Sam Bobroff wrote:
-> EEH recovery currently fails on pSeries for some IOV capable PCI
-> devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
-> certain device tree properties for the device. (Found on an IOV
-> capable device using the ipr driver.)
->
-> Recovery fails in pci_enable_resources() at the check on r->parent,
-> because r->flags is set and r->parent is not.  This state is due to
-> sriov_init() setting the start, end and flags members of the IOV BARs
-> but the parent not being set later in
-> pseries_pci_fixup_iov_resources(), because the
-> "ibm,open-sriov-vf-bar-info" property is missing.
->
-> Correct this by zeroing the resource flags for IOV BARs when they
-> can't be configured.
->
-> Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
+On Thursday, May 10, 2018 8:28:39 PM CEST Mika Westerberg wrote:
+> When a system is using native PCIe hotplug for Thunderbolt it will be
+> only present in the system when there is a device connected. This pretty
+> much follows the BIOS assisted hotplug behaviour.
+> 
+> Thunderbolt host router integrated PCIe switch has two additional PCIe
+> downstream bridges that lead to NHI (Thunderbolt host controller) and xHCI
+> (USB 3 host controller) respectively. These downstream bridges are not
+> marked being hotplug capable. Reason for that is to preserve resources.
+> Otherwise the OS would distribute remaining resources between all
+> downstream bridges making these two bridges consume precious resources
+> of the actual hotplug bridges.
+> 
+> Now, because these two bridges are not marked being hotplug capable the OS
+> will not enable hotplug interrupt for them either and will not receive
+> interrupt when devices behind them are hot-added. Solution to this is
+> that the BIOS sends ACPI Notify() to the root port let the OS know it
+> needs to rescan for added and/or removed devices.
+> 
+> Here is how the mechanism is supposed to work when a Thunderbolt
+> endpoint is connected to one of the ports. In case of a standard USB-C
+> device only the xHCI is hot-added otherwise steps are the same.
+> 
+> 1. Initially there is only the PCIe root port that is controlled by
+>    the pciehp driver
+> 
+>   00:1b.0 (Hotplug+) --
+> 
+> 2. Then we get native PCIe hotplug interrupt and once it is handled the
+>    topology looks as following
+> 
+>   00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 --
+>                                   +- 02:01.0 (HotPlug+)
+>                                   \- 02:02.0 --
+> 
+> 3. Bridges 02:00.0 and 02:02.0 are not marked as hotplug capable and
+>    they don't have anything behind them currently. Bridge 02:01.0 is
+>    hotplug capable and used for extending the topology. At this point
+>    the required PCIe devices are enabled and ACPI Notify() is sent to
+>    the root port. The resulting topology is expected to look like
+> 
+>   00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 -- Thunderbolt host controller
+>                                   +- 02:01.0 (HotPlug+)
+>                                   \- 02:02.0 -- xHCI host controller
+> 
+> However, the current ACPI hotplug implementation scans the whole 00:1b.0
+> hotplug slot and everything behind it regardless whether native PCIe is
+> used or not, and it expects that the BIOS has configured bridge
+> resources upfront. If that's not the case it assigns resources using
+> minimal allocation (everything currently found just barely fit)
+> preventing future extension. In addition to that, if there is another
+> native PCIe hotplug going on we may find the new PCIe switch only
+> partially ready (all links are not fully trained yet) confusing pciehp
+> when it finally starts to enumerate for new devices.
+> 
+> To make this work better with the native PCIe (pciehp) and standard PCI
+> (shpchp) hotplug drivers, we let them handle all slot management and
+> resource allocation for hotplug bridges and restrict ACPI hotplug to
+> non-hotplug bridges.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 > ---
-> Hi,
->
-> This is a fix to allow EEH recovery to succeed in a specific situation,
-> which I've tried to explain in the commit message.
->
-> As with the RFC version, the IOV BARs are disabled by setting the resource
-> flags to 0 but the other fields are now left as-is because that is what is done
-> elsewhere (see sriov_init() and __pci_read_base()).
->
-> I've also examined the concern raised by Bjorn Helgaas, that VFs could be
-> enabled later after the BARs are disabled, and it already seems safe: enabling
-> VFs (on pseries) depends on another device tree property,
-> "ibm,number-of-configurable-vfs" as well as support for the RTAS function
-> "ibm_map_pes". Since these are all part of the hypervisor's support for IOV it
-> seems unlikely that we would ever see some of them but not all. (None are
-> currently provided by QEMU/KVM.) (Additionally, the ipr driver on which the EEH
-> recovery failure was discovered doesn't even seem to have SR-IOV support so it
-> certainly can't enable VFs.)
->
-> Cheers,
-> Sam.
-> ====== v1 -> v2: ======
->
-> Patch 1/1: powerpc/pseries: fix EEH recovery of some IOV devices
-> * Moved the BAR disabling code to a function.
-> * Also check in pseries_pci_fixup_resources().
->
-> ====== v1: ======
->
-> Patch 1/1: powerpc/pseries: fix EEH recovery of IOV devices
->
->  arch/powerpc/platforms/pseries/setup.c | 25 +++++++++++++++++--------
->  1 file changed, 17 insertions(+), 8 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-> index b55ad4286dc7..0a9e4243ae1d 100644
-> --- a/arch/powerpc/platforms/pseries/setup.c
-> +++ b/arch/powerpc/platforms/pseries/setup.c
-> @@ -645,6 +645,15 @@ void of_pci_parse_iov_addrs(struct pci_dev *dev, const int *indexes)
->  	}
+>  drivers/pci/hotplug/acpiphp_glue.c | 75 +++++++++++++++++++++++-------
+>  1 file changed, 58 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index b45b375c0e6c..a8286058f490 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -287,11 +287,12 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
+>  	/*
+>  	 * Expose slots to user space for functions that have _EJ0 or _RMV or
+>  	 * are located in dock stations.  Do not expose them for devices handled
+> -	 * by the native PCIe hotplug (PCIeHP), becuase that code is supposed to
+> -	 * expose slots to user space in those cases.
+> +	 * by the native PCIe hotplug (PCIeHP) or standard PCI hotplug
+> +	 * (SHPCHP), because that code is supposed to expose slots to user
+> +	 * space in those cases.
+>  	 */
+>  	if ((acpi_pci_check_ejectable(pbus, handle) || is_dock_device(adev))
+> -	    && !(pdev && pdev->is_hotplug_bridge && pciehp_is_native(pdev))) {
+> +	    && !hotplug_is_native(pdev)) {
+>  		unsigned long long sun;
+>  		int retval;
+>  
+> @@ -430,6 +431,29 @@ static int acpiphp_rescan_slot(struct acpiphp_slot *slot)
+>  	return pci_scan_slot(slot->bus, PCI_DEVFN(slot->device, 0));
 >  }
->
-> +static void pseries_disable_sriov_resources(struct pci_dev *pdev)
+>  
+> +static void acpiphp_native_scan_bridge(struct pci_dev *bridge)
 > +{
-> +	int i;
+> +	struct pci_bus *bus = bridge->subordinate;
+> +	struct pci_dev *dev;
+> +	int max;
 > +
-> +	pci_warn(pdev, "No hypervisor support for SR-IOV on this device, IOV BARs disabled.\n");
-> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
-> +		pdev->resource[i + PCI_IOV_RESOURCES].flags = 0;
+> +	if (!bus)
+> +		return;
+> +
+> +	max = bus->busn_res.start;
+> +	/* Scan already configured non-hotplug bridges */
+> +	for_each_pci_bridge(dev, bus) {
+> +		if (!dev->is_hotplug_bridge)
+> +			max = pci_scan_bridge(bus, dev, max, 0);
+> +	}
+> +
+> +	/* Scan non-hotplug bridges that need to be reconfigured */
+> +	for_each_pci_bridge(dev, bus) {
+> +		if (!dev->is_hotplug_bridge)
+> +			max = pci_scan_bridge(bus, dev, max, 1);
+> +	}
 > +}
 > +
->  static void pseries_pci_fixup_resources(struct pci_dev *pdev)
->  {
->  	const int *indexes;
-> @@ -652,10 +661,10 @@ static void pseries_pci_fixup_resources(struct pci_dev *pdev)
->
->  	/*Firmware must support open sriov otherwise dont configure*/
->  	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
-> -	if (!indexes)
-> -		return;
-> -	/* Assign the addresses from device tree*/
-> -	of_pci_set_vf_bar_size(pdev, indexes);
-> +	if (indexes)
-> +		of_pci_set_vf_bar_size(pdev, indexes);
-> +	else
-> +		pseries_disable_sriov_resources(pdev);
->  }
->
->  static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
-> @@ -667,10 +676,10 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
->  		return;
->  	/*Firmware must support open sriov otherwise dont configure*/
->  	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
-> -	if (!indexes)
-> -		return;
-> -	/* Assign the addresses from device tree*/
-> -	of_pci_parse_iov_addrs(pdev, indexes);
-> +	if (indexes)
-> +		of_pci_parse_iov_addrs(pdev, indexes);
-> +	else
-> +		pseries_disable_sriov_resources(pdev);
->  }
->
->  static resource_size_t pseries_pci_iov_resource_alignment(struct pci_dev *pdev,
+>  /**
+>   * enable_slot - enable, configure a slot
+>   * @slot: slot to be enabled
+> @@ -442,25 +466,42 @@ static void enable_slot(struct acpiphp_slot *slot)
+>  	struct pci_dev *dev;
+>  	struct pci_bus *bus = slot->bus;
+>  	struct acpiphp_func *func;
+> -	int max, pass;
+> -	LIST_HEAD(add_list);
+>  
+> -	acpiphp_rescan_slot(slot);
+> -	max = acpiphp_max_busnr(bus);
+> -	for (pass = 0; pass < 2; pass++) {
+> +	if (hotplug_is_native(bus->self)) {
+> +		/*
+> +		 * If native hotplug is used, it will take care of hotplug
+> +		 * slot management and resource allocation for hotplug
+> +		 * bridges. However, ACPI hotplug may still be used for
+> +		 * non-hotplug bridges to bring in additional devices such
+> +		 * as Thunderbolt host controller.
+> +		 */
+>  		for_each_pci_bridge(dev, bus) {
+> -			if (PCI_SLOT(dev->devfn) != slot->device)
+> -				continue;
+> -
+> -			max = pci_scan_bridge(bus, dev, max, pass);
+> -			if (pass && dev->subordinate) {
+> -				check_hotplug_bridge(slot, dev);
+> -				pcibios_resource_survey_bus(dev->subordinate);
+> -				__pci_bus_size_bridges(dev->subordinate, &add_list);
+> +			if (PCI_SLOT(dev->devfn) == slot->device)
+> +				acpiphp_native_scan_bridge(dev);
+> +		}
+> +		pci_assign_unassigned_bridge_resources(bus->self);
+> +	} else {
+> +		LIST_HEAD(add_list);
+> +		int max, pass;
+> +
+> +		acpiphp_rescan_slot(slot);
+> +		max = acpiphp_max_busnr(bus);
+> +		for (pass = 0; pass < 2; pass++) {
+> +			for_each_pci_bridge(dev, bus) {
+> +				if (PCI_SLOT(dev->devfn) != slot->device)
+> +					continue;
+> +
+> +				max = pci_scan_bridge(bus, dev, max, pass);
+> +				if (pass && dev->subordinate) {
+> +					check_hotplug_bridge(slot, dev);
+> +					pcibios_resource_survey_bus(dev->subordinate);
+> +					__pci_bus_size_bridges(dev->subordinate,
+> +							       &add_list);
+> +				}
+>  			}
+>  		}
+> +		__pci_bus_assign_resources(bus, &add_list, NULL);
+>  	}
+> -	__pci_bus_assign_resources(bus, &add_list, NULL);
+>  
+>  	acpiphp_sanitize_bus(bus);
+>  	pcie_bus_configure_settings(bus);
+> 
 
-Acked-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+
