@@ -1,49 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:7985 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751371AbeECUNy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 May 2018 16:13:54 -0400
-Date: Thu, 3 May 2018 14:15:08 -0600
-From: Keith Busch <keith.busch@linux.intel.com>
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Sagi Grimberg <sagi@grimberg.me>, Ming Lei <tom.leiming@gmail.com>,
-        linux-nvme <linux-nvme@lists.infradead.org>,
-        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] nvme/pci: Use async_schedule for initial reset work
-Message-ID: <20180503201507.GO5938@localhost.localdomain>
-References: <20180427211708.5604-1-keith.busch@intel.com>
- <CACVXFVNXmzMC9N+EabeXs4-XZLCRSOVdpd901wfojBL_s2YFRQ@mail.gmail.com>
- <20180430194533.GC5938@localhost.localdomain>
- <alpine.LRH.2.02.1805011928470.17838@file01.intranet.prod.int.rdu2.redhat.com>
- <20180502152953.GH5938@localhost.localdomain>
- <alpine.LRH.2.02.1805021717430.2705@file01.intranet.prod.int.rdu2.redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:42680 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751198AbeEPWo0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 May 2018 18:44:26 -0400
+Subject: Re: [PATCH] PCI: DPC: Clear AER status bits before disabling port
+ containment
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>, bhelgaas@google.com
+Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Keith Busch <keith.busch@intel.com>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20180516213306.27027-1-mr.nuke.me@gmail.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <605540c0-b6c5-89a2-9d50-12a3005d9f88@codeaurora.org>
+Date: Wed, 16 May 2018 18:44:22 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LRH.2.02.1805021717430.2705@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <20180516213306.27027-1-mr.nuke.me@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 03, 2018 at 10:55:09AM -0400, Mikulas Patocka wrote:
-> I think there is still one more bug:
+On 5/16/2018 5:33 PM, Alexandru Gagniuc wrote:
+> AER status bits are sticky, and they survive system resets. Downstream
+> devices are usually taken care of after re-enumerating the downstream
+> busses, as the AER bits are cleared during probe().
 > 
-> If nvme_probe is called, it schedules the asynchronous work using 
-> async_schedule - now suppose that the pci system calls the "remove", 
-> "shutdown" or "suspend" method - this method will race with 
-> nvme_async_probe running in the async domain - that will cause 
-> misbehavior.
+> However, nothing clears the bits of the port which contained the
+> error. These sticky bits may leave some BIOSes to think that something
+> bad happened, and print ominous messages on next boot. To prevent this,
+> tidy up the AER status bits before releasing containment.
 > 
-> Or - does the PCI subsystem flush the async queues before calling these 
-> methods? I'm not sure, but it doesn't seem so.
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> ---
+>  drivers/pci/pcie/dpc.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> I think, you need to save the cookie returned by async_schedule and wait 
-> for this cookie with async_synchronize_cookie in the other methods.
+> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> index 8c57d607e603..bf82d6936556 100644
+> --- a/drivers/pci/pcie/dpc.c
+> +++ b/drivers/pci/pcie/dpc.c
+> @@ -112,6 +112,10 @@ static void dpc_work(struct work_struct *work)
+>  		dpc->rp_pio_status = 0;
+>  	}
+>  
+> +	/* DPC event made a mess of our AER status bits. Clean them up. */
+> +	pci_cleanup_aer_error_status_regs(pdev);
+> +	/* TODO: Should we also use aer_print_error to log the event? */
+> +
+>  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+>  		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+>  
+> 
 
-I think we're fine as-is without syncing the cookie. 
+I think Keith has a patch to fix this. It was under review at some point.
 
-The remove path should be fine since we already sync with the necessary
-work queues.
-
-The shutdown, suspend and reset paths will just cause the initial reset
-work to end early, the same result as what previously would happen.
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
