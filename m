@@ -1,163 +1,111 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 7 May 2018 18:00:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH v4 01/14] PCI/P2PDMA: Support peer-to-peer memory
-Message-ID: <20180507230034.GE161390@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
- <20180423233046.21476-2-logang@deltatee.com>
-MIME-Version: 1.0
-In-Reply-To: <20180423233046.21476-2-logang@deltatee.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
- linux-block@vger.kernel.org,
- =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>,
- Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="utf-8"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:34758 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751847AbeEPBdl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2018 21:33:41 -0400
+Received: by mail-pl0-f66.google.com with SMTP id ay10-v6so1118854plb.1
+        for <linux-pci@vger.kernel.org>; Tue, 15 May 2018 18:33:41 -0700 (PDT)
+From: Rajat Jain <rajatja@google.com>
+To: Martin Mares <mj@ucw.cz>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+Cc: Rajat Jain <rajatja@google.com>
+Subject: [PATCH] lspci: Indicate if the OS / kernel go out-of-sync on BAR
+Date: Tue, 15 May 2018 18:33:33 -0700
+Message-Id: <20180516013333.135259-1-rajatja@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gTW9uLCBBcHIgMjMsIDIwMTggYXQgMDU6MzA6MzNQTSAtMDYwMCwgTG9nYW4gR3VudGhvcnBl
-IHdyb3RlOgo+IFNvbWUgUENJIGRldmljZXMgbWF5IGhhdmUgbWVtb3J5IG1hcHBlZCBpbiBhIEJB
-UiBzcGFjZSB0aGF0J3MKPiBpbnRlbmRlZCBmb3IgdXNlIGluIHBlZXItdG8tcGVlciB0cmFuc2Fj
-dGlvbnMuIEluIG9yZGVyIHRvIGVuYWJsZQo+IHN1Y2ggdHJhbnNhY3Rpb25zIHRoZSBtZW1vcnkg
-bXVzdCBiZSByZWdpc3RlcmVkIHdpdGggWk9ORV9ERVZJQ0UgcGFnZXMKPiBzbyBpdCBjYW4gYmUg
-dXNlZCBieSBETUEgaW50ZXJmYWNlcyBpbiBleGlzdGluZyBkcml2ZXJzLgo+IAo+IEFkZCBhbiBp
-bnRlcmZhY2UgZm9yIG90aGVyIHN1YnN5c3RlbXMgdG8gZmluZCBhbmQgYWxsb2NhdGUgY2h1bmtz
-IG9mIFAyUAo+IG1lbW9yeSBhcyBuZWNlc3NhcnkgdG8gZmFjaWxpdGF0ZSB0cmFuc2ZlcnMgYmV0
-d2VlbiB0d28gUENJIHBlZXJzOgo+IAo+IGludCBwY2lfcDJwZG1hX2FkZF9jbGllbnQoKTsKPiBz
-dHJ1Y3QgcGNpX2RldiAqcGNpX3AycG1lbV9maW5kKCk7Cj4gdm9pZCAqcGNpX2FsbG9jX3AycG1l
-bSgpOwo+IAo+IFRoZSBuZXcgaW50ZXJmYWNlIHJlcXVpcmVzIGEgZHJpdmVyIHRvIGNvbGxlY3Qg
-YSBsaXN0IG9mIGNsaWVudCBkZXZpY2VzCj4gaW52b2x2ZWQgaW4gdGhlIHRyYW5zYWN0aW9uIHdp
-dGggdGhlIHBjaV9wMnBtZW1fYWRkX2NsaWVudCooKSBmdW5jdGlvbnMKPiB0aGVuIGNhbGwgcGNp
-X3AycG1lbV9maW5kKCkgdG8gb2J0YWluIGFueSBzdWl0YWJsZSBQMlAgbWVtb3J5LiBPbmNlCj4g
-dGhpcyBpcyBkb25lIHRoZSBsaXN0IGlzIGJvdW5kIHRvIHRoZSBtZW1vcnkgYW5kIHRoZSBjYWxs
-aW5nIGRyaXZlciBpcwo+IGZyZWUgdG8gYWRkIGFuZCByZW1vdmUgY2xpZW50cyBhcyBuZWNlc3Nh
-cnkgKGFkZGluZyBpbmNvbXBhdGlibGUgY2xpZW50cwo+IHdpbGwgZmFpbCkuIFdpdGggYSBzdWl0
-YWJsZSBwMnBtZW0gZGV2aWNlLCBtZW1vcnkgY2FuIHRoZW4gYmUKPiBhbGxvY2F0ZWQgd2l0aCBw
-Y2lfYWxsb2NfcDJwbWVtKCkgZm9yIHVzZSBpbiBETUEgdHJhbnNhY3Rpb25zLgo+IAo+IERlcGVu
-ZGluZyBvbiBoYXJkd2FyZSwgdXNpbmcgcGVlci10by1wZWVyIG1lbW9yeSBtYXkgcmVkdWNlIHRo
-ZSBiYW5kd2lkdGgKPiBvZiB0aGUgdHJhbnNmZXIgYnV0IGNhbiBzaWduaWZpY2FudGx5IHJlZHVj
-ZSBwcmVzc3VyZSBvbiBzeXN0ZW0gbWVtb3J5Lgo+IFRoaXMgbWF5IGJlIGRlc2lyYWJsZSBpbiBt
-YW55IGNhc2VzOiBmb3IgZXhhbXBsZSBhIHN5c3RlbSBjb3VsZCBiZSBkZXNpZ25lZAo+IHdpdGgg
-YSBzbWFsbCBDUFUgY29ubmVjdGVkIHRvIGEgUENJIHN3aXRjaCBieSBhIHNtYWxsIG51bWJlciBv
-ZiBsYW5lcwoKcy9QQ0kvUENJZS8KCj4gd2hpY2ggd291bGQgbWF4aW1pemUgdGhlIG51bWJlciBv
-ZiBsYW5lcyBhdmFpbGFibGUgdG8gY29ubmVjdCB0byBOVk1lCj4gZGV2aWNlcy4KPiAKPiBUaGUg
-Y29kZSBpcyBkZXNpZ25lZCB0byBvbmx5IHV0aWxpemUgdGhlIHAycG1lbSBkZXZpY2UgaWYgYWxs
-IHRoZSBkZXZpY2VzCj4gaW52b2x2ZWQgaW4gYSB0cmFuc2ZlciBhcmUgYmVoaW5kIHRoZSBzYW1l
-IHJvb3QgcG9ydCAodHlwaWNhbGx5IHRocm91Z2gKCnMvcm9vdCBwb3J0L1BDSSBicmlkZ2UvCgo+
-IGEgbmV0d29yayBvZiBQQ0llIHN3aXRjaGVzKS4gVGhpcyBpcyBiZWNhdXNlIHdlIGhhdmUgbm8g
-d2F5IG9mIGtub3dpbmcKPiB3aGV0aGVyIHBlZXItdG8tcGVlciByb3V0aW5nIGJldHdlZW4gUENJ
-ZSBSb290IFBvcnRzIGlzIHN1cHBvcnRlZAo+IChQQ0llIHI0LjAsIHNlYyAxLjMuMSkuICBBZGRp
-dGlvbmFsbHksIHRoZSBiZW5lZml0cyBvZiBQMlAgdHJhbnNmZXJzIHRoYXQKPiBnbyB0aHJvdWdo
-IHRoZSBSQyBpcyBsaW1pdGVkIHRvIG9ubHkgcmVkdWNpbmcgRFJBTSB1c2FnZSBhbmQsIGluIHNv
-bWUKPiBjYXNlcywgY29kaW5nIGNvbnZlbmllbmNlLiBUaGUgUENJLVNJRyBtYXkgYmUgZXhwbG9y
-aW5nIGFkZGluZyBhIG5ldwo+IGNhcGFiaWxpdHkgYml0IHRvIGFkdmVydGlzZSB3aGV0aGVyIHRo
-aXMgaXMgcG9zc2libGUgZm9yIGZ1dHVyZQo+IGhhcmR3YXJlLgo+IAo+IFRoaXMgY29tbWl0IGlu
-Y2x1ZGVzIHNpZ25pZmljYW50IHJld29yayBhbmQgZmVlZGJhY2sgZnJvbSBDaHJpc3RvcGgKPiBI
-ZWxsd2lnLgo+IAo+IFNpZ25lZC1vZmYtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRl
-Pgo+IFNpZ25lZC1vZmYtYnk6IExvZ2FuIEd1bnRob3JwZSA8bG9nYW5nQGRlbHRhdGVlLmNvbT4K
-PiAtLS0KPiAgZHJpdmVycy9wY2kvS2NvbmZpZyAgICAgICAgfCAgMTcgKysKPiAgZHJpdmVycy9w
-Y2kvTWFrZWZpbGUgICAgICAgfCAgIDEgKwo+ICBkcml2ZXJzL3BjaS9wMnBkbWEuYyAgICAgICB8
-IDY5NCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKPiAgaW5j
-bHVkZS9saW51eC9tZW1yZW1hcC5oICAgfCAgMTggKysKPiAgaW5jbHVkZS9saW51eC9wY2ktcDJw
-ZG1hLmggfCAxMDAgKysrKysrKwo+ICBpbmNsdWRlL2xpbnV4L3BjaS5oICAgICAgICB8ICAgNCAr
-Cj4gIDYgZmlsZXMgY2hhbmdlZCwgODM0IGluc2VydGlvbnMoKykKPiAgY3JlYXRlIG1vZGUgMTAw
-NjQ0IGRyaXZlcnMvcGNpL3AycGRtYS5jCj4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBpbmNsdWRlL2xp
-bnV4L3BjaS1wMnBkbWEuaAo+IAo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9LY29uZmlnIGIv
-ZHJpdmVycy9wY2kvS2NvbmZpZwo+IGluZGV4IDM0YjU2YThmODQ4MC4uYjIzOTZjMjJiNTNlIDEw
-MDY0NAo+IC0tLSBhL2RyaXZlcnMvcGNpL0tjb25maWcKPiArKysgYi9kcml2ZXJzL3BjaS9LY29u
-ZmlnCj4gQEAgLTEyNCw2ICsxMjQsMjMgQEAgY29uZmlnIFBDSV9QQVNJRAo+ICAKPiAgCSAgSWYg
-dW5zdXJlLCBzYXkgTi4KPiAgCj4gK2NvbmZpZyBQQ0lfUDJQRE1BCj4gKwlib29sICJQQ0kgcGVl
-ci10by1wZWVyIHRyYW5zZmVyIHN1cHBvcnQiCj4gKwlkZXBlbmRzIG9uIFBDSSAmJiBaT05FX0RF
-VklDRSAmJiBFWFBFUlQKPiArCXNlbGVjdCBHRU5FUklDX0FMTE9DQVRPUgo+ICsJaGVscAo+ICsJ
-ICBFbmFibGXRlSBkcml2ZXJzIHRvIGRvIFBDSSBwZWVyLXRvLXBlZXIgdHJhbnNhY3Rpb25zIHRv
-IGFuZCBmcm9tCj4gKwkgIEJBUnMgdGhhdCBhcmUgZXhwb3NlZCBpbiBvdGhlciBkZXZpY2VzIHRo
-YXQgYXJlIHRoZSBwYXJ0IG9mCj4gKwkgIHRoZSBoaWVyYXJjaHkgd2hlcmUgcGVlci10by1wZWVy
-IERNQSBpcyBndWFyYW50ZWVkIGJ5IHRoZSBQQ0kKPiArCSAgc3BlY2lmaWNhdGlvbiB0byB3b3Jr
-IChpZS4gYW55dGhpbmcgYmVsb3cgYSBzaW5nbGUgUENJIGJyaWRnZSkuCj4gKwo+ICsJICBNYW55
-IFBDSWUgcm9vdCBjb21wbGV4ZXMgZG8gbm90IHN1cHBvcnQgUDJQIHRyYW5zYWN0aW9ucyBhbmQK
-PiArCSAgaXQncyBoYXJkIHRvIHRlbGwgd2hpY2ggc3VwcG9ydCBpdCBhdCBhbGwsIHNvIGF0IHRo
-aXMgdGltZSwgRE1BCj4gKwkgIHRyYW5zYXRpb25zIG11c3QgYmUgYmV0d2VlbiBkZXZpY2VzIGJl
-aGluZCB0aGUgc2FtZSByb290IHBvcnQuCgpzL0RNQSB0cmFuc2FjdGlvbnMvUENJZSBETUEgdHJh
-bnNhY3Rpb25zLwoKKFRoZW9yZXRpY2FsbHkgUDJQIHNob3VsZCB3b3JrIG9uIGNvbnZlbnRpb25h
-bCBQQ0ksIGFuZCB0aGlzIHNlbnRlbmNlIG9ubHkKYXBwbGllcyB0byBQQ0llLikKCj4gKwkgIChU
-eXBpY2FsbHkgYmVoaW5kIGEgbmV0d29yayBvZiBQQ0llIHN3aXRjaGVzKS4KCk5vdCBzdXJlIHRo
-aXMgbGFzdCBzZW50ZW5jZSBhZGRzIHVzZWZ1bCBpbmZvcm1hdGlvbi4KCj4gKysrIGIvZHJpdmVy
-cy9wY2kvcDJwZG1hLmMKPiBAQCAtMCwwICsxLDY5NCBAQAo+ICsvLyBTUERYLUxpY2Vuc2UtSWRl
-bnRpZmllcjogR1BMLTIuMAo+ICsvKgo+ICsgKiBQQ0kgUGVlciAyIFBlZXIgRE1BIHN1cHBvcnQu
-Cj4gKyAqCj4gKyAqIENvcHlyaWdodCAoYykgMjAxNi0yMDE4LCBMb2dhbiBHdW50aG9ycGUKPiAr
-ICogQ29weXJpZ2h0IChjKSAyMDE2LTIwMTcsIE1pY3Jvc2VtaSBDb3Jwb3JhdGlvbgo+ICsgKiBD
-b3B5cmlnaHQgKGMpIDIwMTcsIENocmlzdG9waCBIZWxsd2lnCj4gKyAqIENvcHlyaWdodCAoYykg
-MjAxOCwgRWlkZXRpY29tIEluYy4KPiArICoKCk5pdDogdW5uZWNlc3NhcnkgYmxhbmsgbGluZS4K
-Cj4gKy8qCj4gKyAqIElmIGEgZGV2aWNlIGlzIGJlaGluZCBhIHN3aXRjaCwgd2UgdHJ5IHRvIGZp
-bmQgdGhlIHVwc3RyZWFtIGJyaWRnZQo+ICsgKiBwb3J0IG9mIHRoZSBzd2l0Y2guIFRoaXMgcmVx
-dWlyZXMgdHdvIGNhbGxzIHRvIHBjaV91cHN0cmVhbV9icmlkZ2UoKToKPiArICogb25lIGZvciB0
-aGUgdXBzdHJlYW0gcG9ydCBvbiB0aGUgc3dpdGNoLCBvbmUgb24gdGhlIHVwc3RyZWFtIHBvcnQK
-PiArICogZm9yIHRoZSBuZXh0IGxldmVsIGluIHRoZSBoaWVyYXJjaHkuIEJlY2F1c2Ugb2YgdGhp
-cywgZGV2aWNlcyBjb25uZWN0ZWQKPiArICogdG8gdGhlIHJvb3QgcG9ydCB3aWxsIGJlIHJlamVj
-dGVkLgo+ICsgKi8KPiArc3RhdGljIHN0cnVjdCBwY2lfZGV2ICpnZXRfdXBzdHJlYW1fYnJpZGdl
-X3BvcnQoc3RydWN0IHBjaV9kZXYgKnBkZXYpCgpUaGlzIGZ1bmN0aW9uIGRvZXNuJ3Qgc2VlbSB0
-byBiZSB1c2VkIGFueW1vcmUuICBUaGFua3MgZm9yIGFsbCB5b3VyIGhhcmQKd29yayB0byBnZXQg
-cmlkIG9mIGl0IQoKPiArewo+ICsJc3RydWN0IHBjaV9kZXYgKnVwMSwgKnVwMjsKPiArCj4gKwlp
-ZiAoIXBkZXYpCj4gKwkJcmV0dXJuIE5VTEw7Cj4gKwo+ICsJdXAxID0gcGNpX2Rldl9nZXQocGNp
-X3Vwc3RyZWFtX2JyaWRnZShwZGV2KSk7Cj4gKwlpZiAoIXVwMSkKPiArCQlyZXR1cm4gTlVMTDsK
-PiArCj4gKwl1cDIgPSBwY2lfZGV2X2dldChwY2lfdXBzdHJlYW1fYnJpZGdlKHVwMSkpOwo+ICsJ
-cGNpX2Rldl9wdXQodXAxKTsKPiArCj4gKwlyZXR1cm4gdXAyOwo+ICt9Cj4gKwo+ICsvKgo+ICsg
-KiBGaW5kIHRoZSBkaXN0YW5jZSB0aHJvdWdoIHRoZSBuZWFyZXN0IGNvbW1vbiB1cHN0cmVhbSBi
-cmlkZ2UgYmV0d2Vlbgo+ICsgKiB0d28gUENJIGRldmljZXMuCj4gKyAqCj4gKyAqIElmIHRoZSB0
-d28gZGV2aWNlcyBhcmUgdGhlIHNhbWUgZGV2aWNlIHRoZW4gMCB3aWxsIGJlIHJldHVybmVkLgo+
-ICsgKgo+ICsgKiBJZiB0aGVyZSBhcmUgdHdvIHZpcnR1YWwgZnVuY3Rpb25zIG9mIHRoZSBzYW1l
-IGRldmljZSBiZWhpbmQgdGhlIHNhbWUKPiArICogYnJpZGdlIHBvcnQgdGhlbiAyIHdpbGwgYmUg
-cmV0dXJuZWQgKG9uZSBzdGVwIGRvd24gdG8gdGhlIGJyaWRnZSB0aGVuCgpzL2JyaWRnZS9QQ0ll
-IHN3aXRjaC8KCj4gKyAqIG9uZSBzdGVwIGJhY2sgdG8gdGhlIHNhbWUgZGV2aWNlKS4KPiArICoK
-PiArICogSW4gdGhlIGNhc2Ugd2hlcmUgdHdvIGRldmljZXMgYXJlIGNvbm5lY3RlZCB0byB0aGUg
-c2FtZSBQQ0llIHN3aXRjaCwgdGhlCj4gKyAqIHZhbHVlIDQgd2lsbCBiZSByZXR1cm5lZC4gVGhp
-cyBjb3JyZXNwb25kcyB0byB0aGUgZm9sbG93aW5nIFBDSSB0cmVlOgo+ICsgKgo+ICsgKiAgICAg
-LSsgIFJvb3QgUG9ydAo+ICsgKiAgICAgIFwrIFN3aXRjaCBVcHN0cmVhbSBQb3J0Cj4gKyAqICAg
-ICAgICstKyBTd2l0Y2ggRG93bnN0cmVhbSBQb3J0Cj4gKyAqICAgICAgICsgXC0gRGV2aWNlIEEK
-PiArICogICAgICAgXC0rIFN3aXRjaCBEb3duc3RyZWFtIFBvcnQKPiArICogICAgICAgICBcLSBE
-ZXZpY2UgQgo+ICsgKgo+ICsgKiBUaGUgZGlzdGFuY2UgaXMgNCBiZWNhdXNlIHdlIHRyYXZlcnNl
-IGZyb20gRGV2aWNlIEEgdGhyb3VnaCB0aGUgZG93bnN0cmVhbQo+ICsgKiBwb3J0IG9mIHRoZSBz
-d2l0Y2gsIHRvIHRoZSBjb21tb24gdXBzdHJlYW0gcG9ydCwgYmFjayB1cCB0byB0aGUgc2Vjb25k
-Cj4gKyAqIGRvd25zdHJlYW0gcG9ydCBhbmQgdGhlbiB0byBEZXZpY2UgQi4KPiArICoKPiArICog
-QW55IHR3byBkZXZpY2VzIHRoYXQgZG9uJ3QgaGF2ZSBhIGNvbW1vbiB1cHN0cmVhbSBicmlkZ2Ug
-d2lsbCByZXR1cm4gLTEuCj4gKyAqIEluIHRoaXMgd2F5IGRldmljZXMgb24gc2VwZXJhdGUgcm9v
-dCBwb3J0cyB3aWxsIGJlIHJlamVjdGVkLCB3aGljaAoKcy9zZXBlcmF0ZS9zZXBhcmF0ZS8Kcy9y
-b290IHBvcnQvUENJZSByb290IHBvcnRzLwooQWdhaW4sIHNpbmNlIFAyUCBzaG91bGQgd29yayBv
-biBjb252ZW50aW9uYWwgUENJKQoKPiArICogaXMgd2hhdCB3ZSB3YW50IGZvciBwZWVyLXRvLXBl
-ZXIgc2VlaW5nIHRoZXJlJ3Mgbm8gd2F5IHRvIGRldGVybWluZQo+ICsgKiBpZiB0aGUgcm9vdCBj
-b21wbGV4IHN1cHBvcnRzIGZvcndhcmRpbmcgYmV0d2VlbiByb290IHBvcnRzLgoKcy9zZWVpbmcg
-dGhlcmUncyBubyB3YXkuLi4vCiAgc2VlaW5nIGVhY2ggUENJZSByb290IHBvcnQgZGVmaW5lcyBh
-IHNlcGFyYXRlIGhpZXJhcmNoeSBkb21haW4gYW5kCiAgdGhlcmUncyBubyB3YXkgdG8gZGV0ZXJt
-aW5lIHdoZXRoZXIgdGhlIHJvb3QgY29tcGxleCBzdXBwb3J0cyBmb3J3YXJkaW5nCiAgYmV0d2Vl
-biB0aGVtLi8KCj4gKyAqCj4gKyAqIEluIHRoZSBjYXNlIHdoZXJlIHR3byBkZXZpY2VzIGFyZSBj
-b25uZWN0ZWQgdG8gZGlmZmVyZW50IFBDSWUgc3dpdGNoZXMKPiArICogdGhpcyBmdW5jdGlvbiB3
-aWxsIHN0aWxsIHJldHVybiBhIHBvc2l0aXZlIGRpc3RhbmNlIGFzIGxvbmcgYXMgYm90aAo+ICsg
-KiBzd2l0Y2hlcyBldmVudXRhbGx5IGhhdmUgYSBjb21tb24gdXBzdHJlYW0gYnJpZGdlLiBOb3Rl
-IHRoaXMgY292ZXJzCj4gKyAqIHRoZSBjYXNlIG9mIHVzaW5nIG11bHRpcGxlIFBDSWUgc3dpdGNo
-ZXMgdG8gYWNoaWV2ZSBhIGRlc2lyZWQgbGV2ZWwgb2YKPiArICogZmFuLW91dCBmcm9tIGEgcm9v
-dCBwb3J0LiBUaGUgZXhhY3QgZGlzdGFuY2Ugd2lsbCBiZSBhIGZ1bmN0aW9uIG9mIHRoZQo+ICsg
-KiBudW1iZXIgb2Ygc3dpdGNoZXMgYmV0d2VlbiBEZXZpY2UgQSBhbmQgRGV2aWNlIEIuCj4gKyAq
-CgpOaXQ6IHVubmVjZXNzYXJ5IGJsYW5rIGxpbmUuCgo+ICsgKi8KPiArc3RhdGljIGludCB1cHN0
-cmVhbV9icmlkZ2VfZGlzdGFuY2Uoc3RydWN0IHBjaV9kZXYgKmEsID4gKwkJCQkgICAgc3RydWN0
-IHBjaV9kZXYgKmIpCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KTGludXgtbnZtZSBtYWlsaW5nIGxpc3QKTGludXgtbnZtZUBsaXN0cy5pbmZyYWRlYWQu
-b3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtbnZt
-ZQo=
+If the OS and device are reporting different BAR(s), currently
+the lspci will happily show the OS version with no indication what
+so ever that there is a problem. This is not correct in my opinion
+because lspci is often used to debug devices, so should either show
+the BAR reported by the device, or atleast an indication of
+out-of-sync.
+
+I spent a lot of time debugging a PCI device that would unexpectedly
+clear out the BAR register due to some bug, and it was quite later
+I realized that the lspci is showing me the OS version. So fix that.
+
+On a system that is in problem state:
+
+localhost ~ # setpci -s 1:0.0 0x10.l
+00000004  <=== BAR is zeroed out
+localhost ~ #
+
+Before:
+
+localhost ~ # lspci -v -s 1:0.0
+01:00.0 Network controller: Intel Corporation Wireless 7265 (rev 59)
+        Subsystem: Intel Corporation Dual Band Wireless-AC 7265
+        Flags: bus master, fast devsel, latency 0, IRQ 275
+        Memory at d1400000 (64-bit, non-prefetchable) [size=8K]
+        Capabilities: [c8] Power Management version 3
+        Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+        Capabilities: [40] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Device Serial Number b4-d5-bd-ff-ff-c8-a1-6d
+        Capabilities: [14c] Latency Tolerance Reporting
+        Capabilities: [154] L1 PM Substates
+        Kernel driver in use: iwlwifi
+        Kernel modules: iwlwifi
+
+After:
+
+localhost ~ # lspci -v -s 1:0.0
+01:00.0 Network controller: Device 8086:095a (rev 59)
+        Subsystem: Device 8086:5010
+        Flags: bus master, fast devsel, latency 0, IRQ 275
+        [out-of-sync] Memory at d1400000 (64-bit, non-prefetchable) [size=8K]
+        Capabilities: [c8] Power Management version 3
+        Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+        Capabilities: [40] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Device Serial Number b4-d5-bd-ff-ff-c8-a1-6d
+        Capabilities: [14c] Latency Tolerance Reporting
+        Capabilities: [154] L1 PM Substates
+        Kernel driver in use: iwlwifi
+        Kernel modules: iwlwifi
+
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+ lspci.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/lspci.c b/lspci.c
+index 748452c..81c65f3 100644
+--- a/lspci.c
++++ b/lspci.c
+@@ -371,6 +371,20 @@ show_range(char *prefix, u64 base, u64 limit, int is_64bit)
+   putchar('\n');
+ }
+ 
++static pciaddr_t
++bar_value(struct device *d, int i, u32 flg)
++{
++  pciaddr_t val = 0;
++
++  /* Read higher order 32 bits if it's a 64 bit bar in memory space */
++  if (i < 5 && !(flg & PCI_BASE_ADDRESS_SPACE_IO) &&
++      (flg & PCI_BASE_ADDRESS_MEM_TYPE_MASK == PCI_BASE_ADDRESS_MEM_TYPE_64))
++      val = get_conf_long(d, PCI_BASE_ADDRESS_0 + 4 * (i + 1));
++
++  val = (val << 32) | flg;
++  return val;
++}
++
+ static void
+ show_bases(struct device *d, int cnt)
+ {
+@@ -401,6 +415,10 @@ show_bases(struct device *d, int cnt)
+ 	  flg = pos;
+ 	  virtual = 1;
+ 	}
++      else if (pos != bar_value(d, i, flg))
++	{
++	  printf("[out-of-sync] ");
++	}
+       if (flg & PCI_BASE_ADDRESS_SPACE_IO)
+ 	{
+ 	  pciaddr_t a = pos & PCI_BASE_ADDRESS_IO_MASK;
+-- 
+2.17.0.441.gb46fe60e1d-goog
