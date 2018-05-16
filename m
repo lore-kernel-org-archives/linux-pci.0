@@ -1,128 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:36896 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751214AbeECTk7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 15:40:59 -0400
-Received: by mail-lf0-f68.google.com with SMTP id b23-v6so27677957lfg.4
-        for <linux-pci@vger.kernel.org>; Thu, 03 May 2018 12:40:58 -0700 (PDT)
-Subject: [PATCH v3 3/5] pcie-rcar: add R-Car gen3 PHY support
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-References: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Message-ID: <def3b364-088b-3fcc-47ab-bcb0838b8fe4@cogentembedded.com>
-Date: Thu, 3 May 2018 22:40:54 +0300
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <wangbinghui@hisilicon.com>, <bhelgaas@google.com>,
+        <xuwei5@huawei.com>, <robh+dt@kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <dimitrysh@google.com>, <andy.shevchenko@gmail.com>
+CC: <guodong.xu@linaro.org>, <suzhuangluan@hisilicon.com>,
+        <kongfei@hisilicon.com>, <chenyao11@huawei.com>,
+        <songxiaowei@hisilicon.com>
+Subject: [PATCH v4] PCI: kirin: Add MSI support
+Date: Wed, 16 May 2018 09:21:59 +0800
+Message-ID: <20180516012159.44081-2-songxiaowei@hisilicon.com>
+In-Reply-To: <20180516012159.44081-1-songxiaowei@hisilicon.com>
+References: <20180516012159.44081-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On R-Car gen3 SoCs the PCIe PHY has its own register region -- and I have
-written a generic PHY driver for it, thus we need to add the corresponding
-code in rcar_pcie_hw_init_gen3() and call devm_phy_optional_get() at the
-driver's probing time, so that the existing R-Car gen3 device trees (not
-having a PHY node) would still work (we only need to power up the PHY on
-R-Car V3H).
+From: Yao Chen <chenyao11@huawei.com>
 
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+Add support for MSI.
 
+Signed-off-by: Yao Chen <chenyao11@huawei.com>
+Cc: Xiaowei Song <songxiaowei@hisilicon.com>
 ---
-Changes in version 3:
-- removed double spaces in the patch description;
-- added Simon's tag;
-- refreshed atop of the recent driver/bindings patches.
+ drivers/pci/dwc/pcie-kirin.c | 51 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-Changes in version 2:
-- updated the bindings.
-
- Documentation/devicetree/bindings/pci/rcar-pci.txt |    5 +++
- drivers/pci/host/pcie-rcar.c                       |   27 +++++++++++++++++++--
- 2 files changed, 30 insertions(+), 2 deletions(-)
-
-Index: pci/Documentation/devicetree/bindings/pci/rcar-pci.txt
-===================================================================
---- pci.orig/Documentation/devicetree/bindings/pci/rcar-pci.txt
-+++ pci/Documentation/devicetree/bindings/pci/rcar-pci.txt
-@@ -32,6 +32,11 @@ compatible: "renesas,pcie-r8a7743" for t
- 	and PCIe bus clocks.
- - clock-names: from common clock binding: should be "pcie" and "pcie_bus".
- 
-+Optional properties:
-+- phys: from common PHY binding: PHY phandle and specifier (only make sense
-+	for R-Car gen3 SoCs where the PCIe PHYs have their own register blocks).
-+- phy-names: from common PHY binding: should be "pcie".
-+
- Example:
- 
- SoC-specific DT Entry:
-Index: pci/drivers/pci/host/pcie-rcar.c
-===================================================================
---- pci.orig/drivers/pci/host/pcie-rcar.c
-+++ pci/drivers/pci/host/pcie-rcar.c
-@@ -25,6 +25,7 @@
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
- #include <linux/pci.h>
-+#include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
- #include <linux/slab.h>
-@@ -141,6 +142,7 @@ static inline struct rcar_msi *to_rcar_m
- /* Structure representing the PCIe interface */
- struct rcar_pcie {
- 	struct device		*dev;
-+	struct phy		*phy;
- 	void __iomem		*base;
- 	struct list_head	resources;
- 	int			root_bus_nr;
-@@ -667,6 +669,21 @@ static int rcar_pcie_hw_init_gen2(struct
- 	return rcar_pcie_hw_init(pcie);
+diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
+index d2970a0..00ca4e5 100644
+--- a/drivers/pci/dwc/pcie-kirin.c
++++ b/drivers/pci/dwc/pcie-kirin.c
+@@ -426,9 +426,28 @@ static int kirin_pcie_establish_link(struct pcie_port *pp)
+ 	return 0;
  }
  
-+static int rcar_pcie_hw_init_gen3(struct rcar_pcie *pcie)
++static irqreturn_t kirin_pcie_msi_irq_handler(int irq, void *arg)
 +{
-+	int err;
++	struct pcie_port *pp = arg;
 +
-+	err = phy_init(pcie->phy);
-+	if (err)
-+		return err;
-+
-+	err = phy_power_on(pcie->phy);
-+	if (err)
-+		return err;
-+
-+	return rcar_pcie_hw_init(pcie);
++	return dw_handle_msi_irq(pp);
 +}
 +
- static int rcar_msi_alloc(struct rcar_msi *chip)
- {
- 	int msi;
-@@ -916,6 +933,10 @@ static int rcar_pcie_get_resources(struc
- 	struct resource res;
- 	int err, i;
- 
-+	pcie->phy = devm_phy_optional_get(dev, "pcie");
-+	if (IS_ERR(pcie->phy))
-+		return PTR_ERR(pcie->phy);
++static void kirin_pcie_msi_init(struct pcie_port *pp)
++{
++	dw_pcie_msi_init(pp);
++}
 +
- 	err = of_address_to_resource(dev->of_node, 0, &res);
- 	if (err)
- 		return err;
-@@ -1056,8 +1077,10 @@ static const struct of_device_id rcar_pc
- 	  .data = rcar_pcie_hw_init_gen2 },
- 	{ .compatible = "renesas,pcie-rcar-gen2",
- 	  .data = rcar_pcie_hw_init_gen2 },
--	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
--	{ .compatible = "renesas,pcie-rcar-gen3", .data = rcar_pcie_hw_init },
-+	{ .compatible = "renesas,pcie-r8a7795",
-+	  .data = rcar_pcie_hw_init_gen3 },
-+	{ .compatible = "renesas,pcie-rcar-gen3",
-+	  .data = rcar_pcie_hw_init_gen3 },
- 	{},
++static void kirin_pcie_enable_interrupts(struct pcie_port *pp)
++{
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		kirin_pcie_msi_init(pp);
++}
++
+ static int kirin_pcie_host_init(struct pcie_port *pp)
+ {
+ 	kirin_pcie_establish_link(pp);
++	kirin_pcie_enable_interrupts(pp);
+ 
+ 	return 0;
+ }
+@@ -445,9 +464,41 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
+ 	.host_init = kirin_pcie_host_init,
  };
  
++static int kirin_pcie_add_msi(struct dw_pcie *pci,
++				struct platform_device *pdev)
++{
++	int ret = 0;
++
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		ret = platform_get_irq(pdev, 0);
++		if (ret < 0) {
++			dev_err(&pdev->dev, "failed to get MSI IRQ (%d)\n",
++				pci->pp.msi_irq);
++			return ret;
++		}
++
++		pci->pp.msi_irq = ret;
++
++		ret = devm_request_irq(&pdev->dev, pci->pp.msi_irq,
++					   kirin_pcie_msi_irq_handler,
++					   IRQF_SHARED | IRQF_NO_THREAD,
++					   "kirin_pcie_msi", &pci->pp);
++		if (ret)
++			dev_err(&pdev->dev, "failed to request MSI IRQ %d\n",
++				pci->pp.msi_irq);
++	}
++	return ret;
++}
++
+ static int __init kirin_add_pcie_port(struct dw_pcie *pci,
+ 				      struct platform_device *pdev)
+ {
++	int ret;
++
++	ret = kirin_pcie_add_msi(pci, pdev);
++	if (ret)
++		return ret;
++
+ 	pci->pp.ops = &kirin_pcie_host_ops;
+ 
+ 	return dw_pcie_host_init(&pci->pp);
+-- 
+2.7.3
