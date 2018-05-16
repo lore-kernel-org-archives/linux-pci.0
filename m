@@ -1,64 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] PCI/portdrv: do not disable device on remove()
-To: Lukas Wunner <lukas@wunner.de>
-References: <1527011883-21320-1-git-send-email-okaya@codeaurora.org>
- <20180523022431.GA15069@wunner.de>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <8c91a923-1a3a-55fb-e812-62dd69d99975@codeaurora.org>
-Date: Tue, 22 May 2018 22:40:16 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:4149 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751013AbeEPXKW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 May 2018 19:10:22 -0400
+Date: Wed, 16 May 2018 17:12:21 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Alexandru Gagniuc <mr.nuke.me@gmail.com>, bhelgaas@google.com,
+        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Dongdong Liu <liudongdong3@huawei.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: DPC: Clear AER status bits before disabling port
+ containment
+Message-ID: <20180516231220.GA21659@localhost.localdomain>
+References: <20180516213306.27027-1-mr.nuke.me@gmail.com>
+ <605540c0-b6c5-89a2-9d50-12a3005d9f88@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20180523022431.GA15069@wunner.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: ryan@finnie.org, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Frederick Lawler <fred@fredlawl.com>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- open list <linux-kernel@vger.kernel.org>, stable@vger.kernel.org,
- Keith Busch <keith.busch@intel.com>, Dongdong Liu <liudongdong3@huawei.com>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <605540c0-b6c5-89a2-9d50-12a3005d9f88@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/22/2018 10:24 PM, Lukas Wunner wrote:
-> On Tue, May 22, 2018 at 01:58:00PM -0400, Sinan Kaya wrote:
->> --- a/drivers/pci/pcie/portdrv_core.c
->> +++ b/drivers/pci/pcie/portdrv_core.c
->> @@ -409,7 +409,6 @@ void pcie_port_device_remove(struct pci_dev *dev)
->>  {
->>  	device_for_each_child(&dev->dev, NULL, remove_iter);
->>  	pci_free_irq_vectors(dev);
->> -	pci_disable_device(dev);
->>  }
+On Wed, May 16, 2018 at 06:44:22PM -0400, Sinan Kaya wrote:
+> On 5/16/2018 5:33 PM, Alexandru Gagniuc wrote:
+> > AER status bits are sticky, and they survive system resets. Downstream
+> > devices are usually taken care of after re-enumerating the downstream
+> > busses, as the AER bits are cleared during probe().
+> > 
+> > However, nothing clears the bits of the port which contained the
+> > error. These sticky bits may leave some BIOSes to think that something
+> > bad happened, and print ominous messages on next boot. To prevent this,
+> > tidy up the AER status bits before releasing containment.
+> > 
+> > Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> > ---
+> >  drivers/pci/pcie/dpc.c | 4 ++++
+> >  1 file changed, 4 insertions(+)
+> > 
+> > diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> > index 8c57d607e603..bf82d6936556 100644
+> > --- a/drivers/pci/pcie/dpc.c
+> > +++ b/drivers/pci/pcie/dpc.c
+> > @@ -112,6 +112,10 @@ static void dpc_work(struct work_struct *work)
+> >  		dpc->rp_pio_status = 0;
+> >  	}
+> >  
+> > +	/* DPC event made a mess of our AER status bits. Clean them up. */
+> > +	pci_cleanup_aer_error_status_regs(pdev);
+> > +	/* TODO: Should we also use aer_print_error to log the event? */
+> > +
+> >  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+> >  		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+> >  
+> > 
 > 
-> Shutdown aside, pci_disable_device() is also not called in the ->remove
-> path with this patch, right?  Seems wrong.  E.g. when unbinding the driver
-> from the root port device, or when unplugging a port (happens all the time
-> with Thunderbolt).
+> I think Keith has a patch to fix this. It was under review at some point.
 
-Agreed. I'll spin another version where I skip disable on shutdown path only.
-
-> 
-> Thanks,
-> 
-> Lukas
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Right, I do intend to following up on this, but I've had some trouble
+finding time the last few weeks. Sorry about that, things will clear up
+for me shortly.
