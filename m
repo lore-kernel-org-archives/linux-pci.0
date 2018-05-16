@@ -1,80 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35875 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751214AbeEVMyr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 08:54:47 -0400
-Subject: Re: [PATCH] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20180521210522.29346-1-marek.vasut+renesas@gmail.com>
- <CAMuHMdVkeSEsO-jRCzh-_9VkzZ+4X-VAN1KZOA2wB7bUQTrRYg@mail.gmail.com>
- <3936f87b-155f-7fc1-1618-287d5d64b7b3@gmail.com>
- <CAMuHMdU=s3ZyCLO5zDXgQis8Ak5akhJhcShs4hgQikaoWYLGZw@mail.gmail.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <f7d3ed30-0290-8297-1a7b-7c6bfb2dfcb6@gmail.com>
-Date: Tue, 22 May 2018 14:20:09 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Peter Jones <pjones@redhat.com>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        linux-fbdev@vger.kernel.org (open list:EFIFB FRAMEBUFFER DRIVER),
+        dri-devel@lists.freedesktop.org (open list:FRAMEBUFFER LAYER),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [RFC PATCH] efi/fb: Convert PCI bus address to resource if translated by the bridge
+Date: Wed, 16 May 2018 14:23:49 -0400
+Message-Id: <1526495029-25783-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdU=s3ZyCLO5zDXgQis8Ak5akhJhcShs4hgQikaoWYLGZw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/22/2018 12:33 PM, Geert Uytterhoeven wrote:
-> Hi Marek,
-> 
-> On Tue, May 22, 2018 at 11:48 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
->> On 05/22/2018 11:42 AM, Geert Uytterhoeven wrote:
->>> On Mon, May 21, 2018 at 11:05 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
->>>> The data link active signal usually takes ~20 uSec to be asserted,
->>>> poll the bit more often to avoid useless delays in this function.
->>>> Use udelay() instead of usleep() for such a small delay as suggested
->>>> by the timer documentation and because this will be used in atomic
->>>> context later on when the suspend/resume patches land.
->>>>
->>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>
->>> Thanks for your patch!
->>>
->>>> --- a/drivers/pci/host/pcie-rcar.c
->>>> +++ b/drivers/pci/host/pcie-rcar.c
->>>> @@ -529,13 +529,13 @@ static void phy_write_reg(struct rcar_pcie *pcie,
->>>>
->>>>  static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
->>>>  {
->>>> -       unsigned int timeout = 10;
->>>> +       unsigned int timeout = 10000;
->>>>
->>>>         while (timeout--) {
->>>>                 if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
->>>>                         return 0;
->>>>
->>>> -               msleep(5);
->>>> +               udelay(5);
->>>
->>> + cpu_relax()?
->>
->> Is it safe to use in atomic context ? Because of that suspend/resume thing.
-> 
-> Yes.
+A host bridge is allowed to remap BAR addresses using _TRA attribute in
+_CRS windows.
 
-OK, added.
+pci_bus 0000:00: root bus resource [mem 0x80100100000-0x8011fffffff window] (bus address [0x00100000-0x1fffffff])
+pci 0000:02:00.0: reg 0x10: [mem 0x8011e000000-0x8011effffff]
 
->>>>         }
->>>
->>> if this ever happens, it will have blocked for more than 50 ms...
->>
->> Well yes, so did the previous thing.
-> 
-> No, the previous thing slept. Big difference.
+When a VGA device is behind such a host bridge and the resource is
+translated efifb driver is trying to do ioremap against bus address
+rather than the resource address and is failing to probe.
 
-True
+efifb driver is having difficulty locating the base address from BAR
+address when
 
+efifb: probing for efifb
+efifb: cannot reserve video memory at 0x1e000000
+efifb: framebuffer at 0x1e000000, using 1920k, total 1875k
+efifb: mode is 800x600x32, linelength=3200, pages=1
+efifb: scrolling: redraw
+efifb: Truecolor: size=8:8:8:8, shift=24:16:8:0
+
+Use the host bridge offset information to convert bus address to
+resource address in the fixup.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/video/fbdev/efifb.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+index 46a4484..feef02b 100644
+--- a/drivers/video/fbdev/efifb.c
++++ b/drivers/video/fbdev/efifb.c
+@@ -428,6 +428,8 @@ static void efifb_fixup_resources(struct pci_dev *dev)
+ {
+ 	u64 base = screen_info.lfb_base;
+ 	u64 size = screen_info.lfb_size;
++	struct pci_host_bridge *bridge;
++	struct resource_entry *window;
+ 	int i;
+ 
+ 	if (efifb_pci_dev || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
+@@ -439,6 +441,27 @@ static void efifb_fixup_resources(struct pci_dev *dev)
+ 	if (!base)
+ 		return;
+ 
++	bridge = pci_find_host_bridge(dev->bus);
++	if (!bridge)
++		return;
++
++	resource_list_for_each_entry(window, &bridge->windows) {
++		phys_addr_t win_start;
++		phys_addr_t win_end;
++		size_t win_size;
++
++		if (resource_type(window->res) != IORESOURCE_MEM)
++			continue;
++
++		win_start = window->res->start - window->offset;
++		win_end = window->res->end - window->offset;
++		win_size = window->res->end - window->res->start + 1;
++		if (win_start <= base && win_end >= base + win_size - 1) {
++			base += window->offset;
++			break;
++		}
++	}
++
+ 	for (i = 0; i <= PCI_STD_RESOURCE_END; i++) {
+ 		struct resource *res = &dev->resource[i];
+ 
 -- 
-Best regards,
-Marek Vasut
+2.7.4
