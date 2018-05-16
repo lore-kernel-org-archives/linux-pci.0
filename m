@@ -1,77 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr40059.outbound.protection.outlook.com ([40.107.4.59]:52069
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751597AbeETNvB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 20 May 2018 09:51:01 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
-        robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
-        gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com,
-        bhelgaas@google.com
-Cc: hch@lst.de, joro@8bytes.org, m.szyprowski@samsung.com,
-        shawnguo@kernel.org, frowand.list@gmail.com,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bharat.bhushan@nxp.com, stuyoder@gmail.com, leoyang.li@nxp.com,
-        Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH 7/7 v5] arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
-Date: Sun, 20 May 2018 19:19:51 +0530
-Message-Id: <1526824191-7000-8-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
-References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH] efi/fb: Convert PCI bus address to resource if
+ translated by the bridge
+To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org
+References: <1526495029-25783-1-git-send-email-okaya@codeaurora.org>
+From: Timur Tabi <timur@codeaurora.org>
+Message-ID: <3120434b-9831-bf33-25b8-11aba1c1b648@codeaurora.org>
+Date: Wed, 16 May 2018 13:31:54 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1526495029-25783-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:EFIFB FRAMEBUFFER DRIVER" <linux-fbdev@vger.kernel.org>,
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
+ Peter Jones <pjones@redhat.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-fsl-mc bus support the new iommu-map property. Comply to this binding
-for fsl_mc bus.
+On 05/16/2018 01:23 PM, Sinan Kaya wrote:
+> +		win_start = window->res->start - window->offset;
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
----
- arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Can you guarantee that window->res->start is always >= window->offset?
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-index 137ef4d..6010505 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-@@ -184,6 +184,7 @@
- 		#address-cells = <2>;
- 		#size-cells = <2>;
- 		ranges;
-+		dma-ranges = <0x0 0x0 0x0 0x0 0x10000 0x00000000>;
- 
- 		clockgen: clocking@1300000 {
- 			compatible = "fsl,ls2080a-clockgen";
-@@ -357,6 +358,8 @@
- 			reg = <0x00000008 0x0c000000 0 0x40>,	 /* MC portal base */
- 			      <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
- 			msi-parent = <&its>;
-+			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by u-boot */
-+			dma-coherent;
- 			#address-cells = <3>;
- 			#size-cells = <1>;
- 
-@@ -460,6 +463,8 @@
- 			compatible = "arm,mmu-500";
- 			reg = <0 0x5000000 0 0x800000>;
- 			#global-interrupts = <12>;
-+			#iommu-cells = <1>;
-+			stream-match-mask = <0x7C00>;
- 			interrupts = <0 13 4>, /* global secure fault */
- 				     <0 14 4>, /* combined secure interrupt */
- 				     <0 15 4>, /* global non-secure fault */
-@@ -502,7 +507,6 @@
- 				     <0 204 4>, <0 205 4>,
- 				     <0 206 4>, <0 207 4>,
- 				     <0 208 4>, <0 209 4>;
--			mmu-masters = <&fsl_mc 0x300 0>;
- 		};
- 
- 		dspi: dspi@2100000 {
+> +		win_size = window->res->end - window->res->start + 1;
+
+Use resource_size() instead.
+
 -- 
-1.9.1
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
+Technologies, Inc.  Qualcomm Technologies, Inc. is a member of the
+Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
