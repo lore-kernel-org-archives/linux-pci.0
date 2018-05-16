@@ -1,66 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:37970 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.99]:55178 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S968103AbeEXRjR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 May 2018 13:39:17 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-ntb@googlegroups.com
-Cc: Logan Gunthorpe <logang@deltatee.com>,
+        id S1751213AbeEPVES (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 May 2018 17:04:18 -0400
+Date: Wed, 16 May 2018 16:04:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Timur Tabi <timur@codeaurora.org>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Doug Meyer <dmeyer@gigaio.com>
-Date: Thu, 24 May 2018 11:39:13 -0600
-Message-Id: <20180524173913.4506-1-logang@deltatee.com>
-Subject: [PATCH v2] PCI: Expand documentation for pci_add_dma_alias()
+        Oza Pawandeep <poza@codeaurora.org>,
+        Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCHv2 2/7] PCI/DPC: Fix PCI legacy interrupt acknowledgement
+Message-ID: <20180516210415.GA19955@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180402162203.3370-1-keith.busch@intel.com>
+ <20180402162203.3370-3-keith.busch@intel.com>
+ <20180403203847.GO9322@bhelgaas-glaptop.roam.corp.google.com>
+ <CAOZdJXXQCGUu+r_hWBt+gAvVbYu0h4KxpUXOMKR3p7y92wxq-w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAOZdJXXQCGUu+r_hWBt+gAvVbYu0h4KxpUXOMKR3p7y92wxq-w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Seeing there's been some confusion about the use of pci_add_dma_alias(),
-expand the comment to describe why it must be called early and how
-early it must be called.
+On Wed, May 16, 2018 at 10:16:15AM -0500, Timur Tabi wrote:
+> On Tue, Apr 3, 2018 at 3:38 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> > Bottom line, I think this patch is fine and I applied it with the
+> > following changelog:
+> >
+> >   PCI/DPC: Clear interrupt status in interrupt handler top half
+> 
+> Bjorn,
+> 
+> I can't find this patch (with either subject line) anywhere on
+> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/ or
+> linux-next.  I see you pulled in Oza's other patch set, but this patch
+> is still MIA.
 
-Also, expand on the purpose of this function and common reasons it would
-be used.
+I blew it, sorry.  I think I was hoping to clarify the question of
+using threaded interrupts, but that never happened.
 
-[The comment was reworded to some extent by Alex Williamson]
+I applied this to pci/dpc for v4.18 and pushed it.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>
-Cc: Doug Meyer <dmeyer@gigaio.com>
----
-
-v2: Reworked the patch with Alex's suggested wording.
-
-  drivers/pci/pci.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index dbfe7c4f3776..1c0c1ea23b90 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5395,8 +5395,19 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
-  * @dev: the PCI device for which alias is added
-  * @devfn: alias slot and function
-  *
-- * This helper encodes 8-bit devfn as bit number in dma_alias_mask.
-- * It should be called early, preferably as PCI fixup header quirk.
-+ * This helper encodes an 8-bit devfn as a bit number in dma_alias_mask
-+ * which is used to program permissible BDF source addresses for DMA
-+ * requests in an IOMMU. These aliases factor into IOMMU group creation
-+ * and are useful for devices generating DMA requests beyond or different
-+ * from their logical bus devfn. Examples include device quirks where the
-+ * device simply uses the wronge devfn, as well as non-transparent bridges
-+ * where the alias may be a proxy for devices in another domain.
-+ *
-+ * IOMMU group creation is performed during device discovery or addition,
-+ * prior to any potential DMA mapping and therefore prior to driver probing
-+ * (especially for userspace assigned devices where IOMMU group definition
-+ * cannot be left as a userspace activity). DMA aliases should therefore
-+ * be configured via quirks, such as the PCI fixup header quirk.
-  */
- void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
- {
---
-2.11.0
+Bjorn
