@@ -1,38 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:43831 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751111AbeECMSx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 May 2018 08:18:53 -0400
-Date: Thu, 3 May 2018 14:21:33 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Cc: robin.murphy@arm.com, hch@lst.de, linux@armlinux.org.uk,
-        gregkh@linuxfoundation.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, zajec5@gmail.com, andy.gross@linaro.org,
-        david.brown@linaro.org, dan.j.williams@intel.com,
-        vinod.koul@intel.com, thierry.reding@gmail.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, jarkko.sakkinen@linux.intel.com,
-        rafael.j.wysocki@intel.com, dmitry.torokhov@gmail.com,
-        johan@kernel.org, msuchanek@suse.de, linux-kernel@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-wireless@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org,
-        dmaengine@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, bharat.bhushan@nxp.com,
-        leoyang.li@nxp.com
-Subject: Re: [PATCH v4 1/2] dma-mapping: move dma configuration to bus
-        infrastructure
-Message-ID: <20180503122133.GA18590@lst.de>
-References: <1520868292-2479-1-git-send-email-nipun.gupta@nxp.com> <1524883919-29484-1-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH] efi/fb: Convert PCI bus address to resource if
+ translated by the bridge
+To: Timur Tabi <timur@codeaurora.org>, linux-pci@vger.kernel.org
+References: <1526495029-25783-1-git-send-email-okaya@codeaurora.org>
+ <3120434b-9831-bf33-25b8-11aba1c1b648@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <9f8ea8f6-6005-1b46-4d75-4f89e04ad9c1@codeaurora.org>
+Date: Wed, 16 May 2018 14:41:12 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524883919-29484-1-git-send-email-nipun.gupta@nxp.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3120434b-9831-bf33-25b8-11aba1c1b648@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:EFIFB FRAMEBUFFER DRIVER" <linux-fbdev@vger.kernel.org>,
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
+ Peter Jones <pjones@redhat.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This still fails to apply against either 4.17-rc3 or current Linus
-master for me.  Please resend against it, and mention the tree it
-is against.
-
-Also please resend it in a separate email thread (all your patches
-were replies to the previous ones) and include a cover letter.
+T24gNS8xNi8yMDE4IDI6MzEgUE0sIFRpbXVyIFRhYmkgd3JvdGU6Cj4gT24gMDUvMTYvMjAxOCAw
+MToyMyBQTSwgU2luYW4gS2F5YSB3cm90ZToKPj4gK8KgwqDCoMKgwqDCoMKgIHdpbl9zdGFydCA9
+IHdpbmRvdy0+cmVzLT5zdGFydCAtIHdpbmRvdy0+b2Zmc2V0Owo+IAo+IENhbiB5b3UgZ3VhcmFu
+dGVlIHRoYXQgd2luZG93LT5yZXMtPnN0YXJ0IGlzIGFsd2F5cyA+PSB3aW5kb3ctPm9mZnNldD8K
+PiAKClJlc291cmNlIG9mZnNldCBpcyBnZW5lcmFsbHkgMCB3aGVuIG5vdCB0cmFuc2xhdGluZyBv
+ciBhIHBvc2l0aXZlIG51bWJlcgp0aGF0IHlvdSBzdWJ0cmFjdCBmcm9tIHRoZSByZXNvdXJjZSBz
+dGFydCB0byByZWFjaCB0byB0aGUgdHJhbnNsYXRpbmcgd2luZG93LgoKSGF2aW5nIGEgYmlnZ2Vy
+IG9mZnNldCB0aGFuIHJlc291cmNlIHN0YXJ0IHNob3VsZCBiZSBjb25zaWRlcmVkIGEgQklPUyBi
+dWcuCgo+PiArwqDCoMKgwqDCoMKgwqAgd2luX3NpemUgPSB3aW5kb3ctPnJlcy0+ZW5kIC0gd2lu
+ZG93LT5yZXMtPnN0YXJ0ICsgMTsKPiAKPiBVc2UgcmVzb3VyY2Vfc2l6ZSgpIGluc3RlYWQuCj4g
+CgpJJ2xsIGZpeCBpdC4KCi0tIApTaW5hbiBLYXlhClF1YWxjb21tIERhdGFjZW50ZXIgVGVjaG5v
+bG9naWVzLCBJbmMuIGFzIGFuIGFmZmlsaWF0ZSBvZiBRdWFsY29tbSBUZWNobm9sb2dpZXMsIElu
+Yy4KUXVhbGNvbW0gVGVjaG5vbG9naWVzLCBJbmMuIGlzIGEgbWVtYmVyIG9mIHRoZSBDb2RlIEF1
+cm9yYSBGb3J1bSwgYSBMaW51eCBGb3VuZGF0aW9uIENvbGxhYm9yYXRpdmUgUHJvamVjdC4KCl9f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1r
+ZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpo
+dHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJu
+ZWwK
