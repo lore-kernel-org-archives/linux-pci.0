@@ -1,98 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:46912 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932620AbeEaCys (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 May 2018 22:54:48 -0400
-Date: Thu, 31 May 2018 10:55:02 +0800
-From: Tiwei Bie <tiwei.bie@intel.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: "Rustad, Mark D" <mark.d.rustad@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "virtualization@lists.linux-foundation.org"
-        <virtualization@lists.linux-foundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        "Liang, Cunming" <cunming.liang@intel.com>,
-        "Wang, Zhihong" <zhihong.wang@intel.com>
-Subject: Re: [virtio-dev] [PATCH] virtio_pci: support enabling VFs
-Message-ID: <20180531025502.GA15516@debian>
-References: <20180530085521.26583-1-tiwei.bie@intel.com>
- <D7004E41-C23D-48B7-94A4-ACBBA06B021D@intel.com>
- <20180530190819-mutt-send-email-mst@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20180530190819-mutt-send-email-mst@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=92Ow=IE=qualcomm.com=poza@kernel.org>
+Return-Path: <SRS0=92Ow=IE=qualcomm.com=poza@kernel.org>
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Philippe Ombredanne <pombredanne@nexb.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Kate Stewart <kstewart@linuxfoundation.org>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Dongdong Liu <liudongdong3@huawei.com>,
+	Keith Busch <keith.busch@intel.com>,
+	Wei Zhang <wzhang@fb.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Subject: [PATCH v17 8/9] PCI/AER: Pass service type to pcie_do_fatal_recovery()
+Date: Thu, 17 May 2018 03:43:10 -0400
+Message-Id: <1526542991-5291-9-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
+References: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2018 at 07:09:37PM +0300, Michael S. Tsirkin wrote:
-> On Wed, May 30, 2018 at 04:03:37PM +0000, Rustad, Mark D wrote:
-> > On May 30, 2018, at 1:55 AM, Tiwei Bie <tiwei.bie@intel.com> wrote:
-> > 
-> > > There is a new feature bit allocated in virtio spec to
-> > > support SR-IOV (Single Root I/O Virtualization):
-> > > 
-> > > https://github.com/oasis-tcs/virtio-spec/issues/11
-> > > 
-> > > This patch enables the support for this feature bit in
-> > > virtio driver.
-> > > 
-> > > Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
-> > > ---
-> > > This patch depends on below proposal:
-> > > https://lists.oasis-open.org/archives/virtio-dev/201805/msg00154.html
-> > > 
-> > > This patch depends on below patch:
-> > > https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/virtualization&id=8effc395c2097e258fcedfc02ed4a66d45fb4238
-> > > 
-> > >  drivers/virtio/virtio_pci_common.c | 20 ++++++++++++++++++++
-> > >  drivers/virtio/virtio_pci_modern.c | 14 ++++++++++++++
-> > >  include/uapi/linux/virtio_config.h |  7 ++++++-
-> > >  3 files changed, 40 insertions(+), 1 deletion(-)
-> > > 
-> > 
-> > <snip>
-> > 
-> > > diff --git a/include/uapi/linux/virtio_config.h
-> > > b/include/uapi/linux/virtio_config.h
-> > > index 308e2096291f..b7c1f4e7d59e 100644
-> > > --- a/include/uapi/linux/virtio_config.h
-> > > +++ b/include/uapi/linux/virtio_config.h
-> > > @@ -49,7 +49,7 @@
-> > 
-> > There is a value in the comment directly before this that should
-> > be updated as well to be consistent with the new value for
-> > VIRTIO_TRANSPORT_F_END below.
-> 
-> It hasn't been updated to 34 yet.
-> I suggest a separate patch to replace the numbers with
-> VIRTIO_TRANSPORT_F_START and VIRTIO_TRANSPORT_F_END
-> in the comment.
-> Maybe replace "e.g. virtio_ring" with "e.g. virtio_ring,
-> virtio_pci etc." as well.
+Pass the service type to pcie_do_fatal_recovery() instead of assuming AER.
+We will make DPC also use pcie_do_fatal_recovery(), and it needs to do
+things a little differently for AER and DPC.
 
-Good idea! Thanks for the suggestion! I'll do it.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+[bhelgaas: split to separate patch]
+Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
 
-Best regards,
-Tiwei Bie
-
-
-> 
-> > >   * transport being used (eg. virtio_ring), the rest are per-device feature
-> > >   * bits. */
-> > >  #define VIRTIO_TRANSPORT_F_START	28
-> > > -#define VIRTIO_TRANSPORT_F_END		34
-> > > +#define VIRTIO_TRANSPORT_F_END		38
-> > > 
-> > >  #ifndef VIRTIO_CONFIG_NO_LEGACY
-> > >  /* Do we get callbacks when the ring is completely used, even if we've
-> > 
-> > <snip>
-> > 
-> > --
-> > Mark Rustad, Networking Division, Intel Corporation
-> 
-> 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 5e8857a..6af7595 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -354,7 +354,7 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ void pci_enable_acs(struct pci_dev *dev);
+ 
+ /* PCI error reporting and recovery */
+-void pcie_do_fatal_recovery(struct pci_dev *dev);
++void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service);
+ void pcie_do_nonfatal_recovery(struct pci_dev *dev);
+ 
+ bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index fdfc474..36e622d 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -254,7 +254,7 @@ static void handle_error_source(struct pcie_device *aerdev,
+ 	} else if (info->severity == AER_NONFATAL)
+ 		pcie_do_nonfatal_recovery(dev);
+ 	else if (info->severity == AER_FATAL)
+-		pcie_do_fatal_recovery(dev);
++		pcie_do_fatal_recovery(dev, PCIE_PORT_SERVICE_AER);
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+@@ -321,7 +321,7 @@ static void aer_recover_work_func(struct work_struct *work)
+ 		if (entry.severity == AER_NONFATAL)
+ 			pcie_do_nonfatal_recovery(pdev);
+ 		else if (entry.severity == AER_FATAL)
+-			pcie_do_fatal_recovery(pdev);
++			pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_AER);
+ 		pci_dev_put(pdev);
+ 	}
+ }
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index a1668e9..8d68cd7 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -180,7 +180,7 @@ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+-static pci_ers_result_t reset_link(struct pci_dev *dev)
++static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
+ {
+ 	struct pci_dev *udev;
+ 	pci_ers_result_t status;
+@@ -195,7 +195,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ 	}
+ 
+ 	/* Use the aer driver of the component firstly */
+-	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
++	driver = pcie_port_find_service(udev, service);
+ 
+ 	if (driver && driver->reset_link) {
+ 		status = driver->reset_link(udev);
+@@ -281,7 +281,7 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+  * beneath this AER agent, followed by reset link e.g. secondary bus reset
+  * followed by re-enumeration of devices.
+  */
+-void pcie_do_fatal_recovery(struct pci_dev *dev)
++void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+ {
+ 	struct pci_dev *udev;
+ 	struct pci_bus *parent;
+@@ -307,9 +307,10 @@ void pcie_do_fatal_recovery(struct pci_dev *dev)
+ 		pci_dev_put(pdev);
+ 	}
+ 
+-	result = reset_link(udev);
++	result = reset_link(udev, service);
+ 
+-	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++	if ((service == PCIE_PORT_SERVICE_AER) &&
++	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
+ 		/*
+ 		 * If the error is reported by a bridge, we think this error
+ 		 * is related to the downstream link of the bridge, so we
+-- 
+2.7.4
