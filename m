@@ -1,50 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1] MIPS: PCI: Use dev_printk() when possible
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Ralf Baechle <ralf@linux-mips.org>,
-        James Hogan <jhogan@kernel.org>, linux-mips@linux-mips.org,
-        linux-kernel@vger.kernel.org
-Date: Tue, 22 May 2018 08:11:42 -0500
-Message-ID: <152699470263.162686.16975145205315900817.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152699466671.162686.1029992586935534102.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152699466671.162686.1029992586935534102.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 17 May 2018 08:20:51 -0600
+From: Keith Busch <keith.busch@linux.intel.com>
+To: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH V6 11/11] nvme: pci: support nested EH
+Message-ID: <20180517142051.GB22063@localhost.localdomain>
+References: <20180516040313.13596-1-ming.lei@redhat.com>
+ <20180516040313.13596-12-ming.lei@redhat.com>
+ <20180516141242.GA20119@localhost.localdomain>
+ <20180516231058.GB28727@ming.t460p>
+ <20180517022030.GB21959@localhost.localdomain>
+ <20180517084129.GA26570@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180517084129.GA26570@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ Laurence Oberman <loberman@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-pci@vger.kernel.org, James Smart <james.smart@broadcom.com>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ Ming Lei <ming.lei@redhat.com>, Keith Busch <keith.busch@intel.com>,
+ Jianchao Wang <jianchao.w.wang@oracle.com>,
+ Johannes Thumshirn <jthumshirn@suse.de>, bhelgaas@google.com,
+ arjan@linux.intel.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Thu, May 17, 2018 at 10:41:29AM +0200, Christoph Hellwig wrote:
+> On Wed, May 16, 2018 at 08:20:31PM -0600, Keith Busch wrote:
+> > On Thu, May 17, 2018 at 07:10:59AM +0800, Ming Lei wrote:
+> > > All simulation in block/011 may happen in reality.
+> > 
+> > If this test actually simulates reality, then the following one line
+> > patch (plus explanation for why) would be a real "fix" as this is very
+> > successful in passing block/011. :)
+> > 
+> > ---
+> > diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> > index 1faa32cd07da..dcc5746304c4 100644
+> > --- a/drivers/nvme/host/pci.c
+> > +++ b/drivers/nvme/host/pci.c
+> > @@ -2118,6 +2118,12 @@ static int nvme_pci_enable(struct nvme_dev *dev)
+> >  
+> >  	if (pci_enable_device_mem(pdev))
+> >  		return result;
+> > +	/*
+> > +	 * blktests block/011 disables the device without the driver knowing.
+> > +	 * We'll just enable the device twice to get the enable_cnt > 1
+> > +	 * so that the test's disabling does absolutely nothing.
+> > +	 */
+> > +	pci_enable_device_mem(pdev);
+> 
+> Heh.  But yes, this test and the PCI "enable" interface in sysfs look
+> horribly wrong. pci_disable_device/pci_enable_device aren't something we
+> can just do underneath the driver.  Even if injecting the lowlevel
+> config space manipulations done by it might be useful and a good test
+> the Linux state ones are just killing the driver.
 
-Use the pci_info() and pci_err() wrappers for dev_printk() when possible.
+Yes, I'm totally fine with injecting errors into the config space, but
+for goodness sakes, don't fuck with the internal kernel structures out
+from under drivers using them.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/mips/pci/pci-legacy.c |    7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+My suggestion is to use 'setpci' to disable the device if you want to
+inject this scenario. That way you get the desired broken device
+scenario you want to test, but struct pci_dev hasn't been altered.
+ 
+> The enable attribute appears to have been added by Arjan for the
+> Xorg driver.  I think if we have a driver bound to the device we
+> should not allow it.
 
-diff --git a/arch/mips/pci/pci-legacy.c b/arch/mips/pci/pci-legacy.c
-index 0c65c38e05d6..73643e80f02d 100644
---- a/arch/mips/pci/pci-legacy.c
-+++ b/arch/mips/pci/pci-legacy.c
-@@ -263,9 +263,7 @@ static int pcibios_enable_resources(struct pci_dev *dev, int mask)
- 				(!(r->flags & IORESOURCE_ROM_ENABLE)))
- 			continue;
- 		if (!r->start && r->end) {
--			printk(KERN_ERR "PCI: Device %s not available "
--			       "because of resource collisions\n",
--			       pci_name(dev));
-+			pci_err(dev, "can't enable device: resource collisions\n");
- 			return -EINVAL;
- 		}
- 		if (r->flags & IORESOURCE_IO)
-@@ -274,8 +272,7 @@ static int pcibios_enable_resources(struct pci_dev *dev, int mask)
- 			cmd |= PCI_COMMAND_MEMORY;
- 	}
- 	if (cmd != old_cmd) {
--		printk("PCI: Enabling device %s (%04x -> %04x)\n",
--		       pci_name(dev), old_cmd, cmd);
-+		pci_info(dev, "enabling device (%04x -> %04x)\n", old_cmd, cmd);
- 		pci_write_config_word(dev, PCI_COMMAND, cmd);
- 	}
- 	return 0;
+Agreed. Alternatively possibly call the driver's reset_preparei/done
+callbacks.
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
