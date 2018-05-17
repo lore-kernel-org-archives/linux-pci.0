@@ -1,43 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:56371 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751172AbeEDNmF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 May 2018 09:42:05 -0400
-Date: Fri, 4 May 2018 15:42:01 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v3 0/5] Add R8A77980 PCIe support & some driver cleanups
-Message-ID: <20180504134201.lmtpamgty2a6p6pp@verge.net.au>
-References: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
- <20180504132259.GB8759@e107981-ln.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180504132259.GB8759@e107981-ln.cambridge.arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v7 00/12] PCI: Fixes and cleanups for native PCIe, SHPC and ACPI hotplug
+Date: Thu, 17 May 2018 12:28:51 +0300
+Message-Id: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 04, 2018 at 02:22:59PM +0100, Lorenzo Pieralisi wrote:
-> On Thu, May 03, 2018 at 10:32:41PM +0300, Sergei Shtylyov wrote:
-> > Hello!
-> > 
-> > Here's a set of 5 patches against the 'pci/rcar' branch of Lorenzo Pieralisi's
-> > 'pci.git' repo. These are the changes needed for better R-Car gen3 support
-> > (namely for R8A77980 support) plus some PCIe driver re-factoring done in
-> > the process...
-> > 
-> > [1/5] pcie-rcar: poll PHYRDY in rcar_pcie_hw_init()
-> > [2/5] pcie-rcar: remove PHYRDY polling from rcar_pcie_hw_init_h1()
-> > [3/5] pcie-rcar: add R-Car gen3 PHY support
-> > [4/5] pcie-rcar: factor out rcar_pcie_hw_init() call
-> > [5/5] DT: pci: rcar-pci: document R8A77980 bindings
-> 
-> I applied the series, with some commit log changes, I can comment
-> on those please have a look at my updated pci/rcar branch.
-> 
-> Thanks,
-> Lorenzo
+Hello,
 
-Thanks, much appreciated.
+When Thunderbolt host router is configured to be in native enumeration mode
+it is only present in the system if there is something connected to the
+ports. This pretty much follows how the BIOS assisted mode works.
+
+In native enumeration mode the Thunderbolt host controller (NHI) and USB
+host controller (xHCI) are not hot-added using native PCIe hotplug but
+instead they will be hotplugged via BIOS triggered ACPI Notify() to the
+root port. This is done to preserve resources since NHI and xHCI only need
+1 MB of MMIO space and no additional buses. Currently Linux does not
+support this very well and ends up failing the hotplug in one way or
+another. More detailed explanation is in changelog of patch [7/12].
+
+This series fixes this issue and in addition includes fixes for few other
+issues found during testing on a system that has Thunderbolt controller in
+native PCIe enumeration mode. However, the fixes here are not in any way
+Thunderbolt specific and should be applicable to other systems as well.
+
+The previous versions of the patch series can be found here:
+
+  v6: https://www.spinics.net/lists/linux-pci/msg72267.html
+  v5: https://www.spinics.net/lists/linux-pci/msg71339.html
+  v4: https://www.spinics.net/lists/linux-pci/msg71006.html
+  v3: https://www.spinics.net/lists/linux-acpi/msg80876.html
+  v2: https://www.spinics.net/lists/linux-pci/msg69186.html
+  v1: https://www.spinics.net/lists/linux-acpi/msg80607.html
+
+Changes from v6:
+
+  - Use IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE) and IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC)
+    directly instaed of wrapping them in macro
+  - Check for !bridge in the same condition than we check whether certain
+    native hotplug is enabled
+  - Add Rafael's Reviewed-by
+
+Changes from v5:
+
+  - Dropped patch "PCI: Take bridge window alignment into account when
+    distributing resources"
+  - Rework pciehp_is_native() to be more stricter
+  - Make standard PCI hotplug driver (SHPC) builtin
+  - Rework the way we request OS control of native PCIe
+    hotplug (pciehp) and standard PCI hotplug (SHPC)
+  - Make acpiphp to avoid bridges where hotplug_is_native() returns true
+    (this is combined from pciehp and SHPC)
+  - Updated changelog of patch [7/12]
+  - Use hotplug_bridges + normal_bridges == 1 in patch [9/12] and also
+    remove one indent level from the loop.
+
+Because patch [7/12] looks quite different now I dropped Reviewed-by and
+stable tag (it now depends on reworked pciehp/SHCP support that most
+probably is not suitable for stable trees).
+
+I also was not able to test that SHPC really works because I don't have
+hardware that supports it.
+
+Changes from v4:
+
+  - Updated message in patch [8/9] following Rafael's suggestion
+  - Added Rafael's tag to patches 6, 7, 9.
+
+Changes from v3:
+
+  - Added Andy's tag to patches [1-5]
+  - Improved changelog and subject line of patch [1/9] to match better what
+    it is trying to solve
+  - Improved comment in patch [1/9]
+  - Improved changelog of patches [2/9] and [4/9] accordingly to match
+    better why they are needed
+  - Added cleanup patches [6-9/9]
+
+Changes from v2:
+
+  - Added Rafael's tag to patch [1/5]
+  - Updated changelog of patch [1/5] to include more details about how the
+    problem can be observed from dmesg and lspci output
+
+Changes from v1:
+
+  - Drop 'cmax - max ?: 1' and use similar construct than we use in second
+    pass loop in patch [1/5]
+  - Drop unnecessary parentheses in patch [1/5]
+  - Added Rafael's tag to patches [2-5/5]
+
+Mika Westerberg (12):
+  PCI: Take all bridges into account when calculating bus numbers for extension
+  PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
+  PCI: Request control of native PCIe hotplug only if supported
+  PCI: Make pciehp_is_native() stricter
+  PCI: hotplug: Convert SHPC to be builtin only
+  PCI: Request control of native SHPC hotplug similarly to pciehp
+  ACPI / hotplug / PCI: Do not scan all bridges when native PCIe hotplug is used
+  ACPI / hotplug / PCI: Mark stale PCI devices disconnected
+  PCI: Move resource distribution for a single bridge outside of the loop
+  PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
+  PCI: Improve "partially hidden behind bridge" log message
+  ACPI / hotplug / PCI: Drop unnecessary parentheses
+
+ drivers/acpi/pci_root.c            | 10 +++-
+ drivers/pci/hotplug/Kconfig        |  5 +-
+ drivers/pci/hotplug/acpi_pcihp.c   | 34 +++++-------
+ drivers/pci/hotplug/acpiphp_glue.c | 84 +++++++++++++++++++++++-------
+ drivers/pci/hotplug/pciehp.h       |  2 +-
+ drivers/pci/hotplug/pciehp_core.c  |  2 +-
+ drivers/pci/hotplug/pciehp_hpc.c   | 13 ++++-
+ drivers/pci/hotplug/shpchp.h       | 11 ----
+ drivers/pci/hotplug/shpchp_core.c  |  2 +-
+ drivers/pci/pci-acpi.c             | 47 ++++++++++++-----
+ drivers/pci/pcie/portdrv.h         |  2 -
+ drivers/pci/pcie/portdrv_core.c    |  2 +-
+ drivers/pci/probe.c                | 36 ++++++++-----
+ drivers/pci/setup-bus.c            | 82 ++++++++++++++---------------
+ include/linux/pci.h                |  5 +-
+ include/linux/pci_hotplug.h        | 19 +++++--
+ 16 files changed, 221 insertions(+), 135 deletions(-)
+
+-- 
+2.17.0
+
