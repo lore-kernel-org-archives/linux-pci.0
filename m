@@ -1,49 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56978 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935526AbeEXGIm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 May 2018 02:08:42 -0400
-Date: Thu, 24 May 2018 08:08:22 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Rajat Jain <rajatja@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com
-Subject: Re: [PATCH v2 1/5] PCI/AER: Define and allocate aer_stats structure
- for AER capable devices
-Message-ID: <20180524060822.GA3016@kroah.com>
-References: <20180522222805.80314-1-rajatja@google.com>
- <20180523175808.28030-1-rajatja@google.com>
- <20180523175808.28030-2-rajatja@google.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:58380 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752030AbeEQOzP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 May 2018 10:55:15 -0400
+Date: Thu, 17 May 2018 10:55:13 -0400
+From: Peter Jones <pjones@redhat.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        ard.biesheuvel@linaro.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        "open list:EFIFB FRAMEBUFFER DRIVER" <linux-fbdev@vger.kernel.org>,
+        "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] efi/fb: Convert PCI bus address to resource if
+ translated by the bridge
+Message-ID: <20180517145512.cmr3twodfyz7lzon@redhat.com>
+References: <1526563343-28721-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180523175808.28030-2-rajatja@google.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1526563343-28721-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2018 at 10:58:04AM -0700, Rajat Jain wrote:
+On Thu, May 17, 2018 at 09:22:23AM -0400, Sinan Kaya wrote:
+> A host bridge is allowed to remap BAR addresses using _TRA attribute in
+> _CRS windows.
+> 
+> pci_bus 0000:00: root bus resource [mem 0x80100100000-0x8011fffffff window] (bus address [0x00100000-0x1fffffff])
+> pci 0000:02:00.0: reg 0x10: [mem 0x8011e000000-0x8011effffff]
+> 
+> When a VGA device is behind such a host bridge and the resource is
+> translated efifb driver is trying to do ioremap against bus address
+> rather than the resource address and is failing to probe.
+> 
+> efifb driver is having difficulty locating the base address from BAR
+> address when
+> 
+> efifb: probing for efifb
+> efifb: cannot reserve video memory at 0x1e000000
+> efifb: framebuffer at 0x1e000000, using 1920k, total 1875k
+> efifb: mode is 800x600x32, linelength=3200, pages=1
+> efifb: scrolling: redraw
+> efifb: Truecolor: size=8:8:8:8, shift=24:16:8:0
+> 
+> Use the host bridge offset information to convert bus address to
+> resource address in the fixup.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+
+Looks reasonable to me - Ard, do you want to take this up through the
+EFI tree?
+
+Signed-off-by: Peter Jones <pjones@redhat.com>
+
 > ---
-> v2: Fix the license header as per Greg's suggestions
->     (Since there is disagreement with using "//" vs "/* */" for license
->      I decided to keep the one preferred by Linus, also used by others
->      in this directory)
+>  drivers/video/fbdev/efifb.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+> index 46a4484..ea68d5c 100644
+> --- a/drivers/video/fbdev/efifb.c
+> +++ b/drivers/video/fbdev/efifb.c
+> @@ -428,6 +428,8 @@ static void efifb_fixup_resources(struct pci_dev *dev)
+>  {
+>  	u64 base = screen_info.lfb_base;
+>  	u64 size = screen_info.lfb_size;
+> +	struct pci_bus_region region;
+> +	struct resource res;
+>  	int i;
+>  
+>  	if (efifb_pci_dev || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
+> @@ -439,6 +441,14 @@ static void efifb_fixup_resources(struct pci_dev *dev)
+>  	if (!base)
+>  		return;
+>  
+> +	region.start = base;
+> +	region.end = base + size - 1;
+> +	res.start = 0;
+> +	res.flags = IORESOURCE_MEM;
+> +	pcibios_bus_to_resource(dev->bus, &res, &region);
+> +	if (res.start)
+> +		base = res.start;
+> +
+>  	for (i = 0; i <= PCI_STD_RESOURCE_END; i++) {
+>  		struct resource *res = &dev->resource[i];
+>  
+> -- 
+> 2.7.4
+> 
 
-The rules are pretty simple for how to do this, and they are documented
-in Documentation/process/license-rules.rst, please just follow that like
-the rest of the kernel has done.
-
-thanks,
-
-greg k-h
+-- 
+  Peter
