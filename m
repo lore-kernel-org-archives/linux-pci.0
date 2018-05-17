@@ -1,43 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:40944 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751000AbeEKAVI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 May 2018 20:21:08 -0400
-Received: by mail-pl0-f65.google.com with SMTP id t12-v6so2237375plo.7
-        for <linux-pci@vger.kernel.org>; Thu, 10 May 2018 17:21:08 -0700 (PDT)
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>
-Subject: [PATCH v2 4/9] PCI: armada8k: Drop unnecessary root_bus_nr setting
-Date: Fri, 11 May 2018 08:20:14 +0800
-Message-Id: <1525998019-28634-5-git-send-email-shawn.guo@linaro.org>
-In-Reply-To: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
-References: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
+Received: from mx2.suse.de ([195.135.220.15]:42260 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752408AbeEQOXu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 May 2018 10:23:50 -0400
+Date: Thu, 17 May 2018 16:23:45 +0200
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Keith Busch <keith.busch@linux.intel.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Laurence Oberman <loberman@redhat.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        James Smart <james.smart@broadcom.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Jianchao Wang <jianchao.w.wang@oracle.com>,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        arjan@linux.intel.com
+Subject: Re: [PATCH V6 11/11] nvme: pci: support nested EH
+Message-ID: <20180517142345.t6bnyfne7ndgrxkg@linux-x5ow.site>
+References: <20180516040313.13596-1-ming.lei@redhat.com>
+ <20180516040313.13596-12-ming.lei@redhat.com>
+ <20180516141242.GA20119@localhost.localdomain>
+ <20180516231058.GB28727@ming.t460p>
+ <20180517022030.GB21959@localhost.localdomain>
+ <20180517084129.GA26570@lst.de>
+ <20180517142051.GB22063@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20180517142051.GB22063@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function dw_pcie_host_init() already initializes the root_bus_nr field
-of 'struct pcie_port', so the -1 assignment prior to calling
-dw_pcie_host_init() in platform specific driver is not really needed.
-Drop it.
+On Thu, May 17, 2018 at 08:20:51AM -0600, Keith Busch wrote:
+> > Heh.  But yes, this test and the PCI "enable" interface in sysfs look
+> > horribly wrong. pci_disable_device/pci_enable_device aren't something we
+> > can just do underneath the driver.  Even if injecting the lowlevel
+> > config space manipulations done by it might be useful and a good test
+> > the Linux state ones are just killing the driver.
+> 
+> Yes, I'm totally fine with injecting errors into the config space, but
+> for goodness sakes, don't fuck with the internal kernel structures out
+> from under drivers using them.
+> 
+> My suggestion is to use 'setpci' to disable the device if you want to
+> inject this scenario. That way you get the desired broken device
+> scenario you want to test, but struct pci_dev hasn't been altered.
+>  
+> > The enable attribute appears to have been added by Arjan for the
+> > Xorg driver.  I think if we have a driver bound to the device we
+> > should not allow it.
+> 
+> Agreed. Alternatively possibly call the driver's reset_preparei/done
+> callbacks.
 
-Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-Acked-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
- drivers/pci/dwc/pcie-armada8k.c | 1 -
- 1 file changed, 1 deletion(-)
+Exactly, but as long as we can issue the reset via sysfs the test-case
+is still valid.
 
-diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-index b587352f8b9f..2d8eb88fd4f8 100644
---- a/drivers/pci/dwc/pcie-armada8k.c
-+++ b/drivers/pci/dwc/pcie-armada8k.c
-@@ -171,7 +171,6 @@ static int armada8k_add_pcie_port(struct armada8k_pcie *pcie,
- 	struct device *dev = &pdev->dev;
- 	int ret;
- 
--	pp->root_bus_nr = -1;
- 	pp->ops = &armada8k_pcie_host_ops;
- 
- 	pp->irq = platform_get_irq(pdev, 0);
 -- 
-1.9.1
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
