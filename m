@@ -1,71 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ua0-f196.google.com ([209.85.217.196]:41094 "EHLO
-        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752062AbeEVJm2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 05:42:28 -0400
+Received: from verein.lst.de ([213.95.11.211]:52087 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751438AbeEQIg4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 May 2018 04:36:56 -0400
+Date: Thu, 17 May 2018 10:41:29 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Keith Busch <keith.busch@linux.intel.com>
+Cc: Ming Lei <ming.lei@redhat.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Laurence Oberman <loberman@redhat.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        James Smart <james.smart@broadcom.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Jianchao Wang <jianchao.w.wang@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Johannes Thumshirn <jthumshirn@suse.de>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, arjan@linux.intel.com
+Subject: Re: [PATCH V6 11/11] nvme: pci: support nested EH
+Message-ID: <20180517084129.GA26570@lst.de>
+References: <20180516040313.13596-1-ming.lei@redhat.com> <20180516040313.13596-12-ming.lei@redhat.com> <20180516141242.GA20119@localhost.localdomain> <20180516231058.GB28727@ming.t460p> <20180517022030.GB21959@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <20180521210522.29346-1-marek.vasut+renesas@gmail.com>
-References: <20180521210522.29346-1-marek.vasut+renesas@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 22 May 2018 11:42:27 +0200
-Message-ID: <CAMuHMdVkeSEsO-jRCzh-_9VkzZ+4X-VAN1KZOA2wB7bUQTrRYg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180517022030.GB21959@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek,
+On Wed, May 16, 2018 at 08:20:31PM -0600, Keith Busch wrote:
+> On Thu, May 17, 2018 at 07:10:59AM +0800, Ming Lei wrote:
+> > All simulation in block/011 may happen in reality.
+> 
+> If this test actually simulates reality, then the following one line
+> patch (plus explanation for why) would be a real "fix" as this is very
+> successful in passing block/011. :)
+> 
+> ---
+> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> index 1faa32cd07da..dcc5746304c4 100644
+> --- a/drivers/nvme/host/pci.c
+> +++ b/drivers/nvme/host/pci.c
+> @@ -2118,6 +2118,12 @@ static int nvme_pci_enable(struct nvme_dev *dev)
+>  
+>  	if (pci_enable_device_mem(pdev))
+>  		return result;
+> +	/*
+> +	 * blktests block/011 disables the device without the driver knowing.
+> +	 * We'll just enable the device twice to get the enable_cnt > 1
+> +	 * so that the test's disabling does absolutely nothing.
+> +	 */
+> +	pci_enable_device_mem(pdev);
 
-On Mon, May 21, 2018 at 11:05 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
-> The data link active signal usually takes ~20 uSec to be asserted,
-> poll the bit more often to avoid useless delays in this function.
-> Use udelay() instead of usleep() for such a small delay as suggested
-> by the timer documentation and because this will be used in atomic
-> context later on when the suspend/resume patches land.
->
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Heh.  But yes, this test and the PCI "enable" interface in sysfs look
+horribly wrong. pci_disable_device/pci_enable_device aren't something we
+can just do underneath the driver.  Even if injecting the lowlevel
+config space manipulations done by it might be useful and a good test
+the Linux state ones are just killing the driver.
 
-Thanks for your patch!
-
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -529,13 +529,13 @@ static void phy_write_reg(struct rcar_pcie *pcie,
->
->  static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
->  {
-> -       unsigned int timeout = 10;
-> +       unsigned int timeout = 10000;
->
->         while (timeout--) {
->                 if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
->                         return 0;
->
-> -               msleep(5);
-> +               udelay(5);
-
-+ cpu_relax()?
-
->         }
-
-if this ever happens, it will have blocked for more than 50 ms...
-
->         return -ETIMEDOUT;
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+The enable attribute appears to have been added by Arjan for the
+Xorg driver.  I think if we have a driver bound to the device we
+should not allow it.
