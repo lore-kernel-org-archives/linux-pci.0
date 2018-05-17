@@ -1,61 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v2 0/7] Add MSI-X support on pcitest tool
-Date: Thu, 17 May 2018 18:09:16 +0100
-Message-Id: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
+To: Jacob Pan <jacob.jun.pan@linux.intel.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "tn@semihalf.com" <tn@semihalf.com>,
+        "liubo95@huawei.com" <liubo95@huawei.com>,
+        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+        "rfranz@cavium.com" <rfranz@cavium.com>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>,
+        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+        "robdclark@gmail.com" <robdclark@gmail.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "bharatku@xilinx.com" <bharatku@xilinx.com>,
+        "rgummal@xilinx.com" <rgummal@xilinx.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-2-jean-philippe.brucker@arm.com>
+ <20180516134150.34fc8857@jacob-builder>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <96c1e0f0-0aa7-badf-123e-cbb1b05e645e@arm.com>
+Date: Thu, 17 May 2018 11:02:02 +0100
+MIME-Version: 1.0
+In-Reply-To: <20180516134150.34fc8857@jacob-builder>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Patch series made against Lorenzo's branches and also depends of:
- - pci/dwc
- - pci/endpoint
+Hi Jacob,
 
-Add MSI-X support on pcitest tool.
+Thanks for reviewing this
 
-Add new callbacks methods and handlers to trigger the MSI-X interrupts
-on the EP DesignWare IP driver.
+On 16/05/18 21:41, Jacob Pan wrote:
+>> + * The device must support multiple address spaces (e.g. PCI PASID).
+>> By default
+>> + * the PASID allocated during bind() is limited by the IOMMU
+>> capacity, and by
+>> + * the device PASID width defined in the PCI capability or in the
+>> firmware
+>> + * description. Setting @max_pasid to a non-zero value smaller than
+>> this limit
+>> + * overrides it.
+>> + *
+> seems the min_pasid never gets used. do you really need it?
 
-Allow to set/get MSI-X EP maximum capability number.
+Yes, the SMMU sets it to 1 in patch 28/40, because it needs to reserve
+PASID 0
 
-Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
+>> + * The device should not be performing any DMA while this function
+>> is running,
+>> + * otherwise the behavior is undefined.
+>> + *
+>> + * Return 0 if initialization succeeded, or an error.
+>> + */
+>> +int iommu_sva_device_init(struct device *dev, unsigned long features,
+>> +			  unsigned int max_pasid)
+>> +{
+>> +	int ret;
+>> +	struct iommu_sva_param *param;
+>> +	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
+>> +
+>> +	if (!domain || !domain->ops->sva_device_init)
+>> +		return -ENODEV;
+>> +
+>> +	if (features)
+>> +		return -EINVAL;
+> should it be !features?
 
-Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
+This checks if the user sets any unsupported bit in features. No feature
+is supported right now, but patch 09/40 adds IOMMU_SVA_FEAT_IOPF, and
+changes this line to "features & ~IOMMU_SVA_FEAT_IOPF"
 
-Update the pcitest.sh script to support MSI-X feature tests.
+>> +	mutex_lock(&dev->iommu_param->lock);
+>> +	param = dev->iommu_param->sva_param;
+>> +	dev->iommu_param->sva_param = NULL;
+>> +	mutex_unlock(&dev->iommu_param->lock);
+>> +	if (!param)
+>> +		return -ENODEV;
+>> +
+>> +	if (domain->ops->sva_device_shutdown)
+>> +		domain->ops->sva_device_shutdown(dev, param);
+> seems a little mismatch here, do you need pass the param. I don't think
+> there is anything else model specific iommu driver need to do for the
+> param.
 
+SMMU doesn't use it, but maybe it would remind other IOMMU driver which
+features were enabled, so they don't have to keep track of that
+themselves? I can remove it if it isn't useful
 
-Gustavo Pimentel (7):
-  PCI: endpoint: Add MSI-X interfaces
-  PCI: dwc: Add MSI-X callbacks handler
-  PCI: cadence: Update cdns_pcie_ep_raise_irq function signature
-  PCI: dwc: Rework MSI callbacks handler
-  PCI: dwc: Add legacy interrupt callback handler
-  misc: pci_endpoint_test: Add MSI-X support
-  tools: PCI: Add MSI-X support
-
- Documentation/misc-devices/pci-endpoint-test.txt |   6 +
- drivers/misc/pci_endpoint_test.c                 | 261 +++++++++++++++++------
- drivers/pci/cadence/pcie-cadence-ep.c            |   3 +-
- drivers/pci/dwc/pci-dra7xx.c                     |   2 +-
- drivers/pci/dwc/pcie-artpec6.c                   |   2 +-
- drivers/pci/dwc/pcie-designware-ep.c             | 205 ++++++++++++++++--
- drivers/pci/dwc/pcie-designware-plat.c           |   7 +-
- drivers/pci/dwc/pcie-designware.h                |  31 +--
- drivers/pci/endpoint/functions/pci-epf-test.c    |  81 +++++--
- drivers/pci/endpoint/pci-ep-cfs.c                |  24 +++
- drivers/pci/endpoint/pci-epc-core.c              |  62 +++++-
- include/linux/pci-epc.h                          |  13 +-
- include/linux/pci-epf.h                          |   1 +
- include/uapi/linux/pcitest.h                     |   3 +
- tools/pci/pcitest.c                              |  51 ++++-
- tools/pci/pcitest.sh                             |  15 ++
- 16 files changed, 639 insertions(+), 128 deletions(-)
-
--- 
-2.7.4
+Thanks,
+Jean
