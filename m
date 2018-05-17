@@ -1,64 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42160 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753137AbeEKOSn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 May 2018 10:18:43 -0400
-Date: Fri, 11 May 2018 15:18:36 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: kishon@ti.com, bhelgaas@google.com, nsekhar@ti.com,
-        john@metanate.com, shawn.lin@rock-chips.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: endpoint: Replace mdelay with usleep_range in
- pci_epf_test_write
-Message-ID: <20180511141836.GA29104@e107981-ln.cambridge.arm.com>
-References: <1523365446-31563-1-git-send-email-baijiaju1990@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1523365446-31563-1-git-send-email-baijiaju1990@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <0af2f9224de068c2ffe4f4d64c8285cd7dab9e91.camel@linux.intel.com>
+Subject: Re: [PATCH v7 11/12] PCI: Improve "partially hidden behind bridge"
+ log message
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Date: Thu, 17 May 2018 14:44:19 +0300
+In-Reply-To: <20180517092903.43701-12-mika.westerberg@linux.intel.com>
+References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
+         <20180517092903.43701-12-mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 10, 2018 at 09:04:06PM +0800, Jia-Ju Bai wrote:
-> pci_epf_test_write() is never called in atomic context.
+On Thu, 2018-05-17 at 12:29 +0300, Mika Westerberg wrote:
+> There is a sanity checker in the end of pci_scan_child_bus_extend()
+> that
+> tries to detect badly configured bridges. For example given the below
+> topology:
 > 
-> The call chain ending up at pci_epf_test_write() is:
-> [1] pci_epf_test_write() <- pci_epf_test_cmd_handler()
+>   +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
+>                                   +-01.0-[04-39]--
+>                                   \-02.0-[3a]----00.0
 > 
-> pci_epf_test_cmd_handler() is set as a parameter of INIT_DELAYED_WORK() 
-> in pci_epf_test_probe().
-> This function is not called in atomic context.
+> The sanity checker notices this and logs following messages:
 > 
-> Despite never getting called from atomic context, pci_epf_test_write()
-> calls mdelay() to busily wait.
-> This is not necessary and can be replaced with usleep_range() to
-> avoid busy waiting.
+>   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02
+> [bus 02-39]
+>   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01
+> [bus 01-39]
 > 
-> This is found by a static analysis tool named DCNS written by myself.
-> And I also manually check it.
+> This is not really helpful to users and the information above is not
+> even correct (0000:02 is a bus not bridge). Make this a bit more
+> understandable by changing the sanity checker to log following message
+> in place of the above two messages:
 > 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+>   pci 0000:02:02.0: devices behind bridge are unusable, because [bus
+> 3a] cannot be assigned for them
+> 
+> While there update the comment on top of the sanity checker block to
+> make it clear that it is not only restricted to CardBus.
+> 
+
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > ---
->  drivers/pci/endpoint/functions/pci-epf-test.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-
-Applied to pci/endpoint for v4.18, thanks.
-
-Lorenzo
-
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index f9308c2..2f0642e 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -237,7 +237,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
->  	 * wait 1ms inorder for the write to complete. Without this delay L3
->  	 * error in observed in the host system.
->  	 */
-> -	mdelay(1);
-> +	usleep_range(1000, 2000);
->  
->  	kfree(buf);
->  
-> -- 
-> 1.9.1
+>  drivers/pci/probe.c | 14 +++++---------
+>  1 file changed, 5 insertions(+), 9 deletions(-)
 > 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index a0c48aa1c42f..10084990fbc3 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1191,20 +1191,16 @@ static int pci_scan_bridge_extend(struct
+> pci_bus *bus, struct pci_dev *dev,
+>  		(is_cardbus ? "PCI CardBus %04x:%02x" : "PCI Bus
+> %04x:%02x"),
+>  		pci_domain_nr(bus), child->number);
+>  
+> -	/* Has only triggered on CardBus, fixup is in yenta_socket */
+> +	/* Check that all devices are accessible */
+>  	while (bus->parent) {
+>  		if ((child->busn_res.end > bus->busn_res.end) ||
+>  		    (child->number > bus->busn_res.end) ||
+>  		    (child->number < bus->number) ||
+>  		    (child->busn_res.end < bus->number)) {
+> -			dev_info(&child->dev, "%pR %s hidden behind%s
+> bridge %s %pR\n",
+> -				&child->busn_res,
+> -				(bus->number > child->busn_res.end &&
+> -				 bus->busn_res.end < child->number) ?
+> -					"wholly" : "partially",
+> -				bus->self->transparent ? "
+> transparent" : "",
+> -				dev_name(&bus->dev),
+> -				&bus->busn_res);
+> +			dev_info(&dev->dev,
+> +				 "devices behind bridge are unusable,
+> because %pR cannot be assigned for them\n",
+> +				 &child->busn_res);
+> +			break;
+>  		}
+>  		bus = bus->parent;
+>  	}
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
