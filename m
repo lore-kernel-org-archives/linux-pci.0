@@ -1,219 +1,61 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 7 May 2018 18:13:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>,
- Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-Message-ID: <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
- <20180423233046.21476-5-logang@deltatee.com>
-MIME-Version: 1.0
-In-Reply-To: <20180423233046.21476-5-logang@deltatee.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Sagi Grimberg <sagi@grimberg.me>, linux-nvdimm@lists.01.org,
- linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
- Stephen Bates <sbates@raithlin.com>, linux-block@vger.kernel.org,
- =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>,
- Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v2 0/7] Add MSI-X support on pcitest tool
+Date: Thu, 17 May 2018 18:09:16 +0100
+Message-Id: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+to Alex]
+Patch series made against Lorenzo's branches and also depends of:
+ - pci/dwc
+ - pci/endpoint
 
-Alex,
+Add MSI-X support on pcitest tool.
 
-Are you happy with this strategy of turning off ACS based on
-CONFIG_PCI_P2PDMA?  We only check this at enumeration-time and 
-I don't know if there are other places we would care?
+Add new callbacks methods and handlers to trigger the MSI-X interrupts
+on the EP DesignWare IP driver.
 
-On Mon, Apr 23, 2018 at 05:30:36PM -0600, Logan Gunthorpe wrote:
-> For peer-to-peer transactions to work the downstream ports in each
-> switch must not have the ACS flags set. At this time there is no way
-> to dynamically change the flags and update the corresponding IOMMU
-> groups so this is done at enumeration time before the groups are
-> assigned.
-> 
-> This effectively means that if CONFIG_PCI_P2PDMA is selected then
-> all devices behind any PCIe switch heirarchy will be in the same IOMMU
-> group. Which implies that individual devices behind any switch
-> heirarchy will not be able to be assigned to separate VMs because
-> there is no isolation between them. Additionally, any malicious PCIe
-> devices will be able to DMA to memory exposed by other EPs in the same
-> domain as TLPs will not be checked by the IOMMU.
-> 
-> Given that the intended use case of P2P Memory is for users with
-> custom hardware designed for purpose, we do not expect distributors
-> to ever need to enable this option. Users that want to use P2P
-> must have compiled a custom kernel with this configuration option
-> and understand the implications regarding ACS. They will either
-> not require ACS or will have design the system in such a way that
-> devices that require isolation will be separate from those using P2P
-> transactions.
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> ---
->  drivers/pci/Kconfig        |  9 +++++++++
->  drivers/pci/p2pdma.c       | 45 ++++++++++++++++++++++++++++++---------------
->  drivers/pci/pci.c          |  6 ++++++
->  include/linux/pci-p2pdma.h |  5 +++++
->  4 files changed, 50 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index b2396c22b53e..b6db41d4b708 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -139,6 +139,15 @@ config PCI_P2PDMA
->  	  transations must be between devices behind the same root port.
->  	  (Typically behind a network of PCIe switches).
->  
-> +	  Enabling this option will also disable ACS on all ports behind
-> +	  any PCIe switch. This effectively puts all devices behind any
-> +	  switch heirarchy into the same IOMMU group. Which implies that
+Allow to set/get MSI-X EP maximum capability number.
 
-s/heirarchy/hierarchy/ (also above in changelog)
+Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
 
-> +	  individual devices behind any switch will not be able to be
-> +	  assigned to separate VMs because there is no isolation between
-> +	  them. Additionally, any malicious PCIe devices will be able to
-> +	  DMA to memory exposed by other EPs in the same domain as TLPs
-> +	  will not be checked by the IOMMU.
-> +
->  	  If unsure, say N.
->  
->  config PCI_LABEL
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index ed9dce8552a2..e9f43b43acac 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -240,27 +240,42 @@ static struct pci_dev *find_parent_pci_dev(struct device *dev)
->  }
->  
->  /*
-> - * If a device is behind a switch, we try to find the upstream bridge
-> - * port of the switch. This requires two calls to pci_upstream_bridge():
-> - * one for the upstream port on the switch, one on the upstream port
-> - * for the next level in the hierarchy. Because of this, devices connected
-> - * to the root port will be rejected.
-> + * pci_p2pdma_disable_acs - disable ACS flags for all PCI bridges
-> + * @pdev: device to disable ACS flags for
-> + *
-> + * The ACS flags for P2P Request Redirect and P2P Completion Redirect need
-> + * to be disabled on any PCI bridge in order for the TLPS to not be forwarded
-> + * up to the RC which is not what we want for P2P.
+Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
 
-s/PCI bridge/PCIe switch/ (ACS doesn't apply to conventional PCI)
+Update the pcitest.sh script to support MSI-X feature tests.
 
-> + *
-> + * This function is called when the devices are first enumerated and
-> + * will result in all devices behind any bridge to be in the same IOMMU
-> + * group. At this time, there is no way to "hotplug" IOMMU groups so we rely
-> + * on this largish hammer. If you need the devices to be in separate groups
-> + * don't enable CONFIG_PCI_P2PDMA.
-> + *
-> + * Returns 1 if the ACS bits for this device was cleared, otherwise 0.
->   */
-> -static struct pci_dev *get_upstream_bridge_port(struct pci_dev *pdev)
-> +int pci_p2pdma_disable_acs(struct pci_dev *pdev)
->  {
-> -	struct pci_dev *up1, *up2;
-> +	int pos;
-> +	u16 ctrl;
->  
-> -	if (!pdev)
-> -		return NULL;
-> +	if (!pci_is_bridge(pdev))
-> +		return 0;
->  
-> -	up1 = pci_dev_get(pci_upstream_bridge(pdev));
-> -	if (!up1)
-> -		return NULL;
-> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
-> +	if (!pos)
-> +		return 0;
-> +
-> +	pci_info(pdev, "disabling ACS flags for peer-to-peer DMA\n");
-> +
-> +	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
-> +
-> +	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR);
->  
-> -	up2 = pci_dev_get(pci_upstream_bridge(up1));
-> -	pci_dev_put(up1);
-> +	pci_write_config_word(pdev, pos + PCI_ACS_CTRL, ctrl);
->  
-> -	return up2;
-> +	return 1;
->  }
->  
->  /*
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index e597655a5643..7e2f5724ba22 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -16,6 +16,7 @@
->  #include <linux/of.h>
->  #include <linux/of_pci.h>
->  #include <linux/pci.h>
-> +#include <linux/pci-p2pdma.h>
->  #include <linux/pm.h>
->  #include <linux/slab.h>
->  #include <linux/module.h>
-> @@ -2835,6 +2836,11 @@ static void pci_std_enable_acs(struct pci_dev *dev)
->   */
->  void pci_enable_acs(struct pci_dev *dev)
->  {
-> +#ifdef CONFIG_PCI_P2PDMA
-> +	if (pci_p2pdma_disable_acs(dev))
-> +		return;
-> +#endif
-> +
->  	if (!pci_acs_enable)
->  		return;
->  
-> diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
-> index 0cde88341eeb..fcb3437a2f3c 100644
-> --- a/include/linux/pci-p2pdma.h
-> +++ b/include/linux/pci-p2pdma.h
-> @@ -18,6 +18,7 @@ struct block_device;
->  struct scatterlist;
->  
->  #ifdef CONFIG_PCI_P2PDMA
-> +int pci_p2pdma_disable_acs(struct pci_dev *pdev);
->  int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
->  		u64 offset);
->  int pci_p2pdma_add_client(struct list_head *head, struct device *dev);
-> @@ -40,6 +41,10 @@ int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
->  void pci_p2pdma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
->  			 enum dma_data_direction dir);
->  #else /* CONFIG_PCI_P2PDMA */
-> +static inline int pci_p2pdma_disable_acs(struct pci_dev *pdev)
-> +{
-> +	return 0;
-> +}
->  static inline int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar,
->  		size_t size, u64 offset)
->  {
-> -- 
-> 2.11.0
-> 
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+Gustavo Pimentel (7):
+  PCI: endpoint: Add MSI-X interfaces
+  PCI: dwc: Add MSI-X callbacks handler
+  PCI: cadence: Update cdns_pcie_ep_raise_irq function signature
+  PCI: dwc: Rework MSI callbacks handler
+  PCI: dwc: Add legacy interrupt callback handler
+  misc: pci_endpoint_test: Add MSI-X support
+  tools: PCI: Add MSI-X support
+
+ Documentation/misc-devices/pci-endpoint-test.txt |   6 +
+ drivers/misc/pci_endpoint_test.c                 | 261 +++++++++++++++++------
+ drivers/pci/cadence/pcie-cadence-ep.c            |   3 +-
+ drivers/pci/dwc/pci-dra7xx.c                     |   2 +-
+ drivers/pci/dwc/pcie-artpec6.c                   |   2 +-
+ drivers/pci/dwc/pcie-designware-ep.c             | 205 ++++++++++++++++--
+ drivers/pci/dwc/pcie-designware-plat.c           |   7 +-
+ drivers/pci/dwc/pcie-designware.h                |  31 +--
+ drivers/pci/endpoint/functions/pci-epf-test.c    |  81 +++++--
+ drivers/pci/endpoint/pci-ep-cfs.c                |  24 +++
+ drivers/pci/endpoint/pci-epc-core.c              |  62 +++++-
+ include/linux/pci-epc.h                          |  13 +-
+ include/linux/pci-epf.h                          |   1 +
+ include/uapi/linux/pcitest.h                     |   3 +
+ tools/pci/pcitest.c                              |  51 ++++-
+ tools/pci/pcitest.sh                             |  15 ++
+ 16 files changed, 639 insertions(+), 128 deletions(-)
+
+-- 
+2.7.4
