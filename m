@@ -1,66 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:37950 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752325AbeENPK1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 11:10:27 -0400
-Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 53B1B1E073A
-        for <linux-pci@vger.kernel.org>; Mon, 14 May 2018 17:10:26 +0200 (CEST)
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com
-Cc: linux-pci@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH 2/3] PCI: dwc: Small computation improvement
-Date: Mon, 14 May 2018 16:09:49 +0100
-Message-Id: <f5f7c036d2d70ca97dd82acdb18e00f866b63a1f.1526310453.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1526310453.git.gustavo.pimentel@synopsys.com>
-References: <cover.1526310453.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1526310453.git.gustavo.pimentel@synopsys.com>
-References: <cover.1526310453.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=92Ow=IE=qualcomm.com=poza@kernel.org>
+Return-Path: <SRS0=92Ow=IE=qualcomm.com=poza@kernel.org>
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Philippe Ombredanne <pombredanne@nexb.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Kate Stewart <kstewart@linuxfoundation.org>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Dongdong Liu <liudongdong3@huawei.com>,
+	Keith Busch <keith.busch@intel.com>,
+	Wei Zhang <wzhang@fb.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Subject: [PATCH v17 3/9] PCI/AER: Rename error recovery interfaces to generic PCI naming
+Date: Thu, 17 May 2018 03:43:05 -0400
+Message-Id: <1526542991-5291-4-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
+References: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace a division by 2 operation for a right shift rotation of 1 bit.
+Rename error recovery interfaces with "pcie_" prefix so they can be made
+non-static.
 
-Probably any recent and decent compiler does this kind of substitution
-in order to improve code performance. Nevertheless it's a coding good
-practice whenever there is a division / multiplication by multiple of 2
-to replace it by the equivalent operation in this case, the shift
-rotation.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+[bhelgaas: move declaration to later patch, leave functions static]
+Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-Acked-by: Joao Pinto <jpinto@synopsys.com>
----
- drivers/pci/dwc/pcie-designware-host.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 5a23f78..fc55fde 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -332,8 +332,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index b56f9c1..a2d7cc7 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -476,14 +476,14 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ }
  
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
- 	if (cfg_res) {
--		pp->cfg0_size = resource_size(cfg_res) / 2;
--		pp->cfg1_size = resource_size(cfg_res) / 2;
-+		pp->cfg0_size = resource_size(cfg_res) >> 1;
-+		pp->cfg1_size = resource_size(cfg_res) >> 1;
- 		pp->cfg0_base = cfg_res->start;
- 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
- 	} else if (!pp->va_cfg0_base) {
-@@ -377,8 +377,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			break;
- 		case 0:
- 			pp->cfg = win->res;
--			pp->cfg0_size = resource_size(pp->cfg) / 2;
--			pp->cfg1_size = resource_size(pp->cfg) / 2;
-+			pp->cfg0_size = resource_size(pp->cfg) >> 1;
-+			pp->cfg1_size = resource_size(pp->cfg) >> 1;
- 			pp->cfg0_base = pp->cfg->start;
- 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
- 			break;
+ /**
+- * do_fatal_recovery - handle fatal error recovery process
++ * pcie_do_fatal_recovery - handle fatal error recovery process
+  * @dev: pointer to a pci_dev data structure of agent detecting an error
+  *
+  * Invoked when an error is fatal. Once being invoked, removes the devices
+  * beneath this AER agent, followed by reset link e.g. secondary bus reset
+  * followed by re-enumeration of devices.
+  */
+-static void do_fatal_recovery(struct pci_dev *dev)
++static void pcie_do_fatal_recovery(struct pci_dev *dev)
+ {
+ 	struct pci_dev *udev;
+ 	struct pci_bus *parent;
+@@ -533,14 +533,14 @@ static void do_fatal_recovery(struct pci_dev *dev)
+ }
+ 
+ /**
+- * do_nonfatal_recovery - handle nonfatal error recovery process
++ * pcie_do_nonfatal_recovery - handle nonfatal error recovery process
+  * @dev: pointer to a pci_dev data structure of agent detecting an error
+  *
+  * Invoked when an error is nonfatal. Once being invoked, broadcast
+  * error detected message to all downstream drivers within a hierarchy in
+  * question and return the returned code.
+  */
+-static void do_nonfatal_recovery(struct pci_dev *dev)
++static void pcie_do_nonfatal_recovery(struct pci_dev *dev)
+ {
+ 	pci_ers_result_t status;
+ 	enum pci_channel_state state;
+@@ -611,9 +611,9 @@ static void handle_error_source(struct pcie_device *aerdev,
+ 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+ 					info->status);
+ 	} else if (info->severity == AER_NONFATAL)
+-		do_nonfatal_recovery(dev);
++		pcie_do_nonfatal_recovery(dev);
+ 	else if (info->severity == AER_FATAL)
+-		do_fatal_recovery(dev);
++		pcie_do_fatal_recovery(dev);
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+@@ -678,9 +678,9 @@ static void aer_recover_work_func(struct work_struct *work)
+ 		}
+ 		cper_print_aer(pdev, entry.severity, entry.regs);
+ 		if (entry.severity == AER_NONFATAL)
+-			do_nonfatal_recovery(pdev);
++			pcie_do_nonfatal_recovery(pdev);
+ 		else if (entry.severity == AER_FATAL)
+-			do_fatal_recovery(pdev);
++			pcie_do_fatal_recovery(pdev);
+ 		pci_dev_put(pdev);
+ 	}
+ }
 -- 
 2.7.4
