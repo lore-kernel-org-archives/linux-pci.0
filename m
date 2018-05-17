@@ -1,72 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay6.synopsys.com ([198.182.37.59]:38183 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932278AbeENQRj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 12:17:39 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH 1/4] bindings: PCI: designware: Example update
-Date: Mon, 14 May 2018 17:17:25 +0100
-Message-Id: <daccd2d9da8f4467680649b4226be7be711f32e8.1526314398.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
-References: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
-References: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v7 09/12] PCI: Move resource distribution for a single bridge outside of the loop
+Date: Thu, 17 May 2018 12:29:00 +0300
+Message-Id: <20180517092903.43701-10-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
+References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace "ctrlreg" reg-name by "dbi" to be coherent with similar drivers,
-however it still be compatible with any previous DT that uses the old
-reg-name.
+There is a special case where there is only single bridge on the bus. In
+that case we just assign all resources to it. Currently this is done as
+a part of the resource distribution loop but it does not have to be
+there, and moving it outside actually improves readability because we
+can then save one indent level in the loop.
 
-Replace the PCIe base address example by a real PCIe base address in use.
+While there we can add hotplug_bridges == 1 && normal_bridges == 0 to
+the same block because they are dealt the same way.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- Documentation/devicetree/bindings/pci/designware-pcie.txt | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/pci/setup-bus.c | 82 ++++++++++++++++++++---------------------
+ 1 file changed, 41 insertions(+), 41 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 1da7ade..7f9804d 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -1,7 +1,8 @@
- * Synopsys DesignWare PCIe interface
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 072784f55ea5..79b1824e83b4 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1942,57 +1942,57 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 			remaining_mmio_pref -= resource_size(res);
+ 	}
  
- Required properties:
--- compatible: should contain "snps,dw-pcie" to identify the core.
-+- compatible:
-+	"snps,dw-pcie" for RC mode;
- - reg: Should contain the configuration address space.
- - reg-names: Must be "config" for the PCIe configuration space.
-     (The old way of getting the configuration address space from "ranges"
-@@ -41,11 +42,11 @@ EP mode:
++	/*
++	 * There is only one bridge on the bus so it gets all available
++	 * resources which it can then distribute to the possible
++	 * hotplug bridges below.
++	 */
++	if (hotplug_bridges + normal_bridges == 1) {
++		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
++		if (dev->subordinate) {
++			pci_bus_distribute_available_resources(dev->subordinate,
++				add_list, available_io, available_mmio,
++				available_mmio_pref);
++		}
++		return;
++	}
++
+ 	/*
+ 	 * Go over devices on this bus and distribute the remaining
+ 	 * resource space between hotplug bridges.
+ 	 */
+ 	for_each_pci_bridge(dev, bus) {
++		resource_size_t align, io, mmio, mmio_pref;
+ 		struct pci_bus *b;
  
- Example configuration:
+ 		b = dev->subordinate;
+-		if (!b)
++		if (!b || !dev->is_hotplug_bridge)
+ 			continue;
  
--	pcie: pcie@dffff000 {
-+	pcie: pcie@dfc00000 {
- 		compatible = "snps,dw-pcie";
--		reg = <0xdffff000 0x1000>, /* Controller registers */
--		      <0xd0000000 0x2000>; /* PCI config space */
--		reg-names = "ctrlreg", "config";
-+		reg = <0xdfc00000 0x0001000>, /* IP registers */
-+		      <0xd0000000 0x0002000>; /* Configuration space */
-+		reg-names = "dbi", "config";
- 		#address-cells = <3>;
- 		#size-cells = <2>;
- 		device_type = "pci";
-@@ -54,5 +55,4 @@ Example configuration:
- 		interrupts = <25>, <24>;
- 		#interrupt-cells = <1>;
- 		num-lanes = <1>;
--		num-viewport = <3>;
- 	};
+-		if (!hotplug_bridges && normal_bridges == 1) {
+-			/*
+-			 * There is only one bridge on the bus (upstream
+-			 * port) so it gets all available resources
+-			 * which it can then distribute to the possible
+-			 * hotplug bridges below.
+-			 */
+-			pci_bus_distribute_available_resources(b, add_list,
+-				available_io, available_mmio,
+-				available_mmio_pref);
+-		} else if (dev->is_hotplug_bridge) {
+-			resource_size_t align, io, mmio, mmio_pref;
+-
+-			/*
+-			 * Distribute available extra resources equally
+-			 * between hotplug-capable downstream ports
+-			 * taking alignment into account.
+-			 *
+-			 * Here hotplug_bridges is always != 0.
+-			 */
+-			align = pci_resource_alignment(bridge, io_res);
+-			io = div64_ul(available_io, hotplug_bridges);
+-			io = min(ALIGN(io, align), remaining_io);
+-			remaining_io -= io;
+-
+-			align = pci_resource_alignment(bridge, mmio_res);
+-			mmio = div64_ul(available_mmio, hotplug_bridges);
+-			mmio = min(ALIGN(mmio, align), remaining_mmio);
+-			remaining_mmio -= mmio;
+-
+-			align = pci_resource_alignment(bridge, mmio_pref_res);
+-			mmio_pref = div64_ul(available_mmio_pref,
+-					     hotplug_bridges);
+-			mmio_pref = min(ALIGN(mmio_pref, align),
+-					remaining_mmio_pref);
+-			remaining_mmio_pref -= mmio_pref;
+-
+-			pci_bus_distribute_available_resources(b, add_list, io,
+-							       mmio, mmio_pref);
+-		}
++		/*
++		 * Distribute available extra resources equally between
++		 * hotplug-capable downstream ports taking alignment into
++		 * account.
++		 *
++		 * Here hotplug_bridges is always != 0.
++		 */
++		align = pci_resource_alignment(bridge, io_res);
++		io = div64_ul(available_io, hotplug_bridges);
++		io = min(ALIGN(io, align), remaining_io);
++		remaining_io -= io;
++
++		align = pci_resource_alignment(bridge, mmio_res);
++		mmio = div64_ul(available_mmio, hotplug_bridges);
++		mmio = min(ALIGN(mmio, align), remaining_mmio);
++		remaining_mmio -= mmio;
++
++		align = pci_resource_alignment(bridge, mmio_pref_res);
++		mmio_pref = div64_ul(available_mmio_pref, hotplug_bridges);
++		mmio_pref = min(ALIGN(mmio_pref, align), remaining_mmio_pref);
++		remaining_mmio_pref -= mmio_pref;
++
++		pci_bus_distribute_available_resources(b, add_list, io, mmio,
++						       mmio_pref);
+ 	}
+ }
+ 
 -- 
-2.7.4
+2.17.0
+
