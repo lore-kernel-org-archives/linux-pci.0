@@ -1,141 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Return-Path: <SRS0=uItE=IE=broadcom.com=ray.jui@kernel.org>
+Return-Path: <SRS0=uItE=IE=broadcom.com=ray.jui@kernel.org>
+From: Ray Jui <ray.jui@broadcom.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v6 09/12] PCI: Move resource distribution for a single bridge outside of the loop
-Date: Thu, 10 May 2018 21:28:41 +0300
-Message-Id: <20180510182844.77349-10-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
-References: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH INTERNAL 3/3] PCI: iproc: Disable MSI parsing in certain PAXC blocks
+Date: Thu, 17 May 2018 10:21:32 -0700
+Message-Id: <1526577692-21104-4-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
+References: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-There is a special case where there is only single bridge on the bus. In
-that case we just assign all resources to it. Currently this is done as
-a part of the resource distribution loop but it does not have to be
-there, and moving it outside actually improves readability because we
-can then save one indent level in the loop.
+The internal MSI parsing logic in certain revisions of PAXC root
+complexes does not work properly and can casue corruptions on the
+writes. They need to be disabled
 
-While there we can add hotplug_bridges == 1 && normal_bridges == 0 to
-the same block because they are dealt the same way.
-
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
 ---
- drivers/pci/setup-bus.c | 82 ++++++++++++++++++++---------------------
- 1 file changed, 41 insertions(+), 41 deletions(-)
+ drivers/pci/host/pcie-iproc.c | 34 ++++++++++++++++++++++++++++++++--
+ 1 file changed, 32 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 072784f55ea5..79b1824e83b4 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1942,57 +1942,57 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 			remaining_mmio_pref -= resource_size(res);
- 	}
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 3c76c5f..b906d80 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -1144,10 +1144,22 @@ static int iproc_pcie_paxb_v2_msi_steer(struct iproc_pcie *pcie, u64 msi_addr)
+ 	return ret;
+ }
  
-+	/*
-+	 * There is only one bridge on the bus so it gets all available
-+	 * resources which it can then distribute to the possible
-+	 * hotplug bridges below.
-+	 */
-+	if (hotplug_bridges + normal_bridges == 1) {
-+		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
-+		if (dev->subordinate) {
-+			pci_bus_distribute_available_resources(dev->subordinate,
-+				add_list, available_io, available_mmio,
-+				available_mmio_pref);
-+		}
+-static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64 msi_addr)
++static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64 msi_addr,
++					 bool enable)
+ {
+ 	u32 val;
+ 
++	if (!enable) {
++		/*
++		 * Disable PAXC MSI steering. All write transfers will be
++		 * treated as non-MSI transfers
++		 */
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
++		val &= ~MSI_ENABLE_CFG;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
 +		return;
 +	}
 +
  	/*
- 	 * Go over devices on this bus and distribute the remaining
- 	 * resource space between hotplug bridges.
- 	 */
- 	for_each_pci_bridge(dev, bus) {
-+		resource_size_t align, io, mmio, mmio_pref;
- 		struct pci_bus *b;
- 
- 		b = dev->subordinate;
--		if (!b)
-+		if (!b || !dev->is_hotplug_bridge)
- 			continue;
- 
--		if (!hotplug_bridges && normal_bridges == 1) {
--			/*
--			 * There is only one bridge on the bus (upstream
--			 * port) so it gets all available resources
--			 * which it can then distribute to the possible
--			 * hotplug bridges below.
--			 */
--			pci_bus_distribute_available_resources(b, add_list,
--				available_io, available_mmio,
--				available_mmio_pref);
--		} else if (dev->is_hotplug_bridge) {
--			resource_size_t align, io, mmio, mmio_pref;
--
--			/*
--			 * Distribute available extra resources equally
--			 * between hotplug-capable downstream ports
--			 * taking alignment into account.
--			 *
--			 * Here hotplug_bridges is always != 0.
--			 */
--			align = pci_resource_alignment(bridge, io_res);
--			io = div64_ul(available_io, hotplug_bridges);
--			io = min(ALIGN(io, align), remaining_io);
--			remaining_io -= io;
--
--			align = pci_resource_alignment(bridge, mmio_res);
--			mmio = div64_ul(available_mmio, hotplug_bridges);
--			mmio = min(ALIGN(mmio, align), remaining_mmio);
--			remaining_mmio -= mmio;
--
--			align = pci_resource_alignment(bridge, mmio_pref_res);
--			mmio_pref = div64_ul(available_mmio_pref,
--					     hotplug_bridges);
--			mmio_pref = min(ALIGN(mmio_pref, align),
--					remaining_mmio_pref);
--			remaining_mmio_pref -= mmio_pref;
--
--			pci_bus_distribute_available_resources(b, add_list, io,
--							       mmio, mmio_pref);
--		}
-+		/*
-+		 * Distribute available extra resources equally between
-+		 * hotplug-capable downstream ports taking alignment into
-+		 * account.
-+		 *
-+		 * Here hotplug_bridges is always != 0.
-+		 */
-+		align = pci_resource_alignment(bridge, io_res);
-+		io = div64_ul(available_io, hotplug_bridges);
-+		io = min(ALIGN(io, align), remaining_io);
-+		remaining_io -= io;
-+
-+		align = pci_resource_alignment(bridge, mmio_res);
-+		mmio = div64_ul(available_mmio, hotplug_bridges);
-+		mmio = min(ALIGN(mmio, align), remaining_mmio);
-+		remaining_mmio -= mmio;
-+
-+		align = pci_resource_alignment(bridge, mmio_pref_res);
-+		mmio_pref = div64_ul(available_mmio_pref, hotplug_bridges);
-+		mmio_pref = min(ALIGN(mmio_pref, align), remaining_mmio_pref);
-+		remaining_mmio_pref -= mmio_pref;
-+
-+		pci_bus_distribute_available_resources(b, add_list, io, mmio,
-+						       mmio_pref);
- 	}
+ 	 * Program bits [43:13] of address of GITS_TRANSLATER register into
+ 	 * bits [30:0] of the MSI base address register.  In fact, in all iProc
+@@ -1201,7 +1213,7 @@ static int iproc_pcie_msi_steer(struct iproc_pcie *pcie,
+ 			return ret;
+ 		break;
+ 	case IPROC_PCIE_PAXC_V2:
+-		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
++		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr, true);
+ 		break;
+ 	default:
+ 		return -EINVAL;
+@@ -1427,6 +1439,24 @@ int iproc_pcie_remove(struct iproc_pcie *pcie)
  }
+ EXPORT_SYMBOL(iproc_pcie_remove);
  
++/*
++ * The MSI parsing logic in certain revisions of Broadcom PAXC based root
++ * complex does not work and needs to be disabled
++ */
++static void quirk_paxc_disable_msi_parsing(struct pci_dev *pdev)
++{
++	struct iproc_pcie *pcie = iproc_data(pdev->bus);
++
++	if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
++		iproc_pcie_paxc_v2_msi_steer(pcie, 0, false);
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0,
++			quirk_paxc_disable_msi_parsing);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802,
++			quirk_paxc_disable_msi_parsing);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804,
++			quirk_paxc_disable_msi_parsing);
++
+ MODULE_AUTHOR("Ray Jui <rjui@broadcom.com>");
+ MODULE_DESCRIPTION("Broadcom iPROC PCIe common driver");
+ MODULE_LICENSE("GPL v2");
 -- 
-2.17.0
-
+2.1.4
