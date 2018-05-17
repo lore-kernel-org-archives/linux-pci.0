@@ -1,80 +1,76 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 2 May 2018 21:11:25 +0100
-From: James Hogan <jhogan@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 07/13] arch: remove the ARCH_PHYS_ADDR_T_64BIT config
- symbol
-Message-ID: <20180502201123.GA20766@jamesdev>
-References: <20180425051539.1989-1-hch@lst.de>
- <20180425051539.1989-8-hch@lst.de>
+Return-Path: <SRS0=QK28=IE=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=QK28=IE=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>, dmeyer@gigaio.com
+Cc: kurt.schwemmer@microsemi.com, linux-pci@vger.kernel.org,
+ linux-ntb@googlegroups.com, bhelgaas@google.com, jdmason@kudzu.us,
+ dave.jiang@intel.com, allenbh@gmail.com, linux-kernel@vger.kernel.org
+References: <1526558413-23113-1-git-send-email-dmeyer@gigaio.com>
+ <1526558413-23113-3-git-send-email-dmeyer@gigaio.com>
+ <20180517134521.GC19955@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <9dd68ac0-5b9e-b257-49d2-20327c2ab282@deltatee.com>
+Date: Thu, 17 May 2018 10:06:09 -0600
 MIME-Version: 1.0
-In-Reply-To: <20180425051539.1989-8-hch@lst.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-mips@linux-mips.org, sstabellini@kernel.org,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, linux-pci@vger.kernel.org,
- x86@kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org,
- sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: multipart/mixed; boundary="===============3469111335176836528=="
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180517134521.GC19955@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH 2/2] NTB: PCI Quirk to Enable Switchtec NT Functionality
+ with IOMMU On
 List-ID: <linux-pci.vger.kernel.org>
 
 
---===============3469111335176836528==
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="6TrnltStXW4iwmi0"
-Content-Disposition: inline
 
+On 17/05/18 07:45 AM, Bjorn Helgaas wrote:
+> On Thu, May 17, 2018 at 05:00:13AM -0700, dmeyer@gigaio.com wrote:
+>> From: Doug Meyer <dmeyer@gigaio.com>
+>>
+>> Here we add the PCI quirk for the Microsemi Switchtec parts to allow
+>> non-transparent bridging to work when the IOMMU is turned on.
+> 
+> I'm not an NTB expert, but it *sounds* like you're specifically fixing
+> DMA initiated by an NT endpoint.  I assume other aspects of
+> non-transparent bridging, e.g., routing of config accesses,
+> interrupts, doorbells, etc., might work even without this quirk.
 
---6TrnltStXW4iwmi0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yes, that's correct.
 
-On Wed, Apr 25, 2018 at 07:15:33AM +0200, Christoph Hellwig wrote:
-> Instead select the PHYS_ADDR_T_64BIT for 32-bit architectures that need a
-> 64-bit phys_addr_t type directly.
->=20
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>> When a requestor on one NT endpoint accesses memory on another NT
+>> endpoint, it does this via a devfn proxy ID. Proxy IDs are uniquely
+>> assigned on a per-requestor basis within the NT hardware, and are not
+>> visible via PCI enumeration. As a result, a memory access from a peer
+>> NT endpoint will have an unrecognized requestor ID devfn which the
+>> IOMMU will reject.
+> 
+> It would be very helpful if you could include a reference to the
+> relevant section of a publicly available spec.
 
->  arch/mips/Kconfig                      | 15 ++++++---------
+I'm not aware of any public specs on this. The basic idea is that a peer
+accesses a BAR memory window on it's own side and the NTB translates it
+to a memory request on the local side. This request has it's requester
+ID translated through a LUT seeing the requester ID on the initiating
+side isn't valid on the receiving side. The LUT has multiple entries so
+that multiple requester IDs can be translated and the responses routed
+back to the original requester.
 
-For MIPS:
-Acked-by: James Hogan <jhogan@kernel.org>
+> Who assigns these proxy IDs?  Quirks run before drivers claim the
+> device, so it looks like this assumes the proxy ID assignments are
+> either hard-wired into the device or programmed by firmware.  If the
+> latter, how would they be programmed for hot-added NTBs?
 
-Cheers
-James
+The local side of the requester ID LUT are fixed by the hardware so we
+can determine all the possible IDs coming from the NTB device just by
+reading some registers. The peer's side of the LUT are programmed with
+all possible source requester IDs by the driver but these don't have any
+effect on the ID's on the receiving side.
 
---6TrnltStXW4iwmi0
-Content-Type: application/pgp-signature; name="signature.asc"
+> I'm wondering if all this could or should be done in the switchtec
+> driver instead of in a quirk.  But I really don't know how that driver
+> works.
 
------BEGIN PGP SIGNATURE-----
+We'd like it to be done in the driver too but it seems
+pci_add_dma_alias() must be called before the driver is initialized and
+therefore in a quirk. Presently, it seems nearly all calls to that
+function are in quirks.c for this reason.
 
-iHUEARYIAB0WIQS7lRNBWUYtqfDOVL41zuSGKxAj8gUCWuobYAAKCRA1zuSGKxAj
-8rcSAP9uo9v+ADH7S0A5ptU5zQJbehcDNcjsP+tV3mIWaMxo5AD9Fxc2fxERhWzk
-sHBf3K14mN5e+PiMMLB9/hGD7t8eJAo=
-=7djd
------END PGP SIGNATURE-----
+Thanks,
 
---6TrnltStXW4iwmi0--
-
-
---===============3469111335176836528==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
---===============3469111335176836528==--
+Logan
