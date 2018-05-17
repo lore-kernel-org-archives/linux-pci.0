@@ -1,108 +1,107 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v6 02/12] PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
-Date: Thu, 10 May 2018 21:28:34 +0300
-Message-Id: <20180510182844.77349-3-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
-References: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 17 May 2018 10:00:23 -0700
+From: Jacob Pan <jacob.jun.pan@linux.intel.com>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
+Message-ID: <20180517100023.43585c42@jacob-builder>
+In-Reply-To: <96c1e0f0-0aa7-badf-123e-cbb1b05e645e@arm.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-2-jean-philippe.brucker@arm.com>
+ <20180516134150.34fc8857@jacob-builder>
+ <96c1e0f0-0aa7-badf-123e-cbb1b05e645e@arm.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "linux-mm@kvack.org" <linux-mm@kvack.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "kevin.tian@intel.com" <kevin.tian@intel.com>, jacob.jun.pan@linux.intel.com,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "rgummal@xilinx.com" <rgummal@xilinx.com>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ Robin Murphy <Robin.Murphy@arm.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+ "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After suspend/resume cycle the Presence Detect or Data Link Layer Status
-Changed bits might be set and if we don't clear them those events will
-not fire anymore and nothing happens for instance when a device is now
-hot-unplugged.
+On Thu, 17 May 2018 11:02:02 +0100
+Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
 
-Fix this by clearing those bits in a newly introduced function
-pcie_reenable_notification(). This should be fine because immediately
-after we check if the adapter is still present by reading directly from
-the status register.
+> Hi Jacob,
+> 
+> Thanks for reviewing this
+> 
+> On 16/05/18 21:41, Jacob Pan wrote:
+>  [...]  
+> > seems the min_pasid never gets used. do you really need it?  
+> 
+> Yes, the SMMU sets it to 1 in patch 28/40, because it needs to reserve
+> PASID 0
+> 
+>  [...]  
+> > should it be !features?  
+> 
+> This checks if the user sets any unsupported bit in features. No
+> feature is supported right now, but patch 09/40 adds
+> IOMMU_SVA_FEAT_IOPF, and changes this line to "features &
+> ~IOMMU_SVA_FEAT_IOPF"
+> 
+> >> +	mutex_lock(&dev->iommu_param->lock);
+> >> +	param = dev->iommu_param->sva_param;
+> >> +	dev->iommu_param->sva_param = NULL;
+> >> +	mutex_unlock(&dev->iommu_param->lock);
+> >> +	if (!param)
+> >> +		return -ENODEV;
+> >> +
+> >> +	if (domain->ops->sva_device_shutdown)
+> >> +		domain->ops->sva_device_shutdown(dev, param);  
+> > seems a little mismatch here, do you need pass the param. I don't
+> > think there is anything else model specific iommu driver need to do
+> > for the param.  
+> 
+> SMMU doesn't use it, but maybe it would remind other IOMMU driver
+> which features were enabled, so they don't have to keep track of that
+> themselves? I can remove it if it isn't useful
+> 
+If there is a use case, I guess iommu driver can always retrieve the
+param from struct device.
+> Thanks,
+> Jean
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: stable@vger.kernel.org
----
-Regarding this:
+[Jacob Pan]
 
-  https://www.spinics.net/lists/linux-pci/msg72017.html
-
-I added debug print to pci_restore_pcie_state() right before PCI_EXP_SLTCTL
-is restored that reads PCI_EXP_SLTSTA. Both flags (PCI_EXP_SLTSTA_PDC and
-PCI_EXP_SLTSTA_DLLSC) are alread set so they don't happen after we restore
-PCI_EXP_SLTCTL.
-
- drivers/pci/hotplug/pciehp.h      |  2 +-
- drivers/pci/hotplug/pciehp_core.c |  2 +-
- drivers/pci/hotplug/pciehp_hpc.c  | 13 ++++++++++++-
- 3 files changed, 14 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 88e917c9120f..5f892065585e 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -121,7 +121,7 @@ struct controller *pcie_init(struct pcie_device *dev);
- int pcie_init_notification(struct controller *ctrl);
- int pciehp_enable_slot(struct slot *p_slot);
- int pciehp_disable_slot(struct slot *p_slot);
--void pcie_enable_notification(struct controller *ctrl);
-+void pcie_reenable_notification(struct controller *ctrl);
- int pciehp_power_on_slot(struct slot *slot);
- void pciehp_power_off_slot(struct slot *slot);
- void pciehp_get_power_status(struct slot *slot, u8 *status);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 332b723ff9e6..44a6a63802d5 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -283,7 +283,7 @@ static int pciehp_resume(struct pcie_device *dev)
- 	ctrl = get_service_data(dev);
- 
- 	/* reinitialize the chipset's event detection logic */
--	pcie_enable_notification(ctrl);
-+	pcie_reenable_notification(ctrl);
- 
- 	slot = ctrl->slot;
- 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 18a42f8f5dc5..98ea75aa32c7 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -659,7 +659,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
- 	return handled;
- }
- 
--void pcie_enable_notification(struct controller *ctrl)
-+static void pcie_enable_notification(struct controller *ctrl)
- {
- 	u16 cmd, mask;
- 
-@@ -697,6 +697,17 @@ void pcie_enable_notification(struct controller *ctrl)
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
- }
- 
-+void pcie_reenable_notification(struct controller *ctrl)
-+{
-+	/*
-+	 * Clear both Presence and Data Link Layer Changed to make sure
-+	 * those events still fire after we have re-enabled them.
-+	 */
-+	pcie_capability_write_word(ctrl->pcie->port, PCI_EXP_SLTSTA,
-+				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
-+	pcie_enable_notification(ctrl);
-+}
-+
- static void pcie_disable_notification(struct controller *ctrl)
- {
- 	u16 mask;
--- 
-2.17.0
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
