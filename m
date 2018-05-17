@@ -1,66 +1,99 @@
-Return-Path: <SRS0=mj/D=IL=gmail.com=marek.vasut@kernel.org>
-Return-Path: <SRS0=mj/D=IL=gmail.com=marek.vasut@kernel.org>
-Subject: Re: [PATCH 1/4] PCI: rcar: Rename
- rcar_pcie_parse_request_of_pci_ranges()
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
- Marek Vasut <marek.vasut+renesas@gmail.com>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Phil Edworthy <phil.edworthy@renesas.com>,
- Simon Horman <horms+renesas@verge.net.au>, Wolfram Sang <wsa@the-dreams.de>,
- linux-renesas-soc@vger.kernel.org
-References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
- <20180523161711.GA8113@e107981-ln.cambridge.arm.com>
- <5fc7b4ff-1c75-4d3f-6cb7-fda4559a3635@gmail.com>
- <20180523215626.GG150632@bhelgaas-glaptop.roam.corp.google.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <56b86e01-394e-0cf0-5da2-e884c29bb41e@gmail.com>
-Date: Thu, 24 May 2018 09:24:27 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180523215626.GG150632@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v7 02/12] PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
+Date: Thu, 17 May 2018 12:28:53 +0300
+Message-Id: <20180517092903.43701-3-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
+References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/23/2018 11:56 PM, Bjorn Helgaas wrote:
-> On Wed, May 23, 2018 at 07:05:06PM +0200, Marek Vasut wrote:
->> On 05/23/2018 06:17 PM, Lorenzo Pieralisi wrote:
->>> On Mon, May 21, 2018 at 03:11:20PM +0200, Marek Vasut wrote:
->>>> The function name is just too confusing, rename it, no functional change.
->>>> Rename the function to rcar_pcie_alloc_and_parse_pci_resource_list() as
->>>> it's matching failpath function is pci_free_resource_list() so the names
->>>> align much better and the new name also describes what the function does
->>>> much better.
->>>>
->>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->>>> Cc: Simon Horman <horms+renesas@verge.net.au>
->>>> Cc: Wolfram Sang <wsa@the-dreams.de>
->>>> Cc: linux-renesas-soc@vger.kernel.org
->>>> ---
->>>>  drivers/pci/host/pcie-rcar.c | 4 ++--
->>>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> Can you rebase this series against my pci/rcar branch please ?
->>>
->>> I will merge it then, thanks.
->>
->> Where is that tree/branch located ?
->>
->> It applies fine on current next 20180517, is there a problem ?
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/log/?h=pci/rcar
+After suspend/resume cycle the Presence Detect or Data Link Layer Status
+Changed bits might be set and if we don't clear them those events will
+not fire anymore and nothing happens for instance when a device is now
+hot-unplugged.
 
-OK, 1/4 is dropped, the remaining patches are resubmitted. I added one
-more (6/6) since the phy patches in that tree added a bug into the fail
-path, so I fixed that too.
+Fix this by clearing those bits in a newly introduced function
+pcie_reenable_notification(). This should be fine because immediately
+after we check if the adapter is still present by reading directly from
+the status register.
 
-> I don't think next 20180517 includes Lorenzo's pci/rcar branch, so
-> there might be conflicts.  I think Stephen is on vacation until next
-> week, so there isn't a newer -next tree yet.
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/hotplug/pciehp.h      |  2 +-
+ drivers/pci/hotplug/pciehp_core.c |  2 +-
+ drivers/pci/hotplug/pciehp_hpc.c  | 13 ++++++++++++-
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
-OK
-
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 88e917c9120f..5f892065585e 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -121,7 +121,7 @@ struct controller *pcie_init(struct pcie_device *dev);
+ int pcie_init_notification(struct controller *ctrl);
+ int pciehp_enable_slot(struct slot *p_slot);
+ int pciehp_disable_slot(struct slot *p_slot);
+-void pcie_enable_notification(struct controller *ctrl);
++void pcie_reenable_notification(struct controller *ctrl);
+ int pciehp_power_on_slot(struct slot *slot);
+ void pciehp_power_off_slot(struct slot *slot);
+ void pciehp_get_power_status(struct slot *slot, u8 *status);
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 332b723ff9e6..44a6a63802d5 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -283,7 +283,7 @@ static int pciehp_resume(struct pcie_device *dev)
+ 	ctrl = get_service_data(dev);
+ 
+ 	/* reinitialize the chipset's event detection logic */
+-	pcie_enable_notification(ctrl);
++	pcie_reenable_notification(ctrl);
+ 
+ 	slot = ctrl->slot;
+ 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 18a42f8f5dc5..98ea75aa32c7 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -659,7 +659,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 	return handled;
+ }
+ 
+-void pcie_enable_notification(struct controller *ctrl)
++static void pcie_enable_notification(struct controller *ctrl)
+ {
+ 	u16 cmd, mask;
+ 
+@@ -697,6 +697,17 @@ void pcie_enable_notification(struct controller *ctrl)
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
+ }
+ 
++void pcie_reenable_notification(struct controller *ctrl)
++{
++	/*
++	 * Clear both Presence and Data Link Layer Changed to make sure
++	 * those events still fire after we have re-enabled them.
++	 */
++	pcie_capability_write_word(ctrl->pcie->port, PCI_EXP_SLTSTA,
++				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
++	pcie_enable_notification(ctrl);
++}
++
+ static void pcie_disable_notification(struct controller *ctrl)
+ {
+ 	u16 mask;
 -- 
-Best regards,
-Marek Vasut
+2.17.0
+
