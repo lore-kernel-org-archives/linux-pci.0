@@ -1,79 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36900 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751010AbeEGGdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 May 2018 02:33:45 -0400
-From: Baoquan He <bhe@redhat.com>
-To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-        robh+dt@kernel.org, dan.j.williams@intel.com,
-        nicolas.pitre@linaro.org, josh@joshtriplett.org,
-        fengguang.wu@intel.com, bp@suse.de
-Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com,
-        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
-        keith.busch@intel.com, jonathan.derrick@intel.com,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
-        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
-        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
-        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
-        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
-        yinghai@kernel.org, kexec@lists.infradead.org, monstr@monstr.eu,
-        davem@davemloft.net, chris@zankel.net, jcmvbkbc@gmail.com,
-        gustavo@padovan.org, maarten.lankhorst@linux.intel.com,
-        seanpaul@chromium.org, linux-parisc@vger.kernel.org,
-        Baoquan He <bhe@redhat.com>
-Subject: [PATCH v4 3/3] kexec_file: Load kernel at top of system RAM if required
-Date: Mon,  7 May 2018 14:32:24 +0800
-Message-Id: <20180507063224.24229-4-bhe@redhat.com>
-In-Reply-To: <20180507063224.24229-1-bhe@redhat.com>
-References: <20180507063224.24229-1-bhe@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH] efi/fb: Convert PCI bus address to resource if
+ translated by the bridge
+To: Robin Murphy <robin.murphy@arm.com>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org
+References: <1526495029-25783-1-git-send-email-okaya@codeaurora.org>
+ <74ae2347-464c-ddc1-3cb9-f928692e792f@arm.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <6e875491-38a9-f7cf-92d7-53698299403a@codeaurora.org>
+Date: Thu, 17 May 2018 09:05:28 -0400
+MIME-Version: 1.0
+In-Reply-To: <74ae2347-464c-ddc1-3cb9-f928692e792f@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:EFIFB FRAMEBUFFER DRIVER" <linux-fbdev@vger.kernel.org>,
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
+ Peter Jones <pjones@redhat.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For kexec_file loading, if kexec_buf.top_down is 'true', the memory which
-is used to load kernel/initrd/purgatory is supposed to be allocated from
-top to down. This is what we have been doing all along in the old kexec
-loading interface and the kexec loading is still default setting in some
-distributions. However, the current kexec_file loading interface doesn't
-do likt this. The function arch_kexec_walk_mem() it calls ignores checking
-kexec_buf.top_down, but calls walk_system_ram_res() directly to go through
-all resources of System RAM from bottom to up, to try to find memory region
-which can contain the specific kexec buffer, then call locate_mem_hole_callback()
-to allocate memory in that found memory region from top to down. This brings
-confusion especially when KASLR is widely supported , users have to make clear
-why kexec/kdump kernel loading position is different between these two
-interfaces in order to exclude unnecessary noises. Hence these two interfaces
-need be unified on behaviour.
-
-Here add checking if kexec_buf.top_down is 'true' in arch_kexec_walk_mem(),
-if yes, call the newly added walk_system_ram_res_rev() to find memory region
-from top to down to load kernel.
-
-Signed-off-by: Baoquan He <bhe@redhat.com>
-Cc: Eric Biederman <ebiederm@xmission.com>
-Cc: Vivek Goyal <vgoyal@redhat.com>
-Cc: Dave Young <dyoung@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: kexec@lists.infradead.org
----
- kernel/kexec_file.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/kernel/kexec_file.c b/kernel/kexec_file.c
-index 75d8e7cf040e..7a66d9d5a534 100644
---- a/kernel/kexec_file.c
-+++ b/kernel/kexec_file.c
-@@ -518,6 +518,8 @@ int __weak arch_kexec_walk_mem(struct kexec_buf *kbuf,
- 					   IORESOURCE_SYSTEM_RAM | IORESOURCE_BUSY,
- 					   crashk_res.start, crashk_res.end,
- 					   kbuf, func);
-+	else if (kbuf->top_down)
-+		return walk_system_ram_res_rev(0, ULONG_MAX, kbuf, func);
- 	else
- 		return walk_system_ram_res(0, ULONG_MAX, kbuf, func);
- }
--- 
-2.13.6
+T24gNS8xNy8yMDE4IDY6MTcgQU0sIFJvYmluIE11cnBoeSB3cm90ZToKPj4gK8KgwqDCoCB9Cj4+
+ICsKPiAKPiBJcyB0aGlzIG5vdCBwcmV0dHkgbXVjaCBqdXN0IHBjaWJpb3NfYnVzX3RvX3Jlc291
+cmNlKCk/Cj4KCkFncmVlZCwgbGV0IG1lIGNvbnZlcnQgdGhlIGNvZGUgdG8gdXNlIHBjaWJpb3Nf
+YnVzX3RvX3Jlc291cmNlKCkgQVBJLgpJIHdhc24ndCBhd2FyZSBvZiBpdHMgZXhpc3RlbmNlLgog
+Cj4gUm9iaW4uCgoKLS0gClNpbmFuIEtheWEKUXVhbGNvbW0gRGF0YWNlbnRlciBUZWNobm9sb2dp
+ZXMsIEluYy4gYXMgYW4gYWZmaWxpYXRlIG9mIFF1YWxjb21tIFRlY2hub2xvZ2llcywgSW5jLgpR
+dWFsY29tbSBUZWNobm9sb2dpZXMsIEluYy4gaXMgYSBtZW1iZXIgb2YgdGhlIENvZGUgQXVyb3Jh
+IEZvcnVtLCBhIExpbnV4IEZvdW5kYXRpb24gQ29sbGFib3JhdGl2ZSBQcm9qZWN0LgoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5l
+bCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6
+Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
