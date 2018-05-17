@@ -1,50 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:44078 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751121AbeECQWM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 May 2018 12:22:12 -0400
-Date: Thu, 3 May 2018 17:22:04 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Simon Horman <horms@verge.net.au>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v2 0/5] Add R8A77980 PCIe support & some driver cleanups
-Message-ID: <20180503162204.GA25638@e107981-ln.cambridge.arm.com>
-References: <26e803ca-06b6-28c5-b87c-fc639b322d6f@cogentembedded.com>
- <20180501055553.3zh4ygux7aqvkmvs@verge.net.au>
- <20180501105754.GC19391@e107981-ln.cambridge.arm.com>
- <0f5bc40e-a82b-4826-e711-19a83d0bffb7@cogentembedded.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 03/40] iommu/sva: Manage process address spaces
+To: Jacob Pan <jacob.jun.pan@linux.intel.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "tn@semihalf.com" <tn@semihalf.com>,
+        "liubo95@huawei.com" <liubo95@huawei.com>,
+        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+        "rfranz@cavium.com" <rfranz@cavium.com>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>,
+        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+        "robdclark@gmail.com" <robdclark@gmail.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        "bharatku@xilinx.com" <bharatku@xilinx.com>,
+        "rgummal@xilinx.com" <rgummal@xilinx.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-4-jean-philippe.brucker@arm.com>
+ <20180516163117.622693ea@jacob-builder>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <de478769-9f7a-d40b-a55e-e2c63ad883e8@arm.com>
+Date: Thu, 17 May 2018 11:02:42 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0f5bc40e-a82b-4826-e711-19a83d0bffb7@cogentembedded.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180516163117.622693ea@jacob-builder>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 03, 2018 at 06:26:43PM +0300, Sergei Shtylyov wrote:
-> On 05/01/2018 01:57 PM, Lorenzo Pieralisi wrote:
-> 
-> >>> Hello!
-> >>>
-> >>> Here's a set of 5 patches against the 'pci/rcar' branch of Lorenzo Pieralisi's
-> >>> 'pci.git' repo. These are the changes needed for better R-Car gen3 support
-> >>> (namely for R8A77980 support) plus some PCIe driver re-factoring done in
-> >>> the process...
-> >>>
-> >>> [1/5] pcie-rcar: poll PHYRDY in rcar_pcie_hw_init()
-> >>> [2/5] pcie-rcar: remove PHYRDY polling from rcar_pcie_hw_init_h1()
-> >>> [3/5] pcie-rcar: add R-Car gen3 PHY support
-> >>> [4/5] pcie-rcar: factor out rcar_pcie_hw_init() call
-> >>> [5/5] DT: pci: rcar-pci: document R8A77980 bindings
-> >>
-> >> Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
-> > 
-> > Sergei, would you mind rebasing this series against my pci/rcar
-> > branch please ?
-> 
->    You mean against your updated 'pci/rcar' branch? (The patches were
->    against that branch in the 1st place, and they still do apply,
->    though with fuzz in one of the patches)...
+On 17/05/18 00:31, Jacob Pan wrote:
+> On Fri, 11 May 2018 20:06:04 +0100
+> I am a little confused about domain vs. pasid relationship. If
+> each domain represents a address space, should there be a domain for
+> each pasid?
 
-Yes the current pci/rcar branch, thanks a lot.
+I don't think there is a formal definition, but from previous discussion
+the consensus seems to be: domains are a collection of devices that have
+the same virtual address spaces (one or many).
 
-Lorenzo
+Keeping that definition makes things easier, in my opinion. Some time
+ago, I did try to represent PASIDs using "subdomains" (introducing a
+hierarchy of struct iommu_domain), but it required invasive changes in
+the IOMMU subsystem and probably all over the tree.
+
+You do need some kind of "root domain" for each device, so that
+"iommu_get_domain_for_dev()" still makes sense. That root domain doesn't
+have a single address space but a collection of subdomains. If you need
+this anyway, representing a PASID with an iommu_domain doesn't seem
+preferable than using a different structure (io_mm), because they don't
+have anything in common.
+
+Thanks,
+Jean
