@@ -1,55 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48878 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932976AbeEWNst (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 May 2018 09:48:49 -0400
-Date: Wed, 23 May 2018 08:48:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: James Hogan <jhogan@kernel.org>
-Cc: linux-pci@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-        linux-mips@linux-mips.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1] MIPS: PCI: Use dev_printk() when possible
-Message-ID: <20180523134847.GB150632@bhelgaas-glaptop.roam.corp.google.com>
-References: <152699466671.162686.1029992586935534102.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152699470263.162686.16975145205315900817.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180523081447.GA15645@jamesdev>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180523081447.GA15645@jamesdev>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <81be86fdeb4b8cc496daf668833a3b5ee66428e9.camel@linux.intel.com>
+Subject: Re: [PATCH v7 10/12] PCI: Document return value of
+ pci_scan_bridge() and pci_scan_bridge_extend()
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Date: Thu, 17 May 2018 14:44:48 +0300
+In-Reply-To: <20180517092903.43701-11-mika.westerberg@linux.intel.com>
+References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
+         <20180517092903.43701-11-mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2018 at 09:14:48AM +0100, James Hogan wrote:
-> On Tue, May 22, 2018 at 08:11:42AM -0500, Bjorn Helgaas wrote:
-> > From: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > Use the pci_info() and pci_err() wrappers for dev_printk() when possible.
-> > 
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  arch/mips/pci/pci-legacy.c |    7 ++-----
-> >  1 file changed, 2 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/arch/mips/pci/pci-legacy.c b/arch/mips/pci/pci-legacy.c
-> > index 0c65c38e05d6..73643e80f02d 100644
-> > --- a/arch/mips/pci/pci-legacy.c
-> > +++ b/arch/mips/pci/pci-legacy.c
-> > @@ -263,9 +263,7 @@ static int pcibios_enable_resources(struct pci_dev *dev, int mask)
-> >  				(!(r->flags & IORESOURCE_ROM_ENABLE)))
-> >  			continue;
-> >  		if (!r->start && r->end) {
-> > -			printk(KERN_ERR "PCI: Device %s not available "
-> > -			       "because of resource collisions\n",
-> > -			       pci_name(dev));
-> > +			pci_err(dev, "can't enable device: resource collisions\n");
+On Thu, 2018-05-17 at 12:29 +0300, Mika Westerberg wrote:
+> It is not immediately clear what the two functions actually return so
+> add kernel-doc comment explaining it a bit better.
 > 
-> The pedantic side of me wants to point out that you could wrap that line
-> after the comma to keep it within 80 columns.
 
-Done, thanks!
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-> Either way though:
-> Acked-by: James Hogan <jhogan@kernel.org>
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/pci/probe.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> Cheers
-> James
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index cd28ab122748..a0c48aa1c42f 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -999,6 +999,8 @@ static unsigned int
+> pci_scan_child_bus_extend(struct pci_bus *bus,
+>   * already configured by the BIOS and after we are done with all of
+>   * them, we proceed to assigning numbers to the remaining buses in
+>   * order to avoid overlaps between old and new bus numbers.
+> + *
+> + * Return: New subordinate number covering all buses behind this
+> bridge.
+>   */
+>  static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev
+> *dev,
+>  				  int max, unsigned int
+> available_buses,
+> @@ -1231,6 +1233,8 @@ static int pci_scan_bridge_extend(struct pci_bus
+> *bus, struct pci_dev *dev,
+>   * already configured by the BIOS and after we are done with all of
+>   * them, we proceed to assigning numbers to the remaining buses in
+>   * order to avoid overlaps between old and new bus numbers.
+> + *
+> + * Return: New subordinate number covering all buses behind this
+> bridge.
+>   */
+>  int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int
+> max, int pass)
+>  {
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
