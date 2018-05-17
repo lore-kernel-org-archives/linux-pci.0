@@ -1,218 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:47228 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752350AbeEKTK3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 May 2018 15:10:29 -0400
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 32/40] iommu/arm-smmu-v3: Maintain a SID->device structure
-Date: Fri, 11 May 2018 20:06:33 +0100
-Message-Id: <20180511190641.23008-33-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Subject: [PATCH v17 9/9] PCI/DPC: Use the generic pcie_do_fatal_recovery() path
+Date: Thu, 17 May 2018 03:43:11 -0400
+Message-Id: <1526542991-5291-10-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
+References: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When handling faults from the event or PRI queue, we need to find the
-struct device associated to a SID. Add a rb_tree to keep track of SIDs.
+Our goal is to handle ERR_FATAL errors similarly, whether they are reported
+via AER or via DPC.  A previous commit changed AER so it handles ERR_FATAL
+by calling driver .remove() methods and resetting the Link.  DPC already
+does that (although the Link reset is done automatically by hardware and
+happens before we call the driver .remove() methods).
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 114 +++++++++++++++++++++++++++++++++++-
- 1 file changed, 113 insertions(+), 1 deletion(-)
+Restructure the DPC code so it calls the same pcie_do_fatal_recovery()
+interface used by AER.  This makes it clearer that we want to use the same
+path.
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index d5f3875abfb9..0f2d8aa0deee 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -570,9 +570,18 @@ struct arm_smmu_device {
- 	/* IOMMU core code handle */
- 	struct iommu_device		iommu;
+Implement the .reset_link() method used by pcie_do_fatal_recovery().  For
+DPC, the actual reset is done automatically by hardware, so we really only
+have to wait for the Link to be inactive, then release the Port from DPC.
+
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+[bhelgaas: changelog, DPC_FATAL is not a bitfield, can be sequential]
+Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
+
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 361903f..6064041 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -73,29 +73,30 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
+ 	pcie_wait_for_link(pdev, false);
+ }
  
-+	struct rb_root			streams;
-+	struct mutex			streams_mutex;
+-static void dpc_work(struct work_struct *work)
++static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+ {
+-	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+-	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+-	struct pci_bus *parent = pdev->subordinate;
+-	u16 cap = dpc->cap_pos, ctl;
+-
+-	pci_lock_rescan_remove();
+-	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+-					 bus_list) {
+-		pci_dev_get(dev);
+-		pci_dev_set_disconnected(dev, NULL);
+-		if (pci_has_subordinate(dev))
+-			pci_walk_bus(dev->subordinate,
+-				     pci_dev_set_disconnected, NULL);
+-		pci_stop_and_remove_bus_device(dev);
+-		pci_dev_put(dev);
+-	}
+-	pci_unlock_rescan_remove();
+-
++	struct dpc_dev *dpc;
++	struct pcie_device *pciedev;
++	struct device *devdpc;
++	u16 cap, ctl;
 +
- 	struct iopf_queue		*iopf_queue;
++	/*
++	 * DPC disables the Link automatically in hardware, so it has
++	 * already been reset by the time we get here.
++	 */
++	devdpc = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_DPC);
++	pciedev = to_pcie_device(devdpc);
++	dpc = get_service_data(pciedev);
++	cap = dpc->cap_pos;
++
++	/*
++	 * Wait until the Link is inactive, then clear DPC Trigger Status
++	 * to allow the Port to leave DPC.
++	 */
+ 	dpc_wait_link_inactive(dpc);
++
+ 	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
+-		return;
++		return PCI_ERS_RESULT_DISCONNECT;
+ 	if (dpc->rp_extensions && dpc->rp_pio_status) {
+ 		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
+ 				       dpc->rp_pio_status);
+@@ -108,6 +109,17 @@ static void dpc_work(struct work_struct *work)
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+ 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+ 			      ctl | PCI_EXP_DPC_CTL_INT_EN);
++
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
++static void dpc_work(struct work_struct *work)
++{
++	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
++	struct pci_dev *pdev = dpc->dev->port;
++
++	/* We configure DPC so it only triggers on ERR_FATAL */
++	pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_DPC);
+ }
+ 
+ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
+@@ -288,6 +300,7 @@ static struct pcie_port_service_driver dpcdriver = {
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
+ 	.remove		= dpc_remove,
++	.reset_link	= dpc_reset_link,
  };
  
-+struct arm_smmu_stream {
-+	u32				id;
-+	struct arm_smmu_master_data	*master;
-+	struct rb_node			node;
-+};
-+
- /* SMMU private data for each master */
- struct arm_smmu_master_data {
- 	struct arm_smmu_device		*smmu;
-@@ -580,6 +589,7 @@ struct arm_smmu_master_data {
+ static int __init dpc_service_init(void)
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 8f87bbe..514bffa 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -14,6 +14,7 @@
+ #define AER_NONFATAL			0
+ #define AER_FATAL			1
+ #define AER_CORRECTABLE			2
++#define DPC_FATAL			3
  
- 	struct arm_smmu_domain		*domain;
- 	struct list_head		list; /* domain->devices */
-+	struct arm_smmu_stream		*streams;
+ struct pci_dev;
  
- 	struct device			*dev;
- 	size_t				ssid_bits;
-@@ -1186,6 +1196,32 @@ static int arm_smmu_init_l2_strtab(struct arm_smmu_device *smmu, u32 sid)
- 	return 0;
- }
- 
-+__maybe_unused
-+static struct arm_smmu_master_data *
-+arm_smmu_find_master(struct arm_smmu_device *smmu, u32 sid)
-+{
-+	struct rb_node *node;
-+	struct arm_smmu_stream *stream;
-+	struct arm_smmu_master_data *master = NULL;
-+
-+	mutex_lock(&smmu->streams_mutex);
-+	node = smmu->streams.rb_node;
-+	while (node) {
-+		stream = rb_entry(node, struct arm_smmu_stream, node);
-+		if (stream->id < sid) {
-+			node = node->rb_right;
-+		} else if (stream->id > sid) {
-+			node = node->rb_left;
-+		} else {
-+			master = stream->master;
-+			break;
-+		}
-+	}
-+	mutex_unlock(&smmu->streams_mutex);
-+
-+	return master;
-+}
-+
- /* IRQ and event handlers */
- static irqreturn_t arm_smmu_evtq_thread(int irq, void *dev)
- {
-@@ -2086,6 +2122,71 @@ static bool arm_smmu_sid_in_range(struct arm_smmu_device *smmu, u32 sid)
- 	return sid < limit;
- }
- 
-+static int arm_smmu_insert_master(struct arm_smmu_device *smmu,
-+				  struct arm_smmu_master_data *master)
-+{
-+	int i;
-+	int ret = 0;
-+	struct arm_smmu_stream *new_stream, *cur_stream;
-+	struct rb_node **new_node, *parent_node = NULL;
-+	struct iommu_fwspec *fwspec = master->dev->iommu_fwspec;
-+
-+	master->streams = kcalloc(fwspec->num_ids,
-+				  sizeof(struct arm_smmu_stream), GFP_KERNEL);
-+	if (!master->streams)
-+		return -ENOMEM;
-+
-+	mutex_lock(&smmu->streams_mutex);
-+	for (i = 0; i < fwspec->num_ids && !ret; i++) {
-+		new_stream = &master->streams[i];
-+		new_stream->id = fwspec->ids[i];
-+		new_stream->master = master;
-+
-+		new_node = &(smmu->streams.rb_node);
-+		while (*new_node) {
-+			cur_stream = rb_entry(*new_node, struct arm_smmu_stream,
-+					      node);
-+			parent_node = *new_node;
-+			if (cur_stream->id > new_stream->id) {
-+				new_node = &((*new_node)->rb_left);
-+			} else if (cur_stream->id < new_stream->id) {
-+				new_node = &((*new_node)->rb_right);
-+			} else {
-+				dev_warn(master->dev,
-+					 "stream %u already in tree\n",
-+					 cur_stream->id);
-+				ret = -EINVAL;
-+				break;
-+			}
-+		}
-+
-+		if (!ret) {
-+			rb_link_node(&new_stream->node, parent_node, new_node);
-+			rb_insert_color(&new_stream->node, &smmu->streams);
-+		}
-+	}
-+	mutex_unlock(&smmu->streams_mutex);
-+
-+	return ret;
-+}
-+
-+static void arm_smmu_remove_master(struct arm_smmu_device *smmu,
-+				   struct arm_smmu_master_data *master)
-+{
-+	int i;
-+	struct iommu_fwspec *fwspec = master->dev->iommu_fwspec;
-+
-+	if (!master->streams)
-+		return;
-+
-+	mutex_lock(&smmu->streams_mutex);
-+	for (i = 0; i < fwspec->num_ids; i++)
-+		rb_erase(&master->streams[i].node, &smmu->streams);
-+	mutex_unlock(&smmu->streams_mutex);
-+
-+	kfree(master->streams);
-+}
-+
- static struct iommu_ops arm_smmu_ops;
- 
- static int arm_smmu_add_device(struct device *dev)
-@@ -2142,16 +2243,23 @@ static int arm_smmu_add_device(struct device *dev)
- 	if (ret)
- 		goto err_free_master;
- 
-+	ret = arm_smmu_insert_master(smmu, master);
-+	if (ret)
-+		goto err_unlink;
-+
- 	group = iommu_group_get_for_dev(dev);
- 	if (IS_ERR(group)) {
- 		ret = PTR_ERR(group);
--		goto err_unlink;
-+		goto err_remove_master;
- 	}
- 
- 	iommu_group_put(group);
- 
- 	return 0;
- 
-+err_remove_master:
-+	arm_smmu_remove_master(smmu, master);
-+
- err_unlink:
- 	iommu_device_unlink(&smmu->iommu, dev);
- 
-@@ -2180,6 +2288,7 @@ static void arm_smmu_remove_device(struct device *dev)
- 	if (master->ste.assigned)
- 		arm_smmu_detach_dev(dev);
- 	iommu_group_remove_device(dev);
-+	arm_smmu_remove_master(smmu, master);
- 	iommu_device_unlink(&smmu->iommu, dev);
- 	kfree(master);
- 	iommu_fwspec_free(dev);
-@@ -2483,6 +2592,9 @@ static int arm_smmu_init_structures(struct arm_smmu_device *smmu)
- 	int ret;
- 
- 	atomic_set(&smmu->sync_nr, 0);
-+	mutex_init(&smmu->streams_mutex);
-+	smmu->streams = RB_ROOT;
-+
- 	ret = arm_smmu_init_queues(smmu);
- 	if (ret)
- 		return ret;
 -- 
-2.17.0
+2.7.4
