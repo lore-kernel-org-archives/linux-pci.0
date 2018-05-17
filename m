@@ -1,82 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:52965 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752019AbeENPcH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 11:32:07 -0400
-Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Simon Horman <horms@verge.net.au>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Dien Pham <dien.pham.ry@rvc.renesas.com>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com>
- <20180409114159.azxeehjkeuinwrwe@verge.net.au>
- <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
- <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
- <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
- <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
- <a5a0d78d-627b-6277-ee75-44e204cbd390@gmail.com>
- <CAMuHMdX9d29JYVDsghd3Koyg8Aeuv0D2Fx5Lnn0bBZSb9RntDw@mail.gmail.com>
- <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
- <20180413124819.tw5436lolpn5eqhw@verge.net.au>
- <20180501105556.GB19391@e107981-ln.cambridge.arm.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <d03db400-9f3e-906f-7886-a54cccb96a40@gmail.com>
-Date: Mon, 14 May 2018 17:32:04 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180501105556.GB19391@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v7 10/12] PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
+Date: Thu, 17 May 2018 12:29:01 +0300
+Message-Id: <20180517092903.43701-11-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
+References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/01/2018 12:55 PM, Lorenzo Pieralisi wrote:
-> On Fri, Apr 13, 2018 at 02:48:19PM +0200, Simon Horman wrote:
->> On Tue, Apr 10, 2018 at 06:17:04PM +0200, Marek Vasut wrote:
->>> On 04/10/2018 05:28 PM, Geert Uytterhoeven wrote:
->>
->> ...
->>
->>>>>> rcar_pcie_get_resources() is called while the device is
->>>>>> runtime-enabled/resumed,
->>>>>> pci_free_resource_list() is called while the device is runtime-disabled.
->>>
->>> rcar_pcie_get_resources() is NOT a pair function for
->>> pci_free_resource_list() . rcar_pcie_parse_request_of_pci_ranges() is a
->>> pair function for pci_free_resource_list().
->>>
->>> rcar_pcie_parse_request_of_pci_ranges() calls
->>> of_pci_get_host_bridge_resources() internally, so every single function
->>> called after successful call of rcar_pcie_parse_request_of_pci_ranges()
->>> must call pci_free_resource_list().
->>>
->>> Both of_pci_get_host_bridge_resources() and pci_free_resource_list() are
->>> called with runtime PM disabled.
->>>
->>> The naming of the functions is confusing though.
->>
->> Hi,
->>
->> thanks everyone for their efforts in preparing/reviewing this patch.
->>
->> It seems there are some differences of opinion on how best to handle the
->> error paths but unlike earlier versions this one seems correct to me. If
->> that turns out to be false we can address it. But I don't think its likely
->> things will be enhanced by continuing this review.
->>
->> Lorenzo, please consider taking this patch in its current form.
->>
->> Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
-> 
-> Applied to pci/rcar for v4.18, thanks.
+It is not immediately clear what the two functions actually return so
+add kernel-doc comment explaining it a bit better.
 
-Is there any reason why this patch isnt in next yet ?
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/probe.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cd28ab122748..a0c48aa1c42f 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -999,6 +999,8 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+  * already configured by the BIOS and after we are done with all of
+  * them, we proceed to assigning numbers to the remaining buses in
+  * order to avoid overlaps between old and new bus numbers.
++ *
++ * Return: New subordinate number covering all buses behind this bridge.
+  */
+ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+ 				  int max, unsigned int available_buses,
+@@ -1231,6 +1233,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+  * already configured by the BIOS and after we are done with all of
+  * them, we proceed to assigning numbers to the remaining buses in
+  * order to avoid overlaps between old and new bus numbers.
++ *
++ * Return: New subordinate number covering all buses behind this bridge.
+  */
+ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ {
 -- 
-Best regards,
-Marek Vasut
+2.17.0
+
