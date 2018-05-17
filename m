@@ -1,79 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:35551 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751304AbeERHHk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2018 03:07:40 -0400
-Received: by mail-pg0-f67.google.com with SMTP id 11-v6so1287273pge.2
-        for <linux-pci@vger.kernel.org>; Fri, 18 May 2018 00:07:40 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [RESEND PATCH] PCI: qcom: add runtime pm support to pcie_port
-Date: Fri, 18 May 2018 00:07:36 -0700
-Message-Id: <20180518070736.3003-1-bjorn.andersson@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v2 5/7] PCI: dwc: Add legacy interrupt callback handler
+Date: Thu, 17 May 2018 18:09:21 +0100
+Message-Id: <c94a66476c391f8bdc781384e6d096453c2c885b.1526576613.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
+References: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Add a legacy interrupt callback handler. Currently DesignWare IP don't
+allow trigger legacy interrupts.
 
-This patch is required when the pcie controller sits on a bus with
-its own power domain and clocks which are controlled via a bus driver
-like simple pm bus. As these bus driver have runtime pm enabled, it makes
-sense to update the usage counter so that the runtime pm does not suspend
-the clks or power domain associated with the bus driver.
-
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
 
-This patch was posted 18 months ago but was somehow lost. linux-next recently
-enabled PCIe on MSM8996 and DB820c, but the system stalls as the agnoc gdsc
-isn't enabled. This patch still fixes this problem for me.
+ drivers/pci/dwc/pcie-designware-ep.c   | 10 ++++++++++
+ drivers/pci/dwc/pcie-designware-plat.c |  3 +--
+ drivers/pci/dwc/pcie-designware.h      |  6 ++++++
+ 3 files changed, 17 insertions(+), 2 deletions(-)
 
- drivers/pci/dwc/pcie-qcom.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 5897af7d3355..3f35098b71b1 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -1088,6 +1088,8 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 	struct qcom_pcie *pcie = to_qcom_pcie(pci);
- 	int ret;
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index a4baa0d..9822127 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
+ 	.stop			= dw_pcie_ep_stop,
+ };
  
-+	pm_runtime_get_sync(pci->dev);
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct device *dev = pci->dev;
 +
- 	qcom_ep_reset_assert(pcie);
++	dev_err(dev, "EP cannot trigger legacy IRQs\n");
++
++	return -EINVAL;
++}
++
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num)
+ {
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index 654dcb5..90a8c95 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -84,8 +84,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
  
- 	ret = pcie->ops->init(pcie);
-@@ -1124,6 +1126,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 	phy_power_off(pcie->phy);
- err_deinit:
- 	pcie->ops->deinit(pcie);
-+	pm_runtime_put_sync(pci->dev);
- 
- 	return ret;
+ 	switch (type) {
+ 	case PCI_EPC_IRQ_LEGACY:
+-		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
+-		return -EINVAL;
++		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
+ 	case PCI_EPC_IRQ_MSI:
+ 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
+ 	case PCI_EPC_IRQ_MSIX:
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index a0ab12f..69e6e17 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -350,6 +350,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num);
+ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+@@ -369,6 +370,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
  }
-@@ -1204,6 +1207,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	struct qcom_pcie *pcie;
- 	int ret;
  
++static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	return 0;
++}
 +
- 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
- 	if (!pcie)
- 		return -ENOMEM;
-@@ -1212,6 +1216,8 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	if (!pci)
- 		return -ENOMEM;
- 
-+	pm_runtime_enable(dev);
-+
- 	pci->dev = dev;
- 	pci->ops = &dw_pcie_ops;
- 	pp = &pci->pp;
+ static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 					   u8 interrupt_num)
+ {
 -- 
-2.17.0
+2.7.4
