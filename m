@@ -1,69 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <81be86fdeb4b8cc496daf668833a3b5ee66428e9.camel@linux.intel.com>
-Subject: Re: [PATCH v7 10/12] PCI: Document return value of
- pci_scan_bridge() and pci_scan_bridge_extend()
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Date: Thu, 17 May 2018 14:44:48 +0300
-In-Reply-To: <20180517092903.43701-11-mika.westerberg@linux.intel.com>
-References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
-         <20180517092903.43701-11-mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18837 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752558AbeEQHnY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2018 03:43:24 -0400
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Subject: [PATCH v17 7/9] PCI/DPC: Disable ERR_NONFATAL handling by DPC
+Date: Thu, 17 May 2018 03:43:09 -0400
+Message-Id: <1526542991-5291-8-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
+References: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-05-17 at 12:29 +0300, Mika Westerberg wrote:
-> It is not immediately clear what the two functions actually return so
-> add kernel-doc comment explaining it a bit better.
-> 
+PCIe ERR_NONFATAL errors mean a particular transaction is unreliable but
+the Link is otherwise fully functional (PCIe r4.0, sec 6.2.2).
 
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+The AER driver handles these by logging the error details and calling
+driver-supplied pci_error_handlers callbacks.  It does not reset downstream
+devices, does not remove them from the PCI subsystem, does not re-enumerate
+them, and does not call their driver .remove() or .probe() methods.
 
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/pci/probe.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cd28ab122748..a0c48aa1c42f 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -999,6 +999,8 @@ static unsigned int
-> pci_scan_child_bus_extend(struct pci_bus *bus,
->   * already configured by the BIOS and after we are done with all of
->   * them, we proceed to assigning numbers to the remaining buses in
->   * order to avoid overlaps between old and new bus numbers.
-> + *
-> + * Return: New subordinate number covering all buses behind this
-> bridge.
->   */
->  static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev
-> *dev,
->  				  int max, unsigned int
-> available_buses,
-> @@ -1231,6 +1233,8 @@ static int pci_scan_bridge_extend(struct pci_bus
-> *bus, struct pci_dev *dev,
->   * already configured by the BIOS and after we are done with all of
->   * them, we proceed to assigning numbers to the remaining buses in
->   * order to avoid overlaps between old and new bus numbers.
-> + *
-> + * Return: New subordinate number covering all buses behind this
-> bridge.
->   */
->  int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int
-> max, int pass)
->  {
+But DPC driver previously enabled DPC on ERR_NONFATAL, so if the hardware
+supports DPC, these errors caused a Link reset (performed automatically by
+the hardware), followed by the DPC driver removing affected devices (which
+calls their .remove() methods), bringing the Link back up, and
+re-enumerating (which calls driver .probe() methods).
 
+Disable ERR_NONFATAL DPC triggering so these errors will only be handled by
+AER.  This means drivers won't have to deal with different usage of their
+pci_error_handlers callbacks and .probe() and .remove() methods based on
+whether the platform has DPC support.
+
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+[bhelgaas: changelog]
+Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
+
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 80ec384..361903f 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -260,7 +260,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 		}
+ 	}
+ 
+-	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
++	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN;
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+ 
+ 	dev_info(device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
+@@ -278,7 +278,7 @@ static void dpc_remove(struct pcie_device *dev)
+ 	u16 ctl;
+ 
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
+-	ctl &= ~(PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN);
++	ctl &= ~(PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN);
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+ }
+ 
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 103ba79..5182e0d 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -981,6 +981,7 @@
+ #define  PCI_EXP_DPC_CAP_DL_ACTIVE	0x1000	/* ERR_COR signal on DL_Active supported */
+ 
+ #define PCI_EXP_DPC_CTL			6	/* DPC control */
++#define  PCI_EXP_DPC_CTL_EN_FATAL 	0x0001	/* Enable trigger on ERR_FATAL message */
+ #define  PCI_EXP_DPC_CTL_EN_NONFATAL 	0x0002	/* Enable trigger on ERR_NONFATAL message */
+ #define  PCI_EXP_DPC_CTL_INT_EN 	0x0008	/* DPC Interrupt Enable */
+ 
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.7.4
