@@ -1,68 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:45785 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933114AbeEWOdd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 10:33:33 -0400
-Subject: Re: [PATCH 1/5] PCI/AER: Define and allocate aer_stats structure for
- AER capable devices
-To: Jes Sorensen <jsorensen@fb.com>,
-        Matthew Wilcox <willy@infradead.org>
-Cc: Rajat Jain <rajatja@google.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Kyle McMartin <jkkm@fb.com>,
-        rajatxjain@gmail.com
-References: <20180522222805.80314-1-rajatja@google.com>
- <20180522222805.80314-2-rajatja@google.com>
- <62fae8eb-aaed-65b2-19ad-7c57b3a9bfdc@fb.com>
- <20180523142656.GE19987@bombadil.infradead.org>
- <46f0a2fa-9b48-c6d3-05ac-a75168b1998c@fb.com>
-From: "Alex G." <mr.nuke.me@gmail.com>
-Message-ID: <ffa4e203-f320-b9be-c0d7-8432e949765b@gmail.com>
-Date: Wed, 23 May 2018 09:33:30 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:47160 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751907AbeEQPEO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2018 11:04:14 -0400
 MIME-Version: 1.0
-In-Reply-To: <46f0a2fa-9b48-c6d3-05ac-a75168b1998c@fb.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 17 May 2018 20:34:13 +0530
+From: poza@codeaurora.org
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCHv2 7/7] PCI/DPC: Print AER status in DPC event handling
+In-Reply-To: <12ab6f9ef1ab79fd09ff7ec583e1d2da@codeaurora.org>
+References: <20180402162203.3370-1-keith.busch@intel.com>
+ <20180402162203.3370-8-keith.busch@intel.com>
+ <12ab6f9ef1ab79fd09ff7ec583e1d2da@codeaurora.org>
+Message-ID: <f9bb09d1d73b19231017a42258eef340@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/23/2018 09:32 AM, Jes Sorensen wrote:
-> On 05/23/2018 10:26 AM, Matthew Wilcox wrote:
->> On Wed, May 23, 2018 at 10:20:10AM -0400, Jes Sorensen wrote:
->>>> +++ b/drivers/pci/pcie/aer/aerdrv_stats.c
->>>> @@ -0,0 +1,64 @@
->>>> +// SPDX-License-Identifier: GPL-2.0
->>>
->>> Fix the formatting please - that gross // gibberish doesn't belong there.
->>
->> Sorry, Jes.  The Chief Penguin has Spoken, and that's the preferred
->> syntax:
->>
->> 2. Style:
->>
->>    The SPDX license identifier is added in form of a comment.  The comment
->>    style depends on the file type::
->>
->>       C source: // SPDX-License-Identifier: <SPDX License Expression>
->>
->> (you can dig up the discussion around this on the mailing list if you
->> like.  Linus actually thinks that C++ single-line comments are one of
->> the few things that language got right)
+On 2018-05-17 20:32, poza@codeaurora.org wrote:
+> On 2018-04-02 21:52, Keith Busch wrote:
+>> A DPC enabled device suppresses ERR_(NON)FATAL messages, preventing 
+>> the
+>> AER handler from reporting error details. If the DPC trigger reason 
+>> says
+>> the downstream port detected the error, this patch has the DPC driver
+>> collect the AER uncorrectable status for logging, then clears the 
+>> status.
+>> 
+>> Signed-off-by: Keith Busch <keith.busch@intel.com>
+>> ---
+>>  drivers/pci/pcie/pcie-dpc.c | 7 ++++++-
+>>  1 file changed, 6 insertions(+), 1 deletion(-)
+>> 
+>> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+>> index e12837ee4f1c..76f963a5089e 100644
+>> --- a/drivers/pci/pcie/pcie-dpc.c
+>> +++ b/drivers/pci/pcie/pcie-dpc.c
+>> @@ -85,6 +85,7 @@ static void dpc_wait_link_inactive(struct dpc_dev 
+>> *dpc)
+>> 
+>>  static void dpc_work(struct work_struct *work)
+>>  {
+>> +	struct aer_err_info info;
+>>  	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+>>  	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+>>  	struct pci_bus *parent = pdev->subordinate;
+>> @@ -108,8 +109,12 @@ static void dpc_work(struct work_struct *work)
+>>  		 (ext_reason == 1) ? "software trigger" :
+>>  				     "reserved error");
+>> 
+>> -	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
+>> +	if (dpc->rp_extensions && reason == 3 && ext_reason == 0) {
+>>  		pio_status = dpc_process_rp_pio_error(dpc);
+>> +	} else if (reason == 0 && aer_get_device_error_info(pdev, &info)) {
+>> +		aer_print_error(pdev, &info);
+>> +		pci_cleanup_aer_uncorrect_error_status(pdev);
+>> +	}
+>> 
+>>  	pci_lock_rescan_remove();
+>>  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
 > 
-> Well I'll agree to disagree with Linus on this one. It's ugly as fsck
-> and allows for ambiguous statements in the code.
+> 
+> I am not sure if this series is in pursuit. but was wondering why do
+> we need to clear aer status in DPC (when DPC is triggered)?
+> because
+> 
+> 6.2.10 for Downstream Port Containment:
+> 
+>   When DPC is triggered due to receipt of an uncorrectable error 
+> Message,
+>   the Requester ID from the Message is recorded in the DPC Error
+>   Source ID register and that Message is discarded and not forwarded
+>   Upstream. When DPC is triggered by an unmasked uncorrectable error,
+>   that error will not be signaled with an uncorrectable error Message,
+>   even if otherwise enabled.
+> 
+> so when DPC is active, the msg is discarded and not forwarded to 
+> upstream.
+> which means that we should find AER status set in RP or Switch.
+> 
+> Regards,
+> Oza.
 
-You misspelled "fuck".
-
-Alex
+Correction: which means that we should *not* find AER status set in RP 
+or Switch.
