@@ -1,92 +1,84 @@
-Return-Path: <SRS0=WfuT=HW=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=WfuT=HW=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Thu, 3 May 2018 12:35:04 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sridhar Pitchai <Sridhar.Pitchai@microsoft.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Stephen Hemminger <sthemmin@microsoft.com>,
-	KY Srinivasan <kys@microsoft.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v8] PCI: hv: Make sure the bus domain is really unique
-Message-ID: <20180503113504.GA21781@e107981-ln.cambridge.arm.com>
-References: <6E619990-8EFD-4688-8C01-8D9C480B04AF@microsoft.com>
+Return-Path: <SRS0=4YfD=IF=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=4YfD=IF=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com, Michael Jamet <michael.jamet@intel.com>, Yehezkel Bernat <YehezkelShB@gmail.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org, Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH v7 03/12] PCI: Request control of native PCIe hotplug only if supported
+Date: Fri, 18 May 2018 09:48:54 +0200
+Message-ID: <1570821.OC5yac8T6J@aspire.rjw.lan>
+In-Reply-To: <20180517141324.GD19955@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180517092903.43701-1-mika.westerberg@linux.intel.com> <20180517092903.43701-4-mika.westerberg@linux.intel.com> <20180517141324.GD19955@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6E619990-8EFD-4688-8C01-8D9C480B04AF@microsoft.com>
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 01, 2018 at 05:56:32PM +0000, Sridhar Pitchai wrote:
-> When Linux runs as a guest VM in Hyper-V and Hyper-V adds the virtual PCI
-> bus to the guest, Hyper-V always provides unique PCI domain.
+On Thursday, May 17, 2018 4:13:24 PM CEST Bjorn Helgaas wrote:
+> On Thu, May 17, 2018 at 12:28:54PM +0300, Mika Westerberg wrote:
+> > Currently we request control of native PCIe hotplug unconditionally.
+> > That may cause problems because native PCIe hotplug events are handled
+> > by pciehp driver and if it is not enabled those events will be lost.
+> > Make this bit more robust and request control of native PCIe hotplug
+> > only if we are actually prepared to do so (pciehp driver is enabled).
+> > 
+> > While there rename host->native_hotplug to host->native_pcie_hotplug
+> > because we do the same for SHPC hotplug in subsequent patches.
+> > 
+> > Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >  drivers/acpi/pci_root.c         | 6 ++++--
+> >  drivers/pci/pcie/portdrv_core.c | 2 +-
+> >  drivers/pci/probe.c             | 2 +-
+> >  include/linux/pci.h             | 2 +-
+> >  4 files changed, 7 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> > index 0da18bde6a16..02ab96f00952 100644
+> > --- a/drivers/acpi/pci_root.c
+> > +++ b/drivers/acpi/pci_root.c
+> > @@ -29,6 +29,7 @@
+> >  #include <linux/pci.h>
+> >  #include <linux/pci-acpi.h>
+> >  #include <linux/pci-aspm.h>
+> > +#include <linux/pci_hotplug.h>
+> >  #include <linux/dmar.h>
+> >  #include <linux/acpi.h>
+> >  #include <linux/slab.h>
+> > @@ -472,9 +473,10 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+> >  	}
+> >  
+> >  	control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
+> > -		| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+> >  		| OSC_PCI_EXPRESS_PME_CONTROL;
+> >  
+> > +	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE))
+> > +		control |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
+> >  	if (pci_aer_available()) {
+> >  		if (aer_acpi_firmware_first())
+> >  			dev_info(&device->dev,
+> > @@ -900,7 +902,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> >  
+> >  	host_bridge = to_pci_host_bridge(bus->bridge);
+> >  	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
+> > -		host_bridge->native_hotplug = 0;
+> > +		host_bridge->native_pcie_hotplug = 0;
+> >  	if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
+> >  		host_bridge->native_aer = 0;
+> >  	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
 > 
-> commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI domain")
-> overrode unique domain with the serial number of the first device added to
-> the virtual PCI bus.
-> 
-> The reason for that patch was to have a consistent and short name for the
-> device, but Hyper-V doesn't provide unique serial numbers. Using non-unique
-> serial numbers as domain IDs leads to duplicate device addresses, which
-> causes PCI bus registration to fail.
-> 
-> commit 0c195567a8f6 ("netvsc: transparent VF management") avoids the need
-> for commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI
-> domain").  When scripts were used to configure VF devices, the name of
-> the VF needed to be consistent and short, but with commit 0c195567a8f6
-> ("netvsc: transparent VF management") all the setup is done in the kernel,
-> and we do not need to maintain consistent name.
-> 
-> Revert commit 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI
-> domain") so we can reliably support multiple devices being assigned to
-> a guest.
-> 
-> This revert should only be backported to kernels that contain commit
-> 0c195567a8f6 ("netvsc: transparent VF management").
+> Rafael, I noticed that the PCI Firmware Spec, r3.2, sec 4.5.2.2, says
+> we're required to evaluate _OSC when resuming from S4.  I don't see a
+> path where we do that today.
 
-I removed this last paragraph, the information is in the stable tag
-below.
+No, we don't do that today.
 
-> Fixes: 4a9b0933bdfc ("PCI: hv: Use device serial number as PCI domain")
-> Signed-off-by: Sridhar Pitchai <sridhar.pitchai@microsoft.com>
-> Cc: stable@vger.kernel.org # v4.14+
-> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> ---
-> Changes in v8:
-> * fix the commit comment. [Lorenzo Pieralisi, Bjorn Helgaas]
-> ---
->  drivers/pci/host/pci-hyperv.c | 11 -----------
->  1 file changed, 11 deletions(-)
+> Am I missing it?  If not, what resume hook do we need to use to do
+> this?
 
-Applied to pci/hv for v4.18, thanks.
+We could do that in the ->restore_noirq callback of the host bridge
+device I suppose.  Basically, before resuming all of the PCI devices
+on the bus.
 
-Lorenzo
-
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index 2faf38eab785..ac67e56e451a 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -1518,17 +1518,6 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
->  	get_pcichild(hpdev, hv_pcidev_ref_childlist);
->  	spin_lock_irqsave(&hbus->device_list_lock, flags);
->  
-> -	/*
-> -	 * When a device is being added to the bus, we set the PCI domain
-> -	 * number to be the device serial number, which is non-zero and
-> -	 * unique on the same VM.  The serial numbers start with 1, and
-> -	 * increase by 1 for each device.  So device names including this
-> -	 * can have shorter names than based on the bus instance UUID.
-> -	 * Only the first device serial number is used for domain, so the
-> -	 * domain number will not change after the first device is added.
-> -	 */
-> -	if (list_empty(&hbus->children))
-> -		hbus->sysdata.domain = desc->ser;
->  	list_add_tail(&hpdev->list_entry, &hbus->children);
->  	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
->  	return hpdev;
-> -- 
-> 2.14.1
-> 
-> 
+However, question is on what conditions.  Do the previous versions of the
+spec have this requirement or is it just a new thing?
