@@ -1,280 +1,138 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:16226 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754346AbeEaKuu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 06:50:50 -0400
-Subject: Re: [PATCH v2 2/7] PCI: dwc: Add MSI-X callbacks handler
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
-        <adouglas@cadence.com>, <jesper.nilsson@axis.com>
-References: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
- <24e9cdc20d57aaea0bcb62879824c57004df46c9.1526576613.git.gustavo.pimentel@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <758acd51-a36a-ae68-2e28-5ce184707dda@ti.com>
-Date: Thu, 31 May 2018 16:19:25 +0530
+Return-Path: <SRS0=uJwc=IF=broadcom.com=ray.jui@kernel.org>
+Return-Path: <SRS0=uJwc=IF=broadcom.com=ray.jui@kernel.org>
+Subject: Re: [PATCH INTERNAL 3/3] PCI: iproc: Disable MSI parsing in certain
+ PAXC blocks
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, poza@codeaurora.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
+References: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
+ <1526577692-21104-4-git-send-email-ray.jui@broadcom.com>
+ <ad41ea7f16414a83a2b3d7e6192bcf79@codeaurora.org>
+ <20180518135614.GA18605@e107981-ln.cambridge.arm.com>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <e433f2cf-63c5-37c3-f7ef-15ff0aa67e4f@broadcom.com>
+Date: Fri, 18 May 2018 12:48:28 -0700
 MIME-Version: 1.0
-In-Reply-To: <24e9cdc20d57aaea0bcb62879824c57004df46c9.1526576613.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180518135614.GA18605@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Hi Lorenzo,
 
-On Thursday 17 May 2018 10:39 PM, Gustavo Pimentel wrote:
-> Change pcie_raise_irq() signature, namely the interrupt_num variable type
-> from u8 to u16 to accommodate 2048 maximum MSI-X interrupts.
+On 5/18/2018 6:56 AM, Lorenzo Pieralisi wrote:
+> On Fri, May 18, 2018 at 02:53:41PM +0530, poza@codeaurora.org wrote:
+>> On 2018-05-17 22:51, Ray Jui wrote:
+>>> The internal MSI parsing logic in certain revisions of PAXC root
+>>> complexes does not work properly and can casue corruptions on the
+>>> writes. They need to be disabled
+>>>
+>>> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+>>> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+>>> ---
+>>> drivers/pci/host/pcie-iproc.c | 34 ++++++++++++++++++++++++++++++++--
+>>> 1 file changed, 32 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+>>> index 3c76c5f..b906d80 100644
+>>> --- a/drivers/pci/host/pcie-iproc.c
+>>> +++ b/drivers/pci/host/pcie-iproc.c
+>>> @@ -1144,10 +1144,22 @@ static int iproc_pcie_paxb_v2_msi_steer(struct
+>>> iproc_pcie *pcie, u64 msi_addr)
+>>> 	return ret;
+>>> }
+>>>
+>>> -static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64
+>>> msi_addr)
+>>> +static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64
+>>> msi_addr,
+>>> +					 bool enable)
+>>> {
+>>> 	u32 val;
+>>>
+>>> +	if (!enable) {
+>>> +		/*
+>>> +		 * Disable PAXC MSI steering. All write transfers will be
+>>> +		 * treated as non-MSI transfers
+>>> +		 */
+>>> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
+>>> +		val &= ~MSI_ENABLE_CFG;
+>>> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
+>>> +		return;
+>>> +	}
+>>> +
+>>> 	/*
+>>> 	 * Program bits [43:13] of address of GITS_TRANSLATER register into
+>>> 	 * bits [30:0] of the MSI base address register.  In fact, in all iProc
+>>> @@ -1201,7 +1213,7 @@ static int iproc_pcie_msi_steer(struct iproc_pcie
+>>> *pcie,
+>>> 			return ret;
+>>> 		break;
+>>> 	case IPROC_PCIE_PAXC_V2:
+>>> -		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
+>>> +		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr, true);
+>>
+>> Are you calling iproc_pcie_paxc_v2_msi_steer() anywhere else with 'false' ?
+>> I see its getting called only from one place in current code
+>> iproc_pcie_msi_steer().
 > 
-> Add PCIe config space capability search function.
+> It is called below with the false field to disable MSIs. That's probably
+> one reason more to create a function to enable/disable MSIs instead of
+> adding a parameter to iproc_pcie_paxc_v2_msi_steer().
+
+Correct. Thanks for helping to explain.
+
 > 
-> Add sysfs set/get interface to allow the change of EP MSI-X maximum number.
+> Which brings me to the question: what happens to those MSIs writes
+> when MSIs are disabled according to this patch ? Are they terminated
+> at the root complex ?
+
+Note the PAXC block parses MSI writes from our internally connected 
+endpoints (i.e., an embedded network processor). The PAXC block examines 
+these MSI writes and modifies the memory attributes (to DEVICE) of these 
+data and then send them out to the AXI bus. These MSI writes will then 
+be forwarded to the GIC (e.g., GICv2m, GICv3-ITS from ARM) for further 
+processing. This is saying, PAXC itself does not process these MSI 
+writes. They are processed by the GIC and associated interrupt will be 
+generated form the GIC. PAXC's job is to parse and tag them properly so 
+these MSI writes can reach the GIC, and at the same, reach the GIC at 
+the right order.
+
+On some of these problematic PAXCs, we are being forced to disable this 
+PAXC internal parsing logic. In this case, we set up static mapping with 
+the IOMMU to modify the memory attributes of these MSI writes. These MSI 
+writes are always designated towards a specific memory address (e.g., on 
+the GICv3 based system, it's the address of the translator register), 
+and that's why static mapping table can be set up to work around this.
+
 > 
-> Add EP MSI-X callback for triggering interruptions.
+> Lorenzo
 > 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
-> Change v1->v2:
->  - Nothing changed, just to follow the patch set version.
-> 
->  drivers/pci/dwc/pci-dra7xx.c           |   2 +-
->  drivers/pci/dwc/pcie-artpec6.c         |   2 +-
->  drivers/pci/dwc/pcie-designware-ep.c   | 146 ++++++++++++++++++++++++++++++++-
->  drivers/pci/dwc/pcie-designware-plat.c |   4 +-
->  drivers/pci/dwc/pcie-designware.h      |  14 +++-
->  5 files changed, 163 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index f688204..bdf948b 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -370,7 +370,7 @@ static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
->  }
->  
->  static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-> -				 enum pci_epc_irq_type type, u8 interrupt_num)
-> +				 enum pci_epc_irq_type type, u16 interrupt_num)
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-> index 321b56c..9a2474b 100644
-> --- a/drivers/pci/dwc/pcie-artpec6.c
-> +++ b/drivers/pci/dwc/pcie-artpec6.c
-> @@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
->  }
->  
->  static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-> -				  enum pci_epc_irq_type type, u8 interrupt_num)
-> +				  enum pci_epc_irq_type type, u16 interrupt_num)
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-
-I think you should change pci_epc_raise_irq (in previous patch) and the above
-two changes in a separate patch. You can also include pcie-cadence-ep.c along
-with that.
->  
-> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> index 1eec441..e5f2377 100644
-> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> @@ -40,6 +40,39 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
->  	__dw_pcie_ep_reset_bar(pci, bar, 0);
->  }
->  
-> +u8 __dw_pcie_ep_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
-> +			      u8 cap)
-> +{
-> +	u8 cap_id, next_cap_ptr;
-> +	u16 reg;
-> +
-> +	reg = dw_pcie_readw_dbi(pci, cap_ptr);
-> +	next_cap_ptr = (reg & 0xff00) >> 8;
-> +	cap_id = (reg & 0x00ff);
-> +
-> +	if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
-> +		return 0;
-> +
-> +	if (cap_id == cap)
-> +		return cap_ptr;
-> +
-> +	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
-> +}
-> +
-> +u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
-> +{
-> +	u8 next_cap_ptr;
-> +	u16 reg;
-> +
-> +	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
-> +	next_cap_ptr = (reg & 0x00ff);
-> +
-> +	if (!next_cap_ptr)
-> +		return 0;
-> +
-> +	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
-> +}
-> +
->  static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
->  				   struct pci_epf_header *hdr)
->  {
-> @@ -241,8 +274,47 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
->  	return 0;
->  }
->  
-> +static int dw_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
-> +{
-> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	u32 val, reg;
-> +
-> +	if (!ep->msix_cap)
-> +		return 0;
-
-return -EINVAL?
-
-or pci_epc_get_msix() will return 1.
-> +
-> +	reg = ep->msix_cap + PCI_MSIX_FLAGS;
-> +	val = dw_pcie_readw_dbi(pci, reg);
-> +	if (!(val & PCI_MSIX_FLAGS_ENABLE))
-> +		return -EINVAL;
-> +
-> +	val &= PCI_MSIX_FLAGS_QSIZE;
-> +
-> +	return val;
-> +}
-> +
-> +static int dw_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
-> +{
-> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	u32 val, reg;
-> +
-> +	if (!ep->msix_cap)
-> +		return 0;
-
-here too return -EINVAL.
-> +
-> +	reg = ep->msix_cap + PCI_MSIX_FLAGS;
-> +	val = dw_pcie_readw_dbi(pci, reg);
-> +	val &= ~PCI_MSIX_FLAGS_QSIZE;
-> +	val |= interrupts;
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +	dw_pcie_writew_dbi(pci, reg, val);
-> +	dw_pcie_dbi_ro_wr_dis(pci);
-> +
-> +	return 0;
-> +}
-> +
->  static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
-> -				enum pci_epc_irq_type type, u8 interrupt_num)
-> +				enum pci_epc_irq_type type, u16 interrupt_num)
->  {
->  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->  
-> @@ -282,6 +354,8 @@ static const struct pci_epc_ops epc_ops = {
->  	.unmap_addr		= dw_pcie_ep_unmap_addr,
->  	.set_msi		= dw_pcie_ep_set_msi,
->  	.get_msi		= dw_pcie_ep_get_msi,
-> +	.set_msix		= dw_pcie_ep_set_msix,
-> +	.get_msix		= dw_pcie_ep_get_msix,
->  	.raise_irq		= dw_pcie_ep_raise_irq,
->  	.start			= dw_pcie_ep_start,
->  	.stop			= dw_pcie_ep_stop,
-> @@ -322,6 +396,64 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
->  	return 0;
->  }
->  
-> +int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
-> +			     u16 interrupt_num)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	struct pci_epc *epc = ep->epc;
-> +	u16 tbl_offset, bir;
-> +	u32 bar_addr_upper, bar_addr_lower;
-> +	u32 msg_addr_upper, msg_addr_lower;
-> +	u32 reg, msg_data, vec_ctrl;
-> +	u64 tbl_addr, msg_addr, reg_u64;
-> +	void __iomem *msix_tbl;
-> +	int ret;
-> +
-> +	reg = ep->msix_cap + PCI_MSIX_TABLE;
-> +	tbl_offset = dw_pcie_readl_dbi(pci, reg);
-> +	bir = (tbl_offset & PCI_MSIX_TABLE_BIR);
-> +	tbl_offset &= PCI_MSIX_TABLE_OFFSET;
-> +	tbl_offset >>= 3;
-> +
-> +	reg = PCI_BASE_ADDRESS_0 + (4 * bir);
-> +	bar_addr_lower = dw_pcie_readl_dbi(pci, reg);
-> +	reg_u64 = (bar_addr_lower & PCI_BASE_ADDRESS_MEM_TYPE_MASK);
-> +	if (reg_u64 == PCI_BASE_ADDRESS_MEM_TYPE_64)
-> +		bar_addr_upper = dw_pcie_readl_dbi(pci, reg + 4);
-> +	else
-> +		bar_addr_upper = 0;
-
-You can skip else if you can use something like below
-
-bar_addr_upper = 0
-bar_addr_lower = dw_pcie_readl_dbi(pci, reg);
-reg_u64 = (bar_addr_lower & PCI_BASE_ADDRESS_MEM_TYPE_MASK);
-if (reg_u64 == PCI_BASE_ADDRESS_MEM_TYPE_64)
-	bar_addr_upper = dw_pcie_readl_dbi(pci, reg + 4);
-> +
-> +	tbl_addr = ((u64) bar_addr_upper) << 32 | bar_addr_lower;
-> +	tbl_addr += (tbl_offset + ((interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE));
-> +	tbl_addr &= PCI_BASE_ADDRESS_MEM_MASK;
-> +
-> +	msix_tbl = ioremap_nocache(ep->phys_base + tbl_addr, ep->addr_size);
-
-Why do you want to ioremap the entire address region?
-> +	if (!msix_tbl)
-> +		return -EINVAL;
-> +
-> +	msg_addr_lower = readl(msix_tbl + PCI_MSIX_ENTRY_LOWER_ADDR);
-> +	msg_addr_upper = readl(msix_tbl + PCI_MSIX_ENTRY_UPPER_ADDR);
-> +	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
-> +	msg_data = readl(msix_tbl + PCI_MSIX_ENTRY_DATA);
-> +	vec_ctrl = readl(msix_tbl + PCI_MSIX_ENTRY_VECTOR_CTRL);
-> +
-> +	if (vec_ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT)
-> +		return -EPERM;
-> +
-> +	iounmap(msix_tbl);
-> +
-> +	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msix_mem_phys, msg_addr,
-> +				  epc->mem->page_size);
-> +	if (ret)
-> +		return ret;
-> +
-> +	writel(msg_data, ep->msix_mem);
-> +
-> +	dw_pcie_ep_unmap_addr(epc, func_no, ep->msix_mem_phys);
-> +
-> +	return 0;
-> +}
-> +
->  void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
->  {
->  	struct pci_epc *epc = ep->epc;
-> @@ -329,6 +461,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
->  	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
->  			      epc->mem->page_size);
->  
-> +	pci_epc_mem_free_addr(epc, ep->msix_mem_phys, ep->msix_mem,
-> +			      epc->mem->page_size);
-> +
->  	pci_epc_mem_exit(epc);
->  }
->  
-> @@ -410,6 +545,15 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
->  		dev_err(dev, "Failed to reserve memory for MSI\n");
->  		return -ENOMEM;
->  	}
-> +	ep->msi_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSI);
-
-msi_cap is not used anywhere else.
-
-Thanks
-Kishon
+>>> 		break;
+>>> 	default:
+>>> 		return -EINVAL;
+>>> @@ -1427,6 +1439,24 @@ int iproc_pcie_remove(struct iproc_pcie *pcie)
+>>> }
+>>> EXPORT_SYMBOL(iproc_pcie_remove);
+>>>
+>>> +/*
+>>> + * The MSI parsing logic in certain revisions of Broadcom PAXC based root
+>>> + * complex does not work and needs to be disabled
+>>> + */
+>>> +static void quirk_paxc_disable_msi_parsing(struct pci_dev *pdev)
+>>> +{
+>>> +	struct iproc_pcie *pcie = iproc_data(pdev->bus);
+>>> +
+>>> +	if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+>>> +		iproc_pcie_paxc_v2_msi_steer(pcie, 0, false);
+>>> +}
+>>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0,
+>>> +			quirk_paxc_disable_msi_parsing);
+>>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802,
+>>> +			quirk_paxc_disable_msi_parsing);
+>>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804,
+>>> +			quirk_paxc_disable_msi_parsing);
+>>> +
+>>> MODULE_AUTHOR("Ray Jui <rjui@broadcom.com>");
+>>> MODULE_DESCRIPTION("Broadcom iPROC PCIe common driver");
+>>> MODULE_LICENSE("GPL v2");
