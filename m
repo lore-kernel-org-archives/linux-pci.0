@@ -1,257 +1,139 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 02/40] iommu/sva: Bind process address spaces to devices
-Date: Fri, 11 May 2018 20:06:03 +0100
-Message-Id: <20180511190641.23008-3-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=CtTX=IF=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=CtTX=IF=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Keith Busch <keith.busch@intel.com>,
+	<linux-pci@vger.kernel.org>
+Cc: Joerg Roedel <jroedel@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Dave Fugate <david.fugate@intel.com>,
+	Scott Bauer <scott.bauer@intel.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 2/5] PCI/VMD: Assign membar addresses from shadow registers
+Date: Fri, 18 May 2018 13:27:59 -0600
+Message-Id: <20180518192802.20371-3-jonathan.derrick@intel.com>
+In-Reply-To: <20180518192802.20371-1-jonathan.derrick@intel.com>
+References: <20180518192802.20371-1-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add bind() and unbind() operations to the IOMMU API. Bind() returns a
-PASID that drivers can program in hardware, to let their devices access an
-mm. This patch only adds skeletons for the device driver API, most of the
-implementation is still missing.
+Certain VMD devices have registers within membar 2 which may shadow the
+membar 1 and membar 2 addresses. These are intended to be used in
+virtualization, where assigning a guest address wouldn't be translated
+in the assignment to root port and child devices because the addresses
+exist within the assignment message.
 
-IOMMU groups with more than one device aren't supported for SVA at the
-moment. There may be P2P traffic between devices within a group, which
-cannot be seen by an IOMMU (note that supporting PASID doesn't add any
-form of isolation with regard to P2P). Supporting groups would require
-calling bind() for all bound processes every time a device is added to a
-group, to perform sanity checks (e.g. ensure that new devices support
-PASIDs at least as big as those already allocated in the group). It also
-means making sure that reserved ranges (IOMMU_RESV_*) of all devices are
-carved out of processes. This is already tricky with single devices, but
-becomes very difficult with groups. Since SVA-capable devices are expected
-to be cleanly isolated, and since we don't have any way to test groups or
-hot-plug, we only allow singular groups for now.
+These values will only reflect the membars when enabled in the BIOS, as
+determined by a register in the VMD device.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+This patch declares this option as a bit in the pci id driver_data, so
+that future conforming device ids can be enabled through sysfs new_id if
+necessary.
 
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 ---
-v1->v2: remove iommu_sva_bind/unbind_group
----
- drivers/iommu/iommu-sva.c | 27 +++++++++++++
- drivers/iommu/iommu.c     | 83 +++++++++++++++++++++++++++++++++++++++
- include/linux/iommu.h     | 37 +++++++++++++++++
- 3 files changed, 147 insertions(+)
+ drivers/pci/host/vmd.c | 54 +++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 49 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/iommu/iommu-sva.c b/drivers/iommu/iommu-sva.c
-index 8b4afb7c63ae..8d98f9c09864 100644
---- a/drivers/iommu/iommu-sva.c
-+++ b/drivers/iommu/iommu-sva.c
-@@ -93,6 +93,8 @@ int iommu_sva_device_shutdown(struct device *dev)
- 	if (!domain)
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index b10d2bce2993..1544121b74f3 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -24,6 +24,18 @@
+ #define VMD_MEMBAR1	2
+ #define VMD_MEMBAR2	4
+ 
++#define PCI_REG_VMLOCK		0x70
++#define MB2_SHADOW_EN(vmlock)	(vmlock & 0x2)
++
++enum vmd_features {
++	/*
++	 * Device may contain registers which hint the physical location of the
++	 * membars, in order to allow proper address translation during
++	 * resource assignment to enable guest virtualization
++	 */
++	VMD_FEAT_HAS_MEMBAR_SHADOW	= (1 << 0),
++};
++
+ /*
+  * Lock for manipulating VMD IRQ lists.
+  */
+@@ -546,7 +558,7 @@ static int vmd_find_free_domain(void)
+ 	return domain + 1;
+ }
+ 
+-static int vmd_enable_domain(struct vmd_dev *vmd)
++static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ {
+ 	struct pci_sysdata *sd = &vmd->sysdata;
+ 	struct fwnode_handle *fn;
+@@ -554,6 +566,37 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+ 	u32 upper_bits;
+ 	unsigned long flags;
+ 	LIST_HEAD(resources);
++	resource_size_t offset[2] = {0};
++	resource_size_t membar2_offset = 0x2000;
++
++	/*
++	 * Shadow registers may exist in certain VMD device ids which allow
++	 * guests to correctly assign host physical addresses to the root ports
++	 * and child devices. These registers will either return the host value
++	 * or 0, depending on an enable bit in the VMD device.
++	 */
++	if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
++		u32 vmlock;
++		int ret;
++
++		membar2_offset = 0x2018;
++		ret = pci_read_config_dword(vmd->dev, PCI_REG_VMLOCK, &vmlock);
++		if (ret || vmlock == ~0)
++			return -ENODEV;
++
++		if (MB2_SHADOW_EN(vmlock)) {
++			void __iomem *membar2;
++
++			membar2 = pci_iomap(vmd->dev, VMD_MEMBAR2, 0);
++			if (!membar2)
++				return -ENOMEM;
++			offset[0] = vmd->dev->resource[VMD_MEMBAR1].start -
++						readq(membar2 + 0x2008);
++			offset[1] = vmd->dev->resource[VMD_MEMBAR2].start -
++						readq(membar2 + 0x2010);
++			pci_iounmap(vmd->dev, membar2);
++		}
++	}
+ 
+ 	res = &vmd->dev->resource[VMD_CFGBAR];
+ 	vmd->resources[0] = (struct resource) {
+@@ -600,7 +643,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+ 		flags &= ~IORESOURCE_MEM_64;
+ 	vmd->resources[2] = (struct resource) {
+ 		.name  = "VMD MEMBAR2",
+-		.start = res->start + 0x2000,
++		.start = res->start + membar2_offset,
+ 		.end   = res->end,
+ 		.flags = flags,
+ 		.parent = res,
+@@ -624,8 +667,9 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
  		return -ENODEV;
  
-+	__iommu_sva_unbind_dev_all(dev);
+ 	pci_add_resource(&resources, &vmd->resources[0]);
+-	pci_add_resource(&resources, &vmd->resources[1]);
+-	pci_add_resource(&resources, &vmd->resources[2]);
++	pci_add_resource_offset(&resources, &vmd->resources[1], offset[0]);
++	pci_add_resource_offset(&resources, &vmd->resources[2], offset[1]);
 +
- 	mutex_lock(&dev->iommu_param->lock);
- 	param = dev->iommu_param->sva_param;
- 	dev->iommu_param->sva_param = NULL;
-@@ -108,3 +110,28 @@ int iommu_sva_device_shutdown(struct device *dev)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(iommu_sva_device_shutdown);
-+
-+int __iommu_sva_bind_device(struct device *dev, struct mm_struct *mm,
-+			    int *pasid, unsigned long flags, void *drvdata)
-+{
-+	return -ENOSYS; /* TODO */
-+}
-+EXPORT_SYMBOL_GPL(__iommu_sva_bind_device);
-+
-+int __iommu_sva_unbind_device(struct device *dev, int pasid)
-+{
-+	return -ENOSYS; /* TODO */
-+}
-+EXPORT_SYMBOL_GPL(__iommu_sva_unbind_device);
-+
-+/**
-+ * __iommu_sva_unbind_dev_all() - Detach all address spaces from this device
-+ * @dev: the device
-+ *
-+ * When detaching @device from a domain, IOMMU drivers should use this helper.
-+ */
-+void __iommu_sva_unbind_dev_all(struct device *dev)
-+{
-+	/* TODO */
-+}
-+EXPORT_SYMBOL_GPL(__iommu_sva_unbind_dev_all);
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 9e28d88c8074..bd2819deae5b 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -2261,3 +2261,86 @@ int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(iommu_fwspec_add_ids);
-+
-+/**
-+ * iommu_sva_bind_device() - Bind a process address space to a device
-+ * @dev: the device
-+ * @mm: the mm to bind, caller must hold a reference to it
-+ * @pasid: valid address where the PASID will be stored
-+ * @flags: bond properties
-+ * @drvdata: private data passed to the mm exit handler
-+ *
-+ * Create a bond between device and task, allowing the device to access the mm
-+ * using the returned PASID. If unbind() isn't called first, a subsequent bind()
-+ * for the same device and mm fails with -EEXIST.
-+ *
-+ * iommu_sva_device_init() must be called first, to initialize the required SVA
-+ * features. @flags is a subset of these features.
-+ *
-+ * The caller must pin down using get_user_pages*() all mappings shared with the
-+ * device. mlock() isn't sufficient, as it doesn't prevent minor page faults
-+ * (e.g. copy-on-write).
-+ *
-+ * On success, 0 is returned and @pasid contains a valid ID. Otherwise, an error
-+ * is returned.
-+ */
-+int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm, int *pasid,
-+			  unsigned long flags, void *drvdata)
-+{
-+	int ret = -EINVAL;
-+	struct iommu_group *group;
-+
-+	if (!pasid)
-+		return -EINVAL;
-+
-+	group = iommu_group_get(dev);
-+	if (!group)
-+		return -ENODEV;
-+
-+	/* Ensure device count and domain don't change while we're binding */
-+	mutex_lock(&group->mutex);
-+	if (iommu_group_device_count(group) != 1)
-+		goto out_unlock;
-+
-+	ret = __iommu_sva_bind_device(dev, mm, pasid, flags, drvdata);
-+
-+out_unlock:
-+	mutex_unlock(&group->mutex);
-+	iommu_group_put(group);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(iommu_sva_bind_device);
-+
-+/**
-+ * iommu_sva_unbind_device() - Remove a bond created with iommu_sva_bind_device
-+ * @dev: the device
-+ * @pasid: the pasid returned by bind()
-+ *
-+ * Remove bond between device and address space identified by @pasid. Users
-+ * should not call unbind() if the corresponding mm exited (as the PASID might
-+ * have been reallocated for another process).
-+ *
-+ * The device must not be issuing any more transaction for this PASID. All
-+ * outstanding page requests for this PASID must have been flushed to the IOMMU.
-+ *
-+ * Returns 0 on success, or an error value
-+ */
-+int iommu_sva_unbind_device(struct device *dev, int pasid)
-+{
-+	int ret = -EINVAL;
-+	struct iommu_group *group;
-+
-+	group = iommu_group_get(dev);
-+	if (!group)
-+		return -ENODEV;
-+
-+	mutex_lock(&group->mutex);
-+	ret = __iommu_sva_unbind_device(dev, pasid);
-+	mutex_unlock(&group->mutex);
-+
-+	iommu_group_put(group);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(iommu_sva_unbind_device);
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 2efe7738bedb..da59c20c4f12 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -613,6 +613,10 @@ void iommu_fwspec_free(struct device *dev);
- int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids);
- const struct iommu_ops *iommu_ops_from_fwnode(struct fwnode_handle *fwnode);
+ 	vmd->bus = pci_create_root_bus(&vmd->dev->dev, 0, &vmd_ops, sd,
+ 				       &resources);
+ 	if (!vmd->bus) {
+@@ -713,7 +757,7 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
  
-+extern int iommu_sva_bind_device(struct device *dev, struct mm_struct *mm,
-+				int *pasid, unsigned long flags, void *drvdata);
-+extern int iommu_sva_unbind_device(struct device *dev, int pasid);
-+
- #else /* CONFIG_IOMMU_API */
+ 	spin_lock_init(&vmd->cfg_lock);
+ 	pci_set_drvdata(dev, vmd);
+-	err = vmd_enable_domain(vmd);
++	err = vmd_enable_domain(vmd, (unsigned long) id->driver_data);
+ 	if (err)
+ 		return err;
  
- struct iommu_ops {};
-@@ -932,12 +936,29 @@ static inline int iommu_sva_invalidate(struct iommu_domain *domain,
- 	return -EINVAL;
- }
- 
-+static inline int iommu_sva_bind_device(struct device *dev,
-+					struct mm_struct *mm, int *pasid,
-+					unsigned long flags, void *drvdata)
-+{
-+	return -ENODEV;
-+}
-+
-+static inline int iommu_sva_unbind_device(struct device *dev, int pasid)
-+{
-+	return -ENODEV;
-+}
-+
- #endif /* CONFIG_IOMMU_API */
- 
- #ifdef CONFIG_IOMMU_SVA
- extern int iommu_sva_device_init(struct device *dev, unsigned long features,
- 				 unsigned int max_pasid);
- extern int iommu_sva_device_shutdown(struct device *dev);
-+extern int __iommu_sva_bind_device(struct device *dev, struct mm_struct *mm,
-+				   int *pasid, unsigned long flags,
-+				   void *drvdata);
-+extern int __iommu_sva_unbind_device(struct device *dev, int pasid);
-+extern void __iommu_sva_unbind_dev_all(struct device *dev);
- #else /* CONFIG_IOMMU_SVA */
- static inline int iommu_sva_device_init(struct device *dev,
- 					unsigned long features,
-@@ -950,6 +971,22 @@ static inline int iommu_sva_device_shutdown(struct device *dev)
- {
- 	return -ENODEV;
- }
-+
-+static inline int __iommu_sva_bind_device(struct device *dev,
-+					  struct mm_struct *mm, int *pasid,
-+					  unsigned long flags, void *drvdata)
-+{
-+	return -ENODEV;
-+}
-+
-+static inline int __iommu_sva_unbind_device(struct device *dev, int pasid)
-+{
-+	return -ENODEV;
-+}
-+
-+static inline void __iommu_sva_unbind_dev_all(struct device *dev)
-+{
-+}
- #endif /* CONFIG_IOMMU_SVA */
- 
- #endif /* __LINUX_IOMMU_H */
 -- 
-2.17.0
-
+2.14.3
