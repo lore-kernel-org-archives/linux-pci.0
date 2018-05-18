@@ -1,130 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46550 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.99]:33078 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752087AbeEKTJG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 May 2018 15:09:06 -0400
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 17/40] iommu/arm-smmu-v3: Link domains and devices
-Date: Fri, 11 May 2018 20:06:18 +0100
-Message-Id: <20180511190641.23008-18-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+        id S1751323AbeERVDf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 May 2018 17:03:35 -0400
+Date: Fri, 18 May 2018 16:03:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: kbuild test robot <lkp@intel.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, kbuild-all@01.org,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Jan Kiszka <jan.kiszka@siemens.com>
+Subject: Re: [pci:next 15/20] drivers/pci/host/pcie-altera.c:496:53: sparse:
+ incompatible types for operation (&)
+Message-ID: <20180518210332.GC41790@bhelgaas-glaptop.roam.corp.google.com>
+References: <201805190321.nss6j8Jn%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201805190321.nss6j8Jn%fengguang.wu@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When removing a mapping from a domain, we need to send an invalidation to
-all devices that might have stored it in their Address Translation Cache
-(ATC). In addition when updating the context descriptor of a live domain,
-we'll need to send invalidations for all devices attached to it.
+On Sat, May 19, 2018 at 03:42:27AM +0800, kbuild test robot wrote:
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+> head:   f8d3ac43d8cd4cfba337a50794c26c7ca89d86ac
+> commit: 927da40afdbd6a5fdd31eab6e9aa655dee1f99a4 [15/20] Merge branch 'lorenzo/pci/host/misc'
+> reproduce:
+>         # apt-get install sparse
+>         git checkout 927da40afdbd6a5fdd31eab6e9aa655dee1f99a4
+>         make ARCH=x86_64 allmodconfig
+>         make C=1 CF=-D__CHECK_ENDIAN__
+> 
+> 
+> sparse warnings: (new ones prefixed by >>)
+> 
+> >> drivers/pci/host/pcie-altera.c:496:53: sparse: incompatible types for operation (&)
 
-Maintain a list of devices in each domain, protected by a spinlock. It is
-updated every time we attach or detach devices to and from domains.
+I think I fixed this; it was missing a comma at the end of the first line:
 
-It needs to be a spinlock because we'll invalidate ATC entries from
-within hardirq-safe contexts, but it may be possible to relax the read
-side with RCU later.
+        err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff
+                                                    &pcie->resources, NULL);
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+This error was in the original patch, so I'm not sure if I forgot to push
+the pci/resource branch or if kbuild didn't test it for some reason.
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 1d647104bccc..c892f012fb43 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -595,6 +595,11 @@ struct arm_smmu_device {
- struct arm_smmu_master_data {
- 	struct arm_smmu_device		*smmu;
- 	struct arm_smmu_strtab_ent	ste;
-+
-+	struct arm_smmu_domain		*domain;
-+	struct list_head		list; /* domain->devices */
-+
-+	struct device			*dev;
- };
- 
- /* SMMU private data for an IOMMU domain */
-@@ -618,6 +623,9 @@ struct arm_smmu_domain {
- 	};
- 
- 	struct iommu_domain		domain;
-+
-+	struct list_head		devices;
-+	spinlock_t			devices_lock;
- };
- 
- struct arm_smmu_option_prop {
-@@ -1470,6 +1478,9 @@ static struct iommu_domain *arm_smmu_domain_alloc(unsigned type)
- 	}
- 
- 	mutex_init(&smmu_domain->init_mutex);
-+	INIT_LIST_HEAD(&smmu_domain->devices);
-+	spin_lock_init(&smmu_domain->devices_lock);
-+
- 	return &smmu_domain->domain;
- }
- 
-@@ -1685,7 +1696,17 @@ static void arm_smmu_install_ste_for_dev(struct iommu_fwspec *fwspec)
- 
- static void arm_smmu_detach_dev(struct device *dev)
- {
-+	unsigned long flags;
- 	struct arm_smmu_master_data *master = dev->iommu_fwspec->iommu_priv;
-+	struct arm_smmu_domain *smmu_domain = master->domain;
-+
-+	if (smmu_domain) {
-+		spin_lock_irqsave(&smmu_domain->devices_lock, flags);
-+		list_del(&master->list);
-+		spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
-+
-+		master->domain = NULL;
-+	}
- 
- 	master->ste.assigned = false;
- 	arm_smmu_install_ste_for_dev(dev->iommu_fwspec);
-@@ -1694,6 +1715,7 @@ static void arm_smmu_detach_dev(struct device *dev)
- static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
- {
- 	int ret = 0;
-+	unsigned long flags;
- 	struct arm_smmu_device *smmu;
- 	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
- 	struct arm_smmu_master_data *master;
-@@ -1729,6 +1751,11 @@ static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
- 	}
- 
- 	ste->assigned = true;
-+	master->domain = smmu_domain;
-+
-+	spin_lock_irqsave(&smmu_domain->devices_lock, flags);
-+	list_add(&master->list, &smmu_domain->devices);
-+	spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
- 
- 	if (smmu_domain->stage == ARM_SMMU_DOMAIN_BYPASS) {
- 		ste->s1_cfg = NULL;
-@@ -1847,6 +1874,7 @@ static int arm_smmu_add_device(struct device *dev)
- 			return -ENOMEM;
- 
- 		master->smmu = smmu;
-+		master->dev = dev;
- 		fwspec->iommu_priv = master;
- 	}
- 
--- 
-2.17.0
+>    /kbuild/src/sparse/drivers/pci/host/pcie-rockchip-host.c:996:15: sparse: undefined identifier 'devm_of_pci_get_host_bridge_resources'
+
+I'm confused about this one because pcie-rockchip-host.c doesn't even exist
+in 927da40afdbd, so the steps to reproduce must not be quite right.
+
+But I'm sure I screwed up a conflict resolution somewhere, so I'll find that,
+too.
+
+Bjorn
