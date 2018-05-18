@@ -1,38 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:53272 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750820AbeEDNXD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 May 2018 09:23:03 -0400
-Date: Fri, 4 May 2018 14:22:59 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v3 0/5] Add R8A77980 PCIe support & some driver cleanups
-Message-ID: <20180504132259.GB8759@e107981-ln.cambridge.arm.com>
-References: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 18 May 2018 08:07:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH v7 03/12] PCI: Request control of native PCIe hotplug
+ only if supported
+Message-ID: <20180518130726.GA41790@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
+ <20180517092903.43701-4-mika.westerberg@linux.intel.com>
+ <20180517141324.GD19955@bhelgaas-glaptop.roam.corp.google.com>
+ <1570821.OC5yac8T6J@aspire.rjw.lan>
+ <20180518125706.GA34002@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180518125706.GA34002@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 03, 2018 at 10:32:41PM +0300, Sergei Shtylyov wrote:
-> Hello!
+On Fri, May 18, 2018 at 07:57:07AM -0500, Bjorn Helgaas wrote:
+> On Fri, May 18, 2018 at 09:48:54AM +0200, Rafael J. Wysocki wrote:
+> > On Thursday, May 17, 2018 4:13:24 PM CEST Bjorn Helgaas wrote:
+> > > On Thu, May 17, 2018 at 12:28:54PM +0300, Mika Westerberg wrote:
 > 
-> Here's a set of 5 patches against the 'pci/rcar' branch of Lorenzo Pieralisi's
-> 'pci.git' repo. These are the changes needed for better R-Car gen3 support
-> (namely for R8A77980 support) plus some PCIe driver re-factoring done in
-> the process...
+> > > >  	host_bridge = to_pci_host_bridge(bus->bridge);
+> > > >  	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
+> > > > -		host_bridge->native_hotplug = 0;
+> > > > +		host_bridge->native_pcie_hotplug = 0;
+> > > >  	if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
+> > > >  		host_bridge->native_aer = 0;
+> > > >  	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
+> > > 
+> > > Rafael, I noticed that the PCI Firmware Spec, r3.2, sec 4.5.2.2, says
+> > > we're required to evaluate _OSC when resuming from S4.  I don't see a
+> > > path where we do that today.
+> > 
+> > No, we don't do that today.
+> > 
+> > > Am I missing it?  If not, what resume hook do we need to use to do
+> > > this?
+> > 
+> > We could do that in the ->restore_noirq callback of the host bridge
+> > device I suppose.  Basically, before resuming all of the PCI devices
+> > on the bus.
+> > 
+> > However, question is on what conditions.  Do the previous versions of the
+> > spec have this requirement or is it just a new thing?
 > 
-> [1/5] pcie-rcar: poll PHYRDY in rcar_pcie_hw_init()
-> [2/5] pcie-rcar: remove PHYRDY polling from rcar_pcie_hw_init_h1()
-> [3/5] pcie-rcar: add R-Car gen3 PHY support
-> [4/5] pcie-rcar: factor out rcar_pcie_hw_init() call
-> [5/5] DT: pci: rcar-pci: document R8A77980 bindings
+> I think the requirement has been there since the beginning of _OSC.
+> The first reference I can find is ACPI 3.0, sec 6.2.9, which says we
+> should evaluate _OSC on wake from S4 and when a Notify(<device>, 8) is
+> delivered.  AFAICT, this applies to all _OSC methods, not just those
+> for PCI host bridges.
+> 
+> The OSHP description (PCI Firmware Spec r3.2, sec 4.8) talks about
+> interrupt reconfiguration that may be needed when the OS takes over
+> control of SHPC.  I assume this kind of reconfiguration needs to be
+> done on wake from S4.
 
-I applied the series, with some commit log changes, I can comment
-on those please have a look at my updated pci/rcar branch.
-
-Thanks,
-Lorenzo
+Forgot to mention: I wonder if this omission could be related to mysterious
+resume issues like https://bugzilla.kernel.org/show_bug.cgi?id=99751
