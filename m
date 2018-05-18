@@ -1,96 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from david.siemens.de ([192.35.17.14]:51056 "EHLO david.siemens.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752241AbeEOJI0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 May 2018 05:08:26 -0400
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Subject: [PATCH v4 5/8] PCI: Replace pr_*() with dev_*() in of_pci_get_host_bridge_resources()
-Date: Tue, 15 May 2018 11:07:04 +0200
-Message-Id: <95f6ca417e2bc74d15f707e577b098e46b4b3ba4.1526375226.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
-References: <cover.1526375226.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
-References: <cover.1526375226.git.jan.kiszka@siemens.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:51362 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752459AbeERQ4g (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2018 12:56:36 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: bhelgaas@google.com
+Cc: arjan@linux.intel.com, keith.busch@linux.intel.com,
+        jthumshirn@suse.de, ming.lei@redhat.com, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org
+Subject: [PATCH] PCI/sysfs: do not allow enabling/disabling a device with a driver
+Date: Fri, 18 May 2018 18:56:24 +0200
+Message-Id: <20180518165624.13993-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+Manpulating the enable_cnt behind the back of the driver will wreck
+complete havok with the kernel state, so disallow it.
 
-Now that we have a device reference, make use of it for printing.
-
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/of.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ drivers/pci/pci-sysfs.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index ac97491ba377..4f21514cb4e4 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -282,15 +282,15 @@ int of_pci_get_host_bridge_resources(struct device *dev,
- 	if (!bus_range)
- 		return -ENOMEM;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 366d93af051d..788a200fb2dc 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -288,13 +288,16 @@ static ssize_t enable_store(struct device *dev, struct device_attribute *attr,
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
  
--	pr_info("host bridge %pOF ranges:\n", dev_node);
-+	dev_info(dev, "host bridge %pOF ranges:\n", dev_node);
+-	if (!val) {
+-		if (pci_is_enabled(pdev))
+-			pci_disable_device(pdev);
+-		else
+-			result = -EIO;
+-	} else
++	device_lock(dev);
++	if (dev->driver)
++		result = -EBUSY;
++	else if (val)
+ 		result = pci_enable_device(pdev);
++	else if (pci_is_enabled(pdev))
++		pci_disable_device(pdev);
++	else
++		result = -EIO;
++	device_unlock(dev);
  
- 	err = of_pci_parse_bus_range(dev_node, bus_range);
- 	if (err) {
- 		bus_range->start = busno;
- 		bus_range->end = bus_max;
- 		bus_range->flags = IORESOURCE_BUS;
--		pr_info("  No bus range found for %pOF, using %pR\n",
--			dev_node, bus_range);
-+		dev_info(dev, "  No bus range found for %pOF, using %pR\n",
-+			 dev_node, bus_range);
- 	} else {
- 		if (bus_range->end > bus_range->start + bus_max)
- 			bus_range->end = bus_range->start + bus_max;
-@@ -302,7 +302,7 @@ int of_pci_get_host_bridge_resources(struct device *dev,
- 	if (err)
- 		goto parse_failed;
- 
--	pr_debug("Parsing ranges property...\n");
-+	dev_dbg(dev, "Parsing ranges property...\n");
- 	for_each_of_pci_range(&parser, &range) {
- 		/* Read next ranges element */
- 		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
-@@ -311,9 +311,9 @@ int of_pci_get_host_bridge_resources(struct device *dev,
- 			snprintf(range_type, 4, "MEM");
- 		else
- 			snprintf(range_type, 4, "err");
--		pr_info("  %s %#010llx..%#010llx -> %#010llx\n", range_type,
--			range.cpu_addr, range.cpu_addr + range.size - 1,
--			range.pci_addr);
-+		dev_info(dev, "  %s %#010llx..%#010llx -> %#010llx\n",
-+			 range_type, range.cpu_addr,
-+			 range.cpu_addr + range.size - 1, range.pci_addr);
- 
- 		/*
- 		 * If we failed translation or got a zero-sized region
-@@ -336,14 +336,16 @@ int of_pci_get_host_bridge_resources(struct device *dev,
- 
- 		if (resource_type(res) == IORESOURCE_IO) {
- 			if (!io_base) {
--				pr_err("I/O range found for %pOF. Please provide an io_base pointer to save CPU base address\n",
-+				dev_err(dev,
-+					"I/O range found for %pOF. Please provide an io_base pointer to save CPU base address\n",
- 					dev_node);
- 				err = -EINVAL;
- 				goto conversion_failed;
- 			}
- 			if (*io_base != (resource_size_t)OF_BAD_ADDR)
--				pr_warn("More than one I/O resource converted for %pOF. CPU base address for old range lost!\n",
--					dev_node);
-+				dev_warn(dev,
-+					 "More than one I/O resource converted for %pOF. CPU base address for old range lost!\n",
-+					 dev_node);
- 			*io_base = range.cpu_addr;
- 		}
- 
+ 	return result < 0 ? result : count;
+ }
 -- 
-2.13.6
+2.17.0
