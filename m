@@ -1,44 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57136 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933928AbeEWTKm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 15:10:42 -0400
-Subject: pci=earlydump on ARM
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-References: <bug-199671-164391@https.bugzilla.kernel.org/>
- <bug-199671-164391-E4Mtn0How4@https.bugzilla.kernel.org/>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <9756cf4c-0cec-00f7-3cc6-f09e34177cf9@codeaurora.org>
-Date: Wed, 23 May 2018 15:10:39 -0400
-MIME-Version: 1.0
-In-Reply-To: <bug-199671-164391-E4Mtn0How4@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=CtTX=IF=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=CtTX=IF=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Keith Busch <keith.busch@intel.com>,
+	<linux-pci@vger.kernel.org>
+Cc: Joerg Roedel <jroedel@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Dave Fugate <david.fugate@intel.com>,
+	Scott Bauer <scott.bauer@intel.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 1/5] PCI: Add Intel VMD devices to pci ids
+Date: Fri, 18 May 2018 13:27:58 -0600
+Message-Id: <20180518192802.20371-2-jonathan.derrick@intel.com>
+In-Reply-To: <20180518192802.20371-1-jonathan.derrick@intel.com>
+References: <20180518192802.20371-1-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-> If that doesn't work or you'd rather brute-force it, you could try doing
-> something like "pci=earlydump".  This is currently only implemented for x86, so
-> it would be some work to implement something similar for arm64.  It would be a
-> nice upstream addition if you *did* implement it.
-> 
-> In the earlydump output I would be looking for clues about the power state of
-> 03:00.0 to try to figure out if the bootloader left it powered off or if Linux
-> is doing something to turn it off.
-> 
+Add the Intel VMD device ids to the pci id database and update the VMD
+driver.
 
-Is it really possible to implement a generic version of this?
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ drivers/pci/host/vmd.c  | 2 +-
+ include/linux/pci_ids.h | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-PCI on ARM64 is not really unified. There are several host bridge drivers for
-different types of access. 
-
-If we limit the functionality to ACPI, the answer is still maybe if we can pass
-the base address of the MMCONFIG region. 
-
-All products use a different MMCONFIG region.
-
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index 930a8fa08bd6..b10d2bce2993 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -778,7 +778,7 @@ static int vmd_resume(struct device *dev)
+ static SIMPLE_DEV_PM_OPS(vmd_dev_pm_ops, vmd_suspend, vmd_resume);
+ 
+ static const struct pci_device_id vmd_ids[] = {
+-	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x201d),},
++	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_201D),},
+ 	{0,}
+ };
+ MODULE_DEVICE_TABLE(pci, vmd_ids);
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 9cd0a41e72dd..206d6b9ef434 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2676,6 +2676,7 @@
+ #define PCI_DEVICE_ID_INTEL_PANTHERPOINT_XHCI	0x1e31
+ #define PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MIN	0x1e40
+ #define PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MAX	0x1e5f
++#define PCI_DEVICE_ID_INTEL_VMD_201D	0x201d
+ #define PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MIN	0x2310
+ #define PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MAX	0x231f
+ #define PCI_DEVICE_ID_INTEL_82801AA_0	0x2410
+@@ -2780,6 +2781,7 @@
+ #define PCI_DEVICE_ID_INTEL_ICH8_4	0x2815
+ #define PCI_DEVICE_ID_INTEL_ICH8_5	0x283e
+ #define PCI_DEVICE_ID_INTEL_ICH8_6	0x2850
++#define PCI_DEVICE_ID_INTEL_VMD_28C0	0x28c0
+ #define PCI_DEVICE_ID_INTEL_ICH9_0	0x2910
+ #define PCI_DEVICE_ID_INTEL_ICH9_1	0x2917
+ #define PCI_DEVICE_ID_INTEL_ICH9_2	0x2912
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.14.3
