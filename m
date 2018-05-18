@@ -1,60 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 00/10] PCI: leak fixes, removable generic PCI host,
- assorted stuff
-To: Jan Kiszka <jan.kiszka@siemens.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-References: <cover.1525067324.git.jan.kiszka@siemens.com>
-From: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Message-ID: <e15c1cf5-0844-e5f1-d7af-e196207be6d4@mentor.com>
-Date: Thu, 3 May 2018 10:12:54 +0300
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PCI <linux-pci@vger.kernel.org>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] PCI / PM: Do not clear state_saved for devices that remain suspended
+Date: Fri, 18 May 2018 10:17:42 +0200
+Message-ID: <11415287.ki0m5Bqgns@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <cover.1525067324.git.jan.kiszka@siemens.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- Will Deacon <will.deacon@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jan,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On 04/30/2018 08:48 AM, Jan Kiszka wrote:
-> Changes in v2:
->  - patch 1: commit message reworking as suggested by Lorenzo
->  - patch 3-6: split-up as suggested by Bjorn
->  - patch 8: new
->  - patch 10: select PCI_DOMAINS from PCI_HOST_GENERIC, rather than
->    allowing manual choice, as suggested by Lorenzo
-> 
-> This primarily enables to unbind the generic PCI host controller without
-> leaving lots of memory leaks behind. A previous proposal patch 5 was
-> rejected because of those issues [1].
-> 
-> The fixes have been validated in the Jailhouse setup, where we add and
-> remove a virtual PCI host controller on hypervisor activation/
-> deactivation, with the help of kmemleak.
+The state_saved flag should not be cleared in pci_pm_suspend() if the
+given device is going to remain suspended, or the device's config
+space will not be restored properly during the subsequent resume.
 
-by chance I was looking into a memleak in of_pci_get_host_bridge_resources(),
-so I can give you a number of review tags.
+Namely, if the device is going to stay in suspend, both the late
+and noirq callbacks return early for it, so if its state_saved flag
+is cleared in pci_pm_suspend(), it will remain unset throughout the
+remaining part of suspend and resume and pci_restore_state() called
+for the device going forward will return without doing anything.
 
-FWIW the state of unfixably broken https://patchwork.kernel.org/patch/9662893/
-should be changed to obsoleted/deprecated/rejected.
+For this reason, change pci_pm_suspend() to only clear state_saved
+if the given device is not going to remain suspended.  [This is
+analogous to what commit ae860a19f37c (PCI / PM: Do not clear
+state_saved in pci_pm_freeze() when smart suspend is set) did for
+hibernation.]
 
---
-With best wishes,
-Vladimir
+Fixes: c4b65157aeef (PCI / PM: Take SMART_SUSPEND driver flag into account)
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci-driver.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -753,10 +753,11 @@ static int pci_pm_suspend(struct device
+ 	 * better to resume the device from runtime suspend here.
+ 	 */
+ 	if (!dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) ||
+-	    !pci_dev_keep_suspended(pci_dev))
++	    !pci_dev_keep_suspended(pci_dev)) {
+ 		pm_runtime_resume(dev);
++		pci_dev->state_saved = false;
++	}
+ 
+-	pci_dev->state_saved = false;
+ 	if (pm->suspend) {
+ 		pci_power_t prev = pci_dev->current_state;
+ 		int error;
