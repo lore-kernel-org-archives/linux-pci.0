@@ -1,54 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:44016 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752663AbeEULLw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2018 07:11:52 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH] PCI / PM: Clean up outdated comments in pci_target_state()
-Date: Mon, 21 May 2018 13:11:12 +0200
-Message-ID: <2360046.ecez94sF1Y@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=CtTX=IF=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=CtTX=IF=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Keith Busch <keith.busch@intel.com>,
+	<linux-pci@vger.kernel.org>
+Cc: Joerg Roedel <jroedel@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Dave Fugate <david.fugate@intel.com>,
+	Scott Bauer <scott.bauer@intel.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 4/5] x86/PCI: Add additional VMD device root ports to VMD AER quirk
+Date: Fri, 18 May 2018 13:28:01 -0600
+Message-Id: <20180518192802.20371-5-jonathan.derrick@intel.com>
+In-Reply-To: <20180518192802.20371-1-jonathan.derrick@intel.com>
+References: <20180518192802.20371-1-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+VMD devices change the source id of messages from child devices to the
+VMD endpoint. This patch adds additional VMD root port device ids to the
+AER quirk which requires walking the bus to determine which devices were
+throwing the error.
 
-Two comments in pci_target_state() are outdated, as the function
-doesn't set the target power state for the device any more, only
-finds one for it, so fix them accordingly.
-
-Reported-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 ---
- drivers/pci/pci.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ arch/x86/pci/fixup.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -2025,8 +2025,7 @@ static pci_power_t pci_target_state(stru
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 54ef19e90705..13f4485ca388 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -636,6 +636,10 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334a, quirk_no_aersid);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334b, quirk_no_aersid);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334c, quirk_no_aersid);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334d, quirk_no_aersid);
  
- 	if (platform_pci_power_manageable(dev)) {
- 		/*
--		 * Call the platform to choose the target state of the device
--		 * and enable wake-up from this state if supported.
-+		 * Call the platform to find the target state for the device.
- 		 */
- 		pci_power_t state = platform_pci_choose_state(dev);
+ #ifdef CONFIG_PHYS_ADDR_T_64BIT
  
-@@ -2059,8 +2058,7 @@ static pci_power_t pci_target_state(stru
- 	if (wakeup) {
- 		/*
- 		 * Find the deepest state from which the device can generate
--		 * wake-up events, make it the target state and enable device
--		 * to generate PME#.
-+		 * PME#.
- 		 */
- 		if (dev->pme_support) {
- 			while (target_state
+-- 
+2.14.3
