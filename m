@@ -1,56 +1,34 @@
-Return-Path: <SRS0=xn0A=IM=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=xn0A=IM=linux.intel.com=mika.westerberg@kernel.org>
-Date: Fri, 25 May 2018 09:07:45 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v6 00/12] PCI: Fixes and cleanups for native PCIe, SHPC
- and ACPI hotplug
-Message-ID: <20180525060745.GY15419@lahna.fi.intel.com>
-References: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
- <20180524183005.GD95348@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga12.intel.com ([192.55.52.136]:45970 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750957AbeERRVb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 May 2018 13:21:31 -0400
+Date: Fri, 18 May 2018 11:23:35 -0600
+From: Keith Busch <keith.busch@linux.intel.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: bhelgaas@google.com, arjan@linux.intel.com, jthumshirn@suse.de,
+        ming.lei@redhat.com, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org
+Subject: Re: [PATCH] PCI/sysfs: do not allow enabling/disabling a device with
+ a driver
+Message-ID: <20180518172335.GB27795@localhost.localdomain>
+References: <20180518165624.13993-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180524183005.GD95348@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180518165624.13993-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 24, 2018 at 01:30:05PM -0500, Bjorn Helgaas wrote:
-> I applied the following to pci/hotplug for v4.18:
+On Fri, May 18, 2018 at 06:56:24PM +0200, Christoph Hellwig wrote:
+> Manpulating the enable_cnt behind the back of the driver will wreck
+> complete havok with the kernel state, so disallow it.
 > 
->   PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
->   PCI: Request control of native PCIe hotplug only if supported
->   PCI: Rename host->native_hotplug to host->native_pcie_hotplug
->   PCI: hotplug: Make pciehp_is_native() stricter
->   PCI: hotplug: Convert SHPC to be builtin only
->   PCI: shpchp: Simplify acpi_get_hp_hw_control_from_firmware()
->   PCI: shpchp: Request control of native SHPC hotplug via _OSC
->   PCI: Improve "partially hidden behind bridge" log message
->   ACPI / hotplug / PCI: Drop unnecessary parentheses
-> 
-> I split a couple of these into smaller pieces and removed one NULL
-> pointer check, but otherwise they're straightforward.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Thanks!
+Nice, looks like you beat me to it, and used device locking that I
+missed.
 
-> These are the simple pieces that probably don't fix anything by
-> themselves.  I'm looking at the other parts too and have a couple
-> comments there, but at least we can clear these off the plate.
+Acked-by: Keith Busch <keith.busch@intel.com>
 
-You are right, the patches you applied don't fix anything and are more
-like "nice to have" material. The critical patches that you did not
-apply are:
-
-  PCI: Take all bridges into account when calculating bus numbers for extension
-  ACPI / hotplug / PCI: Do not scan all bridges when native PCIe hotplug is used
-
-These two IMHO should be prioritized higher than doing some cleanup for
-SHPC which pretty much is not used in modern systems anyway. Without the
-above two patches all systems using native mode will not work properly
-when you plug in TBT or normal USB-C device.
+Bjorn,
+Please disregard https://marc.info/?l=linux-pci&m=152666267830742&w=2
