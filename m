@@ -1,42 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:57960 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965634AbeEYJ4V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 May 2018 05:56:21 -0400
-Date: Fri, 25 May 2018 10:56:16 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Marek Vasut <marek.vasut@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Subject: Re: [PATCH v4 0/6] PCI: rcar: Failpath fixes
-Message-ID: <20180525095616.GC6507@e107981-ln.cambridge.arm.com>
-References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
- <20180525093541.GB6507@e107981-ln.cambridge.arm.com>
- <CAMuHMdWaxcyed2K_Ce86uqJSHsv4htC1zdrszKJKBRn21K-qoQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdWaxcyed2K_Ce86uqJSHsv4htC1zdrszKJKBRn21K-qoQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=CtTX=IF=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=CtTX=IF=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Keith Busch <keith.busch@intel.com>,
+	<linux-pci@vger.kernel.org>
+Cc: Joerg Roedel <jroedel@suse.de>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Dave Fugate <david.fugate@intel.com>,
+	Scott Bauer <scott.bauer@intel.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 5/5] PCI/VMD: Add an additional VMD device id to driver device id table
+Date: Fri, 18 May 2018 13:28:02 -0600
+Message-Id: <20180518192802.20371-6-jonathan.derrick@intel.com>
+In-Reply-To: <20180518192802.20371-1-jonathan.derrick@intel.com>
+References: <20180518192802.20371-1-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2018 at 11:39:08AM +0200, Geert Uytterhoeven wrote:
-> Hi Lorenzo,
-> 
-> On Fri, May 25, 2018 at 11:35 AM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > Can I retain your review tags on this series so that I can queue
-> > the patches ? I already added them apart from the last patch that
-> > is new, please let me know asap.
-> 
-> Yes, please.
+Allow VMD devices with PCI id 8086:28c0 to bind to VMD driver.
 
-I assume that's valid also for the last patch, I need Simon's ACK
-to proceed too.
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ drivers/pci/host/vmd.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Lorenzo
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index 34fa6cf0b0ee..942b64fc7f1f 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -847,6 +847,9 @@ static SIMPLE_DEV_PM_OPS(vmd_dev_pm_ops, vmd_suspend, vmd_resume);
+ 
+ static const struct pci_device_id vmd_ids[] = {
+ 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_201D),},
++	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_28C0),
++		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
++				VMD_FEAT_HAS_BUS_RESTRICTIONS,},
+ 	{0,}
+ };
+ MODULE_DEVICE_TABLE(pci, vmd_ids);
+-- 
+2.14.3
