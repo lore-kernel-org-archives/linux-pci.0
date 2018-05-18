@@ -1,137 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:40237 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933872AbeEWR6u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 13:58:50 -0400
-Received: by mail-pl0-f65.google.com with SMTP id t12-v6so13486280plo.7
-        for <linux-pci@vger.kernel.org>; Wed, 23 May 2018 10:58:50 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rajat Jain <rajatja@google.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Kyle McMartin <jkkm@fb.com>
-Cc: rajatxjain@gmail.com, Rajat Jain <rajatj@google.com>
-Subject: [PATCH v2 3/5] PCI/AER: Add sysfs attributes to provide breakdown of AERs
-Date: Wed, 23 May 2018 10:58:06 -0700
-Message-Id: <20180523175808.28030-4-rajatja@google.com>
-In-Reply-To: <20180523175808.28030-1-rajatja@google.com>
-References: <20180522222805.80314-1-rajatja@google.com>
- <20180523175808.28030-1-rajatja@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=PI+z=IF=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=PI+z=IF=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Fri, 18 May 2018 14:56:14 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: poza@codeaurora.org
+Cc: Ray Jui <ray.jui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+	linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH INTERNAL 3/3] PCI: iproc: Disable MSI parsing in certain
+ PAXC blocks
+Message-ID: <20180518135614.GA18605@e107981-ln.cambridge.arm.com>
+References: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
+ <1526577692-21104-4-git-send-email-ray.jui@broadcom.com>
+ <ad41ea7f16414a83a2b3d7e6192bcf79@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ad41ea7f16414a83a2b3d7e6192bcf79@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add sysfs attributes to provide breakdown of the AERs seen,
-into different type of correctable or uncorrectable errors:
+On Fri, May 18, 2018 at 02:53:41PM +0530, poza@codeaurora.org wrote:
+> On 2018-05-17 22:51, Ray Jui wrote:
+> >The internal MSI parsing logic in certain revisions of PAXC root
+> >complexes does not work properly and can casue corruptions on the
+> >writes. They need to be disabled
+> >
+> >Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> >Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> >---
+> > drivers/pci/host/pcie-iproc.c | 34 ++++++++++++++++++++++++++++++++--
+> > 1 file changed, 32 insertions(+), 2 deletions(-)
+> >
+> >diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> >index 3c76c5f..b906d80 100644
+> >--- a/drivers/pci/host/pcie-iproc.c
+> >+++ b/drivers/pci/host/pcie-iproc.c
+> >@@ -1144,10 +1144,22 @@ static int iproc_pcie_paxb_v2_msi_steer(struct
+> >iproc_pcie *pcie, u64 msi_addr)
+> > 	return ret;
+> > }
+> >
+> >-static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64
+> >msi_addr)
+> >+static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64
+> >msi_addr,
+> >+					 bool enable)
+> > {
+> > 	u32 val;
+> >
+> >+	if (!enable) {
+> >+		/*
+> >+		 * Disable PAXC MSI steering. All write transfers will be
+> >+		 * treated as non-MSI transfers
+> >+		 */
+> >+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
+> >+		val &= ~MSI_ENABLE_CFG;
+> >+		iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
+> >+		return;
+> >+	}
+> >+
+> > 	/*
+> > 	 * Program bits [43:13] of address of GITS_TRANSLATER register into
+> > 	 * bits [30:0] of the MSI base address register.  In fact, in all iProc
+> >@@ -1201,7 +1213,7 @@ static int iproc_pcie_msi_steer(struct iproc_pcie
+> >*pcie,
+> > 			return ret;
+> > 		break;
+> > 	case IPROC_PCIE_PAXC_V2:
+> >-		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
+> >+		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr, true);
+> 
+> Are you calling iproc_pcie_paxc_v2_msi_steer() anywhere else with 'false' ?
+> I see its getting called only from one place in current code
+> iproc_pcie_msi_steer().
 
-dev_breakdown_correctable
-dev_breakdown_uncorrectable
+It is called below with the false field to disable MSIs. That's probably
+one reason more to create a function to enable/disable MSIs instead of
+adding a parameter to iproc_pcie_paxc_v2_msi_steer().
 
-Signed-off-by: Rajat Jain <rajatj@google.com>
----
-v2: Use tabs instead of spaces, fix the subject, and print
-    all non zero counters.
+Which brings me to the question: what happens to those MSIs writes
+when MSIs are disabled according to this patch ? Are they terminated
+at the root complex ?
 
- drivers/pci/pcie/aer/aerdrv.h          |  6 ++++++
- drivers/pci/pcie/aer/aerdrv_errprint.c |  6 ++++--
- drivers/pci/pcie/aer/aerdrv_stats.c    | 28 ++++++++++++++++++++++++++
- 3 files changed, 38 insertions(+), 2 deletions(-)
+Lorenzo
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index b5d5ad6f2c03..048fbd7c9633 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -89,6 +89,12 @@ int pci_aer_stats_init(struct pci_dev *pdev);
- void pci_aer_stats_exit(struct pci_dev *pdev);
- void pci_dev_aer_stats_incr(struct pci_dev *pdev, struct aer_err_info *info);
- 
-+extern const char
-+*aer_correctable_error_string[AER_MAX_TYPEOF_CORRECTABLE_ERRS];
-+
-+extern const char
-+*aer_uncorrectable_error_string[AER_MAX_TYPEOF_UNCORRECTABLE_ERRS];
-+
- #ifdef CONFIG_ACPI_APEI
- int pcie_aer_get_firmware_first(struct pci_dev *pci_dev);
- #else
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 5e8b98deda08..5585f309f1a8 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -68,7 +68,8 @@ static const char *aer_error_layer[] = {
- 	"Transaction Layer"
- };
- 
--static const char *aer_correctable_error_string[] = {
-+const char
-+*aer_correctable_error_string[AER_MAX_TYPEOF_CORRECTABLE_ERRS] = {
- 	"Receiver Error",		/* Bit Position 0	*/
- 	NULL,
- 	NULL,
-@@ -87,7 +88,8 @@ static const char *aer_correctable_error_string[] = {
- 	"Header Log Overflow",		/* Bit Position 15	*/
- };
- 
--static const char *aer_uncorrectable_error_string[] = {
-+const char
-+*aer_uncorrectable_error_string[AER_MAX_TYPEOF_UNCORRECTABLE_ERRS] = {
- 	"Undefined",			/* Bit Position 0	*/
- 	NULL,
- 	NULL,
-diff --git a/drivers/pci/pcie/aer/aerdrv_stats.c b/drivers/pci/pcie/aer/aerdrv_stats.c
-index 5555beffef2b..e47321b267f6 100644
---- a/drivers/pci/pcie/aer/aerdrv_stats.c
-+++ b/drivers/pci/pcie/aer/aerdrv_stats.c
-@@ -58,10 +58,38 @@ aer_stats_aggregate_attr(dev_total_cor_errs);
- aer_stats_aggregate_attr(dev_total_fatal_errs);
- aer_stats_aggregate_attr(dev_total_nonfatal_errs);
- 
-+#define aer_stats_breakdown_attr(field, stats_array, strings_array)	\
-+	static ssize_t							\
-+	field##_show(struct device *dev, struct device_attribute *attr,	\
-+		     char *buf)						\
-+{									\
-+	unsigned int i;							\
-+	char *str = buf;						\
-+	struct pci_dev *pdev = to_pci_dev(dev);				\
-+	u64 *stats = pdev->aer_stats->stats_array;			\
-+	for (i = 0; i < ARRAY_SIZE(strings_array); i++) {		\
-+		if (strings_array[i])					\
-+			str += sprintf(str, "%s = 0x%llx\n",		\
-+				       strings_array[i], stats[i]);	\
-+		else if (stats[i])					\
-+			str += sprintf(str, #stats_array "bit[%d] = 0x%llx\n",\
-+				       i, stats[i]);			\
-+	}								\
-+	return str-buf;							\
-+}									\
-+static DEVICE_ATTR_RO(field)
-+
-+aer_stats_breakdown_attr(dev_breakdown_correctable, dev_cor_errs,
-+			 aer_correctable_error_string);
-+aer_stats_breakdown_attr(dev_breakdown_uncorrectable, dev_uncor_errs,
-+			 aer_uncorrectable_error_string);
-+
- static struct attribute *aer_stats_attrs[] __ro_after_init = {
- 	&dev_attr_dev_total_cor_errs.attr,
- 	&dev_attr_dev_total_fatal_errs.attr,
- 	&dev_attr_dev_total_nonfatal_errs.attr,
-+	&dev_attr_dev_breakdown_correctable.attr,
-+	&dev_attr_dev_breakdown_uncorrectable.attr,
- 	NULL
- };
- 
--- 
-2.17.0.441.gb46fe60e1d-goog
+> > 		break;
+> > 	default:
+> > 		return -EINVAL;
+> >@@ -1427,6 +1439,24 @@ int iproc_pcie_remove(struct iproc_pcie *pcie)
+> > }
+> > EXPORT_SYMBOL(iproc_pcie_remove);
+> >
+> >+/*
+> >+ * The MSI parsing logic in certain revisions of Broadcom PAXC based root
+> >+ * complex does not work and needs to be disabled
+> >+ */
+> >+static void quirk_paxc_disable_msi_parsing(struct pci_dev *pdev)
+> >+{
+> >+	struct iproc_pcie *pcie = iproc_data(pdev->bus);
+> >+
+> >+	if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+> >+		iproc_pcie_paxc_v2_msi_steer(pcie, 0, false);
+> >+}
+> >+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0,
+> >+			quirk_paxc_disable_msi_parsing);
+> >+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802,
+> >+			quirk_paxc_disable_msi_parsing);
+> >+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804,
+> >+			quirk_paxc_disable_msi_parsing);
+> >+
+> > MODULE_AUTHOR("Ray Jui <rjui@broadcom.com>");
+> > MODULE_DESCRIPTION("Broadcom iPROC PCIe common driver");
+> > MODULE_LICENSE("GPL v2");
