@@ -1,41 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:40980 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751132AbeEIBU6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 May 2018 21:20:58 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v7 4/7] dt-bindings: PCI: rockchip: Rename rockchip-pcie.txt to rockchip-pcie-host.txt
-Date: Wed,  9 May 2018 09:12:45 +0800
-Message-Id: <1525828365-70040-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1525828278-69800-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1525828278-69800-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <robh@kernel.org>
+Return-Path: <robh@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20180518214211.GD41790@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180405193154.27897-1-robh@kernel.org> <20180518214211.GD41790@bhelgaas-glaptop.roam.corp.google.com>
+From: Rob Herring <robh@kernel.org>
+Date: Sat, 19 May 2018 14:22:27 -0500
+Message-ID: <CAL_Jsq+83D37Hj5bZ8ZamPnX6AYNd+QvFJEwWK+D=mWQ+QK+=Q@mail.gmail.com>
+Subject: Re: [PATCH v4] PCI: improve host drivers compile test coverage
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Branden <scott.branden@broadcom.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Just make it more obvious that this documentation is referenced for
-adding Rockchip PCIe controller as RC mode.
+On Fri, May 18, 2018 at 4:42 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> Hi Rob,
+>
+> On Thu, Apr 05, 2018 at 02:31:54PM -0500, Rob Herring wrote:
+>> Add COMPILE_TEST on driver config options with it. Some ARM drivers
+>> still have arch dependencies, so we have to keep those dependent on ARM.
+>>
+>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: linux-pci@vger.kernel.org
+>> Signed-off-by: Rob Herring <robh@kernel.org>
+>
+>>  config PCIE_ALTERA
+>>       bool "Altera PCIe controller"
+>> -     depends on ARM || NIOS2
+>> -     depends on OF_PCI
+>> +     depends on ARM || NIOS2 || COMPILE_TEST
+>
+> Did you intend to drop the OF_PCI dependency?
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
+No, that should have been removed when OF_PCI was in commit
+4670d610d592 ("PCI: Move OF-related PCI functions into PCI core").
 
-Changes in v7: None
-Changes in v6: None
-Changes in v5: None
-Changes in v4: None
+> I see that CONFIG_OF_PCI doesn't exist, so that looks bogus.
+>
+> But drivers/pci/host/pcie-altera.c still uses
+> devm_of_pci_get_host_bridge_resources(), so I think this should probably
+> still depend on CONFIG_OF?
 
- .../devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} | 0
- 1 file changed, 0 insertions(+), 0 deletions(-)
- rename Documentation/devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} (100%)
+There's an empty version so it shouldn't matter.
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie-host.txt
-similarity index 100%
-rename from Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-rename to Documentation/devicetree/bindings/pci/rockchip-pcie-host.txt
--- 
-1.9.1
+Rob
