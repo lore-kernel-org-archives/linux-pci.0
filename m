@@ -1,19 +1,12 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH] PCI: Do not enable PASID when End-to-End TLP is not supported
+Date: Sat, 19 May 2018 12:52:49 -0400
+Message-Id: <1526748769-701-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Date: Wed, 30 May 2018 01:22:10 -0700
-From: okaya@codeaurora.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] PCI: Add pci=safemode option
-In-Reply-To: <577f01ada5e7f08c79a28d41020fb019@codeaurora.org>
-References: <1527650389-31575-1-git-send-email-okaya@codeaurora.org>
- <20180530043103.GA19734@kroah.com>
- <6c317ed8-cca3-8862-5f3b-12cf14e4d53b@codeaurora.org>
- <20180530073735.GA28793@infradead.org>
- <6dfe2db8f974d94c9867f30ec83d9333@codeaurora.org>
- <20180530074822.GB30177@kroah.com>
- <577f01ada5e7f08c79a28d41020fb019@codeaurora.org>
-Message-ID: <c9698153b17ca6c6dab6a00cb1f0928e@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,79 +14,82 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
- Kai-Heng Feng <kai.heng.feng@canonical.com>, Ingo Molnar <mingo@kernel.org>,
- Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- Christoph Hellwig <hch@infradead.org>, Dongdong Liu <liudongdong3@huawei.com>,
- David Rientjes <rientjes@google.com>,
- Thymo van Beers <thymovanbeers@gmail.com>, "Paul
- E. McKenney" <paulmck@linux.vnet.ibm.com>, Frederick Lawler <fred@fredlawl.com>,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
- Frederic Weisbecker <frederic@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
- Oza Pawandeep <poza@codeaurora.org>, open list <linux-kernel@vger.kernel.org>,
- linux-pci-owner@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-30 00:56, okaya@codeaurora.org wrote:
-> On 2018-05-30 00:48, Greg Kroah-Hartman wrote:
->> On Wed, May 30, 2018 at 12:44:29AM -0700, okaya@codeaurora.org wrote:
->>> On 2018-05-30 00:37, Christoph Hellwig wrote:
->>> > On Tue, May 29, 2018 at 09:41:33PM -0700, Sinan Kaya wrote:
->>> > > Bjorn and I discussed the need for such a "safe" mode feature when you
->>> > > want to bring up PCI for a platform. You want to turn off everything
->>> > > as
->>> > > a starter and just stick to bare minimum.
->>> >
->>> > Can we please make it a config option the instead of adding code
->>> > to every kernel?  Also maybe the bringup should be in the name
->>> > to make this more clear?
->>> 
->>> One other requirement was to have a runtime option rather than 
->>> compile time
->>> option.
->>> 
->>> When someone reported a problem, we wanted to be able to say "use 
->>> this
->>> option and see if system boots" without doing any bisects or 
->>> recompilation.
->>> 
->>> This would be the first step in troubleshooting a system to see if
->>> fundamental features are working.
->> 
->> That makes sense, people can not rebuild their kernels for the most
->> part.  Putting it behind a config option would not make sense as it
->> would always have to be enabled.
->> 
-> 
-> Here is where the discussion took place. Last 5-10  messages should 
-> help.
-> 
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=196197
-> 
+A PCIe endpoint carries the process address space identifier (PASID) in
+the TLP prefix as part of the memory read/write transaction. The address
+information in the TLP is relevant only for a given PASID context.
 
-Some more paper trail for general awareness.
+A translation agent takes PASID value and the address information from the
+TLP to look up the physical address in the system.
 
-https://lkml.org/lkml/2018/5/3/509
+If a bridge drops the TLP prefix, the translation agent can resolve the
+address to an incorrect location and cause data corruption. Prevent
+this condition by requiring End-to-End TLP prefix to be supported on the
+entire data path between the endpoint and the root port.
 
-> 
->>> I don't mind changing the name Bjorn mentioned safe option. I made it
->>> safemode. I am looking at Bjorn for suggestions at this moment.
->> 
->> "minimal"?  "basic"?  "crippled"?
->> "my_hardware_is_so_borked_it_needs_this_option"?  :)
->> 
->> Naming is hard...
->> 
->> greg k-h
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/ats.c             | 16 ++++++++++++++++
+ include/uapi/linux/pci_regs.h |  1 +
+ 2 files changed, 17 insertions(+)
+
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index 89305b5..0bcded5 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -265,7 +265,9 @@ EXPORT_SYMBOL_GPL(pci_reset_pri);
+ int pci_enable_pasid(struct pci_dev *pdev, int features)
+ {
+ 	u16 control, supported;
++	struct pci_dev *bridge;
+ 	int pos;
++	u32 cap;
+ 
+ 	if (WARN_ON(pdev->pasid_enabled))
+ 		return -EBUSY;
+@@ -274,6 +276,20 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
+ 	if (!pos)
+ 		return -EINVAL;
+ 
++	bridge = pci_upstream_bridge(pdev);
++	while (bridge) {
++		if (!pci_find_capability(bridge, PCI_CAP_ID_EXP))
++			return -EINVAL;
++
++		if (pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap))
++			return -EINVAL;
++
++		if (!(cap & PCI_EXP_DEVCAP2_E2ETLP))
++			return -EINVAL;
++
++		bridge = pci_upstream_bridge(bridge);
++	}
++
+ 	pci_read_config_word(pdev, pos + PCI_PASID_CAP, &supported);
+ 	supported &= PCI_PASID_CAP_EXEC | PCI_PASID_CAP_PRIV;
+ 
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 103ba79..d91dea5 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -634,6 +634,7 @@
+ #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
+ #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
+ #define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x00080000 /* Re-use WAKE# for OBFF */
++#define PCI_EXP_DEVCAP2_E2ETLP		0x00200000 /* End-to-End TLP Prefix */
+ #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
+ #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout Value */
+ #define  PCI_EXP_DEVCTL2_COMP_TMOUT_DIS	0x0010	/* Completion Timeout Disable */
+-- 
+2.7.4
+
 
 _______________________________________________
 linux-arm-kernel mailing list
