@@ -1,111 +1,144 @@
-Return-Path: <SRS0=8x9Y=HV=canonical.com=joseph.salisbury@kernel.org>
-Return-Path: <SRS0=8x9Y=HV=canonical.com=joseph.salisbury@kernel.org>
-Subject: Re: [Regression] PCI / PM: Simplify device wakeup settings code
-To: "Rafael J. Wysocki" <rafael@kernel.org>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- Linux PCI <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- 1745646@bugs.launchpad.net, Mika Westerberg <mika.westerberg@linux.intel.com>
-References: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
- <CAJZ5v0j8GAatWoAra37y3c-ti2Ft5am75KONgEkjB6AaypkCqg@mail.gmail.com>
- <ae84e595-dede-1409-4aff-3a29a310f2ba@canonical.com>
- <CAJZ5v0gapMMf=KqBAoDTv0SUBeusrUFPyEz6Z4k8Y3Szizdm5Q@mail.gmail.com>
- <1f67f00a-8141-f9af-2120-c78f7cfecb1d@canonical.com>
- <CAJZ5v0iPsoxCLxsq156RvyZ1cWtM9jNMLUPMnE3cqi5r1jk8jg@mail.gmail.com>
- <20180501195501.GB11698@bhelgaas-glaptop.roam.corp.google.com>
- <CAJZ5v0geYMuzcEhCKcaCHNP-j_ceeyZM0CqEaOTeE3jqVd6zaA@mail.gmail.com>
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
-Message-ID: <d83a8403-1916-29bc-20ea-fe21b8ff8c2f@canonical.com>
-Date: Wed, 2 May 2018 07:12:39 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr40083.outbound.protection.outlook.com ([40.107.4.83]:12149
+        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751428AbeETNup (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 20 May 2018 09:50:45 -0400
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+        gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com,
+        bhelgaas@google.com
+Cc: hch@lst.de, joro@8bytes.org, m.szyprowski@samsung.com,
+        shawnguo@kernel.org, frowand.list@gmail.com,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, stuyoder@gmail.com, leoyang.li@nxp.com,
+        Nipun Gupta <nipun.gupta@nxp.com>
+Subject: [PATCH 4/7 v5] iommu: arm-smmu: Add support for the fsl-mc bus
+Date: Sun, 20 May 2018 19:19:48 +0530
+Message-Id: <1526824191-7000-5-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0geYMuzcEhCKcaCHNP-j_ceeyZM0CqEaOTeE3jqVd6zaA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/02/2018 06:41 AM, Rafael J. Wysocki wrote:
-> On Tue, May 1, 2018 at 9:55 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> On Tue, May 01, 2018 at 10:34:29AM +0200, Rafael J. Wysocki wrote:
->>> On Mon, Apr 30, 2018 at 4:22 PM, Joseph Salisbury
->>> <joseph.salisbury@canonical.com> wrote:
->>>> On 04/16/2018 11:58 AM, Rafael J. Wysocki wrote:
->>>>> On Mon, Apr 16, 2018 at 5:31 PM, Joseph Salisbury
->>>>> <joseph.salisbury@canonical.com> wrote:
->>>>>> On 04/13/2018 05:34 PM, Rafael J. Wysocki wrote:
->>>>>>> On Fri, Apr 13, 2018 at 7:56 PM, Joseph Salisbury
->>>>>>> <joseph.salisbury@canonical.com> wrote:
->>>>>>>> Hi Rafael,
->>>>>>>>
->>>>>>>> A kernel bug report was opened against Ubuntu [0].  After a kernel
->>>>>>>> bisect, it was found that reverting the following two commits resolved
->>>>>>>> this bug:
->>>>>>>>
->>>>>>>> 0ce3fcaff929 ("PCI / PM: Restore PME Enable after config space restoration")
->>>>>>>> 0847684cfc5f("PCI / PM: Simplify device wakeup settings code")
->>>>>>>>
->>>>>>>> This is a regression introduced in v4.13-rc1 and still exists in
->>>>>>>> mainline.  The bug causes the battery to drain when the system is
->>>>>>>> powered down and unplugged, which does not happed prior to these two
->>>>>>>> commits.
->>>>>>> What system and what do you mean by "powered down"?  How much time
->>>>>>> does it take for the battery to drain now?
->>>>>> By powered down, the bug reporter is saying physically powered off and
->>>>>> unplugged.  The system is a HP laptop:
->>>>>>
->>>>>> dmi.chassis.vendor: HP
->>>>>> dmi.product.family: 103C_5335KV HP Notebook
->>>>>> dmi.product.name: HP Notebook
->>>>>> vendor_id    : GenuineIntel
->>>>>> cpu family    : 6
->>>>>>
->>>>>>
->>>>>>>> The bisect actually pointed to commit de3ef1e, but reverting
->>>>>>>> these two commits fixes the issue.
->>>>>>>>
->>>>>>>> I was hoping to get your feedback, since you are the patch author.  Do
->>>>>>>> you think gathering any additional data will help diagnose this issue,
->>>>>>>> or would it be best to submit a revert request?
->>>>>>> First, reverting these is not an option or you will break systems
->>>>>>> relying on them now.  4.13 is three releases back at this point.
->>>>>>>
->>>>>>> Second, your issue appears to be related to the suspend/shutdown path
->>>>>>> whereas commit 0ce3fcaff929 is mostly about resume, so presumably the
->>>>>>> change in pci_enable_wake() causes the problem to happen.  Can you try
->>>>>>> to revert this one alone and see if that helps?
->>>>>> A test kernel with commits 0ce3fcaff929 and de3ef1eb1cd0 reverted was
->>>>>> tested.  However, the test kernel still exhibited the bug.
->>>>> So essentially the bisection result cannot be trusted.
->>>> We performed some more testing and confirmed just a revert of the
->>>> following commit resolves the bug:
->>>>
->>>> 0847684cfc5f0 ("PCI / PM: Simplify device wakeup settings code")
->>> Thanks for confirming this!
->>>
->>>> Can you think of any suggestions to help debug further?
->>> The root cause of the regression is likely the change in
->>> pci_enable_wake() removing the device_may_wakeup() check from it.
->>>
->>> Probably, one of the drivers in the platform calls pci_enable_wake()
->>> directly from its ->shutdown() callback and that causes the device to
->>> be set up for system wakeup which in turn causes the power draw while
->>> the system is off to increase.
->>>
->>> I would look at the PCI drivers used on that platform to find which of
->>> them call pci_enable_wake() directly from ->shutdown() and I would
->>> make these calls conditional on device_may_wakeup().
->> I took a quick look with
->>
->>   git grep -E "pci_enable_wake\(.*[^0]\);|device_may_wakeup"
->>
->> and didn't notice any pci_enable_wake() callers that called
->> device_may_wakeup() first.
-> I've just look at a bunch of network drivers doing that.
->
-> It looks like I may need to restore __pci_enable_wake() with an extra
-> "runtime" argument for internal use.
->
-> Joseph, can you ask the reporter to test the Bjorn's patch, please?
+Implement bus specific support for the fsl-mc bus including
+registering arm_smmu_ops and bus specific device add operations.
 
-Yes, I'll get him a test kernel and respond with the results.
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+---
+ drivers/iommu/arm-smmu.c |  7 +++++++
+ drivers/iommu/iommu.c    | 21 +++++++++++++++++++++
+ include/linux/fsl/mc.h   |  8 ++++++++
+ include/linux/iommu.h    |  2 ++
+ 4 files changed, 38 insertions(+)
+
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index 69e7c60..e1d5090 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -52,6 +52,7 @@
+ #include <linux/spinlock.h>
+ 
+ #include <linux/amba/bus.h>
++#include <linux/fsl/mc.h>
+ 
+ #include "io-pgtable.h"
+ #include "arm-smmu-regs.h"
+@@ -1459,6 +1460,8 @@ static struct iommu_group *arm_smmu_device_group(struct device *dev)
+ 
+ 	if (dev_is_pci(dev))
+ 		group = pci_device_group(dev);
++	else if (dev_is_fsl_mc(dev))
++		group = fsl_mc_device_group(dev);
+ 	else
+ 		group = generic_device_group(dev);
+ 
+@@ -2037,6 +2040,10 @@ static void arm_smmu_bus_init(void)
+ 		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
+ 	}
+ #endif
++#ifdef CONFIG_FSL_MC_BUS
++	if (!iommu_present(&fsl_mc_bus_type))
++		bus_set_iommu(&fsl_mc_bus_type, &arm_smmu_ops);
++#endif
+ }
+ 
+ static int arm_smmu_device_probe(struct platform_device *pdev)
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index d2aa2320..6d4ce35 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -32,6 +32,7 @@
+ #include <linux/pci.h>
+ #include <linux/bitops.h>
+ #include <linux/property.h>
++#include <linux/fsl/mc.h>
+ #include <trace/events/iommu.h>
+ 
+ static struct kset *iommu_group_kset;
+@@ -987,6 +988,26 @@ struct iommu_group *pci_device_group(struct device *dev)
+ 	return iommu_group_alloc();
+ }
+ 
++/* Get the IOMMU group for device on fsl-mc bus */
++struct iommu_group *fsl_mc_device_group(struct device *dev)
++{
++	struct device *cont_dev = fsl_mc_cont_dev(dev);
++	struct iommu_group *group;
++
++	/* Container device is responsible for creating the iommu group */
++	if (fsl_mc_is_cont_dev(dev)) {
++		group = iommu_group_alloc();
++		if (IS_ERR(group))
++			return NULL;
++	} else {
++		get_device(cont_dev);
++		group = iommu_group_get(cont_dev);
++		put_device(cont_dev);
++	}
++
++	return group;
++}
++
+ /**
+  * iommu_group_get_for_dev - Find or create the IOMMU group for a device
+  * @dev: target device
+diff --git a/include/linux/fsl/mc.h b/include/linux/fsl/mc.h
+index f27cb14..dddaca1 100644
+--- a/include/linux/fsl/mc.h
++++ b/include/linux/fsl/mc.h
+@@ -351,6 +351,14 @@ struct fsl_mc_io {
+ #define dev_is_fsl_mc(_dev) (0)
+ #endif
+ 
++/* Macro to check if a device is a container device */
++#define fsl_mc_is_cont_dev(_dev) (to_fsl_mc_device(_dev)->flags & \
++	FSL_MC_IS_DPRC)
++
++/* Macro to get the container device of a MC device */
++#define fsl_mc_cont_dev(_dev) (fsl_mc_is_cont_dev(_dev) ? \
++	(_dev) : (_dev)->parent)
++
+ /*
+  * module_fsl_mc_driver() - Helper macro for drivers that don't do
+  * anything special in module init/exit.  This eliminates a lot of
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 19938ee..2981200 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -389,6 +389,8 @@ static inline size_t iommu_map_sg(struct iommu_domain *domain,
+ extern struct iommu_group *pci_device_group(struct device *dev);
+ /* Generic device grouping function */
+ extern struct iommu_group *generic_device_group(struct device *dev);
++/* FSL-MC device grouping function */
++struct iommu_group *fsl_mc_device_group(struct device *dev);
+ 
+ /**
+  * struct iommu_fwspec - per-device IOMMU instance data
+-- 
+1.9.1
