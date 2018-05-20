@@ -1,93 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:31205 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932637AbeEaDUf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 May 2018 23:20:35 -0400
-Date: Thu, 31 May 2018 11:20:49 +0800
-From: Tiwei Bie <tiwei.bie@intel.com>
-To: "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        "Rustad, Mark D" <mark.d.rustad@intel.com>
-Cc: "mst@redhat.com" <mst@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "virtualization@lists.linux-foundation.org"
-        <virtualization@lists.linux-foundation.org>,
-        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        "Daly, Dan" <dan.daly@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Liang, Cunming" <cunming.liang@intel.com>,
-        "Wang, Zhihong" <zhihong.wang@intel.com>
-Subject: Re: [PATCH] virtio_pci: support enabling VFs
-Message-ID: <20180531032049.GB15516@debian>
-References: <20180530085521.26583-1-tiwei.bie@intel.com>
- <20180530192010-mutt-send-email-mst@kernel.org>
- <414C18B1-30FA-4AC0-B47D-F0FBF9832737@intel.com>
- <1527699273.29907.2.camel@intel.com>
- <5063D90B-7955-4F1E-85A2-D8AFD661ACB7@intel.com>
+Received: from mail-eopbgr40059.outbound.protection.outlook.com ([40.107.4.59]:52069
+        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752572AbeETNuz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 20 May 2018 09:50:55 -0400
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+        gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com,
+        bhelgaas@google.com
+Cc: hch@lst.de, joro@8bytes.org, m.szyprowski@samsung.com,
+        shawnguo@kernel.org, frowand.list@gmail.com,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        bharat.bhushan@nxp.com, stuyoder@gmail.com, leoyang.li@nxp.com,
+        Nipun Gupta <nipun.gupta@nxp.com>
+Subject: [PATCH 6/7 v5] bus: fsl-mc: set coherent dma mask for devices on fsl-mc bus
+Date: Sun, 20 May 2018 19:19:50 +0530
+Message-Id: <1526824191-7000-7-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <5063D90B-7955-4F1E-85A2-D8AFD661ACB7@intel.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 31, 2018 at 01:11:37AM +0800, Rustad, Mark D wrote:
-> On May 30, 2018, at 9:54 AM, Duyck, Alexander H
-> <alexander.h.duyck@intel.com> wrote:
-> 
-> > On Wed, 2018-05-30 at 09:44 -0700, Rustad, Mark D wrote:
-> > > On May 30, 2018, at 9:22 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
-> > > 
-> > > > > +static int virtio_pci_sriov_configure(struct pci_dev *pci_dev, int
-> > > > > num_vfs)
-> > > > > +{
-> > > > > +	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
-> > > > > +	struct virtio_device *vdev = &vp_dev->vdev;
-> > > > > +	int (*sriov_configure)(struct pci_dev *pci_dev, int num_vfs);
-> > > > > +
-> > > > > +	if (!(vdev->config->get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK))
-> > > > > +		return -EBUSY;
-> > > > > +
-> > > > > +	if (!__virtio_test_bit(vdev, VIRTIO_F_SR_IOV))
-> > > > > +		return -EINVAL;
-> > > > > +
-> > > > > +	sriov_configure = pci_sriov_configure_simple;
-> > > > > +	if (sriov_configure == NULL)
-> > > > > +		return -ENOENT;
-> > > > 
-> > > > BTW what is all this trickery in aid of?
-> > > 
-> > > When SR-IOV support is not compiled into the kernel,
-> > > pci_sriov_configure_simple is #defined as NULL. This allows it to compile
-> > > in that case, even though there is utterly no way for it to be called in
-> > > that case. It is an alternative to #ifs in the code.
-> > 
-> > Why even have the call though? I would wrap all of this in an #ifdef
-> > and strip it out since you couldn't support SR-IOV if it isn't present
-> > in the kernel anyway.
-> 
-> I am inclined to agree. In this case, the presence of #ifdefs I think would
-> be clearer. As written, someone will want to get rid of the pointer only to
-> create a build problem when SR-IOV is not configured.
+of_dma_configure() API expects coherent_dma_mask to be correctly
+set in the devices. This patch does the needful.
 
-In my opinion, maybe it would be better to make
-pci_sriov_configure_simple() always available
-just like other sriov functions.
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+---
+ drivers/bus/fsl-mc/fsl-mc-bus.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Based on the comments in the original patch:
-
-https://patchwork.kernel.org/patch/10353197/
-"""
-+/* this is expected to be used as a function pointer, just define as NULL */
-+#define pci_sriov_configure_simple NULL
-"""
-
-This function could be defined as NULL just because
-it was expected to be used as a function pointer.
-But actually it could be called directly as a
-function, just like this case.
-
-So I prefer to make this function always available
-just like other sriov functions.
-
-Best regards,
-Tiwei Bie
+diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
+index fa43c7d..624828b 100644
+--- a/drivers/bus/fsl-mc/fsl-mc-bus.c
++++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
+@@ -627,6 +627,7 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
+ 		mc_dev->icid = parent_mc_dev->icid;
+ 		mc_dev->dma_mask = FSL_MC_DEFAULT_DMA_MASK;
+ 		mc_dev->dev.dma_mask = &mc_dev->dma_mask;
++		mc_dev->dev.coherent_dma_mask = mc_dev->dma_mask;
+ 		dev_set_msi_domain(&mc_dev->dev,
+ 				   dev_get_msi_domain(&parent_mc_dev->dev));
+ 	}
+-- 
+1.9.1
