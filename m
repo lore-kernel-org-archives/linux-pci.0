@@ -1,167 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 9 May 2018 18:21:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: poza@codeaurora.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>,
-        linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH v15 3/9] PCI/AER: Handle ERR_FATAL with removal and
- re-enumeration of devices
-Message-ID: <20180509232111.GA43216@bhelgaas-glaptop.roam.corp.google.com>
-References: <1525323838-1735-1-git-send-email-poza@codeaurora.org>
- <1525323838-1735-4-git-send-email-poza@codeaurora.org>
- <20180508235330.GN161390@bhelgaas-glaptop.roam.corp.google.com>
- <20180509130730.GA236548@bhelgaas-glaptop.roam.corp.google.com>
- <b1f9aaf43300ef7a829001e964bf4e72@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+ robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+ gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com, bhelgaas@google.com
+Subject: [PATCH 1/7 v5] Docs: dt: add fsl-mc iommu-map device-tree binding
+Date: Sun, 20 May 2018 19:19:45 +0530
+Message-Id: <1526824191-7000-2-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b1f9aaf43300ef7a829001e964bf4e72@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
+ linux-pci@vger.kernel.org, frowand.list@gmail.com, hch@lst.de,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 09, 2018 at 06:44:53PM +0530, poza@codeaurora.org wrote:
-> On 2018-05-09 18:37, Bjorn Helgaas wrote:
-> > On Tue, May 08, 2018 at 06:53:30PM -0500, Bjorn Helgaas wrote:
-> > > On Thu, May 03, 2018 at 01:03:52AM -0400, Oza Pawandeep wrote:
-> > > > This patch alters the behavior of handling of ERR_FATAL, where removal
-> > > > of devices is initiated, followed by reset link, followed by
-> > > > re-enumeration.
-> > > >
-> > > > So the errors are handled in a different way as follows:
-> > > > ERR_NONFATAL => call driver recovery entry points
-> > > > ERR_FATAL    => remove and re-enumerate
-> > > >
-> > > > please refer to Documentation/PCI/pci-error-recovery.txt for more details.
-> > > >
-> > > > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-> > > >
-> > > > diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> > > > index 779b387..206f590 100644
-> > > > --- a/drivers/pci/pcie/aer/aerdrv.c
-> > > > +++ b/drivers/pci/pcie/aer/aerdrv.c
-> > > > @@ -330,6 +330,13 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
-> > > >         reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
-> > > >         pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
-> > > >
-> > > > +       /*
-> > > > +        * This function is called only on ERR_FATAL now, and since
-> > > > +        * the pci_report_resume is called only in ERR_NONFATAL case,
-> > > > +        * the clearing part has to be taken care here.
-> > > > +        */
-> > > > +       aer_error_resume(dev);
-> > > 
-> > > I don't understand this part.  Previously the ERR_FATAL path looked
-> > > like
-> > > this:
-> > > 
-> > >   do_recovery
-> > >     reset_link
-> > >       driver->reset_link
-> > >         aer_root_reset
-> > >           pci_reset_bridge_secondary_bus                # <-- reset
-> > >     broadcast_error_message(..., report_resume)
-> > >       pci_walk_bus(..., report_resume, ...)
-> > >         report_resume
-> > >       if (cb == report_resume)
-> > >         pci_cleanup_aer_uncorrect_error_status
-> > >           pci_write_config_dword(PCI_ERR_UNCOR_STATUS)  # <-- clear
-> > > status
-> > > 
-> > > After this patch, it will look like this:
-> > > 
-> > >   do_recovery
-> > >     do_fatal_recovery
-> > >       pci_cleanup_aer_uncorrect_error_status
-> > >         pci_write_config_dword(PCI_ERR_UNCOR_STATUS)    # <-- clear
-> > > status
-> > >       reset_link
-> > >         driver->reset_link
-> > >           aer_root_reset
-> > >             pci_reset_bridge_secondary_bus              # <-- reset
-> > >             aer_error_resume
-> > >               pcie_capability_write_word(PCI_EXP_DEVSTA)        #
-> > > <-- clear more
-> > >               pci_write_config_dword(PCI_ERR_UNCOR_STATUS)      #
-> > > <-- clear status
-> > > 
-> > > So if I'm understanding correctly, the new path clears the status too
-> > > early, then clears it again (plus clearing DEVSTA, which we didn't do
-> > > before) later.
-> > > 
-> > > I would think we would want to leave aer_root_reset() alone, and
-> > > just move
-> > > the pci_cleanup_aer_uncorrect_error_status() in do_fatal_recovery()
-> > > down so
-> > > it happens after we call reset_link().  That way the reset/clear
-> > > sequence
-> > > would be the same as it was before.
-> > 
-> > I've been fiddling with this a bit myself and will post the results to
-> > see
-> > what you think.
-> 
-> 
-> ok so you are suggesting to move pci_cleanup_aer_uncorrect_error_status down
-> which I can do.
-> 
-> And not to call aer_error_resume, because you think its clearing the status
-> again.
-> 
-> following code: calls aer_error_resume.
-> pci_broadcast_error_message()
->  /*
->                  * If the error is reported by an end point, we think this
->                  * error is related to the upstream link of the end point.
->                  */
->                 if (state == pci_channel_io_normal)
->                         /*
->                          * the error is non fatal so the bus is ok, just
-> invoke
->                          * the callback for the function that logged the
-> error.
->                          */
->                         cb(dev, &result_data);
->                 else
->                         pci_walk_bus(dev->bus, cb, &result_data);
+The existing IOMMU bindings cannot be used to specify the relationship
+between fsl-mc devices and IOMMUs. This patch adds a generic binding for
+mapping fsl-mc devices to IOMMUs, using iommu-map property.
 
-Holy crap, I thought this could not possibly get any more complicated,
-but you're right; we do actually call aer_error_resume() today via an
-extremely convoluted path:
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+ .../devicetree/bindings/misc/fsl,qoriq-mc.txt      | 39 ++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-  do_recovery(pci_dev)
-    broadcast_error_message(..., error_detected, ...)
-    if (AER_FATAL)
-      reset_link(pci_dev)
-        udev = BRIDGE ? pci_dev : pci_dev->bus->self
-        driver->reset_link(udev)
-          aer_root_reset(udev)
-    if (CAN_RECOVER)
-      broadcast_error_message(..., mmio_enabled, ...)
-    if (NEED_RESET)
-      broadcast_error_message(..., slot_reset, ...)
-    broadcast_error_message(dev, ..., report_resume, ...)
-      if (BRIDGE)
-        report_resume
-          driver->resume
-            pcie_portdrv_err_resume
-              device_for_each_child(..., resume_iter)
-                resume_iter
-                  driver->error_resume
-                    aer_error_resume
-        pci_cleanup_aer_uncorrect_error_status(pci_dev)       # only if BRIDGE
-          pci_write_config_dword(PCI_ERR_UNCOR_STATUS)
+diff --git a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
+index 6611a7c..8cbed4f 100644
+--- a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
++++ b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
+@@ -9,6 +9,25 @@ blocks that can be used to create functional hardware objects/devices
+ such as network interfaces, crypto accelerator instances, L2 switches,
+ etc.
+ 
++For an overview of the DPAA2 architecture and fsl-mc bus see:
++drivers/staging/fsl-mc/README.txt
++
++As described in the above overview, all DPAA2 objects in a DPRC share the
++same hardware "isolation context" and a 10-bit value called an ICID
++(isolation context id) is expressed by the hardware to identify
++the requester.
++
++The generic 'iommus' property is insufficient to describe the relationship
++between ICIDs and IOMMUs, so an iommu-map property is used to define
++the set of possible ICIDs under a root DPRC and how they map to
++an IOMMU.
++
++For generic IOMMU bindings, see
++Documentation/devicetree/bindings/iommu/iommu.txt.
++
++For arm-smmu binding, see:
++Documentation/devicetree/bindings/iommu/arm,smmu.txt.
++
+ Required properties:
+ 
+     - compatible
+@@ -88,14 +107,34 @@ Sub-nodes:
+               Value type: <phandle>
+               Definition: Specifies the phandle to the PHY device node associated
+                           with the this dpmac.
++Optional properties:
++
++- iommu-map: Maps an ICID to an IOMMU and associated iommu-specifier
++  data.
++
++  The property is an arbitrary number of tuples of
++  (icid-base,iommu,iommu-base,length).
++
++  Any ICID i in the interval [icid-base, icid-base + length) is
++  associated with the listed IOMMU, with the iommu-specifier
++  (i - icid-base + iommu-base).
+ 
+ Example:
+ 
++        smmu: iommu@5000000 {
++               compatible = "arm,mmu-500";
++               #iommu-cells = <2>;
++               stream-match-mask = <0x7C00>;
++               ...
++        };
++
+         fsl_mc: fsl-mc@80c000000 {
+                 compatible = "fsl,qoriq-mc";
+                 reg = <0x00000008 0x0c000000 0 0x40>,    /* MC portal base */
+                       <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
+                 msi-parent = <&its>;
++                /* define map for ICIDs 23-64 */
++                iommu-map = <23 &smmu 23 41>;
+                 #address-cells = <3>;
+                 #size-cells = <1>;
+ 
+-- 
+1.9.1
 
-aerdriver is the only port service driver that implements
-.error_resume(), and aerdriver only binds to root ports.  I can't
-really believe all these device_for_each_child()/resume_iter()
-gyrations are necessary when this is AER code calling AER code.
 
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
