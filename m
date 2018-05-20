@@ -1,93 +1,49 @@
-Return-Path: <SRS0=QH9+=HU=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=QH9+=HU=arm.com=marc.zyngier@kernel.org>
-Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
- (issued 65284 msec ago)
-To: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
- Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org,
- kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
- Lukas Wunner <lukas@wunner.de>, Eric Biederman <ebiederm@xmission.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Vivek Goyal <vgoyal@redhat.com>
-References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
- <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
- <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
- <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
- <20180428005620.GB1675@dhcp-128-65.nay.redhat.com>
- <20180428011845.GC1675@dhcp-128-65.nay.redhat.com>
- <3ebc908fb196168bf0373875ffc5679e@codeaurora.org>
- <d8d134dc-9757-97cd-7a24-cbb21611d6c6@codeaurora.org>
- <20180430211740.GG95643@bhelgaas-glaptop.roam.corp.google.com>
- <7285da70-2c3e-c3b7-62e1-fdbb55a77729@codeaurora.org>
- <3549ffe8-7605-d72c-5c09-1436a4288c7d@codeaurora.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <ffe662be-00c7-ab7f-0e88-8119ccfd9600@arm.com>
-Date: Tue, 1 May 2018 13:59:20 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <3549ffe8-7605-d72c-5c09-1436a4288c7d@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAOMZO5DfHK=2x6+7T1x4n3A4uK5naWkQ_0dmjVt5JyeMAZPGyQ@mail.gmail.com>
+References: <1522288381-470803-1-git-send-email-Minghuan.Lian@nxp.com>
+ <CAOMZO5DfHK=2x6+7T1x4n3A4uK5naWkQ_0dmjVt5JyeMAZPGyQ@mail.gmail.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Sun, 20 May 2018 12:04:51 -0300
+Message-ID: <CAOMZO5A-b_uiU9ci7Nts1EekOYXw9jAtSLu4uTEDkS8sHFWXAA@mail.gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: Update Layerscape PCIe driver maintainers
+ list
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Minghuan Lian <Minghuan.Lian@nxp.com>, linux-pci@vger.kernel.org,
+ "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>, Mingkai Hu <mingkai.hu@nxp.com>,
+ Roy Zang <roy.zang@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/05/18 13:38, Sinan Kaya wrote:
-> +Marc,
-> 
-> On 4/30/2018 5:27 PM, Sinan Kaya wrote:
->> On 4/30/2018 5:17 PM, Bjorn Helgaas wrote:
->>>> What should we do about this?
->>>>
->>>> Since there is an actual HW errata involved, should we quirk this
->>>> root port and not wait as if remove/shutdown doesn't exist?
->>> I was hoping to avoid a quirk because AFAIK all Intel parts have this
->>> issue so it will be an ongoing maintenance issue.  I tried to avoid
->>> the timeout delays, e.g., with 40b960831cfa ("PCI: pciehp: Compute
->>> timeout from hotplug command start time").
->>>
->>> But we still see the alarming messages, so we should probably add a
->>> quirk to get rid of those.
->>>
->>> But I haven't given up on the idea of getting rid of the
->>> pciehp_remove() path.  I'm not convinced yet that we actually need to
->>> do anything to shut this device down.  I don't like the assumption
->>> that kexec requires this.  The kexec is fundamentally just a branch,
->>> and anything we do before the branch (i.e., in the old kernel), we
->>> should also be able to do after the branch (i.e., in the kexec-ed
->>> kernel).
->>>
+Hi Lorenzo,
+
+On Wed, May 2, 2018 at 2:55 PM, Fabio Estevam <festevam@gmail.com> wrote:
+> [Adding Lorenzo]
+>
+> On Wed, Mar 28, 2018 at 10:53 PM, Minghuan Lian <Minghuan.Lian@nxp.com> wrote:
+>> Change Layerscape PCIe driver maintainers' email address
+>> from freescale to nxp.
 >>
->> In my experience with kexec, MSI type edge interrupts are harmless.
->> You might just see a few unhandled interrupt messages during boot
->> if something is pending from the first kernel.
+>> Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+>
+> Yes, freescale.com emails are no longer reachable, so hopefully this
+> one can land into 4.17.
 
-Unfortunately, that's not always the case.
+A gentle ping on this one.
 
-A number of GICv3/v4 implementations (a very common interrupt controller
-on ARM servers) cannot be disabled, which means they will keep writing
-to their pending tables long after kexec will have started the new
-kernel. And since we don't track memory allocation across kexec, you
-end-up with significant chances of observing single bit corruption as
-interrupts carry on being delivered. Oh, and you won't actually be able
-to take MSIs because you can't even reprogram the damn thing.
-
-Yes, this can be considered a HW bug.
-
->> It is the level interrupts that are more concerning. It remains pending
->> until the interrupt source is cleared. CPU never returns from the
->> interrupt handler to actually continue booting the second kernel.
-> 
-> This makes me wonder why kexec doesn't disable all interrupt sources by
-> itself instead of relying on the drivers shutdown routine. Some drivers
-> don't even have a shutdown callback. Kexec could have done both as another
-> example. Something like.
-> 
-> 1. Call shutdown for all drivers if available.
-> 2. Disable all interrupt sources in the interrupt controller
-> 3. Start the new kernel.
-
-See above. Although you can shut off the end-point and to some extent
-mask interrupts before jumping into the payload, it is not always
-possible to go back to a reasonable state where you can take actually MSIs.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
