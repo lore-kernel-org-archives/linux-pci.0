@@ -1,72 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:47861 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932988AbeEIBTl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 May 2018 21:19:41 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v7 0/7] Add EP driver for Rockchip PCIe controller
-Date: Wed,  9 May 2018 09:11:18 +0800
-Message-Id: <1525828278-69800-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+ robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+ gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com, bhelgaas@google.com
+Subject: [PATCH 3/7 v5] iommu: support iommu configuration for fsl-mc devices
+Date: Sun, 20 May 2018 19:19:47 +0530
+Message-Id: <1526824191-7000-4-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
+ linux-pci@vger.kernel.org, frowand.list@gmail.com, hch@lst.de,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+With of_pci_map_rid available for all the busses, use the function
+for configuration of devices on fsl-mc bus
 
-This's the 7th try to upstream EP driver for Rockchip PCIe
-controller. V7 is the same with V6 but with some minor adjustment
-for commit title and commit log.
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+---
+ drivers/iommu/of_iommu.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-Thanks.
-
-
-Changes in v7:
-- check and update commit log
-
-Changes in v6:
-- rebase
-
-Changes in v5:
-- export symbol to fix error reported by Kbuild robot
-- PCIE_ROCKCHIP depends on PCI
-
-Changes in v4:
-- remove empty line
-- keep rockchip's order next to cadence and dwc, but
-  we will try to resort it later when reconstructing
-  the directories
-
-Shawn Lin (7):
-  PCI: rockchip: Separate common code from RC driver
-  PCI: rockchip: Split out rockchip_pcie_parse_dt() to parse DT
-  PCI: rockchip: Split out common function to init controller
-  dt-bindings: PCI: rockchip: Rename rockchip-pcie.txt to
-    rockchip-pcie-host.txt
-  PCI: rockchip: Add EP driver for Rockchip PCIe controller
-  dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe EP
-    driver
-  arm64: defconfig: update config for Rockchip PCIe
-
- .../devicetree/bindings/pci/rockchip-pcie-ep.txt   |   62 +
- .../{rockchip-pcie.txt => rockchip-pcie-host.txt}  |    0
- MAINTAINERS                                        |    4 +-
- arch/arm64/configs/defconfig                       |    3 +-
- drivers/pci/host/Kconfig                           |   19 +-
- drivers/pci/host/Makefile                          |    2 +
- drivers/pci/host/pcie-rockchip-ep.c                |  639 ++++++++
- drivers/pci/host/pcie-rockchip-host.c              | 1141 +++++++++++++
- drivers/pci/host/pcie-rockchip.c                   | 1683 +++-----------------
- drivers/pci/host/pcie-rockchip.h                   |  338 ++++
- 10 files changed, 2403 insertions(+), 1488 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
- rename Documentation/devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} (100%)
- create mode 100644 drivers/pci/host/pcie-rockchip-ep.c
- create mode 100644 drivers/pci/host/pcie-rockchip-host.c
- create mode 100644 drivers/pci/host/pcie-rockchip.h
-
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 811e160..284474d 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -24,6 +24,7 @@
+ #include <linux/of_iommu.h>
+ #include <linux/of_pci.h>
+ #include <linux/slab.h>
++#include <linux/fsl/mc.h>
+ 
+ #define NO_IOMMU	1
+ 
+@@ -159,6 +160,23 @@ static int of_pci_iommu_init(struct pci_dev *pdev, u16 alias, void *data)
+ 	return err;
+ }
+ 
++static int of_fsl_mc_iommu_init(struct fsl_mc_device *mc_dev,
++				struct device_node *master_np)
++{
++	struct of_phandle_args iommu_spec = { .args_count = 1 };
++	int err;
++
++	err = of_map_rid(master_np, mc_dev->icid, "iommu-map",
++			 "iommu-map-mask", &iommu_spec.np,
++			 iommu_spec.args);
++	if (err)
++		return err == -ENODEV ? NO_IOMMU : err;
++
++	err = of_iommu_xlate(&mc_dev->dev, &iommu_spec);
++	of_node_put(iommu_spec.np);
++	return err;
++}
++
+ const struct iommu_ops *of_iommu_configure(struct device *dev,
+ 					   struct device_node *master_np)
+ {
+@@ -190,6 +208,8 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
+ 
+ 		err = pci_for_each_dma_alias(to_pci_dev(dev),
+ 					     of_pci_iommu_init, &info);
++	} else if (dev_is_fsl_mc(dev)) {
++		err = of_fsl_mc_iommu_init(to_fsl_mc_device(dev), master_np);
+ 	} else {
+ 		struct of_phandle_args iommu_spec;
+ 		int idx = 0;
 -- 
 1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
