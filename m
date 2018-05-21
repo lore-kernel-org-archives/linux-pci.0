@@ -1,139 +1,136 @@
-Return-Path: <SRS0=bQz4=HW=kontron.com=gilles.buloz@kernel.org>
-Return-Path: <SRS0=bQz4=HW=kontron.com=gilles.buloz@kernel.org>
-From: Gilles Buloz <Gilles.Buloz@kontron.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci
-	<linux-pci@vger.kernel.org>, "Minghuan.Lian@nxp.com" <Minghuan.Lian@nxp.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, Ard Biesheuvel
-	<ard.biesheuvel@linaro.org>
-Subject: Re: LS1043A : "synchronous abort" at boot due to PCI config read
-Date: Thu, 3 May 2018 12:40:27 +0000
-Message-ID: <5AEB033A.4060407@kontron.com>
-References: <CAKv+Gu_v4V8DUa6f4WxvjZHoJbbqT0mKpOwYVmaLaE20CB3U_g@mail.gmail.com>
- <5AE317AB.4020404@kontron.com>
- <20180427165627.GA8199@bhelgaas-glaptop.roam.corp.google.com>
- <5AE6D7E2.9030506@kontron.com> <5AE71BF4.2010200@kontron.com>
- <20180430170447.GA95643@bhelgaas-glaptop.roam.corp.google.com>
- <5AE75809.30701@kontron.com> <5AE9B5BB.2080003@kontron.com>
- <20180502132501.GE11698@bhelgaas-glaptop.roam.corp.google.com>
- <5AE9C1AB.8020403@kontron.com>
- <20180502172341.GA123831@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180502172341.GA123831@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=QkwI=II=arm.com=robin.murphy@kernel.org>
+Return-Path: <SRS0=QkwI=II=arm.com=robin.murphy@kernel.org>
+Subject: Re: [PATCH INTERNAL 3/3] PCI: iproc: Disable MSI parsing in certain
+ PAXC blocks
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Ray Jui <ray.jui@broadcom.com>
+Cc: poza@codeaurora.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+ bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+ linux-pci-owner@vger.kernel.org
+References: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
+ <1526577692-21104-4-git-send-email-ray.jui@broadcom.com>
+ <ad41ea7f16414a83a2b3d7e6192bcf79@codeaurora.org>
+ <20180518135614.GA18605@e107981-ln.cambridge.arm.com>
+ <e433f2cf-63c5-37c3-f7ef-15ff0aa67e4f@broadcom.com>
+ <20180521133305.GB1443@e107981-ln.cambridge.arm.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <073832d4-88a0-efa1-2da8-5e07479e51e0@arm.com>
+Date: Mon, 21 May 2018 15:26:27 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=WINDOWS-1252
+In-Reply-To: <20180521133305.GB1443@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Subject:    [PATCH] For exception at PCI probe due to bridge reporting UR
+On 21/05/18 14:33, Lorenzo Pieralisi wrote:
+> [+Robin]
+> 
+> On Fri, May 18, 2018 at 12:48:28PM -0700, Ray Jui wrote:
+>> Hi Lorenzo,
+>>
+>> On 5/18/2018 6:56 AM, Lorenzo Pieralisi wrote:
+>>> On Fri, May 18, 2018 at 02:53:41PM +0530, poza@codeaurora.org wrote:
+>>>> On 2018-05-17 22:51, Ray Jui wrote:
+>>>>> The internal MSI parsing logic in certain revisions of PAXC root
+>>>>> complexes does not work properly and can casue corruptions on the
+>>>>> writes. They need to be disabled
+>>>>>
+>>>>> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+>>>>> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+>>>>> ---
+>>>>> drivers/pci/host/pcie-iproc.c | 34 ++++++++++++++++++++++++++++++++--
+>>>>> 1 file changed, 32 insertions(+), 2 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+>>>>> index 3c76c5f..b906d80 100644
+>>>>> --- a/drivers/pci/host/pcie-iproc.c
+>>>>> +++ b/drivers/pci/host/pcie-iproc.c
+>>>>> @@ -1144,10 +1144,22 @@ static int iproc_pcie_paxb_v2_msi_steer(struct
+>>>>> iproc_pcie *pcie, u64 msi_addr)
+>>>>> 	return ret;
+>>>>> }
+>>>>>
+>>>>> -static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64
+>>>>> msi_addr)
+>>>>> +static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64
+>>>>> msi_addr,
+>>>>> +					 bool enable)
+>>>>> {
+>>>>> 	u32 val;
+>>>>>
+>>>>> +	if (!enable) {
+>>>>> +		/*
+>>>>> +		 * Disable PAXC MSI steering. All write transfers will be
+>>>>> +		 * treated as non-MSI transfers
+>>>>> +		 */
+>>>>> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
+>>>>> +		val &= ~MSI_ENABLE_CFG;
+>>>>> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
+>>>>> +		return;
+>>>>> +	}
+>>>>> +
+>>>>> 	/*
+>>>>> 	 * Program bits [43:13] of address of GITS_TRANSLATER register into
+>>>>> 	 * bits [30:0] of the MSI base address register.  In fact, in all iProc
+>>>>> @@ -1201,7 +1213,7 @@ static int iproc_pcie_msi_steer(struct iproc_pcie
+>>>>> *pcie,
+>>>>> 			return ret;
+>>>>> 		break;
+>>>>> 	case IPROC_PCIE_PAXC_V2:
+>>>>> -		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
+>>>>> +		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr, true);
+>>>>
+>>>> Are you calling iproc_pcie_paxc_v2_msi_steer() anywhere else with 'false' ?
+>>>> I see its getting called only from one place in current code
+>>>> iproc_pcie_msi_steer().
+>>>
+>>> It is called below with the false field to disable MSIs. That's probably
+>>> one reason more to create a function to enable/disable MSIs instead of
+>>> adding a parameter to iproc_pcie_paxc_v2_msi_steer().
+>>
+>> Correct. Thanks for helping to explain.
+>>
+>>>
+>>> Which brings me to the question: what happens to those MSIs writes
+>>> when MSIs are disabled according to this patch ? Are they terminated
+>>> at the root complex ?
+>>
+>> Note the PAXC block parses MSI writes from our internally connected
+>> endpoints (i.e., an embedded network processor). The PAXC block examines
+>> these MSI writes and modifies the memory attributes (to DEVICE) of these
+>> data and then send them out to the AXI bus. These MSI writes will then be
+>> forwarded to the GIC (e.g., GICv2m, GICv3-ITS from ARM) for further
+>> processing. This is saying, PAXC itself does not process these MSI writes.
+>> They are processed by the GIC and associated interrupt will be generated
+>> form the GIC. PAXC's job is to parse and tag them properly so these MSI
+>> writes can reach the GIC, and at the same, reach the GIC at the right order.
+>>
+>> On some of these problematic PAXCs, we are being forced to disable this PAXC
+>> internal parsing logic. In this case, we set up static mapping with the
+>> IOMMU to modify the memory attributes of these MSI writes. These MSI writes
+>> are always designated towards a specific memory address (e.g., on the GICv3
+>> based system, it's the address of the translator register), and that's why
+>> static mapping table can be set up to work around this.
+> 
+> Which means, I presume, that there must be some code that somehow
+> somewhere in the kernel sets-up those mappings and it has to be related
+> to this patch, in which case I wonder why we enable the PAXC steering at
+> all given that this (hack) can be done through the IOMMU (and I assume
+> that on all PAXC platforms that do need MSIs there is an IOMMU IP
+> upstream the root bridge, otherwise I have no idea what will happen to
+> those MSI writes).
 
-Even if a device supports extended config access, no such access must be
-done to this device If there's a bridge not supporting that in the path
-to this device. Doing such access with UR reporting enabled on the root
-bridge leads to an exception.
+If it's only rewriting memory attributes (FWIW it sounds like this thing 
+is comparable to the AXI translation table of the PLDA root complex we 
+have in Juno), then if the IOMMU is controlled by Linux the PAXC 
+shouldn't be needed anyway. In that situation the GICv2m/ITS doorbell 
+will be already mapped for the endpoint as device memory (and usually at 
+some arbitrary address that the PAXC won't recognise anyway) - see 
+iommu_dma_get_msi_page().
 
-This is the case on a LS1043A CPU (NXP QorIQ Layerscape) platform with
-the following bus topology :
-  LS1043 PCIe root
-    -> PEX8112 PCIe-to-PCI bridge (not supporting ext cfg on PCI side)
-      -> PMC slot connector (for legacy PMC modules)
-With a PMC module topology as follows :
-  PMC connector
-    -> PCI-to-PCIe bridge
-      -> PCIe switch (4 ports)
-        -> 4 PCIe devices (one on each port)
-In this case all devices behind the PEX8112 are supporting extended config
-access but this is prohibited by the PEX8112. Without this patch, an
-exception (synchronous abort) occurs in pci_cfg_space_size_ext().
+If Linux *doesn't* know about the IOMMU, then the firmware should be 
+free to set it up with a static 1:1 mapping of the PA space and leave it 
+that way, provided Linux can't inadvertently stomp on those page tables 
+later.
 
-This patch checks the parent bridge of each allocated child bus to know if
-extended config access is supported on the child bus, and sets a flag in
-child->bus_flags if not supported. This  flag is inherited by all children
-buses of this child bus and then is checked to avoid this unsupported
-accesses to every device on these buses.
-
-Thanks
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Gilles BULOZ
-Senior software engineer
-Kontron France
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-
-Signed-off-by: Gilles Buloz <gilles.buloz@kontron.com>
-
---- linux-4.17-rc1/include/linux/pci.h.orig=092018-04-16 01:24:20.000000000=
- +0000
-+++ linux-4.17-rc1/include/linux/pci.h=092018-05-03 09:53:03.270000000 +000=
-0
-@@ -217,6 +217,7 @@ enum pci_bus_flags {
-  =09PCI_BUS_FLAGS_NO_MSI=09=3D (__force pci_bus_flags_t) 1,
-  =09PCI_BUS_FLAGS_NO_MMRBC=09=3D (__force pci_bus_flags_t) 2,
-  =09PCI_BUS_FLAGS_NO_AERSID=09=3D (__force pci_bus_flags_t) 4,
-+=09PCI_BUS_FLAGS_NO_EXTCFG=09=3D (__force pci_bus_flags_t) 8,
-  };
- =20
-  /* Values from Link Status register, PCIe r3.1, sec 7.8.8 */
---- linux-4.17-rc1/drivers/pci/probe.c.orig=092018-05-03 09:45:21.110000000=
- +0000
-+++ linux-4.17-rc1/drivers/pci/probe.c=092018-05-03 09:46:50.550000000 +000=
-0
-@@ -882,6 +882,24 @@ free:
-  =09return err;
-  }
- =20
-+static bool pci_bridge_child_bus_ext_cfg_accessible(struct pci_dev *bridge=
-)
-+{
-+=09int pos;
-+=09u32 status;
-+
-+=09if (pci_is_pcie(bridge) &&
-+=09    (pci_pcie_type(bridge) !=3D PCI_EXP_TYPE_PCIE_BRIDGE) &&
-+=09    (pci_pcie_type(bridge) !=3D PCI_EXP_TYPE_PCI_BRIDGE))
-+=09=09return true;
-+
-+=09/* PCI/PCI, or PCIe/PCI (forward), or PCI/PCIe (reverse) bridge */
-+=09pos =3D pci_find_capability(bridge, PCI_CAP_ID_PCIX);
-+=09if (pos)
-+=09=09pci_read_config_dword(bridge, pos + PCI_X_STATUS, &status);
-+
-+=09return pos && (status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ));
-+}
-+
-  static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
-  =09=09=09=09=09   struct pci_dev *bridge, int busnr)
-  {
-@@ -930,6 +948,20 @@ static struct pci_bus *pci_alloc_child_b
-  =09}
-  =09bridge->subordinate =3D child;
- =20
-+=09/*
-+=09 * if bus_flags inherited from parent bus do not already report lack of
-+=09 * extended config space support, check if supported by child bus by
-+=09 * checking its parent bridge
-+=09 */
-+=09if (child->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG) {
-+=09=09pci_info(child, "extended config space not accessible due to parent =
-bus\n");
-+=09} else {
-+=09=09if (!pci_bridge_child_bus_ext_cfg_accessible(bridge)) {
-+=09=09=09child->bus_flags |=3D PCI_BUS_FLAGS_NO_EXTCFG;
-+=09=09=09pci_info(child, "extended config space not accessible due to pare=
-nt bridge\n");
-+=09=09}
-+=09}
-+
-  add_dev:
-  =09pci_set_bus_msi_domain(child);
-  =09ret =3D device_register(&child->dev);
-@@ -1393,6 +1425,9 @@ int pci_cfg_space_size(struct pci_dev *d
-  =09u32 status;
-  =09u16 class;
- =20
-+=09if (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG)
-+=09=09return PCI_CFG_SPACE_SIZE;
-+
-  =09class =3D dev->class >> 8;
-  =09if (class =3D=3D PCI_CLASS_BRIDGE_HOST)
-  =09=09return pci_cfg_space_size_ext(dev);
+Robin.
