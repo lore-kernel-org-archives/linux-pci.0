@@ -1,62 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-To: Stephen Bates <sbates@raithlin.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
- <20180423233046.21476-5-logang@deltatee.com>
- <CAPcyv4g+5N_n03J-VhmJfrr60Sqk95ZapLKBkwSsGvV4nQ+ZRw@mail.gmail.com>
- <64C231F5-DE36-415F-B308-3A423B0BBACB@raithlin.com>
- <15433946-f7f5-f610-4e80-380fb59920e5@redhat.com>
- <3C9FB262-A93C-4C8F-B1E0-85C6D6F78BC2@raithlin.com>
-From: Don Dutile <ddutile@redhat.com>
-Message-ID: <9c85f5a1-a6dc-4a59-4162-03749088a87d@redhat.com>
-Date: Wed, 9 May 2018 11:53:19 -0400
+Return-Path: <SRS0=SNMF=II=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=SNMF=II=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Mon, 21 May 2018 15:03:36 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: honghui.zhang@mediatek.com, marc.zyngier@arm.com, bhelgaas@google.com,
+	matthias.bgg@gmail.com, linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+	ryder.lee@mediatek.com, hongkun.cao@mediatek.com,
+	youlin.pei@mediatek.com, yong.wu@mediatek.com, yt.shen@mediatek.com,
+	sean.wang@mediatek.com, xinping.qian@mediatek.com
+Subject: Re: [PATCH v7 2/2] PCI: mediatek: Using chained IRQ to setup IRQ
+ handle
+Message-ID: <20180521140336.GA3149@e107981-ln.cambridge.arm.com>
+References: <1525412853-24367-1-git-send-email-honghui.zhang@mediatek.com>
+ <1525412853-24367-3-git-send-email-honghui.zhang@mediatek.com>
+ <20180518195154.GB41790@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <3C9FB262-A93C-4C8F-B1E0-85C6D6F78BC2@raithlin.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180518195154.GB41790@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/08/2018 05:27 PM, Stephen  Bates wrote:
-> Hi Don
+On Fri, May 18, 2018 at 02:51:54PM -0500, Bjorn Helgaas wrote:
+> On Fri, May 04, 2018 at 01:47:33PM +0800, honghui.zhang@mediatek.com wrote:
+> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > 
+> > Using irq_chip solution to setup IRQs in order to consist
+> > with IRQ framework.
+> > 
+> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+> > ---
+> >  drivers/pci/host/pcie-mediatek.c | 206 ++++++++++++++++++++++-----------------
+> >  1 file changed, 115 insertions(+), 91 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> > index c3dc549..dabf1086 100644
+> > --- a/drivers/pci/host/pcie-mediatek.c
+> > +++ b/drivers/pci/host/pcie-mediatek.c
+> > ...
 > 
->> Well, p2p DMA is a function of a cooperating 'agent' somewhere above the two devices.
->>     That agent should 'request' to the kernel that ACS be removed/circumvented (p2p enabled) btwn two endpoints.
->>     I recommend doing so via a sysfs method.
+> > -static int mtk_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+> > -			    irq_hw_number_t hwirq)
+> > +static struct msi_domain_info mtk_msi_domain_info = {
 > 
-> Yes we looked at something like this in the past but it does hit the IOMMU grouping issue I discussed earlier today which is not acceptable right now. In the long term, once we get IOMMU grouping callbacks to VMs we can look at extending p2pdma in this way. But I don't think this is viable for the initial series.
+> I think this patch should be amended to include this:
 > 
->      
->>             So I don't understand the comments why VMs should need to know.
-> 
-> As I understand it VMs need to know because VFIO passes IOMMU grouping up into the VMs. So if a IOMMU grouping changes the VM's view of its PCIe topology changes. I think we even have to be cognizant of the fact the OS running on the VM may not even support hot-plug of PCI devices.
->      
->> Is there a thread I need to read up to explain /clear-up the thoughts above?
-> 
-> If you search for p2pdma you should find the previous discussions. Thanks for the input!
-> 
-under linux-pci I'm assuming...
-you cc'd a number of upstream lists; I picked this thread up via rdma-list.
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 0d0177ce436c..368b70d9371b 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -193,7 +193,7 @@ config PCIE_MEDIATEK
+>  	bool "MediaTek PCIe controller"
+>  	depends on (ARM || ARM64) && (ARCH_MEDIATEK || COMPILE_TEST)
+>  	depends on OF
+> -	depends on PCI
 
-> Stephen
->      
->      
-> 
+Actually I amended your patch, since I do not think the deletion above
+belongs in this commit (I agree that's completely useless but that's
+not this patch that we should remove it).
+
+Lorenzo
+
+> +	depends on PCI_MSI_IRQ_DOMAIN
