@@ -1,45 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40778 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751298AbeERVmO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 May 2018 17:42:14 -0400
-Date: Fri, 18 May 2018 16:42:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rob Herring <robh@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Scott Branden <scott.branden@broadcom.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4] PCI: improve host drivers compile test coverage
-Message-ID: <20180518214211.GD41790@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180405193154.27897-1-robh@kernel.org>
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:45628 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753524AbeEUSJd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2018 14:09:33 -0400
+Received: by mail-lf0-f66.google.com with SMTP id w202-v6so25182770lff.12
+        for <linux-pci@vger.kernel.org>; Mon, 21 May 2018 11:09:32 -0700 (PDT)
+Subject: Re: [PATCH] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
+To: Marek Vasut <marek.vasut@gmail.com>, linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+References: <20180521170250.13224-1-marek.vasut+renesas@gmail.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <4ba2a3fa-018c-9e90-d167-c0e04e3f6246@cogentembedded.com>
+Date: Mon, 21 May 2018 21:09:29 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180405193154.27897-1-robh@kernel.org>
+In-Reply-To: <20180521170250.13224-1-marek.vasut+renesas@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rob,
+On 05/21/2018 08:02 PM, Marek Vasut wrote:
 
-On Thu, Apr 05, 2018 at 02:31:54PM -0500, Rob Herring wrote:
-> Add COMPILE_TEST on driver config options with it. Some ARM drivers
-> still have arch dependencies, so we have to keep those dependent on ARM.
-> 
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Rob Herring <robh@kernel.org>
+> The data link active signal usually takes ~20 uSec to be asserted,
+> poll the bit more often to avoid useless delays in this function.
+> Use udelay() instead of usleep() for such a small delay as suggested
+> by the timer documentation and because this will be used in atomic
+> content later on when the suspend/resume patches land.
+  ^^^^^^^ context :-)
 
->  config PCIE_ALTERA
->  	bool "Altera PCIe controller"
-> -	depends on ARM || NIOS2
-> -	depends on OF_PCI
-> +	depends on ARM || NIOS2 || COMPILE_TEST
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+[...]
 
-Did you intend to drop the OF_PCI dependency?
-
-I see that CONFIG_OF_PCI doesn't exist, so that looks bogus.
-
-But drivers/pci/host/pcie-altera.c still uses
-devm_of_pci_get_host_bridge_resources(), so I think this should probably
-still depend on CONFIG_OF?
+MBR, Sergei
