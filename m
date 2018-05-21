@@ -1,174 +1,94 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <4d6b1ed2ca276d92a940cca1e1fbe22ceba875e7.camel@linux.intel.com>
-Subject: Re: [PATCH v8 6/7] PCI: Move resource distribution for a single
- bridge outside of the loop
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Date: Tue, 29 May 2018 20:24:11 +0300
-In-Reply-To: <20180528124756.78512-7-mika.westerberg@linux.intel.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
-         <20180528124756.78512-7-mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:43272 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751127AbeEUNLn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2018 09:11:43 -0400
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH 3/4] PCI: rcar: Add missing irq_dispose_mapping() into failpath
+Date: Mon, 21 May 2018 15:11:22 +0200
+Message-Id: <20180521131123.2009-3-marek.vasut+renesas@gmail.com>
+In-Reply-To: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
+References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2018-05-28 at 15:47 +0300, Mika Westerberg wrote:
-> There is a special case where there is only single bridge on the bus.
-> In
-> that case we just assign all resources to it. Currently this is done
-> as
-> a part of the resource distribution loop but it does not have to be
-> there, and moving it outside actually improves readability because we
-> can then save one indent level in the loop.
-> 
-> While there we can add hotplug_bridges == 1 && normal_bridges == 0 to
-> the same block because they are dealt the same way.
-> 
+The rcar_pcie_get_resources() is another misnomer with a side effect.
+The function does not only get resources, but also maps MSI IRQs via
+irq_of_parse_and_map(). In case anything fails afterward, the IRQ
+mapping must be disposed through irq_dispose_mapping() which is not
+done.
 
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+This patch handles irq_of_parse_and_map() failures in by disposing
+of the mapping in rcar_pcie_get_resources() as well as in probe.
 
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/pci/setup-bus.c | 82 ++++++++++++++++++++------------------
-> ---
->  1 file changed, 41 insertions(+), 41 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 072784f55ea5..79b1824e83b4 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1942,57 +1942,57 @@ static void
-> pci_bus_distribute_available_resources(struct pci_bus *bus,
->  			remaining_mmio_pref -= resource_size(res);
->  	}
->  
-> +	/*
-> +	 * There is only one bridge on the bus so it gets all
-> available
-> +	 * resources which it can then distribute to the possible
-> +	 * hotplug bridges below.
-> +	 */
-> +	if (hotplug_bridges + normal_bridges == 1) {
-> +		dev = list_first_entry(&bus->devices, struct pci_dev,
-> bus_list);
-> +		if (dev->subordinate) {
-> +			pci_bus_distribute_available_resources(dev-
-> >subordinate,
-> +				add_list, available_io,
-> available_mmio,
-> +				available_mmio_pref);
-> +		}
-> +		return;
-> +	}
-> +
->  	/*
->  	 * Go over devices on this bus and distribute the remaining
->  	 * resource space between hotplug bridges.
->  	 */
->  	for_each_pci_bridge(dev, bus) {
-> +		resource_size_t align, io, mmio, mmio_pref;
->  		struct pci_bus *b;
->  
->  		b = dev->subordinate;
-> -		if (!b)
-> +		if (!b || !dev->is_hotplug_bridge)
->  			continue;
->  
-> -		if (!hotplug_bridges && normal_bridges == 1) {
-> -			/*
-> -			 * There is only one bridge on the bus
-> (upstream
-> -			 * port) so it gets all available resources
-> -			 * which it can then distribute to the
-> possible
-> -			 * hotplug bridges below.
-> -			 */
-> -			pci_bus_distribute_available_resources(b,
-> add_list,
-> -				available_io, available_mmio,
-> -				available_mmio_pref);
-> -		} else if (dev->is_hotplug_bridge) {
-> -			resource_size_t align, io, mmio, mmio_pref;
-> -
-> -			/*
-> -			 * Distribute available extra resources
-> equally
-> -			 * between hotplug-capable downstream ports
-> -			 * taking alignment into account.
-> -			 *
-> -			 * Here hotplug_bridges is always != 0.
-> -			 */
-> -			align = pci_resource_alignment(bridge,
-> io_res);
-> -			io = div64_ul(available_io, hotplug_bridges);
-> -			io = min(ALIGN(io, align), remaining_io);
-> -			remaining_io -= io;
-> -
-> -			align = pci_resource_alignment(bridge,
-> mmio_res);
-> -			mmio = div64_ul(available_mmio,
-> hotplug_bridges);
-> -			mmio = min(ALIGN(mmio, align),
-> remaining_mmio);
-> -			remaining_mmio -= mmio;
-> -
-> -			align = pci_resource_alignment(bridge,
-> mmio_pref_res);
-> -			mmio_pref = div64_ul(available_mmio_pref,
-> -					     hotplug_bridges);
-> -			mmio_pref = min(ALIGN(mmio_pref, align),
-> -					remaining_mmio_pref);
-> -			remaining_mmio_pref -= mmio_pref;
-> -
-> -			pci_bus_distribute_available_resources(b,
-> add_list, io,
-> -							       mmio,
-> mmio_pref);
-> -		}
-> +		/*
-> +		 * Distribute available extra resources equally
-> between
-> +		 * hotplug-capable downstream ports taking alignment
-> into
-> +		 * account.
-> +		 *
-> +		 * Here hotplug_bridges is always != 0.
-> +		 */
-> +		align = pci_resource_alignment(bridge, io_res);
-> +		io = div64_ul(available_io, hotplug_bridges);
-> +		io = min(ALIGN(io, align), remaining_io);
-> +		remaining_io -= io;
-> +
-> +		align = pci_resource_alignment(bridge, mmio_res);
-> +		mmio = div64_ul(available_mmio, hotplug_bridges);
-> +		mmio = min(ALIGN(mmio, align), remaining_mmio);
-> +		remaining_mmio -= mmio;
-> +
-> +		align = pci_resource_alignment(bridge,
-> mmio_pref_res);
-> +		mmio_pref = div64_ul(available_mmio_pref,
-> hotplug_bridges);
-> +		mmio_pref = min(ALIGN(mmio_pref, align),
-> remaining_mmio_pref);
-> +		remaining_mmio_pref -= mmio_pref;
-> +
-> +		pci_bus_distribute_available_resources(b, add_list,
-> io, mmio,
-> +						       mmio_pref);
->  	}
->  }
->  
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+---
+ drivers/pci/host/pcie-rcar.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index eac4b71d9c60..3cc84f7e05f7 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -923,18 +923,25 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+ 	i = irq_of_parse_and_map(dev->of_node, 0);
+ 	if (!i) {
+ 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
+-		return -ENOENT;
++		err = -ENOENT;
++		goto err_irq1;
+ 	}
+ 	pcie->msi.irq1 = i;
+ 
+ 	i = irq_of_parse_and_map(dev->of_node, 1);
+ 	if (!i) {
+ 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
+-		return -ENOENT;
++		err = -ENOENT;
++		goto err_irq2;
+ 	}
+ 	pcie->msi.irq2 = i;
+ 
+ 	return 0;
++
++err_irq2:
++	irq_dispose_mapping(pcie->msi.irq1);
++err_irq1:
++	return err;
+ }
+ 
+ static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
+@@ -1118,7 +1125,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 	err = clk_prepare_enable(pcie->bus_clk);
+ 	if (err) {
+ 		dev_err(dev, "failed to enable bus clock: %d\n", err);
+-		goto err_pm_put;
++		goto err_unmap_msi_irqs;
+ 	}
+ 
+ 	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
+@@ -1156,6 +1163,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ err_clk_disable:
+ 	clk_disable_unprepare(pcie->bus_clk);
+ 
++err_unmap_msi_irqs:
++	irq_dispose_mapping(pcie->msi.irq2);
++	irq_dispose_mapping(pcie->msi.irq1);
++
+ err_pm_put:
+ 	pm_runtime_put(dev);
+ 
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.16.2
