@@ -1,41 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v3 0/8] PCI: leak fixes, removable generic PCI host,
- assorted stuff
-To: Jan Kiszka <jan.kiszka@siemens.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-References: <cover.1526363896.git.jan.kiszka@siemens.com>
-CC: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>
-From: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Message-ID: <72f23e5f-4641-9ef3-09e6-70c4724f21a4@mentor.com>
-Date: Tue, 15 May 2018 10:58:03 +0300
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 17/40] iommu/arm-smmu-v3: Link domains and devices
+To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org, xuzaibo@huawei.com,
+        will.deacon@arm.com, okaya@codeaurora.org, linux-mm@kvack.org,
+        ashok.raj@intel.com, bharatku@xilinx.com,
+        linux-acpi@vger.kernel.org, rfranz@cavium.com,
+        devicetree@vger.kernel.org, rgummal@xilinx.com,
+        linux-arm-kernel@lists.infradead.org, dwmw2@infradead.org,
+        ilias.apalodimas@linaro.org, iommu@lists.linux-foundation.org,
+        christian.koenig@amd.com
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-18-jean-philippe.brucker@arm.com>
+ <20180517170748.00004927@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <652e5b8c-fa51-0fec-01fe-0fccc999ecf6@arm.com>
+Date: Mon, 21 May 2018 15:49:51 +0100
 MIME-Version: 1.0
-In-Reply-To: <cover.1526363896.git.jan.kiszka@siemens.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180517170748.00004927@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jan,
+On 17/05/18 17:07, Jonathan Cameron wrote:
+>> +++ b/drivers/iommu/arm-smmu-v3.c
+>> @@ -595,6 +595,11 @@ struct arm_smmu_device {
+>>  struct arm_smmu_master_data {
+>>  	struct arm_smmu_device		*smmu;
+>>  	struct arm_smmu_strtab_ent	ste;
+>> +
+>> +	struct arm_smmu_domain		*domain;
+>> +	struct list_head		list; /* domain->devices */
+> 
+> More meaningful name perhaps to avoid the need for the comment?
 
-On 05/15/2018 08:58 AM, Jan Kiszka wrote:
-> Changes in v3:
->  - refactor series to be both bisectable and simpler while reworking
->    of_pci_get_host_bridge_resources()
->  - include of_pci_get_host_bridge_resources() removal
->  - include devm_of_pci_get_host_bridge_resources() error path fixes
->  - effectively, no functional changes to v2
+Sure
 
-while the previous version of the changeset plus the fixup found on Bjorn's
-pci/resource branch is sufficient, I can't argue with the fact that this
-series is way better.
-
-In case if this series is accepted I'll review and test the fix of
-of_pci_get_host_bridge_resources() memleak again, no worries.
-
---
-With best wishes,
-Vladimir
+Thanks,
+Jean
