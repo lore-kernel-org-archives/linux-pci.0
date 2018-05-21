@@ -1,59 +1,53 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20180423233046.21476-1-logang@deltatee.com>
- <20180423233046.21476-2-logang@deltatee.com>
- <20180507230034.GE161390@bhelgaas-glaptop.roam.corp.google.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <092f3da9-764e-2ece-b3a8-a9b3ab3c49a8@deltatee.com>
-Date: Mon, 7 May 2018 17:09:46 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180507230034.GE161390@bhelgaas-glaptop.roam.corp.google.com>
-Subject: Re: [PATCH v4 01/14] PCI/P2PDMA: Support peer-to-peer memory
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
- linux-block@vger.kernel.org,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam03on0057.outbound.protection.outlook.com ([104.47.42.57]:6496
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752943AbeEURa4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 May 2018 13:30:56 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "cyrille.pitchen@free-electrons.com"
+        <cyrille.pitchen@free-electrons.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "nsekhar@ti.com" <nsekhar@ti.com>
+Subject: [PATCH v2 1/4] PCI: cadence: Update cdns_pcie_writel function
+ signature
+Date: Mon, 21 May 2018 17:30:55 +0000
+Message-ID: <SN6PR07MB4512BA57E8D259911D244E20D8950@SN6PR07MB4512.namprd07.prod.outlook.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the review. I'll apply all of these for the changes for next
-version of the set.
->> +/*
->> + * If a device is behind a switch, we try to find the upstream bridge
->> + * port of the switch. This requires two calls to pci_upstream_bridge():
->> + * one for the upstream port on the switch, one on the upstream port
->> + * for the next level in the hierarchy. Because of this, devices connected
->> + * to the root port will be rejected.
->> + */
->> +static struct pci_dev *get_upstream_bridge_port(struct pci_dev *pdev)
-> 
-> This function doesn't seem to be used anymore.  Thanks for all your hard
-> work to get rid of it!
+From: Alan Douglas <adouglas@cadence.com>
 
-Oops, I thought I had gotten rid of it entirely, but I guess I messed it
-up a bit and it gets removed in patch 4. I'll fix it for v5.
+Change cdns_pcie_writel() signature, u16 value changed to u32, since
+this function should write a long value
 
-Logan
+Signed-off-by: Alan Douglas <adouglas@cadence.com>
+---
+ drivers/pci/cadence/pcie-cadence.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+diff --git a/drivers/pci/cadence/pcie-cadence.h b/drivers/pci/cadence/pcie-=
+cadence.h
+index 4bb2733..ed336cc 100644
+--- a/drivers/pci/cadence/pcie-cadence.h
++++ b/drivers/pci/cadence/pcie-cadence.h
+@@ -279,7 +279,7 @@ static inline void cdns_pcie_ep_fn_writew(struct cdns_p=
+cie *pcie, u8 fn,
+ }
+=20
+ static inline void cdns_pcie_ep_fn_writel(struct cdns_pcie *pcie, u8 fn,
+-					  u32 reg, u16 value)
++					  u32 reg, u32 value)
+ {
+ 	writel(value, pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg);
+ }
+--=20
+2.2.2
