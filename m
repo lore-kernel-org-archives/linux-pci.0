@@ -1,45 +1,59 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <1522288381-470803-1-git-send-email-Minghuan.Lian@nxp.com>
-References: <1522288381-470803-1-git-send-email-Minghuan.Lian@nxp.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Wed, 2 May 2018 14:55:34 -0300
-Message-ID: <CAOMZO5DfHK=2x6+7T1x4n3A4uK5naWkQ_0dmjVt5JyeMAZPGyQ@mail.gmail.com>
-Subject: Re: [PATCH] MAINTAINERS: Update Layerscape PCIe driver maintainers
- list
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Minghuan Lian <Minghuan.Lian@nxp.com>, linux-pci@vger.kernel.org,
- "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>, Mingkai Hu <mingkai.hu@nxp.com>,
- Roy Zang <roy.zang@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:45017 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751127AbeEUNLl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2018 09:11:41 -0400
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH 1/4] PCI: rcar: Rename rcar_pcie_parse_request_of_pci_ranges()
+Date: Mon, 21 May 2018 15:11:20 +0200
+Message-Id: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Adding Lorenzo]
+The function name is just too confusing, rename it, no functional change.
+Rename the function to rcar_pcie_alloc_and_parse_pci_resource_list() as
+it's matching failpath function is pci_free_resource_list() so the names
+align much better and the new name also describes what the function does
+much better.
 
-On Wed, Mar 28, 2018 at 10:53 PM, Minghuan Lian <Minghuan.Lian@nxp.com> wrote:
-> Change Layerscape PCIe driver maintainers' email address
-> from freescale to nxp.
->
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+---
+ drivers/pci/host/pcie-rcar.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Yes, freescale.com emails are no longer reachable, so hopefully this
-one can land into 4.17.
-
-Thanks
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index e403c5206b24..dbc80e457f95 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -1051,7 +1051,7 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+ 	{},
+ };
+ 
+-static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
++static int rcar_pcie_alloc_and_parse_pci_resource_list(struct rcar_pcie *pci)
+ {
+ 	int err;
+ 	struct device *dev = pci->dev;
+@@ -1108,7 +1108,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 
+ 	INIT_LIST_HEAD(&pcie->resources);
+ 
+-	err = rcar_pcie_parse_request_of_pci_ranges(pcie);
++	err = rcar_pcie_alloc_and_parse_pci_resource_list(pcie);
+ 	if (err)
+ 		goto err_free_bridge;
+ 
+-- 
+2.16.2
