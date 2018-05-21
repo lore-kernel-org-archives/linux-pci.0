@@ -1,85 +1,129 @@
-Return-Path: <SRS0=cmb1=IS=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=cmb1=IS=linux.intel.com=mika.westerberg@kernel.org>
-Date: Thu, 31 May 2018 09:58:52 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 2/7] PCI: Introduce shpchp_is_native()
-Message-ID: <20180531065852.GV15419@lahna.fi.intel.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
- <20180528124756.78512-3-mika.westerberg@linux.intel.com>
- <20180530202343.GO39853@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:56070 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752398AbeEUNMD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2018 09:12:03 -0400
+Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Simon Horman <horms@verge.net.au>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <20180408130925.19088-1-marek.vasut+renesas@gmail.com>
+ <CAMuHMdVGBkEY2kE7auUwXBn2QSfX+yhxkFH--4tTw+XJ3WCk0w@mail.gmail.com>
+ <3973dcdf-c6d7-5622-0c19-ea6f77899261@gmail.com>
+ <20180409114159.azxeehjkeuinwrwe@verge.net.au>
+ <CAMuHMdUF0oG+fdWv2CissD9tviHiVCg3ofW3oR3vY+=Km41tAg@mail.gmail.com>
+ <20180409122636.6rmtzhqqlpqxyear@verge.net.au>
+ <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
+ <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
+ <a5a0d78d-627b-6277-ee75-44e204cbd390@gmail.com>
+ <CAMuHMdX9d29JYVDsghd3Koyg8Aeuv0D2Fx5Lnn0bBZSb9RntDw@mail.gmail.com>
+ <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
+ <CAMuHMdWpV-HN=ojjv_-PGDCe+Ud8AOPzJSk5fZXOG6tVC3mV+w@mail.gmail.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <7df750c9-d059-274e-4ac4-8053d2b94755@gmail.com>
+Date: Mon, 21 May 2018 14:57:00 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20180530202343.GO39853@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <CAMuHMdWpV-HN=ojjv_-PGDCe+Ud8AOPzJSk5fZXOG6tVC3mV+w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2018 at 03:23:43PM -0500, Bjorn Helgaas wrote:
-> > +{
-> > +	const struct pci_host_bridge *host;
-> > +
-> > +	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
-> > +		return false;
-> > +
-> > +	if (!pci_find_capability(bridge, PCI_CAP_ID_SHPC))
-> > +		return false;
-> > +
-> > +	host = pci_find_host_bridge(bridge->bus);
-> > +	return host->native_shpc_hotplug;
-> > +}
+On 04/19/2018 12:00 PM, Geert Uytterhoeven wrote:
+> Hi Marek,
 > 
-> This is sort-of-but-not-exactly the same as is_shpc_capable().
+> On Tue, Apr 10, 2018 at 6:17 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>> On 04/10/2018 05:28 PM, Geert Uytterhoeven wrote:
+>>>>>> The pairing looks as follows:
+>>>>>>
+>>>>>> .- rcar_pcie_parse_request_of_pci_ranges()
+>>>>>> |  (pm_runtime_enable is here)
+>>>>>> | .- pm_runtime_get_sync()
+>>>>>> | | .- rcar_pcie_get_resources()
+>>>>>
+>>>>> rcar_pcie_get_resources() is called  while the device is runtime-enabled/resumed
+>>>>
+>>>> Because something may access the device, yes.
+>>>>
+>>>>>> | | |
+>>>>>> | | '- pm_runtime_put()
+>>>>>> | '- pm_runtime_disable() + pci_free_resource_list()
+>>>>>
+>>>>> pci_free_resource_list() is called while the device is runtime-disabled.
+>>>>
+>>>> Because nothing will access the device.
+>>>>
+>>>>>> '- pci_free_host_bridge()
+>>>>>>
+>>>>>> It looks symmetric to me ...
+>>>>>
+>>>>> rcar_pcie_get_resources() is called while the device is
+>>>>> runtime-enabled/resumed,
+>>>>> pci_free_resource_list() is called while the device is runtime-disabled.
+>>>>
+>>>> At this point, I think I'd rather see a diff of changes which you have
+>>>> in mind rather than this endless discussion. Can you provide one against
+>>>> this patch ?
+>>>
+>>> My final comment:
+>>>
+>>> If the steps during probing are A..Z, cleanup and removal should undo them
+>>> in reverse order (Z..A), unless there's a very good reason not to do so.
+>>
+>> I spent extra time going through the probe function and I just don't see
+>> how it is not done in the exact reverse, I checked every single goto
+>> statement in probe.
+>>
+>> I noticed this though:
+>>
+>>>>> rcar_pcie_get_resources() is called while the device is
+>>>>> runtime-enabled/resumed,
+>>>>> pci_free_resource_list() is called while the device is runtime-disabled.
+>>
+>> rcar_pcie_get_resources() is NOT a pair function for
+>> pci_free_resource_list() . rcar_pcie_parse_request_of_pci_ranges() is a
+>> pair function for pci_free_resource_list().
+>>
+>> rcar_pcie_parse_request_of_pci_ranges() calls
+>> of_pci_get_host_bridge_resources() internally, so every single function
+>> called after successful call of rcar_pcie_parse_request_of_pci_ranges()
+>> must call pci_free_resource_list().
+>>
+>> Both of_pci_get_host_bridge_resources() and pci_free_resource_list() are
+>> called with runtime PM disabled.
+>>
+>> The naming of the functions is confusing though.
 > 
-> For PCI_DEVICE_ID_AMD_GOLAM_7450, is_shpc_capable() will return true
-> and shpchp will claim the device, but shpchp_is_native() will return
-> false because there's no SHPC capability.
+> You are right, your changes are correct, and the naming of these functions
+> is confusing. Perhaps it should be changed, to avoid misleading the (not so)
+> casual reviewer?
 > 
-> At least that's my interpretation of the AMD GOLAM stuff.  I don't
-> have a spec for it, but if GOLAM did have an SHPC capability, I assume
-> is_shpc_capable() would look for it *before* testing for GOLAM.
-
-Most probably it did not have SHPC capability because I find it hard to
-explain the check otherwise.
-
-> So I think these two things need to be reconciled somehow.  I
-> mentioned this before, but it was buried at the bottom of a long
-> email, sorry about that.
-
-No it wasn't. I read it and did exactly what you wanted. Now there is no
-duplication in these two functions. is_shpc_capable() calls
-acpi_get_hp_hw_control_from_firmware() which calls shpchp_is_native().
-In fact I don't think is_shpc_capable() warrants to exist at all and it
-should be removed (but in another separate cleanup patch).
-
-> I wish we had a spec or details about the erratum.  It looks like
-> it's been there "forever": https://git.kernel.org/pub/scm/linux/kernel/git/tglx/history.git/commit/drivers/pci/hotplug/shpchp.h?id=c16b4b14d9806e639f4afefa2d651a857a212afe
+> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 > 
-> But neither GOLAM (0x7450) nor POGO (0x7458) is in the PCI database at
-> https://pci-ids.ucw.cz/read/PC/1002, so who knows if those chips ever
-> even saw the light of day.  I'll cc the author of
+> BTW, while diving deeper, I noticed a few other pre-existing issues in error
+> handling:
 > 
->   53044f357448 ("[PATCH] PCI Hotplug: shpchp: AMD POGO errata fix")
+> 1. If anything fails after rcar_pcie_get_resources(), the bus clock is never
+>    disabled,
+> 2. The error path of rcar_pcie_enable_msi() does not call
+>    irq_dispose_mapping() before irq_domain_remove(),
+> 3. If rcar_pcie_enable() fails, none of the setup done in
+>    rcar_pcie_enable_msi() is reverted.
+>    Apart from the IRQ domain handling in 2, that includes freeing msi->pages
+>    (should this be allocated using the DMA API?), and undoing the related HW
+>    setup, to prevent the HW from scribbling the former MSI page in the future.
 > 
-> But that was 12 years ago, so the email address may not even work any
-> more.
+> Care to fix these, too?
 
-Ín any case even if somehow the original patch from 2006 was wrong, I
-don't have absolutely any idea why it needs to be fixed now in this
-patch series? Given that there are two real fixes in this series that
-fix real issues on real contemporary hardware, I don't really understand
-why you are stalling them. Yes, it is good to do cleanups because it
-makes the code easier to understand and thus more maintainable but
-that's something typically not priorized as high as fixes for real
-problems.
+Yes, patchset is coming.
 
-These fixes have been out there since february virtually unchanged, so
-you would think they have had enough review already. If not please point
-out what exactly I need to fix and I'll do that. Otherwise please
-consider taking the series for v4.18.
+-- 
+Best regards,
+Marek Vasut
