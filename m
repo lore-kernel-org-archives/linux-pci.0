@@ -1,59 +1,131 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Jerome Glisse <jglisse@redhat.com>
-CC: =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>,
-        "Logan Gunthorpe" <logang@deltatee.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "Christoph Hellwig" <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Benjamin Herrenschmidt" <benh@kernel.crashing.org>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-Date: Thu, 10 May 2018 14:20:00 +0000
-Message-ID: <405531AE-8315-4A4F-9B0C-8DBE49BFCAB4@raithlin.com>
-References: <20180508133407.57a46902@w520.home>
- <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
- <20180508141331.7cd737cb@w520.home>
- <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
- <20180508205005.GC15608@redhat.com>
- <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
- <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
- <1775CC56-4651-422F-953A-18E024D3717C@raithlin.com>
- <20180509160722.GB4140@redhat.com>
- <366A8132-B88A-40F7-BDE3-DA542E45FC0C@raithlin.com>
- <20180509174952.GC4140@redhat.com>
-In-Reply-To: <20180509174952.GC4140@redhat.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:51864 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751504AbeEUOvi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 May 2018 10:51:38 -0400
+Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
+To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org, xuzaibo@huawei.com,
+        will.deacon@arm.com, okaya@codeaurora.org, linux-mm@kvack.org,
+        ashok.raj@intel.com, bharatku@xilinx.com,
+        linux-acpi@vger.kernel.org, rfranz@cavium.com,
+        devicetree@vger.kernel.org, rgummal@xilinx.com,
+        linux-arm-kernel@lists.infradead.org, dwmw2@infradead.org,
+        ilias.apalodimas@linaro.org, iommu@lists.linux-foundation.org,
+        christian.koenig@amd.com,
+        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-14-jean-philippe.brucker@arm.com>
+ <20180517165845.00000cc9@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <5775e215-9a71-355a-98f5-397f1917b7f7@arm.com>
+Date: Mon, 21 May 2018 15:51:29 +0100
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180517165845.00000cc9@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSmVyb21lDQoNCj4gQXMgaXQgaXMgdGllIHRvIFBBU0lEIHRoaXMgaXMgZG9uZSB1c2luZyBJ
-T01NVSBzbyBsb29rcyBmb3IgY2FsbGVyDQo+IG9mIGFtZF9pb21tdV9iaW5kX3Bhc2lkKCkgb3Ig
-aW50ZWxfc3ZtX2JpbmRfbW0oKSBpbiBHUFUgdGhlIGV4aXN0aW5nDQo+ICB1c2VyIGlzIHRoZSBB
-TUQgR1BVIGRyaXZlciBzZWU6DQogICAgDQpBaCB0aGFua3MuIFRoaXMgY2xlYXJlZCB0aGluZ3Mg
-dXAgZm9yIG1lLiBBIHF1aWNrIHNlYXJjaCBzaG93cyB0aGVyZSBhcmUgc3RpbGwgbm8gdXNlcnMg
-b2YgaW50ZWxfc3ZtX2JpbmRfbW0oKSBidXQgSSBzZWUgdGhlIEFNRCB2ZXJzaW9uIHVzZWQgaW4g
-dGhhdCBHUFUgZHJpdmVyLg0KDQpPbmUgdGhpbmcgSSBjb3VsZCBub3QgZ3JvayBmcm9tIHRoZSBj
-b2RlIGhvdyB0aGUgR1BVIGRyaXZlciBpbmRpY2F0ZXMgd2hpY2ggRE1BIGV2ZW50cyByZXF1aXJl
-IEFUUyB0cmFuc2xhdGlvbnMgYW5kIHdoaWNoIGRvIG5vdC4gSSBhbSBhc3N1bWluZyB0aGUgZHJp
-dmVyIGltcGxlbWVudHMgc29tZXdheSBvZiBpbmRpY2F0aW5nIHRoYXQgYW5kIGl0cyBub3QganVz
-dCBhIGdsb2JhbCBPTiBvciBPRkYgZm9yIGFsbCBETUFzPyBUaGUgcmVhc29uIEkgYXNrIGlzIHRo
-YXQgSSBsb29raW5nIGF0IGlmIE5WTWUgd2FzIHRvIHN1cHBvcnQgQVRTIHdoYXQgd291bGQgbmVl
-ZCB0byBiZSBhZGRlZCBpbiB0aGUgTlZNZSBzcGVjIGFib3ZlIGFuZCBiZXlvbmQgd2hhdCB3ZSBo
-YXZlIGluIFBDSSBBVFMgdG8gc3VwcG9ydCBlZmZpY2llbnQgdXNlIG9mIEFUUyAoZm9yIGV4YW1w
-bGUgd291bGQgd2UgbmVlZCBhIGZsYWcgaW4gdGhlIHN1Ym1pc3Npb24gcXVldWUgZW50cmllcyB0
-byBpbmRpY2F0ZSBhIHBhcnRpY3VsYXIgSU8ncyBTR0wvUFJQIHNob3VsZCB1bmRlcmdvIEFUUyku
-DQoNCkNoZWVycw0KDQpTdGVwaGVuICAgIA0KDQo=
+On 17/05/18 16:58, Jonathan Cameron wrote:
+>> +static int vfio_iommu_bind_group(struct vfio_iommu *iommu,
+>> +				 struct vfio_group *group,
+>> +				 struct vfio_mm *vfio_mm)
+>> +{
+>> +	int ret;
+>> +	bool enabled_sva = false;
+>> +	struct vfio_iommu_sva_bind_data data = {
+>> +		.vfio_mm	= vfio_mm,
+>> +		.iommu		= iommu,
+>> +		.count		= 0,
+>> +	};
+>> +
+>> +	if (!group->sva_enabled) {
+>> +		ret = iommu_group_for_each_dev(group->iommu_group, NULL,
+>> +					       vfio_iommu_sva_init);
+>> +		if (ret)
+>> +			return ret;
+>> +
+>> +		group->sva_enabled = enabled_sva = true;
+>> +	}
+>> +
+>> +	ret = iommu_group_for_each_dev(group->iommu_group, &data,
+>> +				       vfio_iommu_sva_bind_dev);
+>> +	if (ret && data.count > 1)
+> 
+> Are we safe to run this even if data.count == 1?  I assume that at
+> that point we would always not have an iommu domain associated with the
+> device so the initial check would error out.
+
+If data.count == 1, then the first bind didn't succeed. But it's not
+necessarily a domain missing, failure to bind may come from various
+places. If this vfio_mm was already bound to another device then it
+contains a valid PASID and it's safe to call unbind(). Otherwise we call
+it with PASID -1 (VFIO_INVALID_PASID) and that's a bit of a grey area.
+-1 is currently invalid everywhere, but in the future someone might
+implement 32 bits of PASIDs, in which case a bond between this dev and
+PASID -1 might exist. But I think it's safe for now, and whoever
+redefines VFIO_INVALID_PASID when such implementation appears will also
+fix this case.
+
+> Just be nice to get rid of the special casing in this error path as then
+> could just do it all under if (ret) and make it visually clearer these
+> are different aspects of the same error path.
+
+[...]
+>>  static long vfio_iommu_type1_ioctl(void *iommu_data,
+>>  				   unsigned int cmd, unsigned long arg)
+>>  {
+>> @@ -1728,6 +2097,44 @@ static long vfio_iommu_type1_ioctl(void *iommu_data,
+>>  
+>>  		return copy_to_user((void __user *)arg, &unmap, minsz) ?
+>>  			-EFAULT : 0;
+>> +
+>> +	} else if (cmd == VFIO_IOMMU_BIND) {
+>> +		struct vfio_iommu_type1_bind bind;
+>> +
+>> +		minsz = offsetofend(struct vfio_iommu_type1_bind, flags);
+>> +
+>> +		if (copy_from_user(&bind, (void __user *)arg, minsz))
+>> +			return -EFAULT;
+>> +
+>> +		if (bind.argsz < minsz)
+>> +			return -EINVAL;
+>> +
+>> +		switch (bind.flags) {
+>> +		case VFIO_IOMMU_BIND_PROCESS:
+>> +			return vfio_iommu_type1_bind_process(iommu, (void *)arg,
+>> +							     &bind);
+> 
+> Can we combine these two blocks given it is only this case statement that is different?
+
+That would be nicer, though I don't know yet what's needed for vSVA (by
+Yi Liu on Cc), which will add statements to the switches.
+
+Thanks,
+Jean
+
+> 
+>> +		default:
+>> +			return -EINVAL;
+>> +		}
+>> +
+>> +	} else if (cmd == VFIO_IOMMU_UNBIND) {
+>> +		struct vfio_iommu_type1_bind bind;
+>> +
+>> +		minsz = offsetofend(struct vfio_iommu_type1_bind, flags);
+>> +
+>> +		if (copy_from_user(&bind, (void __user *)arg, minsz))
+>> +			return -EFAULT;
+>> +
+>> +		if (bind.argsz < minsz)
+>> +			return -EINVAL;
+>> +
+>> +		switch (bind.flags) {
+>> +		case VFIO_IOMMU_BIND_PROCESS:
+>> +			return vfio_iommu_type1_unbind_process(iommu, (void *)arg,
+>> +							       &bind);
+>> +		default:
+>> +			return -EINVAL;
+>> +		}
+>>  	}
