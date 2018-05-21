@@ -1,167 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:43080 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751147AbeEKRPc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 May 2018 13:15:32 -0400
-Received: by mail-ot0-f195.google.com with SMTP id y10-v6so7027792otg.10
-        for <linux-pci@vger.kernel.org>; Fri, 11 May 2018 10:15:32 -0700 (PDT)
-From: Rob Herring <robh@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Fengguang Wu <fengguang.wu@intel.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v3 1/2] PCI: dwc: move CONFIG_PCI depends to menu
-Date: Fri, 11 May 2018 12:15:29 -0500
-Message-Id: <20180511171530.16068-1-robh@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=SNMF=II=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=SNMF=II=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Mon, 21 May 2018 14:33:05 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: poza@codeaurora.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+	linux-pci-owner@vger.kernel.org, robin.murphy@arm.com
+Subject: Re: [PATCH INTERNAL 3/3] PCI: iproc: Disable MSI parsing in certain
+ PAXC blocks
+Message-ID: <20180521133305.GB1443@e107981-ln.cambridge.arm.com>
+References: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
+ <1526577692-21104-4-git-send-email-ray.jui@broadcom.com>
+ <ad41ea7f16414a83a2b3d7e6192bcf79@codeaurora.org>
+ <20180518135614.GA18605@e107981-ln.cambridge.arm.com>
+ <e433f2cf-63c5-37c3-f7ef-15ff0aa67e4f@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e433f2cf-63c5-37c3-f7ef-15ff0aa67e4f@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-There's no need for every config option to explicitly depend on
-CONFIG_PCI, so move it out of individual option to the menu option.
+[+Robin]
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-Signed-off-by: Rob Herring <robh@kernel.org>
----
-Looks like these 2 patches slipped thru the cracks.
+On Fri, May 18, 2018 at 12:48:28PM -0700, Ray Jui wrote:
+> Hi Lorenzo,
+> 
+> On 5/18/2018 6:56 AM, Lorenzo Pieralisi wrote:
+> >On Fri, May 18, 2018 at 02:53:41PM +0530, poza@codeaurora.org wrote:
+> >>On 2018-05-17 22:51, Ray Jui wrote:
+> >>>The internal MSI parsing logic in certain revisions of PAXC root
+> >>>complexes does not work properly and can casue corruptions on the
+> >>>writes. They need to be disabled
+> >>>
+> >>>Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> >>>Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> >>>---
+> >>>drivers/pci/host/pcie-iproc.c | 34 ++++++++++++++++++++++++++++++++--
+> >>>1 file changed, 32 insertions(+), 2 deletions(-)
+> >>>
+> >>>diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> >>>index 3c76c5f..b906d80 100644
+> >>>--- a/drivers/pci/host/pcie-iproc.c
+> >>>+++ b/drivers/pci/host/pcie-iproc.c
+> >>>@@ -1144,10 +1144,22 @@ static int iproc_pcie_paxb_v2_msi_steer(struct
+> >>>iproc_pcie *pcie, u64 msi_addr)
+> >>>	return ret;
+> >>>}
+> >>>
+> >>>-static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64
+> >>>msi_addr)
+> >>>+static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64
+> >>>msi_addr,
+> >>>+					 bool enable)
+> >>>{
+> >>>	u32 val;
+> >>>
+> >>>+	if (!enable) {
+> >>>+		/*
+> >>>+		 * Disable PAXC MSI steering. All write transfers will be
+> >>>+		 * treated as non-MSI transfers
+> >>>+		 */
+> >>>+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
+> >>>+		val &= ~MSI_ENABLE_CFG;
+> >>>+		iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
+> >>>+		return;
+> >>>+	}
+> >>>+
+> >>>	/*
+> >>>	 * Program bits [43:13] of address of GITS_TRANSLATER register into
+> >>>	 * bits [30:0] of the MSI base address register.  In fact, in all iProc
+> >>>@@ -1201,7 +1213,7 @@ static int iproc_pcie_msi_steer(struct iproc_pcie
+> >>>*pcie,
+> >>>			return ret;
+> >>>		break;
+> >>>	case IPROC_PCIE_PAXC_V2:
+> >>>-		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
+> >>>+		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr, true);
+> >>
+> >>Are you calling iproc_pcie_paxc_v2_msi_steer() anywhere else with 'false' ?
+> >>I see its getting called only from one place in current code
+> >>iproc_pcie_msi_steer().
+> >
+> >It is called below with the false field to disable MSIs. That's probably
+> >one reason more to create a function to enable/disable MSIs instead of
+> >adding a parameter to iproc_pcie_paxc_v2_msi_steer().
+> 
+> Correct. Thanks for helping to explain.
+> 
+> >
+> >Which brings me to the question: what happens to those MSIs writes
+> >when MSIs are disabled according to this patch ? Are they terminated
+> >at the root complex ?
+> 
+> Note the PAXC block parses MSI writes from our internally connected
+> endpoints (i.e., an embedded network processor). The PAXC block examines
+> these MSI writes and modifies the memory attributes (to DEVICE) of these
+> data and then send them out to the AXI bus. These MSI writes will then be
+> forwarded to the GIC (e.g., GICv2m, GICv3-ITS from ARM) for further
+> processing. This is saying, PAXC itself does not process these MSI writes.
+> They are processed by the GIC and associated interrupt will be generated
+> form the GIC. PAXC's job is to parse and tag them properly so these MSI
+> writes can reach the GIC, and at the same, reach the GIC at the right order.
+> 
+> On some of these problematic PAXCs, we are being forced to disable this PAXC
+> internal parsing logic. In this case, we set up static mapping with the
+> IOMMU to modify the memory attributes of these MSI writes. These MSI writes
+> are always designated towards a specific memory address (e.g., on the GICv3
+> based system, it's the address of the translator register), and that's why
+> static mapping table can be set up to work around this.
 
- drivers/pci/dwc/Kconfig | 17 +++--------------
- 1 file changed, 3 insertions(+), 14 deletions(-)
+Which means, I presume, that there must be some code that somehow
+somewhere in the kernel sets-up those mappings and it has to be related
+to this patch, in which case I wonder why we enable the PAXC steering at
+all given that this (hack) can be done through the IOMMU (and I assume
+that on all PAXC platforms that do need MSIs there is an IOMMU IP
+upstream the root bridge, otherwise I have no idea what will happen to
+those MSI writes).
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 2f3f5c50aa48..8c1a5167fb5b 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -1,13 +1,13 @@
- # SPDX-License-Identifier: GPL-2.0
- 
- menu "DesignWare PCI Core Support"
-+	depends on PCI
- 
- config PCIE_DW
- 	bool
- 
- config PCIE_DW_HOST
-         bool
--	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
-         select PCIE_DW
- 
-@@ -22,7 +22,7 @@ config PCI_DRA7XX
- config PCI_DRA7XX_HOST
- 	bool "TI DRA7xx PCIe controller Host Mode"
- 	depends on SOC_DRA7XX || COMPILE_TEST
--	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	depends on PCI_MSI_IRQ_DOMAIN
- 	depends on OF && HAS_IOMEM && TI_PIPE3
- 	select PCIE_DW_HOST
- 	select PCI_DRA7XX
-@@ -52,7 +52,6 @@ config PCI_DRA7XX_EP
- 
- config PCIE_DW_PLAT
- 	bool "Platform bus based DesignWare PCIe Controller"
--	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
- 	---help---
-@@ -65,7 +64,6 @@ config PCIE_DW_PLAT
- 
- config PCI_EXYNOS
- 	bool "Samsung Exynos PCIe controller"
--	depends on PCI
- 	depends on SOC_EXYNOS5440
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -73,7 +71,6 @@ config PCI_EXYNOS
- 
- config PCI_IMX6
- 	bool "Freescale i.MX6 PCIe controller"
--	depends on PCI
- 	depends on SOC_IMX6Q
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -81,7 +78,6 @@ config PCI_IMX6
- 
- config PCIE_SPEAR13XX
- 	bool "STMicroelectronics SPEAr PCIe controller"
--	depends on PCI
- 	depends on ARCH_SPEAR13XX
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -91,7 +87,6 @@ config PCIE_SPEAR13XX
- 
- config PCI_KEYSTONE
- 	bool "TI Keystone PCIe controller"
--	depends on PCI
- 	depends on ARCH_KEYSTONE
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -104,7 +99,6 @@ config PCI_KEYSTONE
- 
- config PCI_LAYERSCAPE
- 	bool "Freescale Layerscape PCIe controller"
--	depends on PCI
- 	depends on OF && (ARM || ARCH_LAYERSCAPE)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select MFD_SYSCON
-@@ -115,7 +109,6 @@ config PCI_LAYERSCAPE
- config PCI_HISI
- 	depends on OF && ARM64
- 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
--	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
-@@ -126,7 +119,6 @@ config PCI_HISI
- 
- config PCIE_QCOM
- 	bool "Qualcomm PCIe controller"
--	depends on PCI
- 	depends on ARCH_QCOM && OF
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -138,7 +130,6 @@ config PCIE_QCOM
- 
- config PCIE_ARMADA_8K
- 	bool "Marvell Armada-8K PCIe controller"
--	depends on PCI
- 	depends on ARCH_MVEBU
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -155,7 +146,7 @@ config PCIE_ARTPEC6
- config PCIE_ARTPEC6_HOST
- 	bool "Axis ARTPEC-6 PCIe controller Host Mode"
- 	depends on MACH_ARTPEC6
--	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	select PCIE_ARTPEC6
-@@ -177,7 +168,6 @@ config PCIE_KIRIN
- 	depends on OF && ARM64
- 	bool "HiSilicon Kirin series SoCs PCIe controllers"
- 	depends on PCI_MSI_IRQ_DOMAIN
--	depends on PCI
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
- 	help
-@@ -187,7 +177,6 @@ config PCIE_KIRIN
- config PCIE_HISI_STB
- 	bool "HiSilicon STB SoCs PCIe controllers"
- 	depends on ARCH_HISI
--	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
--- 
-2.17.0
+Lorenzo
