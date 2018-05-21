@@ -1,229 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:59078 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750737AbeEaXu2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 May 2018 19:50:28 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu, 31 May 2018 17:50:09 -0600
-Message-Id: <20180531235010.5279-3-logang@deltatee.com>
-In-Reply-To: <20180531235010.5279-1-logang@deltatee.com>
-References: <20180531235010.5279-1-logang@deltatee.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [PATCH v2 07/40] iommu: Add a page fault handler
+To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-8-jean-philippe.brucker@arm.com>
+ <20180517162555.00002bd3@huawei.com>
+Message-ID: <d00405e5-9742-1b24-d6b0-6d389bb815ab@arm.com>
+Date: Mon, 21 May 2018 15:48:05 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v2 2/3] PCI: Allow specifying devices using a base bus and path of devfns
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180517162555.00002bd3@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: bharatku@xilinx.com, ashok.raj@intel.com, kvm@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org, xuzaibo@huawei.com,
+ ilias.apalodimas@linaro.org, will.deacon@arm.com,
+ iommu@lists.linux-foundation.org, okaya@codeaurora.org, linux-mm@kvack.org,
+ devicetree@vger.kernel.org, rgummal@xilinx.com, rfranz@cavium.com,
+ dwmw2@infradead.org, christian.koenig@amd.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When specifying PCI devices on the kernel command line using a
-BDF, the bus numbers can change when adding or replacing a device,
-changing motherboard firmware, or applying kernel parameters like
-pci=assign-buses. When this happens, it is usually undesirable to
-apply whatever command line tweak to the wrong device.
+On 17/05/18 16:25, Jonathan Cameron wrote:
+> On Fri, 11 May 2018 20:06:08 +0100
+> Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
+> 
+>> Some systems allow devices to handle I/O Page Faults in the core mm. For
+>> example systems implementing the PCI PRI extension or Arm SMMU stall
+>> model. Infrastructure for reporting these recoverable page faults was
+>> recently added to the IOMMU core for SVA virtualisation. Add a page fault
+>> handler for host SVA.
+>>
+>> IOMMU driver can now instantiate several fault workqueues and link them to
+>> IOPF-capable devices. Drivers can choose between a single global
+>> workqueue, one per IOMMU device, one per low-level fault queue, one per
+>> domain, etc.
+>>
+>> When it receives a fault event, supposedly in an IRQ handler, the IOMMU
+>> driver reports the fault using iommu_report_device_fault(), which calls
+>> the registered handler. The page fault handler then calls the mm fault
+>> handler, and reports either success or failure with iommu_page_response().
+>> When the handler succeeded, the IOMMU retries the access.
+>>
+>> The iopf_param pointer could be embedded into iommu_fault_param. But
+>> putting iopf_param into the iommu_param structure allows us not to care
+>> about ordering between calls to iopf_queue_add_device() and
+>> iommu_register_device_fault_handler().
+>>
+>> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+> 
+> Hi Jean-Phillipe,
+> 
+> One question below on how we would end up with partial faults left when
+> doing the queue remove. Code looks fine, but I'm not seeing how that
+> would happen without buggy hardware... + we presumably have to rely on
+> the hardware timing out on that request or it's dead anyway...
 
-Therefore, it is useful to be able to specify devices with a base
-bus number and the path of devfns needed to get to it. (Similar to
-the "device scope" structure in the Intel VT-d spec, Section 8.3.1.)
+>> +/**
+>> + * iopf_queue_remove_device - Remove producer from fault queue
+>> + * @dev: device to remove
+>> + *
+>> + * Caller makes sure that no more fault is reported for this device, and no more
+>> + * flush is scheduled for this device.
+>> + *
+>> + * Note: safe to call unconditionally on a cleanup path, even if the device
+>> + * isn't registered to any IOPF queue.
+>> + *
+>> + * Return 0 if the device was attached to the IOPF queue
+>> + */
+>> +int iopf_queue_remove_device(struct device *dev)
+>> +{
+>> +	struct iopf_context *fault, *next;
+>> +	struct iopf_device_param *iopf_param;
+>> +	struct iommu_param *param = dev->iommu_param;
+>> +
+>> +	if (!param)
+>> +		return -EINVAL;
+>> +
+>> +	mutex_lock(&param->lock);
+>> +	iopf_param = param->iopf_param;
+>> +	if (iopf_param) {
+>> +		refcount_dec(&iopf_param->queue->refs);
+>> +		param->iopf_param = NULL;
+>> +	}
+>> +	mutex_unlock(&param->lock);
+>> +	if (!iopf_param)
+>> +		return -EINVAL;
+>> +
+>> +	list_for_each_entry_safe(fault, next, &iopf_param->partial, head)
+>> +		kfree(fault);
+>> +
+> 
+> Why would we end up here with partials still in the list?  Buggy hardware?
 
-Thus, we add an option to specify devices in the following format:
+Buggy hardware is one possibility. There also is the nasty case of PRI
+queue overflow. If the PRI queue is full, then the SMMU discards new
+Page Requests from the device. It may discard a 'last' PR of a group
+that is already in iopf_param->partial. This group will never be freed
+until this cleanup.
 
-path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
+The spec dismisses PRIq overflows because the OS is supposed to allocate
+PRI credits to devices such that they can't send more than the PRI queue
+size. This isn't possible in Linux because we don't know exactly how
+many PRI-capable devices will share a queue (the upper limit is 2**32,
+and devices may be hotplugged well after we allocated the PRI queue). So
+PRIq overflow is possible.
 
-The path can be any segment within the PCI hierarchy of any length and
-determined through the use of 'lspci -t'. When specified this way, it is
-less likely that a renumbered bus will result in a valid device specification
-and the tweak won't be applied to the wrong device.
+Ideally when detecting a PRIq overflow we need to immediately remove all
+partial faults of all devices sharing this queue. Since I can't easily
+test that case (my device doesn't do PRGs) and it's complicated code, I
+left it as TODO in patch 39, and this is our only chance to free
+orphaned page requests.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Acked-by: Christian König <christian.koenig@amd.com>
----
- Documentation/admin-guide/kernel-parameters.txt |  12 ++-
- drivers/pci/pci.c                               | 101 +++++++++++++++++++++++-
- 2 files changed, 107 insertions(+), 6 deletions(-)
+>> +void iopf_queue_free(struct iopf_queue *queue)
+>> +{
+>> +
+> 
+> Nitpick : Blank line here doesn't add anything.
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index e58cc671ff92..bc51b316f485 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -2989,9 +2989,10 @@
- 
- 				Some options herein operate on a specific device
- 				or a set of devices (<pci_dev>). These are
--				specified in one of two formats:
-+				specified in one of three formats:
- 
- 				[<domain>:]<bus>:<slot>.<func>
-+				path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
- 				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
- 
- 				Note: the first format specifies a PCI
-@@ -2999,9 +3000,12 @@
- 				if new hardware is inserted, if motherboard
- 				firmware changes, or due to changes caused
- 				by other kernel parameters. The second format
--				selects devices using IDs from the
--				configuration space which may match multiple
--				devices in the system.
-+				specifies a path from a device through
-+				a path of multiple slot/function addresses
-+				(this is more robust against renumbering
-+				issues). The third format selects devices using
-+				IDs from the configuration space which may match
-+				multiple devices in the system.
- 
- 		earlydump	[X86] dump PCI config space before the kernel
- 			        changes anything
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 85fec5e2640b..39f11bd0ee03 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -184,22 +184,111 @@ EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
- #endif
- 
- /**
-+ * pci_dev_str_match_path - test if a path string matches a device
-+ * @dev:    the PCI device to test
-+ * @p:      string to match the device against
-+ * @endptr: pointer to the string after the match
-+ *
-+ * Test if a string (typically from a kernel parameter) formated as a
-+ * path of slot/function addresses matches a PCI device. The string must
-+ * be of the form:
-+ *
-+ *   [<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
-+ *
-+ * A path for a device can be obtained using 'lspci -t'. Using a path
-+ * is more robust against renumbering of devices than using only
-+ * a single bus, slot and function address.
-+ *
-+ * Returns 1 if the string matches the device, 0 if it does not and
-+ * a negative error code if it fails to parse the string.
-+ */
-+static int pci_dev_str_match_path(struct pci_dev *dev, const char *path,
-+				  const char **endptr)
-+{
-+	int ret;
-+	int seg, bus, slot, func;
-+	char *wpath, *p;
-+	char end;
-+
-+	*endptr = strchrnul(path, ';');
-+
-+	wpath = kmemdup_nul(path, *endptr - path, GFP_KERNEL);
-+	if (!wpath)
-+		return -ENOMEM;
-+
-+	while (1) {
-+		p = strrchr(wpath, '/');
-+		if (!p)
-+			break;
-+		ret = sscanf(p, "/%x.%x%c", &slot, &func, &end);
-+		if (ret != 2) {
-+			ret = -EINVAL;
-+			goto free_and_exit;
-+		}
-+
-+		if (dev->devfn != PCI_DEVFN(slot, func)) {
-+			ret = 0;
-+			goto free_and_exit;
-+		}
-+
-+		/*
-+		 * Note: we don't need to get a reference to the upstream
-+		 * bridge because we hold a reference to the top level
-+		 * device which should hold a reference to the bridge,
-+		 * and so on.
-+		 */
-+		dev = pci_upstream_bridge(dev);
-+		if (!dev) {
-+			ret = 0;
-+			goto free_and_exit;
-+		}
-+
-+		*p = 0;
-+	}
-+
-+	ret = sscanf(wpath, "%x:%x:%x.%x%c", &seg, &bus, &slot,
-+		     &func, &end);
-+	if (ret != 4) {
-+		seg = 0;
-+		ret = sscanf(wpath, "%x:%x.%x%c", &bus, &slot, &func, &end);
-+		if (ret != 3) {
-+			ret = -EINVAL;
-+			goto free_and_exit;
-+		}
-+	}
-+
-+	ret = (seg == pci_domain_nr(dev->bus) &&
-+	       bus == dev->bus->number &&
-+	       dev->devfn == PCI_DEVFN(slot, func));
-+
-+free_and_exit:
-+	kfree(wpath);
-+	return ret;
-+}
-+
-+/**
-  * pci_dev_str_match - test if a string matches a device
-  * @dev:    the PCI device to test
-  * @p:      string to match the device against
-  * @endptr: pointer to the string after the match
-  *
-  * Test if a string (typically from a kernel parameter) matches a
-- * specified. The string may be of one of two forms formats:
-+ * specified. The string may be of one of three formats:
-  *
-  *   [<domain>:]<bus>:<slot>.<func>
-+ *   path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
-  *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
-  *
-  * The first format specifies a PCI bus/slot/function address which
-  * may change if new hardware is inserted, if motherboard firmware changes,
-  * or due to changes caused in kernel parameters.
-  *
-- * The second format matches devices using IDs in the configuration
-+ * The second format specifies a PCI bus/slot/function root address and
-+ * a path of slot/function addresses to the specific device from the root.
-+ * The path for a device can be determined through the use of 'lspci -t'.
-+ * This format is more robust against renumbering issues than the first format.
-+
-+ * The third format matches devices using IDs in the configuration
-  * space which may match multiple devices in the system. A value of 0
-  * for any field will match all devices.
-  *
-@@ -236,7 +325,15 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
- 		    (!subsystem_device ||
- 			    subsystem_device == dev->subsystem_device))
- 			goto found;
-+	} else if (strncmp(p, "path:", 5) == 0) {
-+		/* PCI Root Bus and a path of Slot,Function IDs */
-+		p += 5;
- 
-+		ret = pci_dev_str_match_path(dev, p, &p);
-+		if (ret < 0)
-+			return ret;
-+		else if (ret)
-+			goto found;
- 	} else {
- 		/* PCI Bus,Slot,Function ids are specified */
- 		ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
--- 
-2.11.0
+Ok
+
+Thanks,
+Jean
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
