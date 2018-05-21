@@ -1,128 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 7 May 2018 18:20:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Jonathan Corbet <corbet@lwn.net>
-Subject: Re: [PATCH v4 06/14] PCI/P2PDMA: Add P2P DMA driver writer's
- documentation
-Message-ID: <20180507232029.GH161390@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
- <20180423233046.21476-7-logang@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:45775 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752569AbeEUNME (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2018 09:12:04 -0400
+Subject: Re: [PATCH V5] PCI: rcar: Use runtime PM to control controller clock
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Simon Horman <horms@verge.net.au>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <caaa0a56-7487-a4de-2b43-82f5fa5b5552@gmail.com>
+ <CAMuHMdWTTaJF8+GJdLmM_4J+gMaHPzT2rpO=B2kWYb_2bNbQNg@mail.gmail.com>
+ <a5a0d78d-627b-6277-ee75-44e204cbd390@gmail.com>
+ <CAMuHMdX9d29JYVDsghd3Koyg8Aeuv0D2Fx5Lnn0bBZSb9RntDw@mail.gmail.com>
+ <cdc1b25a-e87d-144b-50c1-4abe31bcf5d0@gmail.com>
+ <20180413124819.tw5436lolpn5eqhw@verge.net.au>
+ <20180501105556.GB19391@e107981-ln.cambridge.arm.com>
+ <d03db400-9f3e-906f-7886-a54cccb96a40@gmail.com>
+ <20180514154909.GB13324@e107981-ln.cambridge.arm.com>
+ <c210df35-ba85-4b22-ae84-fc030ddc094a@gmail.com>
+ <20180521130303.GA1443@e107981-ln.cambridge.arm.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <da6f2124-e9a8-cc45-8588-5b96dad0a2c1@gmail.com>
+Date: Mon, 21 May 2018 15:09:54 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180423233046.21476-7-logang@deltatee.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180521130303.GA1443@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 23, 2018 at 05:30:38PM -0600, Logan Gunthorpe wrote:
-> Add a restructured text file describing how to write drivers
-> with support for P2P DMA transactions. The document describes
-> how to use the APIs that were added in the previous few
-> commits.
+On 05/21/2018 03:03 PM, Lorenzo Pieralisi wrote:
+> On Mon, May 21, 2018 at 01:08:36PM +0200, Marek Vasut wrote:
+>> On 05/14/2018 05:49 PM, Lorenzo Pieralisi wrote:
+>>> On Mon, May 14, 2018 at 05:32:04PM +0200, Marek Vasut wrote:
+>>>> On 05/01/2018 12:55 PM, Lorenzo Pieralisi wrote:
+>>>>> On Fri, Apr 13, 2018 at 02:48:19PM +0200, Simon Horman wrote:
+>>>>>> On Tue, Apr 10, 2018 at 06:17:04PM +0200, Marek Vasut wrote:
+>>>>>>> On 04/10/2018 05:28 PM, Geert Uytterhoeven wrote:
+>>>>>>
+>>>>>> ...
+>>>>>>
+>>>>>>>>>> rcar_pcie_get_resources() is called while the device is
+>>>>>>>>>> runtime-enabled/resumed,
+>>>>>>>>>> pci_free_resource_list() is called while the device is runtime-disabled.
+>>>>>>>
+>>>>>>> rcar_pcie_get_resources() is NOT a pair function for
+>>>>>>> pci_free_resource_list() . rcar_pcie_parse_request_of_pci_ranges() is a
+>>>>>>> pair function for pci_free_resource_list().
+>>>>>>>
+>>>>>>> rcar_pcie_parse_request_of_pci_ranges() calls
+>>>>>>> of_pci_get_host_bridge_resources() internally, so every single function
+>>>>>>> called after successful call of rcar_pcie_parse_request_of_pci_ranges()
+>>>>>>> must call pci_free_resource_list().
+>>>>>>>
+>>>>>>> Both of_pci_get_host_bridge_resources() and pci_free_resource_list() are
+>>>>>>> called with runtime PM disabled.
+>>>>>>>
+>>>>>>> The naming of the functions is confusing though.
+>>>>>>
+>>>>>> Hi,
+>>>>>>
+>>>>>> thanks everyone for their efforts in preparing/reviewing this patch.
+>>>>>>
+>>>>>> It seems there are some differences of opinion on how best to handle the
+>>>>>> error paths but unlike earlier versions this one seems correct to me. If
+>>>>>> that turns out to be false we can address it. But I don't think its likely
+>>>>>> things will be enhanced by continuing this review.
+>>>>>>
+>>>>>> Lorenzo, please consider taking this patch in its current form.
+>>>>>>
+>>>>>> Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+>>>>>
+>>>>> Applied to pci/rcar for v4.18, thanks.
+>>>>
+>>>> Is there any reason why this patch isnt in next yet ?
+>>>
+>>> Bjorn will merge it into -next this week.
+>>
+>> Seems this got missed last week ?
 > 
-> Also adds an index for the PCI documentation tree even though this
-> is the only PCI document that has been converted to restructured text
-> at this time.
+> It will go into -next as soon as a new -next release will
+> be available:
 > 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Cc: Jonathan Corbet <corbet@lwn.net>
-> ---
->  Documentation/PCI/index.rst             |  14 +++
->  Documentation/driver-api/pci/index.rst  |   1 +
->  Documentation/driver-api/pci/p2pdma.rst | 166 ++++++++++++++++++++++++++++++++
->  Documentation/index.rst                 |   3 +-
->  4 files changed, 183 insertions(+), 1 deletion(-)
->  create mode 100644 Documentation/PCI/index.rst
->  create mode 100644 Documentation/driver-api/pci/p2pdma.rst
-> 
-> diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
-> new file mode 100644
-> index 000000000000..2fdc4b3c291d
-> --- /dev/null
-> +++ b/Documentation/PCI/index.rst
-> @@ -0,0 +1,14 @@
-> +==================================
-> +Linux PCI Driver Developer's Guide
-> +==================================
-> +
-> +.. toctree::
-> +
-> +   p2pdma
-> +
-> +.. only::  subproject and html
-> +
-> +   Indices
-> +   =======
-> +
-> +   * :ref:`genindex`
-> diff --git a/Documentation/driver-api/pci/index.rst b/Documentation/driver-api/pci/index.rst
-> index 03b57cbf8cc2..d12eeafbfc90 100644
-> --- a/Documentation/driver-api/pci/index.rst
-> +++ b/Documentation/driver-api/pci/index.rst
-> @@ -10,6 +10,7 @@ The Linux PCI driver implementer's API guide
->     :maxdepth: 2
->  
->     pci
-> +   p2pdma
->  
->  .. only::  subproject and html
->  
-> diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
-> new file mode 100644
-> index 000000000000..49a512c405b2
-> --- /dev/null
-> +++ b/Documentation/driver-api/pci/p2pdma.rst
-> @@ -0,0 +1,166 @@
-> +============================
-> +PCI Peer-to-Peer DMA Support
-> +============================
-> +
-> +The PCI bus has pretty decent support for performing DMA transfers
-> +between two endpoints on the bus. This type of transaction is
+> https://marc.info/?l=linux-next&m=152654084627146&w=2
 
-s/endpoints/devices/
+Cool, thanks, I have a few more fixes coming.
 
-> +henceforth called Peer-to-Peer (or P2P). However, there are a number of
-> +issues that make P2P transactions tricky to do in a perfectly safe way.
-> +
-> +One of the biggest issues is that PCI Root Complexes are not required
-
-s/PCI Root Complexes .../
-  PCI doesn't require forwarding transactions between hierarchy domains,
-and in PCIe, each Root Port defines a separate hierarchy domain./
-
-> +to support forwarding packets between Root Ports. To make things worse,
-> +there is no simple way to determine if a given Root Complex supports
-> +this or not. (See PCIe r4.0, sec 1.3.1). Therefore, as of this writing,
-> +the kernel only supports doing P2P when the endpoints involved are all
-> +behind the same PCIe root port as the spec guarantees that all
-> +packets will always be routable but does not require routing between
-> +root ports.
-
-s/endpoints involved .../
-  devices involved are all behind the same PCI bridge, as such devices are
-  all in the same PCI hierarchy domain, and the spec guarantees that all
-  transactions within the hierarchy will be routable, but it does not
-  require routing between hierarchies./
-
-> +
-> +The second issue is that to make use of existing interfaces in Linux,
-> +memory that is used for P2P transactions needs to be backed by struct
-> +pages. However, PCI BARs are not typically cache coherent so there are
-> +a few corner case gotchas with these pages so developers need to
-> +be careful about what they do with them.
+-- 
+Best regards,
+Marek Vasut
