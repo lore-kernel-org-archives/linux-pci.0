@@ -1,43 +1,43 @@
-Return-Path: <SRS0=B+Ju=IS=rock-chips.com=shawn.lin@kernel.org>
-Return-Path: <SRS0=B+Ju=IS=rock-chips.com=shawn.lin@kernel.org>
-Cc: linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: Native PCI host controller patches
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20180530162610.GF39853@bhelgaas-glaptop.roam.corp.google.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <7bc243ff-a950-a7ce-a337-87348eb4b324@rock-chips.com>
-Date: Thu, 31 May 2018 09:26:52 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam03on0077.outbound.protection.outlook.com ([104.47.42.77]:32319
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751214AbeEVN1L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 May 2018 09:27:11 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>,
+        <lorenzo.pieralisi@arm.com>, <linux-pci@vger.kernel.org>
+CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.com>,
+        <cyrille.pitchen@free-electrons.com>,
+        Alan Douglas <adouglas@cadence.com>
+Subject: [RESEND PATCH 1/4] PCI: cadence: Update cdns_pcie_writel function signature
+Date: Tue, 22 May 2018 14:26:53 +0100
+Message-ID: <1526995613-8560-1-git-send-email-adouglas@cadence.com>
 MIME-Version: 1.0
-In-Reply-To: <20180530162610.GF39853@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Change cdns_pcie_writel() signature, u16 value changed to u32, since
+this function should write a long value
 
-On 2018/5/31 0:26, Bjorn Helgaas wrote:
-> Lorenzo will be out until mid-June, so if you have urgent patches that
-> he would normally handle (drivers/pci/{host,dwc,endpoint}/*), let me
-> know.
-> 
+Signed-off-by: Alan Douglas <adouglas@cadence.com>
+---
+ drivers/pci/cadence/pcie-cadence.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-In early discussion and off-list talk with Lorenzo, we wants a second
-pull request for renaming the directories for drivers which would be
-beneficial to future submit but not bother previous in-flight patches to
-do rebase. I sent a patch[1] for that a moment ago, please let me know
-if you'd like to merge it on the top of your final PR for v4.18 merge
-window.
-
-Thanks for your time!
-
-[1]http://patchwork.ozlabs.org/patch/923097/
-
-> I don't have time to review and merge everything, but if you have
-> something that really needs to be merged for v4.17 or during the v4.18
-> merge window, point it out to me and make a case for squeezing it in,
-> and I'll try to work it in.
-> 
-> Bjorn
-> 
-> 
-> 
+diff --git a/drivers/pci/cadence/pcie-cadence.h b/drivers/pci/cadence/pcie-cadence.h
+index 4bb2733..ed336cc 100644
+--- a/drivers/pci/cadence/pcie-cadence.h
++++ b/drivers/pci/cadence/pcie-cadence.h
+@@ -279,7 +279,7 @@ static inline void cdns_pcie_ep_fn_writew(struct cdns_pcie *pcie, u8 fn,
+ }
+ 
+ static inline void cdns_pcie_ep_fn_writel(struct cdns_pcie *pcie, u8 fn,
+-					  u32 reg, u16 value)
++					  u32 reg, u32 value)
+ {
+ 	writel(value, pcie->reg_base + CDNS_PCIE_EP_FUNC_BASE(fn) + reg);
+ }
+-- 
+2.2.2
