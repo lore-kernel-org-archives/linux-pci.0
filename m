@@ -1,53 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51362 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752459AbeERQ4g (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2018 12:56:36 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: bhelgaas@google.com
-Cc: arjan@linux.intel.com, keith.busch@linux.intel.com,
-        jthumshirn@suse.de, ming.lei@redhat.com, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org
-Subject: [PATCH] PCI/sysfs: do not allow enabling/disabling a device with a driver
-Date: Fri, 18 May 2018 18:56:24 +0200
-Message-Id: <20180518165624.13993-1-hch@lst.de>
+Received: from mail.kernel.org ([198.145.29.99]:38030 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751192AbeEVNCT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 May 2018 09:02:19 -0400
+Date: Tue, 22 May 2018 08:02:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Meelis Roos <mroos@linux.ee>, sparclinux@vger.kernel.org
+Subject: Re: [PATCH v1 0/4] sparc/PCI: VGA resource and other fixes
+Message-ID: <20180522130217.GA161672@bhelgaas-glaptop.roam.corp.google.com>
+References: <152694888798.59585.8779818482732387864.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <152694888798.59585.8779818482732387864.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Manpulating the enable_cnt behind the back of the driver will wreck
-complete havok with the kernel state, so disallow it.
+[+cc sparclinux, sorry I missed this first time around]
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/pci-sysfs.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 366d93af051d..788a200fb2dc 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -288,13 +288,16 @@ static ssize_t enable_store(struct device *dev, struct device_attribute *attr,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
- 
--	if (!val) {
--		if (pci_is_enabled(pdev))
--			pci_disable_device(pdev);
--		else
--			result = -EIO;
--	} else
-+	device_lock(dev);
-+	if (dev->driver)
-+		result = -EBUSY;
-+	else if (val)
- 		result = pci_enable_device(pdev);
-+	else if (pci_is_enabled(pdev))
-+		pci_disable_device(pdev);
-+	else
-+		result = -EIO;
-+	device_unlock(dev);
- 
- 	return result < 0 ? result : count;
- }
--- 
-2.17.0
+On Mon, May 21, 2018 at 07:30:29PM -0500, Bjorn Helgaas wrote:
+> The main thing here is the first patch, a legacy VGA framebuffer fix for
+> issues reported by Meelis.
+> 
+> The others are to converge the pci_enable_device() path for LEON and PCIC
+> with other arches (including sparc64), and to convert some logging to use
+> dev_printk() and make it more consistent with the PCI core.
+> 
+> I propose to merge these via the PCI tree.
+> 
+> ---
+> 
+> Bjorn Helgaas (4):
+>       sparc/PCI: Request legacy VGA framebuffer only for VGA devices
+>       sparc32/PCI/LEON: Converge device enable path
+>       sparc32/PCI/PCIC: Converge device enable path
+>       sparc/PCI: Use dev_printk() when possible
+> 
+> 
+>  arch/sparc/kernel/leon_pci.c   |   62 ++++++------------
+>  arch/sparc/kernel/pci.c        |  136 +++++++++++++++++++++++++---------------
+>  arch/sparc/kernel/pci_common.c |   31 ++-------
+>  arch/sparc/kernel/pci_msi.c    |   10 +--
+>  arch/sparc/kernel/pcic.c       |   86 ++++++++++++-------------
+>  5 files changed, 159 insertions(+), 166 deletions(-)
