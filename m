@@ -1,48 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:56656 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754251AbeE1Jdc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 May 2018 05:33:32 -0400
-Date: Mon, 28 May 2018 11:33:28 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Marek Vasut <marek.vasut@gmail.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] PCI: rcar: Clean up PHY init on failure
-Message-ID: <20180528093327.nd5j5k4dnicxr2us@verge.net.au>
-References: <20180525183326.5245-1-marek.vasut+renesas@gmail.com>
- <CAMuHMdUi2uFNOhYB0Y_SH20xfYzqbrBqgn=LgMv4=j+TqyjqWg@mail.gmail.com>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:40756 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753036AbeEVWwF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 18:52:05 -0400
+Subject: Re: [PATCH 5/5] Documentation/PCI: Add details of PCI AER statistics
+To: Rajat Jain <rajatja@google.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Tai <thomas.tai@oracle.com>,
+        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
+        Kyle McMartin <jkkm@fb.com>
+Cc: rajatxjain@gmail.com
+References: <20180522222805.80314-1-rajatja@google.com>
+ <20180522222805.80314-6-rajatja@google.com>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <cffe5b81-a05c-a249-8c36-70a9c4d61e7f@gmail.com>
+Date: Tue, 22 May 2018 17:52:03 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdUi2uFNOhYB0Y_SH20xfYzqbrBqgn=LgMv4=j+TqyjqWg@mail.gmail.com>
+In-Reply-To: <20180522222805.80314-6-rajatja@google.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2018 at 09:27:42PM +0200, Geert Uytterhoeven wrote:
-> CC Sergei
+On 05/22/2018 05:28 PM, Rajat Jain wrote:
+> Add the PCI AER statistics details to
+> Documentation/PCI/pcieaer-howto.txt
 > 
-> On Fri, May 25, 2018 at 8:33 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
-> > If the Gen3 PHY fails to power up, the code does not undo the
-> > initialization caused by phy_init(). Add the missing failure
-> > handling to the rcar_pcie_phy_init_gen3() function.
-> >
-> > Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> > Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> > Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> > Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> > Cc: Simon Horman <horms+renesas@verge.net.au>
-> > Cc: Wolfram Sang <wsa@the-dreams.de>
-> > Cc: linux-renesas-soc@vger.kernel.org
-> > Fixes: 517ca93a7159 ("PCI: rcar: Add R-Car gen3 PHY support")
+> Signed-off-by: Rajat Jain <rajatja@google.com>
+> ---
+>  Documentation/PCI/pcieaer-howto.txt | 35 +++++++++++++++++++++++++++++
+>  1 file changed, 35 insertions(+)
 > 
-> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> diff --git a/Documentation/PCI/pcieaer-howto.txt b/Documentation/PCI/pcieaer-howto.txt
+> index acd0dddd6bb8..86ee9f9ff5e1 100644
+> --- a/Documentation/PCI/pcieaer-howto.txt
+> +++ b/Documentation/PCI/pcieaer-howto.txt
+> @@ -73,6 +73,41 @@ In the example, 'Requester ID' means the ID of the device who sends
+>  the error message to root port. Pls. refer to pci express specs for
+>  other fields.
+>  
+> +2.4 AER statistics
+> +
+> +When AER messages are captured, the statistics are exposed via the following
+> +sysfs attributes under the "aer_stats" folder for the device:
+> +
+> +2.4.1 Device sysfs Attributes
+> +
+> +These attributes show up under all the devices that are AER capable. These
+> +indicate the errors "as seen by the device". Note that this may mean that if
+> +an end point is causing problems, the AER counters may increment at its link
+> +partner (e.g. root port) because the errors will be "seen" by the link partner
+> +and not the the problematic end point itself (which may report all counters
+> +as 0 as it never saw any problems).
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+I was afraid of that. Is there a way to look at the requester ID to log
+AER errors to the correct device?
+
+Alex
