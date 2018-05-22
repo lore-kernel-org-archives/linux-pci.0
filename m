@@ -1,77 +1,59 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Laurentiu Tudor <laurentiu.tudor@nxp.com>
-To: Nipun Gupta <nipun.gupta@nxp.com>, "robin.murphy@arm.com"
- <robin.murphy@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>, "robh@kernel.org"
- <robh@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH 6/7 v5] bus: fsl-mc: set coherent dma mask for devices on
- fsl-mc bus
-Date: Tue, 22 May 2018 07:03:44 +0000
-Message-ID: <5B03C0D0.1090609@nxp.com>
-References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
- <1526824191-7000-7-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1526824191-7000-7-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35411 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751177AbeEVKAm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 06:00:42 -0400
+From: Marek Vasut <marek.vasut@gmail.com>
+Subject: Re: [PATCH][RFC] PCI: rcar: Add bus notifier so we can limit the DMA
+ range
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Nikita Yushchenko <nikita.yoush@cogentembedded.com>
+References: <20180521220514.30256-1-marek.vasut+renesas@gmail.com>
+ <CAK8P3a1PZ_MfgEcvWdUbN-eCcs5Xo38LQ54imLc4kNtSKO9Txw@mail.gmail.com>
+Message-ID: <c2897d82-fe33-52cd-5aa6-3bddb478cb9f@gmail.com>
+Date: Tue, 22 May 2018 11:52:21 +0200
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "stuyoder@gmail.com" <stuyoder@gmail.com>,
- Bharat Bhushan <bharat.bhushan@nxp.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- "joro@8bytes.org" <joro@8bytes.org>,
- "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Leo Li <leoyang.li@nxp.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>, "hch@lst.de" <hch@lst.de>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAK8P3a1PZ_MfgEcvWdUbN-eCcs5Xo38LQ54imLc4kNtSKO9Txw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 05/22/2018 10:10 AM, Arnd Bergmann wrote:
+> On Tue, May 22, 2018 at 12:05 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>> From: Phil Edworthy <phil.edworthy@renesas.com>
+>>
+>> The PCIe DMA controller on RCar Gen2 and earlier is on 32bit bus,
+>> so limit the DMA range to 32bit.
+>>
+>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>> Cc: Arnd Bergmann <arnd@arndb.de>
+>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>> Cc: linux-renesas-soc@vger.kernel.org
+>> To: linux-pci@vger.kernel.org
+>> ---
+>> NOTE: I'm aware of https://patchwork.kernel.org/patch/9495895/ , but the
+>>       discussion seems to have gone way off, so I'm sending this as a
+>>       RFC. Any feedback on how to do this limiting properly would be nice.
+> 
+> Doing it in the driver is clearly not appropriate, we must do this in
+> common code. If I remember correctly, it's specifically ARM64 that is
+> broken here, it incorrectly allows setting a DMA mask to 64 bit
+> when that is not available.
 
+Yep, that's correct. ARM64 with devices mapping tremendous amounts of
+memory. So did anything change since that discussion references in the NOTE?
 
-On 05/20/2018 04:49 PM, Nipun Gupta wrote:
-> of_dma_configure() API expects coherent_dma_mask to be correctly
-> set in the devices. This patch does the needful.
->
-> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-
-Acked-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
-
----
-Best Regards, Laurentiu
-
-> ---
->   drivers/bus/fsl-mc/fsl-mc-bus.c | 1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
-> index fa43c7d..624828b 100644
-> --- a/drivers/bus/fsl-mc/fsl-mc-bus.c
-> +++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
-> @@ -627,6 +627,7 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
->   		mc_dev->icid = parent_mc_dev->icid;
->   		mc_dev->dma_mask = FSL_MC_DEFAULT_DMA_MASK;
->   		mc_dev->dev.dma_mask = &mc_dev->dma_mask;
-> +		mc_dev->dev.coherent_dma_mask = mc_dev->dma_mask;
->   		dev_set_msi_domain(&mc_dev->dev,
->   				   dev_get_msi_domain(&parent_mc_dev->dev));
->   	}
->
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Best regards,
+Marek Vasut
