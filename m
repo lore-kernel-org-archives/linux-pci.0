@@ -1,56 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f47.google.com ([209.85.215.47]:40121 "EHLO
-        mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751140AbeECP0q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 11:26:46 -0400
-Received: by mail-lf0-f47.google.com with SMTP id j16-v6so26583311lfb.7
-        for <linux-pci@vger.kernel.org>; Thu, 03 May 2018 08:26:46 -0700 (PDT)
-Subject: Re: [PATCH v2 0/5] Add R8A77980 PCIe support & some driver cleanups
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Simon Horman <horms@verge.net.au>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-References: <26e803ca-06b6-28c5-b87c-fc639b322d6f@cogentembedded.com>
- <20180501055553.3zh4ygux7aqvkmvs@verge.net.au>
- <20180501105754.GC19391@e107981-ln.cambridge.arm.com>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <0f5bc40e-a82b-4826-e711-19a83d0bffb7@cogentembedded.com>
-Date: Thu, 3 May 2018 18:26:43 +0300
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v1 1/3] xtensa/PCI: Remove dead code
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>,
+        linux-xtensa@linux-xtensa.org, linux-kernel@vger.kernel.org
+Date: Tue, 22 May 2018 08:10:14 -0500
+Message-ID: <152699461445.162480.8740249758106045185.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152699456050.162480.13521209483758803324.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152699456050.162480.13521209483758803324.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180501105754.GC19391@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/01/2018 01:57 PM, Lorenzo Pieralisi wrote:
+From: Bjorn Helgaas <bhelgaas@google.com>
 
->>> Hello!
->>>
->>> Here's a set of 5 patches against the 'pci/rcar' branch of Lorenzo Pieralisi's
->>> 'pci.git' repo. These are the changes needed for better R-Car gen3 support
->>> (namely for R8A77980 support) plus some PCIe driver re-factoring done in
->>> the process...
->>>
->>> [1/5] pcie-rcar: poll PHYRDY in rcar_pcie_hw_init()
->>> [2/5] pcie-rcar: remove PHYRDY polling from rcar_pcie_hw_init_h1()
->>> [3/5] pcie-rcar: add R-Car gen3 PHY support
->>> [4/5] pcie-rcar: factor out rcar_pcie_hw_init() call
->>> [5/5] DT: pci: rcar-pci: document R8A77980 bindings
->>
->> Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
-> 
-> Sergei, would you mind rebasing this series against my pci/rcar
-> branch please ?
+Remove the following unused functions:
 
-   You mean against your updated 'pci/rcar' branch? (The patches were against
-that branch in the 1st place, and they still do apply, though with fuzz in one
-of the patches)...
+  pcibios_enable_resources()
+  pcibios_alloc_controller()
+  pci_controller_num()
 
-> I will apply it then.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/xtensa/include/asm/pci.h |    2 -
+ arch/xtensa/kernel/pci.c      |   59 -----------------------------------------
+ 2 files changed, 61 deletions(-)
 
-   OK, thanks.
-
-> Thanks,
-> Lorenzo
-
-MBR, Sergei
+diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
+index d5a82153a7c5..a94d4b281f4c 100644
+--- a/arch/xtensa/include/asm/pci.h
++++ b/arch/xtensa/include/asm/pci.h
+@@ -20,8 +20,6 @@
+ 
+ #define pcibios_assign_all_busses()	0
+ 
+-extern struct pci_controller* pcibios_alloc_controller(void);
+-
+ /* Assume some values. (We should revise them, if necessary) */
+ 
+ #define PCIBIOS_MIN_IO		0x2000
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index b7c7a60c7000..d451b4f5b1e0 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -80,50 +80,6 @@ pcibios_align_resource(void *data, const struct resource *res,
+ 	return start;
+ }
+ 
+-int
+-pcibios_enable_resources(struct pci_dev *dev, int mask)
+-{
+-	u16 cmd, old_cmd;
+-	int idx;
+-	struct resource *r;
+-
+-	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+-	old_cmd = cmd;
+-	for(idx=0; idx<6; idx++) {
+-		r = &dev->resource[idx];
+-		if (!r->start && r->end) {
+-			pr_err("PCI: Device %s not available because "
+-			       "of resource collisions\n", pci_name(dev));
+-			return -EINVAL;
+-		}
+-		if (r->flags & IORESOURCE_IO)
+-			cmd |= PCI_COMMAND_IO;
+-		if (r->flags & IORESOURCE_MEM)
+-			cmd |= PCI_COMMAND_MEMORY;
+-	}
+-	if (dev->resource[PCI_ROM_RESOURCE].start)
+-		cmd |= PCI_COMMAND_MEMORY;
+-	if (cmd != old_cmd) {
+-		pr_info("PCI: Enabling device %s (%04x -> %04x)\n",
+-			pci_name(dev), old_cmd, cmd);
+-		pci_write_config_word(dev, PCI_COMMAND, cmd);
+-	}
+-	return 0;
+-}
+-
+-struct pci_controller * __init pcibios_alloc_controller(void)
+-{
+-	struct pci_controller *pci_ctrl;
+-
+-	pci_ctrl = (struct pci_controller *)alloc_bootmem(sizeof(*pci_ctrl));
+-	memset(pci_ctrl, 0, sizeof(struct pci_controller));
+-
+-	*pci_ctrl_tail = pci_ctrl;
+-	pci_ctrl_tail = &pci_ctrl->next;
+-
+-	return pci_ctrl;
+-}
+-
+ static void __init pci_controller_apertures(struct pci_controller *pci_ctrl,
+ 					    struct list_head *resources)
+ {
+@@ -241,21 +197,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_PROC_FS
+-
+-/*
+- * Return the index of the PCI controller for device pdev.
+- */
+-
+-int
+-pci_controller_num(struct pci_dev *dev)
+-{
+-	struct pci_controller *pci_ctrl = (struct pci_controller*) dev->sysdata;
+-	return pci_ctrl->index;
+-}
+-
+-#endif /* CONFIG_PROC_FS */
+-
+ /*
+  * Platform support for /proc/bus/pci/X/Y mmap()s.
+  *  -- paulus.
