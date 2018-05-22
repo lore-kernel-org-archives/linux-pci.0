@@ -1,195 +1,313 @@
-Return-Path: <SRS0=pkZX=IM=google.com=rajatja@kernel.org>
-Return-Path: <SRS0=pkZX=IM=google.com=rajatja@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam01on0042.outbound.protection.outlook.com ([104.47.34.42]:36496
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751060AbeEVJG2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 May 2018 05:06:28 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "cyrille.pitchen@free-electrons.com"
+        <cyrille.pitchen@free-electrons.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "nsekhar@ti.com" <nsekhar@ti.com>
+Subject: [PATCH v2 2/4] PCI: cadence: Add generic PHY support to host and EP
+ drivers
+Date: Tue, 22 May 2018 09:06:26 +0000
+Message-ID: <SN6PR07MB4512B35B884093D58EE5EA9AD8940@SN6PR07MB4512.namprd07.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20180525183049.GB63280@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180516013333.135259-1-rajatja@google.com> <20180524223751.GC15320@bhelgaas-glaptop.roam.corp.google.com>
- <CACK8Z6E6g=+T04qDUXhQrhHr1y5O05yHbjTuLM7oxnn1XJpBmw@mail.gmail.com> <20180525183049.GB63280@bhelgaas-glaptop.roam.corp.google.com>
-From: Rajat Jain <rajatja@google.com>
-Date: Fri, 25 May 2018 11:38:22 -0700
-Message-ID: <CACK8Z6HzmqP0MMs9WQ1kNyTPxdbd0Hf=cbfmvji5-2BheZ1vyw@mail.gmail.com>
-Subject: Re: [PATCH] lspci: Indicate if the OS / kernel go out-of-sync on BAR
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Martin Mares <mj@ucw.cz>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2018 at 11:30 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, May 25, 2018 at 09:57:59AM -0700, Rajat Jain wrote:
->> On Thu, May 24, 2018 at 3:37 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> > On Tue, May 15, 2018 at 06:33:33PM -0700, Rajat Jain wrote:
->> >> If the OS and device are reporting different BAR(s), currently
->> >> the lspci will happily show the OS version with no indication what
->> >> so ever that there is a problem. This is not correct in my opinion
->> >> because lspci is often used to debug devices, so should either show
->> >> the BAR reported by the device, or atleast an indication of
->> >> out-of-sync.
->> >>
->> >> I spent a lot of time debugging a PCI device that would unexpectedly
->> >> clear out the BAR register due to some bug, and it was quite later
->> >> I realized that the lspci is showing me the OS version. So fix that.
->> >
->> > I assume (hope) that "lspci -b" would show you the hardware values.
->> > Of course, who would think to use that when you're debugging a
->> > problem.  So that's not really a solution to the problem you faced.
->> >
->> >> On a system that is in problem state:
->> >>
->> >> localhost ~ # setpci -s 1:0.0 0x10.l
->> >> 00000004  <=== BAR is zeroed out
->> >> localhost ~ #
->> >>
->> >> Before:
->> >>
->> >> localhost ~ # lspci -v -s 1:0.0
->> >> 01:00.0 Network controller: Intel Corporation Wireless 7265 (rev 59)
->> >>         Subsystem: Intel Corporation Dual Band Wireless-AC 7265
->> >>         Flags: bus master, fast devsel, latency 0, IRQ 275
->> >>         Memory at d1400000 (64-bit, non-prefetchable) [size=8K]
->> >>         Capabilities: [c8] Power Management version 3
->> >>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
->> >>         Capabilities: [40] Express Endpoint, MSI 00
->> >>         Capabilities: [100] Advanced Error Reporting
->> >>         Capabilities: [140] Device Serial Number b4-d5-bd-ff-ff-c8-a1-6d
->> >>         Capabilities: [14c] Latency Tolerance Reporting
->> >>         Capabilities: [154] L1 PM Substates
->> >>         Kernel driver in use: iwlwifi
->> >>         Kernel modules: iwlwifi
->> >>
->> >> After:
->> >>
->> >> localhost ~ # lspci -v -s 1:0.0
->> >> 01:00.0 Network controller: Device 8086:095a (rev 59)
->> >>         Subsystem: Device 8086:5010
->> >>         Flags: bus master, fast devsel, latency 0, IRQ 275
->> >>         [out-of-sync] Memory at d1400000 (64-bit, non-prefetchable) [size=8K]
->> >>         Capabilities: [c8] Power Management version 3
->> >>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
->> >>         Capabilities: [40] Express Endpoint, MSI 00
->> >>         Capabilities: [100] Advanced Error Reporting
->> >>         Capabilities: [140] Device Serial Number b4-d5-bd-ff-ff-c8-a1-6d
->> >>         Capabilities: [14c] Latency Tolerance Reporting
->> >>         Capabilities: [154] L1 PM Substates
->> >>         Kernel driver in use: iwlwifi
->> >>         Kernel modules: iwlwifi
->> >
->> > I've never been quite clear on the path from hardware BAR value to
->> > lspci output.  On my system,
->> >
->> >   $ strace -e trace=open lspci -vs00:14.0 2>&1 | grep 00:14.0
->> >
->> > suggests that lspci reads these:
->> >
->> >   /sys/bus/pci/.../resource and
->> >   /sys/bus/pci/.../config
->> >
->> > "resource" uses resource_show(), where we use the result of
->> > pci_resource_to_user() on the resources in the struct pci_dev, so
->> > these are basically cached and may be out of date with respect to the
->> > hardware.
->> >
->> > "config" uses pci_read_config(), where we ultimately call the config
->> > accessors, which should give us the actual values from the hardware
->> > BARs.
->> >
->> >> Signed-off-by: Rajat Jain <rajatja@google.com>
->> >> ---
->> >>  lspci.c | 18 ++++++++++++++++++
->> >>  1 file changed, 18 insertions(+)
->> >>
->> >> diff --git a/lspci.c b/lspci.c
->> >> index 748452c..81c65f3 100644
->> >> --- a/lspci.c
->> >> +++ b/lspci.c
->> >> @@ -371,6 +371,20 @@ show_range(char *prefix, u64 base, u64 limit, int is_64bit)
->> >>    putchar('\n');
->> >>  }
->> >>
->> >> +static pciaddr_t
->> >> +bar_value(struct device *d, int i, u32 flg)
->> >> +{
->> >> +  pciaddr_t val = 0;
->> >> +
->> >> +  /* Read higher order 32 bits if it's a 64 bit bar in memory space */
->> >> +  if (i < 5 && !(flg & PCI_BASE_ADDRESS_SPACE_IO) &&
->> >> +      (flg & PCI_BASE_ADDRESS_MEM_TYPE_MASK == PCI_BASE_ADDRESS_MEM_TYPE_64))
->> >> +      val = get_conf_long(d, PCI_BASE_ADDRESS_0 + 4 * (i + 1));
->> >> +
->> >> +  val = (val << 32) | flg;
->> >> +  return val;
->> >> +}
->> >> +
->> >>  static void
->> >>  show_bases(struct device *d, int cnt)
->> >>  {
->> >> @@ -401,6 +415,10 @@ show_bases(struct device *d, int cnt)
->> >>         flg = pos;
->> >>         virtual = 1;
->> >>       }
->> >> +      else if (pos != bar_value(d, i, flg))
->> >> +     {
->> >> +       printf("[out-of-sync] ");
->> >
->> > If the host bridge does any address translation, e.g., if it uses ACPI
->> > _TRA, isn't this going to print "out-of-sync" for *every* BAR, even if
->> > it isn't really out of sync?
->>
->> Need a clarification here to ensure I understand you right. When you
->> refer to address translation above, I assume you are referring to a
->> situation where the CPU issues reads to an address X (in CPU address
->> space), which goes through a translation at the pcie root port /
->> controller, and appears as a read from address Y (as seen on the PCIe
->> bus side)?
->
-> It appears as a read *to* address Y on PCI (I'm sure that's what you had
-> in mind).  Linux shows it like this when it enumerates the host bridge:
->
->   pci_bus 0000:00: root bus resource [mem 0xf0000000000-0xf007edfffff] (bus address [0x80000000-0xfedfffff])
->
-> A CPU read to physical address 0xf0000000000 will appear on PCI with the
-> bus address 0x80000000.  The PCI BAR would contain 0x80000000.
->
->> In such a situation, my understanding (may be wrong) was that the
->> lspci is supposed to be showing the PCI address Y for the bar (not
->> address X in physical address space). If this understanding is wrong
->> (and the lspci is supposed to show address CPU X for the bar), then
->> yes, this patch is likely not correct.
->
-> My impression, based on the man page text about the "-b" option was the
-> opposite:
->
->   -b     Bus-centric  view.  Show all IRQ numbers and addresses as
->          seen by the cards on the PCI bus instead of as seen by the
->          kernel.
+From: Alan Douglas <adouglas@cadence.com>
 
-Oh, sorry I was wrong. Thanks for correcting me.
+If PHYs are present, they will be initialized and enabled in driver probe,
+and disabled in driver shutdown.
 
->
-> That suggests to me that by default lspci shows addresses as seen by
-> the kernel, i.e., using CPU physical addresses.  These match what
-> /proc/iomem shows (at least if you look at /proc/iomem as root).
->
->> But I do think lspci should have a way to indicate when the bars in
->>  /sys/bus/pci/.../resource and
->>  /sys/bus/pci/.../config
->> get out of sync.
->
-> I don't disagree; that does sound like it could be useful.  I just
-> don't know the best way to accomplish it.
+Signed-off-by: Alan Douglas <adouglas@cadence.com>
+---
+ drivers/pci/cadence/pcie-cadence-ep.c   | 14 ++++-
+ drivers/pci/cadence/pcie-cadence-host.c | 31 +++++++++++
+ drivers/pci/cadence/pcie-cadence.c      | 93 +++++++++++++++++++++++++++++=
+++++
+ drivers/pci/cadence/pcie-cadence.h      |  7 +++
+ 4 files changed, 144 insertions(+), 1 deletion(-)
 
-Lets leave it for some other time I think. For now, the lspci -b seems
-to accomplish what I want (so I'll change my scripts to use it as
-needed). Thanks!
-
->  Seems like you'd have to do
-> something in resource_show() to re-read the BAR and validate the
-> cache.  I don't know what you do if you find that it's invalid.
->
->> >
->> >> +     }
->> >>        if (flg & PCI_BASE_ADDRESS_SPACE_IO)
->> >>       {
->> >>         pciaddr_t a = pos & PCI_BASE_ADDRESS_IO_MASK;
->> >> --
->> >> 2.17.0.441.gb46fe60e1d-goog
->> >>
+diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pc=
+ie-cadence-ep.c
+index 3d8283e..2581caf 100644
+--- a/drivers/pci/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/cadence/pcie-cadence-ep.c
+@@ -439,6 +439,7 @@ static int cdns_pcie_ep_probe(struct platform_device *p=
+dev)
+ 	struct pci_epc *epc;
+ 	struct resource *res;
+ 	int ret;
++	int phy_count;
+=20
+ 	ep =3D devm_kzalloc(dev, sizeof(*ep), GFP_KERNEL);
+ 	if (!ep)
+@@ -472,6 +473,12 @@ static int cdns_pcie_ep_probe(struct platform_device *=
+pdev)
+ 	if (!ep->ob_addr)
+ 		return -ENOMEM;
+=20
++	ret =3D cdns_pcie_init_phy(dev, pcie);
++	if (ret) {
++		dev_err(dev, "failed to init phy\n");
++		return ret;
++	}
++	platform_set_drvdata(pdev, pcie);
+ 	pm_runtime_enable(dev);
+ 	ret =3D pm_runtime_get_sync(dev);
+ 	if (ret < 0) {
+@@ -520,6 +527,10 @@ static int cdns_pcie_ep_probe(struct platform_device *=
+pdev)
+=20
+  err_get_sync:
+ 	pm_runtime_disable(dev);
++	cdns_pcie_disable_phy(pcie);
++	phy_count =3D pcie->phy_count;
++	while (phy_count--)
++		device_link_del(pcie->link[phy_count]);
+=20
+ 	return ret;
+ }
+@@ -527,6 +538,7 @@ static int cdns_pcie_ep_probe(struct platform_device *p=
+dev)
+ static void cdns_pcie_ep_shutdown(struct platform_device *pdev)
+ {
+ 	struct device *dev =3D &pdev->dev;
++	struct cdns_pcie *pcie =3D dev_get_drvdata(dev);
+ 	int ret;
+=20
+ 	ret =3D pm_runtime_put_sync(dev);
+@@ -535,7 +547,7 @@ static void cdns_pcie_ep_shutdown(struct platform_devic=
+e *pdev)
+=20
+ 	pm_runtime_disable(dev);
+=20
+-	/* The PCIe controller can't be disabled. */
++	cdns_pcie_disable_phy(pcie);
+ }
+=20
+ static struct platform_driver cdns_pcie_ep_driver =3D {
+diff --git a/drivers/pci/cadence/pcie-cadence-host.c b/drivers/pci/cadence/=
+pcie-cadence-host.c
+index a4ebbd3..7536926a 100644
+--- a/drivers/pci/cadence/pcie-cadence-host.c
++++ b/drivers/pci/cadence/pcie-cadence-host.c
+@@ -58,6 +58,9 @@ static void __iomem *cdns_pci_map_bus(struct pci_bus *bus=
+, unsigned int devfn,
+=20
+ 		return pcie->reg_base + (where & 0xfff);
+ 	}
++	/* Check that the link is up */
++	if (!(cdns_pcie_readl(pcie, CDNS_PCIE_LM_BASE) & 0x1))
++		return NULL;
+=20
+ 	/* Update Output registers for AXI region 0. */
+ 	addr0 =3D CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
+@@ -239,6 +242,7 @@ static int cdns_pcie_host_probe(struct platform_device =
+*pdev)
+ 	struct cdns_pcie *pcie;
+ 	struct resource *res;
+ 	int ret;
++	int phy_count;
+=20
+ 	bridge =3D devm_pci_alloc_host_bridge(dev, sizeof(*rc));
+ 	if (!bridge)
+@@ -290,6 +294,13 @@ static int cdns_pcie_host_probe(struct platform_device=
+ *pdev)
+ 	}
+ 	pcie->mem_res =3D res;
+=20
++	ret =3D cdns_pcie_init_phy(dev, pcie);
++	if (ret) {
++		dev_err(dev, "failed to init phy\n");
++		return ret;
++	}
++	platform_set_drvdata(pdev, pcie);
++
+ 	pm_runtime_enable(dev);
+ 	ret =3D pm_runtime_get_sync(dev);
+ 	if (ret < 0) {
+@@ -322,15 +333,35 @@ static int cdns_pcie_host_probe(struct platform_devic=
+e *pdev)
+=20
+  err_get_sync:
+ 	pm_runtime_disable(dev);
++	cdns_pcie_disable_phy(pcie);
++	phy_count =3D pcie->phy_count;
++	while (phy_count--)
++		device_link_del(pcie->link[phy_count]);
+=20
+ 	return ret;
+ }
+=20
++static void cdns_pcie_shutdown(struct platform_device *pdev)
++{
++	struct device *dev =3D &pdev->dev;
++	struct cdns_pcie *pcie =3D dev_get_drvdata(dev);
++	int ret;
++
++	ret =3D pm_runtime_put_sync(dev);
++	if (ret < 0)
++		dev_dbg(dev, "pm_runtime_put_sync failed\n");
++
++	pm_runtime_disable(dev);
++	cdns_pcie_disable_phy(pcie);
++}
++
++
+ static struct platform_driver cdns_pcie_host_driver =3D {
+ 	.driver =3D {
+ 		.name =3D "cdns-pcie-host",
+ 		.of_match_table =3D cdns_pcie_host_of_match,
+ 	},
+ 	.probe =3D cdns_pcie_host_probe,
++	.shutdown =3D cdns_pcie_shutdown,
+ };
+ builtin_platform_driver(cdns_pcie_host_driver);
+diff --git a/drivers/pci/cadence/pcie-cadence.c b/drivers/pci/cadence/pcie-=
+cadence.c
+index 138d113..681609a 100644
+--- a/drivers/pci/cadence/pcie-cadence.c
++++ b/drivers/pci/cadence/pcie-cadence.c
+@@ -124,3 +124,96 @@ void cdns_pcie_reset_outbound_region(struct cdns_pcie =
+*pcie, u32 r)
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), 0);
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), 0);
+ }
++
++void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
++{
++	int i =3D pcie->phy_count;
++
++	while (i--) {
++		phy_power_off(pcie->phy[i]);
++		phy_exit(pcie->phy[i]);
++	}
++}
++
++int cdns_pcie_enable_phy(struct cdns_pcie *pcie)
++{
++	int ret;
++	int i;
++
++	for (i =3D 0; i < pcie->phy_count; i++) {
++		ret =3D phy_init(pcie->phy[i]);
++		if (ret < 0)
++			goto err_phy;
++
++		ret =3D phy_power_on(pcie->phy[i]);
++		if (ret < 0) {
++			phy_exit(pcie->phy[i]);
++			goto err_phy;
++		}
++	}
++
++	return 0;
++
++err_phy:
++	while (--i >=3D 0) {
++		phy_power_off(pcie->phy[i]);
++		phy_exit(pcie->phy[i]);
++	}
++
++	return ret;
++}
++
++int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
++{
++	struct device_node *np =3D dev->of_node;
++	int phy_count;
++	struct phy **phy;
++	struct device_link **link;
++	int i;
++	int ret;
++	const char *name;
++
++	phy_count =3D of_property_count_strings(np, "phy-names");
++	if (phy_count < 1) {
++		dev_err(dev, "no phy-names.  PHY will not be initialized\n");
++		pcie->phy_count =3D 0;
++		return 0;
++	}
++
++	phy =3D devm_kzalloc(dev, sizeof(*phy) * phy_count, GFP_KERNEL);
++	if (!phy)
++		return -ENOMEM;
++
++	link =3D devm_kzalloc(dev, sizeof(*link) * phy_count, GFP_KERNEL);
++	if (!link)
++		return -ENOMEM;
++
++	for (i =3D 0; i < phy_count; i++) {
++		of_property_read_string_index(np, "phy-names", i, &name);
++		phy[i] =3D devm_phy_get(dev, name);
++		if (IS_ERR(phy))
++			return PTR_ERR(phy);
++
++		link[i] =3D device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
++		if (!link[i]) {
++			ret =3D -EINVAL;
++			goto err_link;
++		}
++	}
++
++	pcie->phy_count =3D phy_count;
++	pcie->phy =3D phy;
++	pcie->link =3D link;
++
++	ret =3D  cdns_pcie_enable_phy(pcie);
++	if (ret)
++		goto err_link;
++
++	return 0;
++
++err_link:
++	while (--i >=3D 0)
++		device_link_del(link[i]);
++
++	return ret;
++}
+diff --git a/drivers/pci/cadence/pcie-cadence.h b/drivers/pci/cadence/pcie-=
+cadence.h
+index ed336cc..b342c80 100644
+--- a/drivers/pci/cadence/pcie-cadence.h
++++ b/drivers/pci/cadence/pcie-cadence.h
+@@ -8,6 +8,7 @@
+=20
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
++#include <linux/phy/phy.h>
+=20
+ /*
+  * Local Management Registers
+@@ -229,6 +230,9 @@ struct cdns_pcie {
+ 	struct resource		*mem_res;
+ 	bool			is_rc;
+ 	u8			bus;
++	int			phy_count;
++	struct phy		**phy;
++	struct device_link	**link;
+ };
+=20
+ /* Register access */
+@@ -307,5 +311,8 @@ void cdns_pcie_set_outbound_region_for_normal_msg(struc=
+t cdns_pcie *pcie, u8 fn,
+ 						  u32 r, u64 cpu_addr);
+=20
+ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r);
++void cdns_pcie_disable_phy(struct cdns_pcie *pcie);
++int cdns_pcie_enable_phy(struct cdns_pcie *pcie);
++int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie);
+=20
+ #endif /* _PCIE_CADENCE_H */
+--=20
+2.2.2
