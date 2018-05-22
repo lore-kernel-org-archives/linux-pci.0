@@ -1,121 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <8f770886632640321592873e4c902218d42c436b.1527194314.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Thu, 24 May 2018 22:45:30 +0200
-Subject: [PATCH] genirq: Synchronize only with single thread on free_irq()
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Sebastian Andrzej Siewior" <bigeasy@linutronix.de>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f68.google.com ([209.85.213.68]:41661 "EHLO
+        mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751114AbeEVKdF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 06:33:05 -0400
+MIME-Version: 1.0
+In-Reply-To: <3936f87b-155f-7fc1-1618-287d5d64b7b3@gmail.com>
+References: <20180521210522.29346-1-marek.vasut+renesas@gmail.com>
+ <CAMuHMdVkeSEsO-jRCzh-_9VkzZ+4X-VAN1KZOA2wB7bUQTrRYg@mail.gmail.com> <3936f87b-155f-7fc1-1618-287d5d64b7b3@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 22 May 2018 12:33:04 +0200
+Message-ID: <CAMuHMdU=s3ZyCLO5zDXgQis8Ak5akhJhcShs4hgQikaoWYLGZw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When pciehp is converted to threaded IRQ handling, removal of unplugged
-devices below a PCIe hotplug port happens synchronously in the IRQ
-thread.  Removal of devices typically entails a call to free_irq() by
-their drivers.
+Hi Marek,
 
-If those devices share their IRQ with the hotplug port, free_irq()
-deadlocks because it calls synchronize_irq() to wait for all hard IRQ
-handlers as well as all threads sharing the IRQ to finish.
+On Tue, May 22, 2018 at 11:48 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
+> On 05/22/2018 11:42 AM, Geert Uytterhoeven wrote:
+>> On Mon, May 21, 2018 at 11:05 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>>> The data link active signal usually takes ~20 uSec to be asserted,
+>>> poll the bit more often to avoid useless delays in this function.
+>>> Use udelay() instead of usleep() for such a small delay as suggested
+>>> by the timer documentation and because this will be used in atomic
+>>> context later on when the suspend/resume patches land.
+>>>
+>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>
+>> Thanks for your patch!
+>>
+>>> --- a/drivers/pci/host/pcie-rcar.c
+>>> +++ b/drivers/pci/host/pcie-rcar.c
+>>> @@ -529,13 +529,13 @@ static void phy_write_reg(struct rcar_pcie *pcie,
+>>>
+>>>  static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
+>>>  {
+>>> -       unsigned int timeout = 10;
+>>> +       unsigned int timeout = 10000;
+>>>
+>>>         while (timeout--) {
+>>>                 if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
+>>>                         return 0;
+>>>
+>>> -               msleep(5);
+>>> +               udelay(5);
+>>
+>> + cpu_relax()?
+>
+> Is it safe to use in atomic context ? Because of that suspend/resume thing.
 
-Actually it's sufficient to wait only for the IRQ thread of the removed
-device, so call synchronize_hardirq() to wait for all hard IRQ handlers
-to finish, but no longer for any threads.  Compensate by rearranging the
-control flow in irq_wait_for_interrupt() such that the device's thread
-is allowed to run one last time after kthread_stop() has been called.
+Yes.
 
-Stack trace for posterity:
-    INFO: task irq/17-pciehp:94 blocked for more than 120 seconds.
-    schedule+0x28/0x80
-    synchronize_irq+0x6e/0xa0
-    __free_irq+0x15a/0x2b0
-    free_irq+0x33/0x70
-    pciehp_release_ctrl+0x98/0xb0
-    pcie_port_remove_service+0x2f/0x40
-    device_release_driver_internal+0x157/0x220
-    bus_remove_device+0xe2/0x150
-    device_del+0x124/0x340
-    device_unregister+0x16/0x60
-    remove_iter+0x1a/0x20
-    device_for_each_child+0x4b/0x90
-    pcie_port_device_remove+0x1e/0x30
-    pci_device_remove+0x36/0xb0
-    device_release_driver_internal+0x157/0x220
-    pci_stop_bus_device+0x7d/0xa0
-    pci_stop_bus_device+0x3d/0xa0
-    pci_stop_and_remove_bus_device+0xe/0x20
-    pciehp_unconfigure_device+0xb8/0x160
-    pciehp_disable_slot+0x84/0x130
-    pciehp_ist+0x158/0x190
-    irq_thread_fn+0x1b/0x50
-    irq_thread+0x143/0x1a0
-    kthread+0x111/0x130
+>>>         }
+>>
+>> if this ever happens, it will have blocked for more than 50 ms...
+>
+> Well yes, so did the previous thing.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- kernel/irq/manage.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+No, the previous thing slept. Big difference.
 
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index e3336d904f64..603d2672f942 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -756,9 +756,19 @@ static irqreturn_t irq_forced_secondary_handler(int irq, void *dev_id)
- 
- static int irq_wait_for_interrupt(struct irqaction *action)
- {
--	set_current_state(TASK_INTERRUPTIBLE);
-+	for (;;) {
-+		set_current_state(TASK_INTERRUPTIBLE);
- 
--	while (!kthread_should_stop()) {
-+		if (kthread_should_stop()) {
-+			/* may need to run one last time. */
-+			if (test_and_clear_bit(IRQTF_RUNTHREAD,
-+					       &action->thread_flags)) {
-+				__set_current_state(TASK_RUNNING);
-+				return 0;
-+			}
-+			__set_current_state(TASK_RUNNING);
-+			return -1;
-+		}
- 
- 		if (test_and_clear_bit(IRQTF_RUNTHREAD,
- 				       &action->thread_flags)) {
-@@ -766,10 +776,7 @@ static int irq_wait_for_interrupt(struct irqaction *action)
- 			return 0;
- 		}
- 		schedule();
--		set_current_state(TASK_INTERRUPTIBLE);
- 	}
--	__set_current_state(TASK_RUNNING);
--	return -1;
- }
- 
- /*
-@@ -990,7 +997,7 @@ static int irq_thread(void *data)
- 	/*
- 	 * This is the regular exit path. __free_irq() is stopping the
- 	 * thread via kthread_stop() after calling
--	 * synchronize_irq(). So neither IRQTF_RUNTHREAD nor the
-+	 * synchronize_hardirq(). So neither IRQTF_RUNTHREAD nor the
- 	 * oneshot mask bit can be set. We cannot verify that as we
- 	 * cannot touch the oneshot mask at this point anymore as
- 	 * __setup_irq() might have given out currents thread_mask
-@@ -1595,7 +1602,7 @@ static struct irqaction *__free_irq(struct irq_desc *desc, void *dev_id)
- 	unregister_handler_proc(irq, action);
- 
- 	/* Make sure it's not being used on another CPU: */
--	synchronize_irq(irq);
-+	synchronize_hardirq(irq);
- 
- #ifdef CONFIG_DEBUG_SHIRQ
- 	/*
+Gr{oetje,eeting}s,
+
+                        Geert
+
 -- 
-2.17.0
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
