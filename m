@@ -1,58 +1,62 @@
-Return-Path: <SRS0=3O2m=HW=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=3O2m=HW=codeaurora.org=okaya@kernel.org>
-Subject: Re: [RFC/RFT] Add noats flag to boot parameters
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Gil Kupfer <gilkup@gmail.com>, dwmw2@infradead.org, bhelgaas@google.com,
- iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, nadav.amit@gmail.com,
- Gil Kupfer <gilkup@cs.technion.ac.il>, Will Deacon <will.deacon@arm.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <1525025808-2365-1-git-send-email-gilkup@cs.technion.ac.il>
- <20180503133459.waawna3ebtu3udn6@8bytes.org>
- <359d736a-a7ac-f0e4-f4db-dc7bb506481c@codeaurora.org>
- <20180503135920.o2rdh3exai7qmkvu@8bytes.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <5cf699f1-90c1-5ad8-07fe-a65042395d05@codeaurora.org>
-Date: Thu, 3 May 2018 10:23:02 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f65.google.com ([209.85.213.65]:44867 "EHLO
+        mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752478AbeEVVI2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 17:08:28 -0400
+Received: by mail-vk0-f65.google.com with SMTP id x66-v6so11816883vka.11
+        for <linux-pci@vger.kernel.org>; Tue, 22 May 2018 14:08:27 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180503135920.o2rdh3exai7qmkvu@8bytes.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <a0997fec-ba06-0d1d-a43d-fcc1600484f5@deltatee.com>
+References: <1526558413-23113-1-git-send-email-dmeyer@gigaio.com>
+ <1526558413-23113-3-git-send-email-dmeyer@gigaio.com> <a0997fec-ba06-0d1d-a43d-fcc1600484f5@deltatee.com>
+From: Doug Meyer <dmeyer@gigaio.com>
+Date: Tue, 22 May 2018 14:08:27 -0700
+Message-ID: <CA+GK6enp==Xb8w2mCCJGuJwWNNPuseuS-jvp00cVszgWvfbODA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] NTB: PCI Quirk to Enable Switchtec NT Functionality
+ with IOMMU On
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: kurt.schwemmer@microsemi.com, linux-pci@vger.kernel.org,
+        linux-ntb <linux-ntb@googlegroups.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jon Mason <jdmason@kudzu.us>,
+        "Jiang, Dave" <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+Bjorn,
-
-On 5/3/2018 9:59 AM, Joerg Roedel wrote:
-> On Thu, May 03, 2018 at 09:46:34AM -0400, Sinan Kaya wrote:
->> I also like the idea in general.
->> Minor nit..
->>
->> Shouldn't this be an iommu parameter rather than a PCI kernel command line parameter?
->> We now have an iommu.passthrough argument that prevents page translation.
->>
->> Doesn't this fit into the same category especially when it is the IOMMU drivers that
->> call ATS functions for enablement not the PCI drivers.
-> 
-> ATS is a bit of a grey area between PCI and IOMMU, but since ATS is
-> PCI-specific and the code to enable/disable it is in PCI as well, I
-> think the parameter makes sense for PCI too.
-> 
-
-OK. Bjorn was interested in having a command line driven feature enables in driver/pci
-directory with bitmasks for each optional PCI spec capability rather than noXYZ feature.
-
-This would allow us to troubleshoot code breakage as well as the platform bring up to
-turn off all optional features.
-
-Sounds like this would be a good match for that work.
+[resending because I forgot the mailing lists want plain text mode]
 
 
-> 
-> 	Joerg
-> 
-> 
+Dear Logan,
+
+I agree. I'll add pci_disable_device().
+
+Blessings,
+Doug
 
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+On Thu, May 17, 2018 at 8:48 AM, Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+> Thanks for your hard work on this Doug!
+>
+> On 17/05/18 06:00 AM, dmeyer@gigaio.com wrote:
+>
+> > +     if (pci_enable_device(pdev)) {
+> > +             dev_err(&pdev->dev, "Cannot enable Switchtec device\n");
+> > +             return;
+> > +     }
+>
+> I suspect we should probably cass pci_disable_device() before leaving
+> this function so it's in the same state we started. Just like we unmap
+> the mmio.
+>
+> Logan
+>
+> --
+> You received this message because you are subscribed to the Google Groups "linux-ntb" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
+> To post to this group, send email to linux-ntb@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/a0997fec-ba06-0d1d-a43d-fcc1600484f5%40deltatee.com.
+> For more options, visit https://groups.google.com/d/optout.
