@@ -1,46 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 23 May 2018 10:46:36 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: "Alex G." <mr.nuke.me@gmail.com>
-Cc: Jes Sorensen <jsorensen@fb.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Rajat Jain <rajatja@google.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Thomas Tai <thomas.tai@oracle.com>, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com
-Subject: Re: [PATCH 1/5] PCI/AER: Define and allocate aer_stats structure
- for AER capable devices
-Message-ID: <20180523104636.55303f16@gandalf.local.home>
-In-Reply-To: <ffa4e203-f320-b9be-c0d7-8432e949765b@gmail.com>
-References: <20180522222805.80314-1-rajatja@google.com>
-        <20180522222805.80314-2-rajatja@google.com>
-        <62fae8eb-aaed-65b2-19ad-7c57b3a9bfdc@fb.com>
-        <20180523142656.GE19987@bombadil.infradead.org>
-        <46f0a2fa-9b48-c6d3-05ac-a75168b1998c@fb.com>
-        <ffa4e203-f320-b9be-c0d7-8432e949765b@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:38874 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751308AbeEVIKF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 04:10:05 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180521220514.30256-1-marek.vasut+renesas@gmail.com>
+References: <20180521220514.30256-1-marek.vasut+renesas@gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Tue, 22 May 2018 10:10:04 +0200
+Message-ID: <CAK8P3a1PZ_MfgEcvWdUbN-eCcs5Xo38LQ54imLc4kNtSKO9Txw@mail.gmail.com>
+Subject: Re: [PATCH][RFC] PCI: rcar: Add bus notifier so we can limit the DMA range
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 23 May 2018 09:33:30 -0500
-"Alex G." <mr.nuke.me@gmail.com> wrote:
+On Tue, May 22, 2018 at 12:05 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
+> From: Phil Edworthy <phil.edworthy@renesas.com>
+>
+> The PCIe DMA controller on RCar Gen2 and earlier is on 32bit bus,
+> so limit the DMA range to 32bit.
+>
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> To: linux-pci@vger.kernel.org
+> ---
+> NOTE: I'm aware of https://patchwork.kernel.org/patch/9495895/ , but the
+>       discussion seems to have gone way off, so I'm sending this as a
+>       RFC. Any feedback on how to do this limiting properly would be nice.
 
-> > Well I'll agree to disagree with Linus on this one. It's ugly as fsck
-> > and allows for ambiguous statements in the code.  
-> 
-> You misspelled "fuck".
+Doing it in the driver is clearly not appropriate, we must do this in
+common code. If I remember correctly, it's specifically ARM64 that is
+broken here, it incorrectly allows setting a DMA mask to 64 bit
+when that is not available.
 
-No, Jes is Danish. That's how they spell it.
-
--- Steve
+      Arnd
