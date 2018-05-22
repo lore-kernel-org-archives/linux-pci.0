@@ -1,163 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 1 May 2018 15:32:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v5 2/9] PCI: Take bridge window alignment into account
- when distributing resources
-Message-ID: <20180501201546.GC11698@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
- <20180416103453.46232-3-mika.westerberg@linux.intel.com>
- <20180425223853.GA225403@bhelgaas-glaptop.roam.corp.google.com>
- <20180426122333.GE2173@lahna.fi.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0052.outbound.protection.outlook.com ([104.47.33.52]:54048
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751214AbeEVN05 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 May 2018 09:26:57 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>,
+        <lorenzo.pieralisi@arm.com>, <linux-pci@vger.kernel.org>
+CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.com>,
+        <cyrille.pitchen@free-electrons.com>,
+        Alan Douglas <adouglas@cadence.com>
+Subject: [RESEND PATCH 0/4] PCI: cadence: Host and EP driver updates for PHY and power management
+Date: Tue, 22 May 2018 14:26:09 +0100
+Message-ID: <1526995569-5481-1-git-send-email-adouglas@cadence.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180426122333.GE2173@lahna.fi.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 26, 2018 at 03:23:33PM +0300, Mika Westerberg wrote:
-> On Wed, Apr 25, 2018 at 05:38:54PM -0500, Bjorn Helgaas wrote:
-> > On Mon, Apr 16, 2018 at 01:34:46PM +0300, Mika Westerberg wrote:
-> > > When hot-adding a PCIe switch the way we currently distribute resources
-> > > does not always work well because devices connected to the switch might
-> > > need to have their MMIO resources aligned to something else than the
-> > > default 1 MB boundary. For example Intel Gigabit ET2 quad port server
-> > > adapter includes PCIe switch leading to 4 x GbE NIC devices that want
-> > > to have their MMIO resources aligned to 2 MB boundary instead.
-> > > 
-> > > The current resource distribution code does not take this alignment into
-> > > account and might try to add too much resources for the extension
-> > > hotplug bridge(s). The resulting bridge window is too big which makes
-> > > the resource assignment operation fail, and we are left with a bridge
-> > > window with minimal amount (1 MB) of MMIO space.
-> > > 
-> > > Here is what happens when an Intel Gigabit ET2 quad port server adapter
-> > > is hot-added:
-> > > 
-> > >   pci 0000:39:00.0: BAR 14: assigned [mem 0x53300000-0x6a0fffff]
-> > >                                           ^^^^^^^^^^
-> > >   pci 0000:3a:01.0: BAR 14: assigned [mem 0x53400000-0x547fffff]
-> > >                                           ^^^^^^^^^^
-> > > The above shows that the downstream bridge (3a:01.0) window is aligned
-> > > to 2 MB instead of 1 MB as is the upstream bridge (39:00.0) window. The
-> > > remaining MMIO space (0x15a00000) is assigned to the hotplug bridge
-> > > (3a:04.0) but it fails:
-> > > 
-> > >   pci 0000:3a:04.0: BAR 14: no space for [mem size 0x15a00000]
-> > >   pci 0000:3a:04.0: BAR 14: failed to assign [mem size 0x15a00000]
-> > > 
-> > > The MMIO resource is calculated as follows:
-> > > 
-> > >   start = 0x54800000
-> > >   end = 0x54800000 + 0x15a00000 - 1 = 0x6a1fffff
-> > > 
-> > > This results bridge window [mem 0x54800000 - 0x6a1fffff] and it ends
-> > > after the upstream bridge window [mem 0x53300000-0x6a0fffff] explaining
-> > > the above failure. Because of this Linux falls back to the default
-> > > allocation of 1 MB as can be seen from 'lspci' output:
-> > > 
-> > >  39:00.0 Memory behind bridge: 53300000-6a0fffff [size=366M]
-> > >    3a:01.0 Memory behind bridge: 53400000-547fffff [size=20M]
-> > >    3a:04.0 Memory behind bridge: 53300000-533fffff [size=1M]
-> > > 
-> > > The hotplug bridge 3a:04.0 only occupies 1 MB MMIO window which is
-> > > clearly not enough for extending the PCIe topology later if more devices
-> > > are to be hot-added.
-> > > 
-> > > Fix this by substracting properly aligned non-hotplug downstream bridge
-> > > window size from the remaining resources used for extension. After this
-> > > change the resource allocation looks like:
-> > > 
-> > >   39:00.0 Memory behind bridge: 53300000-6a0fffff [size=366M]
-> > >     3a:01.0 Memory behind bridge: 53400000-547fffff [size=20M]
-> > >     3a:04.0 Memory behind bridge: 54800000-6a0fffff [size=345M]
-> > > 
-> > > This matches the expectation. All the extra MMIO resource space (345 MB)
-> > > is allocated to the extension hotplug bridge (3a:04.0).
-> > 
-> > Sorry, I've spent a lot of time trying to trace through this code, and
-> > I'm still hopelessly confused.  Can you post the complete "lspci -vv"
-> > output and the dmesg log (including the hot-add event) somewhere and
-> > include a URL to it?
-> 
-> I sent you the logs and lspci output both with and without this patch
-> when I connect a full chain of 6 Thunderbolt devices where 3 of them
-> include those NICs with 4 ethernet ports. The resulting topology
-> includes total of 6 + 3 + 1 PCIe switches.
+This is a series of patches for the cadence PCIe host and EP drivers, to:
+ - Add optional list of generic PHYs to host and EP drivers
+ - Add PHY bindings to devicetree
+ - Add Power Management ops, which will enable/disable PHYs if present
+ - Update cdns_pcie_writel function signature
 
-Thanks, I opened https://bugzilla.kernel.org/show_bug.cgi?id=199581
-and attached the info you sent.
+Changes in v2:
+    Split commit into four patches
+    Re-based on v4.17-rc1
 
-> > I think I understand the problem you're solving:
-> > 
-> >   - You have 366M, 1M-aligned, available for things on bus 3a
-> >   - You assign 20M, 2M-aligned to 3a:01.0
-> >   - This leaves 346M for other things on bus 3a, but it's not all
-> >     contiguous because the 20M is in the middle.
-> >   - The remaining 346M might be 1M on one side and 345M on the other
-> >     (and there are many other possibilities, e.g., 3M + 343M, 5M +
-> >     341M, ..., 345M + 1M).
-> >   - The current code tries to assign all 346M to 3a:04.0, which
-> >     fails because that space is not contiguous, so it falls back to
-> >     allocating 1M, which works but is insufficient for future
-> >     hot-adds.
-> 
-> My understanding is that the 20M is aligned to 2M so we need to take
-> that into account when we distribute the remaining space which makes it
-> 345 instead of 346 which it would be without the alignment.
 
-I think that's what I said above, or did I miss something?
+Alan Douglas (4):
+  PCI: cadence: Update cdns_pcie_writel function signature
+  PCI: cadence: Add generic PHY support to host and EP drivers
+  dt-bindings: PCI: cadence: Add DT bindings for optional PHYs
+  PCI: cadence: Add Power Management ops for host and EP
 
-> > Obviously this patch makes *this* situation work: it assigns 345M to
-> > 3a:04.0 and (I assume) leaves the 1M unused.  But I haven't been able
-> > to convince myself that this patch works *in general*.
-> 
-> I've tested this patch with full chain of devices with all my three
-> Intel Gigabit ET2 quad port server adapters connected there along with
-> other devices and the issue does not happen.
-> 
-> > For example, what if we assigned the 20M from the end of the 366M
-> > window instead of the beginning, so the 345M piece is below the 20M
-> > and there's 1M left above it?  That is legal and should work, but I
-> > suspect this patch would ignore the 345M piece and again assign 1M to
-> > 3a:04.0.
-> 
-> It should work so that it first allocates resources for the non-hotplug
-> bridges and after that everything else is put to hotplug bridges.
-> 
-> > Or what if there are several hotplug bridges on bus 3a?  This example
-> > has two, but there could be many more.
-> > 
-> > Or what if there are normal bridges as well as hotplug bridges on bus
-> > 3a?  Or if they're in arbitrary orders?
-> 
-> Thunderbolt host router with two ports has such configuration where
-> there are two hotplug ports and two normal ports (there could be more)
-> and it is hot-added as well. At least that works. With the other
-> arbitrary scenarios, it is hard to say without actually testing it on a
-> real hardware.
+ .../devicetree/bindings/pci/cdns,cdns-pcie-ep.txt  |   4 +
+ .../bindings/pci/cdns,cdns-pcie-host.txt           |   2 +
+ drivers/pci/cadence/pcie-cadence-ep.c              |  15 ++-
+ drivers/pci/cadence/pcie-cadence-host.c            |  34 ++++++
+ drivers/pci/cadence/pcie-cadence.c                 | 123 +++++++++++++++++++++
+ drivers/pci/cadence/pcie-cadence.h                 |  13 ++-
+ 6 files changed, 189 insertions(+), 2 deletions(-)
 
-This is where it gets hard for me -- I'm not really comfortable if we
-have to convince ourselves that code is correct by testing every
-scenario.  It's a lot better if we can convince ourselves by reasoning
-about what the code does.  That's not very reliable either, but if we
-understand the code, we at least have a hope of being able to fix the
-bugs we missed in our reasoning.
-
-> Also I'm fine dropping this patch altogether and just file a kernel
-> bugzilla with this information attached. Maybe someone else can provide
-> a better fix eventually. This is not really common situation anyway
-> because typically you have only PCIe endpoints included in a Thunderbolt
-> device (not PCIe switches with a bunch of endpoints connected).
-> Furthermore, I tried the same in Windows and it does not handle it
-> properly either ;-)
-
-OK, I opened the bugzilla and attached the info.  Thanks!
+-- 
+2.2.2
