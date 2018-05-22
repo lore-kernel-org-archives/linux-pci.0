@@ -1,67 +1,65 @@
-Return-Path: <SRS0=D0Hd=HW=gmail.com=nadav.amit@kernel.org>
-Return-Path: <SRS0=D0Hd=HW=gmail.com=nadav.amit@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:38512 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751196AbeEVNGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 May 2018 09:06:14 -0400
+Date: Tue, 22 May 2018 08:06:12 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI / PM: Clean up outdated comments in
+ pci_target_state()
+Message-ID: <20180522130612.GB161672@bhelgaas-glaptop.roam.corp.google.com>
+References: <2360046.ecez94sF1Y@aspire.rjw.lan>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [RFC/RFT] Add noats flag to boot parameters
-From: Nadav Amit <nadav.amit@gmail.com>
-In-Reply-To: <5cf699f1-90c1-5ad8-07fe-a65042395d05@codeaurora.org>
-Date: Thu, 3 May 2018 15:15:20 -0700
-Cc: Joerg Roedel <joro@8bytes.org>,
- Gil Kupfer <gilkup@gmail.com>,
- dwmw2@infradead.org,
- bhelgaas@google.com,
- iommu@lists.linux-foundation.org,
- linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- Gil Kupfer <gilkup@cs.technion.ac.il>,
- Will Deacon <will.deacon@arm.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Message-Id: <56E6D90C-A85F-42F7-94C5-EF21DA6C656B@gmail.com>
-References: <1525025808-2365-1-git-send-email-gilkup@cs.technion.ac.il>
- <20180503133459.waawna3ebtu3udn6@8bytes.org>
- <359d736a-a7ac-f0e4-f4db-dc7bb506481c@codeaurora.org>
- <20180503135920.o2rdh3exai7qmkvu@8bytes.org>
- <5cf699f1-90c1-5ad8-07fe-a65042395d05@codeaurora.org>
-To: Sinan Kaya <okaya@codeaurora.org>
+In-Reply-To: <2360046.ecez94sF1Y@aspire.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sinan Kaya <okaya@codeaurora.org> wrote:
+On Mon, May 21, 2018 at 01:11:12PM +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Two comments in pci_target_state() are outdated, as the function
+> doesn't set the target power state for the device any more, only
+> finds one for it, so fix them accordingly.
+> 
+> Reported-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> +Bjorn,
->=20
-> On 5/3/2018 9:59 AM, Joerg Roedel wrote:
->> On Thu, May 03, 2018 at 09:46:34AM -0400, Sinan Kaya wrote:
->>> I also like the idea in general.
->>> Minor nit..
->>>=20
->>> Shouldn't this be an iommu parameter rather than a PCI kernel =
-command line parameter?
->>> We now have an iommu.passthrough argument that prevents page =
-translation.
->>>=20
->>> Doesn't this fit into the same category especially when it is the =
-IOMMU drivers that
->>> call ATS functions for enablement not the PCI drivers.
->>=20
->> ATS is a bit of a grey area between PCI and IOMMU, but since ATS is
->> PCI-specific and the code to enable/disable it is in PCI as well, I
->> think the parameter makes sense for PCI too.
->=20
-> OK. Bjorn was interested in having a command line driven feature =
-enables in driver/pci
-> directory with bitmasks for each optional PCI spec capability rather =
-than noXYZ feature.
->=20
-> This would allow us to troubleshoot code breakage as well as the =
-platform bring up to
-> turn off all optional features.
->=20
-> Sounds like this would be a good match for that work.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-I think that since this feature (ATS) has security implications, it =
-should
-be controllable through the kernel boot parameters. Otherwise, it can be
-potentially too late to turn it off.
+I assume you'll merge this; let me know if you'd rather that I take it.
 
-Regards,
-Nadav=
+> ---
+>  drivers/pci/pci.c |    6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> Index: linux-pm/drivers/pci/pci.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci.c
+> +++ linux-pm/drivers/pci/pci.c
+> @@ -2025,8 +2025,7 @@ static pci_power_t pci_target_state(stru
+>  
+>  	if (platform_pci_power_manageable(dev)) {
+>  		/*
+> -		 * Call the platform to choose the target state of the device
+> -		 * and enable wake-up from this state if supported.
+> +		 * Call the platform to find the target state for the device.
+>  		 */
+>  		pci_power_t state = platform_pci_choose_state(dev);
+>  
+> @@ -2059,8 +2058,7 @@ static pci_power_t pci_target_state(stru
+>  	if (wakeup) {
+>  		/*
+>  		 * Find the deepest state from which the device can generate
+> -		 * wake-up events, make it the target state and enable device
+> -		 * to generate PME#.
+> +		 * PME#.
+>  		 */
+>  		if (dev->pme_support) {
+>  			while (target_state
+> 
