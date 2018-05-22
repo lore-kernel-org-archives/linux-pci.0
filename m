@@ -1,86 +1,188 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 17 May 2018 08:20:51 -0600
-From: Keith Busch <keith.busch@linux.intel.com>
-To: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V6 11/11] nvme: pci: support nested EH
-Message-ID: <20180517142051.GB22063@localhost.localdomain>
-References: <20180516040313.13596-1-ming.lei@redhat.com>
- <20180516040313.13596-12-ming.lei@redhat.com>
- <20180516141242.GA20119@localhost.localdomain>
- <20180516231058.GB28727@ming.t460p>
- <20180517022030.GB21959@localhost.localdomain>
- <20180517084129.GA26570@lst.de>
-MIME-Version: 1.0
-In-Reply-To: <20180517084129.GA26570@lst.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- Laurence Oberman <loberman@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-pci@vger.kernel.org, James Smart <james.smart@broadcom.com>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- Ming Lei <ming.lei@redhat.com>, Keith Busch <keith.busch@intel.com>,
- Jianchao Wang <jianchao.w.wang@oracle.com>,
- Johannes Thumshirn <jthumshirn@suse.de>, bhelgaas@google.com,
- arjan@linux.intel.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:39517 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753299AbeEVW2V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 18:28:21 -0400
+Received: by mail-pl0-f67.google.com with SMTP id c19-v6so11734827pls.6
+        for <linux-pci@vger.kernel.org>; Tue, 22 May 2018 15:28:21 -0700 (PDT)
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Rajat Jain <rajatja@google.com>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Thomas Tai <thomas.tai@oracle.com>,
+        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
+        Kyle McMartin <jkkm@fb.com>
+Cc: rajatxjain@gmail.com
+Subject: [PATCH 2/5] PCI/AER: Add sysfs stats for AER capable devices
+Date: Tue, 22 May 2018 15:28:02 -0700
+Message-Id: <20180522222805.80314-3-rajatja@google.com>
+In-Reply-To: <20180522222805.80314-1-rajatja@google.com>
+References: <20180522222805.80314-1-rajatja@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 17, 2018 at 10:41:29AM +0200, Christoph Hellwig wrote:
-> On Wed, May 16, 2018 at 08:20:31PM -0600, Keith Busch wrote:
-> > On Thu, May 17, 2018 at 07:10:59AM +0800, Ming Lei wrote:
-> > > All simulation in block/011 may happen in reality.
-> > 
-> > If this test actually simulates reality, then the following one line
-> > patch (plus explanation for why) would be a real "fix" as this is very
-> > successful in passing block/011. :)
-> > 
-> > ---
-> > diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-> > index 1faa32cd07da..dcc5746304c4 100644
-> > --- a/drivers/nvme/host/pci.c
-> > +++ b/drivers/nvme/host/pci.c
-> > @@ -2118,6 +2118,12 @@ static int nvme_pci_enable(struct nvme_dev *dev)
-> >  
-> >  	if (pci_enable_device_mem(pdev))
-> >  		return result;
-> > +	/*
-> > +	 * blktests block/011 disables the device without the driver knowing.
-> > +	 * We'll just enable the device twice to get the enable_cnt > 1
-> > +	 * so that the test's disabling does absolutely nothing.
-> > +	 */
-> > +	pci_enable_device_mem(pdev);
-> 
-> Heh.  But yes, this test and the PCI "enable" interface in sysfs look
-> horribly wrong. pci_disable_device/pci_enable_device aren't something we
-> can just do underneath the driver.  Even if injecting the lowlevel
-> config space manipulations done by it might be useful and a good test
-> the Linux state ones are just killing the driver.
+Add the following AER sysfs stats to represent the counters for each
+kind of error as seen by the device:
 
-Yes, I'm totally fine with injecting errors into the config space, but
-for goodness sakes, don't fuck with the internal kernel structures out
-from under drivers using them.
+dev_total_cor_errs
+dev_total_fatal_errs
+dev_total_nonfatal_errs
 
-My suggestion is to use 'setpci' to disable the device if you want to
-inject this scenario. That way you get the desired broken device
-scenario you want to test, but struct pci_dev hasn't been altered.
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+ drivers/pci/pci-sysfs.c                |  3 ++
+ drivers/pci/pci.h                      |  4 +-
+ drivers/pci/pcie/aer/aerdrv.h          |  1 +
+ drivers/pci/pcie/aer/aerdrv_errprint.c |  1 +
+ drivers/pci/pcie/aer/aerdrv_stats.c    | 72 ++++++++++++++++++++++++++
+ 5 files changed, 80 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 366d93af051d..730f985a3dc9 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1743,6 +1743,9 @@ static const struct attribute_group *pci_dev_attr_groups[] = {
+ #endif
+ 	&pci_bridge_attr_group,
+ 	&pcie_dev_attr_group,
++#ifdef CONFIG_PCIEAER
++	&aer_stats_attr_group,
++#endif
+ 	NULL,
+ };
  
-> The enable attribute appears to have been added by Arjan for the
-> Xorg driver.  I think if we have a driver bound to the device we
-> should not allow it.
-
-Agreed. Alternatively possibly call the driver's reset_preparei/done
-callbacks.
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index c358e7a07f3f..9a28ec600225 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -181,7 +181,9 @@ extern const struct attribute_group *pci_dev_groups[];
+ extern const struct attribute_group *pcibus_groups[];
+ extern const struct device_type pci_dev_type;
+ extern const struct attribute_group *pci_bus_groups[];
+-
++#ifdef CONFIG_PCIEAER
++extern const struct attribute_group aer_stats_attr_group;
++#endif
+ 
+ /**
+  * pci_match_one_device - Tell if a PCI device structure has a matching
+diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+index d8b9fba536ed..b5d5ad6f2c03 100644
+--- a/drivers/pci/pcie/aer/aerdrv.h
++++ b/drivers/pci/pcie/aer/aerdrv.h
+@@ -87,6 +87,7 @@ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info);
+ irqreturn_t aer_irq(int irq, void *context);
+ int pci_aer_stats_init(struct pci_dev *pdev);
+ void pci_aer_stats_exit(struct pci_dev *pdev);
++void pci_dev_aer_stats_incr(struct pci_dev *pdev, struct aer_err_info *info);
+ 
+ #ifdef CONFIG_ACPI_APEI
+ int pcie_aer_get_firmware_first(struct pci_dev *pci_dev);
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 21ca5e1b0ded..5e8b98deda08 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -155,6 +155,7 @@ static void __aer_print_error(struct pci_dev *dev,
+ 			pci_err(dev, "   [%2d] Unknown Error Bit%s\n",
+ 				i, info->first_error == i ? " (First)" : "");
+ 	}
++	pci_dev_aer_stats_incr(dev, info);
+ }
+ 
+ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+diff --git a/drivers/pci/pcie/aer/aerdrv_stats.c b/drivers/pci/pcie/aer/aerdrv_stats.c
+index b9f251992209..87b7119d0a86 100644
+--- a/drivers/pci/pcie/aer/aerdrv_stats.c
++++ b/drivers/pci/pcie/aer/aerdrv_stats.c
+@@ -47,6 +47,78 @@ struct aer_stats {
+ 	u64 rootport_total_nonfatal_errs;
+ };
+ 
++#define aer_stats_aggregate_attr(field)                                        \
++	static ssize_t                                                         \
++	field##_show(struct device *dev, struct device_attribute *attr,        \
++		     char *buf)                                                \
++{                                                                              \
++	struct pci_dev *pdev = to_pci_dev(dev);                                \
++	return sprintf(buf, "0x%llx\n", pdev->aer_stats->field);               \
++}                                                                              \
++static DEVICE_ATTR_RO(field)
++
++aer_stats_aggregate_attr(dev_total_cor_errs);
++aer_stats_aggregate_attr(dev_total_fatal_errs);
++aer_stats_aggregate_attr(dev_total_nonfatal_errs);
++
++static struct attribute *aer_stats_attrs[] __ro_after_init = {
++	&dev_attr_dev_total_cor_errs.attr,
++	&dev_attr_dev_total_fatal_errs.attr,
++	&dev_attr_dev_total_nonfatal_errs.attr,
++	NULL
++};
++
++static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
++					   struct attribute *a, int n)
++{
++	struct device *dev = kobj_to_dev(kobj);
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (!pdev->aer_stats)
++		return 0;
++
++	return a->mode;
++}
++
++const struct attribute_group aer_stats_attr_group = {
++	.name  = "aer_stats",
++	.attrs  = aer_stats_attrs,
++	.is_visible = aer_stats_attrs_are_visible,
++};
++
++void pci_dev_aer_stats_incr(struct pci_dev *pdev, struct aer_err_info *info)
++{
++	int status, i, max = -1;
++	u64 *counter = NULL;
++	struct aer_stats *aer_stats = pdev->aer_stats;
++
++	if (unlikely(!aer_stats))
++		return;
++
++	switch (info->severity) {
++	case AER_CORRECTABLE:
++		aer_stats->dev_total_cor_errs++;
++		counter = &aer_stats->dev_cor_errs[0];
++		max = AER_MAX_TYPEOF_CORRECTABLE_ERRS;
++		break;
++	case AER_NONFATAL:
++		aer_stats->dev_total_nonfatal_errs++;
++		counter = &aer_stats->dev_uncor_errs[0];
++		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
++		break;
++	case AER_FATAL:
++		aer_stats->dev_total_fatal_errs++;
++		counter = &aer_stats->dev_uncor_errs[0];
++		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
++		break;
++	}
++
++	status = (info->status & ~info->mask);
++	for (i = 0; i < max; i++)
++		if (status & (1 << i))
++			counter[i]++;
++}
++
+ int pci_aer_stats_init(struct pci_dev *pdev)
+ {
+ 	pdev->aer_stats = kzalloc(sizeof(struct aer_stats), GFP_KERNEL);
+-- 
+2.17.0.441.gb46fe60e1d-goog
