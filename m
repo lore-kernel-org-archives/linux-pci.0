@@ -1,349 +1,261 @@
-Return-Path: <SRS0=f9Y7=HX=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=f9Y7=HX=codeaurora.org=okaya@kernel.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v4 06/14] PCI/P2PDMA: Add P2P DMA driver writer's
+ documentation
+To: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
+ linux-block@vger.kernel.org
+References: <20180423233046.21476-1-logang@deltatee.com>
+ <20180423233046.21476-7-logang@deltatee.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <59b7762e-6d38-7746-20f3-22fd762ecfe7@infradead.org>
+Date: Tue, 22 May 2018 14:24:05 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Fri, 04 May 2018 15:24:33 +0100
-From: okaya@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>, Bjorn Helgaas
- <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
- linux-pci-owner@vger.kernel.org
-Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
- (issued 65284 msec ago)
-In-Reply-To: <20180504133327.GF15790@bhelgaas-glaptop.roam.corp.google.com>
-References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
- <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
- <43b8ab4a-f8ee-dc96-40ec-e6fdfedd8309@molgen.mpg.de>
- <20180504024527.GE15790@bhelgaas-glaptop.roam.corp.google.com>
- <aa72d3ba089c76449600c22b58a2cafe@codeaurora.org>
- <20180504133327.GF15790@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <002363e27f3e9e6e8a6d71231a8a71d1@codeaurora.org>
+In-Reply-To: <20180423233046.21476-7-logang@deltatee.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>,
+ =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Jonathan Corbet <corbet@lwn.net>, Alex Williamson <alex.williamson@redhat.com>,
+ Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-04 14:33, Bjorn Helgaas wrote:
-> On Fri, May 04, 2018 at 07:37:40AM +0100, okaya@codeaurora.org wrote:
->> On 2018-05-04 03:45, Bjorn Helgaas wrote:
->> > On Thu, May 03, 2018 at 10:49:24AM +0200, Paul Menzel wrote:
->> > > On 04/27/18 21:22, Bjorn Helgaas wrote:
->> > > > [+cc Lukas, Sinan]
->> > >
->> > > > On Thu, Apr 26, 2018 at 12:17:53PM +0200, Paul Menzel wrote:
->> > >
->> > > > > On the Lenovo X60t, during resume from ACPI suspend and during shutdown, the
->> > > > > message below is shown in the logs.
->> > > > >
->> > > > >      pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038 (issued
->> > > > > 65284 msec ago)
->> > > >
->> > > > This is an Intel root port:
->> > > >
->> > > >    00:1c.0 PCI bridge: Intel Corporation NM10/ICH7 Family PCI Express Port 1 (rev 02) (prog-if 00 [Normal decode])
->> > > >
->> > > > and probably has the CF118 erratum (see
->> > > > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3461a068661c
->> > > > for details).  I bet if you changed "msecs" in pcie_wait_cmd() to 30000
->> > > > you'd see a 30 second delay during shutdown because we write a command to
->> > > > tell the port not to generate any more hotplug interrupts, and we wait for
->> > > > that command to complete, but the port never tells us it has completed.
->> > > >
->> > > > Lukas reported a similar issue in
->> > > > https://lkml.kernel.org/r/20180112104929.GA10599@wunner.de, which we sort
->> > > > of worked around by assuming that Thunderbolt controllers never support
->> > > > that "command complete" interrupt (see
->> > > > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=493fb50e958c)
->> > > >
->> > > > Sinan mooted the idea of using a "no-wait" path of sending the "don't
->> > > > generate hotplug interrupts" command.  I think we should work on this
->> > > > idea a little more.  If we're shutting down the whole system, I can't
->> > > > believe there's much value in *anything* we do in the pciehp_remove()
->> > > > path.
->> > > >
->> > > > Maybe we should just get rid of pciehp_remove() (and probably
->> > > > pcie_port_remove_service() and the other service driver remove methods)
->> > > > completely.  That dates from when the service drivers could be modules that
->> > > > could be potentially unloaded, but unloading them hasn't been possible for
->> > > > years.
->> > > >
->> > > > As far as the resume path, my guess is that in pciehp_resume(), we
->> > > > write a command to enable interrupts, then it looks like we get a
->> > > > PCI_EXP_SLTSTA_DLLSC "Link Up" interrupt, and apparently we issue
->> > > > another command.  Not sure exactly what's going on here.
->> >
->> > > Thank you for the quick reply and sorry for only being able to test
->> > > it now.
->> > > Please find the relevant bits from the ACPI S3 suspend “action”
->> > > below. The
->> > > full log is attached.
->> >
->> > No problem.  I think we need to bite the bullet and just do a quirk
->> > for the Intel erratum.  I tried to avoid it by waiting for command
->> > completion lazily, but I think that ended up being unnecessarily
->> > clever and it didn't even solve the whole problem.
->> >
->> > Can you try the patch below?  I think it should solve the problem
->> > you're seeing.
->> > ...
+On 04/23/2018 04:30 PM, Logan Gunthorpe wrote:
+> Add a restructured text file describing how to write drivers
+> with support for P2P DMA transactions. The document describes
+> how to use the APIs that were added in the previous few
+> commits.
 > 
->> > +	/* Assume all Intel controllers have erratum CF118 */
->> > +	if (pdev->vendor == PCI_VENDOR_ID_INTEL)
->> > +		ctrl->cc_erratum = 1;
->> > +
->> 
->> Can we build a table like quirks.c?
->> 
->> Qdf2400 root ports have the same problem. I will do a follow up patch 
->> once
->> this finds its way in.
+> Also adds an index for the PCI documentation tree even though this
+> is the only PCI document that has been converted to restructured text
+> at this time.
 > 
-> Yes, definitely.  I intended to do that but got a little lazy.  What
-> do you think about the following?  Paul, if you haven't tested the
-> first patch, can you try this one instead?  The logic is pretty much
-> the same.
-> 
-
-Yes, this works for me.
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Cc: Jonathan Corbet <corbet@lwn.net>
+> ---
+>  Documentation/PCI/index.rst             |  14 +++
+>  Documentation/driver-api/pci/index.rst  |   1 +
+>  Documentation/driver-api/pci/p2pdma.rst | 166 ++++++++++++++++++++++++++++++++
+>  Documentation/index.rst                 |   3 +-
+>  4 files changed, 183 insertions(+), 1 deletion(-)
+>  create mode 100644 Documentation/PCI/index.rst
+>  create mode 100644 Documentation/driver-api/pci/p2pdma.rst
 
 
-> 3461a068661c ("PCI: pciehp: Wait for hotplug command completion
-> lazily") mentions AMD and Nvidia devices with the same issue, but
-> unfortunately doesn't include any specifics.
-> 
-> 
-> commit b0d6f2230e12c85ae3b65a854a53c67c7c1f6406
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Thu May 3 18:39:38 2018 -0500
-> 
->     PCI: pciehp: Add quirk for Intel Command Completed erratum
-> 
->     The Intel CF118 erratum means the controller does not set the 
-> Command
->     Completed bit unless writes to the Slot Command register change 
-> "Control"
->     bits.  Command Completed is never set for writes that only change 
-> software
->     notification "Enable" bits.  This results in timeouts like this:
-> 
->       pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
-> (issued 65284 msec ago)
-> 
->     When this erratum is present, avoid these timeouts by marking 
-> commands
->     "completed" immediately unless they change the "Control" bits.
-> 
->     Here's the text of the erratum from the Intel document:
-> 
->       CF118        PCIe Slot Status Register Command Completed bit not 
-> always
->                    updated on any configuration write to the Slot 
-> Control
->                    Register
-> 
->       Problem:     For PCIe root ports (devices 0 - 10) supporting 
-> hot-plug,
->                    the Slot Status Register (offset AAh) Command 
-> Completed
->                    (bit[4]) status is updated under the following 
-> condition:
->                    IOH will set Command Completed bit after delivering 
-> the new
->                    commands written in the Slot Controller register 
-> (offset
->                    A8h) to VPP. The IOH detects new commands written in 
-> Slot
->                    Control register by checking the change of value for 
-> Power
->                    Controller Control (bit[10]), Power Indicator 
-> Control
->                    (bits[9:8]), Attention Indicator Control 
-> (bits[7:6]), or
->                    Electromechanical Interlock Control (bit[11]) 
-> fields. Any
->                    other configuration writes to the Slot Control 
-> register
->                    without changing the values of these fields will not 
-> cause
->                    Command Completed bit to be set.
-> 
->                    The PCIe Base Specification Revision 2.0 or later 
-> describes
->                    the “Slot Control Register” in section 7.8.10, as 
-> follows
->                    (Reference section 7.8.10, Slot Control Register, 
-> Offset
->                    18h). In hot-plug capable Downstream Ports, a write 
-> to the
->                    Slot Control register must cause a hot-plug command 
-> to be
->                    generated (see Section 6.7.3.2 for details on 
-> hot-plug
->                    commands). A write to the Slot Control register in a
->                    Downstream Port that is not hotplug capable must not 
-> cause a
->                    hot-plug command to be executed.
-> 
->                    The PCIe Spec intended that every write to the Slot 
-> Control
->                    Register is a command and expected a command 
-> complete status
->                    to abstract the VPP implementation specific nuances 
-> from the
->                    OS software. IOH PCIe Slot Control Register 
-> implementation
->                    is not fully conforming to the PCIe Specification in 
-> this
->                    respect.
-> 
->       Implication: Software checking on the Command Completed status 
-> after
->                    writing to the Slot Control register may time out.
-> 
->       Workaround:  Software can read the Slot Control register and 
-> compare the
->                    existing and new values to determine if it should 
-> check the
->                    Command Completed status after writing to the Slot 
-> Control
->                    register.
-> 
->     Link:
-> http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
->     Link:
-> https://lkml.kernel.org/r/8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de
->     Reported-by: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c 
-> b/drivers/pci/hotplug/pciehp_hpc.c
-> index 18a42f8f5dc5..e70eba5ea906 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -10,7 +10,6 @@
->   * All rights reserved.
->   *
->   * Send feedback to <greg@kroah.com>,<kristen.c.accardi@intel.com>
-> - *
->   */
-> 
->  #include <linux/kernel.h>
-> @@ -147,25 +146,22 @@ static void pcie_wait_cmd(struct controller 
-> *ctrl)
->  	else
->  		rc = pcie_poll_cmd(ctrl, jiffies_to_msecs(timeout));
-> 
-> -	/*
-> -	 * Controllers with errata like Intel CF118 don't generate
-> -	 * completion notifications unless the power/indicator/interlock
-> -	 * control bits are changed.  On such controllers, we'll emit this
-> -	 * timeout message when we wait for completion of commands that
-> -	 * don't change those bits, e.g., commands that merely enable
-> -	 * interrupts.
-> -	 */
->  	if (!rc)
->  		ctrl_info(ctrl, "Timeout on hotplug command %#06x (issued %u msec 
-> ago)\n",
->  			  ctrl->slot_ctrl,
->  			  jiffies_to_msecs(jiffies - ctrl->cmd_started));
->  }
-> 
-> +#define CC_ERRATUM_MASK		(PCI_EXP_SLTCTL_PCC |	\
-> +				 PCI_EXP_SLTCTL_PIC |	\
-> +				 PCI_EXP_SLTCTL_AIC |	\
-> +				 PCI_EXP_SLTCTL_EIC)
+> diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
+> new file mode 100644
+> index 000000000000..49a512c405b2
+> --- /dev/null
+> +++ b/Documentation/driver-api/pci/p2pdma.rst
+> @@ -0,0 +1,166 @@
+> +============================
+> +PCI Peer-to-Peer DMA Support
+> +============================
 > +
->  static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
->  			      u16 mask, bool wait)
->  {
->  	struct pci_dev *pdev = ctrl_dev(ctrl);
-> -	u16 slot_ctrl;
-> +	u16 slot_ctrl_orig, slot_ctrl;
-> 
->  	mutex_lock(&ctrl->ctrl_lock);
-> 
-> @@ -180,6 +176,7 @@ static void pcie_do_write_cmd(struct controller
-> *ctrl, u16 cmd,
->  		goto out;
->  	}
-> 
-> +	slot_ctrl_orig = slot_ctrl;
->  	slot_ctrl &= ~mask;
->  	slot_ctrl |= (cmd & mask);
->  	ctrl->cmd_busy = 1;
-> @@ -188,6 +185,17 @@ static void pcie_do_write_cmd(struct controller
-> *ctrl, u16 cmd,
->  	ctrl->cmd_started = jiffies;
->  	ctrl->slot_ctrl = slot_ctrl;
-> 
-> +	/*
-> +	 * Controllers with the Intel CF118 and similar errata advertise
-> +	 * Command Completed support, but they only set Command Completed
-> +	 * if we change the "Control" bits for power, power indicator,
-> +	 * attention indicator, or interlock.  If we only change the
-> +	 * "Enable" bits, they never set the Command Completed bit.
-> +	 */
-> +	if (pdev->broken_cmd_compl &&
-> +	    (slot_ctrl_orig & CC_ERRATUM_MASK) == (slot_ctrl & 
-> CC_ERRATUM_MASK))
-> +		ctrl->cmd_busy = 0;
+> +The PCI bus has pretty decent support for performing DMA transfers
+> +between two endpoints on the bus. This type of transaction is
+> +henceforth called Peer-to-Peer (or P2P). However, there are a number of
+> +issues that make P2P transactions tricky to do in a perfectly safe way.
 > +
->  	/*
->  	 * Optionally wait for the hardware to be ready for a new command,
->  	 * indicating completion of the above issued command.
-> @@ -861,7 +869,7 @@ struct controller *pcie_init(struct pcie_device 
-> *dev)
->  		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_CC |
->  		PCI_EXP_SLTSTA_DLLSC);
-> 
-> -	ctrl_info(ctrl, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c
-> PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c\n",
-> +	ctrl_info(ctrl, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c
-> PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c%s\n",
->  		(slot_cap & PCI_EXP_SLTCAP_PSN) >> 19,
->  		FLAG(slot_cap, PCI_EXP_SLTCAP_ABP),
->  		FLAG(slot_cap, PCI_EXP_SLTCAP_PCP),
-> @@ -872,7 +880,8 @@ struct controller *pcie_init(struct pcie_device 
-> *dev)
->  		FLAG(slot_cap, PCI_EXP_SLTCAP_HPS),
->  		FLAG(slot_cap, PCI_EXP_SLTCAP_EIP),
->  		FLAG(slot_cap, PCI_EXP_SLTCAP_NCCS),
-> -		FLAG(link_cap, PCI_EXP_LNKCAP_DLLLARC));
-> +		FLAG(link_cap, PCI_EXP_LNKCAP_DLLLARC),
-> +		pdev->broken_cmd_compl ? " (with Cmd Compl erratum)" : "");
-> 
->  	if (pcie_init_slot(ctrl))
->  		goto abort_ctrl;
-> @@ -891,3 +900,17 @@ void pciehp_release_ctrl(struct controller *ctrl)
->  	pcie_cleanup_slot(ctrl);
->  	kfree(ctrl);
->  }
+> +One of the biggest issues is that PCI Root Complexes are not required
+> +to support forwarding packets between Root Ports. To make things worse,
+> +there is no simple way to determine if a given Root Complex supports
+> +this or not. (See PCIe r4.0, sec 1.3.1). Therefore, as of this writing,
+> +the kernel only supports doing P2P when the endpoints involved are all
+> +behind the same PCIe root port as the spec guarantees that all
+> +packets will always be routable but does not require routing between
+> +root ports.
 > +
-> +static void quirk_cmd_compl(struct pci_dev *pdev)
-> +{
-> +	u32 slot_cap;
+> +The second issue is that to make use of existing interfaces in Linux,
+> +memory that is used for P2P transactions needs to be backed by struct
+> +pages. However, PCI BARs are not typically cache coherent so there are
+> +a few corner case gotchas with these pages so developers need to
+> +be careful about what they do with them.
 > +
-> +	if (pci_is_pcie(pdev)) {
-> +		pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &slot_cap);
-> +		if (slot_cap & PCI_EXP_SLTCAP_HPC &&
-> +		    !(slot_cap & PCI_EXP_SLTCAP_NCCS))
-> +			pdev->broken_cmd_compl = 1;
-> +	}
-> +}
-> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-> +			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 73178a2fcee0..60cb5350ad28 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -406,6 +406,9 @@ struct pci_dev {
->  	struct bin_attribute *res_attr[DEVICE_COUNT_RESOURCE]; /* sysfs file
-> for resources */
->  	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs
-> file for WC mapping of resources */
-> 
-> +#ifdef CONFIG_HOTPLUG_PCI_PCIE
-> +	unsigned int	broken_cmd_compl:1;	/* Command Complete broken */
-> +#endif
->  #ifdef CONFIG_PCIE_PTM
->  	unsigned int	ptm_root:1;
->  	unsigned int	ptm_enabled:1;
+> +
+> +Driver Writer's Guide
+> +=====================
+> +
+> +In a given P2P implementation there may be three or more different
+> +types of kernel drivers in play:
+> +
+> +* Providers - A driver which provides or publishes P2P resources like
+
+   * Provider -
+
+> +  memory or doorbell registers to other drivers.
+> +* Clients - A driver which makes use of a resource by setting up a
+
+   * Client -
+
+> +  DMA transaction to or from it.
+> +* Orchestrators - A driver which orchestrates the flow of data between
+
+   * Orchestrator -
+
+> +  clients and providers
+> +
+> +In many cases there could be overlap between these three types (ie.
+
+                                                                  (i.e.,
+
+> +it may be typical for a driver to be both a provider and a client).
+> +
+> +For example, in the NVMe Target Copy Offload implementation:
+> +
+> +* The NVMe PCI driver is both a client, provider and orchestrator
+> +  in that it exposes any CMB (Controller Memory Buffer) as a P2P memory
+> +  resource (provider), it accepts P2P memory pages as buffers in requests
+> +  to be used directly (client) and it can also make use the CMB as
+> +  submission queue entries.
+> +* The RDMA driver is a client in this arrangement so that an RNIC
+> +  can DMA directly to the memory exposed by the NVMe device.
+> +* The NVMe Target driver (nvmet) can orchestrate the data from the RNIC
+> +  to the P2P memory (CMB) and then to the NVMe device (and vice versa).
+> +
+> +This is currently the only arrangement supported by the kernel but
+> +one could imagine slight tweaks to this that would allow for the same
+> +functionality. For example, if a specific RNIC added a BAR with some
+> +memory behind it, its driver could add support as a P2P provider and
+> +then the NVMe Target could use the RNIC's memory instead of the CMB
+> +in cases where the NVMe cards in use do not have CMB support.
+> +
+> +
+> +Provider Drivers
+> +----------------
+> +
+> +A provider simply needs to register a BAR (or a portion of a BAR)
+> +as a P2P DMA resource using :c:func:`pci_p2pdma_add_resource()`.
+> +This will register struct pages for all the specified memory.
+> +
+> +After that it may optionally publish all of its resources as
+> +P2P memory using :c:func:`pci_p2pmem_publish()`. This will allow
+> +any orchestrator drivers to find and use the memory. When marked in
+> +this way, the resource must be regular memory with no side effects.
+> +
+> +For the time being this is fairly rudimentary in that all resources
+> +are typically going to be P2P memory. Future work will likely expand
+> +this to include other types of resources like doorbells.
+> +
+> +
+> +Client Drivers
+> +--------------
+> +
+> +A client driver typically only has to conditionally change its DMA map
+> +routine to use the mapping functions :c:func:`pci_p2pdma_map_sg()` and
+> +:c:func:`pci_p2pdma_unmap_sg()` instead of the usual :c:func:`dma_map_sg()`
+> +functions.
+> +
+> +The client may also, optionally, make use of
+> +:c:func:`is_pci_p2pdma_page()` to determine when to use the P2P mapping
+> +functions and when to use the regular mapping functions. In some
+> +situations, it may be more appropriate to use a flag to indicate a
+> +given request is P2P memory and map appropriately (for example the
+> +block layer uses a flag to keep P2P memory out of queues that do not
+> +have P2P client support). It is important to ensure that struct pages that
+> +back P2P memory stay out of code that does not have support for them.
+> +
+> +
+> +Orchestrator Drivers
+> +--------------------
+> +
+> +The first task an orchestrator driver must do is compile a list of
+> +all client drivers that will be involved in a given transaction. For
+> +example, the NVMe Target driver creates a list including all NVMe drives
+                                                                     ^^^^^^
+                                                                   or drivers ?
+Could be either, I guess, but the previous sentence says "compile a list of drivers."
+
+> +and the RNIC in use. The list is stored as an anonymous struct
+> +list_head which must be initialized with the usual INIT_LIST_HEAD.
+> +The following functions may then be used to add to, remove from and free
+> +the list of clients with the functions :c:func:`pci_p2pdma_add_client()`,
+> +:c:func:`pci_p2pdma_remove_client()` and
+> +:c:func:`pci_p2pdma_client_list_free()`.
+> +
+> +With the client list in hand, the orchestrator may then call
+> +:c:func:`pci_p2pmem_find()` to obtain a published P2P memory provider
+> +that is supported (behind the same root port) as all the clients. If more
+> +than one provider is supported, the one nearest to all the clients will
+> +be chosen first. If there are more than one provider is an equal distance
+
+                       there is
+
+> +away, the one returned will be chosen at random. This function returns the PCI
+> +device to use for the provider with a reference taken and therefore
+> +when it's no longer needed it should be returned with pci_dev_put().
+> +
+> +Alternatively, if the orchestrator knows (via some other means)
+> +which provider it wants to use it may use :c:func:`pci_has_p2pmem()`
+> +to determine if it has P2P memory and :c:func:`pci_p2pdma_distance()`
+> +to determine the cumulative distance between it and a potential
+> +list of clients.
+> +
+> +With a supported provider in hand, the driver can then call
+> +:c:func:`pci_p2pdma_assign_provider()` to assign the provider
+> +to the client list. This function returns false if any of the
+> +clients are unsupported by the provider.
+[I would say:]
+           is unsupported
+
+> +
+> +Once a provider is assigned to a client list via either
+> +:c:func:`pci_p2pmem_find()` or :c:func:`pci_p2pdma_assign_provider()`,
+> +the list is permanently bound to the provider such that any new clients
+> +added to the list must be supported by the already selected provider.
+> +If they are not supported, :c:func:`pci_p2pdma_add_client()` will return
+> +an error. In this way, orchestrators are free to add and remove devices
+> +without having to recheck support or tear down existing transfers to
+> +change P2P providers.
+> +
+> +Once a provider is selected, the orchestrator can then use
+> +:c:func:`pci_alloc_p2pmem()` and :c:func:`pci_free_p2pmem()` to
+> +allocate P2P memory from the provider. :c:func:`pci_p2pmem_alloc_sgl()`
+> +and :c:func:`pci_p2pmem_free_sgl()` are convenience functions for
+> +allocating scatter-gather lists with P2P memory.
+> +
+> +Struct Page Caveats
+> +-------------------
+> +
+> +Driver writers should be very careful about not passing these special
+> +struct pages to code that isn't prepared for it. At this time, the kernel
+> +interfaces do not have any checks for ensuring this. This obviously
+> +precludes passing these pages to userspace.
+> +
+> +P2P memory is also technically IO memory but should never have any side
+> +effects behind it. Thus, the order of loads and stores should not be important
+> +and ioreadX(), iowriteX() and friends should not be necessary.
+> +However, as the memory is not cache coherent, if access ever needs to
+> +be protected by a spinlock then :c:func:`mmiowb()` must be used before
+> +unlocking the lock. (See ACQUIRES VS I/O ACCESSES in
+> +Documentation/memory-barriers.txt)
+> +
+> +
+> +P2P DMA Support Library
+> +=====================
+> +
+> +.. kernel-doc:: drivers/pci/p2pdma.c
+> +   :export:
+
+
+-- 
+~Randy
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
