@@ -1,50 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr40059.outbound.protection.outlook.com ([40.107.4.59]:52069
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752572AbeETNuz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 20 May 2018 09:50:55 -0400
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
-        robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
-        gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com,
-        bhelgaas@google.com
-Cc: hch@lst.de, joro@8bytes.org, m.szyprowski@samsung.com,
-        shawnguo@kernel.org, frowand.list@gmail.com,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        bharat.bhushan@nxp.com, stuyoder@gmail.com, leoyang.li@nxp.com,
-        Nipun Gupta <nipun.gupta@nxp.com>
-Subject: [PATCH 6/7 v5] bus: fsl-mc: set coherent dma mask for devices on fsl-mc bus
-Date: Sun, 20 May 2018 19:19:50 +0530
-Message-Id: <1526824191-7000-7-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
-References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+Received: from mail.kernel.org ([198.145.29.99]:37296 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751571AbeEVAav (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 May 2018 20:30:51 -0400
+Subject: [PATCH v1 3/4] sparc32/PCI/PCIC: Converge device enable path
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Meelis Roos <mroos@linux.ee>
+Date: Mon, 21 May 2018 19:30:49 -0500
+Message-ID: <152694904912.59585.12841331398269981947.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152694888798.59585.8779818482732387864.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152694888798.59585.8779818482732387864.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-of_dma_configure() API expects coherent_dma_mask to be correctly
-set in the devices. This patch does the needful.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Most architectures turn on PCI_COMMAND_IO and PCI_COMMAND_MEMORY in
+pci_enable_device() when a driver claims the device.  Sparc PCIC did it in
+pcibios_fixup_bus(), which is called during enumeration, before any drivers
+are attached.
+
+Implement pcibios_enable_device() for PCIC so it will do the same as other
+architectures.  This implementation is copied verbatim from sparc64.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/bus/fsl-mc/fsl-mc-bus.c | 1 +
- 1 file changed, 1 insertion(+)
+ arch/sparc/kernel/pcic.c |   63 ++++++++++++++++++++++------------------------
+ 1 file changed, 30 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
-index fa43c7d..624828b 100644
---- a/drivers/bus/fsl-mc/fsl-mc-bus.c
-+++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
-@@ -627,6 +627,7 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
- 		mc_dev->icid = parent_mc_dev->icid;
- 		mc_dev->dma_mask = FSL_MC_DEFAULT_DMA_MASK;
- 		mc_dev->dev.dma_mask = &mc_dev->dma_mask;
-+		mc_dev->dev.coherent_dma_mask = mc_dev->dma_mask;
- 		dev_set_msi_domain(&mc_dev->dev,
- 				   dev_get_msi_domain(&parent_mc_dev->dev));
+diff --git a/arch/sparc/kernel/pcic.c b/arch/sparc/kernel/pcic.c
+index 22f8774977d5..5b9244f328aa 100644
+--- a/arch/sparc/kernel/pcic.c
++++ b/arch/sparc/kernel/pcic.c
+@@ -624,39 +624,6 @@ void pcibios_fixup_bus(struct pci_bus *bus)
  	}
--- 
-1.9.1
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+-
+-		/*
+-		 * Comment from i386 branch:
+-		 *     There are buggy BIOSes that forget to enable I/O and memory
+-		 *     access to PCI devices. We try to fix this, but we need to
+-		 *     be sure that the BIOS didn't forget to assign an address
+-		 *     to the device. [mj]
+-		 * OBP is a case of such BIOS :-)
+-		 */
+-		has_io = has_mem = 0;
+-		for(i=0; i<6; i++) {
+-			unsigned long f = dev->resource[i].flags;
+-			if (f & IORESOURCE_IO) {
+-				has_io = 1;
+-			} else if (f & IORESOURCE_MEM)
+-				has_mem = 1;
+-		}
+-		pcic_read_config(dev->bus, dev->devfn, PCI_COMMAND, 2, &cmd);
+-		if (has_io && !(cmd & PCI_COMMAND_IO)) {
+-			printk("PCIC: Enabling I/O for device %02x:%02x\n",
+-				dev->bus->number, dev->devfn);
+-			cmd |= PCI_COMMAND_IO;
+-			pcic_write_config(dev->bus, dev->devfn,
+-			    PCI_COMMAND, 2, cmd);
+-		}
+-		if (has_mem && !(cmd & PCI_COMMAND_MEMORY)) {
+-			printk("PCIC: Enabling memory for device %02x:%02x\n",
+-				dev->bus->number, dev->devfn);
+-			cmd |= PCI_COMMAND_MEMORY;
+-			pcic_write_config(dev->bus, dev->devfn,
+-			    PCI_COMMAND, 2, cmd);
+-		}
+-
+ 		node = pdev_to_pnode(&pcic->pbm, dev);
+ 		if(node == 0)
+ 			node = -1;
+@@ -675,6 +642,36 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+ 	}
+ }
+ 
++int pcibios_enable_device(struct pci_dev *dev, int mask)
++{
++	u16 cmd, oldcmd;
++	int i;
++
++	pci_read_config_word(dev, PCI_COMMAND, &cmd);
++	oldcmd = cmd;
++
++	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
++		struct resource *res = &dev->resource[i];
++
++		/* Only set up the requested stuff */
++		if (!(mask & (1<<i)))
++			continue;
++
++		if (res->flags & IORESOURCE_IO)
++			cmd |= PCI_COMMAND_IO;
++		if (res->flags & IORESOURCE_MEM)
++			cmd |= PCI_COMMAND_MEMORY;
++	}
++
++	if (cmd != oldcmd) {
++		printk(KERN_DEBUG "PCI: Enabling device: (%s), cmd %x\n",
++		       pci_name(dev), cmd);
++                /* Enable the appropriate bits in the PCI command register.  */
++		pci_write_config_word(dev, PCI_COMMAND, cmd);
++	}
++	return 0;
++}
++
+ /* Makes compiler happy */
+ static volatile int pcic_timer_dummy;
+ 
