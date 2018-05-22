@@ -1,159 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:60562 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932496AbeEHQS3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 May 2018 12:18:29 -0400
-Date: Tue, 8 May 2018 17:18:24 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        marc.zyngier@arm.com, mingkai.hu@nxp.com, peter.newton@nxp.com,
-        minghuan.lian@nxp.com, rajesh.raina@nxp.com, rajan.kapoor@nxp.com,
-        prabhjot.singh@nxp.com, devicetree@vger.kernel.org
-Subject: Re: [PATCH v10 1/3] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
- driver DT bindings
-Message-ID: <20180508161824.GB13724@e107981-ln.cambridge.arm.com>
-References: <1525683134-9611-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 22 May 2018 09:36:42 +0200
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] PCI/sysfs: do not allow enabling/disabling a device with
+ a driver
+Message-ID: <20180522073642.abqtry7gxjh6ndqi@linux-x5ow.site>
+References: <20180518165624.13993-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1525683134-9611-1-git-send-email-l.subrahmanya@mobiveil.co.in>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180518165624.13993-1-hch@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ ming.lei@redhat.com, keith.busch@linux.intel.com, bhelgaas@google.com,
+ arjan@linux.intel.com
+Content-Type: text/plain; charset="iso-8859-1"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 07, 2018 at 04:52:14AM -0400, Subrahmanya Lingappa wrote:
-> This patch adds the DT bindings for Mobiveil PCIe Host Bridge
-> IP driver and updates the vendor prefixes file.
-> 
-> Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-> Acked-by: Rob Herring <robh@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: devicetree@vger.kernel.org
-> ---
->  .../devicetree/bindings/pci/mobiveil-pcie.txt      | 73 ++++++++++++++++++++++
->  .../devicetree/bindings/vendor-prefixes.txt        |  1 +
->  MAINTAINERS                                        |  7 +++
->  3 files changed, 81 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+-- =
 
-You sent this patch twice, which confused patchwork (which we use to
-apply patches), please send the series to yourself to test it is right
-before sending it to the list.
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
 
-Thanks,
-Lorenzo
-
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-> new file mode 100644
-> index 0000000..65038aa
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-> @@ -0,0 +1,73 @@
-> +* Mobiveil AXI PCIe Root Port Bridge DT description
-> +
-> +Mobiveil's GPEX 4.0 is a PCIe Gen4 root port bridge IP. This configurable IP
-> +has up to 8 outbound and inbound windows for the address translation.
-> +
-> +Required properties:
-> +- #address-cells: Address representation for root ports, set to <3>
-> +- #size-cells: Size representation for root ports, set to <2>
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +	interrupt source. The value must be 1.
-> +- compatible: Should contain "mbvl,gpex40-pcie"
-> +- reg: Should contain PCIe registers location and length
-> +	"config_axi_slave": PCIe controller registers
-> +	"csr_axi_slave"	  : Bridge config registers
-> +	"gpio_slave"	  : GPIO registers to control slot power
-> +	"apb_csr"	  : MSI registers
-> +
-> +- device_type: must be "pci"
-> +- apio-wins : number of requested apio outbound windows
-> +		default 2 outbound windows are configured -
-> +		1. Config window
-> +		2. Memory window
-> +- ppio-wins : number of requested ppio inbound windows
-> +		default 1 inbound memory window is configured.
-> +- bus-range: PCI bus numbers covered
-> +- interrupt-controller: identifies the node as an interrupt controller
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +	interrupt source. The value must be 1.
-> +- interrupt-parent : phandle to the interrupt controller that
-> +		it is attached to, it should be set to gic to point to
-> +		ARM's Generic Interrupt Controller node in system DT.
-> +- interrupts: The interrupt line of the PCIe controller
-> +		last cell of this field is set to 4 to
-> +		denote it as IRQ_TYPE_LEVEL_HIGH type interrupt.
-> +- interrupt-map-mask,
-> +	interrupt-map: standard PCI properties to define the mapping of the
-> +	PCI interface to interrupt numbers.
-> +- ranges: ranges for the PCI memory regions (I/O space region is not
-> +	supported by hardware)
-> +	Please refer to the standard PCI bus binding document for a more
-> +	detailed explanation
-> +
-> +
-> +Example:
-> +++++++++
-> +	pcie0: pcie@a0000000 {
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		compatible = "mbvl,gpex40-pcie";
-> +		reg =	<0xa0000000 0x00001000>,
-> +			<0xb0000000 0x00010000>,
-> +			<0xff000000 0x00200000>,
-> +			<0xb0010000 0x00001000>;
-> +		reg-names =	"config_axi_slave",
-> +				"csr_axi_slave",
-> +				"gpio_slave",
-> +				"apb_csr";
-> +		device_type = "pci";
-> +		apio-wins = <2>;
-> +		ppio-wins = <1>;
-> +		bus-range = <0x00000000 0x000000ff>;
-> +		interrupt-controller;
-> +		interrupt-parent = <&gic>;
-> +		#interrupt-cells = <1>;
-> +		interrupts = < 0 89 4 >;
-> +		interrupt-map-mask = <0 0 0 7>;
-> +		interrupt-map = <0 0 0 0 &pci_express 0>,
-> +				<0 0 0 1 &pci_express 1>,
-> +				<0 0 0 2 &pci_express 2>,
-> +				<0 0 0 3 &pci_express 3>;
-> +		ranges = < 0x83000000 0 0x00000000 0xa8000000 0 0x8000000>;
-> +
-> +	};
-> diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt b/Documentation/devicetree/bindings/vendor-prefixes.txt
-> index 0994bdd..8263cc7 100644
-> --- a/Documentation/devicetree/bindings/vendor-prefixes.txt
-> +++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
-> @@ -197,6 +197,7 @@ lwn	Liebherr-Werk Nenzing GmbH
->  macnica	Macnica Americas
->  marvell	Marvell Technology Group Ltd.
->  maxim	Maxim Integrated Products
-> +mbvl	Mobiveil Inc.
->  mcube	mCube
->  meas	Measurement Specialties
->  mediatek	MediaTek Inc.
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 44512c3..b295080 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -9162,6 +9162,13 @@ Q:	http://patchwork.linuxtv.org/project/linux-media/list/
->  S:	Maintained
->  F:	drivers/media/dvb-frontends/mn88473*
->  
-> +PCI DRIVER FOR MOBIVEIL PCIE IP
-> +M:	Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-> +L:	linux-pci@vger.kernel.org
-> +S:	Supported
-> +F:	Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-> +F:	drivers/pci/host/pcie-mobiveil.c
-> +
->  MODULE SUPPORT
->  M:	Jessica Yu <jeyu@kernel.org>
->  M:	Rusty Russell <rusty@rustcorp.com.au>
-> -- 
-> 1.8.3.1
-> 
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
