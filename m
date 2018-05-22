@@ -1,47 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0052.outbound.protection.outlook.com ([104.47.33.52]:54048
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751214AbeEVN05 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 May 2018 09:26:57 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>,
-        <lorenzo.pieralisi@arm.com>, <linux-pci@vger.kernel.org>
-CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.com>,
-        <cyrille.pitchen@free-electrons.com>,
-        Alan Douglas <adouglas@cadence.com>
-Subject: [RESEND PATCH 0/4] PCI: cadence: Host and EP driver updates for PHY and power management
-Date: Tue, 22 May 2018 14:26:09 +0100
-Message-ID: <1526995569-5481-1-git-send-email-adouglas@cadence.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v1 3/3] xtensa/PCI: Use dev_printk() when possible
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>,
+        linux-xtensa@linux-xtensa.org, linux-kernel@vger.kernel.org
+Date: Tue, 22 May 2018 08:10:27 -0500
+Message-ID: <152699462765.162480.7860807553501499399.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152699456050.162480.13521209483758803324.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152699456050.162480.13521209483758803324.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a series of patches for the cadence PCIe host and EP drivers, to:
- - Add optional list of generic PHYs to host and EP drivers
- - Add PHY bindings to devicetree
- - Add Power Management ops, which will enable/disable PHYs if present
- - Update cdns_pcie_writel function signature
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Changes in v2:
-    Split commit into four patches
-    Re-based on v4.17-rc1
+Use the pci_info() and pci_err() wrappers for dev_printk() when possible.
 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/xtensa/kernel/pci.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Alan Douglas (4):
-  PCI: cadence: Update cdns_pcie_writel function signature
-  PCI: cadence: Add generic PHY support to host and EP drivers
-  dt-bindings: PCI: cadence: Add DT bindings for optional PHYs
-  PCI: cadence: Add Power Management ops for host and EP
-
- .../devicetree/bindings/pci/cdns,cdns-pcie-ep.txt  |   4 +
- .../bindings/pci/cdns,cdns-pcie-host.txt           |   2 +
- drivers/pci/cadence/pcie-cadence-ep.c              |  15 ++-
- drivers/pci/cadence/pcie-cadence-host.c            |  34 ++++++
- drivers/pci/cadence/pcie-cadence.c                 | 123 +++++++++++++++++++++
- drivers/pci/cadence/pcie-cadence.h                 |  13 ++-
- 6 files changed, 189 insertions(+), 2 deletions(-)
-
--- 
-2.2.2
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index e121b555fdb4..21f13e9aabe1 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -179,8 +179,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	for (idx=0; idx<6; idx++) {
+ 		r = &dev->resource[idx];
+ 		if (!r->start && r->end) {
+-			pr_err("PCI: Device %s not available because "
+-			       "of resource collisions\n", pci_name(dev));
++			pci_err(dev, "can't enable device: resource collisions\n");
+ 			return -EINVAL;
+ 		}
+ 		if (r->flags & IORESOURCE_IO)
+@@ -189,8 +188,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 			cmd |= PCI_COMMAND_MEMORY;
+ 	}
+ 	if (cmd != old_cmd) {
+-		pr_info("PCI: Enabling device %s (%04x -> %04x)\n",
+-			pci_name(dev), old_cmd, cmd);
++		pci_info(dev, "enabling device (%04x -> %04x)\n", old_cmd, cmd);
+ 		pci_write_config_word(dev, PCI_COMMAND, cmd);
+ 	}
+ 
