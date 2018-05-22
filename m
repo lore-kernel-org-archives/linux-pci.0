@@ -1,97 +1,77 @@
-Return-Path: <SRS0=MEkt=IR=google.com=rajatja@kernel.org>
-Return-Path: <SRS0=MEkt=IR=google.com=rajatja@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Laurentiu Tudor <laurentiu.tudor@nxp.com>
+To: Nipun Gupta <nipun.gupta@nxp.com>, "robin.murphy@arm.com"
+ <robin.murphy@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>, "robh@kernel.org"
+ <robh@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH 6/7 v5] bus: fsl-mc: set coherent dma mask for devices on
+ fsl-mc bus
+Date: Tue, 22 May 2018 07:03:44 +0000
+Message-ID: <5B03C0D0.1090609@nxp.com>
+References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+ <1526824191-7000-7-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1526824191-7000-7-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-References: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152770285586.80701.6545710900591672975.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152770285586.80701.6545710900591672975.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Rajat Jain <rajatja@google.com>
-Date: Wed, 30 May 2018 11:41:23 -0700
-Message-ID: <CACK8Z6Gs6Wt=qQ9PJJifZT7ZazK1yGtwNZRSTtvwek8iT8oW6w@mail.gmail.com>
-Subject: Re: [PATCH v1 1/2] PCI/AER: Decode Error Source Requester ID
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>, Oza Pawandeep <poza@codeaurora.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "stuyoder@gmail.com" <stuyoder@gmail.com>,
+ Bharat Bhushan <bharat.bhushan@nxp.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "joro@8bytes.org" <joro@8bytes.org>,
+ "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Leo Li <leoyang.li@nxp.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "frowand.list@gmail.com" <frowand.list@gmail.com>, "hch@lst.de" <hch@lst.de>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2018 at 10:54 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-> From: Bjorn Helgaas <bhelgaas@google.com>
 
-> Decode the Requester ID from the AER Error Source Register into domain/
-> bus/device/function format to match other logging.  In cases where the ID
-> matches the device used for pci_err(), drop the extra ID completely so we
-> don't print it twice.
+On 05/20/2018 04:49 PM, Nipun Gupta wrote:
+> of_dma_configure() API expects coherent_dma_mask to be correctly
+> set in the devices. This patch does the needful.
+>
+> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
+
+---
+Best Regards, Laurentiu
+
 > ---
->   drivers/pci/pcie/aer/aerdrv_errprint.c |   18 +++++++++++-------
->   1 file changed, 11 insertions(+), 7 deletions(-)
-
-> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c
-b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> index 21ca5e1b0ded..d7fde8368d81 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> @@ -163,17 +163,17 @@ void aer_print_error(struct pci_dev *dev, struct
-aer_err_info *info)
->          int id = ((dev->bus->number << 8) | dev->devfn);
-
->          if (!info->status) {
-> -               pci_err(dev, "PCIe Bus Error: severity=%s,
-type=Unaccessible, id=%04x(Unregistered Agent ID)\n",
-> -                       aer_error_severity_string[info->severity], id);
-> +               pci_err(dev, "PCIe Bus Error: severity=%s,
-type=Inaccessible, (Unregistered Agent ID)\n",
-> +                       aer_error_severity_string[info->severity]);
-
-Does this code path indicate that a requester id was decoded to a device
-that is not registered with the kernel? If so, shouldn't we log the bad
-requester ID for better debugging, specifically since there is not going to
-be any subsequent print about this ID (since we return from this function
-in this case)?
-
->                  goto out;
->          }
-
->          layer = AER_GET_LAYER_ERROR(info->severity, info->status);
->          agent = AER_GET_AGENT(info->severity, info->status);
-
-> -       pci_err(dev, "PCIe Bus Error: severity=%s, type=%s,
-id=%04x(%s)\n",
-> +       pci_err(dev, "PCIe Bus Error: severity=%s, type=%s, (%s)\n",
->                  aer_error_severity_string[info->severity],
-> -               aer_error_layer[layer], id, aer_agent_string[agent]);
-> +               aer_error_layer[layer], aer_agent_string[agent]);
-
->          pci_err(dev, "  device [%04x:%04x] error status/mask=%08x/%08x\n",
->                  dev->vendor, dev->device,
-> @@ -186,7 +186,7 @@ void aer_print_error(struct pci_dev *dev, struct
-aer_err_info *info)
-
->   out:
->          if (info->id && info->error_dev_num > 1 && info->id == id)
-> -               pci_err(dev, "  Error of this Agent(%04x) is reported
-first\n", id);
-> +               pci_err(dev, "  Error of this Agent is reported first\n");
-
->          trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
->                          info->severity, info->tlp_header_valid,
-&info->tlp);
-> @@ -194,9 +194,13 @@ void aer_print_error(struct pci_dev *dev, struct
-aer_err_info *info)
-
->   void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
->   {
-> -       pci_info(dev, "AER: %s%s error received: id=%04x\n",
-> +       u8 bus = info->id >> 8;
-> +       u8 devfn = info->id & 0xff;
-> +
-> +       pci_info(dev, "AER: %s%s error received: %04x:%02x:%02x.%d\n",
->                  info->multi_error_valid ? "Multiple " : "",
-> -               aer_error_severity_string[info->severity], info->id);
-> +               aer_error_severity_string[info->severity],
-> +               pci_domain_nr(dev->bus), bus, devfn >> 3, devfn & 0x7);
->   }
-
->   #ifdef CONFIG_ACPI_APEI_PCIEAER
+>   drivers/bus/fsl-mc/fsl-mc-bus.c | 1 +
+>   1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
+> index fa43c7d..624828b 100644
+> --- a/drivers/bus/fsl-mc/fsl-mc-bus.c
+> +++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
+> @@ -627,6 +627,7 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
+>   		mc_dev->icid = parent_mc_dev->icid;
+>   		mc_dev->dma_mask = FSL_MC_DEFAULT_DMA_MASK;
+>   		mc_dev->dev.dma_mask = &mc_dev->dma_mask;
+> +		mc_dev->dev.coherent_dma_mask = mc_dev->dma_mask;
+>   		dev_set_msi_domain(&mc_dev->dev,
+>   				   dev_get_msi_domain(&parent_mc_dev->dev));
+>   	}
+>
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
