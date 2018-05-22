@@ -1,73 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 03/40] iommu/sva: Manage process address spaces
-To: Jacob Pan <jacob.jun.pan@linux.intel.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "liubo95@huawei.com" <liubo95@huawei.com>,
-        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
-        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
-        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
-        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
-        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-        "robdclark@gmail.com" <robdclark@gmail.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "rgummal@xilinx.com" <rgummal@xilinx.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-4-jean-philippe.brucker@arm.com>
- <20180516163117.622693ea@jacob-builder>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <de478769-9f7a-d40b-a55e-e2c63ad883e8@arm.com>
-Date: Thu, 17 May 2018 11:02:42 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180516163117.622693ea@jacob-builder>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34071 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753088AbeEVW2O (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 18:28:14 -0400
+Received: by mail-pf0-f196.google.com with SMTP id a14-v6so9448614pfi.1
+        for <linux-pci@vger.kernel.org>; Tue, 22 May 2018 15:28:14 -0700 (PDT)
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Rajat Jain <rajatja@google.com>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Thomas Tai <thomas.tai@oracle.com>,
+        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
+        Kyle McMartin <jkkm@fb.com>
+Cc: rajatxjain@gmail.com
+Subject: [PATCH 0/5] Expose PCIe AER stats via sysfs
+Date: Tue, 22 May 2018 15:28:00 -0700
+Message-Id: <20180522222805.80314-1-rajatja@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17/05/18 00:31, Jacob Pan wrote:
-> On Fri, 11 May 2018 20:06:04 +0100
-> I am a little confused about domain vs. pasid relationship. If
-> each domain represents a address space, should there be a domain for
-> each pasid?
+This patchset exposes the AER stats via the sysfs attributes.
 
-I don't think there is a formal definition, but from previous discussion
-the consensus seems to be: domains are a collection of devices that have
-the same virtual address spaces (one or many).
+Rajat Jain (5):
+  PCI/AER: Define and allocate aer_stats structure for AER capable
+    devices
+  PCI/AER: Add sysfs stats for AER capable devices
+  PCP/AER: Add sysfs attributes to provide breakdown of AERs
+  PCI/AER: Add sysfs attributes for rootport cumulative stats
+  Documentation/PCI: Add details of PCI AER statistics
 
-Keeping that definition makes things easier, in my opinion. Some time
-ago, I did try to represent PASIDs using "subdomains" (introducing a
-hierarchy of struct iommu_domain), but it required invasive changes in
-the IOMMU subsystem and probably all over the tree.
+ Documentation/PCI/pcieaer-howto.txt    |  35 +++++
+ drivers/pci/pci-sysfs.c                |   3 +
+ drivers/pci/pci.h                      |   4 +-
+ drivers/pci/pcie/aer/Makefile          |   2 +-
+ drivers/pci/pcie/aer/aerdrv.h          |  15 ++
+ drivers/pci/pcie/aer/aerdrv_core.c     |  11 ++
+ drivers/pci/pcie/aer/aerdrv_errprint.c |   7 +-
+ drivers/pci/pcie/aer/aerdrv_stats.c    | 192 +++++++++++++++++++++++++
+ drivers/pci/probe.c                    |   1 +
+ include/linux/pci.h                    |   3 +
+ 10 files changed, 269 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/pci/pcie/aer/aerdrv_stats.c
 
-You do need some kind of "root domain" for each device, so that
-"iommu_get_domain_for_dev()" still makes sense. That root domain doesn't
-have a single address space but a collection of subdomains. If you need
-this anyway, representing a PASID with an iommu_domain doesn't seem
-preferable than using a different structure (io_mm), because they don't
-have anything in common.
-
-Thanks,
-Jean
+-- 
+2.17.0.441.gb46fe60e1d-goog
