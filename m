@@ -1,62 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:44867 "EHLO
-        mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752478AbeEVVI2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 17:08:28 -0400
-Received: by mail-vk0-f65.google.com with SMTP id x66-v6so11816883vka.11
-        for <linux-pci@vger.kernel.org>; Tue, 22 May 2018 14:08:27 -0700 (PDT)
+Received: from foss.arm.com ([217.140.101.70]:34962 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750733AbeEVLCo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 May 2018 07:02:44 -0400
+Date: Tue, 22 May 2018 12:02:36 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Alan Douglas <adouglas@cadence.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "cyrille.pitchen@free-electrons.com"
+        <cyrille.pitchen@free-electrons.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "nsekhar@ti.com" <nsekhar@ti.com>
+Subject: Re: [PATCH 3/4] dt-bindings: PCI: cadence: Add DT bindings for
+ optional PHYs
+Message-ID: <20180522110236.GA17739@e107981-ln.cambridge.arm.com>
+References: <SN6PR07MB451213F202165D9733877828D8940@SN6PR07MB4512.namprd07.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <a0997fec-ba06-0d1d-a43d-fcc1600484f5@deltatee.com>
-References: <1526558413-23113-1-git-send-email-dmeyer@gigaio.com>
- <1526558413-23113-3-git-send-email-dmeyer@gigaio.com> <a0997fec-ba06-0d1d-a43d-fcc1600484f5@deltatee.com>
-From: Doug Meyer <dmeyer@gigaio.com>
-Date: Tue, 22 May 2018 14:08:27 -0700
-Message-ID: <CA+GK6enp==Xb8w2mCCJGuJwWNNPuseuS-jvp00cVszgWvfbODA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] NTB: PCI Quirk to Enable Switchtec NT Functionality
- with IOMMU On
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: kurt.schwemmer@microsemi.com, linux-pci@vger.kernel.org,
-        linux-ntb <linux-ntb@googlegroups.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jon Mason <jdmason@kudzu.us>,
-        "Jiang, Dave" <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <SN6PR07MB451213F202165D9733877828D8940@SN6PR07MB4512.namprd07.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[resending because I forgot the mailing lists want plain text mode]
+On Tue, May 22, 2018 at 09:08:01AM +0000, Alan Douglas wrote:
+> From: Alan Douglas <adouglas@cadence.com>
+> 
+> Update DT documentation to include optional PHYs for cadence PCIe
+> host and endpoint controllers.
+> 
+> Signed-off-by: Alan Douglas <adouglas@cadence.com>
+> ---
+>  Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt   | 4 ++++
+>  Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt | 2 ++
+>  2 files changed, 6 insertions(+)
 
+It looks like v2 of patches [3-4] did not make it to the linux-pci list.
+I do not know why you sent two versions and what happened, I suggest you
+avoid adding linux-pci@vger.kernel.org in both to: and cc: for no reason
+to start with.
 
-Dear Logan,
+Anyway, I can't apply patches that aren't on the PCI mailing list.
 
-I agree. I'll add pci_disable_device().
+Can you please generate the series with:
 
-Blessings,
-Doug
+git format-patch
 
+and send it with
 
+git send-email
 
-On Thu, May 17, 2018 at 8:48 AM, Logan Gunthorpe <logang@deltatee.com> wrote:
->
-> Thanks for your hard work on this Doug!
->
-> On 17/05/18 06:00 AM, dmeyer@gigaio.com wrote:
->
-> > +     if (pci_enable_device(pdev)) {
-> > +             dev_err(&pdev->dev, "Cannot enable Switchtec device\n");
-> > +             return;
-> > +     }
->
-> I suspect we should probably cass pci_disable_device() before leaving
-> this function so it's in the same state we started. Just like we unmap
-> the mmio.
->
-> Logan
->
-> --
-> You received this message because you are subscribed to the Google Groups "linux-ntb" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
-> To post to this group, send email to linux-ntb@googlegroups.com.
-> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/a0997fec-ba06-0d1d-a43d-fcc1600484f5%40deltatee.com.
-> For more options, visit https://groups.google.com/d/optout.
+to make sure headers, etc. are in order ? You can resend a v2 by
+sticking a "RESEND" at the beginning of (every) patch subject:
+
+[RESEND PATCH v2...]
+
+Please send patches to yourself first to make sure everything is OK,
+email threading inclusive.
+
+Thanks,
+Lorenzo
+
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+> index 9a305237..e40c635 100644
+> --- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+> +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+> @@ -9,6 +9,8 @@ Required properties:
+>  
+>  Optional properties:
+>  - max-functions: Maximum number of functions that can be configured (default 1).
+> +- phys: From PHY bindings: List of Generic PHY phandles.
+> +- phy-names:  List of names to identify the PHY.
+>  
+>  Example:
+>  
+> @@ -19,4 +21,6 @@ pcie@fc000000 {
+>  	reg-names = "reg", "mem";
+>  	cdns,max-outbound-regions = <16>;
+>  	max-functions = /bits/ 8 <8>;
+> +	phys = <&ep_phy0 &ep_phy1>;
+> +	phy-names = "pcie-lane0","pcie-lane1";
+>  };
+> diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+> index 20a33f3..c0ca4c1 100644
+> --- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+> +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+> @@ -24,6 +24,8 @@ Optional properties:
+>    translations (default 32)
+>  - vendor-id: The PCI vendor ID (16 bits, default is design dependent)
+>  - device-id: The PCI device ID (16 bits, default is design dependent)
+> +- phys: From PHY bindings: List of Generic PHY phandles.
+> +- phy-names:  List of names to identify the PHY.
+>  
+>  Example:
+>  
+> -- 
+> 2.2.2
+> 
