@@ -1,78 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0116.outbound.protection.outlook.com ([104.47.40.116]:7344
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S967823AbeEYTvx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 May 2018 15:51:53 -0400
-From: Haiyang Zhang <haiyangz@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>
-Subject: RE: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
- hv_compose_msi_msg()
-Date: Fri, 25 May 2018 19:51:50 +0000
-Message-ID: <BN6PR21MB016112A4E32D76EC669818C3CA690@BN6PR21MB0161.namprd21.prod.outlook.com>
-References: <KL1P15301MB0006EE546A7C2567B61EA783BF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-In-Reply-To: <KL1P15301MB0006EE546A7C2567B61EA783BF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ua0-f196.google.com ([209.85.217.196]:41094 "EHLO
+        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752062AbeEVJm2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 05:42:28 -0400
 MIME-Version: 1.0
+In-Reply-To: <20180521210522.29346-1-marek.vasut+renesas@gmail.com>
+References: <20180521210522.29346-1-marek.vasut+renesas@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 22 May 2018 11:42:27 +0200
+Message-ID: <CAMuHMdVkeSEsO-jRCzh-_9VkzZ+4X-VAN1KZOA2wB7bUQTrRYg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Marek,
 
+On Mon, May 21, 2018 at 11:05 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+> The data link active signal usually takes ~20 uSec to be asserted,
+> poll the bit more often to avoid useless delays in this function.
+> Use udelay() instead of usleep() for such a small delay as suggested
+> by the timer documentation and because this will be used in atomic
+> context later on when the suspend/resume patches land.
+>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
 
-> -----Original Message-----
-> From: Dexuan Cui
-> Sent: Tuesday, May 22, 2018 8:18 PM
-> To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>; Bjorn Helgaas
-> <bhelgaas@google.com>; linux-pci@vger.kernel.org; KY Srinivasan
-> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
-> olaf@aepfle.de; apw@canonical.com; jasowang@redhat.com
-> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
-> Haiyang Zhang <haiyangz@microsoft.com>; vkuznets@redhat.com;
-> marcelo.cerri@canonical.com
-> Subject: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
-> hv_compose_msi_msg()
->=20
->=20
-> Commit de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in hv_compose_msi_msg()"=
-)
-> uses local_bh_disable()/enable(), because hv_pci_onchannelcallback() can =
-also
-> run in tasklet context as the channel event callback.
->=20
-> With CONFIG_PROVE_LOCKING=3Dy in the latest mainline, or old kernels that
-> don't have commit f71b74bca637 ("irq/softirqs: Use lockdep to assert IRQs=
- are
-> disabled/enabled"), it turns out can we trigger a warning at the beginnin=
-g of
-> __local_bh_enable_ip(), because the upper layer irq code can call
-> hv_compose_msi_msg() with local irqs disabled.
->=20
-> Let's fix the warning by switching to local_irq_save()/restore(). This is=
- not an
-> issue because hv_pci_onchannelcallback() is not slow, and it not a hot pa=
-th.
->=20
-> Fixes: de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in hv_compose_msi_msg()"=
-)
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Cc: <stable@vger.kernel.org>
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
-> ---
+Thanks for your patch!
 
-Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -529,13 +529,13 @@ static void phy_write_reg(struct rcar_pcie *pcie,
+>
+>  static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
+>  {
+> -       unsigned int timeout = 10;
+> +       unsigned int timeout = 10000;
+>
+>         while (timeout--) {
+>                 if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
+>                         return 0;
+>
+> -               msleep(5);
+> +               udelay(5);
 
-Thanks you.
++ cpu_relax()?
+
+>         }
+
+if this ever happens, it will have blocked for more than 50 ms...
+
+>         return -ETIMEDOUT;
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
