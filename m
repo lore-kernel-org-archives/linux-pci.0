@@ -1,43 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:35085 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750903AbeEIFm3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2018 01:42:29 -0400
-Received: by mail-pl0-f68.google.com with SMTP id i5-v6so3625738plt.2
-        for <linux-pci@vger.kernel.org>; Tue, 08 May 2018 22:42:29 -0700 (PDT)
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
-        Jesper Nilsson <jesper.nilsson@axis.com>
-Subject: [PATCH 5/9] PCI: artpec6: Drop unnecessary root_bus_nr setting
-Date: Wed,  9 May 2018 13:39:42 +0800
-Message-Id: <1525844386-5433-5-git-send-email-shawn.guo@linaro.org>
-In-Reply-To: <1525844386-5433-1-git-send-email-shawn.guo@linaro.org>
-References: <1525844386-5433-1-git-send-email-shawn.guo@linaro.org>
+Received: from mail.kernel.org ([198.145.29.99]:39230 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751196AbeEVNKW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 May 2018 09:10:22 -0400
+Subject: [PATCH v1 2/3] xtensa/PCI: Make variables static
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>,
+        linux-xtensa@linux-xtensa.org, linux-kernel@vger.kernel.org
+Date: Tue, 22 May 2018 08:10:21 -0500
+Message-ID: <152699462102.162480.10622776995414606885.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152699456050.162480.13521209483758803324.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152699456050.162480.13521209483758803324.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The root_bus_nr initialization has already been done in function
-dw_pcie_host_init().  The -1 assignment in platform driver before
-calling into dw_pcie_host_init() is not really needed.  Drop it.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-Cc: Jesper Nilsson <jesper.nilsson@axis.com>
+Make these variables static, since they're only used in this file:
+
+  pci_ctrl_head
+  pci_ctrl_tail
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/dwc/pcie-artpec6.c | 1 -
- 1 file changed, 1 deletion(-)
+ arch/xtensa/kernel/pci.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index e66cede2b5b7..af78b5c23bce 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -399,7 +399,6 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
- 		}
- 	}
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index d451b4f5b1e0..e121b555fdb4 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -41,8 +41,8 @@
+  * pci_bus_add_device
+  */
  
--	pp->root_bus_nr = -1;
- 	pp->ops = &artpec6_pcie_host_ops;
+-struct pci_controller* pci_ctrl_head;
+-struct pci_controller** pci_ctrl_tail = &pci_ctrl_head;
++static struct pci_controller *pci_ctrl_head;
++static struct pci_controller **pci_ctrl_tail = &pci_ctrl_head;
  
- 	ret = dw_pcie_host_init(pp);
--- 
-1.9.1
+ static int pci_bus_count;
+ 
