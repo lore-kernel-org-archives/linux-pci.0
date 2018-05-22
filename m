@@ -1,303 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18821 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752396AbeEQHnX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2018 03:43:23 -0400
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH v17 2/9] PCI/AER: Handle ERR_FATAL with removal and re-enumeration of devices
-Date: Thu, 17 May 2018 03:43:04 -0400
-Message-Id: <1526542991-5291-3-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
-References: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
+Received: from mail-sn1nam01on0085.outbound.protection.outlook.com ([104.47.32.85]:59584
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751214AbeEVNdP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 May 2018 09:33:15 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>,
+        <lorenzo.pieralisi@arm.com>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.com>,
+        <cyrille.pitchen@free-electrons.com>,
+        "Alan Douglas" <adouglas@cadence.com>
+Subject: [RESEND PATCH 3/4] dt-bindings: PCI: cadence: Add DT bindings for optional PHYs
+Date: Tue, 22 May 2018 14:32:32 +0100
+Message-ID: <1526995952-22031-1-git-send-email-adouglas@cadence.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe ERR_FATAL errors mean the Link is unreliable.  Components on the Link
-may need to be reset to return to reliable operation (PCIe r4.0, sec
-6.2.2).  We previously handled these errors much differently depending on
-whether the platform supports Downstream Port Containment (DPC) (PCIe r4.0,
-sec 6.2.10) or not.
+Update DT documentation to include optional PHYs for cadence PCIe
+host and endpoint controllers.
 
-The AER driver has historically logged the error details, called
-driver-supplied pci_error_handlers callbacks, and reset the Link.  This
-reset downstream devices, but did not remove them from the PCI subsystem,
-re-enumerate them, or call their driver .remove() or .probe() methods.
+Signed-off-by: Alan Douglas <adouglas@cadence.com>
+---
+ Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt   | 4 ++++
+ Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt | 2 ++
+ 2 files changed, 6 insertions(+)
 
-DPC is different because the hardware automatically disables the Link when
-it detects ERR_FATAL, which resets downstream devices.  There's no
-opportunity for pci_error_handlers callbacks before resetting the Link.
-The DPC driver removes affected devices (which calls their .remove()
-methods), brings the Link back up, and re-enumerates (which calls driver
-.probe() methods).
-
-Align AER ERR_FATAL handling with DPC by resetting the Link in software,
-skipping the driver pci_error_handlers callbacks, removing the devices from
-the PCI subsystem, and re-enumerating.  The idea is that drivers and
-devices should see the same behavior for ERR_FATAL events, regardless of
-whether they're handled by AER or DPC.
-
-Here are the basic ERR_FATAL recovery steps, showing the previous AER
-behavior, the AER behavior after this patch, and the DPC behavior:
-
-                          AER        AER      DPC
-                          previous   new      behavior
-                          --------   ---      --------
-  Log error               yes        yes      yes (minimal)
-  drv.error_detected()    yes        no       no
-  Reset Link              yes        yes      yes
-  drv.mmio_enabled()      yes        no       no
-  drv.slot_reset()        yes        no       no
-  drv.resume()            yes        no       no
-  Remove PCI devices      no         yes      yes
-    (calls drv.remove())
-  Re-enumerate            no         yes      yes
-    (calls drv.probe())
-
-N.B. With DPC, the Link reset happens before the driver .remove() calls,
-while with AER, the reset happens *after* the .remove() calls.
-
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-[bhelgaas: changelog, squash doc patch into this]
-Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
-
-diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
-index 0b6bb3e..688b691 100644
---- a/Documentation/PCI/pci-error-recovery.txt
-+++ b/Documentation/PCI/pci-error-recovery.txt
-@@ -110,7 +110,7 @@ The actual steps taken by a platform to recover from a PCI error
- event will be platform-dependent, but will follow the general
- sequence described below.
+diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+index 9a305237..e40c635 100644
+--- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
++++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+@@ -9,6 +9,8 @@ Required properties:
  
--STEP 0: Error Event
-+STEP 0: Error Event: ERR_NONFATAL
- -------------------
- A PCI bus error is detected by the PCI hardware.  On powerpc, the slot
- is isolated, in that all I/O is blocked: all reads return 0xffffffff,
-@@ -228,13 +228,7 @@ proceeds to either STEP3 (Link Reset) or to STEP 5 (Resume Operations).
- If any driver returned PCI_ERS_RESULT_NEED_RESET, then the platform
- proceeds to STEP 4 (Slot Reset)
+ Optional properties:
+ - max-functions: Maximum number of functions that can be configured (default 1).
++- phys: From PHY bindings: List of Generic PHY phandles.
++- phy-names:  List of names to identify the PHY.
  
--STEP 3: Link Reset
--------------------
--The platform resets the link.  This is a PCI-Express specific step
--and is done whenever a fatal error has been detected that can be
--"solved" by resetting the link.
--
--STEP 4: Slot Reset
-+STEP 3: Slot Reset
- ------------------
+ Example:
  
- In response to a return value of PCI_ERS_RESULT_NEED_RESET, the
-@@ -320,7 +314,7 @@ Failure).
- >>> However, it probably should.
+@@ -19,4 +21,6 @@ pcie@fc000000 {
+ 	reg-names = "reg", "mem";
+ 	cdns,max-outbound-regions = <16>;
+ 	max-functions = /bits/ 8 <8>;
++	phys = <&ep_phy0 &ep_phy1>;
++	phy-names = "pcie-lane0","pcie-lane1";
+ };
+diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+index 20a33f3..c0ca4c1 100644
+--- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
++++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+@@ -24,6 +24,8 @@ Optional properties:
+   translations (default 32)
+ - vendor-id: The PCI vendor ID (16 bits, default is design dependent)
+ - device-id: The PCI device ID (16 bits, default is design dependent)
++- phys: From PHY bindings: List of Generic PHY phandles.
++- phy-names:  List of names to identify the PHY.
  
+ Example:
  
--STEP 5: Resume Operations
-+STEP 4: Resume Operations
- -------------------------
- The platform will call the resume() callback on all affected device
- drivers if all drivers on the segment have returned
-@@ -332,7 +326,7 @@ a result code.
- At this point, if a new error happens, the platform will restart
- a new error recovery sequence.
- 
--STEP 6: Permanent Failure
-+STEP 5: Permanent Failure
- -------------------------
- A "permanent failure" has occurred, and the platform cannot recover
- the device.  The platform will call error_detected() with a
-@@ -355,6 +349,27 @@ errors. See the discussion in powerpc/eeh-pci-error-recovery.txt
- for additional detail on real-life experience of the causes of
- software errors.
- 
-+STEP 0: Error Event: ERR_FATAL
-+-------------------
-+PCI bus error is detected by the PCI hardware. On powerpc, the slot is
-+isolated, in that all I/O is blocked: all reads return 0xffffffff, all
-+writes are ignored.
-+
-+STEP 1: Remove devices
-+--------------------
-+Platform removes the devices depending on the error agent, it could be
-+this port for all subordinates or upstream component (likely downstream
-+port)
-+
-+STEP 2: Reset link
-+--------------------
-+The platform resets the link.  This is a PCI-Express specific step and is
-+done whenever a fatal error has been detected that can be "solved" by
-+resetting the link.
-+
-+STEP 3: Re-enumerate the devices
-+--------------------
-+Initiates the re-enumeration.
- 
- Conclusion; General Remarks
- ---------------------------
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 779b387..377e576 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -353,10 +353,7 @@ static void aer_error_resume(struct pci_dev *dev)
- 	pos = dev->aer_cap;
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
--	if (dev->error_state == pci_channel_io_normal)
--		status &= ~mask; /* Clear corresponding nonfatal bits */
--	else
--		status &= mask; /* Clear corresponding fatal bits */
-+	status &= ~mask; /* Clear corresponding nonfatal bits */
- 	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
- }
- 
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 0ea5acc..b56f9c1 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -20,6 +20,7 @@
- #include <linux/slab.h>
- #include <linux/kfifo.h>
- #include "aerdrv.h"
-+#include "../../pci.h"
- 
- #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
- 				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
-@@ -475,35 +476,82 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
- }
- 
- /**
-- * do_recovery - handle nonfatal/fatal error recovery process
-+ * do_fatal_recovery - handle fatal error recovery process
-  * @dev: pointer to a pci_dev data structure of agent detecting an error
-- * @severity: error severity type
-  *
-- * Invoked when an error is nonfatal/fatal. Once being invoked, broadcast
-+ * Invoked when an error is fatal. Once being invoked, removes the devices
-+ * beneath this AER agent, followed by reset link e.g. secondary bus reset
-+ * followed by re-enumeration of devices.
-+ */
-+static void do_fatal_recovery(struct pci_dev *dev)
-+{
-+	struct pci_dev *udev;
-+	struct pci_bus *parent;
-+	struct pci_dev *pdev, *temp;
-+	pci_ers_result_t result;
-+	struct aer_broadcast_data result_data;
-+
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-+		udev = dev;
-+	else
-+		udev = dev->bus->self;
-+
-+	parent = udev->subordinate;
-+	pci_lock_rescan_remove();
-+	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
-+					 bus_list) {
-+		pci_dev_get(pdev);
-+		pci_dev_set_disconnected(pdev, NULL);
-+		if (pci_has_subordinate(pdev))
-+			pci_walk_bus(pdev->subordinate,
-+				     pci_dev_set_disconnected, NULL);
-+		pci_stop_and_remove_bus_device(pdev);
-+		pci_dev_put(pdev);
-+	}
-+
-+	result = reset_link(udev);
-+
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+		/*
-+		 * If the error is reported by a bridge, we think this error
-+		 * is related to the downstream link of the bridge, so we
-+		 * do error recovery on all subordinates of the bridge instead
-+		 * of the bridge and clear the error status of the bridge.
-+		 */
-+		pci_cleanup_aer_uncorrect_error_status(dev);
-+	}
-+
-+	if (result == PCI_ERS_RESULT_RECOVERED) {
-+		if (pcie_wait_for_link(udev, true))
-+			pci_rescan_bus(udev->bus);
-+	} else {
-+		pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
-+		pci_info(dev, "AER: Device recovery from fatal error failed\n");
-+	}
-+
-+	pci_unlock_rescan_remove();
-+}
-+
-+/**
-+ * do_nonfatal_recovery - handle nonfatal error recovery process
-+ * @dev: pointer to a pci_dev data structure of agent detecting an error
-+ *
-+ * Invoked when an error is nonfatal. Once being invoked, broadcast
-  * error detected message to all downstream drivers within a hierarchy in
-  * question and return the returned code.
-  */
--static void do_recovery(struct pci_dev *dev, int severity)
-+static void do_nonfatal_recovery(struct pci_dev *dev)
- {
--	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
-+	pci_ers_result_t status;
- 	enum pci_channel_state state;
- 
--	if (severity == AER_FATAL)
--		state = pci_channel_io_frozen;
--	else
--		state = pci_channel_io_normal;
-+	state = pci_channel_io_normal;
- 
- 	status = broadcast_error_message(dev,
- 			state,
- 			"error_detected",
- 			report_error_detected);
- 
--	if (severity == AER_FATAL) {
--		result = reset_link(dev);
--		if (result != PCI_ERS_RESULT_RECOVERED)
--			goto failed;
--	}
--
- 	if (status == PCI_ERS_RESULT_CAN_RECOVER)
- 		status = broadcast_error_message(dev,
- 				state,
-@@ -562,8 +610,10 @@ static void handle_error_source(struct pcie_device *aerdev,
- 		if (pos)
- 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
- 					info->status);
--	} else
--		do_recovery(dev, info->severity);
-+	} else if (info->severity == AER_NONFATAL)
-+		do_nonfatal_recovery(dev);
-+	else if (info->severity == AER_FATAL)
-+		do_fatal_recovery(dev);
- }
- 
- #ifdef CONFIG_ACPI_APEI_PCIEAER
-@@ -627,8 +677,10 @@ static void aer_recover_work_func(struct work_struct *work)
- 			continue;
- 		}
- 		cper_print_aer(pdev, entry.severity, entry.regs);
--		if (entry.severity != AER_CORRECTABLE)
--			do_recovery(pdev, entry.severity);
-+		if (entry.severity == AER_NONFATAL)
-+			do_nonfatal_recovery(pdev);
-+		else if (entry.severity == AER_FATAL)
-+			do_fatal_recovery(pdev);
- 		pci_dev_put(pdev);
- 	}
- }
 -- 
-2.7.4
+2.2.2
