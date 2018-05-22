@@ -1,118 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0084.outbound.protection.outlook.com ([104.47.41.84]:40161
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751007AbeECRaF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 May 2018 13:30:05 -0400
-Subject: Re: [PATCH v4 00/14] Copy Offload in NVMe Fabrics with P2P PCI Memory
-To: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-block@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
- <b8acf835-df94-9967-2327-8f0e39d88511@amd.com>
- <805645c1-ea40-2e57-88eb-5dd34e579b2e@deltatee.com>
- <3e4e0126-f444-8d88-6793-b5eb97c61f76@amd.com>
- <ce2e5351-f32a-bd80-1c77-b7fc38842175@deltatee.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <38d866cf-f7b4-7118-d737-5a5dcd9f3784@amd.com>
-Date: Thu, 3 May 2018 19:29:11 +0200
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:40958 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753100AbeEVX2Q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 19:28:16 -0400
+Received: by mail-ot0-f194.google.com with SMTP id n1-v6so23034222otf.7
+        for <linux-pci@vger.kernel.org>; Tue, 22 May 2018 16:28:16 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <ce2e5351-f32a-bd80-1c77-b7fc38842175@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <dcbb2e92-722f-c178-efb7-8d99d4a9d99f@gmail.com>
+References: <20180522222805.80314-1-rajatja@google.com> <20180522222805.80314-3-rajatja@google.com>
+ <dcbb2e92-722f-c178-efb7-8d99d4a9d99f@gmail.com>
+From: Rajat Jain <rajatja@google.com>
+Date: Tue, 22 May 2018 16:27:33 -0700
+Message-ID: <CACK8Z6GNPa+15WLxJBUAZ2=+jfhtdz+85=41B56KWSWCHSnyGw@mail.gmail.com>
+Subject: Re: [PATCH 2/5] PCI/AER: Add sysfs stats for AER capable devices
+To: "Alex G." <mr.nuke.me@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Tai <thomas.tai@oracle.com>,
+        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
+        linux-pci <linux-pci@vger.kernel.org>, linux-doc@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>,
+        Rajat Jain <rajatxjain@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 03.05.2018 um 17:59 schrieb Logan Gunthorpe:
-> On 03/05/18 03:05 AM, Christian König wrote:
->> Second question is how to you want to handle things when device are not
->> behind the same root port (which is perfectly possible in the cases I
->> deal with)?
-> I think we need to implement a whitelist. If both root ports are in the
-> white list and are on the same bus then we return a larger distance
-> instead of -1.
-
-Sounds good.
-
->> Third question why multiple clients? That feels a bit like you are
->> pushing something special to your use case into the common PCI
->> subsystem. Something which usually isn't a good idea.
-> No, I think this will be pretty standard. In the simple general case you
-> are going to have one provider and at least two clients (one which
-> writes the memory and one which reads it). However, one client is
-> likely, but not necessarily, the same as the provider.
-
-Ok, that is the point where I'm stuck. Why do we need that in one 
-function call in the PCIe subsystem?
-
-The problem at least with GPUs is that we seriously don't have that 
-information here, cause the PCI subsystem might not be aware of all the 
-interconnections.
-
-For example it isn't uncommon to put multiple GPUs on one board. To the 
-PCI subsystem that looks like separate devices, but in reality all GPUs 
-are interconnected and can access each others memory directly without 
-going over the PCIe bus.
-
-I seriously don't want to model that in the PCI subsystem, but rather 
-the driver. That's why it feels like a mistake to me to push all that 
-into the PCI function.
-
-> In the NVMeof case, we might have N clients: 1 RDMA device and N-1 block
-> devices. The code doesn't care which device provides the memory as it
-> could be the RDMA device or one/all of the block devices (or, in theory,
-> a completely separate device with P2P-able memory). However, it does
-> require that all devices involved are accessible per
-> pci_p2pdma_distance() or it won't use P2P transactions.
+On Tue, May 22, 2018 at 3:50 PM, Alex G. <mr.nuke.me@gmail.com> wrote:
 >
-> I could also imagine other use cases: ie. an RDMA NIC sends data to a
-> GPU for processing and then sends the data to an NVMe device for storage
-> (or vice-versa). In this case we have 3 clients and one provider.
+>
+> On 05/22/2018 05:28 PM, Rajat Jain wrote:
+>> Add the following AER sysfs stats to represent the counters for each
+>> kind of error as seen by the device:
+>>
+>> dev_total_cor_errs
+>> dev_total_fatal_errs
+>> dev_total_nonfatal_errs
+>>
+>> Signed-off-by: Rajat Jain <rajatja@google.com>
+>> ---
+>>  drivers/pci/pci-sysfs.c                |  3 ++
+>>  drivers/pci/pci.h                      |  4 +-
+>>  drivers/pci/pcie/aer/aerdrv.h          |  1 +
+>>  drivers/pci/pcie/aer/aerdrv_errprint.c |  1 +
+>>  drivers/pci/pcie/aer/aerdrv_stats.c    | 72 ++++++++++++++++++++++++++
+>>  5 files changed, 80 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index 366d93af051d..730f985a3dc9 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+>> @@ -1743,6 +1743,9 @@ static const struct attribute_group *pci_dev_attr_groups[] = {
+>>  #endif
+>>       &pci_bridge_attr_group,
+>>       &pcie_dev_attr_group,
+>> +#ifdef CONFIG_PCIEAER
+>> +     &aer_stats_attr_group,
+>> +#endif
+>>       NULL,
+>>  };
+>
+> So if the device is removed as part of recovery, then these get reset,
+> right? So if the device fails intermittently, these counters would keep
+> getting reset. Is this the intent?
 
-Why can't we model that as two separate transactions?
-
-E.g. one from the RDMA NIC to the GPU memory. And another one from the 
-GPU memory to the NVMe device.
-
-That would also match how I get this information from userspace.
-
->> As far as I can see we need a function which return the distance between
->> a initiator and target device. This function then returns -1 if the
->> transaction can't be made and a positive value otherwise.
-> If you need to make a simpler convenience function for your use case I'm
-> not against it.
-
-Yeah, same for me. If Bjorn is ok with that specialized NVM functions 
-that I'm fine with that as well.
-
-I think it would just be more convenient when we can come up with 
-functions which can handle all use cases, cause there still seems to be 
-a lot of similarities.
+Umm, kind of.
+* One argument is that if a PCI device is removed and then
+re-enumerated, how do we know it is the same device and has not been
+replaced by another device for e.g.?  Note that the root port counters
+that have the cumulative counters for all the errors seen will still
+have them logged in the situation you describe.
 
 >
->> We also need to give the direction of the transaction and have a
->> whitelist root complex PCI-IDs which can handle P2P transactions from
->> different ports for a certain DMA direction.
-> Yes. In the NVMeof case we need all devices to be able to DMA in both
-> directions so we did not need the DMA direction. But I can see this
-> being useful once we add the whitelist.
+> (snip)
+>
+>>  /**
+>>   * pci_match_one_device - Tell if a PCI device structure has a matching
+>> diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+>> index d8b9fba536ed..b5d5ad6f2c03 100644
+>> --- a/drivers/pci/pcie/aer/aerdrv.h
+>> +++ b/drivers/pci/pcie/aer/aerdrv.h
+>> @@ -87,6 +87,7 @@ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info);
+>>  irqreturn_t aer_irq(int irq, void *context);
+>>  int pci_aer_stats_init(struct pci_dev *pdev);
+>>  void pci_aer_stats_exit(struct pci_dev *pdev);
+>> +void pci_dev_aer_stats_incr(struct pci_dev *pdev, struct aer_err_info *info);
+>>
+>>  #ifdef CONFIG_ACPI_APEI
+>>  int pcie_aer_get_firmware_first(struct pci_dev *pci_dev);
+>> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> index 21ca5e1b0ded..5e8b98deda08 100644
+>> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> @@ -155,6 +155,7 @@ static void __aer_print_error(struct pci_dev *dev,
+>>                       pci_err(dev, "   [%2d] Unknown Error Bit%s\n",
+>>                               i, info->first_error == i ? " (First)" : "");
+>>       }
+>> +     pci_dev_aer_stats_incr(dev, info);
+>
+> What about AER errors that are contained by DPC?
 
-Ok, I agree that can be added later on. For simplicity let's assume for 
-now we always to bidirectional transfers.
+Thanks, You are right, this patch does not take care of the DPC. I'll
+try to read up on DPC and can integrate it if it turns out to be easy
+enough.
 
-Thanks for the explanation,
-Christian.
+Thanks,
+
+Rajat
 
 >
-> Logan
+> Alex
