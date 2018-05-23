@@ -1,383 +1,239 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:35739 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751147AbeEKRPd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 May 2018 13:15:33 -0400
-Received: by mail-ot0-f194.google.com with SMTP id h8-v6so7045100otb.2
-        for <linux-pci@vger.kernel.org>; Fri, 11 May 2018 10:15:33 -0700 (PDT)
-From: Rob Herring <robh@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Fengguang Wu <fengguang.wu@intel.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v3 2/2] PCI: Move private DT related functions into private header
-Date: Fri, 11 May 2018 12:15:30 -0500
-Message-Id: <20180511171530.16068-2-robh@kernel.org>
-In-Reply-To: <20180511171530.16068-1-robh@kernel.org>
-References: <20180511171530.16068-1-robh@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 23 May 2018 16:32:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
+Message-ID: <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+In-Reply-To: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: ryan@finnie.org, Kate Stewart <kstewart@linuxfoundation.org>,
+ linux-scsi@vger.kernel.org, Frederick Lawler <fred@fredlawl.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ esc.storagedev@microsemi.com, open list <linux-kernel@vger.kernel.org>,
+ stable@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Thomas Gleixner <tglx@linutronix.de>, Don Brace <don.brace@microsemi.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The functions in linux/of_pci.h are primarily used by host bridge
-drivers, so they can be private to drivers/pci/.
+[-cc Gabriele (invalid email address)]
+[+cc Don, esc.storagedev, linux-scsi since hpsa is involved]
 
-The remaining functions are still used mostly in host bridge drivers
-that still live in arch specific code. Hopefully someday, those will get
-moved into drivers/pci as well.
+Background for newcomers:
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-Signed-off-by: Rob Herring <robh@kernel.org>
----
-Looks like these 2 patches slipped thru the cracks.
+  Ryan reported a panic on shutdown/reboot [1] on DL360 Gen9.  I think
+  the problem is that the shutdown path clears PCI_COMMAND_MASTER on
+  the Root Port leading to an hpsa device, the hpsa device attempts a
+  DMA, the Root Port treats the DMA as an Unsupported Request (a fatal
+  error), and that leads to a panic.
 
- drivers/pci/dwc/pci-dra7xx.c           |  1 +
- drivers/pci/dwc/pcie-designware-host.c |  1 +
- drivers/pci/host/pci-aardvark.c        |  2 ++
- drivers/pci/host/pci-ftpci100.c        |  2 ++
- drivers/pci/host/pci-mvebu.c           |  2 ++
- drivers/pci/host/pci-rcar-gen2.c       |  2 ++
- drivers/pci/host/pci-tegra.c           |  2 ++
- drivers/pci/host/pci-v3-semi.c         |  2 ++
- drivers/pci/host/pci-xgene.c           |  2 ++
- drivers/pci/host/pcie-altera.c         |  2 ++
- drivers/pci/host/pcie-iproc-platform.c |  1 +
- drivers/pci/host/pcie-mediatek.c       |  2 ++
- drivers/pci/host/pcie-rcar.c           |  2 ++
- drivers/pci/host/pcie-rockchip.c       |  2 ++
- drivers/pci/host/pcie-xilinx-nwl.c     |  2 ++
- drivers/pci/host/pcie-xilinx.c         |  2 ++
- drivers/pci/pci.h                      | 40 ++++++++++++++++++++++++++
- include/linux/of_pci.h                 | 34 ----------------------
- 18 files changed, 69 insertions(+), 34 deletions(-)
+  This patch avoids the problem by changing the Root Port shutdown
+  path so it doesn't clear PCI_COMMAND_MASTER.
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index ed8558d638e5..620709d38a64 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -27,6 +27,7 @@
- #include <linux/mfd/syscon.h>
- #include <linux/regmap.h>
- 
-+#include "../pci.h"
- #include "pcie-designware.h"
- 
- /* PCIe controller wrapper DRA7XX configuration registers */
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 6c409079d514..4392dd2e5e0e 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -15,6 +15,7 @@
- #include <linux/pci_regs.h>
- #include <linux/platform_device.h>
- 
-+#include "../pci.h"
- #include "pcie-designware.h"
- 
- static struct pci_ops dw_pcie_ops;
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 9abf549631b4..6571422c9c5b 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -19,6 +19,8 @@
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
- 
-+#include "../pci.h"
-+
- /* PCIe core registers */
- #define PCIE_CORE_CMD_STATUS_REG				0x4
- #define     PCIE_CORE_CMD_IO_ACCESS_EN				BIT(0)
-diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-index 5008fd87956a..474faa2e922e 100644
---- a/drivers/pci/host/pci-ftpci100.c
-+++ b/drivers/pci/host/pci-ftpci100.c
-@@ -28,6 +28,8 @@
- #include <linux/irq.h>
- #include <linux/clk.h>
- 
-+#include "../pci.h"
-+
- /*
-  * Special configuration registers directly in the first few words
-  * in I/O space.
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 5d4dccfc9d81..23e270839e6a 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -21,6 +21,8 @@
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
- 
-+#include "../pci.h"
-+
- /*
-  * PCIe unit register offsets.
-  */
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index dd4f1a6b57c5..326171cb1a97 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -21,6 +21,8 @@
- #include <linux/sizes.h>
- #include <linux/slab.h>
- 
-+#include "../pci.h"
-+
- /* AHB-PCI Bridge PCI communication registers */
- #define RCAR_AHBPCI_PCICOM_OFFSET	0x800
- 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 389e74be846c..f4f53d092e00 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -40,6 +40,8 @@
- #include <soc/tegra/cpuidle.h>
- #include <soc/tegra/pmc.h>
- 
-+#include "../pci.h"
-+
- #define INT_PCI_MSI_NR (8 * 32)
- 
- /* register definitions */
-diff --git a/drivers/pci/host/pci-v3-semi.c b/drivers/pci/host/pci-v3-semi.c
-index 0a4dea796663..04bf53d02f23 100644
---- a/drivers/pci/host/pci-v3-semi.c
-+++ b/drivers/pci/host/pci-v3-semi.c
-@@ -33,6 +33,8 @@
- #include <linux/regmap.h>
- #include <linux/clk.h>
- 
-+#include "../pci.h"
-+
- #define V3_PCI_VENDOR			0x00000000
- #define V3_PCI_DEVICE			0x00000002
- #define V3_PCI_CMD			0x00000004
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index 0a0d7ee6d3c9..648a50243022 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -22,6 +22,8 @@
- #include <linux/platform_device.h>
- #include <linux/slab.h>
- 
-+#include "../pci.h"
-+
- #define PCIECORE_CTLANDSTATUS		0x50
- #define PIM1_1L				0x80
- #define IBAR2				0x98
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index a6af62e0256d..dc4985087e04 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -17,6 +17,8 @@
- #include <linux/platform_device.h>
- #include <linux/slab.h>
- 
-+#include "../pci.h"
-+
- #define RP_TX_REG0			0x2000
- #define RP_TX_REG1			0x2004
- #define RP_TX_CNTRL			0x2008
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index e764a2a2693c..fb23fdf919c8 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -16,6 +16,7 @@
- #include <linux/of_platform.h>
- #include <linux/phy/phy.h>
- 
-+#include "../pci.h"
- #include "pcie-iproc.h"
- 
- static const struct of_device_id iproc_pcie_of_match_table[] = {
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index a8b20c5012a9..5b3da5856ca2 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -22,6 +22,8 @@
- #include <linux/pm_runtime.h>
- #include <linux/reset.h>
- 
-+#include "../pci.h"
-+
- /* PCIe shared registers */
- #define PCIE_SYS_CFG		0x00
- #define PCIE_INT_ENABLE		0x0c
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 6ab28f29ac6a..9629ec039deb 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -28,6 +28,8 @@
- #include <linux/pm_runtime.h>
- #include <linux/slab.h>
- 
-+#include "../pci.h"
-+
- #define PCIECAR			0x000010
- #define PCIECCTLR		0x000018
- #define  CONFIG_SEND_ENABLE	(1 << 31)
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index f1e8f97ea1fb..daf9120a4350 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -36,6 +36,8 @@
- #include <linux/reset.h>
- #include <linux/regmap.h>
- 
-+#include "../pci.h"
-+
- /*
-  * The upper 16 bits of PCIE_CLIENT_CONFIG are a write mask for the lower 16
-  * bits.  This allows atomic updates of the register without locking.
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 4839ae578711..9505bb9649d0 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -21,6 +21,8 @@
- #include <linux/platform_device.h>
- #include <linux/irqchip/chained_irq.h>
- 
-+#include "../pci.h"
-+
- /* Bridge core config registers */
- #define BRCFG_PCIE_RX0			0x00000000
- #define BRCFG_INTERRUPT			0x00000010
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 0ad188effc09..ec193e930caa 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -23,6 +23,8 @@
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- 
-+#include "../pci.h"
-+
- /* Register definitions */
- #define XILINX_PCIE_REG_BIR		0x00000130
- #define XILINX_PCIE_REG_IDR		0x00000138
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 023f7cf25bff..6c7cd16a1d1c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -407,4 +407,44 @@ static inline u64 pci_rebar_size_to_bytes(int size)
- 	return 1ULL << (size + 20);
- }
- 
-+struct device_node;
-+
-+#ifdef CONFIG_OF
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
-+int of_get_pci_domain_nr(struct device_node *node);
-+int of_pci_get_max_link_speed(struct device_node *node);
-+
-+#else
-+static inline int
-+of_pci_parse_bus_range(struct device_node *node, struct resource *res)
-+{
-+	return -EINVAL;
-+}
-+
-+static inline int
-+of_get_pci_domain_nr(struct device_node *node)
-+{
-+	return -1;
-+}
-+
-+static inline int
-+of_pci_get_max_link_speed(struct device_node *node)
-+{
-+	return -EINVAL;
-+}
-+#endif /* CONFIG_OF */
-+
-+#if defined(CONFIG_OF_ADDRESS)
-+int of_pci_get_host_bridge_resources(struct device_node *dev,
-+			unsigned char busno, unsigned char bus_max,
-+			struct list_head *resources, resource_size_t *io_base);
-+#else
-+static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
-+			unsigned char busno, unsigned char bus_max,
-+			struct list_head *resources, resource_size_t *io_base)
-+{
-+	return -EINVAL;
-+}
-+#endif
-+
- #endif /* DRIVERS_PCI_H */
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 091033a6b836..e83d87fc5673 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -13,9 +13,6 @@ struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
- int of_pci_get_devfn(struct device_node *np);
--int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
--int of_get_pci_domain_nr(struct device_node *node);
--int of_pci_get_max_link_speed(struct device_node *node);
- void of_pci_check_probe_only(void);
- int of_pci_map_rid(struct device_node *np, u32 rid,
- 		   const char *map_name, const char *map_mask_name,
-@@ -32,18 +29,6 @@ static inline int of_pci_get_devfn(struct device_node *np)
- 	return -EINVAL;
- }
- 
--static inline int
--of_pci_parse_bus_range(struct device_node *node, struct resource *res)
--{
--	return -EINVAL;
--}
--
--static inline int
--of_get_pci_domain_nr(struct device_node *node)
--{
--	return -1;
--}
--
- static inline int of_pci_map_rid(struct device_node *np, u32 rid,
- 			const char *map_name, const char *map_mask_name,
- 			struct device_node **target, u32 *id_out)
-@@ -51,12 +36,6 @@ static inline int of_pci_map_rid(struct device_node *np, u32 rid,
- 	return -EINVAL;
- }
- 
--static inline int
--of_pci_get_max_link_speed(struct device_node *node)
--{
--	return -EINVAL;
--}
--
- static inline void of_pci_check_probe_only(void) { }
- #endif
- 
-@@ -70,17 +49,4 @@ of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
- }
- #endif
- 
--#if defined(CONFIG_OF_ADDRESS)
--int of_pci_get_host_bridge_resources(struct device_node *dev,
--			unsigned char busno, unsigned char bus_max,
--			struct list_head *resources, resource_size_t *io_base);
--#else
--static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
--			unsigned char busno, unsigned char bus_max,
--			struct list_head *resources, resource_size_t *io_base)
--{
--	return -EINVAL;
--}
--#endif
--
- #endif
--- 
-2.17.0
+  [1] https://bugzilla.kernel.org/show_bug.cgi?id=199779
+
+On Tue, May 22, 2018 at 10:44:46PM -0400, Sinan Kaya wrote:
+> 'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
+> shutdown")' has been added to kernel to shutdown pending PCIe port
+> service interrupts during reboot so that a newly started kexec kernel
+> wouldn't observe pending interrupts.
+> 
+> pcie_port_device_remove() is disabling the root port and switches by
+> calling pci_disable_device() after all PCIe service drivers are shutdown.
+
+It's interesting and annoying that pci_enable_device() and
+pci_disable_device() sound like they should be inverses, or at least
+related, but they really aren't.
+
+pci_enable_device() basically turns on PCI_COMMAND_MEMORY and/or
+PCI_COMMAND_IO so the device will respond to programmed I/O.  But
+pci_disable_device() leaves programmed I/O enabled and turns off
+PCI_COMMAND_MASTER, which keeps the device from performing DMA or
+forwarding transactions upstream (in the case of bridges).
+
+Not an issue for this patch, just an observation :)
+
+> pci_disable_device() has a much wider impact then port service itself and
+> it prevents all inbound transactions to reach to the system and impacts
+> the entire PCI traffic behind the bridge.
+> 
+> Issue is that pcie_port_device_remove() doesn't maintain any coordination
+> with the rest of the PCI device drivers in the system before clearing the
+> bus master bit.
+
+I am interested in this part because if there really isn't any
+coordination, that's a good argument for getting rid of portdrv, which
+I want to do anyway.  But I haven't dug into this enough to verify it.
+
+The portdrv does register as a regular PCI driver (pcie_portdriver),
+and I'm pretty sure the driver core is smart enough to call the driver
+entry points in a postorder traversal (children before parents), which
+means the hpsa .shutdown() should be called before the portdrv
+.shutdown().
+
+The crash seems to indicate that the hpsa device attempted a DMA after
+we cleared the Root Port's PCI_COMMAND_MASTER, which means
+hpsa_shutdown() didn't stop DMA from the device (it looks like *most*
+shutdown methods don't disable device DMA, so it's in good company).
+
+> This has been found to cause crashes on HP DL360 Gen9 machines during
+> reboot. Besides, kexec is already clearing the bus master bit in
+> pci_device_shutdown() after all PCI drivers are removed.
+
+The original path was:
+
+  pci_device_shutdown(hpsa)
+    drv->shutdown
+      hpsa_shutdown                     # hpsa_pci_driver.shutdown
+  ...
+  pci_device_shutdown(RP)               # root port
+    drv->shutdown
+      pcie_portdrv_remove               # pcie_portdriver.shutdown
+        pcie_port_device_remove
+          pci_disable_device
+            do_pci_disable_device
+              # clear RP PCI_COMMAND_MASTER
+    if (kexec)
+      pci_clear_master(RP)
+        # clear RP PCI_COMMAND_MASTER
+
+If I understand correctly, the new path after this patch is:
+
+  pci_device_shutdown(hpsa)
+    drv->shutdown
+      hpsa_shutdown                     # hpsa_pci_driver.shutdown
+  ...
+  pci_device_shutdown(RP)               # root port
+    drv->shutdown
+      pcie_portdrv_shutdown             # pcie_portdriver.shutdown
+        __pcie_portdrv_remove(RP, false)
+          pcie_port_device_remove(RP, false)
+            # do NOT clear RP PCI_COMMAND_MASTER
+    if (kexec)
+      pci_clear_master(RP)
+        # clear RP PCI_COMMAND_MASTER
+
+I guess this patch avoids the panic during reboot because we're not in
+the kexec path, so we never clear PCI_COMMAND_MASTER for the Root
+Port, so the hpsa device can DMA happily until the lights go out.
+
+But DMA continuing for some random amount of time before the reboot or
+shutdown happens makes me a little queasy.  That doesn't sound safe.
+The more I think about this, the more confused I get.  What am I
+missing?  
+
+> Just remove the extra clear in shutdown path by seperating the remove and
+> shutdown APIs in the PORTDRV.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
+> Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
+> Cc: stable@vger.kernel.org
+> Reported-by: Ryan Finnie <ryan@finnie.org>
+> ---
+>  drivers/pci/pcie/portdrv.h      |  2 +-
+>  drivers/pci/pcie/portdrv_core.c |  5 +++--
+>  drivers/pci/pcie/portdrv_pci.c  | 16 +++++++++++++---
+>  3 files changed, 17 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+> index d0c6783..f6e88fe 100644
+> --- a/drivers/pci/pcie/portdrv.h
+> +++ b/drivers/pci/pcie/portdrv.h
+> @@ -86,7 +86,7 @@ int pcie_port_device_register(struct pci_dev *dev);
+>  int pcie_port_device_suspend(struct device *dev);
+>  int pcie_port_device_resume(struct device *dev);
+>  #endif
+> -void pcie_port_device_remove(struct pci_dev *dev);
+> +void pcie_port_device_remove(struct pci_dev *dev, bool disable);
+>  int __must_check pcie_port_bus_register(void);
+>  void pcie_port_bus_unregister(void);
+>  
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index c9c0663..f35341e 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -405,11 +405,12 @@ static int remove_iter(struct device *dev, void *data)
+>   * Remove PCI Express port service devices associated with given port and
+>   * disable MSI-X or MSI for the port.
+>   */
+> -void pcie_port_device_remove(struct pci_dev *dev)
+> +void pcie_port_device_remove(struct pci_dev *dev, bool disable)
+>  {
+>  	device_for_each_child(&dev->dev, NULL, remove_iter);
+>  	pci_free_irq_vectors(dev);
+> -	pci_disable_device(dev);
+> +	if (disable)
+> +		pci_disable_device(dev);
+>  }
+>  
+>  /**
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index 973f1b8..29afaf3 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -137,7 +137,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+>  	return 0;
+>  }
+>  
+> -static void pcie_portdrv_remove(struct pci_dev *dev)
+> +static void __pcie_portdrv_remove(struct pci_dev *dev, bool disable)
+>  {
+>  	if (pci_bridge_d3_possible(dev)) {
+>  		pm_runtime_forbid(&dev->dev);
+> @@ -145,7 +145,17 @@ static void pcie_portdrv_remove(struct pci_dev *dev)
+>  		pm_runtime_dont_use_autosuspend(&dev->dev);
+>  	}
+>  
+> -	pcie_port_device_remove(dev);
+> +	pcie_port_device_remove(dev, disable);
+> +}
+> +
+> +static void pcie_portdrv_remove(struct pci_dev *dev)
+> +{
+> +	return __pcie_portdrv_remove(dev, true);
+> +}
+> +
+> +static void pcie_portdrv_shutdown(struct pci_dev *dev)
+> +{
+> +	return __pcie_portdrv_remove(dev, false);
+>  }
+>  
+>  static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
+> @@ -218,7 +228,7 @@ static struct pci_driver pcie_portdriver = {
+>  
+>  	.probe		= pcie_portdrv_probe,
+>  	.remove		= pcie_portdrv_remove,
+> -	.shutdown	= pcie_portdrv_remove,
+> +	.shutdown	= pcie_portdrv_shutdown,
+
+What are the circumstances when we call .remove() vs .shutdown()?
+
+I guess the main (maybe only) way to call .remove() is to hot-remove
+the port?  And .shutdown() is basically used in the reboot and kexec
+paths?
+
+>  	.err_handler	= &pcie_portdrv_err_handler,
+>  
+> -- 
+> 2.7.4
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
