@@ -1,76 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <wangbinghui@hisilicon.com>, <bhelgaas@google.com>,
-        <xuwei5@huawei.com>, <robh+dt@kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <dimitrysh@google.com>, <guodong.xu@linaro.org>,
-        <suzhuangluan@hisilicon.com>, <andy.shevchenko@gmail.com>
-CC: <kongfei@hisilicon.com>, <chenyao11@huawei.com>
-Subject: [PATCH v5 1/1] PCI: kirin: Add MSI support
-Date: Fri, 25 May 2018 11:58:55 +0800
-Message-ID: <20180525035855.32649-2-songxiaowei@hisilicon.com>
-In-Reply-To: <20180525035855.32649-1-songxiaowei@hisilicon.com>
-References: <20180525035855.32649-1-songxiaowei@hisilicon.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:46668 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933114AbeEWO0M (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 10:26:12 -0400
+Subject: Re: [PATCH 1/5] PCI/AER: Define and allocate aer_stats structure for
+ AER capable devices
+To: Jes Sorensen <jsorensen@fb.com>, Rajat Jain <rajatja@google.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Tai <thomas.tai@oracle.com>,
+        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Kyle McMartin <jkkm@fb.com>
+Cc: rajatxjain@gmail.com
+References: <20180522222805.80314-1-rajatja@google.com>
+ <20180522222805.80314-2-rajatja@google.com>
+ <62fae8eb-aaed-65b2-19ad-7c57b3a9bfdc@fb.com>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <53789ac0-b571-5d6a-5925-7e83925b5b31@gmail.com>
+Date: Wed, 23 May 2018 09:26:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <62fae8eb-aaed-65b2-19ad-7c57b3a9bfdc@fb.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for MSI.
+On 05/23/2018 09:20 AM, Jes Sorensen wrote:
+> On 05/22/2018 06:28 PM, Rajat Jain wrote:
+>> new file mode 100644
+>> index 000000000000..b9f251992209
+>> --- /dev/null
+>> +++ b/drivers/pci/pcie/aer/aerdrv_stats.c
+>> @@ -0,0 +1,64 @@
+>> +// SPDX-License-Identifier: GPL-2.0
+> 
+> Fix the formatting please - that gross // gibberish doesn't belong there.
 
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
----
- drivers/pci/dwc/pcie-kirin.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+Deep breath in. Deep breath out.
 
-diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
-index d2970a009eb5..6997276eb69c 100644
---- a/drivers/pci/dwc/pcie-kirin.c
-+++ b/drivers/pci/dwc/pcie-kirin.c
-@@ -430,6 +430,9 @@ static int kirin_pcie_host_init(struct pcie_port *pp)
- {
- 	kirin_pcie_establish_link(pp);
- 
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		dw_pcie_msi_init(pp);
-+
- 	return 0;
- }
- 
-@@ -445,9 +448,34 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
- 	.host_init = kirin_pcie_host_init,
- };
- 
-+static int kirin_pcie_add_msi(struct dw_pcie *pci,
-+				struct platform_device *pdev)
-+{
-+	int ret = 0;
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		ret = platform_get_irq(pdev, 0);
-+		if (ret < 0) {
-+			dev_err(&pdev->dev,
-+				"failed to get MSI IRQ (%d)\n", ret);
-+			return ret;
-+		}
-+
-+		pci->pp.msi_irq = ret;
-+	}
-+
-+	return ret;
-+}
-+
- static int __init kirin_add_pcie_port(struct dw_pcie *pci,
- 				      struct platform_device *pdev)
- {
-+	int ret;
-+
-+	ret = kirin_pcie_add_msi(pci, pdev);
-+	if (ret)
-+		return ret;
-+
- 	pci->pp.ops = &kirin_pcie_host_ops;
- 
- 	return dw_pcie_host_init(&pci->pp);
--- 
-2.11.GIT
+git grep SPDX
+
+Although I don't like it, this format is already too common.
+
+Cheers,
+Alex
