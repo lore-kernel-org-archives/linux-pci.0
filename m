@@ -1,65 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38512 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751196AbeEVNGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 May 2018 09:06:14 -0400
-Date: Tue, 22 May 2018 08:06:12 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI / PM: Clean up outdated comments in
- pci_target_state()
-Message-ID: <20180522130612.GB161672@bhelgaas-glaptop.roam.corp.google.com>
-References: <2360046.ecez94sF1Y@aspire.rjw.lan>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:35544 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933767AbeEWRRs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 13:17:48 -0400
+Subject: Re: [PATCH 1/4] PCI: rcar: Rename
+ rcar_pcie_parse_request_of_pci_ranges()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
+ <20180523161711.GA8113@e107981-ln.cambridge.arm.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <5fc7b4ff-1c75-4d3f-6cb7-fda4559a3635@gmail.com>
+Date: Wed, 23 May 2018 19:05:06 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2360046.ecez94sF1Y@aspire.rjw.lan>
+In-Reply-To: <20180523161711.GA8113@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 21, 2018 at 01:11:12PM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 05/23/2018 06:17 PM, Lorenzo Pieralisi wrote:
+> On Mon, May 21, 2018 at 03:11:20PM +0200, Marek Vasut wrote:
+>> The function name is just too confusing, rename it, no functional change.
+>> Rename the function to rcar_pcie_alloc_and_parse_pci_resource_list() as
+>> it's matching failpath function is pci_free_resource_list() so the names
+>> align much better and the new name also describes what the function does
+>> much better.
+>>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>> Cc: linux-renesas-soc@vger.kernel.org
+>> ---
+>>  drivers/pci/host/pcie-rcar.c | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> Two comments in pci_target_state() are outdated, as the function
-> doesn't set the target power state for the device any more, only
-> finds one for it, so fix them accordingly.
+> Can you rebase this series against my pci/rcar branch please ?
 > 
-> Reported-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> I will merge it then, thanks.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Where is that tree/branch located ?
 
-I assume you'll merge this; let me know if you'd rather that I take it.
+It applies fine on current next 20180517, is there a problem ?
 
-> ---
->  drivers/pci/pci.c |    6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/pci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci.c
-> +++ linux-pm/drivers/pci/pci.c
-> @@ -2025,8 +2025,7 @@ static pci_power_t pci_target_state(stru
->  
->  	if (platform_pci_power_manageable(dev)) {
->  		/*
-> -		 * Call the platform to choose the target state of the device
-> -		 * and enable wake-up from this state if supported.
-> +		 * Call the platform to find the target state for the device.
->  		 */
->  		pci_power_t state = platform_pci_choose_state(dev);
->  
-> @@ -2059,8 +2058,7 @@ static pci_power_t pci_target_state(stru
->  	if (wakeup) {
->  		/*
->  		 * Find the deepest state from which the device can generate
-> -		 * wake-up events, make it the target state and enable device
-> -		 * to generate PME#.
-> +		 * PME#.
->  		 */
->  		if (dev->pme_support) {
->  			while (target_state
-> 
+-- 
+Best regards,
+Marek Vasut
