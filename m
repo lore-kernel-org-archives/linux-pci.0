@@ -1,59 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:38185 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932681AbeENQRk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 12:17:40 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        robh+dt@kernel.org, mark.rutland@arm.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH 3/4] bindings: PCI: designware: Add support for EP in DesignWare driver
-Date: Mon, 14 May 2018 17:17:27 +0100
-Message-Id: <d14a48a1c9f554d78a8a93532f288259de032fc5.1526314398.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
-References: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
-References: <cover.1526314398.git.gustavo.pimentel@synopsys.com>
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:40237 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933872AbeEWR6u (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 13:58:50 -0400
+Received: by mail-pl0-f65.google.com with SMTP id t12-v6so13486280plo.7
+        for <linux-pci@vger.kernel.org>; Wed, 23 May 2018 10:58:50 -0700 (PDT)
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Rajat Jain <rajatja@google.com>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Thomas Tai <thomas.tai@oracle.com>,
+        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
+        Kyle McMartin <jkkm@fb.com>
+Cc: rajatxjain@gmail.com, Rajat Jain <rajatj@google.com>
+Subject: [PATCH v2 3/5] PCI/AER: Add sysfs attributes to provide breakdown of AERs
+Date: Wed, 23 May 2018 10:58:06 -0700
+Message-Id: <20180523175808.28030-4-rajatja@google.com>
+In-Reply-To: <20180523175808.28030-1-rajatja@google.com>
+References: <20180522222805.80314-1-rajatja@google.com>
+ <20180523175808.28030-1-rajatja@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device tree binding documentation for the EP in PCIe DesignWare driver.
+Add sysfs attributes to provide breakdown of the AERs seen,
+into different type of correctable or uncorrectable errors:
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
+dev_breakdown_correctable
+dev_breakdown_uncorrectable
+
+Signed-off-by: Rajat Jain <rajatj@google.com>
 ---
- Documentation/devicetree/bindings/pci/designware-pcie.txt | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+v2: Use tabs instead of spaces, fix the subject, and print
+    all non zero counters.
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 7f9804d..c124f9b 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -3,6 +3,7 @@
- Required properties:
- - compatible:
- 	"snps,dw-pcie" for RC mode;
-+	"snps,dw-pcie-ep" for EP mode;
- - reg: Should contain the configuration address space.
- - reg-names: Must be "config" for the PCIe configuration space.
-     (The old way of getting the configuration address space from "ranges"
-@@ -56,3 +57,14 @@ Example configuration:
- 		#interrupt-cells = <1>;
- 		num-lanes = <1>;
- 	};
-+or
-+	pcie: pcie@dfc00000 {
-+		compatible = "snps,dw-pcie-ep";
-+		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
-+		      <0xdfc01000 0x0001000>, /* IP registers 2 */
-+		      <0xd0000000 0x2000000>; /* Configuration space */
-+		reg-names = "dbi", "dbi2", "addr_space";
-+		num-ib-windows = <6>;
-+		num-ob-windows = <2>;
-+		num-lanes = <1>;
-+	};
+ drivers/pci/pcie/aer/aerdrv.h          |  6 ++++++
+ drivers/pci/pcie/aer/aerdrv_errprint.c |  6 ++++--
+ drivers/pci/pcie/aer/aerdrv_stats.c    | 28 ++++++++++++++++++++++++++
+ 3 files changed, 38 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+index b5d5ad6f2c03..048fbd7c9633 100644
+--- a/drivers/pci/pcie/aer/aerdrv.h
++++ b/drivers/pci/pcie/aer/aerdrv.h
+@@ -89,6 +89,12 @@ int pci_aer_stats_init(struct pci_dev *pdev);
+ void pci_aer_stats_exit(struct pci_dev *pdev);
+ void pci_dev_aer_stats_incr(struct pci_dev *pdev, struct aer_err_info *info);
+ 
++extern const char
++*aer_correctable_error_string[AER_MAX_TYPEOF_CORRECTABLE_ERRS];
++
++extern const char
++*aer_uncorrectable_error_string[AER_MAX_TYPEOF_UNCORRECTABLE_ERRS];
++
+ #ifdef CONFIG_ACPI_APEI
+ int pcie_aer_get_firmware_first(struct pci_dev *pci_dev);
+ #else
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 5e8b98deda08..5585f309f1a8 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -68,7 +68,8 @@ static const char *aer_error_layer[] = {
+ 	"Transaction Layer"
+ };
+ 
+-static const char *aer_correctable_error_string[] = {
++const char
++*aer_correctable_error_string[AER_MAX_TYPEOF_CORRECTABLE_ERRS] = {
+ 	"Receiver Error",		/* Bit Position 0	*/
+ 	NULL,
+ 	NULL,
+@@ -87,7 +88,8 @@ static const char *aer_correctable_error_string[] = {
+ 	"Header Log Overflow",		/* Bit Position 15	*/
+ };
+ 
+-static const char *aer_uncorrectable_error_string[] = {
++const char
++*aer_uncorrectable_error_string[AER_MAX_TYPEOF_UNCORRECTABLE_ERRS] = {
+ 	"Undefined",			/* Bit Position 0	*/
+ 	NULL,
+ 	NULL,
+diff --git a/drivers/pci/pcie/aer/aerdrv_stats.c b/drivers/pci/pcie/aer/aerdrv_stats.c
+index 5555beffef2b..e47321b267f6 100644
+--- a/drivers/pci/pcie/aer/aerdrv_stats.c
++++ b/drivers/pci/pcie/aer/aerdrv_stats.c
+@@ -58,10 +58,38 @@ aer_stats_aggregate_attr(dev_total_cor_errs);
+ aer_stats_aggregate_attr(dev_total_fatal_errs);
+ aer_stats_aggregate_attr(dev_total_nonfatal_errs);
+ 
++#define aer_stats_breakdown_attr(field, stats_array, strings_array)	\
++	static ssize_t							\
++	field##_show(struct device *dev, struct device_attribute *attr,	\
++		     char *buf)						\
++{									\
++	unsigned int i;							\
++	char *str = buf;						\
++	struct pci_dev *pdev = to_pci_dev(dev);				\
++	u64 *stats = pdev->aer_stats->stats_array;			\
++	for (i = 0; i < ARRAY_SIZE(strings_array); i++) {		\
++		if (strings_array[i])					\
++			str += sprintf(str, "%s = 0x%llx\n",		\
++				       strings_array[i], stats[i]);	\
++		else if (stats[i])					\
++			str += sprintf(str, #stats_array "bit[%d] = 0x%llx\n",\
++				       i, stats[i]);			\
++	}								\
++	return str-buf;							\
++}									\
++static DEVICE_ATTR_RO(field)
++
++aer_stats_breakdown_attr(dev_breakdown_correctable, dev_cor_errs,
++			 aer_correctable_error_string);
++aer_stats_breakdown_attr(dev_breakdown_uncorrectable, dev_uncor_errs,
++			 aer_uncorrectable_error_string);
++
+ static struct attribute *aer_stats_attrs[] __ro_after_init = {
+ 	&dev_attr_dev_total_cor_errs.attr,
+ 	&dev_attr_dev_total_fatal_errs.attr,
+ 	&dev_attr_dev_total_nonfatal_errs.attr,
++	&dev_attr_dev_breakdown_correctable.attr,
++	&dev_attr_dev_breakdown_uncorrectable.attr,
+ 	NULL
+ };
+ 
 -- 
-2.7.4
+2.17.0.441.gb46fe60e1d-goog
