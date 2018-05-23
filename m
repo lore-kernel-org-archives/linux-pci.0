@@ -1,43 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:36165 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751198AbeEIFmj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 May 2018 01:42:39 -0400
-Received: by mail-pf0-f195.google.com with SMTP id w129so19650607pfd.3
-        for <linux-pci@vger.kernel.org>; Tue, 08 May 2018 22:42:39 -0700 (PDT)
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>
-Subject: [PATCH 8/9] PCI: qcom: Drop unnecessary root_bus_nr setting
-Date: Wed,  9 May 2018 13:39:45 +0800
-Message-Id: <1525844386-5433-8-git-send-email-shawn.guo@linaro.org>
-In-Reply-To: <1525844386-5433-1-git-send-email-shawn.guo@linaro.org>
-References: <1525844386-5433-1-git-send-email-shawn.guo@linaro.org>
+Received: from mail.kernel.org ([198.145.29.99]:58858 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933917AbeEWVuI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 May 2018 17:50:08 -0400
+Date: Wed, 23 May 2018 16:50:06 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        kernel-janitors@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/5] pci/hotplug/pnv-php: add missing of_node_put
+Message-ID: <20180523215006.GF150632@bhelgaas-glaptop.roam.corp.google.com>
+References: <1527102436-13447-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1527102436-13447-5-git-send-email-Julia.Lawall@lip6.fr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1527102436-13447-5-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The root_bus_nr initialization has already been done in function
-dw_pcie_host_init().  The -1 assignment in platform driver before
-calling into dw_pcie_host_init() is not really needed.  Drop it.
+On Wed, May 23, 2018 at 09:07:15PM +0200, Julia Lawall wrote:
+> The device node iterators perform an of_node_get on each iteration, so a
+> jump out of the loop requires an of_node_put.
+> 
+> The semantic patch that fixes this problem is as follows
+> (http://coccinelle.lip6.fr):
+> 
+> // <smpl>
+> @@
+> expression root,e;
+> local idexpression child;
+> iterator name for_each_child_of_node;
+> @@
+> 
+>  for_each_child_of_node(root, child) {
+>    ... when != of_node_put(child)
+>        when != e = child
+> +  of_node_put(child);
+> ?  break;
+>    ...
+> }
+> ... when != child
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
----
- drivers/pci/dwc/pcie-qcom.c | 1 -
- 1 file changed, 1 deletion(-)
+Applied to pci/hotplug for v4.18, thanks!
 
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 5897af7d3355..a32aa024e907 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -1247,7 +1247,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
--	pp->root_bus_nr = -1;
- 	pp->ops = &qcom_pcie_dw_ops;
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--- 
-1.9.1
+> ---
+>  drivers/pci/hotplug/pnv_php.c |    8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+> index d441006..6c2e8d7 100644
+> --- a/drivers/pci/hotplug/pnv_php.c
+> +++ b/drivers/pci/hotplug/pnv_php.c
+> @@ -220,12 +220,16 @@ static int pnv_php_populate_changeset(struct of_changeset *ocs,
+>  
+>  	for_each_child_of_node(dn, child) {
+>  		ret = of_changeset_attach_node(ocs, child);
+> -		if (ret)
+> +		if (ret) {
+> +			of_node_put(child);
+>  			break;
+> +		}
+>  
+>  		ret = pnv_php_populate_changeset(ocs, child);
+> -		if (ret)
+> +		if (ret) {
+> +			of_node_put(child);
+>  			break;
+> +		}
+>  	}
+>  
+>  	return ret;
+> 
