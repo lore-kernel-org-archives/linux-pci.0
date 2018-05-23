@@ -1,81 +1,75 @@
-Return-Path: <SRS0=OK9e=HV=siemens.com=jan.kiszka@kernel.org>
-Return-Path: <SRS0=OK9e=HV=siemens.com=jan.kiszka@kernel.org>
-Subject: Re: [PATCH 3/6] PCI: Introduce devm_of_pci_get_host_bridge_resources
-To: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-kernel@lists.infradead.org
-References: <cover.1524582822.git.jan.kiszka@siemens.com>
- <e387d04ea235c9a4879a897bb730adc383a96635.1524582822.git.jan.kiszka@siemens.com>
- <20180427222427.GB73638@bhelgaas-glaptop.roam.corp.google.com>
- <869a8ad9-dd2f-8462-c0c4-2d8a62d74185@siemens.com>
- <20180430184007.GC95643@bhelgaas-glaptop.roam.corp.google.com>
- <5e218659-b512-b622-25e0-5bb5a8f4b87d@codeaurora.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-Message-ID: <5dd1e93a-b85b-a3eb-08de-6989c6a782c2@siemens.com>
-Date: Wed, 2 May 2018 07:39:42 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:46350 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932071AbeEWLOZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 07:14:25 -0400
+Subject: Re: [PATCH 4/4] PCI: rcar: Teardown MSI setup if rcar_pcie_enable()
+ fails
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
+ <20180521131123.2009-4-marek.vasut+renesas@gmail.com>
+ <CAMuHMdVhrb_dR7TP3PU=rsbne+9BZu=BHA9XAK=L1so98HogtA@mail.gmail.com>
+ <f4622ab5-3c94-bb99-cfc3-1929dd88092e@gmail.com>
+ <CAMuHMdVOEe_PFcCpk_yYRZaBicSToEBZjhJ1Z+88Ct8a1HbXZA@mail.gmail.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <b492dc3d-a2e6-e538-5a4f-05e636fe214e@gmail.com>
+Date: Wed, 23 May 2018 12:38:36 +0200
 MIME-Version: 1.0
-In-Reply-To: <5e218659-b512-b622-25e0-5bb5a8f4b87d@codeaurora.org>
+In-Reply-To: <CAMuHMdVOEe_PFcCpk_yYRZaBicSToEBZjhJ1Z+88Ct8a1HbXZA@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-04-30 20:43, Sinan Kaya wrote:
-> On 4/30/2018 2:40 PM, Bjorn Helgaas wrote:
->> On Sat, Apr 28, 2018 at 09:28:47AM +0200, Jan Kiszka wrote:
->>> On 2018-04-28 00:24, Bjorn Helgaas wrote:
->>>> On Tue, Apr 24, 2018 at 05:13:39PM +0200, Jan Kiszka wrote:
->>>>> From: Jan Kiszka <jan.kiszka@siemens.com>
->>>>>
->>>>> of_pci_get_host_bridge_resources allocates the resource structures it
->>>>> fills dynamically, but none of its callers care to release them so far.
->>>>> Rather than requiring everyone to do this explicitly, introduce a
->>>>> managed version of that service. This differs API-wise only in taking a
->>>>> reference to the associated device, rather than to the device tree node.
->>>>>
->>>>> As of_pci_get_host_bridge_resources is an exported interface, we cannot
->>>>> simply drop it at this point. After converting all in-tree users to the
->>>>> new API, we could phase out the unmanaged one over some grace period.
->>>>
->>>> It looks like it might be possible to split this into three or four
->>>> patches:
->>>>
->>>>   1) Factor __of_pci_get_host_bridge_resources() out of
->>>>      of_pci_get_host_bridge_resources()
->>>>
->>>>   2) Add struct device * argument
->>>>
->>>>   3) Convert pr_info() to dev_info()
->>>>
->>>>   4) Add devm_of_pci_get_host_bridge_resources()
->>>
->>> Will do. I'm even considering
->>>
->>> 5) mark of_pci_get_host_bridge_resources() __deprecated, due to the leak
->>>    and no remaining in-tree user - what do you think?
->>
->> Sounds good.
->>
->> It'd be nice if we had some guideline about deprecation -- whether we
->> actually need to mark things __deprecated, and then how long to wait
->> before actually removing them, but I don't see anything in
->> Documentation/.
+On 05/23/2018 08:18 AM, Geert Uytterhoeven wrote:
+> Hi Marek,
 > 
-> I'm under the impression that we don't quite care about out-of-tree drivers.
-> I have seen many times out-of-tree drivers to be broken due to API changes,
-> renames or even parameter meaning change. 
+> On Tue, May 22, 2018 at 11:53 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>> On 05/22/2018 08:36 PM, Geert Uytterhoeven wrote:
+>>> On Mon, May 21, 2018 at 3:11 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>>>> --- a/drivers/pci/host/pcie-rcar.c
+>>>> +++ b/drivers/pci/host/pcie-rcar.c
+>>>> @@ -900,6 +900,28 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+>>>>         return err;
+>>>>  }
+>>>>
+>>>> +static void rcar_pcie_teardown_msi(struct rcar_pcie *pcie)
+>>>> +{
+>>>> +       struct rcar_msi *msi = &pcie->msi;
+>>>> +       int irq, i;
+>>>> +
+>>>> +       /* Disable all MSI interrupts */
+>>>> +       rcar_pci_write_reg(pcie, 0, PCIEMSIIER);
+>>>> +
+>>>> +       /* Disable address decoding of the MSI interrupt, MSIFE */
+>>>> +       rcar_pci_write_reg(pcie, 0, PCIEMSIALR);
+>>>> +
+>>>> +       free_pages(msi->pages, 0);
+>>>> +
+>>>> +       for (i = 0; i < INT_PCI_MSI_NR; i++) {
+>>>> +               irq = irq_find_mapping(msi->domain, i);
+>>>> +               if (irq > 0)
+>>>> +                       irq_dispose_mapping(irq);
+>>>> +       }
+>>>
+>>> Note that similar calls to irq_dispose_mapping() should be added to the
+>>> failure path of rcar_pcie_enable_msi(), too.
+>>
+>> There are no failures happening in rcar_pcie_enable_msi() after the
+>> mapping is created, just memory writes, so no. Did I miss something there ?
 > 
-> If the plan is to remove the API, just remove the API today.
+> In my copy, there are two calls to devm_request_irq(). If they fail, the
+> IRQ domain is removed, but the mappings are never disposed of.
 
-I've already sent a __deprecated patch on Monday [1], in v2 of this
-series [2]. Please vote against that there, and I will replace it with a
-complete removal of that API.
-
-Thanks,
-Jan
-
-[1] https://lkml.org/lkml/2018/4/30/22
-[2] https://lkml.org/lkml/2018/4/30/24
+Ah, true, I'll pull out a bit of the rcar_pcie_teardown_msi and call it
+in the failpath to remove the mapping. Thanks
 
 -- 
-Siemens AG, Corporate Technology, CT RDA IOT SES-DE
-Corporate Competence Center Embedded Linux
+Best regards,
+Marek Vasut
