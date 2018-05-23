@@ -1,68 +1,75 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 8 May 2018 11:58:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: okaya@codeaurora.org
-Subject: Re: AER: Malformed TLP recovery deadlock with NVMe drives
-Message-ID: <20180508165849.GC9529@bhelgaas-glaptop.roam.corp.google.com>
-References: <8cf4e563-5f84-f8bd-88a6-8369cdf07b29@gmail.com>
- <7afd280ad80a73b39e6c9b9a9e29abcc@codeaurora.org>
- <5c97a7c2-cb53-4740-fda0-50ba92288c5c@gmail.com>
- <9fc90040d5712282ea223807ace39312@codeaurora.org>
- <1125ddf8-f342-3f8f-90ee-0aa94287360c@gmail.com>
- <16bdb0febb842ad0980db9214c8076c5@codeaurora.org>
- <3d4991bc2948430d910a16da36c90b91@ausx13mps321.AMER.DELL.COM>
- <1fdfaaa47ad782ee864f24c5a75a355a@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yb0-f194.google.com ([209.85.213.194]:38883 "EHLO
+        mail-yb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933928AbeEWSwc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 14:52:32 -0400
+Date: Wed, 23 May 2018 13:52:29 -0500
+From: Rob Herring <robh@kernel.org>
+To: Alan Douglas <adouglas@cadence.com>
+Cc: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.com, cyrille.pitchen@free-electrons.com
+Subject: Re: [RESEND PATCH 3/4] dt-bindings: PCI: cadence: Add DT bindings
+ for optional PHYs
+Message-ID: <20180523185229.GA7457@rob-hp-laptop>
+References: <1526995952-22031-1-git-send-email-adouglas@cadence.com>
 MIME-Version: 1.0
-In-Reply-To: <1fdfaaa47ad782ee864f24c5a75a355a@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Alex_Gagniuc@dellteam.com, linux-pci@vger.kernel.org,
- linux-nvme@lists.infradead.org, Shyam.Iyer@dell.com, mr.nuke.me@gmail.com,
- Austin.Bolen@dell.com, keith.busch@intel.com, linux-pci-owner@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1526995952-22031-1-git-send-email-adouglas@cadence.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 08, 2018 at 01:21:38AM +0100, okaya@codeaurora.org wrote:
-> On 2018-05-08 00:57, Alex_Gagniuc@Dellteam.com wrote:
-> > On 5/7/2018 5:46 PM, okaya@codeaurora.org wrote:
-> > [snip]
-> > > > If it were easy, somebody would have patched it by now ;)
-> > > 
-> > > Can you file a bugzilla CC me, keith and bjorn and attach all of your
-> > > logs?
-> > 
-> > Sure. Which bugzilla?
-> > 
+On Tue, May 22, 2018 at 02:32:32PM +0100, Alan Douglas wrote:
+> Update DT documentation to include optional PHYs for cadence PCIe
+> host and endpoint controllers.
 > 
-> https://bugzilla.kernel.org
+> Signed-off-by: Alan Douglas <adouglas@cadence.com>
+> ---
+>  Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt   | 4 ++++
+>  Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt | 2 ++
+>  2 files changed, 6 insertions(+)
 > 
-> Drivers -> pci
+> diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+> index 9a305237..e40c635 100644
+> --- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+> +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+> @@ -9,6 +9,8 @@ Required properties:
+>  
+>  Optional properties:
+>  - max-functions: Maximum number of functions that can be configured (default 1).
+> +- phys: From PHY bindings: List of Generic PHY phandles.
+> +- phy-names:  List of names to identify the PHY.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=199657
+You need to define how many. I'd assume one, but I guess your example is 
+1 per lane.
 
-Thanks for the bugzilla.  Can you add the "lspci -vv" output (the
-"lspci -tvnn" output doesn't have the details about individual
-devices) and also the specifics about how you inject the error (I
-assume you're using setpci to update MPS, but it would help others
-reproduce it to see the exact command and the lspci output so they can
-adjust to their local topology).
-
-I don't know how you collected the dmesg logs, but they have a bunch
-of gunk in them (looks like maybe colorizing escape sequences?).  I
-always think it's nice to have the plain ASCII complete log from
-beginning of boot, e.g., from "dmesg" command or similar.  But I
-probably won't have time to look at them myself, and maybe what's
-there is enough.
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+>  
+>  Example:
+>  
+> @@ -19,4 +21,6 @@ pcie@fc000000 {
+>  	reg-names = "reg", "mem";
+>  	cdns,max-outbound-regions = <16>;
+>  	max-functions = /bits/ 8 <8>;
+> +	phys = <&ep_phy0 &ep_phy1>;
+> +	phy-names = "pcie-lane0","pcie-lane1";
+>  };
+> diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+> index 20a33f3..c0ca4c1 100644
+> --- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+> +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+> @@ -24,6 +24,8 @@ Optional properties:
+>    translations (default 32)
+>  - vendor-id: The PCI vendor ID (16 bits, default is design dependent)
+>  - device-id: The PCI device ID (16 bits, default is design dependent)
+> +- phys: From PHY bindings: List of Generic PHY phandles.
+> +- phy-names:  List of names to identify the PHY.
+>  
+>  Example:
+>  
+> -- 
+> 2.2.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
