@@ -1,101 +1,136 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v16 2/9] pci-error-recovery: Add AER_FATAL handling
-Date: Fri, 11 May 2018 06:43:21 -0400
-Message-Id: <1526035408-31328-3-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
-References: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=Dr9k=IK=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=Dr9k=IK=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, ryan@finnie.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ Kate Stewart <kstewart@linuxfoundation.org>,
+ Frederick Lawler <fred@fredlawl.com>, Dongdong Liu
+ <liudongdong3@huawei.com>, Mika Westerberg
+ <mika.westerberg@linux.intel.com>, open list <linux-kernel@vger.kernel.org>,
+ Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com,
+ linux-scsi@vger.kernel.org
+References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+ <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
+Date: Wed, 23 May 2018 18:57:18 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-It adds description on AER_FATAL error handling.
+On 5/23/2018 5:32 PM, Bjorn Helgaas wrote:
+> 
+> The crash seems to indicate that the hpsa device attempted a DMA after
+> we cleared the Root Port's PCI_COMMAND_MASTER, which means
+> hpsa_shutdown() didn't stop DMA from the device (it looks like *most*
+> shutdown methods don't disable device DMA, so it's in good company).
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+All drivers are expected to shutdown DMA and interrupts in their shutdown()
+routines. They can skip removing threads, data structures etc. but DMA and
+interrupt disabling are required. This is the difference between shutdown()
+and remove() callbacks.
 
-diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
-index 0b6bb3e..688b691 100644
---- a/Documentation/PCI/pci-error-recovery.txt
-+++ b/Documentation/PCI/pci-error-recovery.txt
-@@ -110,7 +110,7 @@ The actual steps taken by a platform to recover from a PCI error
- event will be platform-dependent, but will follow the general
- sequence described below.
- 
--STEP 0: Error Event
-+STEP 0: Error Event: ERR_NONFATAL
- -------------------
- A PCI bus error is detected by the PCI hardware.  On powerpc, the slot
- is isolated, in that all I/O is blocked: all reads return 0xffffffff,
-@@ -228,13 +228,7 @@ proceeds to either STEP3 (Link Reset) or to STEP 5 (Resume Operations).
- If any driver returned PCI_ERS_RESULT_NEED_RESET, then the platform
- proceeds to STEP 4 (Slot Reset)
- 
--STEP 3: Link Reset
--------------------
--The platform resets the link.  This is a PCI-Express specific step
--and is done whenever a fatal error has been detected that can be
--"solved" by resetting the link.
--
--STEP 4: Slot Reset
-+STEP 3: Slot Reset
- ------------------
- 
- In response to a return value of PCI_ERS_RESULT_NEED_RESET, the
-@@ -320,7 +314,7 @@ Failure).
- >>> However, it probably should.
- 
- 
--STEP 5: Resume Operations
-+STEP 4: Resume Operations
- -------------------------
- The platform will call the resume() callback on all affected device
- drivers if all drivers on the segment have returned
-@@ -332,7 +326,7 @@ a result code.
- At this point, if a new error happens, the platform will restart
- a new error recovery sequence.
- 
--STEP 6: Permanent Failure
-+STEP 5: Permanent Failure
- -------------------------
- A "permanent failure" has occurred, and the platform cannot recover
- the device.  The platform will call error_detected() with a
-@@ -355,6 +349,27 @@ errors. See the discussion in powerpc/eeh-pci-error-recovery.txt
- for additional detail on real-life experience of the causes of
- software errors.
- 
-+STEP 0: Error Event: ERR_FATAL
-+-------------------
-+PCI bus error is detected by the PCI hardware. On powerpc, the slot is
-+isolated, in that all I/O is blocked: all reads return 0xffffffff, all
-+writes are ignored.
-+
-+STEP 1: Remove devices
-+--------------------
-+Platform removes the devices depending on the error agent, it could be
-+this port for all subordinates or upstream component (likely downstream
-+port)
-+
-+STEP 2: Reset link
-+--------------------
-+The platform resets the link.  This is a PCI-Express specific step and is
-+done whenever a fatal error has been detected that can be "solved" by
-+resetting the link.
-+
-+STEP 3: Re-enumerate the devices
-+--------------------
-+Initiates the re-enumeration.
- 
- Conclusion; General Remarks
- ---------------------------
+If you see that this is not being done in HPSA, then that is where the
+bugfix should be.
+
+Counter argument is that if shutdown() is not implemented, at least remove()
+should be called. Expecting all drivers to implement shutdown() callbacks
+is just bad by design in my opinion. 
+
+Code should have fallen back to remove() if shutdown() doesn't exist.
+I can propose a patch for this but this is yet another story to chase.
+
+> 
+>> This has been found to cause crashes on HP DL360 Gen9 machines during
+>> reboot. Besides, kexec is already clearing the bus master bit in
+>> pci_device_shutdown() after all PCI drivers are removed.
+> 
+> The original path was:
+> 
+>   pci_device_shutdown(hpsa)
+>     drv->shutdown
+>       hpsa_shutdown                     # hpsa_pci_driver.shutdown
+>   ...
+>   pci_device_shutdown(RP)               # root port
+>     drv->shutdown
+>       pcie_portdrv_remove               # pcie_portdriver.shutdown
+>         pcie_port_device_remove
+>           pci_disable_device
+>             do_pci_disable_device
+>               # clear RP PCI_COMMAND_MASTER
+>     if (kexec)
+>       pci_clear_master(RP)
+>         # clear RP PCI_COMMAND_MASTER
+> 
+> If I understand correctly, the new path after this patch is:
+> 
+>   pci_device_shutdown(hpsa)
+>     drv->shutdown
+>       hpsa_shutdown                     # hpsa_pci_driver.shutdown
+>   ...
+>   pci_device_shutdown(RP)               # root port
+>     drv->shutdown
+>       pcie_portdrv_shutdown             # pcie_portdriver.shutdown
+>         __pcie_portdrv_remove(RP, false)
+>           pcie_port_device_remove(RP, false)
+>             # do NOT clear RP PCI_COMMAND_MASTER
+
+yup
+
+>     if (kexec)
+>       pci_clear_master(RP)
+>         # clear RP PCI_COMMAND_MASTER
+> 
+> I guess this patch avoids the panic during reboot because we're not in
+> the kexec path, so we never clear PCI_COMMAND_MASTER for the Root
+> Port, so the hpsa device can DMA happily until the lights go out.
+> 
+> But DMA continuing for some random amount of time before the reboot or
+> shutdown happens makes me a little queasy.  That doesn't sound safe.
+> The more I think about this, the more confused I get.  What am I
+> missing?  
+
+see above.
+
+> 
+>> Just remove the extra clear in shutdown path by seperating the remove and
+>> shutdown APIs in the PORTDRV.
+>>
+>>  static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
+>> @@ -218,7 +228,7 @@ static struct pci_driver pcie_portdriver = {
+>>  
+>>  	.probe		= pcie_portdrv_probe,
+>>  	.remove		= pcie_portdrv_remove,
+>> -	.shutdown	= pcie_portdrv_remove,
+>> +	.shutdown	= pcie_portdrv_shutdown,
+> 
+> What are the circumstances when we call .remove() vs .shutdown()?
+> 
+> I guess the main (maybe only) way to call .remove() is to hot-remove
+> the port?  And .shutdown() is basically used in the reboot and kexec
+> paths?
+
+Correct. shutdown() is only called during reboot/shutdown calls. If you echo
+1 into the remove file, remove() gets called. Handy for hotplug use cases.
+It needs to be the exact opposite of the probe. It needs to clean up resources
+etc. and have the HW in a state where it can be reinitialized via probe again.
+
+> 
+>>  	.err_handler	= &pcie_portdrv_err_handler,
+>>  
+>> -- 
+>> 2.7.4
+>>
+> 
+
+
 -- 
-2.7.4
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
