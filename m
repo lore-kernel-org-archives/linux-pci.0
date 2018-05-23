@@ -1,59 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48342 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755417AbeEaPyV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 11:54:21 -0400
-Subject: Re: [PATCH] PCI: Check for PCIe downtraining conditions
-To: "Alex G." <mr.nuke.me@gmail.com>, Alex_Gagniuc@Dellteam.com,
-        bhelgaas@google.com
-Cc: Austin.Bolen@dell.com, Shyam.Iyer@dell.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180531150535.9684-1-mr.nuke.me@gmail.com>
- <28004506-24f0-6d10-2d1e-074e0483d2f9@codeaurora.org>
- <4e0611c872054e768daa96b302651db3@ausx13mps321.AMER.DELL.COM>
- <f260078b-6918-7fd9-39d6-e9f300e4c048@codeaurora.org>
- <3b8a895b-3080-7ddb-cbfd-5aa972e9bf65@gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <35563ce3-e235-096c-4b9b-5f3664d67d0f@codeaurora.org>
-Date: Thu, 31 May 2018 11:54:18 -0400
+Received: from mail-ua0-f194.google.com ([209.85.217.194]:39425 "EHLO
+        mail-ua0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932391AbeEWLMb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 07:12:31 -0400
 MIME-Version: 1.0
-In-Reply-To: <3b8a895b-3080-7ddb-cbfd-5aa972e9bf65@gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180523105220.25518-1-marek.vasut+renesas@gmail.com>
+References: <20180523105220.25518-1-marek.vasut+renesas@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 23 May 2018 13:12:29 +0200
+Message-ID: <CAMuHMdXAgeat-vL0Cvh-w9+Fnvru_WW5g1qYu=ewM_b7fcJ8iQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: rcar: Remove IRQ mappings in rcar_pcie_enable_msi failpath
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/31/2018 11:46 AM, Alex G. wrote:
->> https://lkml.org/lkml/2018/3/30/553
-> Oh, pcie_get_speed_cap()/pcie_get_width_cap() seems to handle the
-> capability. Not seeing one for status and speed name.
-> 
->> are you working on linux-next?
-> v4.17-rc7
-> 
+Hi Marek,
 
-I think everything you need is in the series. I don't know which linux
-tree this landed or if it landed. Probably, it is shipping for 4.18. 
-Need some help from Bjorn where to locate these.
+On Wed, May 23, 2018 at 12:52 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+> The rcar_pcie_enable_msi() creates IRQ mappings using irq_create_mapping()
+> before requesting the IRQs using devm_request_irq(). If devm_request_irq()
+> fails for some reason, rcar_pcie_enable_msi() does not remove the mapping.
+>
+> Pull out the code for disposing IRQ mappings from rcar_pcie_teardown_msi()
+> into a separate function and call it from both rcar_pcie_teardown_msi()
+> and rcar_pcie_enable_msi() failpath to remove the mappings correctly.
+>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-Fri, 30 Mar 2018 16:04:40 -0500
+Thanks a lot!
 
-Bjorn Helgaas (6):
-      bnx2x: Report PCIe link properties with pcie_print_link_status()
-      bnxt_en: Report PCIe link properties with pcie_print_link_status()
-      cxgb4: Report PCIe link properties with pcie_print_link_status()
-      fm10k: Report PCIe link properties with pcie_print_link_status()
-      ixgbe: Report PCIe link properties with pcie_print_link_status()
-      PCI: Remove unused pcie_get_minimum_link()
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-Tal Gilboa (8):
-      PCI: Add pcie_get_speed_cap() to find max supported link speed
-      PCI: Add pcie_get_width_cap() to find max supported link width
-      PCI: Add pcie_bandwidth_capable() to compute max supported link bandwidth
-      PCI: Add pcie_bandwidth_available() to compute bandwidth available to device
-      PCI: Add pcie_print_link_status() to log link speed and whether it's limited
+Gr{oetje,eeting}s,
 
+                        Geert
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
