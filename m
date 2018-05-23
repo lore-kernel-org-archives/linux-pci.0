@@ -1,137 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 2 May 2018 08:26:09 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 23 May 2018 08:33:21 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gilles Buloz <Gilles.Buloz@kontron.com>
-Subject: Re: LS1043A : "synchronous abort" at boot due to PCI config read
-Message-ID: <20180502132501.GE11698@bhelgaas-glaptop.roam.corp.google.com>
-References: <5AD0E995.3090802@kontron.com>
- <CAKv+Gu_v4V8DUa6f4WxvjZHoJbbqT0mKpOwYVmaLaE20CB3U_g@mail.gmail.com>
- <5AE317AB.4020404@kontron.com>
- <20180427165627.GA8199@bhelgaas-glaptop.roam.corp.google.com>
- <5AE6D7E2.9030506@kontron.com> <5AE71BF4.2010200@kontron.com>
- <20180430170447.GA95643@bhelgaas-glaptop.roam.corp.google.com>
- <5AE75809.30701@kontron.com> <5AE9B5BB.2080003@kontron.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Doug Meyer <dmeyer@gigaio.com>, kurt.schwemmer@microsemi.com,
+        linux-pci@vger.kernel.org, linux-ntb <linux-ntb@googlegroups.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jon Mason <jdmason@kudzu.us>,
+        "Jiang, Dave" <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>, linux-kernel@vger.kernel.org,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH 2/2] NTB: PCI Quirk to Enable Switchtec NT Functionality
+ with IOMMU On
+Message-ID: <20180523133321.GA150632@bhelgaas-glaptop.roam.corp.google.com>
+References: <1526558413-23113-1-git-send-email-dmeyer@gigaio.com>
+ <1526558413-23113-3-git-send-email-dmeyer@gigaio.com>
+ <20180517134521.GC19955@bhelgaas-glaptop.roam.corp.google.com>
+ <9dd68ac0-5b9e-b257-49d2-20327c2ab282@deltatee.com>
+ <CA+GK6en+g+T9H0sOMdVXv-_aD3rRcuzZ1JdfK0moEoTuuJnrqQ@mail.gmail.com>
+ <20180522215126.GA22385@bhelgaas-glaptop.roam.corp.google.com>
+ <598f5880-22b2-bbb4-4a37-5a60bae2348b@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <5AE9B5BB.2080003@kontron.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci <linux-pci@vger.kernel.org>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "Minghuan.Lian@nxp.com" <Minghuan.Lian@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <598f5880-22b2-bbb4-4a37-5a60bae2348b@deltatee.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 02, 2018 at 12:57:31PM +0000, Gilles Buloz wrote:
-> Hi Bjorn,
-> See attached patch (tested ok this morning)
+On Tue, May 22, 2018 at 04:23:13PM -0600, Logan Gunthorpe wrote:
+> On 22/05/18 03:51 PM, Bjorn Helgaas wrote:
+> > I don't think the question of when the aliases need to be added is
+> > quite closed.  Logan said "it seems pci_add_dma_alias() must be called
+> > before the driver is initialized and therefore in a quirk", but that
+> > doesn't make clear *why* the alias needs to be added before the driver
+> > is initialized.  The alias shouldn't be needed until the device does a
+> > DMA, and it shouldn't do that until after the driver initializes.
+> 
+> No, Doug tried it in the driver first and it didn't work. The symbol is
+> also not exported which was probably done because it can't be used in
+> the driver.
+> 
+> > I suspect the reason the existing quirks are in drivers/pci/quirks.c
+> > is because the IOMMU driver is in the host OS, but the host may not
+> > have a driver for the device if the device is passed through to a
+> > guest OS.  In that case, the only way to add the alias is by using a
+> > quirk that is always built into the host OS.
+> 
+> Digging into the code a bit, it's not because it must be done by the
+> Host OS but because it must be done before the IOMMU groups are created.
+> The IOMMU code registers a bus_notifier and creates the groups based on
+> the dma_alias mask when it receives the BUS_NOTIFY_ADD_DEVICE event.
+> This event is notified in device_add() just before a call to
+> bus_probe_device()[1]. Therefore, if a driver attempts to use
+> pci_add_dma_alias() as part of it's probe routine, it will be too late
+> as the IOMMU has already setup the groups based on the original version
+> of the dma_alias_mask.
 
-This looks good.  Minor comments below.
+This (and Alex's) analysis is very useful and I'd like to capture it
+somehow, perhaps by expanding the poor pci_add_dma_alias() function
+comment I added with f0af9593372a ("PCI: Add pci_add_dma_alias() to
+abstract implementation").
 
-I can fix minor things myself, but I do need a signed-off-by from you
-before applying (see
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst)
+The admonition to "call early" without any details about *how* early
+or *why* it needs to be called early is not really very useful.
 
-Please add a changelog, too, and include the patch inline (as opposed
-to as an attachment) if possible.
+If we added your analysis, it would be a great help to anybody who
+reworks IOMMU groups in the future.
 
-> --- include/linux/pci.h.orig	2018-03-26 16:51:18.050000000 +0000
-> +++ include/linux/pci.h	2018-04-30 18:29:14.140000000 +0000
-> @@ -193,6 +193,7 @@
->  enum pci_bus_flags {
->  	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
->  	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
-> +	PCI_BUS_FLAGS_NO_EXTCFG = (__force pci_bus_flags_t) 4,
-
-Best if you can rebase this to v4.17-rc1.
-
->  };
->  
->  /* These values come from the PCI Express Spec */
-> --- drivers/pci/probe.c.orig	2018-01-22 09:29:52.000000000 +0000
-> +++ drivers/pci/probe.c	2018-05-02 13:44:35.530000000 +0000
-> @@ -664,6 +664,23 @@
->  	}
->  }
->  
-> +static bool pci_bridge_child_bus_ext_cfg_accessible(struct pci_dev *bridge)
-> +{
-> +	int pos;
-> +	u32 status;
-> +
-> +	if (!pci_is_pcie(bridge) || /* PCI/PCI bridge */
-> +	    (pci_pcie_type(bridge) == PCI_EXP_TYPE_PCIE_BRIDGE) || /* PCIe/PCI bridge in forward mode */
-> +	    (pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE)) {  /* PCIe/PCI bridge in reverse mode */
-> +		pos = pci_find_capability(bridge, PCI_CAP_ID_PCIX);
-> +		if (pos)
-> +			pci_read_config_dword(bridge, pos + PCI_X_STATUS, &status);
-> +		return pos && (status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ));
-> +	}
-
-Please arrange this so everything fits in 80 columns.
-
-If you can split it into several simpler "if" statements rather
-than one with a complicated expression, that would also be good.
-
-> +
-> +	return true;
-> +}
-> +
->  static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  					   struct pci_dev *bridge, int busnr)
->  {
-> @@ -725,6 +742,19 @@
->  	/* Create legacy_io and legacy_mem files for this bus */
->  	pci_create_legacy_files(child);
->  
-> +	/*
-> +	 * if bus_flags inherited from parent bus do not already report lack of extended config
-> +	 * space support, check if supported by child bus by checking its parent bridge
-> +	 */
-
-Wrap to fit in 80 columns.
-
-> +	if (bridge && !(child->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG)) {
-
-The double negative makes this a little bit hard to read.  Maybe it
-could be improved by reversing the sense of something?
-
-> +		if (!pci_bridge_child_bus_ext_cfg_accessible(bridge)) {
-> +			child->bus_flags |= PCI_BUS_FLAGS_NO_EXTCFG;
-> +			dev_info(&child->dev, "extended config space not accessible due to parent bridge\n");
-
-In v4.17-rc1, there's a pci_info() that should work here (instead of
-dev_info()).
-
-> +		}
-> +	} else {
-> +		dev_info(&child->dev, "extended config space not accessible due to parent bus\n");
-> +	}
-> +
->  	return child;
->  }
->  
-> @@ -1084,6 +1114,9 @@
->  	u32 status;
->  	u16 class;
->  
-> +	if (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG)
-> +		return PCI_CFG_SPACE_SIZE;
-> +
->  	class = dev->class >> 8;
->  	if (class == PCI_CLASS_BRIDGE_HOST)
->  		return pci_cfg_space_size_ext(dev);
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> I suspect this is by design as the groups must be created before and any
+> dma_maps are done on the device and some drivers may create dma_maps
+> during probe.
+> 
+> Logan
+> 
+> [1]
+> https://elixir.bootlin.com/linux/v4.17-rc6/source/drivers/base/core.c#L1863
