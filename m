@@ -1,73 +1,44 @@
-Return-Path: <SRS0=Iw/I=HX=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=Iw/I=HX=h08.hostsharing.net=foo00@kernel.org>
-Date: Fri, 4 May 2018 09:18:27 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v5 3/9] PCI: pciehp: Clear Presence Detect and Data Link
- Layer Status Changed on resume
-Message-ID: <20180504071827.GA10888@wunner.de>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
- <20180416103453.46232-4-mika.westerberg@linux.intel.com>
- <20180501215211.GD11698@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:57136 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933928AbeEWTKm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 15:10:42 -0400
+Subject: pci=earlydump on ARM
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+References: <bug-199671-164391@https.bugzilla.kernel.org/>
+ <bug-199671-164391-E4Mtn0How4@https.bugzilla.kernel.org/>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <9756cf4c-0cec-00f7-3cc6-f09e34177cf9@codeaurora.org>
+Date: Wed, 23 May 2018 15:10:39 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180501215211.GD11698@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <bug-199671-164391-E4Mtn0How4@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 01, 2018 at 04:52:11PM -0500, Bjorn Helgaas wrote:
-> On Mon, Apr 16, 2018 at 01:34:47PM +0300, Mika Westerberg wrote:
-> > After suspend/resume cycle the Presence Detect or Data Link Layer Status
-> > Changed bits might be set and if we don't clear them those events will
-> > not fire anymore and nothing happens for instance when a device is now
-> > hot-unplugged.
-> > 
-> > Fix this by clearing those bits in a newly introduced function
-> > pcie_reenable_notification(). This should be fine because immediately
-> > after we check if the adapter is still present by reading directly from
-> > the status register.
+> If that doesn't work or you'd rather brute-force it, you could try doing
+> something like "pci=earlydump".  This is currently only implemented for x86, so
+> it would be some work to implement something similar for arm64.  It would be a
+> nice upstream addition if you *did* implement it.
 > 
-> I want to understand why we need to handle this differently between
-> the boot-time probe path and the resume path.
+> In the earlydump output I would be looking for clues about the power state of
+> 03:00.0 to try to figure out if the bootloader left it powered off or if Linux
+> is doing something to turn it off.
 > 
-> This patch clears PCI_EXP_SLTSTA_PDC and PCI_EXP_SLTSTA_DLLSC in the
-> resume path:
-> 
->   pciehp_resume
->     pcie_reenable_notification
->       # clear PDC DLLSC
->       pcie_enable_notification
->         # set DLLSCE ABPE/PDCE HPIE CCIE
->     pciehp_get_adapter_status
->       # read PCI_EXP_SLTSTA
 
-The Slot Control register is already written during the ->resume_noirq
-phase via:
+Is it really possible to implement a generic version of this?
 
-  pci_pm_resume_noirq
-    pci_pm_default_resume_early
-    pci_restore_state
-      pci_restore_pcie_state
+PCI on ARM64 is not really unified. There are several host bridge drivers for
+different types of access. 
 
->From that point on, slot events are enabled, but they're not received
-because interrupts are disabled until the ->resume_early phase commences.
+If we limit the functionality to ACPI, the answer is still maybe if we can pass
+the base address of the MMCONFIG region. 
 
-My guess is that if the hotplug port uses edge-triggered MSI/MSI-X,
-an interrupt may have already been sent during ->resume_noirq, but
-was lost because interrupts were disabled.  Clearing the Slot Status
-register thus acknowledges any lost interrupts.
+All products use a different MMCONFIG region.
 
-If this theory is correct, it should probably be included in the
-commit message and/or a code comment so that it's clear what's
-going on.
-
-Thanks,
-
-Lukas
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
