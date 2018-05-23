@@ -1,65 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:32844 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933290AbeEWOdp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 10:33:45 -0400
+Subject: Re: [PATCH 1/5] PCI/AER: Define and allocate aer_stats structure for
+ AER capable devices
+To: Matthew Wilcox <willy@infradead.org>
+CC: Rajat Jain <rajatja@google.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
- <20180423233046.21476-5-logang@deltatee.com>
- <CAPcyv4g+5N_n03J-VhmJfrr60Sqk95ZapLKBkwSsGvV4nQ+ZRw@mail.gmail.com>
- <64C231F5-DE36-415F-B308-3A423B0BBACB@raithlin.com>
- <15433946-f7f5-f610-4e80-380fb59920e5@redhat.com>
- <3C9FB262-A93C-4C8F-B1E0-85C6D6F78BC2@raithlin.com>
- <c5f30ced-7bbf-9420-db1a-72519fc78b3a@redhat.com>
- <20180508180157.7c7b393f@w520.home>
-From: Don Dutile <ddutile@redhat.com>
-Message-ID: <f0d25e16-1201-1fc5-334f-4205abc95500@redhat.com>
-Date: Wed, 9 May 2018 11:47:31 -0400
+        Jonathan Corbet <corbet@lwn.net>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Thomas Tai <thomas.tai@oracle.com>,
+        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Kyle McMartin <jkkm@fb.com>,
+        <rajatxjain@gmail.com>
+References: <20180522222805.80314-1-rajatja@google.com>
+ <20180522222805.80314-2-rajatja@google.com>
+ <62fae8eb-aaed-65b2-19ad-7c57b3a9bfdc@fb.com>
+ <20180523142656.GE19987@bombadil.infradead.org>
+From: Jes Sorensen <jsorensen@fb.com>
+Message-ID: <46f0a2fa-9b48-c6d3-05ac-a75168b1998c@fb.com>
+Date: Wed, 23 May 2018 10:32:24 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180508180157.7c7b393f@w520.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180523142656.GE19987@bombadil.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/08/2018 08:01 PM, Alex Williamson wrote:
-> On Tue, 8 May 2018 19:06:17 -0400
-> Don Dutile <ddutile@redhat.com> wrote:
->> On 05/08/2018 05:27 PM, Stephen  Bates wrote:
->>> As I understand it VMs need to know because VFIO passes IOMMU
->>> grouping up into the VMs. So if a IOMMU grouping changes the VM's
->>> view of its PCIe topology changes. I think we even have to be
->>> cognizant of the fact the OS running on the VM may not even support
->>> hot-plug of PCI devices.
->> Alex:
->> Really? IOMMU groups are created by the kernel, so don't know how
->> they would be passed into the VMs, unless indirectly via  PCI(e)
->> layout. At best, twiddling w/ACS enablement (emulation) would cause
->> VMs to see different IOMMU groups, but again, VMs are not the
->> security point/level, the host/HV's are.
+On 05/23/2018 10:26 AM, Matthew Wilcox wrote:
+> On Wed, May 23, 2018 at 10:20:10AM -0400, Jes Sorensen wrote:
+>>> +++ b/drivers/pci/pcie/aer/aerdrv_stats.c
+>>> @@ -0,0 +1,64 @@
+>>> +// SPDX-License-Identifier: GPL-2.0
+>>
+>> Fix the formatting please - that gross // gibberish doesn't belong there.
 > 
-> Correct, the VM has no concept of the host's IOMMU groups, only the
-> hypervisor knows about the groups, but really only to the extent of
-> which device belongs to which group and whether the group is viable.
-> Any runtime change to grouping though would require DMA mapping
-> updates, which I don't see how we can reasonably do with drivers,
-> vfio-pci or native host drivers, bound to the affected devices.  Thanks,
+> Sorry, Jes.  The Chief Penguin has Spoken, and that's the preferred
+> syntax:
 > 
-> Alex
+> 2. Style:
 > 
-A change in iommu groups would/could require a device remove/add cycle to get an updated DMA-mapping (yet-another-overused-term: iommu 'domain').
+>    The SPDX license identifier is added in form of a comment.  The comment
+>    style depends on the file type::
+> 
+>       C source: // SPDX-License-Identifier: <SPDX License Expression>
+> 
+> (you can dig up the discussion around this on the mailing list if you
+> like.  Linus actually thinks that C++ single-line comments are one of
+> the few things that language got right)
+
+Well I'll agree to disagree with Linus on this one. It's ugly as fsck
+and allows for ambiguous statements in the code.
+
+Jes
