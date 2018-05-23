@@ -1,82 +1,132 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Logan Gunthorpe <logang@deltatee.com>, =?iso-8859-1?Q?Christian_K=F6nig?=
- <christian.koenig@amd.com>, Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all devices
- behind switches
-Date: Fri, 11 May 2018 22:24:59 +0000
-Message-ID: <YTXPR0101MB2045DC0248A9B125CA276969AA9F0@YTXPR0101MB2045.CANPRD01.PROD.OUTLOOK.COM>
-References: <20180423233046.21476-5-logang@deltatee.com>
- <20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
- <e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
- <0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
- <a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
- <3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
- <20180508133407.57a46902@w520.home>
- <5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
- <20180508141331.7cd737cb@w520.home>
- <d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
- <20180508205005.GC15608@redhat.com>
- <7FFB9603-DF9F-4441-82E9-46037CB6C0DE@raithlin.com>
- <a1a36f88-fbfb-b5ee-6dcb-5c5bb96132dd@amd.com>
- <4e0d0b96-ab02-2662-adf3-fa956efd294c@deltatee.com>
- <2fc61d29-9eb4-d168-a3e5-955c36e5d821@amd.com>
- <94C8FE12-7FC3-48BD-9DCA-E6A427E71810@raithlin.com>
- <f0101988-cf82-7ffb-2aca-d3b8d2f4b504@deltatee.com>
- <868B49CE-4F0E-4A48-BE78-12149F85F1A4@raithlin.com>
- <8113cba8-62b9-1801-7a77-f82be223b183@deltatee.com>
- <cf2b92c9-7c5b-f19c-b5b1-2f2d435296d1@amd.com>
- <53fa38ce-40dd-6bc1-9b83-c6ccf228b755@deltatee.com>,
- <A50EA568-81E7-4AD7-8C1B-1029FEA92F49@raithlin.com>
-In-Reply-To: <A50EA568-81E7-4AD7-8C1B-1029FEA92F49@raithlin.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: ryan@finnie.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>, stable@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
+Date: Tue, 22 May 2018 22:44:46 -0400
+Message-Id: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- Keith Busch <keith.busch@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Bjorn
- Helgaas <helgaas@kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-All
+'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
+shutdown")' has been added to kernel to shutdown pending PCIe port
+service interrupts during reboot so that a newly started kexec kernel
+wouldn't observe pending interrupts.
 
->=A0Alex (or anyone else) can you point to where IOVA addresses are generat=
-ed?
+pcie_port_device_remove() is disabling the root port and switches by
+calling pci_disable_device() after all PCIe service drivers are shutdown.
 
-A case of RTFM perhaps (though a pointer to the code would still be appreci=
-ated).
+pci_disable_device() has a much wider impact then port service itself and
+it prevents all inbound transactions to reach to the system and impacts
+the entire PCI traffic behind the bridge.
 
-https://www.kernel.org/doc/Documentation/Intel-IOMMU.txt
+Issue is that pcie_port_device_remove() doesn't maintain any coordination
+with the rest of the PCI device drivers in the system before clearing the
+bus master bit.
 
-Some exceptions to IOVA
------------------------
-Interrupt ranges are not address translated, (0xfee00000 - 0xfeefffff).
-The same is true for peer to peer transactions. Hence we reserve the
-address from PCI MMIO ranges so they are not allocated for IOVA addresses.
+This has been found to cause crashes on HP DL360 Gen9 machines during
+reboot. Besides, kexec is already clearing the bus master bit in
+pci_device_shutdown() after all PCI drivers are removed.
 
-Cheers
+Just remove the extra clear in shutdown path by seperating the remove and
+shutdown APIs in the PORTDRV.
 
-Stephen
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
+Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
+Cc: stable@vger.kernel.org
+Reported-by: Ryan Finnie <ryan@finnie.org>
+---
+ drivers/pci/pcie/portdrv.h      |  2 +-
+ drivers/pci/pcie/portdrv_core.c |  5 +++--
+ drivers/pci/pcie/portdrv_pci.c  | 16 +++++++++++++---
+ 3 files changed, 17 insertions(+), 6 deletions(-)
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index d0c6783..f6e88fe 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -86,7 +86,7 @@ int pcie_port_device_register(struct pci_dev *dev);
+ int pcie_port_device_suspend(struct device *dev);
+ int pcie_port_device_resume(struct device *dev);
+ #endif
+-void pcie_port_device_remove(struct pci_dev *dev);
++void pcie_port_device_remove(struct pci_dev *dev, bool disable);
+ int __must_check pcie_port_bus_register(void);
+ void pcie_port_bus_unregister(void);
+ 
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index c9c0663..f35341e 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -405,11 +405,12 @@ static int remove_iter(struct device *dev, void *data)
+  * Remove PCI Express port service devices associated with given port and
+  * disable MSI-X or MSI for the port.
+  */
+-void pcie_port_device_remove(struct pci_dev *dev)
++void pcie_port_device_remove(struct pci_dev *dev, bool disable)
+ {
+ 	device_for_each_child(&dev->dev, NULL, remove_iter);
+ 	pci_free_irq_vectors(dev);
+-	pci_disable_device(dev);
++	if (disable)
++		pci_disable_device(dev);
+ }
+ 
+ /**
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 973f1b8..29afaf3 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -137,7 +137,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 	return 0;
+ }
+ 
+-static void pcie_portdrv_remove(struct pci_dev *dev)
++static void __pcie_portdrv_remove(struct pci_dev *dev, bool disable)
+ {
+ 	if (pci_bridge_d3_possible(dev)) {
+ 		pm_runtime_forbid(&dev->dev);
+@@ -145,7 +145,17 @@ static void pcie_portdrv_remove(struct pci_dev *dev)
+ 		pm_runtime_dont_use_autosuspend(&dev->dev);
+ 	}
+ 
+-	pcie_port_device_remove(dev);
++	pcie_port_device_remove(dev, disable);
++}
++
++static void pcie_portdrv_remove(struct pci_dev *dev)
++{
++	return __pcie_portdrv_remove(dev, true);
++}
++
++static void pcie_portdrv_shutdown(struct pci_dev *dev)
++{
++	return __pcie_portdrv_remove(dev, false);
+ }
+ 
+ static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
+@@ -218,7 +228,7 @@ static struct pci_driver pcie_portdriver = {
+ 
+ 	.probe		= pcie_portdrv_probe,
+ 	.remove		= pcie_portdrv_remove,
+-	.shutdown	= pcie_portdrv_remove,
++	.shutdown	= pcie_portdrv_shutdown,
+ 
+ 	.err_handler	= &pcie_portdrv_err_handler,
+ 
+-- 
+2.7.4
