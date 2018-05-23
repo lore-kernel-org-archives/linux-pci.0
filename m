@@ -1,36 +1,40 @@
-Return-Path: <SRS0=C1HO=IR=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=C1HO=IR=linux.intel.com=mika.westerberg@kernel.org>
-Date: Wed, 30 May 2018 16:27:04 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v5 3/9] PCI: pciehp: Clear Presence Detect and Data Link
- Layer Status Changed on resume
-Message-ID: <20180530132704.GU15419@lahna.fi.intel.com>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
- <20180416103453.46232-4-mika.westerberg@linux.intel.com>
- <20180501215211.GD11698@bhelgaas-glaptop.roam.corp.google.com>
- <20180502115509.GF2355@lahna.fi.intel.com>
- <20180502134148.GF11698@bhelgaas-glaptop.roam.corp.google.com>
- <20180503104250.GJ2355@lahna.fi.intel.com>
- <20180503230108.GD15790@bhelgaas-glaptop.roam.corp.google.com>
- <20180530104050.GA3954@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ns.mm-sol.com ([37.157.136.199]:43721 "EHLO extserv.mm-sol.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932900AbeEWNyf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 May 2018 09:54:35 -0400
+Subject: Re: [PATCH v2] PCI: qcom: add runtime pm support to pcie_port
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        lorenzo.pieralisi@arm.com, bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bjorn.andersson@linaro.org, vkoul@kernel.org
+References: <20180523104425.6650-1-srinivas.kandagatla@linaro.org>
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <30d3e568-4e17-4991-70d6-e86e10ef4dea@mm-sol.com>
+Date: Wed, 23 May 2018 16:54:31 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180530104050.GA3954@wunner.de>
+In-Reply-To: <20180523104425.6650-1-srinivas.kandagatla@linaro.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2018 at 12:40:50PM +0200, Lukas Wunner wrote:
-> JFYI, I've added the below patch to my upcoming series which reworks
-> pciehp event handling and adds runtime PM support:
-> https://github.com/l1k/linux/commits/pciehp_runpm_v2
-> 
-> The patch removes pciehp_force and reverts db63d40017a5 as requested.
+Hi Srini,
 
-Thanks for taking care if it! I can remove it from my todo list now :-)
+On 05/23/2018 01:44 PM, Srinivas Kandagatla wrote:
+> This patch is required when the pcie controller sits on a bus with
+> its own power domain and clocks which are controlled via a bus driver
+> like simple pm bus. As these bus driver have runtime pm enabled, it makes
+> sense to update the usage counter so that the runtime pm does not suspend
+> the clks or power domain associated with the bus driver.
+> 
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> ---
+>  drivers/pci/dwc/pcie-qcom.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+
+Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+
+-- 
+regards,
+Stan
