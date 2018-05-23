@@ -1,54 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ua0-f196.google.com ([209.85.217.196]:39529 "EHLO
-        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752406AbeEVPLd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 11:11:33 -0400
+Return-Path: <SRS0=35VJ=IK=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=35VJ=IK=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Doug Meyer <dmeyer@gigaio.com>, kurt.schwemmer@microsemi.com,
+ linux-pci@vger.kernel.org, linux-ntb <linux-ntb@googlegroups.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Jon Mason <jdmason@kudzu.us>,
+ "Jiang, Dave" <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
+ linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>
+References: <1526558413-23113-1-git-send-email-dmeyer@gigaio.com>
+ <1526558413-23113-3-git-send-email-dmeyer@gigaio.com>
+ <20180517134521.GC19955@bhelgaas-glaptop.roam.corp.google.com>
+ <9dd68ac0-5b9e-b257-49d2-20327c2ab282@deltatee.com>
+ <CA+GK6en+g+T9H0sOMdVXv-_aD3rRcuzZ1JdfK0moEoTuuJnrqQ@mail.gmail.com>
+ <20180522215126.GA22385@bhelgaas-glaptop.roam.corp.google.com>
+ <598f5880-22b2-bbb4-4a37-5a60bae2348b@deltatee.com>
+ <20180523133321.GA150632@bhelgaas-glaptop.roam.corp.google.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <55fd5f21-2e9c-19a9-117c-e368deaf939e@deltatee.com>
+Date: Wed, 23 May 2018 14:21:59 -0600
 MIME-Version: 1.0
-In-Reply-To: <20180521131123.2009-2-marek.vasut+renesas@gmail.com>
-References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com> <20180521131123.2009-2-marek.vasut+renesas@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 22 May 2018 17:11:31 +0200
-Message-ID: <CAMuHMdX8_EDhn1+ySeo_eK4eJETGs8ZXS736n92xfv0oNAX4zw@mail.gmail.com>
-Subject: Re: [PATCH 2/4] PCI: rcar: Pull bus clock enable/disable from rcar_pcie_get_resources()
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180523133321.GA150632@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH 2/2] NTB: PCI Quirk to Enable Switchtec NT Functionality
+ with IOMMU On
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek,
 
-On Mon, May 21, 2018 at 3:11 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
-> The rcar_pcie_get_resources() is another misnomer with a side effect.
-> The function does not only get resources, but also enables/disables bus
-> clock. This is forgotten in the probe() function though and if anything
-> in probe() fails after rcar_pcie_get_resources() is called, the bus
-> clock are never disabled.
->
-> This patch pulls the clock handling out of the rcar_pcie_get_resources()
-> and enables clock after all the resources were requested. Moreover, this
-> patch also always disables the clock in case of failure.
->
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
 
-Thanks for your patch!
+On 23/05/18 07:33 AM, Bjorn Helgaas wrote:
+> This (and Alex's) analysis is very useful and I'd like to capture it
+> somehow, perhaps by expanding the poor pci_add_dma_alias() function
+> comment I added with f0af9593372a ("PCI: Add pci_add_dma_alias() to
+> abstract implementation").
+> 
+> The admonition to "call early" without any details about *how* early
+> or *why* it needs to be called early is not really very useful.
+> 
+> If we added your analysis, it would be a great help to anybody who
+> reworks IOMMU groups in the future.
 
-Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Sure, I'll work up a patch and send it on shortly.
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Logan
