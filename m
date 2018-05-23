@@ -1,122 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:38203 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932862AbeENQWS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 12:22:18 -0400
-Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id DFA921E044E
-        for <linux-pci@vger.kernel.org>; Mon, 14 May 2018 18:22:16 +0200 (CEST)
-Subject: Re: [PATCH 3/3] PCI: dwc: Replace magic number by defines
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>
-CC: <linux-pci@vger.kernel.org>
-References: <cover.1526310453.git.gustavo.pimentel@synopsys.com>
- <c05c772035bacf71f16fcccc445c589f78ff5ab6.1526310453.git.gustavo.pimentel@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <85f94b0b-4082-58d4-9aab-5772554da1ba@synopsys.com>
-Date: Mon, 14 May 2018 17:22:12 +0100
-MIME-Version: 1.0
-In-Reply-To: <c05c772035bacf71f16fcccc445c589f78ff5ab6.1526310453.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+To: svarbanov@mm-sol.com, lorenzo.pieralisi@arm.com,
+        bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bjorn.andersson@linaro.org, vkoul@kernel.org,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: [PATCH v2] PCI: qcom: add runtime pm support to pcie_port
+Date: Wed, 23 May 2018 11:44:25 +0100
+Message-Id: <20180523104425.6650-1-srinivas.kandagatla@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 4:09 PM de 5/14/2018, Gustavo Pimentel escreveu:
-> Replace magic numbers by a self-explained define to ease human
-> comprehension.
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> Acked-by: Jingoo Han <jingoohan1@gmail.com>
-> ---
->  drivers/pci/dwc/pcie-designware-host.c | 34 ++++++++++++++++++++--------------
->  drivers/pci/dwc/pcie-designware.h      |  1 +
->  2 files changed, 21 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index fc55fde..a7657ab 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -83,18 +83,23 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
->  	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
->  
->  	for (i = 0; i < num_ctrls; i++) {
-> -		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
-> -				    &val);
-> +		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
-> +					(i * MSI_REG_CTRL_BLOCK_SIZE),
-> +				    4, &val);
->  		if (!val)
->  			continue;
->  
->  		ret = IRQ_HANDLED;
->  		pos = 0;
-> -		while ((pos = find_next_bit((unsigned long *) &val, 32,
-> -					    pos)) != 32) {
-> -			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
-> +		while ((pos = find_next_bit((unsigned long *) &val,
-> +					    MAX_MSI_IRQS_PER_CTRL,
-> +					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
-> +			irq = irq_find_mapping(pp->irq_domain,
-> +					       (i * MAX_MSI_IRQS_PER_CTRL) +
-> +					       pos);
->  			generic_handle_irq(irq);
-> -			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
-> +			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
-> +						(i * MSI_REG_CTRL_BLOCK_SIZE),
->  					    4, 1 << pos);
->  			pos++;
->  		}
-> @@ -157,9 +162,9 @@ static void dw_pci_bottom_mask(struct irq_data *data)
->  	if (pp->ops->msi_clear_irq) {
->  		pp->ops->msi_clear_irq(pp, data->hwirq);
->  	} else {
-> -		ctrl = data->hwirq / 32;
-> -		res = ctrl * 12;
-> -		bit = data->hwirq % 32;
-> +		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-> +		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-> +		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
->  
->  		pp->irq_status[ctrl] &= ~(1 << bit);
->  		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
-> @@ -180,9 +185,9 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
->  	if (pp->ops->msi_set_irq) {
->  		pp->ops->msi_set_irq(pp, data->hwirq);
->  	} else {
-> -		ctrl = data->hwirq / 32;
-> -		res = ctrl * 12;
-> -		bit = data->hwirq % 32;
-> +		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-> +		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-> +		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
->  
->  		pp->irq_status[ctrl] |= 1 << bit;
->  		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
-> @@ -652,8 +657,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  
->  	/* Initialize IRQ Status array */
->  	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
-> -		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + (ctrl * 12), 4,
-> -				    &pp->irq_status[ctrl]);
-> +		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
-> +					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
-> +				    4, &pp->irq_status[ctrl]);
->  
->  	/* Setup RC BARs */
->  	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x00000004);
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> index fe811db..bee4e25 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -110,6 +110,7 @@
->  #define MAX_MSI_IRQS			256
->  #define MAX_MSI_IRQS_PER_CTRL		32
->  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
-> +#define MSI_REG_CTRL_BLOCK_SIZE		12
->  #define MSI_DEF_NUM_VECTORS		32
->  
->  /* Maximum number of inbound/outbound iATUs */
-> 
+This patch is required when the pcie controller sits on a bus with
+its own power domain and clocks which are controlled via a bus driver
+like simple pm bus. As these bus driver have runtime pm enabled, it makes
+sense to update the usage counter so that the runtime pm does not suspend
+the clks or power domain associated with the bus driver.
 
-Acked-by: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/pci/dwc/pcie-qcom.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index 5897af7d3355..d6ed5aeeae9c 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -19,6 +19,7 @@
+ #include <linux/of_device.h>
+ #include <linux/of_gpio.h>
+ #include <linux/pci.h>
++#include <linux/pm_runtime.h>
+ #include <linux/platform_device.h>
+ #include <linux/phy/phy.h>
+ #include <linux/regulator/consumer.h>
+@@ -1088,6 +1089,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pci);
+ 	int ret;
+ 
++	pm_runtime_get_sync(pci->dev);
+ 	qcom_ep_reset_assert(pcie);
+ 
+ 	ret = pcie->ops->init(pcie);
+@@ -1124,6 +1126,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
+ 	phy_power_off(pcie->phy);
+ err_deinit:
+ 	pcie->ops->deinit(pcie);
++	pm_runtime_put(pci->dev);
+ 
+ 	return ret;
+ }
+@@ -1212,6 +1215,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	if (!pci)
+ 		return -ENOMEM;
+ 
++	pm_runtime_enable(dev);
+ 	pci->dev = dev;
+ 	pci->ops = &dw_pcie_ops;
+ 	pp = &pci->pp;
+@@ -1257,14 +1261,17 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	ret = phy_init(pcie->phy);
+-	if (ret)
++	if (ret) {
++		pm_runtime_disable(&pdev->dev);
+ 		return ret;
++	}
+ 
+ 	platform_set_drvdata(pdev, pcie);
+ 
+ 	ret = dw_pcie_host_init(pp);
+ 	if (ret) {
+ 		dev_err(dev, "cannot initialize host\n");
++		pm_runtime_disable(&pdev->dev);
+ 		return ret;
+ 	}
+ 
+-- 
+2.16.2
