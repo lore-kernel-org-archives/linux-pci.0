@@ -1,57 +1,58 @@
-Return-Path: <SRS0=5gpV=IR=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=5gpV=IR=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH] PCI: Add pci=safemode option
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
- Kai-Heng Feng <kai.heng.feng@canonical.com>, Ingo Molnar <mingo@kernel.org>,
- Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- Dongdong Liu <liudongdong3@huawei.com>, David Rientjes
- <rientjes@google.com>, Thymo van Beers <thymovanbeers@gmail.com>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Frederick Lawler <fred@fredlawl.com>,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
- Frederic Weisbecker <frederic@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org, Oza Pawandeep <poza@codeaurora.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <1527650389-31575-1-git-send-email-okaya@codeaurora.org>
- <20180530043103.GA19734@kroah.com>
- <6c317ed8-cca3-8862-5f3b-12cf14e4d53b@codeaurora.org>
- <20180530073735.GA28793@infradead.org>
- <6dfe2db8f974d94c9867f30ec83d9333@codeaurora.org>
- <20180530145650.GA39853@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <2a5281cd-a0c7-1449-5b72-133660667fa6@codeaurora.org>
-Date: Wed, 30 May 2018 11:28:42 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:58970 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S933269AbeEWO3t (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 10:29:49 -0400
+Subject: Re: [PATCH 1/5] PCI/AER: Define and allocate aer_stats structure for
+ AER capable devices
+To: "Alex G." <mr.nuke.me@gmail.com>, Rajat Jain <rajatja@google.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Tai <thomas.tai@oracle.com>,
+        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Kyle McMartin <jkkm@fb.com>
+CC: <rajatxjain@gmail.com>
+References: <20180522222805.80314-1-rajatja@google.com>
+ <20180522222805.80314-2-rajatja@google.com>
+ <62fae8eb-aaed-65b2-19ad-7c57b3a9bfdc@fb.com>
+ <53789ac0-b571-5d6a-5925-7e83925b5b31@gmail.com>
+From: Jes Sorensen <jsorensen@fb.com>
+Message-ID: <b25d5e6a-9373-2295-33e6-699fa74a94eb@fb.com>
+Date: Wed, 23 May 2018 10:28:39 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180530145650.GA39853@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <53789ac0-b571-5d6a-5925-7e83925b5b31@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/30/2018 10:56 AM, Bjorn Helgaas wrote:
-> This *was* my idea, but I'm starting to think it was a bad idea.
+On 05/23/2018 10:26 AM, Alex G. wrote:
+> On 05/23/2018 09:20 AM, Jes Sorensen wrote:
+>> On 05/22/2018 06:28 PM, Rajat Jain wrote:
+>>> new file mode 100644
+>>> index 000000000000..b9f251992209
+>>> --- /dev/null
+>>> +++ b/drivers/pci/pcie/aer/aerdrv_stats.c
+>>> @@ -0,0 +1,64 @@
+>>> +// SPDX-License-Identifier: GPL-2.0
+>>
+>> Fix the formatting please - that gross // gibberish doesn't belong there.
 > 
-> I don't want people to use pci= parameters as the normal way to get a
-> system to boot.  That would be a huge support hassle (putting things
-> in release notes, diagnosing problems when people forget it, etc).
+> Deep breath in. Deep breath out.
 > 
-> But the parameters *are* useful for debugging.  If we had a
-> "pci=safemode" and it avoided some problem, the next step would be to
-> narrow it down by using the more specific flags (pci=nomsi, pci=noari,
-> pci=no_ext_tags, etc).  So I think 95% of the value is in the specific
-> flags, and a "pci=safemode" might add a little bit of value but at the
-> cost of a small but nagging maintenance concern and code clutter.
+> git grep SPDX
+> 
+> Although I don't like it, this format is already too common.
 
-OK. Let's try noXYZ feature. Can you enumerate the XYZ features that you
-want to see?
+So? Just because some people did something wrong doesn't mean you should
+continue to do it.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Jes
