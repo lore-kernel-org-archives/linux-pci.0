@@ -1,123 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 1 May 2018 14:55:01 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:47136 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934181AbeEWTxZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 May 2018 15:53:25 -0400
+Date: Wed, 23 May 2018 14:53:22 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        1745646@bugs.launchpad.net,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [Regression] PCI / PM: Simplify device wakeup settings code
-Message-ID: <20180501195501.GB11698@bhelgaas-glaptop.roam.corp.google.com>
-References: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
- <CAJZ5v0j8GAatWoAra37y3c-ti2Ft5am75KONgEkjB6AaypkCqg@mail.gmail.com>
- <ae84e595-dede-1409-4aff-3a29a310f2ba@canonical.com>
- <CAJZ5v0gapMMf=KqBAoDTv0SUBeusrUFPyEz6Z4k8Y3Szizdm5Q@mail.gmail.com>
- <1f67f00a-8141-f9af-2120-c78f7cfecb1d@canonical.com>
- <CAJZ5v0iPsoxCLxsq156RvyZ1cWtM9jNMLUPMnE3cqi5r1jk8jg@mail.gmail.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: pci=earlydump on ARM
+Message-ID: <20180523195322.GC150632@bhelgaas-glaptop.roam.corp.google.com>
+References: <bug-199671-164391@https.bugzilla.kernel.org/>
+ <bug-199671-164391-E4Mtn0How4@https.bugzilla.kernel.org/>
+ <9756cf4c-0cec-00f7-3cc6-f09e34177cf9@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0iPsoxCLxsq156RvyZ1cWtM9jNMLUPMnE3cqi5r1jk8jg@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <9756cf4c-0cec-00f7-3cc6-f09e34177cf9@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 01, 2018 at 10:34:29AM +0200, Rafael J. Wysocki wrote:
-> On Mon, Apr 30, 2018 at 4:22 PM, Joseph Salisbury
-> <joseph.salisbury@canonical.com> wrote:
-> > On 04/16/2018 11:58 AM, Rafael J. Wysocki wrote:
-> >> On Mon, Apr 16, 2018 at 5:31 PM, Joseph Salisbury
-> >> <joseph.salisbury@canonical.com> wrote:
-> >>> On 04/13/2018 05:34 PM, Rafael J. Wysocki wrote:
-> >>>> On Fri, Apr 13, 2018 at 7:56 PM, Joseph Salisbury
-> >>>> <joseph.salisbury@canonical.com> wrote:
-> >>>>> Hi Rafael,
-> >>>>>
-> >>>>> A kernel bug report was opened against Ubuntu [0].  After a kernel
-> >>>>> bisect, it was found that reverting the following two commits resolved
-> >>>>> this bug:
-> >>>>>
-> >>>>> 0ce3fcaff929 ("PCI / PM: Restore PME Enable after config space restoration")
-> >>>>> 0847684cfc5f("PCI / PM: Simplify device wakeup settings code")
-> >>>>>
-> >>>>> This is a regression introduced in v4.13-rc1 and still exists in
-> >>>>> mainline.  The bug causes the battery to drain when the system is
-> >>>>> powered down and unplugged, which does not happed prior to these two
-> >>>>> commits.
-> >>>> What system and what do you mean by "powered down"?  How much time
-> >>>> does it take for the battery to drain now?
-> >>> By powered down, the bug reporter is saying physically powered off and
-> >>> unplugged.  The system is a HP laptop:
-> >>>
-> >>> dmi.chassis.vendor: HP
-> >>> dmi.product.family: 103C_5335KV HP Notebook
-> >>> dmi.product.name: HP Notebook
-> >>> vendor_id    : GenuineIntel
-> >>> cpu family    : 6
-> >>>
-> >>>
-> >>>>> The bisect actually pointed to commit de3ef1e, but reverting
-> >>>>> these two commits fixes the issue.
-> >>>>>
-> >>>>> I was hoping to get your feedback, since you are the patch author.  Do
-> >>>>> you think gathering any additional data will help diagnose this issue,
-> >>>>> or would it be best to submit a revert request?
-> >>>> First, reverting these is not an option or you will break systems
-> >>>> relying on them now.  4.13 is three releases back at this point.
-> >>>>
-> >>>> Second, your issue appears to be related to the suspend/shutdown path
-> >>>> whereas commit 0ce3fcaff929 is mostly about resume, so presumably the
-> >>>> change in pci_enable_wake() causes the problem to happen.  Can you try
-> >>>> to revert this one alone and see if that helps?
-> >>> A test kernel with commits 0ce3fcaff929 and de3ef1eb1cd0 reverted was
-> >>> tested.  However, the test kernel still exhibited the bug.
-> >> So essentially the bisection result cannot be trusted.
-> >
-> > We performed some more testing and confirmed just a revert of the
-> > following commit resolves the bug:
-> >
-> > 0847684cfc5f0 ("PCI / PM: Simplify device wakeup settings code")
+On Wed, May 23, 2018 at 03:10:39PM -0400, Sinan Kaya wrote:
+> > If that doesn't work or you'd rather brute-force it, you could try
+> > doing something like "pci=earlydump".  This is currently only
+> > implemented for x86, so it would be some work to implement something
+> > similar for arm64.  It would be a nice upstream addition if you *did*
+> > implement it.
+> > 
+> > In the earlydump output I would be looking for clues about the power
+> > state of 03:00.0 to try to figure out if the bootloader left it powered
+> > off or if Linux is doing something to turn it off.
+> > 
 > 
-> Thanks for confirming this!
+> Is it really possible to implement a generic version of this?
 > 
-> > Can you think of any suggestions to help debug further?
+> PCI on ARM64 is not really unified. There are several host bridge drivers
+> for different types of access. 
 > 
-> The root cause of the regression is likely the change in
-> pci_enable_wake() removing the device_may_wakeup() check from it.
+> If we limit the functionality to ACPI, the answer is still maybe if we
+> can pass the base address of the MMCONFIG region. 
 > 
-> Probably, one of the drivers in the platform calls pci_enable_wake()
-> directly from its ->shutdown() callback and that causes the device to
-> be set up for system wakeup which in turn causes the power draw while
-> the system is off to increase.
-> 
-> I would look at the PCI drivers used on that platform to find which of
-> them call pci_enable_wake() directly from ->shutdown() and I would
-> make these calls conditional on device_may_wakeup().
+> All products use a different MMCONFIG region.
 
-I took a quick look with
+On x86, early dump is implemented off to the side, outside the PCI
+core, and it takes advantage of arch-specific knowledge about ways to
+perform config accesses.
 
-  git grep -E "pci_enable_wake\(.*[^0]\);|device_may_wakeup"
+But I could imagine something in the pci_scan_device() area, where we
+have the normal config accessors but we haven't yet touched the
+device.  I think we could get 99% of the early dump utility in a
+completely generic way.
 
-and didn't notice any pci_enable_wake() callers that called
-device_may_wakeup() first.
+There might be a few hand-crafted arch-specific quirks that touch PCI
+devices even before that point, but those should be pretty rare.
 
-Probably a dumb question, but would it make sense to restore the
-device_may_wakeup() check in pci_enable_wake(), e.g.,
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e597655a5643..9fa64c175f92 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1932,6 +1932,9 @@ int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable)
- {
- 	int ret = 0;
- 
-+	if (enable && !device_may_wakeup(&dev->dev))
-+		return -EINVAL;
-+
- 	/*
- 	 * Bridges can only signal wakeup on behalf of subordinate devices,
- 	 * but that is set up elsewhere, so skip them.
+Bjorn
