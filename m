@@ -1,212 +1,57 @@
-Return-Path: <SRS0=dahA=IM=netronome.com=jakub.kicinski@kernel.org>
-Return-Path: <SRS0=dahA=IM=netronome.com=jakub.kicinski@kernel.org>
-Date: Fri, 25 May 2018 14:05:21 -0700
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- netdev@vger.kernel.org, Sathya Perla <sathya.perla@broadcom.com>, Felix
- Manlunas <felix.manlunas@caviumnetworks.com>, alexander.duyck@gmail.com,
- john.fastabend@gmail.com, Jacob Keller <jacob.e.keller@intel.com>, Donald
- Dutile <ddutile@redhat.com>, oss-drivers@netronome.com, Christoph Hellwig
- <hch@infradead.org>
-Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
-Message-ID: <20180525140521.662a9c96@cakuba>
-In-Reply-To: <20180525140223.GA45098@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180402224652.4058-1-jakub.kicinski@netronome.com>
-	<20180524235748.GD15320@bhelgaas-glaptop.roam.corp.google.com>
-	<20180524182015.1af7b4c9@cakuba>
-	<20180525140223.GA45098@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-ntb@googlegroups.com
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Doug Meyer <dmeyer@gigaio.com>
+Date: Wed, 23 May 2018 15:07:38 -0600
+Message-Id: <20180523210738.2883-1-logang@deltatee.com>
+Subject: [PATCH] PCI: Expand documentation for pci_add_dma_alias()
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 25 May 2018 09:02:23 -0500, Bjorn Helgaas wrote:
-> On Thu, May 24, 2018 at 06:20:15PM -0700, Jakub Kicinski wrote:
-> > On Thu, 24 May 2018 18:57:48 -0500, Bjorn Helgaas wrote:  
-> > > On Mon, Apr 02, 2018 at 03:46:52PM -0700, Jakub Kicinski wrote:  
-> > > > Some user space depends on enabling sriov_totalvfs number of VFs
-> > > > to not fail, e.g.:
-> > > > 
-> > > > $ cat .../sriov_totalvfs > .../sriov_numvfs
-> > > > 
-> > > > For devices which VF support depends on loaded FW we have the
-> > > > pci_sriov_{g,s}et_totalvfs() API.  However, this API uses 0 as
-> > > > a special "unset" value, meaning drivers can't limit sriov_totalvfs
-> > > > to 0.  Remove the special values completely and simply initialize
-> > > > driver_max_VFs to total_VFs.  Then always use driver_max_VFs.
-> > > > Add a helper for drivers to reset the VF limit back to total.    
-> > > 
-> > > I still can't really make sense out of the changelog.
-> > >
-> > > I think part of the reason it's confusing is because there are two
-> > > things going on:
-> > > 
-> > >   1) You want this:
-> > >   
-> > >        pci_sriov_set_totalvfs(dev, 0);
-> > >        x = pci_sriov_get_totalvfs(dev) 
-> > > 
-> > >      to return 0 instead of total_VFs.  That seems to connect with
-> > >      your subject line.  It means "sriov_totalvfs" in sysfs could be
-> > >      0, but I don't know how that is useful (I'm sure it is; just
-> > >      educate me :))  
-> > 
-> > Let me just quote the bug report that got filed on our internal bug
-> > tracker :)
-> > 
-> >   When testing Juju Openstack with Ubuntu 18.04, enabling SR-IOV causes
-> >   errors because Juju gets the sriov_totalvfs for SR-IOV-capable device
-> >   then tries to set that as the sriov_numvfs parameter.
-> > 
-> >   For SR-IOV incapable FW, the sriov_totalvfs parameter should be 0, 
-> >   but it's set to max.  When FW is switched to flower*, the correct 
-> >   sriov_totalvfs value is presented.
-> > 
-> > * flower is a project name  
-> 
-> From the point of view of the PCI core (which knows nothing about
-> device firmware and relies on the architected config space described
-> by the PCIe spec), this sounds like an erratum: with some firmware
-> installed, the device is not capable of SR-IOV, but still advertises
-> an SR-IOV capability with "TotalVFs > 0".
-> 
-> Regardless of whether that's an erratum, we do allow PF drivers to use
-> pci_sriov_set_totalvfs() to limit the number of VFs that may be
-> enabled by writing to the PF's "sriov_numvfs" sysfs file.
+Seeing there's been some confusion about the use of pci_add_dma_alias(),
+expand the comment to describe why it must be called early and how
+early it must be called.
 
-Think more of an FPGA which can be reprogrammed at runtime to have
-different capabilities than an erratum.  Some FWs simply have no use
-for VFs and save resources (and validation time) by not supporting it.
+Also, expand on the purpose of this function and common reasons it would
+be used.
 
-> But the current implementation does not allow a PF driver to limit VFs
-> to 0, and that does seem nonsensical.
-> 
-> > My understanding is OpenStack uses sriov_totalvfs to determine how many
-> > VFs can be enabled, looks like this is the code:
-> > 
-> > http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n464
-> >   
-> > >   2) You're adding the pci_sriov_reset_totalvfs() interface.  I'm not
-> > >      sure what you intend for this.  Is *every* driver supposed to
-> > >      call it in .remove()?  Could/should this be done in the core
-> > >      somehow instead of depending on every driver?  
-> > 
-> > Good question, I was just thinking yesterday we may want to call it
-> > from the core, but I don't think it's strictly necessary nor always
-> > sufficient (we may reload FW without re-probing).
-> > 
-> > We have a device which supports different number of VFs based on the FW
-> > loaded.  Some legacy FWs does not inform the driver how many VFs it can
-> > support, because it supports max.  So the flow in our driver is this:
-> > 
-> > load_fw(dev);
-> > ...
-> > max_vfs = ask_fw_for_max_vfs(dev);
-> > if (max_vfs >= 0)
-> > 	return pci_sriov_set_totalvfs(dev, max_vfs);
-> > else /* FW didn't tell us, assume max */
-> > 	return pci_sriov_reset_totalvfs(dev); 
-> > 
-> > We also reset the max on device remove, but that's not strictly
-> > necessary.
-> > 
-> > Other users of pci_sriov_set_totalvfs() always know the value to set
-> > the total to (either always get it from FW or it's a constant).
-> > 
-> > If you prefer we can work out the correct max for those legacy cases in
-> > the driver as well, although it seemed cleaner to just ask the core,
-> > since it already has total_VFs value handy :)
-> >   
-> > > I'm also having a hard time connecting your user-space command example
-> > > with the rest of this.  Maybe it will make more sense to me tomorrow
-> > > after some coffee.  
-> > 
-> > OpenStack assumes it will always be able to set sriov_numvfs to
-> > sriov_totalvfs, see this 'if':
-> > 
-> > http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n512  
-> 
-> Thanks for educating me.  I think there are two issues here that we
-> can separate.  I extracted the patch below for the first.
-> 
-> The second is the question of resetting driver_max_VFs.  I think we
-> currently have a general issue in the core:
-> 
->   - load PF driver 1
->   - driver calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
->   - unload PF driver 1
->   - load PF driver 2
-> 
-> Now driver_max_VFs is still stuck at the lower value set by driver 1.
-> I don't think that's the way this should work.
-> 
-> I guess this is partly a consequence of setting driver_max_VFs in
-> sriov_init(), which is called before driver attach and should only
-> depend on hardware characteristics, so it is related to the patch
-> below.  But I think we should fix it in general, not just for
-> netronome.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>
+Cc: Doug Meyer <dmeyer@gigaio.com>
+---
+ drivers/pci/pci.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-Okay, perfect.  That makes sense.  The patch below certainly fixes the
-first issue for us.  Thank you!
-
-As far as the second issue goes - agreed, having the core reset the
-number of VFs to total_VFs definitely makes sense.  It doesn't cater to
-the case where FW is reloaded without reprobing, but we don't do this
-today anyway.
-
-Should I try to come up with a patch to reset total_VFs after detach?
-
-> commit 4a338bc6f94b9ad824ac944f5dfc249d6838719c
-> Author: Jakub Kicinski <jakub.kicinski@netronome.com>
-> Date:   Fri May 25 08:18:34 2018 -0500
-> 
->     PCI/IOV: Allow PF drivers to limit total_VFs to 0
->     
->     Some SR-IOV PF drivers implement .sriov_configure(), which allows
->     user-space to enable VFs by writing the desired number of VFs to the sysfs
->     "sriov_numvfs" file (see sriov_numvfs_store()).
->     
->     The PCI core limits the number of VFs to the TotalVFs advertised by the
->     device in its SR-IOV capability.  The PF driver can limit the number of VFs
->     to even fewer (it may have pre-allocated data structures or knowledge of
->     device limitations) by calling pci_sriov_set_totalvfs(), but previously it
->     could not limit the VFs to 0.
->     
->     Change pci_sriov_get_totalvfs() so it always respects the VF limit imposed
->     by the PF driver, even if the limit is 0.
->     
->     This sequence:
->     
->       pci_sriov_set_totalvfs(dev, 0);
->       x = pci_sriov_get_totalvfs(dev);
->     
->     previously set "x" to TotalVFs from the SR-IOV capability.  Now it will set
->     "x" to 0.
->     
->     Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 192b82898a38..d0d73dbbd5ca 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -469,6 +469,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
->  	iov->nres = nres;
->  	iov->ctrl = ctrl;
->  	iov->total_VFs = total;
-> +	iov->driver_max_VFs = total;
->  	pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_device);
->  	iov->pgsz = pgsz;
->  	iov->self = dev;
-> @@ -827,10 +828,7 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
->  	if (!dev->is_physfn)
->  		return 0;
->  
-> -	if (dev->sriov->driver_max_VFs)
-> -		return dev->sriov->driver_max_VFs;
-> -
-> -	return dev->sriov->total_VFs;
-> +	return dev->sriov->driver_max_VFs;
->  }
->  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
->  
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index dbfe7c4f3776..2a410745a95a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5395,8 +5395,19 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
+  * @dev: the PCI device for which alias is added
+  * @devfn: alias slot and function
+  *
+- * This helper encodes 8-bit devfn as bit number in dma_alias_mask.
+- * It should be called early, preferably as PCI fixup header quirk.
++ * This helper encodes an 8-bit devfn as a bit number in dma_alias_mask
++ * which is used to program permissible BDF source addresses for
++ * DMA requests in an IOMMU. This is useful for non-transparent bridges
++ * which use BDFs that are not visible on the bus as proxies for devices
++ * in another domain. It's also useful for grouping of multiple devices
++ * that must be done without a host endpoint driver.
++ *
++ * This function must be called early, before the IOMMU creates
++ * the groups for the device which happens with a BUS_NOTIFY_ADD_DEVICE
++ * event. This occurs before the driver's probe function is called seeing
++ * the groups must be ready before any DMA mappings for the device are created.
++ * Therefore, this function cannot be called in a driver and, instead,
++ * should be called as a PCI fixup header quirk.
+  */
+ void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
+ {
+-- 
+2.11.0
