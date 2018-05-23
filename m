@@ -1,54 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v7 10/12] PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
-Date: Thu, 17 May 2018 12:29:01 +0300
-Message-Id: <20180517092903.43701-11-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
-References: <20180517092903.43701-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=L5Uk=IK=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=L5Uk=IK=gmail.com=rjwysocki@kernel.org>
+MIME-Version: 1.0
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20180522220149.GB22385@bhelgaas-glaptop.roam.corp.google.com>
+References: <11415287.ki0m5Bqgns@aspire.rjw.lan> <20180522220149.GB22385@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 23 May 2018 10:11:38 +0200
+Message-ID: <CAJZ5v0hE+_PUqngC3JcRDd7SW3ioP6hT3Vpmz98obqgXi1vuEA@mail.gmail.com>
+Subject: Re: [PATCH] PCI / PM: Do not clear state_saved for devices that
+ remain suspended
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-It is not immediately clear what the two functions actually return so
-add kernel-doc comment explaining it a bit better.
+On Wed, May 23, 2018 at 12:01 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, May 18, 2018 at 10:17:42AM +0200, Rafael J. Wysocki wrote:
+>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>
+>> The state_saved flag should not be cleared in pci_pm_suspend() if the
+>> given device is going to remain suspended, or the device's config
+>> space will not be restored properly during the subsequent resume.
+>>
+>> Namely, if the device is going to stay in suspend, both the late
+>> and noirq callbacks return early for it, so if its state_saved flag
+>> is cleared in pci_pm_suspend(), it will remain unset throughout the
+>> remaining part of suspend and resume and pci_restore_state() called
+>> for the device going forward will return without doing anything.
+>>
+>> For this reason, change pci_pm_suspend() to only clear state_saved
+>> if the given device is not going to remain suspended.  [This is
+>> analogous to what commit ae860a19f37c (PCI / PM: Do not clear
+>> state_saved in pci_pm_freeze() when smart suspend is set) did for
+>> hibernation.]
+>>
+>> Fixes: c4b65157aeef (PCI / PM: Take SMART_SUSPEND driver flag into account)
+>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> I assume you'll take this one, too.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/probe.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cd28ab122748..a0c48aa1c42f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -999,6 +999,8 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
-  * already configured by the BIOS and after we are done with all of
-  * them, we proceed to assigning numbers to the remaining buses in
-  * order to avoid overlaps between old and new bus numbers.
-+ *
-+ * Return: New subordinate number covering all buses behind this bridge.
-  */
- static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 				  int max, unsigned int available_buses,
-@@ -1231,6 +1233,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
-  * already configured by the BIOS and after we are done with all of
-  * them, we proceed to assigning numbers to the remaining buses in
-  * order to avoid overlaps between old and new bus numbers.
-+ *
-+ * Return: New subordinate number covering all buses behind this bridge.
-  */
- int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- {
--- 
-2.17.0
-
+Yes, I will, thank you!
