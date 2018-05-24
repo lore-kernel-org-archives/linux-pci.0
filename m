@@ -1,38 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48910 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753847AbeE3QtP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 May 2018 12:49:15 -0400
-Date: Wed, 30 May 2018 11:49:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:42729 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S970449AbeEXOgk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 10:36:40 -0400
+From: Marek Vasut <marek.vasut@gmail.com>
 To: linux-pci@vger.kernel.org
-Cc: Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>,
-        linux-xtensa@linux-xtensa.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 0/3] xtensa/PCI: Trivial cleanup
-Message-ID: <20180530164913.GK39853@bhelgaas-glaptop.roam.corp.google.com>
-References: <152699456050.162480.13521209483758803324.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <152699456050.162480.13521209483758803324.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH v4 6/6] PCI: rcar: Shut the PHY down in failpath
+Date: Thu, 24 May 2018 16:36:24 +0200
+Message-Id: <20180524143624.26718-7-marek.vasut+renesas@gmail.com>
+In-Reply-To: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
+References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 22, 2018 at 08:10:07AM -0500, Bjorn Helgaas wrote:
-> Remove some dead code, make things static, use dev_printk() to follow style
-> of other arches.
-> 
-> I'll merge these via the PCI tree unless there are objections.
-> 
-> ---
-> 
-> Bjorn Helgaas (3):
->       xtensa/PCI: Remove dead code
->       xtensa/PCI: Make variables static
->       xtensa/PCI: Use dev_printk() when possible
-> 
-> 
->  arch/xtensa/include/asm/pci.h |    2 -
->  arch/xtensa/kernel/pci.c      |   69 ++---------------------------------------
->  2 files changed, 4 insertions(+), 67 deletions(-)
+If anything fails past phy_init_fn() and the system is a Gen3 with
+a PHY, the PHY will be left on and inited. This is caused by the
+phy_init_fn, which is in fact a pointer to rcar_pcie_phy_init_gen3()
+function, which starts the PHY, yet has no counterpart in the failpath.
+Add that counterpart.
 
-I applied these to pci/misc for v4.18.
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+Fixes: 517ca93a7159 ("PCI: rcar: Add R-Car gen3 PHY support")
+---
+V4: New patch
+---
+ drivers/pci/host/pcie-rcar.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 636c3c5095d2..695781934f0a 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -1163,7 +1163,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 	if (rcar_pcie_hw_init(pcie)) {
+ 		dev_info(dev, "PCIe link down\n");
+ 		err = -ENODEV;
+-		goto err_clk_disable;
++		goto err_phy_shutdown;
+ 	}
+ 
+ 	data = rcar_pci_read_reg(pcie, MACSR);
+@@ -1175,7 +1175,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 			dev_err(dev,
+ 				"failed to enable MSI support: %d\n",
+ 				err);
+-			goto err_clk_disable;
++			goto err_phy_shutdown;
+ 		}
+ 	}
+ 
+@@ -1189,6 +1189,12 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		rcar_pcie_teardown_msi(pcie);
+ 
++err_phy_shutdown:
++	if (pcie->phy) {
++		phy_power_off(pcie->phy);
++		phy_exit(pcie->phy);
++	}
++
+ err_clk_disable:
+ 	clk_disable_unprepare(pcie->bus_clk);
+ 
+-- 
+2.16.2
