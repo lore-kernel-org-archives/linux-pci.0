@@ -1,105 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:40276 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S970456AbeEXOgj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 10:36:39 -0400
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH v4 5/6] PCI: rcar: Remove IRQ mappings in rcar_pcie_enable_msi failpath
-Date: Thu, 24 May 2018 16:36:23 +0200
-Message-Id: <20180524143624.26718-6-marek.vasut+renesas@gmail.com>
-In-Reply-To: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
-References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=6mTy=IL=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=6mTy=IL=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 24 May 2018 17:58:25 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Derrick, Jonathan" <jonathan.derrick@intel.com>
+Cc: "myron.stowe@redhat.com" <myron.stowe@redhat.com>,
+	"hch@lst.de" <hch@lst.de>,
+	"helgaas@kernel.org" <helgaas@kernel.org>,
+	"Bauer, Scott" <scott.bauer@intel.com>,
+	"jroedel@suse.de" <jroedel@suse.de>,
+	"Fugate, David" <david.fugate@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Busch, Keith" <keith.busch@intel.com>
+Subject: Re: [PATCH 0/5] Enable an additional VMD device id
+Message-ID: <20180524165825.GA26309@e107981-ln.cambridge.arm.com>
+References: <20180518192802.20371-1-jonathan.derrick@intel.com>
+ <20180524114452.GA20732@e107981-ln.cambridge.arm.com>
+ <1527178507.20527.2.camel@intel.com>
+ <20180524163420.GA24940@e107981-ln.cambridge.arm.com>
+ <1527179806.8026.1.camel@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1527179806.8026.1.camel@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The rcar_pcie_enable_msi() creates IRQ mappings using irq_create_mapping()
-before requesting the IRQs using devm_request_irq(). If devm_request_irq()
-fails for some reason, rcar_pcie_enable_msi() does not remove the mapping.
+On Thu, May 24, 2018 at 04:36:48PM +0000, Derrick, Jonathan wrote:
+> On Thu, 2018-05-24 at 17:34 +0100, Lorenzo Pieralisi wrote:
+> > On Thu, May 24, 2018 at 04:15:08PM +0000, Derrick, Jonathan wrote:
+> > > Hi Lorenzo,
+> > > 
+> > > On Thu, 2018-05-24 at 12:44 +0100, Lorenzo Pieralisi wrote:
+> > > > On Fri, May 18, 2018 at 01:27:57PM -0600, Jon Derrick wrote:
+> > > > > This patchset enables an additional VMD device ID to the VMD
+> > > > > driver
+> > > > > supporting assignment of the membar addresses from shadow
+> > > > > registers
+> > > > > and
+> > > > > allows more flexibility in assigning bus numbers to a VMD PCIe
+> > > > > domain.
+> > > > > Additional VMD root port device ids have been added to the VMD
+> > > > > AER
+> > > > > quirk.
+> > > > > 
+> > > > > Changes from rfc include comments, code structure, and using
+> > > > > pci_add_resource_offset to correctly assign addresses while
+> > > > > virtualized.
+> > > > > 
+> > > > > Applies to Bjorn's next branch
+> > > > 
+> > > > Hi Jon,
+> > > > 
+> > > > You should base it on v4.17-rc1 and if there is a dependency on
+> > > > later -rc* or a branch in Bjorn/my queue please let us know.
+> > > 
+> > > It looks like it applies cleanly to 4.17-rc1 and rc6.
+> > > 
+> > > > > Jon Derrick (5):
+> > > > >   PCI: Add Intel VMD devices to pci ids
+> > > > >   PCI/VMD: Assign membar addresses from shadow registers
+> > > > >   PCI/VMD: Add offset to bus numbers if necessary
+> > > > >   x86/PCI: Add additional VMD device root ports to VMD AER
+> > > > > quirk
+> > > > >   PCI/VMD: Add an additional VMD device id to driver device id
+> > > > > table
+> > > > > 
+> > > > >  arch/x86/pci/fixup.c    |  4 +++
+> > > > >  drivers/pci/host/vmd.c  | 91
+> > > > > +++++++++++++++++++++++++++++++++++++++++++------
+> > > > >  include/linux/pci_ids.h |  2 ++
+> > > > >  3 files changed, 87 insertions(+), 10 deletions(-)
+> > > > 
+> > > > I need Bjorn's ACK on patch (4), or if Bjorn is keen on pulling
+> > > > the
+> > > > series, here's mine on the series:
+> > > > 
+> > > > Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > 
+> > > Would you like me to rebase it and resend with Bjorn's ack?
+> > 
+> > No need to resend but I need Bjorn's ACK on patch (4) in order to
+> > queue it.
+> > 
+> > Thanks,
+> > Lorenzo
+> 
+> Here's Bjorn's ack since you may not have it seen it yet:
+> https://patchwork.ozlabs.org/patch/916565/
 
-Pull out the code for disposing IRQ mappings from rcar_pcie_teardown_msi()
-into a separate function and call it from both rcar_pcie_teardown_msi()
-and rcar_pcie_enable_msi() failpath to remove the mappings correctly.
+Ok sorry it is because I am not CC'ed on the patches, I did not notice.
 
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
----
-V2: No change
-V3: No change
-V4: Rebase on top of Lorenzo's pci/rcar, fix up the rebase breakage
-    induced by patches therein
----
- drivers/pci/host/pcie-rcar.c | 25 ++++++++++++++++---------
- 1 file changed, 16 insertions(+), 9 deletions(-)
+Applied the series to pci/vmd for v4.18, thanks.
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 4843a4dc6059..636c3c5095d2 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -866,6 +866,20 @@ static const struct irq_domain_ops msi_domain_ops = {
- 	.map = rcar_msi_map,
- };
- 
-+static void rcar_pcie_unmap_msi(struct rcar_pcie *pcie)
-+{
-+	struct rcar_msi *msi = &pcie->msi;
-+	int i, irq;
-+
-+	for (i = 0; i < INT_PCI_MSI_NR; i++) {
-+		irq = irq_find_mapping(msi->domain, i);
-+		if (irq > 0)
-+			irq_dispose_mapping(irq);
-+	}
-+
-+	irq_domain_remove(msi->domain);
-+}
-+
- static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
-@@ -920,14 +934,13 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
- 	return 0;
- 
- err:
--	irq_domain_remove(msi->domain);
-+	rcar_pcie_unmap_msi(pcie);
- 	return err;
- }
- 
- static void rcar_pcie_teardown_msi(struct rcar_pcie *pcie)
- {
- 	struct rcar_msi *msi = &pcie->msi;
--	int irq, i;
- 
- 	/* Disable all MSI interrupts */
- 	rcar_pci_write_reg(pcie, 0, PCIEMSIIER);
-@@ -937,13 +950,7 @@ static void rcar_pcie_teardown_msi(struct rcar_pcie *pcie)
- 
- 	free_pages(msi->pages, 0);
- 
--	for (i = 0; i < INT_PCI_MSI_NR; i++) {
--		irq = irq_find_mapping(msi->domain, i);
--		if (irq > 0)
--			irq_dispose_mapping(irq);
--	}
--
--	irq_domain_remove(msi->domain);
-+	rcar_pcie_unmap_msi(pcie);
- }
- 
- static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
--- 
-2.16.2
+Lorenzo
