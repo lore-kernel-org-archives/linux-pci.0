@@ -1,74 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:35677 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751262AbeECThz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 May 2018 15:37:55 -0400
-Received: by mail-lf0-f65.google.com with SMTP id y72-v6so13925783lfd.2
-        for <linux-pci@vger.kernel.org>; Thu, 03 May 2018 12:37:54 -0700 (PDT)
-Subject: [PATCH v3 2/5] pcie-rcar: remove PHYRDY polling from
- rcar_pcie_hw_init_h1()
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-To: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
-Message-ID: <c4fb4657-6628-fedc-cecf-0639817f4438@cogentembedded.com>
-Date: Thu, 3 May 2018 22:37:52 +0300
-MIME-Version: 1.0
-In-Reply-To: <b98130a7-b128-9fc3-aee1-1a5a2590b320@cogentembedded.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:45293 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935346AbeEXHXd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 03:23:33 -0400
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH 1/6] PCI: rcar: Pull bus clock enable/disable from rcar_pcie_get_resources()
+Date: Thu, 24 May 2018 09:23:18 +0200
+Message-Id: <20180524072323.22115-1-marek.vasut+renesas@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we've added PCIEPHYSR.PHYRDY polling to rcar_pcie_hw_init(),
-there is no need anymore  for polling the PHY specific register in
-rcar_pcie_hw_init_h1() -- remove it.
+The rcar_pcie_get_resources() is another misnomer with a side effect.
+The function does not only get resources, but also enables/disables bus
+clock. This is forgotten in the probe() function though and if anything
+in probe() fails after rcar_pcie_get_resources() is called, the bus
+clock are never disabled.
 
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+This patch pulls the clock handling out of the rcar_pcie_get_resources()
+and enables clock after all the resources were requested. Moreover, this
+patch also always disables the clock in case of failure.
 
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
 ---
-Changes in version 3:
-- added Simon's tag;
-- refreshed atop of Marek's patch.
+ drivers/pci/host/pcie-rcar.c | 33 ++++++++++++++++-----------------
+ 1 file changed, 16 insertions(+), 17 deletions(-)
 
- drivers/pci/host/pcie-rcar.c |   12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
-
-Index: pci/drivers/pci/host/pcie-rcar.c
-===================================================================
---- pci.orig/drivers/pci/host/pcie-rcar.c
-+++ pci/drivers/pci/host/pcie-rcar.c
-@@ -103,7 +103,6 @@
- #define  LANE_POS		8
- #define  ADR_POS		0
- #define H1_PCIEPHYDOUTR		0x040014
--#define H1_PCIEPHYSR		0x040018
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 8d161563bce8..0879880f7975 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -946,32 +946,22 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+ 		dev_err(dev, "cannot get pcie bus clock\n");
+ 		return PTR_ERR(pcie->bus_clk);
+ 	}
+-	err = clk_prepare_enable(pcie->bus_clk);
+-	if (err)
+-		return err;
  
- /* R-Car Gen2 PHY */
- #define GEN2_PCIEPHYADDR	0x780
-@@ -627,8 +626,6 @@ static int rcar_pcie_hw_init(struct rcar
+ 	i = irq_of_parse_and_map(dev->of_node, 0);
+ 	if (!i) {
+ 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
+-		err = -ENOENT;
+-		goto err_map_reg;
++		return -ENOENT;
+ 	}
+ 	pcie->msi.irq1 = i;
  
- static int rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
- {
--	unsigned int timeout = 10;
--
- 	/* Initialize the phy */
- 	phy_write_reg(pcie, 0, 0x42, 0x1, 0x0EC34191);
- 	phy_write_reg(pcie, 1, 0x42, 0x1, 0x0EC34180);
-@@ -647,14 +644,7 @@ static int rcar_pcie_hw_init_h1(struct r
- 	phy_write_reg(pcie, 0, 0x64, 0x1, 0x3F0F1F0F);
- 	phy_write_reg(pcie, 0, 0x66, 0x1, 0x00008000);
+ 	i = irq_of_parse_and_map(dev->of_node, 1);
+ 	if (!i) {
+ 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
+-		err = -ENOENT;
+-		goto err_map_reg;
++		return -ENOENT;
+ 	}
+ 	pcie->msi.irq2 = i;
  
--	while (timeout--) {
--		if (rcar_pci_read_reg(pcie, H1_PCIEPHYSR))
--			return rcar_pcie_hw_init(pcie);
+ 	return 0;
 -
--		msleep(5);
--	}
+-err_map_reg:
+-	clk_disable_unprepare(pcie->bus_clk);
 -
--	return -ETIMEDOUT;
-+	return rcar_pcie_hw_init(pcie);
+-	return err;
  }
  
- static int rcar_pcie_hw_init_gen2(struct rcar_pcie *pcie)
+ static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
+@@ -1115,22 +1105,28 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 		goto err_pm_put;
+ 	}
+ 
++	err = clk_prepare_enable(pcie->bus_clk);
++	if (err) {
++		dev_err(dev, "failed to enable bus clock: %d\n", err);
++		goto err_pm_put;
++	}
++
+ 	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
+ 	if (err)
+-		goto err_pm_put;
++		goto err_clk_disable;
+ 
+ 	phy_init_fn = of_device_get_match_data(dev);
+ 	err = phy_init_fn(pcie);
+ 	if (err) {
+ 		dev_err(dev, "failed to init PCIe PHY\n");
+-		goto err_pm_put;
++		goto err_clk_disable;
+ 	}
+ 
+ 	/* Failure to get a link might just be that no cards are inserted */
+ 	if (rcar_pcie_hw_init(pcie)) {
+ 		dev_info(dev, "PCIe link down\n");
+ 		err = -ENODEV;
+-		goto err_pm_put;
++		goto err_clk_disable;
+ 	}
+ 
+ 	data = rcar_pci_read_reg(pcie, MACSR);
+@@ -1142,16 +1138,19 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 			dev_err(dev,
+ 				"failed to enable MSI support: %d\n",
+ 				err);
+-			goto err_pm_put;
++			goto err_clk_disable;
+ 		}
+ 	}
+ 
+ 	err = rcar_pcie_enable(pcie);
+ 	if (err)
+-		goto err_pm_put;
++		goto err_clk_disable;
+ 
+ 	return 0;
+ 
++err_clk_disable:
++	clk_disable_unprepare(pcie->bus_clk);
++
+ err_pm_put:
+ 	pm_runtime_put(dev);
+ 
+-- 
+2.16.2
