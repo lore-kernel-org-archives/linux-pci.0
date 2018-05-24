@@ -1,91 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f173.google.com ([74.125.82.173]:45819 "EHLO
-        mail-ot0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752592AbeEKNqO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 May 2018 09:46:14 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:38148 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1031263AbeEXRvG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 May 2018 13:51:06 -0400
+To: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-ntb@googlegroups.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Doug Meyer <dmeyer@gigaio.com>
+References: <20180524173913.4506-1-logang@deltatee.com>
+ <b2481367-3acc-4d54-bae7-cc27fb38232e@infradead.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <2ab7b5f8-f068-026a-bc79-5c589dcdb07e@deltatee.com>
+Date: Thu, 24 May 2018 11:51:03 -0600
 MIME-Version: 1.0
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 11 May 2018 15:46:12 +0200
-Message-ID: <CAJZ5v0itrpj0DKaLqQXuavA4_zffVDtgMZoAm4WDOReLRvMUTg@mail.gmail.com>
-Subject: [GIT PULL] Power management fixes for v4.17-rc5
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <b2481367-3acc-4d54-bae7-cc27fb38232e@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v2] PCI: Expand documentation for pci_add_dma_alias()
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
-
-Please pull from the tag
-
- git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
- pm-4.17-rc5
-
-with top-most commit ef050374e1eedec45bd260e0ac9eb98f699267d2
-
- Merge branches 'pm-pci' and 'pm-docs'
-
-on top of commit 75bc37fefc4471e718ba8e651aa74673d4e0a9eb
-
- Linux 4.17-rc4
-
-to receive power management fixes for 4.17-rc5.
-
-These fix two PCI power management regressions from the 4.13 cycle
-and one cpufreq schedutil governor bug introduced during the 4.12
-cycle, drop a stale comment from the schedutil code and fix two
-mistakes in docs.
-
-Specifics:
-
- - Restore device_may_wakeup() check in pci_enable_wake() removed
-   inadvertently during the 4.13 cycle to prevent systems from
-   drawing excessive power when suspended or off, among other
-   things (Rafael Wysocki).
-
- - Fix pci_dev_run_wake() to properly handle devices that only can
-   signal PME# when in the D3cold power state (Kai Heng Feng).
-
- - Fix the schedutil cpufreq governor to avoid using UINT_MAX
-   as the new CPU frequency in some cases due to a missing check
-   (Rafael Wysocki).
-
- - Remove a stale comment regarding worker kthreads from the
-   schedutil cpufreq governor (Juri Lelli).
-
- - Fix a copy-paste mistake in the intel_pstate driver documentation
-   (Juri Lelli).
-
- - Fix a typo in the system sleep states documentation (Jonathan
-   Neusch=C3=A4fer).
-
-Thanks!
 
 
----------------
+On 24/05/18 11:44 AM, Randy Dunlap wrote:
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index dbfe7c4f3776..1c0c1ea23b90 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -5395,8 +5395,19 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
+>>   * @dev: the PCI device for which alias is added
+>>   * @devfn: alias slot and function
+>>   *
+>> - * This helper encodes 8-bit devfn as bit number in dma_alias_mask.
+>> - * It should be called early, preferably as PCI fixup header quirk.
+>> + * This helper encodes an 8-bit devfn as a bit number in dma_alias_mask
+>> + * which is used to program permissible BDF source addresses for DMA
+> 
+> It took me a few seconds to decode BDF.  FWIW, I would prefer to see
+> bus-devfn or bus-dev-fn or bus-dev-func or bus-dev-function.
 
-Jonathan Neusch=C3=A4fer (1):
-      PM: docs: sleep-states: Fix a typo ("includig")
+Yes, there's a lot of overlapping terminology here. In circles I've
+discussed this stuff, BDF is a common acronym. The kernel uses
+Bus/Slot/Function in some places, but devfn is also common. In any case,
+I like bus-devfn so I'll make these changes and send a v3 shortly.
 
-Juri Lelli (2):
-      PM: docs: intel_pstate: fix Active Mode w/o HWP paragraph
-      cpufreq: schedutil: remove stale comment
+Thanks,
 
-Kai Heng Feng (1):
-      PCI / PM: Always check PME wakeup capability for runtime wakeup suppo=
-rt
-
-Rafael J. Wysocki (2):
-      cpufreq: schedutil: Avoid using invalid next_freq
-      PCI / PM: Check device_may_wakeup() in pci_enable_wake()
-
----------------
-
- Documentation/admin-guide/pm/intel_pstate.rst |  2 +-
- Documentation/admin-guide/pm/sleep-states.rst |  2 +-
- drivers/pci/pci.c                             | 37 +++++++++++++++++++----=
-----
- kernel/sched/cpufreq_schedutil.c              | 16 ++----------
- 4 files changed, 31 insertions(+), 26 deletions(-)
+Logan
