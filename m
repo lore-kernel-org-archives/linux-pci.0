@@ -1,66 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:56978 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935526AbeEXGIm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 May 2018 02:08:42 -0400
+Date: Thu, 24 May 2018 08:08:22 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Rajat Jain <rajatja@google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Thomas Tai <thomas.tai@oracle.com>,
+        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
+        Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com
+Subject: Re: [PATCH v2 1/5] PCI/AER: Define and allocate aer_stats structure
+ for AER capable devices
+Message-ID: <20180524060822.GA3016@kroah.com>
+References: <20180522222805.80314-1-rajatja@google.com>
+ <20180523175808.28030-1-rajatja@google.com>
+ <20180523175808.28030-2-rajatja@google.com>
 MIME-Version: 1.0
-In-Reply-To: <1527631130-20045-3-git-send-email-ray.jui@broadcom.com>
-References: <1527631130-20045-1-git-send-email-ray.jui@broadcom.com>
- <1527631130-20045-3-git-send-email-ray.jui@broadcom.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 30 May 2018 03:59:33 +0300
-Message-ID: <CAHp75VfwfKbikfat3tTbMzSfNgt4v9nFpExyDvhOdX9ko1Z4Fw@mail.gmail.com>
-Subject: Re: [PATCH 2/6] PCI: iproc: Add INTx support with better modeling
-To: Ray Jui <ray.jui@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- devicetree <devicetree@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180523175808.28030-2-rajatja@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2018 at 12:58 AM, Ray Jui <ray.jui@broadcom.com> wrote:
-> Add PCIe legacy interrupt INTx support to the iProc PCIe driver by
-> modeling it with its own IRQ domain. All 4 interrupts INTA, INTB, INTC,
-> INTD share the same interrupt line connected to the GIC in the system,
-> while the status of each INTx can be obtained through the INTX CSR
-> register
+On Wed, May 23, 2018 at 10:58:04AM -0700, Rajat Jain wrote:
+> ---
+> v2: Fix the license header as per Greg's suggestions
+>     (Since there is disagreement with using "//" vs "/* */" for license
+>      I decided to keep the one preferred by Linus, also used by others
+>      in this directory)
 
-> +       while ((status = iproc_pcie_read_reg(pcie, IPROC_PCIE_INTX_CSR) &
-> +               SYS_RC_INTX_MASK) != 0) {
-> +               for_each_set_bit(bit, &status, PCI_NUM_INTX) {
-> +                       virq = irq_find_mapping(pcie->irq_domain, bit + 1);
-> +                       if (virq)
-> +                               generic_handle_irq(virq);
-> +                       else
-> +                               dev_err(dev, "unexpected INTx%u\n", bit);
-> +               }
-> +       }
+The rules are pretty simple for how to do this, and they are documented
+in Documentation/process/license-rules.rst, please just follow that like
+the rest of the kernel has done.
 
-do {
-  status = ...;
-  for_each_set_bit() {
-    ...
-  }
-} while (status);
+thanks,
 
-would look slightly better for my opinion.
-
--- 
-With Best Regards,
-Andy Shevchenko
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+greg k-h
