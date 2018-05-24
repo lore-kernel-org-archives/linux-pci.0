@@ -1,59 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35411 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751177AbeEVKAm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 06:00:42 -0400
-From: Marek Vasut <marek.vasut@gmail.com>
-Subject: Re: [PATCH][RFC] PCI: rcar: Add bus notifier so we can limit the DMA
- range
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Nikita Yushchenko <nikita.yoush@cogentembedded.com>
-References: <20180521220514.30256-1-marek.vasut+renesas@gmail.com>
- <CAK8P3a1PZ_MfgEcvWdUbN-eCcs5Xo38LQ54imLc4kNtSKO9Txw@mail.gmail.com>
-Message-ID: <c2897d82-fe33-52cd-5aa6-3bddb478cb9f@gmail.com>
-Date: Tue, 22 May 2018 11:52:21 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 24 May 2018 14:50:39 +0300
+From: Ilias Apalodimas <ilias.apalodimas@linaro.org>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [PATCH v2 03/40] iommu/sva: Manage process address spaces
+Message-ID: <20180524115039.GA10260@apalos>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-4-jean-philippe.brucker@arm.com>
+ <20180516163117.622693ea@jacob-builder>
+ <de478769-9f7a-d40b-a55e-e2c63ad883e8@arm.com>
+ <20180522094334.71f0e36b@jacob-builder>
+ <f73b4a0e-669e-8483-88d7-1b2c8a2b9934@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a1PZ_MfgEcvWdUbN-eCcs5Xo38LQ54imLc4kNtSKO9Txw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <f73b4a0e-669e-8483-88d7-1b2c8a2b9934@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "linux-mm@kvack.org" <linux-mm@kvack.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "kevin.tian@intel.com" <kevin.tian@intel.com>,
+ Jacob Pan <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "rgummal@xilinx.com" <rgummal@xilinx.com>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ Robin Murphy <Robin.Murphy@arm.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+ "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/22/2018 10:10 AM, Arnd Bergmann wrote:
-> On Tue, May 22, 2018 at 12:05 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
->> From: Phil Edworthy <phil.edworthy@renesas.com>
->>
->> The PCIe DMA controller on RCar Gen2 and earlier is on 32bit bus,
->> so limit the DMA range to 32bit.
->>
->> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->> Cc: Arnd Bergmann <arnd@arndb.de>
->> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->> Cc: Simon Horman <horms+renesas@verge.net.au>
->> Cc: Wolfram Sang <wsa@the-dreams.de>
->> Cc: linux-renesas-soc@vger.kernel.org
->> To: linux-pci@vger.kernel.org
->> ---
->> NOTE: I'm aware of https://patchwork.kernel.org/patch/9495895/ , but the
->>       discussion seems to have gone way off, so I'm sending this as a
->>       RFC. Any feedback on how to do this limiting properly would be nice.
-> 
-> Doing it in the driver is clearly not appropriate, we must do this in
-> common code. If I remember correctly, it's specifically ARM64 that is
-> broken here, it incorrectly allows setting a DMA mask to 64 bit
-> when that is not available.
+> Interesting, I hadn't thought about this use-case before. At first I
+> thought you were talking about mdev devices assigned to VMs, but I think
+> you're referring to mdevs assigned to userspace drivers instead? Out of
+> curiosity, is it only theoretical or does someone actually need this?
 
-Yep, that's correct. ARM64 with devices mapping tremendous amounts of
-memory. So did anything change since that discussion references in the NOTE?
+There has been some non upstreamed efforts to have mdev and produce userspace
+drivers. Huawei is using it on what they call "wrapdrive" for crypto devices and
+we did a proof of concept for ethernet interfaces. At the time we choose not to
+involve the IOMMU for the reason you mentioned, but having it there would be
+good.
 
--- 
-Best regards,
-Marek Vasut
+Thanks
+Ilias
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
