@@ -1,48 +1,174 @@
-Return-Path: <SRS0=R787=H5=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=R787=H5=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 24 May 2018 13:35:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
+Message-ID: <20180524183502.GB85822@bhelgaas-glaptop.roam.corp.google.com>
+References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+ <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+ <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20180510130343.GA173327@bhelgaas-glaptop.roam.corp.google.com>
-References: <56a8953c-d833-837c-57d5-fe758d4db02a@canonical.com>
- <1823373.ea0yBGqyI6@aspire.rjw.lan> <20180510130343.GA173327@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Thu, 10 May 2018 16:49:38 +0200
-Message-ID: <CAJZ5v0hdkyQnpRseSYi2gJWrFPu+svUA64sZvmV0dg2g=KOuiw@mail.gmail.com>
-Subject: Re: [PATCH] PCI / PM: Check device_may_wakeup() in pci_enable_wake()
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Joseph Salisbury <joseph.salisbury@canonical.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 1745646@bugs.launchpad.net,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: ryan@finnie.org, Kate Stewart <kstewart@linuxfoundation.org>,
+ linux-scsi@vger.kernel.org, Frederick Lawler <fred@fredlawl.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ esc.storagedev@microsemi.com, open list <linux-kernel@vger.kernel.org>,
+ stable@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Thomas Gleixner <tglx@linutronix.de>, Don Brace <don.brace@microsemi.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 10, 2018 at 3:03 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, May 09, 2018 at 12:18:32AM +0200, Rafael J. Wysocki wrote:
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> Commit 0847684cfc5f0 (PCI / PM: Simplify device wakeup settings code)
->> went too far and dropped the device_may_wakeup() check from
->> pci_enable_wake() which causes wakeup to be enabled during system
->> suspend, hibernation or shutdown for some PCI devices that are not
->> allowed by user space to wake up the system from sleep (or power off).
->>
->> As a result of this excessive power is drawn by some of the affected
->> systems while in sleep states or off.
->>
->> Restore the device_may_wakeup() check in pci_enable_wake(), but make
->> sure that the PCI bus type's runtime suspend callback will not call
->> device_may_wakeup() which is about system wakeup from sleep and not
->> about device wakeup from runtime suspend.
->>
->> Fixes: 0847684cfc5f0 (PCI / PM: Simplify device wakeup settings code)
->> Reported-by: Joseph Salisbury <joseph.salisbury@canonical.com>
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> 0847684cfc5f0 appeared in v4.13, which raises the question of whether
-> this problem is important enough for a stable backport.  Up to you :)
+On Wed, May 23, 2018 at 06:57:18PM -0400, Sinan Kaya wrote:
+> On 5/23/2018 5:32 PM, Bjorn Helgaas wrote:
+> > 
+> > The crash seems to indicate that the hpsa device attempted a DMA after
+> > we cleared the Root Port's PCI_COMMAND_MASTER, which means
+> > hpsa_shutdown() didn't stop DMA from the device (it looks like *most*
+> > shutdown methods don't disable device DMA, so it's in good company).
+> 
+> All drivers are expected to shutdown DMA and interrupts in their shutdown()
+> routines. They can skip removing threads, data structures etc. but DMA and
+> interrupt disabling are required. This is the difference between shutdown()
+> and remove() callbacks.
+> 
+> If you see that this is not being done in HPSA, then that is where the
+> bugfix should be.
+> 
+> Counter argument is that if shutdown() is not implemented, at least remove()
+> should be called. Expecting all drivers to implement shutdown() callbacks
+> is just bad by design in my opinion. 
+> 
+> Code should have fallen back to remove() if shutdown() doesn't exist.
+> I can propose a patch for this but this is yet another story to chase.
 
-Yes, it is IMO, thank you!
+That sounds like a reasonable idea, and it is definitely another can
+of worms.  I looked briefly at some of the .shutdown() cases:
+
+  - device_shutdown() doesn't fall back to remove().
+
+  - It looks like most bus_types don't implement .shutdown() at all (I
+    didn't look at them all).
+
+  - Of the bus_types that do implement .shutdown(), most do not fall
+    back to .remove().  ps3_system_bus_type() is an example of one
+    that *does* fall back to a driver's .remove() if there is no
+    .shutdown().
+
+Implement shutdown (no fallback unless indicated):
+
+  ecard_bus_type
+  gio_bus_type
+  ps3_system_bus_type	# does fallback to remove
+  ibmebus_bus_type
+  isa_bus_type
+  platform_bus_type	# not direct implementation
+  fmc_bus_type		# fmc_shutdown() looks spurious
+  mipi_dsi_bus_type
+  hv_bus
+
+> >> This has been found to cause crashes on HP DL360 Gen9 machines during
+> >> reboot. Besides, kexec is already clearing the bus master bit in
+> >> pci_device_shutdown() after all PCI drivers are removed.
+> > 
+> > The original path was:
+> > 
+> >   pci_device_shutdown(hpsa)
+> >     drv->shutdown
+> >       hpsa_shutdown                     # hpsa_pci_driver.shutdown
+> >   ...
+> >   pci_device_shutdown(RP)               # root port
+> >     drv->shutdown
+> >       pcie_portdrv_remove               # pcie_portdriver.shutdown
+> >         pcie_port_device_remove
+> >           pci_disable_device
+> >             do_pci_disable_device
+> >               # clear RP PCI_COMMAND_MASTER
+> >     if (kexec)
+> >       pci_clear_master(RP)
+> >         # clear RP PCI_COMMAND_MASTER
+> > 
+> > If I understand correctly, the new path after this patch is:
+> > 
+> >   pci_device_shutdown(hpsa)
+> >     drv->shutdown
+> >       hpsa_shutdown                     # hpsa_pci_driver.shutdown
+> >   ...
+> >   pci_device_shutdown(RP)               # root port
+> >     drv->shutdown
+> >       pcie_portdrv_shutdown             # pcie_portdriver.shutdown
+> >         __pcie_portdrv_remove(RP, false)
+> >           pcie_port_device_remove(RP, false)
+> >             # do NOT clear RP PCI_COMMAND_MASTER
+> 
+> yup
+> 
+> >     if (kexec)
+> >       pci_clear_master(RP)
+> >         # clear RP PCI_COMMAND_MASTER
+> > 
+> > I guess this patch avoids the panic during reboot because we're not in
+> > the kexec path, so we never clear PCI_COMMAND_MASTER for the Root
+> > Port, so the hpsa device can DMA happily until the lights go out.
+> > 
+> > But DMA continuing for some random amount of time before the reboot or
+> > shutdown happens makes me a little queasy.  That doesn't sound safe.
+> > The more I think about this, the more confused I get.  What am I
+> > missing?  
+> 
+> see above.
+> 
+> > 
+> >> Just remove the extra clear in shutdown path by seperating the remove and
+> >> shutdown APIs in the PORTDRV.
+> >>
+> >>  static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
+> >> @@ -218,7 +228,7 @@ static struct pci_driver pcie_portdriver = {
+> >>  
+> >>  	.probe		= pcie_portdrv_probe,
+> >>  	.remove		= pcie_portdrv_remove,
+> >> -	.shutdown	= pcie_portdrv_remove,
+> >> +	.shutdown	= pcie_portdrv_shutdown,
+> > 
+> > What are the circumstances when we call .remove() vs .shutdown()?
+> > 
+> > I guess the main (maybe only) way to call .remove() is to hot-remove
+> > the port?  And .shutdown() is basically used in the reboot and kexec
+> > paths?
+> 
+> Correct. shutdown() is only called during reboot/shutdown calls. If you echo
+> 1 into the remove file, remove() gets called. Handy for hotplug use cases.
+> It needs to be the exact opposite of the probe. It needs to clean up resources
+> etc. and have the HW in a state where it can be reinitialized via probe again.
+> 
+> > 
+> >>  	.err_handler	= &pcie_portdrv_err_handler,
+> >>  
+> >> -- 
+> >> 2.7.4
+> >>
+> > 
+> 
+> 
+> -- 
+> Sinan Kaya
+> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
