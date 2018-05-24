@@ -1,41 +1,68 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 22 May 2018 09:36:42 +0200
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] PCI/sysfs: do not allow enabling/disabling a device with
- a driver
-Message-ID: <20180522073642.abqtry7gxjh6ndqi@linux-x5ow.site>
-References: <20180518165624.13993-1-hch@lst.de>
+Return-Path: <SRS0=5vAC=IL=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=5vAC=IL=codeaurora.org=okaya@kernel.org>
+Subject: Re: pci=earlydump on ARM
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ Linux PCI <linux-pci@vger.kernel.org>
+References: <bug-199671-164391@https.bugzilla.kernel.org/>
+ <bug-199671-164391-E4Mtn0How4@https.bugzilla.kernel.org/>
+ <9756cf4c-0cec-00f7-3cc6-f09e34177cf9@codeaurora.org>
+ <20180523195322.GC150632@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <c92b7445-9e6f-8b82-da0a-2f50ed9baaa5@codeaurora.org>
+Date: Thu, 24 May 2018 07:54:53 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180518165624.13993-1-hch@lst.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
- ming.lei@redhat.com, keith.busch@linux.intel.com, bhelgaas@google.com,
- arjan@linux.intel.com
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180523195322.GC150632@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
--- =
+On 5/23/2018 3:53 PM, Bjorn Helgaas wrote:
+> On Wed, May 23, 2018 at 03:10:39PM -0400, Sinan Kaya wrote:
+>>> If that doesn't work or you'd rather brute-force it, you could try
+>>> doing something like "pci=earlydump".  This is currently only
+>>> implemented for x86, so it would be some work to implement something
+>>> similar for arm64.  It would be a nice upstream addition if you *did*
+>>> implement it.
+>>>
+>>> In the earlydump output I would be looking for clues about the power
+>>> state of 03:00.0 to try to figure out if the bootloader left it powered
+>>> off or if Linux is doing something to turn it off.
+>>>
+>>
+>> Is it really possible to implement a generic version of this?
+>>
+>> PCI on ARM64 is not really unified. There are several host bridge drivers
+>> for different types of access. 
+>>
+>> If we limit the functionality to ACPI, the answer is still maybe if we
+>> can pass the base address of the MMCONFIG region. 
+>>
+>> All products use a different MMCONFIG region.
+> 
+> On x86, early dump is implemented off to the side, outside the PCI
+> core, and it takes advantage of arch-specific knowledge about ways to
+> perform config accesses.
+> 
+> But I could imagine something in the pci_scan_device() area, where we
+> have the normal config accessors but we haven't yet touched the
+> device.  I think we could get 99% of the early dump utility in a
+> completely generic way.
+> 
+> There might be a few hand-crafted arch-specific quirks that touch PCI
+> devices even before that point, but those should be pretty rare.
 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+I see, you just want to dump the config space of each device as code is
+walking the bus while scanning. This should be doable.
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+I'll see what I can do.
+
+> 
+> Bjorn
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
