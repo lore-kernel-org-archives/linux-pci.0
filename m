@@ -1,129 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:50610 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S966894AbeEYAbo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 20:31:44 -0400
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w4P0U8ls082211
-        for <linux-pci@vger.kernel.org>; Thu, 24 May 2018 20:31:43 -0400
-Received: from e06smtp13.uk.ibm.com (e06smtp13.uk.ibm.com [195.75.94.109])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2j62bb5390-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Thu, 24 May 2018 20:31:43 -0400
-Received: from localhost
-        by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <sbobroff@linux.ibm.com>;
-        Fri, 25 May 2018 01:31:41 +0100
-From: Sam Bobroff <sbobroff@linux.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Cc: mpe@ellerman.id.au, bhelgaas@google.com,
-        bryantly@linux.vnet.ibm.com
-Subject: [PATCH v2 1/1] powerpc/pseries: fix EEH recovery of some IOV devices
-Date: Fri, 25 May 2018 10:31:36 +1000
-Message-Id: <7598ffeb48c16c88a34937ad93b18f806222b8df.1527208281.git.sbobroff@linux.ibm.com>
+Received: from ale.deltatee.com ([207.54.116.67]:37970 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S968103AbeEXRjR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 May 2018 13:39:17 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-ntb@googlegroups.com
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Doug Meyer <dmeyer@gigaio.com>
+Date: Thu, 24 May 2018 11:39:13 -0600
+Message-Id: <20180524173913.4506-1-logang@deltatee.com>
+Subject: [PATCH v2] PCI: Expand documentation for pci_add_dma_alias()
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-EEH recovery currently fails on pSeries for some IOV capable PCI
-devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
-certain device tree properties for the device. (Found on an IOV
-capable device using the ipr driver.)
+Seeing there's been some confusion about the use of pci_add_dma_alias(),
+expand the comment to describe why it must be called early and how
+early it must be called.
 
-Recovery fails in pci_enable_resources() at the check on r->parent,
-because r->flags is set and r->parent is not.  This state is due to
-sriov_init() setting the start, end and flags members of the IOV BARs
-but the parent not being set later in
-pseries_pci_fixup_iov_resources(), because the
-"ibm,open-sriov-vf-bar-info" property is missing.
+Also, expand on the purpose of this function and common reasons it would
+be used.
 
-Correct this by zeroing the resource flags for IOV BARs when they
-can't be configured.
+[The comment was reworded to some extent by Alex Williamson]
 
-Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>
+Cc: Doug Meyer <dmeyer@gigaio.com>
 ---
-Hi,
 
-This is a fix to allow EEH recovery to succeed in a specific situation,
-which I've tried to explain in the commit message.
+v2: Reworked the patch with Alex's suggested wording.
 
-As with the RFC version, the IOV BARs are disabled by setting the resource
-flags to 0 but the other fields are now left as-is because that is what is done
-elsewhere (see sriov_init() and __pci_read_base()).
+  drivers/pci/pci.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-I've also examined the concern raised by Bjorn Helgaas, that VFs could be
-enabled later after the BARs are disabled, and it already seems safe: enabling
-VFs (on pseries) depends on another device tree property,
-"ibm,number-of-configurable-vfs" as well as support for the RTAS function
-"ibm_map_pes". Since these are all part of the hypervisor's support for IOV it
-seems unlikely that we would ever see some of them but not all. (None are
-currently provided by QEMU/KVM.) (Additionally, the ipr driver on which the EEH
-recovery failure was discovered doesn't even seem to have SR-IOV support so it
-certainly can't enable VFs.)
-
-Cheers,
-Sam.
-====== v1 -> v2: ======
-
-Patch 1/1: powerpc/pseries: fix EEH recovery of some IOV devices
-* Moved the BAR disabling code to a function.
-* Also check in pseries_pci_fixup_resources().
-
-====== v1: ======
-
-Patch 1/1: powerpc/pseries: fix EEH recovery of IOV devices
-
- arch/powerpc/platforms/pseries/setup.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
-
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index b55ad4286dc7..0a9e4243ae1d 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -645,6 +645,15 @@ void of_pci_parse_iov_addrs(struct pci_dev *dev, const int *indexes)
- 	}
- }
- 
-+static void pseries_disable_sriov_resources(struct pci_dev *pdev)
-+{
-+	int i;
-+
-+	pci_warn(pdev, "No hypervisor support for SR-IOV on this device, IOV BARs disabled.\n");
-+	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
-+		pdev->resource[i + PCI_IOV_RESOURCES].flags = 0;
-+}
-+
- static void pseries_pci_fixup_resources(struct pci_dev *pdev)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index dbfe7c4f3776..1c0c1ea23b90 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5395,8 +5395,19 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
+  * @dev: the PCI device for which alias is added
+  * @devfn: alias slot and function
+  *
+- * This helper encodes 8-bit devfn as bit number in dma_alias_mask.
+- * It should be called early, preferably as PCI fixup header quirk.
++ * This helper encodes an 8-bit devfn as a bit number in dma_alias_mask
++ * which is used to program permissible BDF source addresses for DMA
++ * requests in an IOMMU. These aliases factor into IOMMU group creation
++ * and are useful for devices generating DMA requests beyond or different
++ * from their logical bus devfn. Examples include device quirks where the
++ * device simply uses the wronge devfn, as well as non-transparent bridges
++ * where the alias may be a proxy for devices in another domain.
++ *
++ * IOMMU group creation is performed during device discovery or addition,
++ * prior to any potential DMA mapping and therefore prior to driver probing
++ * (especially for userspace assigned devices where IOMMU group definition
++ * cannot be left as a userspace activity). DMA aliases should therefore
++ * be configured via quirks, such as the PCI fixup header quirk.
+  */
+ void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
  {
- 	const int *indexes;
-@@ -652,10 +661,10 @@ static void pseries_pci_fixup_resources(struct pci_dev *pdev)
- 
- 	/*Firmware must support open sriov otherwise dont configure*/
- 	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
--	if (!indexes)
--		return;
--	/* Assign the addresses from device tree*/
--	of_pci_set_vf_bar_size(pdev, indexes);
-+	if (indexes)
-+		of_pci_set_vf_bar_size(pdev, indexes);
-+	else
-+		pseries_disable_sriov_resources(pdev);
- }
- 
- static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
-@@ -667,10 +676,10 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
- 		return;
- 	/*Firmware must support open sriov otherwise dont configure*/
- 	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
--	if (!indexes)
--		return;
--	/* Assign the addresses from device tree*/
--	of_pci_parse_iov_addrs(pdev, indexes);
-+	if (indexes)
-+		of_pci_parse_iov_addrs(pdev, indexes);
-+	else
-+		pseries_disable_sriov_resources(pdev);
- }
- 
- static resource_size_t pseries_pci_iov_resource_alignment(struct pci_dev *pdev,
--- 
-2.16.1.74.g9b0b1f47b
+--
+2.11.0
