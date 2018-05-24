@@ -1,48 +1,94 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 7 May 2018 10:08:53 -0600
-From: Keith Busch <keith.busch@linux.intel.com>
-To: Aron Griffis <aron@arongriffis.com>
-Subject: Re: PCIe unsupported request with Intel 760p
-Message-ID: <20180507160853.GF20686@localhost.localdomain>
-References: <CAKDfzeD5_AV=YtWqTPr=40vvW4oMFAs4gJs_r42PJWcb815zyQ@mail.gmail.com>
- <20180507123035.GA20097@gmail.com>
- <20180507134354.GF18116@bombadil.infradead.org>
- <20180507151246.GB20686@localhost.localdomain>
- <20180507155759.GA13397@gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <20180507155759.GA13397@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
- linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:50504 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935616AbeEXHXe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 03:23:34 -0400
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH 2/6] PCI: rcar: Add missing irq_dispose_mapping() into failpath
+Date: Thu, 24 May 2018 09:23:19 +0200
+Message-Id: <20180524072323.22115-2-marek.vasut+renesas@gmail.com>
+In-Reply-To: <20180524072323.22115-1-marek.vasut+renesas@gmail.com>
+References: <20180524072323.22115-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 07, 2018 at 11:57:59AM -0400, Aron Griffis wrote:
-> Keith Busch wrote:  [Mon May 07 2018, 11:12:47AM EDT]
-> > Aron,
-> > Could you let me know the firmware revision you're currently running?
-> 
-> Hi Keith, is this what you need?
-> 
-> $ sudo nvme list
-> Node             SN                   Model                                    Namespace Usage                      Format           FW Rev
-> ---------------- -------------------- ---------------------------------------- --------- -------------------------- ---------------- --------
-> /dev/nvme0n1     BTHH807007N4512D     INTEL SSDPEKKW512G8                      1         512.11  GB / 512.11  GB    512   B +  0 B   001C
+The rcar_pcie_get_resources() is another misnomer with a side effect.
+The function does not only get resources, but also maps MSI IRQs via
+irq_of_parse_and_map(). In case anything fails afterward, the IRQ
+mapping must be disposed through irq_dispose_mapping() which is not
+done.
 
-Thank you, that's what I needed. That appears to be the latest released
-firmware for this device. I'll let you know as soon as I find more
-information.
+This patch handles irq_of_parse_and_map() failures in by disposing
+of the mapping in rcar_pcie_get_resources() as well as in probe.
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+---
+ drivers/pci/host/pcie-rcar.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 0879880f7975..6bb1cdec26be 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -950,18 +950,25 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+ 	i = irq_of_parse_and_map(dev->of_node, 0);
+ 	if (!i) {
+ 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
+-		return -ENOENT;
++		err = -ENOENT;
++		goto err_irq1;
+ 	}
+ 	pcie->msi.irq1 = i;
+ 
+ 	i = irq_of_parse_and_map(dev->of_node, 1);
+ 	if (!i) {
+ 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
+-		return -ENOENT;
++		err = -ENOENT;
++		goto err_irq2;
+ 	}
+ 	pcie->msi.irq2 = i;
+ 
+ 	return 0;
++
++err_irq2:
++	irq_dispose_mapping(pcie->msi.irq1);
++err_irq1:
++	return err;
+ }
+ 
+ static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
+@@ -1108,7 +1115,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 	err = clk_prepare_enable(pcie->bus_clk);
+ 	if (err) {
+ 		dev_err(dev, "failed to enable bus clock: %d\n", err);
+-		goto err_pm_put;
++		goto err_unmap_msi_irqs;
+ 	}
+ 
+ 	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
+@@ -1151,6 +1158,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ err_clk_disable:
+ 	clk_disable_unprepare(pcie->bus_clk);
+ 
++err_unmap_msi_irqs:
++	irq_dispose_mapping(pcie->msi.irq2);
++	irq_dispose_mapping(pcie->msi.irq1);
++
+ err_pm_put:
+ 	pm_runtime_put(dev);
+ 
+-- 
+2.16.2
