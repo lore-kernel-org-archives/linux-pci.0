@@ -1,49 +1,82 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: AER: Malformed TLP recovery deadlock with NVMe drives
-To: "Alex G." <mr.nuke.me@gmail.com>
-References: <8cf4e563-5f84-f8bd-88a6-8369cdf07b29@gmail.com>
- <7afd280ad80a73b39e6c9b9a9e29abcc@codeaurora.org>
- <5c97a7c2-cb53-4740-fda0-50ba92288c5c@gmail.com>
- <9fc90040d5712282ea223807ace39312@codeaurora.org>
- <1125ddf8-f342-3f8f-90ee-0aa94287360c@gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <d7b9b374-bb5f-7c84-af0f-08b8c7399f05@codeaurora.org>
-Date: Mon, 7 May 2018 22:48:33 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2] PCI: Expand documentation for pci_add_dma_alias()
+To: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-ntb@googlegroups.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Doug Meyer <dmeyer@gigaio.com>
+References: <20180524173913.4506-1-logang@deltatee.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <b2481367-3acc-4d54-bae7-cc27fb38232e@infradead.org>
+Date: Thu, 24 May 2018 10:44:03 -0700
 MIME-Version: 1.0
-In-Reply-To: <1125ddf8-f342-3f8f-90ee-0aa94287360c@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Alex_Gagniuc@dellteam.com, linux-pci@vger.kernel.org, shyam_iyer@dell.com,
- linux-nvme@lists.infradead.org, Keith Busch <keith.busch@intel.com>,
- austin_bolen@dell.com, linux-pci-owner@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180524173913.4506-1-logang@deltatee.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/7/2018 9:58 PM, Alex G. wrote:
->> Sounds like there are multiple problems.
-> If it were easy, somebody would have patched it by now ;)
+On 05/24/2018 10:39 AM, Logan Gunthorpe wrote:
+> Seeing there's been some confusion about the use of pci_add_dma_alias(),
+> expand the comment to describe why it must be called early and how
+> early it must be called.
+> 
+> Also, expand on the purpose of this function and common reasons it would
+> be used.
+> 
+> [The comment was reworded to some extent by Alex Williamson]
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Alex Williamson <alex.williamson@redhat.com>
+> Cc: Doug Meyer <dmeyer@gigaio.com>
+> ---
+> 
+> v2: Reworked the patch with Alex's suggested wording.
+> 
+>   drivers/pci/pci.c | 15 +++++++++++++--
+>  1 file changed, 13 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index dbfe7c4f3776..1c0c1ea23b90 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5395,8 +5395,19 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
+>   * @dev: the PCI device for which alias is added
+>   * @devfn: alias slot and function
+>   *
+> - * This helper encodes 8-bit devfn as bit number in dma_alias_mask.
+> - * It should be called early, preferably as PCI fixup header quirk.
+> + * This helper encodes an 8-bit devfn as a bit number in dma_alias_mask
+> + * which is used to program permissible BDF source addresses for DMA
+
+It took me a few seconds to decode BDF.  FWIW, I would prefer to see
+bus-devfn or bus-dev-fn or bus-dev-func or bus-dev-function.
+
+> + * requests in an IOMMU. These aliases factor into IOMMU group creation
+> + * and are useful for devices generating DMA requests beyond or different
+> + * from their logical bus devfn. Examples include device quirks where the
+
+                         ^ Here it's "bus devfn."
+
+> + * device simply uses the wronge devfn, as well as non-transparent bridges
+
+                             wrong
+
+> + * where the alias may be a proxy for devices in another domain.
+> + *
+> + * IOMMU group creation is performed during device discovery or addition,
+> + * prior to any potential DMA mapping and therefore prior to driver probing
+> + * (especially for userspace assigned devices where IOMMU group definition
+> + * cannot be left as a userspace activity). DMA aliases should therefore
+> + * be configured via quirks, such as the PCI fixup header quirk.
+>   */
+>  void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
+>  {
+> --
+> 2.11.0
 > 
 
-I know...
-
-Keith has been debugging similar problems recently. I also have interest
-in error cases for hotplug. I have been keeping an eye on this for a while
-to see what might be happening.
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+~Randy
