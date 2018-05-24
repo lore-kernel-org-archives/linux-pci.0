@@ -1,239 +1,279 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:64753 "EHLO mga06.intel.com"
+Received: from ale.deltatee.com ([207.54.116.67]:39900 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965010AbeE2RQ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 May 2018 13:16:29 -0400
-Message-ID: <0ee16c03342858fdc61986e1aee50298f8eaaaa5.camel@linux.intel.com>
-Subject: Re: [PATCH v8 4/7] ACPI/hotplug/PCI: Do not scan all bridges when
- native PCIe hotplug is used
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        id S969433AbeEXVss (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 May 2018 17:48:48 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Date: Tue, 29 May 2018 20:16:24 +0300
-In-Reply-To: <20180529160155.1738-1-mika.westerberg@linux.intel.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
-         <20180529160155.1738-1-mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Christoffer Dall <cdall@linaro.org>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 24 May 2018 15:48:14 -0600
+Message-Id: <20180524214816.14485-2-logang@deltatee.com>
+In-Reply-To: <20180524214816.14485-1-logang@deltatee.com>
+References: <20180524214816.14485-1-logang@deltatee.com>
+Subject: [PATCH 1/3] PCI: Make specifying PCI devices in kernel parameters reusable
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2018-05-29 at 19:01 +0300, Mika Westerberg wrote:
-> When a system is using native PCIe hotplug for Thunderbolt it will be
-> only present in the system when there is a device connected. This
-> pretty
-> much follows the BIOS assisted hotplug behaviour.
-> 
-> Thunderbolt host router integrated PCIe switch has two additional PCIe
-> downstream bridges that lead to NHI (Thunderbolt host controller) and
-> xHCI
-> (USB 3 host controller) respectively. These downstream bridges are not
-> marked being hotplug capable. Reason for that is to preserve
-> resources.
-> Otherwise the OS would distribute remaining resources between all
-> downstream bridges making these two bridges consume precious resources
-> of the actual hotplug bridges.
-> 
-> Now, because these two bridges are not marked being hotplug capable
-> the OS
-> will not enable hotplug interrupt for them either and will not receive
-> interrupt when devices behind them are hot-added. Solution to this is
-> that the BIOS sends ACPI Notify() to the root port let the OS know it
-> needs to rescan for added and/or removed devices.
-> 
-> Here is how the mechanism is supposed to work when a Thunderbolt
-> endpoint is connected to one of the ports. In case of a standard USB-C
-> device only the xHCI is hot-added otherwise steps are the same.
-> 
-> 1. Initially there is only the PCIe root port that is controlled by
->    the pciehp driver
-> 
->   00:1b.0 (Hotplug+) --
-> 
-> 2. Then we get native PCIe hotplug interrupt and once it is handled
-> the
->    topology looks as following
-> 
->   00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 --
->                                   +- 02:01.0 (HotPlug+)
->                                   \- 02:02.0 --
-> 
-> 3. Bridges 02:00.0 and 02:02.0 are not marked as hotplug capable and
->    they don't have anything behind them currently. Bridge 02:01.0 is
->    hotplug capable and used for extending the topology. At this point
->    the required PCIe devices are enabled and ACPI Notify() is sent to
->    the root port. The resulting topology is expected to look like
-> 
->   00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 -- Thunderbolt host
-> controller
->                                   +- 02:01.0 (HotPlug+)
->                                   \- 02:02.0 -- xHCI host controller
-> 
-> However, the current ACPI hotplug implementation scans the whole
-> 00:1b.0
-> hotplug slot and everything behind it regardless whether native PCIe
-> is
-> used or not, and it expects that the BIOS has configured bridge
-> resources upfront. If that's not the case it assigns resources using
-> minimal allocation (everything currently found just barely fit)
-> preventing future extension. In addition to that, if there is another
-> native PCIe hotplug going on we may find the new PCIe switch only
-> partially ready (all links are not fully trained yet) confusing pciehp
-> when it finally starts to enumerate for new devices.
-> 
-> To make this work better with the native PCIe (pciehp) and standard
-> PCI
-> (shpchp) hotplug drivers, we let them handle all slot management and
-> resource allocation for hotplug bridges and restrict ACPI hotplug to
-> non-hotplug bridges.
-> 
+Separate out the code to match a PCI device with a string (typically
+originating from a kernel parameter) from the
+pci_specified_resource_alignment() function into its own helper
+function.
 
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+While we are at it, this change fixes the kernel style of the function
+(fixing a number of long lines and extra parentheses).
 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c | 75 +++++++++++++++++++++++----
-> ---
->  1 file changed, 58 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c
-> b/drivers/pci/hotplug/acpiphp_glue.c
-> index 318b6a6f6341..e2bcd9fc3fd2 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -287,11 +287,12 @@ static acpi_status
-> acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
->  	/*
->  	 * Expose slots to user space for functions that have _EJ0 or
-> _RMV or
->  	 * are located in dock stations.  Do not expose them for
-> devices handled
-> -	 * by the native PCIe hotplug (PCIeHP), becuase that code is
-> supposed to
-> -	 * expose slots to user space in those cases.
-> +	 * by the native PCIe hotplug (PCIeHP) or standard PCI
-> hotplug
-> +	 * (SHPCHP), because that code is supposed to expose slots to
-> user
-> +	 * space in those cases.
->  	 */
->  	if ((acpi_pci_check_ejectable(pbus, handle) ||
-> is_dock_device(adev))
-> -	    && !(pdev && pdev->is_hotplug_bridge &&
-> pciehp_is_native(pdev))) {
-> +	    && !(pdev && hotplug_is_native(pdev))) {
->  		unsigned long long sun;
->  		int retval;
->  
-> @@ -430,6 +431,29 @@ static int acpiphp_rescan_slot(struct
-> acpiphp_slot *slot)
->  	return pci_scan_slot(slot->bus, PCI_DEVFN(slot->device, 0));
->  }
->  
-> +static void acpiphp_native_scan_bridge(struct pci_dev *bridge)
-> +{
-> +	struct pci_bus *bus = bridge->subordinate;
-> +	struct pci_dev *dev;
-> +	int max;
-> +
-> +	if (!bus)
-> +		return;
-> +
-> +	max = bus->busn_res.start;
-> +	/* Scan already configured non-hotplug bridges */
-> +	for_each_pci_bridge(dev, bus) {
-> +		if (!dev->is_hotplug_bridge)
-> +			max = pci_scan_bridge(bus, dev, max, 0);
-> +	}
-> +
-> +	/* Scan non-hotplug bridges that need to be reconfigured */
-> +	for_each_pci_bridge(dev, bus) {
-> +		if (!dev->is_hotplug_bridge)
-> +			max = pci_scan_bridge(bus, dev, max, 1);
-> +	}
-> +}
-> +
->  /**
->   * enable_slot - enable, configure a slot
->   * @slot: slot to be enabled
-> @@ -442,25 +466,42 @@ static void enable_slot(struct acpiphp_slot
-> *slot)
->  	struct pci_dev *dev;
->  	struct pci_bus *bus = slot->bus;
->  	struct acpiphp_func *func;
-> -	int max, pass;
-> -	LIST_HEAD(add_list);
->  
-> -	acpiphp_rescan_slot(slot);
-> -	max = acpiphp_max_busnr(bus);
-> -	for (pass = 0; pass < 2; pass++) {
-> +	if (bus->self && hotplug_is_native(bus->self)) {
-> +		/*
-> +		 * If native hotplug is used, it will take care of
-> hotplug
-> +		 * slot management and resource allocation for
-> hotplug
-> +		 * bridges. However, ACPI hotplug may still be used
-> for
-> +		 * non-hotplug bridges to bring in additional devices
-> such
-> +		 * as Thunderbolt host controller.
-> +		 */
->  		for_each_pci_bridge(dev, bus) {
-> -			if (PCI_SLOT(dev->devfn) != slot->device)
-> -				continue;
-> -
-> -			max = pci_scan_bridge(bus, dev, max, pass);
-> -			if (pass && dev->subordinate) {
-> -				check_hotplug_bridge(slot, dev);
-> -				pcibios_resource_survey_bus(dev-
-> >subordinate);
-> -				__pci_bus_size_bridges(dev-
-> >subordinate, &add_list);
-> +			if (PCI_SLOT(dev->devfn) == slot->device)
-> +				acpiphp_native_scan_bridge(dev);
-> +		}
-> +		pci_assign_unassigned_bridge_resources(bus->self);
-> +	} else {
-> +		LIST_HEAD(add_list);
-> +		int max, pass;
-> +
-> +		acpiphp_rescan_slot(slot);
-> +		max = acpiphp_max_busnr(bus);
-> +		for (pass = 0; pass < 2; pass++) {
-> +			for_each_pci_bridge(dev, bus) {
-> +				if (PCI_SLOT(dev->devfn) != slot-
-> >device)
-> +					continue;
-> +
-> +				max = pci_scan_bridge(bus, dev, max,
-> pass);
-> +				if (pass && dev->subordinate) {
-> +					check_hotplug_bridge(slot,
-> dev);
-> +					pcibios_resource_survey_bus(d
-> ev->subordinate);
-> +					__pci_bus_size_bridges(dev-
-> >subordinate,
-> +							       &add_l
-> ist);
-> +				}
->  			}
->  		}
-> +		__pci_bus_assign_resources(bus, &add_list, NULL);
->  	}
-> -	__pci_bus_assign_resources(bus, &add_list, NULL);
->  
->  	acpiphp_sanitize_bus(bus);
->  	pcie_bus_configure_settings(bus);
+Additionally, make the analogous change to the kernel parameter
+documentation: Separating the description of how to specify a PCI device
+into it's own section at the head of the pci= parameter.
 
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+---
+ Documentation/admin-guide/kernel-parameters.txt |  26 +++-
+ drivers/pci/pci.c                               | 153 +++++++++++++++---------
+ 2 files changed, 120 insertions(+), 59 deletions(-)
+
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 11fc28ecdb6d..894aa516ceab 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -2982,7 +2982,24 @@
+ 			See header of drivers/block/paride/pcd.c.
+ 			See also Documentation/blockdev/paride.txt.
+ 
+-	pci=option[,option...]	[PCI] various PCI subsystem options:
++	pci=option[,option...]	[PCI] various PCI subsystem options.
++
++				Some options herein operate on a specific device
++				or a set of devices (<pci_dev>). These are
++				specified in one of two formats:
++
++				[<domain>:]<bus>:<slot>.<func>
++				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
++
++				Note: the first format specifies a PCI
++				bus/slot/function address which may change
++				if new hardware is inserted, if motherboard
++				firmware changes, or due to changes caused
++				by other kernel parameters. The second format
++				selects devices using IDs from the
++				configuration space which may match multiple
++				devices in the system.
++
+ 		earlydump	[X86] dump PCI config space before the kernel
+ 			        changes anything
+ 		off		[X86] don't probe for the PCI bus
+@@ -3111,11 +3128,10 @@
+ 				window. The default value is 64 megabytes.
+ 		resource_alignment=
+ 				Format:
+-				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
+-				[<order of align>@]pci:<vendor>:<device>\
+-						[:<subvendor>:<subdevice>][; ...]
++				[<order of align>@]<pci_dev>[; ...]
+ 				Specifies alignment and device to reassign
+-				aligned memory resources.
++				aligned memory resources. How to
++				specify the device is described above.
+ 				If <order of align> is not specified,
+ 				PAGE_SIZE is used as alignment.
+ 				PCI-PCI bridge can be specified, if resource
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index dbfe7c4f3776..85fec5e2640b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -183,6 +183,88 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar)
+ EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
+ #endif
+ 
++/**
++ * pci_dev_str_match - test if a string matches a device
++ * @dev:    the PCI device to test
++ * @p:      string to match the device against
++ * @endptr: pointer to the string after the match
++ *
++ * Test if a string (typically from a kernel parameter) matches a
++ * specified. The string may be of one of two forms formats:
++ *
++ *   [<domain>:]<bus>:<slot>.<func>
++ *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
++ *
++ * The first format specifies a PCI bus/slot/function address which
++ * may change if new hardware is inserted, if motherboard firmware changes,
++ * or due to changes caused in kernel parameters.
++ *
++ * The second format matches devices using IDs in the configuration
++ * space which may match multiple devices in the system. A value of 0
++ * for any field will match all devices.
++ *
++ * Returns 1 if the string matches the device, 0 if it does not and
++ * a negative error code if the string cannot be parsed.
++ */
++static int pci_dev_str_match(struct pci_dev *dev, const char *p,
++			     const char **endptr)
++{
++	int ret;
++	int seg, bus, slot, func, count;
++	unsigned short vendor, device, subsystem_vendor, subsystem_device;
++
++	if (strncmp(p, "pci:", 4) == 0) {
++		/* PCI vendor/device (subvendor/subdevice) ids are specified */
++		p += 4;
++		ret = sscanf(p, "%hx:%hx:%hx:%hx%n", &vendor, &device,
++			     &subsystem_vendor, &subsystem_device, &count);
++		if (ret != 4) {
++			ret = sscanf(p, "%hx:%hx%n", &vendor, &device, &count);
++			if (ret != 2)
++				return -EINVAL;
++
++			subsystem_vendor = 0;
++			subsystem_device = 0;
++		}
++
++		p += count;
++
++		if ((!vendor || vendor == dev->vendor) &&
++		    (!device || device == dev->device) &&
++		    (!subsystem_vendor ||
++			    subsystem_vendor == dev->subsystem_vendor) &&
++		    (!subsystem_device ||
++			    subsystem_device == dev->subsystem_device))
++			goto found;
++
++	} else {
++		/* PCI Bus,Slot,Function ids are specified */
++		ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
++			     &func, &count);
++		if (ret != 4) {
++			seg = 0;
++			ret = sscanf(p, "%x:%x.%x%n", &bus, &slot,
++				     &func, &count);
++			if (ret != 3)
++				return -EINVAL;
++		}
++
++		p += count;
++
++		if (seg == pci_domain_nr(dev->bus) &&
++		    bus == dev->bus->number &&
++		    slot == PCI_SLOT(dev->devfn) &&
++		    func == PCI_FUNC(dev->devfn))
++			goto found;
++	}
++
++	*endptr = p;
++	return 0;
++
++found:
++	*endptr = p;
++	return 1;
++}
+ 
+ static int __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
+ 				   u8 pos, int cap, int *ttl)
+@@ -5462,10 +5544,10 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
+ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 							bool *resize)
+ {
+-	int seg, bus, slot, func, align_order, count;
+-	unsigned short vendor, device, subsystem_vendor, subsystem_device;
++	int align_order, count;
+ 	resource_size_t align = pcibios_default_alignment();
+-	char *p;
++	const char *p;
++	int ret;
+ 
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+@@ -5485,58 +5567,21 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 		} else {
+ 			align_order = -1;
+ 		}
+-		if (strncmp(p, "pci:", 4) == 0) {
+-			/* PCI vendor/device (subvendor/subdevice) ids are specified */
+-			p += 4;
+-			if (sscanf(p, "%hx:%hx:%hx:%hx%n",
+-				&vendor, &device, &subsystem_vendor, &subsystem_device, &count) != 4) {
+-				if (sscanf(p, "%hx:%hx%n", &vendor, &device, &count) != 2) {
+-					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: pci:%s\n",
+-						p);
+-					break;
+-				}
+-				subsystem_vendor = subsystem_device = 0;
+-			}
+-			p += count;
+-			if ((!vendor || (vendor == dev->vendor)) &&
+-				(!device || (device == dev->device)) &&
+-				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
+-				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
+-				*resize = true;
+-				if (align_order == -1)
+-					align = PAGE_SIZE;
+-				else
+-					align = 1 << align_order;
+-				/* Found */
+-				break;
+-			}
+-		}
+-		else {
+-			if (sscanf(p, "%x:%x:%x.%x%n",
+-				&seg, &bus, &slot, &func, &count) != 4) {
+-				seg = 0;
+-				if (sscanf(p, "%x:%x.%x%n",
+-						&bus, &slot, &func, &count) != 3) {
+-					/* Invalid format */
+-					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
+-						p);
+-					break;
+-				}
+-			}
+-			p += count;
+-			if (seg == pci_domain_nr(dev->bus) &&
+-				bus == dev->bus->number &&
+-				slot == PCI_SLOT(dev->devfn) &&
+-				func == PCI_FUNC(dev->devfn)) {
+-				*resize = true;
+-				if (align_order == -1)
+-					align = PAGE_SIZE;
+-				else
+-					align = 1 << align_order;
+-				/* Found */
+-				break;
+-			}
++
++		ret = pci_dev_str_match(dev, p, &p);
++		if (ret == 1) {
++			*resize = true;
++			if (align_order == -1)
++				align = PAGE_SIZE;
++			else
++				align = 1 << align_order;
++			break;
++		} else if (ret < 0) {
++			pr_info("PCI: Can't parse resource_alignment parameter: pci:%s\n",
++				p);
++			break;
+ 		}
++
+ 		if (*p != ';' && *p != ',') {
+ 			/* End of param or invalid format */
+ 			break;
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.11.0
