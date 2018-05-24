@@ -1,108 +1,98 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 7 May 2018 18:23:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH v4 00/14] Copy Offload in NVMe Fabrics with P2P PCI Memory
-Message-ID: <20180507232346.GI161390@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
-MIME-Version: 1.0
-In-Reply-To: <20180423233046.21476-1-logang@deltatee.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Sagi Grimberg <sagi@grimberg.me>,
- linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Stephen Bates <sbates@raithlin.com>,
- linux-block@vger.kernel.org,
- =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>,
- Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Max Gurtovoy <maxg@mellanox.com>,
- Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:52530 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935346AbeEXHXi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 03:23:38 -0400
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH 5/6] PCI: rcar: Remove IRQ mappings in rcar_pcie_enable_msi failpath
+Date: Thu, 24 May 2018 09:23:22 +0200
+Message-Id: <20180524072323.22115-5-marek.vasut+renesas@gmail.com>
+In-Reply-To: <20180524072323.22115-1-marek.vasut+renesas@gmail.com>
+References: <20180524072323.22115-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 23, 2018 at 05:30:32PM -0600, Logan Gunthorpe wrote:
-> Hi Everyone,
-> 
-> Here's v4 of our series to introduce P2P based copy offload to NVMe
-> fabrics. This version has been rebased onto v4.17-rc2. A git repo
-> is here:
-> 
-> https://github.com/sbates130272/linux-p2pmem pci-p2p-v4
-> ...
+The rcar_pcie_enable_msi() creates IRQ mappings using irq_create_mapping()
+before requesting the IRQs using devm_request_irq(). If devm_request_irq()
+fails for some reason, rcar_pcie_enable_msi() does not remove the mapping.
 
-> Logan Gunthorpe (14):
->   PCI/P2PDMA: Support peer-to-peer memory
->   PCI/P2PDMA: Add sysfs group to display p2pmem stats
->   PCI/P2PDMA: Add PCI p2pmem dma mappings to adjust the bus offset
->   PCI/P2PDMA: Clear ACS P2P flags for all devices behind switches
->   docs-rst: Add a new directory for PCI documentation
->   PCI/P2PDMA: Add P2P DMA driver writer's documentation
->   block: Introduce PCI P2P flags for request and request queue
->   IB/core: Ensure we map P2P memory correctly in
->     rdma_rw_ctx_[init|destroy]()
->   nvme-pci: Use PCI p2pmem subsystem to manage the CMB
->   nvme-pci: Add support for P2P memory in requests
->   nvme-pci: Add a quirk for a pseudo CMB
->   nvmet: Introduce helper functions to allocate and free request SGLs
->   nvmet-rdma: Use new SGL alloc/free helper for requests
->   nvmet: Optionally use PCI P2P memory
-> 
->  Documentation/ABI/testing/sysfs-bus-pci    |  25 +
->  Documentation/PCI/index.rst                |  14 +
->  Documentation/driver-api/index.rst         |   2 +-
->  Documentation/driver-api/pci/index.rst     |  20 +
->  Documentation/driver-api/pci/p2pdma.rst    | 166 ++++++
->  Documentation/driver-api/{ => pci}/pci.rst |   0
->  Documentation/index.rst                    |   3 +-
->  block/blk-core.c                           |   3 +
->  drivers/infiniband/core/rw.c               |  13 +-
->  drivers/nvme/host/core.c                   |   4 +
->  drivers/nvme/host/nvme.h                   |   8 +
->  drivers/nvme/host/pci.c                    | 118 +++--
->  drivers/nvme/target/configfs.c             |  67 +++
->  drivers/nvme/target/core.c                 | 143 ++++-
->  drivers/nvme/target/io-cmd.c               |   3 +
->  drivers/nvme/target/nvmet.h                |  15 +
->  drivers/nvme/target/rdma.c                 |  22 +-
->  drivers/pci/Kconfig                        |  26 +
->  drivers/pci/Makefile                       |   1 +
->  drivers/pci/p2pdma.c                       | 814 +++++++++++++++++++++++++++++
->  drivers/pci/pci.c                          |   6 +
->  include/linux/blk_types.h                  |  18 +-
->  include/linux/blkdev.h                     |   3 +
->  include/linux/memremap.h                   |  19 +
->  include/linux/pci-p2pdma.h                 | 118 +++++
->  include/linux/pci.h                        |   4 +
->  26 files changed, 1579 insertions(+), 56 deletions(-)
->  create mode 100644 Documentation/PCI/index.rst
->  create mode 100644 Documentation/driver-api/pci/index.rst
->  create mode 100644 Documentation/driver-api/pci/p2pdma.rst
->  rename Documentation/driver-api/{ => pci}/pci.rst (100%)
->  create mode 100644 drivers/pci/p2pdma.c
->  create mode 100644 include/linux/pci-p2pdma.h
+Pull out the code for disposing IRQ mappings from rcar_pcie_teardown_msi()
+into a separate function and call it from both rcar_pcie_teardown_msi()
+and rcar_pcie_enable_msi() failpath to remove the mappings correctly.
 
-How do you envison merging this?  There's a big chunk in drivers/pci, but
-really no opportunity for conflicts there, and there's significant stuff in
-block and nvme that I don't really want to merge.
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+---
+ drivers/pci/host/pcie-rcar.c | 25 ++++++++++++++++---------
+ 1 file changed, 16 insertions(+), 9 deletions(-)
 
-If Alex is OK with the ACS situation, I can ack the PCI parts and you could
-merge it elsewhere?
-
-Bjorn
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 4843a4dc6059..636c3c5095d2 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -866,6 +866,20 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 	.map = rcar_msi_map,
+ };
+ 
++static void rcar_pcie_unmap_msi(struct rcar_pcie *pcie)
++{
++	struct rcar_msi *msi = &pcie->msi;
++	int i, irq;
++
++	for (i = 0; i < INT_PCI_MSI_NR; i++) {
++		irq = irq_find_mapping(msi->domain, i);
++		if (irq > 0)
++			irq_dispose_mapping(irq);
++	}
++
++	irq_domain_remove(msi->domain);
++}
++
+ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+@@ -920,14 +934,13 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+ 	return 0;
+ 
+ err:
+-	irq_domain_remove(msi->domain);
++	rcar_pcie_unmap_msi(pcie);
+ 	return err;
+ }
+ 
+ static void rcar_pcie_teardown_msi(struct rcar_pcie *pcie)
+ {
+ 	struct rcar_msi *msi = &pcie->msi;
+-	int irq, i;
+ 
+ 	/* Disable all MSI interrupts */
+ 	rcar_pci_write_reg(pcie, 0, PCIEMSIIER);
+@@ -937,13 +950,7 @@ static void rcar_pcie_teardown_msi(struct rcar_pcie *pcie)
+ 
+ 	free_pages(msi->pages, 0);
+ 
+-	for (i = 0; i < INT_PCI_MSI_NR; i++) {
+-		irq = irq_find_mapping(msi->domain, i);
+-		if (irq > 0)
+-			irq_dispose_mapping(irq);
+-	}
+-
+-	irq_domain_remove(msi->domain);
++	rcar_pcie_unmap_msi(pcie);
+ }
+ 
+ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+-- 
+2.16.2
