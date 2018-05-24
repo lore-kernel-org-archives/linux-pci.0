@@ -1,176 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:42255 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933891AbeEWR6z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 13:58:55 -0400
-Received: by mail-pg0-f65.google.com with SMTP id p9-v6so9746667pgc.9
-        for <linux-pci@vger.kernel.org>; Wed, 23 May 2018 10:58:55 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rajat Jain <rajatja@google.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Kyle McMartin <jkkm@fb.com>
-Cc: rajatxjain@gmail.com
-Subject: [PATCH v2 5/5] Documentation/ABI: Add details of PCI AER statistics
-Date: Wed, 23 May 2018 10:58:08 -0700
-Message-Id: <20180523175808.28030-6-rajatja@google.com>
-In-Reply-To: <20180523175808.28030-1-rajatja@google.com>
-References: <20180522222805.80314-1-rajatja@google.com>
- <20180523175808.28030-1-rajatja@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
+To: Xu Zaibo <xuzaibo@huawei.com>, "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-mm@kvack.org" <linux-mm@kvack.org>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-14-jean-philippe.brucker@arm.com>
+ <5B0536A3.1000304@huawei.com> <cd13f60d-b282-3804-4ca7-2d34476c597f@arm.com>
+ <5B06B17C.1090809@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <205c1729-8026-3efe-c363-d37d7150d622@arm.com>
+Date: Thu, 24 May 2018 16:04:23 +0100
+MIME-Version: 1.0
+In-Reply-To: <5B06B17C.1090809@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "rgummal@xilinx.com" <rgummal@xilinx.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>,
+ "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the PCI AER statistics details to
-Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
-and provide a pointer to it in
-Documentation/PCI/pcieaer-howto.txt
+On 24/05/18 13:35, Xu Zaibo wrote:
+>> Right, sva_init() must be called once for any device that intends to use
+>> bind(). For the second process though, group->sva_enabled will be true
+>> so we won't call sva_init() again, only bind().
+> 
+> Well, while I create mediated devices based on one parent device to support multiple
+> processes(a new process will create a new 'vfio_group' for the corresponding mediated device,
+> and 'sva_enabled' cannot work any more), in fact, *sva_init and *sva_shutdown are basically
+> working on parent device, so, as a result, I just only need sva initiation and shutdown on the
+> parent device only once. So I change the two as following:
+> 
+> @@ -551,8 +565,18 @@ int iommu_sva_device_init(struct device *dev, unsigned long features,
+>       if (features & ~IOMMU_SVA_FEAT_IOPF)
+>          return -EINVAL;
+> 
+> +    /* If already exists, do nothing  */
+> +    mutex_lock(&dev->iommu_param->lock);
+> +    if (dev->iommu_param->sva_param) {
+> +        mutex_unlock(&dev->iommu_param->lock);
+> +        return 0;
+> +    }
+> +    mutex_unlock(&dev->iommu_param->lock);
+> 
+>      if (features & IOMMU_SVA_FEAT_IOPF) {
+>          ret = iommu_register_device_fault_handler(dev, iommu_queue_iopf,
+> 
+> 
+> @@ -621,6 +646,14 @@ int iommu_sva_device_shutdown(struct device *dev)
+>      if (!domain)
+>          return -ENODEV;
+> 
+> +    /* If any other process is working on the device, shut down does nothing. */
+> +    mutex_lock(&dev->iommu_param->lock);
+> +    if (!list_empty(&dev->iommu_param->sva_param->mm_list)) {
+> +        mutex_unlock(&dev->iommu_param->lock);
+> +        return 0;
+> +    }
+> +    mutex_unlock(&dev->iommu_param->lock);
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
-v2: Move the documentation to Documentation/ABI/
+I don't think iommu-sva.c is the best place for this, it's probably
+better to implement an intermediate layer (the mediating driver), that
+calls iommu_sva_device_init() and iommu_sva_device_shutdown() once. Then
+vfio-pci would still call these functions itself, but for mdev the
+mediating driver keeps a refcount of groups, and calls device_shutdown()
+only when freeing the last mdev.
 
- .../testing/sysfs-bus-pci-devices-aer_stats   | 103 ++++++++++++++++++
- Documentation/PCI/pcieaer-howto.txt           |   5 +
- 2 files changed, 108 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+A device driver (non mdev in this example) expects to be able to free
+all its resources after sva_device_shutdown() returns. Imagine the
+mm_list isn't empty (mm_exit() is running late), and instead of waiting
+in unbind_dev_all() below, we return 0 immediately. Then the calling
+driver frees its resources, and the mm_exit callback along with private
+data passed to bind() disappear. If a mm_exit() is still running in
+parallel, then it will try to access freed data and corrupt memory. So
+in this function if mm_list isn't empty, the only thing we can do is wait.
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
-new file mode 100644
-index 000000000000..f55c389290ac
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
-@@ -0,0 +1,103 @@
-+==========================
-+PCIe Device AER statistics
-+==========================
-+These attributes show up under all the devices that are AER capable. These
-+statistical counters indicate the errors "as seen/reported by the device".
-+Note that this may mean that if an end point is causing problems, the AER
-+counters may increment at its link partner (e.g. root port) because the
-+errors will be "seen" / reported by the link partner and not the the
-+problematic end point itself (which may report all counters as 0 as it never
-+saw any problems).
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_total_cor_errs
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Total number of correctable errors seen and reported by this
-+		PCI device using ERR_COR.
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_total_fatal_errs
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Total number of uncorrectable fatal errors seen and reported
-+		by this PCI device using ERR_FATAL.
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_total_nonfatal_errs
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Total number of uncorrectable non-fatal errors seen and reported
-+		by this PCI device using ERR_NONFATAL.
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_breakdown_correctable
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Breakdown of of correctable errors seen and reported by this
-+		PCI device using ERR_COR. A sample result looks like this:
-+-----------------------------------------
-+Receiver Error = 0x174
-+Bad TLP = 0x19
-+Bad DLLP = 0x3
-+RELAY_NUM Rollover = 0x0
-+Replay Timer Timeout = 0x1
-+Advisory Non-Fatal = 0x0
-+Corrected Internal Error = 0x0
-+Header Log Overflow = 0x0
-+-----------------------------------------
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_breakdown_uncorrectable
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Breakdown of of correctable errors seen and reported by this
-+		PCI device using ERR_FATAL or ERR_NONFATAL. A sample result
-+		looks like this:
-+-----------------------------------------
-+Undefined = 0x0
-+Data Link Protocol = 0x0
-+Surprise Down Error = 0x0
-+Poisoned TLP = 0x0
-+Flow Control Protocol = 0x0
-+Completion Timeout = 0x0
-+Completer Abort = 0x0
-+Unexpected Completion = 0x0
-+Receiver Overflow = 0x0
-+Malformed TLP = 0x0
-+ECRC = 0x0
-+Unsupported Request = 0x0
-+ACS Violation = 0x0
-+Uncorrectable Internal Error = 0x0
-+MC Blocked TLP = 0x0
-+AtomicOp Egress Blocked = 0x0
-+TLP Prefix Blocked Error = 0x0
-+-----------------------------------------
-+
-+============================
-+PCIe Rootport AER statistics
-+============================
-+These attributes showup under only the rootports that are AER capable. These
-+indicate the number of error messages as "reported to" the rootport. Please note
-+that the rootports also transmit (internally) the ERR_* messages for errors seen
-+by the internal rootport PCI device, so these counters includes them and are
-+thus cumulative of all the error messages on the PCI hierarchy originating
-+at that root port.
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/rootport_total_cor_errs
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Total number of ERR_COR messages reported to rootport.
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/rootport_total_fatal_errs
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Total number of ERR_FATAL messages reported to rootport.
-+
-+Where:	    /sys/bus/pci/devices/<dev>/aer_stats/rootport_total_nonfatal_errs
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Total number of ERR_NONFATAL messages reported to rootport.
-diff --git a/Documentation/PCI/pcieaer-howto.txt b/Documentation/PCI/pcieaer-howto.txt
-index acd0dddd6bb8..91b6e677cb8c 100644
---- a/Documentation/PCI/pcieaer-howto.txt
-+++ b/Documentation/PCI/pcieaer-howto.txt
-@@ -73,6 +73,11 @@ In the example, 'Requester ID' means the ID of the device who sends
- the error message to root port. Pls. refer to pci express specs for
- other fields.
- 
-+2.4 AER Statistics / Counters
-+
-+When PCIe AER errors are captured, the counters / statistics are also exposed
-+in form of sysfs attributes which are documented at
-+Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
- 
- 3. Developer Guide
- 
--- 
-2.17.0.441.gb46fe60e1d-goog
+Thanks,
+Jean
+
+> +
+>      __iommu_sva_unbind_dev_all(dev);
+> 
+>      mutex_lock(&dev->iommu_param->lock);
+> 
+> I add the above two checkings in both *sva_init and *sva_shutdown, it is working now,
+> but i don't know if it will cause any new problems. What's more, i doubt if it is
+> reasonable to check this to avoid repeating operation in VFIO, maybe it is better to check
+> in IOMMU. :)
+
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
