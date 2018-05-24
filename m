@@ -1,57 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:34071 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753088AbeEVW2O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 18:28:14 -0400
-Received: by mail-pf0-f196.google.com with SMTP id a14-v6so9448614pfi.1
-        for <linux-pci@vger.kernel.org>; Tue, 22 May 2018 15:28:14 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rajat Jain <rajatja@google.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Kyle McMartin <jkkm@fb.com>
-Cc: rajatxjain@gmail.com
-Subject: [PATCH 0/5] Expose PCIe AER stats via sysfs
-Date: Tue, 22 May 2018 15:28:00 -0700
-Message-Id: <20180522222805.80314-1-rajatja@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=6mTy=IL=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=6mTy=IL=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 24 May 2018 17:34:20 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Derrick, Jonathan" <jonathan.derrick@intel.com>
+Cc: "myron.stowe@redhat.com" <myron.stowe@redhat.com>,
+	"hch@lst.de" <hch@lst.de>,
+	"helgaas@kernel.org" <helgaas@kernel.org>,
+	"Bauer, Scott" <scott.bauer@intel.com>,
+	"jroedel@suse.de" <jroedel@suse.de>,
+	"Fugate, David" <david.fugate@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Busch, Keith" <keith.busch@intel.com>
+Subject: Re: [PATCH 0/5] Enable an additional VMD device id
+Message-ID: <20180524163420.GA24940@e107981-ln.cambridge.arm.com>
+References: <20180518192802.20371-1-jonathan.derrick@intel.com>
+ <20180524114452.GA20732@e107981-ln.cambridge.arm.com>
+ <1527178507.20527.2.camel@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1527178507.20527.2.camel@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset exposes the AER stats via the sysfs attributes.
+On Thu, May 24, 2018 at 04:15:08PM +0000, Derrick, Jonathan wrote:
+> Hi Lorenzo,
+> 
+> On Thu, 2018-05-24 at 12:44 +0100, Lorenzo Pieralisi wrote:
+> > On Fri, May 18, 2018 at 01:27:57PM -0600, Jon Derrick wrote:
+> > > This patchset enables an additional VMD device ID to the VMD driver
+> > > supporting assignment of the membar addresses from shadow registers
+> > > and
+> > > allows more flexibility in assigning bus numbers to a VMD PCIe
+> > > domain.
+> > > Additional VMD root port device ids have been added to the VMD AER
+> > > quirk.
+> > > 
+> > > Changes from rfc include comments, code structure, and using
+> > > pci_add_resource_offset to correctly assign addresses while
+> > > virtualized.
+> > > 
+> > > Applies to Bjorn's next branch
+> > 
+> > Hi Jon,
+> > 
+> > You should base it on v4.17-rc1 and if there is a dependency on
+> > later -rc* or a branch in Bjorn/my queue please let us know.
+> It looks like it applies cleanly to 4.17-rc1 and rc6.
+> 
+> > > Jon Derrick (5):
+> > >   PCI: Add Intel VMD devices to pci ids
+> > >   PCI/VMD: Assign membar addresses from shadow registers
+> > >   PCI/VMD: Add offset to bus numbers if necessary
+> > >   x86/PCI: Add additional VMD device root ports to VMD AER quirk
+> > >   PCI/VMD: Add an additional VMD device id to driver device id
+> > > table
+> > > 
+> > >  arch/x86/pci/fixup.c    |  4 +++
+> > >  drivers/pci/host/vmd.c  | 91
+> > > +++++++++++++++++++++++++++++++++++++++++++------
+> > >  include/linux/pci_ids.h |  2 ++
+> > >  3 files changed, 87 insertions(+), 10 deletions(-)
+> > 
+> > I need Bjorn's ACK on patch (4), or if Bjorn is keen on pulling the
+> > series, here's mine on the series:
+> > 
+> > Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> Would you like me to rebase it and resend with Bjorn's ack?
 
-Rajat Jain (5):
-  PCI/AER: Define and allocate aer_stats structure for AER capable
-    devices
-  PCI/AER: Add sysfs stats for AER capable devices
-  PCP/AER: Add sysfs attributes to provide breakdown of AERs
-  PCI/AER: Add sysfs attributes for rootport cumulative stats
-  Documentation/PCI: Add details of PCI AER statistics
+No need to resend but I need Bjorn's ACK on patch (4) in order to
+queue it.
 
- Documentation/PCI/pcieaer-howto.txt    |  35 +++++
- drivers/pci/pci-sysfs.c                |   3 +
- drivers/pci/pci.h                      |   4 +-
- drivers/pci/pcie/aer/Makefile          |   2 +-
- drivers/pci/pcie/aer/aerdrv.h          |  15 ++
- drivers/pci/pcie/aer/aerdrv_core.c     |  11 ++
- drivers/pci/pcie/aer/aerdrv_errprint.c |   7 +-
- drivers/pci/pcie/aer/aerdrv_stats.c    | 192 +++++++++++++++++++++++++
- drivers/pci/probe.c                    |   1 +
- include/linux/pci.h                    |   3 +
- 10 files changed, 269 insertions(+), 4 deletions(-)
- create mode 100644 drivers/pci/pcie/aer/aerdrv_stats.c
-
--- 
-2.17.0.441.gb46fe60e1d-goog
+Thanks,
+Lorenzo
