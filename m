@@ -1,115 +1,101 @@
-Return-Path: <SRS0=DTHM=H3=molgen.mpg.de=pmenzel@kernel.org>
-Return-Path: <SRS0=DTHM=H3=molgen.mpg.de=pmenzel@kernel.org>
-Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
- (issued 65284 msec ago)
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: okaya@codeaurora.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Lukas Wunner <lukas@wunner.de>
-References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
- <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
- <43b8ab4a-f8ee-dc96-40ec-e6fdfedd8309@molgen.mpg.de>
- <20180504024527.GE15790@bhelgaas-glaptop.roam.corp.google.com>
- <aa72d3ba089c76449600c22b58a2cafe@codeaurora.org>
- <20180504133327.GF15790@bhelgaas-glaptop.roam.corp.google.com>
- <20180507213344.GA133147@bhelgaas-glaptop.roam.corp.google.com>
- <903e7c20-fdd7-9cbf-debb-a90e70240c7c@molgen.mpg.de>
- <20180508123432.GJ161390@bhelgaas-glaptop.roam.corp.google.com>
-From: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
-Message-ID: <302b3ac9-b34f-c061-8c59-6b3b0c56b1f7@molgen.mpg.de>
-Date: Tue, 8 May 2018 15:22:54 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180508123432.GJ161390@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:37952 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S970452AbeEXOgf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 10:36:35 -0400
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH v4 2/6] PCI: rcar: Add missing irq_dispose_mapping() into failpath
+Date: Thu, 24 May 2018 16:36:20 +0200
+Message-Id: <20180524143624.26718-3-marek.vasut+renesas@gmail.com>
+In-Reply-To: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
+References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn,
+The rcar_pcie_get_resources() is another misnomer with a side effect.
+The function does not only get resources, but also maps MSI IRQs via
+irq_of_parse_and_map(). In case anything fails afterward, the IRQ
+mapping must be disposed through irq_dispose_mapping() which is not
+done.
 
+This patch handles irq_of_parse_and_map() failures in by disposing
+of the mapping in rcar_pcie_get_resources() as well as in probe.
 
-Am 08.05.2018 um 14:34 schrieb Bjorn Helgaas:
-> On Tue, May 08, 2018 at 08:59:34AM +0200, Paul Menzel wrote:
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+---
+V2: No change
+V3: No change
+V4: Rebase on top of Lorenzo's pci/rcar, fix up the rebase breakage
+    induced by patches therein
+---
+ drivers/pci/host/pcie-rcar.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
->> Am 07.05.2018 um 23:33 schrieb Bjorn Helgaas:
->>> On Fri, May 04, 2018 at 08:33:27AM -0500, Bjorn Helgaas wrote:
->>>> commit b0d6f2230e12c85ae3b65a854a53c67c7c1f6406
->>>> Author: Bjorn Helgaas <bhelgaas@google.com>
->>>> Date:   Thu May 3 18:39:38 2018 -0500
->>>>
->>>>       PCI: pciehp: Add quirk for Intel Command Completed erratum
->>>>       The Intel CF118 erratum means the controller does not set the Command
->>>>       Completed bit unless writes to the Slot Command register change "Control"
->>>>       bits.  Command Completed is never set for writes that only change software
->>>>       notification "Enable" bits.  This results in timeouts like this:
->>>>         pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038 (issued 65284 msec ago)
->>>>       When this erratum is present, avoid these timeouts by marking commands
->>>>       "completed" immediately unless they change the "Control" bits.
->>>>       Here's the text of the erratum from the Intel document:
->>>>         CF118        PCIe Slot Status Register Command Completed bit not always
->>>>                      updated on any configuration write to the Slot Control
->>>>                      Register
->>>>         Problem:     For PCIe root ports (devices 0 - 10) supporting hot-plug,
->>>>                      the Slot Status Register (offset AAh) Command Completed
->>>>                      (bit[4]) status is updated under the following condition:
->>>>                      IOH will set Command Completed bit after delivering the new
->>>>                      commands written in the Slot Controller register (offset
->>>>                      A8h) to VPP. The IOH detects new commands written in Slot
->>>>                      Control register by checking the change of value for Power
->>>>                      Controller Control (bit[10]), Power Indicator Control
->>>>                      (bits[9:8]), Attention Indicator Control (bits[7:6]), or
->>>>                      Electromechanical Interlock Control (bit[11]) fields. Any
->>>>                      other configuration writes to the Slot Control register
->>>>                      without changing the values of these fields will not cause
->>>>                      Command Completed bit to be set.
->>>>                      The PCIe Base Specification Revision 2.0 or later describes
->>>>                      the “Slot Control Register” in section 7.8.10, as follows
->>>>                      (Reference section 7.8.10, Slot Control Register, Offset
->>>>                      18h). In hot-plug capable Downstream Ports, a write to the
->>>>                      Slot Control register must cause a hot-plug command to be
->>>>                      generated (see Section 6.7.3.2 for details on hot-plug
->>>>                      commands). A write to the Slot Control register in a
->>>>                      Downstream Port that is not hotplug capable must not cause a
->>>>                      hot-plug command to be executed.
->>>>                      The PCIe Spec intended that every write to the Slot Control
->>>>                      Register is a command and expected a command complete status
->>>>                      to abstract the VPP implementation specific nuances from the
->>>>                      OS software. IOH PCIe Slot Control Register implementation
->>>>                      is not fully conforming to the PCIe Specification in this
->>>>                      respect.
->>>>         Implication: Software checking on the Command Completed status after
->>>>                      writing to the Slot Control register may time out.
->>>>         Workaround:  Software can read the Slot Control register and compare the
->>>>                      existing and new values to determine if it should check the
->>>>                      Command Completed status after writing to the Slot Control
->>>>                      register.
->>>>       Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e7-v2-spec-update.html
->>>>       Link: https://lkml.kernel.org/r/8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de
->>>>       Reported-by: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
->>>>       Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>
->>> I applied this with Paul's tested-by on pci/hotplug for v4.18.
->>
->> Thank you very much. Will this also be picked up by the stable Linux kernel
->> series?
-> 
-> I did not tag it for stable because I didn't think it was a serious enough
-> problem, based on this from Documentation/process/stable-kernel-rules.rst:
-> 
->   - It must fix a problem that causes a build error (but not for things
->     marked CONFIG_BROKEN), an oops, a hang, data corruption, a real
->     security issue, or some "oh, that's not good" issue.  In short, something
->     critical.
-> 
-> I know I'm on the conservative end of the stable-tagging spectrum, so maybe
-> I could be convinced to add a stable tag.
-> 
-> My impression was that this bug caused annoying messages and annoying
-> delays of a couple seconds during shutdown and resume.  Is it more serious
-> than that?
-
-No, not more then that. But “oh, that’s not good” fits in my opinion. My 
-impression was, that’s how most stable patches get in.
-
-
-Kind regards,
-
-Paul
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 0879880f7975..6bb1cdec26be 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -950,18 +950,25 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+ 	i = irq_of_parse_and_map(dev->of_node, 0);
+ 	if (!i) {
+ 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
+-		return -ENOENT;
++		err = -ENOENT;
++		goto err_irq1;
+ 	}
+ 	pcie->msi.irq1 = i;
+ 
+ 	i = irq_of_parse_and_map(dev->of_node, 1);
+ 	if (!i) {
+ 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
+-		return -ENOENT;
++		err = -ENOENT;
++		goto err_irq2;
+ 	}
+ 	pcie->msi.irq2 = i;
+ 
+ 	return 0;
++
++err_irq2:
++	irq_dispose_mapping(pcie->msi.irq1);
++err_irq1:
++	return err;
+ }
+ 
+ static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
+@@ -1108,7 +1115,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 	err = clk_prepare_enable(pcie->bus_clk);
+ 	if (err) {
+ 		dev_err(dev, "failed to enable bus clock: %d\n", err);
+-		goto err_pm_put;
++		goto err_unmap_msi_irqs;
+ 	}
+ 
+ 	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
+@@ -1151,6 +1158,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ err_clk_disable:
+ 	clk_disable_unprepare(pcie->bus_clk);
+ 
++err_unmap_msi_irqs:
++	irq_dispose_mapping(pcie->msi.irq2);
++	irq_dispose_mapping(pcie->msi.irq1);
++
+ err_pm_put:
+ 	pm_runtime_put(dev);
+ 
+-- 
+2.16.2
