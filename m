@@ -1,30 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34602 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935826AbeEYO0k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 May 2018 10:26:40 -0400
-Date: Fri, 25 May 2018 15:26:36 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com
-Subject: Offline for two weeks
-Message-ID: <20180525142636.GB10871@e107981-ln.cambridge.arm.com>
+Return-Path: <SRS0=5vAC=IL=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=5vAC=IL=codeaurora.org=okaya@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 24 May 2018 09:35:57 -0400
+From: okaya@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, ryan@finnie.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J.
+ Wysocki" <rafael.j.wysocki@intel.com>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, Kate
+ Stewart <kstewart@linuxfoundation.org>, Frederick Lawler
+ <fred@fredlawl.com>, Dongdong Liu <liudongdong3@huawei.com>, Mika Westerberg
+ <mika.westerberg@linux.intel.com>, open list <linux-kernel@vger.kernel.org>,
+ Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com,
+ linux-scsi@vger.kernel.org
+Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
+In-Reply-To: <20180524130727.GA85822@bhelgaas-glaptop.roam.corp.google.com>
+References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+ <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+ <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
+ <82656e20-e821-1944-3399-1667ceb27719@codeaurora.org>
+ <20180524130727.GA85822@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <24846c30ceab15075205b34305b97ba8@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 2018-05-24 09:07, Bjorn Helgaas wrote:
+> On Thu, May 24, 2018 at 07:43:05AM -0400, Sinan Kaya wrote:
+>> On 5/23/2018 6:57 PM, Sinan Kaya wrote:
+>> >> The crash seems to indicate that the hpsa device attempted a DMA after
+>> >> we cleared the Root Port's PCI_COMMAND_MASTER, which means
+>> >> hpsa_shutdown() didn't stop DMA from the device (it looks like *most*
+>> >> shutdown methods don't disable device DMA, so it's in good company).
+>> > All drivers are expected to shutdown DMA and interrupts in their shutdown()
+>> > routines. They can skip removing threads, data structures etc. but DMA and
+>> > interrupt disabling are required. This is the difference between shutdown()
+>> > and remove() callbacks.
+>> 
+>> I found this note yesterday to see why we are not disabling the
+>> devices in the PCI core itself.
+>> 
+>> pci_device_remove()
+>> 
+>> 	/*
+>> 	 * We would love to complain here if pci_dev->is_enabled is set, that
+>> 	 * the driver should have called pci_disable_device(), but the
+>> 	 * unfortunate fact is there are too many odd BIOS and bridge setups
+>> 	 * that don't like drivers doing that all of the time.
+>> 	 * Oh well, we can dream of sane hardware when we sleep, no matter 
+>> how
+>> 	 * horrible the crap we have to deal with is when we are awake...
+>> 	 */
+>> 
+>> Ryan, can you discard the previous patch and test this one instead?
+>> remove() path in hpsa driver seems to call pci_disable_device() via
+>> 
+>> hpsa_remove_one()
+>> 	hpsa_free_pci_init()
+>> 
+>> but nothing on the shutdown path.
+>> 
+>> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+>> index 4ed3d26..3823f04 100644
+>> --- a/drivers/scsi/hpsa.c
+>> +++ b/drivers/scsi/hpsa.c
+>> @@ -8651,6 +8651,7 @@ static void hpsa_shutdown(struct pci_dev *pdev)
+>>         h->access.set_intr_mask(h, HPSA_INTR_OFF);
+>>         hpsa_free_irqs(h);                      /* init_one 4 */
+>>         hpsa_disable_interrupt_mode(h);         /* pci_init 2 */
+>> +       pci_disable_device(h->pdev);
+>>  }
+> 
+> I suspect this will make things "work" (if the device can't attempt
+> DMA, no Unsupported Request error will occur).
+> 
+> But I'm concerned that the reason for the DMA might that hpsa is
+> transferring buffers from system memory to the hpsa device, and if we
+> arbitrarily terminate those transfers with pci_disable_device(), we
+> may leave the hpsa device in an inconsistent state, e.g., with a dirty
+> filesystem.
+> 
+> But we really need guidance from an hpsa expert.  I don't know the
+> filesystem/SCSI/hpsa details.
 
-just to let pci/{host/dwc/endpoint} maintainers and developers know I
-will be offline for the next two weeks which means that the
-pci/{host/dwc/endpoint} patch queue for the v4.18 merge window closes
-today given the current -rc* cycles release schedule.
+Agreed,
 
-I'd be grateful if you can hold off sending patches (that I won't be able
-to review anyway) till June 11th, which should coincide with the second
-half of the v4.18 merge window according to the current schedule.
+We can drop shutdown and use the remove callback. Remove is supposed to 
+do a safe cleanup.
 
-Thank you very much.
-
-Lorenzo
+> 
+> Bjorn
