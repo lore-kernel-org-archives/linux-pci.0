@@ -1,112 +1,131 @@
-Return-Path: <SRS0=Jv40=HV=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=Jv40=HV=linux.intel.com=mika.westerberg@kernel.org>
-Date: Wed, 2 May 2018 14:55:09 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 24 May 2018 13:30:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v5 3/9] PCI: pciehp: Clear Presence Detect and Data Link
- Layer Status Changed on resume
-Message-ID: <20180502115509.GF2355@lahna.fi.intel.com>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
- <20180416103453.46232-4-mika.westerberg@linux.intel.com>
- <20180501215211.GD11698@bhelgaas-glaptop.roam.corp.google.com>
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v6 00/12] PCI: Fixes and cleanups for native PCIe, SHPC
+ and ACPI hotplug
+Message-ID: <20180524183005.GD95348@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180501215211.GD11698@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 01, 2018 at 04:52:11PM -0500, Bjorn Helgaas wrote:
-> Hi Mika,
+On Thu, May 10, 2018 at 09:28:32PM +0300, Mika Westerberg wrote:
+> Hi,
 > 
-> On Mon, Apr 16, 2018 at 01:34:47PM +0300, Mika Westerberg wrote:
-> > After suspend/resume cycle the Presence Detect or Data Link Layer Status
-> > Changed bits might be set and if we don't clear them those events will
-> > not fire anymore and nothing happens for instance when a device is now
-> > hot-unplugged.
-> > 
-> > Fix this by clearing those bits in a newly introduced function
-> > pcie_reenable_notification(). This should be fine because immediately
-> > after we check if the adapter is still present by reading directly from
-> > the status register.
-> > 
-> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > Cc: stable@vger.kernel.org
+> When Thunderbolt host router is configured to be in native enumeration mode
+> it is only present in the system if there is something connected to the
+> ports. This pretty much follows how the BIOS assisted mode works.
 > 
-> I want to understand why we need to handle this differently between
-> the boot-time probe path and the resume path.
+> In native enumeration mode the Thunderbolt host controller (NHI) and USB
+> host controller (xHCI) are not hot-added using native PCIe hotplug but
+> instead they will be hotplugged via BIOS triggered ACPI Notify() to the
+> root port. This is done to preserve resources since NHI and xHCI only need
+> 1 MB of MMIO space and no additional buses. Currently Linux does not
+> support this very well and ends up failing the hotplug in one way or
+> another. More detailed explanation is in changelog of patch [7/12].
 > 
-> This patch clears PCI_EXP_SLTSTA_PDC and PCI_EXP_SLTSTA_DLLSC in the
-> resume path:
+> This series fixes this issue and in addition includes fixes for few other
+> issues found during testing on a system that has Thunderbolt controller in
+> native PCIe enumeration mode. However, the fixes here are not in any way
+> Thunderbolt specific and should be applicable to other systems as well.
 > 
->   pciehp_resume
->     pcie_reenable_notification
->       # clear PDC DLLSC
->       pcie_enable_notification
->         # set DLLSCE ABPE/PDCE HPIE CCIE
->     pciehp_get_adapter_status
->       # read PCI_EXP_SLTSTA
+> The previous versions of the patch series can be found here:
 > 
-> We used to clear PCI_EXP_SLTSTA_PDC and PCI_EXP_SLTSTA_DLLSC in the
-> probe path:
+>   v5: https://www.spinics.net/lists/linux-pci/msg71339.html
+>   v4: https://www.spinics.net/lists/linux-pci/msg71006.html
+>   v3: https://www.spinics.net/lists/linux-acpi/msg80876.html
+>   v2: https://www.spinics.net/lists/linux-pci/msg69186.html
+>   v1: https://www.spinics.net/lists/linux-acpi/msg80607.html
 > 
->   pciehp_probe
->     pcie_init
->       # clear PDC ABP PFD MRLSC CC DLSCC
->     pcie_init_notification
->       pciehp_request_irq
->       pcie_enable_notification
->         # set DLLSCE ABPE/PDCE HPIE CCIE
->     pciehp_get_adapter_status
->       # read PCI_EXP_SLTSTA
->     pciehp_get_power_status
+> Changes from v5:
 > 
-> db63d40017a5 ("PCI: pciehp: Do not clear Presence Detect Changed
-> during initialization") changed the probe path so we don't clear
-> PCI_EXP_SLTSTA_PDC there anymore.  This was so we wouldn't miss a PDC
-> interrupt that happened before probe.
+>   - Dropped patch "PCI: Take bridge window alignment into account when
+>     distributing resources"
+>   - Rework pciehp_is_native() to be more stricter
+>   - Make standard PCI hotplug driver (SHPC) builtin
+>   - Rework the way we request OS control of native PCIe
+>     hotplug (pciehp) and standard PCI hotplug (SHPC)
+>   - Make acpiphp to avoid bridges where hotplug_is_native() returns true
+>     (this is combined from pciehp and SHPC)
+>   - Updated changelog of patch [7/12]
+>   - Use hotplug_bridges + normal_bridges == 1 in patch [9/12] and also
+>     remove one indent level from the loop.
 > 
-> Why can't we handle probe and resume the same way?  They look quite
-> similar.
+> Because patch [7/12] looks quite different now I dropped Reviewed-by and
+> stable tag (it now depends on reworked pciehp/SHCP support that most
+> probably is not suitable for stable trees).
 > 
-> You say this patch should be fine because we read SLTSTA immediately
-> after clearing PDC and DLLSC.  But we also read SLTSTA in the probe
-> path, so I'm not sure why we need to clear PDC and DLLSC for resume
-> but not for probe.
+> I also was not able to test that SHPC really works because I don't have
+> hardware that supports it.
+> 
+> Changes from v4:
+> 
+>   - Updated message in patch [8/9] following Rafael's suggestion
+>   - Added Rafael's tag to patches 6, 7, 9.
+> 
+> Changes from v3:
+> 
+>   - Added Andy's tag to patches [1-5]
+>   - Improved changelog and subject line of patch [1/9] to match better what
+>     it is trying to solve
+>   - Improved comment in patch [1/9]
+>   - Improved changelog of patches [2/9] and [4/9] accordingly to match
+>     better why they are needed
+>   - Added cleanup patches [6-9/9]
+> 
+> Changes from v2:
+> 
+>   - Added Rafael's tag to patch [1/5]
+>   - Updated changelog of patch [1/5] to include more details about how the
+>     problem can be observed from dmesg and lspci output
+> 
+> Changes from v1:
+> 
+>   - Drop 'cmax - max ?: 1' and use similar construct than we use in second
+>     pass loop in patch [1/5]
+>   - Drop unnecessary parentheses in patch [1/5]
+>   - Added Rafael's tag to patches [2-5/5]
+> 
+> Mika Westerberg (12):
+>   PCI: Take all bridges into account when calculating bus numbers for extension
+>   PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
+>   PCI: Request control of native PCIe hotplug only if supported
+>   PCI: Make pciehp_is_native() stricter
+>   PCI: hotplug: Convert SHPC to be builtin only
+>   PCI: Request control of native SHPC hotplug similarly to pciehp
+>   ACPI / hotplug / PCI: Do not scan all bridges when native PCIe hotplug is used
+>   ACPI / hotplug / PCI: Mark stale PCI devices disconnected
+>   PCI: Move resource distribution for a single bridge outside of the loop
+>   PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
+>   PCI: Improve "partially hidden behind bridge" log message
+>   ACPI / hotplug / PCI: Drop unnecessary parentheses
 
-On probe path we read status but here is what it does:
+I applied the following to pci/hotplug for v4.18:
 
-	pcie_init_notification()
-	...
-        pciehp_get_adapter_status(slot, &occupied);
-	...
-        if (occupied && pciehp_force) {
-                mutex_lock(&slot->hotplug_lock);
-                pciehp_enable_slot(slot);
-                mutex_unlock(&slot->hotplug_lock);
-        }
+  PCI: pciehp: Clear Presence Detect and Data Link Layer Status Changed on resume
+  PCI: Request control of native PCIe hotplug only if supported
+  PCI: Rename host->native_hotplug to host->native_pcie_hotplug
+  PCI: hotplug: Make pciehp_is_native() stricter
+  PCI: hotplug: Convert SHPC to be builtin only
+  PCI: shpchp: Simplify acpi_get_hp_hw_control_from_firmware()
+  PCI: shpchp: Request control of native SHPC hotplug via _OSC
+  PCI: Improve "partially hidden behind bridge" log message
+  ACPI / hotplug / PCI: Drop unnecessary parentheses
 
-If you don't have "pciehp.pciehp_force=1" in your kernel command line
-you miss the fact that the card is already there. Obviously you can't
-expect ordinary users to pass random command line options to get their
-already connected device detected by Linux.
+I split a couple of these into smaller pieces and removed one NULL
+pointer check, but otherwise they're straightforward.
 
-So the reason why in probe we don't clear PDC is that once the interrupt
-is unmasked, you get an interrupt and the card gets detected properly.
-
-On resume path we already check whether the card is there or not and
-handle it accordingly. However, if we don't clear PDC and DLLSC bits we
-will never get hotplug interrupt again.
-
-Now, you ask why can't we handle probe and resume the same way? I think
-we can if we could get rid of that pciehp_force thing but it seems to
-fix an issue on some HP hardware. See 9e5858244926 ("pciehp: don't
-enable slot unless forced").
+These are the simple pieces that probably don't fix anything by
+themselves.  I'm looking at the other parts too and have a couple
+comments there, but at least we can clear these off the plate.
