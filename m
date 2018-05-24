@@ -1,71 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:39908 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966717AbeEXVss (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 May 2018 17:48:48 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Christoffer Dall <cdall@linaro.org>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu, 24 May 2018 15:48:13 -0600
-Message-Id: <20180524214816.14485-1-logang@deltatee.com>
-Subject: [PATCH 0/3] Add parameter for disabling ACS redirection for P2P
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 24 May 2018 08:07:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
+Message-ID: <20180524130727.GA85822@bhelgaas-glaptop.roam.corp.google.com>
+References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+ <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+ <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
+ <82656e20-e821-1944-3399-1667ceb27719@codeaurora.org>
+MIME-Version: 1.0
+In-Reply-To: <82656e20-e821-1944-3399-1667ceb27719@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: ryan@finnie.org, Kate Stewart <kstewart@linuxfoundation.org>,
+ linux-scsi@vger.kernel.org, Frederick Lawler <fred@fredlawl.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ esc.storagedev@microsemi.com, open list <linux-kernel@vger.kernel.org>,
+ stable@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Thomas Gleixner <tglx@linutronix.de>, Don Brace <don.brace@microsemi.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Thu, May 24, 2018 at 07:43:05AM -0400, Sinan Kaya wrote:
+> On 5/23/2018 6:57 PM, Sinan Kaya wrote:
+> >> The crash seems to indicate that the hpsa device attempted a DMA after
+> >> we cleared the Root Port's PCI_COMMAND_MASTER, which means
+> >> hpsa_shutdown() didn't stop DMA from the device (it looks like *most*
+> >> shutdown methods don't disable device DMA, so it's in good company).
+> > All drivers are expected to shutdown DMA and interrupts in their shutdown()
+> > routines. They can skip removing threads, data structures etc. but DMA and
+> > interrupt disabling are required. This is the difference between shutdown()
+> > and remove() callbacks.
+> 
+> I found this note yesterday to see why we are not disabling the
+> devices in the PCI core itself. 
+> 
+> pci_device_remove()
+> 
+> 	/*
+> 	 * We would love to complain here if pci_dev->is_enabled is set, that
+> 	 * the driver should have called pci_disable_device(), but the
+> 	 * unfortunate fact is there are too many odd BIOS and bridge setups
+> 	 * that don't like drivers doing that all of the time.
+> 	 * Oh well, we can dream of sane hardware when we sleep, no matter how
+> 	 * horrible the crap we have to deal with is when we are awake...
+> 	 */ 
+> 
+> Ryan, can you discard the previous patch and test this one instead?
+> remove() path in hpsa driver seems to call pci_disable_device() via 
+> 
+> hpsa_remove_one()
+> 	hpsa_free_pci_init()
+> 
+> but nothing on the shutdown path.
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 4ed3d26..3823f04 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -8651,6 +8651,7 @@ static void hpsa_shutdown(struct pci_dev *pdev)
+>         h->access.set_intr_mask(h, HPSA_INTR_OFF);
+>         hpsa_free_irqs(h);                      /* init_one 4 */
+>         hpsa_disable_interrupt_mode(h);         /* pci_init 2 */
+> +       pci_disable_device(h->pdev);
+>  }
 
-As discussed in our PCI P2PDMA series, we'd like to add a kernel
-parameter for selectively disabling ACS redirection for select
-bridges. Seeing this turned out to be a small series in itself, we've
-decided to send this separately from the P2P work.
+I suspect this will make things "work" (if the device can't attempt
+DMA, no Unsupported Request error will occur).
 
-This series generalizes the code already done for the resource_alignment
-option that already exists. The first patch creates a helper function
-to match PCI devices against strings based on the code that already
-existed in pci_specified_resource_alignment().
+But I'm concerned that the reason for the DMA might that hpsa is
+transferring buffers from system memory to the hpsa device, and if we
+arbitrarily terminate those transfers with pci_disable_device(), we
+may leave the hpsa device in an inconsistent state, e.g., with a dirty
+filesystem.
 
-The second patch expands the new helper to optionally take a path of
-PCI devfns. This is to address Alex's renumbering concern when using
-simple bus-devfns. The implementation is essentially how he described it and
-similar to the Intel VT-d spec (Section 8.3.1).
+But we really need guidance from an hpsa expert.  I don't know the
+filesystem/SCSI/hpsa details.
 
-The final patch adds the disable_acs_redir kernel parameter which takes
-a list of PCI devices and will disable the ACS P2P Request Redirect,
-ACS P2P Completion Redirect and ACS P2P Egress Control bits for the
-selected devices. This allows P2P traffic between selected bridges and
-seeing it's done at boot, before IOMMU group creating the IOMMU groups
-will be created correctly based on the bits.
+Bjorn
 
-Thanks,
-
-Logan
-
-
-Logan Gunthorpe (3):
-  PCI: Make specifying PCI devices in kernel parameters reusable
-  PCI: Allow specifying devices using a base bus and path of devfns
-  PCI: Introduce the disable_acs_redir parameter
-
- Documentation/admin-guide/kernel-parameters.txt |  39 ++-
- drivers/pci/pci.c                               | 358 ++++++++++++++++++++----
- 2 files changed, 336 insertions(+), 61 deletions(-)
-
---
-2.11.0
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
