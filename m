@@ -1,68 +1,59 @@
-Return-Path: <SRS0=ZF2b=IM=intel.com=jacob.e.keller@kernel.org>
-Return-Path: <SRS0=ZF2b=IM=intel.com=jacob.e.keller@kernel.org>
-From: "Keller, Jacob E" <jacob.e.keller@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Jakub Kicinski
-	<jakub.kicinski@netronome.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "netdev@vger.kernel.org"
-	<netdev@vger.kernel.org>, Sathya Perla <sathya.perla@broadcom.com>, "Felix
- Manlunas" <felix.manlunas@caviumnetworks.com>, "alexander.duyck@gmail.com"
-	<alexander.duyck@gmail.com>, "john.fastabend@gmail.com"
-	<john.fastabend@gmail.com>, Donald Dutile <ddutile@redhat.com>,
-	"oss-drivers@netronome.com" <oss-drivers@netronome.com>, Christoph Hellwig
-	<hch@infradead.org>, Derek Chickles <derek.chickles@caviumnetworks.com>,
-	Satanand Burla <satananda.burla@caviumnetworks.com>, Raghu Vatsavayi
-	<raghu.vatsavayi@caviumnetworks.com>, Ajit Khaparde
-	<ajit.khaparde@broadcom.com>, Sriharsha Basavapatna
-	<sriharsha.basavapatna@broadcom.com>, Somnath Kotur
-	<somnath.kotur@broadcom.com>, "Kirsher, Jeffrey T"
-	<jeffrey.t.kirsher@intel.com>, "intel-wired-lan@lists.osuosl.org"
-	<intel-wired-lan@lists.osuosl.org>
-Subject: RE: [PATCH] PCI: allow drivers to limit the number of VFs to 0
-Date: Fri, 25 May 2018 17:46:47 +0000
-Message-ID: <02874ECE860811409154E81DA85FBB5882E539EA@ORSMSX115.amr.corp.intel.com>
-References: <20180402224652.4058-1-jakub.kicinski@netronome.com>
- <20180524235748.GD15320@bhelgaas-glaptop.roam.corp.google.com>
- <20180524182015.1af7b4c9@cakuba>
- <20180525140223.GA45098@bhelgaas-glaptop.roam.corp.google.com>
- <20180525170122.GA63280@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180525170122.GA63280@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:59622 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965305AbeEXNho (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 May 2018 09:37:44 -0400
+Date: Thu, 24 May 2018 08:37:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        Joerg Roedel <jroedel@suse.de>,
+        Myron Stowe <myron.stowe@redhat.com>,
+        Dave Fugate <david.fugate@intel.com>,
+        Scott Bauer <scott.bauer@intel.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 4/5] x86/PCI: Add additional VMD device root ports to VMD
+ AER quirk
+Message-ID: <20180524133742.GB95348@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180518192802.20371-1-jonathan.derrick@intel.com>
+ <20180518192802.20371-5-jonathan.derrick@intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180518192802.20371-5-jonathan.derrick@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Friday, May 25, 2018 10:01 AM
-> To: Jakub Kicinski <jakub.kicinski@netronome.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
-> netdev@vger.kernel.org; Sathya Perla <sathya.perla@broadcom.com>; Felix
-> Manlunas <felix.manlunas@caviumnetworks.com>;
-> alexander.duyck@gmail.com; john.fastabend@gmail.com; Keller, Jacob E
-> <jacob.e.keller@intel.com>; Donald Dutile <ddutile@redhat.com>; oss-
-> drivers@netronome.com; Christoph Hellwig <hch@infradead.org>; Derek
-> Chickles <derek.chickles@caviumnetworks.com>; Satanand Burla
-> <satananda.burla@caviumnetworks.com>; Raghu Vatsavayi
-> <raghu.vatsavayi@caviumnetworks.com>; Ajit Khaparde
-> <ajit.khaparde@broadcom.com>; Sriharsha Basavapatna
-> <sriharsha.basavapatna@broadcom.com>; Somnath Kotur
-> <somnath.kotur@broadcom.com>; Kirsher, Jeffrey T
-> <jeffrey.t.kirsher@intel.com>; intel-wired-lan@lists.osuosl.org
-> Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
->=20
-> [+cc liquidio, benet, fm10k maintainers:
->=20
->   The patch below will affect you if your driver calls
->     pci_sriov_set_totalvfs(dev, 0);
->=20
->   Previously that caused a subsequent pci_sriov_get_totalvfs() to return
->   the totalVFs value from the SR-IOV capability.  After this patch, it wi=
-ll
->   return 0, which has implications for VF enablement via the sysfs
->   "sriov_numvfs" file.]
->=20
+On Fri, May 18, 2018 at 01:28:01PM -0600, Jon Derrick wrote:
+> VMD devices change the source id of messages from child devices to the
+> VMD endpoint. This patch adds additional VMD root port device ids to the
+> AER quirk which requires walking the bus to determine which devices were
+> throwing the error.
+> 
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 
-Thanks. I don't foresee any issues with fm10k regarding this..
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Thanks,
-Jake
+Can you pick up this series, Lorenzo?
+
+> ---
+>  arch/x86/pci/fixup.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index 54ef19e90705..13f4485ca388 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -636,6 +636,10 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334a, quirk_no_aersid);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334b, quirk_no_aersid);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334c, quirk_no_aersid);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x334d, quirk_no_aersid);
+>  
+>  #ifdef CONFIG_PHYS_ADDR_T_64BIT
+>  
+> -- 
+> 2.14.3
+> 
