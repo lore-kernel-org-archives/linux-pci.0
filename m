@@ -1,87 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:57110 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752796AbeEHLwg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 May 2018 07:52:36 -0400
-Date: Tue, 8 May 2018 12:52:29 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v6 0/7] Add endpoint driver for Rockchip PCIe controller
-Message-ID: <20180508115229.GA10653@e107981-ln.cambridge.arm.com>
-References: <1524796697-160764-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-cys01nam02on0042.outbound.protection.outlook.com ([104.47.37.42]:38617
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S935704AbeEXIXB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 May 2018 04:23:01 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: Rob Herring <robh@kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.com" <linux-kernel@vger.kernel.com>,
+        "cyrille.pitchen@free-electrons.com"
+        <cyrille.pitchen@free-electrons.com>
+Subject: RE: [RESEND PATCH 3/4] dt-bindings: PCI: cadence: Add DT bindings for
+ optional PHYs
+Date: Thu, 24 May 2018 08:22:57 +0000
+Message-ID: <SN6PR07MB4512126062D1B934DF342713D86A0@SN6PR07MB4512.namprd07.prod.outlook.com>
+References: <1526995952-22031-1-git-send-email-adouglas@cadence.com>
+ <20180523185229.GA7457@rob-hp-laptop>
+In-Reply-To: <20180523185229.GA7457@rob-hp-laptop>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524796697-160764-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
-
-On Fri, Apr 27, 2018 at 10:38:17AM +0800, Shawn Lin wrote:
-> 
-> Hi Lorenzo,
-> 
-> This's the 6th try to upstream endpoint driver for Rockchip PCIe
-> controller. V6 is rebased by droping the rename change.
-> 
-> Thanks.
-> 
-> 
-> Changes in v6:
-> - rebase
-> 
-> Changes in v5:
-> - export symbol to fix error reported by Kbuild robot
-> - PCIE_ROCKCHIP depends on PCI
-> 
-> Changes in v4:
-> - remove empty line
-> - keep rockchip's order next to cadence and dwc, but
->   we will try to resort it later when reconstructing
->   the directories
-> 
-> Shawn Lin (7):
->   PCI: rockchip: Separate common code from RC driver
-
-There seems to be no patch (1) on linux-pci list, not sure what
-happened, mind resending the whole series possibly with
-commit logs updated as discussed ?
-
-Thanks,
-Lorenzo
-
->   PCI: rockchip: Split out common function to parse DT
->   PCI: rockchip: Split out common function to init controller
->   dt-bindings: PCI: rockchip: Rename rockchip-pcie.txt to
->     rockchip-pcie-host.txt
->   PCI: rockchip: Add Endpoint controller driver for Rockchip PCIe
->     controller
->   dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe endpoint
->     controller
->   arm64: defconfig: update config for Rockchip PCIe
-> 
->  .../devicetree/bindings/pci/rockchip-pcie-ep.txt   |   62 +
->  .../{rockchip-pcie.txt => rockchip-pcie-host.txt}  |    0
->  MAINTAINERS                                        |    4 +-
->  arch/arm64/configs/defconfig                       |    3 +-
->  drivers/pci/host/Kconfig                           |   19 +-
->  drivers/pci/host/Makefile                          |    2 +
->  drivers/pci/host/pcie-rockchip-ep.c                |  642 ++++++++
->  drivers/pci/host/pcie-rockchip-host.c              | 1141 +++++++++++++
->  drivers/pci/host/pcie-rockchip.c                   | 1683 +++-----------------
->  drivers/pci/host/pcie-rockchip.h                   |  338 ++++
->  10 files changed, 2406 insertions(+), 1488 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
->  rename Documentation/devicetree/bindings/pci/{rockchip-pcie.txt => rockchip-pcie-host.txt} (100%)
->  create mode 100644 drivers/pci/host/pcie-rockchip-ep.c
->  create mode 100644 drivers/pci/host/pcie-rockchip-host.c
->  create mode 100644 drivers/pci/host/pcie-rockchip.h
-> 
-> -- 
-> 1.9.1
-> 
-> 
+On  23 May 2018 19:52, Rob Herring wrote:
+> On Tue, May 22, 2018 at 02:32:32PM +0100, Alan Douglas wrote:
+> > Update DT documentation to include optional PHYs for cadence PCIe
+> > host and endpoint controllers.
+> >
+> > Signed-off-by: Alan Douglas <adouglas@cadence.com>
+> > ---
+> >  Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt   | 4 ++++
+> >  Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt | 2 ++
+> >  2 files changed, 6 insertions(+)
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.tx=
+t b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-
+> ep.txt
+> > index 9a305237..e40c635 100644
+> > --- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+> > +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+> > @@ -9,6 +9,8 @@ Required properties:
+> >
+> >  Optional properties:
+> >  - max-functions: Maximum number of functions that can be configured (d=
+efault 1).
+> > +- phys: From PHY bindings: List of Generic PHY phandles.
+> > +- phy-names:  List of names to identify the PHY.
+>=20
+> You need to define how many. I'd assume one, but I guess your example is
+> 1 per lane.
+>=20
+I can update the description in v3 as follows:
+ - phys: From PHY bindings: List of Generic PHY phandles. One per lane if m=
+ore than one in the
+  list.  If only one PHY listed it must manage all lanes.=20
+ - phy-names:  List of names to identify the PHY, one for each in the list.
+> >
+> >  Example:
+> >
+> > @@ -19,4 +21,6 @@ pcie@fc000000 {
+> >  	reg-names =3D "reg", "mem";
+> >  	cdns,max-outbound-regions =3D <16>;
+> >  	max-functions =3D /bits/ 8 <8>;
+> > +	phys =3D <&ep_phy0 &ep_phy1>;
+> > +	phy-names =3D "pcie-lane0","pcie-lane1";
+> >  };
