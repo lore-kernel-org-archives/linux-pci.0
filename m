@@ -1,54 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:41645 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751280AbeERUl0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 May 2018 16:41:26 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180517174619.GA4056@e107981-ln.cambridge.arm.com>
-References: <20180516012159.44081-1-songxiaowei@hisilicon.com>
- <20180516012159.44081-2-songxiaowei@hisilicon.com> <20180517174619.GA4056@e107981-ln.cambridge.arm.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Fri, 18 May 2018 23:41:25 +0300
-Message-ID: <CAHp75Vd2C2yqHkjV18bNUoaNb08_aAOEJSf5Ycgv9Beq9Ub1oQ@mail.gmail.com>
-Subject: Re: [PATCH v4] PCI: kirin: Add MSI support
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Xiaowei Song <songxiaowei@hisilicon.com>,
-        Wangbinghui <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "xuwei (O)" <xuwei5@huawei.com>, Rob Herring <robh+dt@kernel.org>,
-        linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Dmitry Shmidt <dimitrysh@google.com>,
-        Guodong Xu <guodong.xu@linaro.org>,
-        Suzhuangluan <suzhuangluan@hisilicon.com>,
-        Kongfei <kongfei@hisilicon.com>, Yao Chen <chenyao11@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:37332 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1033380AbeEXOgh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 10:36:37 -0400
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH v4 4/6] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
+Date: Thu, 24 May 2018 16:36:22 +0200
+Message-Id: <20180524143624.26718-5-marek.vasut+renesas@gmail.com>
+In-Reply-To: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
+References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 17, 2018 at 8:46 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Wed, May 16, 2018 at 09:21:59AM +0800, Xiaowei Song wrote:
+The data link active signal usually takes ~20 uSec to be asserted,
+poll the bit more often to avoid useless delays in this function.
+Use udelay() instead of usleep() for such a small delay as suggested
+by the timer documentation and because this will be used in atomic
+context later on when the suspend/resume patches land.
 
->> +static void kirin_pcie_msi_init(struct pcie_port *pp)
->> +{
->> +     dw_pcie_msi_init(pp);
->> +}
->> +
->> +static void kirin_pcie_enable_interrupts(struct pcie_port *pp)
->> +{
->> +     if (IS_ENABLED(CONFIG_PCI_MSI))
->> +             kirin_pcie_msi_init(pp);
->> +}
->
-> Why do you need two functons ?
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+---
+V2: s/content/context in commit message
+V3: Add cpu_relax()
+V4: Rebase on top of Lorenzo's pci/rcar, fix up the rebase breakage
+    induced by patches therein
+---
+ drivers/pci/host/pcie-rcar.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-It's probably misreading of my suggestion which is more clearly can look like
-
-  if (!IS_ENABLED(CONFIG_PCI_MSI))
-    return;
-  dw_pcie_msi_init(pp);
-
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index d6a7e8482dcf..4843a4dc6059 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -546,13 +546,14 @@ static int rcar_pcie_wait_for_phyrdy(struct rcar_pcie *pcie)
+ 
+ static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
+ {
+-	unsigned int timeout = 10;
++	unsigned int timeout = 10000;
+ 
+ 	while (timeout--) {
+ 		if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
+ 			return 0;
+ 
+-		msleep(5);
++		udelay(5);
++		cpu_relax();
+ 	}
+ 
+ 	return -ETIMEDOUT;
 -- 
-With Best Regards,
-Andy Shevchenko
+2.16.2
