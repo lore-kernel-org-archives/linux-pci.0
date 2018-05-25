@@ -1,204 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50376 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935826AbeEYOCZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 May 2018 10:02:25 -0400
-Date: Fri, 25 May 2018 09:02:23 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jakub Kicinski <jakub.kicinski@netronome.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, Sathya Perla <sathya.perla@broadcom.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        alexander.duyck@gmail.com, john.fastabend@gmail.com,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Donald Dutile <ddutile@redhat.com>, oss-drivers@netronome.com,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
-Message-ID: <20180525140223.GA45098@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180402224652.4058-1-jakub.kicinski@netronome.com>
- <20180524235748.GD15320@bhelgaas-glaptop.roam.corp.google.com>
- <20180524182015.1af7b4c9@cakuba>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 25 May 2018 17:20:10 -0600
+From: Keith Busch <keith.busch@linux.intel.com>
+To: Aron Griffis <aron@arongriffis.com>
+Subject: Re: PCIe unsupported request with Intel 760p
+Message-ID: <20180525232009.GV11037@localhost.localdomain>
+References: <CAKDfzeD5_AV=YtWqTPr=40vvW4oMFAs4gJs_r42PJWcb815zyQ@mail.gmail.com>
+ <20180507123035.GA20097@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180524182015.1af7b4c9@cakuba>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180507123035.GA20097@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, willy@infradead.org,
+ linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 24, 2018 at 06:20:15PM -0700, Jakub Kicinski wrote:
-> Hi Bjorn!
+On Mon, May 07, 2018 at 08:30:35AM -0400, Aron Griffis wrote:
+> (Reposting to fix line wrapping, and cc'ing linux-pci at Bjorn's request.)
 > 
-> On Thu, 24 May 2018 18:57:48 -0500, Bjorn Helgaas wrote:
-> > On Mon, Apr 02, 2018 at 03:46:52PM -0700, Jakub Kicinski wrote:
-> > > Some user space depends on enabling sriov_totalvfs number of VFs
-> > > to not fail, e.g.:
-> > > 
-> > > $ cat .../sriov_totalvfs > .../sriov_numvfs
-> > > 
-> > > For devices which VF support depends on loaded FW we have the
-> > > pci_sriov_{g,s}et_totalvfs() API.  However, this API uses 0 as
-> > > a special "unset" value, meaning drivers can't limit sriov_totalvfs
-> > > to 0.  Remove the special values completely and simply initialize
-> > > driver_max_VFs to total_VFs.  Then always use driver_max_VFs.
-> > > Add a helper for drivers to reset the VF limit back to total.  
-> > 
-> > I still can't really make sense out of the changelog.
-> >
-> > I think part of the reason it's confusing is because there are two
-> > things going on:
-> > 
-> >   1) You want this:
-> >   
-> >        pci_sriov_set_totalvfs(dev, 0);
-> >        x = pci_sriov_get_totalvfs(dev) 
-> > 
-> >      to return 0 instead of total_VFs.  That seems to connect with
-> >      your subject line.  It means "sriov_totalvfs" in sysfs could be
-> >      0, but I don't know how that is useful (I'm sure it is; just
-> >      educate me :))
+> I'm getting this error continuously with an Intel 760p on 4.16.5 (Fedora 28)
 > 
-> Let me just quote the bug report that got filed on our internal bug
-> tracker :)
+> pcieport 0000:00:1d.0: AER: Uncorrected (Non-Fatal) error received: id=00e8
+> pcieport 0000:00:1d.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=00e8(Requester ID)
+> pcieport 0000:00:1d.0:   device [8086:a298] error status/mask=00100000/00010000
+> pcieport 0000:00:1d.0:    [20] Unsupported Request    (First)
+> pcieport 0000:00:1d.0:   TLP Header: 34000000 70000010 00000000 88468846
+> pcieport 0000:00:1d.0: broadcast error_detected message
+> pcieport 0000:00:1d.0: broadcast mmio_enabled message
+> pcieport 0000:00:1d.0: broadcast resume message
+> pcieport 0000:00:1d.0: AER: Device recovery successful
 > 
->   When testing Juju Openstack with Ubuntu 18.04, enabling SR-IOV causes
->   errors because Juju gets the sriov_totalvfs for SR-IOV-capable device
->   then tries to set that as the sriov_numvfs parameter.
+> Willy graciously decoded this for me to a "Latency Tolerance Reporting
+> Message," and suggested I send email to this list to check whether it's a
+> problem with the device or driver.
 > 
->   For SR-IOV incapable FW, the sriov_totalvfs parameter should be 0, 
->   but it's set to max.  When FW is switched to flower*, the correct 
->   sriov_totalvfs value is presented.
-> 
-> * flower is a project name
+> lspci and full dmesg follow. Please let me know if something else would be
+> helpful.
 
->From the point of view of the PCI core (which knows nothing about
-device firmware and relies on the architected config space described
-by the PCIe spec), this sounds like an erratum: with some firmware
-installed, the device is not capable of SR-IOV, but still advertises
-an SR-IOV capability with "TotalVFs > 0".
+I have some information back from the development team to share. They
+believe this may be a hardware errata and are investigating a firmware
+side fix.
 
-Regardless of whether that's an erratum, we do allow PF drivers to use
-pci_sriov_set_totalvfs() to limit the number of VFs that may be
-enabled by writing to the PF's "sriov_numvfs" sysfs file.
+In the meantime, they think there may be other ways to work around this,
+if these are acceptable. Specifically, disabling any non-operational
+link states may make this go away, and adding kernel parameter
+"pcie_aspm=off" should achieve that.
 
-But the current implementation does not allow a PF driver to limit VFs
-to 0, and that does seem nonsensical.
-
-> My understanding is OpenStack uses sriov_totalvfs to determine how many
-> VFs can be enabled, looks like this is the code:
-> 
-> http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n464
-> 
-> >   2) You're adding the pci_sriov_reset_totalvfs() interface.  I'm not
-> >      sure what you intend for this.  Is *every* driver supposed to
-> >      call it in .remove()?  Could/should this be done in the core
-> >      somehow instead of depending on every driver?
-> 
-> Good question, I was just thinking yesterday we may want to call it
-> from the core, but I don't think it's strictly necessary nor always
-> sufficient (we may reload FW without re-probing).
-> 
-> We have a device which supports different number of VFs based on the FW
-> loaded.  Some legacy FWs does not inform the driver how many VFs it can
-> support, because it supports max.  So the flow in our driver is this:
-> 
-> load_fw(dev);
-> ...
-> max_vfs = ask_fw_for_max_vfs(dev);
-> if (max_vfs >= 0)
-> 	return pci_sriov_set_totalvfs(dev, max_vfs);
-> else /* FW didn't tell us, assume max */
-> 	return pci_sriov_reset_totalvfs(dev); 
-> 
-> We also reset the max on device remove, but that's not strictly
-> necessary.
-> 
-> Other users of pci_sriov_set_totalvfs() always know the value to set
-> the total to (either always get it from FW or it's a constant).
-> 
-> If you prefer we can work out the correct max for those legacy cases in
-> the driver as well, although it seemed cleaner to just ask the core,
-> since it already has total_VFs value handy :)
-> 
-> > I'm also having a hard time connecting your user-space command example
-> > with the rest of this.  Maybe it will make more sense to me tomorrow
-> > after some coffee.
-> 
-> OpenStack assumes it will always be able to set sriov_numvfs to
-> sriov_totalvfs, see this 'if':
-> 
-> http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n512
-
-Thanks for educating me.  I think there are two issues here that we
-can separate.  I extracted the patch below for the first.
-
-The second is the question of resetting driver_max_VFs.  I think we
-currently have a general issue in the core:
-
-  - load PF driver 1
-  - driver calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
-  - unload PF driver 1
-  - load PF driver 2
-
-Now driver_max_VFs is still stuck at the lower value set by driver 1.
-I don't think that's the way this should work.
-
-I guess this is partly a consequence of setting driver_max_VFs in
-sriov_init(), which is called before driver attach and should only
-depend on hardware characteristics, so it is related to the patch
-below.  But I think we should fix it in general, not just for
-netronome.
-
-
-commit 4a338bc6f94b9ad824ac944f5dfc249d6838719c
-Author: Jakub Kicinski <jakub.kicinski@netronome.com>
-Date:   Fri May 25 08:18:34 2018 -0500
-
-    PCI/IOV: Allow PF drivers to limit total_VFs to 0
-    
-    Some SR-IOV PF drivers implement .sriov_configure(), which allows
-    user-space to enable VFs by writing the desired number of VFs to the sysfs
-    "sriov_numvfs" file (see sriov_numvfs_store()).
-    
-    The PCI core limits the number of VFs to the TotalVFs advertised by the
-    device in its SR-IOV capability.  The PF driver can limit the number of VFs
-    to even fewer (it may have pre-allocated data structures or knowledge of
-    device limitations) by calling pci_sriov_set_totalvfs(), but previously it
-    could not limit the VFs to 0.
-    
-    Change pci_sriov_get_totalvfs() so it always respects the VF limit imposed
-    by the PF driver, even if the limit is 0.
-    
-    This sequence:
-    
-      pci_sriov_set_totalvfs(dev, 0);
-      x = pci_sriov_get_totalvfs(dev);
-    
-    previously set "x" to TotalVFs from the SR-IOV capability.  Now it will set
-    "x" to 0.
-    
-    Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 192b82898a38..d0d73dbbd5ca 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -469,6 +469,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 	iov->nres = nres;
- 	iov->ctrl = ctrl;
- 	iov->total_VFs = total;
-+	iov->driver_max_VFs = total;
- 	pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_device);
- 	iov->pgsz = pgsz;
- 	iov->self = dev;
-@@ -827,10 +828,7 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
- 	if (!dev->is_physfn)
- 		return 0;
- 
--	if (dev->sriov->driver_max_VFs)
--		return dev->sriov->driver_max_VFs;
--
--	return dev->sriov->total_VFs;
-+	return dev->sriov->driver_max_VFs;
- }
- EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
- 
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
