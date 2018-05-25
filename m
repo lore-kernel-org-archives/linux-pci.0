@@ -1,281 +1,212 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:59082 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750738AbeEaXu2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 May 2018 19:50:28 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu, 31 May 2018 17:50:08 -0600
-Message-Id: <20180531235010.5279-2-logang@deltatee.com>
-In-Reply-To: <20180531235010.5279-1-logang@deltatee.com>
-References: <20180531235010.5279-1-logang@deltatee.com>
+Return-Path: <SRS0=dahA=IM=netronome.com=jakub.kicinski@kernel.org>
+Return-Path: <SRS0=dahA=IM=netronome.com=jakub.kicinski@kernel.org>
+Date: Fri, 25 May 2018 14:05:21 -0700
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ netdev@vger.kernel.org, Sathya Perla <sathya.perla@broadcom.com>, Felix
+ Manlunas <felix.manlunas@caviumnetworks.com>, alexander.duyck@gmail.com,
+ john.fastabend@gmail.com, Jacob Keller <jacob.e.keller@intel.com>, Donald
+ Dutile <ddutile@redhat.com>, oss-drivers@netronome.com, Christoph Hellwig
+ <hch@infradead.org>
+Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
+Message-ID: <20180525140521.662a9c96@cakuba>
+In-Reply-To: <20180525140223.GA45098@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180402224652.4058-1-jakub.kicinski@netronome.com>
+	<20180524235748.GD15320@bhelgaas-glaptop.roam.corp.google.com>
+	<20180524182015.1af7b4c9@cakuba>
+	<20180525140223.GA45098@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v2 1/3] PCI: Make specifying PCI devices in kernel parameters reusable
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-Separate out the code to match a PCI device with a string (typically
-originating from a kernel parameter) from the
-pci_specified_resource_alignment() function into its own helper
-function.
+On Fri, 25 May 2018 09:02:23 -0500, Bjorn Helgaas wrote:
+> On Thu, May 24, 2018 at 06:20:15PM -0700, Jakub Kicinski wrote:
+> > On Thu, 24 May 2018 18:57:48 -0500, Bjorn Helgaas wrote:  
+> > > On Mon, Apr 02, 2018 at 03:46:52PM -0700, Jakub Kicinski wrote:  
+> > > > Some user space depends on enabling sriov_totalvfs number of VFs
+> > > > to not fail, e.g.:
+> > > > 
+> > > > $ cat .../sriov_totalvfs > .../sriov_numvfs
+> > > > 
+> > > > For devices which VF support depends on loaded FW we have the
+> > > > pci_sriov_{g,s}et_totalvfs() API.  However, this API uses 0 as
+> > > > a special "unset" value, meaning drivers can't limit sriov_totalvfs
+> > > > to 0.  Remove the special values completely and simply initialize
+> > > > driver_max_VFs to total_VFs.  Then always use driver_max_VFs.
+> > > > Add a helper for drivers to reset the VF limit back to total.    
+> > > 
+> > > I still can't really make sense out of the changelog.
+> > >
+> > > I think part of the reason it's confusing is because there are two
+> > > things going on:
+> > > 
+> > >   1) You want this:
+> > >   
+> > >        pci_sriov_set_totalvfs(dev, 0);
+> > >        x = pci_sriov_get_totalvfs(dev) 
+> > > 
+> > >      to return 0 instead of total_VFs.  That seems to connect with
+> > >      your subject line.  It means "sriov_totalvfs" in sysfs could be
+> > >      0, but I don't know how that is useful (I'm sure it is; just
+> > >      educate me :))  
+> > 
+> > Let me just quote the bug report that got filed on our internal bug
+> > tracker :)
+> > 
+> >   When testing Juju Openstack with Ubuntu 18.04, enabling SR-IOV causes
+> >   errors because Juju gets the sriov_totalvfs for SR-IOV-capable device
+> >   then tries to set that as the sriov_numvfs parameter.
+> > 
+> >   For SR-IOV incapable FW, the sriov_totalvfs parameter should be 0, 
+> >   but it's set to max.  When FW is switched to flower*, the correct 
+> >   sriov_totalvfs value is presented.
+> > 
+> > * flower is a project name  
+> 
+> From the point of view of the PCI core (which knows nothing about
+> device firmware and relies on the architected config space described
+> by the PCIe spec), this sounds like an erratum: with some firmware
+> installed, the device is not capable of SR-IOV, but still advertises
+> an SR-IOV capability with "TotalVFs > 0".
+> 
+> Regardless of whether that's an erratum, we do allow PF drivers to use
+> pci_sriov_set_totalvfs() to limit the number of VFs that may be
+> enabled by writing to the PF's "sriov_numvfs" sysfs file.
 
-While we are at it, this change fixes the kernel style of the function
-(fixing a number of long lines and extra parentheses).
+Think more of an FPGA which can be reprogrammed at runtime to have
+different capabilities than an erratum.  Some FWs simply have no use
+for VFs and save resources (and validation time) by not supporting it.
 
-Additionally, make the analogous change to the kernel parameter
-documentation: Separating the description of how to specify a PCI device
-into it's own section at the head of the pci= parameter.
+> But the current implementation does not allow a PF driver to limit VFs
+> to 0, and that does seem nonsensical.
+> 
+> > My understanding is OpenStack uses sriov_totalvfs to determine how many
+> > VFs can be enabled, looks like this is the code:
+> > 
+> > http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n464
+> >   
+> > >   2) You're adding the pci_sriov_reset_totalvfs() interface.  I'm not
+> > >      sure what you intend for this.  Is *every* driver supposed to
+> > >      call it in .remove()?  Could/should this be done in the core
+> > >      somehow instead of depending on every driver?  
+> > 
+> > Good question, I was just thinking yesterday we may want to call it
+> > from the core, but I don't think it's strictly necessary nor always
+> > sufficient (we may reload FW without re-probing).
+> > 
+> > We have a device which supports different number of VFs based on the FW
+> > loaded.  Some legacy FWs does not inform the driver how many VFs it can
+> > support, because it supports max.  So the flow in our driver is this:
+> > 
+> > load_fw(dev);
+> > ...
+> > max_vfs = ask_fw_for_max_vfs(dev);
+> > if (max_vfs >= 0)
+> > 	return pci_sriov_set_totalvfs(dev, max_vfs);
+> > else /* FW didn't tell us, assume max */
+> > 	return pci_sriov_reset_totalvfs(dev); 
+> > 
+> > We also reset the max on device remove, but that's not strictly
+> > necessary.
+> > 
+> > Other users of pci_sriov_set_totalvfs() always know the value to set
+> > the total to (either always get it from FW or it's a constant).
+> > 
+> > If you prefer we can work out the correct max for those legacy cases in
+> > the driver as well, although it seemed cleaner to just ask the core,
+> > since it already has total_VFs value handy :)
+> >   
+> > > I'm also having a hard time connecting your user-space command example
+> > > with the rest of this.  Maybe it will make more sense to me tomorrow
+> > > after some coffee.  
+> > 
+> > OpenStack assumes it will always be able to set sriov_numvfs to
+> > sriov_totalvfs, see this 'if':
+> > 
+> > http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n512  
+> 
+> Thanks for educating me.  I think there are two issues here that we
+> can separate.  I extracted the patch below for the first.
+> 
+> The second is the question of resetting driver_max_VFs.  I think we
+> currently have a general issue in the core:
+> 
+>   - load PF driver 1
+>   - driver calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
+>   - unload PF driver 1
+>   - load PF driver 2
+> 
+> Now driver_max_VFs is still stuck at the lower value set by driver 1.
+> I don't think that's the way this should work.
+> 
+> I guess this is partly a consequence of setting driver_max_VFs in
+> sriov_init(), which is called before driver attach and should only
+> depend on hardware characteristics, so it is related to the patch
+> below.  But I think we should fix it in general, not just for
+> netronome.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Acked-by: Christian König <christian.koenig@amd.com>
----
- Documentation/admin-guide/kernel-parameters.txt |  26 +++-
- drivers/pci/pci.c                               | 153 +++++++++++++++---------
- 2 files changed, 120 insertions(+), 59 deletions(-)
+Okay, perfect.  That makes sense.  The patch below certainly fixes the
+first issue for us.  Thank you!
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index f2040d46f095..e58cc671ff92 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -2985,7 +2985,24 @@
- 			See header of drivers/block/paride/pcd.c.
- 			See also Documentation/blockdev/paride.txt.
- 
--	pci=option[,option...]	[PCI] various PCI subsystem options:
-+	pci=option[,option...]	[PCI] various PCI subsystem options.
-+
-+				Some options herein operate on a specific device
-+				or a set of devices (<pci_dev>). These are
-+				specified in one of two formats:
-+
-+				[<domain>:]<bus>:<slot>.<func>
-+				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
-+
-+				Note: the first format specifies a PCI
-+				bus/slot/function address which may change
-+				if new hardware is inserted, if motherboard
-+				firmware changes, or due to changes caused
-+				by other kernel parameters. The second format
-+				selects devices using IDs from the
-+				configuration space which may match multiple
-+				devices in the system.
-+
- 		earlydump	[X86] dump PCI config space before the kernel
- 			        changes anything
- 		off		[X86] don't probe for the PCI bus
-@@ -3114,11 +3131,10 @@
- 				window. The default value is 64 megabytes.
- 		resource_alignment=
- 				Format:
--				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
--				[<order of align>@]pci:<vendor>:<device>\
--						[:<subvendor>:<subdevice>][; ...]
-+				[<order of align>@]<pci_dev>[; ...]
- 				Specifies alignment and device to reassign
--				aligned memory resources.
-+				aligned memory resources. How to
-+				specify the device is described above.
- 				If <order of align> is not specified,
- 				PAGE_SIZE is used as alignment.
- 				PCI-PCI bridge can be specified, if resource
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index dbfe7c4f3776..85fec5e2640b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -183,6 +183,88 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar)
- EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
- #endif
- 
-+/**
-+ * pci_dev_str_match - test if a string matches a device
-+ * @dev:    the PCI device to test
-+ * @p:      string to match the device against
-+ * @endptr: pointer to the string after the match
-+ *
-+ * Test if a string (typically from a kernel parameter) matches a
-+ * specified. The string may be of one of two forms formats:
-+ *
-+ *   [<domain>:]<bus>:<slot>.<func>
-+ *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
-+ *
-+ * The first format specifies a PCI bus/slot/function address which
-+ * may change if new hardware is inserted, if motherboard firmware changes,
-+ * or due to changes caused in kernel parameters.
-+ *
-+ * The second format matches devices using IDs in the configuration
-+ * space which may match multiple devices in the system. A value of 0
-+ * for any field will match all devices.
-+ *
-+ * Returns 1 if the string matches the device, 0 if it does not and
-+ * a negative error code if the string cannot be parsed.
-+ */
-+static int pci_dev_str_match(struct pci_dev *dev, const char *p,
-+			     const char **endptr)
-+{
-+	int ret;
-+	int seg, bus, slot, func, count;
-+	unsigned short vendor, device, subsystem_vendor, subsystem_device;
-+
-+	if (strncmp(p, "pci:", 4) == 0) {
-+		/* PCI vendor/device (subvendor/subdevice) ids are specified */
-+		p += 4;
-+		ret = sscanf(p, "%hx:%hx:%hx:%hx%n", &vendor, &device,
-+			     &subsystem_vendor, &subsystem_device, &count);
-+		if (ret != 4) {
-+			ret = sscanf(p, "%hx:%hx%n", &vendor, &device, &count);
-+			if (ret != 2)
-+				return -EINVAL;
-+
-+			subsystem_vendor = 0;
-+			subsystem_device = 0;
-+		}
-+
-+		p += count;
-+
-+		if ((!vendor || vendor == dev->vendor) &&
-+		    (!device || device == dev->device) &&
-+		    (!subsystem_vendor ||
-+			    subsystem_vendor == dev->subsystem_vendor) &&
-+		    (!subsystem_device ||
-+			    subsystem_device == dev->subsystem_device))
-+			goto found;
-+
-+	} else {
-+		/* PCI Bus,Slot,Function ids are specified */
-+		ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
-+			     &func, &count);
-+		if (ret != 4) {
-+			seg = 0;
-+			ret = sscanf(p, "%x:%x.%x%n", &bus, &slot,
-+				     &func, &count);
-+			if (ret != 3)
-+				return -EINVAL;
-+		}
-+
-+		p += count;
-+
-+		if (seg == pci_domain_nr(dev->bus) &&
-+		    bus == dev->bus->number &&
-+		    slot == PCI_SLOT(dev->devfn) &&
-+		    func == PCI_FUNC(dev->devfn))
-+			goto found;
-+	}
-+
-+	*endptr = p;
-+	return 0;
-+
-+found:
-+	*endptr = p;
-+	return 1;
-+}
- 
- static int __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
- 				   u8 pos, int cap, int *ttl)
-@@ -5462,10 +5544,10 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
- static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 							bool *resize)
- {
--	int seg, bus, slot, func, align_order, count;
--	unsigned short vendor, device, subsystem_vendor, subsystem_device;
-+	int align_order, count;
- 	resource_size_t align = pcibios_default_alignment();
--	char *p;
-+	const char *p;
-+	int ret;
- 
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
-@@ -5485,58 +5567,21 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 		} else {
- 			align_order = -1;
- 		}
--		if (strncmp(p, "pci:", 4) == 0) {
--			/* PCI vendor/device (subvendor/subdevice) ids are specified */
--			p += 4;
--			if (sscanf(p, "%hx:%hx:%hx:%hx%n",
--				&vendor, &device, &subsystem_vendor, &subsystem_device, &count) != 4) {
--				if (sscanf(p, "%hx:%hx%n", &vendor, &device, &count) != 2) {
--					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: pci:%s\n",
--						p);
--					break;
--				}
--				subsystem_vendor = subsystem_device = 0;
--			}
--			p += count;
--			if ((!vendor || (vendor == dev->vendor)) &&
--				(!device || (device == dev->device)) &&
--				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
--				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
--				*resize = true;
--				if (align_order == -1)
--					align = PAGE_SIZE;
--				else
--					align = 1 << align_order;
--				/* Found */
--				break;
--			}
--		}
--		else {
--			if (sscanf(p, "%x:%x:%x.%x%n",
--				&seg, &bus, &slot, &func, &count) != 4) {
--				seg = 0;
--				if (sscanf(p, "%x:%x.%x%n",
--						&bus, &slot, &func, &count) != 3) {
--					/* Invalid format */
--					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
--						p);
--					break;
--				}
--			}
--			p += count;
--			if (seg == pci_domain_nr(dev->bus) &&
--				bus == dev->bus->number &&
--				slot == PCI_SLOT(dev->devfn) &&
--				func == PCI_FUNC(dev->devfn)) {
--				*resize = true;
--				if (align_order == -1)
--					align = PAGE_SIZE;
--				else
--					align = 1 << align_order;
--				/* Found */
--				break;
--			}
-+
-+		ret = pci_dev_str_match(dev, p, &p);
-+		if (ret == 1) {
-+			*resize = true;
-+			if (align_order == -1)
-+				align = PAGE_SIZE;
-+			else
-+				align = 1 << align_order;
-+			break;
-+		} else if (ret < 0) {
-+			pr_info("PCI: Can't parse resource_alignment parameter: pci:%s\n",
-+				p);
-+			break;
- 		}
-+
- 		if (*p != ';' && *p != ',') {
- 			/* End of param or invalid format */
- 			break;
--- 
-2.11.0
+As far as the second issue goes - agreed, having the core reset the
+number of VFs to total_VFs definitely makes sense.  It doesn't cater to
+the case where FW is reloaded without reprobing, but we don't do this
+today anyway.
+
+Should I try to come up with a patch to reset total_VFs after detach?
+
+> commit 4a338bc6f94b9ad824ac944f5dfc249d6838719c
+> Author: Jakub Kicinski <jakub.kicinski@netronome.com>
+> Date:   Fri May 25 08:18:34 2018 -0500
+> 
+>     PCI/IOV: Allow PF drivers to limit total_VFs to 0
+>     
+>     Some SR-IOV PF drivers implement .sriov_configure(), which allows
+>     user-space to enable VFs by writing the desired number of VFs to the sysfs
+>     "sriov_numvfs" file (see sriov_numvfs_store()).
+>     
+>     The PCI core limits the number of VFs to the TotalVFs advertised by the
+>     device in its SR-IOV capability.  The PF driver can limit the number of VFs
+>     to even fewer (it may have pre-allocated data structures or knowledge of
+>     device limitations) by calling pci_sriov_set_totalvfs(), but previously it
+>     could not limit the VFs to 0.
+>     
+>     Change pci_sriov_get_totalvfs() so it always respects the VF limit imposed
+>     by the PF driver, even if the limit is 0.
+>     
+>     This sequence:
+>     
+>       pci_sriov_set_totalvfs(dev, 0);
+>       x = pci_sriov_get_totalvfs(dev);
+>     
+>     previously set "x" to TotalVFs from the SR-IOV capability.  Now it will set
+>     "x" to 0.
+>     
+>     Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 192b82898a38..d0d73dbbd5ca 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -469,6 +469,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>  	iov->nres = nres;
+>  	iov->ctrl = ctrl;
+>  	iov->total_VFs = total;
+> +	iov->driver_max_VFs = total;
+>  	pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_device);
+>  	iov->pgsz = pgsz;
+>  	iov->self = dev;
+> @@ -827,10 +828,7 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>  	if (!dev->is_physfn)
+>  		return 0;
+>  
+> -	if (dev->sriov->driver_max_VFs)
+> -		return dev->sriov->driver_max_VFs;
+> -
+> -	return dev->sriov->total_VFs;
+> +	return dev->sriov->driver_max_VFs;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+>  
