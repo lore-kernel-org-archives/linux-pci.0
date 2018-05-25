@@ -1,44 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:44896 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751000AbeEKAVN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 May 2018 20:21:13 -0400
-Received: by mail-pf0-f195.google.com with SMTP id q22-v6so1840265pff.11
-        for <linux-pci@vger.kernel.org>; Thu, 10 May 2018 17:21:12 -0700 (PDT)
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
-        Jesper Nilsson <jesper.nilsson@axis.com>
-Subject: [PATCH v2 5/9] PCI: artpec6: Drop unnecessary root_bus_nr setting
-Date: Fri, 11 May 2018 08:20:15 +0800
-Message-Id: <1525998019-28634-6-git-send-email-shawn.guo@linaro.org>
-In-Reply-To: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
-References: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=tmPF=IM=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=tmPF=IM=codeaurora.org=okaya@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 25 May 2018 15:34:09 -0700
+From: okaya@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, ryan@finnie.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J.
+ Wysocki" <rafael.j.wysocki@intel.com>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>, Kate
+ Stewart <kstewart@linuxfoundation.org>, Frederick Lawler
+ <fred@fredlawl.com>, Dongdong Liu <liudongdong3@huawei.com>, Mika Westerberg
+ <mika.westerberg@linux.intel.com>, open list <linux-kernel@vger.kernel.org>,
+ Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com,
+ linux-scsi@vger.kernel.org
+Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
+In-Reply-To: <20180525221024.GC92995@bhelgaas-glaptop.roam.corp.google.com>
+References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+ <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+ <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
+ <20180524183502.GB85822@bhelgaas-glaptop.roam.corp.google.com>
+ <984b9734-244d-04e9-946f-7524f148ff7c@codeaurora.org>
+ <20180525221024.GC92995@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <800f4761ec4b917452a0383f94083731@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Function dw_pcie_host_init() already initializes the root_bus_nr field
-of 'struct pcie_port', so the -1 assignment prior to calling
-dw_pcie_host_init() in platform specific driver is not really needed.
-Drop it.
+On 2018-05-25 15:10, Bjorn Helgaas wrote:
+> On Fri, May 25, 2018 at 09:30:59AM -0400, Sinan Kaya wrote:
+>> On 5/24/2018 2:35 PM, Bjorn Helgaas wrote:
+>> > That sounds like a reasonable idea, and it is definitely another can
+>> > of worms.  I looked briefly at some of the .shutdown() cases:
+>> 
+>> should we throw it into 4.18 and see what happens?
+> 
+> It wouldn't solve this particular problem because hpsa *does* have a
+> .shutdown() method.  The problem is that it doesn't work -- it's
+> supposed to stop DMA and interrupts but it apparently doesn't.
+> 
+> I think we need to fix hpsa first.
 
-Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-Cc: Jesper Nilsson <jesper.nilsson@axis.com>
----
- drivers/pci/dwc/pcie-artpec6.c | 1 -
- 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index e66cede2b5b7..af78b5c23bce 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -399,7 +399,6 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
- 		}
- 	}
- 
--	pp->root_bus_nr = -1;
- 	pp->ops = &artpec6_pcie_host_ops;
- 
- 	ret = dw_pcie_host_init(pp);
--- 
-1.9.1
+Absolutely, the othet patch is a parallel issue.
