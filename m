@@ -1,59 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Check for PCIe downtraining conditions
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>, bhelgaas@google.com
-Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180531150535.9684-1-mr.nuke.me@gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <28004506-24f0-6d10-2d1e-074e0483d2f9@codeaurora.org>
-Date: Thu, 31 May 2018 11:28:07 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:58888 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965137AbeEYK3q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 May 2018 06:29:46 -0400
+Date: Fri, 25 May 2018 11:29:40 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dexuan Cui <decui@microsoft.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "'olaf@aepfle.de'" <olaf@aepfle.de>,
+        "'apw@canonical.com'" <apw@canonical.com>,
+        "'jasowang@redhat.com'" <jasowang@redhat.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'driverdev-devel@linuxdriverproject.org'"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
+        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
+Subject: Re: [PATCH] PCI: hv: Do not wait forever on a device that has
+ disappeared
+Message-ID: <20180525102940.GD6507@e107981-ln.cambridge.arm.com>
+References: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <20180524124101.GB20732@e107981-ln.cambridge.arm.com>
+ <KL1P15301MB00064024E9BB60BF9FD48128BF6A0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
-In-Reply-To: <20180531150535.9684-1-mr.nuke.me@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <KL1P15301MB00064024E9BB60BF9FD48128BF6A0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/31/2018 11:05 AM, Alexandru Gagniuc wrote:
-> +static void pcie_max_link_cap(struct pci_dev *dev, enum pci_bus_speed *speed,
-> +				enum pcie_link_width *width)
-> +{
-> +	uint32_t lnkcap;
-> +
-> +	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
-> +
-> +	*speed = pcie_link_speed[lnkcap & PCI_EXP_LNKCAP_SLS];
-> +	*width = (lnkcap & PCI_EXP_LNKCAP_MLW) >> PCI_EXP_LNKCAP_MLW_SHIFT;
-> +}
-> +
-> +static void pcie_cur_link_sta(struct pci_dev *dev, enum pci_bus_speed *speed,
-> +				enum pcie_link_width *width)
-> +{
-> +	uint16_t lnksta;
-> +
-> +	pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
-> +	*speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
-> +	*width = (lnksta & PCI_EXP_LNKSTA_NLW) >> PCI_EXP_LNKSTA_NLW_SHIFT;
-> +}
-> +
-> +static const char *pcie_bus_speed_name(enum pci_bus_speed speed)
-> +{
-> +	switch (speed) {
-> +	case PCIE_SPEED_2_5GT:
-> +		return "2.5 GT/s";
-> +	case PCIE_SPEED_5_0GT:
-> +		return "5.0 GT/s";
-> +	case PCIE_SPEED_8_0GT:
-> +		return "8.0 GT/s";
-> +	default:
-> +		return "unknown";
-> +	}
-> +}
+On Thu, May 24, 2018 at 11:55:35PM +0000, Dexuan Cui wrote:
+> > From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Sent: Thursday, May 24, 2018 05:41
+> > On Wed, May 23, 2018 at 09:12:01PM +0000, Dexuan Cui wrote:
+> > >
+> > > Before the guest finishes the device initialization, the device can be
+> > > removed anytime by the host, and after that the host won't respond to
+> > > the guest's request, so the guest should be prepared to handle this
+> > > case.
+> > >
+> > > --- a/drivers/pci/host/pci-hyperv.c
+> > > +++ b/drivers/pci/host/pci-hyperv.c
+> > > @@ -556,6 +556,26 @@ static void put_pcichild(struct hv_pci_dev
+> > *hv_pcidev,
+> > >  static void get_hvpcibus(struct hv_pcibus_device *hv_pcibus);
+> > >  static void put_hvpcibus(struct hv_pcibus_device *hv_pcibus);
+> > >
+> > > +/*
+> > > + * There is no good way to get notified from vmbus_onoffer_rescind(),
+> > > + * so let's use polling here, since this is not a hot path.
+> > > + */
+> > > +static int wait_for_response(struct hv_device *hdev,
+> > > +			     struct completion *comp)
+> > > +{
+> > > +	while (true) {
+> > > +		if (hdev->channel->rescind) {
+> > > +			dev_warn_once(&hdev->device, "The device is gone.\n");
+> > > +			return -ENODEV;
+> > > +		}
+> > > +
+> > > +		if (wait_for_completion_timeout(comp, HZ / 10))
+> > > +			break;
+> > > +	}
+> > > +
+> > > +	return 0;
+> > 
+> > This is pretty racy, isn't it ? Also, I reckon you should consider the
+> > timeout return value as an error condition unless I am completely
+> > missing the point of what you are doing.
+> > 
+> > Lorenzo
+> 
+> Actually, this is not racy: we only exit the loop when 
+> 1) the channel is rescinded 
+> or
+> 2) the channel is not rescinded, and the event is completed.
+> 
+> wait_for_completion_timeout() returns 0 if timed out: in this case,
+> we keep spinning in the loop every 0.1 second, testing the 2 conditions.
 
-I thought Bjorn added some functions to retrieve this now.
+Yes sorry, you are right, the exit condition is correct, I am waiting for
+maintainers ACK to merge it, I need it as soon as possible if you want
+this to make it for v4.18.
 
+Thanks,
+Lorenzo
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> If the chanel is not rescinded, here we should wait for the event 
+> forever, as the host is supposed to respond to us quickly, and the
+> event will be completed accordingly. This is what the current code
+> does. But, in case the channel is rescinded, we need to exit the loop 
+> immediately with an error return value: this is the only change
+> made by the patch.
+> 
+> Ideally, we should not use this ugly "polling" method, and the
+> rescind-handler, i.e. vmbus_onoffer_rescind(), should notify 
+> wait_for_response(), but as I mentioned, there is no good way
+> to get notified from vmbus_onoffer_rescind(), so I'm proposing
+> this "polling" method: it's simple and it can work correctly,
+> and this is not a hot path.
+> 
+> Thanks,
+> -- Dexuan
