@@ -1,43 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45620 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751920AbeEAK57 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 1 May 2018 06:57:59 -0400
-Date: Tue, 1 May 2018 11:57:55 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Simon Horman <horms@verge.net.au>,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v2 0/5] Add R8A77980 PCIe support & some driver cleanups
-Message-ID: <20180501105754.GC19391@e107981-ln.cambridge.arm.com>
-References: <26e803ca-06b6-28c5-b87c-fc639b322d6f@cogentembedded.com>
- <20180501055553.3zh4ygux7aqvkmvs@verge.net.au>
+Received: from mail-sn1nam02on0124.outbound.protection.outlook.com ([104.47.36.124]:41367
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S966518AbeEYLn3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 May 2018 07:43:29 -0400
+From: Haiyang Zhang <haiyangz@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "'olaf@aepfle.de'" <olaf@aepfle.de>,
+        "'apw@canonical.com'" <apw@canonical.com>,
+        "'jasowang@redhat.com'" <jasowang@redhat.com>
+CC: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'driverdev-devel@linuxdriverproject.org'"
+        <driverdev-devel@linuxdriverproject.org>,
+        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
+        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
+Subject: RE: [PATCH] PCI: hv: Do not wait forever on a device that has
+ disappeared
+Date: Fri, 25 May 2018 11:43:25 +0000
+Message-ID: <BN6PR21MB0161399BFB7B0A7DCBB0691FCA690@BN6PR21MB0161.namprd21.prod.outlook.com>
+References: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+In-Reply-To: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180501055553.3zh4ygux7aqvkmvs@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 01, 2018 at 07:55:53AM +0200, Simon Horman wrote:
-> On Sun, Apr 08, 2018 at 08:57:13PM +0300, Sergei Shtylyov wrote:
-> > Hello!
-> > 
-> > Here's a set of 5 patches against the 'pci/rcar' branch of Lorenzo Pieralisi's
-> > 'pci.git' repo. These are the changes needed for better R-Car gen3 support
-> > (namely for R8A77980 support) plus some PCIe driver re-factoring done in
-> > the process...
-> > 
-> > [1/5] pcie-rcar: poll PHYRDY in rcar_pcie_hw_init()
-> > [2/5] pcie-rcar: remove PHYRDY polling from rcar_pcie_hw_init_h1()
-> > [3/5] pcie-rcar: add R-Car gen3 PHY support
-> > [4/5] pcie-rcar: factor out rcar_pcie_hw_init() call
-> > [5/5] DT: pci: rcar-pci: document R8A77980 bindings
-> 
-> Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
 
-Sergei, would you mind rebasing this series against my pci/rcar
-branch please ? I will apply it then.
 
-Thanks,
-Lorenzo
+> -----Original Message-----
+> From: Dexuan Cui
+> Sent: Wednesday, May 23, 2018 5:12 PM
+> To: 'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>; 'Bjorn Helgaas'
+> <bhelgaas@google.com>; 'linux-pci@vger.kernel.org' <linux-
+> pci@vger.kernel.org>; KY Srinivasan <kys@microsoft.com>; Stephen
+> Hemminger <sthemmin@microsoft.com>; 'olaf@aepfle.de' <olaf@aepfle.de>;
+> 'apw@canonical.com' <apw@canonical.com>; 'jasowang@redhat.com'
+> <jasowang@redhat.com>
+> Cc: 'linux-kernel@vger.kernel.org' <linux-kernel@vger.kernel.org>; 'drive=
+rdev-
+> devel@linuxdriverproject.org' <driverdev-devel@linuxdriverproject.org>;
+> Haiyang Zhang <haiyangz@microsoft.com>; 'vkuznets@redhat.com'
+> <vkuznets@redhat.com>; 'marcelo.cerri@canonical.com'
+> <marcelo.cerri@canonical.com>
+> Subject: [PATCH] PCI: hv: Do not wait forever on a device that has disapp=
+eared
+>=20
+>=20
+> Before the guest finishes the device initialization, the device can be re=
+moved
+> anytime by the host, and after that the host won't respond to the guest's
+> request, so the guest should be prepared to handle this case.
+>=20
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
+> ---
+>  drivers/pci/host/pci-hyperv.c | 46 ++++++++++++++++++++++++++++++++-----=
+--
+> ----
+
+Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+
+Thank you!
