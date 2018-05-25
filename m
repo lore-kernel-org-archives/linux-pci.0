@@ -1,73 +1,63 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 00/10] PCI: leak fixes, removable generic PCI host,
- assorted stuff
-To: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-References: <cover.1525067324.git.jan.kiszka@siemens.com>
- <e15c1cf5-0844-e5f1-d7af-e196207be6d4@mentor.com>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-Message-ID: <cc97108e-f3db-fc0c-3a88-ced7291be617@siemens.com>
-Date: Thu, 3 May 2018 09:52:16 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:57034 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965130AbeEYJft (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 May 2018 05:35:49 -0400
+Date: Fri, 25 May 2018 10:35:41 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Marek Vasut <marek.vasut@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>
+Cc: linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH v4 0/6] PCI: rcar: Failpath fixes
+Message-ID: <20180525093541.GB6507@e107981-ln.cambridge.arm.com>
+References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <e15c1cf5-0844-e5f1-d7af-e196207be6d4@mentor.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- Will Deacon <will.deacon@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey Vladimir,
+Geert, Simon,
 
-On 2018-05-03 09:12, Vladimir Zapolskiy wrote:
-> Hi Jan,
+Can I retain your review tags on this series so that I can queue
+the patches ? I already added them apart from the last patch that
+is new, please let me know asap.
+
+Thanks,
+Lorenzo
+
+On Thu, May 24, 2018 at 04:36:18PM +0200, Marek Vasut wrote:
+> Multiple minor failpath fixes for the R-Car PCIe driver.
 > 
-> On 04/30/2018 08:48 AM, Jan Kiszka wrote:
->> Changes in v2:
->>  - patch 1: commit message reworking as suggested by Lorenzo
->>  - patch 3-6: split-up as suggested by Bjorn
->>  - patch 8: new
->>  - patch 10: select PCI_DOMAINS from PCI_HOST_GENERIC, rather than
->>    allowing manual choice, as suggested by Lorenzo
->>
->> This primarily enables to unbind the generic PCI host controller without
->> leaving lots of memory leaks behind. A previous proposal patch 5 was
->> rejected because of those issues [1].
->>
->> The fixes have been validated in the Jailhouse setup, where we add and
->> remove a virtual PCI host controller on hypervisor activation/
->> deactivation, with the help of kmemleak.
+> V4: Sync up the version numbers
+>     Rebase on top of Lorenzo's tree
+>     Add new patch fixing bug in the PHY code
 > 
-> by chance I was looking into a memleak in of_pci_get_host_bridge_resources(),
-> so I can give you a number of review tags.
-
-Thanks for the reviews and tests! And the pointer for the maintainers to
-the conflict around patch 7.
-
+> Marek Vasut (6):
+>   PCI: rcar: Pull bus clock enable/disable from
+>     rcar_pcie_get_resources()
+>   PCI: rcar: Add missing irq_dispose_mapping() into failpath
+>   PCI: rcar: Teardown MSI setup if rcar_pcie_enable() fails
+>   PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
+>   PCI: rcar: Remove IRQ mappings in rcar_pcie_enable_msi failpath
+>   PCI: rcar: Shut the PHY down in failpath
 > 
-> FWIW the state of unfixably broken https://patchwork.kernel.org/patch/9662893/
-> should be changed to obsoleted/deprecated/rejected.
-
-Indeed.
-
-Jan
-
--- 
-Siemens AG, Corporate Technology, CT RDA IOT SES-DE
-Corporate Competence Center Embedded Linux
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  drivers/pci/host/pcie-rcar.c | 82 +++++++++++++++++++++++++++++++++++---------
+>  1 file changed, 66 insertions(+), 16 deletions(-)
+> 
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> 
+> -- 
+> 2.16.2
+> 
