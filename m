@@ -1,118 +1,129 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v6 01/12] PCI: Take all bridges into account when calculating bus numbers for extension
-Date: Thu, 10 May 2018 21:28:33 +0300
-Message-Id: <20180510182844.77349-2-mika.westerberg@linux.intel.com>
-In-Reply-To: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
-References: <20180510182844.77349-1-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:50610 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S966894AbeEYAbo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 20:31:44 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w4P0U8ls082211
+        for <linux-pci@vger.kernel.org>; Thu, 24 May 2018 20:31:43 -0400
+Received: from e06smtp13.uk.ibm.com (e06smtp13.uk.ibm.com [195.75.94.109])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2j62bb5390-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 24 May 2018 20:31:43 -0400
+Received: from localhost
+        by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <sbobroff@linux.ibm.com>;
+        Fri, 25 May 2018 01:31:41 +0100
+From: Sam Bobroff <sbobroff@linux.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Cc: mpe@ellerman.id.au, bhelgaas@google.com,
+        bryantly@linux.vnet.ibm.com
+Subject: [PATCH v2 1/1] powerpc/pseries: fix EEH recovery of some IOV devices
+Date: Fri, 25 May 2018 10:31:36 +1000
+Message-Id: <7598ffeb48c16c88a34937ad93b18f806222b8df.1527208281.git.sbobroff@linux.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When distributing extra buses between hotplug bridges for future
-extension we currently fail to take into account the fact that there
-might be non-hotplug bridges on the bus after the hotplug bridges. In
-this particular system we have following topology:
+EEH recovery currently fails on pSeries for some IOV capable PCI
+devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
+certain device tree properties for the device. (Found on an IOV
+capable device using the ipr driver.)
 
-  01:00.0 --+- 02:00.0 -- Thunderbolt host controller
-            +- 02:01.0 (HotPlug+)
-            \- 02:02.0 -- xHCI host controller
+Recovery fails in pci_enable_resources() at the check on r->parent,
+because r->flags is set and r->parent is not.  This state is due to
+sriov_init() setting the start, end and flags members of the IOV BARs
+but the parent not being set later in
+pseries_pci_fixup_iov_resources(), because the
+"ibm,open-sriov-vf-bar-info" property is missing.
 
-Now, pci_scan_child_bus_extend() is supposed to distribute remaining bus
-numbers to the hotplug bridge at 02:01.0 but only after all bridges on
-that bus have been been accounted for. Since we don't check upfront that
-there will be another non-hotplug bridge after the hotplug bridge
-02:01.0 it will inadvertently extend over the bus space of the
-non-hotplug bridge:
+Correct this by zeroing the resource flags for IOV BARs when they
+can't be configured.
 
-  pci 0000:01:00.0: PCI bridge to [bus 02-39]
-  ...
-  pci_bus 0000:04: [bus 04-39] extended by 0x35
-  pci_bus 0000:04: bus scan returning with max=39
-  pci_bus 0000:04: busn_res: [bus 04-39] end is updated to 39
-  pci 0000:02:02.0: scanning [bus 00-00] behind bridge, pass 1
-  pci_bus 0000:3a: scanning bus
-  pci_bus 0000:3a: bus scan returning with max=3a
-  pci_bus 0000:3a: busn_res: [bus 3a] end is updated to 3a
-  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
-  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
-  pci_bus 0000:02: bus scan returning with max=3a
-  pci_bus 0000:02: busn_res: [bus 02-39] end can not be updated to 3a
-
-Resulting 'lspci -t' output looks like this:
-
-  +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
-                             ^^   +-01.0-[04-39]--
-                                  \-02.0-[3a]----00.0
-                                          ^^
-The xHCI host controller (3a:00.0) behind downstream bridge at 02:02.0
-is not usable anymore.
-
-To fix this reserve at least one bus for each bridge during scanning of
-already configured bridges. Then we use this information in the second
-scan to correct the available extra bus space for hotplug bridges.
-
-After this change the 'lspci -t' output is what is expected:
-
-  +-1b.0-[01-39]----00.0-[02-39]--+-00.0-[03]----00.0
-                                  +-01.0-[04-38]--
-                                  \-02.0-[39]----00.0
-
-Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
-Reported-by: Mario Limonciello <mario.limonciello@dell.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: stable@vger.kernel.org
+Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
 ---
- drivers/pci/probe.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+Hi,
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac91b6fd0bcd..7c34a2ccb514 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2638,7 +2638,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 	for_each_pci_bridge(dev, bus) {
- 		cmax = max;
- 		max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
--		used_buses += cmax - max;
-+		/*
-+		 * Reserve one bus for each bridge now to avoid
-+		 * extending hotplug bridges too much during the second
-+		 * scan below.
-+		 */
-+		used_buses++;
-+		if (cmax - max > 1)
-+			used_buses += cmax - max - 1;
+This is a fix to allow EEH recovery to succeed in a specific situation,
+which I've tried to explain in the commit message.
+
+As with the RFC version, the IOV BARs are disabled by setting the resource
+flags to 0 but the other fields are now left as-is because that is what is done
+elsewhere (see sriov_init() and __pci_read_base()).
+
+I've also examined the concern raised by Bjorn Helgaas, that VFs could be
+enabled later after the BARs are disabled, and it already seems safe: enabling
+VFs (on pseries) depends on another device tree property,
+"ibm,number-of-configurable-vfs" as well as support for the RTAS function
+"ibm_map_pes". Since these are all part of the hypervisor's support for IOV it
+seems unlikely that we would ever see some of them but not all. (None are
+currently provided by QEMU/KVM.) (Additionally, the ipr driver on which the EEH
+recovery failure was discovered doesn't even seem to have SR-IOV support so it
+certainly can't enable VFs.)
+
+Cheers,
+Sam.
+====== v1 -> v2: ======
+
+Patch 1/1: powerpc/pseries: fix EEH recovery of some IOV devices
+* Moved the BAR disabling code to a function.
+* Also check in pseries_pci_fixup_resources().
+
+====== v1: ======
+
+Patch 1/1: powerpc/pseries: fix EEH recovery of IOV devices
+
+ arch/powerpc/platforms/pseries/setup.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
+
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index b55ad4286dc7..0a9e4243ae1d 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -645,6 +645,15 @@ void of_pci_parse_iov_addrs(struct pci_dev *dev, const int *indexes)
  	}
+ }
  
- 	/* Scan bridges that need to be reconfigured */
-@@ -2661,12 +2668,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 			 * bridges if any.
- 			 */
- 			buses = available_buses / hotplug_bridges;
--			buses = min(buses, available_buses - used_buses);
-+			buses = min(buses, available_buses - used_buses + 1);
- 		}
++static void pseries_disable_sriov_resources(struct pci_dev *pdev)
++{
++	int i;
++
++	pci_warn(pdev, "No hypervisor support for SR-IOV on this device, IOV BARs disabled.\n");
++	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
++		pdev->resource[i + PCI_IOV_RESOURCES].flags = 0;
++}
++
+ static void pseries_pci_fixup_resources(struct pci_dev *pdev)
+ {
+ 	const int *indexes;
+@@ -652,10 +661,10 @@ static void pseries_pci_fixup_resources(struct pci_dev *pdev)
  
- 		cmax = max;
- 		max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
--		used_buses += max - cmax;
-+		/* One bus is already accounted so don't add it again */
-+		if (max - cmax > 1)
-+			used_buses += max - cmax - 1;
- 	}
+ 	/*Firmware must support open sriov otherwise dont configure*/
+ 	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
+-	if (!indexes)
+-		return;
+-	/* Assign the addresses from device tree*/
+-	of_pci_set_vf_bar_size(pdev, indexes);
++	if (indexes)
++		of_pci_set_vf_bar_size(pdev, indexes);
++	else
++		pseries_disable_sriov_resources(pdev);
+ }
  
- 	/*
+ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
+@@ -667,10 +676,10 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
+ 		return;
+ 	/*Firmware must support open sriov otherwise dont configure*/
+ 	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
+-	if (!indexes)
+-		return;
+-	/* Assign the addresses from device tree*/
+-	of_pci_parse_iov_addrs(pdev, indexes);
++	if (indexes)
++		of_pci_parse_iov_addrs(pdev, indexes);
++	else
++		pseries_disable_sriov_resources(pdev);
+ }
+ 
+ static resource_size_t pseries_pci_iov_resource_alignment(struct pci_dev *pdev,
 -- 
-2.17.0
-
+2.16.1.74.g9b0b1f47b
