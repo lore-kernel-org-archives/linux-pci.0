@@ -1,73 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:54416 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750790AbeE3M3o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 May 2018 08:29:44 -0400
-Date: Wed, 30 May 2018 13:29:40 +0100
-From: Stefan Hajnoczi <stefanha@redhat.com>
-To: Tiwei Bie <tiwei.bie@intel.com>
-Cc: mst@redhat.com, bhelgaas@google.com,
-        virtualization@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, virtio-dev@lists.oasis-open.org,
-        linux-pci@vger.kernel.org, dan.daly@intel.com,
-        mark.d.rustad@intel.com, alexander.h.duyck@intel.com,
-        cunming.liang@intel.com, zhihong.wang@intel.com
-Subject: Re: [virtio-dev] [PATCH] virtio_pci: support enabling VFs
-Message-ID: <20180530122940.GI14623@stefanha-x1.localdomain>
-References: <20180530085521.26583-1-tiwei.bie@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 25 May 2018 17:10:24 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
+Message-ID: <20180525221024.GC92995@bhelgaas-glaptop.roam.corp.google.com>
+References: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+ <20180523213249.GD150632@bhelgaas-glaptop.roam.corp.google.com>
+ <61f70fd6-52fd-da07-ce73-303f95132131@codeaurora.org>
+ <20180524183502.GB85822@bhelgaas-glaptop.roam.corp.google.com>
+ <984b9734-244d-04e9-946f-7524f148ff7c@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="cf0hFtnykp6aONGL"
-In-Reply-To: <20180530085521.26583-1-tiwei.bie@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <984b9734-244d-04e9-946f-7524f148ff7c@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: ryan@finnie.org, Kate Stewart <kstewart@linuxfoundation.org>,
+ linux-scsi@vger.kernel.org, Frederick Lawler <fred@fredlawl.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ esc.storagedev@microsemi.com, open list <linux-kernel@vger.kernel.org>,
+ stable@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Thomas Gleixner <tglx@linutronix.de>, Don Brace <don.brace@microsemi.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, May 25, 2018 at 09:30:59AM -0400, Sinan Kaya wrote:
+> On 5/24/2018 2:35 PM, Bjorn Helgaas wrote:
+> > That sounds like a reasonable idea, and it is definitely another can
+> > of worms.  I looked briefly at some of the .shutdown() cases:
+> 
+> should we throw it into 4.18 and see what happens?
 
---cf0hFtnykp6aONGL
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It wouldn't solve this particular problem because hpsa *does* have a
+.shutdown() method.  The problem is that it doesn't work -- it's
+supposed to stop DMA and interrupts but it apparently doesn't.
 
-On Wed, May 30, 2018 at 04:55:21PM +0800, Tiwei Bie wrote:
-> There is a new feature bit allocated in virtio spec to
-> support SR-IOV (Single Root I/O Virtualization):
->=20
-> https://github.com/oasis-tcs/virtio-spec/issues/11
->=20
-> This patch enables the support for this feature bit in
-> virtio driver.
->=20
-> Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
-> ---
-> This patch depends on below proposal:
-> https://lists.oasis-open.org/archives/virtio-dev/201805/msg00154.html
->=20
-> This patch depends on below patch:
-> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=
-=3Dpci/virtualization&id=3D8effc395c2097e258fcedfc02ed4a66d45fb4238
->=20
->  drivers/virtio/virtio_pci_common.c | 20 ++++++++++++++++++++
->  drivers/virtio/virtio_pci_modern.c | 14 ++++++++++++++
->  include/uapi/linux/virtio_config.h |  7 ++++++-
->  3 files changed, 40 insertions(+), 1 deletion(-)
+I think we need to fix hpsa first.
 
-Looks good and matches the virtio spec change, but I'm not familiar with
-PCI SR-IOV details, so not a full Reviewed-by.
-
-Acked-by: Stefan Hajnoczi <stefanha@redhat.com>
-
---cf0hFtnykp6aONGL
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEcBAEBAgAGBQJbDpk0AAoJEJykq7OBq3PI/a8IAMXdX7W1thOJsCpPYJN/TuyS
-wPDyYhx5+Xs35iJreLG2AIQ73SnLOgfdz/OGzHhpe+yAbH3P+JyWjmAPCXXVHDwu
-S01KRyn8xp60ZYqGhAxbCnmynOLGZS69h5PhnQgiQmr85+B/7O2k+6M6RHTKGE0k
-HwcB8kIid3ixIxjMlH9MiC8GKL5H/VWQ/nCwMTl1YRRvzb2e/9vB+JdyJo/+S/Ni
-/YAyP2hYSkbxRaKJM/GPuDkWt5oDsnfGFWyxlihwccTlI7e3eA2fIDxLz+9bIHO6
-NzhcNg/4WC28wenhr+F+jeP8NKtIKnwh+vDs1GSKXa94mj/nvHF3z7Ypcya8PdQ=
-=E2BM
------END PGP SIGNATURE-----
-
---cf0hFtnykp6aONGL--
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
