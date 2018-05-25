@@ -1,53 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:38457 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753037AbeENRck (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 May 2018 13:32:40 -0400
-Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 412201E073A
-        for <linux-pci@vger.kernel.org>; Mon, 14 May 2018 19:32:39 +0200 (CEST)
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com, kishon@ti.com,
-        jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH 1/2] PCI: dwc: artpec6: Use devm_ioremap_resource instead of devm_ioremap
-Date: Mon, 14 May 2018 18:32:34 +0100
-Message-Id: <4dc752242caf078dd2ef22adfab6716aa7365684.1526319075.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1526319075.git.gustavo.pimentel@synopsys.com>
-References: <cover.1526319075.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1526319075.git.gustavo.pimentel@synopsys.com>
-References: <cover.1526319075.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "linux-acpi@vger.kernel.org"
+ <linux-acpi@vger.kernel.org>, "devicetree@vger.kernel.org"
+ <devicetree@vger.kernel.org>, "iommu@lists.linux-foundation.org"
+ <iommu@lists.linux-foundation.org>, "kvm@vger.kernel.org"
+ <kvm@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-14-jean-philippe.brucker@arm.com>
+ <5B0536A3.1000304@huawei.com> <cd13f60d-b282-3804-4ca7-2d34476c597f@arm.com>
+ <5B06B17C.1090809@huawei.com> <205c1729-8026-3efe-c363-d37d7150d622@arm.com>
+From: Xu Zaibo <xuzaibo@huawei.com>
+Message-ID: <5B077765.30703@huawei.com>
+Date: Fri, 25 May 2018 10:39:33 +0800
+MIME-Version: 1.0
+In-Reply-To: <205c1729-8026-3efe-c363-d37d7150d622@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "rgummal@xilinx.com" <rgummal@xilinx.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>,
+ "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This fix aims to replace the use of devm_ioremap() by
-devm_ioremap_resource() already discussed on [1].
+Hi,
 
-[1] -> https://lkml.kernel.org/r/20180120001645.GA21343@lenoch
+On 2018/5/24 23:04, Jean-Philippe Brucker wrote:
+> On 24/05/18 13:35, Xu Zaibo wrote:
+>>> Right, sva_init() must be called once for any device that intends to use
+>>> bind(). For the second process though, group->sva_enabled will be true
+>>> so we won't call sva_init() again, only bind().
+>> Well, while I create mediated devices based on one parent device to support multiple
+>> processes(a new process will create a new 'vfio_group' for the corresponding mediated device,
+>> and 'sva_enabled' cannot work any more), in fact, *sva_init and *sva_shutdown are basically
+>> working on parent device, so, as a result, I just only need sva initiation and shutdown on the
+>> parent device only once. So I change the two as following:
+>>
+>> @@ -551,8 +565,18 @@ int iommu_sva_device_init(struct device *dev, unsigned long features,
+>>        if (features & ~IOMMU_SVA_FEAT_IOPF)
+>>           return -EINVAL;
+>>
+>> +    /* If already exists, do nothing  */
+>> +    mutex_lock(&dev->iommu_param->lock);
+>> +    if (dev->iommu_param->sva_param) {
+>> +        mutex_unlock(&dev->iommu_param->lock);
+>> +        return 0;
+>> +    }
+>> +    mutex_unlock(&dev->iommu_param->lock);
+>>
+>>       if (features & IOMMU_SVA_FEAT_IOPF) {
+>>           ret = iommu_register_device_fault_handler(dev, iommu_queue_iopf,
+>>
+>>
+>> @@ -621,6 +646,14 @@ int iommu_sva_device_shutdown(struct device *dev)
+>>       if (!domain)
+>>           return -ENODEV;
+>>
+>> +    /* If any other process is working on the device, shut down does nothing. */
+>> +    mutex_lock(&dev->iommu_param->lock);
+>> +    if (!list_empty(&dev->iommu_param->sva_param->mm_list)) {
+>> +        mutex_unlock(&dev->iommu_param->lock);
+>> +        return 0;
+>> +    }
+>> +    mutex_unlock(&dev->iommu_param->lock);
+> I don't think iommu-sva.c is the best place for this, it's probably
+> better to implement an intermediate layer (the mediating driver), that
+> calls iommu_sva_device_init() and iommu_sva_device_shutdown() once. Then
+> vfio-pci would still call these functions itself, but for mdev the
+> mediating driver keeps a refcount of groups, and calls device_shutdown()
+> only when freeing the last mdev.
+>
+> A device driver (non mdev in this example) expects to be able to free
+> all its resources after sva_device_shutdown() returns. Imagine the
+> mm_list isn't empty (mm_exit() is running late), and instead of waiting
+> in unbind_dev_all() below, we return 0 immediately. Then the calling
+> driver frees its resources, and the mm_exit callback along with private
+> data passed to bind() disappear. If a mm_exit() is still running in
+> parallel, then it will try to access freed data and corrupt memory. So
+> in this function if mm_list isn't empty, the only thing we can do is wait.
+>
+I still don't understand why we should 'unbind_dev_all', is it possible 
+to do a 'unbind_dev_pasid'?
+Then we can do other things instead of waiting that user may not like. :)
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
----
- drivers/pci/dwc/pcie-artpec6.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Thanks
+Zaibo
+>
+>> +
+>>       __iommu_sva_unbind_dev_all(dev);
+>>
+>>       mutex_lock(&dev->iommu_param->lock);
+>>
+>> I add the above two checkings in both *sva_init and *sva_shutdown, it is working now,
+>> but i don't know if it will cause any new problems. What's more, i doubt if it is
+>> reasonable to check this to avoid repeating operation in VFIO, maybe it is better to check
+>> in IOMMU. :)
+>
+>
+>
+> .
+>
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index e66cede..321b56c 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -463,9 +463,9 @@ static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
- 	ep->ops = &pcie_ep_ops;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
--	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
--	if (!pci->dbi_base2)
--		return -ENOMEM;
-+	pci->dbi_base2 = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(pci->dbi_base2))
-+		return PTR_ERR(pci->dbi_base2);
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
- 	if (!res)
--- 
-2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
