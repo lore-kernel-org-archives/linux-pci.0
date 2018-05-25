@@ -1,332 +1,214 @@
-Return-Path: <SRS0=sGOI=ID=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=sGOI=ID=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=XQSK=IM=redhat.com=ddutile@kernel.org>
+Return-Path: <SRS0=XQSK=IM=redhat.com=ddutile@kernel.org>
+Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ netdev@vger.kernel.org, Sathya Perla <sathya.perla@broadcom.com>,
+ Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+ alexander.duyck@gmail.com, john.fastabend@gmail.com,
+ Jacob Keller <jacob.e.keller@intel.com>, oss-drivers@netronome.com,
+ Christoph Hellwig <hch@infradead.org>
+References: <20180402224652.4058-1-jakub.kicinski@netronome.com>
+ <20180524235748.GD15320@bhelgaas-glaptop.roam.corp.google.com>
+ <20180524182015.1af7b4c9@cakuba>
+ <20180525140223.GA45098@bhelgaas-glaptop.roam.corp.google.com>
+From: Don Dutile <ddutile@redhat.com>
+Message-ID: <88390255-55f7-57a6-5324-d443373d1984@redhat.com>
+Date: Fri, 25 May 2018 15:27:52 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 16 May 2018 18:21:09 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
- <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
- <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
- Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
- <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v16 8/9] PCI/DPC: Unify and plumb error handling into DPC
-In-Reply-To: <20180516105236.GA217390@bhelgaas-glaptop.roam.corp.google.com>
-References: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
- <1526035408-31328-9-git-send-email-poza@codeaurora.org>
- <a497fae20a326bdf67395c907a5b6b0d@codeaurora.org>
- <20180515235632.GB11156@bhelgaas-glaptop.roam.corp.google.com>
- <2ca65f6b38668cfcf553833409ee38e3@codeaurora.org>
- <20180516105236.GA217390@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <d49a07cc1d255e894fb52f0b76bae772@codeaurora.org>
+In-Reply-To: <20180525140223.GA45098@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-16 16:22, Bjorn Helgaas wrote:
-> On Wed, May 16, 2018 at 01:46:25PM +0530, poza@codeaurora.org wrote:
->> On 2018-05-16 05:26, Bjorn Helgaas wrote:
->> > On Fri, May 11, 2018 at 05:22:08PM +0530, poza@codeaurora.org wrote:
->> > > On 2018-05-11 16:13, Oza Pawandeep wrote:
->> > > > DPC driver implements link_reset callback, and calls
->> > > > pci_do_fatal_recovery().
->> > > >
->> > > > Which follows standard path of ERR_FATAL recovery.
->> > > >
->> > > > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> > > >
->> > > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> > > > index 5e8857a..6af7595 100644
->> > > > --- a/drivers/pci/pci.h
->> > > > +++ b/drivers/pci/pci.h
->> > > > @@ -354,7 +354,7 @@ static inline resource_size_t
->> > > > pci_resource_alignment(struct pci_dev *dev,
->> > > >  void pci_enable_acs(struct pci_dev *dev);
->> > > >
->> > > >  /* PCI error reporting and recovery */
->> > > > -void pcie_do_fatal_recovery(struct pci_dev *dev);
->> > > > +void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service);
->> > > >  void pcie_do_nonfatal_recovery(struct pci_dev *dev);
->> > > >
->> > > >  bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
->> > > > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c
->> > > > b/drivers/pci/pcie/aer/aerdrv_core.c
->> > > > index fdfc474..36e622d 100644
->> > > > --- a/drivers/pci/pcie/aer/aerdrv_core.c
->> > > > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->> > > > @@ -254,7 +254,7 @@ static void handle_error_source(struct pcie_device
->> > > > *aerdev,
->> > > >  	} else if (info->severity == AER_NONFATAL)
->> > > >  		pcie_do_nonfatal_recovery(dev);
->> > > >  	else if (info->severity == AER_FATAL)
->> > > > -		pcie_do_fatal_recovery(dev);
->> > > > +		pcie_do_fatal_recovery(dev, PCIE_PORT_SERVICE_AER);
->> > > >  }
->> > > >
->> > > >  #ifdef CONFIG_ACPI_APEI_PCIEAER
->> > > > @@ -321,7 +321,7 @@ static void aer_recover_work_func(struct work_struct
->> > > > *work)
->> > > >  		if (entry.severity == AER_NONFATAL)
->> > > >  			pcie_do_nonfatal_recovery(pdev);
->> > > >  		else if (entry.severity == AER_FATAL)
->> > > > -			pcie_do_fatal_recovery(pdev);
->> > > > +			pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_AER);
->> > > >  		pci_dev_put(pdev);
->> > > >  	}
->> > > >  }
->> > > > diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
->> > > > index 80ec384..5680c13 100644
->> > > > --- a/drivers/pci/pcie/dpc.c
->> > > > +++ b/drivers/pci/pcie/dpc.c
->> > > > @@ -73,29 +73,31 @@ static void dpc_wait_link_inactive(struct dpc_dev
->> > > > *dpc)
->> > > >  	pcie_wait_for_link(pdev, false);
->> > > >  }
->> > > >
->> > > > -static void dpc_work(struct work_struct *work)
->> > > > +static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
->> > > >  {
->> > > > -	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->> > > > -	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
->> > > > -	struct pci_bus *parent = pdev->subordinate;
->> > > > -	u16 cap = dpc->cap_pos, ctl;
->> > > > -
->> > > > -	pci_lock_rescan_remove();
->> > > > -	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
->> > > > -					 bus_list) {
->> > > > -		pci_dev_get(dev);
->> > > > -		pci_dev_set_disconnected(dev, NULL);
->> > > > -		if (pci_has_subordinate(dev))
->> > > > -			pci_walk_bus(dev->subordinate,
->> > > > -				     pci_dev_set_disconnected, NULL);
->> > > > -		pci_stop_and_remove_bus_device(dev);
->> > > > -		pci_dev_put(dev);
->> > > > -	}
->> > > > -	pci_unlock_rescan_remove();
->> > > > -
->> > > > +	struct dpc_dev *dpc;
->> > > > +	struct pcie_device *pciedev;
->> > > > +	struct device *devdpc;
->> > > > +	u16 cap, ctl;
->> > > > +
->> > > > +	/*
->> > > > +	 * DPC disables the Link automatically in hardware, so it has
->> > > > +	 * already been reset by the time we get here.
->> > > > +	 */
->> > > > +
->> > > > +	devdpc = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_DPC);
->> > > > +	pciedev = to_pcie_device(devdpc);
->> > > > +	dpc = get_service_data(pciedev);
->> > > > +	cap = dpc->cap_pos;
->> > > > +
->> > > > +	/*
->> > > > +	 * Waiting until the link is inactive, then clearing DPC
->> > > > +	 * trigger status to allow the port to leave DPC.
->> > > > +	 */
->> > > >  	dpc_wait_link_inactive(dpc);
->> > > > +
->> > > >  	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
->> > > > -		return;
->> > > > +		return PCI_ERS_RESULT_DISCONNECT;
->> > > >  	if (dpc->rp_extensions && dpc->rp_pio_status) {
->> > > >  		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
->> > > >  				       dpc->rp_pio_status);
->> > > > @@ -108,6 +110,17 @@ static void dpc_work(struct work_struct *work)
->> > > >  	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
->> > > >  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
->> > > >  			      ctl | PCI_EXP_DPC_CTL_INT_EN);
->> > > > +
->> > > > +	return PCI_ERS_RESULT_RECOVERED;
->> > > > +}
->> > > > +
->> > > > +static void dpc_work(struct work_struct *work)
->> > > > +{
->> > > > +	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->> > > > +	struct pci_dev *pdev = dpc->dev->port;
->> > > > +
->> > > > +	/* From DPC point of view error is always FATAL. */
->> > > > +	pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_DPC);
->> > > >  }
->> > > >
->> > > >  static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
->> > > > @@ -288,6 +301,7 @@ static struct pcie_port_service_driver dpcdriver = {
->> > > >  	.service	= PCIE_PORT_SERVICE_DPC,
->> > > >  	.probe		= dpc_probe,
->> > > >  	.remove		= dpc_remove,
->> > > > +	.reset_link	= dpc_reset_link,
->> > > >  };
->> > > >
->> > > >  static int __init dpc_service_init(void)
->> > > > diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
->> > > > index 33a16b1..29ff148 100644
->> > > > --- a/drivers/pci/pcie/err.c
->> > > > +++ b/drivers/pci/pcie/err.c
->> > > > @@ -185,7 +185,7 @@ static pci_ers_result_t default_reset_link(struct
->> > > > pci_dev *dev)
->> > > >  	return PCI_ERS_RESULT_RECOVERED;
->> > > >  }
->> > > >
->> > > > -static pci_ers_result_t reset_link(struct pci_dev *dev)
->> > > > +static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
->> > > >  {
->> > > >  	struct pci_dev *udev;
->> > > >  	pci_ers_result_t status;
->> > > > @@ -200,7 +200,7 @@ static pci_ers_result_t reset_link(struct pci_dev
->> > > > *dev)
->> > > >  	}
->> > > >
->> > > >  	/* Use the aer driver of the component firstly */
->> > > > -	driver = pcie_port_find_service(udev, PCIE_PORT_SERVICE_AER);
->> > > > +	driver = pcie_port_find_service(udev, service);
->> > > >
->> > > >  	if (driver && driver->reset_link) {
->> > > >  		status = driver->reset_link(udev);
->> > > > @@ -287,7 +287,7 @@ static pci_ers_result_t
->> > > > broadcast_error_message(struct pci_dev *dev,
->> > > >   * followed by re-enumeration of devices.
->> > > >   */
->> > > >
->> > > > -void pcie_do_fatal_recovery(struct pci_dev *dev)
->> > > > +void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
->> > > >  {
->> > > >  	struct pci_dev *udev;
->> > > >  	struct pci_bus *parent;
->> > > > @@ -313,7 +313,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev)
->> > > >  		pci_dev_put(pdev);
->> > > >  	}
->> > > >
->> > > > -	result = reset_link(udev);
->> > > > +	result = reset_link(udev, service);
->> > > >
->> > > >  	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> > > >  		/*
->> > > > diff --git a/include/linux/aer.h b/include/linux/aer.h
->> > > > index 8f87bbe..0c506fe 100644
->> > > > --- a/include/linux/aer.h
->> > > > +++ b/include/linux/aer.h
->> > > > @@ -14,6 +14,7 @@
->> > > >  #define AER_NONFATAL			0
->> > > >  #define AER_FATAL			1
->> > > >  #define AER_CORRECTABLE			2
->> > > > +#define DPC_FATAL			4
->> >
->> > I think DPC_FATAL can be 3, since these values are not used as a bit
->> > mask.
->> >
->> > > >  struct pci_dev;
->> > >
->> > >
->> > > Hi Bjorn,
->> > >
->> > >
->> > > I have addressed all the comments, and I hope we are heading towards
->> > > closure.
->> > >
->> > > I just figure that pcie_do_fatal_recovery  (which is getting
->> > > executed for
->> > > DPC as well)
->> > >
->> > > if (result == PCI_ERS_RESULT_RECOVERED) {
->> > >                 if (pcie_wait_for_link(udev, true))
->> > >                         pci_rescan_bus(udev->bus);
->> > >                 pci_info(dev, "Device recovery successful\n");
->> > >         }
->> > >
->> > > I have to correct it to
->> > >
->> > > if (service==AER  && result == PCI_ERS_RESULT_RECOVERED) {
->> > >                 if (pcie_wait_for_link(udev, true))
->> > >                         pci_rescan_bus(udev->bus);
->> > >                 pci_info(dev, "Device recovery successful\n");
->> > >         }
->> >
->> > This patch is mostly a restructuring of DPC and doesn't really change
->> > its
->> > behavior.  DPC didn't previously call pcie_wait_for_link() or
->> > pci_rescan_bus(), so I agree that adding the "service==AER" test will
->> > help preserve the existing DPC behavior.
->> >
->> > However, the rescan should happen with DPC *somewhere* and we should
->> > clarify where that is.  Maybe for now we only need a comment about where
->> > that happens.  Ideally, we could eventually converge this so the same
->> > mechanism is used for AER and DPC, so we wouldn't need a test like
->> > "service=AER".
+On 05/25/2018 10:02 AM, Bjorn Helgaas wrote:
+> On Thu, May 24, 2018 at 06:20:15PM -0700, Jakub Kicinski wrote:
+>> Hi Bjorn!
+>>
+>> On Thu, 24 May 2018 18:57:48 -0500, Bjorn Helgaas wrote:
+>>> On Mon, Apr 02, 2018 at 03:46:52PM -0700, Jakub Kicinski wrote:
+>>>> Some user space depends on enabling sriov_totalvfs number of VFs
+>>>> to not fail, e.g.:
+>>>>
+>>>> $ cat .../sriov_totalvfs > .../sriov_numvfs
+>>>>
+>>>> For devices which VF support depends on loaded FW we have the
+>>>> pci_sriov_{g,s}et_totalvfs() API.  However, this API uses 0 as
+>>>> a special "unset" value, meaning drivers can't limit sriov_totalvfs
+>>>> to 0.  Remove the special values completely and simply initialize
+>>>> driver_max_VFs to total_VFs.  Then always use driver_max_VFs.
+>>>> Add a helper for drivers to reset the VF limit back to total.
+>>>
+>>> I still can't really make sense out of the changelog.
+>>>
+>>> I think part of the reason it's confusing is because there are two
+>>> things going on:
+>>>
+>>>    1) You want this:
+>>>    
+>>>         pci_sriov_set_totalvfs(dev, 0);
+>>>         x = pci_sriov_get_totalvfs(dev)
+>>>
+>>>       to return 0 instead of total_VFs.  That seems to connect with
+>>>       your subject line.  It means "sriov_totalvfs" in sysfs could be
+>>>       0, but I don't know how that is useful (I'm sure it is; just
+>>>       educate me :))
+>>
+>> Let me just quote the bug report that got filed on our internal bug
+>> tracker :)
+>>
+>>    When testing Juju Openstack with Ubuntu 18.04, enabling SR-IOV causes
+>>    errors because Juju gets the sriov_totalvfs for SR-IOV-capable device
+>>    then tries to set that as the sriov_numvfs parameter.
+>>
+>>    For SR-IOV incapable FW, the sriov_totalvfs parameter should be 0,
+>>    but it's set to max.  When FW is switched to flower*, the correct
+>>    sriov_totalvfs value is presented.
+>>
+>> * flower is a project name
 > 
-> Please still add a comment here about why the rescan behavior is
-> different.
+>  From the point of view of the PCI core (which knows nothing about
+> device firmware and relies on the architected config space described
+> by the PCIe spec), this sounds like an erratum: with some firmware
+> installed, the device is not capable of SR-IOV, but still advertises
+> an SR-IOV capability with "TotalVFs > 0".
+> 
+> Regardless of whether that's an erratum, we do allow PF drivers to use
+> pci_sriov_set_totalvfs() to limit the number of VFs that may be
+> enabled by writing to the PF's "sriov_numvfs" sysfs file.
+> 
++1.
 
-I am not sure if I understand this comment. AER and DPC will follow the 
-same path.
-if (result == PCI_ERS_RESULT_RECOVERED) {
-               if (pcie_wait_for_link(udev, true))
-                         pci_rescan_bus(udev->bus);
-                  pci_info(dev, "Device recovery successful\n");
-         }
+> But the current implementation does not allow a PF driver to limit VFs
+> to 0, and that does seem nonsensical.
+> 
+Well, not really -- claiming to support VFs, and then wanting it to be 0...
+I could certainly argue is non-sensical.
+ From a sw perspective, sure, see if we can set VFs to 0 (and reset to another value later).
 
-so the above code will execute for both AER and DPC.
-and before re-enumerating both will wait for link to become active.
+/me wishes that implementers would follow the architecture vs torquing it into strange shapes.
 
-Regards,
-Oza.
+>> My understanding is OpenStack uses sriov_totalvfs to determine how many
+>> VFs can be enabled, looks like this is the code:
+>>
+>> http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n464
+>>
+>>>    2) You're adding the pci_sriov_reset_totalvfs() interface.  I'm not
+>>>       sure what you intend for this.  Is *every* driver supposed to
+>>>       call it in .remove()?  Could/should this be done in the core
+>>>       somehow instead of depending on every driver?
+>>
+>> Good question, I was just thinking yesterday we may want to call it
+>> from the core, but I don't think it's strictly necessary nor always
+>> sufficient (we may reload FW without re-probing).
+>>
+>> We have a device which supports different number of VFs based on the FW
+>> loaded.  Some legacy FWs does not inform the driver how many VFs it can
+>> support, because it supports max.  So the flow in our driver is this:
+>>
+>> load_fw(dev);
+>> ...
+>> max_vfs = ask_fw_for_max_vfs(dev);
+>> if (max_vfs >= 0)
+>> 	return pci_sriov_set_totalvfs(dev, max_vfs);
+>> else /* FW didn't tell us, assume max */
+>> 	return pci_sriov_reset_totalvfs(dev);
+>>
+>> We also reset the max on device remove, but that's not strictly
+>> necessary.
+>>
+>> Other users of pci_sriov_set_totalvfs() always know the value to set
+>> the total to (either always get it from FW or it's a constant).
+>>
+>> If you prefer we can work out the correct max for those legacy cases in
+>> the driver as well, although it seemed cleaner to just ask the core,
+>> since it already has total_VFs value handy :)
+>>
+>>> I'm also having a hard time connecting your user-space command example
+>>> with the rest of this.  Maybe it will make more sense to me tomorrow
+>>> after some coffee.
+>>
+>> OpenStack assumes it will always be able to set sriov_numvfs to
+>> sriov_totalvfs, see this 'if':
+>>
+>> http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n512
+> 
+> Thanks for educating me.  I think there are two issues here that we
+> can separate.  I extracted the patch below for the first.
+> 
+> The second is the question of resetting driver_max_VFs.  I think we
+> currently have a general issue in the core:
+> 
+>    - load PF driver 1
+>    - driver calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
+>    - unload PF driver 1
+>    - load PF driver 2
+> 
+> Now driver_max_VFs is still stuck at the lower value set by driver 1.
+> I don't think that's the way this should work.
+> 
+> I guess this is partly a consequence of setting driver_max_VFs in
+> sriov_init(), which is called before driver attach and should only
+um, if it's at sriov_init() how is max changed by a PF driver?
+or am I missing something subtle (a new sysfs param) as to what is being changed?
 
-> 
->> I am sorry I pasted the wrong snippet.
->> following needs to be fixed in v17.
->> from:
->>    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->>                 /*
->>                  * If the error is reported by a bridge, we think this 
->> error
->>                  * is related to the downstream link of the bridge, so 
->> we
->>                  * do error recovery on all subordinates of the bridge
->> instead
->>                  * of the bridge and clear the error status of the 
->> bridge.
->>                  */
->>                 pci_walk_bus(dev->subordinate, report_resume, 
->> &result_data);
->>                 pci_cleanup_aer_uncorrect_error_status(dev);
->>         }
->> 
->> 
->> to
->> 
->>    if (service==AER  && dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->>                 /*
->>                  * If the error is reported by a bridge, we think this 
->> error
->>                  * is related to the downstream link of the bridge, so 
->> we
->>                  * do error recovery on all subordinates of the bridge
->> instead
->>                  * of the bridge and clear the error status of the 
->> bridge.
->>                  */
->>                 pci_walk_bus(dev->subordinate, report_resume, 
->> &result_data);
->>                 pci_cleanup_aer_uncorrect_error_status(dev);
->>         }
->> 
->> this is only needed in case of AER.
-> 
-> Oh, I missed this before.  It makes sense to clear the AER status
-> here, but why do we need to call report_resume()?  We just called all
-> the driver .remove() methods and detached the drivers from the
-> devices.  So I don't think report_resume() will do anything
-> ("dev->driver" should be NULL) except set the dev->error_state to
-> pci_channel_io_normal.  We probably don't need that because we didn't
-> change error_state in this fatal error path.
-> 
->> by the way I can not find pci/oza-v16 branch when I cloned
->>  git clone
->> https://kernel.googlesource.com/pub/scm/linux/kernel/git/helgaas/pci
-> 
-> Sorry, I must have forgotten to push it.  It's there now at
+> depend on hardware characteristics, so it is related to the patch
+> below.  But I think we should fix it in general, not just for
+> netronome.
 > 
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/oza-v16
+> commit 4a338bc6f94b9ad824ac944f5dfc249d6838719c
+> Author: Jakub Kicinski <jakub.kicinski@netronome.com>
+> Date:   Fri May 25 08:18:34 2018 -0500
 > 
-> I don't know anything about the googlesource mirror, so I don't know
-> when it will get there.
+>      PCI/IOV: Allow PF drivers to limit total_VFs to 0
+>      
+>      Some SR-IOV PF drivers implement .sriov_configure(), which allows
+>      user-space to enable VFs by writing the desired number of VFs to the sysfs
+>      "sriov_numvfs" file (see sriov_numvfs_store()).
+>      
+>      The PCI core limits the number of VFs to the TotalVFs advertised by the
+>      device in its SR-IOV capability.  The PF driver can limit the number of VFs
+>      to even fewer (it may have pre-allocated data structures or knowledge of
+>      device limitations) by calling pci_sriov_set_totalvfs(), but previously it
+>      could not limit the VFs to 0.
+>      
+>      Change pci_sriov_get_totalvfs() so it always respects the VF limit imposed
+>      by the PF driver, even if the limit is 0.
+>      
+>      This sequence:
+>      
+>        pci_sriov_set_totalvfs(dev, 0);
+>        x = pci_sriov_get_totalvfs(dev);
+>      
+>      previously set "x" to TotalVFs from the SR-IOV capability.  Now it will set
+>      "x" to 0.
+>      
+>      Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 192b82898a38..d0d73dbbd5ca 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -469,6 +469,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>   	iov->nres = nres;
+>   	iov->ctrl = ctrl;
+>   	iov->total_VFs = total;
+> +	iov->driver_max_VFs = total;
+>   	pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_device);
+>   	iov->pgsz = pgsz;
+>   	iov->self = dev;
+> @@ -827,10 +828,7 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>   	if (!dev->is_physfn)
+>   		return 0;
+>   
+> -	if (dev->sriov->driver_max_VFs)
+> -		return dev->sriov->driver_max_VFs;
+> -
+> -	return dev->sriov->total_VFs;
+> +	return dev->sriov->driver_max_VFs;
+>   }
+>   EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+>   
+> 
