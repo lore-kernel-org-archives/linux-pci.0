@@ -1,98 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:36490 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S967292AbeEYQnU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 May 2018 12:43:20 -0400
+Date: Fri, 25 May 2018 17:43:13 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH v4 0/6] PCI: rcar: Failpath fixes
+Message-ID: <20180525164313.GA13284@e107981-ln.cambridge.arm.com>
+References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
 MIME-Version: 1.0
-References: <bug-199879-41252@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-199879-41252@https.bugzilla.kernel.org/>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 30 May 2018 07:41:35 -0700
-Message-ID: <CAErSpo5U9D5kmYix2SbcJH_mW8urpmZcgN6Zh=FbGtLch+ACuA@mail.gmail.com>
-Subject: Fwd: [Bug 199879] New: Very basic the Pci device is not resumed from
- suspend mode
-To: linux-pci@vger.kernel.org
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PM list <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci, linux-kernel, linux-pm]
+On Thu, May 24, 2018 at 04:36:18PM +0200, Marek Vasut wrote:
+> Multiple minor failpath fixes for the R-Car PCIe driver.
+> 
+> V4: Sync up the version numbers
+>     Rebase on top of Lorenzo's tree
+>     Add new patch fixing bug in the PHY code
+> 
+> Marek Vasut (6):
+>   PCI: rcar: Pull bus clock enable/disable from
+>     rcar_pcie_get_resources()
+>   PCI: rcar: Add missing irq_dispose_mapping() into failpath
+>   PCI: rcar: Teardown MSI setup if rcar_pcie_enable() fails
+>   PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
+>   PCI: rcar: Remove IRQ mappings in rcar_pcie_enable_msi failpath
+>   PCI: rcar: Shut the PHY down in failpath
+> 
+>  drivers/pci/host/pcie-rcar.c | 82 +++++++++++++++++++++++++++++++++++---------
+>  1 file changed, 66 insertions(+), 16 deletions(-)
 
-I'm not sure I understand the problem yet, so please correct me if I'm wrong:
+Marek,
 
-  - Your system has both Nvidia and Intel graphics devices
+I have applied patches [1-5] to pci/rcar for v4.18, I could not
+apply patch 6 since it is missing Simon's ACK (please have a look
+at what I queued to check it is OK).
 
-  - When you use Intel graphics, lspci, lshw, and /proc/bus/pci for
-the Nvidia device show invalid data (0xff) after suspend/resume
+Bjorn will be merging the branch into -next shortly, I do not know if
+there is room for adding additional patches on top of it, as I mentioned
+on linux-pci I will be offline for two weeks so it is possible that
+what's in pci/rcar at present will be what gets into v4.18, apologies,
+that's all I can do.
 
-  - When you use Nvidia graphics, suspend/resume doesn't work (instead
-of resuming, you just get a blank screen)
+Lorenzo
 
-Can you attach the output of "sudo lspci -vv" to the bugzilla, please?
-
----------- Forwarded message ---------
-From: <bugzilla-daemon@bugzilla.kernel.org>
-Date: Tue, May 29, 2018 at 1:29 PM
-Subject: [Bug 199879] New: Very basic the Pci device is not resumed
-from suspend mode
-To: <bhelgaas@google.com>
-
-
-https://bugzilla.kernel.org/show_bug.cgi?id=199879
-
-            Bug ID: 199879
-           Summary: Very basic the Pci device is not resumed from suspend
-                    mode
-           Product: Drivers
-           Version: 2.5
-    Kernel Version: kernel-4.15.17
-          Hardware: x86-64
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: high
-          Priority: P1
-         Component: PCI
-          Assignee: drivers_pci@kernel-bugs.osdl.org
-          Reporter: uzg@wp.pl
-        Regression: No
-
-Hi, I have problem with very basic device. Device pci-e not resume from
-suspend. Only sleep.
-
-I have a problem with anyone interested in it, because everyone thinks it is
-the fault of the device drivers themselves. But this is not a problem.
-
-This device is a basic device. I've already installed drivers on various
-hardware and it has always been ok, but not this time.
-
-I'm an electronics technician. After diagnosing what I managed, in my opinion
-the device remains asleep.
-
-Where does my application come from?
-I have multiuser mode and I do not use this device. After suspend lspci and
-lshw show normal data. Normal data is in /proc/bus/pci/...
-Next suspend and resume, and...
-lspci see hardware, but is error
-lshw see hardware as undefined device
-data in /proc/bus/pci/... is only 0xFF
-Hardware sleep, not work, not ready. This is bug.
-
-But since the problem concerns the graphics card in the configuration with the
-second default Intel card, everyone thinks that this is another driver problem
-as always and nobody wants to take a look at it :(
-
-The problem is easy to recognize. On the internet, I've seen a lot of
-unresolved problems in which I could see exactly what I found.
-
-My hardware is Lenovo with NVidia and Intel Graphics. Problem is with NVidia. I
-tested Z710 and Z50-70. The first symptom of the problem is lspci in multiuser
-mode (or when is XServer with intel graphics). After suspend NVidia have e.g
-"rev. A1", after resume is "rev. FF". Next symptom lshw and /proc/bus/pci/...
-When system started with normal NVidia driver, system not resume and halt, only
-black screen.
-
-There are many examples on the Internet with unsolved problems e.g
-https://www.lwks.com/index.php?option=com_kunena&func=view&catid=21&id=124374&Itemid=81
-
---
-You are receiving this mail because:
-You are watching the assignee of the bug.
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> 
+> -- 
+> 2.16.2
+> 
