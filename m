@@ -1,69 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:39204 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933801AbeEWR6l (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 13:58:41 -0400
-Received: by mail-pl0-f67.google.com with SMTP id c19-v6so13481709pls.6
-        for <linux-pci@vger.kernel.org>; Wed, 23 May 2018 10:58:41 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rajat Jain <rajatja@google.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Kyle McMartin <jkkm@fb.com>
-Cc: rajatxjain@gmail.com
-Subject: [PATCH v2 0/5] Expose PCIe AER stats via sysfs
-Date: Wed, 23 May 2018 10:58:03 -0700
-Message-Id: <20180523175808.28030-1-rajatja@google.com>
-In-Reply-To: <20180522222805.80314-1-rajatja@google.com>
-References: <20180522222805.80314-1-rajatja@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=dahA=IM=netronome.com=jakub.kicinski@kernel.org>
+Return-Path: <SRS0=dahA=IM=netronome.com=jakub.kicinski@kernel.org>
+Date: Thu, 24 May 2018 18:20:15 -0700
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ netdev@vger.kernel.org, Sathya Perla <sathya.perla@broadcom.com>, Felix
+ Manlunas <felix.manlunas@caviumnetworks.com>, alexander.duyck@gmail.com,
+ john.fastabend@gmail.com, Jacob Keller <jacob.e.keller@intel.com>, Donald
+ Dutile <ddutile@redhat.com>, oss-drivers@netronome.com, Christoph Hellwig
+ <hch@infradead.org>
+Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
+Message-ID: <20180524182015.1af7b4c9@cakuba>
+In-Reply-To: <20180524235748.GD15320@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180402224652.4058-1-jakub.kicinski@netronome.com>
+	<20180524235748.GD15320@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset exposes the AER stats via the sysfs attributes.
+Hi Bjorn!
 
-Patchset v2 has minor changes to v1 based on the review comments,
-no functional change.
-Primarily:
- * Fix license header
- * Use tabs instead of spaces
- * Remove use on unlikely() etc
- * Move documentation to Documentation/ABI/
+On Thu, 24 May 2018 18:57:48 -0500, Bjorn Helgaas wrote:
+> On Mon, Apr 02, 2018 at 03:46:52PM -0700, Jakub Kicinski wrote:
+> > Some user space depends on enabling sriov_totalvfs number of VFs
+> > to not fail, e.g.:
+> > 
+> > $ cat .../sriov_totalvfs > .../sriov_numvfs
+> > 
+> > For devices which VF support depends on loaded FW we have the
+> > pci_sriov_{g,s}et_totalvfs() API.  However, this API uses 0 as
+> > a special "unset" value, meaning drivers can't limit sriov_totalvfs
+> > to 0.  Remove the special values completely and simply initialize
+> > driver_max_VFs to total_VFs.  Then always use driver_max_VFs.
+> > Add a helper for drivers to reset the VF limit back to total.  
+> 
+> I still can't really make sense out of the changelog.
+>
+> I think part of the reason it's confusing is because there are two
+> things going on:
+> 
+>   1) You want this:
+>   
+>        pci_sriov_set_totalvfs(dev, 0);
+>        x = pci_sriov_get_totalvfs(dev) 
+> 
+>      to return 0 instead of total_VFs.  That seems to connect with
+>      your subject line.  It means "sriov_totalvfs" in sysfs could be
+>      0, but I don't know how that is useful (I'm sure it is; just
+>      educate me :))
 
-Rajat Jain (5):
-  PCI/AER: Define and allocate aer_stats structure for AER capable
-    devices
-  PCI/AER: Add sysfs stats for AER capable devices
-  PCI/AER: Add sysfs attributes to provide breakdown of AERs
-  PCI/AER: Add sysfs attributes for rootport cumulative stats
-  Documentation/ABI: Add details of PCI AER statistics
+Let me just quote the bug report that got filed on our internal bug
+tracker :)
 
- .../testing/sysfs-bus-pci-devices-aer_stats   | 103 ++++++++++
- Documentation/PCI/pcieaer-howto.txt           |   5 +
- drivers/pci/pci-sysfs.c                       |   3 +
- drivers/pci/pci.h                             |   4 +-
- drivers/pci/pcie/aer/Makefile                 |   2 +-
- drivers/pci/pcie/aer/aerdrv.h                 |  15 ++
- drivers/pci/pcie/aer/aerdrv_core.c            |  11 +
- drivers/pci/pcie/aer/aerdrv_errprint.c        |   7 +-
- drivers/pci/pcie/aer/aerdrv_stats.c           | 192 ++++++++++++++++++
- drivers/pci/probe.c                           |   1 +
- include/linux/pci.h                           |   3 +
- 11 files changed, 342 insertions(+), 4 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
- create mode 100644 drivers/pci/pcie/aer/aerdrv_stats.c
+  When testing Juju Openstack with Ubuntu 18.04, enabling SR-IOV causes
+  errors because Juju gets the sriov_totalvfs for SR-IOV-capable device
+  then tries to set that as the sriov_numvfs parameter.
 
--- 
-2.17.0.441.gb46fe60e1d-goog
+  For SR-IOV incapable FW, the sriov_totalvfs parameter should be 0, 
+  but it's set to max.  When FW is switched to flower*, the correct 
+  sriov_totalvfs value is presented.
+
+* flower is a project name
+
+My understanding is OpenStack uses sriov_totalvfs to determine how many
+VFs can be enabled, looks like this is the code:
+
+http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n464
+
+>   2) You're adding the pci_sriov_reset_totalvfs() interface.  I'm not
+>      sure what you intend for this.  Is *every* driver supposed to
+>      call it in .remove()?  Could/should this be done in the core
+>      somehow instead of depending on every driver?
+
+Good question, I was just thinking yesterday we may want to call it
+from the core, but I don't think it's strictly necessary nor always
+sufficient (we may reload FW without re-probing).
+
+We have a device which supports different number of VFs based on the FW
+loaded.  Some legacy FWs does not inform the driver how many VFs it can
+support, because it supports max.  So the flow in our driver is this:
+
+load_fw(dev);
+...
+max_vfs = ask_fw_for_max_vfs(dev);
+if (max_vfs >= 0)
+	return pci_sriov_set_totalvfs(dev, max_vfs);
+else /* FW didn't tell us, assume max */
+	return pci_sriov_reset_totalvfs(dev); 
+
+We also reset the max on device remove, but that's not strictly
+necessary.
+
+Other users of pci_sriov_set_totalvfs() always know the value to set
+the total to (either always get it from FW or it's a constant).
+
+If you prefer we can work out the correct max for those legacy cases in
+the driver as well, although it seemed cleaner to just ask the core,
+since it already has total_VFs value handy :)
+
+> I'm also having a hard time connecting your user-space command example
+> with the rest of this.  Maybe it will make more sense to me tomorrow
+> after some coffee.
+
+OpenStack assumes it will always be able to set sriov_numvfs to
+sriov_totalvfs, see this 'if':
+
+http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n512
+
+I tried to morph that into an concise bash command, but clearly failed.
+Sorry about the lack of clarity! :(
