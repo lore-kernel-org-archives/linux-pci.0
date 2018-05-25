@@ -1,216 +1,199 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 3 May 2018 17:31:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gilles Buloz <Gilles.Buloz@kontron.com>
-Subject: [PATCH] PCI: Check whether bridges allow access to extended config
- space
-Message-ID: <20180503223127.GB15790@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180427165627.GA8199@bhelgaas-glaptop.roam.corp.google.com>
- <5AE6D7E2.9030506@kontron.com> <5AE71BF4.2010200@kontron.com>
- <20180430170447.GA95643@bhelgaas-glaptop.roam.corp.google.com>
- <5AE75809.30701@kontron.com> <5AE9B5BB.2080003@kontron.com>
- <20180502132501.GE11698@bhelgaas-glaptop.roam.corp.google.com>
- <5AE9C1AB.8020403@kontron.com>
- <20180502172341.GA123831@bhelgaas-glaptop.roam.corp.google.com>
- <5AEB033A.4060407@kontron.com>
+Return-Path: <SRS0=pkZX=IM=google.com=rajatja@kernel.org>
+Return-Path: <SRS0=pkZX=IM=google.com=rajatja@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <5AEB033A.4060407@kontron.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- linux-pci <linux-pci@vger.kernel.org>, linux-kernel@vger.kernel.org,
- "Minghuan.Lian@nxp.com" <Minghuan.Lian@nxp.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CACK8Z6HzmqP0MMs9WQ1kNyTPxdbd0Hf=cbfmvji5-2BheZ1vyw@mail.gmail.com>
+References: <20180516013333.135259-1-rajatja@google.com> <20180524223751.GC15320@bhelgaas-glaptop.roam.corp.google.com>
+ <CACK8Z6E6g=+T04qDUXhQrhHr1y5O05yHbjTuLM7oxnn1XJpBmw@mail.gmail.com>
+ <20180525183049.GB63280@bhelgaas-glaptop.roam.corp.google.com> <CACK8Z6HzmqP0MMs9WQ1kNyTPxdbd0Hf=cbfmvji5-2BheZ1vyw@mail.gmail.com>
+From: Rajat Jain <rajatja@google.com>
+Date: Fri, 25 May 2018 11:38:55 -0700
+Message-ID: <CACK8Z6GYaKVRWCb5Ei8m7qZmF6_QJi4JPJ-86Y_MKbHgY+yNXw@mail.gmail.com>
+Subject: Re: [PATCH] lspci: Indicate if the OS / kernel go out-of-sync on BAR
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Martin Mares <mj@ucw.cz>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc LKML]
+Sorry, if it was not obvious, I'd like to self NAK this patch. Thanks.
 
-On Thu, May 03, 2018 at 12:40:27PM +0000, Gilles Buloz wrote:
-> Subject:    [PATCH] For exception at PCI probe due to bridge reporting UR
-> 
-> Even if a device supports extended config access, no such access must be
-> done to this device If there's a bridge not supporting that in the path
-> to this device. Doing such access with UR reporting enabled on the root
-> bridge leads to an exception.
-> 
-> This is the case on a LS1043A CPU (NXP QorIQ Layerscape) platform with
-> the following bus topology :
->   LS1043 PCIe root
->     -> PEX8112 PCIe-to-PCI bridge (not supporting ext cfg on PCI side)
->       -> PMC slot connector (for legacy PMC modules)
-> With a PMC module topology as follows :
->   PMC connector
->     -> PCI-to-PCIe bridge
->       -> PCIe switch (4 ports)
->         -> 4 PCIe devices (one on each port)
-> In this case all devices behind the PEX8112 are supporting extended config
-> access but this is prohibited by the PEX8112. Without this patch, an
-> exception (synchronous abort) occurs in pci_cfg_space_size_ext().
-> 
-> This patch checks the parent bridge of each allocated child bus to know if
-> extended config access is supported on the child bus, and sets a flag in
-> child->bus_flags if not supported. This  flag is inherited by all children
-> buses of this child bus and then is checked to avoid this unsupported
-> accesses to every device on these buses.
-
-Hi Gilles,
-
-Thanks for the patch!  I reworked it a little bit to simplify the code
-in pci_alloc_child_bus().  Can you test it and make sure I didn't
-break anything?
-
-
-commit cbaaa85b558a8f974e301fa0364d568efaf491ce
-Author: Gilles Buloz <Gilles.Buloz@kontron.com>
-Date:   Thu May 3 15:21:44 2018 -0500
-
-    PCI: Check whether bridges allow access to extended config space
-    
-    Even if a device supports extended config space, i.e., it is a PCI-X Mode 2
-    or a PCI Express device, the extended space may not be accessible if
-    there's a conventional PCI bus in the path to it.
-    
-    We currently figure that out in pci_cfg_space_size() by reading the first
-    dword of extended config space.  On most platforms that returns ~0 data if
-    the space is inaccessible, but it may set error bits in PCI status
-    registers, and on some platforms it causes exceptions that we currently
-    don't recover from.
-    
-    For example, a PCIe-to-conventional PCI bridge treats config transactions
-    with a non-zero Extended Register Address as an Unsupported Request on PCIe
-    and a received Master-Abort on the destination bus (see PCI Express to
-    PCI/PCI-X Bridge spec, r1.0, sec 4.1.3).
-    
-    A sample case is a LS1043A CPU (NXP QorIQ Layerscape) platform with the
-    following bus topology:
-    
-      LS1043 PCIe Root Port
-        -> PEX8112 PCIe-to-PCI bridge (doesn't support ext cfg on PCI side)
-          -> PMC slot connector (for legacy PMC modules)
-    
-    With a PMC module topology as follows:
-    
-      PMC connector
-        -> PCI-to-PCIe bridge
-          -> PCIe switch (4 ports)
-            -> 4 PCIe devices (one on each port)
-    
-    The PCIe devices on the PMC module support extended config space, but we
-    can't reach it because the PEX8112 can't generate accesses to the extended
-    space on its secondary bus.  Attempts to access it cause Unsupported
-    Request errors, which result in synchronous aborts on this platform.
-    
-    To avoid these errors, check whether bridges are capable of generating
-    extended config space addresses on their secondary interfaces.  If they
-    can't, we restrict devices below the bridge to only the 256-byte
-    PCI-compatible config space.
-    
-    Signed-off-by: Gilles Buloz <gilles.buloz@kontron.com>
-    [bhelgaas: changelog, rework patch so bus_flags testing is all in
-    pci_bridge_child_ext_cfg_accessible()]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac91b6fd0bcd..7b1b7b2e01e4 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -882,6 +882,45 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
- 	return err;
- }
- 
-+static bool pci_bridge_child_ext_cfg_accessible(struct pci_dev *bridge)
-+{
-+	int pos;
-+	u32 status;
-+
-+	/*
-+	 * If extended config space isn't accessible on a bridge's primary
-+	 * bus, we certainly can't access it on the secondary bus.
-+	 */
-+	if (bridge->bus->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG)
-+		return false;
-+
-+	/*
-+	 * PCIe Root Ports and switch ports are PCIe on both sides, so if
-+	 * extended config space is accessible on the primary, it's also
-+	 * accessible on the secondary.
-+	 */
-+	if (pci_is_pcie(bridge) &&
-+	    (pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT ||
-+	     pci_pcie_type(bridge) == PCI_EXP_TYPE_UPSTREAM ||
-+	     pci_pcie_type(bridge) == PCI_EXP_TYPE_DOWNSTREAM))
-+		return true;
-+
-+	/*
-+	 * For the other bridge types:
-+	 *   - PCI-to-PCI bridges
-+	 *   - PCIe-to-PCI/PCI-X forward bridges
-+	 *   - PCI/PCI-X-to-PCIe reverse bridges
-+	 * extended config space on the secondary side is only accessible
-+	 * if the bridge supports PCI-X Mode 2.
-+	 */
-+	pos = pci_find_capability(bridge, PCI_CAP_ID_PCIX);
-+	if (!pos)
-+		return false;
-+
-+	pci_read_config_dword(bridge, pos + PCI_X_STATUS, &status);
-+	return status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ);
-+}
-+
- static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 					   struct pci_dev *bridge, int busnr)
- {
-@@ -923,6 +962,16 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	pci_set_bus_of_node(child);
- 	pci_set_bus_speed(child);
- 
-+	/*
-+	 * Check whether extended config space is accessible on the child
-+	 * bus.  Note that we currently assume it is always accessible on
-+	 * the root bus.
-+	 */
-+	if (!pci_bridge_child_ext_cfg_accessible(bridge)) {
-+		child->bus_flags |= PCI_BUS_FLAGS_NO_EXTCFG;
-+		pci_info(child, "extended config space not accessible on secondary bus\n");
-+	}
-+
- 	/* Set up default resource pointers and names */
- 	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
- 		child->resource[i] = &bridge->resource[PCI_BRIDGE_RESOURCES+i];
-@@ -1393,6 +1442,9 @@ int pci_cfg_space_size(struct pci_dev *dev)
- 	u32 status;
- 	u16 class;
- 
-+	if (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_EXTCFG)
-+		return PCI_CFG_SPACE_SIZE;
-+
- 	class = dev->class >> 8;
- 	if (class == PCI_CLASS_BRIDGE_HOST)
- 		return pci_cfg_space_size_ext(dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 230615620a4a..f7aa6d9f8999 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -217,6 +217,7 @@ enum pci_bus_flags {
- 	PCI_BUS_FLAGS_NO_MSI	= (__force pci_bus_flags_t) 1,
- 	PCI_BUS_FLAGS_NO_MMRBC	= (__force pci_bus_flags_t) 2,
- 	PCI_BUS_FLAGS_NO_AERSID	= (__force pci_bus_flags_t) 4,
-+	PCI_BUS_FLAGS_NO_EXTCFG	= (__force pci_bus_flags_t) 8,
- };
- 
- /* Values from Link Status register, PCIe r3.1, sec 7.8.8 */
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On Fri, May 25, 2018 at 11:38 AM, Rajat Jain <rajatja@google.com> wrote:
+> On Fri, May 25, 2018 at 11:30 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> On Fri, May 25, 2018 at 09:57:59AM -0700, Rajat Jain wrote:
+>>> On Thu, May 24, 2018 at 3:37 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>> > On Tue, May 15, 2018 at 06:33:33PM -0700, Rajat Jain wrote:
+>>> >> If the OS and device are reporting different BAR(s), currently
+>>> >> the lspci will happily show the OS version with no indication what
+>>> >> so ever that there is a problem. This is not correct in my opinion
+>>> >> because lspci is often used to debug devices, so should either show
+>>> >> the BAR reported by the device, or atleast an indication of
+>>> >> out-of-sync.
+>>> >>
+>>> >> I spent a lot of time debugging a PCI device that would unexpectedly
+>>> >> clear out the BAR register due to some bug, and it was quite later
+>>> >> I realized that the lspci is showing me the OS version. So fix that.
+>>> >
+>>> > I assume (hope) that "lspci -b" would show you the hardware values.
+>>> > Of course, who would think to use that when you're debugging a
+>>> > problem.  So that's not really a solution to the problem you faced.
+>>> >
+>>> >> On a system that is in problem state:
+>>> >>
+>>> >> localhost ~ # setpci -s 1:0.0 0x10.l
+>>> >> 00000004  <=== BAR is zeroed out
+>>> >> localhost ~ #
+>>> >>
+>>> >> Before:
+>>> >>
+>>> >> localhost ~ # lspci -v -s 1:0.0
+>>> >> 01:00.0 Network controller: Intel Corporation Wireless 7265 (rev 59)
+>>> >>         Subsystem: Intel Corporation Dual Band Wireless-AC 7265
+>>> >>         Flags: bus master, fast devsel, latency 0, IRQ 275
+>>> >>         Memory at d1400000 (64-bit, non-prefetchable) [size=8K]
+>>> >>         Capabilities: [c8] Power Management version 3
+>>> >>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>>> >>         Capabilities: [40] Express Endpoint, MSI 00
+>>> >>         Capabilities: [100] Advanced Error Reporting
+>>> >>         Capabilities: [140] Device Serial Number b4-d5-bd-ff-ff-c8-a1-6d
+>>> >>         Capabilities: [14c] Latency Tolerance Reporting
+>>> >>         Capabilities: [154] L1 PM Substates
+>>> >>         Kernel driver in use: iwlwifi
+>>> >>         Kernel modules: iwlwifi
+>>> >>
+>>> >> After:
+>>> >>
+>>> >> localhost ~ # lspci -v -s 1:0.0
+>>> >> 01:00.0 Network controller: Device 8086:095a (rev 59)
+>>> >>         Subsystem: Device 8086:5010
+>>> >>         Flags: bus master, fast devsel, latency 0, IRQ 275
+>>> >>         [out-of-sync] Memory at d1400000 (64-bit, non-prefetchable) [size=8K]
+>>> >>         Capabilities: [c8] Power Management version 3
+>>> >>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>>> >>         Capabilities: [40] Express Endpoint, MSI 00
+>>> >>         Capabilities: [100] Advanced Error Reporting
+>>> >>         Capabilities: [140] Device Serial Number b4-d5-bd-ff-ff-c8-a1-6d
+>>> >>         Capabilities: [14c] Latency Tolerance Reporting
+>>> >>         Capabilities: [154] L1 PM Substates
+>>> >>         Kernel driver in use: iwlwifi
+>>> >>         Kernel modules: iwlwifi
+>>> >
+>>> > I've never been quite clear on the path from hardware BAR value to
+>>> > lspci output.  On my system,
+>>> >
+>>> >   $ strace -e trace=open lspci -vs00:14.0 2>&1 | grep 00:14.0
+>>> >
+>>> > suggests that lspci reads these:
+>>> >
+>>> >   /sys/bus/pci/.../resource and
+>>> >   /sys/bus/pci/.../config
+>>> >
+>>> > "resource" uses resource_show(), where we use the result of
+>>> > pci_resource_to_user() on the resources in the struct pci_dev, so
+>>> > these are basically cached and may be out of date with respect to the
+>>> > hardware.
+>>> >
+>>> > "config" uses pci_read_config(), where we ultimately call the config
+>>> > accessors, which should give us the actual values from the hardware
+>>> > BARs.
+>>> >
+>>> >> Signed-off-by: Rajat Jain <rajatja@google.com>
+>>> >> ---
+>>> >>  lspci.c | 18 ++++++++++++++++++
+>>> >>  1 file changed, 18 insertions(+)
+>>> >>
+>>> >> diff --git a/lspci.c b/lspci.c
+>>> >> index 748452c..81c65f3 100644
+>>> >> --- a/lspci.c
+>>> >> +++ b/lspci.c
+>>> >> @@ -371,6 +371,20 @@ show_range(char *prefix, u64 base, u64 limit, int is_64bit)
+>>> >>    putchar('\n');
+>>> >>  }
+>>> >>
+>>> >> +static pciaddr_t
+>>> >> +bar_value(struct device *d, int i, u32 flg)
+>>> >> +{
+>>> >> +  pciaddr_t val = 0;
+>>> >> +
+>>> >> +  /* Read higher order 32 bits if it's a 64 bit bar in memory space */
+>>> >> +  if (i < 5 && !(flg & PCI_BASE_ADDRESS_SPACE_IO) &&
+>>> >> +      (flg & PCI_BASE_ADDRESS_MEM_TYPE_MASK == PCI_BASE_ADDRESS_MEM_TYPE_64))
+>>> >> +      val = get_conf_long(d, PCI_BASE_ADDRESS_0 + 4 * (i + 1));
+>>> >> +
+>>> >> +  val = (val << 32) | flg;
+>>> >> +  return val;
+>>> >> +}
+>>> >> +
+>>> >>  static void
+>>> >>  show_bases(struct device *d, int cnt)
+>>> >>  {
+>>> >> @@ -401,6 +415,10 @@ show_bases(struct device *d, int cnt)
+>>> >>         flg = pos;
+>>> >>         virtual = 1;
+>>> >>       }
+>>> >> +      else if (pos != bar_value(d, i, flg))
+>>> >> +     {
+>>> >> +       printf("[out-of-sync] ");
+>>> >
+>>> > If the host bridge does any address translation, e.g., if it uses ACPI
+>>> > _TRA, isn't this going to print "out-of-sync" for *every* BAR, even if
+>>> > it isn't really out of sync?
+>>>
+>>> Need a clarification here to ensure I understand you right. When you
+>>> refer to address translation above, I assume you are referring to a
+>>> situation where the CPU issues reads to an address X (in CPU address
+>>> space), which goes through a translation at the pcie root port /
+>>> controller, and appears as a read from address Y (as seen on the PCIe
+>>> bus side)?
+>>
+>> It appears as a read *to* address Y on PCI (I'm sure that's what you had
+>> in mind).  Linux shows it like this when it enumerates the host bridge:
+>>
+>>   pci_bus 0000:00: root bus resource [mem 0xf0000000000-0xf007edfffff] (bus address [0x80000000-0xfedfffff])
+>>
+>> A CPU read to physical address 0xf0000000000 will appear on PCI with the
+>> bus address 0x80000000.  The PCI BAR would contain 0x80000000.
+>>
+>>> In such a situation, my understanding (may be wrong) was that the
+>>> lspci is supposed to be showing the PCI address Y for the bar (not
+>>> address X in physical address space). If this understanding is wrong
+>>> (and the lspci is supposed to show address CPU X for the bar), then
+>>> yes, this patch is likely not correct.
+>>
+>> My impression, based on the man page text about the "-b" option was the
+>> opposite:
+>>
+>>   -b     Bus-centric  view.  Show all IRQ numbers and addresses as
+>>          seen by the cards on the PCI bus instead of as seen by the
+>>          kernel.
+>
+> Oh, sorry I was wrong. Thanks for correcting me.
+>
+>>
+>> That suggests to me that by default lspci shows addresses as seen by
+>> the kernel, i.e., using CPU physical addresses.  These match what
+>> /proc/iomem shows (at least if you look at /proc/iomem as root).
+>>
+>>> But I do think lspci should have a way to indicate when the bars in
+>>>  /sys/bus/pci/.../resource and
+>>>  /sys/bus/pci/.../config
+>>> get out of sync.
+>>
+>> I don't disagree; that does sound like it could be useful.  I just
+>> don't know the best way to accomplish it.
+>
+> Lets leave it for some other time I think. For now, the lspci -b seems
+> to accomplish what I want (so I'll change my scripts to use it as
+> needed). Thanks!
+>
+>>  Seems like you'd have to do
+>> something in resource_show() to re-read the BAR and validate the
+>> cache.  I don't know what you do if you find that it's invalid.
+>>
+>>> >
+>>> >> +     }
+>>> >>        if (flg & PCI_BASE_ADDRESS_SPACE_IO)
+>>> >>       {
+>>> >>         pciaddr_t a = pos & PCI_BASE_ADDRESS_IO_MASK;
+>>> >> --
+>>> >> 2.17.0.441.gb46fe60e1d-goog
+>>> >>
