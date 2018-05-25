@@ -1,81 +1,158 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 23 May 2018 16:06:38 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-ntb@googlegroups.com, Bjorn Helgaas <bhelgaas@google.com>,
-        Doug Meyer <dmeyer@gigaio.com>
-Subject: Re: [PATCH] PCI: Expand documentation for pci_add_dma_alias()
-Message-ID: <20180523160638.03f6db90@w520.home>
-In-Reply-To: <20180523210738.2883-1-logang@deltatee.com>
-References: <20180523210738.2883-1-logang@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:34024 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934496AbeEYN4b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 May 2018 09:56:31 -0400
+Date: Fri, 25 May 2018 14:56:23 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dexuan Cui <decui@microsoft.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "'olaf@aepfle.de'" <olaf@aepfle.de>,
+        "'apw@canonical.com'" <apw@canonical.com>,
+        "'jasowang@redhat.com'" <jasowang@redhat.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'driverdev-devel@linuxdriverproject.org'"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
+        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
+Subject: Re: [PATCH] PCI: hv: Do not wait forever on a device that has
+ disappeared
+Message-ID: <20180525135623.GA10871@e107981-ln.cambridge.arm.com>
+References: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 23 May 2018 15:07:38 -0600
-Logan Gunthorpe <logang@deltatee.com> wrote:
-
-> Seeing there's been some confusion about the use of pci_add_dma_alias(),
-> expand the comment to describe why it must be called early and how
-> early it must be called.
+On Wed, May 23, 2018 at 09:12:01PM +0000, Dexuan Cui wrote:
 > 
-> Also, expand on the purpose of this function and common reasons it would
-> be used.
+> Before the guest finishes the device initialization, the device can be
+> removed anytime by the host, and after that the host won't respond to
+> the guest's request, so the guest should be prepared to handle this
+> case.
 > 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Alex Williamson <alex.williamson@redhat.com>
-> Cc: Doug Meyer <dmeyer@gigaio.com>
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
 > ---
->  drivers/pci/pci.c | 15 +++++++++++++--
->  1 file changed, 13 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index dbfe7c4f3776..2a410745a95a 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5395,8 +5395,19 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
->   * @dev: the PCI device for which alias is added
->   * @devfn: alias slot and function
->   *
-> - * This helper encodes 8-bit devfn as bit number in dma_alias_mask.
-> - * It should be called early, preferably as PCI fixup header quirk.
-> + * This helper encodes an 8-bit devfn as a bit number in dma_alias_mask
-> + * which is used to program permissible BDF source addresses for
-> + * DMA requests in an IOMMU. This is useful for non-transparent bridges
-> + * which use BDFs that are not visible on the bus as proxies for devices
-> + * in another domain. It's also useful for grouping of multiple devices
-> + * that must be done without a host endpoint driver.
-> + *
-> + * This function must be called early, before the IOMMU creates
-> + * the groups for the device which happens with a BUS_NOTIFY_ADD_DEVICE
-> + * event. This occurs before the driver's probe function is called seeing
-> + * the groups must be ready before any DMA mappings for the device are created.
-> + * Therefore, this function cannot be called in a driver and, instead,
-> + * should be called as a PCI fixup header quirk.
->   */
->  void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
->  {
+>  drivers/pci/host/pci-hyperv.c | 46 ++++++++++++++++++++++++++++++++-----------
+>  1 file changed, 34 insertions(+), 12 deletions(-)
 
-I might massage this a little further, something like:
-
-  This helper encodes an 8-bit devfn as a bit number in dma_alias_mask,
-  which is used to program permissible BDF source addresses for DMA
-  requests in the IOMMU.  These aliases factor into IOMMU group
-  creation and are useful for devices generating DMA requests beyond or
-  different from their logical bus devfn.  Examples include device
-  quirks where the device simply uses the wrong devfn, as well as
-  non-transparent bridges where the alias may be a proxy for devices in
-  another domain.
-
-  IOMMU group creation is performed during device discovery or
-  addition, prior to any potential DMA mapping and therefore prior to
-  driver probing, particularly for userspace assigned devices where
-  IOMMU group definition cannot be left as a userspace activity.  DMA
-  aliases should therefore be configured via quirks, such as the PCI
-  fixup header quirk.
+Applied with a minor tweak to the commit log to pci/hv for v4.18.
 
 Thanks,
-Alex
+Lorenzo
+
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index ad6a64d..248765f 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -556,6 +556,26 @@ static void put_pcichild(struct hv_pci_dev *hv_pcidev,
+>  static void get_hvpcibus(struct hv_pcibus_device *hv_pcibus);
+>  static void put_hvpcibus(struct hv_pcibus_device *hv_pcibus);
+>  
+> +/*
+> + * There is no good way to get notified from vmbus_onoffer_rescind(),
+> + * so let's use polling here, since this is not a hot path.
+> + */
+> +static int wait_for_response(struct hv_device *hdev,
+> +			     struct completion *comp)
+> +{
+> +	while (true) {
+> +		if (hdev->channel->rescind) {
+> +			dev_warn_once(&hdev->device, "The device is gone.\n");
+> +			return -ENODEV;
+> +		}
+> +
+> +		if (wait_for_completion_timeout(comp, HZ / 10))
+> +			break;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  /**
+>   * devfn_to_wslot() - Convert from Linux PCI slot to Windows
+>   * @devfn:	The Linux representation of PCI slot
+> @@ -1569,7 +1589,8 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
+>  	if (ret)
+>  		goto error;
+>  
+> -	wait_for_completion(&comp_pkt.host_event);
+> +	if (wait_for_response(hbus->hdev, &comp_pkt.host_event))
+> +		goto error;
+>  
+>  	hpdev->desc = *desc;
+>  	refcount_set(&hpdev->refs, 1);
+> @@ -2070,15 +2091,16 @@ static int hv_pci_protocol_negotiation(struct hv_device *hdev)
+>  				sizeof(struct pci_version_request),
+>  				(unsigned long)pkt, VM_PKT_DATA_INBAND,
+>  				VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+> +		if (!ret)
+> +			ret = wait_for_response(hdev, &comp_pkt.host_event);
+> +
+>  		if (ret) {
+>  			dev_err(&hdev->device,
+> -				"PCI Pass-through VSP failed sending version reqquest: %#x",
+> +				"PCI Pass-through VSP failed to request version: %d",
+>  				ret);
+>  			goto exit;
+>  		}
+>  
+> -		wait_for_completion(&comp_pkt.host_event);
+> -
+>  		if (comp_pkt.completion_status >= 0) {
+>  			pci_protocol_version = pci_protocol_versions[i];
+>  			dev_info(&hdev->device,
+> @@ -2287,11 +2309,12 @@ static int hv_pci_enter_d0(struct hv_device *hdev)
+>  	ret = vmbus_sendpacket(hdev->channel, d0_entry, sizeof(*d0_entry),
+>  			       (unsigned long)pkt, VM_PKT_DATA_INBAND,
+>  			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+> +	if (!ret)
+> +		ret = wait_for_response(hdev, &comp_pkt.host_event);
+> +
+>  	if (ret)
+>  		goto exit;
+>  
+> -	wait_for_completion(&comp_pkt.host_event);
+> -
+>  	if (comp_pkt.completion_status < 0) {
+>  		dev_err(&hdev->device,
+>  			"PCI Pass-through VSP failed D0 Entry with status %x\n",
+> @@ -2331,11 +2354,10 @@ static int hv_pci_query_relations(struct hv_device *hdev)
+>  
+>  	ret = vmbus_sendpacket(hdev->channel, &message, sizeof(message),
+>  			       0, VM_PKT_DATA_INBAND, 0);
+> -	if (ret)
+> -		return ret;
+> +	if (!ret)
+> +		ret = wait_for_response(hdev, &comp);
+>  
+> -	wait_for_completion(&comp);
+> -	return 0;
+> +	return ret;
+>  }
+>  
+>  /**
+> @@ -2405,11 +2427,11 @@ static int hv_send_resources_allocated(struct hv_device *hdev)
+>  				size_res, (unsigned long)pkt,
+>  				VM_PKT_DATA_INBAND,
+>  				VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+> +		if (!ret)
+> +			ret = wait_for_response(hdev, &comp_pkt.host_event);
+>  		if (ret)
+>  			break;
+>  
+> -		wait_for_completion(&comp_pkt.host_event);
+> -
+>  		if (comp_pkt.completion_status < 0) {
+>  			ret = -EPROTO;
+>  			dev_err(&hdev->device,
+> -- 
+> 2.7.4
+> 
