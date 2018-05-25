@@ -1,86 +1,137 @@
-Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=tLTY=H3=redhat.com=alex.williamson@kernel.org>
-Date: Tue, 8 May 2018 16:32:06 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Stephen Bates <sbates@raithlin.com>, Christian =?UTF-8?B?S8O2bmln?=
- <christian.koenig@amd.com>, Bjorn Helgaas <helgaas@kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
+To: Xu Zaibo <xuzaibo@huawei.com>, "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
  "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
- "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Christoph
- Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Keith Busch
- <keith.busch@intel.com>, Sagi Grimberg <sagi@grimberg.me>, Bjorn Helgaas
- <bhelgaas@google.com>, Jason Gunthorpe <jgg@mellanox.com>, Max Gurtovoy
- <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Benjamin
- Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v4 04/14] PCI/P2PDMA: Clear ACS P2P flags for all
- devices behind switches
-Message-ID: <20180508163206.7d3bf383@w520.home>
-In-Reply-To: <20905682-9440-7d4b-0260-99d3dc794c3d@deltatee.com>
-References: <20180423233046.21476-1-logang@deltatee.com>
-	<20180423233046.21476-5-logang@deltatee.com>
-	<20180507231306.GG161390@bhelgaas-glaptop.roam.corp.google.com>
-	<e58e8d27-42a5-ca69-3b68-c409a2922cd1@amd.com>
-	<0b4183ef-e720-204b-9e85-b9eaf7a4136a@deltatee.com>
-	<a943a92d-15cd-fb2d-21c3-5e5cfccd9eff@amd.com>
-	<3584a6ac-95c7-5d23-1859-aee30605776e@deltatee.com>
-	<20180508133407.57a46902@w520.home>
-	<5fc9b1c1-9208-06cc-0ec5-1f54c2520494@deltatee.com>
-	<20180508141331.7cd737cb@w520.home>
-	<d70cf286-f7b7-99a5-1042-022506298fed@deltatee.com>
-	<20180508144341.0441b676@w520.home>
-	<a524127a-3557-3dff-971c-dfe94ba5a01c@deltatee.com>
-	<20180508152631.50fd583c@w520.home>
-	<354F7407-0DC7-470C-B9AA-74FDF9C46B08@raithlin.com>
-	<20180508160336.0935ddde@w520.home>
-	<20905682-9440-7d4b-0260-99d3dc794c3d@deltatee.com>
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-mm@kvack.org" <linux-mm@kvack.org>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-14-jean-philippe.brucker@arm.com>
+ <5B0536A3.1000304@huawei.com> <cd13f60d-b282-3804-4ca7-2d34476c597f@arm.com>
+ <5B06B17C.1090809@huawei.com> <205c1729-8026-3efe-c363-d37d7150d622@arm.com>
+ <5B077765.30703@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <fea420ff-e738-e2ed-ab1e-a3f4dde4b6ef@arm.com>
+Date: Fri, 25 May 2018 10:47:43 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <5B077765.30703@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "rgummal@xilinx.com" <rgummal@xilinx.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>,
+ "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 8 May 2018 16:10:19 -0600
-Logan Gunthorpe <logang@deltatee.com> wrote:
+On 25/05/18 03:39, Xu Zaibo wrote:
+> Hi,
+> 
+> On 2018/5/24 23:04, Jean-Philippe Brucker wrote:
+>> On 24/05/18 13:35, Xu Zaibo wrote:
+>>>> Right, sva_init() must be called once for any device that intends to use
+>>>> bind(). For the second process though, group->sva_enabled will be true
+>>>> so we won't call sva_init() again, only bind().
+>>> Well, while I create mediated devices based on one parent device to support multiple
+>>> processes(a new process will create a new 'vfio_group' for the corresponding mediated device,
+>>> and 'sva_enabled' cannot work any more), in fact, *sva_init and *sva_shutdown are basically
+>>> working on parent device, so, as a result, I just only need sva initiation and shutdown on the
+>>> parent device only once. So I change the two as following:
+>>>
+>>> @@ -551,8 +565,18 @@ int iommu_sva_device_init(struct device *dev, unsigned long features,
+>>>        if (features & ~IOMMU_SVA_FEAT_IOPF)
+>>>           return -EINVAL;
+>>>
+>>> +    /* If already exists, do nothing  */
+>>> +    mutex_lock(&dev->iommu_param->lock);
+>>> +    if (dev->iommu_param->sva_param) {
+>>> +        mutex_unlock(&dev->iommu_param->lock);
+>>> +        return 0;
+>>> +    }
+>>> +    mutex_unlock(&dev->iommu_param->lock);
+>>>
+>>>       if (features & IOMMU_SVA_FEAT_IOPF) {
+>>>           ret = iommu_register_device_fault_handler(dev, iommu_queue_iopf,
+>>>
+>>>
+>>> @@ -621,6 +646,14 @@ int iommu_sva_device_shutdown(struct device *dev)
+>>>       if (!domain)
+>>>           return -ENODEV;
+>>>
+>>> +    /* If any other process is working on the device, shut down does nothing. */
+>>> +    mutex_lock(&dev->iommu_param->lock);
+>>> +    if (!list_empty(&dev->iommu_param->sva_param->mm_list)) {
+>>> +        mutex_unlock(&dev->iommu_param->lock);
+>>> +        return 0;
+>>> +    }
+>>> +    mutex_unlock(&dev->iommu_param->lock);
+>> I don't think iommu-sva.c is the best place for this, it's probably
+>> better to implement an intermediate layer (the mediating driver), that
+>> calls iommu_sva_device_init() and iommu_sva_device_shutdown() once. Then
+>> vfio-pci would still call these functions itself, but for mdev the
+>> mediating driver keeps a refcount of groups, and calls device_shutdown()
+>> only when freeing the last mdev.
+>>
+>> A device driver (non mdev in this example) expects to be able to free
+>> all its resources after sva_device_shutdown() returns. Imagine the
+>> mm_list isn't empty (mm_exit() is running late), and instead of waiting
+>> in unbind_dev_all() below, we return 0 immediately. Then the calling
+>> driver frees its resources, and the mm_exit callback along with private
+>> data passed to bind() disappear. If a mm_exit() is still running in
+>> parallel, then it will try to access freed data and corrupt memory. So
+>> in this function if mm_list isn't empty, the only thing we can do is wait.
+>>
+> I still don't understand why we should 'unbind_dev_all', is it possible 
+> to do a 'unbind_dev_pasid'?
 
-> On 08/05/18 04:03 PM, Alex Williamson wrote:
-> > If IOMMU grouping implies device assignment (because nobody else uses
-> > it to the same extent as device assignment) then the build-time option
-> > falls to pieces, we need a single kernel that can do both.  I think we
-> > need to get more clever about allowing the user to specify exactly at
-> > which points in the topology they want to disable isolation.  Thanks,  
-> 
-> 
-> Yeah, so based on the discussion I'm leaning toward just having a
-> command line option that takes a list of BDFs and disables ACS for them.
-> (Essentially as Dan has suggested.) This avoids the shotgun.
-> 
-> Then, the pci_p2pdma_distance command needs to check that ACS is
-> disabled for all bridges between the two devices. If this is not the
-> case, it returns -1. Future work can check if the EP has ATS support, in
-> which case it has to check for the ACS direct translated bit.
-> 
-> A user then needs to either disable the IOMMU and/or add the command
-> line option to disable ACS for the specific downstream ports in the PCI
-> hierarchy. This means the IOMMU groups will be less granular but
-> presumably the person adding the command line argument understands this.
-> 
-> We may also want to do some work so that there's informative dmesgs on
-> which BDFs need to be specified on the command line so it's not so
-> difficult for the user to figure out.
+Not in sva_device_shutdown(), it needs to clean up everything. For
+example you want to physically unplug the device, or assign it to a VM.
+To prevent any leak sva_device_shutdown() needs to remove all bonds. In
+theory there shouldn't be any, since either the driver did unbind_dev(),
+or all process exited. This is a safety net.
 
-I'd advise caution with a user supplied BDF approach, we have no
-guaranteed persistence for a device's PCI address.  Adding a device
-might renumber the buses, replacing a device with one that consumes
-more/less bus numbers can renumber the buses, motherboard firmware
-updates could renumber the buses, pci=assign-buses can renumber the
-buses, etc.  This is why the VT-d spec makes use of device paths when
-describing PCI hierarchies, firmware can't know what bus number will be
-assigned to a device, but it does know the base bus number and the path
-of devfns needed to get to it.  I don't know how we come up with an
-option that's easy enough for a user to understand, but reasonably
-robust against hardware changes.  Thanks,
+> Then we can do other things instead of waiting that user may not like. :)
 
-Alex
+They may not like it, but it's for their own good :) At the moment we're
+waiting that:
+
+* All exit_mm() callback for this device have finished. If we don't wait
+  then the caller will free the private data passed to bind and the
+  mm_exit() callback while they are still being used.
+
+* All page requests targeting this device are dealt with. If we don't
+  wait then some requests, that are lingering in the IOMMU PRI queue,
+  may hit the next contexts bound to this device, possibly in a
+  different VM. It may not be too risky (though probably exploitable in
+  some way), but is incredibly messy.
+
+All of this is bounded in time, and normally should be over pretty fast
+unless the device driver's exit_mm() does something strange. If the
+driver did the right thing, there shouldn't be any wait here (although
+there may be one in unbind_dev() for the same reasons - prevent use
+after free).
+
+Thanks,
+Jean
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
