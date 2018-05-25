@@ -1,54 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 30 May 2018 00:37:35 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH] PCI: Add pci=safemode option
-Message-ID: <20180530073735.GA28793@infradead.org>
-References: <1527650389-31575-1-git-send-email-okaya@codeaurora.org>
- <20180530043103.GA19734@kroah.com>
- <6c317ed8-cca3-8862-5f3b-12cf14e4d53b@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ua0-f196.google.com ([209.85.217.196]:36166 "EHLO
+        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935638AbeEYKJ2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 May 2018 06:09:28 -0400
 MIME-Version: 1.0
-In-Reply-To: <6c317ed8-cca3-8862-5f3b-12cf14e4d53b@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
- Kai-Heng Feng <kai.heng.feng@canonical.com>, Ingo Molnar <mingo@kernel.org>,
- Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- Dongdong Liu <liudongdong3@huawei.com>, David Rientjes <rientjes@google.com>,
- Thymo van Beers <thymovanbeers@gmail.com>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Frederick Lawler <fred@fredlawl.com>,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
- Frederic Weisbecker <frederic@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
- Oza Pawandeep <poza@codeaurora.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180524143624.26718-7-marek.vasut+renesas@gmail.com>
+References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com> <20180524143624.26718-7-marek.vasut+renesas@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Fri, 25 May 2018 12:09:27 +0200
+Message-ID: <CAMuHMdV7Tg3pnxZ7jNhWziwQMXSEt2SihtbM_9RQbqQJc=o2Nw@mail.gmail.com>
+Subject: Re: [PATCH v4 6/6] PCI: rcar: Shut the PHY down in failpath
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 29, 2018 at 09:41:33PM -0700, Sinan Kaya wrote:
-> Bjorn and I discussed the need for such a "safe" mode feature when you
-> want to bring up PCI for a platform. You want to turn off everything as
-> a starter and just stick to bare minimum.
+On Thu, May 24, 2018 at 4:36 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
+> If anything fails past phy_init_fn() and the system is a Gen3 with
+> a PHY, the PHY will be left on and inited. This is caused by the
+> phy_init_fn, which is in fact a pointer to rcar_pcie_phy_init_gen3()
+> function, which starts the PHY, yet has no counterpart in the failpath.
+> Add that counterpart.
+>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
 
-Can we please make it a config option the instead of adding code
-to every kernel?  Also maybe the bringup should be in the name
-to make this more clear?
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Note that there's another unhandled failure mode: rcar_pcie_phy_init_gen3()
+doesn't call phy_exit() if phy_power_on() fails.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
