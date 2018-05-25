@@ -1,42 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:56084 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754002AbeE1Ixd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 May 2018 04:53:33 -0400
-Date: Mon, 28 May 2018 10:53:29 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v4 4/6] PCI: rcar: Poll more often in
- rcar_pcie_wait_for_dl()
-Message-ID: <20180528085328.snw6hybeckgdcpel@verge.net.au>
-References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
- <20180524143624.26718-5-marek.vasut+renesas@gmail.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34602 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935826AbeEYO0k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 May 2018 10:26:40 -0400
+Date: Fri, 25 May 2018 15:26:36 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com
+Subject: Offline for two weeks
+Message-ID: <20180525142636.GB10871@e107981-ln.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180524143624.26718-5-marek.vasut+renesas@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 24, 2018 at 04:36:22PM +0200, Marek Vasut wrote:
-> The data link active signal usually takes ~20 uSec to be asserted,
-> poll the bit more often to avoid useless delays in this function.
-> Use udelay() instead of usleep() for such a small delay as suggested
-> by the timer documentation and because this will be used in atomic
-> context later on when the suspend/resume patches land.
-> 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
+Hi,
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+just to let pci/{host/dwc/endpoint} maintainers and developers know I
+will be offline for the next two weeks which means that the
+pci/{host/dwc/endpoint} patch queue for the v4.18 merge window closes
+today given the current -rc* cycles release schedule.
+
+I'd be grateful if you can hold off sending patches (that I won't be able
+to review anyway) till June 11th, which should coincide with the second
+half of the v4.18 merge window according to the current schedule.
+
+Thank you very much.
+
+Lorenzo
