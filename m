@@ -1,151 +1,190 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH] PCI: Add pci=safemode option
-Date: Tue, 29 May 2018 23:19:41 -0400
-Message-Id: <1527650389-31575-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:49088 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S967628AbeEYSa7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 May 2018 14:30:59 -0400
+Date: Fri, 25 May 2018 13:30:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rajat Jain <rajatja@google.com>
+Cc: Martin Mares <mj@ucw.cz>, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] lspci: Indicate if the OS / kernel go out-of-sync on BAR
+Message-ID: <20180525183049.GB63280@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180516013333.135259-1-rajatja@google.com>
+ <20180524223751.GC15320@bhelgaas-glaptop.roam.corp.google.com>
+ <CACK8Z6E6g=+T04qDUXhQrhHr1y5O05yHbjTuLM7oxnn1XJpBmw@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- Keith Busch <keith.busch@intel.com>,
- Kai-Heng Feng <kai.heng.feng@canonical.com>, Ingo Molnar <mingo@kernel.org>,
- Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- Dongdong Liu <liudongdong3@huawei.com>, David Rientjes <rientjes@google.com>,
- Thymo van Beers <thymovanbeers@gmail.com>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Frederick Lawler <fred@fredlawl.com>,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
- Frederic Weisbecker <frederic@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
- Sinan Kaya <okaya@codeaurora.org>, Oza Pawandeep <poza@codeaurora.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACK8Z6E6g=+T04qDUXhQrhHr1y5O05yHbjTuLM7oxnn1XJpBmw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding pci=safemode kernel command line parameter to turn off all PCI
-Express service driver as well as all optional PCIe features such as LTR,
-Extended tags, Relaxed Ordering etc.
+On Fri, May 25, 2018 at 09:57:59AM -0700, Rajat Jain wrote:
+> On Thu, May 24, 2018 at 3:37 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, May 15, 2018 at 06:33:33PM -0700, Rajat Jain wrote:
+> >> If the OS and device are reporting different BAR(s), currently
+> >> the lspci will happily show the OS version with no indication what
+> >> so ever that there is a problem. This is not correct in my opinion
+> >> because lspci is often used to debug devices, so should either show
+> >> the BAR reported by the device, or atleast an indication of
+> >> out-of-sync.
+> >>
+> >> I spent a lot of time debugging a PCI device that would unexpectedly
+> >> clear out the BAR register due to some bug, and it was quite later
+> >> I realized that the lspci is showing me the OS version. So fix that.
+> >
+> > I assume (hope) that "lspci -b" would show you the hardware values.
+> > Of course, who would think to use that when you're debugging a
+> > problem.  So that's not really a solution to the problem you faced.
+> >
+> >> On a system that is in problem state:
+> >>
+> >> localhost ~ # setpci -s 1:0.0 0x10.l
+> >> 00000004  <=== BAR is zeroed out
+> >> localhost ~ #
+> >>
+> >> Before:
+> >>
+> >> localhost ~ # lspci -v -s 1:0.0
+> >> 01:00.0 Network controller: Intel Corporation Wireless 7265 (rev 59)
+> >>         Subsystem: Intel Corporation Dual Band Wireless-AC 7265
+> >>         Flags: bus master, fast devsel, latency 0, IRQ 275
+> >>         Memory at d1400000 (64-bit, non-prefetchable) [size=8K]
+> >>         Capabilities: [c8] Power Management version 3
+> >>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+> >>         Capabilities: [40] Express Endpoint, MSI 00
+> >>         Capabilities: [100] Advanced Error Reporting
+> >>         Capabilities: [140] Device Serial Number b4-d5-bd-ff-ff-c8-a1-6d
+> >>         Capabilities: [14c] Latency Tolerance Reporting
+> >>         Capabilities: [154] L1 PM Substates
+> >>         Kernel driver in use: iwlwifi
+> >>         Kernel modules: iwlwifi
+> >>
+> >> After:
+> >>
+> >> localhost ~ # lspci -v -s 1:0.0
+> >> 01:00.0 Network controller: Device 8086:095a (rev 59)
+> >>         Subsystem: Device 8086:5010
+> >>         Flags: bus master, fast devsel, latency 0, IRQ 275
+> >>         [out-of-sync] Memory at d1400000 (64-bit, non-prefetchable) [size=8K]
+> >>         Capabilities: [c8] Power Management version 3
+> >>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+> >>         Capabilities: [40] Express Endpoint, MSI 00
+> >>         Capabilities: [100] Advanced Error Reporting
+> >>         Capabilities: [140] Device Serial Number b4-d5-bd-ff-ff-c8-a1-6d
+> >>         Capabilities: [14c] Latency Tolerance Reporting
+> >>         Capabilities: [154] L1 PM Substates
+> >>         Kernel driver in use: iwlwifi
+> >>         Kernel modules: iwlwifi
+> >
+> > I've never been quite clear on the path from hardware BAR value to
+> > lspci output.  On my system,
+> >
+> >   $ strace -e trace=open lspci -vs00:14.0 2>&1 | grep 00:14.0
+> >
+> > suggests that lspci reads these:
+> >
+> >   /sys/bus/pci/.../resource and
+> >   /sys/bus/pci/.../config
+> >
+> > "resource" uses resource_show(), where we use the result of
+> > pci_resource_to_user() on the resources in the struct pci_dev, so
+> > these are basically cached and may be out of date with respect to the
+> > hardware.
+> >
+> > "config" uses pci_read_config(), where we ultimately call the config
+> > accessors, which should give us the actual values from the hardware
+> > BARs.
+> >
+> >> Signed-off-by: Rajat Jain <rajatja@google.com>
+> >> ---
+> >>  lspci.c | 18 ++++++++++++++++++
+> >>  1 file changed, 18 insertions(+)
+> >>
+> >> diff --git a/lspci.c b/lspci.c
+> >> index 748452c..81c65f3 100644
+> >> --- a/lspci.c
+> >> +++ b/lspci.c
+> >> @@ -371,6 +371,20 @@ show_range(char *prefix, u64 base, u64 limit, int is_64bit)
+> >>    putchar('\n');
+> >>  }
+> >>
+> >> +static pciaddr_t
+> >> +bar_value(struct device *d, int i, u32 flg)
+> >> +{
+> >> +  pciaddr_t val = 0;
+> >> +
+> >> +  /* Read higher order 32 bits if it's a 64 bit bar in memory space */
+> >> +  if (i < 5 && !(flg & PCI_BASE_ADDRESS_SPACE_IO) &&
+> >> +      (flg & PCI_BASE_ADDRESS_MEM_TYPE_MASK == PCI_BASE_ADDRESS_MEM_TYPE_64))
+> >> +      val = get_conf_long(d, PCI_BASE_ADDRESS_0 + 4 * (i + 1));
+> >> +
+> >> +  val = (val << 32) | flg;
+> >> +  return val;
+> >> +}
+> >> +
+> >>  static void
+> >>  show_bases(struct device *d, int cnt)
+> >>  {
+> >> @@ -401,6 +415,10 @@ show_bases(struct device *d, int cnt)
+> >>         flg = pos;
+> >>         virtual = 1;
+> >>       }
+> >> +      else if (pos != bar_value(d, i, flg))
+> >> +     {
+> >> +       printf("[out-of-sync] ");
+> >
+> > If the host bridge does any address translation, e.g., if it uses ACPI
+> > _TRA, isn't this going to print "out-of-sync" for *every* BAR, even if
+> > it isn't really out of sync?
+> 
+> Need a clarification here to ensure I understand you right. When you
+> refer to address translation above, I assume you are referring to a
+> situation where the CPU issues reads to an address X (in CPU address
+> space), which goes through a translation at the pcie root port /
+> controller, and appears as a read from address Y (as seen on the PCIe
+> bus side)?
 
-Also setting MPS configuration to PCIE_BUS_SAFE so that MPS and MRRS can be
-reconfigured with by the kernel in case BIOS hands off a broken
-configuration.
+It appears as a read *to* address Y on PCI (I'm sure that's what you had
+in mind).  Linux shows it like this when it enumerates the host bridge:
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- Documentation/admin-guide/kernel-parameters.txt | 2 ++
- drivers/pci/pci.c                               | 7 +++++++
- drivers/pci/pci.h                               | 2 ++
- drivers/pci/pcie/portdrv_core.c                 | 2 +-
- drivers/pci/probe.c                             | 6 ++++++
- 5 files changed, 18 insertions(+), 1 deletion(-)
+  pci_bus 0000:00: root bus resource [mem 0xf0000000000-0xf007edfffff] (bus address [0x80000000-0xfedfffff])
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 641ec9c..247adbb 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3153,6 +3153,8 @@
- 		noari		do not use PCIe ARI.
- 		noats		[PCIE, Intel-IOMMU, AMD-IOMMU]
- 				do not use PCIe ATS (and IOMMU device IOTLB).
-+		safemode	turns of all optinal PCI features. Useful
-+				for bringup/troubleshooting.
- 		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
- 				only look for one device below a PCIe downstream
- 				port.
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d27f771..11f0282 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -115,6 +115,9 @@ static bool pcie_ari_disabled;
- /* If set, the PCIe ATS capability will not be used. */
- static bool pcie_ats_disabled;
- 
-+/* If set, disables most of the optional PCI features */
-+bool pci_safe_mode;
-+
- bool pci_ats_disabled(void)
- {
- 	return pcie_ats_disabled;
-@@ -5845,6 +5848,10 @@ static int __init pci_setup(char *str)
- 		if (*str && (str = pcibios_setup(str)) && *str) {
- 			if (!strcmp(str, "nomsi")) {
- 				pci_no_msi();
-+			} else if (!strncmp(str, "safemode", 8)) {
-+				pr_info("PCI: safe mode with minimum features\n");
-+				pci_safe_mode = true;
-+				pcie_bus_config = PCIE_BUS_SAFE;
- 			} else if (!strncmp(str, "noats", 5)) {
- 				pr_info("PCIe: ATS is disabled\n");
- 				pcie_ats_disabled = true;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c358e7a0..4517bcd 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -8,6 +8,8 @@
- 
- extern const unsigned char pcie_link_speed[];
- 
-+extern bool pci_safe_mode;
-+
- bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
- 
- /* Functions internal to the PCI core code */
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index a5b3b3a..9fe4ed6 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -311,7 +311,7 @@ int pcie_port_device_register(struct pci_dev *dev)
- 
- 	/* Get and check PCI Express port services */
- 	capabilities = get_port_device_capability(dev);
--	if (!capabilities)
-+	if (!capabilities || pci_safe_mode)
- 		return 0;
- 
- 	pci_set_master(dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 3840207..295b79c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2047,6 +2047,9 @@ static void pci_configure_device(struct pci_dev *dev)
- 	struct hotplug_params hpp;
- 	int ret;
- 
-+	if (pci_safe_mode)
-+		return;
-+
- 	pci_configure_mps(dev);
- 	pci_configure_extended_tags(dev, NULL);
- 	pci_configure_relaxed_ordering(dev);
-@@ -2213,6 +2216,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Setup MSI caps & disable MSI/MSI-X interrupts */
- 	pci_msi_setup_pci_dev(dev);
- 
-+	if (pci_safe_mode)
-+		return;
-+
- 	/* Buffers for saving PCIe and PCI-X capabilities */
- 	pci_allocate_cap_save_buffers(dev);
- 
--- 
-2.7.4
+A CPU read to physical address 0xf0000000000 will appear on PCI with the
+bus address 0x80000000.  The PCI BAR would contain 0x80000000.
 
+> In such a situation, my understanding (may be wrong) was that the
+> lspci is supposed to be showing the PCI address Y for the bar (not
+> address X in physical address space). If this understanding is wrong
+> (and the lspci is supposed to show address CPU X for the bar), then
+> yes, this patch is likely not correct.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+My impression, based on the man page text about the "-b" option was the
+opposite:
+
+  -b     Bus-centric  view.  Show all IRQ numbers and addresses as
+	 seen by the cards on the PCI bus instead of as seen by the
+	 kernel.
+
+That suggests to me that by default lspci shows addresses as seen by
+the kernel, i.e., using CPU physical addresses.  These match what
+/proc/iomem shows (at least if you look at /proc/iomem as root).
+
+> But I do think lspci should have a way to indicate when the bars in
+>  /sys/bus/pci/.../resource and
+>  /sys/bus/pci/.../config
+> get out of sync.
+
+I don't disagree; that does sound like it could be useful.  I just
+don't know the best way to accomplish it.  Seems like you'd have to do
+something in resource_show() to re-read the BAR and validate the
+cache.  I don't know what you do if you find that it's invalid.
+
+> >
+> >> +     }
+> >>        if (flg & PCI_BASE_ADDRESS_SPACE_IO)
+> >>       {
+> >>         pciaddr_t a = pos & PCI_BASE_ADDRESS_IO_MASK;
+> >> --
+> >> 2.17.0.441.gb46fe60e1d-goog
+> >>
