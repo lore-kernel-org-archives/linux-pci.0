@@ -1,55 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:35544 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933767AbeEWRRs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 13:17:48 -0400
-Subject: Re: [PATCH 1/4] PCI: rcar: Rename
- rcar_pcie_parse_request_of_pci_ranges()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
- <20180523161711.GA8113@e107981-ln.cambridge.arm.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <5fc7b4ff-1c75-4d3f-6cb7-fda4559a3635@gmail.com>
-Date: Wed, 23 May 2018 19:05:06 +0200
+Return-Path: <SRS0=JCzE=IO=ucw.cz=mj+f-270518+helgaas=kernel.org@kernel.org>
+Return-Path: <SRS0=JCzE=IO=ucw.cz=mj+f-270518+helgaas=kernel.org@kernel.org>
+Date: Sun, 27 May 2018 13:55:32 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Rajat Jain <rajatja@google.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] lspci: Indicate if the OS / kernel go out-of-sync on BAR
+Message-ID: <mj+md-20180527.115322.70863.nikam@ucw.cz>
+References: <20180516013333.135259-1-rajatja@google.com>
+ <20180524223751.GC15320@bhelgaas-glaptop.roam.corp.google.com>
+ <CACK8Z6E6g=+T04qDUXhQrhHr1y5O05yHbjTuLM7oxnn1XJpBmw@mail.gmail.com>
+ <20180525183049.GB63280@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180523161711.GA8113@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180525183049.GB63280@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/23/2018 06:17 PM, Lorenzo Pieralisi wrote:
-> On Mon, May 21, 2018 at 03:11:20PM +0200, Marek Vasut wrote:
->> The function name is just too confusing, rename it, no functional change.
->> Rename the function to rcar_pcie_alloc_and_parse_pci_resource_list() as
->> it's matching failpath function is pci_free_resource_list() so the names
->> align much better and the new name also describes what the function does
->> much better.
->>
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->> Cc: Simon Horman <horms+renesas@verge.net.au>
->> Cc: Wolfram Sang <wsa@the-dreams.de>
->> Cc: linux-renesas-soc@vger.kernel.org
->> ---
->>  drivers/pci/host/pcie-rcar.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> Can you rebase this series against my pci/rcar branch please ?
-> 
-> I will merge it then, thanks.
+Hello!
 
-Where is that tree/branch located ?
+> I don't disagree; that does sound like it could be useful.  I just
+> don't know the best way to accomplish it.  Seems like you'd have to do
+> something in resource_show() to re-read the BAR and validate the
+> cache.  I don't know what you do if you find that it's invalid.
 
-It applies fine on current next 20180517, is there a problem ?
+I also do not see how to do it in a reasonably simple way.
 
--- 
-Best regards,
-Marek Vasut
+I checked lspci and it turned out that it already add a "[virtual]"
+marker in cases when the BAR is zero (which was this case -- am I right?)
+and the kernel reports a non-zero address.
+
+However, it turned out that the check is never triggered on I/O regions,
+because the BAR contains a non-zero type bit.
+
+I have modified the check to take into account just the address part
+of the BAR. You can check it in the master branch.
+
+				Martin
