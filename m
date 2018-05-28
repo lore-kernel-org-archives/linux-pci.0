@@ -1,71 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-References: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 30 May 2018 00:20:57 +0300
-Message-ID: <CAHp75Vd9kiyOaSbaK6c4b7ucF23kgP0yQxKpUAGrjHgKfJprXA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: hv: Do not wait forever on a device that has disappeared
-To: Dexuan Cui <decui@microsoft.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v8 7/7] PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
+Date: Mon, 28 May 2018 15:47:56 +0300
+Message-Id: <20180528124756.78512-8-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 24, 2018 at 12:12 AM, Dexuan Cui <decui@microsoft.com> wrote:
->
-> Before the guest finishes the device initialization, the device can be
-> removed anytime by the host, and after that the host won't respond to
-> the guest's request, so the guest should be prepared to handle this
-> case.
+It is not immediately clear what the two functions actually return so
+add kernel-doc comment explaining it a bit better.
 
-> +       while (true) {
-> +               if (hdev->channel->rescind) {
-> +                       dev_warn_once(&hdev->device, "The device is gone.\n");
-> +                       return -ENODEV;
-> +               }
-> +
-> +               if (wait_for_completion_timeout(comp, HZ / 10))
-> +                       break;
-> +       }
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/probe.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Infinite loops are usually a red flags.
-
-What's wrong with simple:
-
-do {
-  ...
-} while (wait_...(...) == 0);
-
-?
-
-> +       if (!ret)
-> +               ret = wait_for_response(hdev, &comp);
-
-Better to use well established patterns, i.e.
-
-if (ret)
- return ret;
-
-> +               if (!ret)
-> +                       ret = wait_for_response(hdev, &comp_pkt.host_event);
-
-Here it looks okay on the first glance, but better to think about it
-again and refactor.
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8f384e7ca2c2..7dc0b3c49941 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -999,6 +999,8 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+  * already configured by the BIOS and after we are done with all of
+  * them, we proceed to assigning numbers to the remaining buses in
+  * order to avoid overlaps between old and new bus numbers.
++ *
++ * Return: New subordinate number covering all buses behind this bridge.
+  */
+ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+ 				  int max, unsigned int available_buses,
+@@ -1226,6 +1228,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+  * already configured by the BIOS and after we are done with all of
+  * them, we proceed to assigning numbers to the remaining buses in
+  * order to avoid overlaps between old and new bus numbers.
++ *
++ * Return: New subordinate number covering all buses behind this bridge.
+  */
+ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ {
 -- 
-With Best Regards,
-Andy Shevchenko
+2.17.0
+
