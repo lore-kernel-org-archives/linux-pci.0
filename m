@@ -1,39 +1,77 @@
-Return-Path: <SRS0=UZgS=H3=goodmis.org=rostedt@kernel.org>
-Return-Path: <SRS0=UZgS=H3=goodmis.org=rostedt@kernel.org>
-Date: Tue, 8 May 2018 09:34:59 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Thomas Tai <thomas.tai@oracle.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Alexandru Gagniuc
- <mr.nuke.me@gmail.com>
-Subject: Re: [PATCH] PCI/AER: add pcie TLP header information in the
- tracepoint
-Message-ID: <20180508093459.092988b6@gandalf.local.home>
-In-Reply-To: <a5578a08-2434-af48-7910-6f858e5477d6@oracle.com>
-References: <20180402154708.5032-1-thomas.tai@oracle.com>
-	<20180507222136.GD161390@bhelgaas-glaptop.roam.corp.google.com>
-	<20180508090756.57f38d17@gandalf.local.home>
-	<a5578a08-2434-af48-7910-6f858e5477d6@oracle.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v4 4/8] PCI: Replace dev_node parameter of
+ of_pci_get_host_bridge_resources with device
+To: Jan Kiszka <jan.kiszka@siemens.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+References: <cover.1526375226.git.jan.kiszka@siemens.com>
+ <5f2226585c6af9920b266d0503e32042d4c9e440.1526375226.git.jan.kiszka@siemens.com>
+From: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Message-ID: <a74db976-d330-80b9-939e-dd164a20c8c3@mentor.com>
+Date: Mon, 28 May 2018 13:00:21 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <5f2226585c6af9920b266d0503e32042d4c9e440.1526375226.git.jan.kiszka@siemens.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 8 May 2018 09:25:01 -0400
-Thomas Tai <thomas.tai@oracle.com> wrote:
+Hi Jan, Bjorn,
 
-> >>>   	TP_STRUCT__entry(
-> >>>   		__string(	dev_name,	dev_name	)
-> >>>   		__field(	u32,		status		)
-> >>>   		__field(	u8,		severity	)
-> >>> +		__field(	u32, 		tlp_header_valid)  
-> > 
-> > I'm guessing tlp_header_valid is just a boolean. It's after severity
-> > which is just one byte long. Why not make this one byte as well,
-> > otherwise you are wasting 3 bytes.  
+On 05/15/2018 12:07 PM, Jan Kiszka wrote:
+> From: Jan Kiszka <jan.kiszka@siemens.com>
 > 
-> Thanks Steven. Yes boolean is fine.
+> Another step towards a managed version of
+> of_pci_get_host_bridge_resources(): Feed in the underlying device,
+> rather than just the OF node. This will allow to use managed resource
+> allocation internally later on.
+> 
+> CC: Jingoo Han <jingoohan1@gmail.com>
+> CC: Joao Pinto <Joao.Pinto@synopsys.com>
+> CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 
-But don't use "bool", use u8, as bool can be various sizes on different
-archs.
+[snip]
 
--- Steve
+> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+> index a6af62e0256d..61802e55a00c 100644
+> --- a/drivers/pci/host/pcie-altera.c
+> +++ b/drivers/pci/host/pcie-altera.c
+> @@ -488,11 +488,10 @@ static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
+>  {
+>  	int err, res_valid = 0;
+>  	struct device *dev = &pcie->pdev->dev;
+> -	struct device_node *np = dev->of_node;
+>  	struct resource_entry *win;
+>  
+> -	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pcie->resources,
+> -					       NULL);
+> +	err = of_pci_get_host_bridge_resources(dev, 0, 0xff
+> +						    &pcie->resources, NULL);
+>  	if (err)
+>  		return err;
+>  
+
+In case if it is an undiscovered issue, a comma was mistakenly removed,
+which will result it compilation error.
+
+The problem is also found in pci/next , see commit 88e3909aa125.
+
+--
+With best wishes,
+Vladimir
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
