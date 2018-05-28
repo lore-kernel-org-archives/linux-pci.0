@@ -1,147 +1,141 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <5b08c5f6.1c69fb81.2c05f.4330SMTPIN_ADDED_BROKEN@gmr-mx.google.com>
-Date: Sat, 26 May 2018 10:24:45 +0800
-From: Kenneth Lee <Kenneth-Lee-2012@foxmail.com>
-To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Subject: Re: [PATCH v2 03/40] iommu/sva: Manage process address spaces
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-4-jean-philippe.brucker@arm.com>
- <20180516163117.622693ea@jacob-builder>
- <de478769-9f7a-d40b-a55e-e2c63ad883e8@arm.com>
- <20180522094334.71f0e36b@jacob-builder>
- <f73b4a0e-669e-8483-88d7-1b2c8a2b9934@arm.com>
- <20180524115039.GA10260@apalos>
- <19e82a74-429a-3f86-119e-32b12082d0ff@arm.com>
- <20180525063311.GA11605@apalos>
- <20180525093959.000040a7@huawei.com>
-MIME-Version: 1.0
-In-Reply-To: <20180525093959.000040a7@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>, Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "linux-mm@kvack.org" <linux-mm@kvack.org>, liguozhu@hisilicon.com,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "kevin.tian@intel.com" <kevin.tian@intel.com>,
- Jacob Pan <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "rgummal@xilinx.com" <rgummal@xilinx.com>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- Robin Murphy <Robin.Murphy@arm.com>,
- Ilias Apalodimas <ilias.apalodimas@linaro.org>,
- "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
- "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v8 6/7] PCI: Move resource distribution for a single bridge outside of the loop
+Date: Mon, 28 May 2018 15:47:55 +0300
+Message-Id: <20180528124756.78512-7-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2018 at 09:39:59AM +0100, Jonathan Cameron wrote:
-> Date: Fri, 25 May 2018 09:39:59 +0100
-> From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-> To: Ilias Apalodimas <ilias.apalodimas@linaro.org>
-> CC: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
->  "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>, "kvm@vger.kernel.org"
->  <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org"
->  <linux-pci@vger.kernel.org>, "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
->  Will Deacon <Will.Deacon@arm.com>, "okaya@codeaurora.org"
->  <okaya@codeaurora.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>,
->  "yi.l.liu@intel.com" <yi.l.liu@intel.com>, "ashok.raj@intel.com"
->  <ashok.raj@intel.com>, "tn@semihalf.com" <tn@semihalf.com>,
->  "joro@8bytes.org" <joro@8bytes.org>, "robdclark@gmail.com"
->  <robdclark@gmail.com>, "bharatku@xilinx.com" <bharatku@xilinx.com>,
->  "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
->  "liudongdong3@huawei.com" <liudongdong3@huawei.com>, "rfranz@cavium.com"
->  <rfranz@cavium.com>, "devicetree@vger.kernel.org"
->  <devicetree@vger.kernel.org>, "kevin.tian@intel.com"
->  <kevin.tian@intel.com>, Jacob Pan <jacob.jun.pan@linux.intel.com>,
->  "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
->  "rgummal@xilinx.com" <rgummal@xilinx.com>, "thunder.leizhen@huawei.com"
->  <thunder.leizhen@huawei.com>, "linux-arm-kernel@lists.infradead.org"
->  <linux-arm-kernel@lists.infradead.org>, "shunyong.yang@hxt-semitech.com"
->  <shunyong.yang@hxt-semitech.com>, "dwmw2@infradead.org"
->  <dwmw2@infradead.org>, "liubo95@huawei.com" <liubo95@huawei.com>,
->  "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
->  "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
->  Robin Murphy <Robin.Murphy@arm.com>, "christian.koenig@amd.com"
->  <christian.koenig@amd.com>, "nwatters@codeaurora.org"
->  <nwatters@codeaurora.org>, "baolu.lu@linux.intel.com"
->  <baolu.lu@linux.intel.com>, liguozhu@hisilicon.com,
->  kenneth-lee-2012@foxmail.com
-> Subject: Re: [PATCH v2 03/40] iommu/sva: Manage process address spaces
-> Message-ID: <20180525093959.000040a7@huawei.com>
-> 
-> +CC Kenneth Lee
-> 
-> On Fri, 25 May 2018 09:33:11 +0300
-> Ilias Apalodimas <ilias.apalodimas@linaro.org> wrote:
-> 
-> > On Thu, May 24, 2018 at 04:04:39PM +0100, Jean-Philippe Brucker wrote:
-> > > On 24/05/18 12:50, Ilias Apalodimas wrote:  
-> > > >> Interesting, I hadn't thought about this use-case before. At first I
-> > > >> thought you were talking about mdev devices assigned to VMs, but I think
-> > > >> you're referring to mdevs assigned to userspace drivers instead? Out of
-> > > >> curiosity, is it only theoretical or does someone actually need this?  
-> > > > 
-> > > > There has been some non upstreamed efforts to have mdev and produce userspace
-> > > > drivers. Huawei is using it on what they call "wrapdrive" for crypto devices and
-> > > > we did a proof of concept for ethernet interfaces. At the time we choose not to
-> > > > involve the IOMMU for the reason you mentioned, but having it there would be
-> > > > good.  
-> > > 
-> > > I'm guessing there were good reasons to do it that way but I wonder, is
-> > > it not simpler to just have the kernel driver create a /dev/foo, with a
-> > > standard ioctl/mmap/poll interface? Here VFIO adds a layer of
-> > > indirection, and since the mediating driver has to implement these
-> > > operations already, what is gained?  
-> > The best reason i can come up with is "common code". You already have one API
-> > doing that for you so we replicate it in a /dev file?
-> > The mdev approach still needs extentions to support what we tried to do (i.e
-> > mdev bus might need yo have access on iommu_ops), but as far as i undestand it's
-> > a possible case.
+There is a special case where there is only single bridge on the bus. In
+that case we just assign all resources to it. Currently this is done as
+a part of the resource distribution loop but it does not have to be
+there, and moving it outside actually improves readability because we
+can then save one indent level in the loop.
 
-Hi, Jean, Please allow me to share my understanding here:
-https://zhuanlan.zhihu.com/p/35489035
+While there we can add hotplug_bridges == 1 && normal_bridges == 0 to
+the same block because they are dealt the same way.
 
-The reason we do not use the /dev/foo scheme is that the devices to be
-shared are programmable accelerators. We cannot fix up the kernel driver for them.
-> > > 
-> > > Thanks,
-> > > Jean  
-> 
-> 
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/setup-bus.c | 82 ++++++++++++++++++++---------------------
+ 1 file changed, 41 insertions(+), 41 deletions(-)
 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 072784f55ea5..79b1824e83b4 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1942,57 +1942,57 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 			remaining_mmio_pref -= resource_size(res);
+ 	}
+ 
++	/*
++	 * There is only one bridge on the bus so it gets all available
++	 * resources which it can then distribute to the possible
++	 * hotplug bridges below.
++	 */
++	if (hotplug_bridges + normal_bridges == 1) {
++		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
++		if (dev->subordinate) {
++			pci_bus_distribute_available_resources(dev->subordinate,
++				add_list, available_io, available_mmio,
++				available_mmio_pref);
++		}
++		return;
++	}
++
+ 	/*
+ 	 * Go over devices on this bus and distribute the remaining
+ 	 * resource space between hotplug bridges.
+ 	 */
+ 	for_each_pci_bridge(dev, bus) {
++		resource_size_t align, io, mmio, mmio_pref;
+ 		struct pci_bus *b;
+ 
+ 		b = dev->subordinate;
+-		if (!b)
++		if (!b || !dev->is_hotplug_bridge)
+ 			continue;
+ 
+-		if (!hotplug_bridges && normal_bridges == 1) {
+-			/*
+-			 * There is only one bridge on the bus (upstream
+-			 * port) so it gets all available resources
+-			 * which it can then distribute to the possible
+-			 * hotplug bridges below.
+-			 */
+-			pci_bus_distribute_available_resources(b, add_list,
+-				available_io, available_mmio,
+-				available_mmio_pref);
+-		} else if (dev->is_hotplug_bridge) {
+-			resource_size_t align, io, mmio, mmio_pref;
+-
+-			/*
+-			 * Distribute available extra resources equally
+-			 * between hotplug-capable downstream ports
+-			 * taking alignment into account.
+-			 *
+-			 * Here hotplug_bridges is always != 0.
+-			 */
+-			align = pci_resource_alignment(bridge, io_res);
+-			io = div64_ul(available_io, hotplug_bridges);
+-			io = min(ALIGN(io, align), remaining_io);
+-			remaining_io -= io;
+-
+-			align = pci_resource_alignment(bridge, mmio_res);
+-			mmio = div64_ul(available_mmio, hotplug_bridges);
+-			mmio = min(ALIGN(mmio, align), remaining_mmio);
+-			remaining_mmio -= mmio;
+-
+-			align = pci_resource_alignment(bridge, mmio_pref_res);
+-			mmio_pref = div64_ul(available_mmio_pref,
+-					     hotplug_bridges);
+-			mmio_pref = min(ALIGN(mmio_pref, align),
+-					remaining_mmio_pref);
+-			remaining_mmio_pref -= mmio_pref;
+-
+-			pci_bus_distribute_available_resources(b, add_list, io,
+-							       mmio, mmio_pref);
+-		}
++		/*
++		 * Distribute available extra resources equally between
++		 * hotplug-capable downstream ports taking alignment into
++		 * account.
++		 *
++		 * Here hotplug_bridges is always != 0.
++		 */
++		align = pci_resource_alignment(bridge, io_res);
++		io = div64_ul(available_io, hotplug_bridges);
++		io = min(ALIGN(io, align), remaining_io);
++		remaining_io -= io;
++
++		align = pci_resource_alignment(bridge, mmio_res);
++		mmio = div64_ul(available_mmio, hotplug_bridges);
++		mmio = min(ALIGN(mmio, align), remaining_mmio);
++		remaining_mmio -= mmio;
++
++		align = pci_resource_alignment(bridge, mmio_pref_res);
++		mmio_pref = div64_ul(available_mmio_pref, hotplug_bridges);
++		mmio_pref = min(ALIGN(mmio_pref, align), remaining_mmio_pref);
++		remaining_mmio_pref -= mmio_pref;
++
++		pci_bus_distribute_available_resources(b, add_list, io, mmio,
++						       mmio_pref);
+ 	}
+ }
+ 
 -- 
-			-Kenneth Lee (Hisilicon)
+2.17.0
 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
