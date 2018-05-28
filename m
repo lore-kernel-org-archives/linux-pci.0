@@ -1,94 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:58380 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752030AbeEQOzP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 May 2018 10:55:15 -0400
-Date: Thu, 17 May 2018 10:55:13 -0400
-From: Peter Jones <pjones@redhat.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        ard.biesheuvel@linaro.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        "open list:EFIFB FRAMEBUFFER DRIVER" <linux-fbdev@vger.kernel.org>,
-        "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] efi/fb: Convert PCI bus address to resource if
- translated by the bridge
-Message-ID: <20180517145512.cmr3twodfyz7lzon@redhat.com>
-References: <1526563343-28721-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1526563343-28721-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v8 1/7] PCI: Take all bridges into account when calculating bus numbers for extension
+Date: Mon, 28 May 2018 15:47:50 +0300
+Message-Id: <20180528124756.78512-2-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 17, 2018 at 09:22:23AM -0400, Sinan Kaya wrote:
-> A host bridge is allowed to remap BAR addresses using _TRA attribute in
-> _CRS windows.
-> 
-> pci_bus 0000:00: root bus resource [mem 0x80100100000-0x8011fffffff window] (bus address [0x00100000-0x1fffffff])
-> pci 0000:02:00.0: reg 0x10: [mem 0x8011e000000-0x8011effffff]
-> 
-> When a VGA device is behind such a host bridge and the resource is
-> translated efifb driver is trying to do ioremap against bus address
-> rather than the resource address and is failing to probe.
-> 
-> efifb driver is having difficulty locating the base address from BAR
-> address when
-> 
-> efifb: probing for efifb
-> efifb: cannot reserve video memory at 0x1e000000
-> efifb: framebuffer at 0x1e000000, using 1920k, total 1875k
-> efifb: mode is 800x600x32, linelength=3200, pages=1
-> efifb: scrolling: redraw
-> efifb: Truecolor: size=8:8:8:8, shift=24:16:8:0
-> 
-> Use the host bridge offset information to convert bus address to
-> resource address in the fixup.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+When distributing extra buses between hotplug bridges for future
+extension we currently fail to take into account the fact that there
+might be non-hotplug bridges on the bus after the hotplug bridges. In
+this particular system we have following topology:
 
-Looks reasonable to me - Ard, do you want to take this up through the
-EFI tree?
+  01:00.0 --+- 02:00.0 -- Thunderbolt host controller
+            +- 02:01.0 (HotPlug+)
+            \- 02:02.0 -- xHCI host controller
 
-Signed-off-by: Peter Jones <pjones@redhat.com>
+Now, pci_scan_child_bus_extend() is supposed to distribute remaining bus
+numbers to the hotplug bridge at 02:01.0 but only after all bridges on
+that bus have been been accounted for. Since we don't check upfront that
+there will be another non-hotplug bridge after the hotplug bridge
+02:01.0 it will inadvertently extend over the bus space of the
+non-hotplug bridge:
 
-> ---
->  drivers/video/fbdev/efifb.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
-> index 46a4484..ea68d5c 100644
-> --- a/drivers/video/fbdev/efifb.c
-> +++ b/drivers/video/fbdev/efifb.c
-> @@ -428,6 +428,8 @@ static void efifb_fixup_resources(struct pci_dev *dev)
->  {
->  	u64 base = screen_info.lfb_base;
->  	u64 size = screen_info.lfb_size;
-> +	struct pci_bus_region region;
-> +	struct resource res;
->  	int i;
->  
->  	if (efifb_pci_dev || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
-> @@ -439,6 +441,14 @@ static void efifb_fixup_resources(struct pci_dev *dev)
->  	if (!base)
->  		return;
->  
-> +	region.start = base;
-> +	region.end = base + size - 1;
-> +	res.start = 0;
-> +	res.flags = IORESOURCE_MEM;
-> +	pcibios_bus_to_resource(dev->bus, &res, &region);
-> +	if (res.start)
-> +		base = res.start;
-> +
->  	for (i = 0; i <= PCI_STD_RESOURCE_END; i++) {
->  		struct resource *res = &dev->resource[i];
->  
-> -- 
-> 2.7.4
-> 
+  pci 0000:01:00.0: PCI bridge to [bus 02-39]
+  ...
+  pci_bus 0000:04: [bus 04-39] extended by 0x35
+  pci_bus 0000:04: bus scan returning with max=39
+  pci_bus 0000:04: busn_res: [bus 04-39] end is updated to 39
+  pci 0000:02:02.0: scanning [bus 00-00] behind bridge, pass 1
+  pci_bus 0000:3a: scanning bus
+  pci_bus 0000:3a: bus scan returning with max=3a
+  pci_bus 0000:3a: busn_res: [bus 3a] end is updated to 3a
+  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
+  pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
+  pci_bus 0000:02: bus scan returning with max=3a
+  pci_bus 0000:02: busn_res: [bus 02-39] end can not be updated to 3a
 
+Resulting 'lspci -t' output looks like this:
+
+  +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
+                             ^^   +-01.0-[04-39]--
+                                  \-02.0-[3a]----00.0
+                                          ^^
+The xHCI host controller (3a:00.0) behind downstream bridge at 02:02.0
+is not usable anymore.
+
+To fix this reserve at least one bus for each bridge during scanning of
+already configured bridges. Then we use this information in the second
+scan to correct the available extra bus space for hotplug bridges.
+
+After this change the 'lspci -t' output is what is expected:
+
+  +-1b.0-[01-39]----00.0-[02-39]--+-00.0-[03]----00.0
+                                  +-01.0-[04-38]--
+                                  \-02.0-[39]----00.0
+
+Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
+Reported-by: Mario Limonciello <mario.limonciello@dell.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/probe.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index d14e8f827d53..8f384e7ca2c2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2634,7 +2634,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+ 	for_each_pci_bridge(dev, bus) {
+ 		cmax = max;
+ 		max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
+-		used_buses += cmax - max;
++		/*
++		 * Reserve one bus for each bridge now to avoid
++		 * extending hotplug bridges too much during the second
++		 * scan below.
++		 */
++		used_buses++;
++		if (cmax - max > 1)
++			used_buses += cmax - max - 1;
+ 	}
+ 
+ 	/* Scan bridges that need to be reconfigured */
+@@ -2657,12 +2664,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+ 			 * bridges if any.
+ 			 */
+ 			buses = available_buses / hotplug_bridges;
+-			buses = min(buses, available_buses - used_buses);
++			buses = min(buses, available_buses - used_buses + 1);
+ 		}
+ 
+ 		cmax = max;
+ 		max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
+-		used_buses += max - cmax;
++		/* One bus is already accounted so don't add it again */
++		if (max - cmax > 1)
++			used_buses += max - cmax - 1;
+ 	}
+ 
+ 	/*
 -- 
-  Peter
+2.17.0
+
