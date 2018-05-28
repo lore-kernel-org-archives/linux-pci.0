@@ -1,123 +1,130 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 15 May 2018 14:00:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Subject: Re: [PATCH v4 0/8] PCI: leak fixes, removable generic PCI host,
- assorted stuff
-Message-ID: <20180515190057.GA11156@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1526375226.git.jan.kiszka@siemens.com>
-MIME-Version: 1.0
-In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
- Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v8 0/7] PCI: Fixes and cleanups for native PCIe, SHPC and ACPI hotplug
+Date: Mon, 28 May 2018 15:47:49 +0300
+Message-Id: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 15, 2018 at 11:06:59AM +0200, Jan Kiszka wrote:
-> Changes in v4:
->  - restore pci_free_resource_list() in error path of
->    of_pci_get_host_bridge_resources()
-> 
-> Changes in v3:
->  - refactor series to be both bisectable and simpler while reworking
->    of_pci_get_host_bridge_resources()
->  - include of_pci_get_host_bridge_resources() removal
->  - include devm_of_pci_get_host_bridge_resources() error path fixes
->  - effectively, no functional changes to v2
-> 
-> Changes in v2:
->  - patch 1: commit message reworking as suggested by Lorenzo
->  - patch 3-6: split-up as suggested by Bjorn
->  - patch 8: new
->  - patch 10: select PCI_DOMAINS from PCI_HOST_GENERIC, rather than
->    allowing manual choice, as suggested by Lorenzo
-> 
-> This primarily enables to unbind the generic PCI host controller without
-> leaving lots of memory leaks behind. A previous proposal patch 5 was
-> rejected because of those issues [1].
-> 
-> The fixes have been validated in the Jailhouse setup, where we add and
-> remove a virtual PCI host controller on hypervisor activation/
-> deactivation, with the help of kmemleak.
-> 
-> Besides that, there is tiny PCI API cleanup at the beginning and
-> support for manually enabled PCI domains at the end that enables the
-> Jailhouse scenario.
+When Thunderbolt host router is configured to be in native enumeration mode
+it is only present in the system if there is something connected to the
+ports. This pretty much follows how the BIOS assisted mode works.
 
-This is beautiful!  Thanks for tweaking this one more time; I think it
-really makes the patches much more readable.
+In native enumeration mode the Thunderbolt host controller (NHI) and USB
+host controller (xHCI) are not hot-added using native PCIe hotplug but
+instead they will be hotplugged via BIOS triggered ACPI Notify() to the
+root port. This is done to preserve resources since NHI and xHCI only need
+1 MB of MMIO space and no additional buses. Currently Linux does not
+support this very well and ends up failing the hotplug in one way or
+another. More detailed explanation is in changelog of patch [4/7].
 
-I applied these with the tested-by/reviewed-by/acks to pci/resource for
-v4.18.
+This series fixes this issue and in addition includes fixes for few other
+issues found during testing on a system that has Thunderbolt controller in
+native PCIe enumeration mode. However, the fixes here are not in any way
+Thunderbolt specific and should be applicable to other systems as well.
 
-Andy's comments certainly make sense, but doing it in the "Rework
-of_pci_get_host_bridge_resources()" patch would make that patch less
-obvious, so I'd rather do it as a cleanup on top.
+The previous versions of the patch series can be found here:
 
-> [1] http://lkml.iu.edu/hypermail/linux/kernel/1606.3/00072.html
-> 
-> 
-> CC: Jingoo Han <jingoohan1@gmail.com>
-> CC: Joao Pinto <Joao.Pinto@synopsys.com>
-> CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> CC: Will Deacon <will.deacon@arm.com>
-> 
-> Jan Kiszka (8):
->   PCI: Make pci_get_new_domain_nr() static
->   PCI: Fix memory leak of devm_pci_alloc_host_bridge()
->   PCI: Rename device node parameter of
->     of_pci_get_host_bridge_resources()
->   PCI: Replace dev_node parameter of of_pci_get_host_bridge_resources
->     with device
->   PCI: Replace pr_*() with dev_*() in of_pci_get_host_bridge_resources()
->   PCI: Rework of_pci_get_host_bridge_resources() to
->     devm_of_pci_get_host_bridge_resources()
->   PCI: Add support for unbinding the generic PCI host controller
->   PCI: Enable PCI_DOMAINS along with generic PCI host controller
-> 
->  drivers/pci/dwc/pcie-designware-host.c |  2 +-
->  drivers/pci/host/Kconfig               |  1 +
->  drivers/pci/host/pci-aardvark.c        |  5 ++-
->  drivers/pci/host/pci-ftpci100.c        |  4 +--
->  drivers/pci/host/pci-host-common.c     | 13 +++++++
->  drivers/pci/host/pci-host-generic.c    |  1 +
->  drivers/pci/host/pci-v3-semi.c         |  3 +-
->  drivers/pci/host/pci-versatile.c       |  3 +-
->  drivers/pci/host/pci-xgene.c           |  3 +-
->  drivers/pci/host/pcie-altera.c         |  5 ++-
->  drivers/pci/host/pcie-iproc-platform.c |  4 +--
->  drivers/pci/host/pcie-rcar.c           |  5 ++-
->  drivers/pci/host/pcie-rockchip.c       |  4 +--
->  drivers/pci/host/pcie-xilinx-nwl.c     |  4 +--
->  drivers/pci/host/pcie-xilinx.c         |  4 +--
->  drivers/pci/of.c                       | 65 ++++++++++++++++------------------
->  drivers/pci/pci.c                      |  6 ++--
->  drivers/pci/probe.c                    |  4 ++-
->  include/linux/of_pci.h                 |  4 +--
->  include/linux/pci-ecam.h               |  1 +
->  include/linux/pci.h                    |  3 --
->  21 files changed, 76 insertions(+), 68 deletions(-)
-> 
-> -- 
-> 2.13.6
-> 
+  v7: https://www.spinics.net/lists/linux-pci/msg72558.html
+  v6: https://www.spinics.net/lists/linux-pci/msg72267.html
+  v5: https://www.spinics.net/lists/linux-pci/msg71339.html
+  v4: https://www.spinics.net/lists/linux-pci/msg71006.html
+  v3: https://www.spinics.net/lists/linux-acpi/msg80876.html
+  v2: https://www.spinics.net/lists/linux-pci/msg69186.html
+  v1: https://www.spinics.net/lists/linux-acpi/msg80607.html
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Changes from v7:
+
+  - Rebased on top of pci.git pci/hotplug
+  - Make acpi_get_hp_hw_control_from_firmware() call shpchp_is_native()
+  - Drop !bridge check from shpchp_is_native() and update callers to handle
+    possibly NULL pdev
+  - Split out hotplug_is_native() into a separate patch
+
+Changes from v6:
+
+  - Use IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE) and IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC)
+    directly instaed of wrapping them in macro
+  - Check for !bridge in the same condition than we check whether certain
+    native hotplug is enabled
+  - Add Rafael's Reviewed-by
+
+Changes from v5:
+
+  - Dropped patch "PCI: Take bridge window alignment into account when
+    distributing resources"
+  - Rework pciehp_is_native() to be more stricter
+  - Make standard PCI hotplug driver (SHPC) builtin
+  - Rework the way we request OS control of native PCIe
+    hotplug (pciehp) and standard PCI hotplug (SHPC)
+  - Make acpiphp to avoid bridges where hotplug_is_native() returns true
+    (this is combined from pciehp and SHPC)
+  - Updated changelog of patch [7/12]
+  - Use hotplug_bridges + normal_bridges == 1 in patch [9/12] and also
+    remove one indent level from the loop.
+
+Because patch [7/12] looks quite different now I dropped Reviewed-by and
+stable tag (it now depends on reworked pciehp/SHCP support that most
+probably is not suitable for stable trees).
+
+I also was not able to test that SHPC really works because I don't have
+hardware that supports it.
+
+Changes from v4:
+
+  - Updated message in patch [8/9] following Rafael's suggestion
+  - Added Rafael's tag to patches 6, 7, 9.
+
+Changes from v3:
+
+  - Added Andy's tag to patches [1-5]
+  - Improved changelog and subject line of patch [1/9] to match better what
+    it is trying to solve
+  - Improved comment in patch [1/9]
+  - Improved changelog of patches [2/9] and [4/9] accordingly to match
+    better why they are needed
+  - Added cleanup patches [6-9/9]
+
+Changes from v2:
+
+  - Added Rafael's tag to patch [1/5]
+  - Updated changelog of patch [1/5] to include more details about how the
+    problem can be observed from dmesg and lspci output
+
+Changes from v1:
+
+  - Drop 'cmax - max ?: 1' and use similar construct than we use in second
+    pass loop in patch [1/5]
+  - Drop unnecessary parentheses in patch [1/5]
+  - Added Rafael's tag to patches [2-5/5]
+
+Mika Westerberg (7):
+  PCI: Take all bridges into account when calculating bus numbers for extension
+  PCI: Introduce shpchp_is_native()
+  PCI: Introduce hotplug_is_native()
+  ACPI / hotplug / PCI: Do not scan all bridges when native PCIe hotplug is used
+  ACPI / hotplug / PCI: Mark stale PCI devices disconnected
+  PCI: Move resource distribution for a single bridge outside of the loop
+  PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
+
+ drivers/pci/hotplug/acpi_pcihp.c   |  4 +-
+ drivers/pci/hotplug/acpiphp_glue.c | 80 ++++++++++++++++++++++-------
+ drivers/pci/hotplug/shpchp_core.c  |  2 -
+ drivers/pci/pci-acpi.c             | 21 ++++++++
+ drivers/pci/probe.c                | 19 +++++--
+ drivers/pci/setup-bus.c            | 82 +++++++++++++++---------------
+ include/linux/pci_hotplug.h        |  7 +++
+ 7 files changed, 150 insertions(+), 65 deletions(-)
+
+-- 
+2.17.0
+
