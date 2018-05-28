@@ -1,38 +1,77 @@
-Return-Path: <SRS0=JCzE=IO=ucw.cz=mj+f-270518+helgaas=kernel.org@kernel.org>
-Return-Path: <SRS0=JCzE=IO=ucw.cz=mj+f-270518+helgaas=kernel.org@kernel.org>
-Date: Sun, 27 May 2018 13:55:32 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Rajat Jain <rajatja@google.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] lspci: Indicate if the OS / kernel go out-of-sync on BAR
-Message-ID: <mj+md-20180527.115322.70863.nikam@ucw.cz>
-References: <20180516013333.135259-1-rajatja@google.com>
- <20180524223751.GC15320@bhelgaas-glaptop.roam.corp.google.com>
- <CACK8Z6E6g=+T04qDUXhQrhHr1y5O05yHbjTuLM7oxnn1XJpBmw@mail.gmail.com>
- <20180525183049.GB63280@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	ryan@finnie.org,
+	timur@codeaurora.org
+Subject: [PATCH V3 2/2] scsi: hpsa: drop shutdown callback
+Date: Mon, 28 May 2018 17:21:11 -0400
+Message-Id: <1527542471-10316-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1527542471-10316-1-git-send-email-okaya@codeaurora.org>
+References: <1527542471-10316-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180525183049.GB63280@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Don Brace <don.brace@microsemi.com>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER hpsa"
+ <linux-scsi@vger.kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-arm-msm@vger.kernel.org,
+ "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER hpsa"
+ <esc.storagedev@microsemi.com>, open list <linux-kernel@vger.kernel.org>,
+ stable@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
+shutdown")' has been added to kernel to shutdown pending PCIe port
+service interrupts during reboot so that a newly started kexec kernel
+wouldn't observe pending interrupts.
 
-> I don't disagree; that does sound like it could be useful.  I just
-> don't know the best way to accomplish it.  Seems like you'd have to do
-> something in resource_show() to re-read the BAR and validate the
-> cache.  I don't know what you do if you find that it's invalid.
+pcie_port_device_remove() is disabling the root port and switches by
+calling pci_disable_device() after all PCIe service drivers are shutdown.
 
-I also do not see how to do it in a reasonably simple way.
+This has been found to cause crashes on HP DL360 Gen9 machines during
+reboot due to hpsa driver not clearing the bus master bit during the
+shutdown procedure by calling pci_disable_device().
 
-I checked lspci and it turned out that it already add a "[virtual]"
-marker in cases when the BAR is zero (which was this case -- am I right?)
-and the kernel reports a non-zero address.
+Drop the shutdown API and do an orderly clean up by using the remove.
 
-However, it turned out that the check is never triggered on I/O regions,
-because the BAR contains a non-zero type bit.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
+Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
+Cc: stable@vger.kernel.org
+Reported-by: Ryan Finnie <ryan@finnie.org>
+---
+ drivers/scsi/hpsa.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-I have modified the check to take into account just the address part
-of the BAR. You can check it in the master branch.
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 3a9eca1..3dbef28 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -8970,7 +8970,6 @@ static struct pci_driver hpsa_pci_driver = {
+ 	.probe = hpsa_init_one,
+ 	.remove = hpsa_remove_one,
+ 	.id_table = hpsa_pci_device_id,	/* id_table */
+-	.shutdown = hpsa_shutdown,
+ 	.suspend = hpsa_suspend,
+ 	.resume = hpsa_resume,
+ };
+-- 
+2.7.4
 
-				Martin
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
