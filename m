@@ -1,91 +1,120 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 23 May 2018 16:49:33 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Cc: svarbanov@mm-sol.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bjorn.andersson@linaro.org, vkoul@kernel.org
-Subject: Re: [PATCH v2] PCI: qcom: add runtime pm support to pcie_port
-Message-ID: <20180523154933.GA7827@e107981-ln.cambridge.arm.com>
-References: <20180523104425.6650-1-srinivas.kandagatla@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180523104425.6650-1-srinivas.kandagatla@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga12.intel.com ([192.55.52.136]:49900 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S937813AbeE1MsC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 May 2018 08:48:02 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v8 2/7] PCI: Introduce shpchp_is_native()
+Date: Mon, 28 May 2018 15:47:51 +0300
+Message-Id: <20180528124756.78512-3-mika.westerberg@linux.intel.com>
+In-Reply-To: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2018 at 11:44:25AM +0100, Srinivas Kandagatla wrote:
-> This patch is required when the pcie controller sits on a bus with
-> its own power domain and clocks which are controlled via a bus driver
-> like simple pm bus. As these bus driver have runtime pm enabled, it makes
-> sense to update the usage counter so that the runtime pm does not suspend
-> the clks or power domain associated with the bus driver.
-> 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> ---
->  drivers/pci/dwc/pcie-qcom.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
+In the same way we do for pciehp, introduce a new function
+shpchp_is_native() that returns true whether the bridge should be
+handled by the native SHCP driver. Then convert the driver to use this
+function.
 
-Applied to pci/dwc for v4.18, thanks.
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/acpi_pcihp.c  |  4 ++--
+ drivers/pci/hotplug/shpchp_core.c |  2 --
+ drivers/pci/pci-acpi.c            | 21 +++++++++++++++++++++
+ include/linux/pci_hotplug.h       |  2 ++
+ 4 files changed, 25 insertions(+), 4 deletions(-)
 
-Lorenzo
-
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> index 5897af7d3355..d6ed5aeeae9c 100644
-> --- a/drivers/pci/dwc/pcie-qcom.c
-> +++ b/drivers/pci/dwc/pcie-qcom.c
-> @@ -19,6 +19,7 @@
->  #include <linux/of_device.h>
->  #include <linux/of_gpio.h>
->  #include <linux/pci.h>
-> +#include <linux/pm_runtime.h>
->  #include <linux/platform_device.h>
->  #include <linux/phy/phy.h>
->  #include <linux/regulator/consumer.h>
-> @@ -1088,6 +1089,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
->  	struct qcom_pcie *pcie = to_qcom_pcie(pci);
->  	int ret;
->  
-> +	pm_runtime_get_sync(pci->dev);
->  	qcom_ep_reset_assert(pcie);
->  
->  	ret = pcie->ops->init(pcie);
-> @@ -1124,6 +1126,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
->  	phy_power_off(pcie->phy);
->  err_deinit:
->  	pcie->ops->deinit(pcie);
-> +	pm_runtime_put(pci->dev);
->  
->  	return ret;
->  }
-> @@ -1212,6 +1215,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
->  	if (!pci)
->  		return -ENOMEM;
->  
-> +	pm_runtime_enable(dev);
->  	pci->dev = dev;
->  	pci->ops = &dw_pcie_ops;
->  	pp = &pci->pp;
-> @@ -1257,14 +1261,17 @@ static int qcom_pcie_probe(struct platform_device *pdev)
->  	}
->  
->  	ret = phy_init(pcie->phy);
-> -	if (ret)
-> +	if (ret) {
-> +		pm_runtime_disable(&pdev->dev);
->  		return ret;
-> +	}
->  
->  	platform_set_drvdata(pdev, pcie);
->  
->  	ret = dw_pcie_host_init(pp);
->  	if (ret) {
->  		dev_err(dev, "cannot initialize host\n");
-> +		pm_runtime_disable(&pdev->dev);
->  		return ret;
->  	}
->  
-> -- 
-> 2.16.2
-> 
+diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+index 597d22aeefc1..3979f89b250a 100644
+--- a/drivers/pci/hotplug/acpi_pcihp.c
++++ b/drivers/pci/hotplug/acpi_pcihp.c
+@@ -83,11 +83,11 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
+ 	 * OSHP within the scope of the hotplug controller and its parents,
+ 	 * up to the host bridge under which this controller exists.
+ 	 */
+-	host = pci_find_host_bridge(pdev->bus);
+-	if (host->native_shpc_hotplug)
++	if (shpchp_is_native(pdev))
+ 		return 0;
+ 
+ 	/* If _OSC exists, we should not evaluate OSHP */
++	host = pci_find_host_bridge(pdev->bus);
+ 	root = acpi_pci_find_root(ACPI_HANDLE(&host->dev));
+ 	if (root->osc_support_set)
+ 		goto no_control;
+diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+index 47decc9b3bb3..0f3711404c2b 100644
+--- a/drivers/pci/hotplug/shpchp_core.c
++++ b/drivers/pci/hotplug/shpchp_core.c
+@@ -275,8 +275,6 @@ static int is_shpc_capable(struct pci_dev *dev)
+ 	if (dev->vendor == PCI_VENDOR_ID_AMD &&
+ 	    dev->device == PCI_DEVICE_ID_AMD_GOLAM_7450)
+ 		return 1;
+-	if (!pci_find_capability(dev, PCI_CAP_ID_SHPC))
+-		return 0;
+ 	if (acpi_get_hp_hw_control_from_firmware(dev))
+ 		return 0;
+ 	return 1;
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 52b8434d4d6e..bb83be0d0e5b 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -394,6 +394,27 @@ bool pciehp_is_native(struct pci_dev *bridge)
+ 	return host->native_pcie_hotplug;
+ }
+ 
++/**
++ * shpchp_is_native - Check whether a hotplug port is handled by the OS
++ * @bridge: Hotplug port to check
++ *
++ * Returns true if the given @bridge is handled by the native SHPC hotplug
++ * driver.
++ */
++bool shpchp_is_native(struct pci_dev *bridge)
++{
++	const struct pci_host_bridge *host;
++
++	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
++		return false;
++
++	if (!pci_find_capability(bridge, PCI_CAP_ID_SHPC))
++		return false;
++
++	host = pci_find_host_bridge(bridge->bus);
++	return host->native_shpc_hotplug;
++}
++
+ /**
+  * pci_acpi_wake_bus - Root bus wakeup notification fork function.
+  * @context: Device wakeup context.
+diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+index 1f5c935eb0de..4c378368215c 100644
+--- a/include/linux/pci_hotplug.h
++++ b/include/linux/pci_hotplug.h
+@@ -164,6 +164,7 @@ struct hotplug_params {
+ int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp);
+ bool pciehp_is_native(struct pci_dev *bridge);
+ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge);
++bool shpchp_is_native(struct pci_dev *bridge);
+ int acpi_pci_check_ejectable(struct pci_bus *pbus, acpi_handle handle);
+ int acpi_pci_detect_ejectable(acpi_handle handle);
+ #else
+@@ -178,5 +179,6 @@ static inline int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge)
+ 	return 0;
+ }
+ static inline bool pciehp_is_native(struct pci_dev *bridge) { return true; }
++static inline bool shpchp_is_native(struct pci_dev *bridge) { return true; }
+ #endif
+ #endif
+-- 
+2.17.0
