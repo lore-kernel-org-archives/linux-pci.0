@@ -1,52 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47776 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753190AbeE3QpN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 May 2018 12:45:13 -0400
-Date: Wed, 30 May 2018 11:45:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Meelis Roos <mroos@linux.ee>, sparclinux@vger.kernel.org
-Subject: Re: [PATCH v1 0/4] sparc/PCI: VGA resource and other fixes
-Message-ID: <20180530164511.GG39853@bhelgaas-glaptop.roam.corp.google.com>
-References: <152694888798.59585.8779818482732387864.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180522130217.GA161672@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	ryan@finnie.org,
+	timur@codeaurora.org
+Subject: [PATCH V3 1/2] PCI: Try to clean up resources via remove if shutdown
+ doesn't exist
+Date: Mon, 28 May 2018 17:21:10 -0400
+Message-Id: <1527542471-10316-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180522130217.GA161672@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ stable@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 22, 2018 at 08:02:17AM -0500, Bjorn Helgaas wrote:
-> [+cc sparclinux, sorry I missed this first time around]
-> 
-> On Mon, May 21, 2018 at 07:30:29PM -0500, Bjorn Helgaas wrote:
-> > The main thing here is the first patch, a legacy VGA framebuffer fix for
-> > issues reported by Meelis.
-> > 
-> > The others are to converge the pci_enable_device() path for LEON and PCIC
-> > with other arches (including sparc64), and to convert some logging to use
-> > dev_printk() and make it more consistent with the PCI core.
-> > 
-> > I propose to merge these via the PCI tree.
-> > 
-> > ---
-> > 
-> > Bjorn Helgaas (4):
-> >       sparc/PCI: Request legacy VGA framebuffer only for VGA devices
-> >       sparc32/PCI/LEON: Converge device enable path
-> >       sparc32/PCI/PCIC: Converge device enable path
-> >       sparc/PCI: Use dev_printk() when possible
-> > 
-> > 
-> >  arch/sparc/kernel/leon_pci.c   |   62 ++++++------------
-> >  arch/sparc/kernel/pci.c        |  136 +++++++++++++++++++++++++---------------
-> >  arch/sparc/kernel/pci_common.c |   31 ++-------
-> >  arch/sparc/kernel/pci_msi.c    |   10 +--
-> >  arch/sparc/kernel/pcic.c       |   86 ++++++++++++-------------
-> >  5 files changed, 159 insertions(+), 166 deletions(-)
+It is up to a driver to implement shutdown() callback. If shutdown()
+callback is not implemented, PCI device can have pending interrupt and
+even do DMA transactions while the system is going down.
 
-I applied these to my pci/sparc branch for v4.18 (with fixes for the typos
-reported by Meelis and the kbuild robot).
+If kexec is in use, this can damage the newly booting kexec kernel
+or even prevent it from booting altogether. Fallback to calling the
+remove() callback if shutdown() isn't implemented for a given driver.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
+Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
+Cc: stable@vger.kernel.org
+Reported-by: Ryan Finnie <ryan@finnie.org>
+---
+ drivers/pci/pci-driver.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index cbda0e6..75a00fe 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -477,8 +477,17 @@ static void pci_device_shutdown(struct device *dev)
+ 
+ 	pm_runtime_resume(dev);
+ 
++	/*
++	 * Try shutdown callback if it exists, otherwise fallback to remove
++	 * callback. PCI drivers can do DMA and have pending interrupts.
++	 * Leaving the DMA and interrupts pending could damage the newly
++	 * booting kexec kernel as well as prevent it from booting altogether
++	 * if the pending interrupt is level.
++	 */
+ 	if (drv && drv->shutdown)
+ 		drv->shutdown(pci_dev);
++	else if (drv && drv->remove)
++		drv->remove(pci_dev);
+ 
+ 	/*
+ 	 * If this is a kexec reboot, turn off Bus Master bit on the
+-- 
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
