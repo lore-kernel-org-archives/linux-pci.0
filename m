@@ -1,132 +1,192 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: ryan@finnie.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>, stable@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V2] PCI/portdrv: do not disable device on reboot/shutdown
-Date: Tue, 22 May 2018 22:44:46 -0400
-Message-Id: <1527043490-17268-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ve1eur01on0055.outbound.protection.outlook.com ([104.47.1.55]:44901
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S965980AbeE2Tjk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 May 2018 15:39:40 -0400
+From: Leonard Crestez <leonard.crestez@nxp.com>
+To: Andrey Smirnov <andrew.smirnov@gmail.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Richard Zhu <hongxing.zhu@nxp.com>, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Anson Huang <Anson.Huang@nxp.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Abel Vesa <abel.vesa@nxp.com>
+Subject: [PATCH 2/2] PCI: imx: Initial imx7d pm support
+Date: Tue, 29 May 2018 22:39:17 +0300
+Message-Id: <a6176c8bcfbca08ce4e93e304bdcd48c4600f8e2.1527621510.git.leonard.crestez@nxp.com>
+In-Reply-To: <cover.1527621510.git.leonard.crestez@nxp.com>
+References: <cover.1527621510.git.leonard.crestez@nxp.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
-shutdown")' has been added to kernel to shutdown pending PCIe port
-service interrupts during reboot so that a newly started kexec kernel
-wouldn't observe pending interrupts.
+On imx7d the phy is turned off in suspend and must be reset on resume.
+Right now lspci -v fails after a suspend/resume cycle, fix this by
+adding minimal suspend/resume code from the nxp vendor tree.
 
-pcie_port_device_remove() is disabling the root port and switches by
-calling pci_disable_device() after all PCIe service drivers are shutdown.
+This is currently only enabled for imx7 but the same sequence can be
+applied to other imx pcie variants.
 
-pci_disable_device() has a much wider impact then port service itself and
-it prevents all inbound transactions to reach to the system and impacts
-the entire PCI traffic behind the bridge.
+Tested on imx7d-sabresd with an Intel 5622ANHMW wireless pcie adapter.
 
-Issue is that pcie_port_device_remove() doesn't maintain any coordination
-with the rest of the PCI device drivers in the system before clearing the
-bus master bit.
+The original author is mostly Richard Zhu <hongxing.zhu@nxp.com>, this
+patch adjusts the code to the upstream imx7d implemention using reset
+controls and power domains.
 
-This has been found to cause crashes on HP DL360 Gen9 machines during
-reboot. Besides, kexec is already clearing the bus master bit in
-pci_device_shutdown() after all PCI drivers are removed.
-
-Just remove the extra clear in shutdown path by seperating the remove and
-shutdown APIs in the PORTDRV.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
-Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-Cc: stable@vger.kernel.org
-Reported-by: Ryan Finnie <ryan@finnie.org>
+Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
 ---
- drivers/pci/pcie/portdrv.h      |  2 +-
- drivers/pci/pcie/portdrv_core.c |  5 +++--
- drivers/pci/pcie/portdrv_pci.c  | 16 +++++++++++++---
- 3 files changed, 17 insertions(+), 6 deletions(-)
+ drivers/pci/dwc/pci-imx6.c | 94 ++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 89 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index d0c6783..f6e88fe 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -86,7 +86,7 @@ int pcie_port_device_register(struct pci_dev *dev);
- int pcie_port_device_suspend(struct device *dev);
- int pcie_port_device_resume(struct device *dev);
- #endif
--void pcie_port_device_remove(struct pci_dev *dev);
-+void pcie_port_device_remove(struct pci_dev *dev, bool disable);
- int __must_check pcie_port_bus_register(void);
- void pcie_port_bus_unregister(void);
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+index 4818ef875f8a..ff6077eeb387 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -540,10 +540,27 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
  
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index c9c0663..f35341e 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -405,11 +405,12 @@ static int remove_iter(struct device *dev, void *data)
-  * Remove PCI Express port service devices associated with given port and
-  * disable MSI-X or MSI for the port.
-  */
--void pcie_port_device_remove(struct pci_dev *dev)
-+void pcie_port_device_remove(struct pci_dev *dev, bool disable)
- {
- 	device_for_each_child(&dev->dev, NULL, remove_iter);
- 	pci_free_irq_vectors(dev);
--	pci_disable_device(dev);
-+	if (disable)
-+		pci_disable_device(dev);
+ 	dev_err(dev, "Speed change timeout\n");
+ 	return -EINVAL;
  }
  
- /**
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 973f1b8..29afaf3 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -137,7 +137,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 	return 0;
- }
- 
--static void pcie_portdrv_remove(struct pci_dev *dev)
-+static void __pcie_portdrv_remove(struct pci_dev *dev, bool disable)
- {
- 	if (pci_bridge_d3_possible(dev)) {
- 		pm_runtime_forbid(&dev->dev);
-@@ -145,7 +145,17 @@ static void pcie_portdrv_remove(struct pci_dev *dev)
- 		pm_runtime_dont_use_autosuspend(&dev->dev);
- 	}
- 
--	pcie_port_device_remove(dev);
-+	pcie_port_device_remove(dev, disable);
++static void imx6_pcie_ltssm_enable(struct device *dev)
++{
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++
++	switch (imx6_pcie->variant) {
++	case IMX6Q:
++	case IMX6SX:
++	case IMX6QP:
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX6Q_GPR12_PCIE_CTL_2,
++				   IMX6Q_GPR12_PCIE_CTL_2);
++		break;
++	case IMX7D:
++		reset_control_deassert(imx6_pcie->apps_reset);
++	}
 +}
 +
-+static void pcie_portdrv_remove(struct pci_dev *dev)
+ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ {
+ 	struct dw_pcie *pci = imx6_pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	u32 tmp;
+@@ -558,15 +575,11 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+ 	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
+ 	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
+ 
+ 	/* Start LTSSM. */
+-	if (imx6_pcie->variant == IMX7D)
+-		reset_control_deassert(imx6_pcie->apps_reset);
+-	else
+-		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				   IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
++	imx6_pcie_ltssm_enable(dev);
+ 
+ 	ret = imx6_pcie_wait_for_link(imx6_pcie);
+ 	if (ret)
+ 		goto err_reset_phy;
+ 
+@@ -681,10 +694,80 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+ 
+ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.link_up = imx6_pcie_link_up,
+ };
+ 
++#ifdef CONFIG_PM_SLEEP
++static int imx6_pcie_suspend_noirq(struct device *dev)
 +{
-+	return __pcie_portdrv_remove(dev, true);
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++
++	if (imx6_pcie->variant == IMX7D) {
++		/* Disable clks */
++		clk_disable_unprepare(imx6_pcie->pcie);
++		clk_disable_unprepare(imx6_pcie->pcie_phy);
++		clk_disable_unprepare(imx6_pcie->pcie_bus);
++		/* turn off external osc input */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL,
++				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL);
++	}
++
++	return 0;
 +}
 +
-+static void pcie_portdrv_shutdown(struct pci_dev *dev)
++static void imx6_pcie_ltssm_disable(struct device *dev)
 +{
-+	return __pcie_portdrv_remove(dev, false);
- }
- 
- static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
-@@ -218,7 +228,7 @@ static struct pci_driver pcie_portdriver = {
- 
- 	.probe		= pcie_portdrv_probe,
- 	.remove		= pcie_portdrv_remove,
--	.shutdown	= pcie_portdrv_remove,
-+	.shutdown	= pcie_portdrv_shutdown,
- 
- 	.err_handler	= &pcie_portdrv_err_handler,
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++
++	switch (imx6_pcie->variant) {
++	case IMX6Q:
++	case IMX6SX:
++	case IMX6QP:
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX6Q_GPR12_PCIE_CTL_2, 0);
++		break;
++	case IMX7D:
++		reset_control_assert(imx6_pcie->apps_reset);
++		break;
++	}
++}
++
++static int imx6_pcie_resume_noirq(struct device *dev)
++{
++	int ret = 0;
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++	struct pcie_port *pp = &imx6_pcie->pci->pp;
++
++	if (imx6_pcie->variant == IMX7D) {
++		imx6_pcie_ltssm_disable(dev);
++
++		imx6_pcie_assert_core_reset(imx6_pcie);
++		imx6_pcie_init_phy(imx6_pcie);
++		imx6_pcie_deassert_core_reset(imx6_pcie);
++
++		/*
++		 * controller maybe turn off, re-configure again
++		 */
++		dw_pcie_setup_rc(pp);
++
++		imx6_pcie_ltssm_enable(dev);
++
++		ret = imx6_pcie_wait_for_link(imx6_pcie);
++		if (ret < 0)
++			pr_info("pcie link is down after resume.\n");
++	}
++
++	return 0;
++}
++
++static const struct dev_pm_ops imx6_pcie_pm_ops = {
++	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(imx6_pcie_suspend_noirq,
++				      imx6_pcie_resume_noirq)
++};
++#endif
++
+ static int imx6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct dw_pcie *pci;
+ 	struct imx6_pcie *imx6_pcie;
+@@ -847,10 +930,11 @@ static const struct of_device_id imx6_pcie_of_match[] = {
+ static struct platform_driver imx6_pcie_driver = {
+ 	.driver = {
+ 		.name	= "imx6q-pcie",
+ 		.of_match_table = imx6_pcie_of_match,
+ 		.suppress_bind_attrs = true,
++		.pm = &imx6_pcie_pm_ops,
+ 	},
+ 	.probe    = imx6_pcie_probe,
+ 	.shutdown = imx6_pcie_shutdown,
+ };
  
 -- 
-2.7.4
+2.17.0
