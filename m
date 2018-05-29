@@ -1,84 +1,72 @@
-Return-Path: <SRS0=eT9Y=IS=google.com=rajatja@kernel.org>
-Return-Path: <SRS0=eT9Y=IS=google.com=rajatja@kernel.org>
-MIME-Version: 1.0
-References: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152770285586.80701.6545710900591672975.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CACK8Z6Gs6Wt=qQ9PJJifZT7ZazK1yGtwNZRSTtvwek8iT8oW6w@mail.gmail.com> <20180531044216.GR39853@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180531044216.GR39853@bhelgaas-glaptop.roam.corp.google.com>
-From: Rajat Jain <rajatja@google.com>
-Date: Thu, 31 May 2018 10:35:51 -0700
-Message-ID: <CACK8Z6H+sZztSjKbHFqK1efCwruxVSdDs+5kt96_-NPdM2eGmw@mail.gmail.com>
-Subject: Re: [PATCH v1 1/2] PCI/AER: Decode Error Source Requester ID
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>, Oza Pawandeep <poza@codeaurora.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:33374 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967539AbeE2V7S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 May 2018 17:59:18 -0400
+Received: by mail-qk0-f194.google.com with SMTP id h7-v6so5659788qkm.0
+        for <linux-pci@vger.kernel.org>; Tue, 29 May 2018 14:59:18 -0700 (PDT)
+From: Ray Jui <ray.jui@broadcom.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Cc: linux-kernel@vger.kernel.org,
+        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH 5/6] arm: dts: Change PCIe INTx mapping for HR2
+Date: Tue, 29 May 2018 14:58:49 -0700
+Message-Id: <1527631130-20045-6-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1527631130-20045-1-git-send-email-ray.jui@broadcom.com>
+References: <1527631130-20045-1-git-send-email-ray.jui@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2018 at 9:42 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Wed, May 30, 2018 at 11:41:23AM -0700, Rajat Jain wrote:
-> > On Wed, May 30, 2018 at 10:54 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >
-> > > From: Bjorn Helgaas <bhelgaas@google.com>
-> >
-> > > Decode the Requester ID from the AER Error Source Register into domain/
-> > > bus/device/function format to match other logging.  In cases where the ID
-> > > matches the device used for pci_err(), drop the extra ID completely so we
-> > > don't print it twice.
-> >
-> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > ---
-> > >   drivers/pci/pcie/aer/aerdrv_errprint.c |   18 +++++++++++-------
-> > >   1 file changed, 11 insertions(+), 7 deletions(-)
-> >
-> > > diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> > b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> > > index 21ca5e1b0ded..d7fde8368d81 100644
-> > > --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> > > +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> > > @@ -163,17 +163,17 @@ void aer_print_error(struct pci_dev *dev, struct
-> > aer_err_info *info)
-> > >          int id = ((dev->bus->number << 8) | dev->devfn);
->
-> > >          if (!info->status) {
-> > > -               pci_err(dev, "PCIe Bus Error: severity=%s,
-> > type=Unaccessible, id=%04x(Unregistered Agent ID)\n",
-> > > -                       aer_error_severity_string[info->severity], id);
-> > > +               pci_err(dev, "PCIe Bus Error: severity=%s,
-> > type=Inaccessible, (Unregistered Agent ID)\n",
-> > > +                       aer_error_severity_string[info->severity]);
-> >
-> > Does this code path indicate that a requester id was decoded to a device
-> > that is not registered with the kernel? If so, shouldn't we log the bad
-> > requester ID for better debugging, specifically since there is not going to
-> > be any subsequent print about this ID (since we return from this function
-> > in this case)?
->
-> Previously we printed "id", which was constructed above from "dev":
->
->   id = ((dev->bus->number << 8) | dev->devfn);
->
-> so even if we print "id=%04x", it contains exactly the same
-> information as the bus/device/function printed using "dev".
+Change the PCIe INTx mapping to model the 4 INTx interrupts in the
+IRQ domain of the iProc PCIe controller itself
 
-Sorry, my bad, I missed it, despite it being right there in my face :-).
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+---
+ arch/arm/boot/dts/bcm-hr2.dtsi | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
->
-> So no, I don't think "Unregistered Agent ID" means a device not registered
-> with the kernel.  At any rate, we do have a pci_dev for it.
->
-> I *think* "info->status == 0" means PCI_ERR_COR_STATUS (or
-> PCI_ERR_UNCOR_STATUS) was zero, i.e., we didn't find any error status
-> bits set for this device.  I don't think "Unregistered Agent ID" is a
-> very good description of this situation.
-
-Agree, may be something along the lines of "Unknown Error Status"
-might be better.
-
-Thanks,
-
-Rajat
-
->
-> Bjorn
+diff --git a/arch/arm/boot/dts/bcm-hr2.dtsi b/arch/arm/boot/dts/bcm-hr2.dtsi
+index 3f9cedd..20e3161 100644
+--- a/arch/arm/boot/dts/bcm-hr2.dtsi
++++ b/arch/arm/boot/dts/bcm-hr2.dtsi
+@@ -298,9 +298,14 @@
+ 		compatible = "brcm,iproc-pcie";
+ 		reg = <0x18012000 0x1000>;
+ 
++		interrupt-controller;
+ 		#interrupt-cells = <1>;
+-		interrupt-map-mask = <0 0 0 0>;
+-		interrupt-map = <0 0 0 0 &gic GIC_SPI 186 IRQ_TYPE_NONE>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie0 1>,
++				<0 0 0 2 &pcie0 2>,
++				<0 0 0 3 &pcie0 3>,
++				<0 0 0 4 &pcie0 4>;
++		interrupts = <GIC_SPI 186 IRQ_TYPE_NONE>;
+ 
+ 		linux,pci-domain = <0>;
+ 
+@@ -334,9 +339,14 @@
+ 		compatible = "brcm,iproc-pcie";
+ 		reg = <0x18013000 0x1000>;
+ 
++		interrupt-controller;
+ 		#interrupt-cells = <1>;
+-		interrupt-map-mask = <0 0 0 0>;
+-		interrupt-map = <0 0 0 0 &gic GIC_SPI 192 IRQ_TYPE_NONE>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie1 1>,
++				<0 0 0 2 &pcie1 2>,
++				<0 0 0 3 &pcie1 3>,
++				<0 0 0 4 &pcie1 4>;
++		interrupts = <GIC_SPI 192 IRQ_TYPE_NONE>;
+ 
+ 		linux,pci-domain = <1>;
+ 
+-- 
+2.1.4
