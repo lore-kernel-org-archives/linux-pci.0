@@ -1,62 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:52087 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751438AbeEQIg4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 May 2018 04:36:56 -0400
-Date: Thu, 17 May 2018 10:41:29 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Keith Busch <keith.busch@linux.intel.com>
-Cc: Ming Lei <ming.lei@redhat.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Laurence Oberman <loberman@redhat.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        James Smart <james.smart@broadcom.com>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Jianchao Wang <jianchao.w.wang@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Johannes Thumshirn <jthumshirn@suse.de>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, arjan@linux.intel.com
-Subject: Re: [PATCH V6 11/11] nvme: pci: support nested EH
-Message-ID: <20180517084129.GA26570@lst.de>
-References: <20180516040313.13596-1-ming.lei@redhat.com> <20180516040313.13596-12-ming.lei@redhat.com> <20180516141242.GA20119@localhost.localdomain> <20180516231058.GB28727@ming.t460p> <20180517022030.GB21959@localhost.localdomain>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+        Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 2/7] PCI: Introduce shpchp_is_native()
+Date: Tue, 29 May 2018 11:06:30 +0200
+Message-ID: <7137691.oNv7K4vlJe@aspire.rjw.lan>
+In-Reply-To: <20180528124756.78512-3-mika.westerberg@linux.intel.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com> <20180528124756.78512-3-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180517022030.GB21959@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 16, 2018 at 08:20:31PM -0600, Keith Busch wrote:
-> On Thu, May 17, 2018 at 07:10:59AM +0800, Ming Lei wrote:
-> > All simulation in block/011 may happen in reality.
+On Monday, May 28, 2018 2:47:51 PM CEST Mika Westerberg wrote:
+> In the same way we do for pciehp, introduce a new function
+> shpchp_is_native() that returns true whether the bridge should be
+> handled by the native SHCP driver. Then convert the driver to use this
+> function.
 > 
-> If this test actually simulates reality, then the following one line
-> patch (plus explanation for why) would be a real "fix" as this is very
-> successful in passing block/011. :)
-> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
 > ---
-> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-> index 1faa32cd07da..dcc5746304c4 100644
-> --- a/drivers/nvme/host/pci.c
-> +++ b/drivers/nvme/host/pci.c
-> @@ -2118,6 +2118,12 @@ static int nvme_pci_enable(struct nvme_dev *dev)
+>  drivers/pci/hotplug/acpi_pcihp.c  |  4 ++--
+>  drivers/pci/hotplug/shpchp_core.c |  2 --
+>  drivers/pci/pci-acpi.c            | 21 +++++++++++++++++++++
+>  include/linux/pci_hotplug.h       |  2 ++
+>  4 files changed, 25 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+> index 597d22aeefc1..3979f89b250a 100644
+> --- a/drivers/pci/hotplug/acpi_pcihp.c
+> +++ b/drivers/pci/hotplug/acpi_pcihp.c
+> @@ -83,11 +83,11 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
+>  	 * OSHP within the scope of the hotplug controller and its parents,
+>  	 * up to the host bridge under which this controller exists.
+>  	 */
+> -	host = pci_find_host_bridge(pdev->bus);
+> -	if (host->native_shpc_hotplug)
+> +	if (shpchp_is_native(pdev))
+>  		return 0;
 >  
->  	if (pci_enable_device_mem(pdev))
->  		return result;
-> +	/*
-> +	 * blktests block/011 disables the device without the driver knowing.
-> +	 * We'll just enable the device twice to get the enable_cnt > 1
-> +	 * so that the test's disabling does absolutely nothing.
-> +	 */
-> +	pci_enable_device_mem(pdev);
+>  	/* If _OSC exists, we should not evaluate OSHP */
+> +	host = pci_find_host_bridge(pdev->bus);
+>  	root = acpi_pci_find_root(ACPI_HANDLE(&host->dev));
+>  	if (root->osc_support_set)
+>  		goto no_control;
+> diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+> index 47decc9b3bb3..0f3711404c2b 100644
+> --- a/drivers/pci/hotplug/shpchp_core.c
+> +++ b/drivers/pci/hotplug/shpchp_core.c
+> @@ -275,8 +275,6 @@ static int is_shpc_capable(struct pci_dev *dev)
+>  	if (dev->vendor == PCI_VENDOR_ID_AMD &&
+>  	    dev->device == PCI_DEVICE_ID_AMD_GOLAM_7450)
+>  		return 1;
+> -	if (!pci_find_capability(dev, PCI_CAP_ID_SHPC))
+> -		return 0;
+>  	if (acpi_get_hp_hw_control_from_firmware(dev))
+>  		return 0;
+>  	return 1;
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 52b8434d4d6e..bb83be0d0e5b 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -394,6 +394,27 @@ bool pciehp_is_native(struct pci_dev *bridge)
+>  	return host->native_pcie_hotplug;
+>  }
+>  
+> +/**
+> + * shpchp_is_native - Check whether a hotplug port is handled by the OS
+> + * @bridge: Hotplug port to check
+> + *
+> + * Returns true if the given @bridge is handled by the native SHPC hotplug
+> + * driver.
+> + */
+> +bool shpchp_is_native(struct pci_dev *bridge)
+> +{
+> +	const struct pci_host_bridge *host;
+> +
+> +	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
+> +		return false;
+> +
+> +	if (!pci_find_capability(bridge, PCI_CAP_ID_SHPC))
+> +		return false;
+> +
+> +	host = pci_find_host_bridge(bridge->bus);
+> +	return host->native_shpc_hotplug;
+> +}
+> +
+>  /**
+>   * pci_acpi_wake_bus - Root bus wakeup notification fork function.
+>   * @context: Device wakeup context.
+> diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+> index 1f5c935eb0de..4c378368215c 100644
+> --- a/include/linux/pci_hotplug.h
+> +++ b/include/linux/pci_hotplug.h
+> @@ -164,6 +164,7 @@ struct hotplug_params {
+>  int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp);
+>  bool pciehp_is_native(struct pci_dev *bridge);
+>  int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge);
+> +bool shpchp_is_native(struct pci_dev *bridge);
+>  int acpi_pci_check_ejectable(struct pci_bus *pbus, acpi_handle handle);
+>  int acpi_pci_detect_ejectable(acpi_handle handle);
+>  #else
+> @@ -178,5 +179,6 @@ static inline int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge)
+>  	return 0;
+>  }
+>  static inline bool pciehp_is_native(struct pci_dev *bridge) { return true; }
+> +static inline bool shpchp_is_native(struct pci_dev *bridge) { return true; }
+>  #endif
+>  #endif
+> 
 
-Heh.  But yes, this test and the PCI "enable" interface in sysfs look
-horribly wrong. pci_disable_device/pci_enable_device aren't something we
-can just do underneath the driver.  Even if injecting the lowlevel
-config space manipulations done by it might be useful and a good test
-the Linux state ones are just killing the driver.
 
-The enable attribute appears to have been added by Arjan for the
-Xorg driver.  I think if we have a driver bound to the device we
-should not allow it.
