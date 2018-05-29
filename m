@@ -1,52 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 2 May 2018 05:46:17 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Christoph Hellwig <hch@lst.de>
-Subject: Re: centralize SWIOTLB config symbol and misc other cleanups V3
-Message-ID: <20180502124617.GA22001@infradead.org>
-References: <20180425051539.1989-1-hch@lst.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+        <guohanjun@huawei.com>, <jcm@redhat.com>, <toshi.kani@hpe.com>,
+        <tanxiaojun@huawei.com>, <wangzhou1@hisilicon.com>
+CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Yisheng Xie <xieyisheng1@huawei.com>
+Subject: [PATCH v3 2/2] PCI: Check phys_addr for pci_remap_iospace
+Date: Tue, 29 May 2018 20:18:19 +0800
+Message-ID: <1527596299-57567-2-git-send-email-xieyisheng1@huawei.com>
+In-Reply-To: <1527596299-57567-1-git-send-email-xieyisheng1@huawei.com>
+References: <1527596299-57567-1-git-send-email-xieyisheng1@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20180425051539.1989-1-hch@lst.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-mips@linux-mips.org, sstabellini@kernel.org,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, linux-pci@vger.kernel.org,
- x86@kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org,
- sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Any more comments?  Especially from the x86, mips and powerpc arch
-maintainers?  I'd like to merge this in a few days as various other
-patches depend on it.
+If phys_addr is not page aligned, ioremap_page_range() will align down it
+when get pfn by phys_addr >> PAGE_SHIFT. An example in arm64 system with
+64KB page size:
 
-On Wed, Apr 25, 2018 at 07:15:26AM +0200, Christoph Hellwig wrote:
-> Hi all,
-> 
-> this seris aims for a single defintion of the Kconfig symbol.  To get
-> there various cleanups, mostly about config symbols are included as well.
-> 
-> Changes since V2:
->  - swiotlb doesn't need the dma_length field by itself, so don't select it
->  - don't offer a user visible SWIOTLB choice
-> 
-> Chages since V1:
->  - fixed a incorrect Reviewed-by that should be a Signed-off-by.
-> _______________________________________________
-> iommu mailing list
-> iommu@lists.linux-foundation.org
-> https://lists.linuxfoundation.org/mailman/listinfo/iommu
----end quoted text---
+ phys_addr:  0xefff8000
+ res->start: 0x0
+ res->end:   0x0ffff
+ PCI_IOBASE: 0xffff7fdffee00000
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+This will remap virtual address 0xffff7fdffee00000 to phys_addr 0xefff0000,
+but what we really want is 0xefff8000, which makes later IO access to a
+mess. And users may even donot know this until find some odd phenemenon.
+
+This patch checks whether phys_addr is PAGE_ALIGNED or not to find the
+primary scene.
+
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+---
+ drivers/pci/pci.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 0eb0381..117ca6a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3547,6 +3547,9 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+ 	if (!PAGE_ALIGNED(vaddr) || !PAGE_ALIGNED(resource_size(res)))
+ 		return -EINVAL;
+ 
++	if (!PAGE_ALIGNED(phys_addr))
++		return -EINVAL;
++
+ 	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
+ 				  pgprot_device(PAGE_KERNEL));
+ #else
+-- 
+1.7.12.4
+
