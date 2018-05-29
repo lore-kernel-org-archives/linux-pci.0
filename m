@@ -1,141 +1,135 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v16 1/9] PCI: Unify wait for link active into generic PCI
-Date: Fri, 11 May 2018 06:43:20 -0400
-Message-Id: <1526035408-31328-2-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
-References: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <497165753a0240d3c95e8e6ab9b64d6460b783d6.camel@linux.intel.com>
+Subject: Re: [PATCH v8 2/7] PCI: Introduce shpchp_is_native()
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Date: Tue, 29 May 2018 19:33:35 +0300
+In-Reply-To: <20180528124756.78512-3-mika.westerberg@linux.intel.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+         <20180528124756.78512-3-mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Clients such as HP, DPC are using pcie_wait_link_active(), which waits
-till the link becomes active or inactive.
+On Mon, 2018-05-28 at 15:47 +0300, Mika Westerberg wrote:
+> In the same way we do for pciehp, introduce a new function
+> shpchp_is_native() that returns true whether the bridge should be
+> handled by the native SHCP driver. Then convert the driver to use this
+> function.
+> 
 
-Made generic function and moved it to drivers/pci/pci.c
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/pci/hotplug/acpi_pcihp.c  |  4 ++--
+>  drivers/pci/hotplug/shpchp_core.c |  2 --
+>  drivers/pci/pci-acpi.c            | 21 +++++++++++++++++++++
+>  include/linux/pci_hotplug.h       |  2 ++
+>  4 files changed, 25 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpi_pcihp.c
+> b/drivers/pci/hotplug/acpi_pcihp.c
+> index 597d22aeefc1..3979f89b250a 100644
+> --- a/drivers/pci/hotplug/acpi_pcihp.c
+> +++ b/drivers/pci/hotplug/acpi_pcihp.c
+> @@ -83,11 +83,11 @@ int acpi_get_hp_hw_control_from_firmware(struct
+> pci_dev *pdev)
+>  	 * OSHP within the scope of the hotplug controller and its
+> parents,
+>  	 * up to the host bridge under which this controller exists.
+>  	 */
+> -	host = pci_find_host_bridge(pdev->bus);
+> -	if (host->native_shpc_hotplug)
+> +	if (shpchp_is_native(pdev))
+>  		return 0;
+>  
+>  	/* If _OSC exists, we should not evaluate OSHP */
+> +	host = pci_find_host_bridge(pdev->bus);
+>  	root = acpi_pci_find_root(ACPI_HANDLE(&host->dev));
+>  	if (root->osc_support_set)
+>  		goto no_control;
+> diff --git a/drivers/pci/hotplug/shpchp_core.c
+> b/drivers/pci/hotplug/shpchp_core.c
+> index 47decc9b3bb3..0f3711404c2b 100644
+> --- a/drivers/pci/hotplug/shpchp_core.c
+> +++ b/drivers/pci/hotplug/shpchp_core.c
+> @@ -275,8 +275,6 @@ static int is_shpc_capable(struct pci_dev *dev)
+>  	if (dev->vendor == PCI_VENDOR_ID_AMD &&
+>  	    dev->device == PCI_DEVICE_ID_AMD_GOLAM_7450)
+>  		return 1;
+> -	if (!pci_find_capability(dev, PCI_CAP_ID_SHPC))
+> -		return 0;
+>  	if (acpi_get_hp_hw_control_from_firmware(dev))
+>  		return 0;
+>  	return 1;
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 52b8434d4d6e..bb83be0d0e5b 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -394,6 +394,27 @@ bool pciehp_is_native(struct pci_dev *bridge)
+>  	return host->native_pcie_hotplug;
+>  }
+>  
+> +/**
+> + * shpchp_is_native - Check whether a hotplug port is handled by the
+> OS
+> + * @bridge: Hotplug port to check
+> + *
+> + * Returns true if the given @bridge is handled by the native SHPC
+> hotplug
+> + * driver.
+> + */
+> +bool shpchp_is_native(struct pci_dev *bridge)
+> +{
+> +	const struct pci_host_bridge *host;
+> +
+> +	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
+> +		return false;
+> +
+> +	if (!pci_find_capability(bridge, PCI_CAP_ID_SHPC))
+> +		return false;
+> +
+> +	host = pci_find_host_bridge(bridge->bus);
+> +	return host->native_shpc_hotplug;
+> +}
+> +
+>  /**
+>   * pci_acpi_wake_bus - Root bus wakeup notification fork function.
+>   * @context: Device wakeup context.
+> diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+> index 1f5c935eb0de..4c378368215c 100644
+> --- a/include/linux/pci_hotplug.h
+> +++ b/include/linux/pci_hotplug.h
+> @@ -164,6 +164,7 @@ struct hotplug_params {
+>  int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params
+> *hpp);
+>  bool pciehp_is_native(struct pci_dev *bridge);
+>  int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge);
+> +bool shpchp_is_native(struct pci_dev *bridge);
+>  int acpi_pci_check_ejectable(struct pci_bus *pbus, acpi_handle
+> handle);
+>  int acpi_pci_detect_ejectable(acpi_handle handle);
+>  #else
+> @@ -178,5 +179,6 @@ static inline int
+> acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge)
+>  	return 0;
+>  }
+>  static inline bool pciehp_is_native(struct pci_dev *bridge) { return
+> true; }
+> +static inline bool shpchp_is_native(struct pci_dev *bridge) { return
+> true; }
+>  #endif
+>  #endif
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 18a42f8..e0c2b8e 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -231,25 +231,11 @@ bool pciehp_check_link_active(struct controller *ctrl)
- 	return ret;
- }
- 
--static void __pcie_wait_link_active(struct controller *ctrl, bool active)
--{
--	int timeout = 1000;
--
--	if (pciehp_check_link_active(ctrl) == active)
--		return;
--	while (timeout > 0) {
--		msleep(10);
--		timeout -= 10;
--		if (pciehp_check_link_active(ctrl) == active)
--			return;
--	}
--	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
--			active ? "set" : "cleared");
--}
--
- static void pcie_wait_link_active(struct controller *ctrl)
- {
--	__pcie_wait_link_active(ctrl, true);
-+	struct pci_dev *pdev = ctrl_dev(ctrl);
-+
-+	pcie_wait_for_link(pdev, true);
- }
- 
- static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e597655..adfc553 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4138,6 +4138,35 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 
- 	return pci_dev_wait(dev, "PM D3->D0", PCIE_RESET_READY_POLL_MS);
- }
-+/**
-+ * pcie_wait_for_link - Wait for link till it's active?/inactive?
-+ * @pdev: Bridge device
-+ * @active: waiting for active or inactive ?
-+ *
-+ * Use this to wait till link becomes active or inactive.
-+ */
-+bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
-+{
-+	int timeout = 1000;
-+	bool ret;
-+	u16 lnk_status;
-+
-+	for (;;) {
-+		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-+		ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
-+		if (ret == active)
-+			return true;
-+		if (timeout <= 0)
-+			break;
-+		msleep(10);
-+		timeout -= 10;
-+	}
-+
-+	pci_info(pdev, "Data Link Layer Link Active not %s in 1000 msec\n",
-+		 active ? "set" : "cleared");
-+
-+	return false;
-+}
- 
- void pci_reset_secondary_bus(struct pci_dev *dev)
- {
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 023f7cf..cec9d8c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -353,6 +353,7 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- 
- void pci_enable_acs(struct pci_dev *dev);
- 
-+bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
- #ifdef CONFIG_PCIEASPM
- void pcie_aspm_init_link_state(struct pci_dev *pdev);
- void pcie_aspm_exit_link_state(struct pci_dev *pdev);
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index 8c57d60..80ec384 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -68,19 +68,9 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
- 
- static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- {
--	unsigned long timeout = jiffies + HZ;
- 	struct pci_dev *pdev = dpc->dev->port;
--	struct device *dev = &dpc->dev->device;
--	u16 lnk_status;
- 
--	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
--	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
--					!time_after(jiffies, timeout)) {
--		msleep(10);
--		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
--	}
--	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
--		dev_warn(dev, "Link state not disabled for DPC event\n");
-+	pcie_wait_for_link(pdev, false);
- }
- 
- static void dpc_work(struct work_struct *work)
 -- 
-2.7.4
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
