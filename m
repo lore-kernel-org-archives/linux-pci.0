@@ -1,261 +1,133 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v4 06/14] PCI/P2PDMA: Add P2P DMA driver writer's
- documentation
-To: Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm@lists.01.org,
- linux-block@vger.kernel.org
-References: <20180423233046.21476-1-logang@deltatee.com>
- <20180423233046.21476-7-logang@deltatee.com>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <59b7762e-6d38-7746-20f3-22fd762ecfe7@infradead.org>
-Date: Tue, 22 May 2018 14:24:05 -0700
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 29 May 2018 08:26:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 0/7] PCI: Fixes and cleanups for native PCIe, SHPC and
+ ACPI hotplug
+Message-ID: <20180529132617.GB79098@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180423233046.21476-7-logang@deltatee.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>,
- =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Jonathan Corbet <corbet@lwn.net>, Alex Williamson <alex.williamson@redhat.com>,
- Stephen Bates <sbates@raithlin.com>, Keith Busch <keith.busch@intel.com>,
- =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
- Jason Gunthorpe <jgg@mellanox.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Max Gurtovoy <maxg@mellanox.com>, Dan Williams <dan.j.williams@intel.com>,
- Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/23/2018 04:30 PM, Logan Gunthorpe wrote:
-> Add a restructured text file describing how to write drivers
-> with support for P2P DMA transactions. The document describes
-> how to use the APIs that were added in the previous few
-> commits.
+On Mon, May 28, 2018 at 03:47:49PM +0300, Mika Westerberg wrote:
+> When Thunderbolt host router is configured to be in native enumeration mode
+> it is only present in the system if there is something connected to the
+> ports. This pretty much follows how the BIOS assisted mode works.
 > 
-> Also adds an index for the PCI documentation tree even though this
-> is the only PCI document that has been converted to restructured text
-> at this time.
+> In native enumeration mode the Thunderbolt host controller (NHI) and USB
+> host controller (xHCI) are not hot-added using native PCIe hotplug but
+> instead they will be hotplugged via BIOS triggered ACPI Notify() to the
+> root port. This is done to preserve resources since NHI and xHCI only need
+> 1 MB of MMIO space and no additional buses. Currently Linux does not
+> support this very well and ends up failing the hotplug in one way or
+> another. More detailed explanation is in changelog of patch [4/7].
 > 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Cc: Jonathan Corbet <corbet@lwn.net>
-> ---
->  Documentation/PCI/index.rst             |  14 +++
->  Documentation/driver-api/pci/index.rst  |   1 +
->  Documentation/driver-api/pci/p2pdma.rst | 166 ++++++++++++++++++++++++++++++++
->  Documentation/index.rst                 |   3 +-
->  4 files changed, 183 insertions(+), 1 deletion(-)
->  create mode 100644 Documentation/PCI/index.rst
->  create mode 100644 Documentation/driver-api/pci/p2pdma.rst
+> This series fixes this issue and in addition includes fixes for few other
+> issues found during testing on a system that has Thunderbolt controller in
+> native PCIe enumeration mode. However, the fixes here are not in any way
+> Thunderbolt specific and should be applicable to other systems as well.
+> 
+> The previous versions of the patch series can be found here:
+> 
+>   v7: https://www.spinics.net/lists/linux-pci/msg72558.html
+>   v6: https://www.spinics.net/lists/linux-pci/msg72267.html
+>   v5: https://www.spinics.net/lists/linux-pci/msg71339.html
+>   v4: https://www.spinics.net/lists/linux-pci/msg71006.html
+>   v3: https://www.spinics.net/lists/linux-acpi/msg80876.html
+>   v2: https://www.spinics.net/lists/linux-pci/msg69186.html
+>   v1: https://www.spinics.net/lists/linux-acpi/msg80607.html
+> 
+> Changes from v7:
+> 
+>   - Rebased on top of pci.git pci/hotplug
+>   - Make acpi_get_hp_hw_control_from_firmware() call shpchp_is_native()
+>   - Drop !bridge check from shpchp_is_native() and update callers to handle
+>     possibly NULL pdev
+>   - Split out hotplug_is_native() into a separate patch
+> 
+> Changes from v6:
+> 
+>   - Use IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE) and IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC)
+>     directly instaed of wrapping them in macro
+>   - Check for !bridge in the same condition than we check whether certain
+>     native hotplug is enabled
+>   - Add Rafael's Reviewed-by
+> 
+> Changes from v5:
+> 
+>   - Dropped patch "PCI: Take bridge window alignment into account when
+>     distributing resources"
+>   - Rework pciehp_is_native() to be more stricter
+>   - Make standard PCI hotplug driver (SHPC) builtin
+>   - Rework the way we request OS control of native PCIe
+>     hotplug (pciehp) and standard PCI hotplug (SHPC)
+>   - Make acpiphp to avoid bridges where hotplug_is_native() returns true
+>     (this is combined from pciehp and SHPC)
+>   - Updated changelog of patch [7/12]
+>   - Use hotplug_bridges + normal_bridges == 1 in patch [9/12] and also
+>     remove one indent level from the loop.
+> 
+> Because patch [7/12] looks quite different now I dropped Reviewed-by and
+> stable tag (it now depends on reworked pciehp/SHCP support that most
+> probably is not suitable for stable trees).
+> 
+> I also was not able to test that SHPC really works because I don't have
+> hardware that supports it.
+> 
+> Changes from v4:
+> 
+>   - Updated message in patch [8/9] following Rafael's suggestion
+>   - Added Rafael's tag to patches 6, 7, 9.
+> 
+> Changes from v3:
+> 
+>   - Added Andy's tag to patches [1-5]
+>   - Improved changelog and subject line of patch [1/9] to match better what
+>     it is trying to solve
+>   - Improved comment in patch [1/9]
+>   - Improved changelog of patches [2/9] and [4/9] accordingly to match
+>     better why they are needed
+>   - Added cleanup patches [6-9/9]
+> 
+> Changes from v2:
+> 
+>   - Added Rafael's tag to patch [1/5]
+>   - Updated changelog of patch [1/5] to include more details about how the
+>     problem can be observed from dmesg and lspci output
+> 
+> Changes from v1:
+> 
+>   - Drop 'cmax - max ?: 1' and use similar construct than we use in second
+>     pass loop in patch [1/5]
+>   - Drop unnecessary parentheses in patch [1/5]
+>   - Added Rafael's tag to patches [2-5/5]
+> 
+> Mika Westerberg (7):
+>   PCI: Take all bridges into account when calculating bus numbers for extension
+>   PCI: Introduce shpchp_is_native()
+>   PCI: Introduce hotplug_is_native()
+>   ACPI / hotplug / PCI: Do not scan all bridges when native PCIe hotplug is used
+>   ACPI / hotplug / PCI: Mark stale PCI devices disconnected
+>   PCI: Move resource distribution for a single bridge outside of the loop
+>   PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
 
+I only see these on the mailing list and in patchwork:
 
-> diff --git a/Documentation/driver-api/pci/p2pdma.rst b/Documentation/driver-api/pci/p2pdma.rst
-> new file mode 100644
-> index 000000000000..49a512c405b2
-> --- /dev/null
-> +++ b/Documentation/driver-api/pci/p2pdma.rst
-> @@ -0,0 +1,166 @@
-> +============================
-> +PCI Peer-to-Peer DMA Support
-> +============================
-> +
-> +The PCI bus has pretty decent support for performing DMA transfers
-> +between two endpoints on the bus. This type of transaction is
-> +henceforth called Peer-to-Peer (or P2P). However, there are a number of
-> +issues that make P2P transactions tricky to do in a perfectly safe way.
-> +
-> +One of the biggest issues is that PCI Root Complexes are not required
-> +to support forwarding packets between Root Ports. To make things worse,
-> +there is no simple way to determine if a given Root Complex supports
-> +this or not. (See PCIe r4.0, sec 1.3.1). Therefore, as of this writing,
-> +the kernel only supports doing P2P when the endpoints involved are all
-> +behind the same PCIe root port as the spec guarantees that all
-> +packets will always be routable but does not require routing between
-> +root ports.
-> +
-> +The second issue is that to make use of existing interfaces in Linux,
-> +memory that is used for P2P transactions needs to be backed by struct
-> +pages. However, PCI BARs are not typically cache coherent so there are
-> +a few corner case gotchas with these pages so developers need to
-> +be careful about what they do with them.
-> +
-> +
-> +Driver Writer's Guide
-> +=====================
-> +
-> +In a given P2P implementation there may be three or more different
-> +types of kernel drivers in play:
-> +
-> +* Providers - A driver which provides or publishes P2P resources like
+  [PATCH v8 1/7] PCI: Take all bridges into account when calculating bus numbers for extension
+  [PATCH v8 2/7] PCI: Introduce shpchp_is_native()
+  [PATCH v8 3/7] PCI: Introduce hotplug_is_native()
+  [PATCH v8 6/7] PCI: Move resource distribution for a single bridge outside of the loop
+  [PATCH v8 7/7] PCI: Document return value of pci_scan_bridge() and pci_scan_bridge_extend()
 
-   * Provider -
-
-> +  memory or doorbell registers to other drivers.
-> +* Clients - A driver which makes use of a resource by setting up a
-
-   * Client -
-
-> +  DMA transaction to or from it.
-> +* Orchestrators - A driver which orchestrates the flow of data between
-
-   * Orchestrator -
-
-> +  clients and providers
-> +
-> +In many cases there could be overlap between these three types (ie.
-
-                                                                  (i.e.,
-
-> +it may be typical for a driver to be both a provider and a client).
-> +
-> +For example, in the NVMe Target Copy Offload implementation:
-> +
-> +* The NVMe PCI driver is both a client, provider and orchestrator
-> +  in that it exposes any CMB (Controller Memory Buffer) as a P2P memory
-> +  resource (provider), it accepts P2P memory pages as buffers in requests
-> +  to be used directly (client) and it can also make use the CMB as
-> +  submission queue entries.
-> +* The RDMA driver is a client in this arrangement so that an RNIC
-> +  can DMA directly to the memory exposed by the NVMe device.
-> +* The NVMe Target driver (nvmet) can orchestrate the data from the RNIC
-> +  to the P2P memory (CMB) and then to the NVMe device (and vice versa).
-> +
-> +This is currently the only arrangement supported by the kernel but
-> +one could imagine slight tweaks to this that would allow for the same
-> +functionality. For example, if a specific RNIC added a BAR with some
-> +memory behind it, its driver could add support as a P2P provider and
-> +then the NVMe Target could use the RNIC's memory instead of the CMB
-> +in cases where the NVMe cards in use do not have CMB support.
-> +
-> +
-> +Provider Drivers
-> +----------------
-> +
-> +A provider simply needs to register a BAR (or a portion of a BAR)
-> +as a P2P DMA resource using :c:func:`pci_p2pdma_add_resource()`.
-> +This will register struct pages for all the specified memory.
-> +
-> +After that it may optionally publish all of its resources as
-> +P2P memory using :c:func:`pci_p2pmem_publish()`. This will allow
-> +any orchestrator drivers to find and use the memory. When marked in
-> +this way, the resource must be regular memory with no side effects.
-> +
-> +For the time being this is fairly rudimentary in that all resources
-> +are typically going to be P2P memory. Future work will likely expand
-> +this to include other types of resources like doorbells.
-> +
-> +
-> +Client Drivers
-> +--------------
-> +
-> +A client driver typically only has to conditionally change its DMA map
-> +routine to use the mapping functions :c:func:`pci_p2pdma_map_sg()` and
-> +:c:func:`pci_p2pdma_unmap_sg()` instead of the usual :c:func:`dma_map_sg()`
-> +functions.
-> +
-> +The client may also, optionally, make use of
-> +:c:func:`is_pci_p2pdma_page()` to determine when to use the P2P mapping
-> +functions and when to use the regular mapping functions. In some
-> +situations, it may be more appropriate to use a flag to indicate a
-> +given request is P2P memory and map appropriately (for example the
-> +block layer uses a flag to keep P2P memory out of queues that do not
-> +have P2P client support). It is important to ensure that struct pages that
-> +back P2P memory stay out of code that does not have support for them.
-> +
-> +
-> +Orchestrator Drivers
-> +--------------------
-> +
-> +The first task an orchestrator driver must do is compile a list of
-> +all client drivers that will be involved in a given transaction. For
-> +example, the NVMe Target driver creates a list including all NVMe drives
-                                                                     ^^^^^^
-                                                                   or drivers ?
-Could be either, I guess, but the previous sentence says "compile a list of drivers."
-
-> +and the RNIC in use. The list is stored as an anonymous struct
-> +list_head which must be initialized with the usual INIT_LIST_HEAD.
-> +The following functions may then be used to add to, remove from and free
-> +the list of clients with the functions :c:func:`pci_p2pdma_add_client()`,
-> +:c:func:`pci_p2pdma_remove_client()` and
-> +:c:func:`pci_p2pdma_client_list_free()`.
-> +
-> +With the client list in hand, the orchestrator may then call
-> +:c:func:`pci_p2pmem_find()` to obtain a published P2P memory provider
-> +that is supported (behind the same root port) as all the clients. If more
-> +than one provider is supported, the one nearest to all the clients will
-> +be chosen first. If there are more than one provider is an equal distance
-
-                       there is
-
-> +away, the one returned will be chosen at random. This function returns the PCI
-> +device to use for the provider with a reference taken and therefore
-> +when it's no longer needed it should be returned with pci_dev_put().
-> +
-> +Alternatively, if the orchestrator knows (via some other means)
-> +which provider it wants to use it may use :c:func:`pci_has_p2pmem()`
-> +to determine if it has P2P memory and :c:func:`pci_p2pdma_distance()`
-> +to determine the cumulative distance between it and a potential
-> +list of clients.
-> +
-> +With a supported provider in hand, the driver can then call
-> +:c:func:`pci_p2pdma_assign_provider()` to assign the provider
-> +to the client list. This function returns false if any of the
-> +clients are unsupported by the provider.
-[I would say:]
-           is unsupported
-
-> +
-> +Once a provider is assigned to a client list via either
-> +:c:func:`pci_p2pmem_find()` or :c:func:`pci_p2pdma_assign_provider()`,
-> +the list is permanently bound to the provider such that any new clients
-> +added to the list must be supported by the already selected provider.
-> +If they are not supported, :c:func:`pci_p2pdma_add_client()` will return
-> +an error. In this way, orchestrators are free to add and remove devices
-> +without having to recheck support or tear down existing transfers to
-> +change P2P providers.
-> +
-> +Once a provider is selected, the orchestrator can then use
-> +:c:func:`pci_alloc_p2pmem()` and :c:func:`pci_free_p2pmem()` to
-> +allocate P2P memory from the provider. :c:func:`pci_p2pmem_alloc_sgl()`
-> +and :c:func:`pci_p2pmem_free_sgl()` are convenience functions for
-> +allocating scatter-gather lists with P2P memory.
-> +
-> +Struct Page Caveats
-> +-------------------
-> +
-> +Driver writers should be very careful about not passing these special
-> +struct pages to code that isn't prepared for it. At this time, the kernel
-> +interfaces do not have any checks for ensuring this. This obviously
-> +precludes passing these pages to userspace.
-> +
-> +P2P memory is also technically IO memory but should never have any side
-> +effects behind it. Thus, the order of loads and stores should not be important
-> +and ioreadX(), iowriteX() and friends should not be necessary.
-> +However, as the memory is not cache coherent, if access ever needs to
-> +be protected by a spinlock then :c:func:`mmiowb()` must be used before
-> +unlocking the lock. (See ACQUIRES VS I/O ACCESSES in
-> +Documentation/memory-barriers.txt)
-> +
-> +
-> +P2P DMA Support Library
-> +=====================
-> +
-> +.. kernel-doc:: drivers/pci/p2pdma.c
-> +   :export:
-
-
--- 
-~Randy
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+Looks like patches 4 and 5 are missing for some reason.
