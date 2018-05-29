@@ -1,152 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 1 May 2018 16:52:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v5 3/9] PCI: pciehp: Clear Presence Detect and Data Link
- Layer Status Changed on resume
-Message-ID: <20180501215211.GD11698@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180416103453.46232-1-mika.westerberg@linux.intel.com>
- <20180416103453.46232-4-mika.westerberg@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180416103453.46232-4-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Cc: linux-kernel@vger.kernel.org,
+        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH 4/6] arm: dts: Change PCIe INTx mapping for NSP
+Date: Tue, 29 May 2018 14:58:48 -0700
+Message-Id: <1527631130-20045-5-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1527631130-20045-1-git-send-email-ray.jui@broadcom.com>
+References: <1527631130-20045-1-git-send-email-ray.jui@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mika,
+Change the PCIe INTx mapping to model the 4 INTx interrupts in the
+IRQ domain of the iProc PCIe controller itself
 
-On Mon, Apr 16, 2018 at 01:34:47PM +0300, Mika Westerberg wrote:
-> After suspend/resume cycle the Presence Detect or Data Link Layer Status
-> Changed bits might be set and if we don't clear them those events will
-> not fire anymore and nothing happens for instance when a device is now
-> hot-unplugged.
-> 
-> Fix this by clearing those bits in a newly introduced function
-> pcie_reenable_notification(). This should be fine because immediately
-> after we check if the adapter is still present by reading directly from
-> the status register.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Cc: stable@vger.kernel.org
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+---
+ arch/arm/boot/dts/bcm-nsp.dtsi | 27 +++++++++++++++++++++------
+ 1 file changed, 21 insertions(+), 6 deletions(-)
 
-I want to understand why we need to handle this differently between
-the boot-time probe path and the resume path.
-
-This patch clears PCI_EXP_SLTSTA_PDC and PCI_EXP_SLTSTA_DLLSC in the
-resume path:
-
-  pciehp_resume
-    pcie_reenable_notification
-      # clear PDC DLLSC
-      pcie_enable_notification
-        # set DLLSCE ABPE/PDCE HPIE CCIE
-    pciehp_get_adapter_status
-      # read PCI_EXP_SLTSTA
-
-We used to clear PCI_EXP_SLTSTA_PDC and PCI_EXP_SLTSTA_DLLSC in the
-probe path:
-
-  pciehp_probe
-    pcie_init
-      # clear PDC ABP PFD MRLSC CC DLSCC
-    pcie_init_notification
-      pciehp_request_irq
-      pcie_enable_notification
-        # set DLLSCE ABPE/PDCE HPIE CCIE
-    pciehp_get_adapter_status
-      # read PCI_EXP_SLTSTA
-    pciehp_get_power_status
-
-db63d40017a5 ("PCI: pciehp: Do not clear Presence Detect Changed
-during initialization") changed the probe path so we don't clear
-PCI_EXP_SLTSTA_PDC there anymore.  This was so we wouldn't miss a PDC
-interrupt that happened before probe.
-
-Why can't we handle probe and resume the same way?  They look quite
-similar.
-
-You say this patch should be fine because we read SLTSTA immediately
-after clearing PDC and DLLSC.  But we also read SLTSTA in the probe
-path, so I'm not sure why we need to clear PDC and DLLSC for resume
-but not for probe.
-
-> ---
->  drivers/pci/hotplug/pciehp.h      |  2 +-
->  drivers/pci/hotplug/pciehp_core.c |  2 +-
->  drivers/pci/hotplug/pciehp_hpc.c  | 13 ++++++++++++-
->  3 files changed, 14 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index 88e917c9120f..5f892065585e 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -121,7 +121,7 @@ struct controller *pcie_init(struct pcie_device *dev);
->  int pcie_init_notification(struct controller *ctrl);
->  int pciehp_enable_slot(struct slot *p_slot);
->  int pciehp_disable_slot(struct slot *p_slot);
-> -void pcie_enable_notification(struct controller *ctrl);
-> +void pcie_reenable_notification(struct controller *ctrl);
->  int pciehp_power_on_slot(struct slot *slot);
->  void pciehp_power_off_slot(struct slot *slot);
->  void pciehp_get_power_status(struct slot *slot, u8 *status);
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 332b723ff9e6..44a6a63802d5 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -283,7 +283,7 @@ static int pciehp_resume(struct pcie_device *dev)
->  	ctrl = get_service_data(dev);
->  
->  	/* reinitialize the chipset's event detection logic */
-> -	pcie_enable_notification(ctrl);
-> +	pcie_reenable_notification(ctrl);
->  
->  	slot = ctrl->slot;
->  
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 18a42f8f5dc5..98ea75aa32c7 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -659,7 +659,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
->  	return handled;
->  }
->  
-> -void pcie_enable_notification(struct controller *ctrl)
-> +static void pcie_enable_notification(struct controller *ctrl)
->  {
->  	u16 cmd, mask;
->  
-> @@ -697,6 +697,17 @@ void pcie_enable_notification(struct controller *ctrl)
->  		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
->  }
->  
-> +void pcie_reenable_notification(struct controller *ctrl)
-> +{
-> +	/*
-> +	 * Clear both Presence and Data Link Layer Changed to make sure
-> +	 * those events still fire after we have re-enabled them.
-> +	 */
-> +	pcie_capability_write_word(ctrl->pcie->port, PCI_EXP_SLTSTA,
-> +				   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC);
-> +	pcie_enable_notification(ctrl);
-> +}
-> +
->  static void pcie_disable_notification(struct controller *ctrl)
->  {
->  	u16 mask;
-> -- 
-> 2.16.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/arch/arm/boot/dts/bcm-nsp.dtsi b/arch/arm/boot/dts/bcm-nsp.dtsi
+index dcc55aa..8c4c8b2 100644
+--- a/arch/arm/boot/dts/bcm-nsp.dtsi
++++ b/arch/arm/boot/dts/bcm-nsp.dtsi
+@@ -494,9 +494,14 @@
+ 		compatible = "brcm,iproc-pcie";
+ 		reg = <0x18012000 0x1000>;
+ 
++		interrupt-controller;
+ 		#interrupt-cells = <1>;
+-		interrupt-map-mask = <0 0 0 0>;
+-		interrupt-map = <0 0 0 0 &gic GIC_SPI 131 IRQ_TYPE_NONE>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie0 1>,
++				<0 0 0 2 &pcie0 2>,
++				<0 0 0 3 &pcie0 3>,
++				<0 0 0 4 &pcie0 4>;
++		interrupts = <GIC_SPI 131 IRQ_TYPE_NONE>;
+ 
+ 		linux,pci-domain = <0>;
+ 
+@@ -531,9 +536,14 @@
+ 		compatible = "brcm,iproc-pcie";
+ 		reg = <0x18013000 0x1000>;
+ 
++		interrupt-controller;
+ 		#interrupt-cells = <1>;
+-		interrupt-map-mask = <0 0 0 0>;
+-		interrupt-map = <0 0 0 0 &gic GIC_SPI 137 IRQ_TYPE_NONE>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie1 1>,
++				<0 0 0 2 &pcie1 2>,
++				<0 0 0 3 &pcie1 3>,
++				<0 0 0 4 &pcie1 4>;
++		interrupts = <GIC_SPI 137 IRQ_TYPE_NONE>;
+ 
+ 		linux,pci-domain = <1>;
+ 
+@@ -568,9 +578,14 @@
+ 		compatible = "brcm,iproc-pcie";
+ 		reg = <0x18014000 0x1000>;
+ 
++		interrupt-controller;
+ 		#interrupt-cells = <1>;
+-		interrupt-map-mask = <0 0 0 0>;
+-		interrupt-map = <0 0 0 0 &gic GIC_SPI 143 IRQ_TYPE_NONE>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie2 1>,
++				<0 0 0 2 &pcie2 2>,
++				<0 0 0 3 &pcie2 3>,
++				<0 0 0 4 &pcie2 4>;
++		interrupts = <GIC_SPI 143 IRQ_TYPE_NONE>;
+ 
+ 		linux,pci-domain = <2>;
+ 
+-- 
+2.1.4
