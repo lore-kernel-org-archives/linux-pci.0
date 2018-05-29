@@ -1,85 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-        Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v6 11/12] PCI: Improve "partially hidden behind bridge" log message
-Date: Tue, 15 May 2018 11:22:01 +0200
-Message-ID: <13762149.Hxv4uEjImQ@aspire.rjw.lan>
-In-Reply-To: <20180510182844.77349-12-mika.westerberg@linux.intel.com>
-References: <20180510182844.77349-1-mika.westerberg@linux.intel.com> <20180510182844.77349-12-mika.westerberg@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 29 May 2018 08:20:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v4 4/8] PCI: Replace dev_node parameter of
+ of_pci_get_host_bridge_resources with device
+Message-ID: <20180529132015.GA79098@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1526375226.git.jan.kiszka@siemens.com>
+ <5f2226585c6af9920b266d0503e32042d4c9e440.1526375226.git.jan.kiszka@siemens.com>
+ <a74db976-d330-80b9-939e-dd164a20c8c3@mentor.com>
+ <eb9b477a-33c9-db45-9e62-101e3606e8ff@siemens.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <eb9b477a-33c9-db45-9e62-101e3606e8ff@siemens.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, May 10, 2018 8:28:43 PM CEST Mika Westerberg wrote:
-> There is a sanity checker in the end of pci_scan_child_bus_extend() that
-> tries to detect badly configured bridges. For example given the below
-> topology:
+On Mon, May 28, 2018 at 12:46:35PM +0200, Jan Kiszka wrote:
+> On 2018-05-28 12:00, Vladimir Zapolskiy wrote:
+> > Hi Jan, Bjorn,
+> > 
+> > On 05/15/2018 12:07 PM, Jan Kiszka wrote:
+> >> From: Jan Kiszka <jan.kiszka@siemens.com>
+> >>
+> >> Another step towards a managed version of
+> >> of_pci_get_host_bridge_resources(): Feed in the underlying device,
+> >> rather than just the OF node. This will allow to use managed resource
+> >> allocation internally later on.
+> >>
+> >> CC: Jingoo Han <jingoohan1@gmail.com>
+> >> CC: Joao Pinto <Joao.Pinto@synopsys.com>
+> >> CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> > 
+> > [snip]
+> > 
+> >> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+> >> index a6af62e0256d..61802e55a00c 100644
+> >> --- a/drivers/pci/host/pcie-altera.c
+> >> +++ b/drivers/pci/host/pcie-altera.c
+> >> @@ -488,11 +488,10 @@ static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
+> >>  {
+> >>  	int err, res_valid = 0;
+> >>  	struct device *dev = &pcie->pdev->dev;
+> >> -	struct device_node *np = dev->of_node;
+> >>  	struct resource_entry *win;
+> >>  
+> >> -	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pcie->resources,
+> >> -					       NULL);
+> >> +	err = of_pci_get_host_bridge_resources(dev, 0, 0xff
+> >> +						    &pcie->resources, NULL);
+> >>  	if (err)
+> >>  		return err;
+> >>  
+> > 
+> > In case if it is an undiscovered issue, a comma was mistakenly removed,
+> > which will result it compilation error.
+> > 
+> > The problem is also found in pci/next , see commit 88e3909aa125.
 > 
->   +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
->                                   +-01.0-[04-39]--
->                                   \-02.0-[3a]----00.0
-> 
-> The sanity checker notices this and logs following messages:
-> 
->   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
->   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
-> 
-> This is not really helpful to users and the information above is not
-> even correct (0000:02 is a bus not bridge). Make this a bit more
-> understandable by changing the sanity checker to log following message
-> in place of the above two messages:
-> 
->   pci 0000:02:02.0: devices behind bridge are unusable, because [bus 3a] cannot be assigned for them
-> 
-> While there update the comment on top of the sanity checker block to
-> make it clear that it is not only restricted to CardBus.
-> 
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/probe.c | 14 +++++---------
->  1 file changed, 5 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index a0c48aa1c42f..10084990fbc3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1191,20 +1191,16 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->  		(is_cardbus ? "PCI CardBus %04x:%02x" : "PCI Bus %04x:%02x"),
->  		pci_domain_nr(bus), child->number);
->  
-> -	/* Has only triggered on CardBus, fixup is in yenta_socket */
-> +	/* Check that all devices are accessible */
->  	while (bus->parent) {
->  		if ((child->busn_res.end > bus->busn_res.end) ||
->  		    (child->number > bus->busn_res.end) ||
->  		    (child->number < bus->number) ||
->  		    (child->busn_res.end < bus->number)) {
-> -			dev_info(&child->dev, "%pR %s hidden behind%s bridge %s %pR\n",
-> -				&child->busn_res,
-> -				(bus->number > child->busn_res.end &&
-> -				 bus->busn_res.end < child->number) ?
-> -					"wholly" : "partially",
-> -				bus->self->transparent ? " transparent" : "",
-> -				dev_name(&bus->dev),
-> -				&bus->busn_res);
-> +			dev_info(&dev->dev,
-> +				 "devices behind bridge are unusable, because %pR cannot be assigned for them\n",
-> +				 &child->busn_res);
-> +			break;
->  		}
->  		bus = bus->parent;
->  	}
-> 
+> Yes, that's known. We have a bisection breakage: The issue was fixed
+> again by patch 6 in that series.
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-
+I updated 88e3909aa125 to fix the bisection issue.  I'll rebuild
+pci/next later today or tomorrow.
