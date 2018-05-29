@@ -1,57 +1,174 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <4d6b1ed2ca276d92a940cca1e1fbe22ceba875e7.camel@linux.intel.com>
+Subject: Re: [PATCH v8 6/7] PCI: Move resource distribution for a single
+ bridge outside of the loop
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH] PCI / PM: Do not clear state_saved for devices that remain suspended
-Date: Fri, 18 May 2018 10:17:42 +0200
-Message-ID: <11415287.ki0m5Bqgns@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Date: Tue, 29 May 2018 20:24:11 +0300
+In-Reply-To: <20180528124756.78512-7-mika.westerberg@linux.intel.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+         <20180528124756.78512-7-mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Mon, 2018-05-28 at 15:47 +0300, Mika Westerberg wrote:
+> There is a special case where there is only single bridge on the bus.
+> In
+> that case we just assign all resources to it. Currently this is done
+> as
+> a part of the resource distribution loop but it does not have to be
+> there, and moving it outside actually improves readability because we
+> can then save one indent level in the loop.
+> 
+> While there we can add hotplug_bridges == 1 && normal_bridges == 0 to
+> the same block because they are dealt the same way.
+> 
 
-The state_saved flag should not be cleared in pci_pm_suspend() if the
-given device is going to remain suspended, or the device's config
-space will not be restored properly during the subsequent resume.
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Namely, if the device is going to stay in suspend, both the late
-and noirq callbacks return early for it, so if its state_saved flag
-is cleared in pci_pm_suspend(), it will remain unset throughout the
-remaining part of suspend and resume and pci_restore_state() called
-for the device going forward will return without doing anything.
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/pci/setup-bus.c | 82 ++++++++++++++++++++------------------
+> ---
+>  1 file changed, 41 insertions(+), 41 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 072784f55ea5..79b1824e83b4 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1942,57 +1942,57 @@ static void
+> pci_bus_distribute_available_resources(struct pci_bus *bus,
+>  			remaining_mmio_pref -= resource_size(res);
+>  	}
+>  
+> +	/*
+> +	 * There is only one bridge on the bus so it gets all
+> available
+> +	 * resources which it can then distribute to the possible
+> +	 * hotplug bridges below.
+> +	 */
+> +	if (hotplug_bridges + normal_bridges == 1) {
+> +		dev = list_first_entry(&bus->devices, struct pci_dev,
+> bus_list);
+> +		if (dev->subordinate) {
+> +			pci_bus_distribute_available_resources(dev-
+> >subordinate,
+> +				add_list, available_io,
+> available_mmio,
+> +				available_mmio_pref);
+> +		}
+> +		return;
+> +	}
+> +
+>  	/*
+>  	 * Go over devices on this bus and distribute the remaining
+>  	 * resource space between hotplug bridges.
+>  	 */
+>  	for_each_pci_bridge(dev, bus) {
+> +		resource_size_t align, io, mmio, mmio_pref;
+>  		struct pci_bus *b;
+>  
+>  		b = dev->subordinate;
+> -		if (!b)
+> +		if (!b || !dev->is_hotplug_bridge)
+>  			continue;
+>  
+> -		if (!hotplug_bridges && normal_bridges == 1) {
+> -			/*
+> -			 * There is only one bridge on the bus
+> (upstream
+> -			 * port) so it gets all available resources
+> -			 * which it can then distribute to the
+> possible
+> -			 * hotplug bridges below.
+> -			 */
+> -			pci_bus_distribute_available_resources(b,
+> add_list,
+> -				available_io, available_mmio,
+> -				available_mmio_pref);
+> -		} else if (dev->is_hotplug_bridge) {
+> -			resource_size_t align, io, mmio, mmio_pref;
+> -
+> -			/*
+> -			 * Distribute available extra resources
+> equally
+> -			 * between hotplug-capable downstream ports
+> -			 * taking alignment into account.
+> -			 *
+> -			 * Here hotplug_bridges is always != 0.
+> -			 */
+> -			align = pci_resource_alignment(bridge,
+> io_res);
+> -			io = div64_ul(available_io, hotplug_bridges);
+> -			io = min(ALIGN(io, align), remaining_io);
+> -			remaining_io -= io;
+> -
+> -			align = pci_resource_alignment(bridge,
+> mmio_res);
+> -			mmio = div64_ul(available_mmio,
+> hotplug_bridges);
+> -			mmio = min(ALIGN(mmio, align),
+> remaining_mmio);
+> -			remaining_mmio -= mmio;
+> -
+> -			align = pci_resource_alignment(bridge,
+> mmio_pref_res);
+> -			mmio_pref = div64_ul(available_mmio_pref,
+> -					     hotplug_bridges);
+> -			mmio_pref = min(ALIGN(mmio_pref, align),
+> -					remaining_mmio_pref);
+> -			remaining_mmio_pref -= mmio_pref;
+> -
+> -			pci_bus_distribute_available_resources(b,
+> add_list, io,
+> -							       mmio,
+> mmio_pref);
+> -		}
+> +		/*
+> +		 * Distribute available extra resources equally
+> between
+> +		 * hotplug-capable downstream ports taking alignment
+> into
+> +		 * account.
+> +		 *
+> +		 * Here hotplug_bridges is always != 0.
+> +		 */
+> +		align = pci_resource_alignment(bridge, io_res);
+> +		io = div64_ul(available_io, hotplug_bridges);
+> +		io = min(ALIGN(io, align), remaining_io);
+> +		remaining_io -= io;
+> +
+> +		align = pci_resource_alignment(bridge, mmio_res);
+> +		mmio = div64_ul(available_mmio, hotplug_bridges);
+> +		mmio = min(ALIGN(mmio, align), remaining_mmio);
+> +		remaining_mmio -= mmio;
+> +
+> +		align = pci_resource_alignment(bridge,
+> mmio_pref_res);
+> +		mmio_pref = div64_ul(available_mmio_pref,
+> hotplug_bridges);
+> +		mmio_pref = min(ALIGN(mmio_pref, align),
+> remaining_mmio_pref);
+> +		remaining_mmio_pref -= mmio_pref;
+> +
+> +		pci_bus_distribute_available_resources(b, add_list,
+> io, mmio,
+> +						       mmio_pref);
+>  	}
+>  }
+>  
 
-For this reason, change pci_pm_suspend() to only clear state_saved
-if the given device is not going to remain suspended.  [This is
-analogous to what commit ae860a19f37c (PCI / PM: Do not clear
-state_saved in pci_pm_freeze() when smart suspend is set) did for
-hibernation.]
-
-Fixes: c4b65157aeef (PCI / PM: Take SMART_SUSPEND driver flag into account)
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci-driver.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -753,10 +753,11 @@ static int pci_pm_suspend(struct device
- 	 * better to resume the device from runtime suspend here.
- 	 */
- 	if (!dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) ||
--	    !pci_dev_keep_suspended(pci_dev))
-+	    !pci_dev_keep_suspended(pci_dev)) {
- 		pm_runtime_resume(dev);
-+		pci_dev->state_saved = false;
-+	}
- 
--	pci_dev->state_saved = false;
- 	if (pm->suspend) {
- 		pci_power_t prev = pci_dev->current_state;
- 		int error;
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
