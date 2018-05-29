@@ -1,80 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:40529 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753972AbeEUWFS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 May 2018 18:05:18 -0400
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Phil Edworthy <phil.edworthy@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH][RFC] PCI: rcar: Add bus notifier so we can limit the DMA range
-Date: Tue, 22 May 2018 00:05:14 +0200
-Message-Id: <20180521220514.30256-1-marek.vasut+renesas@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 07/40] iommu: Add a page fault handler
+To: Jacob Pan <jacob.jun.pan@linux.intel.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-8-jean-philippe.brucker@arm.com>
+ <20180518110434.150a0e64@jacob-builder>
+ <8a640794-a6f3-fa01-82a9-06479a6f779a@arm.com>
+ <20180522163521.413e60c6@jacob-builder>
+ <bdf9f221-ab97-2168-d072-b7f6a0dba840@arm.com>
+ <20180525173544.05638510@jacob-builder>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <6bd83326-2da0-1250-3dfc-7d6fbf58d701@arm.com>
+Date: Tue, 29 May 2018 11:00:21 +0100
+MIME-Version: 1.0
+In-Reply-To: <20180525173544.05638510@jacob-builder>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "linux-mm@kvack.org" <linux-mm@kvack.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "rgummal@xilinx.com" <rgummal@xilinx.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Phil Edworthy <phil.edworthy@renesas.com>
+On 26/05/18 01:35, Jacob Pan wrote:
+>>>> Not exactly, it's the IOMMU driver that makes sure all LPIG in its
+>>>> queues are submitted by the above flush call. In more details the
+>>>> flow is:
+>>>>
+>>>> * Either device driver calls unbind()/sva_device_shutdown(), or the
+>>>> process exits.
+>>>> * If the device driver called, then it already told the device to
+>>>> stop using the PASID. Otherwise we use the mm_exit() callback to
+>>>> tell the device driver to stop using the PASID.
+> Sorry I still need more clarification. For the PASID termination
+> initiated by vfio unbind, I don't see device driver given a chance to
+> stop PASID. Seems just call __iommu_sva_unbind_device() which already
+> assume device stopped issuing DMA with the PASID.
+> So it is the vfio unbind caller responsible for doing driver callback
+> to stop DMA on a given PASID?
 
-The PCIe DMA controller on RCar Gen2 and earlier is on 32bit bus,
-so limit the DMA range to 32bit.
+Yes, but I don't know how to implement this. Since PCI doesn't formalize
+the PASID stop mechanism and the device doesn't have a kernel driver,
+VFIO would need help from the userspace driver for stopping PASID
+(notify the userspace driver when an other process exits).
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
-To: linux-pci@vger.kernel.org
----
-NOTE: I'm aware of https://patchwork.kernel.org/patch/9495895/ , but the
-      discussion seems to have gone way off, so I'm sending this as a
-      RFC. Any feedback on how to do this limiting properly would be nice.
----
- drivers/pci/host/pcie-rcar.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index c3eab0b95290..db2b16f40bc1 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -1325,3 +1325,31 @@ static struct platform_driver rcar_pcie_driver = {
- 	.probe = rcar_pcie_probe,
- };
- builtin_platform_driver(rcar_pcie_driver);
-+
-+static int rcar_pcie_pci_notifier(struct notifier_block *nb,
-+			    unsigned long action, void *data)
-+{
-+	struct device *dev = data;
-+
-+	switch (action) {
-+	case BUS_NOTIFY_BOUND_DRIVER:
-+		/* Force the DMA mask to lower 32-bits */
-+		dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
-+		break;
-+	default:
-+		return NOTIFY_DONE;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block device_nb = {
-+	.notifier_call = rcar_pcie_pci_notifier,
-+};
-+
-+static int __init register_rcar_pcie_pci_notifier(void)
-+{
-+	return bus_register_notifier(&pci_bus_type, &device_nb);
-+}
-+
-+arch_initcall(register_rcar_pcie_pci_notifier);
--- 
-2.16.2
+>>>> * In either case, when receiving a stop request from the driver,
+>>>> the device sends the LPIGs to the IOMMU queue.
+>>>> * Then, the flush call above ensures that the IOMMU reports the
+>>>> LPIG with iommu_report_device_fault.
+>>>> * While submitting all LPIGs for this PASID to the work queue,
+>>>> ipof_queue_fault also picked up all partial faults, so the partial
+>>>> list is clean.
+>>>>
+>>>> Maybe I should improve this comment?
+>>>>  
+>>> thanks for explaining. LPIG submission is done by device
+>>> asynchronously w.r.t. driver stopping/decommission PASID.  
+>>
+>> Hmm, it should really be synchronous, otherwise there is no way to
+>> know when the PASID can be decommissioned. We need a guarantee such
+>> as the one in 6.20.1 of the PCIe spec, "Managing PASID TLP Prefix
+>> Usage":
+>>
+>> "When the stop request mechanism indicates completion, the Function
+>> has:
+>> * Completed all Non-Posted Requests associated with this PASID.
+>> * Flushed to the host all Posted Requests addressing host memory in
+>> all TCs that were used by the PASID."
+>>
+>> That's in combination with "The function shall [...] finish
+>> transmitting any multi-page Page Request Messages for this PASID
+>> (i.e. send the Page Request Message with the L bit Set)." from the
+>> ATS spec.
+>>
+> I am not contesting on the device side, what I meant was from the
+> host IOMMU driver perspective, LPIG is received via IOMMU host queue,
+> therefore asynchronous. Not sure about ARM, but on VT-d LPIG submission
+> could meet queue full condition. So per VT-d spec, iommu will generate a
+> successful auto response to the device. At this point, assume we
+> already stopped the given PASID on the device, there might not be
+> another LPIG sent for the device. Therefore, you could have a partial
+> list. I think we can just drop the requests in the partial list for
+> that PASID until the PASID gets re-allocated.
+
+Indeed, I'll add this in next version. For a complete solution to the
+queue-full condition (which seems to behave the same way on ARM) I was
+thinking the IOMMU driver should also have a method for removing all
+partial faults when detecting a queue overflow. Since it doesn't know
+which PRGs did receive an auto-response, all it can do is remove all
+partial faults, for all devices using this queue. But freeing the stuck
+partial faults in flush() and remove_device() should be good enough
+
+Thanks,
+Jean
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
