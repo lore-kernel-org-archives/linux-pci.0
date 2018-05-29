@@ -1,333 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v4 6/8] PCI: Rework of_pci_get_host_bridge_resources() to devm_of_pci_get_host_bridge_resources()
-Date: Tue, 15 May 2018 11:07:05 +0200
-Message-Id: <3aeb2ed038cbce8fe744b614dc19d414555a7e8f.1526375226.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
-References: <cover.1526375226.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
-References: <cover.1526375226.git.jan.kiszka@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 13/40] vfio: Add support for Shared Virtual Addressing
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "linux-acpi@vger.kernel.org"
+ <linux-acpi@vger.kernel.org>, "devicetree@vger.kernel.org"
+ <devicetree@vger.kernel.org>, "iommu@lists.linux-foundation.org"
+ <iommu@lists.linux-foundation.org>, "kvm@vger.kernel.org"
+ <kvm@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-14-jean-philippe.brucker@arm.com>
+ <5B0536A3.1000304@huawei.com> <cd13f60d-b282-3804-4ca7-2d34476c597f@arm.com>
+ <5B06B17C.1090809@huawei.com> <205c1729-8026-3efe-c363-d37d7150d622@arm.com>
+ <5B077765.30703@huawei.com> <fea420ff-e738-e2ed-ab1e-a3f4dde4b6ef@arm.com>
+ <5B08DA21.3070507@huawei.com> <99ff4f89-86ef-a251-894c-8aa8a47d2a69@arm.com>
+From: Xu Zaibo <xuzaibo@huawei.com>
+Message-ID: <5B0D467C.90206@huawei.com>
+Date: Tue, 29 May 2018 20:24:28 +0800
+MIME-Version: 1.0
+In-Reply-To: <99ff4f89-86ef-a251-894c-8aa8a47d2a69@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "bharatku@xilinx.com" <bharatku@xilinx.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "rgummal@xilinx.com" <rgummal@xilinx.com>,
+ Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>,
+ "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
-
-of_pci_get_host_bridge_resources() allocates the resource structures it
-fills dynamically, but none of its callers care to release them so far.
-Rather than requiring everyone to do this explicitly, convert the
-existing function to a managed version.
-
-CC: Jingoo Han <jingoohan1@gmail.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
----
- drivers/pci/dwc/pcie-designware-host.c |  2 +-
- drivers/pci/host/pci-aardvark.c        |  2 +-
- drivers/pci/host/pci-ftpci100.c        |  2 +-
- drivers/pci/host/pci-v3-semi.c         |  2 +-
- drivers/pci/host/pci-versatile.c       |  2 +-
- drivers/pci/host/pci-xgene.c           |  2 +-
- drivers/pci/host/pcie-altera.c         |  2 +-
- drivers/pci/host/pcie-iproc-platform.c |  2 +-
- drivers/pci/host/pcie-rcar.c           |  2 +-
- drivers/pci/host/pcie-rockchip.c       |  2 +-
- drivers/pci/host/pcie-xilinx-nwl.c     |  2 +-
- drivers/pci/host/pcie-xilinx.c         |  2 +-
- drivers/pci/of.c                       | 30 ++++++++++++------------------
- include/linux/of_pci.h                 |  4 ++--
- 14 files changed, 26 insertions(+), 32 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 5a535690b7b5..a8f6ab54b4c0 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -342,7 +342,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (!bridge)
- 		return -ENOMEM;
- 
--	ret = of_pci_get_host_bridge_resources(dev, 0, 0xff,
-+	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
- 					&bridge->windows, &pp->io_base);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 39d8fc2a8a76..1e048dd806dc 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -827,7 +827,7 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
- 
- 	INIT_LIST_HEAD(&pcie->resources);
- 
--	err = of_pci_get_host_bridge_resources(dev, 0, 0xff,
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
- 						    &pcie->resources, &iobase);
- 	if (err)
- 		return err;
-diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-index 5c176f806fe5..87748eaeaaed 100644
---- a/drivers/pci/host/pci-ftpci100.c
-+++ b/drivers/pci/host/pci-ftpci100.c
-@@ -476,7 +476,7 @@ static int faraday_pci_probe(struct platform_device *pdev)
- 	if (IS_ERR(p->base))
- 		return PTR_ERR(p->base);
- 
--	ret = of_pci_get_host_bridge_resources(dev, 0, 0xff,
-+	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
- 						    &res, &io_base);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/pci/host/pci-v3-semi.c b/drivers/pci/host/pci-v3-semi.c
-index f3f39935ac2f..167bf6f6b378 100644
---- a/drivers/pci/host/pci-v3-semi.c
-+++ b/drivers/pci/host/pci-v3-semi.c
-@@ -791,7 +791,7 @@ static int v3_pci_probe(struct platform_device *pdev)
- 	if (IS_ERR(v3->config_base))
- 		return PTR_ERR(v3->config_base);
- 
--	ret = of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
-+	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
- 						    &io_base);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
-index ef33ec0a9e1b..ff2cd12b3978 100644
---- a/drivers/pci/host/pci-versatile.c
-+++ b/drivers/pci/host/pci-versatile.c
-@@ -67,7 +67,7 @@ static int versatile_pci_parse_request_of_pci_ranges(struct device *dev,
- 	resource_size_t iobase;
- 	struct resource_entry *win, *tmp;
- 
--	err = of_pci_get_host_bridge_resources(dev, 0, 0xff, res, &iobase);
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, res, &iobase);
- 	if (err)
- 		return err;
- 
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index 88e9a6d315b3..7b3ed6e34b6c 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -632,7 +632,7 @@ static int xgene_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
--	ret = of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
-+	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
- 						    &iobase);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index 61802e55a00c..49410c7ba0cc 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -490,7 +490,7 @@ static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
- 	struct device *dev = &pcie->pdev->dev;
- 	struct resource_entry *win;
- 
--	err = of_pci_get_host_bridge_resources(dev, 0, 0xff
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff
- 						    &pcie->resources, NULL);
- 	if (err)
- 		return err;
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index cec0130326c9..99c2022813e4 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -99,7 +99,7 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- 		pcie->phy = NULL;
- 	}
- 
--	ret = of_pci_get_host_bridge_resources(dev, 0, 0xff, &resources,
-+	ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &resources,
- 						    &iobase);
- 	if (ret) {
- 		dev_err(dev, "unable to get PCI host bridge resources\n");
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 4c1787e021fd..6eb36c924983 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -1070,7 +1070,7 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
- 	resource_size_t iobase;
- 	struct resource_entry *win, *tmp;
- 
--	err = of_pci_get_host_bridge_resources(dev, 0, 0xff,
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
- 						    &pci->resources, &iobase);
- 	if (err)
- 		return err;
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index abac972f0dc2..27b97fcddf15 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -1560,7 +1560,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	if (err < 0)
- 		goto err_deinit_port;
- 
--	err = of_pci_get_host_bridge_resources(dev, 0, 0xff,
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
- 						    &res, &io_base);
- 	if (err)
- 		goto err_remove_irq_domain;
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 6aea997cd21b..64df768c795c 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -854,7 +854,7 @@ static int nwl_pcie_probe(struct platform_device *pdev)
- 		return err;
- 	}
- 
--	err = of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
- 						    &iobase);
- 	if (err) {
- 		dev_err(dev, "Getting bridge resources failed\n");
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index fa5e44a480a4..88c96e5669e0 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -643,7 +643,7 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 		return err;
- 	}
- 
--	err = of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
- 						    &iobase);
- 	if (err) {
- 		dev_err(dev, "Getting bridge resources failed\n");
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 4f21514cb4e4..b06585a1da75 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -244,7 +244,8 @@ EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
- 
- #if defined(CONFIG_OF_ADDRESS)
- /**
-- * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
-+ * devm_of_pci_get_host_bridge_resources() - Resource-managed parsing of PCI
-+ *                                           host bridge resources from DT
-  * @dev: host bridge device
-  * @busno: bus number associated with the bridge root bus
-  * @bus_max: maximum number of buses for this bridge
-@@ -253,8 +254,6 @@ EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
-  * address for the start of the I/O range. Can be NULL if the caller doesn't
-  * expect I/O ranges to be present in the device tree.
-  *
-- * It is the caller's job to free the @resources list.
-- *
-  * This function will parse the "ranges" property of a PCI host bridge device
-  * node and setup the resource mapping based on its content. It is expected
-  * that the property conforms with the Power ePAPR document.
-@@ -262,12 +261,11 @@ EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
-  * It returns zero if the range parsing has been successful or a standard error
-  * value if it failed.
-  */
--int of_pci_get_host_bridge_resources(struct device *dev,
-+int devm_of_pci_get_host_bridge_resources(struct device *dev,
- 			unsigned char busno, unsigned char bus_max,
- 			struct list_head *resources, resource_size_t *io_base)
- {
- 	struct device_node *dev_node = dev->of_node;
--	struct resource_entry *window;
- 	struct resource *res;
- 	struct resource *bus_range;
- 	struct of_pci_range range;
-@@ -278,7 +276,7 @@ int of_pci_get_host_bridge_resources(struct device *dev,
- 	if (io_base)
- 		*io_base = (resource_size_t)OF_BAD_ADDR;
- 
--	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
-+	bus_range = devm_kzalloc(dev, sizeof(*bus_range), GFP_KERNEL);
- 	if (!bus_range)
- 		return -ENOMEM;
- 
-@@ -300,7 +298,7 @@ int of_pci_get_host_bridge_resources(struct device *dev,
- 	/* Check for ranges property */
- 	err = of_pci_range_parser_init(&parser, dev_node);
- 	if (err)
--		goto parse_failed;
-+		goto failed;
- 
- 	dev_dbg(dev, "Parsing ranges property...\n");
- 	for_each_of_pci_range(&parser, &range) {
-@@ -322,15 +320,15 @@ int of_pci_get_host_bridge_resources(struct device *dev,
- 		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
- 			continue;
- 
--		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-+		res = devm_kzalloc(dev, sizeof(struct resource), GFP_KERNEL);
- 		if (!res) {
- 			err = -ENOMEM;
--			goto parse_failed;
-+			goto failed;
- 		}
- 
- 		err = of_pci_range_to_resource(&range, dev_node, res);
- 		if (err) {
--			kfree(res);
-+			devm_kfree(dev, res);
- 			continue;
- 		}
- 
-@@ -340,7 +338,7 @@ int of_pci_get_host_bridge_resources(struct device *dev,
- 					"I/O range found for %pOF. Please provide an io_base pointer to save CPU base address\n",
- 					dev_node);
- 				err = -EINVAL;
--				goto conversion_failed;
-+				goto failed;
- 			}
- 			if (*io_base != (resource_size_t)OF_BAD_ADDR)
- 				dev_warn(dev,
-@@ -354,15 +352,11 @@ int of_pci_get_host_bridge_resources(struct device *dev,
- 
- 	return 0;
- 
--conversion_failed:
--	kfree(res);
--parse_failed:
--	resource_list_for_each_entry(window, resources)
--		kfree(window->res);
-+failed:
- 	pci_free_resource_list(resources);
- 	return err;
- }
--EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-+EXPORT_SYMBOL_GPL(devm_of_pci_get_host_bridge_resources);
- #endif /* CONFIG_OF_ADDRESS */
- 
- /**
-@@ -606,7 +600,7 @@ int pci_parse_request_of_pci_ranges(struct device *dev,
- 	struct resource_entry *win, *tmp;
- 
- 	INIT_LIST_HEAD(resources);
--	err = of_pci_get_host_bridge_resources(dev, 0, 0xff, resources,
-+	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, resources,
- 						    &iobase);
- 	if (err)
- 		return err;
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index e6684c68cb94..fa4463a52900 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -71,11 +71,11 @@ of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
- #endif
- 
- #if defined(CONFIG_OF_ADDRESS)
--int of_pci_get_host_bridge_resources(struct device *dev,
-+int devm_of_pci_get_host_bridge_resources(struct device *dev,
- 			unsigned char busno, unsigned char bus_max,
- 			struct list_head *resources, resource_size_t *io_base);
- #else
--static inline int of_pci_get_host_bridge_resources(struct device *dev,
-+static inline int devm_of_pci_get_host_bridge_resources(struct device *dev,
- 			unsigned char busno, unsigned char bus_max,
- 			struct list_head *resources, resource_size_t *io_base)
- {
--- 
-2.13.6
+SGksCgpPbiAyMDE4LzUvMjkgMTk6NTUsIEplYW4tUGhpbGlwcGUgQnJ1Y2tlciB3cm90ZToKPiAo
+SWYgcG9zc2libGUsIHBsZWFzZSByZXBseSBpbiBwbGFpbiB0ZXh0IHRvIHRoZSBsaXN0LiBSZWFk
+aW5nIHRoaXMgaW4gYQo+IHRleHQtb25seSByZWFkZXIgaXMgY29uZnVzaW5nLCBiZWNhdXNlIGFs
+bCBxdW90ZXMgaGF2ZSB0aGUgc2FtZSBsZXZlbCkKU29ycnkgZm9yIHRoYXTvvIwgSSBoYXZlIHJl
+c2V0IHRoZSB0aHVuZGVyYmlyZCwgOikgdGhhbmtzLgo+IE9uIDI2LzA1LzE4IDA0OjUzLCBYdSBa
+YWlibyB3cm90ZToKPj4gSSBndWVzcyB0aGVyZSBtYXkgYmUgc29tZSBtaXN1bmRlcnN0YW5kaW5n
+cyA6KS4KPj4KPj4gIEZyb20gdGhlIGN1cnJlbnQgcGF0Y2hlcywgJ2lvbW11X3N2YV9kZXZpY2Vf
+c2h1dGRvd24nIGlzIGNhbGxlZCBieSAndmZpb19pb21tdV9zdmFfc2h1dGRvd24nLCB3aGljaAo+
+PiBpcyBtYWlubHkgdXNlZCBieSAndmZpb19pb21tdV90eXBlMV9kZXRhY2hfZ3JvdXAnIHRoYXQg
+aXMgZmluYWxseSBjYWxsZWQgYnkgcHJvY2Vzc2VzJyByZWxlYXNlIG9mIHZmaW8gZmFjaWxpdGl5
+Cj4+IGF1dG9tYXRpY2FsbHkgb3IgY2FsbGVkIGJ5ICdWRklPX0dST1VQX1VOU0VUX0NPTlRBSU5F
+UicgbWFudWFsbHkgaW4gdGhlIHByb2Nlc3Nlcy4KPj4KPj4gU28sIGp1c3QgaW1hZ2UgdGhhdCAy
+IHByb2Nlc3NlcyBpcyB3b3JraW5nIG9uIHRoZSBkZXZpY2Ugd2l0aCBJT1BGIGZlYXR1cmUsIGFu
+ZCB0aGUgMiBkbyB0aGUgZm9sbG93aW5nIHRvIGVuYWJsZSBTVkE6Cj4+Cj4+ICAgICAgMS5vcGVu
+KCIvZGV2L3ZmaW8vdmZpbyIpIDsKPj4KPj4gICAgIDIub3BlbiB0aGUgZ3JvdXAgb2YgdGhlIGRl
+dmNpZSBieSBjYWxsaW5nIG9wZW4oIi9kZXYvdmZpby94IiksIGJ1dCBub3csCj4+ICAgICAgIEkg
+dGhpbmsgdGhlIHNlY29uZCBwcm9jZXNzZXMgd2lsbCBmYWlsIHRvIG9wZW4gdGhlIGdyb3VwIGJl
+Y2F1c2UgY3VycmVudCBWRklPIHRoaW5rcyB0aGF0IG9uZSBncm91cCBvbmx5IGNhbiBiZSB1c2Vk
+IGJ5IG9uZSBwcm9jZXNzL3ZtLAo+PiAgICAgICBhdCBwcmVzZW50LCBJIHVzZSBtZWRpYXRlZCBk
+ZXZpY2UgdG8gY3JlYXRlIG1vcmUgZ3JvdXBzIG9uIHRoZSBwYXJlbnQgZGV2aWNlIHRvIHN1cHBv
+cnQgbXVsdGlwbGUgcHJvY2Vzc2VzOwo+Pgo+PiAgICAgIDMuVkZJT19HUk9VUF9TRVRfQ09OVEFJ
+TkVSOwo+Pgo+PiAgICAgIDQuVkZJT19TRVRfSU9NTVU7Cj4+Cj4+ICAgICAgNS5WRklPX0lPTU1V
+X0JJTkQ7Cj4gSSBoYXZlIGEgY29uY2VybiByZWdhcmRpbmcgeW91ciBkcml2ZXIuIFdpdGggbWRl
+diB5b3UgY2FuJ3QgYWxsb3cKPiBwcm9jZXNzZXMgdG8gcHJvZ3JhbSB0aGUgUEFTSUQgdGhlbXNl
+bHZlcywgc2luY2UgdGhlIHBhcmVudCBkZXZpY2UgaGFzIGEKPiBzaW5nbGUgUEFTSUQgdGFibGUu
+IFlvdSBsb3NlIGFsbCBpc29sYXRpb24gc2luY2UgcHJvY2Vzc2VzIGNvdWxkIHdyaXRlCj4gYW55
+IHZhbHVlIGluIHRoZSBQQVNJRCBmaWVsZCBhbmQgYWNjZXNzIGFkZHJlc3Mgc3BhY2VzIG9mIG90
+aGVyCj4gcHJvY2Vzc2VzIGJvdW5kIHRvIHRoaXMgcGFyZW50IGRldmljZSAoZXZlbiBpZiB0aGUg
+QklORCBjYWxsIHdhcyBmb3IKPiBvdGhlciBtZGV2cykuClllcywgaWYgd3JhcGRyaXZlIGRvIG5v
+dGhpbmcgb24gdGhpcyBQQVNJRCBzZXR0aW5nIHByb2NlZHVyZSBpbiBrZXJuZWwgCnNwYWNlLCBJ
+IHRoaW5rCnRoZXJlIGRlZmluaXRlbHkgZXhpc3RzIHRoaXMgc2VjdXJpdHkgcmlzay4KPiBUaGUg
+d3JhcCBkcml2ZXIgaGFzIHRvIG1lZGlhdGUgY2FsbHMgdG8gYmluZCgpLCBhbmQgZWl0aGVyIHBy
+b2dyYW0gdGhlCj4gUEFTSUQgaW50byB0aGUgZGV2aWNlIGl0c2VsZiwgb3IgYXQgbGVhc3QgY2hl
+Y2sgdGhhdCwgd2hlbiByZWNlaXZpbmcgYQo+IFNFVF9QQVNJRCBpb2N0bCBmcm9tIGEgcHJvY2Vz
+cywgdGhlIGdpdmVuIFBBU0lEIHdhcyBhY3R1YWxseSBhbGxvY2F0ZWQKPiB0byB0aGUgcHJvY2Vz
+cy4KWWVzLCBnb29kIGFkdmljZSwgdGhhbmtzLgo+Cj4+ICAgICAgNi5EbyBzb21lIHdvcmtzIHdp
+dGggdGhlIGhhcmR3YXJlIHdvcmtpbmcgdW5pdCBmaWxsZWQgYnkgUEFTSUQgb24gdGhlIGRldmlj
+ZTsKPj4KPj4gICAgIDcuVkZJT19JT01NVV9VTkJJTkQ7Cj4+Cj4+ICAgICAgOC5WRklPX0dST1VQ
+X1VOU0VUX0NPTlRBSU5FUjstLS1oZXJlLCBoYXZlIHRvIHNsZWVwIHRvIHdhaXQgYW5vdGhlciBw
+cm9jZXNzIHRvIGZpbmlzaCB3b3JrcyBvZiB0aGUgc3RlcCA2Owo+Pgo+PiAgICAgIDkuIGNsb3Nl
+KGdyb3VwKTsgY2xvc2UoY29udGFpbm5lcik7Cj4+Cj4+Cj4+IFNvLCBteSBpZGVhIGlzOiBJZiBp
+dCBpcyBwb3NzaWJsZSB0byBqdXN0IHJlbGVhc2UgdGhlIHBhcmFtcyBvciBmYWNpbGl0aWVzIHRo
+YXQgb25seSBiZWxvbmcgdG8gdGhlIGN1cnJlbnQgcHJvY2VzcyB3aGlsZSB0aGUgcHJvY2VzcyBz
+aHV0ZG93biB0aGUgZGV2aWNlLAo+PiBhbmQgd2hpbGUgdGhlIGxhc3QgcHJvY2VzcyByZWxlYXNl
+cyB0aGVtIGFsbC4gVGhlbiwgYXMgaW4gdGhlIGFib3ZlIHN0ZXAgOCwgd2UKPj4gZG9uJ3QgbmVl
+ZCB0byB3YWl0LCBvciBtYXliZSB3YWl0IGZvciBhIHZlcnkgbG9uZyB0aW1lIGlmIHRoZSBvdGhl
+ciBwcm9jZXNzIGlzIGRvaW5nIGxvdHMgb2Ygd29yayBvbiB0aGUgZGV2aWNlLgo+IEdpdmVuIHRo
+YXQgeW91IG5lZWQgdG8gbm90aWZ5IHRoZSBtZWRpYXRpbmcgZHJpdmVyIG9mIElPTU1VX0JJTkQg
+Y2FsbHMKPiBhcyBleHBsYWluZWQgYWJvdmUsIHlvdSBjb3VsZCBkbyBzb21ldGhpbmcgc2ltaWxh
+ciBmb3Igc2h1dGRvd246IGZyb20KPiB0aGUgbWRldiBkcml2ZXIsIGNhbGwgaW9tbXVfc3ZhX3No
+dXRkb3duX2RldmljZSgpIG9ubHkgZm9yIHRoZSBsYXN0IG1kZXYuCkN1cnJlbnRseSwgSSBhZGQg
+YW4gQVBJIHRvIGNoZWNrIGlmIGl0IGlzIHRoZSBsYXN0IG1kZXYgaW4gd3JhcGRyaXZlLCBhcyAK
+dmZpbyBzaHV0ZG93bnMgdGhlIGRldmljZSwKaXQgY2FsbCB0aGUgQVBJIHRvIGRvIHRoZSBjaGVj
+ayBhdCBmaXJzdC4KClRoYW5rcwpaYWlibwoKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1h
+cm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcv
+bWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
