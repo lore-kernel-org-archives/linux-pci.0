@@ -1,75 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:43689 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753306AbeEVXUR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 19:20:17 -0400
-Subject: Re: [PATCH 4/4] PCI: rcar: Teardown MSI setup if rcar_pcie_enable()
- fails
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
- <20180521131123.2009-4-marek.vasut+renesas@gmail.com>
- <CAMuHMdVhrb_dR7TP3PU=rsbne+9BZu=BHA9XAK=L1so98HogtA@mail.gmail.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <f4622ab5-3c94-bb99-cfc3-1929dd88092e@gmail.com>
-Date: Tue, 22 May 2018 23:53:12 +0200
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 39/40] iommu/arm-smmu-v3: Add support for PRI
+To: Bharat Kumar Gogada <bharatku@xilinx.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>
+Cc: "joro@8bytes.org" <joro@8bytes.org>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "tn@semihalf.com" <tn@semihalf.com>,
+        "liubo95@huawei.com" <liubo95@huawei.com>,
+        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+        "rfranz@cavium.com" <rfranz@cavium.com>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>,
+        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
+        "robdclark@gmail.com" <robdclark@gmail.com>,
+        "christian.koenig@amd.com" <christian.koenig@amd.com>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-40-jean-philippe.brucker@arm.com>
+ <BLUPR0201MB150513BBAA161355DE9B3A48A5690@BLUPR0201MB1505.namprd02.prod.outlook.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <4e36ddb0-f1c3-f434-d330-be2dc9b88bb8@arm.com>
+Date: Tue, 29 May 2018 11:27:33 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdVhrb_dR7TP3PU=rsbne+9BZu=BHA9XAK=L1so98HogtA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <BLUPR0201MB150513BBAA161355DE9B3A48A5690@BLUPR0201MB1505.namprd02.prod.outlook.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/22/2018 08:36 PM, Geert Uytterhoeven wrote:
-> Hi Marek,
+On 25/05/18 15:08, Bharat Kumar Gogada wrote:
+>> +	master->can_fault = true;
+>> +	master->ste.prg_resp_needs_ssid =
+>> pci_prg_resp_requires_prefix(pdev);
 > 
-> On Mon, May 21, 2018 at 3:11 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
->> If the rcar_pcie_enable() fails and MSIs are enabled, the setup done in
->> rcar_pcie_enable_msi() is never undone. Add a function to tear down the
->> MSI setup by disabling the MSI handling in the PCIe block, deallocating
->> the pages requested for the MSIs and zapping the IRQ mapping.
->>
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> 
-> Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> 
->> --- a/drivers/pci/host/pcie-rcar.c
->> +++ b/drivers/pci/host/pcie-rcar.c
->> @@ -900,6 +900,28 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
->>         return err;
->>  }
->>
->> +static void rcar_pcie_teardown_msi(struct rcar_pcie *pcie)
->> +{
->> +       struct rcar_msi *msi = &pcie->msi;
->> +       int irq, i;
->> +
->> +       /* Disable all MSI interrupts */
->> +       rcar_pci_write_reg(pcie, 0, PCIEMSIIER);
->> +
->> +       /* Disable address decoding of the MSI interrupt, MSIFE */
->> +       rcar_pci_write_reg(pcie, 0, PCIEMSIALR);
->> +
->> +       free_pages(msi->pages, 0);
->> +
->> +       for (i = 0; i < INT_PCI_MSI_NR; i++) {
->> +               irq = irq_find_mapping(msi->domain, i);
->> +               if (irq > 0)
->> +                       irq_dispose_mapping(irq);
->> +       }
-> 
-> Note that similar calls to irq_dispose_mapping() should be added to the
-> failure path of rcar_pcie_enable_msi(), too.
+> Any reason why this is not cleared in arm_smmu_disable_pri ?
 
-There are no failures happening in rcar_pcie_enable_msi() after the
-mapping is created, just memory writes, so no. Did I miss something there ?
+Actually, setting it here is wrong. Since we now call enable_pri()
+lazily, prg_resp_needs_ssid isn't initialized when writing the STE. That
+bit is read by the SMMU when the PRIQ is full and it needs to
+auto-respond. Fortunately the PRI doesn't need to be enabled in order to
+read this bit, so we can move pci_prg_resp_requires_prefix() to
+add_device() and clear the bit in remove_device(). Thanks for catching this.
 
--- 
-Best regards,
-Marek Vasut
+Jean
+
