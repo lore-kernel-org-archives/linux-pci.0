@@ -1,121 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:20767 "EHLO
-        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932564AbeEWOYP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 10:24:15 -0400
-Subject: Re: [PATCH 1/5] PCI/AER: Define and allocate aer_stats structure for
- AER capable devices
-To: Rajat Jain <rajatja@google.com>,
+Received: from mail-sg2apc01on0093.outbound.protection.outlook.com ([104.47.125.93]:63552
+        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S966689AbeE2V2p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 May 2018 17:28:45 -0400
+From: Dexuan Cui <decui@microsoft.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Kyle McMartin <jkkm@fb.com>
-CC: <rajatxjain@gmail.com>
-References: <20180522222805.80314-1-rajatja@google.com>
- <20180522222805.80314-2-rajatja@google.com>
-From: Jes Sorensen <jsorensen@fb.com>
-Message-ID: <62fae8eb-aaed-65b2-19ad-7c57b3a9bfdc@fb.com>
-Date: Wed, 23 May 2018 10:20:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180522222805.80314-2-rajatja@google.com>
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>
+Subject: RE: [PATCH] PCI: hv: Do not wait forever on a device that has
+ disappeared
+Date: Tue, 29 May 2018 21:28:27 +0000
+Message-ID: <KL1P15301MB00062308DD0D900D9A8943FDBF6D0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+References: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <CAHp75Vd9kiyOaSbaK6c4b7ucF23kgP0yQxKpUAGrjHgKfJprXA@mail.gmail.com>
+In-Reply-To: <CAHp75Vd9kiyOaSbaK6c4b7ucF23kgP0yQxKpUAGrjHgKfJprXA@mail.gmail.com>
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/22/2018 06:28 PM, Rajat Jain wrote:
-> Define a structure to hold the AER statistics. There are 2 groups
-> of statistics: dev_* counters that are to be collected for all AER
-> capable devices and rootport_* counters that are collected for all
-> (AER capable) rootports only. Allocate and free this structure when
-> device is added or released (thus counters survive the lifetime of the
-> device).
-> 
-> Add a new file aerdrv_stats.c to hold the AER stats collection logic.
-> 
-> Signed-off-by: Rajat Jain <rajatja@google.com>
-> ---
->  drivers/pci/pcie/aer/Makefile       |  2 +-
->  drivers/pci/pcie/aer/aerdrv.h       |  6 +++
->  drivers/pci/pcie/aer/aerdrv_core.c  |  9 ++++
->  drivers/pci/pcie/aer/aerdrv_stats.c | 64 +++++++++++++++++++++++++++++
->  drivers/pci/probe.c                 |  1 +
->  include/linux/pci.h                 |  3 ++
->  6 files changed, 84 insertions(+), 1 deletion(-)
->  create mode 100644 drivers/pci/pcie/aer/aerdrv_stats.c
-> 
-> diff --git a/drivers/pci/pcie/aer/Makefile b/drivers/pci/pcie/aer/Makefile
->  
-> -aerdriver-objs := aerdrv_errprint.o aerdrv_core.o aerdrv.o
-> +aerdriver-objs := aerdrv_errprint.o aerdrv_core.o aerdrv.o aerdrv_stats.o
->  aerdriver-$(CONFIG_ACPI) += aerdrv_acpi.o
->  
->  obj-$(CONFIG_PCIEAER_INJECT) += aer_inject.o
-> diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-> index b4c950683cc7..d8b9fba536ed 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.h
-> +++ b/drivers/pci/pcie/aer/aerdrv.h
-> @@ -33,6 +33,10 @@
->  					PCI_ERR_UNC_MALF_TLP)
->  
->  #define AER_MAX_MULTI_ERR_DEVICES	5	/* Not likely to have more */
-> +
-> +#define AER_MAX_TYPEOF_CORRECTABLE_ERRS 16	/* as per PCI_ERR_COR_STATUS */
-> +#define AER_MAX_TYPEOF_UNCORRECTABLE_ERRS 26	/* as per PCI_ERR_UNCOR_STATUS*/
-> +
->  struct aer_err_info {
->  	struct pci_dev *dev[AER_MAX_MULTI_ERR_DEVICES];
->  	int error_dev_num;
-> @@ -81,6 +85,8 @@ void aer_isr(struct work_struct *work);
->  void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
->  void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info);
->  irqreturn_t aer_irq(int irq, void *context);
-> +int pci_aer_stats_init(struct pci_dev *pdev);
-> +void pci_aer_stats_exit(struct pci_dev *pdev);
->  
->  #ifdef CONFIG_ACPI_APEI
->  int pcie_aer_get_firmware_first(struct pci_dev *pci_dev);
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 36e622d35c48..42a6f913069a 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -95,9 +95,18 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
->  int pci_aer_init(struct pci_dev *dev)
->  {
->  	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +
-> +	if (!dev->aer_cap || pci_aer_stats_init(dev))
-> +		return -EIO;
-> +
->  	return pci_cleanup_aer_error_status_regs(dev);
->  }
->  
-> +void pci_aer_exit(struct pci_dev *dev)
-> +{
-> +	pci_aer_stats_exit(dev);
-> +}
-> +
->  /**
->   * add_error_device - list device to be handled
->   * @e_info: pointer to error info
-> diff --git a/drivers/pci/pcie/aer/aerdrv_stats.c b/drivers/pci/pcie/aer/aerdrv_stats.c
-> new file mode 100644
-> index 000000000000..b9f251992209
-> --- /dev/null
-> +++ b/drivers/pci/pcie/aer/aerdrv_stats.c
-> @@ -0,0 +1,64 @@
-> +// SPDX-License-Identifier: GPL-2.0
-
-Fix the formatting please - that gross // gibberish doesn't belong there.
-
-Jes
+PiBGcm9tOiBBbmR5IFNoZXZjaGVua28gPGFuZHkuc2hldmNoZW5rb0BnbWFpbC5jb20+DQo+IFNl
+bnQ6IFR1ZXNkYXksIE1heSAyOSwgMjAxOCAxNDoyMQ0KPiBPbiBUaHUsIE1heSAyNCwgMjAxOCBh
+dCAxMjoxMiBBTSwgRGV4dWFuIEN1aSA8ZGVjdWlAbWljcm9zb2Z0LmNvbT4NCj4gd3JvdGU6DQo+
+ID4NCj4gPiBCZWZvcmUgdGhlIGd1ZXN0IGZpbmlzaGVzIHRoZSBkZXZpY2UgaW5pdGlhbGl6YXRp
+b24sIHRoZSBkZXZpY2UgY2FuIGJlDQo+ID4gcmVtb3ZlZCBhbnl0aW1lIGJ5IHRoZSBob3N0LCBh
+bmQgYWZ0ZXIgdGhhdCB0aGUgaG9zdCB3b24ndCByZXNwb25kIHRvDQo+ID4gdGhlIGd1ZXN0J3Mg
+cmVxdWVzdCwgc28gdGhlIGd1ZXN0IHNob3VsZCBiZSBwcmVwYXJlZCB0byBoYW5kbGUgdGhpcw0K
+PiA+IGNhc2UuDQo+IA0KPiA+ICsgICAgICAgd2hpbGUgKHRydWUpIHsNCj4gPiArICAgICAgICAg
+ICAgICAgaWYgKGhkZXYtPmNoYW5uZWwtPnJlc2NpbmQpIHsNCj4gPiArICAgICAgICAgICAgICAg
+ICAgICAgICBkZXZfd2Fybl9vbmNlKCZoZGV2LT5kZXZpY2UsICJUaGUgZGV2aWNlIGlzDQo+IGdv
+bmUuXG4iKTsNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gLUVOT0RFVjsNCj4g
+PiArICAgICAgICAgICAgICAgfQ0KPiA+ICsNCj4gPiArICAgICAgICAgICAgICAgaWYgKHdhaXRf
+Zm9yX2NvbXBsZXRpb25fdGltZW91dChjb21wLCBIWiAvIDEwKSkNCj4gPiArICAgICAgICAgICAg
+ICAgICAgICAgICBicmVhazsNCj4gPiArICAgICAgIH0NCj4gDQo+IEluZmluaXRlIGxvb3BzIGFy
+ZSB1c3VhbGx5IGEgcmVkIGZsYWdzLg0KPiANCj4gV2hhdCdzIHdyb25nIHdpdGggc2ltcGxlOg0K
+PiANCj4gZG8gew0KPiAgIC4uLg0KPiB9IHdoaWxlICh3YWl0Xy4uLiguLi4pID09IDApOw0KPiAN
+Cj4gPw0KVGhhbmtzIGZvciB0aGUgc3VnZ2VzdGlvbiwgQW5keSENClRoZSBjb2Rpbmcgc3R5bGUg
+eW91IHN1Z2dlc3RlZCBsb29rcyBiZXR0ZXIgdG8gbWUuIDotKQ0KDQo+ID4gKyAgICAgICBpZiAo
+IXJldCkNCj4gPiArICAgICAgICAgICAgICAgcmV0ID0gd2FpdF9mb3JfcmVzcG9uc2UoaGRldiwg
+JmNvbXApOw0KPiANCj4gQmV0dGVyIHRvIHVzZSB3ZWxsIGVzdGFibGlzaGVkIHBhdHRlcm5zLCBp
+LmUuDQo+IA0KPiBpZiAocmV0KQ0KPiAgcmV0dXJuIHJldDsNCkFncmVlZC4NCg0KPiANCj4gPiAr
+ICAgICAgICAgICAgICAgaWYgKCFyZXQpDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgcmV0
+ID0gd2FpdF9mb3JfcmVzcG9uc2UoaGRldiwNCj4gJmNvbXBfcGt0Lmhvc3RfZXZlbnQpOw0KPiAN
+Cj4gSGVyZSBpdCBsb29rcyBva2F5IG9uIHRoZSBmaXJzdCBnbGFuY2UsIGJ1dCBiZXR0ZXIgdG8g
+dGhpbmsgYWJvdXQgaXQNCj4gYWdhaW4gYW5kIHJlZmFjdG9yLg0KDQo+IFdpdGggQmVzdCBSZWdh
+cmRzLA0KPiBBbmR5IFNoZXZjaGVua28NCg0KSSdsbCB0cnkgdG8gc2VuZCBvdXQgYSBwYXRjaCB0
+byBpbXByb3ZlIHRoZSBjb2Rpbmcgc3R5bGUsIGFmdGVyIEkgYWRkcmVzcw0KTWljaGFlbCBLZWxs
+ZXkncyBjb25jZXJuIG9mIGEgcmFjZS4NCg0KVGhhbmtzLA0KLS0gRGV4dWFuDQo=
