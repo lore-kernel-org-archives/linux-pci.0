@@ -1,80 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f68.google.com ([209.85.213.68]:41661 "EHLO
-        mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751114AbeEVKdF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 May 2018 06:33:05 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <3936f87b-155f-7fc1-1618-287d5d64b7b3@gmail.com>
-References: <20180521210522.29346-1-marek.vasut+renesas@gmail.com>
- <CAMuHMdVkeSEsO-jRCzh-_9VkzZ+4X-VAN1KZOA2wB7bUQTrRYg@mail.gmail.com> <3936f87b-155f-7fc1-1618-287d5d64b7b3@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 22 May 2018 12:33:04 +0200
-Message-ID: <CAMuHMdU=s3ZyCLO5zDXgQis8Ak5akhJhcShs4hgQikaoWYLGZw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+In-Reply-To: <20180529094204.3945660-1-arnd@arndb.de>
+References: <20180529094204.3945660-1-arnd@arndb.de>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 29 May 2018 09:24:16 -0500
+Message-ID: <CAL_JsqKf0nyw0yvw=4brGRvMHgZrrt+nJnBs5KWATcfijhiyug@mail.gmail.com>
+Subject: Re: [PATCH] pci: mvebu: add MVEBU_MBUS dependency
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+        linux-pci@vger.kernel.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek,
-
-On Tue, May 22, 2018 at 11:48 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
-> On 05/22/2018 11:42 AM, Geert Uytterhoeven wrote:
->> On Mon, May 21, 2018 at 11:05 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
->>> The data link active signal usually takes ~20 uSec to be asserted,
->>> poll the bit more often to avoid useless delays in this function.
->>> Use udelay() instead of usleep() for such a small delay as suggested
->>> by the timer documentation and because this will be used in atomic
->>> context later on when the suspend/resume patches land.
->>>
->>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>
->> Thanks for your patch!
->>
->>> --- a/drivers/pci/host/pcie-rcar.c
->>> +++ b/drivers/pci/host/pcie-rcar.c
->>> @@ -529,13 +529,13 @@ static void phy_write_reg(struct rcar_pcie *pcie,
->>>
->>>  static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
->>>  {
->>> -       unsigned int timeout = 10;
->>> +       unsigned int timeout = 10000;
->>>
->>>         while (timeout--) {
->>>                 if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
->>>                         return 0;
->>>
->>> -               msleep(5);
->>> +               udelay(5);
->>
->> + cpu_relax()?
+On Tue, May 29, 2018 at 4:41 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> Enabling the PCI_MVEBU driver for compile testing caused a build failure
+> on ARM randconfig builds:
 >
-> Is it safe to use in atomic context ? Because of that suspend/resume thing.
-
-Yes.
-
->>>         }
->>
->> if this ever happens, it will have blocked for more than 50 ms...
+> drivers/pci/host/pci-mvebu.c: In function 'mvebu_pcie_del_windows':
+> drivers/pci/host/pci-mvebu.c:341:3: error: implicit declaration of function 'mvebu_mbus_del_window'; did you mean 'mvebu_pcie_del_windows'? [-Werror=implicit-function-declaration]
+>    mvebu_mbus_del_window(base, sz);
+>    ^~~~~~~~~~~~~~~~~~~~~
+>    mvebu_pcie_del_windows
+> drivers/pci/host/pci-mvebu.c: In function 'mvebu_pcie_add_windows':
+> drivers/pci/host/pci-mvebu.c:364:9: error: implicit declaration of function 'mvebu_mbus_add_window_remap_by_id'; did you mean 'mvebu_pcie_add_windows'? [-Werror=implicit-function-declaration]
+>    ret = mvebu_mbus_add_window_remap_by_id(target, attribute, base,
+>          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>          mvebu_pcie_add_windows
+> drivers/pci/host/pci-mvebu.c: In function 'mvebu_pcie_probe':
+> drivers/pci/host/pci-mvebu.c:1209:2: error: implicit declaration of function 'mvebu_mbus_get_pcie_mem_aperture'; did you mean 'mvebu_mbus_get_io_win_info'? [-Werror=implicit-function-declaration]
+> drivers/pci/host/pci-mvebu.c:1215:2: error: implicit declaration of function 'mvebu_mbus_get_pcie_io_aperture'; did you mean 'mvebu_mbus_get_io_win_info'? [-Werror=implicit-function-declaration]
 >
-> Well yes, so did the previous thing.
+> The problem is that the mbus helper functions are not declared in the
+> header. There are two ways of solving this: we can change the header
+> to provide empty stub functions for CONFIG_MVEBU_MBUS=n, or we can
+> add back the dependency here.
 
-No, the previous thing slept. Big difference.
+Probably better to just make these non-standard dependencies explicit.
 
-Gr{oetje,eeting}s,
+> I picked the second option since that is simpler, but it somewhat
+> defeats the purpose of the original patch because we still cannot
+> compile test on other platforms this way.
+>
+> Fixes: 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Acked-by: Rob Herring <robh@kernel.org>
