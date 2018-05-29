@@ -1,49 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 6/7] misc: pci_endpoint_test: Add MSI-X support
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
-        <adouglas@cadence.com>, <jesper.nilsson@axis.com>
-References: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
- <30034b904a27c405b894a34922e59315dcae68ab.1526576613.git.gustavo.pimentel@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <2f56cd19-f7a5-c99f-e74f-83a4dbeb0248@ti.com>
-Date: Thu, 31 May 2018 16:57:39 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0134.outbound.protection.outlook.com ([104.47.38.134]:57208
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932727AbeE2ATT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 May 2018 20:19:19 -0400
+From: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "'olaf@aepfle.de'" <olaf@aepfle.de>,
+        "'apw@canonical.com'" <apw@canonical.com>,
+        "'jasowang@redhat.com'" <jasowang@redhat.com>
+CC: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'driverdev-devel@linuxdriverproject.org'"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
+        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
+Subject: RE: [PATCH] PCI: hv: Do not wait forever on a device that has
+ disappeared
+Date: Tue, 29 May 2018 00:19:16 +0000
+Message-ID: <SN6PR2101MB112020C6F949F7C72F52D6BEDC6D0@SN6PR2101MB1120.namprd21.prod.outlook.com>
+References: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+In-Reply-To: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <30034b904a27c405b894a34922e59315dcae68ab.1526576613.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+>=20
+> Before the guest finishes the device initialization, the device can be
+> removed anytime by the host, and after that the host won't respond to
+> the guest's request, so the guest should be prepared to handle this
+> case.
+>=20
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
+> ---
+>  drivers/pci/host/pci-hyperv.c | 46 ++++++++++++++++++++++++++++++++-----=
+------
+>  1 file changed, 34 insertions(+), 12 deletions(-)
+>=20
 
-On Thursday 17 May 2018 10:39 PM, Gustavo Pimentel wrote:
-> Add MSI-X support and update driver documentation accordingly.
-> 
-> Add new driver parameter to allow interruption type selection.
-> 
-> Add 2 new IOCTL commands:
->  - Allow to reconfigure driver IRQ type in runtime.
->  - Allow to retrieve current driver IRQ type configured.
-> 
-> Change Legacy/MSI/MSI-X test process, by having in a BAR:
->  - Interrupt type triggered (added).
->  - Interrupt ID number (moved from the command section).
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+While this patch solves the immediate problem of getting hung waiting
+for a response from Hyper-V that will never come, there's another scenario
+to look at that I think introduces a race.  Suppose the guest VM issues a
+vmbus_sendpacket() request in one of the cases covered by this patch,
+and suppose that Hyper-V queues a response to the request, and then
+immediately follows with a rescind request.   Processing the response will
+get queued to a tasklet associated with the channel, while processing the
+rescind will get queued to a tasklet associated with the top-level vmbus
+connection.   From what I can see, the code doesn't impose any ordering
+on processing the two.  If the rescind is processed first, the new
+wait_for_response() function may wake up, notice the rescind flag, and
+return an error.  Its caller will return an error, and in doing so pop the
+completion packet off the stack.   When the response is processed later,
+it will try to signal completion via a completion packet that no longer
+exists, and memory corruption will likely occur.
 
-It's better to change the subject to pci-epf-test/pci_endpoint_test: Add MSI-X
-support
+Am I missing anything that would prevent this scenario from happening?
+It is admittedly low probability, and a solution seems non-trivial.  I have=
+n't
+looked specifically, but a similar scenario is probably possible with the
+drivers for other VMbus devices.  We should work on a generic solution.
 
-IMO this patch should be split into multiple patches
-
-*) Cleanup PCI_ENDPOINT_TEST memspace (by moving the interrupt number away from
-command section)
-*) Using irq_type module param
-*) Adding MSI-X support
-*) adding 2 ioctl commands (I'm not convinced on adding new ioctls though)
-
-Thanks
-Kishon
+Michael
