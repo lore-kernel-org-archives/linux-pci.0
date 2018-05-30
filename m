@@ -1,118 +1,135 @@
-Return-Path: <SRS0=CtTX=IF=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=CtTX=IF=intel.com=jonathan.derrick@kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Keith Busch <keith.busch@intel.com>,
-	<linux-pci@vger.kernel.org>
-Cc: Joerg Roedel <jroedel@suse.de>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Dave Fugate <david.fugate@intel.com>,
-	Scott Bauer <scott.bauer@intel.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH 3/5] PCI/VMD: Add offset to bus numbers if necessary
-Date: Fri, 18 May 2018 13:28:00 -0600
-Message-Id: <20180518192802.20371-4-jonathan.derrick@intel.com>
-In-Reply-To: <20180518192802.20371-1-jonathan.derrick@intel.com>
-References: <20180518192802.20371-1-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f49.google.com ([209.85.214.49]:51278 "EHLO
+        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932471AbeE3XdV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 May 2018 19:33:21 -0400
+Received: by mail-it0-f49.google.com with SMTP id d10-v6so25365017itj.1
+        for <linux-pci@vger.kernel.org>; Wed, 30 May 2018 16:33:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20180525232009.GV11037@localhost.localdomain>
+References: <CAKDfzeD5_AV=YtWqTPr=40vvW4oMFAs4gJs_r42PJWcb815zyQ@mail.gmail.com>
+ <20180507123035.GA20097@gmail.com> <20180525232009.GV11037@localhost.localdomain>
+From: Bryan Gurney <bgurney@redhat.com>
+Date: Wed, 30 May 2018 19:33:20 -0400
+Message-ID: <CAHhmqcQmyLRJqh=A3kni181cpX+CXOHfvF1em6OBscPCZCihpQ@mail.gmail.com>
+Subject: Re: PCIe unsupported request with Intel 760p
+To: Keith Busch <keith.busch@linux.intel.com>
+Cc: Aron Griffis <aron@arongriffis.com>, linux-pci@vger.kernel.org,
+        willy@infradead.org, linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Depending on platform configuration, certain VMD devices may have an
-additional configuration option which specifies the range of bus numbers
-allowed in a VMD PCIe domain. We determine this requirement by checking
-the value of two vendor specific config registers in the VMD endpoint:
+On Fri, May 25, 2018 at 7:20 PM, Keith Busch
+<keith.busch@linux.intel.com> wrote:
+> On Mon, May 07, 2018 at 08:30:35AM -0400, Aron Griffis wrote:
+>> (Reposting to fix line wrapping, and cc'ing linux-pci at Bjorn's request.)
+>>
+>> I'm getting this error continuously with an Intel 760p on 4.16.5 (Fedora 28)
+>>
+>> pcieport 0000:00:1d.0: AER: Uncorrected (Non-Fatal) error received: id=00e8
+>> pcieport 0000:00:1d.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=00e8(Requester ID)
+>> pcieport 0000:00:1d.0:   device [8086:a298] error status/mask=00100000/00010000
+>> pcieport 0000:00:1d.0:    [20] Unsupported Request    (First)
+>> pcieport 0000:00:1d.0:   TLP Header: 34000000 70000010 00000000 88468846
+>> pcieport 0000:00:1d.0: broadcast error_detected message
+>> pcieport 0000:00:1d.0: broadcast mmio_enabled message
+>> pcieport 0000:00:1d.0: broadcast resume message
+>> pcieport 0000:00:1d.0: AER: Device recovery successful
+>>
+>> Willy graciously decoded this for me to a "Latency Tolerance Reporting
+>> Message," and suggested I send email to this list to check whether it's a
+>> problem with the device or driver.
+>>
+>> lspci and full dmesg follow. Please let me know if something else would be
+>> helpful.
+>
+> I have some information back from the development team to share. They
+> believe this may be a hardware errata and are investigating a firmware
+> side fix.
+>
+> In the meantime, they think there may be other ways to work around this,
+> if these are acceptable. Specifically, disabling any non-operational
+> link states may make this go away, and adding kernel parameter
+> "pcie_aspm=off" should achieve that.
 
- VMCAP[0] | VMCONFIG[9:8] | Bus Numbers
-----------------------------------------
-    0     |       *       |     0-255
-    1     |      00       |     0-127
-    1     |      01       |   128-255
-    1     |      10       |     0-255
+Hi Keith,
 
-This feature is also added as a bit in driver_data, to allow future
-conforming device ids which support these features to be enabled through
-sysfs new_id.
+Sorry to chain off of this, but I remembered that I have an X99
+chipset system with a couple of Intel 750 Series SSDs that were
+outputting similar messages after I performed some writes to them.
+The system's running CentOS 7.4 (kernel 3.10.0-693.11.6.el7.x86_64),
+but I can install Fedora 28 for testing on a recent upstream kernel.
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/host/vmd.c | 34 +++++++++++++++++++++++++++++-----
- 1 file changed, 29 insertions(+), 5 deletions(-)
+Here's a sample of the messages I see, along with the drive firmware
+(which I'm guessing is not the latest; I believe I updated them at
+some point), and the lspci output from the device IDs cited:
 
-diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-index 1544121b74f3..34fa6cf0b0ee 100644
---- a/drivers/pci/host/vmd.c
-+++ b/drivers/pci/host/vmd.c
-@@ -24,6 +24,10 @@
- #define VMD_MEMBAR1	2
- #define VMD_MEMBAR2	4
- 
-+#define PCI_REG_VMCAP		0x40
-+#define BUS_RESTRICT_CAP(vmcap)	(vmcap & 0x1)
-+#define PCI_REG_VMCONFIG	0x44
-+#define BUS_RESTRICT_CFG(vmcfg)	((vmcfg >> 8) & 0x3)
- #define PCI_REG_VMLOCK		0x70
- #define MB2_SHADOW_EN(vmlock)	(vmlock & 0x2)
- 
-@@ -34,6 +38,12 @@ enum vmd_features {
- 	 * resource assignment to enable guest virtualization
- 	 */
- 	VMD_FEAT_HAS_MEMBAR_SHADOW	= (1 << 0),
-+
-+	/*
-+	 * Device may provide root port configuration information which limits
-+	 * bus numbering
-+	 */
-+	VMD_FEAT_HAS_BUS_RESTRICTIONS	= (1 << 1),
- };
- 
- /*
-@@ -567,7 +577,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	unsigned long flags;
- 	LIST_HEAD(resources);
- 	resource_size_t offset[2] = {0};
--	resource_size_t membar2_offset = 0x2000;
-+	resource_size_t membar2_offset = 0x2000, busn_start = 0;
- 
- 	/*
- 	 * Shadow registers may exist in certain VMD device ids which allow
-@@ -598,11 +608,25 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 		}
- 	}
- 
-+	/*
-+	 * Certain VMD devices may have a root port configuration option which
-+	 * limits the bus range to between 0-127 or 128-255
-+	 */
-+	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
-+		u32 vmcap, vmconfig;
-+
-+		pci_read_config_dword(vmd->dev, PCI_REG_VMCAP, &vmcap);
-+		pci_read_config_dword(vmd->dev, PCI_REG_VMCONFIG, &vmconfig);
-+		if (BUS_RESTRICT_CAP(vmcap) &&
-+		    (BUS_RESTRICT_CFG(vmconfig) == 0x1))
-+			busn_start = 128;
-+	}
-+
- 	res = &vmd->dev->resource[VMD_CFGBAR];
- 	vmd->resources[0] = (struct resource) {
- 		.name  = "VMD CFGBAR",
--		.start = 0,
--		.end   = (resource_size(res) >> 20) - 1,
-+		.start = busn_start,
-+		.end   = busn_start + (resource_size(res) >> 20) - 1,
- 		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
- 	};
- 
-@@ -670,8 +694,8 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	pci_add_resource_offset(&resources, &vmd->resources[1], offset[0]);
- 	pci_add_resource_offset(&resources, &vmd->resources[2], offset[1]);
- 
--	vmd->bus = pci_create_root_bus(&vmd->dev->dev, 0, &vmd_ops, sd,
--				       &resources);
-+	vmd->bus = pci_create_root_bus(&vmd->dev->dev, busn_start, &vmd_ops,
-+				       sd, &resources);
- 	if (!vmd->bus) {
- 		pci_free_resource_list(&resources);
- 		irq_domain_remove(vmd->irq_domain);
--- 
-2.14.3
+pcieport 0000:00:03.0: AER: Multiple Corrected error received: id=0018
+pcieport 0000:00:03.0: PCIe Bus Error: severity=Corrected, type=Data
+Link Layer, id=0018(Transmitter ID)
+pcieport 0000:00:03.0:   device [8086:6f08] error status/mask=00001040/00002000
+pcieport 0000:00:03.0:    [ 6] Bad TLP
+pcieport 0000:00:03.0:    [12] Replay Timer Timeout
+pcieport 0000:00:03.0:   Error of this Agent(0018) is reported first
+nvme 0000:02:00.0: PCIe Bus Error: severity=Corrected, type=Physical
+Layer, id=0200(Receiver ID)
+nvme 0000:02:00.0:   device [8086:0953] error status/mask=000000c1/00002000
+nvme 0000:02:00.0:    [ 0] Receiver Error         (First)
+nvme 0000:02:00.0:    [ 6] Bad TLP
+nvme 0000:02:00.0:    [ 7] Bad DLLP
+pcieport 0000:00:03.0: AER: Multiple Corrected error received: id=0018
+pcieport 0000:00:03.0: PCIe Bus Error: severity=Corrected, type=Data
+Link Layer, id=0018(Receiver ID)
+pcieport 0000:00:03.0:   device [8086:6f08] error status/mask=00000040/00002000
+pcieport 0000:00:03.0:    [ 6] Bad TLP
+pcieport 0000:00:03.0:   Error of this Agent(0018) is reported first
+nvme 0000:02:00.0: PCIe Bus Error: severity=Corrected, type=Physical
+Layer, id=0200(Receiver ID)
+nvme 0000:02:00.0:   device [8086:0953] error status/mask=00000001/00002000
+nvme 0000:02:00.0:    [ 0] Receiver Error
+pcieport 0000:00:02.0: AER: Corrected error received: id=0010
+pcieport 0000:00:02.0: PCIe Bus Error: severity=Corrected, type=Data
+Link Layer, id=0010(Receiver ID)
+pcieport 0000:00:02.0:   device [8086:6f04] error status/mask=00000040/00002000
+pcieport 0000:00:02.0:    [ 6] Bad TLP
+pcieport 0000:00:02.0: AER: Corrected error received: id=0010
+pcieport 0000:00:02.0: PCIe Bus Error: severity=Corrected, type=Data
+Link Layer, id=0010(Receiver ID)
+pcieport 0000:00:02.0:   device [8086:6f04] error status/mask=00000040/00002000
+pcieport 0000:00:02.0:    [ 6] Bad TLP
+pcieport 0000:00:02.0: AER: Corrected error received: id=0010
+pcieport 0000:00:02.0: PCIe Bus Error: severity=Corrected, type=Data
+Link Layer, id=0010(Receiver ID)
+pcieport 0000:00:02.0:   device [8086:6f04] error status/mask=00000040/00002000
+pcieport 0000:00:02.0:    [ 6] Bad TLP
+pcieport 0000:00:02.0: AER: Corrected error received: id=0010
+pcieport 0000:00:02.0: PCIe Bus Error: severity=Corrected, type=Data
+Link Layer, id=0010(Receiver ID)
+pcieport 0000:00:02.0:   device [8086:6f04] error status/mask=00000040/00002000
+pcieport 0000:00:02.0:    [ 6] Bad TLP
+
+lrwxrwxrwx. 1 root root 0 May 30 18:57 nvme0n1 ->
+../devices/pci0000:00/0000:00:02.0/0000:03:00.0/nvme/nvme0/nvme0n1
+lrwxrwxrwx. 1 root root 0 May 30 18:57 nvme1n1 ->
+../devices/pci0000:00/0000:00:03.0/0000:02:00.0/nvme/nvme1/nvme1n1
+
+/sys/block/nvme0n1/device/firmware_rev:8EV10174
+/sys/block/nvme0n1/device/model:INTEL SSDPEDMW400G4
+
+/sys/block/nvme1n1/device/firmware_rev:8EV10174
+/sys/block/nvme1n1/device/model:INTEL SSDPEDMW400G4
+
+00:03.0 PCI bridge: Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3
+v4/Xeon D PCI Express Root Port 3 (rev 01)
+00:02.0 PCI bridge: Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3
+v4/Xeon D PCI Express Root Port 2 (rev 01)
+02:00.0 Non-Volatile memory controller: Intel Corporation PCIe Data
+Center SSD (rev 01)
+03:00.0 Non-Volatile memory controller: Intel Corporation PCIe Data
+Center SSD (rev 01)
+
+
+Thanks,
+
+Bryan
