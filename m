@@ -1,105 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:35630 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752263AbeEQPAv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2018 11:00:51 -0400
-Received: by mail-it0-f67.google.com with SMTP id q72-v6so9271815itc.0
-        for <linux-pci@vger.kernel.org>; Thu, 17 May 2018 08:00:50 -0700 (PDT)
+Received: from mail.kernel.org ([198.145.29.99]:43850 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753895AbeE3RyR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 13:54:17 -0400
+Subject: [PATCH v1 1/2] PCI/AER: Decode Error Source Requester ID
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Oza Pawandeep <poza@codeaurora.org>, linux-kernel@vger.kernel.org
+Date: Wed, 30 May 2018 12:54:15 -0500
+Message-ID: <152770285586.80701.6545710900591672975.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180517145512.cmr3twodfyz7lzon@redhat.com>
-References: <1526563343-28721-1-git-send-email-okaya@codeaurora.org> <20180517145512.cmr3twodfyz7lzon@redhat.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Thu, 17 May 2018 17:00:49 +0200
-Message-ID: <CAKv+Gu-q-=nQCYut0B=Kfv_YeJOQ4ik9rWnTB5ZYwT08U+=rHA@mail.gmail.com>
-Subject: Re: [PATCH] efi/fb: Convert PCI bus address to resource if translated
- by the bridge
-To: Peter Jones <pjones@redhat.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Timur Tabi <timur@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        "open list:EFIFB FRAMEBUFFER DRIVER" <linux-fbdev@vger.kernel.org>,
-        "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17 May 2018 at 16:55, Peter Jones <pjones@redhat.com> wrote:
-> On Thu, May 17, 2018 at 09:22:23AM -0400, Sinan Kaya wrote:
->> A host bridge is allowed to remap BAR addresses using _TRA attribute in
->> _CRS windows.
->>
->> pci_bus 0000:00: root bus resource [mem 0x80100100000-0x8011fffffff window] (bus address [0x00100000-0x1fffffff])
->> pci 0000:02:00.0: reg 0x10: [mem 0x8011e000000-0x8011effffff]
->>
->> When a VGA device is behind such a host bridge and the resource is
->> translated efifb driver is trying to do ioremap against bus address
->> rather than the resource address and is failing to probe.
->>
->> efifb driver is having difficulty locating the base address from BAR
->> address when
->>
->> efifb: probing for efifb
->> efifb: cannot reserve video memory at 0x1e000000
->> efifb: framebuffer at 0x1e000000, using 1920k, total 1875k
->> efifb: mode is 800x600x32, linelength=3200, pages=1
->> efifb: scrolling: redraw
->> efifb: Truecolor: size=8:8:8:8, shift=24:16:8:0
->>
->> Use the host bridge offset information to convert bus address to
->> resource address in the fixup.
->>
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->
-> Looks reasonable to me - Ard, do you want to take this up through the
-> EFI tree?
->
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Sure
+Decode the Requester ID from the AER Error Source Register into domain/
+bus/device/function format to match other logging.  In cases where the ID
+matches the device used for pci_err(), drop the extra ID completely so we
+don't print it twice.
 
-> Signed-off-by: Peter Jones <pjones@redhat.com>
->
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/aer/aerdrv_errprint.c |   18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
-I'll take that as a reviewed-by, thanks.
-
->> ---
->>  drivers/video/fbdev/efifb.c | 10 ++++++++++
->>  1 file changed, 10 insertions(+)
->>
->> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
->> index 46a4484..ea68d5c 100644
->> --- a/drivers/video/fbdev/efifb.c
->> +++ b/drivers/video/fbdev/efifb.c
->> @@ -428,6 +428,8 @@ static void efifb_fixup_resources(struct pci_dev *dev)
->>  {
->>       u64 base = screen_info.lfb_base;
->>       u64 size = screen_info.lfb_size;
->> +     struct pci_bus_region region;
->> +     struct resource res;
->>       int i;
->>
->>       if (efifb_pci_dev || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
->> @@ -439,6 +441,14 @@ static void efifb_fixup_resources(struct pci_dev *dev)
->>       if (!base)
->>               return;
->>
->> +     region.start = base;
->> +     region.end = base + size - 1;
->> +     res.start = 0;
->> +     res.flags = IORESOURCE_MEM;
->> +     pcibios_bus_to_resource(dev->bus, &res, &region);
->> +     if (res.start)
->> +             base = res.start;
->> +
->>       for (i = 0; i <= PCI_STD_RESOURCE_END; i++) {
->>               struct resource *res = &dev->resource[i];
->>
->> --
->> 2.7.4
->>
->
-> --
->   Peter
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 21ca5e1b0ded..d7fde8368d81 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -163,17 +163,17 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 	int id = ((dev->bus->number << 8) | dev->devfn);
+ 
+ 	if (!info->status) {
+-		pci_err(dev, "PCIe Bus Error: severity=%s, type=Unaccessible, id=%04x(Unregistered Agent ID)\n",
+-			aer_error_severity_string[info->severity], id);
++		pci_err(dev, "PCIe Bus Error: severity=%s, type=Inaccessible, (Unregistered Agent ID)\n",
++			aer_error_severity_string[info->severity]);
+ 		goto out;
+ 	}
+ 
+ 	layer = AER_GET_LAYER_ERROR(info->severity, info->status);
+ 	agent = AER_GET_AGENT(info->severity, info->status);
+ 
+-	pci_err(dev, "PCIe Bus Error: severity=%s, type=%s, id=%04x(%s)\n",
++	pci_err(dev, "PCIe Bus Error: severity=%s, type=%s, (%s)\n",
+ 		aer_error_severity_string[info->severity],
+-		aer_error_layer[layer], id, aer_agent_string[agent]);
++		aer_error_layer[layer], aer_agent_string[agent]);
+ 
+ 	pci_err(dev, "  device [%04x:%04x] error status/mask=%08x/%08x\n",
+ 		dev->vendor, dev->device,
+@@ -186,7 +186,7 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 
+ out:
+ 	if (info->id && info->error_dev_num > 1 && info->id == id)
+-		pci_err(dev, "  Error of this Agent(%04x) is reported first\n", id);
++		pci_err(dev, "  Error of this Agent is reported first\n");
+ 
+ 	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
+ 			info->severity, info->tlp_header_valid, &info->tlp);
+@@ -194,9 +194,13 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 
+ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+ {
+-	pci_info(dev, "AER: %s%s error received: id=%04x\n",
++	u8 bus = info->id >> 8;
++	u8 devfn = info->id & 0xff;
++
++	pci_info(dev, "AER: %s%s error received: %04x:%02x:%02x.%d\n",
+ 		info->multi_error_valid ? "Multiple " : "",
+-		aer_error_severity_string[info->severity], info->id);
++		aer_error_severity_string[info->severity],
++		pci_domain_nr(dev->bus), bus, devfn >> 3, devfn & 0x7);
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
