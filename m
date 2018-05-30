@@ -1,247 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:21439 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755155AbeEaN0h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 09:26:37 -0400
-Subject: Re: [RESEND PATCH 2/4] PCI: cadence: Add generic PHY support to host
- and EP drivers
-To: Alan Douglas <adouglas@cadence.com>, <bhelgaas@google.com>,
-        <lorenzo.pieralisi@arm.com>, <linux-pci@vger.kernel.org>
-References: <1526995626-9333-1-git-send-email-adouglas@cadence.com>
-CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.com>,
-        <cyrille.pitchen@free-electrons.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <d701937d-f33b-d801-a803-56ac76a7119b@ti.com>
-Date: Thu, 31 May 2018 18:56:26 +0530
-MIME-Version: 1.0
-In-Reply-To: <1526995626-9333-1-git-send-email-adouglas@cadence.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from mga17.intel.com ([192.55.52.151]:21432 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964790AbeE3IzR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 04:55:17 -0400
+From: Tiwei Bie <tiwei.bie@intel.com>
+To: mst@redhat.com, bhelgaas@google.com,
+        virtualization@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        linux-pci@vger.kernel.org
+Cc: dan.daly@intel.com, mark.d.rustad@intel.com,
+        alexander.h.duyck@intel.com, cunming.liang@intel.com,
+        zhihong.wang@intel.com
+Subject: [PATCH] virtio_pci: support enabling VFs
+Date: Wed, 30 May 2018 16:55:21 +0800
+Message-Id: <20180530085521.26583-1-tiwei.bie@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+There is a new feature bit allocated in virtio spec to
+support SR-IOV (Single Root I/O Virtualization):
 
-On Tuesday 22 May 2018 06:57 PM, Alan Douglas wrote:
-> If PHYs are present, they will be initialized and enabled in driver probe,
-> and disabled in driver shutdown.
-> 
-> Signed-off-by: Alan Douglas <adouglas@cadence.com>
-> ---
->  drivers/pci/cadence/pcie-cadence-ep.c   | 14 ++++-
->  drivers/pci/cadence/pcie-cadence-host.c | 31 +++++++++++
->  drivers/pci/cadence/pcie-cadence.c      | 93 +++++++++++++++++++++++++++++++++
->  drivers/pci/cadence/pcie-cadence.h      |  7 +++
->  4 files changed, 144 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
-> index 3d8283e..2581caf 100644
-> --- a/drivers/pci/cadence/pcie-cadence-ep.c
-> +++ b/drivers/pci/cadence/pcie-cadence-ep.c
-> @@ -439,6 +439,7 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
->  	struct pci_epc *epc;
->  	struct resource *res;
->  	int ret;
-> +	int phy_count;
->  
->  	ep = devm_kzalloc(dev, sizeof(*ep), GFP_KERNEL);
->  	if (!ep)
-> @@ -472,6 +473,12 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
->  	if (!ep->ob_addr)
->  		return -ENOMEM;
->  
-> +	ret = cdns_pcie_init_phy(dev, pcie);
-> +	if (ret) {
-> +		dev_err(dev, "failed to init phy\n");
-> +		return ret;
-> +	}
-> +	platform_set_drvdata(pdev, pcie);
->  	pm_runtime_enable(dev);
->  	ret = pm_runtime_get_sync(dev);
->  	if (ret < 0) {
-> @@ -520,6 +527,10 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
->  
->   err_get_sync:
->  	pm_runtime_disable(dev);
-> +	cdns_pcie_disable_phy(pcie);
-> +	phy_count = pcie->phy_count;
-> +	while (phy_count--)
-> +		device_link_del(pcie->link[phy_count]);
->  
->  	return ret;
->  }
-> @@ -527,6 +538,7 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
->  static void cdns_pcie_ep_shutdown(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
-> +	struct cdns_pcie *pcie = dev_get_drvdata(dev);
->  	int ret;
->  
->  	ret = pm_runtime_put_sync(dev);
-> @@ -535,7 +547,7 @@ static void cdns_pcie_ep_shutdown(struct platform_device *pdev)
->  
->  	pm_runtime_disable(dev);
->  
-> -	/* The PCIe controller can't be disabled. */
-> +	cdns_pcie_disable_phy(pcie);
->  }
->  
->  static struct platform_driver cdns_pcie_ep_driver = {
-> diff --git a/drivers/pci/cadence/pcie-cadence-host.c b/drivers/pci/cadence/pcie-cadence-host.c
-> index a4ebbd3..7536926a 100644
-> --- a/drivers/pci/cadence/pcie-cadence-host.c
-> +++ b/drivers/pci/cadence/pcie-cadence-host.c
-> @@ -58,6 +58,9 @@ static void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
->  
->  		return pcie->reg_base + (where & 0xfff);
->  	}
-> +	/* Check that the link is up */
-> +	if (!(cdns_pcie_readl(pcie, CDNS_PCIE_LM_BASE) & 0x1))
-> +		return NULL;
->  
->  	/* Update Output registers for AXI region 0. */
->  	addr0 = CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
-> @@ -239,6 +242,7 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
->  	struct cdns_pcie *pcie;
->  	struct resource *res;
->  	int ret;
-> +	int phy_count;
->  
->  	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*rc));
->  	if (!bridge)
-> @@ -290,6 +294,13 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
->  	}
->  	pcie->mem_res = res;
->  
-> +	ret = cdns_pcie_init_phy(dev, pcie);
-> +	if (ret) {
-> +		dev_err(dev, "failed to init phy\n");
-> +		return ret;
-> +	}
-> +	platform_set_drvdata(pdev, pcie);
-> +
->  	pm_runtime_enable(dev);
->  	ret = pm_runtime_get_sync(dev);
->  	if (ret < 0) {
-> @@ -322,15 +333,35 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
->  
->   err_get_sync:
->  	pm_runtime_disable(dev);
-> +	cdns_pcie_disable_phy(pcie);
-> +	phy_count = pcie->phy_count;
-> +	while (phy_count--)
-> +		device_link_del(pcie->link[phy_count]);
->  
->  	return ret;
->  }
->  
-> +static void cdns_pcie_shutdown(struct platform_device *pdev)
-> +{
-> +	struct device *dev = &pdev->dev;
-> +	struct cdns_pcie *pcie = dev_get_drvdata(dev);
-> +	int ret;
-> +
-> +	ret = pm_runtime_put_sync(dev);
-> +	if (ret < 0)
-> +		dev_dbg(dev, "pm_runtime_put_sync failed\n");
-> +
-> +	pm_runtime_disable(dev);
-> +	cdns_pcie_disable_phy(pcie);
-> +}
+https://github.com/oasis-tcs/virtio-spec/issues/11
 
-shutdown callback can be added in a separate patch.
+This patch enables the support for this feature bit in
+virtio driver.
 
-> +
-> +
-spurious blank line.
->  static struct platform_driver cdns_pcie_host_driver = {
->  	.driver = {
->  		.name = "cdns-pcie-host",
->  		.of_match_table = cdns_pcie_host_of_match,
->  	},
->  	.probe = cdns_pcie_host_probe,
-> +	.shutdown = cdns_pcie_shutdown,
->  };
->  builtin_platform_driver(cdns_pcie_host_driver);
-> diff --git a/drivers/pci/cadence/pcie-cadence.c b/drivers/pci/cadence/pcie-cadence.c
-> index 138d113..681609a 100644
-> --- a/drivers/pci/cadence/pcie-cadence.c
-> +++ b/drivers/pci/cadence/pcie-cadence.c
-> @@ -124,3 +124,96 @@ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
->  	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), 0);
->  	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), 0);
->  }
-> +
-> +void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
-> +{
-> +	int i = pcie->phy_count;
-> +
-> +	while (i--) {
-> +		phy_power_off(pcie->phy[i]);
-> +		phy_exit(pcie->phy[i]);
-> +	}
-> +}
-> +
-> +int cdns_pcie_enable_phy(struct cdns_pcie *pcie)
-> +{
-> +	int ret;
-> +	int i;
-> +
-> +	for (i = 0; i < pcie->phy_count; i++) {
-> +		ret = phy_init(pcie->phy[i]);
-> +		if (ret < 0)
-> +			goto err_phy;
-> +
-> +		ret = phy_power_on(pcie->phy[i]);
-> +		if (ret < 0) {
-> +			phy_exit(pcie->phy[i]);
-> +			goto err_phy;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +
-> +err_phy:
-> +	while (--i >= 0) {
-> +		phy_power_off(pcie->phy[i]);
-> +		phy_exit(pcie->phy[i]);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
-> +{
-> +	struct device_node *np = dev->of_node;
-> +	int phy_count;
-> +	struct phy **phy;
-> +	struct device_link **link;
-> +	int i;
-> +	int ret;
-> +	const char *name;
-> +
-> +	phy_count = of_property_count_strings(np, "phy-names");
+Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
+---
+This patch depends on below proposal:
+https://lists.oasis-open.org/archives/virtio-dev/201805/msg00154.html
 
-It's preferable to have num-lanes property, which can be used to configure the
-number of lanes supported in a platform even if it doesn't populate PHYs property.
-> +	if (phy_count < 1) {
-> +		dev_err(dev, "no phy-names.  PHY will not be initialized\n");
-> +		pcie->phy_count = 0;
-> +		return 0;
-> +	}
-> +
-> +	phy = devm_kzalloc(dev, sizeof(*phy) * phy_count, GFP_KERNEL);
-> +	if (!phy)
-> +		return -ENOMEM;
-> +
-> +	link = devm_kzalloc(dev, sizeof(*link) * phy_count, GFP_KERNEL);
-> +	if (!link)
-> +		return -ENOMEM;
-> +
-> +	for (i = 0; i < phy_count; i++) {
-> +		of_property_read_string_index(np, "phy-names", i, &name);
-> +		phy[i] = devm_phy_get(dev, name);
+This patch depends on below patch:
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/virtualization&id=8effc395c2097e258fcedfc02ed4a66d45fb4238
 
-For optional PHYs, devm_phy_optional_get() should be used.
+ drivers/virtio/virtio_pci_common.c | 20 ++++++++++++++++++++
+ drivers/virtio/virtio_pci_modern.c | 14 ++++++++++++++
+ include/uapi/linux/virtio_config.h |  7 ++++++-
+ 3 files changed, 40 insertions(+), 1 deletion(-)
 
-Thanks
-Kishon
+diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+index 48d4d1cf1cb6..023da80a7a3e 100644
+--- a/drivers/virtio/virtio_pci_common.c
++++ b/drivers/virtio/virtio_pci_common.c
+@@ -588,6 +588,25 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+ 	put_device(dev);
+ }
+ 
++static int virtio_pci_sriov_configure(struct pci_dev *pci_dev, int num_vfs)
++{
++	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
++	struct virtio_device *vdev = &vp_dev->vdev;
++	int (*sriov_configure)(struct pci_dev *pci_dev, int num_vfs);
++
++	if (!(vdev->config->get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK))
++		return -EBUSY;
++
++	if (!__virtio_test_bit(vdev, VIRTIO_F_SR_IOV))
++		return -EINVAL;
++
++	sriov_configure = pci_sriov_configure_simple;
++	if (sriov_configure == NULL)
++		return -ENOENT;
++
++	return sriov_configure(pci_dev, num_vfs);
++}
++
+ static struct pci_driver virtio_pci_driver = {
+ 	.name		= "virtio-pci",
+ 	.id_table	= virtio_pci_id_table,
+@@ -596,6 +615,7 @@ static struct pci_driver virtio_pci_driver = {
+ #ifdef CONFIG_PM_SLEEP
+ 	.driver.pm	= &virtio_pci_pm_ops,
+ #endif
++	.sriov_configure = virtio_pci_sriov_configure,
+ };
+ 
+ module_pci_driver(virtio_pci_driver);
+diff --git a/drivers/virtio/virtio_pci_modern.c b/drivers/virtio/virtio_pci_modern.c
+index 2555d80f6eec..07571daccfec 100644
+--- a/drivers/virtio/virtio_pci_modern.c
++++ b/drivers/virtio/virtio_pci_modern.c
+@@ -153,14 +153,28 @@ static u64 vp_get_features(struct virtio_device *vdev)
+ 	return features;
+ }
+ 
++static void vp_transport_features(struct virtio_device *vdev, u64 features)
++{
++	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
++	struct pci_dev *pci_dev = vp_dev->pci_dev;
++
++	if ((features & BIT_ULL(VIRTIO_F_SR_IOV)) &&
++			pci_find_ext_capability(pci_dev, PCI_EXT_CAP_ID_SRIOV))
++		__virtio_set_bit(vdev, VIRTIO_F_SR_IOV);
++}
++
+ /* virtio config->finalize_features() implementation */
+ static int vp_finalize_features(struct virtio_device *vdev)
+ {
+ 	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
++	u64 features = vdev->features;
+ 
+ 	/* Give virtio_ring a chance to accept features. */
+ 	vring_transport_features(vdev);
+ 
++	/* Give virtio_pci a chance to accept features. */
++	vp_transport_features(vdev, features);
++
+ 	if (!__virtio_test_bit(vdev, VIRTIO_F_VERSION_1)) {
+ 		dev_err(&vdev->dev, "virtio: device uses modern interface "
+ 			"but does not have VIRTIO_F_VERSION_1\n");
+diff --git a/include/uapi/linux/virtio_config.h b/include/uapi/linux/virtio_config.h
+index 308e2096291f..b7c1f4e7d59e 100644
+--- a/include/uapi/linux/virtio_config.h
++++ b/include/uapi/linux/virtio_config.h
+@@ -49,7 +49,7 @@
+  * transport being used (eg. virtio_ring), the rest are per-device feature
+  * bits. */
+ #define VIRTIO_TRANSPORT_F_START	28
+-#define VIRTIO_TRANSPORT_F_END		34
++#define VIRTIO_TRANSPORT_F_END		38
+ 
+ #ifndef VIRTIO_CONFIG_NO_LEGACY
+ /* Do we get callbacks when the ring is completely used, even if we've
+@@ -71,4 +71,9 @@
+  * this is for compatibility with legacy systems.
+  */
+ #define VIRTIO_F_IOMMU_PLATFORM		33
++
++/*
++ * Does the device support Single Root I/O Virtualization?
++ */
++#define VIRTIO_F_SR_IOV			37
+ #endif /* _UAPI_LINUX_VIRTIO_CONFIG_H */
+-- 
+2.17.0
