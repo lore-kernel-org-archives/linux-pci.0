@@ -1,99 +1,92 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 22 May 2018 09:43:34 -0700
-From: Jacob Pan <jacob.jun.pan@linux.intel.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [PATCH v2 03/40] iommu/sva: Manage process address spaces
-Message-ID: <20180522094334.71f0e36b@jacob-builder>
-In-Reply-To: <de478769-9f7a-d40b-a55e-e2c63ad883e8@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-4-jean-philippe.brucker@arm.com>
- <20180516163117.622693ea@jacob-builder>
- <de478769-9f7a-d40b-a55e-e2c63ad883e8@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:43586 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751701AbeE3PU5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 11:20:57 -0400
+Date: Wed, 30 May 2018 10:20:56 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: kbuild test robot <lkp@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, kbuild-all@01.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [pci:pci/sparc 4/4] arch/sparc/kernel/pci_common.c:539:13:
+ error: 'dev' undeclared; did you mean 'pdev'?
+Message-ID: <20180530152056.GD39853@bhelgaas-glaptop.roam.corp.google.com>
+References: <201805301201.LYoeKRvY%fengguang.wu@intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
- "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
- Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "linux-mm@kvack.org" <linux-mm@kvack.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "bharatku@xilinx.com" <bharatku@xilinx.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "kevin.tian@intel.com" <kevin.tian@intel.com>, jacob.jun.pan@linux.intel.com,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "rgummal@xilinx.com" <rgummal@xilinx.com>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
- "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- Robin Murphy <Robin.Murphy@arm.com>,
- "christian.koenig@amd.com" <christian.koenig@amd.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
- "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201805301201.LYoeKRvY%fengguang.wu@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 17 May 2018 11:02:42 +0100
-Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
-
-> On 17/05/18 00:31, Jacob Pan wrote:
-> > On Fri, 11 May 2018 20:06:04 +0100
-> > I am a little confused about domain vs. pasid relationship. If
-> > each domain represents a address space, should there be a domain for
-> > each pasid?  
+On Wed, May 30, 2018 at 12:16:03PM +0800, kbuild test robot wrote:
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/sparc
+> head:   81729bfd0f58568d6ebb162b2a004f8e9291a004
+> commit: 81729bfd0f58568d6ebb162b2a004f8e9291a004 [4/4] sparc/PCI: Use dev_printk() when possible
+> config: sparc64-allmodconfig (attached as .config)
+> compiler: sparc64-linux-gnu-gcc (Debian 7.2.0-11) 7.2.0
+> reproduce:
+>         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         git checkout 81729bfd0f58568d6ebb162b2a004f8e9291a004
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=sparc64 
 > 
-> I don't think there is a formal definition, but from previous
-> discussion the consensus seems to be: domains are a collection of
-> devices that have the same virtual address spaces (one or many).
-> 
-> Keeping that definition makes things easier, in my opinion. Some time
-> ago, I did try to represent PASIDs using "subdomains" (introducing a
-> hierarchy of struct iommu_domain), but it required invasive changes in
-> the IOMMU subsystem and probably all over the tree.
-> 
-> You do need some kind of "root domain" for each device, so that
-> "iommu_get_domain_for_dev()" still makes sense. That root domain
-> doesn't have a single address space but a collection of subdomains.
-> If you need this anyway, representing a PASID with an iommu_domain
-> doesn't seem preferable than using a different structure (io_mm),
-> because they don't have anything in common.
-> 
-My main concern is the PASID table storage. If PASID table storage
-is tied to domain, it is ok to scale up, i.e. multiple devices in a
-domain share a single PASID table. But to scale down, e.g. further
-partition device with VFIO mdev for assignment, each mdev may get its
-own domain via vfio. But there is no IOMMU storage for PASID table at
-mdev device level. Perhaps we do need root domain or some parent-child
-relationship to locate PASID table.
+> All errors (new ones prefixed by >>):
 
-> Thanks,
-> Jean
+I fixed these and updated my "next" branch.
 
-[Jacob Pan]
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>    In file included from include/linux/pci.h:31:0,
+>                     from arch/sparc/kernel/pci_common.c:9:
+>    arch/sparc/kernel/pci_common.c: In function 'pci_scan_for_parity_error':
+> >> arch/sparc/kernel/pci_common.c:539:13: error: 'dev' undeclared (first use in this function); did you mean 'pdev'?
+>        pci_info(dev, "%s: Device saw Parity Error [%016x]\n",
+>                 ^
+>    include/linux/device.h:1382:46: note: in definition of macro 'dev_info'
+>     #define dev_info(dev, fmt, arg...) _dev_info(dev, fmt, ##arg)
+>                                                  ^~~
+>    arch/sparc/kernel/pci_common.c:539:4: note: in expansion of macro 'pci_info'
+>        pci_info(dev, "%s: Device saw Parity Error [%016x]\n",
+>        ^~~~~~~~
+>    arch/sparc/kernel/pci_common.c:539:13: note: each undeclared identifier is reported only once for each function it appears in
+>        pci_info(dev, "%s: Device saw Parity Error [%016x]\n",
+>                 ^
+>    include/linux/device.h:1382:46: note: in definition of macro 'dev_info'
+>     #define dev_info(dev, fmt, arg...) _dev_info(dev, fmt, ##arg)
+>                                                  ^~~
+>    arch/sparc/kernel/pci_common.c:539:4: note: in expansion of macro 'pci_info'
+>        pci_info(dev, "%s: Device saw Parity Error [%016x]\n",
+>        ^~~~~~~~
+> --
+>    In file included from arch/sparc/kernel/pci_impl.h:12:0,
+>                     from arch/sparc/kernel/pci_msi.c:11:
+>    arch/sparc/kernel/pci_msi.c: In function 'sparc64_teardown_msi_irq':
+> >> arch/sparc/kernel/pci_msi.c:204:16: error: expected ')' before string constant
+>       pci_err(pdev "%s: teardown: ops->teardown() on MSI %u, "
+>                    ^
+>    include/linux/pci.h:2300:46: note: in definition of macro 'pci_err'
+>     #define pci_err(pdev, fmt, arg...) dev_err(&(pdev)->dev, fmt, ##arg)
+>                                                  ^~~~
+> 
+> vim +539 arch/sparc/kernel/pci_common.c
+> 
+>    523	
+>    524	void pci_scan_for_parity_error(struct pci_pbm_info *pbm,
+>    525				       struct pci_bus *pbus)
+>    526	{
+>    527		struct pci_dev *pdev;
+>    528		struct pci_bus *bus;
+>    529	
+>    530		list_for_each_entry(pdev, &pbus->devices, bus_list) {
+>    531			u16 status, error_bits;
+>    532	
+>    533			pci_read_config_word(pdev, PCI_STATUS, &status);
+>    534			error_bits =
+>    535				(status & (PCI_STATUS_PARITY |
+>    536					   PCI_STATUS_DETECTED_PARITY));
+>    537			if (error_bits) {
+>    538				pci_write_config_word(pdev, PCI_STATUS, error_bits);
+>  > 539				pci_info(dev, "%s: Device saw Parity Error [%016x]\n",
+> 
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
