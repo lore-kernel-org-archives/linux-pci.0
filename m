@@ -1,105 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:50965 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933363AbeEIBVq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 May 2018 21:21:46 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v7 6/7] dt-bindings: PCI: rockchip: Add DT bindings for Rockchip PCIe EP driver
-Date: Wed,  9 May 2018 09:13:11 +0800
-Message-Id: <1525828391-70153-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1525828278-69800-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1525828278-69800-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mga17.intel.com ([192.55.52.151]:39721 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751623AbeE3QDj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 12:03:39 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: "Bie, Tiwei" <tiwei.bie@intel.com>
+CC: "Michael S. Tsirkin" <mst@redhat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "virtualization@lists.linux-foundation.org"
+        <virtualization@lists.linux-foundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        "Liang, Cunming" <cunming.liang@intel.com>,
+        "Wang, Zhihong" <zhihong.wang@intel.com>
+Subject: Re: [virtio-dev] [PATCH] virtio_pci: support enabling VFs
+Date: Wed, 30 May 2018 16:03:37 +0000
+Message-ID: <D7004E41-C23D-48B7-94A4-ACBBA06B021D@intel.com>
+References: <20180530085521.26583-1-tiwei.bie@intel.com>
+In-Reply-To: <20180530085521.26583-1-tiwei.bie@intel.com>
+Content-Type: multipart/signed;
+        boundary="Apple-Mail=_BAEA8DCF-7D8D-46E0-BF67-24CFA346618A";
+        protocol="application/pgp-signature"; micalg=pgp-sha256
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch documents the DT bindings for the Rockchip PCIe controller
-when configured in EP mode.
+--Apple-Mail=_BAEA8DCF-7D8D-46E0-BF67-24CFA346618A
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii;
+	delsp=yes;
+	format=flowed
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
+On May 30, 2018, at 1:55 AM, Tiwei Bie <tiwei.bie@intel.com> wrote:
 
-Changes in v7: None
-Changes in v6: None
-Changes in v5: None
-Changes in v4: None
+> There is a new feature bit allocated in virtio spec to
+> support SR-IOV (Single Root I/O Virtualization):
+>
+> https://github.com/oasis-tcs/virtio-spec/issues/11
+>
+> This patch enables the support for this feature bit in
+> virtio driver.
+>
+> Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
+> ---
+> This patch depends on below proposal:
+> https://lists.oasis-open.org/archives/virtio-dev/201805/msg00154.html
+>
+> This patch depends on below patch:
+> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/virtualization&id=8effc395c2097e258fcedfc02ed4a66d45fb4238
+>
+>  drivers/virtio/virtio_pci_common.c | 20 ++++++++++++++++++++
+>  drivers/virtio/virtio_pci_modern.c | 14 ++++++++++++++
+>  include/uapi/linux/virtio_config.h |  7 ++++++-
+>  3 files changed, 40 insertions(+), 1 deletion(-)
+>
 
- .../devicetree/bindings/pci/rockchip-pcie-ep.txt   | 62 ++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
+<snip>
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
-new file mode 100644
-index 0000000..77846730
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie-ep.txt
-@@ -0,0 +1,62 @@
-+* Rockchip AXI PCIe Endpoint Controller DT description
-+
-+Required properties:
-+- compatible: Should contain "rockchip,rk3399-pcie-ep"
-+- reg: Two register ranges as listed in the reg-names property
-+- reg-names: Must include the following names
-+	- "apb-base"
-+	- "mem-base"
-+- clocks: Must contain an entry for each entry in clock-names.
-+		See ../clocks/clock-bindings.txt for details.
-+- clock-names: Must include the following entries:
-+	- "aclk"
-+	- "aclk-perf"
-+	- "hclk"
-+	- "pm"
-+- resets: Must contain seven entries for each entry in reset-names.
-+	   See ../reset/reset.txt for details.
-+- reset-names: Must include the following names
-+	- "core"
-+	- "mgmt"
-+	- "mgmt-sticky"
-+	- "pipe"
-+	- "pm"
-+	- "aclk"
-+	- "pclk"
-+- pinctrl-names : The pin control state names
-+- pinctrl-0: The "default" pinctrl state
-+- phys: Must contain an phandle to a PHY for each entry in phy-names.
-+- phy-names: Must include 4 entries for all 4 lanes even if some of
-+  them won't be used for your cases. Entries are of the form "pcie-phy-N":
-+  where N ranges from 0 to 3.
-+  (see example below and you MUST also refer to ../phy/rockchip-pcie-phy.txt
-+  for changing the #phy-cells of phy node to support it)
-+- rockchip,max-outbound-regions: Maximum number of outbound regions
-+
-+Optional Property:
-+- num-lanes: number of lanes to use
-+- max-functions: Maximum number of functions that can be configured (default 1).
-+
-+pcie0-ep: pcie@f8000000 {
-+	compatible = "rockchip,rk3399-pcie-ep";
-+	#address-cells = <3>;
-+	#size-cells = <2>;
-+	rockchip,max-outbound-regions = <16>;
-+	clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
-+		 <&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
-+	clock-names = "aclk", "aclk-perf",
-+		      "hclk", "pm";
-+	max-functions = /bits/ 8 <8>;
-+	num-lanes = <4>;
-+	reg = <0x0 0xfd000000 0x0 0x1000000>, <0x0 0x80000000 0x0 0x20000>;
-+	reg-names = "apb-base", "mem-base";
-+	resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-+		 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE> ,
-+		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
-+	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
-+		      "pm", "pclk", "aclk";
-+	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
-+	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_clkreq>;
-+};
--- 
-1.9.1
+> diff --git a/include/uapi/linux/virtio_config.h  
+> b/include/uapi/linux/virtio_config.h
+> index 308e2096291f..b7c1f4e7d59e 100644
+> --- a/include/uapi/linux/virtio_config.h
+> +++ b/include/uapi/linux/virtio_config.h
+> @@ -49,7 +49,7 @@
+
+There is a value in the comment directly before this that should
+be updated as well to be consistent with the new value for
+VIRTIO_TRANSPORT_F_END below.
+
+>   * transport being used (eg. virtio_ring), the rest are per-device feature
+>   * bits. */
+>  #define VIRTIO_TRANSPORT_F_START	28
+> -#define VIRTIO_TRANSPORT_F_END		34
+> +#define VIRTIO_TRANSPORT_F_END		38
+>
+>  #ifndef VIRTIO_CONFIG_NO_LEGACY
+>  /* Do we get callbacks when the ring is completely used, even if we've
+
+<snip>
+
+--
+Mark Rustad, Networking Division, Intel Corporation
+
+--Apple-Mail=_BAEA8DCF-7D8D-46E0-BF67-24CFA346618A
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEE6ug8b0Wg+ULmnksNPA7/547j7m4FAlsOy1gACgkQPA7/547j
+7m76ZA//Y2LUMKR3vk+daXgmttHCcE/LQRNdsp+Ik27ahXsyWiUT77IJ2RPB0Mze
+J5LThGz0VlmeUFJ5vc1l3RutQoF4DTOo8j1V9U5TD+FG9K9jimJAjf2KQBOZngBx
+ui5BctfAfRkk3hHN35p9B5E8XuOOYGzfwUGFrqCse0tsz+v11s+NwZvtylt9vnDH
+9wDK37Ot2gl/ufee/dRj6cRZXpbO3D4+7heiAx+UfqNGvCDwDII6xhslJAJNGAxt
+TtGgR5sWc6dm7Z02sMQS5IXonrBtZSOkk6Th6P0sAxkc/OiiWTNZjyvP39TM9AkM
+ZKpmXEDwyBaSgqGnrd4GordqXCh6DgVPI6APsKdfl8KNf0GZuFxmCtu8sugYOnA9
+M2UYRppTV73vPB/jIMgo5ClDJ3LIsLeOlwr7oZcOBTzKqzj1YzLcuqAXasR4+rx/
+oZjXMw77yHZbWHWCA2ErIa+Lgeu1xdfHJm/f7ExDQIgGUVKlXfbj2lE87ttm8Zdi
+yY02wOS2z05P2+xnawmEx/p94nQnVz6l4Vdgh48VqUU8g5kax3Zkxb4v8B9oVtDo
+uY+VJrfJ9VReziVzPfIqUAKaCciamvsbAytjRd0JyxALy2600iQZZxt67Z5CMBEp
+MIPoubbmknwnjWXJlDdpGNp24J4d0ZrftJSJtiqbw8TPZ7GcFSQ=
+=13w0
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_BAEA8DCF-7D8D-46E0-BF67-24CFA346618A--
