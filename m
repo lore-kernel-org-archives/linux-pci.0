@@ -1,63 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33218 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750822AbeECUAK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 May 2018 16:00:10 -0400
-Subject: [PATCH v6 0/5] PCI: Improve PCIe link status reporting
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ariel Elior <ariel.elior@cavium.com>
-Cc: linux-pci@vger.kernel.org, everest-linux-l2@cavium.com,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Tal Gilboa <talgi@mellanox.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Jakub Kicinski <kubakici@wp.pl>
-Date: Thu, 03 May 2018 15:00:07 -0500
-Message-ID: <152537719056.62474.2571390812509425478.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Date: Wed, 30 May 2018 00:44:29 -0700
+From: okaya@codeaurora.org
+To: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] PCI: Add pci=safemode option
+In-Reply-To: <20180530073735.GA28793@infradead.org>
+References: <1527650389-31575-1-git-send-email-okaya@codeaurora.org>
+ <20180530043103.GA19734@kroah.com>
+ <6c317ed8-cca3-8862-5f3b-12cf14e4d53b@codeaurora.org>
+ <20180530073735.GA28793@infradead.org>
+Message-ID: <6dfe2db8f974d94c9867f30ec83d9333@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+ Kai-Heng Feng <kai.heng.feng@canonical.com>, Ingo Molnar <mingo@kernel.org>,
+ Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
+ timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Dongdong Liu <liudongdong3@huawei.com>, David Rientjes <rientjes@google.com>,
+ Thymo van Beers <thymovanbeers@gmail.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Frederick Lawler <fred@fredlawl.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
+ Frederic Weisbecker <frederic@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
+ Oza Pawandeep <poza@codeaurora.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is based on Tal's recent work to unify the approach for reporting PCIe
-link speed/width and whether the device is being limited by a slower
-upstream link.
+On 2018-05-30 00:37, Christoph Hellwig wrote:
+> On Tue, May 29, 2018 at 09:41:33PM -0700, Sinan Kaya wrote:
+>> Bjorn and I discussed the need for such a "safe" mode feature when you
+>> want to bring up PCI for a platform. You want to turn off everything 
+>> as
+>> a starter and just stick to bare minimum.
+> 
+> Can we please make it a config option the instead of adding code
+> to every kernel?  Also maybe the bringup should be in the name
+> to make this more clear?
 
-The new pcie_print_link_status() interface appeared in v4.17-rc1; see
-9e506a7b5147 ("PCI: Add pcie_print_link_status() to log link speed and
-whether it's limited").
+One other requirement was to have a runtime option rather than compile 
+time option.
 
-That's a good way to replace use of pcie_get_minimum_link(), which gives
-misleading results when a path contains both a fast, narrow link and a
-slow, wide link: it reports the equivalent of a slow, narrow link.
+When someone reported a problem, we wanted to be able to say "use this 
+option and see if system boots" without doing any bisects or 
+recompilation.
 
-This series removes the remaining uses of pcie_get_minimum_link() and then
-removes the interface itself.  I'd like to merge them all through the PCI
-tree to make the removal easy.
+This would be the first step in troubleshooting a system to see if 
+fundamental features are working.
 
-This does change the dmesg reporting of link speeds, and in the ixgbe case,
-it changes the reporting from KERN_WARN level to KERN_INFO.  If that's an
-issue, let's talk about it.  I'm hoping the reduce code size, improved
-functionality, and consistency across drivers is enough to make this
-worthwhile.
+I don't mind changing the name
+Bjorn mentioned safe option. I made it safemode. I am looking at Bjorn 
+for suggestions at this moment.
 
----
-
-Bjorn Helgaas (5):
-      bnx2x: Report PCIe link properties with pcie_print_link_status()
-      bnxt_en: Report PCIe link properties with pcie_print_link_status()
-      cxgb4: Report PCIe link properties with pcie_print_link_status()
-      ixgbe: Report PCIe link properties with pcie_print_link_status()
-      PCI: Remove unused pcie_get_minimum_link()
-
-
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c |   23 ++-----
- drivers/net/ethernet/broadcom/bnxt/bnxt.c        |   19 ------
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c  |   75 ----------------------
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c    |   47 --------------
- drivers/pci/pci.c                                |   43 -------------
- include/linux/pci.h                              |    2 -
- 6 files changed, 9 insertions(+), 200 deletions(-)
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
