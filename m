@@ -1,94 +1,26 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from goliath.siemens.de ([192.35.17.28]:45052 "EHLO
-        goliath.siemens.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752290AbeEOF6u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2018 01:58:50 -0400
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>
-Subject: [PATCH v3 0/8] PCI: leak fixes, removable generic PCI host, assorted stuff
-Date: Tue, 15 May 2018 07:58:08 +0200
-Message-Id: <cover.1526363896.git.jan.kiszka@siemens.com>
+Received: from mail.kernel.org ([198.145.29.99]:34934 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753044AbeE3Q0L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 12:26:11 -0400
+Date: Wed, 30 May 2018 11:26:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Native PCI host controller patches
+Message-ID: <20180530162610.GF39853@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes in v3:
- - refactor series to be both bisectable and simpler while reworking
-   of_pci_get_host_bridge_resources()
- - include of_pci_get_host_bridge_resources() removal
- - include devm_of_pci_get_host_bridge_resources() error path fixes
- - effectively, no functional changes to v2
+Lorenzo will be out until mid-June, so if you have urgent patches that
+he would normally handle (drivers/pci/{host,dwc,endpoint}/*), let me
+know.
 
-Changes in v2:
- - patch 1: commit message reworking as suggested by Lorenzo
- - patch 3-6: split-up as suggested by Bjorn
- - patch 8: new
- - patch 10: select PCI_DOMAINS from PCI_HOST_GENERIC, rather than
-   allowing manual choice, as suggested by Lorenzo
+I don't have time to review and merge everything, but if you have
+something that really needs to be merged for v4.17 or during the v4.18
+merge window, point it out to me and make a case for squeezing it in,
+and I'll try to work it in.
 
-This primarily enables to unbind the generic PCI host controller without
-leaving lots of memory leaks behind. A previous proposal patch 5 was
-rejected because of those issues [1].
-
-The fixes have been validated in the Jailhouse setup, where we add and
-remove a virtual PCI host controller on hypervisor activation/
-deactivation, with the help of kmemleak.
-
-Besides that, there is tiny PCI API cleanup at the beginning and
-support for manually enabled PCI domains at the end that enables the
-Jailhouse scenario.
-
-Jan
-
-[1] http://lkml.iu.edu/hypermail/linux/kernel/1606.3/00072.html
-
-
-CC: Jingoo Han <jingoohan1@gmail.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Will Deacon <will.deacon@arm.com>
-
-Jan Kiszka (8):
-  PCI: Make pci_get_new_domain_nr() static
-  PCI: Fix memory leak of devm_pci_alloc_host_bridge()
-  PCI: Rename device node parameter of
-    of_pci_get_host_bridge_resources()
-  PCI: Replace dev_node parameter of of_pci_get_host_bridge_resources
-    with device
-  PCI: Replace pr_*() with dev_*() in of_pci_get_host_bridge_resources()
-  PCI: Rework of_pci_get_host_bridge_resources() to
-    devm_of_pci_get_host_bridge_resources()
-  PCI: Add support for unbinding the generic PCI host controller
-  PCI: Enable PCI_DOMAINS along with generic PCI host controller
-
- drivers/pci/dwc/pcie-designware-host.c |  2 +-
- drivers/pci/host/Kconfig               |  1 +
- drivers/pci/host/pci-aardvark.c        |  5 +--
- drivers/pci/host/pci-ftpci100.c        |  4 +-
- drivers/pci/host/pci-host-common.c     | 13 ++++++
- drivers/pci/host/pci-host-generic.c    |  1 +
- drivers/pci/host/pci-v3-semi.c         |  3 +-
- drivers/pci/host/pci-versatile.c       |  3 +-
- drivers/pci/host/pci-xgene.c           |  3 +-
- drivers/pci/host/pcie-altera.c         |  5 +--
- drivers/pci/host/pcie-iproc-platform.c |  4 +-
- drivers/pci/host/pcie-rcar.c           |  5 +--
- drivers/pci/host/pcie-rockchip.c       |  4 +-
- drivers/pci/host/pcie-xilinx-nwl.c     |  4 +-
- drivers/pci/host/pcie-xilinx.c         |  4 +-
- drivers/pci/of.c                       | 72 +++++++++++++++-------------------
- drivers/pci/pci.c                      |  6 +--
- drivers/pci/probe.c                    |  4 +-
- include/linux/of_pci.h                 |  4 +-
- include/linux/pci-ecam.h               |  1 +
- include/linux/pci.h                    |  3 --
- 21 files changed, 76 insertions(+), 75 deletions(-)
-
--- 
-2.13.6
+Bjorn
