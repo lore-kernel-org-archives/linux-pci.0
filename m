@@ -1,36 +1,54 @@
-Return-Path: <SRS0=it8y=IJ=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=it8y=IJ=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 30 May 2018 00:37:35 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH] PCI: Add pci=safemode option
+Message-ID: <20180530073735.GA28793@infradead.org>
+References: <1527650389-31575-1-git-send-email-okaya@codeaurora.org>
+ <20180530043103.GA19734@kroah.com>
+ <6c317ed8-cca3-8862-5f3b-12cf14e4d53b@codeaurora.org>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20180522130612.GB161672@bhelgaas-glaptop.roam.corp.google.com>
-References: <2360046.ecez94sF1Y@aspire.rjw.lan> <20180522130612.GB161672@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 22 May 2018 17:21:47 +0200
-Message-ID: <CAJZ5v0gssLSpaN+OdeGP5-O4RFwwONL6FF0=swo+kc2R0+Av1g@mail.gmail.com>
-Subject: Re: [PATCH] PCI / PM: Clean up outdated comments in pci_target_state()
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Linux PM <linux-pm@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <6c317ed8-cca3-8862-5f3b-12cf14e4d53b@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+ Kai-Heng Feng <kai.heng.feng@canonical.com>, Ingo Molnar <mingo@kernel.org>,
+ Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
+ timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Dongdong Liu <liudongdong3@huawei.com>, David Rientjes <rientjes@google.com>,
+ Thymo van Beers <thymovanbeers@gmail.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Frederick Lawler <fred@fredlawl.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
+ Frederic Weisbecker <frederic@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
+ Oza Pawandeep <poza@codeaurora.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 22, 2018 at 3:06 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Mon, May 21, 2018 at 01:11:12PM +0200, Rafael J. Wysocki wrote:
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> Two comments in pci_target_state() are outdated, as the function
->> doesn't set the target power state for the device any more, only
->> finds one for it, so fix them accordingly.
->>
->> Reported-by: Bjorn Helgaas <bhelgaas@google.com>
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> I assume you'll merge this; let me know if you'd rather that I take it.
+On Tue, May 29, 2018 at 09:41:33PM -0700, Sinan Kaya wrote:
+> Bjorn and I discussed the need for such a "safe" mode feature when you
+> want to bring up PCI for a platform. You want to turn off everything as
+> a starter and just stick to bare minimum.
 
-I will take it, thanks!
+Can we please make it a config option the instead of adding code
+to every kernel?  Also maybe the bringup should be in the name
+to make this more clear?
 
-Can you have a look at https://patchwork.kernel.org/patch/10408977/
-too, please, while at it?
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
