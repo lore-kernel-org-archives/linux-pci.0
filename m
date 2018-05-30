@@ -1,94 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:50504 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935616AbeEXHXe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 03:23:34 -0400
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH 2/6] PCI: rcar: Add missing irq_dispose_mapping() into failpath
-Date: Thu, 24 May 2018 09:23:19 +0200
-Message-Id: <20180524072323.22115-2-marek.vasut+renesas@gmail.com>
-In-Reply-To: <20180524072323.22115-1-marek.vasut+renesas@gmail.com>
-References: <20180524072323.22115-1-marek.vasut+renesas@gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.133]:38821 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932310AbeE3Vxb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 May 2018 17:53:31 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-gpio@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] pci: qcom: include gpio/consumer.h
+Date: Wed, 30 May 2018 23:53:06 +0200
+Message-Id: <20180530215324.1178564-1-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The rcar_pcie_get_resources() is another misnomer with a side effect.
-The function does not only get resources, but also maps MSI IRQs via
-irq_of_parse_and_map(). In case anything fails afterward, the IRQ
-mapping must be disposed through irq_dispose_mapping() which is not
-done.
+When CONFIG_GPIOLIB is disabled, we run into a build failure:
 
-This patch handles irq_of_parse_and_map() failures in by disposing
-of the mapping in rcar_pcie_get_resources() as well as in probe.
+drivers/pci/dwc/pcie-qcom.c: In function 'qcom_pcie_probe':
+drivers/pci/dwc/pcie-qcom.c:1223:16: error: implicit declaration of function 'devm_gpiod_get_optional'; did you mean 'devm_regulator_get_optional'? [-Werror=implicit-function-declaration]
+  pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
 
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
+Including gpio/consumer.h directly is the correct fix.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/pci/host/pcie-rcar.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+ drivers/pci/dwc/pcie-qcom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 0879880f7975..6bb1cdec26be 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -950,18 +950,25 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
- 	i = irq_of_parse_and_map(dev->of_node, 0);
- 	if (!i) {
- 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
--		return -ENOENT;
-+		err = -ENOENT;
-+		goto err_irq1;
- 	}
- 	pcie->msi.irq1 = i;
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index b65bbf7c284e..17df19db851e 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -10,7 +10,7 @@
  
- 	i = irq_of_parse_and_map(dev->of_node, 1);
- 	if (!i) {
- 		dev_err(dev, "cannot get platform resources for msi interrupt\n");
--		return -ENOENT;
-+		err = -ENOENT;
-+		goto err_irq2;
- 	}
- 	pcie->msi.irq2 = i;
- 
- 	return 0;
-+
-+err_irq2:
-+	irq_dispose_mapping(pcie->msi.irq1);
-+err_irq1:
-+	return err;
- }
- 
- static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
-@@ -1108,7 +1115,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	err = clk_prepare_enable(pcie->bus_clk);
- 	if (err) {
- 		dev_err(dev, "failed to enable bus clock: %d\n", err);
--		goto err_pm_put;
-+		goto err_unmap_msi_irqs;
- 	}
- 
- 	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
-@@ -1151,6 +1158,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- err_clk_disable:
- 	clk_disable_unprepare(pcie->bus_clk);
- 
-+err_unmap_msi_irqs:
-+	irq_dispose_mapping(pcie->msi.irq2);
-+	irq_dispose_mapping(pcie->msi.irq1);
-+
- err_pm_put:
- 	pm_runtime_put(dev);
- 
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+-#include <linux/gpio.h>
++#include <linux/gpio/consumer.h>
+ #include <linux/interrupt.h>
+ #include <linux/io.h>
+ #include <linux/iopoll.h>
 -- 
-2.16.2
+2.9.0
