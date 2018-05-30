@@ -1,158 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:18258 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752414AbeEQHnQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 May 2018 03:43:16 -0400
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v17 0/9] Address error and recovery for AER and DPC
-Date: Thu, 17 May 2018 03:43:02 -0400
-Message-Id: <1526542991-5291-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+Date: Wed, 30 May 2018 00:56:52 -0700
+From: okaya@codeaurora.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] PCI: Add pci=safemode option
+In-Reply-To: <20180530074822.GB30177@kroah.com>
+References: <1527650389-31575-1-git-send-email-okaya@codeaurora.org>
+ <20180530043103.GA19734@kroah.com>
+ <6c317ed8-cca3-8862-5f3b-12cf14e4d53b@codeaurora.org>
+ <20180530073735.GA28793@infradead.org>
+ <6dfe2db8f974d94c9867f30ec83d9333@codeaurora.org>
+ <20180530074822.GB30177@kroah.com>
+Message-ID: <577f01ada5e7f08c79a28d41020fb019@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+ Kai-Heng Feng <kai.heng.feng@canonical.com>, Ingo Molnar <mingo@kernel.org>,
+ Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
+ timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Christoph Hellwig <hch@infradead.org>, Dongdong Liu <liudongdong3@huawei.com>,
+ David Rientjes <rientjes@google.com>,
+ Thymo van Beers <thymovanbeers@gmail.com>, "Paul
+ E. McKenney" <paulmck@linux.vnet.ibm.com>, Frederick Lawler <fred@fredlawl.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
+ Frederic Weisbecker <frederic@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
+ Oza Pawandeep <poza@codeaurora.org>, open list <linux-kernel@vger.kernel.org>,
+ linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set brings in error handling support for DPC
+On 2018-05-30 00:48, Greg Kroah-Hartman wrote:
+> On Wed, May 30, 2018 at 12:44:29AM -0700, okaya@codeaurora.org wrote:
+>> On 2018-05-30 00:37, Christoph Hellwig wrote:
+>> > On Tue, May 29, 2018 at 09:41:33PM -0700, Sinan Kaya wrote:
+>> > > Bjorn and I discussed the need for such a "safe" mode feature when you
+>> > > want to bring up PCI for a platform. You want to turn off everything
+>> > > as
+>> > > a starter and just stick to bare minimum.
+>> >
+>> > Can we please make it a config option the instead of adding code
+>> > to every kernel?  Also maybe the bringup should be in the name
+>> > to make this more clear?
+>> 
+>> One other requirement was to have a runtime option rather than compile 
+>> time
+>> option.
+>> 
+>> When someone reported a problem, we wanted to be able to say "use this
+>> option and see if system boots" without doing any bisects or 
+>> recompilation.
+>> 
+>> This would be the first step in troubleshooting a system to see if
+>> fundamental features are working.
+> 
+> That makes sense, people can not rebuild their kernels for the most
+> part.  Putting it behind a config option would not make sense as it
+> would always have to be enabled.
+> 
 
-The current implementation of AER and error message broadcasting to the
-EP driver is tightly coupled and limited to AER service driver.
-It is important to factor out broadcasting and other link handling
-callbacks. So that not only when AER gets triggered, but also when DPC get
-triggered (for e.g. ERR_FATAL), callbacks are handled appropriately.
+Here is where the discussion took place. Last 5-10  messages should 
+help.
 
-The goal of the patch-set is:
-DPC should handle the error handling and recovery similar to AER, because 
-finally both are attempting recovery in some or the other way,
-and for that error handling and recovery framework has to be loosely
-coupled.
 
-It achieves uniformity and transparency to the error handling agents such
-as AER, DPC, with respect to recovery and error handling.
+https://bugzilla.kernel.org/show_bug.cgi?id=196197
 
-So, this patch-set tries to unify lot of things between error agents and
-make them behave in a well defined way. (be it error (FATAL, NON_FATAL)
-handling or recovery).
 
-The FATAL error handling is handled with remove/reset_link/re-enumerate
-sequence while the NON_FATAL follows the default path.
-Documentation/PCI/pci-error-recovery.txt talks more on that.
+>> I don't mind changing the name Bjorn mentioned safe option. I made it
+>> safemode. I am looking at Bjorn for suggestions at this moment.
+> 
+> "minimal"?  "basic"?  "crippled"?
+> "my_hardware_is_so_borked_it_needs_this_option"?  :)
+> 
+> Naming is hard...
+> 
+> greg k-h
 
-Changes since v16:
-    Bjorn's comments addressed
-    > remove call pci_walk_bus(dev->subordinate, report_resume, &result_data)
-    > pci_cleanup_aer_uncorrect_error_status(dev); happens only if service is AER
-    > aer_error_resume does not handle ERR_FATAL clearing anymore
-Changes since v15:
-    Bjorn's comments addressed
-    > minor comments fixed
-    > made FATAL sequence aligned to existing one, as far as clearing status are concerned.
-    > pcie_do_fatal_recovery and pcie_do_nonfatal_recovery functions made to modularize
-    > pcie_do_fatal_recovery now takes service as an argument
-Changes since v14:
-    Bjorn's comments addressed
-    > simplified the patch set, and moved AER_FATAL handling in the beginning.
-    > rebase the code to 4.17-rc1.
-Changes since v13:
-    Bjorn's comments addressed
-    > handke FATAL errors with remove devices followed by re-enumeration.
-    > changes in AER and DPC along with required Documentation.
-Changes since v12:
-    Bjorn's and Keith's Comments addressed.
-    > Made DPC and AER error handling identical <aligned err.c>
-    > hanldled cases for hotplug enabled system differently.
-Changes since v11:
-    Bjorn's comments addressed.
-    > rename pcie-err.c to err.c
-    > removed EXPORT_SYMBOL
-    > made generic find_serivce function in port driver.
-    > removed mutex patch as no need to have mutex in pcie_do_recovery
-    > brough in DPC_FATAL in aer.h
-    > so now all the error codes (AER and DPC) are unified in aer.h
-Changes since v10:
-    Christoph Hellwig's, David Laight's and Randy Dunlap's
-    comments addressed.
-        > renamed pci_do_recovery to pcie_do_recovery
-        > removed inner braces in conditional statements.
-        > restrctured the code in pci_wait_for_link
-        > EXPORT_SYMBOL_GPL
-Changes since v9:
-    Sinan's comments addressed.
-        > bool active = true; unnecessary variable removed.
-Changes since v8:
-    Fixed Kbuild errors.
-Changes since v7:
-    Rebased the code on pci master
-        > https://kernel.googlesource.com/pub/scm/linux/kernel/git/helgaas/pci
-Changes since v6:
-    Sinan's and Stefan's comments implemented.
-        > reordered patch 6 and 7
-        > cleaned up
-Changes since v5:
-    Sinan's and Keith's comments incorporated.
-        > made separate patch for mutex
-        > unified error repotting codes into driver/pci/pci.h
-        > got rid of wait link active/inactive and
-          made generic function in driver/pci/pci.c
-Changes since v4:
-    Bjorn's comments incorporated.
-        > Renamed only do_recovery.
-        > moved the things more locally to drivers/pci/pci.h
-Changes since v3:
-    Bjorn's comments incorporated.
-        > Made separate patch renaming generic pci_err.c
-        > Introduce pci_err.h to contain all the error types and recovery
-        > removed all the dependencies on pci.h
-Changes since v2:
-    Based on feedback from Keith:
-    "
-    When DPC is triggered due to receipt of an uncorrectable error Message,
-    the Requester ID from the Message is recorded in the DPC Error
-    Source ID register and that Message is discarded and not forwarded Upstream.
-    "
-    Removed the patch where AER checks if DPC service is active
-Changes since v1:
-    Kbuild errors fixed:
-        > pci_find_dpc_dev made static
-        > ras_event.h updated
-        > pci_find_aer_service call with CONFIG check
-        > pci_find_dpc_service call with CONFIG check
-
-Oza Pawandeep (9):
-  PCI: Unify wait for link active into generic PCI
-  pci-error-recovery: Add AER_FATAL handling
-  PCI/AER: Handle ERRR_FATAL with removal and re-enumeration of devices
-  PCI/AER: Rename error recovery to generic PCI naming
-  PCI/AER: Factor out error reporting from AER
-  PCI/PORTDRV: Implement generic find service
-  PCI/PORTDRV: Implement generic find device
-  PCI/DPC: Unify and plumb error handling into DPC
-  PCI/DPC: Disable ERR_NONFATAL and enable ERR_FATAL for DPC
-
- Documentation/PCI/pci-error-recovery.txt |  35 ++-
- drivers/pci/hotplug/pciehp_hpc.c         |  20 +-
- drivers/pci/pci.c                        |  29 +++
- drivers/pci/pci.h                        |   4 +
- drivers/pci/pcie/Makefile                |   2 +-
- drivers/pci/pcie/aer/aerdrv.c            |   2 +
- drivers/pci/pcie/aer/aerdrv.h            |  30 ---
- drivers/pci/pcie/aer/aerdrv_core.c       | 317 +-------------------------
- drivers/pci/pcie/dpc.c                   |  58 +++--
- drivers/pci/pcie/err.c                   | 374 +++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv.h               |   4 +
- drivers/pci/pcie/portdrv_core.c          |  67 ++++++
- include/linux/aer.h                      |   1 +
- include/uapi/linux/pci_regs.h            |   1 +
- 14 files changed, 540 insertions(+), 404 deletions(-)
- create mode 100644 drivers/pci/pcie/err.c
-
--- 
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
