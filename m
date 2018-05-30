@@ -1,65 +1,109 @@
-Return-Path: <SRS0=Aj16=IG=siemens.com=jan.kiszka@kernel.org>
-Return-Path: <SRS0=Aj16=IG=siemens.com=jan.kiszka@kernel.org>
-Subject: Re: [pci:next 15/20] drivers/pci/host/pcie-altera.c:496:53: sparse:
- incompatible types for operation (&)
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, kbuild test robot <lkp@intel.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, kbuild-all@01.org,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-References: <201805190321.nss6j8Jn%fengguang.wu@intel.com>
- <20180518210332.GC41790@bhelgaas-glaptop.roam.corp.google.com>
- <856d3483-3ce3-fe5c-4013-073bce64e1c7@siemens.com>
-Message-ID: <37fb15bf-a97c-3e01-fb21-511837ab21ab@siemens.com>
-Date: Sat, 19 May 2018 11:36:38 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:51092 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751623AbeE3Q4h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 12:56:37 -0400
+Date: Wed, 30 May 2018 11:56:36 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Borislav Petkov <bp@alien8.de>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pci/aer: Get rid of aer_recover_work_func() forward
+ declaration
+Message-ID: <20180530165636.GM39853@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180511163923.22116-1-bp@alien8.de>
 MIME-Version: 1.0
-In-Reply-To: <856d3483-3ce3-fe5c-4013-073bce64e1c7@siemens.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180511163923.22116-1-bp@alien8.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-19 10:06, Jan Kiszka wrote:
-> On 2018-05-18 23:03, Bjorn Helgaas wrote:
->> On Sat, May 19, 2018 at 03:42:27AM +0800, kbuild test robot wrote:
->>> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
->>> head:   f8d3ac43d8cd4cfba337a50794c26c7ca89d86ac
->>> commit: 927da40afdbd6a5fdd31eab6e9aa655dee1f99a4 [15/20] Merge branch 'lorenzo/pci/host/misc'
->>> reproduce:
->>>         # apt-get install sparse
->>>         git checkout 927da40afdbd6a5fdd31eab6e9aa655dee1f99a4
->>>         make ARCH=x86_64 allmodconfig
->>>         make C=1 CF=-D__CHECK_ENDIAN__
->>>
->>>
->>> sparse warnings: (new ones prefixed by >>)
->>>
->>>>> drivers/pci/host/pcie-altera.c:496:53: sparse: incompatible types for operation (&)
->>
->> I think I fixed this; it was missing a comma at the end of the first line:
->>
->>         err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff
->>                                                     &pcie->resources, NULL);
->>
->> This error was in the original patch, so I'm not sure if I forgot to push
->> the pci/resource branch or if kbuild didn't test it for some reason.
->>
->>>    /kbuild/src/sparse/drivers/pci/host/pcie-rockchip-host.c:996:15: sparse: undefined identifier 'devm_of_pci_get_host_bridge_resources'
->>
->> I'm confused about this one because pcie-rockchip-host.c doesn't even exist
->> in 927da40afdbd, so the steps to reproduce must not be quite right.
->>
->> But I'm sure I screwed up a conflict resolution somewhere, so I'll find that,
->> too.
+On Fri, May 11, 2018 at 06:39:23PM +0200, Borislav Petkov wrote:
+> From: Borislav Petkov <bp@suse.de>
 > 
-> No, this should be really just be a missing "," in my original patch
-> "PCI: Replace dev_node parameter of of_pci_get_host_bridge_resources
-> with device".
+> Just move the actual function up so that it is visible to its user
+> aer_recover_queue().
+> 
+> No functional changes.
+> 
+> Signed-off-by: Borislav Petkov <bp@suse.de>
 
-Err, that reply was too fast: The second issue seem to be related to
-moving devm_of_pci_get_host_bridge_resources() prototypes around into
-the private pci.h. The above mentioned head
-f8d3ac43d8cd4cfba337a50794c26c7ca89d86ac lacks the required new include
-in pcie-rockchip-host.c (because
-9e2aee80c78d5084e0c58745e9762c29da6bd53f targeted pcie-rockchip.c).
+Applied to pci/aer for v4.18, thanks!
 
-But it seems you fixed that in your next revision by now.
-
-Jan
+> ---
+>  drivers/pci/pcie/aer/aerdrv_core.c | 45 +++++++++++++++---------------
+>  1 file changed, 22 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index 0ea5acc40323..a9e575189571 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -567,8 +567,6 @@ static void handle_error_source(struct pcie_device *aerdev,
+>  }
+>  
+>  #ifdef CONFIG_ACPI_APEI_PCIEAER
+> -static void aer_recover_work_func(struct work_struct *work);
+> -
+>  #define AER_RECOVER_RING_ORDER		4
+>  #define AER_RECOVER_RING_SIZE		(1 << AER_RECOVER_RING_ORDER)
+>  
+> @@ -582,6 +580,28 @@ struct aer_recover_entry {
+>  
+>  static DEFINE_KFIFO(aer_recover_ring, struct aer_recover_entry,
+>  		    AER_RECOVER_RING_SIZE);
+> +
+> +static void aer_recover_work_func(struct work_struct *work)
+> +{
+> +	struct aer_recover_entry entry;
+> +	struct pci_dev *pdev;
+> +
+> +	while (kfifo_get(&aer_recover_ring, &entry)) {
+> +		pdev = pci_get_domain_bus_and_slot(entry.domain, entry.bus,
+> +						   entry.devfn);
+> +		if (!pdev) {
+> +			pr_err("AER recover: Can not find pci_dev for %04x:%02x:%02x:%x\n",
+> +			       entry.domain, entry.bus,
+> +			       PCI_SLOT(entry.devfn), PCI_FUNC(entry.devfn));
+> +			continue;
+> +		}
+> +		cper_print_aer(pdev, entry.severity, entry.regs);
+> +		if (entry.severity != AER_CORRECTABLE)
+> +			do_recovery(pdev, entry.severity);
+> +		pci_dev_put(pdev);
+> +	}
+> +}
+> +
+>  /*
+>   * Mutual exclusion for writers of aer_recover_ring, reader side don't
+>   * need lock, because there is only one reader and lock is not needed
+> @@ -611,27 +631,6 @@ void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+>  	spin_unlock_irqrestore(&aer_recover_ring_lock, flags);
+>  }
+>  EXPORT_SYMBOL_GPL(aer_recover_queue);
+> -
+> -static void aer_recover_work_func(struct work_struct *work)
+> -{
+> -	struct aer_recover_entry entry;
+> -	struct pci_dev *pdev;
+> -
+> -	while (kfifo_get(&aer_recover_ring, &entry)) {
+> -		pdev = pci_get_domain_bus_and_slot(entry.domain, entry.bus,
+> -						   entry.devfn);
+> -		if (!pdev) {
+> -			pr_err("AER recover: Can not find pci_dev for %04x:%02x:%02x:%x\n",
+> -			       entry.domain, entry.bus,
+> -			       PCI_SLOT(entry.devfn), PCI_FUNC(entry.devfn));
+> -			continue;
+> -		}
+> -		cper_print_aer(pdev, entry.severity, entry.regs);
+> -		if (entry.severity != AER_CORRECTABLE)
+> -			do_recovery(pdev, entry.severity);
+> -		pci_dev_put(pdev);
+> -	}
+> -}
+>  #endif
+>  
+>  /**
+> -- 
+> 2.17.0.391.g1f1cddd558b5
+> 
