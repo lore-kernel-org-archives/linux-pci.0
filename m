@@ -1,43 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 2 May 2018 05:39:23 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Subject: Re: [PATCH v2 08/10] PCI: Deprecate of_pci_get_host_bridge_resources()
-Message-ID: <20180502123923.GA10783@infradead.org>
-References: <cover.1525067324.git.jan.kiszka@siemens.com>
- <aca0d89cd8c1551a83b87ffab29fcd6e1d59a61c.1525067324.git.jan.kiszka@siemens.com>
+Return-Path: <SRS0=MEkt=IR=google.com=rajatja@kernel.org>
+Return-Path: <SRS0=MEkt=IR=google.com=rajatja@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <aca0d89cd8c1551a83b87ffab29fcd6e1d59a61c.1525067324.git.jan.kiszka@siemens.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+References: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152770286159.80701.8079550179741454699.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152770286159.80701.8079550179741454699.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Rajat Jain <rajatja@google.com>
+Date: Wed, 30 May 2018 11:18:35 -0700
+Message-ID: <CACK8Z6HhvLYkEtbROXymfn3pwz=rc8Dm_AstOe5R4tpb5aiJGg@mail.gmail.com>
+Subject: Re: [PATCH v1 2/2] PCI/AER: Stop printing vendor/device ID
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>, Oza Pawandeep <poza@codeaurora.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 30, 2018 at 07:48:42AM +0200, Jan Kiszka wrote:
-> From: Jan Kiszka <jan.kiszka@siemens.com>
-> 
-> There are no in-tree users remaining, all are converted to the managed
-> variant. And it is unlikely that any out-of-tree user got the resource
-> management right as well. So deprecate the interface and push users to
-> the managed version instead.
-> 
-> To avoid raising a warning when exporting a deprecated symbol, wrap the
-> API with an inline and export an internal name.
+On Wed, May 30, 2018 at 10:54 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-Don't deprecated it, just remove it.
+> From: Bjorn Helgaas <bhelgaas@google.com>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> The Vendor and Device ID of the root port that raised an AER interrupt is
+> irrelevant and already available via normal enumeration dmesg logging or
+> lspci.
+
+Er, what is getting printed is not the vendor/device id of the root port
+but that of the AER source device (the one that root port got an ERR_*
+message from). In case of fatal AERs, the end point device may become
+inaccessible so lspci will not be available, and enumeration logs (from
+boot) may have gotten rolled over. So I think it is still better to print
+this information here.
+
+Just my opinion :-)
+
+Thanks,
+
+Rajat
+
+
+> Remove the Vendor and Device ID from AER logging.
+
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>   drivers/pci/pcie/aer/aerdrv_errprint.c |    5 ++---
+>   1 file changed, 2 insertions(+), 3 deletions(-)
+
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c
+b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> index d7fde8368d81..16116844531c 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -175,9 +175,8 @@ void aer_print_error(struct pci_dev *dev, struct
+aer_err_info *info)
+>                  aer_error_severity_string[info->severity],
+>                  aer_error_layer[layer], aer_agent_string[agent]);
+
+> -       pci_err(dev, "  device [%04x:%04x] error status/mask=%08x/%08x\n",
+> -               dev->vendor, dev->device,
+> -               info->status, info->mask);
+> +       pci_err(dev, "  error status/mask=%08x/%08x\n", info->status,
+> +               info->mask);
+
+>          __aer_print_error(dev, info);
