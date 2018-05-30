@@ -1,39 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41965 "EHLO newverein.lst.de"
+Received: from mail.kernel.org ([198.145.29.99]:43328 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751838AbeECDyE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 May 2018 23:54:04 -0400
-Date: Thu, 3 May 2018 05:56:43 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: James Hogan <jhogan@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        iommu@lists.linux-foundation.org, sstabellini@kernel.org,
-        x86@kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        linux-mips@linux-mips.org, sparclinux@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 11/13] mips,unicore32: swiotlb doesn't need
-        sg->dma_length
-Message-ID: <20180503035643.GA9781@lst.de>
-References: <20180425051539.1989-1-hch@lst.de> <20180425051539.1989-12-hch@lst.de> <20180502222017.GC20766@jamesdev>
+        id S1753033AbeE3PUZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 11:20:25 -0400
+Date: Wed, 30 May 2018 10:20:24 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Rob Herring <robh@kernel.org>,
+        Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: mvebu: add MVEBU_MBUS dependency
+Message-ID: <20180530152024.GC39853@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180529094204.3945660-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180502222017.GC20766@jamesdev>
+In-Reply-To: <20180529094204.3945660-1-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 02, 2018 at 11:20:18PM +0100, James Hogan wrote:
-> On Wed, Apr 25, 2018 at 07:15:37AM +0200, Christoph Hellwig wrote:
-> > Only mips and unicore32 select CONFIG_NEED_SG_DMA_LENGTH when building
-> > swiotlb.  swiotlb itself never merges segements and doesn't accesses the
-> > dma_length field directly, so drop the dependency.
+On Tue, May 29, 2018 at 11:41:51AM +0200, Arnd Bergmann wrote:
+> Enabling the PCI_MVEBU driver for compile testing caused a build failure
+> on ARM randconfig builds:
 > 
-> Is that at odds with Documentation/DMA-API-HOWTO.txt, which seems to
-> suggest arch ports should enable it for IOMMUs?
+> drivers/pci/host/pci-mvebu.c: In function 'mvebu_pcie_del_windows':
+> drivers/pci/host/pci-mvebu.c:341:3: error: implicit declaration of function 'mvebu_mbus_del_window'; did you mean 'mvebu_pcie_del_windows'? [-Werror=implicit-function-declaration]
+>    mvebu_mbus_del_window(base, sz);
+>    ^~~~~~~~~~~~~~~~~~~~~
+>    mvebu_pcie_del_windows
+> drivers/pci/host/pci-mvebu.c: In function 'mvebu_pcie_add_windows':
+> drivers/pci/host/pci-mvebu.c:364:9: error: implicit declaration of function 'mvebu_mbus_add_window_remap_by_id'; did you mean 'mvebu_pcie_add_windows'? [-Werror=implicit-function-declaration]
+>    ret = mvebu_mbus_add_window_remap_by_id(target, attribute, base,
+>          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>          mvebu_pcie_add_windows
+> drivers/pci/host/pci-mvebu.c: In function 'mvebu_pcie_probe':
+> drivers/pci/host/pci-mvebu.c:1209:2: error: implicit declaration of function 'mvebu_mbus_get_pcie_mem_aperture'; did you mean 'mvebu_mbus_get_io_win_info'? [-Werror=implicit-function-declaration]
+> drivers/pci/host/pci-mvebu.c:1215:2: error: implicit declaration of function 'mvebu_mbus_get_pcie_io_aperture'; did you mean 'mvebu_mbus_get_io_win_info'? [-Werror=implicit-function-declaration]
+> 
+> The problem is that the mbus helper functions are not declared in the
+> header. There are two ways of solving this: we can change the header
+> to provide empty stub functions for CONFIG_MVEBU_MBUS=n, or we can
+> add back the dependency here.
+> 
+> I picked the second option since that is simpler, but it somewhat
+> defeats the purpose of the original patch because we still cannot
+> compile test on other platforms this way.
+> 
+> Fixes: 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-swiotlb isn't really an iommu..  That being said iommus don't have to
-merge segments either if they don't want to, and we have various
-implementations that don't.  The whole dma api documentation needs
-a major overhaul, including merging the various files and dropping a lot
-of dead wood.  It has been on my todo list for a while, with an inner
-hope that someone else would do it before me.
+Thanks, I added this when doing the merge.
+
+> ---
+>  drivers/pci/host/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index fa51d0893384..5340950f4b98 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -6,6 +6,7 @@ menu "PCI host controller drivers"
+>  config PCI_MVEBU
+>  	bool "Marvell EBU PCIe controller"
+>  	depends on ARCH_MVEBU || ARCH_DOVE || COMPILE_TEST
+> +	depends on MVEBU_MBUS
+>  	depends on ARM
+>  	depends on OF
+>  
+> -- 
+> 2.9.0
+> 
