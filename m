@@ -1,92 +1,35 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Don Brace <don.brace@microsemi.com>
-To: Ryan Finnie <ryan@finnie.org>, Sinan Kaya <okaya@codeaurora.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>
-Subject: RE: [PATCH V3 2/2] scsi: hpsa: drop shutdown callback
-Date: Wed, 30 May 2018 19:25:07 +0000
-Message-ID: <af772e6434e645f4a42d22821442a3bd@microsemi.com>
-References: <1527542471-10316-1-git-send-email-okaya@codeaurora.org>
- <1527542471-10316-2-git-send-email-okaya@codeaurora.org>
- <51bb7b82-c4a1-435c-7668-639db96d76e1@finnie.org>
-In-Reply-To: <51bb7b82-c4a1-435c-7668-639db96d76e1@finnie.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:49332 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753852AbeE3QuR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 12:50:17 -0400
+Date: Wed, 30 May 2018 11:50:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Ralf Baechle <ralf@linux-mips.org>,
+        James Hogan <jhogan@kernel.org>, linux-mips@linux-mips.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1] MIPS: PCI: Use dev_printk()
+Message-ID: <20180530165015.GL39853@bhelgaas-glaptop.roam.corp.google.com>
+References: <152699466671.162686.1029992586935534102.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
- "open list:HEWLETT-PACKARD SMART ARRAY RAID
- DRIVER \(hpsa\)" <linux-scsi@vger.kernel.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- "esc.storagedev" <esc.storagedev@microsemi.com>,
- open list <linux-kernel@vger.kernel.org>,
- "stable@vger.kernel.org" <stable@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <152699466671.162686.1029992586935534102.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Ryan Finnie [mailto:ryan@finnie.org]
-> Sent: Tuesday, May 29, 2018 8:50 PM
-> To: Sinan Kaya <okaya@codeaurora.org>; linux-pci@vger.kernel.org;
-> timur@codeaurora.org
-> Cc: linux-arm-msm@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> stable@vger.kernel.org; Don Brace <don.brace@microsemi.com>; James E.J.
-> Bottomley <jejb@linux.vnet.ibm.com>; Martin K. Petersen
-> <martin.petersen@oracle.com>; esc.storagedev
-> <esc.storagedev@microsemi.com>; open list:HEWLETT-PACKARD SMART ARRAY
-> RAID DRIVER (hpsa) <linux-scsi@vger.kernel.org>; open list <linux-
-> kernel@vger.kernel.org>
-> Subject: Re: [PATCH V3 2/2] scsi: hpsa: drop shutdown callback
+On Tue, May 22, 2018 at 08:11:36AM -0500, Bjorn Helgaas wrote:
+> Use dev_printk() to follow style of other arches.
 > 
-> EXTERNAL EMAIL
+> I'll merge via the PCI tree unless there are objections.
+> 
+> ---
+> 
+> Bjorn Helgaas (1):
+>       MIPS: PCI: Use dev_printk() when possible
 > 
 > 
-> On 05/28/2018 02:21 PM, Sinan Kaya wrote:
-> > 'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
-> > shutdown")' has been added to kernel to shutdown pending PCIe port
-> > service interrupts during reboot so that a newly started kexec kernel
-> > wouldn't observe pending interrupts.
-> >
-> > pcie_port_device_remove() is disabling the root port and switches by
-> > calling pci_disable_device() after all PCIe service drivers are shutdown.
-> >
-> > This has been found to cause crashes on HP DL360 Gen9 machines during
-> > reboot due to hpsa driver not clearing the bus master bit during the
-> > shutdown procedure by calling pci_disable_device().
-> >
-> > Drop the shutdown API and do an orderly clean up by using the remove.
-> >
-> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
-> > Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-> > Cc: stable@vger.kernel.org
-> > Reported-by: Ryan Finnie <ryan@finnie.org>
-> 
-> Tested successfully on DL360 Gen9 and DL380 Gen9.
-> 
-> Tested-by: Ryan Finnie <ryan@finnie.org>
+>  arch/mips/pci/pci-legacy.c |    7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
 
-The shutdown path issues a cache flush to the controller.
-Without this flush, you will see "Dirty Cache" messages at POST.
-It is best to keep the shutdown path.
-
-Thanks,
-Don Brace
-ESC - Smart Storage
-Microsemi Corporation
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Applied with James' ack to pci/misc for v4.18.
