@@ -1,72 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 29 May 2018 08:20:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v4 4/8] PCI: Replace dev_node parameter of
- of_pci_get_host_bridge_resources with device
-Message-ID: <20180529132015.GA79098@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1526375226.git.jan.kiszka@siemens.com>
- <5f2226585c6af9920b266d0503e32042d4c9e440.1526375226.git.jan.kiszka@siemens.com>
- <a74db976-d330-80b9-939e-dd164a20c8c3@mentor.com>
- <eb9b477a-33c9-db45-9e62-101e3606e8ff@siemens.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 30 May 2018 06:55:57 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH] PCI: Add pci=safemode option
+Message-ID: <20180530045557.GA26682@kroah.com>
+References: <1527650389-31575-1-git-send-email-okaya@codeaurora.org>
+ <20180530043103.GA19734@kroah.com>
+ <6c317ed8-cca3-8862-5f3b-12cf14e4d53b@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <eb9b477a-33c9-db45-9e62-101e3606e8ff@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <6c317ed8-cca3-8862-5f3b-12cf14e4d53b@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+ Kai-Heng Feng <kai.heng.feng@canonical.com>, Ingo Molnar <mingo@kernel.org>,
+ Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
+ timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Dongdong Liu <liudongdong3@huawei.com>, David Rientjes <rientjes@google.com>,
+ Thymo van Beers <thymovanbeers@gmail.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Frederick Lawler <fred@fredlawl.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
+ Frederic Weisbecker <frederic@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
+ Oza Pawandeep <poza@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 28, 2018 at 12:46:35PM +0200, Jan Kiszka wrote:
-> On 2018-05-28 12:00, Vladimir Zapolskiy wrote:
-> > Hi Jan, Bjorn,
-> > 
-> > On 05/15/2018 12:07 PM, Jan Kiszka wrote:
-> >> From: Jan Kiszka <jan.kiszka@siemens.com>
+On Tue, May 29, 2018 at 09:41:33PM -0700, Sinan Kaya wrote:
+> On 5/29/2018 9:31 PM, Greg Kroah-Hartman wrote:
+> > On Tue, May 29, 2018 at 11:19:41PM -0400, Sinan Kaya wrote:
+> >> Adding pci=safemode kernel command line parameter to turn off all PCI
+> >> Express service driver as well as all optional PCIe features such as LTR,
+> >> Extended tags, Relaxed Ordering etc.
 > >>
-> >> Another step towards a managed version of
-> >> of_pci_get_host_bridge_resources(): Feed in the underlying device,
-> >> rather than just the OF node. This will allow to use managed resource
-> >> allocation internally later on.
+> >> Also setting MPS configuration to PCIE_BUS_SAFE so that MPS and MRRS can be
+> >> reconfigured with by the kernel in case BIOS hands off a broken
+> >> configuration.
+> > 
+> > Why not fix the BIOS?  That's what sane platforms do :)
+> > 
 > >>
-> >> CC: Jingoo Han <jingoohan1@gmail.com>
-> >> CC: Joao Pinto <Joao.Pinto@synopsys.com>
-> >> CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> >> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> >> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> >> ---
+> >>  Documentation/admin-guide/kernel-parameters.txt | 2 ++
+> >>  drivers/pci/pci.c                               | 7 +++++++
+> >>  drivers/pci/pci.h                               | 2 ++
+> >>  drivers/pci/pcie/portdrv_core.c                 | 2 +-
+> >>  drivers/pci/probe.c                             | 6 ++++++
+> >>  5 files changed, 18 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> >> index 641ec9c..247adbb 100644
+> >> --- a/Documentation/admin-guide/kernel-parameters.txt
+> >> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> >> @@ -3153,6 +3153,8 @@
+> >>  		noari		do not use PCIe ARI.
+> >>  		noats		[PCIE, Intel-IOMMU, AMD-IOMMU]
+> >>  				do not use PCIe ATS (and IOMMU device IOTLB).
+> >> +		safemode	turns of all optinal PCI features. Useful
+> >> +				for bringup/troubleshooting.
 > > 
-> > [snip]
-> > 
-> >> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-> >> index a6af62e0256d..61802e55a00c 100644
-> >> --- a/drivers/pci/host/pcie-altera.c
-> >> +++ b/drivers/pci/host/pcie-altera.c
-> >> @@ -488,11 +488,10 @@ static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
-> >>  {
-> >>  	int err, res_valid = 0;
-> >>  	struct device *dev = &pcie->pdev->dev;
-> >> -	struct device_node *np = dev->of_node;
-> >>  	struct resource_entry *win;
-> >>  
-> >> -	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pcie->resources,
-> >> -					       NULL);
-> >> +	err = of_pci_get_host_bridge_resources(dev, 0, 0xff
-> >> +						    &pcie->resources, NULL);
-> >>  	if (err)
-> >>  		return err;
-> >>  
-> > 
-> > In case if it is an undiscovered issue, a comma was mistakenly removed,
-> > which will result it compilation error.
-> > 
-> > The problem is also found in pci/next , see commit 88e3909aa125.
+> > s/optinal/optional/ ?
 > 
-> Yes, that's known. We have a bisection breakage: The issue was fixed
-> again by patch 6 in that series.
+> sure.
+> 
+> > 
+> > And you should explain what exactly in PCI is "optional".  Who defines
+> > this and where is that list and what can go wrong if those options are
+> > not enabled?
+> 
+> Bjorn and I discussed the need for such a "safe" mode feature when you
+> want to bring up PCI for a platform. You want to turn off everything as
+> a starter and just stick to bare minimum.
+> 
+> I can add a few words describing them. The goal of this option is to keep
+> base PCI features with MSI only. Things like PME, AER, ASPM, Extended
+> Tags, LTR, Relaxed Ordering, SRIOV are all considered optional. safemode
+> is certainly not intended for production environments. 
 
-I updated 88e3909aa125 to fix the bisection issue.  I'll rebuild
-pci/next later today or tomorrow.
+Ok, then you should say that here, or somewhere, so that people know
+this.  Otherwise people will see that "hey this lets my hardware boot!"
+and then never change it :(
+
+> I can taint the kernel as a suggestion.
+
+I would not worry about that.
+
+> I defined minimum as just booting a device and to be able to do DMA traffic
+> only with 0 optimization
+
+Ok, again, just document this really well, so that people do not have
+questions and start wondering why their devices barely seem to work.
+
+thanks,
+
+greg k-h
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
