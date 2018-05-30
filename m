@@ -1,52 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58074 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:47776 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751381AbeEaEyf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 May 2018 00:54:35 -0400
-Date: Wed, 30 May 2018 23:54:34 -0500
+        id S1753190AbeE3QpN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 12:45:13 -0400
+Date: Wed, 30 May 2018 11:45:11 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Oza Pawandeep <poza@codeaurora.org>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 1/2] PCI/AER: Decode Error Source Requester ID
-Message-ID: <20180531045434.GS39853@bhelgaas-glaptop.roam.corp.google.com>
-References: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152770285586.80701.6545710900591672975.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180530183241.GA20222@wunner.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Meelis Roos <mroos@linux.ee>, sparclinux@vger.kernel.org
+Subject: Re: [PATCH v1 0/4] sparc/PCI: VGA resource and other fixes
+Message-ID: <20180530164511.GG39853@bhelgaas-glaptop.roam.corp.google.com>
+References: <152694888798.59585.8779818482732387864.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20180522130217.GA161672@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180530183241.GA20222@wunner.de>
+In-Reply-To: <20180522130217.GA161672@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2018 at 08:32:41PM +0200, Lukas Wunner wrote:
-> On Wed, May 30, 2018 at 12:54:15PM -0500, Bjorn Helgaas wrote:
-> >  void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
-> >  {
-> > -	pci_info(dev, "AER: %s%s error received: id=%04x\n",
-> > +	u8 bus = info->id >> 8;
-> > +	u8 devfn = info->id & 0xff;
-> > +
-> > +	pci_info(dev, "AER: %s%s error received: %04x:%02x:%02x.%d\n",
-> >  		info->multi_error_valid ? "Multiple " : "",
-> > -		aer_error_severity_string[info->severity], info->id);
-> > +		aer_error_severity_string[info->severity],
-> > +		pci_domain_nr(dev->bus), bus, devfn >> 3, devfn & 0x7);
+On Tue, May 22, 2018 at 08:02:17AM -0500, Bjorn Helgaas wrote:
+> [+cc sparclinux, sorry I missed this first time around]
 > 
-> I think PCI_SLOT(devfn), PCI_FUNC(devfn) is a bit more readable.
+> On Mon, May 21, 2018 at 07:30:29PM -0500, Bjorn Helgaas wrote:
+> > The main thing here is the first patch, a legacy VGA framebuffer fix for
+> > issues reported by Meelis.
+> > 
+> > The others are to converge the pci_enable_device() path for LEON and PCIC
+> > with other arches (including sparc64), and to convert some logging to use
+> > dev_printk() and make it more consistent with the PCI core.
+> > 
+> > I propose to merge these via the PCI tree.
+> > 
+> > ---
+> > 
+> > Bjorn Helgaas (4):
+> >       sparc/PCI: Request legacy VGA framebuffer only for VGA devices
+> >       sparc32/PCI/LEON: Converge device enable path
+> >       sparc32/PCI/PCIC: Converge device enable path
+> >       sparc/PCI: Use dev_printk() when possible
+> > 
+> > 
+> >  arch/sparc/kernel/leon_pci.c   |   62 ++++++------------
+> >  arch/sparc/kernel/pci.c        |  136 +++++++++++++++++++++++++---------------
+> >  arch/sparc/kernel/pci_common.c |   31 ++-------
+> >  arch/sparc/kernel/pci_msi.c    |   10 +--
+> >  arch/sparc/kernel/pcic.c       |   86 ++++++++++++-------------
+> >  5 files changed, 159 insertions(+), 166 deletions(-)
 
-I used those originally, but of course those definitions predate PCIe
-so they aren't clearly related to a Requester ID.
-
-I searched the PCIe spec for the specifics of the Requester ID
-composition.  It was surprisingly hard to find a clear statement.  The
-best I found was PCIe r4.0, sec 6.13, which says
-
-    Routing IDs, Requester IDs, and Completer IDs are 16-bit
-    identifiers traditionally composed of three fields: an 8-bit Bus
-    Number, a 5-bit Device Number, and a 3-bit Function Number.
-
-Even that isn't specific about where the fields are, 
-
-But it's probably not worth obsessing over this and PCI_SLOT() and
-PCI_FUNC() are definitely more readable, so I changed them.
+I applied these to my pci/sparc branch for v4.18 (with fixes for the typos
+reported by Meelis and the kbuild robot).
