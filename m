@@ -1,256 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:6196 "EHLO mga05.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:48006 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753268AbeEVXca (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 May 2018 19:32:30 -0400
-Date: Tue, 22 May 2018 16:35:21 -0700
-From: Jacob Pan <jacob.jun.pan@linux.intel.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org, xuzaibo@huawei.com,
-        will.deacon@arm.com, okaya@codeaurora.org, linux-mm@kvack.org,
-        ashok.raj@intel.com, bharatku@xilinx.com,
-        linux-acpi@vger.kernel.org, rfranz@cavium.com,
-        devicetree@vger.kernel.org, rgummal@xilinx.com,
-        linux-arm-kernel@lists.infradead.org, dwmw2@infradead.org,
-        ilias.apalodimas@linaro.org, iommu@lists.linux-foundation.org,
-        christian.koenig@amd.com, jacob.jun.pan@linux.intel.com
-Subject: Re: [PATCH v2 07/40] iommu: Add a page fault handler
-Message-ID: <20180522163521.413e60c6@jacob-builder>
-In-Reply-To: <8a640794-a6f3-fa01-82a9-06479a6f779a@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-        <20180511190641.23008-8-jean-philippe.brucker@arm.com>
-        <20180518110434.150a0e64@jacob-builder>
-        <8a640794-a6f3-fa01-82a9-06479a6f779a@arm.com>
+        id S1753816AbeE3Qp6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 12:45:58 -0400
+Date: Wed, 30 May 2018 11:45:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Remove host driver Kconfig selection of
+ CONFIG_PCIEPORTBUS
+Message-ID: <20180530164557.GH39853@bhelgaas-glaptop.roam.corp.google.com>
+References: <152668266782.118010.15462515170612275250.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <152668266782.118010.15462515170612275250.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 21 May 2018 15:49:40 +0100
-Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
+On Fri, May 18, 2018 at 05:31:07PM -0500, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Host bridge drivers do not use the portdrv interfaces (struct pcie_device,
+> struct pcie_port_service_driver, pcie_port_service_register(), etc), and
+> they should not select CONFIG_PCIEPORTBUS.
+> 
+> If users need the portdrv services, they can select CONFIG_PCIEPORTBUS just
+> like all other PCI users.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> On 18/05/18 19:04, Jacob Pan wrote:
-> >> +struct iopf_context {
-> >> +	struct device			*dev;
-> >> +	struct iommu_fault_event	evt;
-> >> +	struct list_head		head;
-> >> +};
-> >> +
-> >> +struct iopf_group {
-> >> +	struct iopf_context		last_fault;
-> >> +	struct list_head		faults;
-> >> +	struct work_struct		work;
-> >> +};
-> >> +  
-> > All the page requests in the group should belong to the same device,
-> > perhaps struct device tracking should be in iopf_group instead of
-> > iopf_context?  
-> 
-> Right, this is a leftover from when we kept a global list of partial
-> faults. Since the list is now per-device, I can move the dev pointer
-> (I think I should also rename iopf_context to iopf_fault, if that's
-> all right)
-> 
-> >> +static int iopf_complete(struct device *dev, struct
-> >> iommu_fault_event *evt,
-> >> +			 enum page_response_code status)
-> >> +{
-> >> +	struct page_response_msg resp = {
-> >> +		.addr			= evt->addr,
-> >> +		.pasid			= evt->pasid,
-> >> +		.pasid_present		= evt->pasid_valid,
-> >> +		.page_req_group_id	=
-> >> evt->page_req_group_id,
-> >> +		.private_data		= evt->iommu_private,
-> >> +		.resp_code		= status,
-> >> +	};
-> >> +
-> >> +	return iommu_page_response(dev, &resp);
-> >> +}
-> >> +
-> >> +static enum page_response_code
-> >> +iopf_handle_single(struct iopf_context *fault)
-> >> +{
-> >> +	/* TODO */
-> >> +	return -ENODEV;
-> >> +}
-> >> +
-> >> +static void iopf_handle_group(struct work_struct *work)
-> >> +{
-> >> +	struct iopf_group *group;
-> >> +	struct iopf_context *fault, *next;
-> >> +	enum page_response_code status = IOMMU_PAGE_RESP_SUCCESS;
-> >> +
-> >> +	group = container_of(work, struct iopf_group, work);
-> >> +
-> >> +	list_for_each_entry_safe(fault, next, &group->faults,
-> >> head) {
-> >> +		struct iommu_fault_event *evt = &fault->evt;
-> >> +		/*
-> >> +		 * Errors are sticky: don't handle subsequent
-> >> faults in the
-> >> +		 * group if there is an error.
-> >> +		 */  
-> > There might be performance benefit for certain device to continue in
-> > spite of error in that the ATS retry may have less fault. Perhaps a
-> > policy decision for later enhancement.  
-> 
-> Yes I think we should leave it to future work. My current reasoning is
-> that subsequent requests are more likely to fail as well and reporting
-> the error is more urgent, but we need real workloads to confirm this.
-> 
-> >> +		if (status == IOMMU_PAGE_RESP_SUCCESS)
-> >> +			status = iopf_handle_single(fault);
-> >> +
-> >> +		if (!evt->last_req)
-> >> +			kfree(fault);
-> >> +	}
-> >> +
-> >> +	iopf_complete(group->last_fault.dev,
-> >> &group->last_fault.evt, status);
-> >> +	kfree(group);
-> >> +}
-> >> +
-> >> +/**
-> >> + * iommu_queue_iopf - IO Page Fault handler
-> >> + * @evt: fault event
-> >> + * @cookie: struct device, passed to
-> >> iommu_register_device_fault_handler.
-> >> + *
-> >> + * Add a fault to the device workqueue, to be handled by mm.
-> >> + */
-> >> +int iommu_queue_iopf(struct iommu_fault_event *evt, void *cookie)
-> >> +{
-> >> +	struct iopf_group *group;
-> >> +	struct iopf_context *fault, *next;
-> >> +	struct iopf_device_param *iopf_param;
-> >> +
-> >> +	struct device *dev = cookie;
-> >> +	struct iommu_param *param = dev->iommu_param;
-> >> +
-> >> +	if (WARN_ON(!mutex_is_locked(&param->lock)))
-> >> +		return -EINVAL;
-> >> +
-> >> +	if (evt->type != IOMMU_FAULT_PAGE_REQ)
-> >> +		/* Not a recoverable page fault */
-> >> +		return IOMMU_PAGE_RESP_CONTINUE;
-> >> +
-> >> +	/*
-> >> +	 * As long as we're holding param->lock, the queue can't
-> >> be unlinked
-> >> +	 * from the device and therefore cannot disappear.
-> >> +	 */
-> >> +	iopf_param = param->iopf_param;
-> >> +	if (!iopf_param)
-> >> +		return -ENODEV;
-> >> +
-> >> +	if (!evt->last_req) {
-> >> +		fault = kzalloc(sizeof(*fault), GFP_KERNEL);
-> >> +		if (!fault)
-> >> +			return -ENOMEM;
-> >> +
-> >> +		fault->evt = *evt;
-> >> +		fault->dev = dev;
-> >> +
-> >> +		/* Non-last request of a group. Postpone until the
-> >> last one */
-> >> +		list_add(&fault->head, &iopf_param->partial);
-> >> +
-> >> +		return IOMMU_PAGE_RESP_HANDLED;
-> >> +	}
-> >> +
-> >> +	group = kzalloc(sizeof(*group), GFP_KERNEL);
-> >> +	if (!group)
-> >> +		return -ENOMEM;
-> >> +
-> >> +	group->last_fault.evt = *evt;
-> >> +	group->last_fault.dev = dev;
-> >> +	INIT_LIST_HEAD(&group->faults);
-> >> +	list_add(&group->last_fault.head, &group->faults);
-> >> +	INIT_WORK(&group->work, iopf_handle_group);
-> >> +
-> >> +	/* See if we have partial faults for this group */
-> >> +	list_for_each_entry_safe(fault, next,
-> >> &iopf_param->partial, head) {
-> >> +		if (fault->evt.page_req_group_id ==
-> >> evt->page_req_group_id)  
-> > If all 9 bit group index are used, there can be lots of PRGs. For
-> > future enhancement, maybe we can have per group partial list ready
-> > to go when LPIG comes in? I will be less searching.  
-> 
-> Yes, allocating the PRG from the start could be more efficient. I
-> think it's slightly more complicated code so I'd rather see
-> performance numbers before implementing it
-> 
-> >> +			/* Insert *before* the last fault */
-> >> +			list_move(&fault->head, &group->faults);
-> >> +	}
-> >> +  
-> > If you already sorted the group list with last fault at the end,
-> > why do you need a separate entry to track the last fault?  
-> 
-> Not sure I understand your question, sorry. Do you mean why the
-> iopf_group.last_fault? Just to avoid one more kzalloc.
-> 
-kind of :) what i thought was that why can't the last_fault naturally
-be the last entry in your group fault list? then there is no need for
-special treatment in terms of allocation of the last fault. just my
-preference.
-> >> +
-> >> +	queue->flush(queue->flush_arg, dev);
-> >> +
-> >> +	/*
-> >> +	 * No need to clear the partial list. All PRGs containing
-> >> the PASID that
-> >> +	 * needs to be decommissioned are whole (the device driver
-> >> made sure of
-> >> +	 * it before this function was called). They have been
-> >> submitted to the
-> >> +	 * queue by the above flush().
-> >> +	 */  
-> > So you are saying device driver need to make sure LPIG PRQ is
-> > submitted in the flush call above such that partial list is
-> > cleared?  
-> 
-> Not exactly, it's the IOMMU driver that makes sure all LPIG in its
-> queues are submitted by the above flush call. In more details the
-> flow is:
-> 
-> * Either device driver calls unbind()/sva_device_shutdown(), or the
-> process exits.
-> * If the device driver called, then it already told the device to stop
-> using the PASID. Otherwise we use the mm_exit() callback to tell the
-> device driver to stop using the PASID.
-> * In either case, when receiving a stop request from the driver, the
-> device sends the LPIGs to the IOMMU queue.
-> * Then, the flush call above ensures that the IOMMU reports the LPIG
-> with iommu_report_device_fault.
-> * While submitting all LPIGs for this PASID to the work queue,
-> ipof_queue_fault also picked up all partial faults, so the partial
-> list is clean.
-> 
-> Maybe I should improve this comment?
-> 
-thanks for explaining. LPIG submission is done by device asynchronously
-w.r.t. driver stopping/decommission PASID. so if we were to use this
-flow on vt-d, which does not stall page request queue, then we should
-use the iommu model specific flush() callback to ensure LPIG is
-received? There could be queue full condition and retry. I am just
-trying to understand how and where we can make sure LPIG is
-received and all groups are whole.
+I applied this to pci/kconfig for v4.18.
 
-> > what if
-> > there are device failures where device needs to reset (either whole
-> > function level or PASID level), should there still be a need to
-> > clear the partial list for all associated PASID/group?  
+> ---
+>  drivers/pci/dwc/Kconfig  |   10 ----------
+>  drivers/pci/host/Kconfig |    2 --
+>  2 files changed, 12 deletions(-)
 > 
-> I guess the simplest way out, when resetting the device, is for the
-> device driver to call iommu_sva_device_shutdown(). Both the IOMMU
-> driver's sva_device_shutdown() and remove_device() ops should call
-> iopf_queue_remove_device(), which clears the partial list.
+> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> index 2f3f5c50aa48..678390a77ba1 100644
+> --- a/drivers/pci/dwc/Kconfig
+> +++ b/drivers/pci/dwc/Kconfig
+> @@ -68,7 +68,6 @@ config PCI_EXYNOS
+>  	depends on PCI
+>  	depends on SOC_EXYNOS5440
+>  	depends on PCI_MSI_IRQ_DOMAIN
+> -	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  
+>  config PCI_IMX6
+> @@ -76,7 +75,6 @@ config PCI_IMX6
+>  	depends on PCI
+>  	depends on SOC_IMX6Q
+>  	depends on PCI_MSI_IRQ_DOMAIN
+> -	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  
+>  config PCIE_SPEAR13XX
+> @@ -84,7 +82,6 @@ config PCIE_SPEAR13XX
+>  	depends on PCI
+>  	depends on ARCH_SPEAR13XX
+>  	depends on PCI_MSI_IRQ_DOMAIN
+> -	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  	help
+>  	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
+> @@ -94,7 +91,6 @@ config PCI_KEYSTONE
+>  	depends on PCI
+>  	depends on ARCH_KEYSTONE
+>  	depends on PCI_MSI_IRQ_DOMAIN
+> -	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  	help
+>  	  Say Y here if you want to enable PCI controller support on Keystone
+> @@ -117,7 +113,6 @@ config PCI_HISI
+>  	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+>  	depends on PCI
+>  	depends on PCI_MSI_IRQ_DOMAIN
+> -	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  	select PCI_HOST_COMMON
+>  	help
+> @@ -129,7 +124,6 @@ config PCIE_QCOM
+>  	depends on PCI
+>  	depends on ARCH_QCOM && OF
+>  	depends on PCI_MSI_IRQ_DOMAIN
+> -	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  	help
+>  	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
+> @@ -141,7 +135,6 @@ config PCIE_ARMADA_8K
+>  	depends on PCI
+>  	depends on ARCH_MVEBU
+>  	depends on PCI_MSI_IRQ_DOMAIN
+> -	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  	help
+>  	  Say Y here if you want to enable PCIe controller support on
+> @@ -156,7 +149,6 @@ config PCIE_ARTPEC6_HOST
+>  	bool "Axis ARTPEC-6 PCIe controller Host Mode"
+>  	depends on MACH_ARTPEC6
+>  	depends on PCI && PCI_MSI_IRQ_DOMAIN
+> -	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  	select PCIE_ARTPEC6
+>  	help
+> @@ -178,7 +170,6 @@ config PCIE_KIRIN
+>  	bool "HiSilicon Kirin series SoCs PCIe controllers"
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	depends on PCI
+> -	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  	help
+>  	  Say Y here if you want PCIe controller support
+> @@ -189,7 +180,6 @@ config PCIE_HISI_STB
+>  	depends on ARCH_HISI
+>  	depends on PCI
+>  	depends on PCI_MSI_IRQ_DOMAIN
+> -	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  	help
+>            Say Y here if you want PCIe controller support on HiSilicon STB SoCs
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 0d0177ce436c..90f0cc9dfd95 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -83,7 +83,6 @@ config PCI_XGENE
+>  	bool "X-Gene PCIe controller"
+>  	depends on ARM64
+>  	depends on OF || (ACPI && PCI_QUIRKS)
+> -	select PCIEPORTBUS
+>  	help
+>  	  Say Y here if you want internal PCI support on APM X-Gene SoC.
+>  	  There are 5 internal PCIe ports available. Each port is GEN3 capable
+> @@ -194,7 +193,6 @@ config PCIE_MEDIATEK
+>  	depends on (ARM || ARM64) && (ARCH_MEDIATEK || COMPILE_TEST)
+>  	depends on OF
+>  	depends on PCI
+> -	select PCIEPORTBUS
+>  	help
+>  	  Say Y here if you want to enable PCIe controller support on
+>  	  MediaTek SoCs.
 > 
-yes. I think that should work for functional reset.
-> Thanks,
-> Jean
-
-[Jacob Pan]
