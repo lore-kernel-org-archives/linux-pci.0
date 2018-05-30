@@ -1,225 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46848 "EHLO foss.arm.com"
+Received: from mga17.intel.com ([192.55.52.151]:42031 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752146AbeEKTJp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 May 2018 15:09:45 -0400
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-mm@kvack.org
-Cc: joro@8bytes.org, will.deacon@arm.com, robin.murphy@arm.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        xuzaibo@huawei.com, ilias.apalodimas@linaro.org,
-        jonathan.cameron@huawei.com, liudongdong3@huawei.com,
-        shunyong.yang@hxt-semitech.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, jcrouse@codeaurora.org, rfranz@cavium.com,
-        dwmw2@infradead.org, jacob.jun.pan@linux.intel.com,
-        yi.l.liu@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
-        baolu.lu@linux.intel.com, robdclark@gmail.com,
-        christian.koenig@amd.com, bharatku@xilinx.com, rgummal@xilinx.com
-Subject: [PATCH v2 24/40] iommu/arm-smmu-v3: Seize private ASID
-Date: Fri, 11 May 2018 20:06:25 +0100
-Message-Id: <20180511190641.23008-25-jean-philippe.brucker@arm.com>
-In-Reply-To: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+        id S1753805AbeE3QoJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 12:44:09 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+CC: "Bie, Tiwei" <tiwei.bie@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "virtualization@lists.linux-foundation.org"
+        <virtualization@lists.linux-foundation.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        "Liang, Cunming" <cunming.liang@intel.com>,
+        "Wang, Zhihong" <zhihong.wang@intel.com>
+Subject: Re: [PATCH] virtio_pci: support enabling VFs
+Date: Wed, 30 May 2018 16:44:07 +0000
+Message-ID: <414C18B1-30FA-4AC0-B47D-F0FBF9832737@intel.com>
+References: <20180530085521.26583-1-tiwei.bie@intel.com>
+ <20180530192010-mutt-send-email-mst@kernel.org>
+In-Reply-To: <20180530192010-mutt-send-email-mst@kernel.org>
+Content-Type: multipart/signed;
+        boundary="Apple-Mail=_FB4DAD04-C672-49EE-BC0F-E8F33D4948E7";
+        protocol="application/pgp-signature"; micalg=pgp-sha256
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The SMMU has a single ASID space, the union of shared and private ASID
-sets. This means that the context table module competes with the arch
-allocator for ASIDs. Shared ASIDs are those of Linux processes, allocated
-by the arch, and contribute in broadcast TLB maintenance. Private ASIDs
-are allocated by the SMMU driver and used for "classic" map/unmap DMA.
-They require explicit TLB invalidations.
+--Apple-Mail=_FB4DAD04-C672-49EE-BC0F-E8F33D4948E7
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii;
+	delsp=yes;
+	format=flowed
 
-When we pin down an mm_context and get an ASID that is already in use by
-the SMMU, it belongs to a private context. We used to simply abort the
-bind, but this is unfair to users that would be unable to bind a few
-seemingly random processes. Try to allocate a new private ASID for the
-context in use, and make the old ASID shared.
+On May 30, 2018, at 9:22 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
 
-Introduce a new lock to prevent races when rewriting context descriptors.
+>> +static int virtio_pci_sriov_configure(struct pci_dev *pci_dev, int  
+>> num_vfs)
+>> +{
+>> +	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+>> +	struct virtio_device *vdev = &vp_dev->vdev;
+>> +	int (*sriov_configure)(struct pci_dev *pci_dev, int num_vfs);
+>> +
+>> +	if (!(vdev->config->get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK))
+>> +		return -EBUSY;
+>> +
+>> +	if (!__virtio_test_bit(vdev, VIRTIO_F_SR_IOV))
+>> +		return -EINVAL;
+>> +
+>> +	sriov_configure = pci_sriov_configure_simple;
+>> +	if (sriov_configure == NULL)
+>> +		return -ENOENT;
+>
+> BTW what is all this trickery in aid of?
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3-context.c | 90 ++++++++++++++++++++++++++---
- 1 file changed, 83 insertions(+), 7 deletions(-)
+When SR-IOV support is not compiled into the kernel,  
+pci_sriov_configure_simple is #defined as NULL. This allows it to compile  
+in that case, even though there is utterly no way for it to be called in  
+that case. It is an alternative to #ifs in the code.
 
-diff --git a/drivers/iommu/arm-smmu-v3-context.c b/drivers/iommu/arm-smmu-v3-context.c
-index 352cba3c1a62..0e12f6804e16 100644
---- a/drivers/iommu/arm-smmu-v3-context.c
-+++ b/drivers/iommu/arm-smmu-v3-context.c
-@@ -65,6 +65,8 @@
- #define ARM_SMMU_TCR2CD(tcr, fld)	FIELD_PREP(CTXDESC_CD_0_TCR_##fld, \
- 					FIELD_GET(ARM64_TCR_##fld, tcr))
- 
-+#define ARM_SMMU_NO_PASID		(-1)
-+
- struct arm_smmu_cd {
- 	struct iommu_pasid_entry	entry;
- 
-@@ -72,8 +74,14 @@ struct arm_smmu_cd {
- 	u64				tcr;
- 	u64				mair;
- 
-+	int				pasid;
-+
-+	/* 'refs' tracks alloc/free */
- 	refcount_t			refs;
-+	/* 'users' tracks attach/detach, and is only used for sanity checking */
-+	unsigned int			users;
- 	struct mm_struct		*mm;
-+	struct arm_smmu_cd_tables	*tbl;
- };
- 
- #define pasid_entry_to_cd(entry) \
-@@ -105,6 +113,7 @@ struct arm_smmu_cd_tables {
- #define pasid_ops_to_tables(ops) \
- 	pasid_to_cd_tables(iommu_pasid_table_ops_to_table(ops))
- 
-+static DEFINE_SPINLOCK(contexts_lock);
- static DEFINE_SPINLOCK(asid_lock);
- static DEFINE_IDR(asid_idr);
- 
-@@ -191,8 +200,8 @@ static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
- 	return val;
- }
- 
--static int arm_smmu_write_ctx_desc(struct arm_smmu_cd_tables *tbl, int ssid,
--				   struct arm_smmu_cd *cd)
-+static int __arm_smmu_write_ctx_desc(struct arm_smmu_cd_tables *tbl, int ssid,
-+				     struct arm_smmu_cd *cd)
- {
- 	u64 val;
- 	bool cd_live;
-@@ -262,6 +271,18 @@ static int arm_smmu_write_ctx_desc(struct arm_smmu_cd_tables *tbl, int ssid,
- 	return 0;
- }
- 
-+static int arm_smmu_write_ctx_desc(struct arm_smmu_cd_tables *tbl, int ssid,
-+				   struct arm_smmu_cd *cd)
-+{
-+	int ret;
-+
-+	spin_lock(&contexts_lock);
-+	ret = __arm_smmu_write_ctx_desc(tbl, ssid, cd);
-+	spin_unlock(&contexts_lock);
-+
-+	return ret;
-+}
-+
- static bool arm_smmu_free_asid(struct arm_smmu_cd *cd)
- {
- 	bool free;
-@@ -301,15 +322,26 @@ static struct arm_smmu_cd *arm_smmu_alloc_cd(struct arm_smmu_cd_tables *tbl)
- 	if (!cd)
- 		return NULL;
- 
--	cd->entry.release = arm_smmu_free_cd;
-+	cd->pasid		= ARM_SMMU_NO_PASID;
-+	cd->tbl			= tbl;
-+	cd->entry.release	= arm_smmu_free_cd;
- 	refcount_set(&cd->refs, 1);
- 
- 	return cd;
- }
- 
-+/*
-+ * Try to reserve this ASID in the SMMU. If it is in use, try to steal it from
-+ * the private entry. Careful here, we may be modifying the context tables of
-+ * another SMMU!
-+ */
- static struct arm_smmu_cd *arm_smmu_share_asid(u16 asid)
- {
-+	int ret;
- 	struct arm_smmu_cd *cd;
-+	struct arm_smmu_cd_tables *tbl;
-+	struct arm_smmu_context_cfg *cfg;
-+	struct iommu_pasid_entry old_entry;
- 
- 	cd = idr_find(&asid_idr, asid);
- 	if (!cd)
-@@ -319,17 +351,47 @@ static struct arm_smmu_cd *arm_smmu_share_asid(u16 asid)
- 		/*
- 		 * It's pretty common to find a stale CD when doing unbind-bind,
- 		 * given that the release happens after a RCU grace period.
--		 * Simply reuse it.
-+		 * Simply reuse it, but check that it isn't active, because it's
-+		 * going to be assigned a different PASID.
- 		 */
-+		if (WARN_ON(cd->users))
-+			return ERR_PTR(-EINVAL);
-+
- 		refcount_inc(&cd->refs);
- 		return cd;
- 	}
- 
-+	tbl = cd->tbl;
-+	cfg = &tbl->pasid.cfg.arm_smmu;
-+
-+	ret = idr_alloc_cyclic(&asid_idr, cd, 0, 1 << cfg->asid_bits,
-+			       GFP_ATOMIC);
-+	if (ret < 0)
-+		return ERR_PTR(-ENOSPC);
-+
-+	/* Save the previous ASID */
-+	old_entry = cd->entry;
-+
- 	/*
--	 * Ouch, ASID is already in use for a private cd.
--	 * TODO: seize it, for the common good.
-+	 * Race with unmap; TLB invalidations will start targeting the new ASID,
-+	 * which isn't assigned yet. We'll do an invalidate-all on the old ASID
-+	 * later, so it doesn't matter.
- 	 */
--	return ERR_PTR(-EEXIST);
-+	cd->entry.tag = ret;
-+
-+	/*
-+	 * Update ASID and invalidate CD in all associated masters. There will
-+	 * be some overlap between use of both ASIDs, until we invalidate the
-+	 * TLB.
-+	 */
-+	arm_smmu_write_ctx_desc(tbl, cd->pasid, cd);
-+
-+	/* Invalidate TLB entries previously associated with that context */
-+	iommu_pasid_flush_tlbs(&tbl->pasid, cd->pasid, &old_entry);
-+
-+	idr_remove(&asid_idr, asid);
-+
-+	return NULL;
- }
- 
- static struct iommu_pasid_entry *
-@@ -476,6 +538,15 @@ static int arm_smmu_set_cd(struct iommu_pasid_table_ops *ops, int pasid,
- 	if (WARN_ON(pasid > (1 << tbl->pasid.cfg.order)))
- 		return -EINVAL;
- 
-+	if (WARN_ON(cd->pasid != ARM_SMMU_NO_PASID && cd->pasid != pasid))
-+		return -EEXIST;
-+
-+	/*
-+	 * There is a single cd structure for each address space, multiple
-+	 * devices may use the same in different tables.
-+	 */
-+	cd->users++;
-+	cd->pasid = pasid;
- 	return arm_smmu_write_ctx_desc(tbl, pasid, cd);
- }
- 
-@@ -488,6 +559,11 @@ static void arm_smmu_clear_cd(struct iommu_pasid_table_ops *ops, int pasid,
- 	if (WARN_ON(pasid > (1 << tbl->pasid.cfg.order)))
- 		return;
- 
-+	WARN_ON(cd->pasid != pasid);
-+
-+	if (!(--cd->users))
-+		cd->pasid = ARM_SMMU_NO_PASID;
-+
- 	arm_smmu_write_ctx_desc(tbl, pasid, NULL);
- 
- 	/*
--- 
-2.17.0
+--
+Mark Rustad, Networking Division, Intel Corporation
+
+--Apple-Mail=_FB4DAD04-C672-49EE-BC0F-E8F33D4948E7
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEE6ug8b0Wg+ULmnksNPA7/547j7m4FAlsO1NQACgkQPA7/547j
+7m7fOBAApqkdKjNkDMyc4Fo/KLviVZCiv3VXJ6ftdR6iQcJPCj4fBJQkHYcs9hoH
+FUc4GIuo6hFl84OgsbvVDfCQFg0yaO+rZp2lSNjTrEQ+By6Oh4vXe6wCPcu7/sDE
+IDFR04g3U5dm/HohkQbbcNW/Um/CcBLdHgmJXWpsifNr8j+Au3SafiFbalfv7UFr
+WUSGPKwCPzGJoGYIia824sWkUI/HdGRrhvxXefnq3DSObrxxX+Hj7lqxgfg7r8c7
+CfZ0NmeykKIyuGLHZLyKhOispM3cw9145QiquP8tHVnvxUTqrYNhzMiSZTYqsBY2
+VQSGCf+paHgFPIKqJIZpNIAN/A3YKynFZA+qq8XrDr5AT5UA9HrLbe8fheooamV5
+r21k4+05AIwDOTV1AlYMHdpzUTNs8SLe5mwNL+4RpvQlKV3Kptv2NFzv13fmSPEo
+SHcRexSpBP4eSxVOIhW3j64M4aY7vg5MQshD+geqhgA4wVpb6Wqct3GHdnxqSoEt
+z5wQrQD8jB8glt8HpIrWzMDyp774QKYnqlpddA6U9keUYP1NS5iNMzbCdT2/TZIx
+s266G3ckoi0E5qs72bEgYSyd2g4yvmLl7vZ+FWJqpypFUE4Dj7cbGXlBu4Ib8haq
+IZBRPVopLACSRpAl2exZXwnT41mvznompRSHxigfe79w64JHwgM=
+=kV9d
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_FB4DAD04-C672-49EE-BC0F-E8F33D4948E7--
