@@ -1,234 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:55819 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754284AbeEaKaY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 06:30:24 -0400
-Subject: Re: [PATCH v2 1/7] PCI: endpoint: Add MSI-X interfaces
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
-        <adouglas@cadence.com>, <jesper.nilsson@axis.com>
-References: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
- <1c07395b28f8b33ce370bd6f15bb1e7f2a95ba45.1526576613.git.gustavo.pimentel@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <9787b000-5f7e-a3fa-383d-4d3975fa220b@ti.com>
-Date: Thu, 31 May 2018 16:00:08 +0530
+Return-Path: <SRS0=MEkt=IR=google.com=rajatja@kernel.org>
+Return-Path: <SRS0=MEkt=IR=google.com=rajatja@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1c07395b28f8b33ce370bd6f15bb1e7f2a95ba45.1526576613.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+References: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152770285586.80701.6545710900591672975.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152770285586.80701.6545710900591672975.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Rajat Jain <rajatja@google.com>
+Date: Wed, 30 May 2018 11:41:23 -0700
+Message-ID: <CACK8Z6Gs6Wt=qQ9PJJifZT7ZazK1yGtwNZRSTtvwek8iT8oW6w@mail.gmail.com>
+Subject: Re: [PATCH v1 1/2] PCI/AER: Decode Error Source Requester ID
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>, Oza Pawandeep <poza@codeaurora.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, May 30, 2018 at 10:54 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
 
+> From: Bjorn Helgaas <bhelgaas@google.com>
 
-On Thursday 17 May 2018 10:39 PM, Gustavo Pimentel wrote:
-> Add PCI_EPC_IRQ_MSIX type.
-> 
-> Add MSI-X callbacks signatures to the ops structure.
-> 
-> Add sysfs interface for set/get MSI-X capability maximum number.
-> 
-> Change pci_epc_raise_irq() signature, namely the interrupt_num variable type
-> from u8 to u16 to accommodate 2048 maximum MSI-X interrupts.
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> Decode the Requester ID from the AER Error Source Register into domain/
+> bus/device/function format to match other logging.  In cases where the ID
+> matches the device used for pci_err(), drop the extra ID completely so we
+> don't print it twice.
 
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
-> Change v1->v2:
->  - Nothing changed, just to follow the patch set version.
-> 
->  drivers/pci/endpoint/pci-ep-cfs.c   | 24 +++++++++++++++
->  drivers/pci/endpoint/pci-epc-core.c | 59 ++++++++++++++++++++++++++++++++++++-
->  include/linux/pci-epc.h             | 13 ++++++--
->  include/linux/pci-epf.h             |  1 +
->  4 files changed, 94 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-> index 018ea34..d1288a0 100644
-> --- a/drivers/pci/endpoint/pci-ep-cfs.c
-> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
-> @@ -286,6 +286,28 @@ static ssize_t pci_epf_msi_interrupts_show(struct config_item *item,
->  		       to_pci_epf_group(item)->epf->msi_interrupts);
->  }
->  
-> +static ssize_t pci_epf_msix_interrupts_store(struct config_item *item,
-> +					     const char *page, size_t len)
-> +{
-> +	u16 val;
-> +	int ret;
+>   drivers/pci/pcie/aer/aerdrv_errprint.c |   18 +++++++++++-------
+>   1 file changed, 11 insertions(+), 7 deletions(-)
+
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c
+b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> index 21ca5e1b0ded..d7fde8368d81 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -163,17 +163,17 @@ void aer_print_error(struct pci_dev *dev, struct
+aer_err_info *info)
+>          int id = ((dev->bus->number << 8) | dev->devfn);
+
+>          if (!info->status) {
+> -               pci_err(dev, "PCIe Bus Error: severity=%s,
+type=Unaccessible, id=%04x(Unregistered Agent ID)\n",
+> -                       aer_error_severity_string[info->severity], id);
+> +               pci_err(dev, "PCIe Bus Error: severity=%s,
+type=Inaccessible, (Unregistered Agent ID)\n",
+> +                       aer_error_severity_string[info->severity]);
+
+Does this code path indicate that a requester id was decoded to a device
+that is not registered with the kernel? If so, shouldn't we log the bad
+requester ID for better debugging, specifically since there is not going to
+be any subsequent print about this ID (since we return from this function
+in this case)?
+
+>                  goto out;
+>          }
+
+>          layer = AER_GET_LAYER_ERROR(info->severity, info->status);
+>          agent = AER_GET_AGENT(info->severity, info->status);
+
+> -       pci_err(dev, "PCIe Bus Error: severity=%s, type=%s,
+id=%04x(%s)\n",
+> +       pci_err(dev, "PCIe Bus Error: severity=%s, type=%s, (%s)\n",
+>                  aer_error_severity_string[info->severity],
+> -               aer_error_layer[layer], id, aer_agent_string[agent]);
+> +               aer_error_layer[layer], aer_agent_string[agent]);
+
+>          pci_err(dev, "  device [%04x:%04x] error status/mask=%08x/%08x\n",
+>                  dev->vendor, dev->device,
+> @@ -186,7 +186,7 @@ void aer_print_error(struct pci_dev *dev, struct
+aer_err_info *info)
+
+>   out:
+>          if (info->id && info->error_dev_num > 1 && info->id == id)
+> -               pci_err(dev, "  Error of this Agent(%04x) is reported
+first\n", id);
+> +               pci_err(dev, "  Error of this Agent is reported first\n");
+
+>          trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
+>                          info->severity, info->tlp_header_valid,
+&info->tlp);
+> @@ -194,9 +194,13 @@ void aer_print_error(struct pci_dev *dev, struct
+aer_err_info *info)
+
+>   void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+>   {
+> -       pci_info(dev, "AER: %s%s error received: id=%04x\n",
+> +       u8 bus = info->id >> 8;
+> +       u8 devfn = info->id & 0xff;
 > +
-> +	ret = kstrtou16(page, 0, &val);
-> +	if (ret)
-> +		return ret;
-> +
-> +	to_pci_epf_group(item)->epf->msix_interrupts = val;
-> +
-> +	return len;
-> +}
-> +
-> +static ssize_t pci_epf_msix_interrupts_show(struct config_item *item,
-> +					    char *page)
-> +{
-> +	return sprintf(page, "%d\n",
-> +		       to_pci_epf_group(item)->epf->msix_interrupts);
-> +}
-> +
->  PCI_EPF_HEADER_R(vendorid)
->  PCI_EPF_HEADER_W_u16(vendorid)
->  
-> @@ -327,6 +349,7 @@ CONFIGFS_ATTR(pci_epf_, subsys_vendor_id);
->  CONFIGFS_ATTR(pci_epf_, subsys_id);
->  CONFIGFS_ATTR(pci_epf_, interrupt_pin);
->  CONFIGFS_ATTR(pci_epf_, msi_interrupts);
-> +CONFIGFS_ATTR(pci_epf_, msix_interrupts);
->  
->  static struct configfs_attribute *pci_epf_attrs[] = {
->  	&pci_epf_attr_vendorid,
-> @@ -340,6 +363,7 @@ static struct configfs_attribute *pci_epf_attrs[] = {
->  	&pci_epf_attr_subsys_id,
->  	&pci_epf_attr_interrupt_pin,
->  	&pci_epf_attr_msi_interrupts,
-> +	&pci_epf_attr_msix_interrupts,
->  	NULL,
->  };
->  
-> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-> index b0ee427..a23aa75 100644
-> --- a/drivers/pci/endpoint/pci-epc-core.c
-> +++ b/drivers/pci/endpoint/pci-epc-core.c
-> @@ -137,7 +137,7 @@ EXPORT_SYMBOL_GPL(pci_epc_start);
->   * Invoke to raise an MSI or legacy interrupt
->   */
->  int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
-> -		      enum pci_epc_irq_type type, u8 interrupt_num)
-> +		      enum pci_epc_irq_type type, u16 interrupt_num)
->  {
->  	int ret;
->  	unsigned long flags;
-> @@ -218,6 +218,63 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
->  EXPORT_SYMBOL_GPL(pci_epc_set_msi);
->  
->  /**
-> + * pci_epc_get_msix() - get the number of MSI-X interrupt numbers allocated
-> + * @epc: the EPC device to which MSI-X interrupts was requested
-> + * @func_no: the endpoint function number in the EPC device
-> + *
-> + * Invoke to get the number of MSI-X interrupts allocated by the RC
-> + */
-> +int pci_epc_get_msix(struct pci_epc *epc, u8 func_no)
-> +{
-> +	int interrupt;
-> +	unsigned long flags;
-> +
-> +	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
-> +		return 0;
-> +
-> +	if (!epc->ops->get_msix)
-> +		return 0;
-> +
-> +	spin_lock_irqsave(&epc->lock, flags);
-> +	interrupt = epc->ops->get_msix(epc, func_no);
-> +	spin_unlock_irqrestore(&epc->lock, flags);
-> +
-> +	if (interrupt < 0)
-> +		return 0;
-> +
-> +	return interrupt + 1;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_epc_get_msix);
-> +
-> +/**
-> + * pci_epc_set_msix() - set the number of MSI-X interrupt numbers required
-> + * @epc: the EPC device on which MSI-X has to be configured
-> + * @func_no: the endpoint function number in the EPC device
-> + * @interrupts: number of MSI-X interrupts required by the EPF
-> + *
-> + * Invoke to set the required number of MSI-X interrupts.
-> + */
-> +int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
-> +{
-> +	int ret;
-> +	unsigned long flags;
-> +
-> +	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
-> +	    interrupts < 1 || interrupts > 2048)
-> +		return -EINVAL;
-> +
-> +	if (!epc->ops->set_msix)
-> +		return 0;
-> +
-> +	spin_lock_irqsave(&epc->lock, flags);
-> +	ret = epc->ops->set_msix(epc, func_no, interrupts - 1);
-> +	spin_unlock_irqrestore(&epc->lock, flags);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_epc_set_msix);
-> +
-> +/**
->   * pci_epc_unmap_addr() - unmap CPU address from PCI address
->   * @epc: the EPC device on which address is allocated
->   * @func_no: the endpoint function number in the EPC device
-> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-> index 243eaa5..c73abc2 100644
-> --- a/include/linux/pci-epc.h
-> +++ b/include/linux/pci-epc.h
-> @@ -17,6 +17,7 @@ enum pci_epc_irq_type {
->  	PCI_EPC_IRQ_UNKNOWN,
->  	PCI_EPC_IRQ_LEGACY,
->  	PCI_EPC_IRQ_MSI,
-> +	PCI_EPC_IRQ_MSIX,
->  };
->  
->  /**
-> @@ -30,6 +31,10 @@ enum pci_epc_irq_type {
->   *	     capability register
->   * @get_msi: ops to get the number of MSI interrupts allocated by the RC from
->   *	     the MSI capability register
-> + * @set_msix: ops to set the requested number of MSI-X interrupts in the
-> + *	     MSI-X capability register
-> + * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
-> + *	     from the MSI-X capability register
->   * @raise_irq: ops to raise a legacy or MSI interrupt
->   * @start: ops to start the PCI link
->   * @stop: ops to stop the PCI link
-> @@ -48,8 +53,10 @@ struct pci_epc_ops {
->  			      phys_addr_t addr);
->  	int	(*set_msi)(struct pci_epc *epc, u8 func_no, u8 interrupts);
->  	int	(*get_msi)(struct pci_epc *epc, u8 func_no);
-> +	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
-> +	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
->  	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
-> -			     enum pci_epc_irq_type type, u8 interrupt_num);
-> +			     enum pci_epc_irq_type type, u16 interrupt_num);
->  	int	(*start)(struct pci_epc *epc);
->  	void	(*stop)(struct pci_epc *epc);
->  	struct module *owner;
-> @@ -144,8 +151,10 @@ void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no,
->  			phys_addr_t phys_addr);
->  int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts);
->  int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
-> +int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts);
-> +int pci_epc_get_msix(struct pci_epc *epc, u8 func_no);
->  int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
-> -		      enum pci_epc_irq_type type, u8 interrupt_num);
-> +		      enum pci_epc_irq_type type, u16 interrupt_num);
->  int pci_epc_start(struct pci_epc *epc);
->  void pci_epc_stop(struct pci_epc *epc);
->  struct pci_epc *pci_epc_get(const char *epc_name);
-> diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-> index f7d6f48..9bb1f31 100644
-> --- a/include/linux/pci-epf.h
-> +++ b/include/linux/pci-epf.h
-> @@ -119,6 +119,7 @@ struct pci_epf {
->  	struct pci_epf_header	*header;
->  	struct pci_epf_bar	bar[6];
->  	u8			msi_interrupts;
-> +	u16			msix_interrupts;
->  	u8			func_no;
->  
->  	struct pci_epc		*epc;
-> 
+> +       pci_info(dev, "AER: %s%s error received: %04x:%02x:%02x.%d\n",
+>                  info->multi_error_valid ? "Multiple " : "",
+> -               aer_error_severity_string[info->severity], info->id);
+> +               aer_error_severity_string[info->severity],
+> +               pci_domain_nr(dev->bus), bus, devfn >> 3, devfn & 0x7);
+>   }
+
+>   #ifdef CONFIG_ACPI_APEI_PCIEAER
