@@ -1,149 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 30 May 2018 15:23:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, David Keck <david.keck@amd.com>
-Subject: Re: [PATCH v8 2/7] PCI: Introduce shpchp_is_native()
-Message-ID: <20180530202343.GO39853@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
- <20180528124756.78512-3-mika.westerberg@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44522 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753359AbeE3RPp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 13:15:45 -0400
+Date: Wed, 30 May 2018 20:15:43 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Duyck, Alexander H" <alexander.h.duyck@intel.com>
+Cc: "alexander.duyck@gmail.com" <alexander.duyck@gmail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "virtualization@lists.linux-foundation.org"
+        <virtualization@lists.linux-foundation.org>,
+        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        "Bie, Tiwei" <tiwei.bie@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Liang, Cunming" <cunming.liang@intel.com>,
+        "Wang, Zhihong" <zhihong.wang@intel.com>
+Subject: Re: [virtio-dev] [PATCH] virtio_pci: support enabling VFs
+Message-ID: <20180530201034-mutt-send-email-mst@kernel.org>
+References: <20180530085521.26583-1-tiwei.bie@intel.com>
+ <CAKgT0UcRZd5ajpTyC3KMvNFACVAb6D8A9Tss3m0r+UdamvVeRA@mail.gmail.com>
+ <20180530192215-mutt-send-email-mst@kernel.org>
+ <1527697588.16245.136.camel@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180528124756.78512-3-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1527697588.16245.136.camel@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc David]
-
-On Mon, May 28, 2018 at 03:47:51PM +0300, Mika Westerberg wrote:
-> In the same way we do for pciehp, introduce a new function
-> shpchp_is_native() that returns true whether the bridge should be
-> handled by the native SHCP driver. Then convert the driver to use this
-> function.
+On Wed, May 30, 2018 at 04:26:30PM +0000, Duyck, Alexander H wrote:
+> On Wed, 2018-05-30 at 19:22 +0300, Michael S. Tsirkin wrote:
+> > On Wed, May 30, 2018 at 09:10:57AM -0700, Alexander Duyck wrote:
+> > > On Wed, May 30, 2018 at 1:55 AM, Tiwei Bie <tiwei.bie@intel.com> wrote:
+> > > > There is a new feature bit allocated in virtio spec to
+> > > > support SR-IOV (Single Root I/O Virtualization):
+> > > > 
+> > > > https://github.com/oasis-tcs/virtio-spec/issues/11
+> > > > 
+> > > > This patch enables the support for this feature bit in
+> > > > virtio driver.
+> > > > 
+> > > > Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
+> > > 
+> > > So from a quick glance it looks like we are leaving SR-IOV enabled if
+> > > the driver is removed. Do we want to have that behavior or should we
+> > > be adding the code to disable SR-IOV and free the VFs on driver
+> > > removal?
+> > 
+> > Could pci core handle it for us somehow?
 > 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/hotplug/acpi_pcihp.c  |  4 ++--
->  drivers/pci/hotplug/shpchp_core.c |  2 --
->  drivers/pci/pci-acpi.c            | 21 +++++++++++++++++++++
->  include/linux/pci_hotplug.h       |  2 ++
->  4 files changed, 25 insertions(+), 4 deletions(-)
+> Maybe, but it would require changes to the pci core to do it.
 > 
-> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> index 597d22aeefc1..3979f89b250a 100644
-> --- a/drivers/pci/hotplug/acpi_pcihp.c
-> +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> @@ -83,11 +83,11 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
->  	 * OSHP within the scope of the hotplug controller and its parents,
->  	 * up to the host bridge under which this controller exists.
->  	 */
-> -	host = pci_find_host_bridge(pdev->bus);
-> -	if (host->native_shpc_hotplug)
-> +	if (shpchp_is_native(pdev))
->  		return 0;
->  
->  	/* If _OSC exists, we should not evaluate OSHP */
-> +	host = pci_find_host_bridge(pdev->bus);
->  	root = acpi_pci_find_root(ACPI_HANDLE(&host->dev));
->  	if (root->osc_support_set)
->  		goto no_control;
-> diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
-> index 47decc9b3bb3..0f3711404c2b 100644
-> --- a/drivers/pci/hotplug/shpchp_core.c
-> +++ b/drivers/pci/hotplug/shpchp_core.c
-> @@ -275,8 +275,6 @@ static int is_shpc_capable(struct pci_dev *dev)
->  	if (dev->vendor == PCI_VENDOR_ID_AMD &&
->  	    dev->device == PCI_DEVICE_ID_AMD_GOLAM_7450)
->  		return 1;
-> -	if (!pci_find_capability(dev, PCI_CAP_ID_SHPC))
-> -		return 0;
->  	if (acpi_get_hp_hw_control_from_firmware(dev))
->  		return 0;
->  	return 1;
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index 52b8434d4d6e..bb83be0d0e5b 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -394,6 +394,27 @@ bool pciehp_is_native(struct pci_dev *bridge)
->  	return host->native_pcie_hotplug;
->  }
->  
-> +/**
-> + * shpchp_is_native - Check whether a hotplug port is handled by the OS
-> + * @bridge: Hotplug port to check
-> + *
-> + * Returns true if the given @bridge is handled by the native SHPC hotplug
-> + * driver.
-> + */
-> +bool shpchp_is_native(struct pci_dev *bridge)
-> +{
-> +	const struct pci_host_bridge *host;
-> +
-> +	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
-> +		return false;
-> +
-> +	if (!pci_find_capability(bridge, PCI_CAP_ID_SHPC))
-> +		return false;
-> +
-> +	host = pci_find_host_bridge(bridge->bus);
-> +	return host->native_shpc_hotplug;
-> +}
-
-This is sort-of-but-not-exactly the same as is_shpc_capable().
-
-For PCI_DEVICE_ID_AMD_GOLAM_7450, is_shpc_capable() will return true
-and shpchp will claim the device, but shpchp_is_native() will return
-false because there's no SHPC capability.
-
-At least that's my interpretation of the AMD GOLAM stuff.  I don't
-have a spec for it, but if GOLAM did have an SHPC capability, I assume
-is_shpc_capable() would look for it *before* testing for GOLAM.
-
-So I think these two things need to be reconciled somehow.  I
-mentioned this before, but it was buried at the bottom of a long
-email, sorry about that.
-
-I wish we had a spec or details about the erratum.  It looks like
-it's been there "forever": https://git.kernel.org/pub/scm/linux/kernel/git/tglx/history.git/commit/drivers/pci/hotplug/shpchp.h?id=c16b4b14d9806e639f4afefa2d651a857a212afe
-
-But neither GOLAM (0x7450) nor POGO (0x7458) is in the PCI database at
-https://pci-ids.ucw.cz/read/PC/1002, so who knows if those chips ever
-even saw the light of day.  I'll cc the author of
-
-  53044f357448 ("[PATCH] PCI Hotplug: shpchp: AMD POGO errata fix")
-
-But that was 12 years ago, so the email address may not even work any
-more.
-
->  /**
->   * pci_acpi_wake_bus - Root bus wakeup notification fork function.
->   * @context: Device wakeup context.
-> diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-> index 1f5c935eb0de..4c378368215c 100644
-> --- a/include/linux/pci_hotplug.h
-> +++ b/include/linux/pci_hotplug.h
-> @@ -164,6 +164,7 @@ struct hotplug_params {
->  int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp);
->  bool pciehp_is_native(struct pci_dev *bridge);
->  int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge);
-> +bool shpchp_is_native(struct pci_dev *bridge);
->  int acpi_pci_check_ejectable(struct pci_bus *pbus, acpi_handle handle);
->  int acpi_pci_detect_ejectable(acpi_handle handle);
->  #else
-> @@ -178,5 +179,6 @@ static inline int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge)
->  	return 0;
->  }
->  static inline bool pciehp_is_native(struct pci_dev *bridge) { return true; }
-> +static inline bool shpchp_is_native(struct pci_dev *bridge) { return true; }
->  #endif
->  #endif
-> -- 
-> 2.17.0
+> The problem is some drivers want to leave the VFs there since the PF
+> doesn't really do anything, or they have the option of essentially
+> putting the VFs into a standby state when the PF is gone.
 > 
+> My main concern is do we care if VFs are allocated and then somebody
+> removes the driver and binds a different driver to the interface? If
+> not then this code and be left as is, but I just wanted to be certain
+> since I know this isn't just enabling SR-IOV we are having to do a
+> number of other checks against the virtio device.
+
+Well the spec says features have to be negotiated, and since we reset
+the device when we unbind from it I think it's a given we should keep a
+driver bound to the PF.
+
+IOW until we are sure we need the capability to keep it enabled, let's
+disable it to be safe.
+
+-- 
+MST
