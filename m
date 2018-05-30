@@ -1,160 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:43786 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935296AbeEXMlH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 May 2018 08:41:07 -0400
-Date: Thu, 24 May 2018 13:41:01 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Dexuan Cui <decui@microsoft.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "'olaf@aepfle.de'" <olaf@aepfle.de>,
-        "'apw@canonical.com'" <apw@canonical.com>,
-        "'jasowang@redhat.com'" <jasowang@redhat.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'driverdev-devel@linuxdriverproject.org'"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
-        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
-Subject: Re: [PATCH] PCI: hv: Do not wait forever on a device that has
- disappeared
-Message-ID: <20180524124101.GB20732@e107981-ln.cambridge.arm.com>
-References: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 30 May 2018 06:31:03 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH] PCI: Add pci=safemode option
+Message-ID: <20180530043103.GA19734@kroah.com>
+References: <1527650389-31575-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1527650389-31575-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+ Kai-Heng Feng <kai.heng.feng@canonical.com>, Ingo Molnar <mingo@kernel.org>,
+ Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
+ timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Dongdong Liu <liudongdong3@huawei.com>, David Rientjes <rientjes@google.com>,
+ Thymo van Beers <thymovanbeers@gmail.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Frederick Lawler <fred@fredlawl.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
+ Frederic Weisbecker <frederic@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
+ Oza Pawandeep <poza@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2018 at 09:12:01PM +0000, Dexuan Cui wrote:
+On Tue, May 29, 2018 at 11:19:41PM -0400, Sinan Kaya wrote:
+> Adding pci=safemode kernel command line parameter to turn off all PCI
+> Express service driver as well as all optional PCIe features such as LTR,
+> Extended tags, Relaxed Ordering etc.
 > 
-> Before the guest finishes the device initialization, the device can be
-> removed anytime by the host, and after that the host won't respond to
-> the guest's request, so the guest should be prepared to handle this
-> case.
+> Also setting MPS configuration to PCIE_BUS_SAFE so that MPS and MRRS can be
+> reconfigured with by the kernel in case BIOS hands off a broken
+> configuration.
+
+Why not fix the BIOS?  That's what sane platforms do :)
+
 > 
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 > ---
->  drivers/pci/host/pci-hyperv.c | 46 ++++++++++++++++++++++++++++++++-----------
->  1 file changed, 34 insertions(+), 12 deletions(-)
+>  Documentation/admin-guide/kernel-parameters.txt | 2 ++
+>  drivers/pci/pci.c                               | 7 +++++++
+>  drivers/pci/pci.h                               | 2 ++
+>  drivers/pci/pcie/portdrv_core.c                 | 2 +-
+>  drivers/pci/probe.c                             | 6 ++++++
+>  5 files changed, 18 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index ad6a64d..248765f 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -556,6 +556,26 @@ static void put_pcichild(struct hv_pci_dev *hv_pcidev,
->  static void get_hvpcibus(struct hv_pcibus_device *hv_pcibus);
->  static void put_hvpcibus(struct hv_pcibus_device *hv_pcibus);
->  
-> +/*
-> + * There is no good way to get notified from vmbus_onoffer_rescind(),
-> + * so let's use polling here, since this is not a hot path.
-> + */
-> +static int wait_for_response(struct hv_device *hdev,
-> +			     struct completion *comp)
-> +{
-> +	while (true) {
-> +		if (hdev->channel->rescind) {
-> +			dev_warn_once(&hdev->device, "The device is gone.\n");
-> +			return -ENODEV;
-> +		}
-> +
-> +		if (wait_for_completion_timeout(comp, HZ / 10))
-> +			break;
-> +	}
-> +
-> +	return 0;
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 641ec9c..247adbb 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -3153,6 +3153,8 @@
+>  		noari		do not use PCIe ARI.
+>  		noats		[PCIE, Intel-IOMMU, AMD-IOMMU]
+>  				do not use PCIe ATS (and IOMMU device IOTLB).
+> +		safemode	turns of all optinal PCI features. Useful
+> +				for bringup/troubleshooting.
 
-This is pretty racy, isn't it ? Also, I reckon you should consider the
-timeout return value as an error condition unless I am completely
-missing the point of what you are doing.
+s/optinal/optional/ ?
 
-Lorenzo
+And you should explain what exactly in PCI is "optional".  Who defines
+this and where is that list and what can go wrong if those options are
+not enabled?
 
-> +}
-> +
->  /**
->   * devfn_to_wslot() - Convert from Linux PCI slot to Windows
->   * @devfn:	The Linux representation of PCI slot
-> @@ -1569,7 +1589,8 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
->  	if (ret)
->  		goto error;
->  
-> -	wait_for_completion(&comp_pkt.host_event);
-> +	if (wait_for_response(hbus->hdev, &comp_pkt.host_event))
-> +		goto error;
->  
->  	hpdev->desc = *desc;
->  	refcount_set(&hpdev->refs, 1);
-> @@ -2070,15 +2091,16 @@ static int hv_pci_protocol_negotiation(struct hv_device *hdev)
->  				sizeof(struct pci_version_request),
->  				(unsigned long)pkt, VM_PKT_DATA_INBAND,
->  				VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-> +		if (!ret)
-> +			ret = wait_for_response(hdev, &comp_pkt.host_event);
-> +
->  		if (ret) {
->  			dev_err(&hdev->device,
-> -				"PCI Pass-through VSP failed sending version reqquest: %#x",
-> +				"PCI Pass-through VSP failed to request version: %d",
->  				ret);
->  			goto exit;
->  		}
->  
-> -		wait_for_completion(&comp_pkt.host_event);
-> -
->  		if (comp_pkt.completion_status >= 0) {
->  			pci_protocol_version = pci_protocol_versions[i];
->  			dev_info(&hdev->device,
-> @@ -2287,11 +2309,12 @@ static int hv_pci_enter_d0(struct hv_device *hdev)
->  	ret = vmbus_sendpacket(hdev->channel, d0_entry, sizeof(*d0_entry),
->  			       (unsigned long)pkt, VM_PKT_DATA_INBAND,
->  			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-> +	if (!ret)
-> +		ret = wait_for_response(hdev, &comp_pkt.host_event);
-> +
->  	if (ret)
->  		goto exit;
->  
-> -	wait_for_completion(&comp_pkt.host_event);
-> -
->  	if (comp_pkt.completion_status < 0) {
->  		dev_err(&hdev->device,
->  			"PCI Pass-through VSP failed D0 Entry with status %x\n",
-> @@ -2331,11 +2354,10 @@ static int hv_pci_query_relations(struct hv_device *hdev)
->  
->  	ret = vmbus_sendpacket(hdev->channel, &message, sizeof(message),
->  			       0, VM_PKT_DATA_INBAND, 0);
-> -	if (ret)
-> -		return ret;
-> +	if (!ret)
-> +		ret = wait_for_response(hdev, &comp);
->  
-> -	wait_for_completion(&comp);
-> -	return 0;
-> +	return ret;
->  }
->  
->  /**
-> @@ -2405,11 +2427,11 @@ static int hv_send_resources_allocated(struct hv_device *hdev)
->  				size_res, (unsigned long)pkt,
->  				VM_PKT_DATA_INBAND,
->  				VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-> +		if (!ret)
-> +			ret = wait_for_response(hdev, &comp_pkt.host_event);
->  		if (ret)
->  			break;
->  
-> -		wait_for_completion(&comp_pkt.host_event);
-> -
->  		if (comp_pkt.completion_status < 0) {
->  			ret = -EPROTO;
->  			dev_err(&hdev->device,
-> -- 
-> 2.7.4
-> 
+In looking at your patch, I can't determine that at all, so there's no
+way that someone just looking at this sentence will be able to
+understand.
+
+thanks,
+
+greg k-h
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
