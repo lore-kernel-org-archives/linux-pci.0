@@ -1,61 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:45846 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.99]:39588 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754944AbeENQUc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 May 2018 12:20:32 -0400
-Date: Mon, 14 May 2018 17:20:26 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc: bhelgaas@google.com, Joao.Pinto@synopsys.com, jingoohan1@gmail.com,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc: Define maximum number of vectors
-Message-ID: <20180514162026.GA14611@e107981-ln.cambridge.arm.com>
-References: <cec63daa3d1090699816819c39292577016dab03.1526310065.git.gustavo.pimentel@synopsys.com>
+        id S1753484AbeE3Vzk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 17:55:40 -0400
+Date: Wed, 30 May 2018 16:55:39 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 2/7] PCI: Introduce shpchp_is_native()
+Message-ID: <20180530215539.GA130778@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+ <20180528124756.78512-3-mika.westerberg@linux.intel.com>
+ <20180530202343.GO39853@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cec63daa3d1090699816819c39292577016dab03.1526310065.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <20180530202343.GO39853@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 14, 2018 at 04:06:33PM +0100, Gustavo Pimentel wrote:
-> Add a callback to define the maximum number of vectors used by the RC.
-> 
-> Since this is a parameter associated to each SoC IP setting, makes sense
-> to be configurable and easily visible to future modifications.
-> 
-> Set DesignWare driver vectors number maximum to 256.
-> 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> Acked-by: Joao Pinto <jpinto@synopsys.com>
-> Acked-by: Jingoo Han <jingoohan1@gmail.com>
-> ---
->  drivers/pci/dwc/pcie-designware-plat.c | 6 ++++++
->  1 file changed, 6 insertions(+)
+[-cc David, his email bounced]
 
-Applied to pci/dwc for v4.18, thanks.
-
-Lorenzo
-
-> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-> index 5416aa8..80a2782 100644
-> --- a/drivers/pci/dwc/pcie-designware-plat.c
-> +++ b/drivers/pci/dwc/pcie-designware-plat.c
-> @@ -38,8 +38,14 @@ static int dw_plat_pcie_host_init(struct pcie_port *pp)
->  	return 0;
->  }
->  
-> +static void dw_plat_set_num_vectors(struct pcie_port *pp)
-> +{
-> +	pp->num_vectors = MAX_MSI_IRQS;
-> +}
-> +
->  static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
->  	.host_init = dw_plat_pcie_host_init,
-> +	.set_num_vectors = dw_plat_set_num_vectors,
->  };
->  
->  static int dw_plat_add_pcie_port(struct pcie_port *pp,
-> -- 
-> 2.7.4
+On Wed, May 30, 2018 at 03:23:43PM -0500, Bjorn Helgaas wrote:
+> [+cc David]
 > 
+> On Mon, May 28, 2018 at 03:47:51PM +0300, Mika Westerberg wrote:
+> > In the same way we do for pciehp, introduce a new function
+> > shpchp_is_native() that returns true whether the bridge should be
+> > handled by the native SHCP driver. Then convert the driver to use this
+> > function.
+> > 
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  drivers/pci/hotplug/acpi_pcihp.c  |  4 ++--
+> >  drivers/pci/hotplug/shpchp_core.c |  2 --
+> >  drivers/pci/pci-acpi.c            | 21 +++++++++++++++++++++
+> >  include/linux/pci_hotplug.h       |  2 ++
+> >  4 files changed, 25 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+> > index 597d22aeefc1..3979f89b250a 100644
+> > --- a/drivers/pci/hotplug/acpi_pcihp.c
+> > +++ b/drivers/pci/hotplug/acpi_pcihp.c
+> > @@ -83,11 +83,11 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
+> >  	 * OSHP within the scope of the hotplug controller and its parents,
+> >  	 * up to the host bridge under which this controller exists.
+> >  	 */
+> > -	host = pci_find_host_bridge(pdev->bus);
+> > -	if (host->native_shpc_hotplug)
+> > +	if (shpchp_is_native(pdev))
+> >  		return 0;
+> >  
+> >  	/* If _OSC exists, we should not evaluate OSHP */
+> > +	host = pci_find_host_bridge(pdev->bus);
+> >  	root = acpi_pci_find_root(ACPI_HANDLE(&host->dev));
+> >  	if (root->osc_support_set)
+> >  		goto no_control;
+> > diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+> > index 47decc9b3bb3..0f3711404c2b 100644
+> > --- a/drivers/pci/hotplug/shpchp_core.c
+> > +++ b/drivers/pci/hotplug/shpchp_core.c
+> > @@ -275,8 +275,6 @@ static int is_shpc_capable(struct pci_dev *dev)
+> >  	if (dev->vendor == PCI_VENDOR_ID_AMD &&
+> >  	    dev->device == PCI_DEVICE_ID_AMD_GOLAM_7450)
+> >  		return 1;
+> > -	if (!pci_find_capability(dev, PCI_CAP_ID_SHPC))
+> > -		return 0;
+> >  	if (acpi_get_hp_hw_control_from_firmware(dev))
+> >  		return 0;
+> >  	return 1;
+> > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> > index 52b8434d4d6e..bb83be0d0e5b 100644
+> > --- a/drivers/pci/pci-acpi.c
+> > +++ b/drivers/pci/pci-acpi.c
+> > @@ -394,6 +394,27 @@ bool pciehp_is_native(struct pci_dev *bridge)
+> >  	return host->native_pcie_hotplug;
+> >  }
+> >  
+> > +/**
+> > + * shpchp_is_native - Check whether a hotplug port is handled by the OS
+> > + * @bridge: Hotplug port to check
+> > + *
+> > + * Returns true if the given @bridge is handled by the native SHPC hotplug
+> > + * driver.
+> > + */
+> > +bool shpchp_is_native(struct pci_dev *bridge)
+> > +{
+> > +	const struct pci_host_bridge *host;
+> > +
+> > +	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
+> > +		return false;
+> > +
+> > +	if (!pci_find_capability(bridge, PCI_CAP_ID_SHPC))
+> > +		return false;
+> > +
+> > +	host = pci_find_host_bridge(bridge->bus);
+> > +	return host->native_shpc_hotplug;
+> > +}
 > 
+> This is sort-of-but-not-exactly the same as is_shpc_capable().
+> 
+> For PCI_DEVICE_ID_AMD_GOLAM_7450, is_shpc_capable() will return true
+> and shpchp will claim the device, but shpchp_is_native() will return
+> false because there's no SHPC capability.
+> 
+> At least that's my interpretation of the AMD GOLAM stuff.  I don't
+> have a spec for it, but if GOLAM did have an SHPC capability, I assume
+> is_shpc_capable() would look for it *before* testing for GOLAM.
+> 
+> So I think these two things need to be reconciled somehow.  I
+> mentioned this before, but it was buried at the bottom of a long
+> email, sorry about that.
+> 
+> I wish we had a spec or details about the erratum.  It looks like
+> it's been there "forever": https://git.kernel.org/pub/scm/linux/kernel/git/tglx/history.git/commit/drivers/pci/hotplug/shpchp.h?id=c16b4b14d9806e639f4afefa2d651a857a212afe
+> 
+> But neither GOLAM (0x7450) nor POGO (0x7458) is in the PCI database at
+> https://pci-ids.ucw.cz/read/PC/1002, so who knows if those chips ever
+> even saw the light of day.  I'll cc the author of
+> 
+>   53044f357448 ("[PATCH] PCI Hotplug: shpchp: AMD POGO errata fix")
+> 
+> But that was 12 years ago, so the email address may not even work any
+> more.
+> 
+> >  /**
+> >   * pci_acpi_wake_bus - Root bus wakeup notification fork function.
+> >   * @context: Device wakeup context.
+> > diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+> > index 1f5c935eb0de..4c378368215c 100644
+> > --- a/include/linux/pci_hotplug.h
+> > +++ b/include/linux/pci_hotplug.h
+> > @@ -164,6 +164,7 @@ struct hotplug_params {
+> >  int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp);
+> >  bool pciehp_is_native(struct pci_dev *bridge);
+> >  int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge);
+> > +bool shpchp_is_native(struct pci_dev *bridge);
+> >  int acpi_pci_check_ejectable(struct pci_bus *pbus, acpi_handle handle);
+> >  int acpi_pci_detect_ejectable(acpi_handle handle);
+> >  #else
+> > @@ -178,5 +179,6 @@ static inline int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge)
+> >  	return 0;
+> >  }
+> >  static inline bool pciehp_is_native(struct pci_dev *bridge) { return true; }
+> > +static inline bool shpchp_is_native(struct pci_dev *bridge) { return true; }
+> >  #endif
+> >  #endif
+> > -- 
+> > 2.17.0
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
