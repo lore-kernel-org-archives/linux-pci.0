@@ -1,76 +1,263 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41368 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753772AbeEaEmR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 May 2018 00:42:17 -0400
-Date: Wed, 30 May 2018 23:42:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rajat Jain <rajatja@google.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/2] PCI/AER: Decode Error Source Requester ID
-Message-ID: <20180531044216.GR39853@bhelgaas-glaptop.roam.corp.google.com>
-References: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152770285586.80701.6545710900591672975.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CACK8Z6Gs6Wt=qQ9PJJifZT7ZazK1yGtwNZRSTtvwek8iT8oW6w@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH] PCI: move early dump functionality from x86 arch into the
+ common code
+Date: Wed, 30 May 2018 00:34:30 -0400
+Message-Id: <1527654876-26716-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACK8Z6Gs6Wt=qQ9PJJifZT7ZazK1yGtwNZRSTtvwek8iT8oW6w@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Kate Stewart <kstewart@linuxfoundation.org>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ Petr Tesarik <ptesarik@suse.cz>, Ram Pai <linuxram@us.ibm.com>,
+ Sinan Kaya <okaya@codeaurora.org>, Kai-Heng Feng <kai.heng.feng@canonical.com>,
+ "H. Peter Anvin" <hpa@zytor.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+ Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
+ "maintainer:X86 ARCHITECTURE 32-BIT AND 64-BIT" <x86@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
+ Thymo van Beers <thymovanbeers@gmail.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Tom Lendacky <thomas.lendacky@amd.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
+ Frederic Weisbecker <frederic@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
+ linux-arm-kernel@lists.infradead.org, Juergen Gross <jgross@suse.com>,
+ Dou Liyang <douly.fnst@cn.fujitsu.com>, Borislav Petkov <bp@suse.de>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ Philippe Ombredanne <pombredanne@nexb.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2018 at 11:41:23AM -0700, Rajat Jain wrote:
-> On Wed, May 30, 2018 at 10:54 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
-> > From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> > Decode the Requester ID from the AER Error Source Register into domain/
-> > bus/device/function format to match other logging.  In cases where the ID
-> > matches the device used for pci_err(), drop the extra ID completely so we
-> > don't print it twice.
-> 
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >   drivers/pci/pcie/aer/aerdrv_errprint.c |   18 +++++++++++-------
-> >   1 file changed, 11 insertions(+), 7 deletions(-)
-> 
-> > diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> > index 21ca5e1b0ded..d7fde8368d81 100644
-> > --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> > +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> > @@ -163,17 +163,17 @@ void aer_print_error(struct pci_dev *dev, struct
-> aer_err_info *info)
-> >          int id = ((dev->bus->number << 8) | dev->devfn);
+Move early dump functionality into common code so that it is available for
+all archtiectures. No need to carry arch specific reads around as the read
+hooks are already initialized by the time pci_setup_device() is getting
+called during scan.
 
-> >          if (!info->status) {
-> > -               pci_err(dev, "PCIe Bus Error: severity=%s,
-> type=Unaccessible, id=%04x(Unregistered Agent ID)\n",
-> > -                       aer_error_severity_string[info->severity], id);
-> > +               pci_err(dev, "PCIe Bus Error: severity=%s,
-> type=Inaccessible, (Unregistered Agent ID)\n",
-> > +                       aer_error_severity_string[info->severity]);
-> 
-> Does this code path indicate that a requester id was decoded to a device
-> that is not registered with the kernel? If so, shouldn't we log the bad
-> requester ID for better debugging, specifically since there is not going to
-> be any subsequent print about this ID (since we return from this function
-> in this case)?
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ Documentation/admin-guide/kernel-parameters.txt |  2 +-
+ arch/x86/include/asm/pci-direct.h               |  5 ---
+ arch/x86/kernel/setup.c                         |  5 ---
+ arch/x86/pci/common.c                           |  4 --
+ arch/x86/pci/early.c                            | 50 -------------------------
+ drivers/pci/pci.c                               |  4 ++
+ drivers/pci/pci.h                               |  2 +-
+ drivers/pci/probe.c                             | 19 ++++++++++
+ 8 files changed, 25 insertions(+), 66 deletions(-)
 
-Previously we printed "id", which was constructed above from "dev":
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index c247612..4459270 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -2986,7 +2986,7 @@
+ 			See also Documentation/blockdev/paride.txt.
+ 
+ 	pci=option[,option...]	[PCI] various PCI subsystem options:
+-		earlydump	[X86] dump PCI config space before the kernel
++		earlydump	dump PCI config space before the kernel
+ 				changes anything
+ 		off		[X86] don't probe for the PCI bus
+ 		bios		[X86-32] force use of PCI BIOS, don't access
+diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
+index e1084f7..e5e2129 100644
+--- a/arch/x86/include/asm/pci-direct.h
++++ b/arch/x86/include/asm/pci-direct.h
+@@ -14,9 +14,4 @@ extern void write_pci_config(u8 bus, u8 slot, u8 func, u8 offset, u32 val);
+ extern void write_pci_config_byte(u8 bus, u8 slot, u8 func, u8 offset, u8 val);
+ extern void write_pci_config_16(u8 bus, u8 slot, u8 func, u8 offset, u16 val);
+ 
+-extern int early_pci_allowed(void);
+-
+-extern unsigned int pci_early_dump_regs;
+-extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
+-extern void early_dump_pci_devices(void);
+ #endif /* _ASM_X86_PCI_DIRECT_H */
+diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+index 2f86d88..480f250 100644
+--- a/arch/x86/kernel/setup.c
++++ b/arch/x86/kernel/setup.c
+@@ -991,11 +991,6 @@ void __init setup_arch(char **cmdline_p)
+ 		setup_clear_cpu_cap(X86_FEATURE_APIC);
+ 	}
+ 
+-#ifdef CONFIG_PCI
+-	if (pci_early_dump_regs)
+-		early_dump_pci_devices();
+-#endif
+-
+ 	e820__reserve_setup_data();
+ 	e820__finish_early_params();
+ 
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 563049c..d4ec117 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -22,7 +22,6 @@
+ unsigned int pci_probe = PCI_PROBE_BIOS | PCI_PROBE_CONF1 | PCI_PROBE_CONF2 |
+ 				PCI_PROBE_MMCONF;
+ 
+-unsigned int pci_early_dump_regs;
+ static int pci_bf_sort;
+ int pci_routeirq;
+ int noioapicquirk;
+@@ -599,9 +598,6 @@ char *__init pcibios_setup(char *str)
+ 		pci_probe |= PCI_BIG_ROOT_WINDOW;
+ 		return NULL;
+ #endif
+-	} else if (!strcmp(str, "earlydump")) {
+-		pci_early_dump_regs = 1;
+-		return NULL;
+ 	} else if (!strcmp(str, "routeirq")) {
+ 		pci_routeirq = 1;
+ 		return NULL;
+diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
+index e5f753c..e20d449 100644
+--- a/arch/x86/pci/early.c
++++ b/arch/x86/pci/early.c
+@@ -51,53 +51,3 @@ void write_pci_config_16(u8 bus, u8 slot, u8 func, u8 offset, u16 val)
+ 	outw(val, 0xcfc + (offset&2));
+ }
+ 
+-int early_pci_allowed(void)
+-{
+-	return (pci_probe & (PCI_PROBE_CONF1|PCI_PROBE_NOEARLY)) ==
+-			PCI_PROBE_CONF1;
+-}
+-
+-void early_dump_pci_device(u8 bus, u8 slot, u8 func)
+-{
+-	u32 value[256 / 4];
+-	int i;
+-
+-	pr_info("pci 0000:%02x:%02x.%d config space:\n", bus, slot, func);
+-
+-	for (i = 0; i < 256; i += 4)
+-		value[i / 4] = read_pci_config(bus, slot, func, i);
+-
+-	print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value, 256, false);
+-}
+-
+-void early_dump_pci_devices(void)
+-{
+-	unsigned bus, slot, func;
+-
+-	if (!early_pci_allowed())
+-		return;
+-
+-	for (bus = 0; bus < 256; bus++) {
+-		for (slot = 0; slot < 32; slot++) {
+-			for (func = 0; func < 8; func++) {
+-				u32 class;
+-				u8 type;
+-
+-				class = read_pci_config(bus, slot, func,
+-							PCI_CLASS_REVISION);
+-				if (class == 0xffffffff)
+-					continue;
+-
+-				early_dump_pci_device(bus, slot, func);
+-
+-				if (func == 0) {
+-					type = read_pci_config_byte(bus, slot,
+-								    func,
+-							       PCI_HEADER_TYPE);
+-					if (!(type & 0x80))
+-						break;
+-				}
+-			}
+-		}
+-	}
+-}
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7c03701..ae5a2ae 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -115,6 +115,8 @@ static bool pcie_ari_disabled;
+ /* If set, the PCIe ATS capability will not be used. */
+ static bool pcie_ats_disabled;
+ 
++bool pci_early_dump;
++
+ bool pci_ats_disabled(void)
+ {
+ 	return pcie_ats_disabled;
+@@ -5848,6 +5850,8 @@ static int __init pci_setup(char *str)
+ 				pcie_ats_disabled = true;
+ 			} else if (!strcmp(str, "noaer")) {
+ 				pci_no_aer();
++			} else if (!strcmp(str, "earlydump")) {
++				pci_early_dump = true;
+ 			} else if (!strncmp(str, "realloc=", 8)) {
+ 				pci_realloc_get_opt(str + 8);
+ 			} else if (!strncmp(str, "realloc", 7)) {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index c358e7a0..9c66b7d 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -7,7 +7,7 @@
+ #define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
+ 
+ extern const unsigned char pcie_link_speed[];
+-
++extern bool pci_early_dump;
+ bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+ 
+ /* Functions internal to the PCI core code */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 3840207..b1f068d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1549,6 +1549,22 @@ static int pci_intx_mask_broken(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
++static void early_dump_pci_device(struct pci_dev *pdev)
++{
++	u32 value[256 / 4];
++	int i;
++
++	dev_info(&pdev->dev, "pci 0000:%02x:%02x.%d config space:\n",
++		 pdev->bus->number, PCI_SLOT(pdev->devfn),
++		 PCI_FUNC(pdev->devfn));
++
++	for (i = 0; i < 256; i += 4)
++		pci_read_config_dword(pdev, i, &value[i / 4]);
++
++	print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value,
++		       256, false);
++}
++
+ /**
+  * pci_setup_device - Fill in class and map information of a device
+  * @dev: the device structure to fill
+@@ -1598,6 +1614,9 @@ int pci_setup_device(struct pci_dev *dev)
+ 	pci_printk(KERN_DEBUG, dev, "[%04x:%04x] type %02x class %#08x\n",
+ 		   dev->vendor, dev->device, dev->hdr_type, dev->class);
+ 
++	if (pci_early_dump)
++		early_dump_pci_device(dev);
++
+ 	/* Need to have dev->class ready */
+ 	dev->cfg_size = pci_cfg_space_size(dev);
+ 
+-- 
+2.7.4
 
-  id = ((dev->bus->number << 8) | dev->devfn);
 
-so even if we print "id=%04x", it contains exactly the same
-information as the bus/device/function printed using "dev".
-
-So no, I don't think "Unregistered Agent ID" means a device not registered
-with the kernel.  At any rate, we do have a pci_dev for it.
-
-I *think* "info->status == 0" means PCI_ERR_COR_STATUS (or
-PCI_ERR_UNCOR_STATUS) was zero, i.e., we didn't find any error status
-bits set for this device.  I don't think "Unregistered Agent ID" is a
-very good description of this situation.
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
