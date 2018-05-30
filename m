@@ -1,15 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 18 May 2018 14:51:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: honghui.zhang@mediatek.com
-Subject: Re: [PATCH v7 2/2] PCI: mediatek: Using chained IRQ to setup IRQ
- handle
-Message-ID: <20180518195154.GB41790@bhelgaas-glaptop.roam.corp.google.com>
-References: <1525412853-24367-1-git-send-email-honghui.zhang@mediatek.com>
- <1525412853-24367-3-git-send-email-honghui.zhang@mediatek.com>
+From: Don Brace <don.brace@microsemi.com>
+To: Ryan Finnie <ryan@finnie.org>, Sinan Kaya <okaya@codeaurora.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "timur@codeaurora.org" <timur@codeaurora.org>
+Subject: RE: [PATCH V3 2/2] scsi: hpsa: drop shutdown callback
+Date: Wed, 30 May 2018 19:25:07 +0000
+Message-ID: <af772e6434e645f4a42d22821442a3bd@microsemi.com>
+References: <1527542471-10316-1-git-send-email-okaya@codeaurora.org>
+ <1527542471-10316-2-git-send-email-okaya@codeaurora.org>
+ <51bb7b82-c4a1-435c-7668-639db96d76e1@finnie.org>
+In-Reply-To: <51bb7b82-c4a1-435c-7668-639db96d76e1@finnie.org>
 MIME-Version: 1.0
-In-Reply-To: <1525412853-24367-3-git-send-email-honghui.zhang@mediatek.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,60 +19,72 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, lorenzo.pieralisi@arm.com, marc.zyngier@arm.com,
- linux-pci@vger.kernel.org, sean.wang@mediatek.com, xinping.qian@mediatek.com,
- linux-kernel@vger.kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
- ryder.lee@mediatek.com, linux-mediatek@lists.infradead.org,
- yong.wu@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
- eddie.huang@mediatek.com, linux-arm-kernel@lists.infradead.org
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "open list:HEWLETT-PACKARD SMART ARRAY RAID
+ DRIVER \(hpsa\)" <linux-scsi@vger.kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "esc.storagedev" <esc.storagedev@microsemi.com>,
+ open list <linux-kernel@vger.kernel.org>,
+ "stable@vger.kernel.org" <stable@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 04, 2018 at 01:47:33PM +0800, honghui.zhang@mediatek.com wrote:
-> From: Honghui Zhang <honghui.zhang@mediatek.com>
+> -----Original Message-----
+> From: Ryan Finnie [mailto:ryan@finnie.org]
+> Sent: Tuesday, May 29, 2018 8:50 PM
+> To: Sinan Kaya <okaya@codeaurora.org>; linux-pci@vger.kernel.org;
+> timur@codeaurora.org
+> Cc: linux-arm-msm@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> stable@vger.kernel.org; Don Brace <don.brace@microsemi.com>; James E.J.
+> Bottomley <jejb@linux.vnet.ibm.com>; Martin K. Petersen
+> <martin.petersen@oracle.com>; esc.storagedev
+> <esc.storagedev@microsemi.com>; open list:HEWLETT-PACKARD SMART ARRAY
+> RAID DRIVER (hpsa) <linux-scsi@vger.kernel.org>; open list <linux-
+> kernel@vger.kernel.org>
+> Subject: Re: [PATCH V3 2/2] scsi: hpsa: drop shutdown callback
 > 
-> Using irq_chip solution to setup IRQs in order to consist
-> with IRQ framework.
+> EXTERNAL EMAIL
 > 
-> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
-> ---
->  drivers/pci/host/pcie-mediatek.c | 206 ++++++++++++++++++++++-----------------
->  1 file changed, 115 insertions(+), 91 deletions(-)
 > 
-> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> index c3dc549..dabf1086 100644
-> --- a/drivers/pci/host/pcie-mediatek.c
-> +++ b/drivers/pci/host/pcie-mediatek.c
-> ...
+> On 05/28/2018 02:21 PM, Sinan Kaya wrote:
+> > 'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
+> > shutdown")' has been added to kernel to shutdown pending PCIe port
+> > service interrupts during reboot so that a newly started kexec kernel
+> > wouldn't observe pending interrupts.
+> >
+> > pcie_port_device_remove() is disabling the root port and switches by
+> > calling pci_disable_device() after all PCIe service drivers are shutdown.
+> >
+> > This has been found to cause crashes on HP DL360 Gen9 machines during
+> > reboot due to hpsa driver not clearing the bus master bit during the
+> > shutdown procedure by calling pci_disable_device().
+> >
+> > Drop the shutdown API and do an orderly clean up by using the remove.
+> >
+> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
+> > Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
+> > Cc: stable@vger.kernel.org
+> > Reported-by: Ryan Finnie <ryan@finnie.org>
+> 
+> Tested successfully on DL360 Gen9 and DL380 Gen9.
+> 
+> Tested-by: Ryan Finnie <ryan@finnie.org>
 
-> -static int mtk_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
-> -			    irq_hw_number_t hwirq)
-> +static struct msi_domain_info mtk_msi_domain_info = {
+The shutdown path issues a cache flush to the controller.
+Without this flush, you will see "Dirty Cache" messages at POST.
+It is best to keep the shutdown path.
 
-I think this patch should be amended to include this:
-
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 0d0177ce436c..368b70d9371b 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -193,7 +193,7 @@ config PCIE_MEDIATEK
- 	bool "MediaTek PCIe controller"
- 	depends on (ARM || ARM64) && (ARCH_MEDIATEK || COMPILE_TEST)
- 	depends on OF
--	depends on PCI
-+	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	help
- 	  Say Y here if you want to enable PCIe controller support on
+Thanks,
+Don Brace
+ESC - Smart Storage
+Microsemi Corporation
 
 
-Lorenzo, if you want to fold that in and update your branch, I can pull it.
-If not, I can add a patch on top, which should only break compile-testing
-bisection.
 
 _______________________________________________
 linux-arm-kernel mailing list
