@@ -1,294 +1,248 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:35908 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750749AbeELKQ6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 May 2018 06:16:58 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        tedheadster@gmail.com
-Subject: [PATCH] 3c59x: convert to generic DMA API
-Date: Sat, 12 May 2018 12:16:50 +0200
-Message-Id: <20180512101650.1693-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 30 May 2018 10:23:29 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Christoffer Dall <cdall@linaro.org>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>
+Subject: Re: [PATCH 2/3] PCI: Allow specifying devices using a base bus and
+ path of devfns
+Message-ID: <20180530102329.7423dc57@w520.home>
+In-Reply-To: <20180524214816.14485-3-logang@deltatee.com>
+References: <20180524214816.14485-1-logang@deltatee.com>
+        <20180524214816.14485-3-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This driver supports EISA devices in addition to PCI devices, and relied
-on the legacy behavior of the pci_dma* shims to pass on a NULL pointer
-to the DMA API, and the DMA API being able to handle that.  When the
-NULL forwarding broke the EISA support got broken.  Fix this by converting
-to the DMA API instead of the legacy PCI shims.
+On Thu, 24 May 2018 15:48:15 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-Fixes: 4167b2ad ("PCI: Remove NULL device handling from PCI DMA API")
-Reported-by: tedheadster <tedheadster@gmail.com>
-Tested-by: tedheadster <tedheadster@gmail.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/net/ethernet/3com/3c59x.c | 104 +++++++++++++++---------------
- 1 file changed, 51 insertions(+), 53 deletions(-)
+> When specifying PCI devices on the kernel command line using a
+> BDF, the bus numbers can change when adding or replacing a device,
+> changing motherboard firmware, or applying kernel parameters like
+> pci=assign-buses. When this happens, it is usually undesirable to
+> apply whatever command line tweak to the wrong device.
+> 
+> Therefore, it is useful to be able to specify devices with a base
+> bus number and the path of devfns needed to get to it. (Similar to
+> the "device scope" structure in the Intel VT-d spec, Section 8.3.1.)
+> 
+> Thus, we add an option to specify devices in the following format:
+> 
+> path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
+> 
+> The path can be any segment within the PCI hierarchy of any length and
+> determined through the use of 'lspci -t'. When specified this way, it is
+> less likely that a renumbered bus will result in a valid device specification
+> and the tweak won't be applied to the wrong device.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Stephen Bates <sbates@raithlin.com>
+> ---
+>  Documentation/admin-guide/kernel-parameters.txt |  12 ++-
+>  drivers/pci/pci.c                               | 106 +++++++++++++++++++++++-
+>  2 files changed, 112 insertions(+), 6 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 894aa516ceab..519ab95bb418 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -2986,9 +2986,10 @@
+>  
+>  				Some options herein operate on a specific device
+>  				or a set of devices (<pci_dev>). These are
+> -				specified in one of two formats:
+> +				specified in one of three formats:
+>  
+>  				[<domain>:]<bus>:<slot>.<func>
+> +				path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
+>  				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+>  
+>  				Note: the first format specifies a PCI
+> @@ -2996,9 +2997,12 @@
+>  				if new hardware is inserted, if motherboard
+>  				firmware changes, or due to changes caused
+>  				by other kernel parameters. The second format
+> -				selects devices using IDs from the
+> -				configuration space which may match multiple
+> -				devices in the system.
+> +				specifies a path from a device through
+> +				a path of multiple slot/function addresses
+> +				(this is more robust against renumbering
+> +				issues). The third format selects devices using
+> +				IDs from the configuration space which may match
+> +				multiple devices in the system.
+>  
+>  		earlydump	[X86] dump PCI config space before the kernel
+>  			        changes anything
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 85fec5e2640b..53ea0d7b02ce 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -184,22 +184,116 @@ EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
+>  #endif
+>  
+>  /**
+> + * pci_dev_str_match_path - test if a path string matches a device
+> + * @dev:    the PCI device to test
+> + * @p:      string to match the device against
+> + * @endptr: pointer to the string after the match
+> + *
+> + * Test if a string (typically from a kernel parameter) formated as a
+> + * path of slot/function addresses matches a PCI device. The string must
+> + * be of the form:
+> + *
+> + *   [<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
+> + *
+> + * A path for a device can be obtained using 'lspci -t'. Using a path
+> + * is more robust against renumbering of devices than using only
+> + * a single bus, slot and function address.
+> + *
+> + * Returns 1 if the string matches the device, 0 if it does not and
+> + * a negative error code if it fails to parse the string.
+> + */
+> +static int pci_dev_str_match_path(struct pci_dev *dev, const char *p,
+> +				  const char **endptr)
+> +{
+> +	int ret;
+> +	int seg, bus, slot, func, count;
+> +	u8 *devfn_path;
+> +	int num_devfn = 0;
+> +	struct pci_dev *tmp;
+> +
+> +	ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
+> +		     &func, &count);
+> +	if (ret != 4) {
+> +		seg = 0;
+> +		ret = sscanf(p, "%x:%x.%x%n", &bus, &slot,
+> +			     &func, &count);
+> +		if (ret != 3)
+> +			return -EINVAL;
+> +	}
+> +
+> +	p += count;
+> +
+> +	devfn_path = kmalloc(PAGE_SIZE, GFP_KERNEL);
+> +	devfn_path[num_devfn++] = PCI_DEVFN(slot, func);
+> +
+> +	while (*p && *p != ',' && *p != ';') {
+> +		ret = sscanf(p, "/%x.%x%n", &slot, &func, &count);
+> +		if (ret != 2) {
+> +			ret = -EINVAL;
+> +			goto free_and_exit;
+> +		}
+> +
+> +		p += count;
+> +		devfn_path[num_devfn++] = PCI_DEVFN(slot, func);
+> +		if (num_devfn >= PAGE_SIZE) {
+> +			ret = -EINVAL;
+> +			goto free_and_exit;
+> +		}
+> +	}
+> +
+> +	*endptr = p;
+> +	ret = 0;
+> +
+> +	if (seg != pci_domain_nr(dev->bus))
+> +		goto free_and_exit;
+> +
+> +	pci_dev_get(dev);
+> +	while (num_devfn > 0 && dev) {
+> +		num_devfn--;
+> +
+> +		if (devfn_path[num_devfn] != dev->devfn)
+> +			goto put_and_exit;
+> +
+> +		if (num_devfn == 0 && bus == dev->bus->number) {
+> +			ret = 1;
+> +			goto put_and_exit;
+> +		}
+> +
+> +		tmp = pci_dev_get(pci_upstream_bridge(dev));
+> +		pci_dev_put(dev);
+> +		dev = tmp;
+> +	}
+> +
+> +put_and_exit:
+> +	pci_dev_put(dev);
+> +free_and_exit:
+> +	kfree(devfn_path);
+> +	return ret;
+> +}
 
-diff --git a/drivers/net/ethernet/3com/3c59x.c b/drivers/net/ethernet/3com/3c59x.c
-index 36c8950dbd2d..176861bd2252 100644
---- a/drivers/net/ethernet/3com/3c59x.c
-+++ b/drivers/net/ethernet/3com/3c59x.c
-@@ -1212,9 +1212,9 @@ static int vortex_probe1(struct device *gendev, void __iomem *ioaddr, int irq,
- 	vp->mii.reg_num_mask = 0x1f;
- 
- 	/* Makes sure rings are at least 16 byte aligned. */
--	vp->rx_ring = pci_alloc_consistent(pdev, sizeof(struct boom_rx_desc) * RX_RING_SIZE
-+	vp->rx_ring = dma_alloc_coherent(gendev, sizeof(struct boom_rx_desc) * RX_RING_SIZE
- 					   + sizeof(struct boom_tx_desc) * TX_RING_SIZE,
--					   &vp->rx_ring_dma);
-+					   &vp->rx_ring_dma, GFP_KERNEL);
- 	retval = -ENOMEM;
- 	if (!vp->rx_ring)
- 		goto free_device;
-@@ -1476,11 +1476,10 @@ static int vortex_probe1(struct device *gendev, void __iomem *ioaddr, int irq,
- 		return 0;
- 
- free_ring:
--	pci_free_consistent(pdev,
--						sizeof(struct boom_rx_desc) * RX_RING_SIZE
--							+ sizeof(struct boom_tx_desc) * TX_RING_SIZE,
--						vp->rx_ring,
--						vp->rx_ring_dma);
-+	dma_free_coherent(&pdev->dev,
-+		sizeof(struct boom_rx_desc) * RX_RING_SIZE +
-+		sizeof(struct boom_tx_desc) * TX_RING_SIZE,
-+		vp->rx_ring, vp->rx_ring_dma);
- free_device:
- 	free_netdev(dev);
- 	pr_err(PFX "vortex_probe1 fails.  Returns %d\n", retval);
-@@ -1751,9 +1750,9 @@ vortex_open(struct net_device *dev)
- 				break;			/* Bad news!  */
- 
- 			skb_reserve(skb, NET_IP_ALIGN);	/* Align IP on 16 byte boundaries */
--			dma = pci_map_single(VORTEX_PCI(vp), skb->data,
--					     PKT_BUF_SZ, PCI_DMA_FROMDEVICE);
--			if (dma_mapping_error(&VORTEX_PCI(vp)->dev, dma))
-+			dma = dma_map_single(vp->gendev, skb->data,
-+					     PKT_BUF_SZ, DMA_FROM_DEVICE);
-+			if (dma_mapping_error(vp->gendev, dma))
- 				break;
- 			vp->rx_ring[i].addr = cpu_to_le32(dma);
- 		}
-@@ -2067,9 +2066,9 @@ vortex_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	if (vp->bus_master) {
- 		/* Set the bus-master controller to transfer the packet. */
- 		int len = (skb->len + 3) & ~3;
--		vp->tx_skb_dma = pci_map_single(VORTEX_PCI(vp), skb->data, len,
--						PCI_DMA_TODEVICE);
--		if (dma_mapping_error(&VORTEX_PCI(vp)->dev, vp->tx_skb_dma)) {
-+		vp->tx_skb_dma = dma_map_single(vp->gendev, skb->data, len,
-+						DMA_TO_DEVICE);
-+		if (dma_mapping_error(vp->gendev, vp->tx_skb_dma)) {
- 			dev_kfree_skb_any(skb);
- 			dev->stats.tx_dropped++;
- 			return NETDEV_TX_OK;
-@@ -2168,9 +2167,9 @@ boomerang_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 			vp->tx_ring[entry].status = cpu_to_le32(skb->len | TxIntrUploaded | AddTCPChksum | AddUDPChksum);
- 
- 	if (!skb_shinfo(skb)->nr_frags) {
--		dma_addr = pci_map_single(VORTEX_PCI(vp), skb->data, skb->len,
--					  PCI_DMA_TODEVICE);
--		if (dma_mapping_error(&VORTEX_PCI(vp)->dev, dma_addr))
-+		dma_addr = dma_map_single(vp->gendev, skb->data, skb->len,
-+					  DMA_TO_DEVICE);
-+		if (dma_mapping_error(vp->gendev, dma_addr))
- 			goto out_dma_err;
- 
- 		vp->tx_ring[entry].frag[0].addr = cpu_to_le32(dma_addr);
-@@ -2178,9 +2177,9 @@ boomerang_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	} else {
- 		int i;
- 
--		dma_addr = pci_map_single(VORTEX_PCI(vp), skb->data,
--					  skb_headlen(skb), PCI_DMA_TODEVICE);
--		if (dma_mapping_error(&VORTEX_PCI(vp)->dev, dma_addr))
-+		dma_addr = dma_map_single(vp->gendev, skb->data,
-+					  skb_headlen(skb), DMA_TO_DEVICE);
-+		if (dma_mapping_error(vp->gendev, dma_addr))
- 			goto out_dma_err;
- 
- 		vp->tx_ring[entry].frag[0].addr = cpu_to_le32(dma_addr);
-@@ -2189,21 +2188,21 @@ boomerang_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 		for (i = 0; i < skb_shinfo(skb)->nr_frags; i++) {
- 			skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
- 
--			dma_addr = skb_frag_dma_map(&VORTEX_PCI(vp)->dev, frag,
-+			dma_addr = skb_frag_dma_map(vp->gendev, frag,
- 						    0,
- 						    frag->size,
- 						    DMA_TO_DEVICE);
--			if (dma_mapping_error(&VORTEX_PCI(vp)->dev, dma_addr)) {
-+			if (dma_mapping_error(vp->gendev, dma_addr)) {
- 				for(i = i-1; i >= 0; i--)
--					dma_unmap_page(&VORTEX_PCI(vp)->dev,
-+					dma_unmap_page(vp->gendev,
- 						       le32_to_cpu(vp->tx_ring[entry].frag[i+1].addr),
- 						       le32_to_cpu(vp->tx_ring[entry].frag[i+1].length),
- 						       DMA_TO_DEVICE);
- 
--				pci_unmap_single(VORTEX_PCI(vp),
-+				dma_unmap_single(vp->gendev,
- 						 le32_to_cpu(vp->tx_ring[entry].frag[0].addr),
- 						 le32_to_cpu(vp->tx_ring[entry].frag[0].length),
--						 PCI_DMA_TODEVICE);
-+						 DMA_TO_DEVICE);
- 
- 				goto out_dma_err;
- 			}
-@@ -2218,8 +2217,8 @@ boomerang_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 		}
- 	}
- #else
--	dma_addr = pci_map_single(VORTEX_PCI(vp), skb->data, skb->len, PCI_DMA_TODEVICE);
--	if (dma_mapping_error(&VORTEX_PCI(vp)->dev, dma_addr))
-+	dma_addr = dma_map_single(vp->gendev, skb->data, skb->len, DMA_TO_DEVICE);
-+	if (dma_mapping_error(vp->gendev, dma_addr))
- 		goto out_dma_err;
- 	vp->tx_ring[entry].addr = cpu_to_le32(dma_addr);
- 	vp->tx_ring[entry].length = cpu_to_le32(skb->len | LAST_FRAG);
-@@ -2254,7 +2253,7 @@ boomerang_start_xmit(struct sk_buff *skb, struct net_device *dev)
- out:
- 	return NETDEV_TX_OK;
- out_dma_err:
--	dev_err(&VORTEX_PCI(vp)->dev, "Error mapping dma buffer\n");
-+	dev_err(vp->gendev, "Error mapping dma buffer\n");
- 	goto out;
- }
- 
-@@ -2322,7 +2321,7 @@ vortex_interrupt(int irq, void *dev_id)
- 		if (status & DMADone) {
- 			if (ioread16(ioaddr + Wn7_MasterStatus) & 0x1000) {
- 				iowrite16(0x1000, ioaddr + Wn7_MasterStatus); /* Ack the event. */
--				pci_unmap_single(VORTEX_PCI(vp), vp->tx_skb_dma, (vp->tx_skb->len + 3) & ~3, PCI_DMA_TODEVICE);
-+				dma_unmap_single(vp->gendev, vp->tx_skb_dma, (vp->tx_skb->len + 3) & ~3, DMA_TO_DEVICE);
- 				pkts_compl++;
- 				bytes_compl += vp->tx_skb->len;
- 				dev_kfree_skb_irq(vp->tx_skb); /* Release the transferred buffer */
-@@ -2459,19 +2458,19 @@ boomerang_interrupt(int irq, void *dev_id)
- 					struct sk_buff *skb = vp->tx_skbuff[entry];
- #if DO_ZEROCOPY
- 					int i;
--					pci_unmap_single(VORTEX_PCI(vp),
-+					dma_unmap_single(vp->gendev,
- 							le32_to_cpu(vp->tx_ring[entry].frag[0].addr),
- 							le32_to_cpu(vp->tx_ring[entry].frag[0].length)&0xFFF,
--							PCI_DMA_TODEVICE);
-+							DMA_TO_DEVICE);
- 
- 					for (i=1; i<=skb_shinfo(skb)->nr_frags; i++)
--							pci_unmap_page(VORTEX_PCI(vp),
-+							dma_unmap_page(vp->gendev,
- 											 le32_to_cpu(vp->tx_ring[entry].frag[i].addr),
- 											 le32_to_cpu(vp->tx_ring[entry].frag[i].length)&0xFFF,
--											 PCI_DMA_TODEVICE);
-+											 DMA_TO_DEVICE);
- #else
--					pci_unmap_single(VORTEX_PCI(vp),
--						le32_to_cpu(vp->tx_ring[entry].addr), skb->len, PCI_DMA_TODEVICE);
-+					dma_unmap_single(vp->gendev,
-+						le32_to_cpu(vp->tx_ring[entry].addr), skb->len, DMA_TO_DEVICE);
- #endif
- 					pkts_compl++;
- 					bytes_compl += skb->len;
-@@ -2561,14 +2560,14 @@ static int vortex_rx(struct net_device *dev)
- 				/* 'skb_put()' points to the start of sk_buff data area. */
- 				if (vp->bus_master &&
- 					! (ioread16(ioaddr + Wn7_MasterStatus) & 0x8000)) {
--					dma_addr_t dma = pci_map_single(VORTEX_PCI(vp), skb_put(skb, pkt_len),
--									   pkt_len, PCI_DMA_FROMDEVICE);
-+					dma_addr_t dma = dma_map_single(vp->gendev, skb_put(skb, pkt_len),
-+									   pkt_len, DMA_FROM_DEVICE);
- 					iowrite32(dma, ioaddr + Wn7_MasterAddr);
- 					iowrite16((skb->len + 3) & ~3, ioaddr + Wn7_MasterLen);
- 					iowrite16(StartDMAUp, ioaddr + EL3_CMD);
- 					while (ioread16(ioaddr + Wn7_MasterStatus) & 0x8000)
- 						;
--					pci_unmap_single(VORTEX_PCI(vp), dma, pkt_len, PCI_DMA_FROMDEVICE);
-+					dma_unmap_single(vp->gendev, dma, pkt_len, DMA_FROM_DEVICE);
- 				} else {
- 					ioread32_rep(ioaddr + RX_FIFO,
- 					             skb_put(skb, pkt_len),
-@@ -2635,11 +2634,11 @@ boomerang_rx(struct net_device *dev)
- 			if (pkt_len < rx_copybreak &&
- 			    (skb = netdev_alloc_skb(dev, pkt_len + 2)) != NULL) {
- 				skb_reserve(skb, 2);	/* Align IP on 16 byte boundaries */
--				pci_dma_sync_single_for_cpu(VORTEX_PCI(vp), dma, PKT_BUF_SZ, PCI_DMA_FROMDEVICE);
-+				dma_sync_single_for_cpu(vp->gendev, dma, PKT_BUF_SZ, DMA_FROM_DEVICE);
- 				/* 'skb_put()' points to the start of sk_buff data area. */
- 				skb_put_data(skb, vp->rx_skbuff[entry]->data,
- 					     pkt_len);
--				pci_dma_sync_single_for_device(VORTEX_PCI(vp), dma, PKT_BUF_SZ, PCI_DMA_FROMDEVICE);
-+				dma_sync_single_for_device(vp->gendev, dma, PKT_BUF_SZ, DMA_FROM_DEVICE);
- 				vp->rx_copy++;
- 			} else {
- 				/* Pre-allocate the replacement skb.  If it or its
-@@ -2651,9 +2650,9 @@ boomerang_rx(struct net_device *dev)
- 					dev->stats.rx_dropped++;
- 					goto clear_complete;
- 				}
--				newdma = pci_map_single(VORTEX_PCI(vp), newskb->data,
--							PKT_BUF_SZ, PCI_DMA_FROMDEVICE);
--				if (dma_mapping_error(&VORTEX_PCI(vp)->dev, newdma)) {
-+				newdma = dma_map_single(vp->gendev, newskb->data,
-+							PKT_BUF_SZ, DMA_FROM_DEVICE);
-+				if (dma_mapping_error(vp->gendev, newdma)) {
- 					dev->stats.rx_dropped++;
- 					consume_skb(newskb);
- 					goto clear_complete;
-@@ -2664,7 +2663,7 @@ boomerang_rx(struct net_device *dev)
- 				vp->rx_skbuff[entry] = newskb;
- 				vp->rx_ring[entry].addr = cpu_to_le32(newdma);
- 				skb_put(skb, pkt_len);
--				pci_unmap_single(VORTEX_PCI(vp), dma, PKT_BUF_SZ, PCI_DMA_FROMDEVICE);
-+				dma_unmap_single(vp->gendev, dma, PKT_BUF_SZ, DMA_FROM_DEVICE);
- 				vp->rx_nocopy++;
- 			}
- 			skb->protocol = eth_type_trans(skb, dev);
-@@ -2761,8 +2760,8 @@ vortex_close(struct net_device *dev)
- 	if (vp->full_bus_master_rx) { /* Free Boomerang bus master Rx buffers. */
- 		for (i = 0; i < RX_RING_SIZE; i++)
- 			if (vp->rx_skbuff[i]) {
--				pci_unmap_single(	VORTEX_PCI(vp), le32_to_cpu(vp->rx_ring[i].addr),
--									PKT_BUF_SZ, PCI_DMA_FROMDEVICE);
-+				dma_unmap_single(vp->gendev, le32_to_cpu(vp->rx_ring[i].addr),
-+									PKT_BUF_SZ, DMA_FROM_DEVICE);
- 				dev_kfree_skb(vp->rx_skbuff[i]);
- 				vp->rx_skbuff[i] = NULL;
- 			}
-@@ -2775,12 +2774,12 @@ vortex_close(struct net_device *dev)
- 				int k;
- 
- 				for (k=0; k<=skb_shinfo(skb)->nr_frags; k++)
--						pci_unmap_single(VORTEX_PCI(vp),
-+						dma_unmap_single(vp->gendev,
- 										 le32_to_cpu(vp->tx_ring[i].frag[k].addr),
- 										 le32_to_cpu(vp->tx_ring[i].frag[k].length)&0xFFF,
--										 PCI_DMA_TODEVICE);
-+										 DMA_TO_DEVICE);
- #else
--				pci_unmap_single(VORTEX_PCI(vp), le32_to_cpu(vp->tx_ring[i].addr), skb->len, PCI_DMA_TODEVICE);
-+				dma_unmap_single(vp->gendev, le32_to_cpu(vp->tx_ring[i].addr), skb->len, DMA_TO_DEVICE);
- #endif
- 				dev_kfree_skb(skb);
- 				vp->tx_skbuff[i] = NULL;
-@@ -3288,11 +3287,10 @@ static void vortex_remove_one(struct pci_dev *pdev)
- 
- 	pci_iounmap(pdev, vp->ioaddr);
- 
--	pci_free_consistent(pdev,
--						sizeof(struct boom_rx_desc) * RX_RING_SIZE
--							+ sizeof(struct boom_tx_desc) * TX_RING_SIZE,
--						vp->rx_ring,
--						vp->rx_ring_dma);
-+	dma_free_coherent(&pdev->dev,
-+			sizeof(struct boom_rx_desc) * RX_RING_SIZE +
-+			sizeof(struct boom_tx_desc) * TX_RING_SIZE,
-+			vp->rx_ring, vp->rx_ring_dma);
- 
- 	pci_release_regions(pdev);
- 
--- 
-2.17.0
+I like the idea, but can't we improve the implementation?  It seems
+that we shouldn't need to allocate more than a working copy of the
+original path string.  We can use strrchr() to find the last path
+divider ('/'), match the slot.fn after that to the current devfn, set
+that path divider to null, step to the next upstream device and
+repeat.  Also, since we're working from a downstream device up, I
+suspect we don't need to get and put references at each step, the
+downstream device probably already holds a reference to the upstream
+device for each step along the way.  It would be interesting to adapt
+this to allow specifying a driver_override for a specific device as
+well, I can think of a bunch of vfio users that would prefer that to
+initrd scripts, but I know how much Bjorn loves more commandline
+bloat ;)  Thanks,
+
+Alex
+
+> +
+> +/**
+>   * pci_dev_str_match - test if a string matches a device
+>   * @dev:    the PCI device to test
+>   * @p:      string to match the device against
+>   * @endptr: pointer to the string after the match
+>   *
+>   * Test if a string (typically from a kernel parameter) matches a
+> - * specified. The string may be of one of two forms formats:
+> + * specified. The string may be of one of three formats:
+>   *
+>   *   [<domain>:]<bus>:<slot>.<func>
+> + *   path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
+>   *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+>   *
+>   * The first format specifies a PCI bus/slot/function address which
+>   * may change if new hardware is inserted, if motherboard firmware changes,
+>   * or due to changes caused in kernel parameters.
+>   *
+> - * The second format matches devices using IDs in the configuration
+> + * The second format specifies a PCI bus/slot/function root address and
+> + * a path of slot/function addresses to the specific device from the root.
+> + * The path for a device can be determined through the use of 'lspci -t'.
+> + * This format is more robust against renumbering issues than the first format.
+> +
+> + * The third format matches devices using IDs in the configuration
+>   * space which may match multiple devices in the system. A value of 0
+>   * for any field will match all devices.
+>   *
+> @@ -236,7 +330,15 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
+>  		    (!subsystem_device ||
+>  			    subsystem_device == dev->subsystem_device))
+>  			goto found;
+> +	} else if (strncmp(p, "path:", 5) == 0) {
+> +		/* PCI Root Bus and a path of Slot,Function IDs */
+> +		p += 5;
+>  
+> +		ret = pci_dev_str_match_path(dev, p, &p);
+> +		if (ret < 0)
+> +			return ret;
+> +		else if (ret)
+> +			goto found;
+>  	} else {
+>  		/* PCI Bus,Slot,Function ids are specified */
+>  		ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
