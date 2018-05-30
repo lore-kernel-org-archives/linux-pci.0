@@ -1,78 +1,81 @@
-Return-Path: <SRS0=6mTy=IL=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=6mTy=IL=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Thu, 24 May 2018 14:50:43 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Marek Vasut <marek.vasut+renesas@gmail.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Simon Horman <horms+renesas@verge.net.au>,
-	Wolfram Sang <wsa@the-dreams.de>, linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH 1/4] PCI: rcar: Rename
- rcar_pcie_parse_request_of_pci_ranges()
-Message-ID: <20180524135043.GB22455@e107981-ln.cambridge.arm.com>
-References: <20180521131123.2009-1-marek.vasut+renesas@gmail.com>
- <20180523161711.GA8113@e107981-ln.cambridge.arm.com>
- <5fc7b4ff-1c75-4d3f-6cb7-fda4559a3635@gmail.com>
- <20180523215626.GG150632@bhelgaas-glaptop.roam.corp.google.com>
- <56b86e01-394e-0cf0-5da2-e884c29bb41e@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 30 May 2018 09:48:22 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: okaya@codeaurora.org
+Subject: Re: [PATCH] PCI: Add pci=safemode option
+Message-ID: <20180530074822.GB30177@kroah.com>
+References: <1527650389-31575-1-git-send-email-okaya@codeaurora.org>
+ <20180530043103.GA19734@kroah.com>
+ <6c317ed8-cca3-8862-5f3b-12cf14e4d53b@codeaurora.org>
+ <20180530073735.GA28793@infradead.org>
+ <6dfe2db8f974d94c9867f30ec83d9333@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56b86e01-394e-0cf0-5da2-e884c29bb41e@gmail.com>
+In-Reply-To: <6dfe2db8f974d94c9867f30ec83d9333@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+ Kai-Heng Feng <kai.heng.feng@canonical.com>, Ingo Molnar <mingo@kernel.org>,
+ Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
+ timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Christoph Hellwig <hch@infradead.org>, Dongdong Liu <liudongdong3@huawei.com>,
+ David Rientjes <rientjes@google.com>,
+ Thymo van Beers <thymovanbeers@gmail.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Frederick Lawler <fred@fredlawl.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
+ Frederic Weisbecker <frederic@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
+ Oza Pawandeep <poza@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 24, 2018 at 09:24:27AM +0200, Marek Vasut wrote:
-> On 05/23/2018 11:56 PM, Bjorn Helgaas wrote:
-> > On Wed, May 23, 2018 at 07:05:06PM +0200, Marek Vasut wrote:
-> >> On 05/23/2018 06:17 PM, Lorenzo Pieralisi wrote:
-> >>> On Mon, May 21, 2018 at 03:11:20PM +0200, Marek Vasut wrote:
-> >>>> The function name is just too confusing, rename it, no functional change.
-> >>>> Rename the function to rcar_pcie_alloc_and_parse_pci_resource_list() as
-> >>>> it's matching failpath function is pci_free_resource_list() so the names
-> >>>> align much better and the new name also describes what the function does
-> >>>> much better.
-> >>>>
-> >>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> >>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> >>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> >>>> Cc: Simon Horman <horms+renesas@verge.net.au>
-> >>>> Cc: Wolfram Sang <wsa@the-dreams.de>
-> >>>> Cc: linux-renesas-soc@vger.kernel.org
-> >>>> ---
-> >>>>  drivers/pci/host/pcie-rcar.c | 4 ++--
-> >>>>  1 file changed, 2 insertions(+), 2 deletions(-)
-> >>>
-> >>> Can you rebase this series against my pci/rcar branch please ?
-> >>>
-> >>> I will merge it then, thanks.
-> >>
-> >> Where is that tree/branch located ?
-> >>
-> >> It applies fine on current next 20180517, is there a problem ?
-> > https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/log/?h=pci/rcar
+On Wed, May 30, 2018 at 12:44:29AM -0700, okaya@codeaurora.org wrote:
+> On 2018-05-30 00:37, Christoph Hellwig wrote:
+> > On Tue, May 29, 2018 at 09:41:33PM -0700, Sinan Kaya wrote:
+> > > Bjorn and I discussed the need for such a "safe" mode feature when you
+> > > want to bring up PCI for a platform. You want to turn off everything
+> > > as
+> > > a starter and just stick to bare minimum.
+> > 
+> > Can we please make it a config option the instead of adding code
+> > to every kernel?  Also maybe the bringup should be in the name
+> > to make this more clear?
 > 
-> OK, 1/4 is dropped, the remaining patches are resubmitted. I added one
-> more (6/6) since the phy patches in that tree added a bug into the fail
-> path, so I fixed that too.
-
-Please CC me if you want me to merge your code, I monitor linux-pci
-but that would help me, thanks.
-
-You did not add the review tags you received to the new series (also a
-cover letter - however minimal - and a version number would help),
-please add them and post a v2 so that I can merge them, I can do that
-for you but it is good practice for the future.
-
-Thanks,
-Lorenzo
-
-> > I don't think next 20180517 includes Lorenzo's pci/rcar branch, so
-> > there might be conflicts.  I think Stephen is on vacation until next
-> > week, so there isn't a newer -next tree yet.
+> One other requirement was to have a runtime option rather than compile time
+> option.
 > 
-> OK
+> When someone reported a problem, we wanted to be able to say "use this
+> option and see if system boots" without doing any bisects or recompilation.
 > 
-> -- 
-> Best regards,
-> Marek Vasut
+> This would be the first step in troubleshooting a system to see if
+> fundamental features are working.
+
+That makes sense, people can not rebuild their kernels for the most
+part.  Putting it behind a config option would not make sense as it
+would always have to be enabled.
+
+> I don't mind changing the name Bjorn mentioned safe option. I made it
+> safemode. I am looking at Bjorn for suggestions at this moment.
+
+"minimal"?  "basic"?  "crippled"?
+"my_hardware_is_so_borked_it_needs_this_option"?  :)
+
+Naming is hard...
+
+greg k-h
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
