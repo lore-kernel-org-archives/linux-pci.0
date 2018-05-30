@@ -1,91 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55598 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750710AbeEJWyE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 May 2018 18:54:04 -0400
-Date: Thu, 10 May 2018 17:54:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Jarkko Nikula <jarkko.nikula@linux.intel.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI / PM: Do not clear state_saved in pci_pm_freeze()
- when smart suspend is set
-Message-ID: <20180510225402.GE190385@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180420122202.29944-1-mika.westerberg@linux.intel.com>
- <7417684.AuALTLa7H7@aspire.rjw.lan>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:54416 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750790AbeE3M3o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 08:29:44 -0400
+Date: Wed, 30 May 2018 13:29:40 +0100
+From: Stefan Hajnoczi <stefanha@redhat.com>
+To: Tiwei Bie <tiwei.bie@intel.com>
+Cc: mst@redhat.com, bhelgaas@google.com,
+        virtualization@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        linux-pci@vger.kernel.org, dan.daly@intel.com,
+        mark.d.rustad@intel.com, alexander.h.duyck@intel.com,
+        cunming.liang@intel.com, zhihong.wang@intel.com
+Subject: Re: [virtio-dev] [PATCH] virtio_pci: support enabling VFs
+Message-ID: <20180530122940.GI14623@stefanha-x1.localdomain>
+References: <20180530085521.26583-1-tiwei.bie@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7417684.AuALTLa7H7@aspire.rjw.lan>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="cf0hFtnykp6aONGL"
+In-Reply-To: <20180530085521.26583-1-tiwei.bie@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 23, 2018 at 09:43:52AM +0200, Rafael J. Wysocki wrote:
-> On Friday, April 20, 2018 2:22:02 PM CEST Mika Westerberg wrote:
-> > If a driver uses DPM_FLAG_SMART_SUSPEND and the device is already
-> > runtime suspended when hibernate is started PCI core skips runtime
-> > resuming the device but still clears pci_dev->state_saved. After the
-> > hibernation image is written pci_pm_thaw_noirq() makes sure subsequent
-> > thaw phases for the device are also skipped leaving it runtime suspended
-> > with pci_dev->state_saved == false.
-> > 
-> > When the device is eventually runtime resumed pci_pm_runtime_resume()
-> > restores config space by calling pci_restore_standard_config(), however
-> > because pci_dev->state_saved == false pci_restore_state() never actually
-> > restores the config space leaving the device in a state that is not what
-> > the driver might expect.
-> > 
-> > For example here is what happens for intel-lpss I2C devices once the
-> > hibernation snapshot is taken:
-> > 
-> >   intel-lpss 0000:00:15.0: power state changed by ACPI to D0
-> >   intel-lpss 0000:00:1e.0: power state changed by ACPI to D3cold
-> >   video LNXVIDEO:00: Restoring backlight state
-> >   PM: hibernation exit
-> >   i2c_designware i2c_designware.1: Unknown Synopsys component type: 0xffffffff
-> >   i2c_designware i2c_designware.0: Unknown Synopsys component type: 0xffffffff
-> >   i2c_designware i2c_designware.1: timeout in disabling adapter
-> >   i2c_designware i2c_designware.0: timeout in disabling adapter
-> > 
-> > Since PCI config space is not restored the device is still in D3hot
-> > making MMIO register reads return 0xffffffff.
-> > 
-> > Fix this by clearing pci_dev->state_saved only if we actually end up
-> > runtime resuming the device.
-> > 
-> > Fixes: c4b65157aeef ("PCI / PM: Take SMART_SUSPEND driver flag into account")
-> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> 
-> Since this fixes a commit that went in through the PM tree, I've queued it up.
-> 
-> Bjorn, please let me know if you prefer to route it through the PCI tree.
 
-Thanks for taking it, that's perfect!
+--cf0hFtnykp6aONGL
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> > ---
-> >  drivers/pci/pci-driver.c | 5 +++--
-> >  1 file changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> > index 6ace47099fc5..b9a131137e64 100644
-> > --- a/drivers/pci/pci-driver.c
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -958,10 +958,11 @@ static int pci_pm_freeze(struct device *dev)
-> >  	 * devices should not be touched during freeze/thaw transitions,
-> >  	 * however.
-> >  	 */
-> > -	if (!dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND))
-> > +	if (!dev_pm_smart_suspend_and_suspended(dev)) {
-> >  		pm_runtime_resume(dev);
-> > +		pci_dev->state_saved = false;
-> > +	}
-> >  
-> > -	pci_dev->state_saved = false;
-> >  	if (pm->freeze) {
-> >  		int error;
-> >  
-> > 
-> 
-> 
+On Wed, May 30, 2018 at 04:55:21PM +0800, Tiwei Bie wrote:
+> There is a new feature bit allocated in virtio spec to
+> support SR-IOV (Single Root I/O Virtualization):
+>=20
+> https://github.com/oasis-tcs/virtio-spec/issues/11
+>=20
+> This patch enables the support for this feature bit in
+> virtio driver.
+>=20
+> Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
+> ---
+> This patch depends on below proposal:
+> https://lists.oasis-open.org/archives/virtio-dev/201805/msg00154.html
+>=20
+> This patch depends on below patch:
+> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=
+=3Dpci/virtualization&id=3D8effc395c2097e258fcedfc02ed4a66d45fb4238
+>=20
+>  drivers/virtio/virtio_pci_common.c | 20 ++++++++++++++++++++
+>  drivers/virtio/virtio_pci_modern.c | 14 ++++++++++++++
+>  include/uapi/linux/virtio_config.h |  7 ++++++-
+>  3 files changed, 40 insertions(+), 1 deletion(-)
+
+Looks good and matches the virtio spec change, but I'm not familiar with
+PCI SR-IOV details, so not a full Reviewed-by.
+
+Acked-by: Stefan Hajnoczi <stefanha@redhat.com>
+
+--cf0hFtnykp6aONGL
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAEBAgAGBQJbDpk0AAoJEJykq7OBq3PI/a8IAMXdX7W1thOJsCpPYJN/TuyS
+wPDyYhx5+Xs35iJreLG2AIQ73SnLOgfdz/OGzHhpe+yAbH3P+JyWjmAPCXXVHDwu
+S01KRyn8xp60ZYqGhAxbCnmynOLGZS69h5PhnQgiQmr85+B/7O2k+6M6RHTKGE0k
+HwcB8kIid3ixIxjMlH9MiC8GKL5H/VWQ/nCwMTl1YRRvzb2e/9vB+JdyJo/+S/Ni
+/YAyP2hYSkbxRaKJM/GPuDkWt5oDsnfGFWyxlihwccTlI7e3eA2fIDxLz+9bIHO6
+NzhcNg/4WC28wenhr+F+jeP8NKtIKnwh+vDs1GSKXa94mj/nvHF3z7Ypcya8PdQ=
+=E2BM
+-----END PGP SIGNATURE-----
+
+--cf0hFtnykp6aONGL--
