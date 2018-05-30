@@ -1,106 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v16 4/9] PCI/AER: Rename error recovery to generic PCI naming
-Date: Fri, 11 May 2018 06:43:23 -0400
-Message-Id: <1526035408-31328-5-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
-References: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI: move early dump functionality from x86 arch into the
+ common code
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+References: <1527654876-26716-1-git-send-email-okaya@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <dc9133a4-7085-e663-172a-87601ee8775d@codeaurora.org>
+Date: Tue, 29 May 2018 21:36:15 -0700
+MIME-Version: 1.0
+In-Reply-To: <1527654876-26716-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Kate Stewart <kstewart@linuxfoundation.org>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ Petr Tesarik <ptesarik@suse.cz>, Ram Pai <linuxram@us.ibm.com>,
+ Kai-Heng Feng <kai.heng.feng@canonical.com>, "H. Peter Anvin" <hpa@zytor.com>,
+ Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+ Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
+ "maintainer:X86 ARCHITECTURE \(32-BIT AND 64-BIT\)" <x86@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
+ Thymo van Beers <thymovanbeers@gmail.com>, Borislav Petkov <bp@suse.de>,
+ Tom Lendacky <thomas.lendacky@amd.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
+ Frederic Weisbecker <frederic@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
+ linux-arm-kernel@lists.infradead.org, Juergen Gross <jgross@suse.com>,
+ Dou Liyang <douly.fnst@cn.fujitsu.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ Philippe Ombredanne <pombredanne@nexb.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch renames error recovery to generic name with pcie prefix
+On 5/29/2018 9:34 PM, Sinan Kaya wrote:
+> -int early_pci_allowed(void)
+> -{
+> -	return (pci_probe & (PCI_PROBE_CONF1|PCI_PROBE_NOEARLY)) ==
+> -			PCI_PROBE_CONF1;
+> -}
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
+I should have kept this. I'll wait for more feedback before posting the
+next rev. 
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index cec9d8c..5e8857a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -353,6 +353,10 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
- 
- void pci_enable_acs(struct pci_dev *dev);
- 
-+/* PCI error reporting and recovery */
-+void pcie_do_fatal_recovery(struct pci_dev *dev);
-+void pcie_do_nonfatal_recovery(struct pci_dev *dev);
-+
- bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
- #ifdef CONFIG_PCIEASPM
- void pcie_aspm_init_link_state(struct pci_dev *pdev);
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 649dd1f..4444aa4 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -476,7 +476,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
- }
- 
- /**
-- * do_fatal_recovery - handle fatal error recovery process
-+ * pcie_do_fatal_recovery - handle fatal error recovery process
-  * @dev: pointer to a pci_dev data structure of agent detecting an error
-  *
-  * Invoked when an error is fatal. Once being invoked, removes the devices
-@@ -484,7 +484,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
-  * followed by re-enumeration of devices.
-  */
- 
--static void do_fatal_recovery(struct pci_dev *dev)
-+void pcie_do_fatal_recovery(struct pci_dev *dev)
- {
- 	struct pci_dev *udev;
- 	struct pci_bus *parent;
-@@ -535,14 +535,14 @@ static void do_fatal_recovery(struct pci_dev *dev)
- }
- 
- /**
-- * do_nonfatal_recovery - handle nonfatal error recovery process
-+ * pcie_do_nonfatal_recovery - handle nonfatal error recovery process
-  * @dev: pointer to a pci_dev data structure of agent detecting an error
-  *
-  * Invoked when an error is nonfatal/fatal. Once being invoked, broadcast
-  * error detected message to all downstream drivers within a hierarchy in
-  * question and return the returned code.
-  */
--static void do_nonfatal_recovery(struct pci_dev *dev)
-+void pcie_do_nonfatal_recovery(struct pci_dev *dev)
- {
- 	pci_ers_result_t status;
- 	enum pci_channel_state state;
-@@ -613,9 +613,9 @@ static void handle_error_source(struct pcie_device *aerdev,
- 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
- 					info->status);
- 	} else if (info->severity == AER_NONFATAL)
--		do_nonfatal_recovery(dev);
-+		pcie_do_nonfatal_recovery(dev);
- 	else if (info->severity == AER_FATAL)
--		do_fatal_recovery(dev);
-+		pcie_do_fatal_recovery(dev);
- }
- 
- #ifdef CONFIG_ACPI_APEI_PCIEAER
-@@ -680,9 +680,9 @@ static void aer_recover_work_func(struct work_struct *work)
- 		}
- 		cper_print_aer(pdev, entry.severity, entry.regs);
- 		if (entry.severity == AER_NONFATAL)
--			do_nonfatal_recovery(pdev);
-+			pcie_do_nonfatal_recovery(pdev);
- 		else if (entry.severity == AER_FATAL)
--			do_fatal_recovery(pdev);
-+			pcie_do_fatal_recovery(pdev);
- 		pci_dev_put(pdev);
- 	}
- }
 -- 
-2.7.4
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
