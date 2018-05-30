@@ -1,79 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51670 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750711AbeEKPei (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 May 2018 11:34:38 -0400
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:42916 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750752AbeE3QJj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 12:09:39 -0400
+Date: Wed, 30 May 2018 19:09:37 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Rustad, Mark D" <mark.d.rustad@intel.com>
+Cc: "Bie, Tiwei" <tiwei.bie@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "virtualization@lists.linux-foundation.org"
+        <virtualization@lists.linux-foundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        "Liang, Cunming" <cunming.liang@intel.com>,
+        "Wang, Zhihong" <zhihong.wang@intel.com>
+Subject: Re: [virtio-dev] [PATCH] virtio_pci: support enabling VFs
+Message-ID: <20180530190819-mutt-send-email-mst@kernel.org>
+References: <20180530085521.26583-1-tiwei.bie@intel.com>
+ <D7004E41-C23D-48B7-94A4-ACBBA06B021D@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 11 May 2018 21:04:36 +0530
-From: poza@codeaurora.org
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v16 5/9] PCI/AER: Factor out error reporting from AER
-In-Reply-To: <20180511125857.GA23225@wunner.de>
-References: <1526035408-31328-1-git-send-email-poza@codeaurora.org>
- <1526035408-31328-6-git-send-email-poza@codeaurora.org>
- <20180511125857.GA23225@wunner.de>
-Message-ID: <7317531a7a85404d590008a27131955f@codeaurora.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <D7004E41-C23D-48B7-94A4-ACBBA06B021D@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-11 18:28, Lukas Wunner wrote:
-> On Fri, May 11, 2018 at 06:43:24AM -0400, Oza Pawandeep wrote:
->> +void pcie_do_fatal_recovery(struct pci_dev *dev)
->> +{
->> +	struct pci_dev *udev;
->> +	struct pci_bus *parent;
->> +	struct pci_dev *pdev, *temp;
->> +	pci_ers_result_t result = PCI_ERS_RESULT_RECOVERED;
->> +	struct aer_broadcast_data result_data;
->> +
->> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
->> +		udev = dev;
->> +	else
->> +		udev = dev->bus->self;
->> +
->> +	parent = udev->subordinate;
->> +	pci_lock_rescan_remove();
->> +	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
->> +				 bus_list) {
->> +		pci_dev_get(pdev);
->> +		pci_dev_set_disconnected(pdev, NULL);
->> +		if (pci_has_subordinate(pdev))
->> +			pci_walk_bus(pdev->subordinate,
->> +				     pci_dev_set_disconnected, NULL);
->> +		pci_stop_and_remove_bus_device(pdev);
->> +		pci_dev_put(pdev);
->> +	}
+On Wed, May 30, 2018 at 04:03:37PM +0000, Rustad, Mark D wrote:
+> On May 30, 2018, at 1:55 AM, Tiwei Bie <tiwei.bie@intel.com> wrote:
 > 
-> Any reason not to simply call
+> > There is a new feature bit allocated in virtio spec to
+> > support SR-IOV (Single Root I/O Virtualization):
+> > 
+> > https://github.com/oasis-tcs/virtio-spec/issues/11
+> > 
+> > This patch enables the support for this feature bit in
+> > virtio driver.
+> > 
+> > Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
+> > ---
+> > This patch depends on below proposal:
+> > https://lists.oasis-open.org/archives/virtio-dev/201805/msg00154.html
+> > 
+> > This patch depends on below patch:
+> > https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/virtualization&id=8effc395c2097e258fcedfc02ed4a66d45fb4238
+> > 
+> >  drivers/virtio/virtio_pci_common.c | 20 ++++++++++++++++++++
+> >  drivers/virtio/virtio_pci_modern.c | 14 ++++++++++++++
+> >  include/uapi/linux/virtio_config.h |  7 ++++++-
+> >  3 files changed, 40 insertions(+), 1 deletion(-)
+> > 
 > 
-> 	pci_walk_bus(udev->subordinate, pci_dev_set_disconnected, NULL);
+> <snip>
 > 
-> before the list_for_each_entry_safe_reverse() iteration, instead of
-> calling it for each device on the subordinate bus and for each
-> device's children?  Should be semantically identical, saves 3 LoC
-> and saves wasted cycles of acquiring pci_bus_sem over and over again
-> for each device on the subordinate bus.
+> > diff --git a/include/uapi/linux/virtio_config.h
+> > b/include/uapi/linux/virtio_config.h
+> > index 308e2096291f..b7c1f4e7d59e 100644
+> > --- a/include/uapi/linux/virtio_config.h
+> > +++ b/include/uapi/linux/virtio_config.h
+> > @@ -49,7 +49,7 @@
 > 
-> Thanks,
-> 
-> Lukas
+> There is a value in the comment directly before this that should
+> be updated as well to be consistent with the new value for
+> VIRTIO_TRANSPORT_F_END below.
 
-Well this is borrowed code from DPC driver, hence I thought to keep the 
-same.
-but to me it looks like its taking care of PCIe switch where is goes 
-through all the subordinates, and which could turn out to be more 
-swicthes down the line, and son on...
-it goes all the way down to the tree
-Am I missing something here ?
+It hasn't been updated to 34 yet.
+I suggest a separate patch to replace the numbers with
+VIRTIO_TRANSPORT_F_START and VIRTIO_TRANSPORT_F_END
+in the comment.
+Maybe replace "e.g. virtio_ring" with "e.g. virtio_ring,
+virtio_pci etc." as well.
+
+> >   * transport being used (eg. virtio_ring), the rest are per-device feature
+> >   * bits. */
+> >  #define VIRTIO_TRANSPORT_F_START	28
+> > -#define VIRTIO_TRANSPORT_F_END		34
+> > +#define VIRTIO_TRANSPORT_F_END		38
+> > 
+> >  #ifndef VIRTIO_CONFIG_NO_LEGACY
+> >  /* Do we get callbacks when the ring is completely used, even if we've
+> 
+> <snip>
+> 
+> --
+> Mark Rustad, Networking Division, Intel Corporation
