@@ -1,83 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 4 May 2018 17:44:01 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Subject: Re: [PATCH v2 07/10] PCI: Convert of_pci_get_host_bridge_resources()
- users to devm variant
-Message-ID: <20180504164401.GA17043@e107981-ln.cambridge.arm.com>
-References: <cover.1525067324.git.jan.kiszka@siemens.com>
- <ed3e6df4feca5febefa14716d62aaddd5b4a39d1.1525067324.git.jan.kiszka@siemens.com>
- <dbfa80fb-5fe8-3ccd-6886-4604ef9e058b@mentor.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga07.intel.com ([134.134.136.100]:24566 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753670AbeE3Qyk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 12:54:40 -0400
+From: "Duyck, Alexander H" <alexander.h.duyck@intel.com>
+To: "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        "mst@redhat.com" <mst@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "virtualization@lists.linux-foundation.org"
+        <virtualization@lists.linux-foundation.org>,
+        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        "Bie, Tiwei" <tiwei.bie@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Liang, Cunming" <cunming.liang@intel.com>,
+        "Wang, Zhihong" <zhihong.wang@intel.com>
+Subject: Re: [PATCH] virtio_pci: support enabling VFs
+Date: Wed, 30 May 2018 16:54:35 +0000
+Message-ID: <1527699273.29907.2.camel@intel.com>
+References: <20180530085521.26583-1-tiwei.bie@intel.com>
+         <20180530192010-mutt-send-email-mst@kernel.org>
+         <414C18B1-30FA-4AC0-B47D-F0FBF9832737@intel.com>
+In-Reply-To: <414C18B1-30FA-4AC0-B47D-F0FBF9832737@intel.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <dbfa80fb-5fe8-3ccd-6886-4604ef9e058b@mentor.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jan Kiszka <jan.kiszka@siemens.com>,
- linux-pci@vger.kernel.org,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 03, 2018 at 10:18:24AM +0300, Vladimir Zapolskiy wrote:
-> Hi Jan,
-> 
-> On 04/30/2018 08:48 AM, Jan Kiszka wrote:
-> > From: Jan Kiszka <jan.kiszka@siemens.com>
-> > 
-> > Straightforward for all of them, no more leaks afterwards.
-> > 
-> > CC: Jingoo Han <jingoohan1@gmail.com>
-> > CC: Joao Pinto <Joao.Pinto@synopsys.com>
-> > CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
-> > Acked-by: Jingoo Han <jingoo1han@gmail.com>
-> 
-> [snip]
-> 
-> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> > index 6ab28f29ac6a..6eb36c924983 100644
-> > --- a/drivers/pci/host/pcie-rcar.c
-> > +++ b/drivers/pci/host/pcie-rcar.c
-> > @@ -1067,12 +1067,11 @@ static int rcar_pcie_parse_request_of_pci_ranges(struct rcar_pcie *pci)
-> >  {
-> >  	int err;
-> >  	struct device *dev = pci->dev;
-> > -	struct device_node *np = dev->of_node;
-> >  	resource_size_t iobase;
-> >  	struct resource_entry *win, *tmp;
-> >  
-> > -	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
-> > -					       &iobase);
-> > +	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
-> > +						    &pci->resources, &iobase);
-> >  	if (err)
-> >  		return err;
-> >  
-> 
-> this one snippet is obsoleted by https://patchwork.ozlabs.org/patch/904326/
-> 
-> If 08/10 remains a deprecation, then it is sufficient to exclude the R-Car change,
-> otherwise I hope maintainers can deal with the proper ordering.
-
-Isn't applying your patch:
-
-https://patchwork.ozlabs.org/patch/904326/
-
-and dropping the rcar hunk from this patch enough ?
-
-Lorenzo
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+T24gV2VkLCAyMDE4LTA1LTMwIGF0IDA5OjQ0IC0wNzAwLCBSdXN0YWQsIE1hcmsgRCB3cm90ZToN
+Cj4gT24gTWF5IDMwLCAyMDE4LCBhdCA5OjIyIEFNLCBNaWNoYWVsIFMuIFRzaXJraW4gPG1zdEBy
+ZWRoYXQuY29tPiB3cm90ZToNCj4gDQo+ID4gPiArc3RhdGljIGludCB2aXJ0aW9fcGNpX3NyaW92
+X2NvbmZpZ3VyZShzdHJ1Y3QgcGNpX2RldiAqcGNpX2RldiwgaW50ICANCj4gPiA+IG51bV92ZnMp
+DQo+ID4gPiArew0KPiA+ID4gKwlzdHJ1Y3QgdmlydGlvX3BjaV9kZXZpY2UgKnZwX2RldiA9IHBj
+aV9nZXRfZHJ2ZGF0YShwY2lfZGV2KTsNCj4gPiA+ICsJc3RydWN0IHZpcnRpb19kZXZpY2UgKnZk
+ZXYgPSAmdnBfZGV2LT52ZGV2Ow0KPiA+ID4gKwlpbnQgKCpzcmlvdl9jb25maWd1cmUpKHN0cnVj
+dCBwY2lfZGV2ICpwY2lfZGV2LCBpbnQgbnVtX3Zmcyk7DQo+ID4gPiArDQo+ID4gPiArCWlmICgh
+KHZkZXYtPmNvbmZpZy0+Z2V0X3N0YXR1cyh2ZGV2KSAmIFZJUlRJT19DT05GSUdfU19EUklWRVJf
+T0spKQ0KPiA+ID4gKwkJcmV0dXJuIC1FQlVTWTsNCj4gPiA+ICsNCj4gPiA+ICsJaWYgKCFfX3Zp
+cnRpb190ZXN0X2JpdCh2ZGV2LCBWSVJUSU9fRl9TUl9JT1YpKQ0KPiA+ID4gKwkJcmV0dXJuIC1F
+SU5WQUw7DQo+ID4gPiArDQo+ID4gPiArCXNyaW92X2NvbmZpZ3VyZSA9IHBjaV9zcmlvdl9jb25m
+aWd1cmVfc2ltcGxlOw0KPiA+ID4gKwlpZiAoc3Jpb3ZfY29uZmlndXJlID09IE5VTEwpDQo+ID4g
+PiArCQlyZXR1cm4gLUVOT0VOVDsNCj4gPiANCj4gPiBCVFcgd2hhdCBpcyBhbGwgdGhpcyB0cmlj
+a2VyeSBpbiBhaWQgb2Y/DQo+IA0KPiBXaGVuIFNSLUlPViBzdXBwb3J0IGlzIG5vdCBjb21waWxl
+ZCBpbnRvIHRoZSBrZXJuZWwsICANCj4gcGNpX3NyaW92X2NvbmZpZ3VyZV9zaW1wbGUgaXMgI2Rl
+ZmluZWQgYXMgTlVMTC4gVGhpcyBhbGxvd3MgaXQgdG8gY29tcGlsZSAgDQo+IGluIHRoYXQgY2Fz
+ZSwgZXZlbiB0aG91Z2ggdGhlcmUgaXMgdXR0ZXJseSBubyB3YXkgZm9yIGl0IHRvIGJlIGNhbGxl
+ZCBpbiAgDQo+IHRoYXQgY2FzZS4gSXQgaXMgYW4gYWx0ZXJuYXRpdmUgdG8gI2lmcyBpbiB0aGUg
+Y29kZS4NCg0KV2h5IGV2ZW4gaGF2ZSB0aGUgY2FsbCB0aG91Z2g/IEkgd291bGQgd3JhcCBhbGwg
+b2YgdGhpcyBpbiBhbiAjaWZkZWYNCmFuZCBzdHJpcCBpdCBvdXQgc2luY2UgeW91IGNvdWxkbid0
+IHN1cHBvcnQgU1ItSU9WIGlmIGl0IGlzbid0IHByZXNlbnQNCmluIHRoZSBrZXJuZWwgYW55d2F5
+Lg==
