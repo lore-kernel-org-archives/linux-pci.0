@@ -1,66 +1,46 @@
-Return-Path: <SRS0=5vAC=IL=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=5vAC=IL=codeaurora.org=okaya@kernel.org>
-Subject: Re: pci=earlydump on ARM
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- Linux PCI <linux-pci@vger.kernel.org>
-References: <bug-199671-164391@https.bugzilla.kernel.org/>
- <bug-199671-164391-E4Mtn0How4@https.bugzilla.kernel.org/>
- <9756cf4c-0cec-00f7-3cc6-f09e34177cf9@codeaurora.org>
- <20180523195322.GC150632@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45372 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755556AbeEaRLY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 13:11:24 -0400
+Subject: Re: [PATCH] PCI: Check for PCIe downtraining conditions
+To: "Alex G." <mr.nuke.me@gmail.com>, Alex_Gagniuc@Dellteam.com,
+        bhelgaas@google.com
+Cc: Austin.Bolen@dell.com, Shyam.Iyer@dell.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20180531150535.9684-1-mr.nuke.me@gmail.com>
+ <28004506-24f0-6d10-2d1e-074e0483d2f9@codeaurora.org>
+ <4e0611c872054e768daa96b302651db3@ausx13mps321.AMER.DELL.COM>
+ <f260078b-6918-7fd9-39d6-e9f300e4c048@codeaurora.org>
+ <3b8a895b-3080-7ddb-cbfd-5aa972e9bf65@gmail.com>
+ <35563ce3-e235-096c-4b9b-5f3664d67d0f@codeaurora.org>
+ <093b2789-39a1-db9e-5783-b0488b3c9ccd@gmail.com>
+ <32d58835-2f35-0b80-38d0-b9ff603619dd@codeaurora.org>
+ <54071f83-5d0d-04a0-d448-0c99ec0ffc4f@gmail.com>
 From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <c92b7445-9e6f-8b82-da0a-2f50ed9baaa5@codeaurora.org>
-Date: Thu, 24 May 2018 07:54:53 -0400
+Message-ID: <29ad2bf5-b5af-35be-3bef-2d0652aa2e33@codeaurora.org>
+Date: Thu, 31 May 2018 13:11:21 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180523195322.GC150632@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <54071f83-5d0d-04a0-d448-0c99ec0ffc4f@gmail.com>
 Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/23/2018 3:53 PM, Bjorn Helgaas wrote:
-> On Wed, May 23, 2018 at 03:10:39PM -0400, Sinan Kaya wrote:
->>> If that doesn't work or you'd rather brute-force it, you could try
->>> doing something like "pci=earlydump".  This is currently only
->>> implemented for x86, so it would be some work to implement something
->>> similar for arm64.  It would be a nice upstream addition if you *did*
->>> implement it.
->>>
->>> In the earlydump output I would be looking for clues about the power
->>> state of 03:00.0 to try to figure out if the bootloader left it powered
->>> off or if Linux is doing something to turn it off.
->>>
->>
->> Is it really possible to implement a generic version of this?
->>
->> PCI on ARM64 is not really unified. There are several host bridge drivers
->> for different types of access. 
->>
->> If we limit the functionality to ACPI, the answer is still maybe if we
->> can pass the base address of the MMCONFIG region. 
->>
->> All products use a different MMCONFIG region.
-> 
-> On x86, early dump is implemented off to the side, outside the PCI
-> core, and it takes advantage of arch-specific knowledge about ways to
-> perform config accesses.
-> 
-> But I could imagine something in the pci_scan_device() area, where we
-> have the normal config accessors but we haven't yet touched the
-> device.  I think we could get 99% of the early dump utility in a
-> completely generic way.
-> 
-> There might be a few hand-crafted arch-specific quirks that touch PCI
-> devices even before that point, but those should be pretty rare.
-
-I see, you just want to dump the config space of each device as code is
-walking the bus while scanning. This should be doable.
-
-I'll see what I can do.
-
-> 
-> Bjorn
+On 5/31/2018 12:49 PM, Alex G. wrote:
+>> 	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
+>> 	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width, *parent*);
+> That's confusing. I'd expect _capable() and _available() to be
+> symmetrical. They either both look at one link only, or both go down to
+> the root port. Though it seems _capable() is link-local, and
+> _available() is down to root port.
 > 
 
+As you know, link speed is a qualification of two devices speed capability.
+Both speed and width parameters get negotiated by two devices during TS1 and TS2
+ordered set exchange. 
+
+You need to see what your link partner can support in available function() vs.
+what this device can do in bandwidth() function.
 
 -- 
 Sinan Kaya
