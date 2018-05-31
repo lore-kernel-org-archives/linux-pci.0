@@ -1,79 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:42729 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S970449AbeEXOgk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 10:36:40 -0400
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH v4 6/6] PCI: rcar: Shut the PHY down in failpath
-Date: Thu, 24 May 2018 16:36:24 +0200
-Message-Id: <20180524143624.26718-7-marek.vasut+renesas@gmail.com>
-In-Reply-To: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
-References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=B+Ju=IS=rock-chips.com=shawn.lin@kernel.org>
+Return-Path: <SRS0=B+Ju=IS=rock-chips.com=shawn.lin@kernel.org>
+Cc: linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: Native PCI host controller patches
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20180530162610.GF39853@bhelgaas-glaptop.roam.corp.google.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <7bc243ff-a950-a7ce-a337-87348eb4b324@rock-chips.com>
+Date: Thu, 31 May 2018 09:26:52 +0800
+MIME-Version: 1.0
+In-Reply-To: <20180530162610.GF39853@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-If anything fails past phy_init_fn() and the system is a Gen3 with
-a PHY, the PHY will be left on and inited. This is caused by the
-phy_init_fn, which is in fact a pointer to rcar_pcie_phy_init_gen3()
-function, which starts the PHY, yet has no counterpart in the failpath.
-Add that counterpart.
+Hi Bjorn,
 
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
-Fixes: 517ca93a7159 ("PCI: rcar: Add R-Car gen3 PHY support")
----
-V4: New patch
----
- drivers/pci/host/pcie-rcar.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+On 2018/5/31 0:26, Bjorn Helgaas wrote:
+> Lorenzo will be out until mid-June, so if you have urgent patches that
+> he would normally handle (drivers/pci/{host,dwc,endpoint}/*), let me
+> know.
+> 
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 636c3c5095d2..695781934f0a 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -1163,7 +1163,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	if (rcar_pcie_hw_init(pcie)) {
- 		dev_info(dev, "PCIe link down\n");
- 		err = -ENODEV;
--		goto err_clk_disable;
-+		goto err_phy_shutdown;
- 	}
- 
- 	data = rcar_pci_read_reg(pcie, MACSR);
-@@ -1175,7 +1175,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 			dev_err(dev,
- 				"failed to enable MSI support: %d\n",
- 				err);
--			goto err_clk_disable;
-+			goto err_phy_shutdown;
- 		}
- 	}
- 
-@@ -1189,6 +1189,12 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		rcar_pcie_teardown_msi(pcie);
- 
-+err_phy_shutdown:
-+	if (pcie->phy) {
-+		phy_power_off(pcie->phy);
-+		phy_exit(pcie->phy);
-+	}
-+
- err_clk_disable:
- 	clk_disable_unprepare(pcie->bus_clk);
- 
--- 
-2.16.2
+In early discussion and off-list talk with Lorenzo, we wants a second
+pull request for renaming the directories for drivers which would be
+beneficial to future submit but not bother previous in-flight patches to
+do rebase. I sent a patch[1] for that a moment ago, please let me know
+if you'd like to merge it on the top of your final PR for v4.18 merge
+window.
+
+Thanks for your time!
+
+[1]http://patchwork.ozlabs.org/patch/923097/
+
+> I don't have time to review and merge everything, but if you have
+> something that really needs to be merged for v4.17 or during the v4.18
+> merge window, point it out to me and make a case for squeezing it in,
+> and I'll try to work it in.
+> 
+> Bjorn
+> 
+> 
+> 
