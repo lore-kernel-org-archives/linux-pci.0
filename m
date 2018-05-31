@@ -1,241 +1,52 @@
-Return-Path: <SRS0=puPd=IJ=gigaio.com=dmeyer@kernel.org>
-Return-Path: <SRS0=puPd=IJ=gigaio.com=dmeyer@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:58074 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751381AbeEaEyf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 May 2018 00:54:35 -0400
+Date: Wed, 30 May 2018 23:54:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, Oza Pawandeep <poza@codeaurora.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 1/2] PCI/AER: Decode Error Source Requester ID
+Message-ID: <20180531045434.GS39853@bhelgaas-glaptop.roam.corp.google.com>
+References: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152770285586.80701.6545710900591672975.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20180530183241.GA20222@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <9dd68ac0-5b9e-b257-49d2-20327c2ab282@deltatee.com>
-References: <1526558413-23113-1-git-send-email-dmeyer@gigaio.com>
- <1526558413-23113-3-git-send-email-dmeyer@gigaio.com> <20180517134521.GC19955@bhelgaas-glaptop.roam.corp.google.com>
- <9dd68ac0-5b9e-b257-49d2-20327c2ab282@deltatee.com>
-From: Doug Meyer <dmeyer@gigaio.com>
-Date: Tue, 22 May 2018 14:06:13 -0700
-Message-ID: <CA+GK6endrDvQEVQz11RPBUWEpft1wWOnyK-JRx-wURVSdxL+uQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] NTB: PCI Quirk to Enable Switchtec NT Functionality
- with IOMMU On
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, kurt.schwemmer@microsemi.com,
-	linux-pci@vger.kernel.org, linux-ntb <linux-ntb@googlegroups.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Jon Mason <jdmason@kudzu.us>,
-	"Jiang, Dave" <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, linux-kernel@vger.kernel.org
-Content-Type: multipart/alternative; boundary="000000000000dadeb7056cd1c98c"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180530183241.GA20222@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---000000000000dadeb7056cd1c98c
-Content-Type: text/plain; charset="UTF-8"
-
-Dear Bjorn,
-
-Logan answered the questions quite thoroughly. (Thanks, Logan!)
-
-
-> Don't initialize variables unless there's a path through the
-> code that would otherwise use an uninitialized value.
-> > +     struct ntb_info_regs __iomem *mmio_ntb = NULL;
-> > +     struct ntb_ctrl_regs __iomem *mmio_ctrl = NULL;
-> > +     struct sys_info_regs __iomem *mmio_sys_info = NULL;
+On Wed, May 30, 2018 at 08:32:41PM +0200, Lukas Wunner wrote:
+> On Wed, May 30, 2018 at 12:54:15PM -0500, Bjorn Helgaas wrote:
+> >  void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+> >  {
+> > -	pci_info(dev, "AER: %s%s error received: id=%04x\n",
+> > +	u8 bus = info->id >> 8;
+> > +	u8 devfn = info->id & 0xff;
 > > +
-> No blank line here.
-> > +     u64 partition_map;
-> > +     u8 partition;
-> > +     int pp;
-> > +
-> > +     if (pci_enable_device(pdev)) {
-> > +             dev_err(&pdev->dev, "Cannot enable Switchtec device\n");
-> Use "pci_err(pdev, ...)" here and below.
-> [...]
-> I think you should probably disable the device here (and in the error
-> return path) to balance the enable above.
+> > +	pci_info(dev, "AER: %s%s error received: %04x:%02x:%02x.%d\n",
+> >  		info->multi_error_valid ? "Multiple " : "",
+> > -		aer_error_severity_string[info->severity], info->id);
+> > +		aer_error_severity_string[info->severity],
+> > +		pci_domain_nr(dev->bus), bus, devfn >> 3, devfn & 0x7);
+> 
+> I think PCI_SLOT(devfn), PCI_FUNC(devfn) is a bit more readable.
 
+I used those originally, but of course those definitions predate PCIe
+so they aren't clearly related to a Requester ID.
 
-I'll make the changes (above) that you requested.
+I searched the PCIe spec for the specifics of the Requester ID
+composition.  It was surprisingly hard to find a clear statement.  The
+best I found was PCIe r4.0, sec 6.13, which says
 
-Blessings,
-Doug
+    Routing IDs, Requester IDs, and Completer IDs are 16-bit
+    identifiers traditionally composed of three fields: an 8-bit Bus
+    Number, a 5-bit Device Number, and a 3-bit Function Number.
 
-On Thu, May 17, 2018 at 9:06 AM, Logan Gunthorpe <logang@deltatee.com>
-wrote:
+Even that isn't specific about where the fields are, 
 
->
->
-> On 17/05/18 07:45 AM, Bjorn Helgaas wrote:
-> > On Thu, May 17, 2018 at 05:00:13AM -0700, dmeyer@gigaio.com wrote:
-> >> From: Doug Meyer <dmeyer@gigaio.com>
-> >>
-> >> Here we add the PCI quirk for the Microsemi Switchtec parts to allow
-> >> non-transparent bridging to work when the IOMMU is turned on.
-> >
-> > I'm not an NTB expert, but it *sounds* like you're specifically fixing
-> > DMA initiated by an NT endpoint.  I assume other aspects of
-> > non-transparent bridging, e.g., routing of config accesses,
-> > interrupts, doorbells, etc., might work even without this quirk.
->
-> Yes, that's correct.
->
-> >> When a requestor on one NT endpoint accesses memory on another NT
-> >> endpoint, it does this via a devfn proxy ID. Proxy IDs are uniquely
-> >> assigned on a per-requestor basis within the NT hardware, and are not
-> >> visible via PCI enumeration. As a result, a memory access from a peer
-> >> NT endpoint will have an unrecognized requestor ID devfn which the
-> >> IOMMU will reject.
-> >
-> > It would be very helpful if you could include a reference to the
-> > relevant section of a publicly available spec.
->
-> I'm not aware of any public specs on this. The basic idea is that a peer
-> accesses a BAR memory window on it's own side and the NTB translates it
-> to a memory request on the local side. This request has it's requester
-> ID translated through a LUT seeing the requester ID on the initiating
-> side isn't valid on the receiving side. The LUT has multiple entries so
-> that multiple requester IDs can be translated and the responses routed
-> back to the original requester.
->
-> > Who assigns these proxy IDs?  Quirks run before drivers claim the
-> > device, so it looks like this assumes the proxy ID assignments are
-> > either hard-wired into the device or programmed by firmware.  If the
-> > latter, how would they be programmed for hot-added NTBs?
->
-> The local side of the requester ID LUT are fixed by the hardware so we
-> can determine all the possible IDs coming from the NTB device just by
-> reading some registers. The peer's side of the LUT are programmed with
-> all possible source requester IDs by the driver but these don't have any
-> effect on the ID's on the receiving side.
->
-> > I'm wondering if all this could or should be done in the switchtec
-> > driver instead of in a quirk.  But I really don't know how that driver
-> > works.
->
-> We'd like it to be done in the driver too but it seems
-> pci_add_dma_alias() must be called before the driver is initialized and
-> therefore in a quirk. Presently, it seems nearly all calls to that
-> function are in quirks.c for this reason.
->
-> Thanks,
->
-> Logan
->
->
-
---000000000000dadeb7056cd1c98c
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Dear Bjorn,<div><br></div><div>Logan answered the question=
-s quite thoroughly. (Thanks, Logan!)</div><div><br></div><blockquote class=
-=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left:1px solid rg=
-b(204,204,204);padding-left:1ex"><br><span style=3D"font-size:12.8px">Don&#=
-39;t initialize variables unless there&#39;s a path through the<br></span><=
-span style=3D"font-size:12.8px">code that would otherwise use an uninitiali=
-zed value.</span><span class=3D"gmail-im" style=3D"font-size:12.8px"><br></=
-span><span class=3D"gmail-im" style=3D"font-size:12.8px">&gt; +=C2=A0 =C2=
-=A0 =C2=A0struct ntb_info_regs __iomem *mmio_ntb =3D NULL;<br></span><span =
-class=3D"gmail-im" style=3D"font-size:12.8px">&gt; +=C2=A0 =C2=A0 =C2=A0str=
-uct ntb_ctrl_regs __iomem *mmio_ctrl =3D NULL;<br></span><span class=3D"gma=
-il-im" style=3D"font-size:12.8px">&gt; +=C2=A0 =C2=A0 =C2=A0struct sys_info=
-_regs __iomem *mmio_sys_info =3D NULL;<br></span><span class=3D"gmail-im" s=
-tyle=3D"font-size:12.8px">&gt; +</span><span class=3D"gmail-im" style=3D"fo=
-nt-size:12.8px"><br></span><span style=3D"font-size:12.8px">No blank line h=
-ere.</span><span class=3D"gmail-im" style=3D"font-size:12.8px"><br></span><=
-span class=3D"gmail-im" style=3D"font-size:12.8px">&gt; +=C2=A0 =C2=A0 =C2=
-=A0u64 partition_map;<br></span><span class=3D"gmail-im" style=3D"font-size=
-:12.8px">&gt; +=C2=A0 =C2=A0 =C2=A0u8 partition;<br></span><span class=3D"g=
-mail-im" style=3D"font-size:12.8px">&gt; +=C2=A0 =C2=A0 =C2=A0int pp;<br></=
-span><span class=3D"gmail-im" style=3D"font-size:12.8px">&gt; +<br></span><=
-span class=3D"gmail-im" style=3D"font-size:12.8px">&gt; +=C2=A0 =C2=A0 =C2=
-=A0if (pci_enable_device(pdev)) {<br></span><span class=3D"gmail-im" style=
-=3D"font-size:12.8px">&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0dev_err(&amp;pdev-&gt;dev, &quot;Cannot enable Switchtec device\n&quot;)=
-;</span><span class=3D"gmail-im" style=3D"font-size:12.8px"><br></span><spa=
-n style=3D"font-size:12.8px">Use &quot;pci_err(pdev, ...)&quot; here and be=
-low.<br></span>[...]<br><span style=3D"font-size:12.8px">I think you should=
- probably disable the device here (and in the error<br></span><span style=
-=3D"font-size:12.8px">return path) to balance the enable above.</span></blo=
-ckquote><div><div style=3D"font-size:12.8px"><div class=3D"gmail-adm"><div =
-id=3D"gmail-q_1636e6f54eed3822_12" class=3D"gmail-ajR gmail-h4"><div class=
-=3D"gmail-ajT" style=3D"opacity:0.3"></div></div></div></div></div><div cla=
-ss=3D"gmail_extra"><br></div><div class=3D"gmail_extra">I&#39;ll make the c=
-hanges (above) that you requested.</div><div class=3D"gmail_extra"><br></di=
-v><div class=3D"gmail_extra">Blessings,</div><div class=3D"gmail_extra">Dou=
-g</div><div class=3D"gmail_extra"><br><div class=3D"gmail_quote">On Thu, Ma=
-y 17, 2018 at 9:06 AM, Logan Gunthorpe <span dir=3D"ltr">&lt;<a href=3D"mai=
-lto:logang@deltatee.com" target=3D"_blank">logang@deltatee.com</a>&gt;</spa=
-n> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px =
-0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex"><span class=
-=3D"gmail-"><br>
-<br>
-On 17/05/18 07:45 AM, Bjorn Helgaas wrote:<br>
-&gt; On Thu, May 17, 2018 at 05:00:13AM -0700, <a href=3D"mailto:dmeyer@gig=
-aio.com">dmeyer@gigaio.com</a> wrote:<br>
-&gt;&gt; From: Doug Meyer &lt;<a href=3D"mailto:dmeyer@gigaio.com">dmeyer@g=
-igaio.com</a>&gt;<br>
-&gt;&gt;<br>
-&gt;&gt; Here we add the PCI quirk for the Microsemi Switchtec parts to all=
-ow<br>
-&gt;&gt; non-transparent bridging to work when the IOMMU is turned on.<br>
-&gt; <br>
-&gt; I&#39;m not an NTB expert, but it *sounds* like you&#39;re specificall=
-y fixing<br>
-&gt; DMA initiated by an NT endpoint.=C2=A0 I assume other aspects of<br>
-&gt; non-transparent bridging, e.g., routing of config accesses,<br>
-&gt; interrupts, doorbells, etc., might work even without this quirk.<br>
-<br>
-</span>Yes, that&#39;s correct.<br>
-<span class=3D"gmail-"><br>
-&gt;&gt; When a requestor on one NT endpoint accesses memory on another NT<=
-br>
-&gt;&gt; endpoint, it does this via a devfn proxy ID. Proxy IDs are uniquel=
-y<br>
-&gt;&gt; assigned on a per-requestor basis within the NT hardware, and are =
-not<br>
-&gt;&gt; visible via PCI enumeration. As a result, a memory access from a p=
-eer<br>
-&gt;&gt; NT endpoint will have an unrecognized requestor ID devfn which the=
-<br>
-&gt;&gt; IOMMU will reject.<br>
-&gt; <br>
-&gt; It would be very helpful if you could include a reference to the<br>
-&gt; relevant section of a publicly available spec.<br>
-<br>
-</span>I&#39;m not aware of any public specs on this. The basic idea is tha=
-t a peer<br>
-accesses a BAR memory window on it&#39;s own side and the NTB translates it=
-<br>
-to a memory request on the local side. This request has it&#39;s requester<=
-br>
-ID translated through a LUT seeing the requester ID on the initiating<br>
-side isn&#39;t valid on the receiving side. The LUT has multiple entries so=
-<br>
-that multiple requester IDs can be translated and the responses routed<br>
-back to the original requester.<br>
-<span class=3D"gmail-"><br>
-&gt; Who assigns these proxy IDs?=C2=A0 Quirks run before drivers claim the=
-<br>
-&gt; device, so it looks like this assumes the proxy ID assignments are<br>
-&gt; either hard-wired into the device or programmed by firmware.=C2=A0 If =
-the<br>
-&gt; latter, how would they be programmed for hot-added NTBs?<br>
-<br>
-</span>The local side of the requester ID LUT are fixed by the hardware so =
-we<br>
-can determine all the possible IDs coming from the NTB device just by<br>
-reading some registers. The peer&#39;s side of the LUT are programmed with<=
-br>
-all possible source requester IDs by the driver but these don&#39;t have an=
-y<br>
-effect on the ID&#39;s on the receiving side.<br>
-<span class=3D"gmail-"><br>
-&gt; I&#39;m wondering if all this could or should be done in the switchtec=
-<br>
-&gt; driver instead of in a quirk.=C2=A0 But I really don&#39;t know how th=
-at driver<br>
-&gt; works.<br>
-<br>
-</span>We&#39;d like it to be done in the driver too but it seems<br>
-pci_add_dma_alias() must be called before the driver is initialized and<br>
-therefore in a quirk. Presently, it seems nearly all calls to that<br>
-function are in quirks.c for this reason.<br>
-<br>
-Thanks,<br>
-<br>
-Logan<br>
-<br>
-</blockquote></div><br></div></div>
-
---000000000000dadeb7056cd1c98c--
+But it's probably not worth obsessing over this and PCI_SLOT() and
+PCI_FUNC() are definitely more readable, so I changed them.
