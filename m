@@ -1,41 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:56067 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753994AbeE1IwU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 May 2018 04:52:20 -0400
-Date: Mon, 28 May 2018 10:52:16 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v4 3/6] PCI: rcar: Teardown MSI setup if
- rcar_pcie_enable() fails
-Message-ID: <20180528085216.j6bztt447coescdz@verge.net.au>
-References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
- <20180524143624.26718-4-marek.vasut+renesas@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <wangbinghui@hisilicon.com>, <bhelgaas@google.com>,
+        <xuwei5@huawei.com>, <robh+dt@kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <dimitrysh@google.com>, <guodong.xu@linaro.org>,
+        <suzhuangluan@hisilicon.com>, <andy.shevchenko@gmail.com>,
+        <songxiaowei@hisilicon.com>
+CC: <kongfei@hisilicon.com>, <chenyao11@huawei.com>
+Subject: [PATCH v5 0/1] *** PCI: kirin: Add MSI support ***
+Date: Thu, 31 May 2018 17:06:42 +0800
+Message-ID: <20180531090643.96810-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180524143624.26718-4-marek.vasut+renesas@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 24, 2018 at 04:36:21PM +0200, Marek Vasut wrote:
-> If the rcar_pcie_enable() fails and MSIs are enabled, the setup done in
-> rcar_pcie_enable_msi() is never undone. Add a function to tear down the
-> MSI setup by disabling the MSI handling in the PCIe block, deallocating
-> the pages requested for the MSIs and zapping the IRQ mapping.
-> 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
+Before Version Patches
+======================
+patch v4
+https://patchwork.kernel.org/patch/10402399/
+patch v3
+https://www.spinics.net/lists/linux-pci/msg72322.html
+patch v2
+https://www.spinics.net/lists/kernel/msg2797610.html
 
-Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+patch v1
+https://www.spinics.net/lists/kernel/msg2796410.html
+
+Changes between V5 and V4
+=========================
+1. rebase the patch based on Linux next-version branch.
+2. fix issues according to review comments from Andy Shevchenko and Lorenzo.
+   (1) Del MSI irq handler for DW handle it, while Kirin only read the number from DT,
+   (2) Use the function dw_pcie_msi_init directly if CONFIG_PCI_MSI is enabled.
+
+Changes between V4 and V3
+=========================
+1. remove DT binding patch, for Wei Xu had applied it.
+2. fix issues according to review comments from Andy Shevchenko.
+   (1) Take the msi number get and request as a seperate function,
+   (2) Use the result of  platform_get_irq as return val.
+
+Changes between V3 and V2
+=========================
+1. fix issues according to review comments
+   (1)from Bjorn Helgaas: Check for 'pci->pp.msi_irq < 0'.
+   (2)from Bjorn Helgaas: Update the message of 'msi irq' in dev_err().
+
+Changes between V2 and V1
+=========================
+1. seperate DT binding patch.
+2. fix issues according to review comments
+   (1)from Bjorn Helgaas: Update the style of subject and changelog.
+   (2)from Bjorn Helgaas: Add msi irq number in the message.
+   (3)from Bjorn Helgaas: Delete unnecessary code 'pci->pp.root_bus_nr = -1'.
+   (4)from Dmitry Shmidt: Fix typing error. Replace 'interrupts-names' of 'interrupt-names'.
+
+Xiaowei Song (1):
+  PCI: kirin: Add MSI support
+
+ drivers/pci/dwc/pcie-kirin.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+-- 
+2.11.GIT
