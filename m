@@ -1,84 +1,85 @@
-Return-Path: <SRS0=sCGD=HU=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=sCGD=HU=codeaurora.org=okaya@kernel.org>
-Subject: Re: pciehp 0000:00:1c.0:pcie004: Timeout on hotplug command 0x1038
- (issued 65284 msec ago)
+Return-Path: <SRS0=cmb1=IS=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=cmb1=IS=linux.intel.com=mika.westerberg@kernel.org>
+Date: Thu, 31 May 2018 09:58:52 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>,
- Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org,
- kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
- Lukas Wunner <lukas@wunner.de>, Eric Biederman <ebiederm@xmission.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Vivek Goyal <vgoyal@redhat.com>,
- Marc Zyngier <marc.zyngier@arm.com>
-References: <8770820b-85a0-172b-7230-3a44524e6c9f@molgen.mpg.de>
- <20180427192207.GG8199@bhelgaas-glaptop.roam.corp.google.com>
- <b62c2a8e-fe14-6d7d-147c-0ce3b0c0ab2f@codeaurora.org>
- <20180427211255.GI8199@bhelgaas-glaptop.roam.corp.google.com>
- <20180428005620.GB1675@dhcp-128-65.nay.redhat.com>
- <20180428011845.GC1675@dhcp-128-65.nay.redhat.com>
- <3ebc908fb196168bf0373875ffc5679e@codeaurora.org>
- <d8d134dc-9757-97cd-7a24-cbb21611d6c6@codeaurora.org>
- <20180430211740.GG95643@bhelgaas-glaptop.roam.corp.google.com>
- <7285da70-2c3e-c3b7-62e1-fdbb55a77729@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <3549ffe8-7605-d72c-5c09-1436a4288c7d@codeaurora.org>
-Date: Tue, 1 May 2018 08:38:47 -0400
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+	Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <YehezkelShB@gmail.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 2/7] PCI: Introduce shpchp_is_native()
+Message-ID: <20180531065852.GV15419@lahna.fi.intel.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+ <20180528124756.78512-3-mika.westerberg@linux.intel.com>
+ <20180530202343.GO39853@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <7285da70-2c3e-c3b7-62e1-fdbb55a77729@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20180530202343.GO39853@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-+Marc,
-
-On 4/30/2018 5:27 PM, Sinan Kaya wrote:
-> On 4/30/2018 5:17 PM, Bjorn Helgaas wrote:
->>> What should we do about this?
->>>
->>> Since there is an actual HW errata involved, should we quirk this
->>> root port and not wait as if remove/shutdown doesn't exist?
->> I was hoping to avoid a quirk because AFAIK all Intel parts have this
->> issue so it will be an ongoing maintenance issue.  I tried to avoid
->> the timeout delays, e.g., with 40b960831cfa ("PCI: pciehp: Compute
->> timeout from hotplug command start time").
->>
->> But we still see the alarming messages, so we should probably add a
->> quirk to get rid of those.
->>
->> But I haven't given up on the idea of getting rid of the
->> pciehp_remove() path.  I'm not convinced yet that we actually need to
->> do anything to shut this device down.  I don't like the assumption
->> that kexec requires this.  The kexec is fundamentally just a branch,
->> and anything we do before the branch (i.e., in the old kernel), we
->> should also be able to do after the branch (i.e., in the kexec-ed
->> kernel).
->>
+On Wed, May 30, 2018 at 03:23:43PM -0500, Bjorn Helgaas wrote:
+> > +{
+> > +	const struct pci_host_bridge *host;
+> > +
+> > +	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
+> > +		return false;
+> > +
+> > +	if (!pci_find_capability(bridge, PCI_CAP_ID_SHPC))
+> > +		return false;
+> > +
+> > +	host = pci_find_host_bridge(bridge->bus);
+> > +	return host->native_shpc_hotplug;
+> > +}
 > 
-> In my experience with kexec, MSI type edge interrupts are harmless.
-> You might just see a few unhandled interrupt messages during boot
-> if something is pending from the first kernel.
+> This is sort-of-but-not-exactly the same as is_shpc_capable().
 > 
-> It is the level interrupts that are more concerning. It remains pending
-> until the interrupt source is cleared. CPU never returns from the
-> interrupt handler to actually continue booting the second kernel.
-
-This makes me wonder why kexec doesn't disable all interrupt sources by
-itself instead of relying on the drivers shutdown routine. Some drivers
-don't even have a shutdown callback. Kexec could have done both as another
-example. Something like.
-
-1. Call shutdown for all drivers if available.
-2. Disable all interrupt sources in the interrupt controller
-3. Start the new kernel.
-
+> For PCI_DEVICE_ID_AMD_GOLAM_7450, is_shpc_capable() will return true
+> and shpchp will claim the device, but shpchp_is_native() will return
+> false because there's no SHPC capability.
 > 
-> Execution doesn't reach to PCIe hp driver initialization for
-> acknowledging the interrupt.
-> 
-> How about remove() only if MSI is disabled? Most root port interrupts
-> are MSI based anyhow.
-> 
+> At least that's my interpretation of the AMD GOLAM stuff.  I don't
+> have a spec for it, but if GOLAM did have an SHPC capability, I assume
+> is_shpc_capable() would look for it *before* testing for GOLAM.
 
+Most probably it did not have SHPC capability because I find it hard to
+explain the check otherwise.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> So I think these two things need to be reconciled somehow.  I
+> mentioned this before, but it was buried at the bottom of a long
+> email, sorry about that.
+
+No it wasn't. I read it and did exactly what you wanted. Now there is no
+duplication in these two functions. is_shpc_capable() calls
+acpi_get_hp_hw_control_from_firmware() which calls shpchp_is_native().
+In fact I don't think is_shpc_capable() warrants to exist at all and it
+should be removed (but in another separate cleanup patch).
+
+> I wish we had a spec or details about the erratum.  It looks like
+> it's been there "forever": https://git.kernel.org/pub/scm/linux/kernel/git/tglx/history.git/commit/drivers/pci/hotplug/shpchp.h?id=c16b4b14d9806e639f4afefa2d651a857a212afe
+> 
+> But neither GOLAM (0x7450) nor POGO (0x7458) is in the PCI database at
+> https://pci-ids.ucw.cz/read/PC/1002, so who knows if those chips ever
+> even saw the light of day.  I'll cc the author of
+> 
+>   53044f357448 ("[PATCH] PCI Hotplug: shpchp: AMD POGO errata fix")
+> 
+> But that was 12 years ago, so the email address may not even work any
+> more.
+
+Ín any case even if somehow the original patch from 2006 was wrong, I
+don't have absolutely any idea why it needs to be fixed now in this
+patch series? Given that there are two real fixes in this series that
+fix real issues on real contemporary hardware, I don't really understand
+why you are stalling them. Yes, it is good to do cleanups because it
+makes the code easier to understand and thus more maintainable but
+that's something typically not priorized as high as fixes for real
+problems.
+
+These fixes have been out there since february virtually unchanged, so
+you would think they have had enough review already. If not please point
+out what exactly I need to fix and I'll do that. Otherwise please
+consider taking the series for v4.18.
