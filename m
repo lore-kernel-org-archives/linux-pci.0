@@ -1,112 +1,138 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 01/40] iommu: Introduce Shared Virtual Addressing API
-To: Jacob Pan <jacob.jun.pan@linux.intel.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "liubo95@huawei.com" <liubo95@huawei.com>,
-        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
-        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
-        "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
-        "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
-        "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
-        "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
-        "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
-        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>,
-        "robdclark@gmail.com" <robdclark@gmail.com>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "bharatku@xilinx.com" <bharatku@xilinx.com>,
-        "rgummal@xilinx.com" <rgummal@xilinx.com>
-References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
- <20180511190641.23008-2-jean-philippe.brucker@arm.com>
- <20180516134150.34fc8857@jacob-builder>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <96c1e0f0-0aa7-badf-123e-cbb1b05e645e@arm.com>
-Date: Thu, 17 May 2018 11:02:02 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37978 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755556AbeEaQz7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 May 2018 12:55:59 -0400
+Date: Thu, 31 May 2018 11:55:56 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 2/7] PCI: Introduce shpchp_is_native()
+Message-ID: <20180531165556.GA99633@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+ <20180528124756.78512-3-mika.westerberg@linux.intel.com>
+ <20180530202343.GO39853@bhelgaas-glaptop.roam.corp.google.com>
+ <20180531065852.GV15419@lahna.fi.intel.com>
+ <20180531131202.GA76395@bhelgaas-glaptop.roam.corp.google.com>
+ <20180531135117.GX15419@lahna.fi.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180516134150.34fc8857@jacob-builder>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180531135117.GX15419@lahna.fi.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jacob,
+On Thu, May 31, 2018 at 04:51:17PM +0300, Mika Westerberg wrote:
+> On Thu, May 31, 2018 at 08:12:02AM -0500, Bjorn Helgaas wrote:
+> > Maybe I'm reading your patches wrong.  It looks to me like shpchp will
+> > claim GOLAM_7450, which means shpchp will register slots, program the
+> > SHPC, handle hotplug interrupts, etc.
+> > 
+> > But since shpchp_is_native() returns false, acpiphp thinks *it* should
+> > handle hotplug.  For example, I think that given some ACPI
+> > prerequisites (_EJ0/_RMV/etc), both will call pci_hp_register():
+> > 
+> >   shpc_probe
+> >     is_shpc_capable             # true for GOLAM_7450
+> >     init_slots
+> >       pci_hp_register
+> > 
+> >   acpi_pci_add_slots
+> >     acpiphp_enumerate_slots
+> >       acpi_walk_namespace(..., acpiphp_add_context)
+> >         acpiphp_add_context
+> >           hotplug_is_native     # false for GOLAM_7450
+> >           acpiphp_register_hotplug_slot
+> >             pci_hp_register
+> > 
+> > It is true that the same situation occurred before your patches, since
+> > acpiphp_add_context() only checked pciehp_is_native().  In fact, with
+> > the existing code, shpchp and acpiphp could both try to manage *any*
+> > SHPC, not just GOLAM_7450.
+> > 
+> > I think the current series fixes 99% of that problem and it seems like
+> > we should try to do that last 1% at the same time so the SHPC code
+> > makes more sense.
+> 
+> Would the following fix the last 1% for you? Applies on top of this
+> patch.
 
-Thanks for reviewing this
+Yes, that's exactly what I was looking for!  Thanks!
 
-On 16/05/18 21:41, Jacob Pan wrote:
->> + * The device must support multiple address spaces (e.g. PCI PASID).
->> By default
->> + * the PASID allocated during bind() is limited by the IOMMU
->> capacity, and by
->> + * the device PASID width defined in the PCI capability or in the
->> firmware
->> + * description. Setting @max_pasid to a non-zero value smaller than
->> this limit
->> + * overrides it.
->> + *
-> seems the min_pasid never gets used. do you really need it?
-
-Yes, the SMMU sets it to 1 in patch 28/40, because it needs to reserve
-PASID 0
-
->> + * The device should not be performing any DMA while this function
->> is running,
->> + * otherwise the behavior is undefined.
->> + *
->> + * Return 0 if initialization succeeded, or an error.
->> + */
->> +int iommu_sva_device_init(struct device *dev, unsigned long features,
->> +			  unsigned int max_pasid)
->> +{
->> +	int ret;
->> +	struct iommu_sva_param *param;
->> +	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
->> +
->> +	if (!domain || !domain->ops->sva_device_init)
->> +		return -ENODEV;
->> +
->> +	if (features)
->> +		return -EINVAL;
-> should it be !features?
-
-This checks if the user sets any unsupported bit in features. No feature
-is supported right now, but patch 09/40 adds IOMMU_SVA_FEAT_IOPF, and
-changes this line to "features & ~IOMMU_SVA_FEAT_IOPF"
-
->> +	mutex_lock(&dev->iommu_param->lock);
->> +	param = dev->iommu_param->sva_param;
->> +	dev->iommu_param->sva_param = NULL;
->> +	mutex_unlock(&dev->iommu_param->lock);
->> +	if (!param)
->> +		return -ENODEV;
->> +
->> +	if (domain->ops->sva_device_shutdown)
->> +		domain->ops->sva_device_shutdown(dev, param);
-> seems a little mismatch here, do you need pass the param. I don't think
-> there is anything else model specific iommu driver need to do for the
-> param.
-
-SMMU doesn't use it, but maybe it would remind other IOMMU driver which
-features were enabled, so they don't have to keep track of that
-themselves? I can remove it if it isn't useful
-
-Thanks,
-Jean
+> diff --git a/drivers/pci/hotplug/shpchp.h b/drivers/pci/hotplug/shpchp.h
+> index 9675ab757323..516e4835019c 100644
+> --- a/drivers/pci/hotplug/shpchp.h
+> +++ b/drivers/pci/hotplug/shpchp.h
+> @@ -105,7 +105,6 @@ struct controller {
+>  };
+>  
+>  /* Define AMD SHPC ID  */
+> -#define PCI_DEVICE_ID_AMD_GOLAM_7450	0x7450
+>  #define PCI_DEVICE_ID_AMD_POGO_7458	0x7458
+>  
+>  /* AMD PCI-X bridge registers */
+> diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+> index 0f3711404c2b..e91be287f292 100644
+> --- a/drivers/pci/hotplug/shpchp_core.c
+> +++ b/drivers/pci/hotplug/shpchp_core.c
+> @@ -270,22 +270,12 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+>  	return 0;
+>  }
+>  
+> -static int is_shpc_capable(struct pci_dev *dev)
+> -{
+> -	if (dev->vendor == PCI_VENDOR_ID_AMD &&
+> -	    dev->device == PCI_DEVICE_ID_AMD_GOLAM_7450)
+> -		return 1;
+> -	if (acpi_get_hp_hw_control_from_firmware(dev))
+> -		return 0;
+> -	return 1;
+> -}
+> -
+>  static int shpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  {
+>  	int rc;
+>  	struct controller *ctrl;
+>  
+> -	if (!is_shpc_capable(pdev))
+> +	if (acpi_get_hp_hw_control_from_firmware(pdev))
+>  		return -ENODEV;
+>  
+>  	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index bbc4ea70505a..fd1c0ee33805 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -408,6 +408,14 @@ bool shpchp_is_native(struct pci_dev *bridge)
+>  	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
+>  		return false;
+>  
+> +	/*
+> +	 * It is assumed that AMD GOLAM chips support SHPC but they do not
+> +	 * have SHPC capability.
+> +	 */
+> +	if (bridge->vendor == PCI_VENDOR_ID_AMD &&
+> +	    bridge->device == PCI_DEVICE_ID_AMD_GOLAM_7450)
+> +		return true;
+> +
+>  	if (!pci_find_capability(bridge, PCI_CAP_ID_SHPC))
+>  		return false;
+>  
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 883cb7bf78aa..5aace6cca0d7 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -561,6 +561,7 @@
+>  #define PCI_DEVICE_ID_AMD_OPUS_7443	0x7443
+>  #define PCI_DEVICE_ID_AMD_VIPER_7443	0x7443
+>  #define PCI_DEVICE_ID_AMD_OPUS_7445	0x7445
+> +#define PCI_DEVICE_ID_AMD_GOLAM_7450	0x7450
+>  #define PCI_DEVICE_ID_AMD_8111_PCI	0x7460
+>  #define PCI_DEVICE_ID_AMD_8111_LPC	0x7468
+>  #define PCI_DEVICE_ID_AMD_8111_IDE	0x7469
