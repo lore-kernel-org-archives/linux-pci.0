@@ -1,65 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 10 May 2018 17:29:29 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:41368 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753772AbeEaEmR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 May 2018 00:42:17 -0400
+Date: Wed, 30 May 2018 23:42:16 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Ganesh Goudar <ganeshgr@chelsio.com>,
-        Michael Chan <michael.chan@broadcom.com>,
-        Ariel Elior <ariel.elior@cavium.com>
-Cc: linux-pci@vger.kernel.org, everest-linux-l2@cavium.com,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Tal Gilboa <talgi@mellanox.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Jakub Kicinski <kubakici@wp.pl>
-Subject: Re: [PATCH v6 0/5] PCI: Improve PCIe link status reporting
-Message-ID: <20180510222928.GC190385@bhelgaas-glaptop.roam.corp.google.com>
-References: <152537719056.62474.2571390812509425478.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Rajat Jain <rajatja@google.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 1/2] PCI/AER: Decode Error Source Requester ID
+Message-ID: <20180531044216.GR39853@bhelgaas-glaptop.roam.corp.google.com>
+References: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152770285586.80701.6545710900591672975.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CACK8Z6Gs6Wt=qQ9PJJifZT7ZazK1yGtwNZRSTtvwek8iT8oW6w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <152537719056.62474.2571390812509425478.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CACK8Z6Gs6Wt=qQ9PJJifZT7ZazK1yGtwNZRSTtvwek8iT8oW6w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 03, 2018 at 03:00:07PM -0500, Bjorn Helgaas wrote:
-> This is based on Tal's recent work to unify the approach for reporting PCIe
-> link speed/width and whether the device is being limited by a slower
-> upstream link.
+On Wed, May 30, 2018 at 11:41:23AM -0700, Rajat Jain wrote:
+> On Wed, May 30, 2018 at 10:54 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
 > 
-> The new pcie_print_link_status() interface appeared in v4.17-rc1; see
-> 9e506a7b5147 ("PCI: Add pcie_print_link_status() to log link speed and
-> whether it's limited").
+> > From: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> That's a good way to replace use of pcie_get_minimum_link(), which gives
-> misleading results when a path contains both a fast, narrow link and a
-> slow, wide link: it reports the equivalent of a slow, narrow link.
+> > Decode the Requester ID from the AER Error Source Register into domain/
+> > bus/device/function format to match other logging.  In cases where the ID
+> > matches the device used for pci_err(), drop the extra ID completely so we
+> > don't print it twice.
 > 
-> This series removes the remaining uses of pcie_get_minimum_link() and then
-> removes the interface itself.  I'd like to merge them all through the PCI
-> tree to make the removal easy.
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >   drivers/pci/pcie/aer/aerdrv_errprint.c |   18 +++++++++++-------
+> >   1 file changed, 11 insertions(+), 7 deletions(-)
 > 
-> This does change the dmesg reporting of link speeds, and in the ixgbe case,
-> it changes the reporting from KERN_WARN level to KERN_INFO.  If that's an
-> issue, let's talk about it.  I'm hoping the reduce code size, improved
-> functionality, and consistency across drivers is enough to make this
-> worthwhile.
-> 
-> ---
-> 
-> Bjorn Helgaas (5):
->       bnx2x: Report PCIe link properties with pcie_print_link_status()
->       bnxt_en: Report PCIe link properties with pcie_print_link_status()
->       cxgb4: Report PCIe link properties with pcie_print_link_status()
->       ixgbe: Report PCIe link properties with pcie_print_link_status()
->       PCI: Remove unused pcie_get_minimum_link()
+> > diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> > index 21ca5e1b0ded..d7fde8368d81 100644
+> > --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> > +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> > @@ -163,17 +163,17 @@ void aer_print_error(struct pci_dev *dev, struct
+> aer_err_info *info)
+> >          int id = ((dev->bus->number << 8) | dev->devfn);
 
-Jeff has acked the ixgbe patch.
+> >          if (!info->status) {
+> > -               pci_err(dev, "PCIe Bus Error: severity=%s,
+> type=Unaccessible, id=%04x(Unregistered Agent ID)\n",
+> > -                       aer_error_severity_string[info->severity], id);
+> > +               pci_err(dev, "PCIe Bus Error: severity=%s,
+> type=Inaccessible, (Unregistered Agent ID)\n",
+> > +                       aer_error_severity_string[info->severity]);
+> 
+> Does this code path indicate that a requester id was decoded to a device
+> that is not registered with the kernel? If so, shouldn't we log the bad
+> requester ID for better debugging, specifically since there is not going to
+> be any subsequent print about this ID (since we return from this function
+> in this case)?
 
-Any comments on the bnx2x, bnxt_en, or cxgb4 patches?
+Previously we printed "id", which was constructed above from "dev":
 
->  drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c |   23 ++-----
->  drivers/net/ethernet/broadcom/bnxt/bnxt.c        |   19 ------
->  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c  |   75 ----------------------
->  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c    |   47 --------------
->  drivers/pci/pci.c                                |   43 -------------
->  include/linux/pci.h                              |    2 -
->  6 files changed, 9 insertions(+), 200 deletions(-)
+  id = ((dev->bus->number << 8) | dev->devfn);
+
+so even if we print "id=%04x", it contains exactly the same
+information as the bus/device/function printed using "dev".
+
+So no, I don't think "Unregistered Agent ID" means a device not registered
+with the kernel.  At any rate, we do have a pci_dev for it.
+
+I *think* "info->status == 0" means PCI_ERR_COR_STATUS (or
+PCI_ERR_UNCOR_STATUS) was zero, i.e., we didn't find any error status
+bits set for this device.  I don't think "Unregistered Agent ID" is a
+very good description of this situation.
+
+Bjorn
