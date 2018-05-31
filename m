@@ -1,48 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45372 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755556AbeEaRLY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 13:11:24 -0400
-Subject: Re: [PATCH] PCI: Check for PCIe downtraining conditions
-To: "Alex G." <mr.nuke.me@gmail.com>, Alex_Gagniuc@Dellteam.com,
-        bhelgaas@google.com
-Cc: Austin.Bolen@dell.com, Shyam.Iyer@dell.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20180531150535.9684-1-mr.nuke.me@gmail.com>
- <28004506-24f0-6d10-2d1e-074e0483d2f9@codeaurora.org>
- <4e0611c872054e768daa96b302651db3@ausx13mps321.AMER.DELL.COM>
- <f260078b-6918-7fd9-39d6-e9f300e4c048@codeaurora.org>
- <3b8a895b-3080-7ddb-cbfd-5aa972e9bf65@gmail.com>
- <35563ce3-e235-096c-4b9b-5f3664d67d0f@codeaurora.org>
- <093b2789-39a1-db9e-5783-b0488b3c9ccd@gmail.com>
- <32d58835-2f35-0b80-38d0-b9ff603619dd@codeaurora.org>
- <54071f83-5d0d-04a0-d448-0c99ec0ffc4f@gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <29ad2bf5-b5af-35be-3bef-2d0652aa2e33@codeaurora.org>
-Date: Thu, 31 May 2018 13:11:21 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1527733167.28160.1.camel@mhfsdcap03>
+Subject: Re: [PATCH] PCI: mediatek: Add system pm support for MT2712
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Ryder Lee <ryder.lee@mediatek.com>
+CC: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <hongkun.cao@mediatek.com>, <youlin.pei@mediatek.com>,
+        <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
+        <sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
+Date: Thu, 31 May 2018 10:19:27 +0800
+In-Reply-To: <1527732336.9842.3.camel@mtkswgap22>
+References: <1527647736-19986-1-git-send-email-honghui.zhang@mediatek.com>
+         <1527732336.9842.3.camel@mtkswgap22>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <54071f83-5d0d-04a0-d448-0c99ec0ffc4f@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/31/2018 12:49 PM, Alex G. wrote:
->> 	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
->> 	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width, *parent*);
-> That's confusing. I'd expect _capable() and _available() to be
-> symmetrical. They either both look at one link only, or both go down to
-> the root port. Though it seems _capable() is link-local, and
-> _available() is down to root port.
+On Thu, 2018-05-31 at 10:05 +0800, Ryder Lee wrote:
+> On Wed, 2018-05-30 at 10:35 +0800, honghui.zhang@mediatek.com wrote:
+> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > 
+> > The MTCMOS of PCIe Host for MT2712 will be off when system suspend, and all
+> > the internel control register will be reset after system resume. The PCIe
+> > link should be re-established and the related control register values should
+> > be re-set after system resume.
+> > 
+> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > CC: Ryder Lee <ryder.lee@mediatek.com>
+> > ---
+> >  drivers/pci/host/pcie-mediatek.c | 82 ++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 82 insertions(+)
+> > 
+> > diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> > index dabf1086..60f98d92 100644
+> > --- a/drivers/pci/host/pcie-mediatek.c
+> > +++ b/drivers/pci/host/pcie-mediatek.c
+> > @@ -132,12 +132,14 @@ struct mtk_pcie_port;
+> >  /**
+> >   * struct mtk_pcie_soc - differentiate between host generations
+> >   * @need_fix_class_id: whether this host's class ID needed to be fixed or not
+> > + * @pm_support: whether the host's MTCMOS will be off when suspend
+> >   * @ops: pointer to configuration access functions
+> >   * @startup: pointer to controller setting functions
+> >   * @setup_irq: pointer to initialize IRQ functions
+> >   */
+> >  struct mtk_pcie_soc {
+> >  	bool need_fix_class_id;
+> > +	bool pm_support;
+> >  	struct pci_ops *ops;
+> >  	int (*startup)(struct mtk_pcie_port *port);
+> >  	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
+> > @@ -1179,12 +1181,91 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+> >  	return err;
+> >  }
+> >  
+> > +static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
+> > +{
+> > +	struct platform_device *pdev;
+> > +	struct mtk_pcie *pcie;
+> > +	struct mtk_pcie_port *port;
+> > +	const struct mtk_pcie_soc *soc;
+> > +
+> > +	pdev = to_platform_device(dev);
+> > +	pcie = platform_get_drvdata(pdev);
 > 
+> How about this -
+> struct mtk_pcie *pcie = dev_get_drvdata(dev);
 
-As you know, link speed is a qualification of two devices speed capability.
-Both speed and width parameters get negotiated by two devices during TS1 and TS2
-ordered set exchange. 
+Yes, I forgot that, thanks very much for your reminder.
 
-You need to see what your link partner can support in available function() vs.
-what this device can do in bandwidth() function.
+> 
+> > +	soc = pcie->soc;
+> > +	if (!soc->pm_support)
+> > +		return 0;
+> > +
+> > +	list_for_each_entry(port, &pcie->ports, list) {
+> > +		clk_disable_unprepare(port->ahb_ck);
+> > +		clk_disable_unprepare(port->sys_ck);
+> > +		phy_power_off(port->phy);
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
+> > +{
+> > +	struct platform_device *pdev;
+> > +	struct mtk_pcie *pcie;
+> > +	struct mtk_pcie_port *port;
+> > +	const struct mtk_pcie_soc *soc;
+> > +	int ret;
+> > +
+> > +	pdev = to_platform_device(dev);
+> > +	pcie = platform_get_drvdata(pdev);
+> 
+> struct mtk_pcie *pcie = dev_get_drvdata(dev);
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+thanks.
+
+> 
+> > +	soc = pcie->soc;
+> > +	if (!soc->pm_support)
+> > +		return 0;
+> > +
+> > +	list_for_each_entry(port, &pcie->ports, list) {
+> > +		ret = phy_power_on(port->phy);
+> > +		if (ret) {
+> > +			dev_err(dev, "could not power on phy\n");
+> > +			return ret;
+> > +		}
+> > +		ret = clk_prepare_enable(port->sys_ck);
+> > +		if (ret) {
+> > +			dev_err(dev, "enable sys clock error\n");
+> > +			phy_power_off(port->phy);
+> > +			return ret;
+> > +		}
+> > +
+> > +		ret = clk_prepare_enable(port->ahb_ck);
+> > +		if (ret) {
+> > +			dev_err(dev, "enable ahb clock error\n");
+> > +			phy_power_off(port->phy);
+> > +			clk_disable_unprepare(port->sys_ck);
+> > +			return ret;
+> > +		}
+> > +
+> > +		ret = soc->startup(port);
+> > +		if (ret) {
+> > +			dev_err(dev, "pcie linkup failed\n");
+> > +			phy_power_off(port->phy);
+> > +			clk_disable_unprepare(port->sys_ck);
+> > +			clk_disable_unprepare(port->ahb_ck);
+> > +			return ret;
+> > +		}
+> > +
+> > +		if (IS_ENABLED(CONFIG_PCI_MSI))
+> > +			mtk_pcie_enable_msi(port);
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> 
+> 
+> 
