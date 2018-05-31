@@ -1,94 +1,93 @@
-Return-Path: <SRS0=Jy+Z=IJ=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=Jy+Z=IJ=broadcom.com=ray.jui@kernel.org>
-From: Ray Jui <ray.jui@broadcom.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Ray Jui <ray.jui@broadcom.com>
-Subject: [PATCH 2/2] PCI: iproc: Reduce inbound/outbound mapping print level
-Date: Tue, 22 May 2018 10:05:09 -0700
-Message-Id: <1527008709-20786-3-git-send-email-ray.jui@broadcom.com>
-In-Reply-To: <1527008709-20786-1-git-send-email-ray.jui@broadcom.com>
-References: <1527008709-20786-1-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:31205 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932637AbeEaDUf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 May 2018 23:20:35 -0400
+Date: Thu, 31 May 2018 11:20:49 +0800
+From: Tiwei Bie <tiwei.bie@intel.com>
+To: "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>
+Cc: "mst@redhat.com" <mst@redhat.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "virtualization@lists.linux-foundation.org"
+        <virtualization@lists.linux-foundation.org>,
+        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Liang, Cunming" <cunming.liang@intel.com>,
+        "Wang, Zhihong" <zhihong.wang@intel.com>
+Subject: Re: [PATCH] virtio_pci: support enabling VFs
+Message-ID: <20180531032049.GB15516@debian>
+References: <20180530085521.26583-1-tiwei.bie@intel.com>
+ <20180530192010-mutt-send-email-mst@kernel.org>
+ <414C18B1-30FA-4AC0-B47D-F0FBF9832737@intel.com>
+ <1527699273.29907.2.camel@intel.com>
+ <5063D90B-7955-4F1E-85A2-D8AFD661ACB7@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5063D90B-7955-4F1E-85A2-D8AFD661ACB7@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reduce inbound/outbound mapping print level from dev_info to
-dev_dbg. This reduces the console logs during Linux boot process
+On Thu, May 31, 2018 at 01:11:37AM +0800, Rustad, Mark D wrote:
+> On May 30, 2018, at 9:54 AM, Duyck, Alexander H
+> <alexander.h.duyck@intel.com> wrote:
+> 
+> > On Wed, 2018-05-30 at 09:44 -0700, Rustad, Mark D wrote:
+> > > On May 30, 2018, at 9:22 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> > > 
+> > > > > +static int virtio_pci_sriov_configure(struct pci_dev *pci_dev, int
+> > > > > num_vfs)
+> > > > > +{
+> > > > > +	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+> > > > > +	struct virtio_device *vdev = &vp_dev->vdev;
+> > > > > +	int (*sriov_configure)(struct pci_dev *pci_dev, int num_vfs);
+> > > > > +
+> > > > > +	if (!(vdev->config->get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK))
+> > > > > +		return -EBUSY;
+> > > > > +
+> > > > > +	if (!__virtio_test_bit(vdev, VIRTIO_F_SR_IOV))
+> > > > > +		return -EINVAL;
+> > > > > +
+> > > > > +	sriov_configure = pci_sriov_configure_simple;
+> > > > > +	if (sriov_configure == NULL)
+> > > > > +		return -ENOENT;
+> > > > 
+> > > > BTW what is all this trickery in aid of?
+> > > 
+> > > When SR-IOV support is not compiled into the kernel,
+> > > pci_sriov_configure_simple is #defined as NULL. This allows it to compile
+> > > in that case, even though there is utterly no way for it to be called in
+> > > that case. It is an alternative to #ifs in the code.
+> > 
+> > Why even have the call though? I would wrap all of this in an #ifdef
+> > and strip it out since you couldn't support SR-IOV if it isn't present
+> > in the kernel anyway.
+> 
+> I am inclined to agree. In this case, the presence of #ifdefs I think would
+> be clearer. As written, someone will want to get rid of the pointer only to
+> create a build problem when SR-IOV is not configured.
 
-Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
----
- drivers/pci/host/pcie-iproc.c | 34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
+In my opinion, maybe it would be better to make
+pci_sriov_configure_simple() always available
+just like other sriov functions.
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index b1d8c60..14f374d 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -827,14 +827,14 @@ static inline int iproc_pcie_ob_write(struct iproc_pcie *pcie, int window_idx,
- 	writel(lower_32_bits(pci_addr), pcie->base + omap_offset);
- 	writel(upper_32_bits(pci_addr), pcie->base + omap_offset + 4);
- 
--	dev_info(dev, "ob window [%d]: offset 0x%x axi %pap pci %pap\n",
--		 window_idx, oarr_offset, &axi_addr, &pci_addr);
--	dev_info(dev, "oarr lo 0x%x oarr hi 0x%x\n",
--		 readl(pcie->base + oarr_offset),
--		 readl(pcie->base + oarr_offset + 4));
--	dev_info(dev, "omap lo 0x%x omap hi 0x%x\n",
--		 readl(pcie->base + omap_offset),
--		 readl(pcie->base + omap_offset + 4));
-+	dev_dbg(dev, "ob window [%d]: offset 0x%x axi %pap pci %pap\n",
-+		window_idx, oarr_offset, &axi_addr, &pci_addr);
-+	dev_dbg(dev, "oarr lo 0x%x oarr hi 0x%x\n",
-+		readl(pcie->base + oarr_offset),
-+		readl(pcie->base + oarr_offset + 4));
-+	dev_dbg(dev, "omap lo 0x%x omap hi 0x%x\n",
-+		readl(pcie->base + omap_offset),
-+		readl(pcie->base + omap_offset + 4));
- 
- 	return 0;
- }
-@@ -1001,8 +1001,8 @@ static int iproc_pcie_ib_write(struct iproc_pcie *pcie, int region_idx,
- 	    iproc_pcie_reg_is_invalid(imap_offset))
- 		return -EINVAL;
- 
--	dev_info(dev, "ib region [%d]: offset 0x%x axi %pap pci %pap\n",
--		 region_idx, iarr_offset, &axi_addr, &pci_addr);
-+	dev_dbg(dev, "ib region [%d]: offset 0x%x axi %pap pci %pap\n",
-+		region_idx, iarr_offset, &axi_addr, &pci_addr);
- 
- 	/*
- 	 * Program the IARR registers.  The upper 32-bit IARR register is
-@@ -1012,9 +1012,9 @@ static int iproc_pcie_ib_write(struct iproc_pcie *pcie, int region_idx,
- 	       pcie->base + iarr_offset);
- 	writel(upper_32_bits(pci_addr), pcie->base + iarr_offset + 4);
- 
--	dev_info(dev, "iarr lo 0x%x iarr hi 0x%x\n",
--		 readl(pcie->base + iarr_offset),
--		 readl(pcie->base + iarr_offset + 4));
-+	dev_dbg(dev, "iarr lo 0x%x iarr hi 0x%x\n",
-+		readl(pcie->base + iarr_offset),
-+		readl(pcie->base + iarr_offset + 4));
- 
- 	/*
- 	 * Now program the IMAP registers.  Each IARR region may have one or
-@@ -1028,10 +1028,10 @@ static int iproc_pcie_ib_write(struct iproc_pcie *pcie, int region_idx,
- 		writel(upper_32_bits(axi_addr),
- 		       pcie->base + imap_offset + ib_map->imap_addr_offset);
- 
--		dev_info(dev, "imap window [%d] lo 0x%x hi 0x%x\n",
--			 window_idx, readl(pcie->base + imap_offset),
--			 readl(pcie->base + imap_offset +
--			       ib_map->imap_addr_offset));
-+		dev_dbg(dev, "imap window [%d] lo 0x%x hi 0x%x\n",
-+			window_idx, readl(pcie->base + imap_offset),
-+			readl(pcie->base + imap_offset +
-+			      ib_map->imap_addr_offset));
- 
- 		imap_offset += ib_map->imap_window_offset;
- 		axi_addr += size;
--- 
-2.1.4
+Based on the comments in the original patch:
+
+https://patchwork.kernel.org/patch/10353197/
+"""
++/* this is expected to be used as a function pointer, just define as NULL */
++#define pci_sriov_configure_simple NULL
+"""
+
+This function could be defined as NULL just because
+it was expected to be used as a function pointer.
+But actually it could be called directly as a
+function, just like this case.
+
+So I prefer to make this function always available
+just like other sriov functions.
+
+Best regards,
+Tiwei Bie
