@@ -1,120 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:35180 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966424AbeEXVan (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 May 2018 17:30:43 -0400
-Received: by mail-pl0-f66.google.com with SMTP id i5-v6so1822951plt.2
-        for <linux-pci@vger.kernel.org>; Thu, 24 May 2018 14:30:43 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: lorenzo.pieralisi@arm.com, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>
-Subject: [RFC] PCI: hv: support reporting serial number as slot information
-Date: Thu, 24 May 2018 14:30:39 -0700
-Message-Id: <20180524213039.27841-1-sthemmin@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=eT9Y=IS=google.com=rajatja@kernel.org>
+Return-Path: <SRS0=eT9Y=IS=google.com=rajatja@kernel.org>
+MIME-Version: 1.0
+References: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152770285586.80701.6545710900591672975.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CACK8Z6Gs6Wt=qQ9PJJifZT7ZazK1yGtwNZRSTtvwek8iT8oW6w@mail.gmail.com> <20180531044216.GR39853@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180531044216.GR39853@bhelgaas-glaptop.roam.corp.google.com>
+From: Rajat Jain <rajatja@google.com>
+Date: Thu, 31 May 2018 10:35:51 -0700
+Message-ID: <CACK8Z6H+sZztSjKbHFqK1efCwruxVSdDs+5kt96_-NPdM2eGmw@mail.gmail.com>
+Subject: Re: [PATCH v1 1/2] PCI/AER: Decode Error Source Requester ID
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>, Oza Pawandeep <poza@codeaurora.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-The Hyper-V host API for PCI provides a unique "serial number" which
-can be used as basis for sysfs PCI slot table. This can be useful
-for cases where userspace wants to find the PCI device based on
-serial number.
+On Wed, May 30, 2018 at 9:42 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Wed, May 30, 2018 at 11:41:23AM -0700, Rajat Jain wrote:
+> > On Wed, May 30, 2018 at 10:54 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> > > From: Bjorn Helgaas <bhelgaas@google.com>
+> >
+> > > Decode the Requester ID from the AER Error Source Register into domain/
+> > > bus/device/function format to match other logging.  In cases where the ID
+> > > matches the device used for pci_err(), drop the extra ID completely so we
+> > > don't print it twice.
+> >
+> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > ---
+> > >   drivers/pci/pcie/aer/aerdrv_errprint.c |   18 +++++++++++-------
+> > >   1 file changed, 11 insertions(+), 7 deletions(-)
+> >
+> > > diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> > b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> > > index 21ca5e1b0ded..d7fde8368d81 100644
+> > > --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> > > +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> > > @@ -163,17 +163,17 @@ void aer_print_error(struct pci_dev *dev, struct
+> > aer_err_info *info)
+> > >          int id = ((dev->bus->number << 8) | dev->devfn);
+>
+> > >          if (!info->status) {
+> > > -               pci_err(dev, "PCIe Bus Error: severity=%s,
+> > type=Unaccessible, id=%04x(Unregistered Agent ID)\n",
+> > > -                       aer_error_severity_string[info->severity], id);
+> > > +               pci_err(dev, "PCIe Bus Error: severity=%s,
+> > type=Inaccessible, (Unregistered Agent ID)\n",
+> > > +                       aer_error_severity_string[info->severity]);
+> >
+> > Does this code path indicate that a requester id was decoded to a device
+> > that is not registered with the kernel? If so, shouldn't we log the bad
+> > requester ID for better debugging, specifically since there is not going to
+> > be any subsequent print about this ID (since we return from this function
+> > in this case)?
+>
+> Previously we printed "id", which was constructed above from "dev":
+>
+>   id = ((dev->bus->number << 8) | dev->devfn);
+>
+> so even if we print "id=%04x", it contains exactly the same
+> information as the bus/device/function printed using "dev".
 
-When an SR-IOV NIC is added, the host sends an attach message
-with serial number. The kernel doesn't use the serial number, but
-it is useful when doing the same thing in a userspace driver such
-as the DPDK. By having /sys/bus/pci/slots/N it provides a direct
-way to find the matching PCI device.
+Sorry, my bad, I missed it, despite it being right there in my face :-).
 
-There maybe some cases where serial number is not unique such
-as when using GPU's. But the PCI slot infrastructure will handle
-that.
+>
+> So no, I don't think "Unregistered Agent ID" means a device not registered
+> with the kernel.  At any rate, we do have a pci_dev for it.
+>
+> I *think* "info->status == 0" means PCI_ERR_COR_STATUS (or
+> PCI_ERR_UNCOR_STATUS) was zero, i.e., we didn't find any error status
+> bits set for this device.  I don't think "Unregistered Agent ID" is a
+> very good description of this situation.
 
-This has a side effect which may also be useful. The common udev
-network device naming policy uses the slot information (rather
-than PCI address).
+Agree, may be something along the lines of "Unknown Error Status"
+might be better.
 
-Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+Thanks,
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 50cdefe3f6d3..42656ebadd5b 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -88,6 +88,8 @@ static enum pci_protocol_version_t pci_protocol_version;
- 
- #define STATUS_REVISION_MISMATCH 0xC0000059
- 
-+#define SLOT_NAME_SIZE	16
-+
- /*
-  * Message Types
-  */
-@@ -504,6 +506,7 @@ struct hv_pci_dev {
- 	struct list_head list_entry;
- 	refcount_t refs;
- 	enum hv_pcichild_state state;
-+	struct pci_slot *pci_slot;
- 	struct pci_function_description desc;
- 	bool reported_missing;
- 	struct hv_pcibus_device *hbus;
-@@ -1443,6 +1446,29 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
- 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
- }
- 
-+static void hv_pci_assign_slots(struct hv_pcibus_device *hbus)
-+{
-+	struct hv_pci_dev *hpdev;
-+	char name[SLOT_NAME_SIZE];
-+	unsigned long flags;
-+	int slot_nr;
-+
-+	spin_lock_irqsave(&hbus->device_list_lock, flags);
-+	list_for_each_entry(hpdev, &hbus->children, list_entry) {
-+		if (hpdev->pci_slot)
-+			continue;
-+
-+		slot_nr = PCI_SLOT(wslot_to_devfn(hpdev->desc.win_slot.slot));
-+		snprintf(name, SLOT_NAME_SIZE, "%u", hpdev->desc.ser);
-+		pr_info("%s slot %u name '%s'\n", __func__, slot_nr, name);
-+		hpdev->pci_slot = pci_create_slot(hbus->pci_bus, slot_nr,
-+					  name, NULL);
-+		if (!hpdev->pci_slot)
-+			pr_warn("pci_create slot failed\n");
-+	}
-+	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
-+}
-+
- /**
-  * create_root_hv_pci_bus() - Expose a new root PCI bus
-  * @hbus:	Root PCI bus, as understood by this driver
-@@ -1466,6 +1492,7 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
- 	pci_lock_rescan_remove();
- 	pci_scan_child_bus(hbus->pci_bus);
- 	pci_bus_assign_resources(hbus->pci_bus);
-+	hv_pci_assign_slots(hbus);
- 	pci_bus_add_devices(hbus->pci_bus);
- 	pci_unlock_rescan_remove();
- 	hbus->state = hv_pcibus_installed;
-@@ -1759,6 +1786,7 @@ static void pci_devices_present_work(struct work_struct *work)
- 		 */
- 		pci_lock_rescan_remove();
- 		pci_scan_child_bus(hbus->pci_bus);
-+		hv_pci_assign_slots(hbus);
- 		pci_unlock_rescan_remove();
- 		break;
- 
-@@ -1875,6 +1903,9 @@ static void hv_eject_device_work(struct work_struct *work)
- 	list_del(&hpdev->list_entry);
- 	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
- 
-+	if (hpdev->pci_slot)
-+		pci_destroy_slot(hpdev->pci_slot);
-+
- 	memset(&ctxt, 0, sizeof(ctxt));
- 	ejct_pkt = (struct pci_eject_response *)&ctxt.pkt.message;
- 	ejct_pkt->message_type.type = PCI_EJECTION_COMPLETE;
--- 
-2.17.0
+Rajat
+
+>
+> Bjorn
