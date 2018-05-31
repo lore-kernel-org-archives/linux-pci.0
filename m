@@ -1,146 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
- <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH v3] PCI: mediatek: Add system pm support for MT2712
-Date: Fri, 1 Jun 2018 11:04:30 +0800
-Message-ID: <1527822270-30280-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:43494 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755417AbeEaPiR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 11:38:17 -0400
+Subject: Re: [PATCH] PCI: Check for PCIe downtraining conditions
+To: Alex_Gagniuc@Dellteam.com, mr.nuke.me@gmail.com,
+        bhelgaas@google.com
+Cc: Austin.Bolen@dell.com, Shyam.Iyer@dell.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20180531150535.9684-1-mr.nuke.me@gmail.com>
+ <28004506-24f0-6d10-2d1e-074e0483d2f9@codeaurora.org>
+ <4e0611c872054e768daa96b302651db3@ausx13mps321.AMER.DELL.COM>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <f260078b-6918-7fd9-39d6-e9f300e4c048@codeaurora.org>
+Date: Thu, 31 May 2018 11:38:13 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <4e0611c872054e768daa96b302651db3@ausx13mps321.AMER.DELL.COM>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+On 5/31/2018 11:29 AM, Alex_Gagniuc@Dellteam.com wrote:
+> On 5/31/2018 10:28 AM, Sinan Kaya wrote:
+>> On 5/31/2018 11:05 AM, Alexandru Gagniuc wrote:
+>>> +static void pcie_max_link_cap(struct pci_dev *dev, enum pci_bus_speed *speed,
+>>> +				enum pcie_link_width *width)
+>>> +{
+>>> +	uint32_t lnkcap;
+>>> +
+>>> +	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
+>>> +
+>>> +	*speed = pcie_link_speed[lnkcap & PCI_EXP_LNKCAP_SLS];
+>>> +	*width = (lnkcap & PCI_EXP_LNKCAP_MLW) >> PCI_EXP_LNKCAP_MLW_SHIFT;
+>>> +}
+>>> +
+>>> +static void pcie_cur_link_sta(struct pci_dev *dev, enum pci_bus_speed *speed,
+>>> +				enum pcie_link_width *width)
+>>> +{
+>>> +	uint16_t lnksta;
+>>> +
+>>> +	pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
+>>> +	*speed = pcie_link_speed[lnksta & PCI_EXP_LNKSTA_CLS];
+>>> +	*width = (lnksta & PCI_EXP_LNKSTA_NLW) >> PCI_EXP_LNKSTA_NLW_SHIFT;
+>>> +}
+>>> +
+>>> +static const char *pcie_bus_speed_name(enum pci_bus_speed speed)
+>>> +{
+>>> +	switch (speed) {
+>>> +	case PCIE_SPEED_2_5GT:
+>>> +		return "2.5 GT/s";
+>>> +	case PCIE_SPEED_5_0GT:
+>>> +		return "5.0 GT/s";
+>>> +	case PCIE_SPEED_8_0GT:
+>>> +		return "8.0 GT/s";
+>>> +	default:
+>>> +		return "unknown";
+>>> +	}
+>>> +}
+>>
+>> I thought Bjorn added some functions to retrieve this now.
+> 
+> Hmm. I couldn't find them.
 
-The MTCMOS of PCIe Host for MT2712 will be off when system suspend, and all
-the internal control register will be reset after system resume. The PCIe
-link should be re-established and the related control register values
-should be re-set after system resume.
+https://lkml.org/lkml/2018/3/30/553
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-CC: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/pci/host/pcie-mediatek.c | 60 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
+are you working on linux-next?
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index dabf1086..5363cc7 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -132,12 +132,14 @@ struct mtk_pcie_port;
- /**
-  * struct mtk_pcie_soc - differentiate between host generations
-  * @need_fix_class_id: whether this host's class ID needed to be fixed or not
-+ * @pm_support: whether the host's MTCMOS will be off when suspend
-  * @ops: pointer to configuration access functions
-  * @startup: pointer to controller setting functions
-  * @setup_irq: pointer to initialize IRQ functions
-  */
- struct mtk_pcie_soc {
- 	bool need_fix_class_id;
-+	bool pm_support;
- 	struct pci_ops *ops;
- 	int (*startup)(struct mtk_pcie_port *port);
- 	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
-@@ -1179,12 +1181,69 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int mtk_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-+	const struct mtk_pcie_soc *soc = pcie->soc;
-+	struct mtk_pcie_port *port;
-+
-+	if (!soc->pm_support)
-+		return 0;
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		clk_disable_unprepare(port->ahb_ck);
-+		clk_disable_unprepare(port->sys_ck);
-+		phy_power_off(port->phy);
-+	}
-+
-+	return 0;
-+}
-+
-+static int mtk_pcie_resume_noirq(struct device *dev)
-+{
-+	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-+	const struct mtk_pcie_soc *soc = pcie->soc;
-+	struct mtk_pcie_port *port;
-+	int ret;
-+
-+	if (!soc->pm_support)
-+		return 0;
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		phy_power_on(port->phy);
-+		clk_prepare_enable(port->sys_ck);
-+		clk_prepare_enable(port->ahb_ck);
-+
-+		ret = soc->startup(port);
-+		if (ret) {
-+			dev_err(dev, "Port%d link down\n", port->slot);
-+			phy_power_off(port->phy);
-+			clk_disable_unprepare(port->sys_ck);
-+			clk_disable_unprepare(port->ahb_ck);
-+			return ret;
-+		}
-+
-+		if (IS_ENABLED(CONFIG_PCI_MSI))
-+			mtk_pcie_enable_msi(port);
-+	}
-+
-+	return 0;
-+}
-+#endif
-+
-+static const struct dev_pm_ops mtk_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
-+				      mtk_pcie_resume_noirq)
-+};
-+
- static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
- 	.ops = &mtk_pcie_ops,
- 	.startup = mtk_pcie_startup_port,
- };
- 
- static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-+	.pm_support = true,
- 	.ops = &mtk_pcie_ops_v2,
- 	.startup = mtk_pcie_startup_port_v2,
- 	.setup_irq = mtk_pcie_setup_irq,
-@@ -1211,6 +1270,7 @@ static struct platform_driver mtk_pcie_driver = {
- 		.name = "mtk-pcie",
- 		.of_match_table = mtk_pcie_ids,
- 		.suppress_bind_attrs = true,
-+		.pm = &mtk_pcie_pm_ops,
- 	},
- };
- builtin_platform_driver(mtk_pcie_driver);
+> 
+> Alex
+> 
+> 
+
+
 -- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
