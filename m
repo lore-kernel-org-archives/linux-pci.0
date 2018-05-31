@@ -1,135 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <497165753a0240d3c95e8e6ab9b64d6460b783d6.camel@linux.intel.com>
-Subject: Re: [PATCH v8 2/7] PCI: Introduce shpchp_is_native()
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Date: Tue, 29 May 2018 19:33:35 +0300
-In-Reply-To: <20180528124756.78512-3-mika.westerberg@linux.intel.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
-         <20180528124756.78512-3-mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:39500 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932714AbeEaQu1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 12:50:27 -0400
+Subject: Re: [PATCH] PCI: Check for PCIe downtraining conditions
+From: "Alex G." <mr.nuke.me@gmail.com>
+To: Sinan Kaya <okaya@codeaurora.org>, Alex_Gagniuc@Dellteam.com,
+        bhelgaas@google.com
+Cc: Austin.Bolen@dell.com, Shyam.Iyer@dell.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20180531150535.9684-1-mr.nuke.me@gmail.com>
+ <28004506-24f0-6d10-2d1e-074e0483d2f9@codeaurora.org>
+ <4e0611c872054e768daa96b302651db3@ausx13mps321.AMER.DELL.COM>
+ <f260078b-6918-7fd9-39d6-e9f300e4c048@codeaurora.org>
+ <3b8a895b-3080-7ddb-cbfd-5aa972e9bf65@gmail.com>
+ <35563ce3-e235-096c-4b9b-5f3664d67d0f@codeaurora.org>
+ <093b2789-39a1-db9e-5783-b0488b3c9ccd@gmail.com>
+ <32d58835-2f35-0b80-38d0-b9ff603619dd@codeaurora.org>
+ <54071f83-5d0d-04a0-d448-0c99ec0ffc4f@gmail.com>
+Message-ID: <dbe16533-1878-13ed-709a-04b3a75fe477@gmail.com>
+Date: Thu, 31 May 2018 11:50:25 -0500
+MIME-Version: 1.0
+In-Reply-To: <54071f83-5d0d-04a0-d448-0c99ec0ffc4f@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2018-05-28 at 15:47 +0300, Mika Westerberg wrote:
-> In the same way we do for pciehp, introduce a new function
-> shpchp_is_native() that returns true whether the bridge should be
-> handled by the native SHCP driver. Then convert the driver to use this
-> function.
+
+
+On 05/31/2018 11:49 AM, Alex G. wrote:
 > 
-
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/hotplug/acpi_pcihp.c  |  4 ++--
->  drivers/pci/hotplug/shpchp_core.c |  2 --
->  drivers/pci/pci-acpi.c            | 21 +++++++++++++++++++++
->  include/linux/pci_hotplug.h       |  2 ++
->  4 files changed, 25 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/pci/hotplug/acpi_pcihp.c
-> b/drivers/pci/hotplug/acpi_pcihp.c
-> index 597d22aeefc1..3979f89b250a 100644
-> --- a/drivers/pci/hotplug/acpi_pcihp.c
-> +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> @@ -83,11 +83,11 @@ int acpi_get_hp_hw_control_from_firmware(struct
-> pci_dev *pdev)
->  	 * OSHP within the scope of the hotplug controller and its
-> parents,
->  	 * up to the host bridge under which this controller exists.
->  	 */
-> -	host = pci_find_host_bridge(pdev->bus);
-> -	if (host->native_shpc_hotplug)
-> +	if (shpchp_is_native(pdev))
->  		return 0;
->  
->  	/* If _OSC exists, we should not evaluate OSHP */
-> +	host = pci_find_host_bridge(pdev->bus);
->  	root = acpi_pci_find_root(ACPI_HANDLE(&host->dev));
->  	if (root->osc_support_set)
->  		goto no_control;
-> diff --git a/drivers/pci/hotplug/shpchp_core.c
-> b/drivers/pci/hotplug/shpchp_core.c
-> index 47decc9b3bb3..0f3711404c2b 100644
-> --- a/drivers/pci/hotplug/shpchp_core.c
-> +++ b/drivers/pci/hotplug/shpchp_core.c
-> @@ -275,8 +275,6 @@ static int is_shpc_capable(struct pci_dev *dev)
->  	if (dev->vendor == PCI_VENDOR_ID_AMD &&
->  	    dev->device == PCI_DEVICE_ID_AMD_GOLAM_7450)
->  		return 1;
-> -	if (!pci_find_capability(dev, PCI_CAP_ID_SHPC))
-> -		return 0;
->  	if (acpi_get_hp_hw_control_from_firmware(dev))
->  		return 0;
->  	return 1;
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index 52b8434d4d6e..bb83be0d0e5b 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -394,6 +394,27 @@ bool pciehp_is_native(struct pci_dev *bridge)
->  	return host->native_pcie_hotplug;
->  }
->  
-> +/**
-> + * shpchp_is_native - Check whether a hotplug port is handled by the
-> OS
-> + * @bridge: Hotplug port to check
-> + *
-> + * Returns true if the given @bridge is handled by the native SHPC
-> hotplug
-> + * driver.
-> + */
-> +bool shpchp_is_native(struct pci_dev *bridge)
-> +{
-> +	const struct pci_host_bridge *host;
-> +
-> +	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
-> +		return false;
-> +
-> +	if (!pci_find_capability(bridge, PCI_CAP_ID_SHPC))
-> +		return false;
-> +
-> +	host = pci_find_host_bridge(bridge->bus);
-> +	return host->native_shpc_hotplug;
-> +}
-> +
->  /**
->   * pci_acpi_wake_bus - Root bus wakeup notification fork function.
->   * @context: Device wakeup context.
-> diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-> index 1f5c935eb0de..4c378368215c 100644
-> --- a/include/linux/pci_hotplug.h
-> +++ b/include/linux/pci_hotplug.h
-> @@ -164,6 +164,7 @@ struct hotplug_params {
->  int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params
-> *hpp);
->  bool pciehp_is_native(struct pci_dev *bridge);
->  int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge);
-> +bool shpchp_is_native(struct pci_dev *bridge);
->  int acpi_pci_check_ejectable(struct pci_bus *pbus, acpi_handle
-> handle);
->  int acpi_pci_detect_ejectable(acpi_handle handle);
->  #else
-> @@ -178,5 +179,6 @@ static inline int
-> acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge)
->  	return 0;
->  }
->  static inline bool pciehp_is_native(struct pci_dev *bridge) { return
-> true; }
-> +static inline bool shpchp_is_native(struct pci_dev *bridge) { return
-> true; }
->  #endif
->  #endif
+> On 05/31/2018 11:13 AM, Sinan Kaya wrote:
+>> On 5/31/2018 12:01 PM, Alex G. wrote:
+>>>>       PCI: Add pcie_print_link_status() to log link speed and whether it's limited
+>>> This one, I have, but it's not what I need. This looks at the available
+>>> bandwidth from root port to endpoint, whereas I'm only interested in
+>>> downtraining between endpoint and upstream port.
+>>
+>> I see what you are saying. 
+>>
+>> With a little bit of effort, you can reuse the same code.
+>>
+>> Here is an attempt.
+>>
+>> You can probably extend pcie_bandwidth_available() to put an optional parent bridge
+>> device for your own use case and terminate the loop around here.
+>>
+>> https://elixir.bootlin.com/linux/v4.17-rc7/source/drivers/pci/pci.c#L5182
+>>
+>> Then, you can use the existing code to achieve what you are looking for via
+>> pcie_print_link_status() by adding an optional parent parameter.
+>>
+>> 	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
+>> 	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width, *parent*);
+> 
+> That's confusing.
 
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+"confusing" refers to the way the code currently works. It doesn't refer
+to your proposal.
+
+
+Alex
+
+ I'd expect _capable() and _available() to be
+> symmetrical. They either both look at one link only, or both go down to
+> the root port. Though it seems _capable() is link-local, and
+> _available() is down to root port.
+> 
+>>
+>> If parent parameter is NULL, code can walk all the way to root as it is doing today.
+>> If it is not, then will terminate the loop on the first iteration.
+>>
