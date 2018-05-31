@@ -1,89 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
-Subject: [PATCH v4 1/8] PCI: Make pci_get_new_domain_nr() static
-Date: Tue, 15 May 2018 11:07:00 +0200
-Message-Id: <80a86454baa7a240c859d6623a6e498d4003e417.1526375226.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
-References: <cover.1526375226.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1526375226.git.jan.kiszka@siemens.com>
-References: <cover.1526375226.git.jan.kiszka@siemens.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga05-in.huawei.com ([45.249.212.191]:8215 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754080AbeEaJHF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 May 2018 05:07:05 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <wangbinghui@hisilicon.com>, <bhelgaas@google.com>,
+        <xuwei5@huawei.com>, <robh+dt@kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <dimitrysh@google.com>, <guodong.xu@linaro.org>,
+        <suzhuangluan@hisilicon.com>, <andy.shevchenko@gmail.com>,
+        <songxiaowei@hisilicon.com>
+CC: <kongfei@hisilicon.com>, <chenyao11@huawei.com>
+Subject: [PATCH v5 1/1] PCI: kirin: Add MSI support
+Date: Thu, 31 May 2018 17:06:43 +0800
+Message-ID: <20180531090643.96810-2-songxiaowei@hisilicon.com>
+In-Reply-To: <20180531090643.96810-1-songxiaowei@hisilicon.com>
+References: <20180531090643.96810-1-songxiaowei@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+Add support for MSI.
 
-The only user of pci_get_new_domain_nr() is of_pci_bus_find_domain_nr().
-Since they are defined in the same compilation unit,
-pci_get_new_domain_nr() can be made static, which also simplifies
-preprocessor conditionals.
-
-No functional change intended.
-
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
 ---
- drivers/pci/pci.c   | 6 ++----
- include/linux/pci.h | 3 ---
- 2 files changed, 2 insertions(+), 7 deletions(-)
+ drivers/pci/dwc/pcie-kirin.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index dbfe7c4f3776..fe28cd76eacd 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5719,15 +5719,14 @@ static void pci_no_domains(void)
- #endif
- }
- 
--#ifdef CONFIG_PCI_DOMAINS
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
- static atomic_t __domain_nr = ATOMIC_INIT(-1);
- 
--int pci_get_new_domain_nr(void)
-+static int pci_get_new_domain_nr(void)
+diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
+index d2970a009eb5..6997276eb69c 100644
+--- a/drivers/pci/dwc/pcie-kirin.c
++++ b/drivers/pci/dwc/pcie-kirin.c
+@@ -430,6 +430,9 @@ static int kirin_pcie_host_init(struct pcie_port *pp)
  {
- 	return atomic_inc_return(&__domain_nr);
+ 	kirin_pcie_establish_link(pp);
+ 
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		dw_pcie_msi_init(pp);
++
+ 	return 0;
  }
  
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
- static int of_pci_bus_find_domain_nr(struct device *parent)
+@@ -445,9 +448,34 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
+ 	.host_init = kirin_pcie_host_init,
+ };
+ 
++static int kirin_pcie_add_msi(struct dw_pcie *pci,
++				struct platform_device *pdev)
++{
++	int ret = 0;
++
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		ret = platform_get_irq(pdev, 0);
++		if (ret < 0) {
++			dev_err(&pdev->dev,
++				"failed to get MSI IRQ (%d)\n", ret);
++			return ret;
++		}
++
++		pci->pp.msi_irq = ret;
++	}
++
++	return ret;
++}
++
+ static int __init kirin_add_pcie_port(struct dw_pcie *pci,
+ 				      struct platform_device *pdev)
  {
- 	static int use_dt_domains = -1;
-@@ -5782,7 +5781,6 @@ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
- 			       acpi_pci_bus_find_domain_nr(bus);
- }
- #endif
--#endif
++	int ret;
++
++	ret = kirin_pcie_add_msi(pci, pdev);
++	if (ret)
++		return ret;
++
+ 	pci->pp.ops = &kirin_pcie_host_ops;
  
- /**
-  * pci_ext_cfg_avail - can we access extended PCI config space?
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 73178a2fcee0..963232a6cd2e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1510,12 +1510,10 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
-  */
- #ifdef CONFIG_PCI_DOMAINS
- extern int pci_domains_supported;
--int pci_get_new_domain_nr(void);
- #else
- enum { pci_domains_supported = 0 };
- static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
- static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
--static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- #endif /* CONFIG_PCI_DOMAINS */
- 
- /*
-@@ -1670,7 +1668,6 @@ static inline struct pci_dev *pci_get_domain_bus_and_slot(int domain,
- 
- static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
- static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
--static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- 
- #define dev_is_pci(d) (false)
- #define dev_is_pf(d) (false)
+ 	return dw_pcie_host_init(&pci->pp);
 -- 
-2.13.6
+2.11.GIT
