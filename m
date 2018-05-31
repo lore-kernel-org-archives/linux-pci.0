@@ -1,93 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-        <guohanjun@huawei.com>, <jcm@redhat.com>, <toshi.kani@hpe.com>,
-        <tanxiaojun@huawei.com>, <wangzhou1@hisilicon.com>
-CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Yisheng Xie <xieyisheng1@huawei.com>
-Subject: [PATCH v3 1/2] PCI: Avoid panic when PCI IO resource's size is not page aligned
-Date: Tue, 29 May 2018 20:18:18 +0800
-Message-ID: <1527596299-57567-1-git-send-email-xieyisheng1@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48342 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755417AbeEaPyV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 May 2018 11:54:21 -0400
+Subject: Re: [PATCH] PCI: Check for PCIe downtraining conditions
+To: "Alex G." <mr.nuke.me@gmail.com>, Alex_Gagniuc@Dellteam.com,
+        bhelgaas@google.com
+Cc: Austin.Bolen@dell.com, Shyam.Iyer@dell.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20180531150535.9684-1-mr.nuke.me@gmail.com>
+ <28004506-24f0-6d10-2d1e-074e0483d2f9@codeaurora.org>
+ <4e0611c872054e768daa96b302651db3@ausx13mps321.AMER.DELL.COM>
+ <f260078b-6918-7fd9-39d6-e9f300e4c048@codeaurora.org>
+ <3b8a895b-3080-7ddb-cbfd-5aa972e9bf65@gmail.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <35563ce3-e235-096c-4b9b-5f3664d67d0f@codeaurora.org>
+Date: Thu, 31 May 2018 11:54:18 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <3b8a895b-3080-7ddb-cbfd-5aa972e9bf65@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Zhou reported a bug on Hisilicon arm64 D06 platform with 64KB page size:
+On 5/31/2018 11:46 AM, Alex G. wrote:
+>> https://lkml.org/lkml/2018/3/30/553
+> Oh, pcie_get_speed_cap()/pcie_get_width_cap() seems to handle the
+> capability. Not seeing one for status and speed name.
+> 
+>> are you working on linux-next?
+> v4.17-rc7
+> 
 
- [    2.470908] kernel BUG at lib/ioremap.c:72!
- [    2.475079] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
- [    2.480551] Modules linked in:
- [    2.483594] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.16.0-rc7-00062-g0b41260-dirty #23
- [    2.491756] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI Nemo 2.0 RC0 - B120 03/23/2018
- [    2.500614] pstate: 80c00009 (Nzcv daif +PAN +UAO)
- [    2.505395] pc : ioremap_page_range+0x268/0x36c
- [    2.509912] lr : pci_remap_iospace+0xe4/0x100
- [...]
- [    2.603733] Call trace:
- [    2.606168]  ioremap_page_range+0x268/0x36c
- [    2.610337]  pci_remap_iospace+0xe4/0x100
- [    2.614334]  acpi_pci_probe_root_resources+0x1d4/0x214
- [    2.619460]  pci_acpi_root_prepare_resources+0x18/0xa8
- [    2.624585]  acpi_pci_root_create+0x98/0x214
- [    2.628843]  pci_acpi_scan_root+0x124/0x20c
- [    2.633013]  acpi_pci_root_add+0x224/0x494
- [    2.637096]  acpi_bus_attach+0xf8/0x200
- [    2.640918]  acpi_bus_attach+0x98/0x200
- [    2.644740]  acpi_bus_attach+0x98/0x200
- [    2.648562]  acpi_bus_scan+0x48/0x9c
- [    2.652125]  acpi_scan_init+0x104/0x268
- [    2.655948]  acpi_init+0x308/0x374
- [    2.659337]  do_one_initcall+0x48/0x14c
- [    2.663160]  kernel_init_freeable+0x19c/0x250
- [    2.667504]  kernel_init+0x10/0x100
- [    2.670979]  ret_from_fork+0x10/0x18
+I think everything you need is in the series. I don't know which linux
+tree this landed or if it landed. Probably, it is shipping for 4.18. 
+Need some help from Bjorn where to locate these.
 
-The cause is the size of PCI IO resource is 32KB, which is 4K aligned but
-not 64KB aligned, however, ioremap_page_range() request the range as page
-aligned or it will trigger a BUG_ON() on ioremap_pte_range() it calls, as
-ioremap_pte_range increase the addr by PAGE_SIZE, which makes addr != end
-until trigger BUG_ON, if its incoming end is not page aligned. More detail
-trace is as following:
+Fri, 30 Mar 2018 16:04:40 -0500
 
- ioremap_page_range
- -> ioremap_p4d_range
-    -> ioremap_p4d_range
-       -> ioremap_pud_range
-          -> ioremap_pmd_range
-             -> ioremap_pte_range
+Bjorn Helgaas (6):
+      bnx2x: Report PCIe link properties with pcie_print_link_status()
+      bnxt_en: Report PCIe link properties with pcie_print_link_status()
+      cxgb4: Report PCIe link properties with pcie_print_link_status()
+      fm10k: Report PCIe link properties with pcie_print_link_status()
+      ixgbe: Report PCIe link properties with pcie_print_link_status()
+      PCI: Remove unused pcie_get_minimum_link()
 
-This patch avoid panic by return -EINVAL if vaddr or resource size is not
-page aligned.
+Tal Gilboa (8):
+      PCI: Add pcie_get_speed_cap() to find max supported link speed
+      PCI: Add pcie_get_width_cap() to find max supported link width
+      PCI: Add pcie_bandwidth_capable() to compute max supported link bandwidth
+      PCI: Add pcie_bandwidth_available() to compute bandwidth available to device
+      PCI: Add pcie_print_link_status() to log link speed and whether it's limited
 
-Reported-by: Zhou Wang <wangzhou1@hisilicon.com>
-Tested-by: Xiaojun Tan <tanxiaojun@huawei.com>
-Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
----
-v3:
- - pci_remap_iospace() sanitize its arguments instead - per Rafael
 
-v2:
- - Let the caller of ioremap_page_range() align the request by PAGE_SIZE - per Toshi
-
- drivers/pci/pci.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index dbfe7c4..0eb0381 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3544,6 +3544,9 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
- 	if (res->end > IO_SPACE_LIMIT)
- 		return -EINVAL;
- 
-+	if (!PAGE_ALIGNED(vaddr) || !PAGE_ALIGNED(resource_size(res)))
-+		return -EINVAL;
-+
- 	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
- 				  pgprot_device(PAGE_KERNEL));
- #else
 -- 
-1.7.12.4
-
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
