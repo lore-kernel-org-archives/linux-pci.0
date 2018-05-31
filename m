@@ -1,117 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:46059 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933144AbeEWRs1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 May 2018 13:48:27 -0400
-Received: by mail-pf0-f194.google.com with SMTP id c10-v6so10844996pfi.12
-        for <linux-pci@vger.kernel.org>; Wed, 23 May 2018 10:48:27 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: bhelgaas@google.com, kys@microsoft.com, haiyangz@microsoft.com,
-        lorenzo.pieralisi@arm.com
-Cc: devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>
-Subject: [PATCH 3/3] PCI: hv: use list_for_each_entry
-Date: Wed, 23 May 2018 10:11:14 -0700
-Message-Id: <20180523171114.5136-4-sthemmin@microsoft.com>
-In-Reply-To: <20180523171114.5136-1-sthemmin@microsoft.com>
-References: <20180523171114.5136-1-sthemmin@microsoft.com>
+Received: from mail-sg2apc01on0091.outbound.protection.outlook.com ([104.47.125.91]:55520
+        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750711AbeEaVBt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 May 2018 17:01:49 -0400
+From: Dexuan Cui <decui@microsoft.com>
+To: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>,
+        'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "'olaf@aepfle.de'" <olaf@aepfle.de>,
+        "'apw@canonical.com'" <apw@canonical.com>,
+        "'jasowang@redhat.com'" <jasowang@redhat.com>
+CC: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'driverdev-devel@linuxdriverproject.org'"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
+        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
+Subject: RE: [PATCH] PCI: hv: Do not wait forever on a device that has
+ disappeared
+Date: Thu, 31 May 2018 21:01:34 +0000
+Message-ID: <KL1P15301MB0006F8A3E876E7BEB5973B94BF630@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+References: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <SN6PR2101MB112020C6F949F7C72F52D6BEDC6D0@SN6PR2101MB1120.namprd21.prod.outlook.com>
+ <KL1P15301MB0006B36AD458D43907DF82B0BF6D0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <SN6PR2101MB1120FF4297B3C7ED5E3AE032DC630@SN6PR2101MB1120.namprd21.prod.outlook.com>
+In-Reply-To: <SN6PR2101MB1120FF4297B3C7ED5E3AE032DC630@SN6PR2101MB1120.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are several places where list_for_each_entry could be
-used to simplify the code.
+> From: Michael Kelley (EOSG)
+> Sent: Thursday, May 31, 2018 09:41
+> >
+> > IMO we can disable the per-channel tasklet to exclude the race:
+> > This way, when we exit the loop, we're sure hv_pci_onchannelcallback() =
+can
+> > not run anymore. What do you think of this?
+>=20
+> I've stared at this and the tasklet code over a couple of days now.  Addi=
+ng the
+> call to tasklet_disable() solves the immediate problem of preventing
+> hv_pci_onchannelcallback() from calling complete() against a completion
+> packet
+> that has been popped off the stack.  But in doing so, it simply pushes th=
+e core
+> problem further down the road and leaves it unresolved.
+>=20
+> tasklet_disable() does not prevent the tasklet from being scheduled.  So =
+if
+> there
+> is a response from Hyper-V to the original message, the tasklet still get=
+s
+> scheduled.  Because it is disabled, it will sit in the tasklet queue and =
+be
+> skipped
+> over each time the queue is processed.  Later,  when the channel is
+> eventually
+> deleted in free_channel(), tasklet_kill() is called.  Unfortunately, task=
+let_kill()
+> will get stuck in an infinite loop, waiting for the tasklet to run.   The=
+re aren't
+> any tasklet interfaces to dequeue an already scheduled tasklet.
 
-Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c | 27 +++++++--------------------
- 1 file changed, 7 insertions(+), 20 deletions(-)
+I think you're correct.
+=20
+> Please double-check my reasoning.  To solve this problem, I think the VMb=
+us
+> driver code will need some additional synchronization between rescind
+> notifications and a response, which may or may not have been sent, and
+> which could be processed after the rescind.  I haven't yet thought about
+> what this synchronization might need to look like.
+>=20
+> Michael
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 19eb47f58ccb..afc30dee6001 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1279,7 +1279,6 @@ static u64 get_bar_size(u64 bar_val)
-  */
- static void survey_child_resources(struct hv_pcibus_device *hbus)
- {
--	struct list_head *iter;
- 	struct hv_pci_dev *hpdev;
- 	resource_size_t bar_size = 0;
- 	unsigned long flags;
-@@ -1305,8 +1304,7 @@ static void survey_child_resources(struct hv_pcibus_device *hbus)
- 	 * for a child device are a power of 2 in size and aligned in memory,
- 	 * so it's sufficient to just add them up without tracking alignment.
- 	 */
--	list_for_each(iter, &hbus->children) {
--		hpdev = container_of(iter, struct hv_pci_dev, list_entry);
-+	list_for_each_entry(hpdev, &hbus->children, list_entry) {
- 		for (i = 0; i < 6; i++) {
- 			if (hpdev->probed_bar[i] & PCI_BASE_ADDRESS_SPACE_IO)
- 				dev_err(&hbus->hdev->device,
-@@ -1359,7 +1357,6 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
- 	resource_size_t low_base = 0;
- 	resource_size_t bar_size;
- 	struct hv_pci_dev *hpdev;
--	struct list_head *iter;
- 	unsigned long flags;
- 	u64 bar_val;
- 	u32 command;
-@@ -1381,9 +1378,7 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
- 
- 	/* Pick addresses for the BARs. */
- 	do {
--		list_for_each(iter, &hbus->children) {
--			hpdev = container_of(iter, struct hv_pci_dev,
--					     list_entry);
-+		list_for_each_entry(hpdev, &hbus->children, list_entry) {
- 			for (i = 0; i < 6; i++) {
- 				bar_val = hpdev->probed_bar[i];
- 				if (bar_val == 0)
-@@ -1637,7 +1632,6 @@ static void pci_devices_present_work(struct work_struct *work)
- {
- 	u32 child_no;
- 	bool found;
--	struct list_head *iter;
- 	struct pci_function_description *new_desc;
- 	struct hv_pci_dev *hpdev;
- 	struct hv_pcibus_device *hbus;
-@@ -1674,10 +1668,8 @@ static void pci_devices_present_work(struct work_struct *work)
- 
- 	/* First, mark all existing children as reported missing. */
- 	spin_lock_irqsave(&hbus->device_list_lock, flags);
--	list_for_each(iter, &hbus->children) {
--			hpdev = container_of(iter, struct hv_pci_dev,
--					     list_entry);
--			hpdev->reported_missing = true;
-+	list_for_each_entry(hpdev, &hbus->children, list_entry) {
-+		hpdev->reported_missing = true;
- 	}
- 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
- 
-@@ -1687,11 +1679,8 @@ static void pci_devices_present_work(struct work_struct *work)
- 		new_desc = &dr->func[child_no];
- 
- 		spin_lock_irqsave(&hbus->device_list_lock, flags);
--		list_for_each(iter, &hbus->children) {
--			hpdev = container_of(iter, struct hv_pci_dev,
--					     list_entry);
--			if ((hpdev->desc.win_slot.slot ==
--			     new_desc->win_slot.slot) &&
-+		list_for_each_entry(hpdev, &hbus->children, list_entry) {
-+			if ((hpdev->desc.win_slot.slot == new_desc->win_slot.slot) &&
- 			    (hpdev->desc.v_id == new_desc->v_id) &&
- 			    (hpdev->desc.d_id == new_desc->d_id) &&
- 			    (hpdev->desc.ser == new_desc->ser)) {
-@@ -1713,9 +1702,7 @@ static void pci_devices_present_work(struct work_struct *work)
- 	spin_lock_irqsave(&hbus->device_list_lock, flags);
- 	do {
- 		found = false;
--		list_for_each(iter, &hbus->children) {
--			hpdev = container_of(iter, struct hv_pci_dev,
--					     list_entry);
-+		list_for_each_entry(hpdev, &hbus->children, list_entry) {
- 			if (hpdev->reported_missing) {
- 				found = true;
- 				put_pcichild(hpdev);
--- 
-2.17.0
+Yes, it looks the VMBus driver needs to provide an API to cope with this.
+I'll try to further investigate the issue.
+
+-- Dexuan
