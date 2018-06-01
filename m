@@ -1,69 +1,123 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 19 Jun 2018 17:16:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rajat Jain <rajatja@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com
-Subject: Re: [PATCH v2 0/5] Expose PCIe AER stats via sysfs
-Message-ID: <20180619221651.GH33049@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180522222805.80314-1-rajatja@google.com>
- <20180523175808.28030-1-rajatja@google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Don Brace <don.brace@microsemi.com>
+To: Sinan Kaya <okaya@codeaurora.org>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "ryan@finnie.org" <ryan@finnie.org>,
+ "timur@codeaurora.org" <timur@codeaurora.org>
+Subject: RE: [PATCH V4] scsi: hpsa: drop shutdown callback
+Date: Fri, 1 Jun 2018 20:58:09 +0000
+Message-ID: <a46c373b432946ec89fce71d6ef7b5cc@microsemi.com>
+References: <1527860768-11367-1-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1527860768-11367-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180523175808.28030-1-rajatja@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "open list:HEWLETT-PACKARD SMART ARRAY RAID
+ DRIVER \(hpsa\)" <linux-scsi@vger.kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "esc.storagedev" <esc.storagedev@microsemi.com>,
+ open list <linux-kernel@vger.kernel.org>,
+ "stable@vger.kernel.org" <stable@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2018 at 10:58:03AM -0700, Rajat Jain wrote:
-> This patchset exposes the AER stats via the sysfs attributes.
+> -----Original Message-----
+> From: Sinan Kaya [mailto:okaya@codeaurora.org]
+> Sent: Friday, June 01, 2018 8:46 AM
+> To: linux-pci@vger.kernel.org; ryan@finnie.org; timur@codeaurora.org
+> Cc: linux-arm-msm@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> Sinan Kaya <okaya@codeaurora.org>; stable@vger.kernel.org; Don Brace
+> <don.brace@microsemi.com>; James E.J. Bottomley
+> <jejb@linux.vnet.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>;
+> esc.storagedev <esc.storagedev@microsemi.com>; open list:HEWLETT-
+> PACKARD SMART ARRAY RAID DRIVER (hpsa) <linux-scsi@vger.kernel.org>; open
+> list <linux-kernel@vger.kernel.org>
+> Subject: [PATCH V4] scsi: hpsa: drop shutdown callback
 > 
-> Patchset v2 has minor changes to v1 based on the review comments,
-> no functional change.
-> Primarily:
->  * Fix license header
->  * Use tabs instead of spaces
->  * Remove use on unlikely() etc
->  * Move documentation to Documentation/ABI/
+> EXTERNAL EMAIL
 > 
-> Rajat Jain (5):
->   PCI/AER: Define and allocate aer_stats structure for AER capable
->     devices
->   PCI/AER: Add sysfs stats for AER capable devices
->   PCI/AER: Add sysfs attributes to provide breakdown of AERs
->   PCI/AER: Add sysfs attributes for rootport cumulative stats
->   Documentation/ABI: Add details of PCI AER statistics
 > 
->  .../testing/sysfs-bus-pci-devices-aer_stats   | 103 ++++++++++
->  Documentation/PCI/pcieaer-howto.txt           |   5 +
->  drivers/pci/pci-sysfs.c                       |   3 +
->  drivers/pci/pci.h                             |   4 +-
->  drivers/pci/pcie/aer/Makefile                 |   2 +-
->  drivers/pci/pcie/aer/aerdrv.h                 |  15 ++
->  drivers/pci/pcie/aer/aerdrv_core.c            |  11 +
->  drivers/pci/pcie/aer/aerdrv_errprint.c        |   7 +-
->  drivers/pci/pcie/aer/aerdrv_stats.c           | 192 ++++++++++++++++++
->  drivers/pci/probe.c                           |   1 +
->  include/linux/pci.h                           |   3 +
->  11 files changed, 342 insertions(+), 4 deletions(-)
->  create mode 100644 Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
->  create mode 100644 drivers/pci/pcie/aer/aerdrv_stats.c
+> 'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
+> shutdown")' has been added to kernel to shutdown pending PCIe port
+> service interrupts during reboot so that a newly started kexec kernel
+> wouldn't observe pending interrupts.
+> 
+> pcie_port_device_remove() is disabling the root port and switches by
+> calling pci_disable_device() after all PCIe service drivers are shutdown.
+> 
+> This has been found to cause crashes on HP DL360 Gen9 machines during
+> reboot due to hpsa driver not clearing the bus master bit during the
+> shutdown procedure by calling pci_disable_device().
+> 
+> Disable device as part of the shutdown sequence.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-I broke this by putting all the AER code in one file in v4.18-rc1,
-sorry!  Would you mind rebasing these on top of that?
+Looks good. Thanks for your patch
+Thanks for changing the patch name also.
 
-Since everything AER-related is now in aer.c, I'd suggest putting the
-stats code there, too.
+Tested-by: Don Brace <don.brace@microsemi.com>
+Acked-by: Don Brace <don.brace@microsemi.com>
+
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
+> Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
+> Cc: stable@vger.kernel.org
+> Reported-by: Ryan Finnie <ryan@finnie.org>
+> ---
+>  drivers/scsi/hpsa.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 3a9eca1..b92f86a 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -8869,7 +8869,7 @@ static void hpsa_disable_rld_caching(struct ctlr_info
+> *h)
+>         kfree(options);
+>  }
+> 
+> -static void hpsa_shutdown(struct pci_dev *pdev)
+> +static void __hpsa_shutdown(struct pci_dev *pdev)
+>  {
+>         struct ctlr_info *h;
+> 
+> @@ -8884,6 +8884,12 @@ static void hpsa_shutdown(struct pci_dev *pdev)
+>         hpsa_disable_interrupt_mode(h);         /* pci_init 2 */
+>  }
+> 
+> +static void hpsa_shutdown(struct pci_dev *pdev)
+> +{
+> +       __hpsa_shutdown(pdev);
+> +       pci_disable_device(pdev);
+> +}
+> +
+>  static void hpsa_free_device_info(struct ctlr_info *h)
+>  {
+>         int i;
+> @@ -8927,7 +8933,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+>                 scsi_remove_host(h->scsi_host);         /* init_one 8 */
+>         /* includes hpsa_free_irqs - init_one 4 */
+>         /* includes hpsa_disable_interrupt_mode - pci_init 2 */
+> -       hpsa_shutdown(pdev);
+> +       __hpsa_shutdown(pdev);
+> 
+>         hpsa_free_device_info(h);               /* scan */
+> 
+> --
+> 2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
