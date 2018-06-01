@@ -1,69 +1,31 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:36576 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935532AbeFNBeT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 21:34:19 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 0/10] Add new helper to allocate IRQ domain for host drivers
-Date: Thu, 14 Jun 2018 09:33:15 +0800
-Message-Id: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39526 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751525AbeFAPEA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jun 2018 11:04:00 -0400
+Subject: Re: [PATCH v2] PCI: Check for PCIe downtraining conditions
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>, bhelgaas@google.com
+Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20180601150129.10486-1-mr.nuke.me@gmail.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <35a67b5b-5f37-c779-64a3-eb5e21362e9c@codeaurora.org>
+Date: Fri, 1 Jun 2018 11:03:57 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180601150129.10486-1-mr.nuke.me@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 6/1/2018 11:01 AM, Alexandru Gagniuc wrote:
+> +	/* Multi-function PCIe share the same link/status. */
+> +	if (PCI_FUNC(dev->devfn) != 0)
+> +		return;
 
-Hi Bjorn and Lorenzo,
-
-PCI drivers use highly similar code block to allocate IRQ domain which
-leads to code duplication than expected. This patchset adds a new helper,
-pci_host_alloc_intx_irqd(), to avoid that as much as possible.
-
-
-Changes in v4:
-- fix another compile warning reported by Kbuild Robot
-
-Changes in v3:
-- rename to pci_host_alloc_intx_irqd and move to probe.c
-- fix compile error reported by Kbuild Robot
-
-Changes in v2:
-- fix typo and move the code to C file.
-
-Shawn Lin (10):
-  PCI: Add pci_host_alloc_intx_irqd() for allocating IRQ domain
-  PCI: dra7xx: Use pci_host_alloc_intx_irqd() helper to simplify the
-    code
-  PCI: keystone-dw: Use pci_host_alloc_intx_irqd() helper to get irq
-    domain for INTx
-  PCI: aardvark: Use pci_host_alloc_intx_irqd() helper to get irq domain
-    for INTx
-  PCI: faraday: Use pci_host_alloc_intx_irqd() helper to get irq domain
-    for INTx
-  PCI: altera: Use pci_host_alloc_intx_irqd() helper to get irq domain
-    for INTx
-  PCI: mediatek: Use pci_host_alloc_intx_irqd() helper to get irq domain
-    for INTx
-  PCI: xilinx-nwl: Use pci_host_alloc_intx_irqd() helper to get irq
-    domain for INTx
-  PCI: xilinx: Use pci_host_alloc_intx_irqd() helper to get irq domain
-    for INTx
-  PCI: rockchip: Use pci_host_alloc_intx_irqd() helper to get irq domain
-    for INTx
-
- drivers/pci/controller/dwc/pci-dra7xx.c      | 42 ++--------------
- drivers/pci/controller/dwc/pci-keystone-dw.c | 13 ++---
- drivers/pci/controller/pci-aardvark.c        | 24 ++-------
- drivers/pci/controller/pci-ftpci100.c        | 15 ++----
- drivers/pci/controller/pcie-altera.c         | 38 ++------------
- drivers/pci/controller/pcie-mediatek.c       | 30 ++---------
- drivers/pci/controller/pcie-rockchip-host.c  | 38 ++------------
- drivers/pci/controller/pcie-xilinx-nwl.c     | 22 ++-------
- drivers/pci/controller/pcie-xilinx.c         | 44 ++---------------
- drivers/pci/probe.c                          | 74 ++++++++++++++++++++++++++++
- include/linux/pci.h                          |  7 +++
- 11 files changed, 119 insertions(+), 228 deletions(-)
+How about virtual functions?
 
 -- 
-1.9.1
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
