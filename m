@@ -1,213 +1,166 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Sun, 17 Jun 2018 10:54:41 +0530
-From: poza@codeaurora.org
-To: Rajat Jain <rajatja@google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 1 Jun 2018 08:49:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com
-Subject: Re: [PATCH v2 5/5] Documentation/ABI: Add details of PCI AER
- statistics
-In-Reply-To: <20180523175808.28030-6-rajatja@google.com>
-References: <20180522222805.80314-1-rajatja@google.com>
- <20180523175808.28030-1-rajatja@google.com>
- <20180523175808.28030-6-rajatja@google.com>
-Message-ID: <c27290dd401bb2954db4959559c39a00@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 1/7] PCI: Take all bridges into account when
+ calculating bus numbers for extension
+Message-ID: <20180601134958.GB119987@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+ <20180528124756.78512-2-mika.westerberg@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180528124756.78512-2-mika.westerberg@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-05-23 23:28, Rajat Jain wrote:
-> Add the PCI AER statistics details to
-> Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
-> and provide a pointer to it in
-> Documentation/PCI/pcieaer-howto.txt
+On Mon, May 28, 2018 at 03:47:50PM +0300, Mika Westerberg wrote:
+> When distributing extra buses between hotplug bridges for future
+> extension we currently fail to take into account the fact that there
+> might be non-hotplug bridges on the bus after the hotplug bridges. In
+> this particular system we have following topology:
 > 
-> Signed-off-by: Rajat Jain <rajatja@google.com>
+>   01:00.0 --+- 02:00.0 -- Thunderbolt host controller
+>             +- 02:01.0 (HotPlug+)
+>             \- 02:02.0 -- xHCI host controller
+> 
+> Now, pci_scan_child_bus_extend() is supposed to distribute remaining bus
+> numbers to the hotplug bridge at 02:01.0 but only after all bridges on
+> that bus have been been accounted for. Since we don't check upfront that
+> there will be another non-hotplug bridge after the hotplug bridge
+> 02:01.0 it will inadvertently extend over the bus space of the
+> non-hotplug bridge:
+
+Just to make sure I understand this correctly, I think this situation
+arises when we hot-add 01:00.0.  The port above 01:00.0 was probably
+programmed by the BIOS like this:
+
+  pci 0000:00:1b.0: PCI bridge to [bus 01-39]
+
+01:00.0 is the only device on bus 01, so we give it everything that's
+left:
+
+>   pci 0000:01:00.0: PCI bridge to [bus 02-39]
+>   ...
+
+There are three bridges on bus 02, so we need to distribute the
+remaining [bus 03-39] range among them.  Previously we only assigned
+bus numbers to "is_hotplug_bridge" devices (basically those with
+PCI_EXP_SLTCAP_HPC or ACPI hotplug methods).
+
+In this case, the only one with "is_hotplug_bridge" is 02:01.0.
+
+We looked at 02:00.0, which is a bridge but doesn't have
+PCI_EXP_SLTCAP_HPC set, so we gave it one secondary bus number:
+
+  pci 0000:02:00.0: PCI bridge to [bus 03]
+
+Then we looked at 02:01.0, which *does* have PCI_EXP_SLTCAP_HPC, and
+we know it's the only "is_hotplug_bridge", so we gave it the rest:
+
+  pci 0000:02:01.0: PCI bridge to [bus 04-39]
+
+Then we get to 02:02.0.  There are no bus numbers available, so we
+can't reach anything below it.
+
+And this patch fixes it by assigning at least one bus number to every
+bridge, even if it doesn't have PCI_EXP_SLTCAP_HPC?
+
+Is that right?
+
+(The messages we print are sort of weird because we claim to scan bus
+3a, but config accesses to 3a will never even reach the 01:00.0
+bridge.  But that's a problem for another day.)
+
+>   pci_bus 0000:04: [bus 04-39] extended by 0x35
+>   pci_bus 0000:04: bus scan returning with max=39
+>   pci_bus 0000:04: busn_res: [bus 04-39] end is updated to 39
+>   pci 0000:02:02.0: scanning [bus 00-00] behind bridge, pass 1
+>   pci_bus 0000:3a: scanning bus
+>   pci_bus 0000:3a: bus scan returning with max=3a
+>   pci_bus 0000:3a: busn_res: [bus 3a] end is updated to 3a
+>   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
+>   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
+>   pci_bus 0000:02: bus scan returning with max=3a
+>   pci_bus 0000:02: busn_res: [bus 02-39] end can not be updated to 3a
+> 
+> Resulting 'lspci -t' output looks like this:
+> 
+>   +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
+>                              ^^   +-01.0-[04-39]--
+>                                   \-02.0-[3a]----00.0
+>                                           ^^
+> The xHCI host controller (3a:00.0) behind downstream bridge at 02:02.0
+> is not usable anymore.
+> 
+> To fix this reserve at least one bus for each bridge during scanning of
+> already configured bridges. Then we use this information in the second
+> scan to correct the available extra bus space for hotplug bridges.
+> 
+> After this change the 'lspci -t' output is what is expected:
+> 
+>   +-1b.0-[01-39]----00.0-[02-39]--+-00.0-[03]----00.0
+>                                   +-01.0-[04-38]--
+>                                   \-02.0-[39]----00.0
+> 
+> Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
+> Reported-by: Mario Limonciello <mario.limonciello@dell.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Cc: stable@vger.kernel.org
 > ---
-> v2: Move the documentation to Documentation/ABI/
+>  drivers/pci/probe.c | 15 ++++++++++++---
+>  1 file changed, 12 insertions(+), 3 deletions(-)
 > 
->  .../testing/sysfs-bus-pci-devices-aer_stats   | 103 ++++++++++++++++++
->  Documentation/PCI/pcieaer-howto.txt           |   5 +
->  2 files changed, 108 insertions(+)
->  create mode 100644 
-> Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index d14e8f827d53..8f384e7ca2c2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2634,7 +2634,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+>  	for_each_pci_bridge(dev, bus) {
+>  		cmax = max;
+>  		max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
+> -		used_buses += cmax - max;
+> +		/*
+> +		 * Reserve one bus for each bridge now to avoid
+> +		 * extending hotplug bridges too much during the second
+> +		 * scan below.
+> +		 */
+> +		used_buses++;
+> +		if (cmax - max > 1)
+> +			used_buses += cmax - max - 1;
+>  	}
+>  
+>  	/* Scan bridges that need to be reconfigured */
+> @@ -2657,12 +2664,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+>  			 * bridges if any.
+>  			 */
+>  			buses = available_buses / hotplug_bridges;
+> -			buses = min(buses, available_buses - used_buses);
+> +			buses = min(buses, available_buses - used_buses + 1);
+>  		}
+>  
+>  		cmax = max;
+>  		max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
+> -		used_buses += max - cmax;
+> +		/* One bus is already accounted so don't add it again */
+> +		if (max - cmax > 1)
+> +			used_buses += max - cmax - 1;
+>  	}
+>  
+>  	/*
+> -- 
+> 2.17.0
 > 
-> diff --git a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
-> b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
-> new file mode 100644
-> index 000000000000..f55c389290ac
-> --- /dev/null
-> +++ b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
-> @@ -0,0 +1,103 @@
-> +==========================
-> +PCIe Device AER statistics
-> +==========================
-> +These attributes show up under all the devices that are AER capable. 
-> These
-> +statistical counters indicate the errors "as seen/reported by the 
-> device".
-> +Note that this may mean that if an end point is causing problems, the 
-> AER
-> +counters may increment at its link partner (e.g. root port) because 
-> the
-> +errors will be "seen" / reported by the link partner and not the the
-> +problematic end point itself (which may report all counters as 0 as it 
-> never
-> +saw any problems).
-> +
-> +Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_total_cor_errs
-> +Date:		May 2018
-> +Kernel Version: 4.17.0
-> +Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-> +Description:	Total number of correctable errors seen and reported by 
-> this
-> +		PCI device using ERR_COR.
-> +
-> +Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_total_fatal_errs
-> +Date:		May 2018
-> +Kernel Version: 4.17.0
-> +Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-> +Description:	Total number of uncorrectable fatal errors seen and 
-> reported
-> +		by this PCI device using ERR_FATAL.
-> +
-> +Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_total_nonfatal_errs
-> +Date:		May 2018
-> +Kernel Version: 4.17.0
-> +Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-> +Description:	Total number of uncorrectable non-fatal errors seen and 
-> reported
-> +		by this PCI device using ERR_NONFATAL.
-> +
-> +Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_breakdown_correctable
-> +Date:		May 2018
-> +Kernel Version: 4.17.0
-> +Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-> +Description:	Breakdown of of correctable errors seen and reported by 
-> this
-> +		PCI device using ERR_COR. A sample result looks like this:
-> +-----------------------------------------
-> +Receiver Error = 0x174
-> +Bad TLP = 0x19
-> +Bad DLLP = 0x3
-> +RELAY_NUM Rollover = 0x0
-> +Replay Timer Timeout = 0x1
-> +Advisory Non-Fatal = 0x0
-> +Corrected Internal Error = 0x0
-> +Header Log Overflow = 0x0
-> +-----------------------------------------
-why hex display ? decimal is easy to read as these are counters.
-> +
-> +Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_breakdown_uncorrectable
-> +Date:		May 2018
-> +Kernel Version: 4.17.0
-> +Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-> +Description:	Breakdown of of correctable errors seen and reported by 
-> this
-> +		PCI device using ERR_FATAL or ERR_NONFATAL. A sample result
-> +		looks like this:
-> +-----------------------------------------
-> +Undefined = 0x0
-> +Data Link Protocol = 0x0
-> +Surprise Down Error = 0x0
-> +Poisoned TLP = 0x0
-> +Flow Control Protocol = 0x0
-> +Completion Timeout = 0x0
-> +Completer Abort = 0x0
-> +Unexpected Completion = 0x0
-> +Receiver Overflow = 0x0
-> +Malformed TLP = 0x0
-> +ECRC = 0x0
-> +Unsupported Request = 0x0
-> +ACS Violation = 0x0
-> +Uncorrectable Internal Error = 0x0
-> +MC Blocked TLP = 0x0
-> +AtomicOp Egress Blocked = 0x0
-> +TLP Prefix Blocked Error = 0x0
-> +-----------------------------------------
-> +
-> +============================
-> +PCIe Rootport AER statistics
-> +============================
-> +These attributes showup under only the rootports that are AER capable. 
-> These
-> +indicate the number of error messages as "reported to" the rootport.
-> Please note
-> +that the rootports also transmit (internally) the ERR_* messages for
-> errors seen
-> +by the internal rootport PCI device, so these counters includes them 
-> and are
-> +thus cumulative of all the error messages on the PCI hierarchy 
-> originating
-> +at that root port.
-
-what about switches and bridges ?
-Also Can you give some idea as e.g what is the difference between
-dev_total_fatal_errs and rootport_total_fatal_errs  (assuming that both 
-are same pci_dev.
-
-rootport_total_fatal_errs gives me an idea that how many times things 
-have been failed under this pci_dev ?
-which means num of downstream link problems. but I am still trying to 
-make sense as how it could be used,
-since we dont have BDF information associated with the number of errors 
-anywhere (except these AER print messages)
-
-
-and dev_total_fatal_errs as you mentioned above that problematic EP, 
-then say root-port will report it and increment
-dev_total_fatal_errs ++
-does it also increment root-port_total_fatal_errs ++ in above scenario ?
-
-> +
-> +Where:		/sys/bus/pci/devices/<dev>/aer_stats/rootport_total_cor_errs
-> +Date:		May 2018
-> +Kernel Version: 4.17.0
-> +Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-> +Description:	Total number of ERR_COR messages reported to rootport.
-> +
-> +Where:		/sys/bus/pci/devices/<dev>/aer_stats/rootport_total_fatal_errs
-> +Date:		May 2018
-> +Kernel Version: 4.17.0
-> +Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-> +Description:	Total number of ERR_FATAL messages reported to rootport.
-> +
-> +Where:	    
-> /sys/bus/pci/devices/<dev>/aer_stats/rootport_total_nonfatal_errs
-> +Date:		May 2018
-> +Kernel Version: 4.17.0
-> +Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-> +Description:	Total number of ERR_NONFATAL messages reported to 
-> rootport.
-> diff --git a/Documentation/PCI/pcieaer-howto.txt
-> b/Documentation/PCI/pcieaer-howto.txt
-> index acd0dddd6bb8..91b6e677cb8c 100644
-> --- a/Documentation/PCI/pcieaer-howto.txt
-> +++ b/Documentation/PCI/pcieaer-howto.txt
-> @@ -73,6 +73,11 @@ In the example, 'Requester ID' means the ID of the
-> device who sends
->  the error message to root port. Pls. refer to pci express specs for
->  other fields.
-> 
-> +2.4 AER Statistics / Counters
-> +
-> +When PCIe AER errors are captured, the counters / statistics are also 
-> exposed
-> +in form of sysfs attributes which are documented at
-> +Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
-> 
->  3. Developer Guide
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
