@@ -1,139 +1,96 @@
-Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-References: <1528871397-17917-1-git-send-email-kernelfans@gmail.com>
- <1528871397-17917-3-git-send-email-kernelfans@gmail.com> <20180613131317.GA201807@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20180613131317.GA201807@bhelgaas-glaptop.roam.corp.google.com>
-From: Pingfan Liu <kernelfans@gmail.com>
-Date: Mon, 25 Jun 2018 10:59:31 +0800
-Message-ID: <CAFgQCTukvm+dqTPG=SbNY6zvxg7EoPuqEBOKV0GZFO2obxu7kA@mail.gmail.com>
-Subject: Re: [patchV2 2/2] pci/shpchp: no claim on pcie port device
-To: helgaas@kernel.org
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Christoph Hellwig <hch@infradead.org>, linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1527654876-26716-1-git-send-email-okaya@codeaurora.org>
+References: <1527654876-26716-1-git-send-email-okaya@codeaurora.org>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Fri, 1 Jun 2018 18:02:31 +0300
+Message-ID: <CAHp75Vc3YKAR1P_F0fwD+ueGub4gVUjP0=wv4Egf_fTSVkSUjw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: move early dump functionality from x86 arch into the
+ common code
+To: Sinan Kaya <okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Kate Stewart <kstewart@linuxfoundation.org>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ linux-pci@vger.kernel.org, Petr Tesarik <ptesarik@suse.cz>,
+ Ram Pai <linuxram@us.ibm.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>,
+ "H. Peter Anvin" <hpa@zytor.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+ Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
+ Timur Tabi <timur@codeaurora.org>,
+ "maintainer:X86 ARCHITECTURE \(32-BIT AND 64-BIT\)" <x86@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
+ Thymo van Beers <thymovanbeers@gmail.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Tom Lendacky <thomas.lendacky@amd.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
+ Frederic Weisbecker <frederic@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+ Juergen Gross <jgross@suse.com>, Dou Liyang <douly.fnst@cn.fujitsu.com>,
+ Borislav Petkov <bp@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ Philippe Ombredanne <pombredanne@nexb.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 13, 2018 at 9:13 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Wed, Jun 13, 2018 at 02:29:57PM +0800, Pingfan Liu wrote:
-> > The Linux Device Driver Model allows a physical device to be handled
-> > by only a single driver. But at present, both shpchp and portdrv_pci
-> > claim PCI_CLASS_BRIDGE_PCI, and touch devices_kset when the drivers are
-> > loaded. This causes a few problems, one is the wrong shutdown seq of
-> > devices, owing to the broken devices_kset. This patch keeps shpchp away
-> > from pcie port device, using the extra matching method.
->
-> As Christoph pointed out, something seems wrong if we add to
-> devices_kset even when the probe fails.  We will call shpc_probe() for
-> the device below, but there's no SHPC capability, so the probe should
-> fail when shpc_init() fails.
->
-> I do think the current structure where portdrv and shpchp are both
-> "drivers" that claim bridges is broken.  This has caused problems
-> before, e.g., some PCIe switches have performance counters, and a
-> driver for those switches ought to be able to claim the device and use
-> the counters, but portdrv is in the way.
->
-> I think it would be better if portdrv (and maybe shpchp; not sure
-> about that) were integrated into the PCIe core and did not register as
-> a driver.  But this is a big project, far beyond the scope of this
-> current issue.
->
-Yes, I agree. But just leaving this for later fix, and try to bring
-out a fix in drivers/core firstly.
+On Wed, May 30, 2018 at 7:34 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> Move early dump functionality into common code so that it is available for
+> all archtiectures. No need to carry arch specific reads around as the read
+> hooks are already initialized by the time pci_setup_device() is getting
+> called during scan.
 
-Regards,
-Pingfan
+>  /* If set, the PCIe ATS capability will not be used. */
+>  static bool pcie_ats_disabled;
+>
+> +bool pci_early_dump;
+> +
 
-> > Note:
-> > I hit this bug on a Power9 machine, when "kexec -e", and see a ata-disk
-> > behind a bridge can not write back buffer in flight due to the former
-> > shutdown of the bridge which clears the BusMaster bit.
-> >
-> > the device involved:
-> > 0004:00:00.0 PCI bridge: IBM Device 04c1 (prog-if 00 [Normal decode])
-> >         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-> >         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-> >         Latency: 0
-> >         NUMA node: 0
-> >         Bus: primary=00, secondary=01, subordinate=12, sec-latency=0
-> >         I/O behind bridge: 00000000-00000fff
-> >         Memory behind bridge: 80000000-ffefffff
-> >         Prefetchable memory behind bridge: 0006024000000000-0006027f7fffffff
-> >         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-> >         BridgeCtl: Parity- SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
-> >                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-> >         Capabilities: [40] Power Management version 3
-> >                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-> >                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-> >         Capabilities: [48] Express (v2) Root Port (Slot-), MSI 00
-> >                 DevCap: MaxPayload 512 bytes, PhantFunc 0
-> >                         ExtTag- RBE+
-> >                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> >                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-> >                         MaxPayload 256 bytes, MaxReadReq 128 bytes
-> >                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-> >                 LnkCap: Port #0, Speed 8GT/s, Width x8, ASPM not supported, Exit Latency L0s <64ns, L1 <1us
-> >                         ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp-
-> >                 LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- CommClk-
-> >                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> >                 LnkSta: Speed 8GT/s, Width x4, TrErr- Train- SlotClk- DLActive+ BWMgmt- ABWMgmt+
-> >                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-> >                 RootCap: CRSVisible-
-> >                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-> >                 DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd+
-> >                 DevCtl2: Completion Timeout: 16ms to 55ms, TimeoutDis+, LTR-, OBFF Disabled ARIFwd+
-> >                 LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-> >                          Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-> >                          Compliance De-emphasis: -6dB
-> >                 LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete+, EqualizationPhase1+
-> >                          EqualizationPhase2+, EqualizationPhase3+, LinkEqualizationRequest-
-> >         Capabilities: [100 v1] Advanced Error Reporting
-> >                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-> >                 UEMsk:  DLP- SDES- TLP+ FCP- CmpltTO+ CmpltAbrt+ UnxCmplt- RxOF- MalfTLP- ECRC+ UnsupReq- ACSViol-
-> >                 UESvrt: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-> >                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-> >                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-> >                 AERCap: First Error Pointer: 00, GenCap+ CGenEn+ ChkCap+ ChkEn+
-> >         Capabilities: [148 v1] #19
-> >
-> > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
-> > ---
-> >  drivers/pci/hotplug/shpchp_core.c | 13 +++++++++++++
-> >  1 file changed, 13 insertions(+)
-> >
-> > diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
-> > index 1f0f969..85b4665 100644
-> > --- a/drivers/pci/hotplug/shpchp_core.c
-> > +++ b/drivers/pci/hotplug/shpchp_core.c
-> > @@ -336,6 +336,18 @@ static void shpc_remove(struct pci_dev *dev)
-> >       kfree(ctrl);
-> >  }
-> >
-> > +static int shpc_extra_match(struct pci_dev *pdev)
-> > +{
-> > +     /* do not claim pcie port device */
-> > +     if (pci_is_pcie(pdev) &&
-> > +         (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
-> > +          pci_pcie_type(pdev) == PCI_EXP_TYPE_UPSTREAM ||
-> > +          pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM))
-> > +             return -ENODEV;
-> > +
-> > +     return 0;
-> > +}
-> > +
-> >  static const struct pci_device_id shpcd_pci_tbl[] = {
-> >       {PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0)},
-> >       { /* end: all zeroes */ }
-> > @@ -345,6 +357,7 @@ MODULE_DEVICE_TABLE(pci, shpcd_pci_tbl);
-> >  static struct pci_driver shpc_driver = {
-> >       .name =         SHPC_MODULE_NAME,
-> >       .id_table =     shpcd_pci_tbl,
-> > +     .extra_match =  shpc_extra_match,
-> >       .probe =        shpc_probe,
-> >       .remove =       shpc_remove,
-> >  };
-> > --
-> > 2.7.4
-> >
+I didn't check above these, but maybe a good idea to add one line
+comment what is this about?
+
+
+>  extern const unsigned char pcie_link_speed[];
+> -
+> +extern bool pci_early_dump;
+>  bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+>
+
+Hmm... I would rather not attach this line to some function declarations.
+
+> +static void early_dump_pci_device(struct pci_dev *pdev)
+> +{
+> +       u32 value[256 / 4];
+> +       int i;
+> +
+> +       dev_info(&pdev->dev, "pci 0000:%02x:%02x.%d config space:\n",
+> +                pdev->bus->number, PCI_SLOT(pdev->devfn),
+> +                PCI_FUNC(pdev->devfn));
+
+Shouldn't be this changed to pci_info() ?
+
+> +
+> +       for (i = 0; i < 256; i += 4)
+> +               pci_read_config_dword(pdev, i, &value[i / 4]);
+> +
+> +       print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value,
+> +                      256, false);
+> +}
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
