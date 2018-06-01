@@ -1,48 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay6.synopsys.com ([198.182.37.59]:42883 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753207AbeEOOcU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 May 2018 10:32:20 -0400
-Subject: Re: [PATCH 0/4] Add DesignWare EP support
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>, <kishon@ti.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-References: <cover.1526368368.git.gustavo.pimentel@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <bd7d0219-e70a-df60-2b9f-5e74d6c282f4@synopsys.com>
-Date: Tue, 15 May 2018 15:32:13 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: <honghui.zhang@mediatek.com>
+To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+ <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+ <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
+Subject: [PATCH v3] PCI: mediatek: Add system pm support for MT2712
+Date: Fri, 1 Jun 2018 11:04:30 +0800
+Message-ID: <1527822270-30280-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <cover.1526368368.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
+ xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
+ yong.wu@mediatek.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gustavo,
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Às 8:13 AM de 5/15/2018, Gustavo Pimentel escreveu:
-> The PCIe controller dual mode is capable of operating in RC mode as well
-> as EP mode by configuration option. Till now only RC mode was supported,
-> with this patch is add EP support to the DesignWare driver.
-> 
-> Gustavo Pimentel (4):
->   bindings: PCI: designware: Example update
->   PCI: dwc: Add support for EP mode
->   bindings: PCI: designware: Add support for EP in DesignWare driver
->   misc: pci_endpoint_test: Add DesignWare EP entry
-> 
->  .../devicetree/bindings/pci/designware-pcie.txt    |  24 +++-
->  drivers/misc/pci_endpoint_test.c                   |   1 +
->  drivers/pci/dwc/Kconfig                            |  41 ++++--
->  drivers/pci/dwc/pcie-designware-ep.c               |   3 +
->  drivers/pci/dwc/pcie-designware-plat.c             | 149 +++++++++++++++++++--
->  drivers/pci/endpoint/functions/pci-epf-test.c      |   7 +
->  include/linux/pci-epc.h                            |   8 ++
->  7 files changed, 206 insertions(+), 27 deletions(-)
-> 
+The MTCMOS of PCIe Host for MT2712 will be off when system suspend, and all
+the internal control register will be reset after system resume. The PCIe
+link should be re-established and the related control register values
+should be re-set after system resume.
 
-Thanks for this patch-set.
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+CC: Ryder Lee <ryder.lee@mediatek.com>
+---
+ drivers/pci/host/pcie-mediatek.c | 60 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
 
-Reviewed-by: Joao Pinto <jpinto@synopsys.com>
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index dabf1086..5363cc7 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -132,12 +132,14 @@ struct mtk_pcie_port;
+ /**
+  * struct mtk_pcie_soc - differentiate between host generations
+  * @need_fix_class_id: whether this host's class ID needed to be fixed or not
++ * @pm_support: whether the host's MTCMOS will be off when suspend
+  * @ops: pointer to configuration access functions
+  * @startup: pointer to controller setting functions
+  * @setup_irq: pointer to initialize IRQ functions
+  */
+ struct mtk_pcie_soc {
+ 	bool need_fix_class_id;
++	bool pm_support;
+ 	struct pci_ops *ops;
+ 	int (*startup)(struct mtk_pcie_port *port);
+ 	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
+@@ -1179,12 +1181,69 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
++#ifdef CONFIG_PM_SLEEP
++static int mtk_pcie_suspend_noirq(struct device *dev)
++{
++	struct mtk_pcie *pcie = dev_get_drvdata(dev);
++	const struct mtk_pcie_soc *soc = pcie->soc;
++	struct mtk_pcie_port *port;
++
++	if (!soc->pm_support)
++		return 0;
++
++	list_for_each_entry(port, &pcie->ports, list) {
++		clk_disable_unprepare(port->ahb_ck);
++		clk_disable_unprepare(port->sys_ck);
++		phy_power_off(port->phy);
++	}
++
++	return 0;
++}
++
++static int mtk_pcie_resume_noirq(struct device *dev)
++{
++	struct mtk_pcie *pcie = dev_get_drvdata(dev);
++	const struct mtk_pcie_soc *soc = pcie->soc;
++	struct mtk_pcie_port *port;
++	int ret;
++
++	if (!soc->pm_support)
++		return 0;
++
++	list_for_each_entry(port, &pcie->ports, list) {
++		phy_power_on(port->phy);
++		clk_prepare_enable(port->sys_ck);
++		clk_prepare_enable(port->ahb_ck);
++
++		ret = soc->startup(port);
++		if (ret) {
++			dev_err(dev, "Port%d link down\n", port->slot);
++			phy_power_off(port->phy);
++			clk_disable_unprepare(port->sys_ck);
++			clk_disable_unprepare(port->ahb_ck);
++			return ret;
++		}
++
++		if (IS_ENABLED(CONFIG_PCI_MSI))
++			mtk_pcie_enable_msi(port);
++	}
++
++	return 0;
++}
++#endif
++
++static const struct dev_pm_ops mtk_pcie_pm_ops = {
++	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
++				      mtk_pcie_resume_noirq)
++};
++
+ static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
+ 	.ops = &mtk_pcie_ops,
+ 	.startup = mtk_pcie_startup_port,
+ };
+ 
+ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
++	.pm_support = true,
+ 	.ops = &mtk_pcie_ops_v2,
+ 	.startup = mtk_pcie_startup_port_v2,
+ 	.setup_irq = mtk_pcie_setup_irq,
+@@ -1211,6 +1270,7 @@ static struct platform_driver mtk_pcie_driver = {
+ 		.name = "mtk-pcie",
+ 		.of_match_table = mtk_pcie_ids,
+ 		.suppress_bind_attrs = true,
++		.pm = &mtk_pcie_pm_ops,
+ 	},
+ };
+ builtin_platform_driver(mtk_pcie_driver);
+-- 
+2.6.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
