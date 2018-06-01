@@ -1,162 +1,224 @@
-Return-Path: <SRS0=lN9j=JG=flex--rajatja.bounces.google.com=3SeYqWwcKB6ARAJATJAGOOGLE.COMHELGAASKERNEL.ORG@kernel.org>
-Return-Path: <SRS0=lN9j=JG=flex--rajatja.bounces.google.com=3SeYqWwcKB6ARAJATJAGOOGLE.COMHELGAASKERNEL.ORG@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 1 Jun 2018 16:50:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 4/7] ACPI/hotplug/PCI: Do not scan all bridges when
+ native PCIe hotplug is used
+Message-ID: <20180601215026.GA187972@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+ <20180529160155.1738-1-mika.westerberg@linux.intel.com>
+ <20180601141118.GC119987@bhelgaas-glaptop.roam.corp.google.com>
+ <20180601142404.GG15419@lahna.fi.intel.com>
+ <20180601184109.GC79098@bhelgaas-glaptop.roam.corp.google.com>
+ <20180601191905.GJ15419@lahna.fi.intel.com>
 MIME-Version: 1.0
-Date: Wed, 20 Jun 2018 16:41:44 -0700
-In-Reply-To: <20180620234147.48438-1-rajatja@google.com>
-Message-Id: <20180620234147.48438-2-rajatja@google.com>
-References: <20180522222805.80314-1-rajatja@google.com> <20180620234147.48438-1-rajatja@google.com>
-Subject: [PATCH v5 2/5] PCI/AER: Add sysfs stats for AER capable devices
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
-	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
-	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
-Cc: Rajat Jain <rajatja@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180601191905.GJ15419@lahna.fi.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the following AER sysfs stats to represent the counters for each
-kind of error as seen by the device:
+On Fri, Jun 01, 2018 at 10:19:05PM +0300, Mika Westerberg wrote:
+> On Fri, Jun 01, 2018 at 01:41:09PM -0500, Bjorn Helgaas wrote:
+> > On Fri, Jun 01, 2018 at 05:24:04PM +0300, Mika Westerberg wrote:
+> > > On Fri, Jun 01, 2018 at 09:11:18AM -0500, Bjorn Helgaas wrote:
+> > > > On Tue, May 29, 2018 at 07:01:55PM +0300, Mika Westerberg wrote:
+> > > > > When a system is using native PCIe hotplug for Thunderbolt it will be
+> > > > > only present in the system when there is a device connected. This pretty
+> > > > > much follows the BIOS assisted hotplug behaviour.
+> > > > > 
+> > > > > Thunderbolt host router integrated PCIe switch has two additional PCIe
+> > > > > downstream bridges that lead to NHI (Thunderbolt host controller) and xHCI
+> > > > > (USB 3 host controller) respectively. These downstream bridges are not
+> > > > > marked being hotplug capable. Reason for that is to preserve resources.
+> > > > > Otherwise the OS would distribute remaining resources between all
+> > > > > downstream bridges making these two bridges consume precious resources
+> > > > > of the actual hotplug bridges.
+> > > > > 
+> > > > > Now, because these two bridges are not marked being hotplug capable the OS
+> > > > > will not enable hotplug interrupt for them either and will not receive
+> > > > > interrupt when devices behind them are hot-added. Solution to this is
+> > > > > that the BIOS sends ACPI Notify() to the root port let the OS know it
+> > > > > needs to rescan for added and/or removed devices.
+> > > > > 
+> > > > > Here is how the mechanism is supposed to work when a Thunderbolt
+> > > > > endpoint is connected to one of the ports. In case of a standard USB-C
+> > > > > device only the xHCI is hot-added otherwise steps are the same.
+> > > > > 
+> > > > > 1. Initially there is only the PCIe root port that is controlled by
+> > > > >    the pciehp driver
+> > > > > 
+> > > > >   00:1b.0 (Hotplug+) --
+> > > > > 
+> > > > > 2. Then we get native PCIe hotplug interrupt and once it is handled the
+> > > > >    topology looks as following
+> > > > > 
+> > > > >   00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 --
+> > > > >                                   +- 02:01.0 (HotPlug+)
+> > > > >                                   \- 02:02.0 --
+> > > > 
+> > > > Help me out here.  In PCIe terms, I assume we basically hot-added this
+> > > > switch:
+> > > > 
+> > > >   01:00.0 Switch Upstream port
+> > > >   02:00.0 Switch Downstream Port
+> > > >   02:01.0 Switch Downstream Port
+> > > >   02:02.0 Switch Downstream Port
+> > > > 
+> > > > Only 02:01.0 has PCI_EXP_SLTCAP_HPC set.  We can assign secondary bus
+> > > > number space to all the downstream ports, but there are currently no
+> > > > devices below any of them.  Well, duh, that's exactly what you said
+> > > > below:
+> > > > 
+> > > > > 3. Bridges 02:00.0 and 02:02.0 are not marked as hotplug capable and
+> > > > >    they don't have anything behind them currently. Bridge 02:01.0 is
+> > > > >    hotplug capable and used for extending the topology. At this point
+> > > > >    the required PCIe devices are enabled and ACPI Notify() is sent to
+> > > > >    the root port. The resulting topology is expected to look like
+> > > > > 
+> > > > >   00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 -- Thunderbolt host controller
+> > > > >                                   +- 02:01.0 (HotPlug+)
+> > > > >                                   \- 02:02.0 -- xHCI host controller
+> > > > > 
+> > > > 
+> > > > I guess this means we should ultimately end up with these new devices:
+> > > > 
+> > > >   03:00.0 Thunderbolt host controller
+> > > >   39:00.0 xHCI host controller
+> > > 
+> > > That's right.
 
-dev_total_cor_errs
-dev_total_fatal_errs
-dev_total_nonfatal_errs
+And after the host router firmware sets up the tunnels, is there a
+step 4 where we get another pciehp event from 02:01.0 and we enumerate
+the Thunderbolt switch (which I assume looks like a regular PCIe
+switch to the PCI core)?  Does the add-in card actually contain all
+the following devices (from the lspci you pointed me to)?
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
-v5: same as v4
-v4: Same as v3
-v3: Merge everything in aer.c, use "%llu" in place of "%llx"
+  01:00.0 Switch Upstream Port   to [bus 02-39]
+  02:00.0 Switch Downstream Port to [bus 03]     (to NHI)
+  02:01.0 Switch Downstream Port to [bus 04-38]  (to Thunderbolt switch)
+  02:02.0 Switch Downstream Port to [bus 39]     (to xHCI)
 
- drivers/pci/pci-sysfs.c |  3 ++
- drivers/pci/pci.h       |  4 ++-
- drivers/pci/pcie/aer.c  | 74 +++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 80 insertions(+), 1 deletion(-)
+  03:00.0 Thunderbolt Host Controller (NHI) Endpoint
+  39:00.0 xHCI Endpoint
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 0c4653c1d2ce..9f1cb9051d7d 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1746,6 +1746,9 @@ static const struct attribute_group *pci_dev_attr_groups[] = {
- #endif
- 	&pci_bridge_attr_group,
- 	&pcie_dev_attr_group,
-+#ifdef CONFIG_PCIEAER
-+	&aer_stats_attr_group,
-+#endif
- 	NULL,
- };
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c358e7a07f3f..9a28ec600225 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -181,7 +181,9 @@ extern const struct attribute_group *pci_dev_groups[];
- extern const struct attribute_group *pcibus_groups[];
- extern const struct device_type pci_dev_type;
- extern const struct attribute_group *pci_bus_groups[];
--
-+#ifdef CONFIG_PCIEAER
-+extern const struct attribute_group aer_stats_attr_group;
-+#endif
- 
- /**
-  * pci_match_one_device - Tell if a PCI device structure has a matching
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index f9fa994b6c33..ce0d675d7bd3 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -573,6 +573,79 @@ static const char *aer_agent_string[] = {
- 	"Transmitter ID"
- };
- 
-+#define aer_stats_aggregate_attr(field)					\
-+	static ssize_t							\
-+	field##_show(struct device *dev, struct device_attribute *attr,	\
-+		     char *buf)						\
-+{									\
-+	struct pci_dev *pdev = to_pci_dev(dev);				\
-+	return sprintf(buf, "%llu\n", pdev->aer_stats->field);		\
-+}									\
-+static DEVICE_ATTR_RO(field)
-+
-+aer_stats_aggregate_attr(dev_total_cor_errs);
-+aer_stats_aggregate_attr(dev_total_fatal_errs);
-+aer_stats_aggregate_attr(dev_total_nonfatal_errs);
-+
-+static struct attribute *aer_stats_attrs[] __ro_after_init = {
-+	&dev_attr_dev_total_cor_errs.attr,
-+	&dev_attr_dev_total_fatal_errs.attr,
-+	&dev_attr_dev_total_nonfatal_errs.attr,
-+	NULL
-+};
-+
-+static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
-+					   struct attribute *a, int n)
-+{
-+	struct device *dev = kobj_to_dev(kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (!pdev->aer_stats)
-+		return 0;
-+
-+	return a->mode;
-+}
-+
-+const struct attribute_group aer_stats_attr_group = {
-+	.name  = "aer_stats",
-+	.attrs  = aer_stats_attrs,
-+	.is_visible = aer_stats_attrs_are_visible,
-+};
-+
-+static void pci_dev_aer_stats_incr(struct pci_dev *pdev,
-+				   struct aer_err_info *info)
-+{
-+	int status, i, max = -1;
-+	u64 *counter = NULL;
-+	struct aer_stats *aer_stats = pdev->aer_stats;
-+
-+	if (!aer_stats)
-+		return;
-+
-+	switch (info->severity) {
-+	case AER_CORRECTABLE:
-+		aer_stats->dev_total_cor_errs++;
-+		counter = &aer_stats->dev_cor_errs[0];
-+		max = AER_MAX_TYPEOF_CORRECTABLE_ERRS;
-+		break;
-+	case AER_NONFATAL:
-+		aer_stats->dev_total_nonfatal_errs++;
-+		counter = &aer_stats->dev_uncor_errs[0];
-+		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
-+		break;
-+	case AER_FATAL:
-+		aer_stats->dev_total_fatal_errs++;
-+		counter = &aer_stats->dev_uncor_errs[0];
-+		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
-+		break;
-+	}
-+
-+	status = (info->status & ~info->mask);
-+	for (i = 0; i < max; i++)
-+		if (status & (1 << i))
-+			counter[i]++;
-+}
-+
- static void __print_tlp_header(struct pci_dev *dev,
- 			       struct aer_header_log_regs *t)
- {
-@@ -605,6 +678,7 @@ static void __aer_print_error(struct pci_dev *dev,
- 			pci_err(dev, "   [%2d] Unknown Error Bit%s\n",
- 				i, info->first_error == i ? " (First)" : "");
- 	}
-+	pci_dev_aer_stats_incr(dev, info);
- }
- 
- static void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
--- 
-2.18.0.rc1.244.gcf134e6275-goog
+  04:00.0 Switch Upstream Port   to [bus 05-38]   \
+  05:01.0 Switch Downstream Port to [bus 06-09]   |  Thunderbolt Switch
+  05:04.0 Switch Downstream Port to [bus 0a-38]   /
+
+That would correspond to Figure 1-1 here: https://developer.apple.com/library/content/documentation/HardwareDrivers/Conceptual/ThunderboltDevGuide/Basics/Basics.html
+except that the figure doesn't show the xHCI controller.
+
+> > > > (Can you send "lspci -vv" output so I can see the names, device types,
+> > > > etc?  I'm still trying to map the Thunderbolt "host router", NHI, etc
+> > > > terminology into PCIe concepts.)
+> > > 
+> > > The full lspci -vv is here:
+> > > 
+> > >   https://bugzilla.kernel.org/attachment.cgi?id=275703
+> > 
+> > Thanks, that's quite an intimidating PCIe tree with several levels of
+> > Thunderbolt stuff.
+> > 
+> > If you disconnect/reconnect the cable (or I guess the add-in card at
+> > the top level) closest to the root port, does this all work correctly?
+> 
+> Yes it does.
+
+I'm honestly amazed :)
+
+> > I assume the pciehp hotplug adds just the top-level switch (01:00.0),
+> > then an ACPI Notify() adds the NHI and xHCI and configures the
+> > tunnels, then another pciehp event adds the next-level switch, and
+> > another Notify() sets up more tunnels, etc, etc?
+> 
+> It is the firmware running on the Thunderbolt host router that sets up
+> the tunnels and triggers standard PCIe hotplug once it is done. Notify()
+> is only used to bring in those two controllers to the first PCIe switch.
+> Reason for using Notify() here is that then we don't need to mark the
+> two downstream ports leading to xHCI and NHI to be hotplug ports and
+> thus the OS does not spread the available bus space/resources to those
+> ports.
+> 
+> If you keep connecting more devices then standard PCIe hotplug is used
+> and there will be no Notify().
+> 
+> > > Just to clarify:
+> > > 
+> > >   Thunderbolt host router = The whole Thunderbolt add-in-card, including
+> > >   			    PCIe switch, Thunderbolt host controller
+> > > 			    (NHI) and USB 3.0 host controller (xHCI).
+> > 
+> > I assume the main reason for using ACPI hotplug here is because Linux
+> > doesn't know how to set up the Thunderbolt tunnels, so some sort of
+> > firmware has to do it?
+> 
+> Firmware does it regardless of what OS is running (with the exception of
+> Apple hardware, of course). Once it establishes a tunnel a standard PCIe
+> hotplug event is triggered.
+> 
+> ACPI hotplug is only used to bring in those two devices of the host
+> router. You might wonder why they aren't all handled by the pciehp and
+> the reason is that if you only connect USB-C device (not TBT) ACPI
+> hotplug only finds xHCI since you don't need the NHI for that.
+>
+> > How does the BIOS figure out when to send the Notify()?  If the host
+> > router is built into the motherboard, I can see how there might be
+> > some path for BIOS to notice a device being connected to the
+> > Thunderbolt host router, and then it could power up the host router
+> > (causing a pciehp hot-add), and then send the Notify().
+> 
+> There is a GPIO on the AIC that is wired to trigger ACPI GPE and the GPE
+> handler does the Notify().
+
+So this GPIO must be part of the reason for the mysterious Thunderbolt
+header, i.e., https://superuser.com/questions/1024865/for-what-is-the-thunderbolt-aic-connector-used
+
+You mentioned two reasons for using the ACPI Notify():
+
+  1) To avoid having the OS assign more resources than necessary to the
+     bridges leading to NHI and xHCI.
+
+  2) To avoid adding NHI at all if we only need USB-C.
+
+They both seem sort of minor.  If those devices were brought in via
+the original pciehp hot-add, we would only allocate the resources they
+need since they're both endpoints and we'd know exactly what they
+needed.  An unused NHI would only consume 260K of MMIO space and one
+bus number (which I think we will always assign anyway because of
+"PCI: Take all bridges into account when calculating bus numbers for
+extension").
+
+The requirement for the GPIO header and a separate cable to it is a
+huge hassle so it seems like there must be more to it than just those
+two things.  But that's not really germane to this patch anyway
+because we have to support the hardware/firmware as it is, not as we
+might imagine things could be.
+
+> > But if this is actually a separate add-in card, does that mean the
+> > tunnel setup has to be done via the option ROM somehow?
+> 
+> It is done in the firmware running on the host router (AIC).
+> 
+> > Or does the add-in card only work on systems that already have
+> > Thunderbolt support in their BIOS?  If so, how does this work if the
+> > card is hot-added?  Do we add the switch via pciehp, and something
+> > else in Linux tells ACPI to issue the Notify()?
+> 
+> The BIOS needs to have Thunderbolt support built in but I think that is
+> pretty "generic" and that is one of the reasons the Notify() is send to
+> the root port and not to the exact downstream ports where those two
+> controllers (xHCI, NHI) are connected to. I don't know all the details
+> but I think it works like that.
+
+Thanks for all this background.  It really helps me put things
+together.
+
+Bjorn
