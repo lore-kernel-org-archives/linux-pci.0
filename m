@@ -1,79 +1,67 @@
-Return-Path: <SRS0=Jsdd=JG=flex--rajatja.bounces.google.com=3-KkpWwcKB9EEx6xG6x3BB381.zB94183xxF71EA18.BE3@kernel.org>
-Return-Path: <SRS0=Jsdd=JG=flex--rajatja.bounces.google.com=3-KkpWwcKB9EEx6xG6x3BB381.zB94183xxF71EA18.BE3@kernel.org>
-MIME-Version: 1.0
-Date: Tue, 19 Jun 2018 18:12:08 -0700
-In-Reply-To: <20180620011210.254601-1-rajatja@google.com>
-Message-Id: <20180620011210.254601-3-rajatja@google.com>
-References: <20180619221651.GH33049@bhelgaas-glaptop.roam.corp.google.com> <20180620011210.254601-1-rajatja@google.com>
-Subject: [PATCH v3 3/5] PCI/AER: Add sysfs attributes to provide breakdown of AERs
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
-	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
-	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
-Cc: Rajat Jain <rajatja@google.com>, Rajat Jain <rajatj@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay6.synopsys.com ([198.182.37.59]:42594 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750850AbeFAOZD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jun 2018 10:25:03 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v3 00/10] Add MSI-X support on pcitest tool
+Date: Fri,  1 Jun 2018 15:24:42 +0100
+Message-Id: <cover.1527862777.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add sysfs attributes to provide breakdown of the AERs seen,
-into different type of correctable or uncorrectable errors:
+Patch series made against Lorenzo's branches and also depends of:
+ - pci/dwc
+ - pci/endpoint
 
-dev_breakdown_correctable
-dev_breakdown_uncorrectable
+Add MSI-X support on pcitest tool.
 
-Signed-off-by: Rajat Jain <rajatj@google.com>
----
-v3: Merge everything in aer.c, use "%llu" in place of "%llx"
+Add new callbacks methods and handlers to trigger the MSI-X interrupts
+on the EP DesignWare IP driver.
 
- drivers/pci/pcie/aer.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+Allow to set/get MSI-X EP maximum capability number.
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index ce0d675d7bd3..876f03799810 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -587,10 +587,38 @@ aer_stats_aggregate_attr(dev_total_cor_errs);
- aer_stats_aggregate_attr(dev_total_fatal_errs);
- aer_stats_aggregate_attr(dev_total_nonfatal_errs);
- 
-+#define aer_stats_breakdown_attr(field, stats_array, strings_array)	\
-+	static ssize_t							\
-+	field##_show(struct device *dev, struct device_attribute *attr,	\
-+		     char *buf)						\
-+{									\
-+	unsigned int i;							\
-+	char *str = buf;						\
-+	struct pci_dev *pdev = to_pci_dev(dev);				\
-+	u64 *stats = pdev->aer_stats->stats_array;			\
-+	for (i = 0; i < ARRAY_SIZE(strings_array); i++) {		\
-+		if (strings_array[i])					\
-+			str += sprintf(str, "%s = 0x%llx\n",		\
-+				       strings_array[i], stats[i]);	\
-+		else if (stats[i])					\
-+			str += sprintf(str, #stats_array "bit[%d] = 0x%llx\n",\
-+				       i, stats[i]);			\
-+	}								\
-+	return str-buf;							\
-+}									\
-+static DEVICE_ATTR_RO(field)
-+
-+aer_stats_breakdown_attr(dev_breakdown_correctable, dev_cor_errs,
-+			 aer_correctable_error_string);
-+aer_stats_breakdown_attr(dev_breakdown_uncorrectable, dev_uncor_errs,
-+			 aer_uncorrectable_error_string);
-+
- static struct attribute *aer_stats_attrs[] __ro_after_init = {
- 	&dev_attr_dev_total_cor_errs.attr,
- 	&dev_attr_dev_total_fatal_errs.attr,
- 	&dev_attr_dev_total_nonfatal_errs.attr,
-+	&dev_attr_dev_breakdown_correctable.attr,
-+	&dev_attr_dev_breakdown_uncorrectable.attr,
- 	NULL
- };
- 
+Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
+
+Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
+
+Update the pcitest.sh script to support MSI-X feature tests.
+
+Gustavo Pimentel (10):
+  PCI: endpoint: Add MSI-X interfaces
+  PCI: dwc: Add MSI-X callbacks handler
+  PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
+  PCI: dwc: Rework MSI callbacks handler
+  PCI: dwc: Add legacy interrupt callback handler
+  pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
+  pci-epf-test/pci_endpoint_test: Use irq_type module parameter
+  pci-epf-test/pci_endpoint_test: Add MSI-X support
+  pci_endpoint_test: Add 2 ioctl commands
+  tools: PCI: Add MSI-X support
+
+ Documentation/misc-devices/pci-endpoint-test.txt |   6 +
+ drivers/misc/pci_endpoint_test.c                 | 261 +++++++++++++++++------
+ drivers/pci/cadence/pcie-cadence-ep.c            |   3 +-
+ drivers/pci/dwc/pci-dra7xx.c                     |   2 +-
+ drivers/pci/dwc/pcie-artpec6.c                   |   2 +-
+ drivers/pci/dwc/pcie-designware-ep.c             | 205 ++++++++++++++++--
+ drivers/pci/dwc/pcie-designware-plat.c           |   7 +-
+ drivers/pci/dwc/pcie-designware.h                |  31 +--
+ drivers/pci/endpoint/functions/pci-epf-test.c    |  81 +++++--
+ drivers/pci/endpoint/pci-ep-cfs.c                |  24 +++
+ drivers/pci/endpoint/pci-epc-core.c              |  68 +++++-
+ include/linux/pci-epc.h                          |  15 +-
+ include/linux/pci-epf.h                          |   1 +
+ include/uapi/linux/pcitest.h                     |   3 +
+ tools/pci/pcitest.c                              |  51 ++++-
+ tools/pci/pcitest.sh                             |  15 ++
+ 16 files changed, 643 insertions(+), 132 deletions(-)
+
 -- 
-2.18.0.rc1.244.gcf134e6275-goog
+2.7.4
