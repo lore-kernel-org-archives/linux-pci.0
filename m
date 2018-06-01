@@ -1,71 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0134.outbound.protection.outlook.com ([104.47.38.134]:57208
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932727AbeE2ATT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 May 2018 20:19:19 -0400
-From: "Michael Kelley (EOSG)" <Michael.H.Kelley@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "'olaf@aepfle.de'" <olaf@aepfle.de>,
-        "'apw@canonical.com'" <apw@canonical.com>,
-        "'jasowang@redhat.com'" <jasowang@redhat.com>
-CC: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'driverdev-devel@linuxdriverproject.org'"
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
-        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
-Subject: RE: [PATCH] PCI: hv: Do not wait forever on a device that has
- disappeared
-Date: Tue, 29 May 2018 00:19:16 +0000
-Message-ID: <SN6PR2101MB112020C6F949F7C72F52D6BEDC6D0@SN6PR2101MB1120.namprd21.prod.outlook.com>
-References: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-In-Reply-To: <KL1P15301MB0006DF4209AEE3809ABD303FBF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:20594 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750758AbeFAECk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Jun 2018 00:02:40 -0400
+From: Tiwei Bie <tiwei.bie@intel.com>
+To: mst@redhat.com, bhelgaas@google.com, stefanha@redhat.com,
+        virtualization@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        linux-pci@vger.kernel.org
+Cc: dan.daly@intel.com, mark.d.rustad@intel.com,
+        alexander.h.duyck@intel.com, cunming.liang@intel.com,
+        zhihong.wang@intel.com
+Subject: [PATCH v3] virtio_pci: support enabling VFs
+Date: Fri,  1 Jun 2018 12:02:39 +0800
+Message-Id: <20180601040239.1151-1-tiwei.bie@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->=20
-> Before the guest finishes the device initialization, the device can be
-> removed anytime by the host, and after that the host won't respond to
-> the guest's request, so the guest should be prepared to handle this
-> case.
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
-> ---
->  drivers/pci/host/pci-hyperv.c | 46 ++++++++++++++++++++++++++++++++-----=
-------
->  1 file changed, 34 insertions(+), 12 deletions(-)
->=20
+There is a new feature bit allocated in virtio spec to
+support SR-IOV (Single Root I/O Virtualization):
 
-While this patch solves the immediate problem of getting hung waiting
-for a response from Hyper-V that will never come, there's another scenario
-to look at that I think introduces a race.  Suppose the guest VM issues a
-vmbus_sendpacket() request in one of the cases covered by this patch,
-and suppose that Hyper-V queues a response to the request, and then
-immediately follows with a rescind request.   Processing the response will
-get queued to a tasklet associated with the channel, while processing the
-rescind will get queued to a tasklet associated with the top-level vmbus
-connection.   From what I can see, the code doesn't impose any ordering
-on processing the two.  If the rescind is processed first, the new
-wait_for_response() function may wake up, notice the rescind flag, and
-return an error.  Its caller will return an error, and in doing so pop the
-completion packet off the stack.   When the response is processed later,
-it will try to signal completion via a completion packet that no longer
-exists, and memory corruption will likely occur.
+https://github.com/oasis-tcs/virtio-spec/issues/11
 
-Am I missing anything that would prevent this scenario from happening?
-It is admittedly low probability, and a solution seems non-trivial.  I have=
-n't
-looked specifically, but a similar scenario is probably possible with the
-drivers for other VMbus devices.  We should work on a generic solution.
+This patch enables the support for this feature bit in
+virtio driver.
 
-Michael
+Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
+---
+v3:
+- Drop the acks;
+
+v2:
+- Disable VFs when unbinding the driver (Alex, MST);
+- Don't use pci_sriov_configure_simple (Alex);
+
+ drivers/virtio/virtio_pci_common.c | 30 ++++++++++++++++++++++++++++++
+ drivers/virtio/virtio_pci_modern.c | 14 ++++++++++++++
+ include/uapi/linux/virtio_config.h |  7 ++++++-
+ 3 files changed, 50 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+index 48d4d1cf1cb6..1d4467b2dc31 100644
+--- a/drivers/virtio/virtio_pci_common.c
++++ b/drivers/virtio/virtio_pci_common.c
+@@ -577,6 +577,8 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+ 	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+ 	struct device *dev = get_device(&vp_dev->vdev.dev);
+ 
++	pci_disable_sriov(pci_dev);
++
+ 	unregister_virtio_device(&vp_dev->vdev);
+ 
+ 	if (vp_dev->ioaddr)
+@@ -588,6 +590,33 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+ 	put_device(dev);
+ }
+ 
++static int virtio_pci_sriov_configure(struct pci_dev *pci_dev, int num_vfs)
++{
++	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
++	struct virtio_device *vdev = &vp_dev->vdev;
++	int ret;
++
++	if (!(vdev->config->get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK))
++		return -EBUSY;
++
++	if (!__virtio_test_bit(vdev, VIRTIO_F_SR_IOV))
++		return -EINVAL;
++
++	if (pci_vfs_assigned(pci_dev))
++		return -EPERM;
++
++	if (num_vfs == 0) {
++		pci_disable_sriov(pci_dev);
++		return 0;
++	}
++
++	ret = pci_enable_sriov(pci_dev, num_vfs);
++	if (ret < 0)
++		return ret;
++
++	return num_vfs;
++}
++
+ static struct pci_driver virtio_pci_driver = {
+ 	.name		= "virtio-pci",
+ 	.id_table	= virtio_pci_id_table,
+@@ -596,6 +625,7 @@ static struct pci_driver virtio_pci_driver = {
+ #ifdef CONFIG_PM_SLEEP
+ 	.driver.pm	= &virtio_pci_pm_ops,
+ #endif
++	.sriov_configure = virtio_pci_sriov_configure,
+ };
+ 
+ module_pci_driver(virtio_pci_driver);
+diff --git a/drivers/virtio/virtio_pci_modern.c b/drivers/virtio/virtio_pci_modern.c
+index 2555d80f6eec..07571daccfec 100644
+--- a/drivers/virtio/virtio_pci_modern.c
++++ b/drivers/virtio/virtio_pci_modern.c
+@@ -153,14 +153,28 @@ static u64 vp_get_features(struct virtio_device *vdev)
+ 	return features;
+ }
+ 
++static void vp_transport_features(struct virtio_device *vdev, u64 features)
++{
++	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
++	struct pci_dev *pci_dev = vp_dev->pci_dev;
++
++	if ((features & BIT_ULL(VIRTIO_F_SR_IOV)) &&
++			pci_find_ext_capability(pci_dev, PCI_EXT_CAP_ID_SRIOV))
++		__virtio_set_bit(vdev, VIRTIO_F_SR_IOV);
++}
++
+ /* virtio config->finalize_features() implementation */
+ static int vp_finalize_features(struct virtio_device *vdev)
+ {
+ 	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
++	u64 features = vdev->features;
+ 
+ 	/* Give virtio_ring a chance to accept features. */
+ 	vring_transport_features(vdev);
+ 
++	/* Give virtio_pci a chance to accept features. */
++	vp_transport_features(vdev, features);
++
+ 	if (!__virtio_test_bit(vdev, VIRTIO_F_VERSION_1)) {
+ 		dev_err(&vdev->dev, "virtio: device uses modern interface "
+ 			"but does not have VIRTIO_F_VERSION_1\n");
+diff --git a/include/uapi/linux/virtio_config.h b/include/uapi/linux/virtio_config.h
+index 308e2096291f..b7c1f4e7d59e 100644
+--- a/include/uapi/linux/virtio_config.h
++++ b/include/uapi/linux/virtio_config.h
+@@ -49,7 +49,7 @@
+  * transport being used (eg. virtio_ring), the rest are per-device feature
+  * bits. */
+ #define VIRTIO_TRANSPORT_F_START	28
+-#define VIRTIO_TRANSPORT_F_END		34
++#define VIRTIO_TRANSPORT_F_END		38
+ 
+ #ifndef VIRTIO_CONFIG_NO_LEGACY
+ /* Do we get callbacks when the ring is completely used, even if we've
+@@ -71,4 +71,9 @@
+  * this is for compatibility with legacy systems.
+  */
+ #define VIRTIO_F_IOMMU_PLATFORM		33
++
++/*
++ * Does the device support Single Root I/O Virtualization?
++ */
++#define VIRTIO_F_SR_IOV			37
+ #endif /* _UAPI_LINUX_VIRTIO_CONFIG_H */
+-- 
+2.17.0
