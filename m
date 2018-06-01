@@ -1,183 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:32994 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967684AbeEYTJi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 May 2018 15:09:38 -0400
-Received: by mail-pg0-f68.google.com with SMTP id e21-v6so2673745pgv.0
-        for <linux-pci@vger.kernel.org>; Fri, 25 May 2018 12:09:37 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: qcom: Fix error handling in pm_runtime support
-Date: Fri, 25 May 2018 12:09:34 -0700
-Message-Id: <20180525190934.1042-1-bjorn.andersson@linaro.org>
-In-Reply-To: <20180523104425.6650-1-srinivas.kandagatla@linaro.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46060 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750758AbeFADrC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 May 2018 23:47:02 -0400
+Date: Fri, 1 Jun 2018 06:47:01 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Tiwei Bie <tiwei.bie@intel.com>
+Cc: bhelgaas@google.com, virtualization@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        linux-pci@vger.kernel.org, dan.daly@intel.com,
+        mark.d.rustad@intel.com, alexander.h.duyck@intel.com,
+        cunming.liang@intel.com, zhihong.wang@intel.com
+Subject: Re: [PATCH v2] virtio_pci: support enabling VFs
+Message-ID: <20180601063224-mutt-send-email-mst@kernel.org>
+References: <20180601020921.30957-1-tiwei.bie@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180601020921.30957-1-tiwei.bie@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The driver does not cope with the fact that probe can fail in a number
-of cases after enabling pm_runtime on the device, this results in
-warnings about "Unbalanced pm_runtime_enable". Further more if probe
-fails after invoking host_init the power-domain will be left referenced.
+On Fri, Jun 01, 2018 at 10:09:21AM +0800, Tiwei Bie wrote:
+> There is a new feature bit allocated in virtio spec to
+> support SR-IOV (Single Root I/O Virtualization):
+> 
+> https://github.com/oasis-tcs/virtio-spec/issues/11
+> 
+> This patch enables the support for this feature bit in
+> virtio driver.
+> 
+> Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
+> Acked-by: Stefan Hajnoczi <stefanha@redhat.com>
+> Acked-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
 
-As it's not possible for the error handling in qcom_pcie_host_init() to
-handle errors happening after returning from that function the
-pm_runtime_get_sync() is moved to probe() as well.
+Generally you aren't supposed to carry forward acks
+when you make major changes.
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
+In this case I'm fine with the patch, so never mind.
 
-I'm sorry for not spotting this last week when we discussed the previous patch.
+> v2:
+> - Disable VFs when unbinding the driver (Alex, MST);
+> - Don't use pci_sriov_configure_simple (Alex);
+> 
+>  drivers/virtio/virtio_pci_common.c | 30 ++++++++++++++++++++++++++++++
+>  drivers/virtio/virtio_pci_modern.c | 14 ++++++++++++++
+>  include/uapi/linux/virtio_config.h |  7 ++++++-
+>  3 files changed, 50 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+> index 48d4d1cf1cb6..1d4467b2dc31 100644
+> --- a/drivers/virtio/virtio_pci_common.c
+> +++ b/drivers/virtio/virtio_pci_common.c
+> @@ -577,6 +577,8 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+>  	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+>  	struct device *dev = get_device(&vp_dev->vdev.dev);
+>  
+> +	pci_disable_sriov(pci_dev);
+> +
+>  	unregister_virtio_device(&vp_dev->vdev);
+>  
+>  	if (vp_dev->ioaddr)
+> @@ -588,6 +590,33 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+>  	put_device(dev);
+>  }
+>  
+> +static int virtio_pci_sriov_configure(struct pci_dev *pci_dev, int num_vfs)
+> +{
+> +	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+> +	struct virtio_device *vdev = &vp_dev->vdev;
+> +	int ret;
+> +
+> +	if (!(vdev->config->get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK))
+> +		return -EBUSY;
+> +
+> +	if (!__virtio_test_bit(vdev, VIRTIO_F_SR_IOV))
+> +		return -EINVAL;
+> +
+> +	if (pci_vfs_assigned(pci_dev))
+> +		return -EPERM;
 
- drivers/pci/dwc/pcie-qcom.c | 65 ++++++++++++++++++++++++++-----------
- 1 file changed, 46 insertions(+), 19 deletions(-)
+Not a comment on this patch - existing code has the
+same race - but generally
 
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 3f35098b71b1..f2453196278f 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -1088,8 +1088,6 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 	struct qcom_pcie *pcie = to_qcom_pcie(pci);
- 	int ret;
- 
--	pm_runtime_get_sync(pci->dev);
--
- 	qcom_ep_reset_assert(pcie);
- 
- 	ret = pcie->ops->init(pcie);
-@@ -1126,7 +1124,6 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 	phy_power_off(pcie->phy);
- err_deinit:
- 	pcie->ops->deinit(pcie);
--	pm_runtime_put_sync(pci->dev);
- 
- 	return ret;
- }
-@@ -1207,7 +1204,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	struct qcom_pcie *pcie;
- 	int ret;
- 
--
- 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
- 	if (!pcie)
- 		return -ENOMEM;
-@@ -1217,6 +1213,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	pm_runtime_enable(dev);
-+	pm_runtime_get_sync(dev);
- 
- 	pci->dev = dev;
- 	pci->ops = &dw_pcie_ops;
-@@ -1227,53 +1224,82 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	pcie->ops = of_device_get_match_data(dev);
- 
- 	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
--	if (IS_ERR(pcie->reset))
--		return PTR_ERR(pcie->reset);
-+	if (IS_ERR(pcie->reset)) {
-+		ret = PTR_ERR(pcie->reset);
-+		goto err_pm_runtime_put;
-+	}
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "parf");
- 	pcie->parf = devm_ioremap_resource(dev, res);
--	if (IS_ERR(pcie->parf))
--		return PTR_ERR(pcie->parf);
-+	if (IS_ERR(pcie->parf)) {
-+		ret = PTR_ERR(pcie->parf);
-+		goto err_pm_runtime_put;
-+	}
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
- 	pci->dbi_base = devm_pci_remap_cfg_resource(dev, res);
--	if (IS_ERR(pci->dbi_base))
--		return PTR_ERR(pci->dbi_base);
-+	if (IS_ERR(pci->dbi_base)) {
-+		ret = PTR_ERR(pci->dbi_base);
-+		goto err_pm_runtime_put;
-+	}
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "elbi");
- 	pcie->elbi = devm_ioremap_resource(dev, res);
--	if (IS_ERR(pcie->elbi))
--		return PTR_ERR(pcie->elbi);
-+	if (IS_ERR(pcie->elbi)) {
-+		ret = PTR_ERR(pcie->elbi);
-+		goto err_pm_runtime_put;
-+	}
- 
- 	pcie->phy = devm_phy_optional_get(dev, "pciephy");
--	if (IS_ERR(pcie->phy))
--		return PTR_ERR(pcie->phy);
-+	if (IS_ERR(pcie->phy)) {
-+		ret = PTR_ERR(pcie->phy);
-+		goto err_pm_runtime_put;
-+	}
- 
- 	ret = pcie->ops->get_resources(pcie);
- 	if (ret)
--		return ret;
-+		goto err_pm_runtime_put;
- 
- 	pp->root_bus_nr = -1;
- 	pp->ops = &qcom_pcie_dw_ops;
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
--		if (pp->msi_irq < 0)
--			return pp->msi_irq;
-+		if (pp->msi_irq < 0) {
-+			ret = pp->msi_irq;
-+			goto err_pm_runtime_put;
-+		}
- 	}
- 
- 	ret = phy_init(pcie->phy);
- 	if (ret)
--		return ret;
-+		goto err_pm_runtime_put;
- 
- 	platform_set_drvdata(pdev, pcie);
- 
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(dev, "cannot initialize host\n");
--		return ret;
-+		goto err_pm_runtime_put;
- 	}
- 
-+	return 0;
-+
-+err_pm_runtime_put:
-+	pm_runtime_put(dev);
-+	pm_runtime_disable(dev);
-+
-+	return ret;
-+}
-+
-+static int qcom_pcie_remove(struct platform_device *pdev)
-+{
-+	struct qcom_pcie *pcie = platform_get_drvdata(pdev);
-+	struct device *dev = pcie->pci->dev;
-+
-+	pm_runtime_put(dev);
-+	pm_runtime_disable(dev);
-+
- 	return 0;
- }
- 
-@@ -1289,6 +1315,7 @@ static const struct of_device_id qcom_pcie_match[] = {
- 
- static struct platform_driver qcom_pcie_driver = {
- 	.probe = qcom_pcie_probe,
-+	.remove = qcom_pcie_remove,
- 	.driver = {
- 		.name = "qcom-pcie",
- 		.suppress_bind_attrs = true,
--- 
-2.17.0
+1. this seems racy since assigning vfs does not seem
+   to take device lock
+2. does this work correctly for kvm at all?
+   pci_set_dev_assigned seems to be only called by xen.
+
+Can you look at addressing this pls?
+
+
+> +
+> +	if (num_vfs == 0) {
+> +		pci_disable_sriov(pci_dev);
+> +		return 0;
+> +	}
+> +
+> +	ret = pci_enable_sriov(pci_dev, num_vfs);
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	return num_vfs;
+> +}
+> +
+>  static struct pci_driver virtio_pci_driver = {
+>  	.name		= "virtio-pci",
+>  	.id_table	= virtio_pci_id_table,
+> @@ -596,6 +625,7 @@ static struct pci_driver virtio_pci_driver = {
+>  #ifdef CONFIG_PM_SLEEP
+>  	.driver.pm	= &virtio_pci_pm_ops,
+>  #endif
+> +	.sriov_configure = virtio_pci_sriov_configure,
+>  };
+>  
+>  module_pci_driver(virtio_pci_driver);
+> diff --git a/drivers/virtio/virtio_pci_modern.c b/drivers/virtio/virtio_pci_modern.c
+> index 2555d80f6eec..07571daccfec 100644
+> --- a/drivers/virtio/virtio_pci_modern.c
+> +++ b/drivers/virtio/virtio_pci_modern.c
+> @@ -153,14 +153,28 @@ static u64 vp_get_features(struct virtio_device *vdev)
+>  	return features;
+>  }
+>  
+> +static void vp_transport_features(struct virtio_device *vdev, u64 features)
+> +{
+> +	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
+> +	struct pci_dev *pci_dev = vp_dev->pci_dev;
+> +
+> +	if ((features & BIT_ULL(VIRTIO_F_SR_IOV)) &&
+> +			pci_find_ext_capability(pci_dev, PCI_EXT_CAP_ID_SRIOV))
+> +		__virtio_set_bit(vdev, VIRTIO_F_SR_IOV);
+> +}
+> +
+>  /* virtio config->finalize_features() implementation */
+>  static int vp_finalize_features(struct virtio_device *vdev)
+>  {
+>  	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
+> +	u64 features = vdev->features;
+>  
+>  	/* Give virtio_ring a chance to accept features. */
+>  	vring_transport_features(vdev);
+>  
+> +	/* Give virtio_pci a chance to accept features. */
+> +	vp_transport_features(vdev, features);
+> +
+>  	if (!__virtio_test_bit(vdev, VIRTIO_F_VERSION_1)) {
+>  		dev_err(&vdev->dev, "virtio: device uses modern interface "
+>  			"but does not have VIRTIO_F_VERSION_1\n");
+> diff --git a/include/uapi/linux/virtio_config.h b/include/uapi/linux/virtio_config.h
+> index 308e2096291f..b7c1f4e7d59e 100644
+> --- a/include/uapi/linux/virtio_config.h
+> +++ b/include/uapi/linux/virtio_config.h
+> @@ -49,7 +49,7 @@
+>   * transport being used (eg. virtio_ring), the rest are per-device feature
+>   * bits. */
+>  #define VIRTIO_TRANSPORT_F_START	28
+> -#define VIRTIO_TRANSPORT_F_END		34
+> +#define VIRTIO_TRANSPORT_F_END		38
+>  
+>  #ifndef VIRTIO_CONFIG_NO_LEGACY
+>  /* Do we get callbacks when the ring is completely used, even if we've
+> @@ -71,4 +71,9 @@
+>   * this is for compatibility with legacy systems.
+>   */
+>  #define VIRTIO_F_IOMMU_PLATFORM		33
+> +
+> +/*
+> + * Does the device support Single Root I/O Virtualization?
+> + */
+> +#define VIRTIO_F_SR_IOV			37
+>  #endif /* _UAPI_LINUX_VIRTIO_CONFIG_H */
+> -- 
+> 2.17.0
