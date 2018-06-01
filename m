@@ -1,74 +1,80 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 1/2] PCI: aardvark: Size bridges before resources allocation
-Date: Fri, 29 Jun 2018 11:16:19 +0200
-Message-Id: <20180629091620.31503-2-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180629091620.31503-1-thomas.petazzoni@bootlin.com>
-References: <20180629091620.31503-1-thomas.petazzoni@bootlin.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
- =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
- Zachary Zhang <zhangzg@marvell.com>, Wilson Ding <dingwei@marvell.com>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:35002 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751777AbeFAPqi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Jun 2018 11:46:38 -0400
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        Linux Documentation List <linux-doc@vger.kernel.org>,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20180531235010.5279-1-logang@deltatee.com>
+ <20180531235010.5279-2-logang@deltatee.com>
+ <CAHp75VcQwDGqND8v1RTo4+6Hyf9G5_2w9x9aiVONwKXsTKgJ1Q@mail.gmail.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <806279a8-1faa-7b86-f761-15eb95b10887@deltatee.com>
+Date: Fri, 1 Jun 2018 09:46:05 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAHp75VcQwDGqND8v1RTo4+6Hyf9G5_2w9x9aiVONwKXsTKgJ1Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v2 1/3] PCI: Make specifying PCI devices in kernel
+ parameters reusable
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Zachary Zhang <zhangzg@marvell.com>
-
-The PCIE I/O and MEM resource allocation mechanism is that root bus
-goes through the following steps:
-
-1. Check PCI bridges' range and computes I/O and Mem base/limits.
-
-2. Sort all subordinate devices I/O and MEM resource requirements and
-   allocate the resources and writes/updates subordinate devices'
-   requirements to PCI bridges I/O and Mem MEM/limits registers.
-
-Currently, PCI Aardvark driver only handles the second step and lacks
-the first step, so there is an I/O and MEM resource allocation failure
-when using a PCI switch. This commit fixes that by sizing bridges
-before doing the resource allocation.
-
-Signed-off-by: Zachary Zhang <zhangzg@marvell.com>
-[Thomas: edit commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
- drivers/pci/controller/pci-aardvark.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 486c41721c89..8e92231214e3 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -1065,6 +1065,7 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 
- 	bus = bridge->bus;
- 
-+	pci_bus_size_bridges(bus);
- 	pci_bus_assign_resources(bus);
- 
- 	list_for_each_entry(child, &bus->children, node)
--- 
-2.14.4
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 01/06/18 04:39 AM, Andy Shevchenko wrote:
+>> -       pci=option[,option...]  [PCI] various PCI subsystem options:
+>> +       pci=option[,option...]  [PCI] various PCI subsystem options.
+>> +
+>> +                               Some options herein operate on a specific device
+>> +                               or a set of devices (<pci_dev>). These are
+>> +                               specified in one of two formats:
+> 
+> I would rather to add
+> 
+>  <pci_dev>
+> 
+> here in the same way as done for options.
+> It would be easy for people to find a referenced paragraph.
+
+Sorry, I don't understand what you are asking. Can you be more specific?
+
+>> +
+>> +                               [<domain>:]<bus>:<slot>.<func>
+>> +                               pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+>> +
+>> +                               Note: the first format specifies a PCI
+>> +                               bus/slot/function address which may change
+>> +                               if new hardware is inserted, if motherboard
+>> +                               firmware changes, or due to changes caused
+>> +                               by other kernel parameters. The second format
+>> +                               selects devices using IDs from the
+>> +                               configuration space which may match multiple
+>> +                               devices in the system.
+> 
+>> +static int pci_dev_str_match(struct pci_dev *dev, const char *p,
+>> +                            const char **endptr)
+> 
+> This change I hope has no functional alteration, so, can be split to a
+> separate patch.
+
+That's all this patch does... Or do you want be to separate out
+documentation from implementation? That just seems a bit excessive to me.
+
+Logan
