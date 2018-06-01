@@ -1,117 +1,254 @@
-Return-Path: <SRS0=EJf8=JF=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=EJf8=JF=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 19 Jun 2018 17:32:56 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Punit Agrawal <punit.agrawal@arm.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Xie XiuQi <xiexiuqi@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, tnowicki@caviumnetworks.com,
-	linux-pci@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-	linux-mm@kvack.org, wanghuiqiang@huawei.com,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	zhongjiang <zhongjiang@huawei.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
-Message-ID: <20180619163256.GA18952@e107981-ln.cambridge.arm.com>
-References: <20180611145330.GO13364@dhcp22.suse.cz>
- <87lgbk59gs.fsf@e105922-lin.cambridge.arm.com>
- <87bmce60y3.fsf@e105922-lin.cambridge.arm.com>
- <8b715082-14d4-f10b-d2d6-b23be7e4bf7e@huawei.com>
- <20180619120714.GE13685@dhcp22.suse.cz>
- <874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
- <20180619140818.GA16927@e107981-ln.cambridge.arm.com>
- <87wouu3jz1.fsf@e105922-lin.cambridge.arm.com>
- <20180619151425.GH13685@dhcp22.suse.cz>
- <87r2l23i2b.fsf@e105922-lin.cambridge.arm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V3] PCI: move early dump functionality from x86 arch into the
+ common code
+Date: Fri,  1 Jun 2018 15:00:15 -0400
+Message-Id: <1527879620-22720-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87r2l23i2b.fsf@e105922-lin.cambridge.arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Kate Stewart <kstewart@linuxfoundation.org>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ Petr Tesarik <ptesarik@suse.cz>, Ram Pai <linuxram@us.ibm.com>,
+ Sinan Kaya <okaya@codeaurora.org>, Kai-Heng Feng <kai.heng.feng@canonical.com>,
+ "H. Peter Anvin" <hpa@zytor.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+ Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
+ "maintainer:X86 ARCHITECTURE 32-BIT AND 64-BIT" <x86@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
+ Thymo van Beers <thymovanbeers@gmail.com>, Borislav Petkov <bp@suse.de>,
+ Tom Lendacky <thomas.lendacky@amd.com>, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-arm-msm@vger.kernel.org, Frederic Weisbecker <frederic@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
+ Juergen Gross <jgross@suse.com>, Dou Liyang <douly.fnst@cn.fujitsu.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ Philippe Ombredanne <pombredanne@nexb.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 19, 2018 at 04:35:40PM +0100, Punit Agrawal wrote:
-> Michal Hocko <mhocko@kernel.org> writes:
-> 
-> > On Tue 19-06-18 15:54:26, Punit Agrawal wrote:
-> > [...]
-> >> In terms of $SUBJECT, I wonder if it's worth taking the original patch
-> >> as a temporary fix (it'll also be easier to backport) while we work on
-> >> fixing these other issues and enabling memoryless nodes.
-> >
-> > Well, x86 already does that but copying this antipatern is not really
-> > nice. So it is good as a quick fix but it would be definitely much
-> > better to have a robust fix. Who knows how many other places might hit
-> > this. You certainly do not want to add a hack like this all over...
-> 
-> Completely agree! I was only suggesting it as a temporary measure,
-> especially as it looked like a proper fix might be invasive.
-> 
-> Another fix might be to change the node specific allocation to node
-> agnostic allocations. It isn't clear why the allocation is being
-> requested from a specific node. I think Lorenzo suggested this in one of
-> the threads.
+Move early dump functionality into common code so that it is available for
+all archtiectures. No need to carry arch specific reads around as the read
+hooks are already initialized by the time pci_setup_device() is getting
+called during scan.
 
-I think that code was just copypasted but it is better to fix the
-underlying issue.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ Documentation/admin-guide/kernel-parameters.txt |  2 +-
+ arch/x86/include/asm/pci-direct.h               |  5 ---
+ arch/x86/kernel/setup.c                         |  5 ---
+ arch/x86/pci/common.c                           |  4 ---
+ arch/x86/pci/early.c                            | 44 -------------------------
+ drivers/pci/pci.c                               |  5 +++
+ drivers/pci/pci.h                               |  1 +
+ drivers/pci/probe.c                             | 19 +++++++++++
+ 8 files changed, 26 insertions(+), 59 deletions(-)
 
-> I've started putting together a set fixing the issues identified in this
-> thread. It should give a better idea on the best course of action.
-
-On ACPI ARM64, this diff should do if I read the code correctly, it
-should be (famous last words) just a matter of mapping PXMs to nodes for
-every SRAT GICC entry, feel free to pick it up if it works.
-
-Yes, we can take the original patch just because it is safer for an -rc
-cycle even though if the patch below would do delaying the fix for a
-couple of -rc (to get it tested across ACPI ARM64 NUMA platforms) is
-not a disaster.
-
-Lorenzo
-
--- >8 --
-diff --git a/arch/arm64/kernel/acpi_numa.c b/arch/arm64/kernel/acpi_numa.c
-index d190a7b231bf..877b268ef9fa 100644
---- a/arch/arm64/kernel/acpi_numa.c
-+++ b/arch/arm64/kernel/acpi_numa.c
-@@ -70,12 +70,6 @@ void __init acpi_numa_gicc_affinity_init(struct acpi_srat_gicc_affinity *pa)
- 	if (!(pa->flags & ACPI_SRAT_GICC_ENABLED))
- 		return;
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index e490902..e64f1d8 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -2995,7 +2995,7 @@
+ 			See also Documentation/blockdev/paride.txt.
  
--	if (cpus_in_srat >= NR_CPUS) {
--		pr_warn_once("SRAT: cpu_to_node_map[%d] is too small, may not be able to use all cpus\n",
--			     NR_CPUS);
--		return;
--	}
+ 	pci=option[,option...]	[PCI] various PCI subsystem options:
+-		earlydump	[X86] dump PCI config space before the kernel
++		earlydump	dump PCI config space before the kernel
+ 				changes anything
+ 		off		[X86] don't probe for the PCI bus
+ 		bios		[X86-32] force use of PCI BIOS, don't access
+diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
+index e1084f7..e5e2129 100644
+--- a/arch/x86/include/asm/pci-direct.h
++++ b/arch/x86/include/asm/pci-direct.h
+@@ -14,9 +14,4 @@ extern void write_pci_config(u8 bus, u8 slot, u8 func, u8 offset, u32 val);
+ extern void write_pci_config_byte(u8 bus, u8 slot, u8 func, u8 offset, u8 val);
+ extern void write_pci_config_16(u8 bus, u8 slot, u8 func, u8 offset, u16 val);
+ 
+-extern int early_pci_allowed(void);
 -
- 	pxm = pa->proximity_domain;
- 	node = acpi_map_pxm_to_node(pxm);
- 
-@@ -85,6 +79,14 @@ void __init acpi_numa_gicc_affinity_init(struct acpi_srat_gicc_affinity *pa)
- 		return;
+-extern unsigned int pci_early_dump_regs;
+-extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
+-extern void early_dump_pci_devices(void);
+ #endif /* _ASM_X86_PCI_DIRECT_H */
+diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+index 2f86d88..480f250 100644
+--- a/arch/x86/kernel/setup.c
++++ b/arch/x86/kernel/setup.c
+@@ -991,11 +991,6 @@ void __init setup_arch(char **cmdline_p)
+ 		setup_clear_cpu_cap(X86_FEATURE_APIC);
  	}
  
-+	node_set(node, numa_nodes_parsed);
-+
-+	if (cpus_in_srat >= NR_CPUS) {
-+		pr_warn_once("SRAT: cpu_to_node_map[%d] is too small, may not be able to use all cpus\n",
-+			     NR_CPUS);
-+		return;
-+	}
-+
- 	mpidr = acpi_map_madt_entry(pa->acpi_processor_uid);
- 	if (mpidr == PHYS_CPUID_INVALID) {
- 		pr_err("SRAT: PXM %d with ACPI ID %d has no valid MPIDR in MADT\n",
-@@ -95,7 +97,6 @@ void __init acpi_numa_gicc_affinity_init(struct acpi_srat_gicc_affinity *pa)
+-#ifdef CONFIG_PCI
+-	if (pci_early_dump_regs)
+-		early_dump_pci_devices();
+-#endif
+-
+ 	e820__reserve_setup_data();
+ 	e820__finish_early_params();
  
- 	early_node_cpu_hwid[cpus_in_srat].node_id = node;
- 	early_node_cpu_hwid[cpus_in_srat].cpu_hwid =  mpidr;
--	node_set(node, numa_nodes_parsed);
- 	cpus_in_srat++;
- 	pr_info("SRAT: PXM %d -> MPIDR 0x%Lx -> Node %d\n",
- 		pxm, mpidr, node);
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 563049c..d4ec117 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -22,7 +22,6 @@
+ unsigned int pci_probe = PCI_PROBE_BIOS | PCI_PROBE_CONF1 | PCI_PROBE_CONF2 |
+ 				PCI_PROBE_MMCONF;
+ 
+-unsigned int pci_early_dump_regs;
+ static int pci_bf_sort;
+ int pci_routeirq;
+ int noioapicquirk;
+@@ -599,9 +598,6 @@ char *__init pcibios_setup(char *str)
+ 		pci_probe |= PCI_BIG_ROOT_WINDOW;
+ 		return NULL;
+ #endif
+-	} else if (!strcmp(str, "earlydump")) {
+-		pci_early_dump_regs = 1;
+-		return NULL;
+ 	} else if (!strcmp(str, "routeirq")) {
+ 		pci_routeirq = 1;
+ 		return NULL;
+diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
+index e5f753c..f5fc953 100644
+--- a/arch/x86/pci/early.c
++++ b/arch/x86/pci/early.c
+@@ -57,47 +57,3 @@ int early_pci_allowed(void)
+ 			PCI_PROBE_CONF1;
+ }
+ 
+-void early_dump_pci_device(u8 bus, u8 slot, u8 func)
+-{
+-	u32 value[256 / 4];
+-	int i;
+-
+-	pr_info("pci 0000:%02x:%02x.%d config space:\n", bus, slot, func);
+-
+-	for (i = 0; i < 256; i += 4)
+-		value[i / 4] = read_pci_config(bus, slot, func, i);
+-
+-	print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value, 256, false);
+-}
+-
+-void early_dump_pci_devices(void)
+-{
+-	unsigned bus, slot, func;
+-
+-	if (!early_pci_allowed())
+-		return;
+-
+-	for (bus = 0; bus < 256; bus++) {
+-		for (slot = 0; slot < 32; slot++) {
+-			for (func = 0; func < 8; func++) {
+-				u32 class;
+-				u8 type;
+-
+-				class = read_pci_config(bus, slot, func,
+-							PCI_CLASS_REVISION);
+-				if (class == 0xffffffff)
+-					continue;
+-
+-				early_dump_pci_device(bus, slot, func);
+-
+-				if (func == 0) {
+-					type = read_pci_config_byte(bus, slot,
+-								    func,
+-							       PCI_HEADER_TYPE);
+-					if (!(type & 0x80))
+-						break;
+-				}
+-			}
+-		}
+-	}
+-}
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 97acba7..04052dc 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -115,6 +115,9 @@ static bool pcie_ari_disabled;
+ /* If set, the PCIe ATS capability will not be used. */
+ static bool pcie_ats_disabled;
+ 
++/* If set, the PCI config space of each device is printed during boot. */
++bool pci_early_dump;
++
+ bool pci_ats_disabled(void)
+ {
+ 	return pcie_ats_disabled;
+@@ -5805,6 +5808,8 @@ static int __init pci_setup(char *str)
+ 				pcie_ats_disabled = true;
+ 			} else if (!strcmp(str, "noaer")) {
+ 				pci_no_aer();
++			} else if (!strcmp(str, "earlydump")) {
++				pci_early_dump = true;
+ 			} else if (!strncmp(str, "realloc=", 8)) {
+ 				pci_realloc_get_opt(str + 8);
+ 			} else if (!strncmp(str, "realloc", 7)) {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index c358e7a0..c33265e 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -7,6 +7,7 @@
+ #define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
+ 
+ extern const unsigned char pcie_link_speed[];
++extern bool pci_early_dump;
+ 
+ bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 56771f3..3678f0a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1545,6 +1545,23 @@ static int pci_intx_mask_broken(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
++static void early_dump_pci_device(struct pci_dev *pdev)
++{
++	u32 value[256 / 4];
++	int i;
++
++	if (!pci_early_dump)
++		return;
++
++	pci_info(pdev, "config space:\n");
++
++	for (i = 0; i < 256; i += 4)
++		pci_read_config_dword(pdev, i, &value[i / 4]);
++
++	print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value,
++		       256, false);
++}
++
+ /**
+  * pci_setup_device - Fill in class and map information of a device
+  * @dev: the device structure to fill
+@@ -1594,6 +1611,8 @@ int pci_setup_device(struct pci_dev *dev)
+ 	pci_printk(KERN_DEBUG, dev, "[%04x:%04x] type %02x class %#08x\n",
+ 		   dev->vendor, dev->device, dev->hdr_type, dev->class);
+ 
++	early_dump_pci_device(dev);
++
+ 	/* Need to have dev->class ready */
+ 	dev->cfg_size = pci_cfg_space_size(dev);
+ 
+-- 
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
