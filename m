@@ -1,117 +1,148 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Baoquan He <bhe@redhat.com>
-To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-        robh+dt@kernel.org, dan.j.williams@intel.com,
-        nicolas.pitre@linaro.org, josh@joshtriplett.org,
-        fengguang.wu@intel.com, bp@suse.de
-Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com,
-        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
-        keith.busch@intel.com, jonathan.derrick@intel.com,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
-        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
-        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
-        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
-        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
-        yinghai@kernel.org, kexec@lists.infradead.org, monstr@monstr.eu,
-        davem@davemloft.net, chris@zankel.net, jcmvbkbc@gmail.com,
-        gustavo@padovan.org, maarten.lankhorst@linux.intel.com,
-        seanpaul@chromium.org, linux-parisc@vger.kernel.org,
-        Baoquan He <bhe@redhat.com>
-Subject: [PATCH v4 0/3] resource: Use list_head to link sibling resource
-Date: Mon,  7 May 2018 14:32:21 +0800
-Message-Id: <20180507063224.24229-1-bhe@redhat.com>
+Date: Fri, 1 Jun 2018 10:30:14 +0800
+From: Tiwei Bie <tiwei.bie@intel.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        "Rustad, Mark D" <mark.d.rustad@intel.com>,
+        "mst@redhat.com" <mst@redhat.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "virtualization@lists.linux-foundation.org"
+        <virtualization@lists.linux-foundation.org>,
+        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
+        "Daly, Dan" <dan.daly@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Liang, Cunming" <cunming.liang@intel.com>,
+        "Wang, Zhihong" <zhihong.wang@intel.com>
+Subject: Re: [PATCH] virtio_pci: support enabling VFs
+Message-ID: <20180601023014.GA31226@debian>
+References: <20180530085521.26583-1-tiwei.bie@intel.com>
+ <20180530192010-mutt-send-email-mst@kernel.org>
+ <414C18B1-30FA-4AC0-B47D-F0FBF9832737@intel.com>
+ <1527699273.29907.2.camel@intel.com>
+ <5063D90B-7955-4F1E-85A2-D8AFD661ACB7@intel.com>
+ <20180531032049.GB15516@debian>
+ <CAKgT0Ud1QmotAXGOi1ORA79rYLFzofDZWPiJtPj=MBg4zxiSdw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAKgT0Ud1QmotAXGOi1ORA79rYLFzofDZWPiJtPj=MBg4zxiSdw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset is doing:
-1) Replace struct resource's sibling list from singly linked list to
-list_head. Clearing out those pointer operation within singly linked
-list for better code readability.
-2) Based on list_head replacement, add a new function
-walk_system_ram_res_rev() which can does reversed iteration on
-iomem_resource's siblings.
-3) Change kexec_file loading to search system RAM top down for kernel
-loadin, using walk_system_ram_res_rev().
+On Thu, May 31, 2018 at 07:27:43AM -0700, Alexander Duyck wrote:
+> On Wed, May 30, 2018 at 8:20 PM, Tiwei Bie <tiwei.bie@intel.com> wrote:
+> > On Thu, May 31, 2018 at 01:11:37AM +0800, Rustad, Mark D wrote:
+> >> On May 30, 2018, at 9:54 AM, Duyck, Alexander H
+> >> <alexander.h.duyck@intel.com> wrote:
+> >>
+> >> > On Wed, 2018-05-30 at 09:44 -0700, Rustad, Mark D wrote:
+> >> > > On May 30, 2018, at 9:22 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> >> > >
+> >> > > > > +static int virtio_pci_sriov_configure(struct pci_dev *pci_dev, int
+> >> > > > > num_vfs)
+> >> > > > > +{
+> >> > > > > +     struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+> >> > > > > +     struct virtio_device *vdev = &vp_dev->vdev;
+> >> > > > > +     int (*sriov_configure)(struct pci_dev *pci_dev, int num_vfs);
+> >> > > > > +
+> >> > > > > +     if (!(vdev->config->get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK))
+> >> > > > > +             return -EBUSY;
+> >> > > > > +
+> >> > > > > +     if (!__virtio_test_bit(vdev, VIRTIO_F_SR_IOV))
+> >> > > > > +             return -EINVAL;
+> >> > > > > +
+> >> > > > > +     sriov_configure = pci_sriov_configure_simple;
+> >> > > > > +     if (sriov_configure == NULL)
+> >> > > > > +             return -ENOENT;
+> >> > > >
+> >> > > > BTW what is all this trickery in aid of?
+> >> > >
+> >> > > When SR-IOV support is not compiled into the kernel,
+> >> > > pci_sriov_configure_simple is #defined as NULL. This allows it to compile
+> >> > > in that case, even though there is utterly no way for it to be called in
+> >> > > that case. It is an alternative to #ifs in the code.
+> >> >
+> >> > Why even have the call though? I would wrap all of this in an #ifdef
+> >> > and strip it out since you couldn't support SR-IOV if it isn't present
+> >> > in the kernel anyway.
+> >>
+> >> I am inclined to agree. In this case, the presence of #ifdefs I think would
+> >> be clearer. As written, someone will want to get rid of the pointer only to
+> >> create a build problem when SR-IOV is not configured.
+> >
+> > In my opinion, maybe it would be better to make
+> > pci_sriov_configure_simple() always available
+> > just like other sriov functions.
+> >
+> > Based on the comments in the original patch:
+> >
+> > https://patchwork.kernel.org/patch/10353197/
+> > """
+> > +/* this is expected to be used as a function pointer, just define as NULL */
+> > +#define pci_sriov_configure_simple NULL
+> > """
+> >
+> > This function could be defined as NULL just because
+> > it was expected to be used as a function pointer.
+> > But actually it could be called directly as a
+> > function, just like this case.
+> >
+> > So I prefer to make this function always available
+> > just like other sriov functions.
+> >
+> > Best regards,
+> > Tiwei Bie
+> 
+> The fact that you are having to add additional code kind of implies
+> that maybe this doesn't fall into the pci_sriov_configure_simple case
+> anymore. The PF itself is defining what the VF can and can't do via
+> the feature flags you are testing for.
 
-Note:
-This patchset passed testing on my kvm guest, x86_64 arch with network
-enabling. The thing we need pay attetion to is that a root resource's
-child member need be initialized specifically with LIST_HEAD_INIT() if
-statically defined or INIT_LIST_HEAD() for dynamically definition. Here
-Just like we do for iomem_resource/ioport_resource, or the change in
-get_pci_domain_busn_res().
+I think you're right about pci_sriov_configure_simple
+isn't designed for this case. I dropped the use of
+pci_sriov_configure_simple in v2. Thanks!
 
+> 
+> For example how is the bit of code below valid if the kernel itself
+> doesn't support SR-IOV:
+> +static void vp_transport_features(struct virtio_device *vdev, u64 features)
+> +{
+> +       struct virtio_pci_device *vp_dev = to_vp_device(vdev);
+> +       struct pci_dev *pci_dev = vp_dev->pci_dev;
+> +
+> +       if ((features & BIT_ULL(VIRTIO_F_SR_IOV)) &&
+> +                       pci_find_ext_capability(pci_dev, PCI_EXT_CAP_ID_SRIOV))
+> +               __virtio_set_bit(vdev, VIRTIO_F_SR_IOV);
+> +}
+> +
+> 
+> It really seems like we should be wrapping these functions at the very
+> minimum so that they don't imply you have SR-IOV support when it isn't
+> supported in the kernel.
 
-Links of the old posting(Boris pointed out that we should use
-https://lkml.kernel.org/r/Message-ID, while it can't be opened from
-my side, so paste all of them here.):
-v3:
-https://lkml.kernel.org/r/20180419001848.3041-1-bhe@redhat.com
-https://lkml.org/lkml/2018/4/18/767
+I think it's OK to accept this feature bit in this case.
+The IOV support not enabled in kernel just means there is
+no way for users to use SR-IOV. But it doesn't mean that
+the virtio driver doesn't understand *this feature bit*.
+Even if the IOV support is enabled in kernel, there is
+still no way for virtio driver to know whether users will
+enable VFs or not. Accepting this feature is to tell the
+device the virtio driver understands this feature (i.e.
+this is not an incompatible virtio driver). And it's not
+to tell the device whether users will enable VFs or not,
+or how many VFs will be enabled.
 
-v2:
-https://lkml.kernel.org/r/20180408024724.16812-1-bhe@redhat.com
-https://lkml.org/lkml/2018/4/7/169
+> 
+> Also it seems like we should be disabling the VFs if the driver is
+> unbound from this interface. We need to add logic to disable SR-IOV if
+> the driver is removed. What we don't want to do is leave VFs allocated
+> and then have the potential for us to unbind/rebind the driver as the
+> new driver may change the negotiated features.
 
-v1:
-https://lkml.kernel.org/r/20180322033722.9279-1-bhe@redhat.com
-https://lkml.org/lkml/2018/3/21/952
+Right. Thanks!
 
-Changelog:
-v3->v4:
-  Fix several bugs test robot reported. Rewrite cover letter and patch
-  log according to reviewer's comment.
+FYI, here is v2:
+https://lists.oasis-open.org/archives/virtio-dev/201805/msg00206.html
 
-v2->v3:
-  Rename resource functions first_child() and sibling() to
-  resource_first_chils() and resource_sibling(). Dan suggested this.
-
-  Move resource_first_chils() and resource_sibling() to linux/ioport.h
-  and make them as inline function. Rob suggested this. Accordingly add
-  linux/list.h including in linux/ioport.h, please help review if this
-  bring efficiency degradation or code redundancy.
-
-  The change on struct resource {} bring two pointers of size increase,
-  mention this in git log to make it more specifically, Rob suggested
-  this.
-
-v1->v2:
-  Use list_head instead to link resource siblings. This is suggested by
-  Andrew.
-
-  Rewrite walk_system_ram_res_rev() after list_head is taken to link
-  resouce siblings.
-
-Baoquan He (3):
-  resource: Use list_head to link sibling resource
-  resource: add walk_system_ram_res_rev()
-  kexec_file: Load kernel at top of system RAM if required
-
- arch/microblaze/pci/pci-common.c            |  31 ++--
- arch/sparc/kernel/ioport.c                  |   2 +-
- arch/xtensa/include/asm/pci-bridge.h        |   4 +-
- drivers/eisa/eisa-bus.c                     |   2 +
- drivers/gpu/drm/drm_memory.c                |   3 +-
- drivers/gpu/drm/gma500/gtt.c                |   5 +-
- drivers/hv/vmbus_drv.c                      |  52 +++----
- drivers/input/joystick/iforce/iforce-main.c |   4 +-
- drivers/nvdimm/e820.c                       |   2 +-
- drivers/nvdimm/namespace_devs.c             |   6 +-
- drivers/nvdimm/nd.h                         |   5 +-
- drivers/of/address.c                        |   4 +-
- drivers/parisc/lba_pci.c                    |   4 +-
- drivers/pci/host/vmd.c                      |   8 +-
- drivers/pci/probe.c                         |   2 +
- drivers/pci/setup-bus.c                     |   2 +-
- include/linux/ioport.h                      |  20 ++-
- kernel/kexec_file.c                         |   2 +
- kernel/resource.c                           | 221 ++++++++++++++++------------
- 19 files changed, 215 insertions(+), 164 deletions(-)
-
--- 
-2.13.6
+Best regards,
+Tiwei Bie
