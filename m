@@ -1,66 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:43221 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932354AbeE2Jma (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 May 2018 05:42:30 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Ryder Lee <ryder.lee@mediatek.com>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Rob Herring <robh@kernel.org>,
-        Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] pci: mvebu: add MVEBU_MBUS dependency
-Date: Tue, 29 May 2018 11:41:51 +0200
-Message-Id: <20180529094204.3945660-1-arnd@arndb.de>
+Received: from mga12.intel.com ([192.55.52.136]:47741 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750771AbeFAAnJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 May 2018 20:43:09 -0400
+Date: Fri, 1 Jun 2018 08:42:27 +0800
+From: kbuild test robot <lkp@intel.com>
+To: honghui.zhang@mediatek.com
+Cc: kbuild-all@01.org, lorenzo.pieralisi@arm.com, marc.zyngier@arm.com,
+        bhelgaas@google.com, matthias.bgg@gmail.com,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+        ryder.lee@mediatek.com, honghui.zhang@mediatek.com,
+        hongkun.cao@mediatek.com, youlin.pei@mediatek.com,
+        yong.wu@mediatek.com, yt.shen@mediatek.com, sean.wang@mediatek.com,
+        xinping.qian@mediatek.com
+Subject: Re: [PATCH] PCI: mediatek: Add system pm support for MT2712
+Message-ID: <201806010727.GOthd5OK%fengguang.wu@intel.com>
+References: <1527647736-19986-1-git-send-email-honghui.zhang@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1527647736-19986-1-git-send-email-honghui.zhang@mediatek.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enabling the PCI_MVEBU driver for compile testing caused a build failure
-on ARM randconfig builds:
+Hi Honghui,
 
-drivers/pci/host/pci-mvebu.c: In function 'mvebu_pcie_del_windows':
-drivers/pci/host/pci-mvebu.c:341:3: error: implicit declaration of function 'mvebu_mbus_del_window'; did you mean 'mvebu_pcie_del_windows'? [-Werror=implicit-function-declaration]
-   mvebu_mbus_del_window(base, sz);
-   ^~~~~~~~~~~~~~~~~~~~~
-   mvebu_pcie_del_windows
-drivers/pci/host/pci-mvebu.c: In function 'mvebu_pcie_add_windows':
-drivers/pci/host/pci-mvebu.c:364:9: error: implicit declaration of function 'mvebu_mbus_add_window_remap_by_id'; did you mean 'mvebu_pcie_add_windows'? [-Werror=implicit-function-declaration]
-   ret = mvebu_mbus_add_window_remap_by_id(target, attribute, base,
-         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         mvebu_pcie_add_windows
-drivers/pci/host/pci-mvebu.c: In function 'mvebu_pcie_probe':
-drivers/pci/host/pci-mvebu.c:1209:2: error: implicit declaration of function 'mvebu_mbus_get_pcie_mem_aperture'; did you mean 'mvebu_mbus_get_io_win_info'? [-Werror=implicit-function-declaration]
-drivers/pci/host/pci-mvebu.c:1215:2: error: implicit declaration of function 'mvebu_mbus_get_pcie_io_aperture'; did you mean 'mvebu_mbus_get_io_win_info'? [-Werror=implicit-function-declaration]
+Thank you for the patch! Perhaps something to improve:
 
-The problem is that the mbus helper functions are not declared in the
-header. There are two ways of solving this: we can change the header
-to provide empty stub functions for CONFIG_MVEBU_MBUS=n, or we can
-add back the dependency here.
+[auto build test WARNING on pci/next]
+[also build test WARNING on next-20180531]
+[cannot apply to v4.17-rc7]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-I picked the second option since that is simpler, but it somewhat
-defeats the purpose of the original patch because we still cannot
-compile test on other platforms this way.
+url:    https://github.com/0day-ci/linux/commits/honghui-zhang-mediatek-com/PCI-mediatek-Add-system-pm-support-for-MT2712/20180601-053217
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
 
-Fixes: 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+
+sparse warnings: (new ones prefixed by >>)
+
+   drivers/pci/host/pcie-mediatek.c:463:40: sparse: incorrect type in argument 1 (different address spaces) @@    expected void volatile *address @@    got void [novoid volatile *address @@
+   drivers/pci/host/pcie-mediatek.c:463:40:    expected void volatile *address
+   drivers/pci/host/pcie-mediatek.c:463:40:    got void [noderef] <asn:2>*
+   drivers/pci/host/pcie-mediatek.c:586:44: sparse: incorrect type in argument 1 (different address spaces) @@    expected void volatile *address @@    got void [novoid volatile *address @@
+   drivers/pci/host/pcie-mediatek.c:586:44:    expected void volatile *address
+   drivers/pci/host/pcie-mediatek.c:586:44:    got void [noderef] <asn:2>*
+>> drivers/pci/host/pcie-mediatek.c:1259:25: sparse: symbol 'mtk_pcie_pm_ops' was not declared. Should it be static?
+
+Please review and possibly fold the followup patch.
+
 ---
- drivers/pci/host/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index fa51d0893384..5340950f4b98 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -6,6 +6,7 @@ menu "PCI host controller drivers"
- config PCI_MVEBU
- 	bool "Marvell EBU PCIe controller"
- 	depends on ARCH_MVEBU || ARCH_DOVE || COMPILE_TEST
-+	depends on MVEBU_MBUS
- 	depends on ARM
- 	depends on OF
- 
--- 
-2.9.0
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
