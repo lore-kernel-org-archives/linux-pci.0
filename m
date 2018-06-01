@@ -1,172 +1,248 @@
-Return-Path: <SRS0=/00G=JG=flex--rajatja.bounces.google.com=3UuYqWwcKB6kaJSJcSJPXXPUN.LXVQNUPJJbTNaWNU.XaP@kernel.org>
-Return-Path: <SRS0=/00G=JG=flex--rajatja.bounces.google.com=3UuYqWwcKB6kaJSJcSJPXXPUN.LXVQNUPJJbTNaWNU.XaP@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55988 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751465AbeFAOaG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Jun 2018 10:30:06 -0400
+Date: Fri, 1 Jun 2018 08:30:00 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>
+Subject: Re: [PATCH v2 2/3] PCI: Allow specifying devices using a base bus
+ and path of devfns
+Message-ID: <20180601083000.62d10d14@t450s.home>
+In-Reply-To: <20180531235010.5279-3-logang@deltatee.com>
+References: <20180531235010.5279-1-logang@deltatee.com>
+        <20180531235010.5279-3-logang@deltatee.com>
 MIME-Version: 1.0
-Date: Wed, 20 Jun 2018 16:41:47 -0700
-In-Reply-To: <20180620234147.48438-1-rajatja@google.com>
-Message-Id: <20180620234147.48438-5-rajatja@google.com>
-References: <20180522222805.80314-1-rajatja@google.com> <20180620234147.48438-1-rajatja@google.com>
-Subject: [PATCH v5 5/5] Documentation/ABI: Add details of PCI AER statistics
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
-	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
-	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
-Cc: Rajat Jain <rajatja@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the PCI AER statistics details to
-Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
-and provide a pointer to it in
-Documentation/PCI/pcieaer-howto.txt
+On Thu, 31 May 2018 17:50:09 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
-v5: Same as v4
-v4: Same as v3
-v3: Add some more details
+> When specifying PCI devices on the kernel command line using a
+> BDF, the bus numbers can change when adding or replacing a device,
+> changing motherboard firmware, or applying kernel parameters like
+> pci=assign-buses. When this happens, it is usually undesirable to
+> apply whatever command line tweak to the wrong device.
+> 
+> Therefore, it is useful to be able to specify devices with a base
+> bus number and the path of devfns needed to get to it. (Similar to
+> the "device scope" structure in the Intel VT-d spec, Section 8.3.1.)
+> 
+> Thus, we add an option to specify devices in the following format:
+> 
+> path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
+> 
+> The path can be any segment within the PCI hierarchy of any length and
+> determined through the use of 'lspci -t'. When specified this way, it is
+> less likely that a renumbered bus will result in a valid device specification
+> and the tweak won't be applied to the wrong device.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Stephen Bates <sbates@raithlin.com>
+> Acked-by: Christian König <christian.koenig@amd.com>
+> ---
+>  Documentation/admin-guide/kernel-parameters.txt |  12 ++-
+>  drivers/pci/pci.c                               | 101 +++++++++++++++++++++++-
+>  2 files changed, 107 insertions(+), 6 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index e58cc671ff92..bc51b316f485 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -2989,9 +2989,10 @@
+>  
+>  				Some options herein operate on a specific device
+>  				or a set of devices (<pci_dev>). These are
+> -				specified in one of two formats:
+> +				specified in one of three formats:
+>  
+>  				[<domain>:]<bus>:<slot>.<func>
+> +				path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
+>  				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+>  
+>  				Note: the first format specifies a PCI
+> @@ -2999,9 +3000,12 @@
+>  				if new hardware is inserted, if motherboard
+>  				firmware changes, or due to changes caused
+>  				by other kernel parameters. The second format
+> -				selects devices using IDs from the
+> -				configuration space which may match multiple
+> -				devices in the system.
+> +				specifies a path from a device through
+> +				a path of multiple slot/function addresses
+> +				(this is more robust against renumbering
+> +				issues). The third format selects devices using
+> +				IDs from the configuration space which may match
+> +				multiple devices in the system.
+>  
+>  		earlydump	[X86] dump PCI config space before the kernel
+>  			        changes anything
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 85fec5e2640b..39f11bd0ee03 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -184,22 +184,111 @@ EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
+>  #endif
+>  
+>  /**
+> + * pci_dev_str_match_path - test if a path string matches a device
+> + * @dev:    the PCI device to test
+> + * @p:      string to match the device against
+> + * @endptr: pointer to the string after the match
+> + *
+> + * Test if a string (typically from a kernel parameter) formated as a
+> + * path of slot/function addresses matches a PCI device. The string must
+> + * be of the form:
+> + *
+> + *   [<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
+> + *
+> + * A path for a device can be obtained using 'lspci -t'. Using a path
+> + * is more robust against renumbering of devices than using only
+> + * a single bus, slot and function address.
+> + *
+> + * Returns 1 if the string matches the device, 0 if it does not and
+> + * a negative error code if it fails to parse the string.
+> + */
+> +static int pci_dev_str_match_path(struct pci_dev *dev, const char *path,
+> +				  const char **endptr)
+> +{
+> +	int ret;
+> +	int seg, bus, slot, func;
+> +	char *wpath, *p;
+> +	char end;
+> +
+> +	*endptr = strchrnul(path, ';');
+> +
+> +	wpath = kmemdup_nul(path, *endptr - path, GFP_KERNEL);
+> +	if (!wpath)
+> +		return -ENOMEM;
+> +
+> +	while (1) {
+> +		p = strrchr(wpath, '/');
+> +		if (!p)
+> +			break;
+> +		ret = sscanf(p, "/%x.%x%c", &slot, &func, &end);
+> +		if (ret != 2) {
+> +			ret = -EINVAL;
+> +			goto free_and_exit;
+> +		}
+> +
+> +		if (dev->devfn != PCI_DEVFN(slot, func)) {
+> +			ret = 0;
+> +			goto free_and_exit;
+> +		}
+> +
+> +		/*
+> +		 * Note: we don't need to get a reference to the upstream
+> +		 * bridge because we hold a reference to the top level
+> +		 * device which should hold a reference to the bridge,
+> +		 * and so on.
+> +		 */
+> +		dev = pci_upstream_bridge(dev);
+> +		if (!dev) {
+> +			ret = 0;
+> +			goto free_and_exit;
+> +		}
+> +
+> +		*p = 0;
+> +	}
+> +
+> +	ret = sscanf(wpath, "%x:%x:%x.%x%c", &seg, &bus, &slot,
+> +		     &func, &end);
+> +	if (ret != 4) {
+> +		seg = 0;
+> +		ret = sscanf(wpath, "%x:%x.%x%c", &bus, &slot, &func, &end);
+> +		if (ret != 3) {
+> +			ret = -EINVAL;
+> +			goto free_and_exit;
+> +		}
+> +	}
+> +
+> +	ret = (seg == pci_domain_nr(dev->bus) &&
+> +	       bus == dev->bus->number &&
+> +	       dev->devfn == PCI_DEVFN(slot, func));
+> +
+> +free_and_exit:
+> +	kfree(wpath);
+> +	return ret;
+> +}
 
- .../testing/sysfs-bus-pci-devices-aer_stats   | 111 ++++++++++++++++++
- Documentation/PCI/pcieaer-howto.txt           |   5 +
- 2 files changed, 116 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+Cool, I'm glad this worked.  I note though that there's really not much
+difference between:
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
-new file mode 100644
-index 000000000000..3ed5a682be87
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
-@@ -0,0 +1,111 @@
-+==========================
-+PCIe Device AER statistics
-+==========================
-+These attributes show up under all the devices that are AER capable. These
-+statistical counters indicate the errors "as seen/reported by the device".
-+Note that this may mean that if an end point is causing problems, the AER
-+counters may increment at its link partner (e.g. root port) because the
-+errors will be "seen" / reported by the link partner and not the the
-+problematic end point itself (which may report all counters as 0 as it never
-+saw any problems).
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_total_cor_errs
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Total number of correctable errors seen and reported by this
-+		PCI device using ERR_COR.
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_total_fatal_errs
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Total number of uncorrectable fatal errors seen and reported
-+		by this PCI device using ERR_FATAL.
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_total_nonfatal_errs
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Total number of uncorrectable non-fatal errors seen and reported
-+		by this PCI device using ERR_NONFATAL.
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_breakdown_correctable
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Breakdown of correctable errors seen and reported by this
-+		PCI device using ERR_COR. Note that the sum total of all errors
-+		in dev_breakdown_correctable may exceed dev_total_cor_errs
-+		because a device is allowed to merge multiple correctable and
-+		send a single ERR_COR for them (which is what dev_total_cor_errs
-+		counts). A sample output for this attribute looks like this:
-+-----------------------------------------
-+Receiver Error = 174
-+Bad TLP = 19
-+Bad DLLP = 3
-+RELAY_NUM Rollover = 0
-+Replay Timer Timeout = 1
-+Advisory Non-Fatal = 0
-+Corrected Internal Error = 0
-+Header Log Overflow = 0
-+-----------------------------------------
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_breakdown_uncorrectable
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Breakdown of of correctable errors seen and reported by this
-+		PCI device using ERR_FATAL or ERR_NONFATAL. Note that the sum
-+		total of all errors in dev_breakdown_uncorrectable may exceed
-+		(dev_total_fatal_errs + dev_total_nonfatal_errs) because a
-+		device is allowed to merge multiple errors at the same severity
-+		and send a single ERR_FATAL/ERR_NON_FATAL for them.
-+		A sample output for this attribute looks like this:
-+-----------------------------------------
-+Undefined = 0
-+Data Link Protocol = 0
-+Surprise Down Error = 0
-+Poisoned TLP = 0
-+Flow Control Protocol = 0
-+Completion Timeout = 0
-+Completer Abort = 0
-+Unexpected Completion = 0
-+Receiver Overflow = 0
-+Malformed TLP = 0
-+ECRC = 0
-+Unsupported Request = 0
-+ACS Violation = 0
-+Uncorrectable Internal Error = 0
-+MC Blocked TLP = 0
-+AtomicOp Egress Blocked = 0
-+TLP Prefix Blocked Error = 0
-+-----------------------------------------
-+
-+============================
-+PCIe Rootport AER statistics
-+============================
-+These attributes showup under only the rootports that are AER capable. These
-+indicate the number of error messages as "reported to" the rootport. Please note
-+that the rootports also transmit (internally) the ERR_* messages for errors seen
-+by the internal rootport PCI device, so these counters includes them and are
-+thus cumulative of all the error messages on the PCI hierarchy originating
-+at that root port.
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/rootport_total_cor_errs
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Total number of ERR_COR messages reported to rootport.
-+
-+Where:		/sys/bus/pci/devices/<dev>/aer_stats/rootport_total_fatal_errs
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Total number of ERR_FATAL messages reported to rootport.
-+
-+Where:	    /sys/bus/pci/devices/<dev>/aer_stats/rootport_total_nonfatal_errs
-+Date:		May 2018
-+Kernel Version: 4.17.0
-+Contact:	linux-pci@vger.kernel.org, rajatja@google.com
-+Description:	Total number of ERR_NONFATAL messages reported to rootport.
-diff --git a/Documentation/PCI/pcieaer-howto.txt b/Documentation/PCI/pcieaer-howto.txt
-index acd0dddd6bb8..91b6e677cb8c 100644
---- a/Documentation/PCI/pcieaer-howto.txt
-+++ b/Documentation/PCI/pcieaer-howto.txt
-@@ -73,6 +73,11 @@ In the example, 'Requester ID' means the ID of the device who sends
- the error message to root port. Pls. refer to pci express specs for
- other fields.
- 
-+2.4 AER Statistics / Counters
-+
-+When PCIe AER errors are captured, the counters / statistics are also exposed
-+in form of sysfs attributes which are documented at
-+Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
- 
- 3. Developer Guide
- 
--- 
-2.18.0.rc1.244.gcf134e6275-goog
+[domain:]bus:slot.fn
+
+and
+
+[domain:]bus:slot.fn[/slot.fn[/slot.fn[/...]]]
+
+IOW, what's defined here as the "path:" specification doesn't require
+that we start at a root bus device, it can really specify a path
+starting anywhere, including the target device directly.  So can we
+simply extend domain:bus:slot.fn to support paths without a separate
+identifier?  Thanks,
+
+Alex
+
+> +
+> +/**
+>   * pci_dev_str_match - test if a string matches a device
+>   * @dev:    the PCI device to test
+>   * @p:      string to match the device against
+>   * @endptr: pointer to the string after the match
+>   *
+>   * Test if a string (typically from a kernel parameter) matches a
+> - * specified. The string may be of one of two forms formats:
+> + * specified. The string may be of one of three formats:
+>   *
+>   *   [<domain>:]<bus>:<slot>.<func>
+> + *   path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
+>   *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+>   *
+>   * The first format specifies a PCI bus/slot/function address which
+>   * may change if new hardware is inserted, if motherboard firmware changes,
+>   * or due to changes caused in kernel parameters.
+>   *
+> - * The second format matches devices using IDs in the configuration
+> + * The second format specifies a PCI bus/slot/function root address and
+> + * a path of slot/function addresses to the specific device from the root.
+> + * The path for a device can be determined through the use of 'lspci -t'.
+> + * This format is more robust against renumbering issues than the first format.
+> +
+> + * The third format matches devices using IDs in the configuration
+>   * space which may match multiple devices in the system. A value of 0
+>   * for any field will match all devices.
+>   *
+> @@ -236,7 +325,15 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
+>  		    (!subsystem_device ||
+>  			    subsystem_device == dev->subsystem_device))
+>  			goto found;
+> +	} else if (strncmp(p, "path:", 5) == 0) {
+> +		/* PCI Root Bus and a path of Slot,Function IDs */
+> +		p += 5;
+>  
+> +		ret = pci_dev_str_match_path(dev, p, &p);
+> +		if (ret < 0)
+> +			return ret;
+> +		else if (ret)
+> +			goto found;
+>  	} else {
+>  		/* PCI Bus,Slot,Function ids are specified */
+>  		ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
