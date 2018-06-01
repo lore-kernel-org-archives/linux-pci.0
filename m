@@ -1,66 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:47668 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754530AbeFVUvC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Jun 2018 16:51:02 -0400
-To: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Matthew Wilcox <willy@infradead.org>
-References: <20180622194315.10475-1-logang@deltatee.com>
- <20180622194315.10475-2-logang@deltatee.com>
- <1222da4e-864c-5e27-b735-99fc53d1e367@infradead.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <baccb879-0ddc-37e0-1d54-747beb47e6a8@deltatee.com>
-Date: Fri, 22 Jun 2018 14:50:45 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 21/40] iommu/arm-smmu-v3: Add support for Substream IDs
+To: Bharat Kumar Gogada <bharatku@xilinx.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "linux-mm@kvack.org" <linux-mm@kvack.org>
+References: <20180511190641.23008-1-jean-philippe.brucker@arm.com>
+ <20180511190641.23008-22-jean-philippe.brucker@arm.com>
+ <BLUPR0201MB1505AA55707BE2E13392FFAFA5630@BLUPR0201MB1505.namprd02.prod.outlook.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <be58739e-ed03-396f-c7ac-19a3195aef87@arm.com>
+Date: Fri, 1 Jun 2018 11:46:07 +0100
 MIME-Version: 1.0
-In-Reply-To: <1222da4e-864c-5e27-b735-99fc53d1e367@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v4 1/3] PCI: Make specifying PCI devices in kernel
- parameters reusable
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <BLUPR0201MB1505AA55707BE2E13392FFAFA5630@BLUPR0201MB1505.namprd02.prod.outlook.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "xuzaibo@huawei.com" <xuzaibo@huawei.com>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+ "rfranz@cavium.com" <rfranz@cavium.com>,
+ "kevin.tian@intel.com" <kevin.tian@intel.com>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "jcrouse@codeaurora.org" <jcrouse@codeaurora.org>,
+ Ravikiran Gummaluri <rgummal@xilinx.com>,
+ "jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
+ "shunyong.yang@hxt-semitech.com" <shunyong.yang@hxt-semitech.com>,
+ Robin Murphy <Robin.Murphy@arm.com>,
+ "ilias.apalodimas@linaro.org" <ilias.apalodimas@linaro.org>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "christian.koenig@amd.com" <christian.koenig@amd.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+ "baolu.lu@linux.intel.com" <baolu.lu@linux.intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 22/06/18 02:05 PM, Randy Dunlap wrote:
-> Hi,
+On 31/05/18 12:01, Bharat Kumar Gogada wrote:
+>>  static void arm_smmu_sync_cd(void *cookie, int ssid, bool leaf)  {
+>> +	struct arm_smmu_cmdq_ent cmd = {
+>> +		.opcode	= CMDQ_OP_CFGI_CD_ALL,
 > 
-> On 06/22/2018 12:43 PM, Logan Gunthorpe wrote:
-> 
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 97acba712e4e..cb999b2a9530 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -191,6 +191,92 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar)
->>  EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
->>  #endif
->>  
->> +/**
->> + * pci_dev_str_match - test if a string matches a device
->> + * @dev:    the PCI device to test
->> + * @p:      string to match the device against
->> + * @endptr: pointer to the string after the match
->> + *
->> + * Test if a string (typically from a kernel parameter) matches a
->> + * specified. The string may be of one of the following formats:
-> 
-> "matches a specified."  eh?
+> Hi Jean, here CMDQ_OP_CFGI_CD opcode 0x5. 
 
-Shoot, must have been over edited. Will fix for v5.
+Woops, nice catch!
 
-Logan
+I pushed fixes for all comments so far to branch sva/current
+
+Thanks,
+Jean
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
