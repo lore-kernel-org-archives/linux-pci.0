@@ -1,76 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:39738 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932686AbeFUUVt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 16:21:49 -0400
-Date: Thu, 21 Jun 2018 22:21:44 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Lukas Wunner <lukas@wunner.de>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] genirq: Synchronize only with single thread on
- free_irq()
-In-Reply-To: <8f770886632640321592873e4c902218d42c436b.1527194314.git.lukas@wunner.de>
-Message-ID: <alpine.DEB.2.21.1806212217571.1591@nanos.tec.linutronix.de>
-References: <8f770886632640321592873e4c902218d42c436b.1527194314.git.lukas@wunner.de>
+Return-Path: <SRS0=pwuc=IT=gmail.com=marek.vasut@kernel.org>
+Return-Path: <SRS0=pwuc=IT=gmail.com=marek.vasut@kernel.org>
+Subject: Re: [PATCH v4 6/6] PCI: rcar: Shut the PHY down in failpath
+To: Simon Horman <horms@verge.net.au>
+Cc: linux-pci@vger.kernel.org, Marek Vasut <marek.vasut+renesas@gmail.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Phil Edworthy <phil.edworthy@renesas.com>, Wolfram Sang <wsa@the-dreams.de>,
+ linux-renesas-soc@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
+References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
+ <20180524143624.26718-7-marek.vasut+renesas@gmail.com>
+ <20180528084813.ic5gyos7hq5vxknw@verge.net.au>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <0a7b03be-b2f8-0965-ac5c-5bb3988a6da0@gmail.com>
+Date: Sat, 2 Jun 2018 01:30:00 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180528084813.ic5gyos7hq5vxknw@verge.net.au>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 24 May 2018, Lukas Wunner wrote:
->  static int irq_wait_for_interrupt(struct irqaction *action)
->  {
-> -	set_current_state(TASK_INTERRUPTIBLE);
-> +	for (;;) {
-> +		set_current_state(TASK_INTERRUPTIBLE);
->  
-> -	while (!kthread_should_stop()) {
-> +		if (kthread_should_stop()) {
-> +			/* may need to run one last time. */
-> +			if (test_and_clear_bit(IRQTF_RUNTHREAD,
-> +					       &action->thread_flags)) {
-> +				__set_current_state(TASK_RUNNING);
-> +				return 0;
-> +			}
-> +			__set_current_state(TASK_RUNNING);
-> +			return -1;
-> +		}
->  
->  		if (test_and_clear_bit(IRQTF_RUNTHREAD,
->  				       &action->thread_flags)) {
-> @@ -766,10 +776,7 @@ static int irq_wait_for_interrupt(struct irqaction *action)
->  			return 0;
->  		}
->  		schedule();
-> -		set_current_state(TASK_INTERRUPTIBLE);
->  	}
-> -	__set_current_state(TASK_RUNNING);
-> -	return -1;
->  }
->  
->  /*
-> @@ -990,7 +997,7 @@ static int irq_thread(void *data)
->  	/*
->  	 * This is the regular exit path. __free_irq() is stopping the
->  	 * thread via kthread_stop() after calling
-> -	 * synchronize_irq(). So neither IRQTF_RUNTHREAD nor the
-> +	 * synchronize_hardirq(). So neither IRQTF_RUNTHREAD nor the
->  	 * oneshot mask bit can be set. We cannot verify that as we
->  	 * cannot touch the oneshot mask at this point anymore as
->  	 * __setup_irq() might have given out currents thread_mask
-> @@ -1595,7 +1602,7 @@ static struct irqaction *__free_irq(struct irq_desc *desc, void *dev_id)
->  	unregister_handler_proc(irq, action);
->  
->  	/* Make sure it's not being used on another CPU: */
-> -	synchronize_irq(irq);
-> +	synchronize_hardirq(irq);
+On 05/28/2018 10:48 AM, Simon Horman wrote:
+> On Thu, May 24, 2018 at 04:36:24PM +0200, Marek Vasut wrote:
+>> If anything fails past phy_init_fn() and the system is a Gen3 with
+>> a PHY, the PHY will be left on and inited. This is caused by the
+>> phy_init_fn, which is in fact a pointer to rcar_pcie_phy_init_gen3()
+>> function, which starts the PHY, yet has no counterpart in the failpath.
+>> Add that counterpart.
+>>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>> Cc: linux-renesas-soc@vger.kernel.org
+>> Fixes: 517ca93a7159 ("PCI: rcar: Add R-Car gen3 PHY support")
+> 
+> Acked-by: Simon Horman <horms+renesas@verge.net.au>
 
-So after that, action can be freed and when the thread above tries to
-access it. Nice Use After Free. That needs more thought.
+While I see the first 5 in today's next, I don't see this one there, so
+it'd be nice to add it too.
 
-Thanks,
-
-	tglx
+-- 
+Best regards,
+Marek Vasut
