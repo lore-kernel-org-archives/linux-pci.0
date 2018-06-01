@@ -1,96 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:54143 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935929AbeFNBgL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 21:36:11 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-        Ley Foon Tan <ley.foon.tan@intel.com>
-Subject: [PATCH v4 06/10] PCI: altera: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Thu, 14 Jun 2018 09:35:45 +0800
-Message-Id: <1528940145-183495-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <53e4d6c3-ee19-fd04-4ba3-862d04558689@codeaurora.org>
+References: <1527654876-26716-1-git-send-email-okaya@codeaurora.org>
+ <CAHp75Vc3YKAR1P_F0fwD+ueGub4gVUjP0=wv4Egf_fTSVkSUjw@mail.gmail.com>
+ <53e4d6c3-ee19-fd04-4ba3-862d04558689@codeaurora.org>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Fri, 1 Jun 2018 18:24:00 +0300
+Message-ID: <CAHp75VdTyvQOqnSm67Uo5heP1otE98BbquM0TjSAorEzTgUwHQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: move early dump functionality from x86 arch into the
+ common code
+To: Sinan Kaya <okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Kate Stewart <kstewart@linuxfoundation.org>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ linux-pci@vger.kernel.org, Petr Tesarik <ptesarik@suse.cz>,
+ Ram Pai <linuxram@us.ibm.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>,
+ "H. Peter Anvin" <hpa@zytor.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+ Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
+ Timur Tabi <timur@codeaurora.org>,
+ "maintainer:X86 ARCHITECTURE \(32-BIT AND 64-BIT\)" <x86@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
+ Thymo van Beers <thymovanbeers@gmail.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Tom Lendacky <thomas.lendacky@amd.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
+ Frederic Weisbecker <frederic@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+ Juergen Gross <jgross@suse.com>, Dou Liyang <douly.fnst@cn.fujitsu.com>,
+ Borislav Petkov <bp@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ Philippe Ombredanne <pombredanne@nexb.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+On Fri, Jun 1, 2018 at 6:06 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> On 6/1/2018 11:02 AM, Andy Shevchenko wrote:
+>> On Wed, May 30, 2018 at 7:34 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>>> Move early dump functionality into common code so that it is available for
+>>> all archtiectures. No need to carry arch specific reads around as the read
+>>> hooks are already initialized by the time pci_setup_device() is getting
+>>> called during scan.
+>>
+>>>  /* If set, the PCIe ATS capability will not be used. */
+>>>  static bool pcie_ats_disabled;
+>>>
+>>> +bool pci_early_dump;
+>>> +
+>>
+>> I didn't check above these, but maybe a good idea to add one line
+>> comment what is this about?
+>
+> This was discussed here:
+>
+> https://www.spinics.net/lists/linux-pci/msg72859.html
 
-Cc: Ley Foon Tan <ley.foon.tan@intel.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+I understand what is it. What I'm pointing is the variable in the
+source without any comment. In the context you have in diff previous
+one has a comment.
 
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
 
- drivers/pci/controller/pcie-altera.c | 38 ++++--------------------------------
- 1 file changed, 4 insertions(+), 34 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
-index 7d05e51..0915c8b 100644
---- a/drivers/pci/controller/pcie-altera.c
-+++ b/drivers/pci/controller/pcie-altera.c
-@@ -443,19 +443,6 @@ static void altera_pcie_retrain(struct altera_pcie *pcie)
- 	}
- }
- 
--static int altera_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
--				irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--	return 0;
--}
--
--static const struct irq_domain_ops intx_domain_ops = {
--	.map = altera_pcie_intx_map,
--	.xlate = pci_irqd_intx_xlate,
--};
--
- static void altera_pcie_isr(struct irq_desc *desc)
- {
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
-@@ -519,22 +506,6 @@ static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
- 	return err;
- }
- 
--static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
--{
--	struct device *dev = &pcie->pdev->dev;
--	struct device_node *node = dev->of_node;
--
--	/* Setup INTx */
--	pcie->irq_domain = irq_domain_add_linear(node, PCI_NUM_INTX,
--					&intx_domain_ops, pcie);
--	if (!pcie->irq_domain) {
--		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		return -ENOMEM;
--	}
--
--	return 0;
--}
--
- static int altera_pcie_parse_dt(struct altera_pcie *pcie)
- {
- 	struct device *dev = &pcie->pdev->dev;
-@@ -592,11 +563,10 @@ static int altera_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 	}
- 
--	ret = altera_pcie_init_irq_domain(pcie);
--	if (ret) {
--		dev_err(dev, "Failed creating IRQ Domain\n");
--		return ret;
--	}
-+	pcie->irq_domain = pci_host_alloc_intx_irqd(dev, pcie, true, NULL,
-+						    dev->of_node);
-+	if (IS_ERR(pcie->irq_domain))
-+		return PTR_ERR(pcie->irq_domain);
- 
- 	/* clear all interrupts */
- 	cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
 -- 
-1.9.1
+With Best Regards,
+Andy Shevchenko
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
