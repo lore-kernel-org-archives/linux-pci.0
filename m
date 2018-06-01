@@ -1,78 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:43815 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933657AbeFMH1H (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 03:27:07 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3 07/10] PCI: mediatek: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Wed, 13 Jun 2018 15:26:41 +0800
-Message-Id: <1528874801-7863-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V3 2/2] scsi: hpsa: drop shutdown callback
+To: Don Brace <don.brace@microsemi.com>
+References: <1527542471-10316-1-git-send-email-okaya@codeaurora.org>
+ <1527542471-10316-2-git-send-email-okaya@codeaurora.org>
+ <51bb7b82-c4a1-435c-7668-639db96d76e1@finnie.org>
+ <af772e6434e645f4a42d22821442a3bd@microsemi.com>
+ <3ebb873ea4658275e7fa89c01cd8bfe1@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <fe49b9b4-5e15-b0ae-59c3-33b5a31eeb9c@codeaurora.org>
+Date: Fri, 1 Jun 2018 09:34:04 -0400
+MIME-Version: 1.0
+In-Reply-To: <3ebb873ea4658275e7fa89c01cd8bfe1@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ryan Finnie <ryan@finnie.org>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER \(hpsa\)"
+ <linux-scsi@vger.kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, "esc.storagedev" <esc.storagedev@microsemi.com>,
+ open list <linux-kernel@vger.kernel.org>, stable@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+On 5/30/2018 9:08 PM, okaya@codeaurora.org wrote:
+> I have seen that shutdown() is also called from remove().
+> 
+> remove() is supposed to do a safe cleanup too. If it is leaving the hw in inconsistent state even though it is c lling shutdown , it is yet another bug.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Let's try to be constructive. I'll post a patch with the pci_disable added to shutdown
+only as in my original proposal.
 
-Changes in v3: None
-Changes in v2: None
+Somebody can deal with remove another day.
 
- drivers/pci/controller/pcie-mediatek.c | 30 ++++--------------------------
- 1 file changed, 4 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 0baabe3..b35a8ce 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -590,39 +590,17 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
- 	writel(val, port->base + PCIE_INT_MASK);
- }
- 
--static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
--			     irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--static const struct irq_domain_ops intx_domain_ops = {
--	.map = mtk_pcie_intx_map,
--};
--
- static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
- 				    struct device_node *node)
- {
- 	struct device *dev = port->pcie->dev;
--	struct device_node *pcie_intc_node;
- 	int ret;
- 
--	/* Setup INTx */
--	pcie_intc_node = of_get_next_child(node, NULL);
--	if (!pcie_intc_node) {
--		dev_err(dev, "no PCIe Intc node found\n");
--		return -ENODEV;
--	}
-+	port->irq_domain = pci_host_alloc_intx_irqd(dev, port, false,
-+						    NULL, NULL);
-+	if (IS_ERR(port->irq_domain))
-+		return PTR_ERR(port->irq_domain);
- 
--	port->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--						 &intx_domain_ops, port);
--	if (!port->irq_domain) {
--		dev_err(dev, "failed to get INTx IRQ domain\n");
--		return -ENODEV;
--	}
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		ret = mtk_pcie_allocate_msi_domains(port);
 -- 
-1.9.1
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
