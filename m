@@ -1,64 +1,66 @@
-Return-Path: <SRS0=bwDY=I5=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=bwDY=I5=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 11 Jun 2018 13:47:26 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH v1 0/9] PCI/portdrv: Squash into one file
-In-Reply-To: <152848853199.14051.12670957565366345798.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152848853199.14051.12670957565366345798.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <1ade8ebfbd2e02177d2f6afa3d805bb0@codeaurora.org>
+In-Reply-To: <1527850145.28160.6.camel@mhfsdcap03>
+References: <1527822270-30280-1-git-send-email-honghui.zhang@mediatek.com>
+ <CAHp75VeBTmC=3nJ-t+OO9bp0mzJuTYsGBwi8fokT16bu2nE9RA@mail.gmail.com>
+ <1527850145.28160.6.camel@mhfsdcap03>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Fri, 1 Jun 2018 13:52:44 +0300
+Message-ID: <CAHp75VcEp2kFO4hncvMS4Dh1AzvoFbrps7+FLmdk0RLyNTHz7g@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: mediatek: Add system pm support for MT2712
+To: Honghui Zhang <honghui.zhang@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree <devicetree@vger.kernel.org>,
+ hongkun.cao@mediatek.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, xinping.qian@mediatek.com,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, yt.shen@mediatek.com,
+ Matthias Brugger <matthias.bgg@gmail.com>, ryder.lee@mediatek.com,
+ "moderated list:ARM/Mediatek SoC support" <linux-mediatek@lists.infradead.org>,
+ yong.wu@mediatek.com, Bjorn Helgaas <bhelgaas@google.com>,
+ yingjoe.chen@mediatek.com, Arnd Bergmann <arnd.bergmann@linaro.org>,
+ Eddie Huang <eddie.huang@mediatek.com>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-06-09 01:42, Bjorn Helgaas wrote:
-> The portdrv code is scattered across several files, which makes it a 
-> bit of
-> a hassle to browse.  Consolidate it all in a single file.
-> 
+On Fri, Jun 1, 2018 at 1:49 PM, Honghui Zhang
+<honghui.zhang@mediatek.com> wrote:
+> On Fri, 2018-06-01 at 13:17 +0300, Andy Shevchenko wrote:
+>> On Fri, Jun 1, 2018 at 6:04 AM,  <honghui.zhang@mediatek.com> wrote:
+>> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+>>
+>> > +#ifdef CONFIG_PM_SLEEP
+>> > +static int mtk_pcie_suspend_noirq(struct device *dev)
+>>
+>> __maybe_unused
+>>
+>
+> Hi, Andy, thanks for your review.
+> Bjorn had point this out that at:
+> https://www.spinics.net/lists/arm-kernel/msg656774.html
 
-Although I do not have any objection is merging the code,
+Nice, one more maintainer with strong opinion here.
 
-It looks to me that the 2 files served purpose of keeping
-portdrv device functionality in  one file > portdrv_pci.c
-while, port driver helper and exported service functions for services 
-are in > portdrv_core.c
+Arnd, that's what I mentioned as a split in opinions earlier.
+Any new developer or even existing contributor would be now really
+confusing since maintainers asked for two different approaches on the
+same matter.
 
-If that was the original intention, it just looks okay to me.
-But I am not sure the way the code is now, we can call is scattered,
-and also I do not think by merging it, we can call it more organised.
+-- 
+With Best Regards,
+Andy Shevchenko
 
-although certainly it looks easier to browse as you are suggesting.
-little less confusing.
-
-> This is all pure code moves; no functional changes intended.  Well, 
-> there
-> is a function rename, but it shouldn't change any behavior.
-> 
-> ---
-> 
-> Bjorn Helgaas (9):
->       PCI/portdrv: Rename resume_iter() to prevent name collision
->       PCI/portdrv: Squash pieces of portdrv_core.c into portdrv_pci.c
->       PCI/portdrv: Squash PM-related code into portdrv_pci.c
->       PCI/portdrv: Squash device removal code into portdrv_pci.c
->       PCI/portdrv: Squash lookup interfaces into portdrv_pci.c
->       PCI/portdrv: Squash service driver registration into 
-> portdrv_pci.c
->       PCI/portdrv: Move private definitions to portdrv_pci.c
->       PCI/portdrv: Clean up whitespace
->       PCI/portdrv: Rename portdrv_pci.c to portdrv.c
-> 
-> 
->  drivers/pci/pcie/Makefile       |    6
->  drivers/pci/pcie/portdrv.c      |  822 
-> +++++++++++++++++++++++++++++++++++++++
->  drivers/pci/pcie/portdrv.h      |   15 -
->  drivers/pci/pcie/portdrv_core.c |  578 ---------------------------
->  drivers/pci/pcie/portdrv_pci.c  |  261 ------------
->  5 files changed, 824 insertions(+), 858 deletions(-)
->  create mode 100644 drivers/pci/pcie/portdrv.c
->  delete mode 100644 drivers/pci/pcie/portdrv_core.c
->  delete mode 100644 drivers/pci/pcie/portdrv_pci.c
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
