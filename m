@@ -1,65 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56110 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754628AbeFRVzG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 18 Jun 2018 17:55:06 -0400
-Date: Mon, 18 Jun 2018 15:55:04 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>
-Subject: Re: [PATCH v3 2/3] PCI: Allow specifying devices using a base bus
- and path of devfns
-Message-ID: <20180618155504.68e56358@t450s.home>
-In-Reply-To: <20180618193636.16210-3-logang@deltatee.com>
-References: <20180618193636.16210-1-logang@deltatee.com>
-        <20180618193636.16210-3-logang@deltatee.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH V4] scsi: hpsa: drop shutdown callback
+To: linux-pci@vger.kernel.org, ryan@finnie.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, stable@vger.kernel.org,
+        Don Brace <don.brace@microsemi.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER (hpsa)"
+        <esc.storagedev@microsemi.com>,
+        "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER (hpsa)"
+        <linux-scsi@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1527860768-11367-1-git-send-email-okaya@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <9516f507-9c3e-cce0-5557-c5c17388f404@codeaurora.org>
+Date: Fri, 1 Jun 2018 09:47:17 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1527860768-11367-1-git-send-email-okaya@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 18 Jun 2018 13:36:35 -0600
-Logan Gunthorpe <logang@deltatee.com> wrote:
+On 6/1/2018 9:46 AM, Sinan Kaya wrote:
+> 'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
+> shutdown")' has been added to kernel to shutdown pending PCIe port
+> service interrupts during reboot so that a newly started kexec kernel
+> wouldn't observe pending interrupts.
+> 
+> pcie_port_device_remove() is disabling the root port and switches by
+> calling pci_disable_device() after all PCIe service drivers are shutdown.
+> 
+> This has been found to cause crashes on HP DL360 Gen9 machines during
+> reboot due to hpsa driver not clearing the bus master bit during the
+> shutdown procedure by calling pci_disable_device().
+> 
+> Disable device as part of the shutdown sequence.
 
-> When specifying PCI devices on the kernel command line using a
-> BDF, the bus numbers can change when adding or replacing a device,
-> changing motherboard firmware, or applying kernel parameters like
-> pci=assign-buses. When this happens, it is usually undesirable to
-> apply whatever command line tweak to the wrong device.
+Forgot to change the commit title. Apologies for that. The rest of the
+patch should work. Waiting for tested-bys.
+
 > 
-> Therefore, it is useful to be able to specify devices with a base
-> bus number and the path of devfns needed to get to it. (Similar to
-> the "device scope" structure in the Intel VT-d spec, Section 8.3.1.)
-> 
-> Thus, we add an option to specify devices in the following format:
-> 
-> [<domain>:]<bus>:<slot>.<func>[/<slot>.<func>][/ ...]
-> 
-> The path can be any segment within the PCI hierarchy of any length and
-> determined through the use of 'lspci -t'. When specified this way, it is
-> less likely that a renumbered bus will result in a valid device specification
-> and the tweak won't be applied to the wrong device.
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Reviewed-by: Stephen Bates <sbates@raithlin.com>
-> Acked-by: Christian König <christian.koenig@amd.com>
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
+> Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
+> Cc: stable@vger.kernel.org
+> Reported-by: Ryan Finnie <ryan@finnie.org>
 > ---
->  Documentation/admin-guide/kernel-parameters.txt |   8 +-
->  drivers/pci/pci.c                               | 120 ++++++++++++++++++++----
->  2 files changed, 106 insertions(+), 22 deletions(-)
+>  drivers/scsi/hpsa.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 3a9eca1..b92f86a 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -8869,7 +8869,7 @@ static void hpsa_disable_rld_caching(struct ctlr_info *h)
+>  	kfree(options);
+>  }
+>  
+> -static void hpsa_shutdown(struct pci_dev *pdev)
+> +static void __hpsa_shutdown(struct pci_dev *pdev)
+>  {
+>  	struct ctlr_info *h;
+>  
+> @@ -8884,6 +8884,12 @@ static void hpsa_shutdown(struct pci_dev *pdev)
+>  	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
+>  }
+>  
+> +static void hpsa_shutdown(struct pci_dev *pdev)
+> +{
+> +	__hpsa_shutdown(pdev);
+> +	pci_disable_device(pdev);
+> +}
+> +
+>  static void hpsa_free_device_info(struct ctlr_info *h)
+>  {
+>  	int i;
+> @@ -8927,7 +8933,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+>  		scsi_remove_host(h->scsi_host);		/* init_one 8 */
+>  	/* includes hpsa_free_irqs - init_one 4 */
+>  	/* includes hpsa_disable_interrupt_mode - pci_init 2 */
+> -	hpsa_shutdown(pdev);
+> +	__hpsa_shutdown(pdev);
+>  
+>  	hpsa_free_device_info(h);		/* scan */
+>  
+> 
 
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
