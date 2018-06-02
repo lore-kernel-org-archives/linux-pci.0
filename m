@@ -1,201 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:3979 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933130AbeFUL60 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Jun 2018 07:58:26 -0400
-Date: Thu, 21 Jun 2018 14:58:19 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 17/32] PCI: pciehp: Enable/disable exclusively from IRQ
- thread
-Message-ID: <20180621115819.GX2558@lahna.fi.intel.com>
-References: <cover.1529173804.git.lukas@wunner.de>
- <ad8ef05242c00ce95aae64ca983cb3152cc8eb70.1529173804.git.lukas@wunner.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org,
+	ryan@finnie.org
+Subject: [PATCH V5] scsi: hpsa: disable device during shutdown
+Date: Sat,  2 Jun 2018 00:28:53 -0400
+Message-Id: <1527913733-16492-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ad8ef05242c00ce95aae64ca983cb3152cc8eb70.1529173804.git.lukas@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Don Brace <don.brace@microsemi.com>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER hpsa"
+ <linux-scsi@vger.kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-arm-msm@vger.kernel.org,
+ "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER hpsa"
+ <esc.storagedev@microsemi.com>, open list <linux-kernel@vger.kernel.org>,
+ stable@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
-> @@ -240,13 +240,19 @@ static int pciehp_probe(struct pcie_device *dev)
->  	}
->  
->  	/* Check if slot is occupied */
-> +	mutex_lock(&slot->lock);
->  	pciehp_get_adapter_status(slot, &occupied);
->  	pciehp_get_power_status(slot, &poweron);
-> -	if (occupied && pciehp_force)
-> -		pciehp_enable_slot(slot);
-> +	if (pciehp_force &&
-> +	    ((occupied && (slot->state == OFF_STATE ||
-> +			   slot->state == BLINKINGON_STATE)) ||
-> +	     (!occupied && (slot->state == ON_STATE ||
-> +			    slot->state == BLINKINGOFF_STATE))))
-> +		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
+'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
+shutdown")' has been added to kernel to shutdown pending PCIe port
+service interrupts during reboot so that a newly started kexec kernel
+wouldn't observe pending interrupts.
 
-This...
+pcie_port_device_remove() is disabling the root port and switches by
+calling pci_disable_device() after all PCIe service drivers are shutdown.
 
->  	/* If empty slot's power status is on, turn power off */
->  	if (!occupied && poweron && POWER_CTRL(ctrl))
->  		pciehp_power_off_slot(slot);
-> +	mutex_unlock(&slot->lock);
->  
->  	return 0;
->  
-> @@ -290,10 +296,14 @@ static int pciehp_resume(struct pcie_device *dev)
->  
->  	/* Check if slot is occupied */
->  	pciehp_get_adapter_status(slot, &status);
-> -	if (status)
-> -		pciehp_enable_slot(slot);
-> -	else
-> -		pciehp_disable_slot(slot);
-> +	mutex_lock(&slot->lock);
-> +	if ((status && (slot->state == OFF_STATE ||
-> +			slot->state == BLINKINGON_STATE)) ||
-> +	    (!status && (slot->state == ON_STATE ||
-> +			 slot->state == BLINKINGOFF_STATE)))
-> +		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
+This has been found to cause crashes on HP DL360 Gen9 machines during
+reboot due to hpsa driver not clearing the bus master bit during the
+shutdown procedure by calling pci_disable_device().
 
-... and this look the same (I think there are other places as well).
-Perhaps you could factor this to a helper function?
+Disable device as part of the shutdown sequence.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
+Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
+Cc: stable@vger.kernel.org
+Reported-by: Ryan Finnie <ryan@finnie.org>
+Tested-by: Don Brace <don.brace@microsemi.com>
+Acked-by: Don Brace <don.brace@microsemi.com>
+---
+ drivers/scsi/hpsa.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 3a9eca1..b92f86a 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -8869,7 +8869,7 @@ static void hpsa_disable_rld_caching(struct ctlr_info *h)
+ 	kfree(options);
+ }
+ 
+-static void hpsa_shutdown(struct pci_dev *pdev)
++static void __hpsa_shutdown(struct pci_dev *pdev)
+ {
+ 	struct ctlr_info *h;
+ 
+@@ -8884,6 +8884,12 @@ static void hpsa_shutdown(struct pci_dev *pdev)
+ 	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
+ }
+ 
++static void hpsa_shutdown(struct pci_dev *pdev)
++{
++	__hpsa_shutdown(pdev);
++	pci_disable_device(pdev);
++}
++
+ static void hpsa_free_device_info(struct ctlr_info *h)
+ {
+ 	int i;
+@@ -8927,7 +8933,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ 		scsi_remove_host(h->scsi_host);		/* init_one 8 */
+ 	/* includes hpsa_free_irqs - init_one 4 */
+ 	/* includes hpsa_disable_interrupt_mode - pci_init 2 */
+-	hpsa_shutdown(pdev);
++	__hpsa_shutdown(pdev);
+ 
+ 	hpsa_free_device_info(h);		/* scan */
+ 
+-- 
+2.7.4
 
 
-> +	mutex_unlock(&slot->lock);
-> +
->  	return 0;
->  }
->  #endif /* PM */
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index 627e846df802..70bad847a450 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -122,22 +122,26 @@ static void remove_board(struct slot *p_slot)
->  	pciehp_green_led_off(p_slot);
->  }
->  
-> +void pciehp_request(struct controller *ctrl, int action)
-> +{
-> +	atomic_or(action, &ctrl->pending_events);
-> +	if (!pciehp_poll_mode)
-> +		irq_wake_thread(ctrl->pcie->irq, ctrl);
-> +}
-> +
->  void pciehp_queue_pushbutton_work(struct work_struct *work)
->  {
->  	struct slot *p_slot = container_of(work, struct slot, work.work);
-> +	struct controller *ctrl = p_slot->ctrl;
->  
->  	mutex_lock(&p_slot->lock);
->  	switch (p_slot->state) {
->  	case BLINKINGOFF_STATE:
-> -		p_slot->state = POWEROFF_STATE;
-> -		mutex_unlock(&p_slot->lock);
-> -		pciehp_disable_slot(p_slot);
-> -		return;
-> +		pciehp_request(ctrl, DISABLE_SLOT);
-> +		break;
->  	case BLINKINGON_STATE:
-> -		p_slot->state = POWERON_STATE;
-> -		mutex_unlock(&p_slot->lock);
-> -		pciehp_enable_slot(p_slot);
-> -		return;
-> +		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
-> +		break;
->  	default:
->  		break;
->  	}
-> @@ -186,16 +190,6 @@ void pciehp_handle_button_press(struct slot *p_slot)
->  		ctrl_info(ctrl, "Slot(%s): Action canceled due to button press\n",
->  			  slot_name(p_slot));
->  		break;
-> -	case POWEROFF_STATE:
-> -	case POWERON_STATE:
-> -		/*
-> -		 * Ignore if the slot is on power-on or power-off state;
-> -		 * this means that the previous attention button action
-> -		 * to hot-add or hot-remove is undergoing
-> -		 */
-> -		ctrl_info(ctrl, "Slot(%s): Button ignored\n",
-> -			  slot_name(p_slot));
-> -		break;
->  	default:
->  		ctrl_err(ctrl, "Slot(%s): Ignoring invalid state %#x\n",
->  			 slot_name(p_slot), p_slot->state);
-> @@ -204,6 +198,22 @@ void pciehp_handle_button_press(struct slot *p_slot)
->  	mutex_unlock(&p_slot->lock);
->  }
->  
-> +void pciehp_handle_disable_request(struct slot *slot)
-> +{
-> +	struct controller *ctrl = slot->ctrl;
-> +
-> +	mutex_lock(&slot->lock);
-> +	switch (slot->state) {
-> +	case BLINKINGON_STATE:
-> +	case BLINKINGOFF_STATE:
-> +		cancel_delayed_work(&slot->work);
-
-Missing break here (even though it does nothing) but if someone extends
-this in future it may cause problems.
-
-> +	}
-> +	slot->state = POWEROFF_STATE;
-> +	mutex_unlock(&slot->lock);
-> +
-> +	ctrl->request_result = pciehp_disable_slot(slot);
-> +}
-> +
->  void pciehp_handle_link_change(struct slot *p_slot)
->  {
->  	struct controller *ctrl = p_slot->ctrl;
-> @@ -232,32 +242,6 @@ void pciehp_handle_link_change(struct slot *p_slot)
->  		}
->  		return;
->  		break;
-> -	case POWERON_STATE:
-> -		if (link_active) {
-> -			ctrl_info(ctrl, "Slot(%s): Link Up event ignored; already powering on\n",
-> -				  slot_name(p_slot));
-> -		} else {
-> -			p_slot->state = POWEROFF_STATE;
-> -			mutex_unlock(&p_slot->lock);
-> -			ctrl_info(ctrl, "Slot(%s): Link Down event queued; currently getting powered on\n",
-> -				  slot_name(p_slot));
-> -			pciehp_disable_slot(p_slot);
-> -			return;
-> -		}
-> -		break;
-> -	case POWEROFF_STATE:
-> -		if (link_active) {
-> -			p_slot->state = POWERON_STATE;
-> -			mutex_unlock(&p_slot->lock);
-> -			ctrl_info(ctrl, "Slot(%s): Link Up event queued; currently getting powered off\n",
-> -				  slot_name(p_slot));
-> -			pciehp_enable_slot(p_slot);
-> -			return;
-> -		} else {
-> -			ctrl_info(ctrl, "Slot(%s): Link Down event ignored; already powering off\n",
-> -				  slot_name(p_slot));
-> -		}
-> -		break;
->  	default:
->  		ctrl_err(ctrl, "Slot(%s): Ignoring invalid state %#x\n",
->  			 slot_name(p_slot), p_slot->state);
-> @@ -272,6 +256,12 @@ void pciehp_handle_presence_change(struct slot *slot)
->  	u8 present;
->  
->  	mutex_lock(&slot->lock);
-> +	switch (slot->state) {
-> +	case BLINKINGON_STATE:
-> +	case BLINKINGOFF_STATE:
-> +		cancel_delayed_work(&slot->work);
-
-Ditto.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
