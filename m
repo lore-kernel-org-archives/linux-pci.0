@@ -1,215 +1,35 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:51852 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933328AbeFMC7Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2018 22:59:25 -0400
-Received: from mail-pg0-f70.google.com ([74.125.83.70])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1fSw0K-0004Hz-C5
-        for linux-pci@vger.kernel.org; Wed, 13 Jun 2018 02:59:24 +0000
-Received: by mail-pg0-f70.google.com with SMTP id e1-v6so353744pgp.20
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2018 19:59:24 -0700 (PDT)
-Content-Type: text/plain;
-        charset=us-ascii;
-        delsp=yes;
-        format=flowed
-Mime-Version: 1.0 (Mac OS X Mail 11.4 \(3445.8.2\))
-Subject: Re: [PATCH 2/2] r8169: Reinstate ASPM Support
-From: Kai Heng Feng <kai.heng.feng@canonical.com>
-In-Reply-To: <30b033ec-2ac3-6470-be43-06044f87b81d@gmail.com>
-Date: Wed, 13 Jun 2018 10:59:17 +0800
-Cc: davem@davemloft.net, ryankao@realtek.com, hayeswang@realtek.com,
-        hau@realtek.com, romieu@fr.zoreil.com, bhelgaas@google.com,
-        netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <A4FEE5F1-9548-44B9-BE11-4D3A6A463959@canonical.com>
-References: <20180612095759.6828-1-kai.heng.feng@canonical.com>
- <20180612095759.6828-2-kai.heng.feng@canonical.com>
- <30b033ec-2ac3-6470-be43-06044f87b81d@gmail.com>
-To: Heiner Kallweit <hkallweit1@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=OP+v=IU=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=OP+v=IU=linux.intel.com=mika.westerberg@kernel.org>
+Date: Sat, 2 Jun 2018 21:49:33 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+	Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <YehezkelShB@gmail.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v1 2/2] PCI: shpchp: Fix AMD POGO identification
+Message-ID: <20180602184933.GU15419@lahna.fi.intel.com>
+References: <152791788214.257724.13044360353832574147.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152791813206.257724.14863139556803168986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <152791813206.257724.14863139556803168986.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Heiner,
+On Sat, Jun 02, 2018 at 12:42:12AM -0500, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> The fix for an AMD POGO erratum related to SHPC incorrectly identified the
+> device.  The workaround should be applied only for AMD POGO devices, but it
+> was instead applied to:
+> 
+>   - all AMD bridges, and
+>   - all devices from any vendor with device ID 0x7458
 
-> On Jun 13, 2018, at 3:35 AM, Heiner Kallweit <hkallweit1@gmail.com> wrote:
->
-> On 12.06.2018 11:57, Kai-Heng Feng wrote:
->> On newer Intel platforms, ASPM support in r8169 is the last missing
->> puzzle to let Package C-State achieves PC8. Without ASPM support, the
->> deepest Package C-State can hit is PC3.
->> PC8 can save additional ~3W in comparison with PC3 on my testing
->> platform.
-> Maybe we should replace PC8 with "beyond PC3". My system
-> (Haswell 2961Y) reaches 50% PC7 + 5% PC9 + 45% PC10 now.
-> It never seems to use PC8.
+Good catch.
 
-My original wording are really mouthful. I'll update them in next version.
-
-The platform in question is Coffee Lake. This patch should make systems  
-newer than Skylake to hit > PC3. Older systems may not see significant  
-change.
-I'll also state these info in the next version.
-
->
->> The original patch is from Realtek.
-> Please add a link to this original patch.
-
-Realtek sent me the patch privately. Is it okay to upload the patch to  
-pastebin or gist?
-
-Kai-Heng
-
->
->> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
->> ---
->> v2:
->> - Remove module parameter.
->> - Remove pci_disable_link_state().
->>
->>  drivers/net/ethernet/realtek/r8169.c | 41 +++++++++++++++++++---------
->>  1 file changed, 28 insertions(+), 13 deletions(-)
->>
->> diff --git a/drivers/net/ethernet/realtek/r8169.c  
->> b/drivers/net/ethernet/realtek/r8169.c
->> index 9b55ce513a36..85f4e746b040 100644
->> --- a/drivers/net/ethernet/realtek/r8169.c
->> +++ b/drivers/net/ethernet/realtek/r8169.c
->> @@ -5289,6 +5289,18 @@ static void rtl_pcie_state_l2l3_enable(struct  
->> rtl8169_private *tp, bool enable)
->>  	RTL_W8(tp, Config3, data);
->>  }
->>
->> +static void rtl_hw_internal_aspm_clkreq_enable(struct rtl8169_private  
->> *tp,
->> +					       bool enable)
->
-> Do we need this hw_internal in the function name?
->
->> +{
->> +	if (enable) {
->> +		RTL_W8(tp, Config2, RTL_R8(tp, Config2) | ClkReqEn);
->> +		RTL_W8(tp, Config5, RTL_R8(tp, Config5) | ASPM_en);
->> +	} else {
->> +		RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
->> +		RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
->> +	}
->> +}
->> +
->>  static void rtl_hw_start_8168bb(struct rtl8169_private *tp)
->>  {
->>  	RTL_W8(tp, Config3, RTL_R8(tp, Config3) & ~Beacon_en);
->> @@ -5645,9 +5657,9 @@ static void rtl_hw_start_8168g_1(struct  
->> rtl8169_private *tp)
->>  	rtl_hw_start_8168g(tp);
->>
->>  	/* disable aspm and clock request before access ephy */
->> -	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
->> -	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
->> +	rtl_hw_internal_aspm_clkreq_enable(tp, false);
->>  	rtl_ephy_init(tp, e_info_8168g_1, ARRAY_SIZE(e_info_8168g_1));
->> +	rtl_hw_internal_aspm_clkreq_enable(tp, true);
->>  }
->>
->>  static void rtl_hw_start_8168g_2(struct rtl8169_private *tp)
->> @@ -5680,9 +5692,9 @@ static void rtl_hw_start_8411_2(struct  
->> rtl8169_private *tp)
->>  	rtl_hw_start_8168g(tp);
->>
->>  	/* disable aspm and clock request before access ephy */
->> -	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
->> -	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
->> +	rtl_hw_internal_aspm_clkreq_enable(tp, false);
->>  	rtl_ephy_init(tp, e_info_8411_2, ARRAY_SIZE(e_info_8411_2));
->> +	rtl_hw_internal_aspm_clkreq_enable(tp, true);
->>  }
->>
->>  static void rtl_hw_start_8168h_1(struct rtl8169_private *tp)
->> @@ -5699,8 +5711,7 @@ static void rtl_hw_start_8168h_1(struct  
->> rtl8169_private *tp)
->>  	};
->>
->>  	/* disable aspm and clock request before access ephy */
->> -	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
->> -	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
->> +	rtl_hw_internal_aspm_clkreq_enable(tp, false);
->>  	rtl_ephy_init(tp, e_info_8168h_1, ARRAY_SIZE(e_info_8168h_1));
->>
->>  	RTL_W32(tp, TxConfig, RTL_R32(tp, TxConfig) | TXCFG_AUTO_FIFO);
->> @@ -5779,6 +5790,8 @@ static void rtl_hw_start_8168h_1(struct  
->> rtl8169_private *tp)
->>  	r8168_mac_ocp_write(tp, 0xe63e, 0x0000);
->>  	r8168_mac_ocp_write(tp, 0xc094, 0x0000);
->>  	r8168_mac_ocp_write(tp, 0xc09e, 0x0000);
->> +
->> +	rtl_hw_internal_aspm_clkreq_enable(tp, true);
->>  }
->>
->>  static void rtl_hw_start_8168ep(struct rtl8169_private *tp)
->> @@ -5830,11 +5843,12 @@ static void rtl_hw_start_8168ep_1(struct  
->> rtl8169_private *tp)
->>  	};
->>
->>  	/* disable aspm and clock request before access ephy */
->> -	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
->> -	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
->> +	rtl_hw_internal_aspm_clkreq_enable(tp, false);
->>  	rtl_ephy_init(tp, e_info_8168ep_1, ARRAY_SIZE(e_info_8168ep_1));
->>
->>  	rtl_hw_start_8168ep(tp);
->> +
->> +	rtl_hw_internal_aspm_clkreq_enable(tp, true);
->>  }
->>
->>  static void rtl_hw_start_8168ep_2(struct rtl8169_private *tp)
->> @@ -5846,14 +5860,15 @@ static void rtl_hw_start_8168ep_2(struct  
->> rtl8169_private *tp)
->>  	};
->>
->>  	/* disable aspm and clock request before access ephy */
->> -	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
->> -	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
->> +	rtl_hw_internal_aspm_clkreq_enable(tp, false);
->>  	rtl_ephy_init(tp, e_info_8168ep_2, ARRAY_SIZE(e_info_8168ep_2));
->>
->>  	rtl_hw_start_8168ep(tp);
->>
->>  	RTL_W8(tp, DLLPR, RTL_R8(tp, DLLPR) & ~PFM_EN);
->>  	RTL_W8(tp, MISC_1, RTL_R8(tp, MISC_1) & ~PFM_D3COLD_EN);
->> +
->> +	rtl_hw_internal_aspm_clkreq_enable(tp, true);
->>  }
->>
->>  static void rtl_hw_start_8168ep_3(struct rtl8169_private *tp)
->> @@ -5867,8 +5882,7 @@ static void rtl_hw_start_8168ep_3(struct  
->> rtl8169_private *tp)
->>  	};
->>
->>  	/* disable aspm and clock request before access ephy */
->> -	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
->> -	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
->> +	rtl_hw_internal_aspm_clkreq_enable(tp, false);
->>  	rtl_ephy_init(tp, e_info_8168ep_3, ARRAY_SIZE(e_info_8168ep_3));
->>
->>  	rtl_hw_start_8168ep(tp);
->> @@ -5888,6 +5902,8 @@ static void rtl_hw_start_8168ep_3(struct  
->> rtl8169_private *tp)
->>  	data = r8168_mac_ocp_read(tp, 0xe860);
->>  	data |= 0x0080;
->>  	r8168_mac_ocp_write(tp, 0xe860, data);
->> +
->> +	rtl_hw_internal_aspm_clkreq_enable(tp, true);
->>  }
->>
->>  static void rtl_hw_start_8168(struct rtl8169_private *tp)
->> @@ -7646,7 +7662,6 @@ static int rtl_init_one(struct pci_dev *pdev,  
->> const struct pci_device_id *ent)
->>  	mii->reg_num_mask = 0x1f;
->>  	mii->supports_gmii = cfg->has_gmii;
->>
->> -
->>  	/* enable device (incl. PCI PM wakeup and hotplug setup) */
->>  	rc = pcim_enable_device(pdev);
->>  	if (rc < 0) {
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
