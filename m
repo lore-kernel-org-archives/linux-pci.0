@@ -1,63 +1,52 @@
-Return-Path: <SRS0=M1MQ=JI=codeaurora.org=tbaicar@kernel.org>
-Return-Path: <SRS0=M1MQ=JI=codeaurora.org=tbaicar@kernel.org>
-Subject: Re: [PATCH v5 3/5] PCI/AER: Add sysfs attributes to provide breakdown
- of AERs
-To: rajatxjain@gmail.com, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Rajat Jain <rajatja@google.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Jonathan Corbet <corbet@lwn.net>, Philippe Ombredanne
- <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
- Thomas Gleixner <tglx@linutronix.de>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
- Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc
- <mr.nuke.me@gmail.com>, Thomas Tai <thomas.tai@oracle.com>,
- "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
- linux-pci <linux-pci@vger.kernel.org>, linux-doc
- <linux-doc@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>
-References: <20180522222805.80314-1-rajatja@google.com>
- <20180620234147.48438-1-rajatja@google.com>
- <20180620234147.48438-3-rajatja@google.com>
- <20180621184822.GB14136@bhelgaas-glaptop.roam.corp.google.com>
- <CAA93t1rz6YGmvvORDB0ehr7Gwp-W+0HDYxEDgjtgYmGm3qMgCw@mail.gmail.com>
-From: Tyler Baicar <tbaicar@codeaurora.org>
-Message-ID: <a16746f0-351f-276e-2a66-3ebf2c267507@codeaurora.org>
-Date: Fri, 22 Jun 2018 12:38:50 -0400
+Return-Path: <SRS0=OP+v=IU=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=OP+v=IU=linux.intel.com=mika.westerberg@kernel.org>
+Date: Sat, 2 Jun 2018 21:47:29 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+	Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <YehezkelShB@gmail.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 0/7] PCI: Fixes and cleanups for native PCIe, SHPC and
+ ACPI hotplug
+Message-ID: <20180602184729.GS15419@lahna.fi.intel.com>
+References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
+ <20180602055050.GC187972@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAA93t1rz6YGmvvORDB0ehr7Gwp-W+0HDYxEDgjtgYmGm3qMgCw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180602055050.GC187972@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/21/2018 5:25 PM, Rajat Jain wrote:
-> On Thu, Jun 21, 2018 at 11:48 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> [+cc Tyler for AER dmesg decoding]
->>
->> - Tyler posted a patch [1] to update those dmesg strings so they match
->>    the way lspci decodes them.  I really liked that update, but we
->>    never quite finished it.  If we're going to do that, it would be
->>    nice to do it first, so we don't publish new sysfs files, then
->>    immediately change the labels used in them.
-> Sure, I guess you can push them in the right order.
-The way the prints are handled has already been unified in 4.18rc1:
+On Sat, Jun 02, 2018 at 12:50:50AM -0500, Bjorn Helgaas wrote:
+> On Mon, May 28, 2018 at 03:47:49PM +0300, Mika Westerberg wrote:
+> > When Thunderbolt host router is configured to be in native enumeration mode
+> > it is only present in the system if there is something connected to the
+> > ports. This pretty much follows how the BIOS assisted mode works.
+> > 
+> > In native enumeration mode the Thunderbolt host controller (NHI) and USB
+> > host controller (xHCI) are not hot-added using native PCIe hotplug but
+> > instead they will be hotplugged via BIOS triggered ACPI Notify() to the
+> > root port. This is done to preserve resources since NHI and xHCI only need
+> > 1 MB of MMIO space and no additional buses. Currently Linux does not
+> > support this very well and ends up failing the hotplug in one way or
+> > another. More detailed explanation is in changelog of patch [4/7].
+> > 
+> > This series fixes this issue and in addition includes fixes for few other
+> > issues found during testing on a system that has Thunderbolt controller in
+> > native PCIe enumeration mode. However, the fixes here are not in any way
+> > Thunderbolt specific and should be applicable to other systems as well.
+> 
+> I applied all these on pci/hotplug for v4.18.
 
-https://elixir.bootlin.com/linux/v4.18-rc1/source/drivers/pci/pcie/aer.c#L636
+Thank you!
 
-So that patch isn't needed anymore in it's entirety.
->> - IIRC, Tyler's patch had the nice property of changing the strings so
->>    each error name had no spaces, which would make it a little easier
->>    to parse this sysfs file: each line would be a single identifier
->>    followed by a single number (I would probably remove the "=" from
->>    the middle).
->
-> Will do.
-Would you like me to send a patch with just the string changes?
+> Thanks for your help and patience!  I reordered some things and
+> tweaked some changelogs, so let me know if I broke anything.  I'll put
+> this into -next as soon as the 0-day robot builds it.
 
-Thanks,
-Tyler
->> [1] https://lkml.kernel.org/r/1518034285-3543-1-git-send-email-tbaicar@codeaurora.org
->>
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project.
+I just finished testing of your branch and everything still work as
+expected :)
