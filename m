@@ -1,84 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 11/13] PCI/AER: Squash Kconfig.debug into Kconfig
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Keith Busch <keith.busch@intel.com>,
-        Borislav Petkov <bp@alien8.de>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        linux-kernel@vger.kernel.org
-Date: Fri, 08 Jun 2018 15:05:53 -0500
-Message-ID: <152848835367.11888.14087620046663002613.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=qPnv=IV=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=qPnv=IV=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: rjwysocki@gmail.com
+In-Reply-To: <152791813206.257724.14863139556803168986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152791788214.257724.13044360353832574147.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <152791813206.257724.14863139556803168986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sun, 3 Jun 2018 09:59:18 +0200
+Message-ID: <CAJZ5v0hHHR_559P1vF+9g_vmKkPSWjm9pv5zmjBq9qQ7vDhjOg@mail.gmail.com>
+Subject: Re: [PATCH v1 2/2] PCI: shpchp: Fix AMD POGO identification
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, Mario Limonciello <Mario.Limonciello@dell.com>,
+	Michael Jamet <michael.jamet@intel.com>, Yehezkel Bernat <YehezkelShB@gmail.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Lukas Wunner <lukas@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Sat, Jun 2, 2018 at 7:42 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+>
+> The fix for an AMD POGO erratum related to SHPC incorrectly identified the
+> device.  The workaround should be applied only for AMD POGO devices, but it
+> was instead applied to:
+>
+>   - all AMD bridges, and
+>   - all devices from any vendor with device ID 0x7458
+>
+> Fixes: 53044f357448 ("[PATCH] PCI Hotplug: shpchp: AMD POGO errata fix")
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Squash Kconfig.debug into Kconfig.  No functional change intended.
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/aer/Kconfig       |   16 ++++++++++++++--
- drivers/pci/pcie/aer/Kconfig.debug |   19 -------------------
- 2 files changed, 14 insertions(+), 21 deletions(-)
- delete mode 100644 drivers/pci/pcie/aer/Kconfig.debug
-
-diff --git a/drivers/pci/pcie/aer/Kconfig b/drivers/pci/pcie/aer/Kconfig
-index 5a64eb3d6c7a..1996df082e89 100644
---- a/drivers/pci/pcie/aer/Kconfig
-+++ b/drivers/pci/pcie/aer/Kconfig
-@@ -13,6 +13,20 @@ config PCIEAER
- 	  (AER) driver support. Error reporting messages sent to Root
- 	  Port will be handled by PCI Express AER driver.
- 
-+config PCIEAER_INJECT
-+	tristate "PCIe AER error injector support"
-+	depends on PCIEAER
-+	default n
-+	help
-+	  This enables PCI Express Root Port Advanced Error Reporting
-+	  (AER) software error injector.
-+
-+	  Debugging PCIe AER code is quite difficult because it is hard
-+	  to trigger various real hardware errors. Software based
-+	  error injection can fake almost all kinds of errors with the
-+	  help of a user space helper tool aer-inject, which can be
-+	  gotten from:
-+	     http://www.kernel.org/pub/linux/utils/pci/aer-inject/
- 
- #
- # PCI Express ECRC
-@@ -25,5 +39,3 @@ config PCIE_ECRC
- 	  (transaction layer end-to-end CRC checking).
- 
- 	  When in doubt, say N.
--
--source "drivers/pci/pcie/aer/Kconfig.debug"
-diff --git a/drivers/pci/pcie/aer/Kconfig.debug b/drivers/pci/pcie/aer/Kconfig.debug
-deleted file mode 100644
-index 67e02174b65b..000000000000
---- a/drivers/pci/pcie/aer/Kconfig.debug
-+++ /dev/null
-@@ -1,19 +0,0 @@
--# SPDX-License-Identifier: GPL-2.0
--#
--# PCI Express Root Port Device AER Debug Configuration
--#
--
--config PCIEAER_INJECT
--	tristate "PCIe AER error injector support"
--	depends on PCIEAER
--	default n
--	help
--	  This enables PCI Express Root Port Advanced Error Reporting
--	  (AER) software error injector.
--
--	  Debugging PCIe AER code is quite difficult because it is hard
--	  to trigger various real hardware errors. Software based
--	  error injection can fake almost all kinds of errors with the
--	  help of a user space helper tool aer-inject, which can be
--	  gotten from:
--	     http://www.kernel.org/pub/linux/utils/pci/aer-inject/
+> ---
+>  drivers/pci/hotplug/shpchp_ctrl.c |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
+> index bedda5bda910..1047b56e5730 100644
+> --- a/drivers/pci/hotplug/shpchp_ctrl.c
+> +++ b/drivers/pci/hotplug/shpchp_ctrl.c
+> @@ -585,13 +585,13 @@ static int shpchp_enable_slot (struct slot *p_slot)
+>         ctrl_dbg(ctrl, "%s: p_slot->pwr_save %x\n", __func__, p_slot->pwr_save);
+>         p_slot->hpc_ops->get_latch_status(p_slot, &getstatus);
+>
+> -       if (((p_slot->ctrl->pci_dev->vendor == PCI_VENDOR_ID_AMD) ||
+> -           (p_slot->ctrl->pci_dev->device == PCI_DEVICE_ID_AMD_POGO_7458))
+> +       if ((p_slot->ctrl->pci_dev->vendor == PCI_VENDOR_ID_AMD &&
+> +            p_slot->ctrl->pci_dev->device == PCI_DEVICE_ID_AMD_POGO_7458)
+>              && p_slot->ctrl->num_slots == 1) {
+> -               /* handle amd pogo errata; this must be done before enable  */
+> +               /* handle AMD POGO errata; this must be done before enable  */
+>                 amd_pogo_errata_save_misc_reg(p_slot);
+>                 retval = board_added(p_slot);
+> -               /* handle amd pogo errata; this must be done after enable  */
+> +               /* handle AMD POGO errata; this must be done after enable  */
+>                 amd_pogo_errata_restore_misc_reg(p_slot);
+>         } else
+>                 retval = board_added(p_slot);
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
