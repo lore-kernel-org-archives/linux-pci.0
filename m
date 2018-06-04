@@ -1,191 +1,43 @@
-Return-Path: <SRS0=Bq+a=JQ=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=Bq+a=JQ=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V2] PCI: Enable PASID when End-to-End TLP is supported by
- all bridges
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
-References: <1529460886-23722-1-git-send-email-okaya@codeaurora.org>
- <20180630004912.GI40928@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <568634cf-54d0-c67d-b0f8-766b67def610@codeaurora.org>
-Date: Sat, 30 Jun 2018 10:45:21 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 4 Jun 2018 12:49:24 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v1 0/2] PCI: shpchp: Minor fixes
+Message-ID: <20180604174924.GB30381@bhelgaas-glaptop.roam.corp.google.com>
+References: <152791788214.257724.13044360353832574147.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180630004912.GI40928@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <152791788214.257724.13044360353832574147.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/29/2018 8:49 PM, Bjorn Helgaas wrote:
-> On Tue, Jun 19, 2018 at 10:14:46PM -0400, Sinan Kaya wrote:
->> A PCIe endpoint carries the process address space identifier (PASID) in
->> the TLP prefix as part of the memory read/write transaction. The address
->> information in the TLP is relevant only for a given PASID context.
->>
->> An IOMMU takes PASID value and the address information from the
->> TLP to look up the physical address in the system.
->>
->> If a bridge drops the TLP prefix, the translation agent can resolve the
->> address to an incorrect location and cause data corruption. Prevent
->> this condition by requiring End-to-End TLP prefix to be supported on the
->> entire data path between the endpoint and the root port.
+On Sat, Jun 02, 2018 at 12:41:59AM -0500, Bjorn Helgaas wrote:
+> An AMD POGO check in shpchp incorrectly included any device with device ID
+> 0x7458, no matter what the vendor.
 > 
-> PASID is an End-End TLP Prefix (PCIe r4.0, sec 6.20).  Sec 2.2.10.2 says
+> Also, use pci_info() instead of dbg() for messages related to OSHP.
+> They're important enough that they should appear in dmesg.
 > 
->   It is an error to receive a TLP with an End-End TLP Prefix by a
->   Receiver that does not support End-End TLP Prefixes. A TLP in
->   violation of this rule is handled as a Malformed TLP. This is a
->   reported error associated with the Receiving Port (see Section 6.2).
+> I intend to include these along with Mika's shpchp updates.
 > 
-> So I agree that we shouldn't enable PASID in an endpoint unless all
-> the switch ports leading to it support End-End prefixes.  But I don't
-> see how a bridge can drop a prefix and cause data corruption -- if it
-> doesn't support End-End prefixes, shouldn't the bridge raise a
-> Malformed TLP error instead of forwarding the TLP?
+> ---
+> 
+> Bjorn Helgaas (2):
+>       PCI: shpchp: Use dev_printk() for OSHP-related messages
+>       PCI: shpchp: Fix AMD POGO identification
+> 
+> 
+>  drivers/pci/hotplug/acpi_pcihp.c  |   13 ++++++-------
+>  drivers/pci/hotplug/shpchp_ctrl.c |    8 ++++----
+>  2 files changed, 10 insertions(+), 11 deletions(-)
 
-It should under normal circumstances. 
-
-I remember reading that most PCIe switches don't support TLP prefixes.
-I don't know if it is because of buggy behavior or if it is just plain
-unsupported while dropping the request as Malformed TLP.
-
-I was trying to be proactive and not enable PASID if the entire path
-is incapable.
-
-> 
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->> ---
->>  drivers/pci/ats.c             |  9 +++++++++
->>  drivers/pci/probe.c           | 17 +++++++++++++++++
->>  include/linux/pci.h           |  1 +
->>  include/uapi/linux/pci_regs.h |  1 +
->>  4 files changed, 28 insertions(+)
->>
->> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
->> index 4923a2a..e1b2e6d 100644
->> --- a/drivers/pci/ats.c
->> +++ b/drivers/pci/ats.c
->> @@ -268,6 +268,7 @@ EXPORT_SYMBOL_GPL(pci_reset_pri);
->>  int pci_enable_pasid(struct pci_dev *pdev, int features)
->>  {
->>  	u16 control, supported;
->> +	struct pci_dev *bridge;
->>  	int pos;
->>  
->>  	if (WARN_ON(pdev->pasid_enabled))
->> @@ -277,6 +278,14 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
->>  	if (!pos)
->>  		return -EINVAL;
->>  
->> +	bridge = pci_upstream_bridge(pdev);
->> +	while (bridge) {
->> +		if (!bridge->eetlp_prefix)
->> +			return -EINVAL;
->> +
->> +		bridge = pci_upstream_bridge(bridge);
->> +	}
-> 
-> I was hoping to avoid even this loop by having the eetlp_prefix bit
-> indicate that "End-End TLP Prefixes are supported from the Root Port
-> to here".
-> 
-
-I see.
-
->>  	pci_read_config_word(pdev, pos + PCI_PASID_CAP, &supported);
->>  	supported &= PCI_PASID_CAP_EXEC | PCI_PASID_CAP_PRIV;
->>  
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index ac876e3..a7f7ac1 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -2042,6 +2042,22 @@ static void pci_configure_ltr(struct pci_dev *dev)
->>  #endif
->>  }
->>  
->> +static void pci_configure_eetlp_prefix(struct pci_dev *dev)
->> +{
->> +#ifdef CONFIG_PCI_PASID
->> +	u32 cap;
->> +
->> +	if (!pci_is_pcie(dev))
->> +		return;
->> +
->> +	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
->> +	if (!(cap & PCI_EXP_DEVCAP2_E2ETLP))
->> +		return;
->> +
->> +	dev->eetlp_prefix = 1;
-> 
-> I.e., here we would do:
-> 
->   if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
->     dev->eetlp_prefix_path = 1;
->   else {
->     bridge = pci_upstream_bridge(dev);
->     if (bridge && bridge->eetlp_prefix_path)
->       dev->eetlp_prefix_path = 1;
->   }
-
-Sure, let me make the changes and post a new version.
-
-> 
->> +#endif
->> +}
->> +
->>  static void pci_configure_device(struct pci_dev *dev)
->>  {
->>  	struct hotplug_params hpp;
->> @@ -2051,6 +2067,7 @@ static void pci_configure_device(struct pci_dev *dev)
->>  	pci_configure_extended_tags(dev, NULL);
->>  	pci_configure_relaxed_ordering(dev);
->>  	pci_configure_ltr(dev);
->> +	pci_configure_eetlp_prefix(dev);
->>  
->>  	memset(&hpp, 0, sizeof(hpp));
->>  	ret = pci_get_hp_params(dev, &hpp);
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 340029b..cf88d47 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -350,6 +350,7 @@ struct pci_dev {
->>  	unsigned int	ltr_path:1;	/* Latency Tolerance Reporting
->>  					   supported from root to here */
->>  #endif
->> +	unsigned int	eetlp_prefix:1;	/* End-to-End TLP Prefix */
->>  
->>  	pci_channel_state_t error_state;	/* Current connectivity state */
->>  	struct device	dev;			/* Generic device interface */
->> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
->> index 4da87e2..a617ab2 100644
->> --- a/include/uapi/linux/pci_regs.h
->> +++ b/include/uapi/linux/pci_regs.h
->> @@ -636,6 +636,7 @@
->>  #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
->>  #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
->>  #define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x00080000 /* Re-use WAKE# for OBFF */
->> +#define PCI_EXP_DEVCAP2_E2ETLP		0x00200000 /* End-to-End TLP Prefix */
-> 
-> It looks like lspci doesn't decode this bit (and several others in
-> DevCap2).  Would you be interested in adding that?  The source is at
-> git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git
-> 
->>  #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
->>  #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout Value */
->>  #define  PCI_EXP_DEVCTL2_COMP_TMOUT_DIS	0x0010	/* Completion Timeout Disable */
->> -- 
->> 2.7.4
->>
->>
->> _______________________________________________
->> linux-arm-kernel mailing list
->> linux-arm-kernel@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+I applied these with reviewed-by from Mika and Rafael to pci/hotplug for
+v4.18.
