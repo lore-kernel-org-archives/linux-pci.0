@@ -1,47 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:33578 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935366AbeF2K15 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jun 2018 06:27:57 -0400
-Received: by mail-qk0-f194.google.com with SMTP id c131-v6so4626877qkb.0
-        for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2018 03:27:57 -0700 (PDT)
-From: Hari Vyas <hari.vyas@broadcom.com>
-To: bhelgaas@google.com, benh@kernel.crashing.org
-Cc: linux-pci@vger.kernel.org, ray.jui@broadcom.com,
-        Hari Vyas <hari.vyas@broadcom.com>
-Subject: [PATCH v2 3/3] PCI: Hotplug: use new pci function to get device addition state
-Date: Fri, 29 Jun 2018 15:57:41 +0530
-Message-Id: <1530268061-17324-4-git-send-email-hari.vyas@broadcom.com>
-In-Reply-To: <1530268061-17324-1-git-send-email-hari.vyas@broadcom.com>
-References: <1530268061-17324-1-git-send-email-hari.vyas@broadcom.com>
+Received: from mga17.intel.com ([192.55.52.151]:52303 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751312AbeFDQJf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 4 Jun 2018 12:09:35 -0400
+Date: Mon, 4 Jun 2018 10:12:13 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: bhelgaas@google.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: access.c: Piggyback user config access on
+ pci_read/write_*()
+Message-ID: <20180604161213.GA7712@localhost.localdomain>
+References: <20180604154803.14185-1-mr.nuke.me@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180604154803.14185-1-mr.nuke.me@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Due to one race condition happening while updating pci
-device addition and master status bits in a particular
-scenario, device addition state is moved to a independent
-private flag variable.
+On Mon, Jun 04, 2018 at 10:48:02AM -0500, Alexandru Gagniuc wrote:
+> +++ b/drivers/pci/access.c
+> @@ -223,16 +223,9 @@ int pci_user_read_config_##size						\
+>  	(struct pci_dev *dev, int pos, type *val)			\
+>  {									\
+>  	int ret = PCIBIOS_SUCCESSFUL;					\
+> -	u32 data = -1;							\
+>  	if (PCI_##size##_BAD)						\
+>  		return -EINVAL;						\
+> -	raw_spin_lock_irq(&pci_lock);				\
+> -	if (unlikely(dev->block_cfg_access))				\
+> -		pci_wait_cfg(dev);					\
+> -	ret = dev->bus->ops->read(dev->bus, dev->devfn,			\
+> -					pos, sizeof(type), &data);	\
+> -	raw_spin_unlock_irq(&pci_lock);				\
+> -	*val = (type)data;						\
+> +	ret = pci_read_config_##size(dev, pos, val);			\
+>  	return pcibios_err_to_errno(ret);				\
+>  }									\
 
-This change uses newly proposed pci_dev_is_added() function
-to retrieve device addition state.
-
-Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
----
- drivers/pci/hotplug/acpiphp_glue.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 3a17b29..ef0b1b6 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -509,7 +509,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		/* Assume that newly added devices are powered on already. */
--		if (!dev->is_added)
-+		if (!pci_dev_is_added(dev))
- 			dev->current_state = PCI_D0;
- 	}
- 
--- 
-1.9.1
+If it wasn't for the block_cfg_access check for user access, this would
+have been a nice code reuse cleanup.
