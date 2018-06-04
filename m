@@ -1,70 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 8/9] PCI/portdrv: Clean up whitespace
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Oza Pawandeep <poza@codeaurora.org>, linux-kernel@vger.kernel.org
-Date: Fri, 08 Jun 2018 15:12:50 -0500
-Message-ID: <152848877040.14051.14265851714984144776.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152848853199.14051.12670957565366345798.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152848853199.14051.12670957565366345798.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>
+To: Wolfram Sang <wsa@the-dreams.de>,
+        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        "Singh, Sandeep" <Sandeep.Singh@amd.com>,
+        "S-k, Shyam-sundar" <Shyam-sundar.S-k@amd.com>,
+        "Kai Heng Feng" <kai.heng.feng@canonical.com>
+Subject: RE: [PATCH] i2c:amd  I2C Driver based on PCI Interface for upcoming
+ platform
+Date: Mon, 4 Jun 2018 16:33:37 +0000
+Message-ID: <SN1PR12MB257592515E4A436078D43E68A0670@SN1PR12MB2575.namprd12.prod.outlook.com>
+References: <1524928597-23312-1-git-send-email-Nehal-bakulchandra.Shah@amd.com>
+ <SN1PR12MB257536FC4322C1D3D6F2F972A06C0@SN1PR12MB2575.namprd12.prod.outlook.com>
+ <20180531214311.i6s5xginjgevkwoe@ninjato>
+In-Reply-To: <20180531214311.i6s5xginjgevkwoe@ninjato>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Hi All,
 
-Clean up trivial whitespace issues.  No functional change intended.
+Please help in reviewing the patch.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/portdrv_pci.c |   12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 76ad08e97a6f..4fc86d0eef9d 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -644,7 +644,7 @@ int pcie_port_device_register(struct pci_dev *dev)
-  * this port device.
-  */
- static int pcie_portdrv_probe(struct pci_dev *dev,
--					const struct pci_device_id *id)
-+			      const struct pci_device_id *id)
- {
- 	int status;
- 
-@@ -759,13 +759,11 @@ static void pcie_portdrv_err_resume(struct pci_dev *dev)
- 	device_for_each_child(&dev->dev, NULL, err_resume_iter);
- }
- 
--/*
-- * LINUX Device Driver Model
-- */
- static const struct pci_device_id port_pci_ids[] = { {
- 	/* handle any PCI-Express port */
- 	PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0),
--	}, { /* end: all zeroes */ }
-+	},
-+	{ }
- };
- 
- static const struct pci_error_handlers pcie_portdrv_err_handler = {
-@@ -777,7 +775,7 @@ static const struct pci_error_handlers pcie_portdrv_err_handler = {
- 
- static struct pci_driver pcie_portdriver = {
- 	.name		= "pcieport",
--	.id_table	= &port_pci_ids[0],
-+	.id_table	= port_pci_ids,
- 
- 	.probe		= pcie_portdrv_probe,
- 	.remove		= pcie_portdrv_remove,
-@@ -809,7 +807,7 @@ static const struct dmi_system_id pcie_portdrv_dmi_table[] __initconst = {
- 		     DMI_MATCH(DMI_PRODUCT_NAME, "U-100"),
- 		     },
- 	 },
--	 {}
-+	 { }
- };
- 
- static int __init pcie_portdrv_init(void)
+@Wolfram,
+
+Thanks for the update and all the support for helping us.
+
+
+Regards
+Nehal Shah
+
+-----Original Message-----
+From: linux-i2c-owner@vger.kernel.org [mailto:linux-i2c-owner@vger.kernel.o=
+rg] On Behalf Of Wolfram Sang
+Sent: Friday, June 1, 2018 3:13 AM
+To: Shah, Nehal-bakulchandra <Nehal-bakulchandra.Shah@amd.com>
+Cc: linux-i2c@vger.kernel.org; Singh, Sandeep <Sandeep.Singh@amd.com>; S-k,=
+ Shyam-sundar <Shyam-sundar.S-k@amd.com>; Kai Heng Feng <kai.heng.feng@cano=
+nical.com>
+Subject: Re: [PATCH] i2c:amd I2C Driver based on PCI Interface for upcoming=
+ platform
+
+Hi,
+
+> I am waiting for the feedback on this patch. It has been there since=20
+> long time. Can you please provide the feedback.
+
+Well, reviewing drivers is a community effort these days. While I am part o=
+f this community, I am surely not the only one. So, please ask the list for=
+ help (rather than me personally). Furthermore, I think I am not the right =
+person here to ask for help. I don't know much about PCI & ACPI. We have de=
+dicated I2C-ACPI maintainers, maybe they have some bandwidth for review?
+
+That being said: yes, it is sad that you need to wait this long; yet I simp=
+ly can't fill up all the resource problems we have here.
+
+Thanks,
+
+   Wolfram
+
