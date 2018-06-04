@@ -1,66 +1,89 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <1527850145.28160.6.camel@mhfsdcap03>
-References: <1527822270-30280-1-git-send-email-honghui.zhang@mediatek.com>
- <CAHp75VeBTmC=3nJ-t+OO9bp0mzJuTYsGBwi8fokT16bu2nE9RA@mail.gmail.com>
- <1527850145.28160.6.camel@mhfsdcap03>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Fri, 1 Jun 2018 13:52:44 +0300
-Message-ID: <CAHp75VcEp2kFO4hncvMS4Dh1AzvoFbrps7+FLmdk0RLyNTHz7g@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: mediatek: Add system pm support for MT2712
-To: Honghui Zhang <honghui.zhang@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree <devicetree@vger.kernel.org>,
- hongkun.cao@mediatek.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, xinping.qian@mediatek.com,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, yt.shen@mediatek.com,
- Matthias Brugger <matthias.bgg@gmail.com>, ryder.lee@mediatek.com,
- "moderated list:ARM/Mediatek SoC support" <linux-mediatek@lists.infradead.org>,
- yong.wu@mediatek.com, Bjorn Helgaas <bhelgaas@google.com>,
- yingjoe.chen@mediatek.com, Arnd Bergmann <arnd.bergmann@linaro.org>,
- Eddie Huang <eddie.huang@mediatek.com>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=CfAA=IW=ozlabs.org=michael@kernel.org>
+Return-Path: <SRS0=CfAA=IW=ozlabs.org=michael@kernel.org>
+In-Reply-To: <99f78122-cd53-100f-4f58-be5bf7927d4e@xenosoft.de>
+To: Christian Zigotzky <chzigotzky@xenosoft.de>, Olof Johansson <olof@lixom.net>, Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Darren Stevens <darren@stevens-zone.net>, Bjorn Helgaas <helgaas@kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+From: Michael Ellerman <patch-notifications@ellerman.id.au>
+Cc: 
+Subject: Re: SB600 for the Nemo board has non-zero devices on non-root bus
+Message-Id: <40zxfX40gMz9s08@ozlabs.org>
+Date: Tue,  5 Jun 2018 00:10:28 +1000 (AEST)
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 1, 2018 at 1:49 PM, Honghui Zhang
-<honghui.zhang@mediatek.com> wrote:
-> On Fri, 2018-06-01 at 13:17 +0300, Andy Shevchenko wrote:
->> On Fri, Jun 1, 2018 at 6:04 AM,  <honghui.zhang@mediatek.com> wrote:
->> > From: Honghui Zhang <honghui.zhang@mediatek.com>
->>
->> > +#ifdef CONFIG_PM_SLEEP
->> > +static int mtk_pcie_suspend_noirq(struct device *dev)
->>
->> __maybe_unused
->>
->
-> Hi, Andy, thanks for your review.
-> Bjorn had point this out that at:
-> https://www.spinics.net/lists/arm-kernel/msg656774.html
+On Wed, 2017-12-06 at 11:03:52 UTC, Christian Zigotzky wrote:
+> On 06 December 2017 at 09:37AM, Christian Zigotzky wrote:
+>  > On 03 December 2017 at 10:43AM, Christian Zigotzky wrote:
+>  > >
+>  > > On 3. Dec 2017, at 00:02, Olof Johansson <olof@lixom.net> wrote:
+>  > >>
+>  > >> Typo, should be ';', not ':'. I obviously didn't even try 
+> compiling this. :)
+>  > >>
+>  > >>
+>  > >> -Olof
+>  > >
+>  > > Hi Olof,
+>  > >
+>  > > Thanks a lot for your patch! I will test it on Wednesday.
+>  > >
+>  > > Cheers,
+>  > > Christian
+>  >
+>  >
+>  > Hi Olof,
+>  >
+>  > I tested your patch today. Unfortunately the kernel 4.15-rc2 doesn't 
+> compile with your patch.
+>  >
+>  > Error messages:
+>  >
+>  >                        ^~~~~~~~~
+>  > arch/powerpc/platforms/pasemi/pci.c: In function ‘pas_pci_init’:
+>  > arch/powerpc/platforms/pasemi/pci.c:298:2: error: implicit 
+> declaration of function ‘pci_set_flag’ 
+> [-Werror=implicit-function-declaration]
+>  >   pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS);
+>  >   ^~~~~~~~~~~~
+>  > cc1: some warnings being treated as errors
+>  >
+>  > ---
+>  >
+>  > I figured out that we need 'pci_set_flags' instead of 'pci_set_flag'. 
+> I modified your patch and after that the kernel compiles. Please find 
+> attached the new patch.
+>  >
+>  > Cheers,
+>  > Christian
+> 
+> Hi Olof,
+> 
+> Many thanks for your patch! :-) The RC2 of kernel 4.15 boots without any 
+> problems on my P.A. Semi Nemo board (A-EON AmigaOne X1000). I don’t need 
+> the additional boot argument 'pci=pcie_scan_all' anymore.
+> 
+> Is it possible to merge it via the powerpc tree?
+> 
+> Thanks,
+> Christian
+> 
+> arch/powerpc/platforms/pasemi/pci.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
+> index 5ff6108..ea54ed2 100644
+> --- a/arch/powerpc/platforms/pasemi/pci.c
+> +++ b/arch/powerpc/platforms/pasemi/pci.c
+> @@ -224,6 +224,8 @@ void __init pas_pci_init(void)
+>  		return;
+>  	}
+>  
+> +	pci_set_flags(PCI_SCAN_ALL_PCIE_DEVS);
+> +
+>  	for (np = NULL; (np = of_get_next_child(root, np)) != NULL;)
+>  		if (np->name && !strcmp(np->name, "pxp") && !pas_add_bridge(np))
+>  			of_node_get(np);
 
-Nice, one more maintainer with strong opinion here.
+Applied to powerpc next, thanks.
 
-Arnd, that's what I mentioned as a split in opinions earlier.
-Any new developer or even existing contributor would be now really
-confusing since maintainers asked for two different approaches on the
-same matter.
+https://git.kernel.org/powerpc/c/eff06ef0891d200eb0ddd156c6e96c
 
--- 
-With Best Regards,
-Andy Shevchenko
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+cheers
