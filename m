@@ -1,74 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:39358 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752929AbeFNMVt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jun 2018 08:21:49 -0400
-From: "=?UTF-8?q?Christian=20K=C3=B6nig?="
-        <ckoenig.leichtzumerken@gmail.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:39486 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751424AbeFDBY6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 3 Jun 2018 21:24:58 -0400
+Received: by mail-pf0-f195.google.com with SMTP id r11-v6so7563291pfl.6
+        for <linux-pci@vger.kernel.org>; Sun, 03 Jun 2018 18:24:58 -0700 (PDT)
+Date: Sun, 3 Jun 2018 18:24:55 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-gpio@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] PCI: fix restoring resized BAR state on resume
-Date: Thu, 14 Jun 2018 14:21:45 +0200
-Message-Id: <20180614122146.62118-1-christian.koenig@amd.com>
+Subject: Re: [PATCH] pci: qcom: include gpio/consumer.h
+Message-ID: <20180604012455.GA3374@builder>
+References: <20180530215324.1178564-1-arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180530215324.1178564-1-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Resize BARs after resume to the expected size again.
+On Wed 30 May 14:53 PDT 2018, Arnd Bergmann wrote:
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
-BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=199959
-CC: stable@vger.kernel.org      # v4.15+
----
- drivers/pci/pci.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+> When CONFIG_GPIOLIB is disabled, we run into a build failure:
+> 
+> drivers/pci/dwc/pcie-qcom.c: In function 'qcom_pcie_probe':
+> drivers/pci/dwc/pcie-qcom.c:1223:16: error: implicit declaration of function 'devm_gpiod_get_optional'; did you mean 'devm_regulator_get_optional'? [-Werror=implicit-function-declaration]
+>   pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
+> 
+> Including gpio/consumer.h directly is the correct fix.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index bd6f156dc3cf..d4685090378b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1159,6 +1159,33 @@ static void pci_restore_config_space(struct pci_dev *pdev)
- 	}
- }
- 
-+static void pci_restore_rebar_state(struct pci_dev *pdev)
-+{
-+	unsigned int pos, nbars, i;
-+	u32 ctrl;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
-+	if (!pos)
-+		return;
-+
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >>
-+		    PCI_REBAR_CTRL_NBAR_SHIFT;
-+
-+	for (i = 0; i < nbars; i++, pos += 8) {
-+		struct resource *res;
-+		int bar_idx, size;
-+
-+		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+		bar_idx = ctrl & PCI_REBAR_CTRL_BAR_IDX;
-+		res = pdev->resource + bar_idx;
-+		size = order_base_2((resource_size(res) >> 20) | 1) - 1;
-+		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE;
-+		ctrl |= size << 8;
-+		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
-+	}
-+}
-+
- /**
-  * pci_restore_state - Restore the saved state of a PCI device
-  * @dev: - PCI device that we're dealing with
-@@ -1174,6 +1201,7 @@ void pci_restore_state(struct pci_dev *dev)
- 	pci_restore_pri_state(dev);
- 	pci_restore_ats_state(dev);
- 	pci_restore_vc_state(dev);
-+	pci_restore_rebar_state(dev);
- 
- 	pci_cleanup_aer_error_status_regs(dev);
- 
--- 
-2.14.1
+Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+
+Regards,
+Bjorn
+
+> ---
+>  drivers/pci/dwc/pcie-qcom.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+> index b65bbf7c284e..17df19db851e 100644
+> --- a/drivers/pci/dwc/pcie-qcom.c
+> +++ b/drivers/pci/dwc/pcie-qcom.c
+> @@ -10,7 +10,7 @@
+>  
+>  #include <linux/clk.h>
+>  #include <linux/delay.h>
+> -#include <linux/gpio.h>
+> +#include <linux/gpio/consumer.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/io.h>
+>  #include <linux/iopoll.h>
+> -- 
+> 2.9.0
+> 
