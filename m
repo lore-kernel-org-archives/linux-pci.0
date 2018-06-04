@@ -1,65 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:33022 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750831AbeFBRnC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 2 Jun 2018 13:43:02 -0400
-Date: Sat, 2 Jun 2018 19:42:59 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc: bhelgaas@google.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com, keith.busch@intel.com,
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:36902 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750759AbeFDPsL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jun 2018 11:48:11 -0400
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: bhelgaas@google.com
+Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, keith.busch@intel.com,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Check for PCIe downtraining conditions
-Message-ID: <20180602174259.GA14870@amd>
-References: <20180531150535.9684-1-mr.nuke.me@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="h31gzZEtNLTqOjlF"
-In-Reply-To: <20180531150535.9684-1-mr.nuke.me@gmail.com>
+Subject: [PATCH] PCI: access.c: Piggyback user config access on pci_read/write_*()
+Date: Mon,  4 Jun 2018 10:48:02 -0500
+Message-Id: <20180604154803.14185-1-mr.nuke.me@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+pci_read/write_config*() functions have several safeguards to prevent
+stallling accesses when a device is removed. However, their "_user_"
+counterparts use a different code path.
 
---h31gzZEtNLTqOjlF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+To make sure that safeguards are used for userspace PCI config
+accesses, piggyback the "_user_" functions on the in-kernel
+pci_read/write_config*().
 
-On Thu 2018-05-31 10:05:33, Alexandru Gagniuc wrote:
-> PCIe downtraining happens when both the device and PCIe port are
-> capable of a larger bus width or higher speed than negotiated.
-> Downtraining might be indicative of other problems in the system, and
-> identifying this from userspace is neither intuitive, nor straigh
-> forward.
-> Instead, check for such conditions on device probe, and print an
-> appropriate message.
->=20
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
+ drivers/pci/access.c | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
 
-> +	if (dev_cur_width < max_link_width) {
-> +		/* Lanes might not be routed, so use info instead of warn. */
-> +		pci_info(dev, "PCIe downtrain: Port and device capable of x%d, but lin=
-k running at x%d",
-> +			 max_link_width, dev_cur_width);
-> +	}
-
-Would "warn" be right loglevel?
-									Pavel
-								=09
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---h31gzZEtNLTqOjlF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlsS1yMACgkQMOfwapXb+vLn9wCeLrJpI37mN9luuXqrNZ6OhyAH
-nz4AoLLXIXxQqAtoiW4dNmxIXCI70hEi
-=sEfL
------END PGP SIGNATURE-----
-
---h31gzZEtNLTqOjlF--
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index a3ad2fe185b9..6db2a8713c85 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -223,16 +223,9 @@ int pci_user_read_config_##size						\
+ 	(struct pci_dev *dev, int pos, type *val)			\
+ {									\
+ 	int ret = PCIBIOS_SUCCESSFUL;					\
+-	u32 data = -1;							\
+ 	if (PCI_##size##_BAD)						\
+ 		return -EINVAL;						\
+-	raw_spin_lock_irq(&pci_lock);				\
+-	if (unlikely(dev->block_cfg_access))				\
+-		pci_wait_cfg(dev);					\
+-	ret = dev->bus->ops->read(dev->bus, dev->devfn,			\
+-					pos, sizeof(type), &data);	\
+-	raw_spin_unlock_irq(&pci_lock);				\
+-	*val = (type)data;						\
++	ret = pci_read_config_##size(dev, pos, val);			\
+ 	return pcibios_err_to_errno(ret);				\
+ }									\
+ EXPORT_SYMBOL_GPL(pci_user_read_config_##size);
+@@ -245,12 +238,7 @@ int pci_user_write_config_##size					\
+ 	int ret = PCIBIOS_SUCCESSFUL;					\
+ 	if (PCI_##size##_BAD)						\
+ 		return -EINVAL;						\
+-	raw_spin_lock_irq(&pci_lock);				\
+-	if (unlikely(dev->block_cfg_access))				\
+-		pci_wait_cfg(dev);					\
+-	ret = dev->bus->ops->write(dev->bus, dev->devfn,		\
+-					pos, sizeof(type), val);	\
+-	raw_spin_unlock_irq(&pci_lock);				\
++	ret = pci_write_config_##size(dev, pos, val);			\
+ 	return pcibios_err_to_errno(ret);				\
+ }									\
+ EXPORT_SYMBOL_GPL(pci_user_write_config_##size);
+-- 
+2.14.4
