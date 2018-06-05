@@ -1,54 +1,50 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 21 Jun 2018 12:40:35 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Nipun Gupta <nipun.gupta@nxp.com>
-Subject: Re: [PATCH 0/7 v5] Support for fsl-mc bus and its devices in SMMU
-Message-ID: <20180621114034.GD22505@arm.com>
-References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
- <HE1PR0401MB24250CEFBC0B7CC919C4388AE6760@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 3/7] PCI: cadence: Update cdns_pcie_ep_raise_irq
+ function signature
+To: Alan Douglas <adouglas@cadence.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+References: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
+ <4994f263efbf6a2cb952d3d9839fb3b1737efde9.1526576613.git.gustavo.pimentel@synopsys.com>
+ <aa86d9b7-d715-2a21-6a94-be927e55b51b@ti.com>
+ <SN6PR07MB4512F3B395D731FF14EBDB8ED8670@SN6PR07MB4512.namprd07.prod.outlook.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <e9de6853-9c55-2dc9-0de0-0faa075714db@ti.com>
+Date: Tue, 5 Jun 2018 10:51:16 +0530
 MIME-Version: 1.0
-In-Reply-To: <HE1PR0401MB24250CEFBC0B7CC919C4388AE6760@HE1PR0401MB2425.eurprd04.prod.outlook.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Bharat Bhushan <bharat.bhushan@nxp.com>,
- "stuyoder@gmail.com" <stuyoder@gmail.com>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>,
- "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
- "joro@8bytes.org" <joro@8bytes.org>,
- "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Leo Li <leoyang.li@nxp.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>, "hch@lst.de" <hch@lst.de>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <SN6PR07MB4512F3B395D731FF14EBDB8ED8670@SN6PR07MB4512.namprd07.prod.outlook.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Nipun,
 
-On Thu, Jun 21, 2018 at 03:59:27AM +0000, Nipun Gupta wrote:
-> Will this patch-set be taken for the next kernel release (and via which
-> tree)?
 
-I think you need Acks from Robin and Joerg in order for this to be queued.
-Robin should be back at the beginning of next month, so there's still time
-for 4.19.
+On Monday 04 June 2018 08:38 PM, Alan Douglas wrote:
+> On 31 May 2018 11:51, Kishon Vijay Abraham I  wrote:
+>> Hi Alan,
+>>
+>> On Thursday 17 May 2018 10:39 PM, Gustavo Pimentel wrote:
+>>> Change cdns_pcie_ep_raise_irq() signature, namely the interrupt_num
+>>> variable type from u8 to u16 to accommodate 2048 maximum MSI-X
+>>> interrupts.
+>>>
+>>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>>> Acked-by: Alan Douglas <adouglas@cadence.com>
+>>
+>> Do you want to add MSI-X support to cadence PCIe?
+>>
+> I do want to add MSI-X support, in fact I have done some tests with a
+> modified cadence driver with this set, so plan to submit a patch later.
+> 
 
-Will
+cool, glad to hear!
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks
+Kishon
