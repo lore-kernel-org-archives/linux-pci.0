@@ -1,129 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com, sboyd@codeaurora.org
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v5 07/11] pci-epf-test/pci_endpoint_test: Use irq_type module parameter
-Date: Wed, 20 Jun 2018 17:28:29 +0100
-Message-Id: <99e94309e651dbc4d5fac25134b21685956e18ab.1529507416.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=dHkj=IX=gmail.com=hkallweit1@kernel.org>
+Return-Path: <SRS0=dHkj=IX=gmail.com=hkallweit1@kernel.org>
+Subject: Re: [PATCH] r8169: Reinstate ALDPS and ASPM support
+To: Florian Fainelli <f.fainelli@gmail.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, Ryankao <ryankao@realtek.com>
+Cc: Kai Heng Feng <kai.heng.feng@canonical.com>,
+ "jrg.otte@gmail.com" <jrg.otte@gmail.com>, David Miller
+ <davem@davemloft.net>, Hayes Wang <hayeswang@realtek.com>,
+ "romieu@fr.zoreil.com" <romieu@fr.zoreil.com>,
+ Linux Netdev List <netdev@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Hau <hau@realtek.com>, linux-pci@vger.kernel.org
+References: <20180605045812.17977-1-kai.heng.feng@canonical.com>
+ <9D9E2AF1-CD59-425B-85E9-DB89D620CA67@canonical.com>
+ <B01FA80E1422A647BEB597328C544223D30B8F90@RTITMBSV05.realtek.com.tw>
+ <20180605172805.GD30381@bhelgaas-glaptop.roam.corp.google.com>
+ <20180605191142.GA214338@bhelgaas-glaptop.roam.corp.google.com>
+ <6c6b579a-5be4-ccc0-f64c-9998e51145f5@gmail.com>
+ <d50e04b3-87be-f300-b0ea-2da7e3660ebb@gmail.com>
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Message-ID: <15ef164c-9b7c-5a05-3b41-840a53c77a56@gmail.com>
+Date: Tue, 5 Jun 2018 21:41:06 +0200
+MIME-Version: 1.0
+In-Reply-To: <d50e04b3-87be-f300-b0ea-2da7e3660ebb@gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Add new driver parameter to allow interruption type selection.
-
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v2->v3:
- - New patch file created base on the previous patch
-"misc: pci_endpoint_test: Add MSI-X support" patch file following
-Kishon's suggestion.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
-
- drivers/misc/pci_endpoint_test.c | 30 +++++++++++++++++++++---------
- 1 file changed, 21 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 35fbfbd..4d2c9cb 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -82,6 +82,10 @@ static bool no_msi;
- module_param(no_msi, bool, 0444);
- MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
- 
-+static int irq_type = IRQ_TYPE_MSI;
-+module_param(irq_type, int, 0444);
-+MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI)");
-+
- enum pci_barno {
- 	BAR_0,
- 	BAR_1,
-@@ -108,7 +112,7 @@ struct pci_endpoint_test {
- struct pci_endpoint_test_data {
- 	enum pci_barno test_reg_bar;
- 	size_t alignment;
--	bool no_msi;
-+	int irq_type;
- };
- 
- static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
-@@ -291,8 +295,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
- 				 size);
- 
--	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
--				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
- 				 COMMAND_COPY);
-@@ -361,8 +364,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
- 
--	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
--				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
- 				 COMMAND_READ);
-@@ -419,8 +421,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
- 
--	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
--				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
- 				 COMMAND_WRITE);
-@@ -505,11 +506,14 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	test->alignment = 0;
- 	test->pdev = pdev;
- 
-+	if (no_msi)
-+		irq_type = IRQ_TYPE_LEGACY;
-+
- 	data = (struct pci_endpoint_test_data *)ent->driver_data;
- 	if (data) {
- 		test_reg_bar = data->test_reg_bar;
- 		test->alignment = data->alignment;
--		no_msi = data->no_msi;
-+		irq_type = data->irq_type;
- 	}
- 
- 	init_completion(&test->irq_raised);
-@@ -529,13 +533,21 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 
- 	pci_set_master(pdev);
- 
--	if (!no_msi) {
-+	switch (irq_type) {
-+	case IRQ_TYPE_LEGACY:
-+		irq = 0;
-+		break;
-+	case IRQ_TYPE_MSI:
- 		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
- 		if (irq < 0)
- 			dev_err(dev, "Failed to get MSI interrupts\n");
- 		test->num_irqs = irq;
-+		break;
-+	default:
-+		dev_err(dev, "Invalid IRQ type selected\n");
- 	}
- 
-+
- 	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
- 			       IRQF_SHARED, DRV_MODULE_NAME, test);
- 	if (err) {
--- 
-2.7.4
+On 05.06.2018 21:27, Florian Fainelli wrote:
+> On 06/05/2018 12:17 PM, Heiner Kallweit wrote:
+>> On 05.06.2018 21:11, Bjorn Helgaas wrote:
+>>> [+cc linux-pci]
+>>>
+>>> On Tue, Jun 05, 2018 at 12:28:05PM -0500, Bjorn Helgaas wrote:
+>>>> On Tue, Jun 05, 2018 at 06:34:09AM +0000, Ryankao wrote:
+>>>>> Add realtek folk Hau
+>>>>>
+>>>>> -----Original Message-----
+>>>>> From: Kai Heng Feng [mailto:kai.heng.feng@canonical.com] 
+>>>>> Sent: Tuesday, June 05, 2018 1:02 PM
+>>>>> To: jrg.otte@gmail.com
+>>>>> Cc: David Miller <davem@davemloft.net>; Hayes Wang <hayeswang@realtek.com>; hkallweit1@gmail.com; romieu@fr.zoreil.com; Linux Netdev List <netdev@vger.kernel.org>; Linux Kernel Mailing List <linux-kernel@vger.kernel.org>; Ryankao <ryankao@realtek.com>
+>>>>> Subject: Re: [PATCH] r8169: Reinstate ALDPS and ASPM support
+>>>>>
+>>>>> Hi Jörg Otte,
+>>>>>
+>>>>> Can you give this patch a try?
+>>>>>
+>>>>> Since you are the only one that reported ALDPS/ASPM regression,
+>>>>>
+>>>>> And I think this patch should solve the issue you had [1].
+>>>>>
+>>>>> Hopefully we don't need to go down the rabbit hole of blacklist/whitelist...
+>>>>>
+>>>>> Kai-Heng
+>>>>>
+>>>>> [1] https://lkml.org/lkml/2013/1/5/36
+>>>>
+>>>> I have no idea what ALDPS is.  It's not mentioned in the PCIe spec, so
+>>>> presumably it's some Realtek-specific thing.  ASPM is a generic PCIe
+>>>> thing.  Changes to these two things should be in separate patches so
+>>>> they don't get tangled up.
+>>>>
+>> ALDPS = Advanced Link Down Power Saving
+>> And yes, it's a Realtek feature.
+> 
+> Link as in Ethernet link or PCI(e) link? Sorry too lazy to let me google
+> that for myself :)
+> 
+Sorry .. Link here refers to the Ethernet PHY.
