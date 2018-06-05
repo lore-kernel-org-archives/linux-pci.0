@@ -1,218 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:52404 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932227AbeFTQ2o (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2018 12:28:44 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com, sboyd@codeaurora.org
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v5 01/11] PCI: endpoint: Add MSI-X interfaces
-Date: Wed, 20 Jun 2018 17:28:23 +0100
-Message-Id: <80e29cd7dc34363f27e74a099b727175f94242d4.1529507416.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
+Received: from mail.kernel.org ([198.145.29.99]:58494 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932103AbeFEXxT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 Jun 2018 19:53:19 -0400
+Date: Tue, 5 Jun 2018 18:53:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yisheng Xie <xieyisheng1@huawei.com>
+Cc: bhelgaas@google.com, rjw@rjwysocki.net, lenb@kernel.org,
+        guohanjun@huawei.com, jcm@redhat.com, toshi.kani@hpe.com,
+        tanxiaojun@huawei.com, wangzhou1@hisilicon.com,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] PCI: Avoid panic when PCI IO resource's size is
+ not page aligned
+Message-ID: <20180605235303.GE226399@bhelgaas-glaptop.roam.corp.google.com>
+References: <1527596299-57567-1-git-send-email-xieyisheng1@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1527596299-57567-1-git-send-email-xieyisheng1@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PCI_EPC_IRQ_MSIX type.
+On Tue, May 29, 2018 at 08:18:18PM +0800, Yisheng Xie wrote:
+> Zhou reported a bug on Hisilicon arm64 D06 platform with 64KB page size:
+> 
+>  [    2.470908] kernel BUG at lib/ioremap.c:72!
+>  [    2.475079] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+>  [    2.480551] Modules linked in:
+>  [    2.483594] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.16.0-rc7-00062-g0b41260-dirty #23
+>  [    2.491756] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI Nemo 2.0 RC0 - B120 03/23/2018
+>  [    2.500614] pstate: 80c00009 (Nzcv daif +PAN +UAO)
+>  [    2.505395] pc : ioremap_page_range+0x268/0x36c
+>  [    2.509912] lr : pci_remap_iospace+0xe4/0x100
+>  [...]
+>  [    2.603733] Call trace:
+>  [    2.606168]  ioremap_page_range+0x268/0x36c
+>  [    2.610337]  pci_remap_iospace+0xe4/0x100
+>  [    2.614334]  acpi_pci_probe_root_resources+0x1d4/0x214
+>  [    2.619460]  pci_acpi_root_prepare_resources+0x18/0xa8
+>  [    2.624585]  acpi_pci_root_create+0x98/0x214
+>  [    2.628843]  pci_acpi_scan_root+0x124/0x20c
+>  [    2.633013]  acpi_pci_root_add+0x224/0x494
+>  [    2.637096]  acpi_bus_attach+0xf8/0x200
+>  [    2.640918]  acpi_bus_attach+0x98/0x200
+>  [    2.644740]  acpi_bus_attach+0x98/0x200
+>  [    2.648562]  acpi_bus_scan+0x48/0x9c
+>  [    2.652125]  acpi_scan_init+0x104/0x268
+>  [    2.655948]  acpi_init+0x308/0x374
+>  [    2.659337]  do_one_initcall+0x48/0x14c
+>  [    2.663160]  kernel_init_freeable+0x19c/0x250
+>  [    2.667504]  kernel_init+0x10/0x100
+>  [    2.670979]  ret_from_fork+0x10/0x18
+> 
+> The cause is the size of PCI IO resource is 32KB, which is 4K aligned but
+> not 64KB aligned, however, ioremap_page_range() request the range as page
+> aligned or it will trigger a BUG_ON() on ioremap_pte_range() it calls, as
+> ioremap_pte_range increase the addr by PAGE_SIZE, which makes addr != end
+> until trigger BUG_ON, if its incoming end is not page aligned. More detail
+> trace is as following:
+> 
+>  ioremap_page_range
+>  -> ioremap_p4d_range
+>     -> ioremap_p4d_range
+>        -> ioremap_pud_range
+>           -> ioremap_pmd_range
+>              -> ioremap_pte_range
+> 
+> This patch avoid panic by return -EINVAL if vaddr or resource size is not
+> page aligned.
+> 
+> Reported-by: Zhou Wang <wangzhou1@hisilicon.com>
+> Tested-by: Xiaojun Tan <tanxiaojun@huawei.com>
+> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+> ---
+> v3:
+>  - pci_remap_iospace() sanitize its arguments instead - per Rafael
+> 
+> v2:
+>  - Let the caller of ioremap_page_range() align the request by PAGE_SIZE - per Toshi
+> 
+>  drivers/pci/pci.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index dbfe7c4..0eb0381 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3544,6 +3544,9 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+>  	if (res->end > IO_SPACE_LIMIT)
+>  		return -EINVAL;
+>  
+> +	if (!PAGE_ALIGNED(vaddr) || !PAGE_ALIGNED(resource_size(res)))
+> +		return -EINVAL;
 
-Add MSI-X callbacks signatures to the ops structure.
+Most other callers of ioremap_page_range() are in the ioremap() path,
+and they align phys_addr themselves.  In some cases that results in a
+mapping that covers more than necessary.  For instance, see the
+function comment at the x86 version of __ioremap_caller().
 
-Add sysfs interface for set/get MSI-X capability maximum number.
+Is there any reason we couldn't similarly align vaddr and phys_addr
+here?
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Moved pci_epc_raise_irq() signature changes to patch file #3.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
+The acpi_pci_probe_root_resources() path you mention above basically
+ignores the errors you're returning.  Your patches will avoid the
+panic, which is an improvement, but I/O port space will not work, and
+I don't see anything that gives the user a hint about why not.
 
- drivers/pci/endpoint/pci-ep-cfs.c   | 24 ++++++++++++++++
- drivers/pci/endpoint/pci-epc-core.c | 57 +++++++++++++++++++++++++++++++++++++
- include/linux/pci-epc.h             |  9 ++++++
- include/linux/pci-epf.h             |  1 +
- 4 files changed, 91 insertions(+)
+If we could align vaddr and phys_addr (and possibly map more than
+necessary), I/O port space would still work.
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 018ea34..d1288a0 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -286,6 +286,28 @@ static ssize_t pci_epf_msi_interrupts_show(struct config_item *item,
- 		       to_pci_epf_group(item)->epf->msi_interrupts);
- }
- 
-+static ssize_t pci_epf_msix_interrupts_store(struct config_item *item,
-+					     const char *page, size_t len)
-+{
-+	u16 val;
-+	int ret;
-+
-+	ret = kstrtou16(page, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	to_pci_epf_group(item)->epf->msix_interrupts = val;
-+
-+	return len;
-+}
-+
-+static ssize_t pci_epf_msix_interrupts_show(struct config_item *item,
-+					    char *page)
-+{
-+	return sprintf(page, "%d\n",
-+		       to_pci_epf_group(item)->epf->msix_interrupts);
-+}
-+
- PCI_EPF_HEADER_R(vendorid)
- PCI_EPF_HEADER_W_u16(vendorid)
- 
-@@ -327,6 +349,7 @@ CONFIGFS_ATTR(pci_epf_, subsys_vendor_id);
- CONFIGFS_ATTR(pci_epf_, subsys_id);
- CONFIGFS_ATTR(pci_epf_, interrupt_pin);
- CONFIGFS_ATTR(pci_epf_, msi_interrupts);
-+CONFIGFS_ATTR(pci_epf_, msix_interrupts);
- 
- static struct configfs_attribute *pci_epf_attrs[] = {
- 	&pci_epf_attr_vendorid,
-@@ -340,6 +363,7 @@ static struct configfs_attribute *pci_epf_attrs[] = {
- 	&pci_epf_attr_subsys_id,
- 	&pci_epf_attr_interrupt_pin,
- 	&pci_epf_attr_msi_interrupts,
-+	&pci_epf_attr_msix_interrupts,
- 	NULL,
- };
- 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index b0ee427..7d77bd0 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -218,6 +218,63 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- EXPORT_SYMBOL_GPL(pci_epc_set_msi);
- 
- /**
-+ * pci_epc_get_msix() - get the number of MSI-X interrupt numbers allocated
-+ * @epc: the EPC device to which MSI-X interrupts was requested
-+ * @func_no: the endpoint function number in the EPC device
-+ *
-+ * Invoke to get the number of MSI-X interrupts allocated by the RC
-+ */
-+int pci_epc_get_msix(struct pci_epc *epc, u8 func_no)
-+{
-+	int interrupt;
-+	unsigned long flags;
-+
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
-+		return 0;
-+
-+	if (!epc->ops->get_msix)
-+		return 0;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	interrupt = epc->ops->get_msix(epc, func_no);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	if (interrupt < 0)
-+		return 0;
-+
-+	return interrupt + 1;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_get_msix);
-+
-+/**
-+ * pci_epc_set_msix() - set the number of MSI-X interrupt numbers required
-+ * @epc: the EPC device on which MSI-X has to be configured
-+ * @func_no: the endpoint function number in the EPC device
-+ * @interrupts: number of MSI-X interrupts required by the EPF
-+ *
-+ * Invoke to set the required number of MSI-X interrupts.
-+ */
-+int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
-+{
-+	int ret;
-+	unsigned long flags;
-+
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
-+	    interrupts < 1 || interrupts > 2048)
-+		return -EINVAL;
-+
-+	if (!epc->ops->set_msix)
-+		return 0;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	ret = epc->ops->set_msix(epc, func_no, interrupts - 1);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_set_msix);
-+
-+/**
-  * pci_epc_unmap_addr() - unmap CPU address from PCI address
-  * @epc: the EPC device on which address is allocated
-  * @func_no: the endpoint function number in the EPC device
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index 243eaa5..89f079f 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -17,6 +17,7 @@ enum pci_epc_irq_type {
- 	PCI_EPC_IRQ_UNKNOWN,
- 	PCI_EPC_IRQ_LEGACY,
- 	PCI_EPC_IRQ_MSI,
-+	PCI_EPC_IRQ_MSIX,
- };
- 
- /**
-@@ -30,6 +31,10 @@ enum pci_epc_irq_type {
-  *	     capability register
-  * @get_msi: ops to get the number of MSI interrupts allocated by the RC from
-  *	     the MSI capability register
-+ * @set_msix: ops to set the requested number of MSI-X interrupts in the
-+ *	     MSI-X capability register
-+ * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
-+ *	     from the MSI-X capability register
-  * @raise_irq: ops to raise a legacy or MSI interrupt
-  * @start: ops to start the PCI link
-  * @stop: ops to stop the PCI link
-@@ -48,6 +53,8 @@ struct pci_epc_ops {
- 			      phys_addr_t addr);
- 	int	(*set_msi)(struct pci_epc *epc, u8 func_no, u8 interrupts);
- 	int	(*get_msi)(struct pci_epc *epc, u8 func_no);
-+	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
-+	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
- 	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
- 			     enum pci_epc_irq_type type, u8 interrupt_num);
- 	int	(*start)(struct pci_epc *epc);
-@@ -144,6 +151,8 @@ void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no,
- 			phys_addr_t phys_addr);
- int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts);
- int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
-+int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts);
-+int pci_epc_get_msix(struct pci_epc *epc, u8 func_no);
- int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
- 		      enum pci_epc_irq_type type, u8 interrupt_num);
- int pci_epc_start(struct pci_epc *epc);
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index 4e77649..ec02f587 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -119,6 +119,7 @@ struct pci_epf {
- 	struct pci_epf_header	*header;
- 	struct pci_epf_bar	bar[6];
- 	u8			msi_interrupts;
-+	u16			msix_interrupts;
- 	u8			func_no;
- 
- 	struct pci_epc		*epc;
--- 
-2.7.4
+>  	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
+>  				  pgprot_device(PAGE_KERNEL));
+>  #else
+> -- 
+> 1.7.12.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
