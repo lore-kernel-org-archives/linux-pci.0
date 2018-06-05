@@ -1,113 +1,86 @@
-Return-Path: <SRS0=5wfS=I2=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=5wfS=I2=codeaurora.org=okaya@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:33264 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751748AbeFEQ06 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2018 12:26:58 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 08 Jun 2018 06:41:48 -0400
-From: okaya@codeaurora.org
-To: poza@codeaurora.org
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Philippe Ombredanne <pombredanne@nexb.com>, Thomas Gleixner
- <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate
- Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
- Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Timur Tabi
- <timur@codeaurora.org>, linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH NEXT 6/6] PCI/PORTDRV: Remove ERR_FATAL handling from
- pcie_portdrv_slot_reset()
-In-Reply-To: <bbce31a6e59fdfa00e565e09dcae9eea@codeaurora.org>
-References: <1528351234-26914-1-git-send-email-poza@codeaurora.org>
- <1528351234-26914-6-git-send-email-poza@codeaurora.org>
- <94661add3e71e3694aa22c2a9cabf503@codeaurora.org>
- <20180607213448.GB37077@bhelgaas-glaptop.roam.corp.google.com>
- <bbce31a6e59fdfa00e565e09dcae9eea@codeaurora.org>
-Message-ID: <eaa6c04259f0b41d5281d24c7422f914@codeaurora.org>
+In-Reply-To: <f35b2972-aa40-5397-facb-765cafe7c315@siemens.com>
+References: <cover.1526375226.git.jan.kiszka@siemens.com> <3aeb2ed038cbce8fe744b614dc19d414555a7e8f.1526375226.git.jan.kiszka@siemens.com>
+ <CAHp75VeUbjobse6uLeM4h_xXRUw+YUQUN+EOye67AJy77a5euQ@mail.gmail.com>
+ <CAHp75VeM7_8+9QJjOypXaiBhpWP4B5KACdUQ-p3frbS3jPh=OQ@mail.gmail.com> <f35b2972-aa40-5397-facb-765cafe7c315@siemens.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Tue, 5 Jun 2018 19:26:57 +0300
+Message-ID: <CAHp75VdWhCDYt3jvii92g222WeHTvwX5e8Sthr0pknXvCgwHDA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Clean up resource allocation in devm_of_pci_get_host_bridge_resources()
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+        Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-06-08 00:57, poza@codeaurora.org wrote:
-> On 2018-06-08 03:04, Bjorn Helgaas wrote:
->> On Thu, Jun 07, 2018 at 07:18:03PM +0530, poza@codeaurora.org wrote:
->>> On 2018-06-07 11:30, Oza Pawandeep wrote:
->>> > We are handling ERR_FATAL by resetting the Link in software,skipping the
->>> > driver pci_error_handlers callbacks, removing the devices from the PCI
->>> > subsystem, and re-enumerating, as a result of that, no more calling
->>> > pcie_portdrv_slot_reset in ERR_FATAL case.
->>> >
->>> > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->>> >
->>> > diff --git a/drivers/pci/pcie/portdrv_pci.c
->>> > b/drivers/pci/pcie/portdrv_pci.c
->>> > index 973f1b8..92f5d330 100644
->>> > --- a/drivers/pci/pcie/portdrv_pci.c
->>> > +++ b/drivers/pci/pcie/portdrv_pci.c
->>> > @@ -42,17 +42,6 @@ __setup("pcie_ports=", pcie_port_setup);
->>> >
->>> >  /* global data */
->>> >
->>> > -static int pcie_portdrv_restore_config(struct pci_dev *dev)
->>> > -{
->>> > -	int retval;
->>> > -
->>> > -	retval = pci_enable_device(dev);
->>> > -	if (retval)
->>> > -		return retval;
->>> > -	pci_set_master(dev);
->>> > -	return 0;
->>> > -}
->>> > -
->>> >  #ifdef CONFIG_PM
->>> >  static int pcie_port_runtime_suspend(struct device *dev)
->>> >  {
->>> > @@ -162,14 +151,6 @@ static pci_ers_result_t
->>> > pcie_portdrv_mmio_enabled(struct pci_dev *dev)
->>> >
->>> >  static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
->>> >  {
->>> > -	/* If fatal, restore cfg space for possible link reset at upstream */
->>> > -	if (dev->error_state == pci_channel_io_frozen) {
->>> > -		dev->state_saved = true;
->>> > -		pci_restore_state(dev);
->>> > -		pcie_portdrv_restore_config(dev);
->>> > -		pci_enable_pcie_error_reporting(dev);
->>> > -	}
->>> > -
->>> >  	return PCI_ERS_RESULT_RECOVERED;
->>> >  }
->>> 
->>> 
->>> Hi Bjorn,
->>> 
->>> the above patch removes ERR_FATAL handling from 
->>> pcie_portdrv_slot_reset()
->>> because now we are handling ERR_FATAL differently than before.
->>> 
->>> I tried to dig into pcie_portdrv_slot_reset() handling for ERR_FATAL 
->>> case
->>> where it
->>> restores the config space, enable device, set master and enable error
->>> reporting....
->>> and as far as I understand this is being done for upstream link 
->>> (bridges
->>> etc..)
->>> 
->>> why was it done at the first point (I checked the commit description, 
->>> but
->>> could not really get it)
->>> and do we need to handle the same thing in ERR_FATAL now ?
->> 
->> You mean 4bf3392e0bf5 ("PCI-Express AER implemetation: pcie_portdrv
->> error handler"), which added pcie_portdrv_slot_reset()?  I agree, that
->> commit log has no useful information.  I don't know any of the history
->> behind it.
-> 
-> 
-> Yes Bjorn thats right.
-> I am trying to understand it but no clue.
-> since it is restoring the stuffs in ERR_FATAL case, why would PCIe
-> bridge loose all the settings ?  [config space, aer bits, master,
-> device enable etc..)
-> Max we do is link_reset in ERR_FATAL case, and Secondary bus reset
-> should affect downstream components (not upstream)
+On Wed, May 16, 2018 at 3:31 PM, Jan Kiszka <jan.kiszka@siemens.com> wrote:
+> Instead of first allocating and then freeing memory for struct resource
+> in case we cannot parse a PCI resource from the device tree, work
+> against a local struct and kmemdup it when we decide to go with it.
+>
 
-Our first generation controller had this problem. There could be others 
-too.
+Bjorn, any comments on this?
+
+> Suggested-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> ---
+>  drivers/pci/of.c | 14 ++++++--------
+>  1 file changed, 6 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index b06585a1da75..fc0f906c5c25 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -266,7 +266,7 @@ int devm_of_pci_get_host_bridge_resources(struct device *dev,
+>                         struct list_head *resources, resource_size_t *io_base)
+>  {
+>         struct device_node *dev_node = dev->of_node;
+> -       struct resource *res;
+> +       struct resource *res, tmp_res;
+>         struct resource *bus_range;
+>         struct of_pci_range range;
+>         struct of_pci_range_parser parser;
+> @@ -320,18 +320,16 @@ int devm_of_pci_get_host_bridge_resources(struct device *dev,
+>                 if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+>                         continue;
+>
+> -               res = devm_kzalloc(dev, sizeof(struct resource), GFP_KERNEL);
+> +               err = of_pci_range_to_resource(&range, dev_node, &tmp_res);
+> +               if (err)
+> +                       continue;
+> +
+> +               res = devm_kmemdup(dev, &tmp_res, sizeof(tmp_res), GFP_KERNEL);
+>                 if (!res) {
+>                         err = -ENOMEM;
+>                         goto failed;
+>                 }
+>
+> -               err = of_pci_range_to_resource(&range, dev_node, res);
+> -               if (err) {
+> -                       devm_kfree(dev, res);
+> -                       continue;
+> -               }
+> -
+>                 if (resource_type(res) == IORESOURCE_IO) {
+>                         if (!io_base) {
+>                                 dev_err(dev,
+> --
+> 2.13.6
+
+
+
+-- 
+With Best Regards,
+Andy Shevchenko
