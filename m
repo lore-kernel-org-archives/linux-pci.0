@@ -1,74 +1,110 @@
-Return-Path: <SRS0=gFkO=JL=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=gFkO=JL=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [PATCH] PCI: shpchp: Fix probing logic inversion
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20180621164715.28160-1-marc.zyngier@arm.com>
- <20180625140122.GF108993@bhelgaas-glaptop.roam.corp.google.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <62eb1a4b-2ec9-b472-a277-33ddc5952348@arm.com>
-Date: Mon, 25 Jun 2018 17:18:40 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:43407 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751718AbeFEM1P (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jun 2018 08:27:15 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180625140122.GF108993@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180604155523.14906-1-mr.nuke.me@gmail.com>
+References: <20180604155523.14906-1-mr.nuke.me@gmail.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Tue, 5 Jun 2018 15:27:14 +0300
+Message-ID: <CAHp75VciAimPhuMDOzYdMP=S1OWGyOUh4dN4BqfsLVOpTnRBRQ@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: Check for PCIe downtraining conditions
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, Mika,
+On Mon, Jun 4, 2018 at 6:55 PM, Alexandru Gagniuc <mr.nuke.me@gmail.com> wrote:
+> PCIe downtraining happens when both the device and PCIe port are
+> capable of a larger bus width or higher speed than negotiated.
+> Downtraining might be indicative of other problems in the system, and
+> identifying this from userspace is neither intuitive, nor straigh
+> forward.
+>
+> The easiest way to detect this is with pcie_print_link_status(),
+> since the bottleneck is usually the link that is downtrained. It's not
+> a perfect solution, but it works extremely well in most cases.
 
-On 25/06/18 15:01, Bjorn Helgaas wrote:
-> Hi Marc,
-> 
-> Sorry we broke this!
+Have you seen any of my comments?
+For your convenience repeating below.
 
-No worries, gave me a chance to stare at something else! ;-)
+>
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> ---
+>
+> Changes since v2:
+>  - Check dev->is_virtfn flag
+>
+> Changes since v1:
+>  - Use pcie_print_link_status() instead of reimplementing logic
+>
+>  drivers/pci/probe.c | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ac91b6fd0bcd..a88ec8c25dd5 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2146,6 +2146,25 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>         return dev;
+>  }
+>
+> +static void pcie_check_upstream_link(struct pci_dev *dev)
+> +{
 
-> 
-> On Thu, Jun 21, 2018 at 05:47:15PM +0100, Marc Zyngier wrote:
->> Until recently, shpc_probe() would bail out pretty early in the
->> absence of the SHPC capability. A logic change in the way the
->> driver now checks that capability makes it go and probe the
->> firmware anyway, with ugly consequences if the system is not
->> ACPI based (my arm64 ThunderX is DT driven, and explodes in
->> a spectacular way after getting a NULL root bridge from the
->> non-existent ACPI tables...).
->>
->> Take this opportunity to move the call to shpchp_is_native()
->> back into shpc_probe(), making it clear that a non-ACPI system
->> is not expected to use this driver.
-> 
-> But a non-ACPI system *should* be able to use SHPC.
+> +
 
-Yeah, I only realized that once Mika pointed it out.
+This is redundant blank line.
 
-> Here's my understanding of how it should work.  On an ACPI system,
-> 
->   - If firmware has _OSC, the OS calls it to request permission to
->     manage the SHPC.  If _OSC grants permission, it should also
->     configure the hardware (interrupts, etc) to give the OS.
->     
->   - If there's no _OSC, shpchp assumes it's allowed to manage the
->     SHPC, and it calls OSHP to configure the hardware appropriately.
-> 
-> On a non-ACPI system, shpchp assumes there's no firmware involved at
-> all, so it can manage the SHPC without doing anything special.
-> 
-> I see Mika has already posted a patch similar to the first one
-> below; I think either of those should fix the problem you're seeing.
+> +       if (!pci_is_pcie(dev))
+> +               return;
+> +
+> +       /* Look from the device up to avoid downstream ports with no devices. */
+> +       if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
+> +           (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
+> +           (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
+> +               return;
 
-Absolutely. With this early exit when root is NULL, my test box is back
-up and running.
+I looked briefly at the use of these calls and perhaps it might make
+sense to introduce
+pci_is_pcie_type(dev, type) which unifies pci_is_pcie() + pci_pcie_type().
 
-> The second is an attempt to clean things up so they make a
-> little more sense.
+> +
+> +       /* Multi-function PCIe share the same link/status. */
 
-I haven't tried that second patch yet, but from reading it, it
-definitely helps making sense of this driver.
+> +       if ((PCI_FUNC(dev->devfn) != 0) || dev->is_virtfn)
 
-Thanks,
+The one pair of parens is not needed.
 
-	M.
+> +               return;
+> +
+> +       pcie_print_link_status(dev);
+> +}
+> +
+>  static void pci_init_capabilities(struct pci_dev *dev)
+>  {
+>         /* Enhanced Allocation */
+> @@ -2181,6 +2200,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>         /* Advanced Error Reporting */
+>         pci_aer_init(dev);
+>
+> +       /* Check link and detect downtrain errors */
+> +       pcie_check_upstream_link(dev);
+> +
+>         if (pci_probe_reset_function(dev) == 0)
+>                 dev->reset_fn = 1;
+>  }
+> --
+> 2.14.4
+>
+
+
+
 -- 
-Jazz is not dead. It just smells funny...
+With Best Regards,
+Andy Shevchenko
