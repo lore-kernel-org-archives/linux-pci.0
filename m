@@ -1,151 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sg2apc01on0113.outbound.protection.outlook.com ([104.47.125.113]:47815
-        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751363AbeF3SNz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 30 Jun 2018 14:13:55 -0400
-From: Dexuan Cui <decui@microsoft.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "'olaf@aepfle.de'" <olaf@aepfle.de>,
-        "'apw@canonical.com'" <apw@canonical.com>,
-        "'jasowang@redhat.com'" <jasowang@redhat.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'driverdev-devel@linuxdriverproject.org'"
-        <driverdev-devel@linuxdriverproject.org>,
-        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
-        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
-Subject: RE: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
- hv_compose_msi_msg()
-Date: Sat, 30 Jun 2018 18:13:39 +0000
-Message-ID: <KL1P15301MB0006780D045979A760DA4E2BBF4D0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-References: <KL1P15301MB0006EE546A7C2567B61EA783BF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <BN6PR21MB016112A4E32D76EC669818C3CA690@BN6PR21MB0161.namprd21.prod.outlook.com>
- <KL1P15301MB0006D8314C8B40A939598056BF640@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <KL1P15301MB00069C79B0C674695DDBC8AABF7E0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <20180613221509.GB12463@bjorn-Precision-5520>
- <KL1P15301MB0006CAB372940BA3C42F1C58BF7E0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <20180629093927.GA9576@red-moon>
-In-Reply-To: <20180629093927.GA9576@red-moon>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 5 Jun 2018 15:44:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH] PCI: Clean up resource allocation in
+ devm_of_pci_get_host_bridge_resources()
+Message-ID: <20180605204407.GA226399@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1526375226.git.jan.kiszka@siemens.com>
+ <3aeb2ed038cbce8fe744b614dc19d414555a7e8f.1526375226.git.jan.kiszka@siemens.com>
+ <CAHp75VeUbjobse6uLeM4h_xXRUw+YUQUN+EOye67AJy77a5euQ@mail.gmail.com>
+ <CAHp75VeM7_8+9QJjOypXaiBhpWP4B5KACdUQ-p3frbS3jPh=OQ@mail.gmail.com>
+ <f35b2972-aa40-5397-facb-765cafe7c315@siemens.com>
+ <CAHp75VdWhCDYt3jvii92g222WeHTvwX5e8Sthr0pknXvCgwHDA@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAHp75VdWhCDYt3jvii92g222WeHTvwX5e8Sthr0pknXvCgwHDA@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Jan Kiszka <jan.kiszka@siemens.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Sent: Friday, June 29, 2018 02:39
-> To: Dexuan Cui <decui@microsoft.com>
-> On Wed, Jun 13, 2018 at 10:50:05PM +0000, Dexuan Cui wrote:
-> > > From: Bjorn Helgaas <helgaas@kernel.org>
-> > > Sent: Wednesday, June 13, 2018 15:15
-> > > > ...
-> > > > It looks Lorenzo's pci.git tree has not been updated for 3+ weeks.
-> > > > I guess Lorenzo may be on vacation.
-> > > >
-> > > > @Bjorn, can this patch go through your tree?
-> > > > Should I resubmit it?
-> > >
-> > > No need to resubmit it, Lorenzo has been out for a bit, but I'm sure
-> > > he'll pick this up as he catches up.
-> > OK, I see. Thanks!
+On Tue, Jun 05, 2018 at 07:26:57PM +0300, Andy Shevchenko wrote:
+> On Wed, May 16, 2018 at 3:31 PM, Jan Kiszka <jan.kiszka@siemens.com> wrote:
+> > Instead of first allocating and then freeing memory for struct resource
+> > in case we cannot parse a PCI resource from the device tree, work
+> > against a local struct and kmemdup it when we decide to go with it.
 > >
-> > > You might, however, fix the commit log:
-> > >
-> > >   This is not an issue because hv_pci_onchannelcallback() is not slow=
-,
-> > >   and it not a hot path.
-> > >
-> > > This has at least one typo (I think you mean "and *is* not a hot
-> > > path").
-> > Sorry -- yes, it's a typo. I hope Lorenzo can help to fix this, or I ca=
-n
-> > resubmit it if Lorenzo or you want me to do it.
-> >
-> > > I also don't understand the sentence as a whole because the
-> > > hv_pci_onchannelcallback() comment says it's called whenever the host
-> > > sends a packet to this channel, and that *does* sound like a hot path=
-.
-> > Sorry for not making it clear.
-> > The host only sends a packet into the channel of the guest when there
-> > is a change of device configuration (i.e. hot add or remove a device), =
-or
-> > the host is responding to the guest's request.
-> >
-> > The change of device configuration is only triggered on-demand by the
-> > administrator on the host, and the guest's requests are one-off when
-> > the device is probed.
-> >
-> > So IMO the callback is not a hot path.
-> >
-> > > I also don't understand the "hv_pci_onchannelcallback() is not slow"
-> > > part.  In other words, you're saying hv_pci_onchannelcallback() is
-> > > fast and it's not a hot path.  And apparently this has something to d=
-o
-> > > with the difference between local_bh_disable() and local_irq_save()?
-> > >
-> > > Bjorn
-> > Actually in my original internal version of the patch, I did use
-> > local_irq_save/restore().
-> >
-> > hv_pci_onchannelcallback() itself runs fast, but here since it's in a
-> > loop (i.e. the while (!try_wait_for_completion(&comp.comp_pkt.host_even=
-t)
-> > loop), IIRC I was asked if I really need local_irq_save/restore(),
-> > and I answered "not really", so later I switched to
-> local_bh_disable()/enable().
-> >
-> > However, recently I found that if we enable CONFIG_PROVE_LOCKING=3Dy,
-> > the local_bh_enable() can trigger a warning because the function
-> > hv_compose_msi_msg() can be called with local IRQs disabled (BTW,
-> > hv_compose_msi_msg() can also be called with local IRQS enabled in
-> > another code path):
-> >
-> > IRQs not enabled as expected
-> >   WARNING: CPU: 0 PID: 408 at kernel/softirq.c:162 __local_bh_enable_ip
-> >
-> > Despite the warning, the code itself can still work correctly, but IMO =
-we'd
-> > better switch back to local_irq_save/restore(), and hence I made the pa=
-tch.
-> >
-> > I hope the explanation sounds reasonable. :-)
->=20
-> Sorry for the delay in replying. I need to understand if you are
-> preventing a spurious lockdep warning or you are fixing a kernel
-> bug. From your commit log, I assume the former option but I do
-> not think that's what you are really doing.
+> 
+> Bjorn, any comments on this?
 
-Now my understanding is:
-1) When hv_compose_msi_msg() is called with local irq ENABLED by the upper
-level irq code, the current code is good and the lockdep warning is not tri=
-ggered.
+I'm trying to finish up the v4.18 changes now, but I'll look at this later.
+If it's urgent, let me know and I can look sooner.
 
-2) When hv_compose_msi_msg() is called with local irq DISABLED by the upper
-level irq code, the current code *is* buggg: local_bh_enable() can potentia=
-lly call
-do_softirq(), which is not supposed to run when local irq is DISABLED.=20
-I think the lockdep warning is triggered for this reason.
+> > Suggested-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+> > Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> > ---
+> >  drivers/pci/of.c | 14 ++++++--------
+> >  1 file changed, 6 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> > index b06585a1da75..fc0f906c5c25 100644
+> > --- a/drivers/pci/of.c
+> > +++ b/drivers/pci/of.c
+> > @@ -266,7 +266,7 @@ int devm_of_pci_get_host_bridge_resources(struct device *dev,
+> >                         struct list_head *resources, resource_size_t *io_base)
+> >  {
+> >         struct device_node *dev_node = dev->of_node;
+> > -       struct resource *res;
+> > +       struct resource *res, tmp_res;
+> >         struct resource *bus_range;
+> >         struct of_pci_range range;
+> >         struct of_pci_range_parser parser;
+> > @@ -320,18 +320,16 @@ int devm_of_pci_get_host_bridge_resources(struct device *dev,
+> >                 if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+> >                         continue;
+> >
+> > -               res = devm_kzalloc(dev, sizeof(struct resource), GFP_KERNEL);
+> > +               err = of_pci_range_to_resource(&range, dev_node, &tmp_res);
+> > +               if (err)
+> > +                       continue;
+> > +
+> > +               res = devm_kmemdup(dev, &tmp_res, sizeof(tmp_res), GFP_KERNEL);
+> >                 if (!res) {
+> >                         err = -ENOMEM;
+> >                         goto failed;
+> >                 }
+> >
+> > -               err = of_pci_range_to_resource(&range, dev_node, res);
+> > -               if (err) {
+> > -                       devm_kfree(dev, res);
+> > -                       continue;
+> > -               }
+> > -
+> >                 if (resource_type(res) == IORESOURCE_IO) {
+> >                         if (!io_base) {
+> >                                 dev_err(dev,
+> > --
+> > 2.13.6
+> 
+> 
+> 
+> -- 
+> With Best Regards,
+> Andy Shevchenko
 
-In summary, now I realized the warning is not spurious, and here at the fir=
-st
-place I should not use local_bh_disable()/enable(), which are not supposed =
-to
-be used when local irq can be DISABLED.
-
-> Apart from the commit log typos fixes I would like a log that
-> explains *why* this is not a kernel bug fix rather than a harmless
-> lockdep warning prevention.
->=20
-> Lorenzo
-
-Now I realized there *is* a bug.
-I'm going to send a v2 with a new changelog, though the changed code
-will remain the same.=20
-
-Thanks,
--- Dexuan
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
