@@ -1,136 +1,268 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1528468422.26356.20.camel@pengutronix.de>
-Subject: Re: [PATCH 2/2] PCI: imx: Initial imx7d pm support
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Leonard Crestez <leonard.crestez@nxp.com>, Andrey Smirnov
- <andrew.smirnov@gmail.com>, Philipp Zabel <p.zabel@pengutronix.de>, Richard
- Zhu <hongxing.zhu@nxp.com>, linux-pci@vger.kernel.org,
- linux-pm@vger.kernel.org,  linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org
-Date: Fri, 08 Jun 2018 16:33:42 +0200
-In-Reply-To: <a6176c8bcfbca08ce4e93e304bdcd48c4600f8e2.1527621510.git.leonard.crestez@nxp.com>
-References: <cover.1527621510.git.leonard.crestez@nxp.com>
- <a6176c8bcfbca08ce4e93e304bdcd48c4600f8e2.1527621510.git.leonard.crestez@nxp.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Abel Vesa <abel.vesa@nxp.com>,
- Anson Huang <Anson.Huang@nxp.com>, Jingoo Han <jingoohan1@gmail.com>,
- "Rafael J.
- Wysocki" <rjw@rjwysocki.net>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 6 Jun 2018 23:08:02 +0800
+From: Tiwei Bie <tiwei.bie@intel.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: bhelgaas@google.com, stefanha@redhat.com,
+        virtualization@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        linux-pci@vger.kernel.org, dan.daly@intel.com,
+        mark.d.rustad@intel.com, alexander.h.duyck@intel.com,
+        cunming.liang@intel.com, zhihong.wang@intel.com
+Subject: Re: [virtio-dev] Re: [PATCH v3] virtio_pci: support enabling VFs
+Message-ID: <20180606150802.GA14901@debian>
+References: <20180601040239.1151-1-tiwei.bie@intel.com>
+ <20180604192222-mutt-send-email-mst@kernel.org>
+ <20180605013653.GA1045@debian>
+ <20180605152151-mutt-send-email-mst@kernel.org>
+ <20180606121154.GA9599@debian>
+ <20180606153236-mutt-send-email-mst@kernel.org>
+ <20180606141943.GA13904@debian>
+ <20180606172139-mutt-send-email-mst@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180606172139-mutt-send-email-mst@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QW0gRGllbnN0YWcsIGRlbiAyOS4wNS4yMDE4LCAyMjozOSArMDMwMCBzY2hyaWViIExlb25hcmQg
-Q3Jlc3RlejoKPiBPbiBpbXg3ZCB0aGUgcGh5IGlzIHR1cm5lZCBvZmYgaW4gc3VzcGVuZCBhbmQg
-bXVzdCBiZSByZXNldCBvbiByZXN1bWUuCj4gUmlnaHQgbm93IGxzcGNpIC12IGZhaWxzIGFmdGVy
-IGEgc3VzcGVuZC9yZXN1bWUgY3ljbGUsIGZpeCB0aGlzIGJ5Cj4gYWRkaW5nIG1pbmltYWwgc3Vz
-cGVuZC9yZXN1bWUgY29kZSBmcm9tIHRoZSBueHAgdmVuZG9yIHRyZWUuCj4gCj4gVGhpcyBpcyBj
-dXJyZW50bHkgb25seSBlbmFibGVkIGZvciBpbXg3IGJ1dCB0aGUgc2FtZSBzZXF1ZW5jZSBjYW4g
-YmUKPiBhcHBsaWVkIHRvIG90aGVyIGlteCBwY2llIHZhcmlhbnRzLgo+IAo+IFRlc3RlZCBvbiBp
-bXg3ZC1zYWJyZXNkIHdpdGggYW4gSW50ZWwgNTYyMkFOSE1XIHdpcmVsZXNzIHBjaWUgYWRhcHRl
-ci4KPiAKPiA+IFRoZSBvcmlnaW5hbCBhdXRob3IgaXMgbW9zdGx5IFJpY2hhcmQgWmh1IDxob25n
-eGluZy56aHVAbnhwLmNvbT4sIHRoaXMKPiBwYXRjaCBhZGp1c3RzIHRoZSBjb2RlIHRvIHRoZSB1
-cHN0cmVhbSBpbXg3ZCBpbXBsZW1lbnRpb24gdXNpbmcgcmVzZXQKPiBjb250cm9scyBhbmQgcG93
-ZXIgZG9tYWlucy4KPiAKPiA+IFNpZ25lZC1vZmYtYnk6IExlb25hcmQgQ3Jlc3RleiA8bGVvbmFy
-ZC5jcmVzdGV6QG54cC5jb20+Cj4gLS0tCj4gwqBkcml2ZXJzL3BjaS9kd2MvcGNpLWlteDYuYyB8
-IDk0ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tCj4gwqAxIGZpbGUgY2hh
-bmdlZCwgODkgaW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9wY2kvZHdjL3BjaS1pbXg2LmMgYi9kcml2ZXJzL3BjaS9kd2MvcGNpLWlteDYuYwo+
-IGluZGV4IDQ4MThlZjg3NWY4YS4uZmY2MDc3ZWViMzg3IDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMv
-cGNpL2R3Yy9wY2ktaW14Ni5jCj4gKysrIGIvZHJpdmVycy9wY2kvZHdjL3BjaS1pbXg2LmMKPiBA
-QCAtNTQwLDEwICs1NDAsMjcgQEAgc3RhdGljIGludCBpbXg2X3BjaWVfd2FpdF9mb3Jfc3BlZWRf
-Y2hhbmdlKHN0cnVjdCBpbXg2X3BjaWUgKmlteDZfcGNpZSkKPiDCoAo+ID4gwqAJZGV2X2Vycihk
-ZXYsICJTcGVlZCBjaGFuZ2UgdGltZW91dFxuIik7Cj4gPiDCoAlyZXR1cm4gLUVJTlZBTDsKPiDC
-oH0KPiDCoAo+ICtzdGF0aWMgdm9pZCBpbXg2X3BjaWVfbHRzc21fZW5hYmxlKHN0cnVjdCBkZXZp
-Y2UgKmRldikKPiArewo+ID4gKwlzdHJ1Y3QgaW14Nl9wY2llICppbXg2X3BjaWUgPSBkZXZfZ2V0
-X2RydmRhdGEoZGV2KTsKPiArCj4gPiArCXN3aXRjaCAoaW14Nl9wY2llLT52YXJpYW50KSB7Cj4g
-PiArCWNhc2UgSU1YNlE6Cj4gPiArCWNhc2UgSU1YNlNYOgo+ID4gKwljYXNlIElNWDZRUDoKPiA+
-ICsJCXJlZ21hcF91cGRhdGVfYml0cyhpbXg2X3BjaWUtPmlvbXV4Y19ncHIsIElPTVVYQ19HUFIx
-MiwKPiA+ICsJCQkJwqDCoMKgSU1YNlFfR1BSMTJfUENJRV9DVExfMiwKPiA+ICsJCQkJwqDCoMKg
-SU1YNlFfR1BSMTJfUENJRV9DVExfMik7Cj4gPiArCQlicmVhazsKPiA+ICsJY2FzZSBJTVg3RDoK
-PiA+ICsJCXJlc2V0X2NvbnRyb2xfZGVhc3NlcnQoaW14Nl9wY2llLT5hcHBzX3Jlc2V0KTsKPiA+
-ICsJfQo+ICt9Cj4gKwo+IMKgc3RhdGljIGludCBpbXg2X3BjaWVfZXN0YWJsaXNoX2xpbmsoc3Ry
-dWN0IGlteDZfcGNpZSAqaW14Nl9wY2llKQo+IMKgewo+ID4gwqAJc3RydWN0IGR3X3BjaWUgKnBj
-aSA9IGlteDZfcGNpZS0+cGNpOwo+ID4gwqAJc3RydWN0IGRldmljZSAqZGV2ID0gcGNpLT5kZXY7
-Cj4gPiDCoAl1MzIgdG1wOwo+IEBAIC01NTgsMTUgKzU3NSwxMSBAQCBzdGF0aWMgaW50IGlteDZf
-cGNpZV9lc3RhYmxpc2hfbGluayhzdHJ1Y3QgaW14Nl9wY2llICppbXg2X3BjaWUpCj4gPiDCoAl0
-bXAgJj0gflBDSUVfUkNfTENSX01BWF9MSU5LX1NQRUVEU19NQVNLOwo+ID4gwqAJdG1wIHw9IFBD
-SUVfUkNfTENSX01BWF9MSU5LX1NQRUVEU19HRU4xOwo+ID4gwqAJZHdfcGNpZV93cml0ZWxfZGJp
-KHBjaSwgUENJRV9SQ19MQ1IsIHRtcCk7Cj4gwqAKPiA+IMKgCS8qIFN0YXJ0IExUU1NNLiAqLwo+
-ID4gLQlpZiAoaW14Nl9wY2llLT52YXJpYW50ID09IElNWDdEKQo+ID4gLQkJcmVzZXRfY29udHJv
-bF9kZWFzc2VydChpbXg2X3BjaWUtPmFwcHNfcmVzZXQpOwo+ID4gLQllbHNlCj4gPiAtCQlyZWdt
-YXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMTIsCj4gPiAt
-CQkJCcKgwqDCoElNWDZRX0dQUjEyX1BDSUVfQ1RMXzIsIDEgPDwgMTApOwo+ID4gKwlpbXg2X3Bj
-aWVfbHRzc21fZW5hYmxlKGRldik7Cj4gwqAKPiA+IMKgCXJldCA9IGlteDZfcGNpZV93YWl0X2Zv
-cl9saW5rKGlteDZfcGNpZSk7Cj4gPiDCoAlpZiAocmV0KQo+ID4gwqAJCWdvdG8gZXJyX3Jlc2V0
-X3BoeTsKPiDCoAo+IEBAIC02ODEsMTAgKzY5NCw4MCBAQCBzdGF0aWMgaW50IGlteDZfYWRkX3Bj
-aWVfcG9ydChzdHJ1Y3QgaW14Nl9wY2llICppbXg2X3BjaWUsCj4gwqAKPiDCoHN0YXRpYyBjb25z
-dCBzdHJ1Y3QgZHdfcGNpZV9vcHMgZHdfcGNpZV9vcHMgPSB7Cj4gPiDCoAkubGlua191cCA9IGlt
-eDZfcGNpZV9saW5rX3VwLAo+IMKgfTsKPiDCoAo+ICsjaWZkZWYgQ09ORklHX1BNX1NMRUVQCj4g
-K3N0YXRpYyBpbnQgaW14Nl9wY2llX3N1c3BlbmRfbm9pcnEoc3RydWN0IGRldmljZSAqZGV2KQo+
-ICt7Cj4gPiArCXN0cnVjdCBpbXg2X3BjaWUgKmlteDZfcGNpZSA9IGRldl9nZXRfZHJ2ZGF0YShk
-ZXYpOwo+ICsKPiArCWlmIChpbXg2X3BjaWUtPnZhcmlhbnQgPT0gSU1YN0QpIHsKCkluc3RlYWQg
-b2YgdGhpcyBsYXJnZSBpbmRlbnRlZCBibG9jaywgcGxlYXNlIGp1c3QgaGF2ZSBhbiBlYXJseSBy
-ZXR1cm4KYXQgdGhlIHN0YXJ0IG9mIHRoaXMgZnVuY3Rpb24sIGxpa2U6CgppZiAoaW14Nl9wY2ll
-LT52YXJpYW50ICE9IElNWDdEKQoJcmV0dXJuIDA7CgpTYW1lIGZvciB0aGUgcmVzdW1lIGZ1bmN0
-aW9uLgoKPiArCQkvKiBEaXNhYmxlIGNsa3MgKi8KPiA+ICsJCWNsa19kaXNhYmxlX3VucHJlcGFy
-ZShpbXg2X3BjaWUtPnBjaWUpOwo+ID4gKwkJY2xrX2Rpc2FibGVfdW5wcmVwYXJlKGlteDZfcGNp
-ZS0+cGNpZV9waHkpOwo+ID4gKwkJY2xrX2Rpc2FibGVfdW5wcmVwYXJlKGlteDZfcGNpZS0+cGNp
-ZV9idXMpOwo+ID4gKwkJLyogdHVybiBvZmYgZXh0ZXJuYWwgb3NjIGlucHV0ICovCj4gPiArCQly
-ZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMTIsCj4g
-PiArCQkJCcKgwqDCoElNWDdEX0dQUjEyX1BDSUVfUEhZX1JFRkNMS19TRUwsCj4gPiArCQkJCcKg
-wqDCoElNWDdEX0dQUjEyX1BDSUVfUEhZX1JFRkNMS19TRUwpOwo+ID4gKwl9Cj4gKwo+ID4gKwly
-ZXR1cm4gMDsKPiArfQo+ICsKPiArc3RhdGljIHZvaWQgaW14Nl9wY2llX2x0c3NtX2Rpc2FibGUo
-c3RydWN0IGRldmljZSAqZGV2KQo+ICt7Cj4gPiArCXN0cnVjdCBpbXg2X3BjaWUgKmlteDZfcGNp
-ZSA9IGRldl9nZXRfZHJ2ZGF0YShkZXYpOwo+ICsKPiA+ICsJc3dpdGNoIChpbXg2X3BjaWUtPnZh
-cmlhbnQpIHsKPiA+ICsJY2FzZSBJTVg2UToKPiA+ICsJY2FzZSBJTVg2U1g6Cj4gPiArCWNhc2Ug
-SU1YNlFQOgo+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwg
-SU9NVVhDX0dQUjEyLAo+ID4gKwkJCQnCoMKgwqBJTVg2UV9HUFIxMl9QQ0lFX0NUTF8yLCAwKTsK
-PiA+ICsJCWJyZWFrOwo+ID4gKwljYXNlIElNWDdEOgo+ID4gKwkJcmVzZXRfY29udHJvbF9hc3Nl
-cnQoaW14Nl9wY2llLT5hcHBzX3Jlc2V0KTsKPiA+ICsJCWJyZWFrOwo+ID4gKwl9Cj4gK30KPiAr
-Cj4gK3N0YXRpYyBpbnQgaW14Nl9wY2llX3Jlc3VtZV9ub2lycShzdHJ1Y3QgZGV2aWNlICpkZXYp
-Cj4gK3sKPiA+ICsJaW50IHJldCA9IDA7Cj4gPiArCXN0cnVjdCBpbXg2X3BjaWUgKmlteDZfcGNp
-ZSA9IGRldl9nZXRfZHJ2ZGF0YShkZXYpOwo+ID4gKwlzdHJ1Y3QgcGNpZV9wb3J0ICpwcCA9ICZp
-bXg2X3BjaWUtPnBjaS0+cHA7Cj4gKwo+ID4gKwlpZiAoaW14Nl9wY2llLT52YXJpYW50ID09IElN
-WDdEKSB7Cj4gPiArCQlpbXg2X3BjaWVfbHRzc21fZGlzYWJsZShkZXYpOwoKVGhlIExUU1NNIGRp
-c2FibGUgc2VlbXMgbWlzcGxhY2VkIGhlcmUuIEkgd291bGQgaGF2ZSBleHBlY3RlZCBpdCB0byBi
-ZQppbiB0aGUgc3VzcGVuZCBmdW5jdGlvbi4KCj4gKwkJaW14Nl9wY2llX2Fzc2VydF9jb3JlX3Jl
-c2V0KGlteDZfcGNpZSk7Cj4gPiArCQlpbXg2X3BjaWVfaW5pdF9waHkoaW14Nl9wY2llKTsKPiA+
-ICsJCWlteDZfcGNpZV9kZWFzc2VydF9jb3JlX3Jlc2V0KGlteDZfcGNpZSk7Cj4gKwo+ID4gKwkJ
-LyoKPiA+ICsJCcKgKiBjb250cm9sbGVyIG1heWJlIHR1cm4gb2ZmLCByZS1jb25maWd1cmUgYWdh
-aW4KPiA+ICsJCcKgKi8KPiA+ICsJCWR3X3BjaWVfc2V0dXBfcmMocHApOwo+ICsKPiA+ICsJCWlt
-eDZfcGNpZV9sdHNzbV9lbmFibGUoZGV2KTsKPiArCj4gPiArCQlyZXQgPSBpbXg2X3BjaWVfd2Fp
-dF9mb3JfbGluayhpbXg2X3BjaWUpOwo+ID4gKwkJaWYgKHJldCA8IDApCj4gKwkJCXByX2luZm8o
-InBjaWUgbGluayBpcyBkb3duIGFmdGVyIHJlc3VtZS5cbiIpOwoKSWYgdGhlIFBIWSBoYXMgYmVl
-biBwb3dlcmVkIGRvd24gYW5kIExUU1NNIHN0b3BwZWQgSSBndWVzcyB3ZSBuZWVkIHRvCmRvIHRo
-ZSBmdWxsIGlteDZfcGNpZV9lc3RhYmxpc2hfbGluaygpIGRhbmNlIGFnYWluIGhlcmUgdG8gcmVs
-aWFibHkgcmUtCmVzdGFibGlzaCB0aGUgbGluay4gVGhlIGFib3ZlIHNlZW1zIHVuc2FmZS4KCj4g
-Kwl9Cj4gKwo+ID4gKwlyZXR1cm4gMDsKPiArfQo+ICsKPiArc3RhdGljIGNvbnN0IHN0cnVjdCBk
-ZXZfcG1fb3BzIGlteDZfcGNpZV9wbV9vcHMgPSB7Cj4gPiArCVNFVF9OT0lSUV9TWVNURU1fU0xF
-RVBfUE1fT1BTKGlteDZfcGNpZV9zdXNwZW5kX25vaXJxLAo+ID4gKwkJCQnCoMKgwqDCoMKgwqBp
-bXg2X3BjaWVfcmVzdW1lX25vaXJxKQo+ICt9Owo+ICsjZW5kaWYKClRoaXMgc3RydWN0dXJlIG11
-c3QgYmUgb3V0c2lkZSBvZiB0aGUgaWZkZWYsIG9yIHlvdSdsbCBicmVhayB0aGUgYnVpbGQKb24g
-IUNPTkZJR19QTV9TTEVFUC4KCj4gwqBzdGF0aWMgaW50IGlteDZfcGNpZV9wcm9iZShzdHJ1Y3Qg
-cGxhdGZvcm1fZGV2aWNlICpwZGV2KQo+IMKgewo+ID4gwqAJc3RydWN0IGRldmljZSAqZGV2ID0g
-JnBkZXYtPmRldjsKPiA+IMKgCXN0cnVjdCBkd19wY2llICpwY2k7Cj4gPiDCoAlzdHJ1Y3QgaW14
-Nl9wY2llICppbXg2X3BjaWU7Cj4gQEAgLTg0NywxMCArOTMwLDExIEBAIHN0YXRpYyBjb25zdCBz
-dHJ1Y3Qgb2ZfZGV2aWNlX2lkIGlteDZfcGNpZV9vZl9tYXRjaFtdID0gewo+IMKgc3RhdGljIHN0
-cnVjdCBwbGF0Zm9ybV9kcml2ZXIgaW14Nl9wY2llX2RyaXZlciA9IHsKPiA+IMKgCS5kcml2ZXIg
-PSB7Cj4gPiA+IMKgCQkubmFtZQk9ICJpbXg2cS1wY2llIiwKPiA+IMKgCQkub2ZfbWF0Y2hfdGFi
-bGUgPSBpbXg2X3BjaWVfb2ZfbWF0Y2gsCj4gPiDCoAkJLnN1cHByZXNzX2JpbmRfYXR0cnMgPSB0
-cnVlLAo+ID4gKwkJLnBtID0gJmlteDZfcGNpZV9wbV9vcHMsCj4gPiDCoAl9LAo+ID4gwqAJLnBy
-b2JlwqDCoMKgwqA9IGlteDZfcGNpZV9wcm9iZSwKPiA+IMKgCS5zaHV0ZG93biA9IGlteDZfcGNp
-ZV9zaHV0ZG93biwKPiDCoH07Cj4gwqAKClJlZ2FyZHMsCkx1Y2FzCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcg
-bGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmlu
-ZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+On Wed, Jun 06, 2018 at 05:27:07PM +0300, Michael S. Tsirkin wrote:
+> On Wed, Jun 06, 2018 at 10:19:43PM +0800, Tiwei Bie wrote:
+> > On Wed, Jun 06, 2018 at 03:44:11PM +0300, Michael S. Tsirkin wrote:
+> > > On Wed, Jun 06, 2018 at 08:11:54PM +0800, Tiwei Bie wrote:
+> > > > On Tue, Jun 05, 2018 at 03:23:11PM +0300, Michael S. Tsirkin wrote:
+> > > > > On Tue, Jun 05, 2018 at 09:36:53AM +0800, Tiwei Bie wrote:
+> > > > > > On Mon, Jun 04, 2018 at 07:32:25PM +0300, Michael S. Tsirkin wrote:
+> > > > > > > On Fri, Jun 01, 2018 at 12:02:39PM +0800, Tiwei Bie wrote:
+> > > > > > > > There is a new feature bit allocated in virtio spec to
+> > > > > > > > support SR-IOV (Single Root I/O Virtualization):
+> > > > > > > > 
+> > > > > > > > https://github.com/oasis-tcs/virtio-spec/issues/11
+> > > > > > > > 
+> > > > > > > > This patch enables the support for this feature bit in
+> > > > > > > > virtio driver.
+> > > > > > > > 
+> > > > > > > > Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
+> > > > > > > > ---
+> > > > > > > 
+> > > > > > > OK but what about freeze/restore functions?
+> > > > > 
+> > > > > So for restore, don't you need to restore the
+> > > > > sriov capability?
+> > > > 
+> > > > Currently I'm not familiar with the PM part.
+> > > > But I still think the sriov capability should
+> > > > be handled by PCI core.
+> > > 
+> > > OK but the point is restore looks just like power up for device.
+> > > 
+> > > > I'm trying to understand
+> > > > all the relevant code..
+> > > > For your question, based on what I found from
+> > > > the code currently, I guess the sriov capability
+> > > > will be restored by pci_restore_state() which
+> > > > will be called by the ops in pci_dev_pm_ops.
+> > > > The sriov_restore_state() will be called
+> > > > eventually.
+> > > > 
+> > > > Best regards,
+> > > > Tiwei Bie
+> > > 
+> > > Right but my point is during resume SRIOV gets enabled first before
+> > > driver ok.
+> > > 
+> > > Maybe we should relax the requirements in the spec:
+> > > - only require FEATURES_OK from device, not DRIVER_OK from driver
+> > > - explain that it only has to happen once, not on each reset,
+> > >   and driver can remember the result
+> > 
+> > I got your point now! I'd like to relax the
+> > requirements in the spec.
+> > 
+> > Best regards,
+> > Tiwei Bie
+> 
+> Well the ballot approving your change closed.  I think we should apply
+> the first chunks reserving the feature bit then, and defer the rest, and
+> you can work on new wording documenting the actual behaviour with a new
+> github issue to track that - does this make sense?
+> Let's do it quickly though - I don't want to bother the
+> TC with re-voting the deferral, then the new patch.
+
+Yeah. It makes sense! I think it's a good idea
+to reserve the feature bit first and defer the
+rest. I'll work on the new wording documenting
+the actual behavior with a new github issue to
+track it. Thanks a lot!
+
+Best regards,
+Tiwei Bie
+
+> 
+> > > 
+> > > 
+> > > > 
+> > > > > 
+> > > > > 
+> > > > > > > I also wonder about kexec - virtio.c currently does:
+> > > > > > > 
+> > > > > > >         /* We always start by resetting the device, in case a previous
+> > > > > > >          * driver messed it up.  This also tests that code path a little. */
+> > > > > > >         dev->config->reset(dev);
+> > > > > > > 
+> > > > > > > Do we need to do something like this for sriov?
+> > > > > > 
+> > > > > > I think VFs are managed by PCI core. Once they are
+> > > > > > allocated, virtio driver doesn't have to care too
+> > > > > > much about how to manage them. The proposal for the
+> > > > > > spec is just to provide a feature bit based virtio
+> > > > > > way for virtio drivers to know whether a virtio
+> > > > > > device is SR-IOV capable (and virtio drivers can
+> > > > > > support configuring SR-IOV based on the feature
+> > > > > > bit negotiation result).
+> > > > > > 
+> > > > > > > 
+> > > > > > > I also wonder whether PCI core should disable sriov for us.
+> > > > > > > 
+> > > > > > > 
+> > > > > > > I wish there was a patch emulating this without vDPA for QEMU,
+> > > > > > > would make it easy to test your patches. Do you happen
+> > > > > > > to have something like this?
+> > > > > > 
+> > > > > > Sorry, currently I don't have anything like this..
+> > > > > > 
+> > > > > > Best regards,
+> > > > > > Tiwei Bie
+> > > > > > 
+> > > > > > > 
+> > > > > > > Thanks,
+> > > > > > > 
+> > > > > > > 
+> > > > > > > > v3:
+> > > > > > > > - Drop the acks;
+> > > > > > > > 
+> > > > > > > > v2:
+> > > > > > > > - Disable VFs when unbinding the driver (Alex, MST);
+> > > > > > > > - Don't use pci_sriov_configure_simple (Alex);
+> > > > > > > > 
+> > > > > > > >  drivers/virtio/virtio_pci_common.c | 30 ++++++++++++++++++++++++++++++
+> > > > > > > >  drivers/virtio/virtio_pci_modern.c | 14 ++++++++++++++
+> > > > > > > >  include/uapi/linux/virtio_config.h |  7 ++++++-
+> > > > > > > >  3 files changed, 50 insertions(+), 1 deletion(-)
+> > > > > > > > 
+> > > > > > > > diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+> > > > > > > > index 48d4d1cf1cb6..1d4467b2dc31 100644
+> > > > > > > > --- a/drivers/virtio/virtio_pci_common.c
+> > > > > > > > +++ b/drivers/virtio/virtio_pci_common.c
+> > > > > > > > @@ -577,6 +577,8 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+> > > > > > > >  	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+> > > > > > > >  	struct device *dev = get_device(&vp_dev->vdev.dev);
+> > > > > > > >  
+> > > > > > > > +	pci_disable_sriov(pci_dev);
+> > > > > > > > +
+> > > > > > > >  	unregister_virtio_device(&vp_dev->vdev);
+> > > > > > > >  
+> > > > > > > >  	if (vp_dev->ioaddr)
+> > > > > > > > @@ -588,6 +590,33 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+> > > > > > > >  	put_device(dev);
+> > > > > > > >  }
+> > > > > > > >  
+> > > > > > > > +static int virtio_pci_sriov_configure(struct pci_dev *pci_dev, int num_vfs)
+> > > > > > > > +{
+> > > > > > > > +	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+> > > > > > > > +	struct virtio_device *vdev = &vp_dev->vdev;
+> > > > > > > > +	int ret;
+> > > > > > > > +
+> > > > > > > > +	if (!(vdev->config->get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK))
+> > > > > > > > +		return -EBUSY;
+> > > > > > > > +
+> > > > > > > > +	if (!__virtio_test_bit(vdev, VIRTIO_F_SR_IOV))
+> > > > > > > > +		return -EINVAL;
+> > > > > > > > +
+> > > > > > > > +	if (pci_vfs_assigned(pci_dev))
+> > > > > > > > +		return -EPERM;
+> > > > > > > > +
+> > > > > > > > +	if (num_vfs == 0) {
+> > > > > > > > +		pci_disable_sriov(pci_dev);
+> > > > > > > > +		return 0;
+> > > > > > > > +	}
+> > > > > > > > +
+> > > > > > > > +	ret = pci_enable_sriov(pci_dev, num_vfs);
+> > > > > > > > +	if (ret < 0)
+> > > > > > > > +		return ret;
+> > > > > > > > +
+> > > > > > > > +	return num_vfs;
+> > > > > > > > +}
+> > > > > > > > +
+> > > > > > > >  static struct pci_driver virtio_pci_driver = {
+> > > > > > > >  	.name		= "virtio-pci",
+> > > > > > > >  	.id_table	= virtio_pci_id_table,
+> > > > > > > > @@ -596,6 +625,7 @@ static struct pci_driver virtio_pci_driver = {
+> > > > > > > >  #ifdef CONFIG_PM_SLEEP
+> > > > > > > >  	.driver.pm	= &virtio_pci_pm_ops,
+> > > > > > > >  #endif
+> > > > > > > > +	.sriov_configure = virtio_pci_sriov_configure,
+> > > > > > > >  };
+> > > > > > > >  
+> > > > > > > >  module_pci_driver(virtio_pci_driver);
+> > > > > > > > diff --git a/drivers/virtio/virtio_pci_modern.c b/drivers/virtio/virtio_pci_modern.c
+> > > > > > > > index 2555d80f6eec..07571daccfec 100644
+> > > > > > > > --- a/drivers/virtio/virtio_pci_modern.c
+> > > > > > > > +++ b/drivers/virtio/virtio_pci_modern.c
+> > > > > > > > @@ -153,14 +153,28 @@ static u64 vp_get_features(struct virtio_device *vdev)
+> > > > > > > >  	return features;
+> > > > > > > >  }
+> > > > > > > >  
+> > > > > > > > +static void vp_transport_features(struct virtio_device *vdev, u64 features)
+> > > > > > > > +{
+> > > > > > > > +	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
+> > > > > > > > +	struct pci_dev *pci_dev = vp_dev->pci_dev;
+> > > > > > > > +
+> > > > > > > > +	if ((features & BIT_ULL(VIRTIO_F_SR_IOV)) &&
+> > > > > > > > +			pci_find_ext_capability(pci_dev, PCI_EXT_CAP_ID_SRIOV))
+> > > > > > > > +		__virtio_set_bit(vdev, VIRTIO_F_SR_IOV);
+> > > > > > > > +}
+> > > > > > > > +
+> > > > > > > >  /* virtio config->finalize_features() implementation */
+> > > > > > > >  static int vp_finalize_features(struct virtio_device *vdev)
+> > > > > > > >  {
+> > > > > > > >  	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
+> > > > > > > > +	u64 features = vdev->features;
+> > > > > > > >  
+> > > > > > > >  	/* Give virtio_ring a chance to accept features. */
+> > > > > > > >  	vring_transport_features(vdev);
+> > > > > > > >  
+> > > > > > > > +	/* Give virtio_pci a chance to accept features. */
+> > > > > > > > +	vp_transport_features(vdev, features);
+> > > > > > > > +
+> > > > > > > >  	if (!__virtio_test_bit(vdev, VIRTIO_F_VERSION_1)) {
+> > > > > > > >  		dev_err(&vdev->dev, "virtio: device uses modern interface "
+> > > > > > > >  			"but does not have VIRTIO_F_VERSION_1\n");
+> > > > > > > > diff --git a/include/uapi/linux/virtio_config.h b/include/uapi/linux/virtio_config.h
+> > > > > > > > index 308e2096291f..b7c1f4e7d59e 100644
+> > > > > > > > --- a/include/uapi/linux/virtio_config.h
+> > > > > > > > +++ b/include/uapi/linux/virtio_config.h
+> > > > > > > > @@ -49,7 +49,7 @@
+> > > > > > > >   * transport being used (eg. virtio_ring), the rest are per-device feature
+> > > > > > > >   * bits. */
+> > > > > > > >  #define VIRTIO_TRANSPORT_F_START	28
+> > > > > > > > -#define VIRTIO_TRANSPORT_F_END		34
+> > > > > > > > +#define VIRTIO_TRANSPORT_F_END		38
+> > > > > > > >  
+> > > > > > > >  #ifndef VIRTIO_CONFIG_NO_LEGACY
+> > > > > > > >  /* Do we get callbacks when the ring is completely used, even if we've
+> > > > > > > > @@ -71,4 +71,9 @@
+> > > > > > > >   * this is for compatibility with legacy systems.
+> > > > > > > >   */
+> > > > > > > >  #define VIRTIO_F_IOMMU_PLATFORM		33
+> > > > > > > > +
+> > > > > > > > +/*
+> > > > > > > > + * Does the device support Single Root I/O Virtualization?
+> > > > > > > > + */
+> > > > > > > > +#define VIRTIO_F_SR_IOV			37
+> > > > > > > >  #endif /* _UAPI_LINUX_VIRTIO_CONFIG_H */
+> > > > > > > > -- 
+> > > > > > > > 2.17.0
+> > > > > > > 
+> > > > > > > ---------------------------------------------------------------------
+> > > > > > > To unsubscribe, e-mail: virtio-dev-unsubscribe@lists.oasis-open.org
+> > > > > > > For additional commands, e-mail: virtio-dev-help@lists.oasis-open.org
+> > > > > > > 
