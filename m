@@ -1,64 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:39448 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752181AbeGADzH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jun 2018 23:55:07 -0400
-Received: by mail-pg0-f66.google.com with SMTP id n2-v6so5648245pgq.6
-        for <linux-pci@vger.kernel.org>; Sat, 30 Jun 2018 20:55:06 -0700 (PDT)
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
-        Shawn Guo <shawn.guo@linaro.org>
-Subject: [PATCH v3 0/9] PCI: dwc: Drop unnecessary root_bus_nr setting
-Date: Sun,  1 Jul 2018 11:54:42 +0800
-Message-Id: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=5jRI=IY=arm.com=will.deacon@kernel.org>
+Return-Path: <SRS0=5jRI=IY=arm.com=will.deacon@kernel.org>
+Date: Wed, 6 Jun 2018 16:45:06 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Marek Vasut <marek.vasut@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Marek Vasut <marek.vasut+renesas@gmail.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Simon Horman <horms+renesas@verge.net.au>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+	Nikita Yushchenko <nikita.yoush@cogentembedded.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH][RFC] PCI: rcar: Add bus notifier so we can limit the DMA
+ range
+Message-ID: <20180606154505.GJ6631@arm.com>
+References: <20180521220514.30256-1-marek.vasut+renesas@gmail.com>
+ <CAK8P3a1PZ_MfgEcvWdUbN-eCcs5Xo38LQ54imLc4kNtSKO9Txw@mail.gmail.com>
+ <c2897d82-fe33-52cd-5aa6-3bddb478cb9f@gmail.com>
+ <20180604223048.GC30381@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180604223048.GC30381@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The designware core function dw_pcie_host_init() already initializes
-the root_bus_nr field of 'struct pcie_port', so the -1 assignment prior
-to calling dw_pcie_host_init() in platform specific driver is not really
-needed.  Drop it.
+On Mon, Jun 04, 2018 at 05:30:48PM -0500, Bjorn Helgaas wrote:
+> [+cc ARM64 folks, linux-kernel]
+> 
+> The original patch under discussion is:
+> https://lkml.kernel.org/r/20180521220514.30256-1-marek.vasut+renesas@gmail.com
+> 
+> On Tue, May 22, 2018 at 11:52:21AM +0200, Marek Vasut wrote:
+> > On 05/22/2018 10:10 AM, Arnd Bergmann wrote:
+> > > On Tue, May 22, 2018 at 12:05 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
+> > >> From: Phil Edworthy <phil.edworthy@renesas.com>
+> > >>
+> > >> The PCIe DMA controller on RCar Gen2 and earlier is on 32bit bus,
+> > >> so limit the DMA range to 32bit.
+> > >>
+> > >> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > >> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> > >> Cc: Arnd Bergmann <arnd@arndb.de>
+> > >> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> > >> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> > >> Cc: Simon Horman <horms+renesas@verge.net.au>
+> > >> Cc: Wolfram Sang <wsa@the-dreams.de>
+> > >> Cc: linux-renesas-soc@vger.kernel.org
+> > >> To: linux-pci@vger.kernel.org
+> > >> ---
+> > >> NOTE: I'm aware of https://patchwork.kernel.org/patch/9495895/ , but the
+> > >>       discussion seems to have gone way off, so I'm sending this as a
+> > >>       RFC. Any feedback on how to do this limiting properly would be nice.
+> > > 
+> > > Doing it in the driver is clearly not appropriate, we must do this in
+> > > common code. If I remember correctly, it's specifically ARM64 that is
+> > > broken here, it incorrectly allows setting a DMA mask to 64 bit
+> > > when that is not available.
+> > 
+> > Yep, that's correct. ARM64 with devices mapping tremendous amounts of
+> > memory. So did anything change since that discussion references in the NOTE?
 
-Changes for v3:
- - Rebase to v4.18-rc1
- - Collect ACK from Pratyush on spear13xx driver
+Is it specifically arm64 that's broken here? If so, why and how do other
+archs (e.g. riscv) handle this? I thought all of this behaviour was driven
+by the DMA ops, and we're just using generic code for that afaict.
 
-Changes for v2:
- - Improve commit log a bit per Thomas' suggestion.
- - Collect ACK from Thomas and Stanimir on armada8k and qcom driver.
-
-
-Shawn Guo (9):
-  PCI: exynos: Drop unnecessary root_bus_nr setting
-  PCI: imx6: Drop unnecessary root_bus_nr setting
-  PCI: keystone: Drop unnecessary root_bus_nr setting
-  PCI: armada8k: Drop unnecessary root_bus_nr setting
-  PCI: artpec6: Drop unnecessary root_bus_nr setting
-  PCI: designware-plat: Drop unnecessary root_bus_nr setting
-  PCI: histb: Drop unnecessary root_bus_nr setting
-  PCI: qcom: Drop unnecessary root_bus_nr setting
-  PCI: spear13xx: Drop unnecessary root_bus_nr setting
-
- drivers/pci/controller/dwc/pci-exynos.c           | 1 -
- drivers/pci/controller/dwc/pci-imx6.c             | 1 -
- drivers/pci/controller/dwc/pci-keystone.c         | 1 -
- drivers/pci/controller/dwc/pcie-armada8k.c        | 1 -
- drivers/pci/controller/dwc/pcie-artpec6.c         | 1 -
- drivers/pci/controller/dwc/pcie-designware-plat.c | 1 -
- drivers/pci/controller/dwc/pcie-histb.c           | 1 -
- drivers/pci/controller/dwc/pcie-qcom.c            | 1 -
- drivers/pci/controller/dwc/pcie-spear13xx.c       | 1 -
- 9 files changed, 9 deletions(-)
-
--- 
-1.9.1
+Will
