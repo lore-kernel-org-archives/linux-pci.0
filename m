@@ -1,60 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:38967 "EHLO gate.crashing.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754251AbeFUAjS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Jun 2018 20:39:18 -0400
-Message-ID: <c03e5e63fb64d2bf503bb2e00101bf352e396ceb.camel@kernel.crashing.org>
-Subject: Re: [PATCH] arch: powerpc: pci-common: fix wrong return value check
- on phd_id
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Michael Ellerman <mpe@ellerman.id.au>,
-        Daniel Walker <danielwa@cisco.com>,
-        "Guilherme G. Piccoli" <guilherme@gpiccoli.net>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-        xe-kernel@external.cisco.com, linux-kernel@vger.kernel.org,
-        Paul Mackerras <paulus@samba.org>,
-        linuxppc-dev@lists.ozlabs.org,
-        Mauro Rodrigues <maurosr@linux.vnet.ibm.com>,
-        linux-pci@vger.kernel.org
-Date: Thu, 21 Jun 2018 10:38:46 +1000
-In-Reply-To: <87in6dvv89.fsf@concordia.ellerman.id.au>
-References: <20180618165706.42679-1-danielwa@cisco.com>
-         <CALJn8nPbTy3Ne2a7L71c2YZ06Ccr2j0zs6TdptfRc7O-N9u=Yg@mail.gmail.com>
-         <c56f43f5-7902-f7c8-20e1-955ad064c4d0@cisco.com>
-         <CALJn8nM+S7STs+_MTje1qVCpa6MvnROS2+b5_GDz2wYs8etapA@mail.gmail.com>
-         <6d321d8a-432d-d41d-cc08-144764d644b2@cisco.com>
-         <87in6dvv89.fsf@concordia.ellerman.id.au>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:39159 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752943AbeFFUTH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2018 16:19:07 -0400
+Received: by mail-pg0-f66.google.com with SMTP id w12-v6so3547651pgc.6
+        for <linux-pci@vger.kernel.org>; Wed, 06 Jun 2018 13:19:07 -0700 (PDT)
+Date: Wed, 6 Jun 2018 13:19:03 -0700
+From: Moritz Fischer <mdf@kernel.org>
+To: Muni Sekhar <munisekharrms@gmail.com>
+Cc: Moritz Fischer <moritz.fischer@ettus.com>,
+        Ludwig Petrosyan <ludwig.petrosyan@desy.de>,
+        linux-pci@vger.kernel.org, linux-fpga@vger.kernel.org
+Subject: Re: pcie: fpga: programme FPGA =?utf-8?Q?P?= =?utf-8?B?Uk9N4oCZcw==?=
+Message-ID: <20180606201903.GA1459@archbook>
+References: <CAHhAz+grcWVZAOvLL9VBHoPLiDCT3LApJTkE7GchtLA3g4U3NA@mail.gmail.com>
+ <c8e47c11-e3f5-589f-3a58-4aa2466cac6d@desy.de>
+ <CAHhAz+j=KBFwc10tFCT1mj1dxtR0LhU3TysPz0fFVuDnUOAm-A@mail.gmail.com>
+ <CAAtXAHdrOCkv_jA_nMCMa-2dT=V0006xVNELddjV40TkU+2bhA@mail.gmail.com>
+ <CAHhAz+gDvU9o2bpts=M0inJmrAxJfuspSz1QCqRZBC2_Bo5s6Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAHhAz+gDvU9o2bpts=M0inJmrAxJfuspSz1QCqRZBC2_Bo5s6Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-06-21 at 10:28 +1000, Michael Ellerman wrote:
+On Wed, Jun 06, 2018 at 10:40:47PM +0530, Muni Sekhar wrote:
+> On Wed, Jun 6, 2018 at 9:18 PM, Moritz Fischer <moritz.fischer@ettus.com> wrote:
+> > Hi Muni,
+> >
+> > On Wed, Jun 6, 2018 at 4:37 AM, Muni Sekhar <munisekharrms@gmail.com> wrote:
+> >> On Wed, Jun 6, 2018 at 4:50 PM, Ludwig Petrosyan
+> >> <ludwig.petrosyan@desy.de> wrote:
+> >>> Hi
+> >>>
+> >>> why You do not use jtagplayer from Xilinx?
+> >>
+> >> Yes, JTAG can be used. But we have a lot many of these FPGA boards,
+> >> using JTAG costs more. And also we want to automate the PROM
+> >> programming.
+> >>
+> >>
+> >>>
+> >>>
+> >>> with best regards
+> >>>
+> >>>
+> >>> Ludwig
+> >>>
+> >>>
+> >>>
+> >>> On 06/06/2018 11:08 AM, Muni Sekhar wrote:
+> >>>>
+> >>>> [ Please keep me in CC as I'm not subscribed to the list]
+> >>>>
+> >>>> Hi All,
+> >>>>
+> >>>> We have a Kintex7 FPGA board connected to Intel Atom PC running Ubuntu
+> >>>> on PCIe bus.
+> >
+> > Are you using a Tandem flow? What kind of PROM are we talking about QSPI flash?
+> I'm not sure about the Tandem flow, can you please clarify me on this?
 > 
-> That's true, though I think yours is the first report we've had of
-> problems.
-> 
-> The old behaviour relied on device tree ordering in nearly all cases, so
-> you basically get whatever order your firmware happened to flatten the
-> device tree in.
-> 
-> That tends to be consistent on a single system or with a single firmware
-> version, but it's not stable in general. If your firmware changes, or
-> you kexec then the ordering can change.
-> 
-> So I'd definitely prefer we didn't go back to that behaviour, because
-> it's basically "random order".
-> 
-> If there's anything you can do on your end to cope with the ne
+> Okay, we have two onboard PROM’s (Micron’s SPI NOR Flash MT25QL128).
+> The FPGA will be loaded from one of the two onboard PROM’s, it will be
+> up and running before the PC powers up.
 
-I think the numbering change has to be coped with. However:
+In which case you don't need Tandem. Tandem basically just brings up
+minmal bitstream to bring up PCIe link and does the rest via some sort
+of partial reconfiguration flow. This allows to meet the PCIe deadline.
 
-The main issue I see is that it somewhat hard wires that "reg"
-is a 64-bit property with the "interesting" bits in the bottom,
-and that "interesting" part somewhat happens to fit in 16-bits.
+> When the Intel Atom PC powers up the FPGA will enumerate over PCIe.
+> I'm looking for any available Linux tool(user space or kernel space)
+> to program the PROM's via PCIe interface.
 
-It would have been better to get the full address out of reg (using the
-appropriate size specified in the parent #address-cells) and hash it.
+Any reason you can't drop a SPI controller in the fabric and use that
+to program the FPGA or do you intend to do the initial programing of
+the PROM also over PCIe?
 
-Cheers,
-Ben.
+- Moritz
