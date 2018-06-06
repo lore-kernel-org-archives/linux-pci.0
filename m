@@ -1,79 +1,238 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33548 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936356AbeF2VrL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Jun 2018 17:47:11 -0400
-Date: Fri, 29 Jun 2018 16:47:08 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 0/2] PCI: Support to workaround bus level HW issues
-Message-ID: <20180629214708.GD40928@bhelgaas-glaptop.roam.corp.google.com>
-References: <4bd28931-8e8d-6bfe-a98c-49f8e2778c6e@oracle.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 6 Jun 2018 15:44:11 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Tiwei Bie <tiwei.bie@intel.com>
+Cc: bhelgaas@google.com, stefanha@redhat.com,
+        virtualization@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org, virtio-dev@lists.oasis-open.org,
+        linux-pci@vger.kernel.org, dan.daly@intel.com,
+        mark.d.rustad@intel.com, alexander.h.duyck@intel.com,
+        cunming.liang@intel.com, zhihong.wang@intel.com
+Subject: Re: [virtio-dev] Re: [PATCH v3] virtio_pci: support enabling VFs
+Message-ID: <20180606153236-mutt-send-email-mst@kernel.org>
+References: <20180601040239.1151-1-tiwei.bie@intel.com>
+ <20180604192222-mutt-send-email-mst@kernel.org>
+ <20180605013653.GA1045@debian>
+ <20180605152151-mutt-send-email-mst@kernel.org>
+ <20180606121154.GA9599@debian>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4bd28931-8e8d-6bfe-a98c-49f8e2778c6e@oracle.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180606121154.GA9599@debian>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 30, 2018 at 01:25:22PM -0400, James Puthukattukaran wrote:
-> There are bugs in certain PCIe switches that cause access violations when an
-> endpoint device is hotplugged. In particular, there's an issue with
-> certain IDT switches that trigger a ACS violation when bringing up a newly
-> plugged PCIe endpoint device. This is a major issue for platforms
-> designed to issue a fatal reset in the case of this event.
+On Wed, Jun 06, 2018 at 08:11:54PM +0800, Tiwei Bie wrote:
+> On Tue, Jun 05, 2018 at 03:23:11PM +0300, Michael S. Tsirkin wrote:
+> > On Tue, Jun 05, 2018 at 09:36:53AM +0800, Tiwei Bie wrote:
+> > > On Mon, Jun 04, 2018 at 07:32:25PM +0300, Michael S. Tsirkin wrote:
+> > > > On Fri, Jun 01, 2018 at 12:02:39PM +0800, Tiwei Bie wrote:
+> > > > > There is a new feature bit allocated in virtio spec to
+> > > > > support SR-IOV (Single Root I/O Virtualization):
+> > > > > 
+> > > > > https://github.com/oasis-tcs/virtio-spec/issues/11
+> > > > > 
+> > > > > This patch enables the support for this feature bit in
+> > > > > virtio driver.
+> > > > > 
+> > > > > Signed-off-by: Tiwei Bie <tiwei.bie@intel.com>
+> > > > > ---
+> > > > 
+> > > > OK but what about freeze/restore functions?
+> > 
+> > So for restore, don't you need to restore the
+> > sriov capability?
 > 
-> The first patch provides a framework for intercepting and working around
-> issues with parent devices to the endpoint being brought up.
-> 
-> The second patch provides the actual patch for the IDT switch issue using
-> that framework. The ACS feature is disabled in the IDT switch prior to endpoint
-> device detection and then re-enabled subsequent to that.
-> 
-> James
-> 
-> -v2: move workaround to pci_bus_read_dev_vendor_id() from pci_bus_check_dev()
->      and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
-> -v3: add bus->self check for root bus and virtual bus for sriov vfs.
-> -v4: only do workaround for IDT switches
-> -v5: tweak pci_std_enable_acs_sv to deal with unimplemented SV
-> -v6: Added errata verbiage verbatim and resolved patch format issues
-> -v7: changed int to bool for found and idt_workaround declarations. Also
->      added bugzilla https://bugzilla.kernel.org/show_bug.cgi?id=196979
-> -v8: Rewrote the patch by adding a new acs quirk to keep the workaround
->      out of the main code path
-> -v9: changed function name from pci_dev_specific_fixup_acs_quirk to
->      pci_bus_acs_quirk. Also, tested for FLR and hot reset scenarios and did
->      not see issues where workaround was required. The issue seems to be
->      related only to cold reset/power on situation.
-> -v10: Moved the contents of pci_bus_read_vendor_id into an internal function
->       __pci_bus_read_vendor_id
-> -v11: Split the patch into two patches. The first a general quirk framework.
-> -v12: Add pci_bus_generic_read_dev_vendor_id() to carry out default behavior
->       when detecting endpoint and pci_bus_specific_read_dev_vendor_id for
->       bus quirk behavior
-> -v13: Fixed build errors found for non-x86 platforms via cross compiles when
->       CONFIG_QUIRKS is not defined
+> Currently I'm not familiar with the PM part.
+> But I still think the sriov capability should
+> be handled by PCI core.
 
-This email is labeled v2, but you go up to v13 here.  Obviously this must
-be at least v14.
+OK but the point is restore looks just like power up for device.
 
-If this post is actually v13, please label the next version v14.  If this
-post is different from v13, that means *this* one is really v14 and the
-next one should be v15.
+> I'm trying to understand
+> all the relevant code..
+> For your question, based on what I found from
+> the code currently, I guess the sriov capability
+> will be restored by pci_restore_state() which
+> will be called by the ops in pci_dev_pm_ops.
+> The sriov_restore_state() will be called
+> eventually.
+> 
+> Best regards,
+> Tiwei Bie
 
-> James Puthukattukaran (2):
->   PCI: Add pci_bus_specific_read_dev_vendor_id() to workaround PCI
->     switch     specific issues prior to accessing newly added endpoint
->   PCI: Implement workaround for the ACS bug in the IDT switch
+Right but my point is during resume SRIOV gets enabled first before
+driver ok.
+
+Maybe we should relax the requirements in the spec:
+- only require FEATURES_OK from device, not DRIVER_OK from driver
+- explain that it only has to happen once, not on each reset,
+  and driver can remember the result
+
+
 > 
->  drivers/pci/pci.h    |  13 +++++
->  drivers/pci/probe.c  |  20 +++++++-
->  drivers/pci/quirks.c | 142 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 174 insertions(+), 1 deletion(-)
-> 
-> -- 
-> 1.8.3.1
-> 
+> > 
+> > 
+> > > > I also wonder about kexec - virtio.c currently does:
+> > > > 
+> > > >         /* We always start by resetting the device, in case a previous
+> > > >          * driver messed it up.  This also tests that code path a little. */
+> > > >         dev->config->reset(dev);
+> > > > 
+> > > > Do we need to do something like this for sriov?
+> > > 
+> > > I think VFs are managed by PCI core. Once they are
+> > > allocated, virtio driver doesn't have to care too
+> > > much about how to manage them. The proposal for the
+> > > spec is just to provide a feature bit based virtio
+> > > way for virtio drivers to know whether a virtio
+> > > device is SR-IOV capable (and virtio drivers can
+> > > support configuring SR-IOV based on the feature
+> > > bit negotiation result).
+> > > 
+> > > > 
+> > > > I also wonder whether PCI core should disable sriov for us.
+> > > > 
+> > > > 
+> > > > I wish there was a patch emulating this without vDPA for QEMU,
+> > > > would make it easy to test your patches. Do you happen
+> > > > to have something like this?
+> > > 
+> > > Sorry, currently I don't have anything like this..
+> > > 
+> > > Best regards,
+> > > Tiwei Bie
+> > > 
+> > > > 
+> > > > Thanks,
+> > > > 
+> > > > 
+> > > > > v3:
+> > > > > - Drop the acks;
+> > > > > 
+> > > > > v2:
+> > > > > - Disable VFs when unbinding the driver (Alex, MST);
+> > > > > - Don't use pci_sriov_configure_simple (Alex);
+> > > > > 
+> > > > >  drivers/virtio/virtio_pci_common.c | 30 ++++++++++++++++++++++++++++++
+> > > > >  drivers/virtio/virtio_pci_modern.c | 14 ++++++++++++++
+> > > > >  include/uapi/linux/virtio_config.h |  7 ++++++-
+> > > > >  3 files changed, 50 insertions(+), 1 deletion(-)
+> > > > > 
+> > > > > diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+> > > > > index 48d4d1cf1cb6..1d4467b2dc31 100644
+> > > > > --- a/drivers/virtio/virtio_pci_common.c
+> > > > > +++ b/drivers/virtio/virtio_pci_common.c
+> > > > > @@ -577,6 +577,8 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+> > > > >  	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+> > > > >  	struct device *dev = get_device(&vp_dev->vdev.dev);
+> > > > >  
+> > > > > +	pci_disable_sriov(pci_dev);
+> > > > > +
+> > > > >  	unregister_virtio_device(&vp_dev->vdev);
+> > > > >  
+> > > > >  	if (vp_dev->ioaddr)
+> > > > > @@ -588,6 +590,33 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+> > > > >  	put_device(dev);
+> > > > >  }
+> > > > >  
+> > > > > +static int virtio_pci_sriov_configure(struct pci_dev *pci_dev, int num_vfs)
+> > > > > +{
+> > > > > +	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+> > > > > +	struct virtio_device *vdev = &vp_dev->vdev;
+> > > > > +	int ret;
+> > > > > +
+> > > > > +	if (!(vdev->config->get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK))
+> > > > > +		return -EBUSY;
+> > > > > +
+> > > > > +	if (!__virtio_test_bit(vdev, VIRTIO_F_SR_IOV))
+> > > > > +		return -EINVAL;
+> > > > > +
+> > > > > +	if (pci_vfs_assigned(pci_dev))
+> > > > > +		return -EPERM;
+> > > > > +
+> > > > > +	if (num_vfs == 0) {
+> > > > > +		pci_disable_sriov(pci_dev);
+> > > > > +		return 0;
+> > > > > +	}
+> > > > > +
+> > > > > +	ret = pci_enable_sriov(pci_dev, num_vfs);
+> > > > > +	if (ret < 0)
+> > > > > +		return ret;
+> > > > > +
+> > > > > +	return num_vfs;
+> > > > > +}
+> > > > > +
+> > > > >  static struct pci_driver virtio_pci_driver = {
+> > > > >  	.name		= "virtio-pci",
+> > > > >  	.id_table	= virtio_pci_id_table,
+> > > > > @@ -596,6 +625,7 @@ static struct pci_driver virtio_pci_driver = {
+> > > > >  #ifdef CONFIG_PM_SLEEP
+> > > > >  	.driver.pm	= &virtio_pci_pm_ops,
+> > > > >  #endif
+> > > > > +	.sriov_configure = virtio_pci_sriov_configure,
+> > > > >  };
+> > > > >  
+> > > > >  module_pci_driver(virtio_pci_driver);
+> > > > > diff --git a/drivers/virtio/virtio_pci_modern.c b/drivers/virtio/virtio_pci_modern.c
+> > > > > index 2555d80f6eec..07571daccfec 100644
+> > > > > --- a/drivers/virtio/virtio_pci_modern.c
+> > > > > +++ b/drivers/virtio/virtio_pci_modern.c
+> > > > > @@ -153,14 +153,28 @@ static u64 vp_get_features(struct virtio_device *vdev)
+> > > > >  	return features;
+> > > > >  }
+> > > > >  
+> > > > > +static void vp_transport_features(struct virtio_device *vdev, u64 features)
+> > > > > +{
+> > > > > +	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
+> > > > > +	struct pci_dev *pci_dev = vp_dev->pci_dev;
+> > > > > +
+> > > > > +	if ((features & BIT_ULL(VIRTIO_F_SR_IOV)) &&
+> > > > > +			pci_find_ext_capability(pci_dev, PCI_EXT_CAP_ID_SRIOV))
+> > > > > +		__virtio_set_bit(vdev, VIRTIO_F_SR_IOV);
+> > > > > +}
+> > > > > +
+> > > > >  /* virtio config->finalize_features() implementation */
+> > > > >  static int vp_finalize_features(struct virtio_device *vdev)
+> > > > >  {
+> > > > >  	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
+> > > > > +	u64 features = vdev->features;
+> > > > >  
+> > > > >  	/* Give virtio_ring a chance to accept features. */
+> > > > >  	vring_transport_features(vdev);
+> > > > >  
+> > > > > +	/* Give virtio_pci a chance to accept features. */
+> > > > > +	vp_transport_features(vdev, features);
+> > > > > +
+> > > > >  	if (!__virtio_test_bit(vdev, VIRTIO_F_VERSION_1)) {
+> > > > >  		dev_err(&vdev->dev, "virtio: device uses modern interface "
+> > > > >  			"but does not have VIRTIO_F_VERSION_1\n");
+> > > > > diff --git a/include/uapi/linux/virtio_config.h b/include/uapi/linux/virtio_config.h
+> > > > > index 308e2096291f..b7c1f4e7d59e 100644
+> > > > > --- a/include/uapi/linux/virtio_config.h
+> > > > > +++ b/include/uapi/linux/virtio_config.h
+> > > > > @@ -49,7 +49,7 @@
+> > > > >   * transport being used (eg. virtio_ring), the rest are per-device feature
+> > > > >   * bits. */
+> > > > >  #define VIRTIO_TRANSPORT_F_START	28
+> > > > > -#define VIRTIO_TRANSPORT_F_END		34
+> > > > > +#define VIRTIO_TRANSPORT_F_END		38
+> > > > >  
+> > > > >  #ifndef VIRTIO_CONFIG_NO_LEGACY
+> > > > >  /* Do we get callbacks when the ring is completely used, even if we've
+> > > > > @@ -71,4 +71,9 @@
+> > > > >   * this is for compatibility with legacy systems.
+> > > > >   */
+> > > > >  #define VIRTIO_F_IOMMU_PLATFORM		33
+> > > > > +
+> > > > > +/*
+> > > > > + * Does the device support Single Root I/O Virtualization?
+> > > > > + */
+> > > > > +#define VIRTIO_F_SR_IOV			37
+> > > > >  #endif /* _UAPI_LINUX_VIRTIO_CONFIG_H */
+> > > > > -- 
+> > > > > 2.17.0
+> > > > 
+> > > > ---------------------------------------------------------------------
+> > > > To unsubscribe, e-mail: virtio-dev-unsubscribe@lists.oasis-open.org
+> > > > For additional commands, e-mail: virtio-dev-help@lists.oasis-open.org
+> > > > 
