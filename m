@@ -1,268 +1,108 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>
+CC: <guohanjun@huawei.com>, <jcm@redhat.com>, <toshi.kani@hpe.com>,
+        <tanxiaojun@huawei.com>, <wangzhou1@hisilicon.com>,
+        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        Yisheng Xie <xieyisheng1@huawei.com>
+Subject: [PATCH v4] PCI ACPI: Avoid panic when PCI IO resource's size is not page aligned
+Date: Wed, 6 Jun 2018 10:06:33 +0800
+Message-ID: <1528250793-57034-1-git-send-email-xieyisheng1@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1528164985-14099-1-git-send-email-okaya@codeaurora.org>
-References: <1528164985-14099-1-git-send-email-okaya@codeaurora.org>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 20 Jun 2018 16:46:02 +0300
-Message-ID: <CAHp75VekLHxB43b=7jCvuqhibz8ynfQGhwFXHkM+0orNCETjVA@mail.gmail.com>
-Subject: Re: [PATCH V4] PCI: move early dump functionality from x86 arch into
- the common code
-To: Sinan Kaya <okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- linux-pci@vger.kernel.org, Petr Tesarik <ptesarik@suse.cz>,
- Ram Pai <linuxram@us.ibm.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>,
- "H. Peter Anvin" <hpa@zytor.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- Timur Tabi <timur@codeaurora.org>,
- "maintainer:X86 ARCHITECTURE \(32-BIT AND 64-BIT\)" <x86@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
- Thymo van Beers <thymovanbeers@gmail.com>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Tom Lendacky <thomas.lendacky@amd.com>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-arm-msm@vger.kernel.org, Frederic Weisbecker <frederic@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
- Juergen Gross <jgross@suse.com>, Dou Liyang <douly.fnst@cn.fujitsu.com>,
- Borislav Petkov <bp@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- open list <linux-kernel@vger.kernel.org>,
- Philippe Ombredanne <pombredanne@nexb.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 5, 2018 at 5:16 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> Move early dump functionality into common code so that it is available for
-> all archtiectures. No need to carry arch specific reads around as the read
-> hooks are already initialized by the time pci_setup_device() is getting
-> called during scan.
->
+Zhou reported a bug on Hisilicon arm64 D06 platform with 64KB page size:
 
-It didn't break my setup on x86 at least. Thus,
+ [    2.470908] kernel BUG at lib/ioremap.c:72!
+ [    2.475079] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+ [    2.480551] Modules linked in:
+ [    2.483594] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.16.0-rc7-00062-g0b41260-dirty #23
+ [    2.491756] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI Nemo 2.0 RC0 - B120 03/23/2018
+ [    2.500614] pstate: 80c00009 (Nzcv daif +PAN +UAO)
+ [    2.505395] pc : ioremap_page_range+0x268/0x36c
+ [    2.509912] lr : pci_remap_iospace+0xe4/0x100
+ [...]
+ [    2.603733] Call trace:
+ [    2.606168]  ioremap_page_range+0x268/0x36c
+ [    2.610337]  pci_remap_iospace+0xe4/0x100
+ [    2.614334]  acpi_pci_probe_root_resources+0x1d4/0x214
+ [    2.619460]  pci_acpi_root_prepare_resources+0x18/0xa8
+ [    2.624585]  acpi_pci_root_create+0x98/0x214
+ [    2.628843]  pci_acpi_scan_root+0x124/0x20c
+ [    2.633013]  acpi_pci_root_add+0x224/0x494
+ [    2.637096]  acpi_bus_attach+0xf8/0x200
+ [    2.640918]  acpi_bus_attach+0x98/0x200
+ [    2.644740]  acpi_bus_attach+0x98/0x200
+ [    2.648562]  acpi_bus_scan+0x48/0x9c
+ [    2.652125]  acpi_scan_init+0x104/0x268
+ [    2.655948]  acpi_init+0x308/0x374
+ [    2.659337]  do_one_initcall+0x48/0x14c
+ [    2.663160]  kernel_init_freeable+0x19c/0x250
+ [    2.667504]  kernel_init+0x10/0x100
+ [    2.670979]  ret_from_fork+0x10/0x18
 
-Tested-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+The cause is the size of PCI IO resource is 32KB, which is 4K aligned but
+not 64KB aligned, however, ioremap_page_range() request the range as page
+aligned or it will trigger a BUG_ON() on ioremap_pte_range() it calls, as
+ioremap_pte_range increase the addr by PAGE_SIZE, which makes addr != end
+until trigger BUG_ON, if its incoming end is not page aligned. More detail
+trace is as following:
 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  Documentation/admin-guide/kernel-parameters.txt |  2 +-
->  arch/x86/include/asm/pci-direct.h               |  4 ---
->  arch/x86/kernel/setup.c                         |  5 ---
->  arch/x86/pci/common.c                           |  4 ---
->  arch/x86/pci/early.c                            | 44 -------------------------
->  drivers/pci/pci.c                               |  5 +++
->  drivers/pci/pci.h                               |  1 +
->  drivers/pci/probe.c                             | 19 +++++++++++
->  8 files changed, 26 insertions(+), 58 deletions(-)
->
-> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-> index e490902..e64f1d8 100644
-> --- a/Documentation/admin-guide/kernel-parameters.txt
-> +++ b/Documentation/admin-guide/kernel-parameters.txt
-> @@ -2995,7 +2995,7 @@
->                         See also Documentation/blockdev/paride.txt.
->
->         pci=option[,option...]  [PCI] various PCI subsystem options:
-> -               earlydump       [X86] dump PCI config space before the kernel
-> +               earlydump       dump PCI config space before the kernel
->                                 changes anything
->                 off             [X86] don't probe for the PCI bus
->                 bios            [X86-32] force use of PCI BIOS, don't access
-> diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
-> index e1084f7..94597a3 100644
-> --- a/arch/x86/include/asm/pci-direct.h
-> +++ b/arch/x86/include/asm/pci-direct.h
-> @@ -15,8 +15,4 @@ extern void write_pci_config_byte(u8 bus, u8 slot, u8 func, u8 offset, u8 val);
->  extern void write_pci_config_16(u8 bus, u8 slot, u8 func, u8 offset, u16 val);
->
->  extern int early_pci_allowed(void);
-> -
-> -extern unsigned int pci_early_dump_regs;
-> -extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
-> -extern void early_dump_pci_devices(void);
->  #endif /* _ASM_X86_PCI_DIRECT_H */
-> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-> index 2f86d88..480f250 100644
-> --- a/arch/x86/kernel/setup.c
-> +++ b/arch/x86/kernel/setup.c
-> @@ -991,11 +991,6 @@ void __init setup_arch(char **cmdline_p)
->                 setup_clear_cpu_cap(X86_FEATURE_APIC);
->         }
->
-> -#ifdef CONFIG_PCI
-> -       if (pci_early_dump_regs)
-> -               early_dump_pci_devices();
-> -#endif
-> -
->         e820__reserve_setup_data();
->         e820__finish_early_params();
->
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 563049c..d4ec117 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -22,7 +22,6 @@
->  unsigned int pci_probe = PCI_PROBE_BIOS | PCI_PROBE_CONF1 | PCI_PROBE_CONF2 |
->                                 PCI_PROBE_MMCONF;
->
-> -unsigned int pci_early_dump_regs;
->  static int pci_bf_sort;
->  int pci_routeirq;
->  int noioapicquirk;
-> @@ -599,9 +598,6 @@ char *__init pcibios_setup(char *str)
->                 pci_probe |= PCI_BIG_ROOT_WINDOW;
->                 return NULL;
->  #endif
-> -       } else if (!strcmp(str, "earlydump")) {
-> -               pci_early_dump_regs = 1;
-> -               return NULL;
->         } else if (!strcmp(str, "routeirq")) {
->                 pci_routeirq = 1;
->                 return NULL;
-> diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
-> index e5f753c..f5fc953 100644
-> --- a/arch/x86/pci/early.c
-> +++ b/arch/x86/pci/early.c
-> @@ -57,47 +57,3 @@ int early_pci_allowed(void)
->                         PCI_PROBE_CONF1;
->  }
->
-> -void early_dump_pci_device(u8 bus, u8 slot, u8 func)
-> -{
-> -       u32 value[256 / 4];
-> -       int i;
-> -
-> -       pr_info("pci 0000:%02x:%02x.%d config space:\n", bus, slot, func);
-> -
-> -       for (i = 0; i < 256; i += 4)
-> -               value[i / 4] = read_pci_config(bus, slot, func, i);
-> -
-> -       print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value, 256, false);
-> -}
-> -
-> -void early_dump_pci_devices(void)
-> -{
-> -       unsigned bus, slot, func;
-> -
-> -       if (!early_pci_allowed())
-> -               return;
-> -
-> -       for (bus = 0; bus < 256; bus++) {
-> -               for (slot = 0; slot < 32; slot++) {
-> -                       for (func = 0; func < 8; func++) {
-> -                               u32 class;
-> -                               u8 type;
-> -
-> -                               class = read_pci_config(bus, slot, func,
-> -                                                       PCI_CLASS_REVISION);
-> -                               if (class == 0xffffffff)
-> -                                       continue;
-> -
-> -                               early_dump_pci_device(bus, slot, func);
-> -
-> -                               if (func == 0) {
-> -                                       type = read_pci_config_byte(bus, slot,
-> -                                                                   func,
-> -                                                              PCI_HEADER_TYPE);
-> -                                       if (!(type & 0x80))
-> -                                               break;
-> -                               }
-> -                       }
-> -               }
-> -       }
-> -}
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 97acba7..04052dc 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -115,6 +115,9 @@ static bool pcie_ari_disabled;
->  /* If set, the PCIe ATS capability will not be used. */
->  static bool pcie_ats_disabled;
->
-> +/* If set, the PCI config space of each device is printed during boot. */
-> +bool pci_early_dump;
-> +
->  bool pci_ats_disabled(void)
->  {
->         return pcie_ats_disabled;
-> @@ -5805,6 +5808,8 @@ static int __init pci_setup(char *str)
->                                 pcie_ats_disabled = true;
->                         } else if (!strcmp(str, "noaer")) {
->                                 pci_no_aer();
-> +                       } else if (!strcmp(str, "earlydump")) {
-> +                               pci_early_dump = true;
->                         } else if (!strncmp(str, "realloc=", 8)) {
->                                 pci_realloc_get_opt(str + 8);
->                         } else if (!strncmp(str, "realloc", 7)) {
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index c358e7a0..c33265e 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -7,6 +7,7 @@
->  #define PCI_VSEC_ID_INTEL_TBT  0x1234  /* Thunderbolt */
->
->  extern const unsigned char pcie_link_speed[];
-> +extern bool pci_early_dump;
->
->  bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 56771f3..3678f0a 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1545,6 +1545,23 @@ static int pci_intx_mask_broken(struct pci_dev *dev)
->         return 0;
->  }
->
-> +static void early_dump_pci_device(struct pci_dev *pdev)
-> +{
-> +       u32 value[256 / 4];
-> +       int i;
-> +
-> +       if (!pci_early_dump)
-> +               return;
-> +
-> +       pci_info(pdev, "config space:\n");
-> +
-> +       for (i = 0; i < 256; i += 4)
-> +               pci_read_config_dword(pdev, i, &value[i / 4]);
-> +
-> +       print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value,
-> +                      256, false);
-> +}
-> +
->  /**
->   * pci_setup_device - Fill in class and map information of a device
->   * @dev: the device structure to fill
-> @@ -1594,6 +1611,8 @@ int pci_setup_device(struct pci_dev *dev)
->         pci_printk(KERN_DEBUG, dev, "[%04x:%04x] type %02x class %#08x\n",
->                    dev->vendor, dev->device, dev->hdr_type, dev->class);
->
-> +       early_dump_pci_device(dev);
-> +
->         /* Need to have dev->class ready */
->         dev->cfg_size = pci_cfg_space_size(dev);
->
-> --
-> 2.7.4
->
+ ioremap_page_range
+ -> ioremap_p4d_range
+    -> ioremap_p4d_range
+       -> ioremap_pud_range
+          -> ioremap_pmd_range
+             -> ioremap_pte_range
 
+This patch avoid panic by align the vaddr and phys_addr.
 
+Reported-by: Zhou Wang <wangzhou1@hisilicon.com>
+Tested-by: Xiaojun Tan <tanxiaojun@huawei.com>
+Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+---
+v4:
+ - align vaddr and phys_addr  - per Bjorn
+v3:
+ - pci_remap_iospace() sanitize its arguments instead - per Rafael
+v2:
+ - Let the caller of ioremap_page_range() align the request by PAGE_SIZE - per Toshi
 
+ drivers/pci/pci.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index dbfe7c4..652f7d6 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3537,6 +3537,7 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+ {
+ #if defined(PCI_IOBASE) && defined(CONFIG_MMU)
+ 	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
++	unsigned long last_vaddr;
+ 
+ 	if (!(res->flags & IORESOURCE_IO))
+ 		return -EINVAL;
+@@ -3544,7 +3545,16 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+ 	if (res->end > IO_SPACE_LIMIT)
+ 		return -EINVAL;
+ 
+-	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
++	/* It will be mess if vaddr's offset is not equal to phys_addr's */
++	if ((vaddr & ~PAGE_MASK) != (phys_addr & ~PAGE_MASK))
++		return -EINVAL;
++
++	/* Mappings have to be page-aligned */
++	last_vaddr = PAGE_ALIGN(vaddr + resource_size(res));
++	phys_addr &= PAGE_MASK;
++	vaddr &= PAGE_MASK;
++
++	return ioremap_page_range(vaddr, last_vaddr, phys_addr,
+ 				  pgprot_device(PAGE_KERNEL));
+ #else
+ 	/* this architecture does not have memory mapped I/O space,
 -- 
-With Best Regards,
-Andy Shevchenko
+1.7.12.4
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
