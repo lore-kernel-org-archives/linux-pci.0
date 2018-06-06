@@ -1,119 +1,129 @@
-Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
-From: Pingfan Liu <kernelfans@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Pingfan Liu <kernelfans@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 3/3] drivers/base: only reordering consumer device when probing
-Date: Mon, 25 Jun 2018 13:23:07 +0800
-Message-Id: <1529904187-18673-4-git-send-email-kernelfans@gmail.com>
-In-Reply-To: <1529904187-18673-1-git-send-email-kernelfans@gmail.com>
-References: <1529904187-18673-1-git-send-email-kernelfans@gmail.com>
+Return-Path: <SRS0=kWo4=IY=huawei.com=xieyisheng1@kernel.org>
+Return-Path: <SRS0=kWo4=IY=huawei.com=xieyisheng1@kernel.org>
+Subject: Re: [PATCH v3 1/2] PCI: Avoid panic when PCI IO resource's size is
+ not page aligned
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1527596299-57567-1-git-send-email-xieyisheng1@huawei.com>
+ <20180605235303.GE226399@bhelgaas-glaptop.roam.corp.google.com>
+CC: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<guohanjun@huawei.com>, <jcm@redhat.com>, <toshi.kani@hpe.com>,
+	<tanxiaojun@huawei.com>, <wangzhou1@hisilicon.com>,
+	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Message-ID: <f1e62ee9-cb19-1139-c9e4-e3a5c9f16b72@huawei.com>
+Date: Wed, 6 Jun 2018 10:11:01 +0800
+MIME-Version: 1.0
+In-Reply-To: <20180605235303.GE226399@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-commit 52cdbdd49853 ("driver core: correct device's shutdown order")
-places an assumption of supplier<-consumer order on the process of probe.
-But it turns out to break down the parent <- child order in some scene.
-E.g in pci, a bridge is enabled by pci core, and behind it, the devices
-have been probed. Then comes the bridge's module, which enables extra
-feature(such as hotplug) on this bridge. This will break the
-parent<-children order and cause failure when "kexec -e" in some scenario.
+Hi Bjorn,
 
-The detailed description of the scenario:
-An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
-match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
-to some issue. For this case, the bridge is moved after its children in
-devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
-write back buffer in flight due to the former shutdown of the bridge which
-clears the BusMaster bit.
+On 2018/6/6 7:53, Bjorn Helgaas wrote:
+> On Tue, May 29, 2018 at 08:18:18PM +0800, Yisheng Xie wrote:
+>> Zhou reported a bug on Hisilicon arm64 D06 platform with 64KB page size:
+>>
+>>  [    2.470908] kernel BUG at lib/ioremap.c:72!
+>>  [    2.475079] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+>>  [    2.480551] Modules linked in:
+>>  [    2.483594] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.16.0-rc7-00062-g0b41260-dirty #23
+>>  [    2.491756] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI Nemo 2.0 RC0 - B120 03/23/2018
+>>  [    2.500614] pstate: 80c00009 (Nzcv daif +PAN +UAO)
+>>  [    2.505395] pc : ioremap_page_range+0x268/0x36c
+>>  [    2.509912] lr : pci_remap_iospace+0xe4/0x100
+>>  [...]
+>>  [    2.603733] Call trace:
+>>  [    2.606168]  ioremap_page_range+0x268/0x36c
+>>  [    2.610337]  pci_remap_iospace+0xe4/0x100
+>>  [    2.614334]  acpi_pci_probe_root_resources+0x1d4/0x214
+>>  [    2.619460]  pci_acpi_root_prepare_resources+0x18/0xa8
+>>  [    2.624585]  acpi_pci_root_create+0x98/0x214
+>>  [    2.628843]  pci_acpi_scan_root+0x124/0x20c
+>>  [    2.633013]  acpi_pci_root_add+0x224/0x494
+>>  [    2.637096]  acpi_bus_attach+0xf8/0x200
+>>  [    2.640918]  acpi_bus_attach+0x98/0x200
+>>  [    2.644740]  acpi_bus_attach+0x98/0x200
+>>  [    2.648562]  acpi_bus_scan+0x48/0x9c
+>>  [    2.652125]  acpi_scan_init+0x104/0x268
+>>  [    2.655948]  acpi_init+0x308/0x374
+>>  [    2.659337]  do_one_initcall+0x48/0x14c
+>>  [    2.663160]  kernel_init_freeable+0x19c/0x250
+>>  [    2.667504]  kernel_init+0x10/0x100
+>>  [    2.670979]  ret_from_fork+0x10/0x18
+>>
+>> The cause is the size of PCI IO resource is 32KB, which is 4K aligned but
+>> not 64KB aligned, however, ioremap_page_range() request the range as page
+>> aligned or it will trigger a BUG_ON() on ioremap_pte_range() it calls, as
+>> ioremap_pte_range increase the addr by PAGE_SIZE, which makes addr != end
+>> until trigger BUG_ON, if its incoming end is not page aligned. More detail
+>> trace is as following:
+>>
+>>  ioremap_page_range
+>>  -> ioremap_p4d_range
+>>     -> ioremap_p4d_range
+>>        -> ioremap_pud_range
+>>           -> ioremap_pmd_range
+>>              -> ioremap_pte_range
+>>
+>> This patch avoid panic by return -EINVAL if vaddr or resource size is not
+>> page aligned.
+>>
+>> Reported-by: Zhou Wang <wangzhou1@hisilicon.com>
+>> Tested-by: Xiaojun Tan <tanxiaojun@huawei.com>
+>> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+>> ---
+>> v3:
+>>  - pci_remap_iospace() sanitize its arguments instead - per Rafael
+>>
+>> v2:
+>>  - Let the caller of ioremap_page_range() align the request by PAGE_SIZE - per Toshi
+>>
+>>  drivers/pci/pci.c | 3 +++
+>>  1 file changed, 3 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index dbfe7c4..0eb0381 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -3544,6 +3544,9 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+>>  	if (res->end > IO_SPACE_LIMIT)
+>>  		return -EINVAL;
+>>  
+>> +	if (!PAGE_ALIGNED(vaddr) || !PAGE_ALIGNED(resource_size(res)))
+>> +		return -EINVAL;
+> 
+> Most other callers of ioremap_page_range() are in the ioremap() path,
+> and they align phys_addr themselves.  In some cases that results in a
+> mapping that covers more than necessary.  For instance, see the
+> function comment at the x86 version of __ioremap_caller().
+> 
+> Is there any reason we couldn't similarly align vaddr and phys_addr
+> here?
+> 
+> The acpi_pci_probe_root_resources() path you mention above basically
+> ignores the errors you're returning.  Your patches will avoid the
+> panic, which is an improvement, but I/O port space will not work, and
+> I don't see anything that gives the user a hint about why not.
+> 
+> If we could align vaddr and phys_addr (and possibly map more than
+> necessary), I/O port space would still work.
 
-To fix this issue, only reordering a device and all of its children
-if it is a consumer.
+Right, I will send another version, soon.
 
-Note, the bridge involved:
-0004:00:00.0 PCI bridge: IBM Device 04c1 (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        NUMA node: 0
-        Bus: primary=00, secondary=01, subordinate=12, sec-latency=0
-        I/O behind bridge: 00000000-00000fff
-        Memory behind bridge: 80000000-ffefffff
-        Prefetchable memory behind bridge: 0006024000000000-0006027f7fffffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity- SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [48] Express (v2) Root Port (Slot-), MSI 00
-                DevCap: MaxPayload 512 bytes, PhantFunc 0
-                        ExtTag- RBE+
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 256 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 8GT/s, Width x8, ASPM not supported, Exit Latency L0s <64ns, L1 <1us
-                        ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp-
-                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 8GT/s, Width x4, TrErr- Train- SlotClk- DLActive+ BWMgmt- ABWMgmt+
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-                RootCap: CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd+
-                DevCtl2: Completion Timeout: 16ms to 55ms, TimeoutDis+, LTR-, OBFF Disabled ARIFwd+
-                LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete+, EqualizationPhase1+
-                         EqualizationPhase2+, EqualizationPhase3+, LinkEqualizationRequest-
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP+ FCP- CmpltTO+ CmpltAbrt+ UnxCmplt- RxOF- MalfTLP- ECRC+ UnsupReq- ACSViol-
-                UESvrt: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn+ ChkCap+ ChkEn+
-        Capabilities: [148 v1] #19
-
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Dave Young <dyoung@redhat.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
----
- drivers/base/dd.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/base/dd.c b/drivers/base/dd.c
-index 1435d72..c74f23c 100644
---- a/drivers/base/dd.c
-+++ b/drivers/base/dd.c
-@@ -434,13 +434,8 @@ static int really_probe(struct device *dev, struct device_driver *drv)
- 			goto probe_failed;
- 	}
- 
--	/*
--	 * Ensure devices are listed in devices_kset in correct order
--	 * It's important to move Dev to the end of devices_kset before
--	 * calling .probe, because it could be recursive and parent Dev
--	 * should always go first
--	 */
--	devices_kset_move_last(dev);
-+	/* only reoder consumer and its children after suppliers.*/
-+	device_reorder_consumer(dev);
- 
- 	if (dev->bus->probe) {
- 		ret = dev->bus->probe(dev);
--- 
-2.7.4
+Thanks
+Yisheng
+> 
+>>  	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
+>>  				  pgprot_device(PAGE_KERNEL));
+>>  #else
+>> -- 
+>> 1.7.12.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
