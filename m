@@ -1,332 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v4 02/10] PCI: dwc: Add MSI-X callbacks handler
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
- <5beae521c5ee475b1c0e04f5eec07d0120b0fa2b.1529329262.git.gustavo.pimentel@synopsys.com>
- <88d14571-694e-db83-11df-0e647f7bf3db@ti.com>
-From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Message-ID: <9485abef-5b72-e0fb-1056-9b8df25e2d1b@synopsys.com>
-Date: Wed, 20 Jun 2018 10:26:10 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <88d14571-694e-db83-11df-0e647f7bf3db@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+References: <1527768879-88161-1-git-send-email-xiexiuqi@huawei.com>
+ <1527768879-88161-2-git-send-email-xiexiuqi@huawei.com>
+ <20180606154516.GL6631@arm.com>
+In-Reply-To: <20180606154516.GL6631@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 6 Jun 2018 15:39:34 -0500
+Message-ID: <CAErSpo6S0qtR42tjGZrFu4aMFFyThx1hkHTSowTt6t3XerpHnA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
+To: Will Deacon <will.deacon@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: tnowicki@caviumnetworks.com, xiexiuqi@huawei.com, linux-pci@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Hanjun Guo <guohanjun@huawei.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>, linux-mm@kvack.org,
+ wanghuiqiang@huawei.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ linux-arm <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+[+cc akpm, linux-mm, linux-pci]
 
-On 20/06/2018 07:44, Kishon Vijay Abraham I wrote:
-> Hi,
-> 
-> On Monday 18 June 2018 08:30 PM, Gustavo Pimentel wrote:
->> Add PCIe config space capability search function.
->>
->> Add sysfs set/get interface to allow the change of EP MSI-X maximum number.
->>
->> Add EP MSI-X callback for triggering interruptions.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->> Change v1->v2:
->>  - Nothing changed, just to follow the patch set version.
->> Change v2->v3:
->>  - Moved dra7xx_pcie_raise_irq() signature change to patch file #3.
->>  - Moved artpec6_pcie_raise_irq() signature change to patch file #3.
->>  - Replaced wrong return value 0 to -EINVAL.
->>  - Removed an else if by code refactoring.
->>  - Reduced the size of ioremap_nocache mapping from ep->addr_size to
->> PCI_MSIX_ENTRY_SIZE.
->>  - Fixed a small bug. If the MSI-X vector bit has been set, the function
->> would return without executing the proper unmap.
->> Change v3->v4:
->>  - Rebased to Lorenzo's master branch v4.18-rc1.
->>  - Added static prefix to __dw_pcie_ep_find_next_cap function.
->>
->>  drivers/pci/controller/dwc/pcie-designware-ep.c   | 146 +++++++++++++++++++++-
->>  drivers/pci/controller/dwc/pcie-designware-plat.c |   4 +-
->>  drivers/pci/controller/dwc/pcie-designware.h      |  14 ++-
->>  3 files changed, 161 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
->> index 8650416..ad25654 100644
->> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
->> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
->> @@ -40,6 +40,39 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
->>  	__dw_pcie_ep_reset_bar(pci, bar, 0);
->>  }
->>  
->> +static u8 __dw_pcie_ep_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
->> +			      u8 cap)
->> +{
->> +	u8 cap_id, next_cap_ptr;
->> +	u16 reg;
->> +
->> +	reg = dw_pcie_readw_dbi(pci, cap_ptr);
->> +	next_cap_ptr = (reg & 0xff00) >> 8;
->> +	cap_id = (reg & 0x00ff);
->> +
->> +	if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
->> +		return 0;
->> +
->> +	if (cap_id == cap)
->> +		return cap_ptr;
->> +
->> +	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
->> +}
->> +
->> +u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
-> 
-> This should be static?
+On Wed, Jun 6, 2018 at 10:44 AM Will Deacon <will.deacon@arm.com> wrote:
+>
+> On Thu, May 31, 2018 at 08:14:38PM +0800, Xie XiuQi wrote:
+> > A numa system may return node which is not online.
+> > For example, a numa node:
+> > 1) without memory
+> > 2) NR_CPUS is very small, and the cpus on the node are not brought up
+> >
+> > In this situation, we use NUMA_NO_NODE to avoid oops.
+> >
+> > [   25.732905] Unable to handle kernel NULL pointer dereference at virtual address 00001988
+> > [   25.740982] Mem abort info:
+> > [   25.743762]   ESR = 0x96000005
+> > [   25.746803]   Exception class = DABT (current EL), IL = 32 bits
+> > [   25.752711]   SET = 0, FnV = 0
+> > [   25.755751]   EA = 0, S1PTW = 0
+> > [   25.758878] Data abort info:
+> > [   25.761745]   ISV = 0, ISS = 0x00000005
+> > [   25.765568]   CM = 0, WnR = 0
+> > [   25.768521] [0000000000001988] user address but active_mm is swapper
+> > [   25.774861] Internal error: Oops: 96000005 [#1] SMP
+> > [   25.779724] Modules linked in:
+> > [   25.782768] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.17.0-rc6-mpam+ #115
+> > [   25.789714] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 EC UEFI Nemo 2.0 RC0 - B305 05/28/2018
+> > [   25.798831] pstate: 80c00009 (Nzcv daif +PAN +UAO)
+> > [   25.803612] pc : __alloc_pages_nodemask+0xf0/0xe70
+> > [   25.808389] lr : __alloc_pages_nodemask+0x184/0xe70
+> > [   25.813252] sp : ffff00000996f660
+> > [   25.816553] x29: ffff00000996f660 x28: 0000000000000000
+> > [   25.821852] x27: 00000000014012c0 x26: 0000000000000000
+> > [   25.827150] x25: 0000000000000003 x24: ffff000008099eac
+> > [   25.832449] x23: 0000000000400000 x22: 0000000000000000
+> > [   25.837747] x21: 0000000000000001 x20: 0000000000000000
+> > [   25.843045] x19: 0000000000400000 x18: 0000000000010e00
+> > [   25.848343] x17: 000000000437f790 x16: 0000000000000020
+> > [   25.853641] x15: 0000000000000000 x14: 6549435020524541
+> > [   25.858939] x13: 20454d502067756c x12: 0000000000000000
+> > [   25.864237] x11: ffff00000996f6f0 x10: 0000000000000006
+> > [   25.869536] x9 : 00000000000012a4 x8 : ffff8023c000ff90
+> > [   25.874834] x7 : 0000000000000000 x6 : ffff000008d73c08
+> > [   25.880132] x5 : 0000000000000000 x4 : 0000000000000081
+> > [   25.885430] x3 : 0000000000000000 x2 : 0000000000000000
+> > [   25.890728] x1 : 0000000000000001 x0 : 0000000000001980
+> > [   25.896027] Process swapper/0 (pid: 1, stack limit = 0x        (ptrval))
+> > [   25.902712] Call trace:
+> > [   25.905146]  __alloc_pages_nodemask+0xf0/0xe70
+> > [   25.909577]  allocate_slab+0x94/0x590
+> > [   25.913225]  new_slab+0x68/0xc8
+> > [   25.916353]  ___slab_alloc+0x444/0x4f8
+> > [   25.920088]  __slab_alloc+0x50/0x68
+> > [   25.923562]  kmem_cache_alloc_node_trace+0xe8/0x230
+> > [   25.928426]  pci_acpi_scan_root+0x94/0x278
+> > [   25.932510]  acpi_pci_root_add+0x228/0x4b0
+> > [   25.936593]  acpi_bus_attach+0x10c/0x218
+> > [   25.940501]  acpi_bus_attach+0xac/0x218
+> > [   25.944323]  acpi_bus_attach+0xac/0x218
+> > [   25.948144]  acpi_bus_scan+0x5c/0xc0
+> > [   25.951708]  acpi_scan_init+0xf8/0x254
+> > [   25.955443]  acpi_init+0x310/0x37c
+> > [   25.958831]  do_one_initcall+0x54/0x208
+> > [   25.962653]  kernel_init_freeable+0x244/0x340
+> > [   25.966999]  kernel_init+0x18/0x118
+> > [   25.970474]  ret_from_fork+0x10/0x1c
+> > [   25.974036] Code: 7100047f 321902a4 1a950095 b5000602 (b9400803)
+> > [   25.980162] ---[ end trace 64f0893eb21ec283 ]---
+> > [   25.984765] Kernel panic - not syncing: Fatal exception
+> >
+> > Signed-off-by: Xie XiuQi <xiexiuqi@huawei.com>
+> > Tested-by: Huiqiang Wang <wanghuiqiang@huawei.com>
+> > Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> > Cc: Tomasz Nowicki <Tomasz.Nowicki@caviumnetworks.com>
+> > Cc: Xishi Qiu <qiuxishi@huawei.com>
+> > ---
+> >  arch/arm64/kernel/pci.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> >
+> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > index 0e2ea1c..e17cc45 100644
+> > --- a/arch/arm64/kernel/pci.c
+> > +++ b/arch/arm64/kernel/pci.c
+> > @@ -170,6 +170,9 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+> >       struct pci_bus *bus, *child;
+> >       struct acpi_pci_root_ops *root_ops;
+> >
+> > +     if (node != NUMA_NO_NODE && !node_online(node))
+> > +             node = NUMA_NO_NODE;
+> > +
+>
+> This really feels like a bodge, but it does appear to be what other
+> architectures do, so:
+>
+> Acked-by: Will Deacon <will.deacon@arm.com>
 
-Yes, kbuild also point that out. It'll be fixed.
+I agree, this doesn't feel like something we should be avoiding in the
+caller of kzalloc_node().
 
-Thanks
-Gustavo
+I would not expect kzalloc_node() to return memory that's offline, no
+matter what node we told it to allocate from.  I could imagine it
+returning failure, or returning memory from a node that *is* online,
+but returning a pointer to offline memory seems broken.
 
-> 
-> Thanks
-> Kishon
->> +{
->> +	u8 next_cap_ptr;
->> +	u16 reg;
->> +
->> +	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
->> +	next_cap_ptr = (reg & 0x00ff);
->> +
->> +	if (!next_cap_ptr)
->> +		return 0;
->> +
->> +	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
->> +}
->> +
->>  static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
->>  				   struct pci_epf_header *hdr)
->>  {
->> @@ -241,8 +274,47 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
->>  	return 0;
->>  }
->>  
->> +static int dw_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
->> +{
->> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->> +	u32 val, reg;
->> +
->> +	if (!ep->msix_cap)
->> +		return -EINVAL;
->> +
->> +	reg = ep->msix_cap + PCI_MSIX_FLAGS;
->> +	val = dw_pcie_readw_dbi(pci, reg);
->> +	if (!(val & PCI_MSIX_FLAGS_ENABLE))
->> +		return -EINVAL;
->> +
->> +	val &= PCI_MSIX_FLAGS_QSIZE;
->> +
->> +	return val;
->> +}
->> +
->> +static int dw_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
->> +{
->> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->> +	u32 val, reg;
->> +
->> +	if (!ep->msix_cap)
->> +		return -EINVAL;
->> +
->> +	reg = ep->msix_cap + PCI_MSIX_FLAGS;
->> +	val = dw_pcie_readw_dbi(pci, reg);
->> +	val &= ~PCI_MSIX_FLAGS_QSIZE;
->> +	val |= interrupts;
->> +	dw_pcie_dbi_ro_wr_en(pci);
->> +	dw_pcie_writew_dbi(pci, reg, val);
->> +	dw_pcie_dbi_ro_wr_dis(pci);
->> +
->> +	return 0;
->> +}
->> +
->>  static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
->> -				enum pci_epc_irq_type type, u8 interrupt_num)
->> +				enum pci_epc_irq_type type, u16 interrupt_num)
->>  {
->>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->>  
->> @@ -282,6 +354,8 @@ static const struct pci_epc_ops epc_ops = {
->>  	.unmap_addr		= dw_pcie_ep_unmap_addr,
->>  	.set_msi		= dw_pcie_ep_set_msi,
->>  	.get_msi		= dw_pcie_ep_get_msi,
->> +	.set_msix		= dw_pcie_ep_set_msix,
->> +	.get_msix		= dw_pcie_ep_get_msix,
->>  	.raise_irq		= dw_pcie_ep_raise_irq,
->>  	.start			= dw_pcie_ep_start,
->>  	.stop			= dw_pcie_ep_stop,
->> @@ -322,6 +396,64 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
->>  	return 0;
->>  }
->>  
->> +int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
->> +			     u16 interrupt_num)
->> +{
->> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->> +	struct pci_epc *epc = ep->epc;
->> +	u16 tbl_offset, bir;
->> +	u32 bar_addr_upper, bar_addr_lower;
->> +	u32 msg_addr_upper, msg_addr_lower;
->> +	u32 reg, msg_data, vec_ctrl;
->> +	u64 tbl_addr, msg_addr, reg_u64;
->> +	void __iomem *msix_tbl;
->> +	int ret;
->> +
->> +	reg = ep->msix_cap + PCI_MSIX_TABLE;
->> +	tbl_offset = dw_pcie_readl_dbi(pci, reg);
->> +	bir = (tbl_offset & PCI_MSIX_TABLE_BIR);
->> +	tbl_offset &= PCI_MSIX_TABLE_OFFSET;
->> +	tbl_offset >>= 3;
->> +
->> +	reg = PCI_BASE_ADDRESS_0 + (4 * bir);
->> +	bar_addr_upper = 0;
->> +	bar_addr_lower = dw_pcie_readl_dbi(pci, reg);
->> +	reg_u64 = (bar_addr_lower & PCI_BASE_ADDRESS_MEM_TYPE_MASK);
->> +	if (reg_u64 == PCI_BASE_ADDRESS_MEM_TYPE_64)
->> +		bar_addr_upper = dw_pcie_readl_dbi(pci, reg + 4);
->> +
->> +	tbl_addr = ((u64) bar_addr_upper) << 32 | bar_addr_lower;
->> +	tbl_addr += (tbl_offset + ((interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE));
->> +	tbl_addr &= PCI_BASE_ADDRESS_MEM_MASK;
->> +
->> +	msix_tbl = ioremap_nocache(ep->phys_base + tbl_addr,
->> +				   PCI_MSIX_ENTRY_SIZE);
->> +	if (!msix_tbl)
->> +		return -EINVAL;
->> +
->> +	msg_addr_lower = readl(msix_tbl + PCI_MSIX_ENTRY_LOWER_ADDR);
->> +	msg_addr_upper = readl(msix_tbl + PCI_MSIX_ENTRY_UPPER_ADDR);
->> +	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
->> +	msg_data = readl(msix_tbl + PCI_MSIX_ENTRY_DATA);
->> +	vec_ctrl = readl(msix_tbl + PCI_MSIX_ENTRY_VECTOR_CTRL);
->> +
->> +	iounmap(msix_tbl);
->> +
->> +	if (vec_ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT)
->> +		return -EPERM;
->> +
->> +	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msix_mem_phys, msg_addr,
->> +				  epc->mem->page_size);
->> +	if (ret)
->> +		return ret;
->> +
->> +	writel(msg_data, ep->msix_mem);
->> +
->> +	dw_pcie_ep_unmap_addr(epc, func_no, ep->msix_mem_phys);
->> +
->> +	return 0;
->> +}
->> +
->>  void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
->>  {
->>  	struct pci_epc *epc = ep->epc;
->> @@ -329,6 +461,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
->>  	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
->>  			      epc->mem->page_size);
->>  
->> +	pci_epc_mem_free_addr(epc, ep->msix_mem_phys, ep->msix_mem,
->> +			      epc->mem->page_size);
->> +
->>  	pci_epc_mem_exit(epc);
->>  }
->>  
->> @@ -412,6 +547,15 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
->>  		dev_err(dev, "Failed to reserve memory for MSI\n");
->>  		return -ENOMEM;
->>  	}
->> +	ep->msi_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSI);
->> +
->> +	ep->msix_mem = pci_epc_mem_alloc_addr(epc, &ep->msix_mem_phys,
->> +					     epc->mem->page_size);
->> +	if (!ep->msix_mem) {
->> +		dev_err(dev, "Failed to reserve memory for MSI-X\n");
->> +		return -ENOMEM;
->> +	}
->> +	ep->msix_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSIX);
->>  
->>  	epc->features = EPC_FEATURE_NO_LINKUP_NOTIFIER;
->>  	EPC_FEATURE_SET_BAR(epc->features, BAR_0);
->> diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
->> index 5937fed..654dcb5 100644
->> --- a/drivers/pci/controller/dwc/pcie-designware-plat.c
->> +++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
->> @@ -78,7 +78,7 @@ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
->>  
->>  static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
->>  				     enum pci_epc_irq_type type,
->> -				     u8 interrupt_num)
->> +				     u16 interrupt_num)
->>  {
->>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->>  
->> @@ -88,6 +88,8 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
->>  		return -EINVAL;
->>  	case PCI_EPC_IRQ_MSI:
->>  		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
->> +	case PCI_EPC_IRQ_MSIX:
->> +		return dw_pcie_ep_raise_msix_irq(ep, func_no, interrupt_num);
->>  	default:
->>  		dev_err(pci->dev, "UNKNOWN IRQ type\n");
->>  	}
->> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
->> index bee4e25..b22c5bb 100644
->> --- a/drivers/pci/controller/dwc/pcie-designware.h
->> +++ b/drivers/pci/controller/dwc/pcie-designware.h
->> @@ -191,7 +191,7 @@ enum dw_pcie_as_type {
->>  struct dw_pcie_ep_ops {
->>  	void	(*ep_init)(struct dw_pcie_ep *ep);
->>  	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
->> -			     enum pci_epc_irq_type type, u8 interrupt_num);
->> +			     enum pci_epc_irq_type type, u16 interrupt_num);
->>  };
->>  
->>  struct dw_pcie_ep {
->> @@ -208,6 +208,10 @@ struct dw_pcie_ep {
->>  	u32			num_ob_windows;
->>  	void __iomem		*msi_mem;
->>  	phys_addr_t		msi_mem_phys;
->> +	void __iomem		*msix_mem;
->> +	phys_addr_t		msix_mem_phys;
->> +	u8			msi_cap;	/* MSI capability offset */
->> +	u8			msix_cap;	/* MSI-X capability offset */
->>  };
->>  
->>  struct dw_pcie_ops {
->> @@ -359,6 +363,8 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
->>  void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
->>  int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
->>  			     u8 interrupt_num);
->> +int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
->> +			     u16 interrupt_num);
->>  void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
->>  #else
->>  static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
->> @@ -380,6 +386,12 @@ static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
->>  	return 0;
->>  }
->>  
->> +static inline int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
->> +					   u16 interrupt_num)
->> +{
->> +	return 0;
->> +}
->> +
->>  static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
->>  {
->>  }
->>
+Are we putting memory that's offline in the free list?  I don't know
+where to look to figure this out.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
