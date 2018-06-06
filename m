@@ -1,61 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:36246 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933514AbeF2PjP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Jun 2018 11:39:15 -0400
-Date: Fri, 29 Jun 2018 16:41:01 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        bhelgaas@google.com, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] pci: host: pci-hyperv: Replace GFP_ATOMIC with
- GFP_KERNEL in new_pcichild_device
-Message-ID: <20180629154101.GI9643@red-moon>
-References: <1521384808-23627-1-git-send-email-baijiaju1990@gmail.com>
+Return-Path: <SRS0=kWo4=IY=huawei.com=xieyisheng1@kernel.org>
+Return-Path: <SRS0=kWo4=IY=huawei.com=xieyisheng1@kernel.org>
+Subject: Re: [PATCH v4] PCI ACPI: Avoid panic when PCI IO resource's size is
+ not page aligned
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1528250793-57034-1-git-send-email-xieyisheng1@huawei.com>
+ <20180606220143.GA128611@bhelgaas-glaptop.roam.corp.google.com>
+CC: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<guohanjun@huawei.com>, <jcm@redhat.com>, <toshi.kani@hpe.com>,
+	<tanxiaojun@huawei.com>, <wangzhou1@hisilicon.com>,
+	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<akpm@linux-foundation.org>, <kstewart@linuxfoundation.org>, Greg KH
+	<gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Message-ID: <b2a58563-8216-6fa6-2ca8-4ca3b5cfe807@huawei.com>
+Date: Thu, 7 Jun 2018 07:54:28 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1521384808-23627-1-git-send-email-baijiaju1990@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180606220143.GA128611@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 18, 2018 at 10:53:28PM +0800, Jia-Ju Bai wrote:
-> new_pcichild_device() is not called in atomic context.
-> 
-> The call chain ending up at new_pcichild_device() is:
-> [1] new_pcichild_device() <- pci_devices_present_work()
-> pci_devices_present_work() is only set in INIT_WORK().
-> 
-> Despite never getting called from atomic context,
-> new_pcichild_device() calls kzalloc with GFP_ATOMIC,
-> which waits busily for allocation.
-> GFP_ATOMIC is not necessary and can be replaced with GFP_KERNEL
-> to avoid busy waiting.
-> 
-> This is found by a static analysis tool named DCNS written by myself.
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
-> ---
->  drivers/pci/host/pci-hyperv.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+hi Bjorn,
 
-Applied to pci/hv for v4.19, thanks.
+On 2018/6/7 6:01, Bjorn Helgaas wrote:
+> On Wed, Jun 06, 2018 at 10:06:33AM +0800, Yisheng Xie wrote:
+>> Zhou reported a bug on Hisilicon arm64 D06 platform with 64KB page size:
+>>
+>>  [    2.470908] kernel BUG at lib/ioremap.c:72!
+>>  [    2.475079] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+>>  [    2.480551] Modules linked in:
+>>  [    2.483594] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.16.0-rc7-00062-g0b41260-dirty #23
+>>  [    2.491756] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI Nemo 2.0 RC0 - B120 03/23/2018
+>>  [    2.500614] pstate: 80c00009 (Nzcv daif +PAN +UAO)
+>>  [    2.505395] pc : ioremap_page_range+0x268/0x36c
+>>  [    2.509912] lr : pci_remap_iospace+0xe4/0x100
+>>  [...]
+>>  [    2.603733] Call trace:
+>>  [    2.606168]  ioremap_page_range+0x268/0x36c
+>>  [    2.610337]  pci_remap_iospace+0xe4/0x100
+>>  [    2.614334]  acpi_pci_probe_root_resources+0x1d4/0x214
+>>  [    2.619460]  pci_acpi_root_prepare_resources+0x18/0xa8
+>>  [    2.624585]  acpi_pci_root_create+0x98/0x214
+>>  [    2.628843]  pci_acpi_scan_root+0x124/0x20c
+>>  [    2.633013]  acpi_pci_root_add+0x224/0x494
+>>  [    2.637096]  acpi_bus_attach+0xf8/0x200
+>>  [    2.640918]  acpi_bus_attach+0x98/0x200
+>>  [    2.644740]  acpi_bus_attach+0x98/0x200
+>>  [    2.648562]  acpi_bus_scan+0x48/0x9c
+>>  [    2.652125]  acpi_scan_init+0x104/0x268
+>>  [    2.655948]  acpi_init+0x308/0x374
+>>  [    2.659337]  do_one_initcall+0x48/0x14c
+>>  [    2.663160]  kernel_init_freeable+0x19c/0x250
+>>  [    2.667504]  kernel_init+0x10/0x100
+>>  [    2.670979]  ret_from_fork+0x10/0x18
+>>
+>> The cause is the size of PCI IO resource is 32KB, which is 4K aligned but
+>> not 64KB aligned, however, ioremap_page_range() request the range as page
+>> aligned or it will trigger a BUG_ON() on ioremap_pte_range() it calls, as
+>> ioremap_pte_range increase the addr by PAGE_SIZE, which makes addr != end
+>> until trigger BUG_ON, if its incoming end is not page aligned. More detail
+>> trace is as following:
+>>
+>>  ioremap_page_range
+>>  -> ioremap_p4d_range
+>>     -> ioremap_p4d_range
+>>        -> ioremap_pud_range
+>>           -> ioremap_pmd_range
+>>              -> ioremap_pte_range
+>>
+>> This patch avoid panic by align the vaddr and phys_addr.
+>>
+>> Reported-by: Zhou Wang <wangzhou1@hisilicon.com>
+>> Tested-by: Xiaojun Tan <tanxiaojun@huawei.com>
+>> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+>> ---
+>> v4:
+>>  - align vaddr and phys_addr  - per Bjorn
+>> v3:
+>>  - pci_remap_iospace() sanitize its arguments instead - per Rafael
+>> v2:
+>>  - Let the caller of ioremap_page_range() align the request by PAGE_SIZE - per Toshi
+>>
+>>  drivers/pci/pci.c | 12 +++++++++++-
+>>  1 file changed, 11 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index dbfe7c4..652f7d6 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -3537,6 +3537,7 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+>>  {
+>>  #if defined(PCI_IOBASE) && defined(CONFIG_MMU)
+>>  	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
+>> +	unsigned long last_vaddr;
+>>  
+>>  	if (!(res->flags & IORESOURCE_IO))
+>>  		return -EINVAL;
+>> @@ -3544,7 +3545,16 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+>>  	if (res->end > IO_SPACE_LIMIT)
+>>  		return -EINVAL;
+>>  
+>> -	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
+>> +	/* It will be mess if vaddr's offset is not equal to phys_addr's */
+>> +	if ((vaddr & ~PAGE_MASK) != (phys_addr & ~PAGE_MASK))
+>> +		return -EINVAL;
+>> +
+>> +	/* Mappings have to be page-aligned */
+>> +	last_vaddr = PAGE_ALIGN(vaddr + resource_size(res));
+>> +	phys_addr &= PAGE_MASK;
+>> +	vaddr &= PAGE_MASK;
+> 
+> I think this stuff should be put into ioremap_page_range().  Almost
+> every caller does this sort of thing before calling
+> ioremap_page_range(), so you could clean up a fair amount of code if
+> you added one copy into ioremap_page_range() and removed it from all
+> the callers.
 
-Lorenzo
+Actually,  I do not have strong opinion about this. Therefore, I would
+like to add ./lib/ioremap.c's maintainer(commiters), to get more suggestion.
 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index 0fe3ea1..289e31d 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -1500,7 +1500,7 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
->  	unsigned long flags;
->  	int ret;
->  
-> -	hpdev = kzalloc(sizeof(*hpdev), GFP_ATOMIC);
-> +	hpdev = kzalloc(sizeof(*hpdev), GFP_KERNEL);
->  	if (!hpdev)
->  		return NULL;
->  
-> -- 
-> 1.9.1
+Hi Andrew, Greg and all,
+
+Could you please give some suggestion about this patch?
+
+Thanks
+Yisheng
+
+> 
+>> +	return ioremap_page_range(vaddr, last_vaddr, phys_addr,
+>>  				  pgprot_device(PAGE_KERNEL));
+>>  #else
+>>  	/* this architecture does not have memory mapped I/O space,
+> 
+> .
 > 
