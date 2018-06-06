@@ -1,53 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56514 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755150AbeF3CVn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Jun 2018 22:21:43 -0400
-Subject: [PATCH] PCI: Make pci_get_rom_size() static
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Rex Zhu <Rex.Zhu@amd.com>
-Date: Fri, 29 Jun 2018 21:21:39 -0500
-Message-ID: <153032529978.134892.3376112989125005436.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-ot0-f182.google.com ([74.125.82.182]:34380 "EHLO
+        mail-ot0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751912AbeFFLhp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2018 07:37:45 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <c8e47c11-e3f5-589f-3a58-4aa2466cac6d@desy.de>
+References: <CAHhAz+grcWVZAOvLL9VBHoPLiDCT3LApJTkE7GchtLA3g4U3NA@mail.gmail.com>
+ <c8e47c11-e3f5-589f-3a58-4aa2466cac6d@desy.de>
+From: Muni Sekhar <munisekharrms@gmail.com>
+Date: Wed, 6 Jun 2018 17:07:44 +0530
+Message-ID: <CAHhAz+j=KBFwc10tFCT1mj1dxtR0LhU3TysPz0fFVuDnUOAm-A@mail.gmail.com>
+Subject: =?UTF-8?Q?Re=3A_pcie=3A_fpga=3A_programme_FPGA_PROM=E2=80=99s?=
+To: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
+Cc: linux-pci@vger.kernel.org, linux-fpga@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Wed, Jun 6, 2018 at 4:50 PM, Ludwig Petrosyan
+<ludwig.petrosyan@desy.de> wrote:
+> Hi
+>
+> why You do not use jtagplayer from Xilinx?
 
-pci_get_rom_size() is called only from pci_map_rom(), so it can be static.
-Make it static and remove the declaration from include/linux/pci.h.
+Yes, JTAG can be used. But we have a lot many of these FPGA boards,
+using JTAG costs more. And also we want to automate the PROM
+programming.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/rom.c   |    3 ++-
- include/linux/pci.h |    1 -
- 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-index 3a33f5ce314a..137bf0cee897 100644
---- a/drivers/pci/rom.c
-+++ b/drivers/pci/rom.c
-@@ -80,7 +80,8 @@ EXPORT_SYMBOL_GPL(pci_disable_rom);
-  * The PCI window size could be much larger than the
-  * actual image size.
-  */
--size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
-+static size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom,
-+			       size_t size)
- {
- 	void __iomem *image;
- 	int last_image;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 340029b2fb38..f40d3e05ccd1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1122,7 +1122,6 @@ int pci_enable_rom(struct pci_dev *pdev);
- void pci_disable_rom(struct pci_dev *pdev);
- void __iomem __must_check *pci_map_rom(struct pci_dev *pdev, size_t *size);
- void pci_unmap_rom(struct pci_dev *pdev, void __iomem *rom);
--size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size);
- void __iomem __must_check *pci_platform_rom(struct pci_dev *pdev, size_t *size);
- 
- /* Power management related routines */
+>
+>
+> with best regards
+>
+>
+> Ludwig
+>
+>
+>
+> On 06/06/2018 11:08 AM, Muni Sekhar wrote:
+>>
+>> [ Please keep me in CC as I'm not subscribed to the list]
+>>
+>> Hi All,
+>>
+>> We have a Kintex7 FPGA board connected to Intel Atom PC running Ubuntu
+>> on PCIe bus.
+>> We are looking for a tool to allow us to remotely programme FPGA
+>> PROM=E2=80=99s via the Intel Atom PC on PCIe bus. Does any one already d=
+one
+>> this or can someone share the ideas?
+>>
+>>
+>>
+>
+
+
+
+--=20
+Thanks,
+Sekhar
