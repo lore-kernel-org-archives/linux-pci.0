@@ -1,99 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:42599 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751512AbeFAOZF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jun 2018 10:25:05 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v3 05/10] PCI: dwc: Add legacy interrupt callback handler
-Date: Fri,  1 Jun 2018 15:24:47 +0100
-Message-Id: <8c34b249752c37e5729fd4ac100961d334d46ff7.1527862777.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1527862777.git.gustavo.pimentel@synopsys.com>
-References: <cover.1527862777.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1527862777.git.gustavo.pimentel@synopsys.com>
-References: <cover.1527862777.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=cNEb=IZ=rock-chips.com=shawn.lin@kernel.org>
+Return-Path: <SRS0=cNEb=IZ=rock-chips.com=shawn.lin@kernel.org>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Rename directory from host to controller and move
+ back drivers
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1527729157-201428-1-git-send-email-shawn.lin@rock-chips.com>
+ <20180606222720.GB128611@bhelgaas-glaptop.roam.corp.google.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <7845016f-0cc8-b4ae-bbfe-af25047f3a7d@rock-chips.com>
+Date: Thu, 7 Jun 2018 09:29:16 +0800
+MIME-Version: 1.0
+In-Reply-To: <20180606222720.GB128611@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a legacy interrupt callback handler. Currently DesignWare IP don't
-allow trigger legacy interrupts.
+Hi Bjorn,
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
+On 2018/6/7 6:27, Bjorn Helgaas wrote:
+> On Thu, May 31, 2018 at 09:12:37AM +0800, Shawn Lin wrote:
+>> In early discussion, the PCI drivers were scattered across three
+>> different places, including host, cadence and dwc directories.
+>> The reason behind that is we thought the name, host, was confusing
+>> since it seems contain the driver for RC. And dwc drivers set a
+>> precedent for supporting both of RC and EP mode, so that they were
+>> moved to a separate directory called dwc which is parallel to the host
+>> directory. Then cadence drivers follow this convention, and so on.
+>> But this confuses more and potentially make the drivers/pci/ look
+>> fragmented if more and more drivers follow this way.
+>>
+>> So this patch rename directory from host to controller and make it
+>> obvious that this is for controller drivers which applies to both
+>> of RC and EP drivers. Then it moves back cadence and dwc drivers.
+>>
+>> Hope all are settled down and all the following patches submitting
+>> new drivers could benefit from it.
+>>
+>> No functional change intended.
+>>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
+> This seems reasonable to me.  It would be even nicer if you had any
+> URLs for previous conversation about it.  If you find any, just
+> respond here (no need to repost the patch; I can fold them into the
+> changelog).
 
- drivers/pci/dwc/pcie-designware-ep.c   | 10 ++++++++++
- drivers/pci/dwc/pcie-designware-plat.c |  3 +--
- drivers/pci/dwc/pcie-designware.h      |  6 ++++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
+This[1] is the initial suggestion about removing separate directories
+for host drivers, and quoting from Lorenzo's final call: "Send a last
+version asap and I will try to merge it for this cycle, keeping in mind
+that what we discussed above must be implemented as soon as a new cycle
+starts."
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 3ba7059..6fa363c 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
- 	.stop			= dw_pcie_ep_stop,
- };
- 
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct device *dev = pci->dev;
-+
-+	dev_err(dev, "EP cannot trigger legacy IRQs\n");
-+
-+	return -EINVAL;
-+}
-+
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num)
- {
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 654dcb5..90a8c95 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -84,8 +84,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 
- 	switch (type) {
- 	case PCI_EPC_IRQ_LEGACY:
--		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
--		return -EINVAL;
-+		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index a0ab12f..69e6e17 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -350,6 +350,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num);
- int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
-@@ -369,6 +370,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
- 
-+static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	return 0;
-+}
-+
- static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 					   u8 interrupt_num)
- {
--- 
-2.7.4
+Then we discussed an option about second PR for that[2].
+
+[1]https://patchwork.kernel.org/patch/10260547/
+[2]https://patchwork.kernel.org/patch/10319355/
+
+
+Thanks.
+
+> 
+> If there's consensus to do this, I can so a second pull request for
+> v4.18-rc1 next week.  I haven't even done the first one yet, but
+> hopefully end of this week or early next week.
+> 
+> Bjorn
+> 
+> 
+> 
