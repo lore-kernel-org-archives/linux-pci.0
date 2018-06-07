@@ -1,130 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59438 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751358AbeF3Bxb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Jun 2018 21:53:31 -0400
-Date: Fri, 29 Jun 2018 20:53:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sam Bobroff <sbobroff@linux.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        mpe@ellerman.id.au, bhelgaas@google.com,
-        bryantly@linux.vnet.ibm.com
-Subject: Re: [PATCH v2 1/1] powerpc/pseries: fix EEH recovery of some IOV
- devices
-Message-ID: <20180630015329.GM40928@bhelgaas-glaptop.roam.corp.google.com>
-References: <7598ffeb48c16c88a34937ad93b18f806222b8df.1527208281.git.sbobroff@linux.ibm.com>
+Return-Path: <SRS0=+gCa=IZ=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=+gCa=IZ=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7598ffeb48c16c88a34937ad93b18f806222b8df.1527208281.git.sbobroff@linux.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 07 Jun 2018 16:20:10 +0530
+From: poza@codeaurora.org
+To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org, Bjorn
+ Helgaas <bhelgaas@google.com>, linux-pci-owner@vger.kernel.org
+Subject: Re: pci_error_handlers for pci_host_bridge ?
+In-Reply-To: <CAFZiPx0UUB25kOgSNzUruNLom4=F5y==QbF_Q2g1uPA7csGOHA@mail.gmail.com>
+References: <CAFZiPx29KrKGDJiQ8huTpuVb7tMn=wjMWAvJEZaBiV7eSXYMSQ@mail.gmail.com>
+ <20180606125025.GA100923@bhelgaas-glaptop.roam.corp.google.com>
+ <CAFZiPx0UUB25kOgSNzUruNLom4=F5y==QbF_Q2g1uPA7csGOHA@mail.gmail.com>
+Message-ID: <80853b92d0f69f32f2f0e2bbcd106993@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2018 at 10:31:36AM +1000, Sam Bobroff wrote:
-> EEH recovery currently fails on pSeries for some IOV capable PCI
-> devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
-> certain device tree properties for the device. (Found on an IOV
-> capable device using the ipr driver.)
+On 2018-06-07 15:45, Subrahmanya Lingappa wrote:
+> Bjorn,
 > 
-> Recovery fails in pci_enable_resources() at the check on r->parent,
-> because r->flags is set and r->parent is not.  This state is due to
-> sriov_init() setting the start, end and flags members of the IOV BARs
-> but the parent not being set later in
-> pseries_pci_fixup_iov_resources(), because the
-> "ibm,open-sriov-vf-bar-info" property is missing.
+> On Wed, Jun 6, 2018 at 6:20 PM, Bjorn Helgaas <helgaas@kernel.org> 
+> wrote:
+>> Hi Subrahmanya,
+>> 
+>> On Wed, Jun 06, 2018 at 05:57:17PM +0530, Subrahmanya Lingappa wrote:
+>>> Hi,
+>>> according to 
+>>> https://github.com/torvalds/linux/blob/master/Documentation/PCI/pci-error-recovery.txt
+>>> 
+>>> as part of AER handling, struct pci_error_handlers{} is implemented 
+>>> by
+>>> endpoint drivers to handle device specific recovery steps for "struct
+>>> pci_driver".
+>>> 
+>>> But we have a platform_driver which implements "struct
+>>> pci_host_bridge" which also supports AER capability how can we 
+>>> support
+>>> pci_error_handlers() for the host bridge drivers ?
+>> 
+>> I assume you're referring to Mobiveil.  Can you explain more of the
+>> topology here?  Can you also include "sudo lspci -vv" output?
+>> 
+> Yes, it is for Mobiveil's Host bridge driver :
+> https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/drivers/pci/host/pcie-mobiveil.c
+> lspci output is now is not available, I'll try to get it sooner.
 > 
-> Correct this by zeroing the resource flags for IOV BARs when they
-> can't be configured.
+> we have an endpoint connected directly to Rootport as follows
+> RC Rootport ----->BUS------> EP
 > 
-> Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
+>> The AER capability is an optional capability of PCIe device functions.
+>> A host bridge is not itself a PCIe function; it's a bridge between a
+>> platform-specific host bus and the PCIe bus.
+>> 
+>> Sometimes there is a PCI function that corresponds to the host bridge,
+>> but that's not required by the PCI specs and there is no generic
+>> programming model for it.
+>> 
+>> If you have an PCIe function corresponding to the Mobiveil host
+>> bridge, and it has an AER capability, what would you want the error
+>> handlers to do?  This function would not normally be a Root Port or
+>> other type 1 PCI-to-PCI bridge device, so it's not clear how its AER
+>> would integrate with the PCIe hierarchy.
+>> 
+> Yes we do have a PCI function with AER capability, after an AER 
+> reported by EP,
+> AER driver initiates an hot_reset on subordinate bus, which happens to
+> be downstream port
+> for RC. So we get a downstream port link down happens in this case RC
+> driver needs to follow
+> a specific register restore sequence, which is most of the HW specific
+> initialization done in probe function of the driver  to recover
+> properly.
 
-I assume this will be handled by the powerpc folks, since it doesn't touch
-drivers/pci.  Let me know if you need something from me.
+Are you looking at something similar to pci_error_handlers to be called 
+for your RC driver ?
+where probably you are expecting during ERR_NONFATAL recovery you would 
+want to restore some of your platform
+specific registers. I dont think that support exists now. since 
+pci_error_handlers is of struct pci_driver
+while yours is platform driver.
 
-> ---
-> Hi,
+Although please also note that ERR_FATAL is no more handled with error 
+and recovery callbacks.
+that are just going to be handled with removal, re-enumeration of the 
+devices.
+
+but I suppose in any case you want to restore the registers in any type 
+of uncorrectable error.
+
+although this is really platform specific, some sort of quirk I cna 
+think of, but again err.c has to check
+that quirk's existence and calls platform specific callback
+(that again I am not sure because such things do not exist with respect 
+to error/recovery callbacks)
+
+Yeah just re-thinking, this is too specific, not to be addressed by 
+generic framework I think.
+
+> I was wondering if this can be handled by using AER error handlers, or
+> would suggest a better way to handle this ?
 > 
-> This is a fix to allow EEH recovery to succeed in a specific situation,
-> which I've tried to explain in the commit message.
+> As of now plan is to handle this situation is by calling a minimal
+> probe recovery sequence after link down interrupt within the
+> driver interrupt service routine.
+
+Well I think that is a better place,
+I was wondering why are you loosing registers at the first point ?
+Is because of link down even you are loosing them ? some issue with hw !
+
+
+Lets hear from Bjorn anyway, I am curious.
+
 > 
-> As with the RFC version, the IOV BARs are disabled by setting the resource
-> flags to 0 but the other fields are now left as-is because that is what is done
-> elsewhere (see sriov_init() and __pci_read_base()).
+>> Bjorn
 > 
-> I've also examined the concern raised by Bjorn Helgaas, that VFs could be
-> enabled later after the BARs are disabled, and it already seems safe: enabling
-> VFs (on pseries) depends on another device tree property,
-> "ibm,number-of-configurable-vfs" as well as support for the RTAS function
-> "ibm_map_pes". Since these are all part of the hypervisor's support for IOV it
-> seems unlikely that we would ever see some of them but not all. (None are
-> currently provided by QEMU/KVM.) (Additionally, the ipr driver on which the EEH
-> recovery failure was discovered doesn't even seem to have SR-IOV support so it
-> certainly can't enable VFs.)
-> 
-> Cheers,
-> Sam.
-> ====== v1 -> v2: ======
-> 
-> Patch 1/1: powerpc/pseries: fix EEH recovery of some IOV devices
-> * Moved the BAR disabling code to a function.
-> * Also check in pseries_pci_fixup_resources().
-> 
-> ====== v1: ======
-> 
-> Patch 1/1: powerpc/pseries: fix EEH recovery of IOV devices
-> 
->  arch/powerpc/platforms/pseries/setup.c | 25 +++++++++++++++++--------
->  1 file changed, 17 insertions(+), 8 deletions(-)
-> 
-> diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-> index b55ad4286dc7..0a9e4243ae1d 100644
-> --- a/arch/powerpc/platforms/pseries/setup.c
-> +++ b/arch/powerpc/platforms/pseries/setup.c
-> @@ -645,6 +645,15 @@ void of_pci_parse_iov_addrs(struct pci_dev *dev, const int *indexes)
->  	}
->  }
->  
-> +static void pseries_disable_sriov_resources(struct pci_dev *pdev)
-> +{
-> +	int i;
-> +
-> +	pci_warn(pdev, "No hypervisor support for SR-IOV on this device, IOV BARs disabled.\n");
-> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++)
-> +		pdev->resource[i + PCI_IOV_RESOURCES].flags = 0;
-> +}
-> +
->  static void pseries_pci_fixup_resources(struct pci_dev *pdev)
->  {
->  	const int *indexes;
-> @@ -652,10 +661,10 @@ static void pseries_pci_fixup_resources(struct pci_dev *pdev)
->  
->  	/*Firmware must support open sriov otherwise dont configure*/
->  	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
-> -	if (!indexes)
-> -		return;
-> -	/* Assign the addresses from device tree*/
-> -	of_pci_set_vf_bar_size(pdev, indexes);
-> +	if (indexes)
-> +		of_pci_set_vf_bar_size(pdev, indexes);
-> +	else
-> +		pseries_disable_sriov_resources(pdev);
->  }
->  
->  static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
-> @@ -667,10 +676,10 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
->  		return;
->  	/*Firmware must support open sriov otherwise dont configure*/
->  	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
-> -	if (!indexes)
-> -		return;
-> -	/* Assign the addresses from device tree*/
-> -	of_pci_parse_iov_addrs(pdev, indexes);
-> +	if (indexes)
-> +		of_pci_parse_iov_addrs(pdev, indexes);
-> +	else
-> +		pseries_disable_sriov_resources(pdev);
->  }
->  
->  static resource_size_t pseries_pci_iov_resource_alignment(struct pci_dev *pdev,
-> -- 
-> 2.16.1.74.g9b0b1f47b
-> 
+> Thanks,
