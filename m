@@ -1,61 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43507 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966066AbeF0UPx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 27 Jun 2018 16:15:53 -0400
-Date: Wed, 27 Jun 2018 22:15:50 +0200
-From: Jean Delvare <jdelvare@suse.de>
-To: Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Cc: linux-i2c@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] i2c: i801: Fix runtime PM
-Message-ID: <20180627221550.0fa5f2df@endymion>
-In-Reply-To: <20180626143913.7361-1-jarkko.nikula@linux.intel.com>
-References: <20180626143913.7361-1-jarkko.nikula@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:46991 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751037AbeFGTdu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jun 2018 15:33:50 -0400
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: linux-acpi@vger.kernel.org
+Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, keith.busch@intel.com,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI/AER: Fix aerdrv loading with "pcie_ports=native" parameter
+Date: Thu,  7 Jun 2018 14:33:40 -0500
+Message-Id: <20180607193341.18891-1-mr.nuke.me@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jarkko,
+According to the documentation, "pcie_ports=native", linux should use
+native AER and DPC services. While that is true for the _OSC method
+parsing, this is not the only place that is checked. Should the HEST
+table list PCIe ports as firmware-first, linux will not use native
+services.
 
-On Tue, 26 Jun 2018 17:39:12 +0300, Jarkko Nikula wrote:
-> Commit 9c8088c7988 ("i2c: i801: Don't restore config registers on
-> runtime PM") nullified the runtime PM suspend/resume callback pointers
-> while keeping the runtime PM enabled. This causes that device stays in
-> D0 power state and sysfs /sys/bus/pci/devices/.../power/runtime_status
-> shows "error" when runtime PM framework attempts to autosuspend the
-> device.
-> 
-> This is due PCI bus runtime PM which checks for driver runtime PM
-> callbacks and returns with -ENOSYS if they are not set. Fix this by
-> having a shared dummy runtime PM callback that returns with success.
-> 
-> Fixes: a9c8088c7988 ("i2c: i801: Don't restore config registers on runtime PM")
+This happens because aer_acpi_firmware_first() doesn't take
+'pcie_ports' into account. This is wrong. DPC uses the same logic when
+it decides whether to load or not, so fixing this also fixes DPC not
+loading.
 
-I don't want to sound like I'm trying to decline all responsibility for
-a regression I caused, but frankly, if just using SIMPLE_DEV_PM_OPS()
-breaks runtime PM, then it's the PM model which is broken, not the
-i2c-i801 driver.
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
+ drivers/pci/pcie/aer/aerdrv_acpi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-I will boldly claim that the PCI bus runtime code is simply wrong in
-returning -ENOSYS in the absence of runtime PM callbacks, and it should
-be changed to return 0 instead. Or whoever receives that -ENOSYS should
-not treat it as an error - whatever makes more sense.
-
-Having to add dummy functions in every PCI driver that doesn't need to
-do anything special for runtime PM sounds plain stupid. It should be
-pretty obvious that a whole lot of drivers are going to use
-SIMPLE_DEV_PM_OPS() because it exists and seems to do what they want,
-and all of them will be bugged because the PCI core is doing something
-silly and unexpected.
-
-So please let's fix it at the PCI subsystem core level. Adding Bjorn
-and the linux-pci list to Cc.
-
-Thanks,
+diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
+index 08c87de13cb8..4b491851a781 100644
+--- a/drivers/pci/pcie/aer/aerdrv_acpi.c
++++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
+@@ -101,7 +101,7 @@ static void aer_set_firmware_first(struct pci_dev *pci_dev)
+ 
+ 	rc = apei_hest_parse(aer_hest_parse, &info);
+ 
+-	if (rc)
++	if (rc || pcie_ports_native)
+ 		pci_dev->__aer_firmware_first = 0;
+ 	else
+ 		pci_dev->__aer_firmware_first = info.firmware_first;
+@@ -135,6 +135,8 @@ bool aer_acpi_firmware_first(void)
+ 		apei_hest_parse(aer_hest_parse, &info);
+ 		aer_firmware_first = info.firmware_first;
+ 		parsed = true;
++		if (pcie_ports_native)
++			aer_firmware_first = 0;
+ 	}
+ 	return aer_firmware_first;
+ }
 -- 
-Jean Delvare
-SUSE L3 Support
+2.14.3
