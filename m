@@ -1,166 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:47736 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932163AbeFHITg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jun 2018 04:19:36 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v3 04/10] PCI: dwc: Rework MSI callbacks handler
-Date: Fri,  8 Jun 2018 09:19:20 +0100
-Message-Id: <a300c2c7ca631bf4df41de4f9e0c6428c9e1c6c6.1527862777.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1527862777.git.gustavo.pimentel@synopsys.com>
-References: <cover.1527862777.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1527862777.git.gustavo.pimentel@synopsys.com>
-References: <cover.1527862777.git.gustavo.pimentel@synopsys.com>
+Received: from mail-cys01nam02on0068.outbound.protection.outlook.com ([104.47.37.68]:19200
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750897AbeFGKWe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Jun 2018 06:22:34 -0400
+Subject: Re: [PATCH] i2c:amd I2C Driver based on PCI Interface for upcoming
+ platform
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <1524928597-23312-1-git-send-email-Nehal-bakulchandra.Shah@amd.com>
+ <SN1PR12MB257536FC4322C1D3D6F2F972A06C0@SN1PR12MB2575.namprd12.prod.outlook.com>
+ <20180531214311.i6s5xginjgevkwoe@ninjato>
+ <SN1PR12MB257592515E4A436078D43E68A0670@SN1PR12MB2575.namprd12.prod.outlook.com>
+ <CAErSpo6SvtKL6HsPGn2KM5Tw+oadHZXWeq=aLMA+1pyrBfBA1Q@mail.gmail.com>
+Cc: Wolfram Sang <wsa@the-dreams.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-i2c <linux-i2c@vger.kernel.org>, Sandeep.Singh@amd.com,
+        Shyam-sundar.S-k@amd.com, kai.heng.feng@canonical.com
+From: "Shah, Nehal-bakulchandra" <Nehal-Bakulchandra.shah@amd.com>
+Message-ID: <315546a5-3f3a-d921-abd6-dd500db98953@amd.com>
+Date: Thu, 7 Jun 2018 15:52:03 +0530
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6SvtKL6HsPGn2KM5Tw+oadHZXWeq=aLMA+1pyrBfBA1Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove duplicate defines located on pcie-designware.h file already
-available on /include/uapi/linux/pci-regs.h file.
+Hi
 
-Add pci_epc_set_msi() maximum 32 interrupts validation.
+Thanks for your valuable input.
+On 6/4/2018 10:45 PM, Bjorn Helgaas wrote:
+> On Mon, Jun 4, 2018 at 11:33 AM Shah, Nehal-bakulchandra
+> <Nehal-bakulchandra.Shah@amd.com> wrote:
+>>
+>> Hi All,
+>>
+>> Please help in reviewing the patch.
+> 
+> If you'd like PCI review, please post the patches to linux-pci@vger.kernel.org.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Replaced wrong return value 0 to -EINVAL.
+This patch is more onto I2C which is using PCI Interface. Is it still good to send for linux-pci review? I am really confused how to take it forward. Your suggestion will be well appreciated.
+ 
+>> -----Original Message-----
+>> From: linux-i2c-owner@vger.kernel.org [mailto:linux-i2c-owner@vger.kernel.org] On Behalf Of Wolfram Sang
+>> Sent: Friday, June 1, 2018 3:13 AM
+>> To: Shah, Nehal-bakulchandra <Nehal-bakulchandra.Shah@amd.com>
+>> Cc: linux-i2c@vger.kernel.org; Singh, Sandeep <Sandeep.Singh@amd.com>; S-k, Shyam-sundar <Shyam-sundar.S-k@amd.com>; Kai Heng Feng <kai.heng.feng@canonical.com>
+>> Subject: Re: [PATCH] i2c:amd I2C Driver based on PCI Interface for upcoming platform
+>>
+>> Hi,
+>>
+>>> I am waiting for the feedback on this patch. It has been there since
+>>> long time. Can you please provide the feedback.
+>>
+>> Well, reviewing drivers is a community effort these days. While I am part of this community, I am surely not the only one. So, please ask the list for help (rather than me personally). Furthermore, I think I am not the right person here to ask for help. I don't know much about PCI & ACPI. We have dedicated I2C-ACPI maintainers, maybe they have some bandwidth for review?
+>>
+>> That being said: yes, it is sad that you need to wait this long; yet I simply can't fill up all the resource problems we have here.
+>>
+>> Thanks,
+>>
+>>    Wolfram
+>>
 
- drivers/pci/dwc/pcie-designware-ep.c | 49 ++++++++++++++++++++++++------------
- drivers/pci/dwc/pcie-designware.h    | 11 --------
- drivers/pci/endpoint/pci-epc-core.c  |  3 ++-
- 3 files changed, 35 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index c7f2fa9..3ba7059 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -246,29 +246,38 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
- 
- static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
- {
--	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 val, reg;
-+
-+	if (!ep->msi_cap)
-+		return -EINVAL;
- 
--	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
--	if (!(val & MSI_CAP_MSI_EN_MASK))
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	val = dw_pcie_readw_dbi(pci, reg);
-+	if (!(val & PCI_MSI_FLAGS_ENABLE))
- 		return -EINVAL;
- 
--	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
-+	val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
-+
- 	return val;
- }
- 
--static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
-+static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- {
--	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 val, reg;
- 
--	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
--	val &= ~MSI_CAP_MMC_MASK;
--	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
-+	if (!ep->msi_cap)
-+		return -EINVAL;
-+
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	val = dw_pcie_readw_dbi(pci, reg);
-+	val &= ~PCI_MSI_FLAGS_QMASK;
-+	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
- 	dw_pcie_dbi_ro_wr_en(pci);
--	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
-+	dw_pcie_writew_dbi(pci, reg, val);
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	return 0;
-@@ -367,21 +376,29 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct pci_epc *epc = ep->epc;
- 	u16 msg_ctrl, msg_data;
--	u32 msg_addr_lower, msg_addr_upper;
-+	u32 msg_addr_lower, msg_addr_upper, reg;
- 	u64 msg_addr;
- 	bool has_upper;
- 	int ret;
- 
-+	if (!ep->msi_cap)
-+		return -EINVAL;
-+
- 	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
--	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	msg_ctrl = dw_pcie_readw_dbi(pci, reg);
- 	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
--	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-+	reg = ep->msi_cap + PCI_MSI_ADDRESS_LO;
-+	msg_addr_lower = dw_pcie_readl_dbi(pci, reg);
- 	if (has_upper) {
--		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
--		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
-+		reg = ep->msi_cap + PCI_MSI_ADDRESS_HI;
-+		msg_addr_upper = dw_pcie_readl_dbi(pci, reg);
-+		reg = ep->msi_cap + PCI_MSI_DATA_64;
-+		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	} else {
- 		msg_addr_upper = 0;
--		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
-+		reg = ep->msi_cap + PCI_MSI_DATA_32;
-+		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	}
- 	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
- 	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index b22c5bb..a0ab12f 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -96,17 +96,6 @@
- #define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
- 			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
- 
--#define MSI_MESSAGE_CONTROL		0x52
--#define MSI_CAP_MMC_SHIFT		1
--#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
--#define MSI_CAP_MME_SHIFT		4
--#define MSI_CAP_MSI_EN_MASK		0x1
--#define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
--#define MSI_MESSAGE_ADDR_L32		0x54
--#define MSI_MESSAGE_ADDR_U32		0x58
--#define MSI_MESSAGE_DATA_32		0x58
--#define MSI_MESSAGE_DATA_64		0x5C
--
- #define MAX_MSI_IRQS			256
- #define MAX_MSI_IRQS_PER_CTRL		32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index c72e656..094dcc3 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -201,7 +201,8 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- 	u8 encode_int;
- 	unsigned long flags;
- 
--	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
-+	    interrupts > 32)
- 		return -EINVAL;
- 
- 	if (!epc->ops->set_msi)
--- 
-2.7.4
+Thanks,
+Nehal Shah
