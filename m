@@ -1,29 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ed1-f44.google.com ([209.85.208.44]:42742 "EHLO
-        mail-ed1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934131AbeF3KYX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jun 2018 06:24:23 -0400
-Received: by mail-ed1-f44.google.com with SMTP id g12-v6so8617471edi.9
-        for <linux-pci@vger.kernel.org>; Sat, 30 Jun 2018 03:24:22 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 7 Jun 2018 16:34:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: poza@codeaurora.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH NEXT 6/6] PCI/PORTDRV: Remove ERR_FATAL handling from
+ pcie_portdrv_slot_reset()
+Message-ID: <20180607213448.GB37077@bhelgaas-glaptop.roam.corp.google.com>
+References: <1528351234-26914-1-git-send-email-poza@codeaurora.org>
+ <1528351234-26914-6-git-send-email-poza@codeaurora.org>
+ <94661add3e71e3694aa22c2a9cabf503@codeaurora.org>
 MIME-Version: 1.0
-References: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org> <20180629141626.GH9643@red-moon>
-In-Reply-To: <20180629141626.GH9643@red-moon>
-From: Shawn Guo <shawn.guo@linaro.org>
-Date: Sat, 30 Jun 2018 18:24:10 +0800
-Message-ID: <CAAQ0ZWRdts12WKuRiNW=-FRPh_r=g=V+mnzHRiL-eSfP_0hy0w@mail.gmail.com>
-Subject: Re: [PATCH v2 0/9] PCI: dwc: Drop unnecessary root_bus_nr setting
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <94661add3e71e3694aa22c2a9cabf503@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 29, 2018 at 10:14 PM Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> would you mind please rebasing it against v4.18-rc1 and resend with
-> CC all the controllers maintainers so that we can get ACKs and send it
-> for v4.19 ?
+On Thu, Jun 07, 2018 at 07:18:03PM +0530, poza@codeaurora.org wrote:
+> On 2018-06-07 11:30, Oza Pawandeep wrote:
+> > We are handling ERR_FATAL by resetting the Link in software,skipping the
+> > driver pci_error_handlers callbacks, removing the devices from the PCI
+> > subsystem, and re-enumerating, as a result of that, no more calling
+> > pcie_portdrv_slot_reset in ERR_FATAL case.
+> > 
+> > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+> > 
+> > diff --git a/drivers/pci/pcie/portdrv_pci.c
+> > b/drivers/pci/pcie/portdrv_pci.c
+> > index 973f1b8..92f5d330 100644
+> > --- a/drivers/pci/pcie/portdrv_pci.c
+> > +++ b/drivers/pci/pcie/portdrv_pci.c
+> > @@ -42,17 +42,6 @@ __setup("pcie_ports=", pcie_port_setup);
+> > 
+> >  /* global data */
+> > 
+> > -static int pcie_portdrv_restore_config(struct pci_dev *dev)
+> > -{
+> > -	int retval;
+> > -
+> > -	retval = pci_enable_device(dev);
+> > -	if (retval)
+> > -		return retval;
+> > -	pci_set_master(dev);
+> > -	return 0;
+> > -}
+> > -
+> >  #ifdef CONFIG_PM
+> >  static int pcie_port_runtime_suspend(struct device *dev)
+> >  {
+> > @@ -162,14 +151,6 @@ static pci_ers_result_t
+> > pcie_portdrv_mmio_enabled(struct pci_dev *dev)
+> > 
+> >  static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+> >  {
+> > -	/* If fatal, restore cfg space for possible link reset at upstream */
+> > -	if (dev->error_state == pci_channel_io_frozen) {
+> > -		dev->state_saved = true;
+> > -		pci_restore_state(dev);
+> > -		pcie_portdrv_restore_config(dev);
+> > -		pci_enable_pcie_error_reporting(dev);
+> > -	}
+> > -
+> >  	return PCI_ERS_RESULT_RECOVERED;
+> >  }
+> 
+> 
+> Hi Bjorn,
+> 
+> the above patch removes ERR_FATAL handling from pcie_portdrv_slot_reset()
+> because now we are handling ERR_FATAL differently than before.
+> 
+> I tried to dig into pcie_portdrv_slot_reset() handling for ERR_FATAL case
+> where it
+> restores the config space, enable device, set master and enable error
+> reporting....
+> and as far as I understand this is being done for upstream link (bridges
+> etc..)
+> 
+> why was it done at the first point (I checked the commit description, but
+> could not really get it)
+> and do we need to handle the same thing in ERR_FATAL now ?
 
-No problem.  Will do.
-
-Shawn
+You mean 4bf3392e0bf5 ("PCI-Express AER implemetation: pcie_portdrv
+error handler"), which added pcie_portdrv_slot_reset()?  I agree, that
+commit log has no useful information.  I don't know any of the history
+behind it.
