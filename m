@@ -1,46 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:47042 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754628AbeFRPOg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jun 2018 11:14:36 -0400
-Date: Mon, 18 Jun 2018 08:14:29 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: hotplug: Breathe new life into skeleton driver
-Message-ID: <20180618151429.GA12288@infradead.org>
-References: <173b4197138473a1f184cdc0c27093dfce318412.1529179055.git.lukas@wunner.de>
+Received: from mail-pu1apc01on0093.outbound.protection.outlook.com ([104.47.126.93]:15369
+        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752213AbeFGAO5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 Jun 2018 20:14:57 -0400
+From: Dexuan Cui <decui@microsoft.com>
+To: Haiyang Zhang <haiyangz@microsoft.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>
+Subject: RE: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
+ hv_compose_msi_msg()
+Date: Thu, 7 Jun 2018 00:14:39 +0000
+Message-ID: <KL1P15301MB0006D8314C8B40A939598056BF640@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+References: <KL1P15301MB0006EE546A7C2567B61EA783BF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <BN6PR21MB016112A4E32D76EC669818C3CA690@BN6PR21MB0161.namprd21.prod.outlook.com>
+In-Reply-To: <BN6PR21MB016112A4E32D76EC669818C3CA690@BN6PR21MB0161.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <173b4197138473a1f184cdc0c27093dfce318412.1529179055.git.lukas@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 16, 2018 at 10:09:10PM +0200, Lukas Wunner wrote:
-> Ten years ago, commit 58319b802a61 ("PCI: Hotplug core: remove 'name'")
-> dropped the name element from struct hotplug_slot but neglected to
-> update the skeleton driver.
-> 
-> That same year, commit f46753c5e354 ("PCI: introduce pci_slot") raised
-> the number of arguments to pci_hp_register() from one to four.
-> 
-> Fourteen years ago, historic commit 7ab60fc1b8e7 ("PCI Hotplug skeleton:
-> final cleanups") removed all usages of the retval variable from
-> pcihp_skel_init() but not the variable itself, provoking a compiler
-> warning:
-> https://git.kernel.org/tglx/history/c/7ab60fc1b8e7
-> 
-> Fix it and afford compile test coverage to the driver to prevent the
-> same thing from happening again.
-> 
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
-> I guess an alternative would be to delete the skeleton driver,
-> considering that noone bothered to fix these bugs for years.
-> If that is preferred I'll be happy to submit a patch.
+> From: Haiyang Zhang
+> Sent: Friday, May 25, 2018 12:52
+> To: Dexuan Cui <decui@microsoft.com>; Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com>; Bjorn Helgaas <bhelgaas@google.com>;
+> linux-pci@vger.kernel.org; KY Srinivasan <kys@microsoft.com>; Stephen
+> Hemminger <sthemmin@microsoft.com>; olaf@aepfle.de;
+> apw@canonical.com; jasowang@redhat.com
+> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
+> vkuznets@redhat.com; marcelo.cerri@canonical.com
+> Subject: RE: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
+> hv_compose_msi_msg()
+>=20
+> > From: Dexuan Cui
+> > Sent: Tuesday, May 22, 2018 8:18 PM
+> > To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>; Bjorn Helgaas
+> > <bhelgaas@google.com>; linux-pci@vger.kernel.org; KY Srinivasan
+> > <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
+> > olaf@aepfle.de; apw@canonical.com; jasowang@redhat.com
+> > Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.or=
+g;
+> > Haiyang Zhang <haiyangz@microsoft.com>; vkuznets@redhat.com;
+> > marcelo.cerri@canonical.com
+> > Subject: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
+> > hv_compose_msi_msg()
+> >
+> >
+> > Commit de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in
+> hv_compose_msi_msg()")
+> > uses local_bh_disable()/enable(), because hv_pci_onchannelcallback() ca=
+n
+> also
+> > run in tasklet context as the channel event callback.
+> >
+> > With CONFIG_PROVE_LOCKING=3Dy in the latest mainline, or old kernels th=
+at
+> > don't have commit f71b74bca637 ("irq/softirqs: Use lockdep to assert IR=
+Qs
+> are
+> > disabled/enabled"), it turns out can we trigger a warning at the beginn=
+ing of
+> > __local_bh_enable_ip(), because the upper layer irq code can call
+> > hv_compose_msi_msg() with local irqs disabled.
+> >
+> > Let's fix the warning by switching to local_irq_save()/restore(). This =
+is not an
+> > issue because hv_pci_onchannelcallback() is not slow, and it not a hot =
+path.
+> >
+> > Fixes: de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in hv_compose_msi_msg(=
+)")
+> > Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> > Cc: <stable@vger.kernel.org>
+> > Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> > Cc: K. Y. Srinivasan <kys@microsoft.com>
+> > ---
+>=20
+> Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+>=20
+> Thanks you.
 
-I think deleting is is the better idea.  skeleton drivers have a tendency
-to get out of sync with reality really quickly as you've shown.  And that
-assumes they started out correct, which often isn't the case.
+Hi Lorenzo,
+
+Can I have your reply to this patch?
+
+-- Dexuan
