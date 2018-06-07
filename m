@@ -1,45 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35650 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933719AbeFZUj2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jun 2018 16:39:28 -0400
-Date: Tue, 26 Jun 2018 15:39:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 0/4] PCI: shpchp: NULL pointer fix and cleanups
-Message-ID: <20180626203926.GB181504@bhelgaas-glaptop.roam.corp.google.com>
-References: <152996746234.260522.11381067633352986554.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <152996746234.260522.11381067633352986554.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:20187 "EHLO
+        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752561AbeFGGAj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jun 2018 02:00:39 -0400
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH NEXT 2/6] PCI/AER: Clear uncorrectable fatal error status bits
+Date: Thu,  7 Jun 2018 02:00:30 -0400
+Message-Id: <1528351234-26914-2-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1528351234-26914-1-git-send-email-poza@codeaurora.org>
+References: <1528351234-26914-1-git-send-email-poza@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 25, 2018 at 05:59:33PM -0500, Bjorn Helgaas wrote:
-> The first patch fixes a NULL pointer dereference reported by Marc and would
-> be targeted for v4.18.
-> 
-> The others simplify the shpchp probe path and would be for v4.19.
-> 
-> ---
-> 
-> Bjorn Helgaas (4):
->       PCI: shpchp: Manage SHPC unconditionally on non-ACPI systems
->       PCI: shpchp: Separate existence of SHPC and permission to use it
->       PCI: shpchp: Inline shpchp_is_native()
->       PCI: hotplug: Implement hotplug_is_native() only when CONFIG_ACPI=y
+During ERR_FATAL handling, AER calls pci_cleanup_aer_uncorrect_error_status
+which should handle pci_channel_io_frozen case in order to determine if it
+has to clear fatal bits or nonfatal bits.
 
-I applied the first (with Marc's tested-by and Mika's reviewed-by) to
-for-linus for v4.18.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-I applied the others with Mika's reviewed-by to pci/hotplug for v4.19.
-
->  drivers/pci/hotplug/acpi_pcihp.c  |   40 +++++++++++++++++++++++--------------
->  drivers/pci/hotplug/shpchp_core.c |   21 +++++++++++++++++++
->  drivers/pci/pci-acpi.c            |   29 ---------------------------
->  include/linux/pci.h               |    1 +
->  include/linux/pci_hotplug.h       |   20 ++++++++++---------
->  5 files changed, 58 insertions(+), 53 deletions(-)
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 309f3f5..6745e37 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -60,7 +60,12 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+ 	pos = dev->aer_cap;
+ 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
+ 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
+-	status &= ~mask; /* Clear corresponding nonfatal bits */
++
++	if (dev->error_state == pci_channel_io_normal)
++		status &= ~mask; /* Clear corresponding nonfatal bits */
++	else
++		status &= mask; /* Clear corresponding fatal bits */
++
+ 	if (status)
+ 		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
+ 
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index f7ce0cb..00d2875 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -288,6 +288,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+ 	struct pci_dev *pdev, *temp;
+ 	pci_ers_result_t result;
+ 
++	dev->error_state = pci_channel_io_frozen;
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+ 		udev = dev;
+ 	else
+@@ -323,6 +324,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+ 		if (pcie_wait_for_link(udev, true))
+ 			pci_rescan_bus(udev->bus);
+ 		pci_info(dev, "Device recovery from fatal error successful\n");
++		dev->error_state = pci_channel_io_normal;
+ 	} else {
+ 		pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+ 		pci_info(dev, "Device recovery from fatal error failed\n");
+-- 
+2.7.4
