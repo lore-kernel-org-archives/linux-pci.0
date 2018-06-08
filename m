@@ -1,107 +1,270 @@
-Return-Path: <mhocko@kernel.org>
-Return-Path: <mhocko@kernel.org>
-Date: Fri, 22 Jun 2018 11:11:53 +0200
-From: Michal Hocko <mhocko@kernel.org>
-To: Hanjun Guo <guohanjun@huawei.com>
-Cc: Punit Agrawal <punit.agrawal@arm.com>, Xie XiuQi <xiexiuqi@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, tnowicki@caviumnetworks.com,
-	linux-pci@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-	linux-mm@kvack.org, wanghuiqiang@huawei.com,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	zhongjiang <zhongjiang@huawei.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
-Message-ID: <20180622091153.GU10465@dhcp22.suse.cz>
-References: <20180619120714.GE13685@dhcp22.suse.cz>
- <874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
- <20180619140818.GA16927@e107981-ln.cambridge.arm.com>
- <87wouu3jz1.fsf@e105922-lin.cambridge.arm.com>
- <20180619151425.GH13685@dhcp22.suse.cz>
- <87r2l23i2b.fsf@e105922-lin.cambridge.arm.com>
- <20180619163256.GA18952@e107981-ln.cambridge.arm.com>
- <814205eb-ae86-a519-bed0-f09b8e2d3a02@huawei.com>
- <87602d3ccl.fsf@e105922-lin.cambridge.arm.com>
- <5c083c9c-473f-f504-848b-48506d0fd380@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v1 6/9] PCI/portdrv: Squash service driver registration into
+ portdrv_pci.c
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Oza Pawandeep <poza@codeaurora.org>, linux-kernel@vger.kernel.org
+Date: Fri, 08 Jun 2018 15:12:38 -0500
+Message-ID: <152848875803.14051.11862886995562549992.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152848853199.14051.12670957565366345798.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152848853199.14051.12670957565366345798.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5c083c9c-473f-f504-848b-48506d0fd380@huawei.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri 22-06-18 16:58:05, Hanjun Guo wrote:
-> On 2018/6/20 19:51, Punit Agrawal wrote:
-> > Xie XiuQi <xiexiuqi@huawei.com> writes:
-> > 
-> >> Hi Lorenzo, Punit,
-> >>
-> >>
-> >> On 2018/6/20 0:32, Lorenzo Pieralisi wrote:
-> >>> On Tue, Jun 19, 2018 at 04:35:40PM +0100, Punit Agrawal wrote:
-> >>>> Michal Hocko <mhocko@kernel.org> writes:
-> >>>>
-> >>>>> On Tue 19-06-18 15:54:26, Punit Agrawal wrote:
-> >>>>> [...]
-> >>>>>> In terms of $SUBJECT, I wonder if it's worth taking the original patch
-> >>>>>> as a temporary fix (it'll also be easier to backport) while we work on
-> >>>>>> fixing these other issues and enabling memoryless nodes.
-> >>>>>
-> >>>>> Well, x86 already does that but copying this antipatern is not really
-> >>>>> nice. So it is good as a quick fix but it would be definitely much
-> >>>>> better to have a robust fix. Who knows how many other places might hit
-> >>>>> this. You certainly do not want to add a hack like this all over...
-> >>>>
-> >>>> Completely agree! I was only suggesting it as a temporary measure,
-> >>>> especially as it looked like a proper fix might be invasive.
-> >>>>
-> >>>> Another fix might be to change the node specific allocation to node
-> >>>> agnostic allocations. It isn't clear why the allocation is being
-> >>>> requested from a specific node. I think Lorenzo suggested this in one of
-> >>>> the threads.
-> >>>
-> >>> I think that code was just copypasted but it is better to fix the
-> >>> underlying issue.
-> >>>
-> >>>> I've started putting together a set fixing the issues identified in this
-> >>>> thread. It should give a better idea on the best course of action.
-> >>>
-> >>> On ACPI ARM64, this diff should do if I read the code correctly, it
-> >>> should be (famous last words) just a matter of mapping PXMs to nodes for
-> >>> every SRAT GICC entry, feel free to pick it up if it works.
-> >>>
-> >>> Yes, we can take the original patch just because it is safer for an -rc
-> >>> cycle even though if the patch below would do delaying the fix for a
-> >>> couple of -rc (to get it tested across ACPI ARM64 NUMA platforms) is
-> >>> not a disaster.
-> >>
-> >> I tested this patch on my arm board, it works.
-> > 
-> > I am assuming you tried the patch without enabling support for
-> > memory-less nodes.
-> > 
-> > The patch de-couples the onlining of numa nodes (as parsed from SRAT)
-> > from NR_CPUS restriction. When it comes to building zonelists, the node
-> > referenced by the PCI controller also has zonelists initialised.
-> > 
-> > So it looks like a fallback node is setup even if we don't have
-> > memory-less nodes enabled. I need to stare some more at the code to see
-> > why we need memory-less nodes at all then ...
-> 
-> Yes, please. From my limited MM knowledge, zonelists should not be
-> initialised if no CPU and no memory on this node, correct me if I'm
-> wrong.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Well, as long as there is a code which can explicitly ask for a specific
-node than it is safer to have zonelists configured. Otherwise you just
-force callers to add hacks and figure out the proper placement there.
-Zonelists should be cheep to configure for all possible nodes. It's not
-like we are talking about huge amount of resources.
--- 
-Michal Hocko
-SUSE Labs
+Squash service driver registration into portdrv_pci.c.  No functional
+change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/Makefile       |    2 -
+ drivers/pci/pcie/portdrv_core.c |  116 ---------------------------------------
+ drivers/pci/pcie/portdrv_pci.c  |   96 ++++++++++++++++++++++++++++++++
+ 3 files changed, 97 insertions(+), 117 deletions(-)
+ delete mode 100644 drivers/pci/pcie/portdrv_core.c
+
+diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
+index 03f4e0b3a140..aad431790b1d 100644
+--- a/drivers/pci/pcie/Makefile
++++ b/drivers/pci/pcie/Makefile
+@@ -2,7 +2,7 @@
+ #
+ # Makefile for PCI Express features and port driver
+ 
+-pcieportdrv-y			:= portdrv_core.o portdrv_pci.o err.o
++pcieportdrv-y			:= portdrv_pci.o err.o
+ 
+ obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
+ 
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+deleted file mode 100644
+index 77b1c1ea8885..000000000000
+--- a/drivers/pci/pcie/portdrv_core.c
++++ /dev/null
+@@ -1,116 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Purpose:	PCI Express Port Bus Driver's Core Functions
+- *
+- * Copyright (C) 2004 Intel
+- * Copyright (C) Tom Long Nguyen (tom.l.nguyen@intel.com)
+- */
+-
+-#include <linux/module.h>
+-#include <linux/pci.h>
+-#include <linux/kernel.h>
+-#include <linux/errno.h>
+-#include <linux/pm.h>
+-#include <linux/pm_runtime.h>
+-#include <linux/string.h>
+-#include <linux/slab.h>
+-#include <linux/aer.h>
+-
+-#include "../pci.h"
+-#include "portdrv.h"
+-
+-/**
+- * pcie_port_probe_service - probe driver for given PCI Express port service
+- * @dev: PCI Express port service device to probe against
+- *
+- * If PCI Express port service driver is registered with
+- * pcie_port_service_register(), this function will be called by the driver core
+- * whenever match is found between the driver and a port service device.
+- */
+-static int pcie_port_probe_service(struct device *dev)
+-{
+-	struct pcie_device *pciedev;
+-	struct pcie_port_service_driver *driver;
+-	int status;
+-
+-	if (!dev || !dev->driver)
+-		return -ENODEV;
+-
+-	driver = to_service_driver(dev->driver);
+-	if (!driver || !driver->probe)
+-		return -ENODEV;
+-
+-	pciedev = to_pcie_device(dev);
+-	status = driver->probe(pciedev);
+-	if (status)
+-		return status;
+-
+-	get_device(dev);
+-	return 0;
+-}
+-
+-/**
+- * pcie_port_remove_service - detach driver from given PCI Express port service
+- * @dev: PCI Express port service device to handle
+- *
+- * If PCI Express port service driver is registered with
+- * pcie_port_service_register(), this function will be called by the driver core
+- * when device_unregister() is called for the port service device associated
+- * with the driver.
+- */
+-static int pcie_port_remove_service(struct device *dev)
+-{
+-	struct pcie_device *pciedev;
+-	struct pcie_port_service_driver *driver;
+-
+-	if (!dev || !dev->driver)
+-		return 0;
+-
+-	pciedev = to_pcie_device(dev);
+-	driver = to_service_driver(dev->driver);
+-	if (driver && driver->remove) {
+-		driver->remove(pciedev);
+-		put_device(dev);
+-	}
+-	return 0;
+-}
+-
+-/**
+- * pcie_port_shutdown_service - shut down given PCI Express port service
+- * @dev: PCI Express port service device to handle
+- *
+- * If PCI Express port service driver is registered with
+- * pcie_port_service_register(), this function will be called by the driver core
+- * when device_shutdown() is called for the port service device associated
+- * with the driver.
+- */
+-static void pcie_port_shutdown_service(struct device *dev) {}
+-
+-/**
+- * pcie_port_service_register - register PCI Express port service driver
+- * @new: PCI Express port service driver to register
+- */
+-int pcie_port_service_register(struct pcie_port_service_driver *new)
+-{
+-	if (pcie_ports_disabled)
+-		return -ENODEV;
+-
+-	new->driver.name = new->name;
+-	new->driver.bus = &pcie_port_bus_type;
+-	new->driver.probe = pcie_port_probe_service;
+-	new->driver.remove = pcie_port_remove_service;
+-	new->driver.shutdown = pcie_port_shutdown_service;
+-
+-	return driver_register(&new->driver);
+-}
+-EXPORT_SYMBOL(pcie_port_service_register);
+-
+-/**
+- * pcie_port_service_unregister - unregister PCI Express port service driver
+- * @drv: PCI Express port service driver to unregister
+- */
+-void pcie_port_service_unregister(struct pcie_port_service_driver *drv)
+-{
+-	driver_unregister(&drv->driver);
+-}
+-EXPORT_SYMBOL(pcie_port_service_unregister);
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index b019af97f14e..1375e91c268f 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -110,6 +110,102 @@ struct device *pcie_port_find_device(struct pci_dev *dev, u32 service)
+ 	return device;
+ }
+ 
++/**
++ * pcie_port_probe_service - probe driver for given PCI Express port service
++ * @dev: PCI Express port service device to probe against
++ *
++ * If PCI Express port service driver is registered with
++ * pcie_port_service_register(), this function will be called by the driver core
++ * whenever match is found between the driver and a port service device.
++ */
++static int pcie_port_probe_service(struct device *dev)
++{
++	struct pcie_device *pciedev;
++	struct pcie_port_service_driver *driver;
++	int status;
++
++	if (!dev || !dev->driver)
++		return -ENODEV;
++
++	driver = to_service_driver(dev->driver);
++	if (!driver || !driver->probe)
++		return -ENODEV;
++
++	pciedev = to_pcie_device(dev);
++	status = driver->probe(pciedev);
++	if (status)
++		return status;
++
++	get_device(dev);
++	return 0;
++}
++
++/**
++ * pcie_port_remove_service - detach driver from given PCI Express port service
++ * @dev: PCI Express port service device to handle
++ *
++ * If PCI Express port service driver is registered with
++ * pcie_port_service_register(), this function will be called by the driver core
++ * when device_unregister() is called for the port service device associated
++ * with the driver.
++ */
++static int pcie_port_remove_service(struct device *dev)
++{
++	struct pcie_device *pciedev;
++	struct pcie_port_service_driver *driver;
++
++	if (!dev || !dev->driver)
++		return 0;
++
++	pciedev = to_pcie_device(dev);
++	driver = to_service_driver(dev->driver);
++	if (driver && driver->remove) {
++		driver->remove(pciedev);
++		put_device(dev);
++	}
++	return 0;
++}
++
++/**
++ * pcie_port_shutdown_service - shut down given PCI Express port service
++ * @dev: PCI Express port service device to handle
++ *
++ * If PCI Express port service driver is registered with
++ * pcie_port_service_register(), this function will be called by the driver core
++ * when device_shutdown() is called for the port service device associated
++ * with the driver.
++ */
++static void pcie_port_shutdown_service(struct device *dev) {}
++
++/**
++ * pcie_port_service_register - register PCI Express port service driver
++ * @new: PCI Express port service driver to register
++ */
++int pcie_port_service_register(struct pcie_port_service_driver *new)
++{
++	if (pcie_ports_disabled)
++		return -ENODEV;
++
++	new->driver.name = new->name;
++	new->driver.bus = &pcie_port_bus_type;
++	new->driver.probe = pcie_port_probe_service;
++	new->driver.remove = pcie_port_remove_service;
++	new->driver.shutdown = pcie_port_shutdown_service;
++
++	return driver_register(&new->driver);
++}
++EXPORT_SYMBOL(pcie_port_service_register);
++
++/**
++ * pcie_port_service_unregister - unregister PCI Express port service driver
++ * @drv: PCI Express port service driver to unregister
++ */
++void pcie_port_service_unregister(struct pcie_port_service_driver *drv)
++{
++	driver_unregister(&drv->driver);
++}
++EXPORT_SYMBOL(pcie_port_service_unregister);
++
+ static int pcie_portdrv_restore_config(struct pci_dev *dev)
+ {
+ 	int retval;
