@@ -1,46 +1,190 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:29680 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753906AbeFULOA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Jun 2018 07:14:00 -0400
-Date: Thu, 21 Jun 2018 14:13:54 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 32/32] PCI: Whitelist Thunderbolt ports for runtime D3
-Message-ID: <20180621111354.GW2558@lahna.fi.intel.com>
-References: <cover.1529173804.git.lukas@wunner.de>
- <10206fe7f3967aa73ade5b24dc729de0e94c3b7f.1529173804.git.lukas@wunner.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v1 10/13] PCI/AER: Move private AER things to aerdrv.c
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Keith Busch <keith.busch@intel.com>,
+        Borislav Petkov <bp@alien8.de>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        linux-kernel@vger.kernel.org
+Date: Fri, 08 Jun 2018 15:05:47 -0500
+Message-ID: <152848834746.11888.3692087095799839481.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <10206fe7f3967aa73ade5b24dc729de0e94c3b7f.1529173804.git.lukas@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
-> +		/* Even the oldest 2010 Thunderbolt controller supports D3. */
-> +		if (bridge->is_thunderbolt)
-> +			return true;
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-I have a small concern here. In PC world native PCIe hotplug used with
-Thunderbolt comes in two flavors:
+Most of the things in aerdrv.h are only used in aerdrv.c, so move them
+there.  No functional change intended.
 
-  - Native PCI hotplug without runtime PM
-  - Native PCI hotplug with runtime PM
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/aer/aerdrv.c |   64 +++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/aer/aerdrv.h |   79 -----------------------------------------
+ 2 files changed, 63 insertions(+), 80 deletions(-)
+ delete mode 100644 drivers/pci/pcie/aer/aerdrv.h
 
-The former works so that even if it uses native PCIe hotplug, the power
-management is done so that the Thunderbolt host router is hot-removed
-when there is nothing connected (and that brings the power savings).
-With the above change we start putting all Thunderbolt PCIe hotplug
-ports to D3 runtime. While this probably works (and I tested it on the
-same Dell) I don't think Windows does it and it may lead to a path that
-has not been tested very thoroughly by OEMs.
-
-So I wonder if it makes sense to restrict this particular check to Apple
-hardware at this point?
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 51b66307e68c..3fc23fc95f98 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -27,8 +27,70 @@
+ #include <acpi/apei.h>
+ #include <ras/ras_event.h>
+ 
+-#include "aerdrv.h"
+ #include "../../pci.h"
++#include "../portdrv.h"
++
++#define AER_ERROR_SOURCES_MAX		100
++#define AER_MAX_MULTI_ERR_DEVICES	5	/* Not likely to have more */
++
++struct aer_err_info {
++	struct pci_dev *dev[AER_MAX_MULTI_ERR_DEVICES];
++	int error_dev_num;
++
++	unsigned int id:16;
++
++	unsigned int severity:2;	/* 0:NONFATAL | 1:FATAL | 2:COR */
++	unsigned int __pad1:5;
++	unsigned int multi_error_valid:1;
++
++	unsigned int first_error:5;
++	unsigned int __pad2:2;
++	unsigned int tlp_header_valid:1;
++
++	unsigned int status;		/* COR/UNCOR Error Status */
++	unsigned int mask;		/* COR/UNCOR Error Mask */
++	struct aer_header_log_regs tlp;	/* TLP Header */
++};
++
++struct aer_err_source {
++	unsigned int status;
++	unsigned int id;
++};
++
++struct aer_rpc {
++	struct pci_dev *rpd;		/* Root Port device */
++	struct work_struct dpc_handler;
++	struct aer_err_source e_sources[AER_ERROR_SOURCES_MAX];
++	struct aer_err_info e_info;
++	unsigned short prod_idx;	/* Error Producer Index */
++	unsigned short cons_idx;	/* Error Consumer Index */
++	int isr;
++	spinlock_t e_lock;		/*
++					 * Lock access to Error Status/ID Regs
++					 * and error producer/consumer index
++					 */
++	struct mutex rpc_mutex;		/*
++					 * only one thread could do
++					 * recovery on the same
++					 * root port hierarchy
++					 */
++};
++
++#define AER_LOG_TLP_MASKS		(PCI_ERR_UNC_POISON_TLP|	\
++					PCI_ERR_UNC_ECRC|		\
++					PCI_ERR_UNC_UNSUP|		\
++					PCI_ERR_UNC_COMP_ABORT|		\
++					PCI_ERR_UNC_UNX_COMP|		\
++					PCI_ERR_UNC_MALF_TLP)
++
++#define SYSTEM_ERROR_INTR_ON_MESG_MASK	(PCI_EXP_RTCTL_SECEE|	\
++					PCI_EXP_RTCTL_SENFEE|	\
++					PCI_EXP_RTCTL_SEFEE)
++#define ROOT_PORT_INTR_ON_MESG_MASK	(PCI_ERR_ROOT_CMD_COR_EN|	\
++					PCI_ERR_ROOT_CMD_NONFATAL_EN|	\
++					PCI_ERR_ROOT_CMD_FATAL_EN)
++#define ERR_COR_ID(d)			(d & 0xffff)
++#define ERR_UNCOR_ID(d)			(d >> 16)
+ 
+ static int pcie_aer_disable;
+ 
+diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+deleted file mode 100644
+index 9867950635df..000000000000
+--- a/drivers/pci/pcie/aer/aerdrv.h
++++ /dev/null
+@@ -1,79 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-/*
+- * Copyright (C) 2006 Intel Corp.
+- *	Tom Long Nguyen (tom.l.nguyen@intel.com)
+- *	Zhang Yanmin (yanmin.zhang@intel.com)
+- */
+-
+-#ifndef _AERDRV_H_
+-#define _AERDRV_H_
+-
+-#include <linux/workqueue.h>
+-#include <linux/aer.h>
+-#include <linux/interrupt.h>
+-
+-#include "../portdrv.h"
+-
+-#define SYSTEM_ERROR_INTR_ON_MESG_MASK	(PCI_EXP_RTCTL_SECEE|	\
+-					PCI_EXP_RTCTL_SENFEE|	\
+-					PCI_EXP_RTCTL_SEFEE)
+-#define ROOT_PORT_INTR_ON_MESG_MASK	(PCI_ERR_ROOT_CMD_COR_EN|	\
+-					PCI_ERR_ROOT_CMD_NONFATAL_EN|	\
+-					PCI_ERR_ROOT_CMD_FATAL_EN)
+-#define ERR_COR_ID(d)			(d & 0xffff)
+-#define ERR_UNCOR_ID(d)			(d >> 16)
+-
+-#define AER_ERROR_SOURCES_MAX		100
+-
+-#define AER_LOG_TLP_MASKS		(PCI_ERR_UNC_POISON_TLP|	\
+-					PCI_ERR_UNC_ECRC|		\
+-					PCI_ERR_UNC_UNSUP|		\
+-					PCI_ERR_UNC_COMP_ABORT|		\
+-					PCI_ERR_UNC_UNX_COMP|		\
+-					PCI_ERR_UNC_MALF_TLP)
+-
+-#define AER_MAX_MULTI_ERR_DEVICES	5	/* Not likely to have more */
+-struct aer_err_info {
+-	struct pci_dev *dev[AER_MAX_MULTI_ERR_DEVICES];
+-	int error_dev_num;
+-
+-	unsigned int id:16;
+-
+-	unsigned int severity:2;	/* 0:NONFATAL | 1:FATAL | 2:COR */
+-	unsigned int __pad1:5;
+-	unsigned int multi_error_valid:1;
+-
+-	unsigned int first_error:5;
+-	unsigned int __pad2:2;
+-	unsigned int tlp_header_valid:1;
+-
+-	unsigned int status;		/* COR/UNCOR Error Status */
+-	unsigned int mask;		/* COR/UNCOR Error Mask */
+-	struct aer_header_log_regs tlp;	/* TLP Header */
+-};
+-
+-struct aer_err_source {
+-	unsigned int status;
+-	unsigned int id;
+-};
+-
+-struct aer_rpc {
+-	struct pci_dev *rpd;		/* Root Port device */
+-	struct work_struct dpc_handler;
+-	struct aer_err_source e_sources[AER_ERROR_SOURCES_MAX];
+-	struct aer_err_info e_info;
+-	unsigned short prod_idx;	/* Error Producer Index */
+-	unsigned short cons_idx;	/* Error Consumer Index */
+-	int isr;
+-	spinlock_t e_lock;		/*
+-					 * Lock access to Error Status/ID Regs
+-					 * and error producer/consumer index
+-					 */
+-	struct mutex rpc_mutex;		/*
+-					 * only one thread could do
+-					 * recovery on the same
+-					 * root port hierarchy
+-					 */
+-};
+-
+-#endif /* _AERDRV_H_ */
