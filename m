@@ -1,100 +1,113 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org,
-	ryan@finnie.org
-Subject: [PATCH V5] scsi: hpsa: disable device during shutdown
-Date: Sat,  2 Jun 2018 00:28:53 -0400
-Message-Id: <1527913733-16492-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=5wfS=I2=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=5wfS=I2=codeaurora.org=okaya@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Don Brace <don.brace@microsemi.com>,
- "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
- "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER hpsa"
- <linux-scsi@vger.kernel.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-arm-msm@vger.kernel.org,
- "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER hpsa"
- <esc.storagedev@microsemi.com>, open list <linux-kernel@vger.kernel.org>,
- stable@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 08 Jun 2018 06:41:48 -0400
+From: okaya@codeaurora.org
+To: poza@codeaurora.org
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Philippe Ombredanne <pombredanne@nexb.com>, Thomas Gleixner
+ <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate
+ Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
+ Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Timur Tabi
+ <timur@codeaurora.org>, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH NEXT 6/6] PCI/PORTDRV: Remove ERR_FATAL handling from
+ pcie_portdrv_slot_reset()
+In-Reply-To: <bbce31a6e59fdfa00e565e09dcae9eea@codeaurora.org>
+References: <1528351234-26914-1-git-send-email-poza@codeaurora.org>
+ <1528351234-26914-6-git-send-email-poza@codeaurora.org>
+ <94661add3e71e3694aa22c2a9cabf503@codeaurora.org>
+ <20180607213448.GB37077@bhelgaas-glaptop.roam.corp.google.com>
+ <bbce31a6e59fdfa00e565e09dcae9eea@codeaurora.org>
+Message-ID: <eaa6c04259f0b41d5281d24c7422f914@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
-shutdown")' has been added to kernel to shutdown pending PCIe port
-service interrupts during reboot so that a newly started kexec kernel
-wouldn't observe pending interrupts.
+On 2018-06-08 00:57, poza@codeaurora.org wrote:
+> On 2018-06-08 03:04, Bjorn Helgaas wrote:
+>> On Thu, Jun 07, 2018 at 07:18:03PM +0530, poza@codeaurora.org wrote:
+>>> On 2018-06-07 11:30, Oza Pawandeep wrote:
+>>> > We are handling ERR_FATAL by resetting the Link in software,skipping the
+>>> > driver pci_error_handlers callbacks, removing the devices from the PCI
+>>> > subsystem, and re-enumerating, as a result of that, no more calling
+>>> > pcie_portdrv_slot_reset in ERR_FATAL case.
+>>> >
+>>> > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+>>> >
+>>> > diff --git a/drivers/pci/pcie/portdrv_pci.c
+>>> > b/drivers/pci/pcie/portdrv_pci.c
+>>> > index 973f1b8..92f5d330 100644
+>>> > --- a/drivers/pci/pcie/portdrv_pci.c
+>>> > +++ b/drivers/pci/pcie/portdrv_pci.c
+>>> > @@ -42,17 +42,6 @@ __setup("pcie_ports=", pcie_port_setup);
+>>> >
+>>> >  /* global data */
+>>> >
+>>> > -static int pcie_portdrv_restore_config(struct pci_dev *dev)
+>>> > -{
+>>> > -	int retval;
+>>> > -
+>>> > -	retval = pci_enable_device(dev);
+>>> > -	if (retval)
+>>> > -		return retval;
+>>> > -	pci_set_master(dev);
+>>> > -	return 0;
+>>> > -}
+>>> > -
+>>> >  #ifdef CONFIG_PM
+>>> >  static int pcie_port_runtime_suspend(struct device *dev)
+>>> >  {
+>>> > @@ -162,14 +151,6 @@ static pci_ers_result_t
+>>> > pcie_portdrv_mmio_enabled(struct pci_dev *dev)
+>>> >
+>>> >  static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+>>> >  {
+>>> > -	/* If fatal, restore cfg space for possible link reset at upstream */
+>>> > -	if (dev->error_state == pci_channel_io_frozen) {
+>>> > -		dev->state_saved = true;
+>>> > -		pci_restore_state(dev);
+>>> > -		pcie_portdrv_restore_config(dev);
+>>> > -		pci_enable_pcie_error_reporting(dev);
+>>> > -	}
+>>> > -
+>>> >  	return PCI_ERS_RESULT_RECOVERED;
+>>> >  }
+>>> 
+>>> 
+>>> Hi Bjorn,
+>>> 
+>>> the above patch removes ERR_FATAL handling from 
+>>> pcie_portdrv_slot_reset()
+>>> because now we are handling ERR_FATAL differently than before.
+>>> 
+>>> I tried to dig into pcie_portdrv_slot_reset() handling for ERR_FATAL 
+>>> case
+>>> where it
+>>> restores the config space, enable device, set master and enable error
+>>> reporting....
+>>> and as far as I understand this is being done for upstream link 
+>>> (bridges
+>>> etc..)
+>>> 
+>>> why was it done at the first point (I checked the commit description, 
+>>> but
+>>> could not really get it)
+>>> and do we need to handle the same thing in ERR_FATAL now ?
+>> 
+>> You mean 4bf3392e0bf5 ("PCI-Express AER implemetation: pcie_portdrv
+>> error handler"), which added pcie_portdrv_slot_reset()?  I agree, that
+>> commit log has no useful information.  I don't know any of the history
+>> behind it.
+> 
+> 
+> Yes Bjorn thats right.
+> I am trying to understand it but no clue.
+> since it is restoring the stuffs in ERR_FATAL case, why would PCIe
+> bridge loose all the settings ?  [config space, aer bits, master,
+> device enable etc..)
+> Max we do is link_reset in ERR_FATAL case, and Secondary bus reset
+> should affect downstream components (not upstream)
 
-pcie_port_device_remove() is disabling the root port and switches by
-calling pci_disable_device() after all PCIe service drivers are shutdown.
-
-This has been found to cause crashes on HP DL360 Gen9 machines during
-reboot due to hpsa driver not clearing the bus master bit during the
-shutdown procedure by calling pci_disable_device().
-
-Disable device as part of the shutdown sequence.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
-Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-Cc: stable@vger.kernel.org
-Reported-by: Ryan Finnie <ryan@finnie.org>
-Tested-by: Don Brace <don.brace@microsemi.com>
-Acked-by: Don Brace <don.brace@microsemi.com>
----
- drivers/scsi/hpsa.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3a9eca1..b92f86a 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -8869,7 +8869,7 @@ static void hpsa_disable_rld_caching(struct ctlr_info *h)
- 	kfree(options);
- }
- 
--static void hpsa_shutdown(struct pci_dev *pdev)
-+static void __hpsa_shutdown(struct pci_dev *pdev)
- {
- 	struct ctlr_info *h;
- 
-@@ -8884,6 +8884,12 @@ static void hpsa_shutdown(struct pci_dev *pdev)
- 	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
- }
- 
-+static void hpsa_shutdown(struct pci_dev *pdev)
-+{
-+	__hpsa_shutdown(pdev);
-+	pci_disable_device(pdev);
-+}
-+
- static void hpsa_free_device_info(struct ctlr_info *h)
- {
- 	int i;
-@@ -8927,7 +8933,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
- 		scsi_remove_host(h->scsi_host);		/* init_one 8 */
- 	/* includes hpsa_free_irqs - init_one 4 */
- 	/* includes hpsa_disable_interrupt_mode - pci_init 2 */
--	hpsa_shutdown(pdev);
-+	__hpsa_shutdown(pdev);
- 
- 	hpsa_free_device_info(h);		/* scan */
- 
--- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Our first generation controller had this problem. There could be others 
+too.
