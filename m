@@ -1,59 +1,28 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:34929 "EHLO
-        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752096AbeFFPsW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2018 11:48:22 -0400
-Received: by mail-lf0-f45.google.com with SMTP id y72-v6so9864668lfd.2
-        for <linux-pci@vger.kernel.org>; Wed, 06 Jun 2018 08:48:22 -0700 (PDT)
+Return-Path: <SRS0=c2HZ=I2=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=c2HZ=I2=intel.com=keith.busch@kernel.org>
+Date: Fri, 8 Jun 2018 14:23:03 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Borislav Petkov <bp@alien8.de>,
+	Oza Pawandeep <poza@codeaurora.org>, linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH v1 00/13] PCI/AER: Squash into one file
+Message-ID: <20180608202303.GB24554@localhost.localdomain>
+References: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAHhAz+j=KBFwc10tFCT1mj1dxtR0LhU3TysPz0fFVuDnUOAm-A@mail.gmail.com>
-References: <CAHhAz+grcWVZAOvLL9VBHoPLiDCT3LApJTkE7GchtLA3g4U3NA@mail.gmail.com>
- <c8e47c11-e3f5-589f-3a58-4aa2466cac6d@desy.de> <CAHhAz+j=KBFwc10tFCT1mj1dxtR0LhU3TysPz0fFVuDnUOAm-A@mail.gmail.com>
-From: Moritz Fischer <moritz.fischer@ettus.com>
-Date: Wed, 6 Jun 2018 08:48:20 -0700
-Message-ID: <CAAtXAHdrOCkv_jA_nMCMa-2dT=V0006xVNELddjV40TkU+2bhA@mail.gmail.com>
-Subject: =?UTF-8?Q?Re=3A_pcie=3A_fpga=3A_programme_FPGA_PROM=E2=80=99s?=
-To: Muni Sekhar <munisekharrms@gmail.com>
-Cc: Ludwig Petrosyan <ludwig.petrosyan@desy.de>,
-        linux-pci@vger.kernel.org, linux-fpga@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Muni,
+On Fri, Jun 08, 2018 at 03:04:45PM -0500, Bjorn Helgaas wrote:
+> The AER code is scattered across several files and buried a little too deep
+> in the hierarchy, which makes it a bit of a hassle to browse.  Consolidate
+> it all in a single file (plus the optional aer_inject module) and move it
+> up one level to drivers/pci/pcie/aer.c.
+> 
+> This is all pure code moves; no functional changes intended.
 
-On Wed, Jun 6, 2018 at 4:37 AM, Muni Sekhar <munisekharrms@gmail.com> wrote:
-> On Wed, Jun 6, 2018 at 4:50 PM, Ludwig Petrosyan
-> <ludwig.petrosyan@desy.de> wrote:
->> Hi
->>
->> why You do not use jtagplayer from Xilinx?
->
-> Yes, JTAG can be used. But we have a lot many of these FPGA boards,
-> using JTAG costs more. And also we want to automate the PROM
-> programming.
->
->
->>
->>
->> with best regards
->>
->>
->> Ludwig
->>
->>
->>
->> On 06/06/2018 11:08 AM, Muni Sekhar wrote:
->>>
->>> [ Please keep me in CC as I'm not subscribed to the list]
->>>
->>> Hi All,
->>>
->>> We have a Kintex7 FPGA board connected to Intel Atom PC running Ubuntu
->>> on PCIe bus.
+Thanks for doing this. I got a head start on reviewing when I saw this
+merged to your tree earlier today, and the driver is much more pleasant
+to read than before!
 
-Are you using a Tandem flow? What kind of PROM are we talking about QSPI flash?
-
-Cheers,
-
-Moritz
+Reviewed-by: Keith Busch <keith.busch@intel.com>
