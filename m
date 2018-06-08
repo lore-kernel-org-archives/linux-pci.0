@@ -1,43 +1,152 @@
-Return-Path: <SRS0=eLY7=JO=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=eLY7=JO=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=/iDX=I2=mobiveil.co.in=l.subrahmanya@kernel.org>
+Return-Path: <SRS0=/iDX=I2=mobiveil.co.in=l.subrahmanya@kernel.org>
 MIME-Version: 1.0
-References: <1529904187-18673-3-git-send-email-kernelfans@gmail.com>
- <20180626074426.hzunfbvwbubt3t3p@mwanda> <CAFgQCTsCFP_6znUaFKnczuUJjMMA1Hq_Qrk6CUVs+EFEBZgTMQ@mail.gmail.com>
- <20180627083445.jsu2ffyz5cl4wbjn@mwanda>
-In-Reply-To: <20180627083445.jsu2ffyz5cl4wbjn@mwanda>
-From: Pingfan Liu <kernelfans@gmail.com>
-Date: Thu, 28 Jun 2018 21:47:20 +0800
-Message-ID: <CAFgQCTsZk=gQmwpTcaaTkLjmb1W5mPKbo5Bonkd+Bj_rW+mZYg@mail.gmail.com>
-Subject: Re: [PATCH 2/3] drivers/base: reorder consumer and its children
- behind suppliers
-To: dan.carpenter@oracle.com
-Cc: kbuild@01.org, kbuild-all@01.org, linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+In-Reply-To: <20180607135923.GC15137@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAFZiPx29KrKGDJiQ8huTpuVb7tMn=wjMWAvJEZaBiV7eSXYMSQ@mail.gmail.com>
+ <20180606125025.GA100923@bhelgaas-glaptop.roam.corp.google.com>
+ <CAFZiPx0UUB25kOgSNzUruNLom4=F5y==QbF_Q2g1uPA7csGOHA@mail.gmail.com>
+ <80853b92d0f69f32f2f0e2bbcd106993@codeaurora.org> <20180607135923.GC15137@bhelgaas-glaptop.roam.corp.google.com>
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Fri, 8 Jun 2018 17:27:12 +0530
+Message-ID: <CAFZiPx2E_aDCghJBeri2kTp6TaNTo2k6RY+0oLRk2JNwMeCBEw@mail.gmail.com>
+Subject: Re: pci_error_handlers for pci_host_bridge ?
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: poza@codeaurora.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci-owner@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 27, 2018 at 4:35 PM Dan Carpenter <dan.carpenter@oracle.com> wrote:
->
-> On Wed, Jun 27, 2018 at 10:34:54AM +0800, Pingfan Liu wrote:
-> > > 1b2a1e63 Pingfan Liu 2018-06-25  243            }
-> > > 1b2a1e63 Pingfan Liu 2018-06-25  244    }
-> > > 1b2a1e63 Pingfan Liu 2018-06-25 @245    BUG_ON(!ret);
-> > >
-> > > If the list is empty then "ret" can be unitialized.  We test a different
-> > > list "dev->links.suppliers" to see if that's empty.  I wrote a bunch of
-> > > code to make Smatch try to understand about empty lists, but I don't
-> > > think it works...
-> > >
-> > Yes, if list_empty, then the code can not touch ret. But ret is
-> > useless in this scene. Does it matter?
-> >
->
-> I'm not sure I understand what you're asking?  Of course, it matters?
->
-Oh, I misunderstood your original comment. Yes, you are right. I will
-fix it in next version, if this code section is still used.
+Bjorn,
 
-Thanks and regards,
-Pingfan
+On Thu, Jun 7, 2018 at 7:29 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Jun 07, 2018 at 04:20:10PM +0530, poza@codeaurora.org wrote:
+>> On 2018-06-07 15:45, Subrahmanya Lingappa wrote:
+>> > Bjorn,
+>> >
+>> > On Wed, Jun 6, 2018 at 6:20 PM, Bjorn Helgaas <helgaas@kernel.org>
+>> > wrote:
+>> > > Hi Subrahmanya,
+>> > >
+>> > > On Wed, Jun 06, 2018 at 05:57:17PM +0530, Subrahmanya Lingappa wrote:
+>> > > > Hi,
+>> > > > according to https://github.com/torvalds/linux/blob/master/Documentation/PCI/pci-error-recovery.txt
+>> > > >
+>> > > > as part of AER handling, struct pci_error_handlers{} is
+>> > > > implemented by
+>> > > > endpoint drivers to handle device specific recovery steps for "struct
+>> > > > pci_driver".
+>> > > >
+>> > > > But we have a platform_driver which implements "struct
+>> > > > pci_host_bridge" which also supports AER capability how can we
+>> > > > support
+>> > > > pci_error_handlers() for the host bridge drivers ?
+>> > >
+>> > > I assume you're referring to Mobiveil.  Can you explain more of the
+>> > > topology here?  Can you also include "sudo lspci -vv" output?
+>> > >
+>> > Yes, it is for Mobiveil's Host bridge driver :
+>> > https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/drivers/pci/host/pcie-mobiveil.c
+>> > lspci output is now is not available, I'll try to get it sooner.
+>> >
+>> > we have an endpoint connected directly to Rootport as follows
+>> > RC Rootport ----->BUS------> EP
+>> >
+>> > > The AER capability is an optional capability of PCIe device functions.
+>> > > A host bridge is not itself a PCIe function; it's a bridge between a
+>> > > platform-specific host bus and the PCIe bus.
+>> > >
+>> > > Sometimes there is a PCI function that corresponds to the host bridge,
+>> > > but that's not required by the PCI specs and there is no generic
+>> > > programming model for it.
+>> > >
+>> > > If you have an PCIe function corresponding to the Mobiveil host
+>> > > bridge, and it has an AER capability, what would you want the error
+>> > > handlers to do?  This function would not normally be a Root Port or
+>> > > other type 1 PCI-to-PCI bridge device, so it's not clear how its AER
+>> > > would integrate with the PCIe hierarchy.
+>> > >
+>> > Yes we do have a PCI function with AER capability, after an AER
+>> > reported by EP, AER driver initiates an hot_reset on subordinate
+>> > bus, which happens to be downstream port for RC. So we get a
+>> > downstream port link down happens in this case RC driver needs to
+>> > follow a specific register restore sequence, which is most of the
+>> > HW specific initialization done in probe function of the driver
+>> > to recover properly.
+>
+> I'm still not quite getting your point.  Let's try a concrete example.
+> Assume this topology (this is what you described above):
+>
+>   00:00.0 Root Port to [bus 01]
+>   01:00.0 Endpoint
+>
+> Then we have this situation:
+>
+>   - AER driver binds to Root Port 00:00.0
+>   - Endpoint 01:00.0 detects an error and sends ERR_* message upstream
+>   - Root Port 00:00.0 receives ERR_* message
+>   - Root Port 00:00.0 generates AER interrupt
+>   - AER driver handles the interrupt and does a secondary bus reset on
+>     Root Port 00:00.0.  This resets the Endpoint (01:00.0) but not the
+>     Root Port itself.
+>
+> It sounds like you need to do an RC register restore sequence at this
+> point, i.e., something like mobiveil_host_init()?  That sounds like a
+> hardware defect.  Doing a secondary bus reset via the Root Port's
+> bridge control register should have no effect on the RC itself.
+>
+> What am I missing?
+Yes, in this situation PCI config registers are fine, but due to a bug
+RC, config space registers will get reset
+in the SW we need to call the mobiveil_host_init() again to recover in
+case of directly connected EP to the Root-port.
+
+We do get an local interrupt when this problem occurs, so this can be
+handled in Driver's ISR;
+or is there a better way to handle it ?
+
+Thanks.
+
+>
+>> Are you looking at something similar to pci_error_handlers to be called for
+>> your RC driver ?
+>> where probably you are expecting during ERR_NONFATAL recovery you would want
+>> to restore some of your platform
+>> specific registers. I dont think that support exists now. since
+>> pci_error_handlers is of struct pci_driver
+>> while yours is platform driver.
+>>
+>> Although please also note that ERR_FATAL is no more handled with error and
+>> recovery callbacks.
+>> that are just going to be handled with removal, re-enumeration of the
+>> devices.
+>>
+>> but I suppose in any case you want to restore the registers in any type of
+>> uncorrectable error.
+>>
+>> although this is really platform specific, some sort of quirk I cna think
+>> of, but again err.c has to check
+>> that quirk's existence and calls platform specific callback
+>> (that again I am not sure because such things do not exist with respect to
+>> error/recovery callbacks)
+>>
+>> Yeah just re-thinking, this is too specific, not to be addressed by generic
+>> framework I think.
+>>
+>> > I was wondering if this can be handled by using AER error handlers, or
+>> > would suggest a better way to handle this ?
+>> >
+>> > As of now plan is to handle this situation is by calling a minimal
+>> > probe recovery sequence after link down interrupt within the
+>> > driver interrupt service routine.
+>>
+>> Well I think that is a better place,
+>> I was wondering why are you loosing registers at the first point ?
+>> Is because of link down even you are loosing them ? some issue with hw !
+>>
+>>
+>> Lets hear from Bjorn anyway, I am curious.
+>>
+>> >
+>> > > Bjorn
+>> >
+>> > Thanks,
