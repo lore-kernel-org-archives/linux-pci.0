@@ -1,122 +1,108 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: "robin.murphy@arm.com" <robin.murphy@arm.com>, "will.deacon@arm.com"
- <will.deacon@arm.com>, "gregkh@linuxfoundation.org"
- <gregkh@linuxfoundation.org>
-Subject: RE: [PATCH 0/7 v5] Support for fsl-mc bus and its devices in SMMU
-Date: Thu, 21 Jun 2018 03:59:27 +0000
-Message-ID: <HE1PR0401MB24250CEFBC0B7CC919C4388AE6760@HE1PR0401MB2425.eurprd04.prod.outlook.com>
-References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <SRS0=Gnjn=I2=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=Gnjn=I2=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "stuyoder@gmail.com" <stuyoder@gmail.com>,
- Bharat Bhushan <bharat.bhushan@nxp.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- "joro@8bytes.org" <joro@8bytes.org>,
- "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Leo Li <leoyang.li@nxp.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>, "hch@lst.de" <hch@lst.de>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 08 Jun 2018 10:27:19 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
+ <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
+ <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
+ Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
+ <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH NEXT 6/6] PCI/PORTDRV: Remove ERR_FATAL handling from
+ pcie_portdrv_slot_reset()
+In-Reply-To: <20180607213448.GB37077@bhelgaas-glaptop.roam.corp.google.com>
+References: <1528351234-26914-1-git-send-email-poza@codeaurora.org>
+ <1528351234-26914-6-git-send-email-poza@codeaurora.org>
+ <94661add3e71e3694aa22c2a9cabf503@codeaurora.org>
+ <20180607213448.GB37077@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <bbce31a6e59fdfa00e565e09dcae9eea@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Robin/Greg k-h,
-
-Will this patch-set be taken for the next kernel release (and via which tree)?
-
-Thanks,
-Nipun
-
-> -----Original Message-----
-> From: Nipun Gupta
-> Sent: Sunday, May 20, 2018 7:20 PM
-> To: robin.murphy@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
-> robh@kernel.org; mark.rutland@arm.com; catalin.marinas@arm.com;
-> gregkh@linuxfoundation.org; Laurentiu Tudor <laurentiu.tudor@nxp.com>;
-> bhelgaas@google.com
-> Cc: hch@lst.de; joro@8bytes.org; m.szyprowski@samsung.com;
-> shawnguo@kernel.org; frowand.list@gmail.com; iommu@lists.linux-
-> foundation.org; linux-kernel@vger.kernel.org; devicetree@vger.kernel.org;
-> linux-arm-kernel@lists.infradead.org; linuxppc-dev@lists.ozlabs.org; linux-
-> pci@vger.kernel.org; Bharat Bhushan <bharat.bhushan@nxp.com>;
-> stuyoder@gmail.com; Leo Li <leoyang.li@nxp.com>; Nipun Gupta
-> <nipun.gupta@nxp.com>
-> Subject: [PATCH 0/7 v5] Support for fsl-mc bus and its devices in SMMU
+On 2018-06-08 03:04, Bjorn Helgaas wrote:
+> On Thu, Jun 07, 2018 at 07:18:03PM +0530, poza@codeaurora.org wrote:
+>> On 2018-06-07 11:30, Oza Pawandeep wrote:
+>> > We are handling ERR_FATAL by resetting the Link in software,skipping the
+>> > driver pci_error_handlers callbacks, removing the devices from the PCI
+>> > subsystem, and re-enumerating, as a result of that, no more calling
+>> > pcie_portdrv_slot_reset in ERR_FATAL case.
+>> >
+>> > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+>> >
+>> > diff --git a/drivers/pci/pcie/portdrv_pci.c
+>> > b/drivers/pci/pcie/portdrv_pci.c
+>> > index 973f1b8..92f5d330 100644
+>> > --- a/drivers/pci/pcie/portdrv_pci.c
+>> > +++ b/drivers/pci/pcie/portdrv_pci.c
+>> > @@ -42,17 +42,6 @@ __setup("pcie_ports=", pcie_port_setup);
+>> >
+>> >  /* global data */
+>> >
+>> > -static int pcie_portdrv_restore_config(struct pci_dev *dev)
+>> > -{
+>> > -	int retval;
+>> > -
+>> > -	retval = pci_enable_device(dev);
+>> > -	if (retval)
+>> > -		return retval;
+>> > -	pci_set_master(dev);
+>> > -	return 0;
+>> > -}
+>> > -
+>> >  #ifdef CONFIG_PM
+>> >  static int pcie_port_runtime_suspend(struct device *dev)
+>> >  {
+>> > @@ -162,14 +151,6 @@ static pci_ers_result_t
+>> > pcie_portdrv_mmio_enabled(struct pci_dev *dev)
+>> >
+>> >  static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+>> >  {
+>> > -	/* If fatal, restore cfg space for possible link reset at upstream */
+>> > -	if (dev->error_state == pci_channel_io_frozen) {
+>> > -		dev->state_saved = true;
+>> > -		pci_restore_state(dev);
+>> > -		pcie_portdrv_restore_config(dev);
+>> > -		pci_enable_pcie_error_reporting(dev);
+>> > -	}
+>> > -
+>> >  	return PCI_ERS_RESULT_RECOVERED;
+>> >  }
+>> 
+>> 
+>> Hi Bjorn,
+>> 
+>> the above patch removes ERR_FATAL handling from 
+>> pcie_portdrv_slot_reset()
+>> because now we are handling ERR_FATAL differently than before.
+>> 
+>> I tried to dig into pcie_portdrv_slot_reset() handling for ERR_FATAL 
+>> case
+>> where it
+>> restores the config space, enable device, set master and enable error
+>> reporting....
+>> and as far as I understand this is being done for upstream link 
+>> (bridges
+>> etc..)
+>> 
+>> why was it done at the first point (I checked the commit description, 
+>> but
+>> could not really get it)
+>> and do we need to handle the same thing in ERR_FATAL now ?
 > 
-> This patchset defines IOMMU DT binding for fsl-mc bus and adds
-> support in SMMU for fsl-mc bus.
-> 
-> The patch series is based on top of dma-mapping tree (for-next branch):
-> http://git.infradead.org/users/hch/dma-mapping.git
-> 
-> These patches
->   - Define property 'iommu-map' for fsl-mc bus (patch 1)
->   - Integrates the fsl-mc bus with the SMMU using this
->     IOMMU binding (patch 2,3,4)
->   - Adds the dma configuration support for fsl-mc bus (patch 5, 6)
->   - Updates the fsl-mc device node with iommu/dma related changes (patch 7)
-> 
-> Changes in v2:
->   - use iommu-map property for fsl-mc bus
->   - rebase over patchset https://patchwork.kernel.org/patch/10317337/
->     and make corresponding changes for dma configuration of devices on
->     fsl-mc bus
-> 
-> Changes in v3:
->   - move of_map_rid in drivers/of/address.c
-> 
-> Changes in v4:
->   - move of_map_rid in drivers/of/base.c
-> 
-> Changes in v5:
->   - break patch 5 in two separate patches (now patch 5/7 and patch 6/7)
->   - add changelog text in patch 3/7 and patch 5/7
->   - typo fix
-> 
-> Nipun Gupta (7):
->   Docs: dt: add fsl-mc iommu-map device-tree binding
->   iommu: of: make of_pci_map_rid() available for other devices too
->   iommu: support iommu configuration for fsl-mc devices
->   iommu: arm-smmu: Add support for the fsl-mc bus
->   bus: fsl-mc: support dma configure for devices on fsl-mc bus
->   bus: fsl-mc: set coherent dma mask for devices on fsl-mc bus
->   arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
-> 
->  .../devicetree/bindings/misc/fsl,qoriq-mc.txt      |  39 ++++++++
->  arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi     |   6 +-
->  drivers/bus/fsl-mc/fsl-mc-bus.c                    |  16 +++-
->  drivers/iommu/arm-smmu.c                           |   7 ++
->  drivers/iommu/iommu.c                              |  21 +++++
->  drivers/iommu/of_iommu.c                           |  25 ++++-
->  drivers/of/base.c                                  | 102 +++++++++++++++++++++
->  drivers/of/irq.c                                   |   5 +-
->  drivers/pci/of.c                                   | 101 --------------------
->  include/linux/fsl/mc.h                             |   8 ++
->  include/linux/iommu.h                              |   2 +
->  include/linux/of.h                                 |  11 +++
->  include/linux/of_pci.h                             |  10 --
->  13 files changed, 231 insertions(+), 122 deletions(-)
-> 
-> --
-> 1.9.1
+> You mean 4bf3392e0bf5 ("PCI-Express AER implemetation: pcie_portdrv
+> error handler"), which added pcie_portdrv_slot_reset()?  I agree, that
+> commit log has no useful information.  I don't know any of the history
+> behind it.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Yes Bjorn thats right.
+I am trying to understand it but no clue.
+since it is restoring the stuffs in ERR_FATAL case, why would PCIe 
+bridge loose all the settings ?  [config space, aer bits, master, device 
+enable etc..)
+Max we do is link_reset in ERR_FATAL case, and Secondary bus reset 
+should affect downstream components (not upstream)
