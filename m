@@ -1,68 +1,136 @@
-Return-Path: <SRS0=qPnv=IV=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=qPnv=IV=gmail.com=rjwysocki@kernel.org>
-MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <152791813206.257724.14863139556803168986.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152791788214.257724.13044360353832574147.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152791813206.257724.14863139556803168986.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Sun, 3 Jun 2018 09:59:18 +0200
-Message-ID: <CAJZ5v0hHHR_559P1vF+9g_vmKkPSWjm9pv5zmjBq9qQ7vDhjOg@mail.gmail.com>
-Subject: Re: [PATCH v1 2/2] PCI: shpchp: Fix AMD POGO identification
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario Limonciello <Mario.Limonciello@dell.com>,
-	Michael Jamet <michael.jamet@intel.com>, Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Lukas Wunner <lukas@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1528468422.26356.20.camel@pengutronix.de>
+Subject: Re: [PATCH 2/2] PCI: imx: Initial imx7d pm support
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Leonard Crestez <leonard.crestez@nxp.com>, Andrey Smirnov
+ <andrew.smirnov@gmail.com>, Philipp Zabel <p.zabel@pengutronix.de>, Richard
+ Zhu <hongxing.zhu@nxp.com>, linux-pci@vger.kernel.org,
+ linux-pm@vger.kernel.org,  linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+Date: Fri, 08 Jun 2018 16:33:42 +0200
+In-Reply-To: <a6176c8bcfbca08ce4e93e304bdcd48c4600f8e2.1527621510.git.leonard.crestez@nxp.com>
+References: <cover.1527621510.git.leonard.crestez@nxp.com>
+ <a6176c8bcfbca08ce4e93e304bdcd48c4600f8e2.1527621510.git.leonard.crestez@nxp.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Abel Vesa <abel.vesa@nxp.com>,
+ Anson Huang <Anson.Huang@nxp.com>, Jingoo Han <jingoohan1@gmail.com>,
+ "Rafael J.
+ Wysocki" <rjw@rjwysocki.net>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 2, 2018 at 7:42 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
->
-> The fix for an AMD POGO erratum related to SHPC incorrectly identified the
-> device.  The workaround should be applied only for AMD POGO devices, but it
-> was instead applied to:
->
->   - all AMD bridges, and
->   - all devices from any vendor with device ID 0x7458
->
-> Fixes: 53044f357448 ("[PATCH] PCI Hotplug: shpchp: AMD POGO errata fix")
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-> ---
->  drivers/pci/hotplug/shpchp_ctrl.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
-> index bedda5bda910..1047b56e5730 100644
-> --- a/drivers/pci/hotplug/shpchp_ctrl.c
-> +++ b/drivers/pci/hotplug/shpchp_ctrl.c
-> @@ -585,13 +585,13 @@ static int shpchp_enable_slot (struct slot *p_slot)
->         ctrl_dbg(ctrl, "%s: p_slot->pwr_save %x\n", __func__, p_slot->pwr_save);
->         p_slot->hpc_ops->get_latch_status(p_slot, &getstatus);
->
-> -       if (((p_slot->ctrl->pci_dev->vendor == PCI_VENDOR_ID_AMD) ||
-> -           (p_slot->ctrl->pci_dev->device == PCI_DEVICE_ID_AMD_POGO_7458))
-> +       if ((p_slot->ctrl->pci_dev->vendor == PCI_VENDOR_ID_AMD &&
-> +            p_slot->ctrl->pci_dev->device == PCI_DEVICE_ID_AMD_POGO_7458)
->              && p_slot->ctrl->num_slots == 1) {
-> -               /* handle amd pogo errata; this must be done before enable  */
-> +               /* handle AMD POGO errata; this must be done before enable  */
->                 amd_pogo_errata_save_misc_reg(p_slot);
->                 retval = board_added(p_slot);
-> -               /* handle amd pogo errata; this must be done after enable  */
-> +               /* handle AMD POGO errata; this must be done after enable  */
->                 amd_pogo_errata_restore_misc_reg(p_slot);
->         } else
->                 retval = board_added(p_slot);
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+QW0gRGllbnN0YWcsIGRlbiAyOS4wNS4yMDE4LCAyMjozOSArMDMwMCBzY2hyaWViIExlb25hcmQg
+Q3Jlc3RlejoKPiBPbiBpbXg3ZCB0aGUgcGh5IGlzIHR1cm5lZCBvZmYgaW4gc3VzcGVuZCBhbmQg
+bXVzdCBiZSByZXNldCBvbiByZXN1bWUuCj4gUmlnaHQgbm93IGxzcGNpIC12IGZhaWxzIGFmdGVy
+IGEgc3VzcGVuZC9yZXN1bWUgY3ljbGUsIGZpeCB0aGlzIGJ5Cj4gYWRkaW5nIG1pbmltYWwgc3Vz
+cGVuZC9yZXN1bWUgY29kZSBmcm9tIHRoZSBueHAgdmVuZG9yIHRyZWUuCj4gCj4gVGhpcyBpcyBj
+dXJyZW50bHkgb25seSBlbmFibGVkIGZvciBpbXg3IGJ1dCB0aGUgc2FtZSBzZXF1ZW5jZSBjYW4g
+YmUKPiBhcHBsaWVkIHRvIG90aGVyIGlteCBwY2llIHZhcmlhbnRzLgo+IAo+IFRlc3RlZCBvbiBp
+bXg3ZC1zYWJyZXNkIHdpdGggYW4gSW50ZWwgNTYyMkFOSE1XIHdpcmVsZXNzIHBjaWUgYWRhcHRl
+ci4KPiAKPiA+IFRoZSBvcmlnaW5hbCBhdXRob3IgaXMgbW9zdGx5IFJpY2hhcmQgWmh1IDxob25n
+eGluZy56aHVAbnhwLmNvbT4sIHRoaXMKPiBwYXRjaCBhZGp1c3RzIHRoZSBjb2RlIHRvIHRoZSB1
+cHN0cmVhbSBpbXg3ZCBpbXBsZW1lbnRpb24gdXNpbmcgcmVzZXQKPiBjb250cm9scyBhbmQgcG93
+ZXIgZG9tYWlucy4KPiAKPiA+IFNpZ25lZC1vZmYtYnk6IExlb25hcmQgQ3Jlc3RleiA8bGVvbmFy
+ZC5jcmVzdGV6QG54cC5jb20+Cj4gLS0tCj4gwqBkcml2ZXJzL3BjaS9kd2MvcGNpLWlteDYuYyB8
+IDk0ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tCj4gwqAxIGZpbGUgY2hh
+bmdlZCwgODkgaW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9wY2kvZHdjL3BjaS1pbXg2LmMgYi9kcml2ZXJzL3BjaS9kd2MvcGNpLWlteDYuYwo+
+IGluZGV4IDQ4MThlZjg3NWY4YS4uZmY2MDc3ZWViMzg3IDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMv
+cGNpL2R3Yy9wY2ktaW14Ni5jCj4gKysrIGIvZHJpdmVycy9wY2kvZHdjL3BjaS1pbXg2LmMKPiBA
+QCAtNTQwLDEwICs1NDAsMjcgQEAgc3RhdGljIGludCBpbXg2X3BjaWVfd2FpdF9mb3Jfc3BlZWRf
+Y2hhbmdlKHN0cnVjdCBpbXg2X3BjaWUgKmlteDZfcGNpZSkKPiDCoAo+ID4gwqAJZGV2X2Vycihk
+ZXYsICJTcGVlZCBjaGFuZ2UgdGltZW91dFxuIik7Cj4gPiDCoAlyZXR1cm4gLUVJTlZBTDsKPiDC
+oH0KPiDCoAo+ICtzdGF0aWMgdm9pZCBpbXg2X3BjaWVfbHRzc21fZW5hYmxlKHN0cnVjdCBkZXZp
+Y2UgKmRldikKPiArewo+ID4gKwlzdHJ1Y3QgaW14Nl9wY2llICppbXg2X3BjaWUgPSBkZXZfZ2V0
+X2RydmRhdGEoZGV2KTsKPiArCj4gPiArCXN3aXRjaCAoaW14Nl9wY2llLT52YXJpYW50KSB7Cj4g
+PiArCWNhc2UgSU1YNlE6Cj4gPiArCWNhc2UgSU1YNlNYOgo+ID4gKwljYXNlIElNWDZRUDoKPiA+
+ICsJCXJlZ21hcF91cGRhdGVfYml0cyhpbXg2X3BjaWUtPmlvbXV4Y19ncHIsIElPTVVYQ19HUFIx
+MiwKPiA+ICsJCQkJwqDCoMKgSU1YNlFfR1BSMTJfUENJRV9DVExfMiwKPiA+ICsJCQkJwqDCoMKg
+SU1YNlFfR1BSMTJfUENJRV9DVExfMik7Cj4gPiArCQlicmVhazsKPiA+ICsJY2FzZSBJTVg3RDoK
+PiA+ICsJCXJlc2V0X2NvbnRyb2xfZGVhc3NlcnQoaW14Nl9wY2llLT5hcHBzX3Jlc2V0KTsKPiA+
+ICsJfQo+ICt9Cj4gKwo+IMKgc3RhdGljIGludCBpbXg2X3BjaWVfZXN0YWJsaXNoX2xpbmsoc3Ry
+dWN0IGlteDZfcGNpZSAqaW14Nl9wY2llKQo+IMKgewo+ID4gwqAJc3RydWN0IGR3X3BjaWUgKnBj
+aSA9IGlteDZfcGNpZS0+cGNpOwo+ID4gwqAJc3RydWN0IGRldmljZSAqZGV2ID0gcGNpLT5kZXY7
+Cj4gPiDCoAl1MzIgdG1wOwo+IEBAIC01NTgsMTUgKzU3NSwxMSBAQCBzdGF0aWMgaW50IGlteDZf
+cGNpZV9lc3RhYmxpc2hfbGluayhzdHJ1Y3QgaW14Nl9wY2llICppbXg2X3BjaWUpCj4gPiDCoAl0
+bXAgJj0gflBDSUVfUkNfTENSX01BWF9MSU5LX1NQRUVEU19NQVNLOwo+ID4gwqAJdG1wIHw9IFBD
+SUVfUkNfTENSX01BWF9MSU5LX1NQRUVEU19HRU4xOwo+ID4gwqAJZHdfcGNpZV93cml0ZWxfZGJp
+KHBjaSwgUENJRV9SQ19MQ1IsIHRtcCk7Cj4gwqAKPiA+IMKgCS8qIFN0YXJ0IExUU1NNLiAqLwo+
+ID4gLQlpZiAoaW14Nl9wY2llLT52YXJpYW50ID09IElNWDdEKQo+ID4gLQkJcmVzZXRfY29udHJv
+bF9kZWFzc2VydChpbXg2X3BjaWUtPmFwcHNfcmVzZXQpOwo+ID4gLQllbHNlCj4gPiAtCQlyZWdt
+YXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMTIsCj4gPiAt
+CQkJCcKgwqDCoElNWDZRX0dQUjEyX1BDSUVfQ1RMXzIsIDEgPDwgMTApOwo+ID4gKwlpbXg2X3Bj
+aWVfbHRzc21fZW5hYmxlKGRldik7Cj4gwqAKPiA+IMKgCXJldCA9IGlteDZfcGNpZV93YWl0X2Zv
+cl9saW5rKGlteDZfcGNpZSk7Cj4gPiDCoAlpZiAocmV0KQo+ID4gwqAJCWdvdG8gZXJyX3Jlc2V0
+X3BoeTsKPiDCoAo+IEBAIC02ODEsMTAgKzY5NCw4MCBAQCBzdGF0aWMgaW50IGlteDZfYWRkX3Bj
+aWVfcG9ydChzdHJ1Y3QgaW14Nl9wY2llICppbXg2X3BjaWUsCj4gwqAKPiDCoHN0YXRpYyBjb25z
+dCBzdHJ1Y3QgZHdfcGNpZV9vcHMgZHdfcGNpZV9vcHMgPSB7Cj4gPiDCoAkubGlua191cCA9IGlt
+eDZfcGNpZV9saW5rX3VwLAo+IMKgfTsKPiDCoAo+ICsjaWZkZWYgQ09ORklHX1BNX1NMRUVQCj4g
+K3N0YXRpYyBpbnQgaW14Nl9wY2llX3N1c3BlbmRfbm9pcnEoc3RydWN0IGRldmljZSAqZGV2KQo+
+ICt7Cj4gPiArCXN0cnVjdCBpbXg2X3BjaWUgKmlteDZfcGNpZSA9IGRldl9nZXRfZHJ2ZGF0YShk
+ZXYpOwo+ICsKPiArCWlmIChpbXg2X3BjaWUtPnZhcmlhbnQgPT0gSU1YN0QpIHsKCkluc3RlYWQg
+b2YgdGhpcyBsYXJnZSBpbmRlbnRlZCBibG9jaywgcGxlYXNlIGp1c3QgaGF2ZSBhbiBlYXJseSBy
+ZXR1cm4KYXQgdGhlIHN0YXJ0IG9mIHRoaXMgZnVuY3Rpb24sIGxpa2U6CgppZiAoaW14Nl9wY2ll
+LT52YXJpYW50ICE9IElNWDdEKQoJcmV0dXJuIDA7CgpTYW1lIGZvciB0aGUgcmVzdW1lIGZ1bmN0
+aW9uLgoKPiArCQkvKiBEaXNhYmxlIGNsa3MgKi8KPiA+ICsJCWNsa19kaXNhYmxlX3VucHJlcGFy
+ZShpbXg2X3BjaWUtPnBjaWUpOwo+ID4gKwkJY2xrX2Rpc2FibGVfdW5wcmVwYXJlKGlteDZfcGNp
+ZS0+cGNpZV9waHkpOwo+ID4gKwkJY2xrX2Rpc2FibGVfdW5wcmVwYXJlKGlteDZfcGNpZS0+cGNp
+ZV9idXMpOwo+ID4gKwkJLyogdHVybiBvZmYgZXh0ZXJuYWwgb3NjIGlucHV0ICovCj4gPiArCQly
+ZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BSMTIsCj4g
+PiArCQkJCcKgwqDCoElNWDdEX0dQUjEyX1BDSUVfUEhZX1JFRkNMS19TRUwsCj4gPiArCQkJCcKg
+wqDCoElNWDdEX0dQUjEyX1BDSUVfUEhZX1JFRkNMS19TRUwpOwo+ID4gKwl9Cj4gKwo+ID4gKwly
+ZXR1cm4gMDsKPiArfQo+ICsKPiArc3RhdGljIHZvaWQgaW14Nl9wY2llX2x0c3NtX2Rpc2FibGUo
+c3RydWN0IGRldmljZSAqZGV2KQo+ICt7Cj4gPiArCXN0cnVjdCBpbXg2X3BjaWUgKmlteDZfcGNp
+ZSA9IGRldl9nZXRfZHJ2ZGF0YShkZXYpOwo+ICsKPiA+ICsJc3dpdGNoIChpbXg2X3BjaWUtPnZh
+cmlhbnQpIHsKPiA+ICsJY2FzZSBJTVg2UToKPiA+ICsJY2FzZSBJTVg2U1g6Cj4gPiArCWNhc2Ug
+SU1YNlFQOgo+ID4gKwkJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteDZfcGNpZS0+aW9tdXhjX2dwciwg
+SU9NVVhDX0dQUjEyLAo+ID4gKwkJCQnCoMKgwqBJTVg2UV9HUFIxMl9QQ0lFX0NUTF8yLCAwKTsK
+PiA+ICsJCWJyZWFrOwo+ID4gKwljYXNlIElNWDdEOgo+ID4gKwkJcmVzZXRfY29udHJvbF9hc3Nl
+cnQoaW14Nl9wY2llLT5hcHBzX3Jlc2V0KTsKPiA+ICsJCWJyZWFrOwo+ID4gKwl9Cj4gK30KPiAr
+Cj4gK3N0YXRpYyBpbnQgaW14Nl9wY2llX3Jlc3VtZV9ub2lycShzdHJ1Y3QgZGV2aWNlICpkZXYp
+Cj4gK3sKPiA+ICsJaW50IHJldCA9IDA7Cj4gPiArCXN0cnVjdCBpbXg2X3BjaWUgKmlteDZfcGNp
+ZSA9IGRldl9nZXRfZHJ2ZGF0YShkZXYpOwo+ID4gKwlzdHJ1Y3QgcGNpZV9wb3J0ICpwcCA9ICZp
+bXg2X3BjaWUtPnBjaS0+cHA7Cj4gKwo+ID4gKwlpZiAoaW14Nl9wY2llLT52YXJpYW50ID09IElN
+WDdEKSB7Cj4gPiArCQlpbXg2X3BjaWVfbHRzc21fZGlzYWJsZShkZXYpOwoKVGhlIExUU1NNIGRp
+c2FibGUgc2VlbXMgbWlzcGxhY2VkIGhlcmUuIEkgd291bGQgaGF2ZSBleHBlY3RlZCBpdCB0byBi
+ZQppbiB0aGUgc3VzcGVuZCBmdW5jdGlvbi4KCj4gKwkJaW14Nl9wY2llX2Fzc2VydF9jb3JlX3Jl
+c2V0KGlteDZfcGNpZSk7Cj4gPiArCQlpbXg2X3BjaWVfaW5pdF9waHkoaW14Nl9wY2llKTsKPiA+
+ICsJCWlteDZfcGNpZV9kZWFzc2VydF9jb3JlX3Jlc2V0KGlteDZfcGNpZSk7Cj4gKwo+ID4gKwkJ
+LyoKPiA+ICsJCcKgKiBjb250cm9sbGVyIG1heWJlIHR1cm4gb2ZmLCByZS1jb25maWd1cmUgYWdh
+aW4KPiA+ICsJCcKgKi8KPiA+ICsJCWR3X3BjaWVfc2V0dXBfcmMocHApOwo+ICsKPiA+ICsJCWlt
+eDZfcGNpZV9sdHNzbV9lbmFibGUoZGV2KTsKPiArCj4gPiArCQlyZXQgPSBpbXg2X3BjaWVfd2Fp
+dF9mb3JfbGluayhpbXg2X3BjaWUpOwo+ID4gKwkJaWYgKHJldCA8IDApCj4gKwkJCXByX2luZm8o
+InBjaWUgbGluayBpcyBkb3duIGFmdGVyIHJlc3VtZS5cbiIpOwoKSWYgdGhlIFBIWSBoYXMgYmVl
+biBwb3dlcmVkIGRvd24gYW5kIExUU1NNIHN0b3BwZWQgSSBndWVzcyB3ZSBuZWVkIHRvCmRvIHRo
+ZSBmdWxsIGlteDZfcGNpZV9lc3RhYmxpc2hfbGluaygpIGRhbmNlIGFnYWluIGhlcmUgdG8gcmVs
+aWFibHkgcmUtCmVzdGFibGlzaCB0aGUgbGluay4gVGhlIGFib3ZlIHNlZW1zIHVuc2FmZS4KCj4g
+Kwl9Cj4gKwo+ID4gKwlyZXR1cm4gMDsKPiArfQo+ICsKPiArc3RhdGljIGNvbnN0IHN0cnVjdCBk
+ZXZfcG1fb3BzIGlteDZfcGNpZV9wbV9vcHMgPSB7Cj4gPiArCVNFVF9OT0lSUV9TWVNURU1fU0xF
+RVBfUE1fT1BTKGlteDZfcGNpZV9zdXNwZW5kX25vaXJxLAo+ID4gKwkJCQnCoMKgwqDCoMKgwqBp
+bXg2X3BjaWVfcmVzdW1lX25vaXJxKQo+ICt9Owo+ICsjZW5kaWYKClRoaXMgc3RydWN0dXJlIG11
+c3QgYmUgb3V0c2lkZSBvZiB0aGUgaWZkZWYsIG9yIHlvdSdsbCBicmVhayB0aGUgYnVpbGQKb24g
+IUNPTkZJR19QTV9TTEVFUC4KCj4gwqBzdGF0aWMgaW50IGlteDZfcGNpZV9wcm9iZShzdHJ1Y3Qg
+cGxhdGZvcm1fZGV2aWNlICpwZGV2KQo+IMKgewo+ID4gwqAJc3RydWN0IGRldmljZSAqZGV2ID0g
+JnBkZXYtPmRldjsKPiA+IMKgCXN0cnVjdCBkd19wY2llICpwY2k7Cj4gPiDCoAlzdHJ1Y3QgaW14
+Nl9wY2llICppbXg2X3BjaWU7Cj4gQEAgLTg0NywxMCArOTMwLDExIEBAIHN0YXRpYyBjb25zdCBz
+dHJ1Y3Qgb2ZfZGV2aWNlX2lkIGlteDZfcGNpZV9vZl9tYXRjaFtdID0gewo+IMKgc3RhdGljIHN0
+cnVjdCBwbGF0Zm9ybV9kcml2ZXIgaW14Nl9wY2llX2RyaXZlciA9IHsKPiA+IMKgCS5kcml2ZXIg
+PSB7Cj4gPiA+IMKgCQkubmFtZQk9ICJpbXg2cS1wY2llIiwKPiA+IMKgCQkub2ZfbWF0Y2hfdGFi
+bGUgPSBpbXg2X3BjaWVfb2ZfbWF0Y2gsCj4gPiDCoAkJLnN1cHByZXNzX2JpbmRfYXR0cnMgPSB0
+cnVlLAo+ID4gKwkJLnBtID0gJmlteDZfcGNpZV9wbV9vcHMsCj4gPiDCoAl9LAo+ID4gwqAJLnBy
+b2JlwqDCoMKgwqA9IGlteDZfcGNpZV9wcm9iZSwKPiA+IMKgCS5zaHV0ZG93biA9IGlteDZfcGNp
+ZV9zaHV0ZG93biwKPiDCoH07Cj4gwqAKClJlZ2FyZHMsCkx1Y2FzCgpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcg
+bGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmlu
+ZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
