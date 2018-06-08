@@ -1,73 +1,40 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] PCI: move early dump functionality from x86 arch into the
- common code
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-References: <1527654876-26716-1-git-send-email-okaya@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <82d0852b-7c34-3fc2-85d8-c21b33aa8cf4@codeaurora.org>
-Date: Fri, 1 Jun 2018 10:45:58 -0400
+Return-Path: <SRS0=c2HZ=I2=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=c2HZ=I2=intel.com=keith.busch@kernel.org>
+Date: Fri, 8 Jun 2018 16:43:30 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: "poza@codeaurora.org" <poza@codeaurora.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Philippe Ombredanne <pombredanne@nexb.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Kate Stewart <kstewart@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Dongdong Liu <liudongdong3@huawei.com>, Wei Zhang <wzhang@fb.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH NEXT 6/6] PCI/PORTDRV: Remove ERR_FATAL handling from
+ pcie_portdrv_slot_reset()
+Message-ID: <20180608224330.GA25132@localhost.localdomain>
+References: <1528351234-26914-1-git-send-email-poza@codeaurora.org>
+ <1528351234-26914-6-git-send-email-poza@codeaurora.org>
+ <94661add3e71e3694aa22c2a9cabf503@codeaurora.org>
+ <20180607213448.GB37077@bhelgaas-glaptop.roam.corp.google.com>
+ <f9a6f1ae2e7c17f87e465e643c8e6dcc@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <1527654876-26716-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- Petr Tesarik <ptesarik@suse.cz>, Ram Pai <linuxram@us.ibm.com>,
- Kai-Heng Feng <kai.heng.feng@canonical.com>, "H. Peter Anvin" <hpa@zytor.com>,
- Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- "maintainer:X86 ARCHITECTURE \(32-BIT AND 64-BIT\)" <x86@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
- Thymo van Beers <thymovanbeers@gmail.com>, Borislav Petkov <bp@suse.de>,
- Tom Lendacky <thomas.lendacky@amd.com>,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
- Frederic Weisbecker <frederic@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org, Juergen Gross <jgross@suse.com>,
- Dou Liyang <douly.fnst@cn.fujitsu.com>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- open list <linux-kernel@vger.kernel.org>,
- Philippe Ombredanne <pombredanne@nexb.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f9a6f1ae2e7c17f87e465e643c8e6dcc@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/30/2018 12:34 AM, Sinan Kaya wrote:
-> Move early dump functionality into common code so that it is available for
-> all archtiectures. No need to carry arch specific reads around as the read
-> hooks are already initialized by the time pci_setup_device() is getting
-> called during scan.
+On Thu, Jun 07, 2018 at 09:47:42PM -0700, poza@codeaurora.org wrote:
+> Keith,
 > 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  Documentation/admin-guide/kernel-parameters.txt |  2 +-
->  arch/x86/include/asm/pci-direct.h               |  5 ---
->  arch/x86/kernel/setup.c                         |  5 ---
->  arch/x86/pci/common.c                           |  4 --
->  arch/x86/pci/early.c                            | 50 -------------------------
->  drivers/pci/pci.c                               |  4 ++
->  drivers/pci/pci.h                               |  2 +-
->  drivers/pci/probe.c                             | 19 ++++++++++
->  8 files changed, 25 insertions(+), 66 deletions(-)
+> do you know why in ERR_FATAL case following was done ?
+> have a look at pcie_portdrv_slot_reset() handling (for bridges, switches 
+> etc..)
 
-Any feedback on the direction?
+Not sure, but I was looking into some issues in this area anyway.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I'm finding that non-hotpluggable bridges that support D3 are getting
+put into that low-power mode, and that pretty much breaks the
+re-enumeration.
