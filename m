@@ -1,89 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34382 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753045AbeF2NgV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Jun 2018 09:36:21 -0400
-Date: Fri, 29 Jun 2018 14:38:05 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v4 6/6] PCI: rcar: Shut the PHY down in failpath
-Message-ID: <20180629133805.GA9643@red-moon>
-References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
- <20180524143624.26718-7-marek.vasut+renesas@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:51166 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752676AbeFHUMC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Jun 2018 16:12:02 -0400
+Subject: [RFC PATCH v1 0/9] PCI/portdrv: Squash into one file
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Oza Pawandeep <poza@codeaurora.org>, linux-kernel@vger.kernel.org
+Date: Fri, 08 Jun 2018 15:12:00 -0500
+Message-ID: <152848853199.14051.12670957565366345798.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180524143624.26718-7-marek.vasut+renesas@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 24, 2018 at 04:36:24PM +0200, Marek Vasut wrote:
-> If anything fails past phy_init_fn() and the system is a Gen3 with
-> a PHY, the PHY will be left on and inited. This is caused by the
-> phy_init_fn, which is in fact a pointer to rcar_pcie_phy_init_gen3()
-> function, which starts the PHY, yet has no counterpart in the failpath.
-> Add that counterpart.
-> 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> Fixes: 517ca93a7159 ("PCI: rcar: Add R-Car gen3 PHY support")
-> ---
-> V4: New patch
-> ---
->  drivers/pci/host/pcie-rcar.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
+The portdrv code is scattered across several files, which makes it a bit of
+a hassle to browse.  Consolidate it all in a single file.
 
-Applied to pci/controller-fixes to be tentatively merged at -rc4,
-thanks.
+This is all pure code moves; no functional changes intended.  Well, there
+is a function rename, but it shouldn't change any behavior.
 
-Lorenzo
+---
 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 636c3c5095d2..695781934f0a 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -1163,7 +1163,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	if (rcar_pcie_hw_init(pcie)) {
->  		dev_info(dev, "PCIe link down\n");
->  		err = -ENODEV;
-> -		goto err_clk_disable;
-> +		goto err_phy_shutdown;
->  	}
->  
->  	data = rcar_pci_read_reg(pcie, MACSR);
-> @@ -1175,7 +1175,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  			dev_err(dev,
->  				"failed to enable MSI support: %d\n",
->  				err);
-> -			goto err_clk_disable;
-> +			goto err_phy_shutdown;
->  		}
->  	}
->  
-> @@ -1189,6 +1189,12 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
->  		rcar_pcie_teardown_msi(pcie);
->  
-> +err_phy_shutdown:
-> +	if (pcie->phy) {
-> +		phy_power_off(pcie->phy);
-> +		phy_exit(pcie->phy);
-> +	}
-> +
->  err_clk_disable:
->  	clk_disable_unprepare(pcie->bus_clk);
->  
-> -- 
-> 2.16.2
-> 
+Bjorn Helgaas (9):
+      PCI/portdrv: Rename resume_iter() to prevent name collision
+      PCI/portdrv: Squash pieces of portdrv_core.c into portdrv_pci.c
+      PCI/portdrv: Squash PM-related code into portdrv_pci.c
+      PCI/portdrv: Squash device removal code into portdrv_pci.c
+      PCI/portdrv: Squash lookup interfaces into portdrv_pci.c
+      PCI/portdrv: Squash service driver registration into portdrv_pci.c
+      PCI/portdrv: Move private definitions to portdrv_pci.c
+      PCI/portdrv: Clean up whitespace
+      PCI/portdrv: Rename portdrv_pci.c to portdrv.c
+
+
+ drivers/pci/pcie/Makefile       |    6 
+ drivers/pci/pcie/portdrv.c      |  822 +++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/portdrv.h      |   15 -
+ drivers/pci/pcie/portdrv_core.c |  578 ---------------------------
+ drivers/pci/pcie/portdrv_pci.c  |  261 ------------
+ 5 files changed, 824 insertions(+), 858 deletions(-)
+ create mode 100644 drivers/pci/pcie/portdrv.c
+ delete mode 100644 drivers/pci/pcie/portdrv_core.c
+ delete mode 100644 drivers/pci/pcie/portdrv_pci.c
