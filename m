@@ -1,60 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:46991 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751037AbeFGTdu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jun 2018 15:33:50 -0400
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-acpi@vger.kernel.org
-Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, keith.busch@intel.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+Received: from mail.kernel.org ([198.145.29.99]:48644 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752478AbeFHUEr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Jun 2018 16:04:47 -0400
+Subject: [RFC PATCH v1 00/13] PCI/AER: Squash into one file
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Keith Busch <keith.busch@intel.com>,
+        Borislav Petkov <bp@alien8.de>,
+        Oza Pawandeep <poza@codeaurora.org>,
         linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI/AER: Fix aerdrv loading with "pcie_ports=native" parameter
-Date: Thu,  7 Jun 2018 14:33:40 -0500
-Message-Id: <20180607193341.18891-1-mr.nuke.me@gmail.com>
+Date: Fri, 08 Jun 2018 15:04:45 -0500
+Message-ID: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to the documentation, "pcie_ports=native", linux should use
-native AER and DPC services. While that is true for the _OSC method
-parsing, this is not the only place that is checked. Should the HEST
-table list PCIe ports as firmware-first, linux will not use native
-services.
+The AER code is scattered across several files and buried a little too deep
+in the hierarchy, which makes it a bit of a hassle to browse.  Consolidate
+it all in a single file (plus the optional aer_inject module) and move it
+up one level to drivers/pci/pcie/aer.c.
 
-This happens because aer_acpi_firmware_first() doesn't take
-'pcie_ports' into account. This is wrong. DPC uses the same logic when
-it decides whether to load or not, so fixing this also fixes DPC not
-loading.
+This is all pure code moves; no functional changes intended.
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 ---
- drivers/pci/pcie/aer/aerdrv_acpi.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-index 08c87de13cb8..4b491851a781 100644
---- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-+++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-@@ -101,7 +101,7 @@ static void aer_set_firmware_first(struct pci_dev *pci_dev)
- 
- 	rc = apei_hest_parse(aer_hest_parse, &info);
- 
--	if (rc)
-+	if (rc || pcie_ports_native)
- 		pci_dev->__aer_firmware_first = 0;
- 	else
- 		pci_dev->__aer_firmware_first = info.firmware_first;
-@@ -135,6 +135,8 @@ bool aer_acpi_firmware_first(void)
- 		apei_hest_parse(aer_hest_parse, &info);
- 		aer_firmware_first = info.firmware_first;
- 		parsed = true;
-+		if (pcie_ports_native)
-+			aer_firmware_first = 0;
- 	}
- 	return aer_firmware_first;
- }
--- 
-2.14.3
+Bjorn Helgaas (13):
+      PCI/AER: Remove forward declarations
+      PCI/AER: Reorder code to group probe/remove stuff together
+      PCI/AER: Squash aerdrv_core.c into aerdrv.c
+      PCI/AER: Squash aerdrv_errprint.c into aerdrv.c
+      PCI/AER: Squash aerdrv_acpi.c into aerdrv.c
+      PCI/AER: Squash ecrc.c into aerdrv.c
+      PCI/AER: Remove duplicate pcie_port_bus_type declaration
+      PCI/AER: Move pcie_aer_get_firmware_first() to portdrv.h
+      PCI/AER: Move aer_irq() declaration to portdrv.h
+      PCI/AER: Move private AER things to aerdrv.c
+      PCI/AER: Squash Kconfig.debug into Kconfig
+      PCI/AER: Hoist aerdrv.c, aer_inject.c up to drivers/pci/pcie/
+      PCI/AER: Use "PCI Express" consistently in Kconfig text
+
+
+ drivers/pci/pcie/Kconfig               |   41 +
+ drivers/pci/pcie/Makefile              |    3 
+ drivers/pci/pcie/aer.c                 | 1377 ++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/aer/Kconfig           |   29 -
+ drivers/pci/pcie/aer/Kconfig.debug     |   19 
+ drivers/pci/pcie/aer/Makefile          |   13 
+ drivers/pci/pcie/aer/aer_inject.c      |  550 -------------
+ drivers/pci/pcie/aer/aerdrv.c          |  371 ---------
+ drivers/pci/pcie/aer/aerdrv.h          |   95 --
+ drivers/pci/pcie/aer/aerdrv_acpi.c     |  141 ---
+ drivers/pci/pcie/aer/aerdrv_core.c     |  496 ------------
+ drivers/pci/pcie/aer/aerdrv_errprint.c |  260 ------
+ drivers/pci/pcie/aer/ecrc.c            |  117 ---
+ drivers/pci/pcie/aer_inject.c          |  551 +++++++++++++
+ drivers/pci/pcie/dpc.c                 |    1 
+ drivers/pci/pcie/portdrv.h             |   15 
+ 16 files changed, 1983 insertions(+), 2096 deletions(-)
+ create mode 100644 drivers/pci/pcie/aer.c
+ delete mode 100644 drivers/pci/pcie/aer/Kconfig
+ delete mode 100644 drivers/pci/pcie/aer/Kconfig.debug
+ delete mode 100644 drivers/pci/pcie/aer/Makefile
+ delete mode 100644 drivers/pci/pcie/aer/aer_inject.c
+ delete mode 100644 drivers/pci/pcie/aer/aerdrv.c
+ delete mode 100644 drivers/pci/pcie/aer/aerdrv.h
+ delete mode 100644 drivers/pci/pcie/aer/aerdrv_acpi.c
+ delete mode 100644 drivers/pci/pcie/aer/aerdrv_core.c
+ delete mode 100644 drivers/pci/pcie/aer/aerdrv_errprint.c
+ delete mode 100644 drivers/pci/pcie/aer/ecrc.c
+ create mode 100644 drivers/pci/pcie/aer_inject.c
