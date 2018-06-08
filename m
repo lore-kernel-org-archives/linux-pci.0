@@ -1,45 +1,129 @@
-Return-Path: <SRS0=pwuc=IT=gmail.com=marek.vasut@kernel.org>
-Return-Path: <SRS0=pwuc=IT=gmail.com=marek.vasut@kernel.org>
-Subject: Re: [PATCH v4 6/6] PCI: rcar: Shut the PHY down in failpath
-To: Simon Horman <horms@verge.net.au>
-Cc: linux-pci@vger.kernel.org, Marek Vasut <marek.vasut+renesas@gmail.com>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Phil Edworthy <phil.edworthy@renesas.com>, Wolfram Sang <wsa@the-dreams.de>,
- linux-renesas-soc@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
-References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
- <20180524143624.26718-7-marek.vasut+renesas@gmail.com>
- <20180528084813.ic5gyos7hq5vxknw@verge.net.au>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <0a7b03be-b2f8-0965-ac5c-5bb3988a6da0@gmail.com>
-Date: Sat, 2 Jun 2018 01:30:00 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:42140 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751251AbeFHMgv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Jun 2018 08:36:51 -0400
+Date: Fri, 8 Jun 2018 07:36:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Cc: poza@codeaurora.org, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci-owner@vger.kernel.org
+Subject: Re: pci_error_handlers for pci_host_bridge ?
+Message-ID: <20180608123649.GA197137@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAFZiPx29KrKGDJiQ8huTpuVb7tMn=wjMWAvJEZaBiV7eSXYMSQ@mail.gmail.com>
+ <20180606125025.GA100923@bhelgaas-glaptop.roam.corp.google.com>
+ <CAFZiPx0UUB25kOgSNzUruNLom4=F5y==QbF_Q2g1uPA7csGOHA@mail.gmail.com>
+ <80853b92d0f69f32f2f0e2bbcd106993@codeaurora.org>
+ <20180607135923.GC15137@bhelgaas-glaptop.roam.corp.google.com>
+ <CAFZiPx2E_aDCghJBeri2kTp6TaNTo2k6RY+0oLRk2JNwMeCBEw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180528084813.ic5gyos7hq5vxknw@verge.net.au>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFZiPx2E_aDCghJBeri2kTp6TaNTo2k6RY+0oLRk2JNwMeCBEw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/28/2018 10:48 AM, Simon Horman wrote:
-> On Thu, May 24, 2018 at 04:36:24PM +0200, Marek Vasut wrote:
->> If anything fails past phy_init_fn() and the system is a Gen3 with
->> a PHY, the PHY will be left on and inited. This is caused by the
->> phy_init_fn, which is in fact a pointer to rcar_pcie_phy_init_gen3()
->> function, which starts the PHY, yet has no counterpart in the failpath.
->> Add that counterpart.
->>
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->> Cc: Simon Horman <horms+renesas@verge.net.au>
->> Cc: Wolfram Sang <wsa@the-dreams.de>
->> Cc: linux-renesas-soc@vger.kernel.org
->> Fixes: 517ca93a7159 ("PCI: rcar: Add R-Car gen3 PHY support")
+On Fri, Jun 08, 2018 at 05:27:12PM +0530, Subrahmanya Lingappa wrote:
+> Bjorn,
 > 
-> Acked-by: Simon Horman <horms+renesas@verge.net.au>
+> On Thu, Jun 7, 2018 at 7:29 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Thu, Jun 07, 2018 at 04:20:10PM +0530, poza@codeaurora.org wrote:
+> >> On 2018-06-07 15:45, Subrahmanya Lingappa wrote:
+> >> > Bjorn,
+> >> >
+> >> > On Wed, Jun 6, 2018 at 6:20 PM, Bjorn Helgaas <helgaas@kernel.org>
+> >> > wrote:
+> >> > > Hi Subrahmanya,
+> >> > >
+> >> > > On Wed, Jun 06, 2018 at 05:57:17PM +0530, Subrahmanya Lingappa wrote:
+> >> > > > Hi,
+> >> > > > according to https://github.com/torvalds/linux/blob/master/Documentation/PCI/pci-error-recovery.txt
+> >> > > >
+> >> > > > as part of AER handling, struct pci_error_handlers{} is
+> >> > > > implemented by
+> >> > > > endpoint drivers to handle device specific recovery steps for "struct
+> >> > > > pci_driver".
+> >> > > >
+> >> > > > But we have a platform_driver which implements "struct
+> >> > > > pci_host_bridge" which also supports AER capability how can we
+> >> > > > support
+> >> > > > pci_error_handlers() for the host bridge drivers ?
+> >> > >
+> >> > > I assume you're referring to Mobiveil.  Can you explain more of the
+> >> > > topology here?  Can you also include "sudo lspci -vv" output?
+> >> > >
+> >> > Yes, it is for Mobiveil's Host bridge driver :
+> >> > https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/drivers/pci/host/pcie-mobiveil.c
+> >> > lspci output is now is not available, I'll try to get it sooner.
+> >> >
+> >> > we have an endpoint connected directly to Rootport as follows
+> >> > RC Rootport ----->BUS------> EP
+> >> >
+> >> > > The AER capability is an optional capability of PCIe device functions.
+> >> > > A host bridge is not itself a PCIe function; it's a bridge between a
+> >> > > platform-specific host bus and the PCIe bus.
+> >> > >
+> >> > > Sometimes there is a PCI function that corresponds to the host bridge,
+> >> > > but that's not required by the PCI specs and there is no generic
+> >> > > programming model for it.
+> >> > >
+> >> > > If you have an PCIe function corresponding to the Mobiveil host
+> >> > > bridge, and it has an AER capability, what would you want the error
+> >> > > handlers to do?  This function would not normally be a Root Port or
+> >> > > other type 1 PCI-to-PCI bridge device, so it's not clear how its AER
+> >> > > would integrate with the PCIe hierarchy.
+> >> > >
+> >> > Yes we do have a PCI function with AER capability, after an AER
+> >> > reported by EP, AER driver initiates an hot_reset on subordinate
+> >> > bus, which happens to be downstream port for RC. So we get a
+> >> > downstream port link down happens in this case RC driver needs to
+> >> > follow a specific register restore sequence, which is most of the
+> >> > HW specific initialization done in probe function of the driver
+> >> > to recover properly.
+> >
+> > I'm still not quite getting your point.  Let's try a concrete example.
+> > Assume this topology (this is what you described above):
+> >
+> >   00:00.0 Root Port to [bus 01]
+> >   01:00.0 Endpoint
+> >
+> > Then we have this situation:
+> >
+> >   - AER driver binds to Root Port 00:00.0
+> >   - Endpoint 01:00.0 detects an error and sends ERR_* message upstream
+> >   - Root Port 00:00.0 receives ERR_* message
+> >   - Root Port 00:00.0 generates AER interrupt
+> >   - AER driver handles the interrupt and does a secondary bus reset on
+> >     Root Port 00:00.0.  This resets the Endpoint (01:00.0) but not the
+> >     Root Port itself.
+> >
+> > It sounds like you need to do an RC register restore sequence at this
+> > point, i.e., something like mobiveil_host_init()?  That sounds like a
+> > hardware defect.  Doing a secondary bus reset via the Root Port's
+> > bridge control register should have no effect on the RC itself.
+> >
+> > What am I missing?
+> Yes, in this situation PCI config registers are fine, but due to a bug
+> RC, config space registers will get reset
+> in the SW we need to call the mobiveil_host_init() again to recover in
+> case of directly connected EP to the Root-port.
+> 
+> We do get an local interrupt when this problem occurs, so this can be
+> handled in Driver's ISR;
+> or is there a better way to handle it ?
 
-While I see the first 5 in today's next, I don't see this one there, so
-it'd be nice to add it too.
+I don't see a better way to handle it.
 
--- 
-Best regards,
-Marek Vasut
+If the PCI core were doing something wrong here, e.g., missing some
+restore required by hardware that follows the spec, we would of course
+want a nice way to fix it in the core.
+
+But this sounds like hardware that does not follow the spec, so the
+workaround should be in the hardware-specific driver.
+
+Note that this may be an issue if/when you want to support ACPI with
+this hardware, because in that case we use the generic ACPI host
+bridge driver (drivers/acpi/pci_root.c) and there is less opportunity
+for device-specific workarounds like this.
+
+Bjorn
