@@ -1,147 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from david.siemens.de ([192.35.17.14]:54655 "EHLO david.siemens.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752835AbeFRQxs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 18 Jun 2018 12:53:48 -0400
-Subject: Re: [v4] PCI: improve host drivers compile test coverage
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Rob Herring <robh@kernel.org>,
-        Scott Branden <scott.branden@broadcom.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ley Foon Tan <lftan@altera.com>,
-        Russell King <linux@armlinux.org.uk>
-References: <20180405193154.27897-1-robh@kernel.org>
- <20180612170229.GA10141@roeck-us.net>
- <20180613100935.GA7707@e107981-ln.cambridge.arm.com>
- <20180613181146.GA28856@roeck-us.net>
- <20180615125847.GA7735@e107981-ln.cambridge.arm.com>
- <980b68c0-6034-b495-753f-c75c04e0f5d1@broadcom.com>
- <CAL_JsqLUR_5Hnaws3Dt8ujetq8R-TxnG9wvOe4y6HT50KrNnbQ@mail.gmail.com>
- <20180618093201.GA18994@e107981-ln.cambridge.arm.com>
- <45f29e28-d3d4-b1e6-249e-ac28b6ec6a36@siemens.com>
- <20180618125255.GA356@red-moon>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-Message-ID: <03d3eac6-4711-2bd5-4ab5-fc2f77d5e4ad@siemens.com>
-Date: Mon, 18 Jun 2018 18:53:10 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v1 1/9] PCI/portdrv: Rename resume_iter() to prevent name
+ collision
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Oza Pawandeep <poza@codeaurora.org>, linux-kernel@vger.kernel.org
+Date: Fri, 08 Jun 2018 15:12:07 -0500
+Message-ID: <152848872711.14051.2066441875532387495.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <152848853199.14051.12670957565366345798.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <152848853199.14051.12670957565366345798.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180618125255.GA356@red-moon>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-06-18 14:52, Lorenzo Pieralisi wrote:
-> On Mon, Jun 18, 2018 at 01:42:25PM +0200, Jan Kiszka wrote:
->> On 2018-06-18 11:32, Lorenzo Pieralisi wrote:
->>> On Fri, Jun 15, 2018 at 12:34:51PM -0600, Rob Herring wrote:
->>>> On Fri, Jun 15, 2018 at 11:55 AM, Scott Branden
->>>> <scott.branden@broadcom.com> wrote:
->>>>> Hi Lorenzo,
->>>>>
->>>>>
->>>>>
->>>>> On 18-06-15 05:58 AM, Lorenzo Pieralisi wrote:
->>>>>>
->>>>>> On Wed, Jun 13, 2018 at 11:11:46AM -0700, Guenter Roeck wrote:
->>>>>>>
->>>>>>> On Wed, Jun 13, 2018 at 11:09:35AM +0100, Lorenzo Pieralisi wrote:
->>>>>>>>
->>>>>>>> [+Jan, Ley Foon, RMK]
->>>>>>>>
->>>>>>>> On Tue, Jun 12, 2018 at 10:02:29AM -0700, Guenter Roeck wrote:
->>>>>>>>>
->>>>>>>>> On Thu, Apr 05, 2018 at 02:31:54PM -0500, Rob Herring wrote:
->>>>>>>>>>
->>>>>>>>>> Add COMPILE_TEST on driver config options with it. Some ARM drivers
->>>>>>>>>> still have arch dependencies, so we have to keep those dependent on
->>>>>>>>>> ARM.
->>>>>>>>>>
->>>>>>>>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>>>>>>>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
->>>>>>>>>> Cc: linux-pci@vger.kernel.org
->>>>>>>>>> Signed-off-by: Rob Herring <robh@kernel.org>
->>>>>>>>>
->>>>>>>>> This patch has the undesirable side effect that it selects PCI_DOMAINS
->>>>>>>>> for
->>>>>>>>> sparc32:allmodconfig, which in turn results in
->>>>>>>>>
->>>>>>>>> drivers/ata/pata_ali.c: In function 'ali_init_chipset':
->>>>>>>>> drivers/ata/pata_ali.c:469:38: error:
->>>>>>>>>         implicit declaration of function 'pci_domain_nr'; did you mean
->>>>>>>>> 'pci_iomap_wc'?
->>>>>>>>>
->>>>>>>>> Unfortunately, 37bd62d224c82 ("PCI: Enable PCI_DOMAINS along with
->>>>>>>>> generic
->>>>>>>>> PCI host controller") has pretty much the same result. No idea how to
->>>>>>>>> fix
->>>>>>>>> the problem, so I won't even try.
->>>>>>>>
->>>>>>>> Sorry about that.
->>>>>>>>
->>>>>>>> One option would consist in removing all PCI_DOMAINS selection from
->>>>>>>> drivers/pci/controller/Kconfig and delegate it to arches even though
->>>>>>>> this would force PCI_DOMAINS selection on all ARM platforms (it is
->>>>>>>> already selected for ARCH_MULTIPLATFORM).
->>>>>>>>
->>>>>>>> Or we add back arch dependency to the relevant host bridges.
->>>>>>>>
->>>>>>>> Everything else I have in mind seems overkill to me given that this
->>>>>>>> patch was added to improve test coverage (we could add a default
->>>>>>>> pci_domain_nr() stub - weak or #define - that returns 0 in case arches
->>>>>>>> do not provide an implementation but do we really want to do that ?).
->>>>>>>>
->>>>>>>> Thoughts appreciated.
->>>>>>>>
->>>>>>>  From the definition of PCI_DOMAINS, I suspect the original idea was that
->>>>>>> drivers should depend on it, not select it. Especially auto-selecting
->>>>>>> it with PCI_HOST_GENERIC seems like a bad idea to me. However, that is
->>>>>>> just me. I'll leave it up to Bjorn to decide what if anything he wants
->>>>>>> to do about it.
->>>>>>
->>>>>> Here is a patch that should reinstate the previous behaviour but
->>>>>> it will make PCI_DOMAINS a visible option on ARM 32-bit systems; whether
->>>>>> that's acceptable that's the question I need to answer, it should
->>>>>> honour old configs and it does not force PCI_DOMAINS selection on
->>>>>> non-DT arch/arm PCI host controllers (that do not need PCI_DOMAINS
->>>>>> anyway so I suspect that enabling it on all ARM 32-bit platforms
->>>>>> should not break anything but I preferred to be cautious).
->>>>>
->>>>> I think this change will also require a patch enabling CONFIG_PCI_DOMAINS in
->>>>> multi_v7_defconfig and iproc_defconfig at the very least?
->>>>
->>>> Perhaps the sub-arches that want this should select it. It is more a
->>>> platform option/decision more than a controller option.
->>>
->>> Yes, that makes sense, I assume ARCH_VIRT is a sensible choice for
->>> virtual machines configuration, Jan ?
->>>
->>> I will add a PCI_DOMAINS selection to all (ARM) arches that select
->>> PCI_DOMAINS in drivers/pci/controller/Kconfig.
->>>
->>> For Jailhouse configurations I need Jan's input, I assume adding
->>> the selection to ARCH_VIRT is the correct way forward, please let
->>> me know asap.
->>
->> So far, there is no need on ARM or ARM64 declare a special platform in
->> order to run as Jailhouse (secondary) guest.
->>
->> My original patch was just about making PCI_DOMAINS manually
->> configurable, which would have been fine for our use case.
-> 
-> I need more details on your system configuration to make sure we can fix
-> this in a way that does not upset anybody; I am not a big fan of making
-> PCI_DOMAINS visible since it affects other platforms and it is different
-> from how it is managed for all other arches, so please provide details.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Our setup is as follows: A platform, e.g. Jetson TK1 or TX1/2, already
-has one PCI host controller. When enabling Jailhouse on it (from within
-a running Linux), this adds the generic PCI host controller as virtual
-one. So we need to configure the system to support both controllers and
-PCI domains. But, otherwise, the system does not look different from a
-physical one.
+Rename resume_iter() to prevent a name collision in a future patch.  No
+functional change intended.
 
-Jan
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/portdrv_pci.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
--- 
-Siemens AG, Corporate Technology, CT RDA IOT SES-DE
-Corporate Competence Center Embedded Linux
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 973f1b80a038..b8b99dd07c0c 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -173,7 +173,7 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+-static int resume_iter(struct device *device, void *data)
++static int err_resume_iter(struct device *device, void *data)
+ {
+ 	struct pcie_device *pcie_device;
+ 	struct pcie_port_service_driver *driver;
+@@ -193,7 +193,7 @@ static int resume_iter(struct device *device, void *data)
+ 
+ static void pcie_portdrv_err_resume(struct pci_dev *dev)
+ {
+-	device_for_each_child(&dev->dev, NULL, resume_iter);
++	device_for_each_child(&dev->dev, NULL, err_resume_iter);
+ }
+ 
+ /*
