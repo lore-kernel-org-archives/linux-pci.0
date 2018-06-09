@@ -1,95 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:54506 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935532AbeFNBgp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 21:36:45 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 09/10] PCI: xilinx: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Thu, 14 Jun 2018 09:36:25 +0800
-Message-Id: <1528940185-183646-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 9 Jun 2018 18:03:45 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: kbuild-all@01.org, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: Re: [PATCH v3 03/10] PCI: Update xxx_pcie_ep_raise_irq() and
+ pci_epc_raise_irq() signatures
+Message-ID: <201806091725.uRBp8LOU%fengguang.wu@intel.com>
+References: <b4eba65e4ae7b8d15a5770a31d6a339de518cea7.1527862777.git.gustavo.pimentel@synopsys.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b4eba65e4ae7b8d15a5770a31d6a339de518cea7.1527862777.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+Hi Gustavo,
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Thank you for the patch! Perhaps something to improve:
+
+[auto build test WARNING on pci/next]
+[also build test WARNING on next-20180608]
+[cannot apply to v4.17]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+
+url:    https://github.com/0day-ci/linux/commits/Gustavo-Pimentel/Add-MSI-X-support-on-pcitest-tool/20180609-143316
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
+
+
+sparse warnings: (new ones prefixed by >>)
+
+   drivers/pci/host/pcie-rockchip-ep.c:173:14: sparse: expression using sizeof(void)
+>> drivers/pci/host/pcie-rockchip-ep.c:516:27: sparse: incorrect type in initializer (incompatible argument 4 (different type sizes)) @@    expected int ( *raise_irq )( ... ) @@    got int ( *raise_irq )( ... ) @@
+   drivers/pci/host/pcie-rockchip-ep.c:516:27:    expected int ( *raise_irq )( ... )
+   drivers/pci/host/pcie-rockchip-ep.c:516:27:    got int ( *<noident> )( ... )
+   drivers/pci/host/pcie-rockchip-ep.c:516:15: error: initialization from incompatible pointer type [-Werror=incompatible-pointer-types]
+     .raise_irq = rockchip_pcie_ep_raise_irq,
+                  ^~~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/pci/host/pcie-rockchip-ep.c:516:15: note: (near initialization for 'rockchip_pcie_epc_ops.raise_irq')
+   cc1: some warnings being treated as errors
+
+vim +516 drivers/pci/host/pcie-rockchip-ep.c
+
+cf590b07 Shawn Lin 2018-05-09  507  
+cf590b07 Shawn Lin 2018-05-09  508  static const struct pci_epc_ops rockchip_pcie_epc_ops = {
+cf590b07 Shawn Lin 2018-05-09  509  	.write_header	= rockchip_pcie_ep_write_header,
+cf590b07 Shawn Lin 2018-05-09  510  	.set_bar	= rockchip_pcie_ep_set_bar,
+cf590b07 Shawn Lin 2018-05-09  511  	.clear_bar	= rockchip_pcie_ep_clear_bar,
+cf590b07 Shawn Lin 2018-05-09  512  	.map_addr	= rockchip_pcie_ep_map_addr,
+cf590b07 Shawn Lin 2018-05-09  513  	.unmap_addr	= rockchip_pcie_ep_unmap_addr,
+cf590b07 Shawn Lin 2018-05-09  514  	.set_msi	= rockchip_pcie_ep_set_msi,
+cf590b07 Shawn Lin 2018-05-09  515  	.get_msi	= rockchip_pcie_ep_get_msi,
+cf590b07 Shawn Lin 2018-05-09 @516  	.raise_irq	= rockchip_pcie_ep_raise_irq,
+cf590b07 Shawn Lin 2018-05-09  517  	.start		= rockchip_pcie_ep_start,
+cf590b07 Shawn Lin 2018-05-09  518  };
+cf590b07 Shawn Lin 2018-05-09  519  
+
+:::::: The code at line 516 was first introduced by commit
+:::::: cf590b07839133146842d2d3d9a68f804c2edc4b PCI: rockchip: Add EP driver for Rockchip PCIe controller
+
+:::::: TO: Shawn Lin <shawn.lin@rock-chips.com>
+:::::: CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
 ---
-
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- drivers/pci/controller/pcie-xilinx.c | 44 ++++--------------------------------
- 1 file changed, 4 insertions(+), 40 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
-index b110a3a..8dbfc76 100644
---- a/drivers/pci/controller/pcie-xilinx.c
-+++ b/drivers/pci/controller/pcie-xilinx.c
-@@ -346,31 +346,6 @@ static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
- 	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
- }
- 
--/* INTx Functions */
--
--/**
-- * xilinx_pcie_intx_map - Set the handler for the INTx and mark IRQ as valid
-- * @domain: IRQ domain
-- * @irq: Virtual IRQ number
-- * @hwirq: HW interrupt number
-- *
-- * Return: Always returns 0.
-- */
--static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
--				irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--/* INTx IRQ Domain operations */
--static const struct irq_domain_ops intx_domain_ops = {
--	.map = xilinx_pcie_intx_map,
--	.xlate = pci_irqd_intx_xlate,
--};
--
- /* PCIe HW Functions */
- 
- /**
-@@ -497,22 +472,11 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- {
- 	struct device *dev = port->dev;
- 	struct device_node *node = dev->of_node;
--	struct device_node *pcie_intc_node;
- 
--	/* Setup INTx */
--	pcie_intc_node = of_get_next_child(node, NULL);
--	if (!pcie_intc_node) {
--		dev_err(dev, "No PCIe Intc node found\n");
--		return -ENODEV;
--	}
--
--	port->leg_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--						 &intx_domain_ops,
--						 port);
--	if (!port->leg_domain) {
--		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		return -ENODEV;
--	}
-+	port->leg_domain = pci_host_alloc_intx_irqd(dev, port, true, NULL,
-+						    NULL);
-+	if (IS_ERR(port->leg_domain))
-+		return PTR_ERR(port->leg_domain);
- 
- 	/* Setup MSI */
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--- 
-1.9.1
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
