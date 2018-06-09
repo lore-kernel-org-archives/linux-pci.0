@@ -1,93 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH V4] scsi: hpsa: drop shutdown callback
-To: linux-pci@vger.kernel.org, ryan@finnie.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, stable@vger.kernel.org,
-        Don Brace <don.brace@microsemi.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER (hpsa)"
-        <esc.storagedev@microsemi.com>,
-        "open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER (hpsa)"
-        <linux-scsi@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1527860768-11367-1-git-send-email-okaya@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <9516f507-9c3e-cce0-5557-c5c17388f404@codeaurora.org>
-Date: Fri, 1 Jun 2018 09:47:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <1527860768-11367-1-git-send-email-okaya@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Pu Wen <puwen@hygon.cn>
+To: boris.ostrovsky@oracle.com, jgross@suse.com, tglx@linutronix.de,
+        mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
+        zhangpanyong@hygon.cn
+Cc: thomas.lendacky@amd.com, peterz@infradead.org, tony.luck@intel.com,
+        bp@alien8.de, pbonzini@redhat.com, rkrcmar@redhat.com,
+        rjw@rjwysocki.net, lenb@kernel.org, viresh.kumar@linaro.org,
+        mchehab@kernel.org, trenn@suse.com, shuah@kernel.org,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-x86_64@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-edac@vger.kernel.org,
+        linux-pm@vger.kernel.org, kvm@vger.kernel.org,
+        xen-devel@lists.xenproject.org, Pu Wen <puwen@hygon.cn>
+Subject: [PATCH 07/11] x86/xen: Add support for Hygon's Dhyana Family 18h processor
+Date: Sat,  9 Jun 2018 21:23:37 +0800
+Message-Id: <1528550617-28395-1-git-send-email-puwen@hygon.cn>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/1/2018 9:46 AM, Sinan Kaya wrote:
-> 'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
-> shutdown")' has been added to kernel to shutdown pending PCIe port
-> service interrupts during reboot so that a newly started kexec kernel
-> wouldn't observe pending interrupts.
-> 
-> pcie_port_device_remove() is disabling the root port and switches by
-> calling pci_disable_device() after all PCIe service drivers are shutdown.
-> 
-> This has been found to cause crashes on HP DL360 Gen9 machines during
-> reboot due to hpsa driver not clearing the bus master bit during the
-> shutdown procedure by calling pci_disable_device().
-> 
-> Disable device as part of the shutdown sequence.
+This patch enables the Xen Hypervisor support to Hygon
+Family 18h CPU:
+- Add Hygon support in Xen PMU arch init codes.
+- Add Hygon support in PMU MSR read/write codes.
+- Add Hygon support in read PMC codes.
 
-Forgot to change the commit title. Apologies for that. The rest of the
-patch should work. Waiting for tested-bys.
+Signed-off-by: Pu Wen <puwen@hygon.cn>
+---
+ arch/x86/xen/pmu.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
-> Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-> Cc: stable@vger.kernel.org
-> Reported-by: Ryan Finnie <ryan@finnie.org>
-> ---
->  drivers/scsi/hpsa.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 3a9eca1..b92f86a 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -8869,7 +8869,7 @@ static void hpsa_disable_rld_caching(struct ctlr_info *h)
->  	kfree(options);
->  }
->  
-> -static void hpsa_shutdown(struct pci_dev *pdev)
-> +static void __hpsa_shutdown(struct pci_dev *pdev)
->  {
->  	struct ctlr_info *h;
->  
-> @@ -8884,6 +8884,12 @@ static void hpsa_shutdown(struct pci_dev *pdev)
->  	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
->  }
->  
-> +static void hpsa_shutdown(struct pci_dev *pdev)
-> +{
-> +	__hpsa_shutdown(pdev);
-> +	pci_disable_device(pdev);
-> +}
-> +
->  static void hpsa_free_device_info(struct ctlr_info *h)
->  {
->  	int i;
-> @@ -8927,7 +8933,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
->  		scsi_remove_host(h->scsi_host);		/* init_one 8 */
->  	/* includes hpsa_free_irqs - init_one 4 */
->  	/* includes hpsa_disable_interrupt_mode - pci_init 2 */
-> -	hpsa_shutdown(pdev);
-> +	__hpsa_shutdown(pdev);
->  
->  	hpsa_free_device_info(h);		/* scan */
->  
-> 
-
-
+diff --git a/arch/x86/xen/pmu.c b/arch/x86/xen/pmu.c
+index 7d00d4a..e2bee70 100644
+--- a/arch/x86/xen/pmu.c
++++ b/arch/x86/xen/pmu.c
+@@ -68,7 +68,8 @@ static __read_mostly int intel_num_arch_counters, intel_num_fixed_counters;
+ 
+ static void xen_pmu_arch_init(void)
+ {
+-	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD) {
++	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD ||
++	    boot_cpu_data.x86_vendor == X86_VENDOR_HYGON) {
+ 
+ 		switch (boot_cpu_data.x86) {
+ 		case 0x15:
+@@ -285,7 +286,8 @@ static bool xen_amd_pmu_emulate(unsigned int msr, u64 *val, bool is_read)
+ 
+ bool pmu_msr_read(unsigned int msr, uint64_t *val, int *err)
+ {
+-	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD) {
++	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD ||
++	    boot_cpu_data.x86_vendor == X86_VENDOR_HYGON) {
+ 		if (is_amd_pmu_msr(msr)) {
+ 			if (!xen_amd_pmu_emulate(msr, val, 1))
+ 				*val = native_read_msr_safe(msr, err);
+@@ -308,7 +310,8 @@ bool pmu_msr_write(unsigned int msr, uint32_t low, uint32_t high, int *err)
+ {
+ 	uint64_t val = ((uint64_t)high << 32) | low;
+ 
+-	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD) {
++	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD ||
++	    boot_cpu_data.x86_vendor == X86_VENDOR_HYGON) {
+ 		if (is_amd_pmu_msr(msr)) {
+ 			if (!xen_amd_pmu_emulate(msr, &val, 0))
+ 				*err = native_write_msr_safe(msr, low, high);
+@@ -379,7 +382,8 @@ static unsigned long long xen_intel_read_pmc(int counter)
+ 
+ unsigned long long xen_read_pmc(int counter)
+ {
+-	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD)
++	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD ||
++	    boot_cpu_data.x86_vendor == X86_VENDOR_HYGON)
+ 		return xen_amd_read_pmc(counter);
+ 	else
+ 		return xen_intel_read_pmc(counter);
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.7.4
+
