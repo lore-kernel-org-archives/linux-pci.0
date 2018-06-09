@@ -1,96 +1,60 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Pu Wen <puwen@hygon.cn>
-To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-        x86@kernel.org, thomas.lendacky@amd.com, peterz@infradead.org,
-        tony.luck@intel.com, bp@alien8.de, pbonzini@redhat.com,
-        rkrcmar@redhat.com, boris.ostrovsky@oracle.com, jgross@suse.com,
-        rjw@rjwysocki.net, lenb@kernel.org, viresh.kumar@linaro.org,
-        mchehab@kernel.org, trenn@suse.com, shuah@kernel.org,
-        zhangpanyong@hygon.cn
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-x86_64@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-edac@vger.kernel.org,
-        linux-pm@vger.kernel.org, kvm@vger.kernel.org,
-        xen-devel@lists.xenproject.org, Pu Wen <puwen@hygon.cn>
-Subject: [PATCH 00/11] Add support for Hygon's Dhyana Family 18h processor
-Date: Sat,  9 Jun 2018 21:20:10 +0800
-Message-Id: <1528550410-28080-1-git-send-email-puwen@hygon.cn>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:54724 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753516AbeFIXt2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 9 Jun 2018 19:49:28 -0400
+Subject: Re: [PATCH v2] pci/aspm: Remove CONFIG_PCIEASPM_DEBUG
+To: Rajat Jain <rajatja@google.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Busch, Keith" <keith.busch@intel.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Frederick Lawler <fred@fredlawl.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
+Cc: Rajat Jain <rajatxjain@gmail.com>
+References: <20180508230148.121852-1-rajatja@google.com>
+ <20180510233912.96454-1-rajatja@google.com>
+ <CACK8Z6H0PE-xBiNxhS+-P=-SyqAzKQi87xQoLGzgh6sgyt8zGA@mail.gmail.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <d856a2c3-2f75-8e79-f791-d5c0787a9018@codeaurora.org>
+Date: Sat, 9 Jun 2018 19:49:23 -0400
+MIME-Version: 1.0
+In-Reply-To: <CACK8Z6H0PE-xBiNxhS+-P=-SyqAzKQi87xQoLGzgh6sgyt8zGA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As a new x86 CPU Vendor, Chengdu Haiguang IC Design Co., Ltd (Hygon)
-is a Joint Venture between AMD and Haiguang Information Technology Co.,
-Ltd., and aims at providing high performance x86 processor for China
-server market.
+> On Thu, May 10, 2018 at 4:39 PM Rajat Jain <rajatja@google.com> wrote:
+>>
+>> Currently, the linux kernel disables ASPM when a device is
+>> removed from the kernel. But it is not enabled again when
+>> a new device is added on that slot even if it was originally
+>> enabled (by the BIOS) when the system booted up (assuming
+>> POLICY_DEFAULT).
+>>
+>> This was earlier discussed here:
+>> https://www.spinics.net/lists/linux-pci/msg60212.html
+>>
+>> And some suggestions from Bjorn here:
+>> https://www.spinics.net/lists/linux-pci/msg60541.html
+>>
+>> This patch picks up one of the suggestion, to remove the
+>> CONFIG_PCIEASPM_DEBUG and thus make the code always
+>> avilable. This provides control to userspace to control
+>> ASPM on a per slot / device basis using sysfs interface.
+>>
+>> Signed-off-by: Rajat Jain <rajatja@google.com>
+>> ---
+>> v2: provide function definitions for !CONFIG_PCIEASPM case
 
-The first generation Hygon's processor(Dhyana) originates from AMD
-technology and shares most of the architecture with AMD's family 17h,
-but with different CPU Vendor ID("HygonGenuine")/PCIE Device Vendor ID
-(0x1D94)/Family series number(Family 18h).
-
-To enable the support of Linux kernel to Hygon's CPU, we added a new
-vendor type (X86_VENDOR_HYGON, with value of 9) in arch/x86/include/
-asm/processor.h, and shared most of kernel support codes with AMD
-family 17h.
-
-These patches have been applied and tested successfully in Hygon's
-Dhyana SoC silicon. Also tested on AMD's EPYC (Family 17h) processor
-works fine and makes no harm to existing codes.
-
-Thanks.
-
-Pu Wen (11):
-  x86/cpu: Add support for Hygon's Dhyana Family 18h processor
-  x86/pci: Add support for Hygon's Dhyana Family 18h processor
-  x86/cpu/bug: Add support for Hygon's Dhyana Family 18h processor
-  x86/perf: Add support for Hygon's Dhyana Family 18h processor
-  x86/mce: Add support for Hygon's Dhyana Family 18h processor
-  x86/kvm: Add support for Hygon's Dhyana Family 18h processor
-  x86/xen: Add support for Hygon's Dhyana Family 18h processor
-  driver/acpi: Add support for Hygon's Dhyana Family 18h processor
-  driver/cpufreq: Add support for Hygon's Dhyana Family 18h processor
-  driver/edac: Add support for Hygon's Dhyana Family 18h processor
-  tools/cpupower: Add support for Hygon's Dhyana Family 18h processor
-
- arch/x86/events/amd/core.c                         | 10 ++++++++
- arch/x86/events/amd/uncore.c                       |  7 ++---
- arch/x86/events/core.c                             |  1 +
- arch/x86/include/asm/kvm_emulate.h                 |  4 +++
- arch/x86/include/asm/nospec-branch.h               |  4 +--
- arch/x86/include/asm/processor.h                   |  3 ++-
- arch/x86/include/asm/virtext.h                     |  5 ++--
- arch/x86/kernel/alternative.c                      |  4 +++
- arch/x86/kernel/amd_nb.c                           | 11 +++++++-
- arch/x86/kernel/apic/apic.c                        | 13 ++++++++--
- arch/x86/kernel/cpu/amd.c                          | 14 +++++++++-
- arch/x86/kernel/cpu/bugs.c                         | 30 ++++++++++++----------
- arch/x86/kernel/cpu/common.c                       |  1 +
- arch/x86/kernel/cpu/intel_cacheinfo.c              |  9 ++++---
- arch/x86/kernel/cpu/mcheck/mce-severity.c          |  3 ++-
- arch/x86/kernel/cpu/mcheck/mce.c                   | 16 +++++++++---
- arch/x86/kernel/cpu/mtrr/cleanup.c                 |  3 ++-
- arch/x86/kernel/cpu/mtrr/generic.c                 |  3 ++-
- arch/x86/kernel/cpu/mtrr/main.c                    |  2 +-
- arch/x86/kernel/cpu/perfctr-watchdog.c             |  2 ++
- arch/x86/kernel/smpboot.c                          |  4 ++-
- arch/x86/kvm/emulate.c                             |  8 +++++-
- arch/x86/pci/amd_bus.c                             |  6 +++--
- arch/x86/pci/irq.c                                 |  1 +
- arch/x86/xen/pmu.c                                 | 12 ++++++---
- drivers/acpi/acpi_pad.c                            |  1 +
- drivers/acpi/processor_idle.c                      |  1 +
- drivers/cpufreq/acpi-cpufreq.c                     |  5 +++-
- drivers/cpufreq/amd_freq_sensitivity.c             |  9 +++++--
- drivers/edac/amd64_edac.c                          | 20 ++++++++++++++-
- drivers/edac/amd64_edac.h                          |  4 +++
- drivers/edac/mce_amd.c                             |  4 ++-
- include/linux/pci_ids.h                            |  2 ++
- tools/power/cpupower/utils/cpufreq-info.c          |  6 +++--
- tools/power/cpupower/utils/helpers/cpuid.c         |  6 +++--
- tools/power/cpupower/utils/helpers/helpers.h       |  2 +-
- .../cpupower/utils/idle_monitor/mperf_monitor.c    |  3 ++-
- 37 files changed, 183 insertions(+), 56 deletions(-)
+Reviewed-by: Sinan Kaya <okaya@codeaurora.org>
 
 -- 
-2.7.4
-
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
