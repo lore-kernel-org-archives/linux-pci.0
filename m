@@ -1,94 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:35335 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932554AbeFPTdQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:33:16 -0400
-Message-Id: <a85cfc8b6dc0a52e2f1d84e806e277adde9c1a5b.1529173804.git.lukas@wunner.de>
-In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 16 Jun 2018 21:25:00 +0200
-Subject: [PATCH 24/32] PCI: portdrv: Deduplicate PM callback iterator
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org
+Received: from smtp21.cstnet.cn ([159.226.251.21]:44190 "EHLO cstnet.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753260AbeFINaW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 9 Jun 2018 09:30:22 -0400
+From: Pu Wen <puwen@hygon.cn>
+To: rjw@rjwysocki.net, lenb@kernel.org, zhangpanyong@hygon.cn
+Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+        x86@kernel.org, thomas.lendacky@amd.com, peterz@infradead.org,
+        tony.luck@intel.com, bp@alien8.de, pbonzini@redhat.com,
+        rkrcmar@redhat.com, boris.ostrovsky@oracle.com, jgross@suse.com,
+        viresh.kumar@linaro.org, mchehab@kernel.org, trenn@suse.com,
+        shuah@kernel.org, linux-kernel@vger.kernel.org,
+        linux-arch@vger.kernel.org, linux-x86_64@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-edac@vger.kernel.org, linux-pm@vger.kernel.org,
+        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
+        Pu Wen <puwen@hygon.cn>
+Subject: [PATCH 08/11] driver/acpi: Add support for Hygon's Dhyana Family 18h processor
+Date: Sat,  9 Jun 2018 21:23:53 +0800
+Message-Id: <1528550633-28441-1-git-send-email-puwen@hygon.cn>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace suspend_iter() and resume_iter() with a single function pm_iter()
-to allow addition of port service callbacks for further power management
-phases without having to add another iterator each time.
+This patch enables the ACPI driver support to Hygon Family 18h CPU:
+- Add Hygon support in power_saving_mwait_init().
+- Add Hygon support in lapic_timer_state_broadcast().
 
-No functional change intended.
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Pu Wen <puwen@hygon.cn>
 ---
- drivers/pci/pcie/portdrv_core.c | 30 ++++++++++++------------------
- 1 file changed, 12 insertions(+), 18 deletions(-)
+ drivers/acpi/acpi_pad.c       | 1 +
+ drivers/acpi/processor_idle.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index e0261ad4bcdd..13a248575a14 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -353,14 +353,19 @@ int pcie_port_device_register(struct pci_dev *dev)
- }
+diff --git a/drivers/acpi/acpi_pad.c b/drivers/acpi/acpi_pad.c
+index 552c1f7..a47676a 100644
+--- a/drivers/acpi/acpi_pad.c
++++ b/drivers/acpi/acpi_pad.c
+@@ -70,6 +70,7 @@ static void power_saving_mwait_init(void)
  
- #ifdef CONFIG_PM
--static int suspend_iter(struct device *dev, void *data)
-+typedef int (*pcie_pm_callback_t)(struct pcie_device *);
-+
-+static int pm_iter(struct device *dev, void *data)
+ #if defined(CONFIG_X86)
+ 	switch (boot_cpu_data.x86_vendor) {
++	case X86_VENDOR_HYGON:
+ 	case X86_VENDOR_AMD:
+ 	case X86_VENDOR_INTEL:
+ 		/*
+diff --git a/drivers/acpi/processor_idle.c b/drivers/acpi/processor_idle.c
+index abb559c..b2131c4 100644
+--- a/drivers/acpi/processor_idle.c
++++ b/drivers/acpi/processor_idle.c
+@@ -205,6 +205,7 @@ static void lapic_timer_state_broadcast(struct acpi_processor *pr,
+ static void tsc_check_state(int state)
  {
- 	struct pcie_port_service_driver *service_driver;
-+	size_t offset = *(size_t *)data;
-+	pcie_pm_callback_t cb;
- 
- 	if ((dev->bus == &pcie_port_bus_type) && dev->driver) {
- 		service_driver = to_service_driver(dev->driver);
--		if (service_driver->suspend)
--			service_driver->suspend(to_pcie_device(dev));
-+		cb = *(pcie_pm_callback_t *)((void *)service_driver + offset);
-+		if (cb)
-+			return cb(to_pcie_device(dev));
- 	}
- 	return 0;
- }
-@@ -371,20 +376,8 @@ static int suspend_iter(struct device *dev, void *data)
-  */
- int pcie_port_device_suspend(struct device *dev)
- {
--	return device_for_each_child(dev, NULL, suspend_iter);
--}
--
--static int resume_iter(struct device *dev, void *data)
--{
--	struct pcie_port_service_driver *service_driver;
--
--	if ((dev->bus == &pcie_port_bus_type) &&
--	    (dev->driver)) {
--		service_driver = to_service_driver(dev->driver);
--		if (service_driver->resume)
--			service_driver->resume(to_pcie_device(dev));
--	}
--	return 0;
-+	size_t off = offsetof(struct pcie_port_service_driver, suspend);
-+	return device_for_each_child(dev, &off, pm_iter);
- }
- 
- /**
-@@ -393,7 +386,8 @@ static int resume_iter(struct device *dev, void *data)
-  */
- int pcie_port_device_resume(struct device *dev)
- {
--	return device_for_each_child(dev, NULL, resume_iter);
-+	size_t off = offsetof(struct pcie_port_service_driver, resume);
-+	return device_for_each_child(dev, &off, pm_iter);
- }
- #endif /* PM */
- 
+ 	switch (boot_cpu_data.x86_vendor) {
++	case X86_VENDOR_HYGON:
+ 	case X86_VENDOR_AMD:
+ 	case X86_VENDOR_INTEL:
+ 	case X86_VENDOR_CENTAUR:
 -- 
-2.17.1
+2.7.4
