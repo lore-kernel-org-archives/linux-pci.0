@@ -1,71 +1,134 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
- <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH 0/4] PCI: mediatek: fixup find_port, enable_msi and add pm,
- module support
-Date: Wed, 27 Jun 2018 17:21:34 +0800
-Message-ID: <1530091298-28120-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <SRS0=ytgX=I3=mobiveil.co.in=l.subrahmanya@kernel.org>
+Return-Path: <SRS0=ytgX=I3=mobiveil.co.in=l.subrahmanya@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- honghui.zhang@mediatek.com, yt.shen@mediatek.com, yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180608123649.GA197137@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAFZiPx29KrKGDJiQ8huTpuVb7tMn=wjMWAvJEZaBiV7eSXYMSQ@mail.gmail.com>
+ <20180606125025.GA100923@bhelgaas-glaptop.roam.corp.google.com>
+ <CAFZiPx0UUB25kOgSNzUruNLom4=F5y==QbF_Q2g1uPA7csGOHA@mail.gmail.com>
+ <80853b92d0f69f32f2f0e2bbcd106993@codeaurora.org> <20180607135923.GC15137@bhelgaas-glaptop.roam.corp.google.com>
+ <CAFZiPx2E_aDCghJBeri2kTp6TaNTo2k6RY+0oLRk2JNwMeCBEw@mail.gmail.com> <20180608123649.GA197137@bhelgaas-glaptop.roam.corp.google.com>
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Sat, 9 Jun 2018 15:40:41 +0530
+Message-ID: <CAFZiPx3yfNT2af3Ybw8s5ezd3WRBWFvHOasSs-yrJZYQaGVdgg@mail.gmail.com>
+Subject: Re: pci_error_handlers for pci_host_bridge ?
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: poza@codeaurora.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+Bjorn,
+Understood;
+Thanks for the insights.
 
-This patchset includes misc patchs:
+For now we will fix with ISR patch to root bridge driver locally till
+we get a proper Hardware fix.
 
-The first patch fixup the mtk_pcie_find_port logical which will cause system
-could not touch the EP's configuration space which was connected to PCIe slot 1.
-
-The second patch fixup the enable msi logical, the operation to enable msi
-should be after system clock is enabled. The function of mtk_pcie_startup_port_v2's
-define location is re-arranged to avoid mtk_pcie_enable_msi's forward declaration.
-And call mtk_pcie_enable_msi in mtk_pcie_startup_port_v2 since the clock was all
-enabled at that time.
-
-The third patch was rebased and refactor of the v4 patch[1], changes are:
- -Add PM support for MT7622.
- -Using mtk_pcie_enable_port to re-establish the link when resumed.
- -Rebase on the previous two patches.
-
-The fourth patch add loadable kernel module support.
-
-Those patches was already reviewed-by Ryder Lee <ryder.lee@mediatek.com> so
-I just add the Reviewed-by tags in those patches.
-
-[1] https://patchwork.kernel.org/patch/10479079
-
-Honghui Zhang (4):
-  PCI: mediatek: fixup mtk_pcie_find_port logical
-  PCI: mediatek: enable msi after clock enabled
-  PCI: mediatek: Add system pm support for MT2712 and MT7622
-  PCI: mediatek: Add loadable kernel module support
-
- drivers/pci/controller/Kconfig         |   2 +-
- drivers/pci/controller/pcie-mediatek.c | 291 ++++++++++++++++++++++++---------
- 2 files changed, 215 insertions(+), 78 deletions(-)
-
--- 
-2.6.4
+Thanks.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On Fri, Jun 8, 2018 at 6:06 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Jun 08, 2018 at 05:27:12PM +0530, Subrahmanya Lingappa wrote:
+>> Bjorn,
+>>
+>> On Thu, Jun 7, 2018 at 7:29 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > On Thu, Jun 07, 2018 at 04:20:10PM +0530, poza@codeaurora.org wrote:
+>> >> On 2018-06-07 15:45, Subrahmanya Lingappa wrote:
+>> >> > Bjorn,
+>> >> >
+>> >> > On Wed, Jun 6, 2018 at 6:20 PM, Bjorn Helgaas <helgaas@kernel.org>
+>> >> > wrote:
+>> >> > > Hi Subrahmanya,
+>> >> > >
+>> >> > > On Wed, Jun 06, 2018 at 05:57:17PM +0530, Subrahmanya Lingappa wrote:
+>> >> > > > Hi,
+>> >> > > > according to https://github.com/torvalds/linux/blob/master/Documentation/PCI/pci-error-recovery.txt
+>> >> > > >
+>> >> > > > as part of AER handling, struct pci_error_handlers{} is
+>> >> > > > implemented by
+>> >> > > > endpoint drivers to handle device specific recovery steps for "struct
+>> >> > > > pci_driver".
+>> >> > > >
+>> >> > > > But we have a platform_driver which implements "struct
+>> >> > > > pci_host_bridge" which also supports AER capability how can we
+>> >> > > > support
+>> >> > > > pci_error_handlers() for the host bridge drivers ?
+>> >> > >
+>> >> > > I assume you're referring to Mobiveil.  Can you explain more of the
+>> >> > > topology here?  Can you also include "sudo lspci -vv" output?
+>> >> > >
+>> >> > Yes, it is for Mobiveil's Host bridge driver :
+>> >> > https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/drivers/pci/host/pcie-mobiveil.c
+>> >> > lspci output is now is not available, I'll try to get it sooner.
+>> >> >
+>> >> > we have an endpoint connected directly to Rootport as follows
+>> >> > RC Rootport ----->BUS------> EP
+>> >> >
+>> >> > > The AER capability is an optional capability of PCIe device functions.
+>> >> > > A host bridge is not itself a PCIe function; it's a bridge between a
+>> >> > > platform-specific host bus and the PCIe bus.
+>> >> > >
+>> >> > > Sometimes there is a PCI function that corresponds to the host bridge,
+>> >> > > but that's not required by the PCI specs and there is no generic
+>> >> > > programming model for it.
+>> >> > >
+>> >> > > If you have an PCIe function corresponding to the Mobiveil host
+>> >> > > bridge, and it has an AER capability, what would you want the error
+>> >> > > handlers to do?  This function would not normally be a Root Port or
+>> >> > > other type 1 PCI-to-PCI bridge device, so it's not clear how its AER
+>> >> > > would integrate with the PCIe hierarchy.
+>> >> > >
+>> >> > Yes we do have a PCI function with AER capability, after an AER
+>> >> > reported by EP, AER driver initiates an hot_reset on subordinate
+>> >> > bus, which happens to be downstream port for RC. So we get a
+>> >> > downstream port link down happens in this case RC driver needs to
+>> >> > follow a specific register restore sequence, which is most of the
+>> >> > HW specific initialization done in probe function of the driver
+>> >> > to recover properly.
+>> >
+>> > I'm still not quite getting your point.  Let's try a concrete example.
+>> > Assume this topology (this is what you described above):
+>> >
+>> >   00:00.0 Root Port to [bus 01]
+>> >   01:00.0 Endpoint
+>> >
+>> > Then we have this situation:
+>> >
+>> >   - AER driver binds to Root Port 00:00.0
+>> >   - Endpoint 01:00.0 detects an error and sends ERR_* message upstream
+>> >   - Root Port 00:00.0 receives ERR_* message
+>> >   - Root Port 00:00.0 generates AER interrupt
+>> >   - AER driver handles the interrupt and does a secondary bus reset on
+>> >     Root Port 00:00.0.  This resets the Endpoint (01:00.0) but not the
+>> >     Root Port itself.
+>> >
+>> > It sounds like you need to do an RC register restore sequence at this
+>> > point, i.e., something like mobiveil_host_init()?  That sounds like a
+>> > hardware defect.  Doing a secondary bus reset via the Root Port's
+>> > bridge control register should have no effect on the RC itself.
+>> >
+>> > What am I missing?
+>> Yes, in this situation PCI config registers are fine, but due to a bug
+>> RC, config space registers will get reset
+>> in the SW we need to call the mobiveil_host_init() again to recover in
+>> case of directly connected EP to the Root-port.
+>>
+>> We do get an local interrupt when this problem occurs, so this can be
+>> handled in Driver's ISR;
+>> or is there a better way to handle it ?
+>
+> I don't see a better way to handle it.
+>
+> If the PCI core were doing something wrong here, e.g., missing some
+> restore required by hardware that follows the spec, we would of course
+> want a nice way to fix it in the core.
+>
+> But this sounds like hardware that does not follow the spec, so the
+> workaround should be in the hardware-specific driver.
+>
+> Note that this may be an issue if/when you want to support ACPI with
+> this hardware, because in that case we use the generic ACPI host
+> bridge driver (drivers/acpi/pci_root.c) and there is less opportunity
+> for device-specific workarounds like this.
+>
+> Bjorn
