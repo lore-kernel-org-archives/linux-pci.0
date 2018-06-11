@@ -1,76 +1,166 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 178.115.242.59.static.drei.at ([178.115.242.59]:58762 "EHLO
-        mail.osadl.at" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-        with ESMTP id S933704AbeFMHXC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 03:23:02 -0400
-Date: Wed, 13 Jun 2018 07:12:04 +0000
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: linux-pci@vger.kernel.org
-Subject: question regarding irq_domain_add_linear fixup in error case
-Message-ID: <20180613071204.GA14373@osadl.at>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
+To: Michal Hocko <mhocko@kernel.org>
+References: <1527768879-88161-1-git-send-email-xiexiuqi@huawei.com>
+ <1527768879-88161-2-git-send-email-xiexiuqi@huawei.com>
+ <20180606154516.GL6631@arm.com>
+ <CAErSpo6S0qtR42tjGZrFu4aMFFyThx1hkHTSowTt6t3XerpHnA@mail.gmail.com>
+ <20180607105514.GA13139@dhcp22.suse.cz>
+ <5ed798a0-6c9c-086e-e5e8-906f593ca33e@huawei.com>
+ <20180607122152.GP32433@dhcp22.suse.cz>
+ <a880df29-b656-d98d-3037-b04761c7ed78@huawei.com>
+ <20180611085237.GI13364@dhcp22.suse.cz>
+From: Xie XiuQi <xiexiuqi@huawei.com>
+Message-ID: <16c4db2f-bc70-d0f2-fb38-341d9117ff66@huawei.com>
+Date: Mon, 11 Jun 2018 20:32:10 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180611085237.GI13364@dhcp22.suse.cz>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Hanjun Guo <guohanjun@huawei.com>, tnowicki@caviumnetworks.com,
+ linux-pci@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
+ "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Will Deacon <will.deacon@arm.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>, linux-mm@kvack.org,
+ wanghuiqiang@huawei.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Andrew Morton <akpm@linux-foundation.org>,
+ zhongjiang <zhongjiang@huawei.com>,
+ linux-arm <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Michal,
 
-Hi !
+On 2018/6/11 16:52, Michal Hocko wrote:
+> On Mon 11-06-18 11:23:18, Xie XiuQi wrote:
+>> Hi Michal,
+>>
+>> On 2018/6/7 20:21, Michal Hocko wrote:
+>>> On Thu 07-06-18 19:55:53, Hanjun Guo wrote:
+>>>> On 2018/6/7 18:55, Michal Hocko wrote:
+>>> [...]
+>>>>> I am not sure I have the full context but pci_acpi_scan_root calls
+>>>>> kzalloc_node(sizeof(*info), GFP_KERNEL, node)
+>>>>> and that should fall back to whatever node that is online. Offline node
+>>>>> shouldn't keep any pages behind. So there must be something else going
+>>>>> on here and the patch is not the right way to handle it. What does
+>>>>> faddr2line __alloc_pages_nodemask+0xf0 tells on this kernel?
+>>>>
+>>>> The whole context is:
+>>>>
+>>>> The system is booted with a NUMA node has no memory attaching to it
+>>>> (memory-less NUMA node), also with NR_CPUS less than CPUs presented
+>>>> in MADT, so CPUs on this memory-less node are not brought up, and
+>>>> this NUMA node will not be online (but SRAT presents this NUMA node);
+>>>>
+>>>> Devices attaching to this NUMA node such as PCI host bridge still
+>>>> return the valid NUMA node via _PXM, but actually that valid NUMA node
+>>>> is not online which lead to this issue.
+>>>
+>>> But we should have other numa nodes on the zonelists so the allocator
+>>> should fall back to other node. If the zonelist is not intiailized
+>>> properly, though, then this can indeed show up as a problem. Knowing
+>>> which exact place has blown up would help get a better picture...
+>>>
+>>
+>> I specific a non-exist node to allocate memory using kzalloc_node,
+>> and got this following error message.
+>>
+>> And I found out there is just a VM_WARN, but it does not prevent the memory
+>> allocation continue.
+>>
+>> This nid would be use to access NODE_DADA(nid), so if nid is invalid,
+>> it would cause oops here.
+>>
+>> 459 /*
+>> 460  * Allocate pages, preferring the node given as nid. The node must be valid and
+>> 461  * online. For more general interface, see alloc_pages_node().
+>> 462  */
+>> 463 static inline struct page *
+>> 464 __alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
+>> 465 {
+>> 466         VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
+>> 467         VM_WARN_ON(!node_online(nid));
+>> 468
+>> 469         return __alloc_pages(gfp_mask, order, nid);
+>> 470 }
+>> 471
+>>
+>> (I wrote a ko, to allocate memory on a non-exist node using kzalloc_node().)
+> 
+> OK, so this is an artificialy broken code, right. You shouldn't get a
+> non-existent node via standard APIs AFAICS. The original report was
+> about an existing node which is offline AFAIU. That would be a different
+> case. If I am missing something and there are legitimate users that try
+> to allocate from non-existing nodes then we should handle that in
+> node_zonelist.
 
- I have a question regarding the MSI setup error path - if the
- irq_domain_add_linear() there were to fail then the prevous call
- irq_domain_add_linear() would leave the irq allocated and
- registered in the reverse mapping (HW -> Host) so should that
- error path no call irq_domain_clear_mapping() ?
+I think hanjun's comments may help to understood this question:
+ - NUMA node will be built if CPUs and (or) memory are valid on this NUMA node;
 
- code is from linux-next 4.17.0 (localversion-next 20180613)
+ - But if we boot the system with memory-less node and also with CONFIG_NR_CPUS
+   less than CPUs in SRAT, for example, 64 CPUs total with 4 NUMA nodes, 16 CPUs
+   on each NUMA node, if we boot with CONFIG_NR_CPUS=48, then we will not built
+   numa node for node 3, but with devices on that numa node, alloc memory will
+   be panic because NUMA node 3 is not a valid node.
 
-/**
- * xilinx_pcie_init_irq_domain - Initialize IRQ domain
- * @port: PCIe port information
- *
- * Return: '0' on success and error value on failure
- */
-static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
-{
-	struct device *dev = port->dev;
-	struct device_node *node = dev->of_node;
-	struct device_node *pcie_intc_node;
+I triggered this BUG on arm64 platform, and I found a similar bug has been fixed
+on x86 platform. So I sent a similar patch for this bug.
 
-	/* Setup INTx */
-	pcie_intc_node = of_get_next_child(node, NULL);
-	if (!pcie_intc_node) {
-		dev_err(dev, "No PCIe Intc node found\n");
-		return -ENODEV;
-	}
+Or, could we consider to fix it in the mm subsystem?
 
-	port->leg_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
-						 &intx_domain_ops,
-						 port);
-	if (!port->leg_domain) {
-		dev_err(dev, "Failed to get a INTx IRQ domain\n");
-		return -ENODEV;
-	}
+>From b755de8dfdfef97effaa91379ffafcb81f4d62a1 Mon Sep 17 00:00:00 2001
+From: Yinghai Lu <Yinghai.Lu@Sun.COM>
+Date: Wed, 20 Feb 2008 12:41:52 -0800
+Subject: [PATCH] x86: make dev_to_node return online node
 
-	/* Setup MSI */
-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-		port->msi_domain = irq_domain_add_linear(node,
-							 XILINX_NUM_MSI_IRQS,
-							 &msi_domain_ops,
-							 &xilinx_pcie_msi_chip);
-		if (!port->msi_domain) {
-			dev_err(dev, "Failed to get a MSI IRQ domain\n");
-+ ??			irq_domain_clear_mapping(port->leg_domain ?? ?? )
-			return -ENODEV;
-		}
+a numa system (with multi HT chains) may return node without ram. Aka it
+is not online. Try to get an online node, otherwise return -1.
 
-		xilinx_pcie_enable_msi(port);
-	}
+Signed-off-by: Yinghai Lu <yinghai.lu@sun.com>
+Signed-off-by: Ingo Molnar <mingo@elte.hu>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/x86/pci/acpi.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-	return 0;
-}
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index d95de2f..ea8685f 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -172,6 +172,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_device *device, int do
+ 		set_mp_bus_to_node(busnum, node);
+ 	else
+ 		node = get_mp_bus_to_node(busnum);
++
++	if (node != -1 && !node_online(node))
++		node = -1;
+ #endif
 
-Am I missing something here - or is the cleanup in the MSI setup error case
-incomlete ?
+ 	/* Allocate per-root-bus (not per bus) arch-specific data.
+-- 
+1.8.3.1
 
-thx!
-hofrat
+
+> 
+> [...]
+> 
+
+-- 
+Thanks,
+Xie XiuQi
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
