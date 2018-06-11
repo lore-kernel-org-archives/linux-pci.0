@@ -1,218 +1,146 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1530150265.28284.25.camel@mhfsdcap03>
-Subject: Re: [PATCH 3/4] PCI: mediatek: Add system pm support for MT2712 and
- MT7622
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Thu, 28 Jun 2018 09:44:25 +0800
-In-Reply-To: <CAHp75VcHgJrujzqstSc4RWpUbjip1vtJu87HN3uTosoLdOiT3A@mail.gmail.com>
-References: <1530091298-28120-1-git-send-email-honghui.zhang@mediatek.com>
- <1530091298-28120-4-git-send-email-honghui.zhang@mediatek.com>
- <CAHp75VcHgJrujzqstSc4RWpUbjip1vtJu87HN3uTosoLdOiT3A@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:49414 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933007AbeFKN7O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Jun 2018 09:59:14 -0400
+Date: Mon, 11 Jun 2018 08:59:12 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH V2 4/5] PCI: rcar: Support runtime PM, link state L1
+ handling
+Message-ID: <20180611135912.GD75679@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
+ <20171110215843.432-5-marek.vasut+renesas@gmail.com>
+ <20171117174906.GB22599@red-moon>
+ <3e0bc374-d296-675c-f290-256cc530feb7@gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree <devicetree@vger.kernel.org>,
- hongkun.cao@mediatek.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- YT Shen <yt.shen@mediatek.com>, Matthias
- Brugger <matthias.bgg@gmail.com>, ryder.lee@mediatek.com,
- "moderated list:ARM/Mediatek SoC
- support" <linux-mediatek@lists.infradead.org>, yong.wu@mediatek.com,
- Bjorn Helgaas <bhelgaas@google.com>, yingjoe.chen@mediatek.com,
- Eddie Huang <eddie.huang@mediatek.com>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3e0bc374-d296-675c-f290-256cc530feb7@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2018-06-27 at 19:45 +0300, Andy Shevchenko wrote:
-> On Wed, Jun 27, 2018 at 12:21 PM,  <honghui.zhang@mediatek.com> wrote:
-> > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> >
-> > The MTCMOS of PCIe Host for MT2712 and MT7622 will be off when system
-> > suspend, and all the internal control register will be reset after system
-> > resume. The PCIe link should be re-established and the related control
-> > register values should be re-set after system resume.
+On Sun, Jun 10, 2018 at 03:57:10PM +0200, Marek Vasut wrote:
+> On 11/17/2017 06:49 PM, Lorenzo Pieralisi wrote:
+> > On Fri, Nov 10, 2017 at 10:58:42PM +0100, Marek Vasut wrote:
+> >> From: Phil Edworthy <phil.edworthy@renesas.com>
+> >>
+> >> Most PCIe host controllers support L0s and L1 power states via ASPM.
+> >> The R-Car hardware only supports L0s, so when the system suspends and
+> >> resumes we have to manually handle L1.
+> >> When the system suspends, cards can put themselves into L1 and send a
+> > 
+> > I assumed L1 entry has to be negotiated depending upon the PCIe
+> > hierarchy capabilities, I would appreciate if you can explain to
+> > me what's the root cause of the issue please.
 > 
-> >  struct mtk_pcie_soc {
-> >         bool need_fix_class_id;
-> 
-> > +       bool pm_support;
-> 
-> Hmm... Do you really need this flag? Can't runtime PM API tell you this?
+> You should probably ignore the suspend/resume part altogether. The issue
+> here is that the cards can enter L1 state, while the controller won't do
+> that automatically, it can only detect that the link went into L1 state.
+> If that happens,the driver must manually put the controller to L1 state.
+> The controller can transition out of L1 state automatically though.
 
-This host driver is both for MT2712, MT7622 and MT7623, but MT7623 do
-not this this patch.
-I only add this flag to identify whether we need to do the PM operation
-for this SoC since I do not want to touch anything for MT7623.
- 
-> 
-> >         struct pci_ops *ops;
-> >         int (*startup)(struct mtk_pcie_port *port);
-> >         int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
-> > @@ -1195,12 +1197,76 @@ static int mtk_pcie_probe(struct platform_device *pdev)
-> >         return err;
-> >  }
-> >
-> > +#ifdef CONFIG_PM_SLEEP
-> > +static int mtk_pcie_suspend_noirq(struct device *dev)
-> 
-> Perhaps __maybe_unused?
+>From earlier discussion I thought the R-Car root port did not
+advertise L1 support.  If that's the case, we shouldn't enable L1
+entry on a card.  Is the core ASPM code doing something wrong here?
 
-Ok, I'm a bit confused about this, if there's some discussion about
-this, do you have the link of those discussion and kindly point put it
-in this thread? Or I guess I can change this back to __maybe_unused if
-there's no other comments about this.
-
+> >> PM_ENTER_L1 DLLP to the host controller. At this point, we can no longer
+> >> access the card's config registers.
+> >>
+> >> The R-Car host controller will handle taking cards out of L1 as long as
+> >> the host controller has also been transitioned to L1 link state.
+> > 
+> > I wonder why this can't be done in a PM restore hook but that's not
+> > really where my question is.
 > 
-> > +{
-> > +       struct mtk_pcie *pcie = dev_get_drvdata(dev);
-> > +       const struct mtk_pcie_soc *soc = pcie->soc;
-> > +       struct mtk_pcie_port *port;
-> > +
-> > +       if (!soc->pm_support)
-> > +               return 0;
-> > +
+> I suspect because the link can be in L1 during startup too?
 > 
-> > +       if (list_empty(&pcie->ports))
-> > +               return 0;
+> >> Ideally, we would detect the PM_ENTER_L1 DLLP using an interrupt and
+> >> transition the host to L1 immediately. However, this patch just ensures
+> >> that we can talk to cards after they have gone into L1.
+> > 
+> >> When attempting a config access, it checks to see if the card has gone
+> >> into L1, and if so, does the same for the host controller.
+> >>
+> >> This is based on a patch by Hien Dang <hien.dang.eb@rvc.renesas.com>
+> >>
+> >> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> >> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> >> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> >> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> >> Cc: Simon Horman <horms+renesas@verge.net.au>
+> >> Cc: Wolfram Sang <wsa@the-dreams.de>
+> >> Cc: linux-renesas-soc@vger.kernel.org
+> >> ---
+> >> V2: - Drop extra parenthesis
+> >>     - Use GENMASK()
+> >>     - Fix comment "The HW will handle coming of of L1.", s/of of/out of/
+> >> ---
+> >>  drivers/pci/host/pcie-rcar.c | 24 ++++++++++++++++++++++++
+> >>  1 file changed, 24 insertions(+)
+> >>
+> >> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> >> index ab61829db389..068bf9067ec1 100644
+> >> --- a/drivers/pci/host/pcie-rcar.c
+> >> +++ b/drivers/pci/host/pcie-rcar.c
+> >> @@ -92,6 +92,13 @@
+> >>  #define MACCTLR			0x011058
+> >>  #define  SPEED_CHANGE		BIT(24)
+> >>  #define  SCRAMBLE_DISABLE	BIT(27)
+> >> +#define PMSR			0x01105c
+> >> +#define  L1FAEG			BIT(31)
+> >> +#define  PM_ENTER_L1RX		BIT(23)
+> >> +#define  PMSTATE		GENMASK(18, 16)
+> >> +#define  PMSTATE_L1		GENMASK(17, 16)
+> >> +#define PMCTLR			0x011060
+> >> +#define  L1_INIT		BIT(31)
+> >>  #define MACS2R			0x011078
+> >>  #define MACCGSPSETR		0x011084
+> >>  #define  SPCNGRSN		BIT(31)
+> >> @@ -191,6 +198,7 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+> >>  		unsigned int devfn, int where, u32 *data)
+> >>  {
+> >>  	int dev, func, reg, index;
+> >> +	u32 val;
+> >>  
+> >>  	dev = PCI_SLOT(devfn);
+> >>  	func = PCI_FUNC(devfn);
+> >> @@ -232,6 +240,22 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+> >>  	if (pcie->root_bus_nr < 0)
+> >>  		return PCIBIOS_DEVICE_NOT_FOUND;
+> >>  
+> >> +	/*
+> >> +	 * If we are not in L1 link state and we have received PM_ENTER_L1 DLLP,
+> >> +	 * transition to L1 link state. The HW will handle coming out of L1.
+> >> +	 */
+> >> +	val = rcar_pci_read_reg(pcie, PMSR);
+> >> +	if (val & PM_ENTER_L1RX && (val & PMSTATE) != PMSTATE_L1) {
+> >> +		rcar_pci_write_reg(pcie, L1_INIT, PMCTLR);
+> >> +
+> >> +		/* Wait until we are in L1 */
+> >> +		while (!(val & L1FAEG))
+> >> +			val = rcar_pci_read_reg(pcie, PMSR);
+> >> +
+> >> +		/* Clear flags indicating link has transitioned to L1 */
+> >> +		rcar_pci_write_reg(pcie, L1FAEG | PM_ENTER_L1RX, PMSR);
+> >> +	}
+> > 
+> > I do not get why you need to add the DLLP check for _every_ given config
+> > access and how/why it is just related to suspend/resume and not eg cold
+> > boot (I supposed it is because devices can enter L1 upon suspend(?)), I
+> > would ask you please to provide a thorough explanation so that I can
+> > actually review this patch (the commit log must be rewritten nonetheless,
+> > I do not think it is clear, at least it is not for me).
 > 
-> So, if the list is empty you are not suspending for the host?
+> See above
 > 
-
-if the list was empty then it indicate that all the PCIe slot was not
-connected with any EP device, and all the resource have been release in
-probe time. So the host driver does not need to save or restore
-anything.
-
-> 
-> > +
-> > +       list_for_each_entry(port, &pcie->ports, list) {
-> > +               clk_disable_unprepare(port->pipe_ck);
-> > +               clk_disable_unprepare(port->obff_ck);
-> > +               clk_disable_unprepare(port->axi_ck);
-> > +               clk_disable_unprepare(port->aux_ck);
-> > +               clk_disable_unprepare(port->ahb_ck);
-> > +               clk_disable_unprepare(port->sys_ck);
-> > +               phy_power_off(port->phy);
-> > +               phy_exit(port->phy);
-> > +       }
-> > +
-> > +       mtk_pcie_subsys_powerdown(pcie);
-> > +
-> > +       return 0;
-> > +}
-> > +
-> > +static int mtk_pcie_resume_noirq(struct device *dev)
-> > +{
-> > +       struct mtk_pcie *pcie = dev_get_drvdata(dev);
-> > +       const struct mtk_pcie_soc *soc = pcie->soc;
-> > +       struct mtk_pcie_port *port;
-> > +
-> > +       if (!soc->pm_support)
-> > +               return 0;
-> > +
-> 
-> > +       if (list_empty(&pcie->ports))
-> > +               return 0;
-> 
-> No runtime PM for this case?
-> (It seems now I understand why in previous patch you have a similar check)
-> 
-I guess host driver does not need to resume anything if there's no EP
-device was connected.
-
-> > +
-> > +       if (dev->pm_domain) {
-> > +               pm_runtime_enable(dev);
-> > +               pm_runtime_get_sync(dev);
-> > +       }
-> > +
-> > +       clk_prepare_enable(pcie->free_ck);
-> > +
-> > +       list_for_each_entry(port, &pcie->ports, list)
-> > +               mtk_pcie_enable_port(port);
-> > +
-> 
-> > +       if (list_empty(&pcie->ports))
-> 
-> Hmm... How it would be true if you already bailed out above on the
-> same condition?
-
-Assuming that there's EP device connected before suspend, and the EP was
-removed from the link while system suspend. It means that when enter
-this function the list is not empty, but after the function of
-mtk_pcie_enable_port was called, host driver found there's no EP device
-was connected anymore, it will free this list and some other resources
-in mtk_pcie_enable_port,(after mtk_pcie_enable_port was called, the list
-is empty in this scenario) but leave the subsys power along, I guess we
-need to take care of this scenario.
-> 
-> > +               mtk_pcie_subsys_powerdown(pcie);
-> > +
-> > +       return 0;
-> > +}
-> > +#endif
-> > +
-> > +static const struct dev_pm_ops mtk_pcie_pm_ops = {
-> > +       SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
-> > +                                     mtk_pcie_resume_noirq)
-> > +};
-> > +
-> >  static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
-> >         .ops = &mtk_pcie_ops,
-> >         .startup = mtk_pcie_startup_port,
-> >  };
-> >
-> >  static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-> > +       .pm_support = true,
-> >         .ops = &mtk_pcie_ops_v2,
-> >         .startup = mtk_pcie_startup_port_v2,
-> >         .setup_irq = mtk_pcie_setup_irq,
-> 
-> No update for .pm ?
-
-I'm not get your point, I update the .pm callbacks in the
-platform_driver struct, this SoC data just store the different
-information for SoCs. Did I missed something?
-
-> 
-> > @@ -1208,6 +1274,7 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-> >
-> >  static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
-> >         .need_fix_class_id = true,
-> > +       .pm_support = true,
-> >         .ops = &mtk_pcie_ops_v2,
-> >         .startup = mtk_pcie_startup_port_v2,
-> >         .setup_irq = mtk_pcie_setup_irq,
-> > @@ -1227,6 +1294,7 @@ static struct platform_driver mtk_pcie_driver = {
-> >                 .name = "mtk-pcie",
-> >                 .of_match_table = mtk_pcie_ids,
-> >                 .suppress_bind_attrs = true,
-> > +               .pm = &mtk_pcie_pm_ops,
-> >         },
-> >  };
-> >  builtin_platform_driver(mtk_pcie_driver);
-> > --
-> > 2.6.4
-> >
-> 
-> 
-> 
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> -- 
+> Best regards,
+> Marek Vasut
