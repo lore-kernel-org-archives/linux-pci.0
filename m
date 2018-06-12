@@ -1,40 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51494 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933649AbeFLHvy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2018 03:51:54 -0400
+Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
-Date: Tue, 12 Jun 2018 13:21:53 +0530
+Date: Tue, 12 Jun 2018 14:00:40 +0530
 From: poza@codeaurora.org
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI/AER: Prevent runtime power management during recovery
-In-Reply-To: <08e0ba9f-69cd-ea18-ae1b-d0795cceb306@codeaurora.org>
-References: <20180611222918.1708-1-keith.busch@intel.com>
- <08e0ba9f-69cd-ea18-ae1b-d0795cceb306@codeaurora.org>
-Message-ID: <76f700a5484d82529272d94b4531e434@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v2 1/5] PCI: iproc: Activate PAXC bridge quirk for more
+ devices
+In-Reply-To: <1528762867-16823-2-git-send-email-ray.jui@broadcom.com>
+References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
+ <1528762867-16823-2-git-send-email-ray.jui@broadcom.com>
+Message-ID: <8c6d5faccee6723ccb635f538105f1cc@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-06-12 10:10, Sinan Kaya wrote:
-> On 6/11/2018 6:29 PM, Keith Busch wrote:
->> A bridge that supports D3 but not hotplug will be subject to runtime
->> power management placing it in a non-operation power state if it 
->> doesn't
->> have any devices attached. This patch will prevent this power 
->> management
->> during error recovery so that the rescan at the end may be successful.
+On 2018-06-12 05:51, Ray Jui wrote:
+> Activate PAXC bridge quirk for more PAXC based PCIe root complex with
+> the following PCIe device ID:
+> 0xd750, 0xd802, 0xd804
 > 
-> If there is no card connected, why would the bridge observe a fatal 
-> error?
+> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> ---
+>  drivers/pci/quirks.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 2990ad1..47dfea0 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2195,6 +2195,9 @@ static void quirk_paxc_bridge(struct pci_dev 
+> *pdev)
+>  }
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16cd, 
+> quirk_paxc_bridge);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0, 
+> quirk_paxc_bridge);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd750, 
+> quirk_paxc_bridge);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802, 
+> quirk_paxc_bridge);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804, 
+> quirk_paxc_bridge);
+>  #endif
+> 
+>  /* Originally in EDAC sources for i82875P:
 
-fatal error could be coming from anywhere let us say below RootPort..
-and RP observes it and decides to take the tree down....
-Is that the case Keith is talking about ?
-
-Why will re-enumeration be a problem even if runtime PM is active ?
-I assume that enumeration will get bridge out of D3.
+Reviewed-by: Oza Pawandeep <poza@codeaurora.org>
