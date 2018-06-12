@@ -1,106 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay6.synopsys.com ([198.182.37.59]:57290 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933384AbeFUQBt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 12:01:49 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v6 05/11] PCI: dwc: Add legacy interrupt callback handler
-Date: Thu, 21 Jun 2018 17:01:30 +0100
-Message-Id: <5d32623b4681549cbc24df854ced4e99e5552732.1529595907.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Tue, 12 Jun 2018 23:14:59 +0530
+From: poza@codeaurora.org
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v2 3/5] PCI: iproc: Disable MSI parsing in certain PAXC
+ blocks
+In-Reply-To: <c44bf00c-b412-2cd1-75ee-7541bc775173@broadcom.com>
+References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
+ <1528762867-16823-4-git-send-email-ray.jui@broadcom.com>
+ <8f6d7771baec3f56e0ccf5efd0efe2a2@codeaurora.org>
+ <c44bf00c-b412-2cd1-75ee-7541bc775173@broadcom.com>
+Message-ID: <5dab98f1205c33320422ea1732bc6fba@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a legacy interrupt callback handler. Currently DesignWare IP don't
-allow trigger legacy interrupts.
+On 2018-06-12 22:28, Ray Jui wrote:
+> On 6/12/2018 1:29 AM, poza@codeaurora.org wrote:
+>> On 2018-06-12 05:51, Ray Jui wrote:
+>>> The internal MSI parsing logic in certain revisions of PAXC root
+>>> complexes does not work properly and can casue corruptions on the
+>>> writes. They need to be disabled
+>>> 
+>>> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+>>> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+>>> ---
+>>>  drivers/pci/host/pcie-iproc.c | 34 
+>>> ++++++++++++++++++++++++++++++++--
+>>>  1 file changed, 32 insertions(+), 2 deletions(-)
+>>> 
+>>> diff --git a/drivers/pci/host/pcie-iproc.c 
+>>> b/drivers/pci/host/pcie-iproc.c
+>>> index 680f6b1..0804aa2 100644
+>>> --- a/drivers/pci/host/pcie-iproc.c
+>>> +++ b/drivers/pci/host/pcie-iproc.c
+>>> @@ -1197,10 +1197,22 @@ static int 
+>>> iproc_pcie_paxb_v2_msi_steer(struct
+>>> iproc_pcie *pcie, u64 msi_addr)
+>>>      return ret;
+>>>  }
+>>> 
+>>> -static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, 
+>>> u64 msi_addr)
+>>> +static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, 
+>>> u64 msi_addr,
+>>> +                     bool enable)
+>>>  {
+>>>      u32 val;
+>>> 
+>>> +    if (!enable) {
+>>> +        /*
+>>> +         * Disable PAXC MSI steering. All write transfers will be
+>>> +         * treated as non-MSI transfers
+>>> +         */
+>>> +        val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
+>>> +        val &= ~MSI_ENABLE_CFG;
+>>> +        iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
+>>> +        return;
+>> can be dropped.
+> 
+> 
+> No it cannot be dropped. Please review the code carefully.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
+Ahhh, my bad, it looked like a new function to me, may e I need sleep.
+sorry about that.
 
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 10 ++++++++++
- drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +--
- drivers/pci/controller/dwc/pcie-designware.h      |  6 ++++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 1f98db3..70d0688 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
- 	.stop			= dw_pcie_ep_stop,
- };
- 
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct device *dev = pci->dev;
-+
-+	dev_err(dev, "EP cannot trigger legacy IRQs\n");
-+
-+	return -EINVAL;
-+}
-+
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num)
- {
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 654dcb5..90a8c95 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -84,8 +84,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 
- 	switch (type) {
- 	case PCI_EPC_IRQ_LEGACY:
--		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
--		return -EINVAL;
-+		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index a0ab12f..69e6e17 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -350,6 +350,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num);
- int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
-@@ -369,6 +370,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
- 
-+static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	return 0;
-+}
-+
- static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 					   u8 interrupt_num)
- {
--- 
-2.7.4
+Reviewed-by: Oza Pawandeep <poza@codeaurora.org>
