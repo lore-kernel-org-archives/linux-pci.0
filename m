@@ -1,86 +1,151 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Walker, Benjamin" <benjamin.walker@intel.com>
-To: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "srinath.mannam@broadcom.com" <srinath.mannam@broadcom.com>
-Subject: Re: Requirement to get BAR pci_bus_address in user space
-Date: Thu, 14 Jun 2018 20:04:53 +0000
-Message-ID: <fc8795b0a4619d4c4abc55fdf010015db7272db5.camel@intel.com>
-References: <CABe79T41Cr0mjH_k2drzccHvObFwRcW3n+WKCj0JvFUBy0wz-A@mail.gmail.com>
- <20180614102001.GA20836@lst.de>
- <CABe79T6k387EnDrpydTbQYQ+sZoWXKUee23EDzDJqnkroOmodA@mail.gmail.com>
- <92a9eeced36f863458ca2fd029f17a20@codeaurora.org>
- <CABe79T5ZRBToOgCY0Myo47mkeOQ5FWrxgF-Bbdx-Pa3fmYPDGw@mail.gmail.com>
- <20180614085015.3f39b367@w520.home>
-In-Reply-To: <20180614085015.3f39b367@w520.home>
+Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "hch@lst.de" <hch@lst.de>, "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "vikram.prakash@broadcom.com" <vikram.prakash@broadcom.com>,
- "abhishek.shah@broadcom.com" <abhishek.shah@broadcom.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 12 Jun 2018 14:00:11 +0530
+From: poza@codeaurora.org
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v2 4/5] PCI: iproc: Reject unconfigured physical functions
+ from PAXC
+In-Reply-To: <1528762867-16823-5-git-send-email-ray.jui@broadcom.com>
+References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
+ <1528762867-16823-5-git-send-email-ray.jui@broadcom.com>
+Message-ID: <2f545a86aa5433526b17071d64f68e50@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-06-14 at 08:50 -0600, Alex Williamson wrote:
-> On Thu, 14 Jun 2018 16:18:15 +0530
-> Srinath Mannam <srinath.mannam@broadcom.com> wrote:
+On 2018-06-12 05:51, Ray Jui wrote:
+> PAXC is an emulated PCIe root complex internally in various Broadcom
+> based SoCs. PAXC internally connects to the embedded network processor
+> within these SoCs, with the embedeed network processor exposed as an
+> endpoint device
 > 
-> > Hi Sinan Kaya,
-> > 
-> > Here are the details,
-> > 
-> > The issue is, For CMB cards SQs are allocated inside device BAR memory
-> > which is different from normal cards.
-> > In Normal cards SQ memory allocated at host side.
-> > In both the cases physical address of CQ memory is programmed in NVMe
-> > controller register.
-> > This method works for normal cards because CQ memory is at host side.
-> > But in CMB cards pci bus address equivalent to CQ memory needs to program.
-> > 
-> > More details are in the patch: nvme-pci: Use PCI bus address for
-> > data/queues in CMB.
-> > 
-> > With the above patch issue is fixed in the NVMe kernel driver, But
-> > similar fix is required in SPDK library also.
-> > So, We need a mechanism to get pci_bus_address in user space libraries
-> > to address this issue.
+> The number of physical functions from the embedded network processor
+> that can be accessed depend on the firmware configuration.
+> Unfortunately, due to an ASIC bug, unconfigured physical functions 
+> cannot
+> be properly hidden from the root complex during enumerattion. As a
+> result, config write access to these unconfigured physical functions
+> during enumeration will cause a bus lock up on the embedded network
+> processor
 > 
-> I don't understand the CQ vs CMB, but I think I gather that there's some
-> sort of buffer that's allocated from within the devices MMIO BAR and
-> some programming of the device needs to reference that buffer.
-> Wouldn't you therefore use the vfio type1 IOMMU MAP_DMA ioctl to map
-> the BAR into the IOVA address space and you can then use the IOVA +
-> offset into the BAR for the device to reference the buffer?  It seems
-> this is the same way we'd setup a peer-to-peer mapping, but we're using
-> it for the device to reference itself effectively.  Thanks,
+> Fortunately, these unconfigured physical functions contain a very
+> specific, staled PCIe device ID 0x168e. By making use of this device 
+> ID,
+> one is able to terminate the enumeration early in the vendor/device ID
+> config read
+> 
+> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> ---
+>  drivers/pci/host/pcie-iproc.c | 26 +++++++++++++++++++++++++-
+>  drivers/pci/host/pcie-iproc.h |  5 +++++
+>  2 files changed, 30 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-iproc.c 
+> b/drivers/pci/host/pcie-iproc.c
+> index 0804aa2..59be1e0 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -582,6 +582,25 @@ static int iproc_pcie_config_read(struct pci_bus
+> *bus, unsigned int devfn,
+>  	if (size <= 2)
+>  		*val = (data >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
+> 
+> +	/*
+> +	 * For PAXC and PAXCv2, the total number of PFs that one can 
+> enumerate
+> +	 * depends on the firmware configuration. Unfortunately, due to an 
+> ASIC
+> +	 * bug, unconfigured PFs cannot be properly hidden from the root
+> +	 * complex. As a result, write access to these PFs will cause bus 
+> lock
+> +	 * up on the embedded processor
+> +	 *
+> +	 * Since all unconfigured PFs are left with an incorrect, staled 
+> device
+> +	 * ID of 0x168e (PCI_DEVICE_ID_NX2_57810), we try to catch those 
+> access
+> +	 * early here and reject them all
+> +	 */
+> +#define DEVICE_ID_MASK     0xffff0000
+> +#define DEVICE_ID_SHIFT    16
+> +	if (pcie->rej_unconfig_pf &&
+> +	    (where & CFG_ADDR_REG_NUM_MASK) == PCI_VENDOR_ID)
+> +		if ((*val & DEVICE_ID_MASK) ==
+> +		    (PCI_DEVICE_ID_NX2_57810 << DEVICE_ID_SHIFT))
+> +			return PCIBIOS_FUNC_NOT_SUPPORTED;
+> +
+>  	return PCIBIOS_SUCCESSFUL;
+>  }
+> 
+> @@ -681,7 +700,7 @@ static int iproc_pcie_config_read32(struct pci_bus
+> *bus, unsigned int devfn,
+>  	struct iproc_pcie *pcie = iproc_data(bus);
+> 
+>  	iproc_pcie_apb_err_disable(bus, true);
+> -	if (pcie->type == IPROC_PCIE_PAXB_V2)
+> +	if (pcie->iproc_cfg_read)
+>  		ret = iproc_pcie_config_read(bus, devfn, where, size, val);
+>  	else
+>  		ret = pci_generic_config_read32(bus, devfn, where, size, val);
+> @@ -1336,6 +1355,7 @@ static int iproc_pcie_rev_init(struct iproc_pcie 
+> *pcie)
+>  		break;
+>  	case IPROC_PCIE_PAXB:
+>  		regs = iproc_pcie_reg_paxb;
+> +		pcie->iproc_cfg_read = true;
+>  		pcie->has_apb_err_disable = true;
+>  		if (pcie->need_ob_cfg) {
+>  			pcie->ob_map = paxb_ob_map;
+> @@ -1358,10 +1378,14 @@ static int iproc_pcie_rev_init(struct 
+> iproc_pcie *pcie)
+>  	case IPROC_PCIE_PAXC:
+>  		regs = iproc_pcie_reg_paxc;
+>  		pcie->ep_is_internal = true;
+> +		pcie->iproc_cfg_read = true;
+> +		pcie->rej_unconfig_pf = true;
+>  		break;
+>  	case IPROC_PCIE_PAXC_V2:
+>  		regs = iproc_pcie_reg_paxc_v2;
+>  		pcie->ep_is_internal = true;
+> +		pcie->iproc_cfg_read = true;
+> +		pcie->rej_unconfig_pf = true;
+>  		pcie->need_msi_steer = true;
+>  		break;
+>  	default:
+> diff --git a/drivers/pci/host/pcie-iproc.h 
+> b/drivers/pci/host/pcie-iproc.h
+> index 9d5cfee..4f03ea5 100644
+> --- a/drivers/pci/host/pcie-iproc.h
+> +++ b/drivers/pci/host/pcie-iproc.h
+> @@ -58,6 +58,9 @@ struct iproc_msi;
+>   * @phy: optional PHY device that controls the Serdes
+>   * @map_irq: function callback to map interrupts
+>   * @ep_is_internal: indicates an internal emulated endpoint device is 
+> connected
+> + * @iproc_cfg_read: indicates the iProc config read function should be 
+> used
+> + * @rej_unconfig_pf: indicates the root complex needs to detect and 
+> reject
+> + * enumeration against unconfigured physical functions emulated in the 
+> ASIC
+>   * @has_apb_err_disable: indicates the controller can be configured to 
+> prevent
+>   * unsupported request from being forwarded as an APB bus error
+>   * @fix_paxc_cap: indicates the controller has corrupted capability 
+> list in its
+> @@ -86,6 +89,8 @@ struct iproc_pcie {
+>  	struct phy *phy;
+>  	int (*map_irq)(const struct pci_dev *, u8, u8);
+>  	bool ep_is_internal;
+> +	bool iproc_cfg_read;
+> +	bool rej_unconfig_pf;
+>  	bool has_apb_err_disable;
+>  	bool fix_paxc_cap;
 
-SPDK already does this today. It's capable of placing submission and completion
-queues in the device's controller memory buffer (CMB) and will do all of the
-right things for both uio (look up physical address) and vfio (send
-IOMMU_MAP_DMA ioctl to set a iova and use that). It additionally already
-supports using the CMB as a target for peer-to-peer data transfers.
-
-This was just confirmed to work on the most recent SPDK release. If you are not
-on the most recent release, I recommend trying that first. If there is still
-some issue, please do take it to the SPDK mailing list.
-
-Thanks,
-Ben
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+Reviewed-by: Oza Pawandeep <poza@codeaurora.org>
