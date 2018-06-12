@@ -1,101 +1,60 @@
-Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:32818 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754209AbeFLPQO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2018 11:16:14 -0400
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
-Date: Tue, 12 Jun 2018 13:59:24 +0530
+Date: Tue, 12 Jun 2018 20:46:12 +0530
 From: poza@codeaurora.org
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH v2 3/5] PCI: iproc: Disable MSI parsing in certain PAXC
- blocks
-In-Reply-To: <1528762867-16823-4-git-send-email-ray.jui@broadcom.com>
-References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
- <1528762867-16823-4-git-send-email-ray.jui@broadcom.com>
-Message-ID: <8f6d7771baec3f56e0ccf5efd0efe2a2@codeaurora.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI/AER: Prevent runtime power management during recovery
+In-Reply-To: <20180612144443.GA3142@localhost.localdomain>
+References: <20180611222918.1708-1-keith.busch@intel.com>
+ <08e0ba9f-69cd-ea18-ae1b-d0795cceb306@codeaurora.org>
+ <76f700a5484d82529272d94b4531e434@codeaurora.org>
+ <20180612144443.GA3142@localhost.localdomain>
+Message-ID: <24bc5664ce1c0ac40b48eb6d757e19aa@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-06-12 05:51, Ray Jui wrote:
-> The internal MSI parsing logic in certain revisions of PAXC root
-> complexes does not work properly and can casue corruptions on the
-> writes. They need to be disabled
+On 2018-06-12 20:14, Keith Busch wrote:
+> On Tue, Jun 12, 2018 at 01:21:53PM +0530, poza@codeaurora.org wrote:
+>> On 2018-06-12 10:10, Sinan Kaya wrote:
+>> > On 6/11/2018 6:29 PM, Keith Busch wrote:
+>> > > A bridge that supports D3 but not hotplug will be subject to runtime
+>> > > power management placing it in a non-operation power state if it
+>> > > doesn't
+>> > > have any devices attached. This patch will prevent this power
+>> > > management
+>> > > during error recovery so that the rescan at the end may be successful.
+>> >
+>> > If there is no card connected, why would the bridge observe a fatal
+>> > error?
+>> 
+>> fatal error could be coming from anywhere let us say below RootPort..
+>> and RP observes it and decides to take the tree down....
+>> Is that the case Keith is talking about ?
 > 
-> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-> ---
->  drivers/pci/host/pcie-iproc.c | 34 ++++++++++++++++++++++++++++++++--
->  1 file changed, 32 insertions(+), 2 deletions(-)
+> Right, the err fatal handling removes all the devices below a bridge,
+> making that bridge allowed for run time d3.
 > 
-> diff --git a/drivers/pci/host/pcie-iproc.c 
-> b/drivers/pci/host/pcie-iproc.c
-> index 680f6b1..0804aa2 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -1197,10 +1197,22 @@ static int iproc_pcie_paxb_v2_msi_steer(struct
-> iproc_pcie *pcie, u64 msi_addr)
->  	return ret;
->  }
+>> Why will re-enumeration be a problem even if runtime PM is active ?
+>> I assume that enumeration will get bridge out of D3.
 > 
-> -static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64 
-> msi_addr)
-> +static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64 
-> msi_addr,
-> +					 bool enable)
->  {
->  	u32 val;
-> 
-> +	if (!enable) {
-> +		/*
-> +		 * Disable PAXC MSI steering. All write transfers will be
-> +		 * treated as non-MSI transfers
-> +		 */
-> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
-> +		val &= ~MSI_ENABLE_CFG;
-> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
-> +		return;
-can be dropped.
-> +	}
-> +
->  	/*
->  	 * Program bits [43:13] of address of GITS_TRANSLATER register into
->  	 * bits [30:0] of the MSI base address register.  In fact, in all 
-> iProc
-> @@ -1254,7 +1266,7 @@ static int iproc_pcie_msi_steer(struct iproc_pcie 
-> *pcie,
->  			return ret;
->  		break;
->  	case IPROC_PCIE_PAXC_V2:
-> -		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
-> +		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr, true);
->  		break;
->  	default:
->  		return -EINVAL;
-> @@ -1480,6 +1492,24 @@ int iproc_pcie_remove(struct iproc_pcie *pcie)
->  }
->  EXPORT_SYMBOL(iproc_pcie_remove);
-> 
-> +/*
-> + * The MSI parsing logic in certain revisions of Broadcom PAXC based 
-> root
-> + * complex does not work and needs to be disabled
-> + */
-> +static void quirk_paxc_disable_msi_parsing(struct pci_dev *pdev)
-> +{
-> +	struct iproc_pcie *pcie = iproc_data(pdev->bus);
-> +
-> +	if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-> +		iproc_pcie_paxc_v2_msi_steer(pcie, 0, false);
-> +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0,
-> +			quirk_paxc_disable_msi_parsing);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802,
-> +			quirk_paxc_disable_msi_parsing);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804,
-> +			quirk_paxc_disable_msi_parsing);
-> +
->  MODULE_AUTHOR("Ray Jui <rjui@broadcom.com>");
->  MODULE_DESCRIPTION("Broadcom iPROC PCIe common driver");
->  MODULE_LICENSE("GPL v2");
+> That doesn't seem to be the case.
+
+reset_link(udev, service); will initiate SBR, and which should do hot 
+reset the bridge and bring it out of D3 !
+but it seems even SBR is not doing it for you.
+
+Although I am not sure if the EP has to be designed to reset its config 
+space upon SBR.. even if they are, some just might not do it all 
+correctly !
+
+The code looks okay to me anyway.
+Reviewed-by: Oza Pawandeep <poza@codeaurora.org>
