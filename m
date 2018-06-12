@@ -1,80 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:35002 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751777AbeFAPqi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Jun 2018 11:46:38 -0400
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        Linux Documentation List <linux-doc@vger.kernel.org>,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-References: <20180531235010.5279-1-logang@deltatee.com>
- <20180531235010.5279-2-logang@deltatee.com>
- <CAHp75VcQwDGqND8v1RTo4+6Hyf9G5_2w9x9aiVONwKXsTKgJ1Q@mail.gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <806279a8-1faa-7b86-f761-15eb95b10887@deltatee.com>
-Date: Fri, 1 Jun 2018 09:46:05 -0600
+Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAHp75VcQwDGqND8v1RTo4+6Hyf9G5_2w9x9aiVONwKXsTKgJ1Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v2 1/3] PCI: Make specifying PCI devices in kernel
- parameters reusable
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 12 Jun 2018 13:59:24 +0530
+From: poza@codeaurora.org
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v2 3/5] PCI: iproc: Disable MSI parsing in certain PAXC
+ blocks
+In-Reply-To: <1528762867-16823-4-git-send-email-ray.jui@broadcom.com>
+References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
+ <1528762867-16823-4-git-send-email-ray.jui@broadcom.com>
+Message-ID: <8f6d7771baec3f56e0ccf5efd0efe2a2@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 01/06/18 04:39 AM, Andy Shevchenko wrote:
->> -       pci=option[,option...]  [PCI] various PCI subsystem options:
->> +       pci=option[,option...]  [PCI] various PCI subsystem options.
->> +
->> +                               Some options herein operate on a specific device
->> +                               or a set of devices (<pci_dev>). These are
->> +                               specified in one of two formats:
+On 2018-06-12 05:51, Ray Jui wrote:
+> The internal MSI parsing logic in certain revisions of PAXC root
+> complexes does not work properly and can casue corruptions on the
+> writes. They need to be disabled
 > 
-> I would rather to add
+> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> ---
+>  drivers/pci/host/pcie-iproc.c | 34 ++++++++++++++++++++++++++++++++--
+>  1 file changed, 32 insertions(+), 2 deletions(-)
 > 
->  <pci_dev>
+> diff --git a/drivers/pci/host/pcie-iproc.c 
+> b/drivers/pci/host/pcie-iproc.c
+> index 680f6b1..0804aa2 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -1197,10 +1197,22 @@ static int iproc_pcie_paxb_v2_msi_steer(struct
+> iproc_pcie *pcie, u64 msi_addr)
+>  	return ret;
+>  }
 > 
-> here in the same way as done for options.
-> It would be easy for people to find a referenced paragraph.
-
-Sorry, I don't understand what you are asking. Can you be more specific?
-
->> +
->> +                               [<domain>:]<bus>:<slot>.<func>
->> +                               pci:<vendor>:<device>[:<subvendor>:<subdevice>]
->> +
->> +                               Note: the first format specifies a PCI
->> +                               bus/slot/function address which may change
->> +                               if new hardware is inserted, if motherboard
->> +                               firmware changes, or due to changes caused
->> +                               by other kernel parameters. The second format
->> +                               selects devices using IDs from the
->> +                               configuration space which may match multiple
->> +                               devices in the system.
+> -static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64 
+> msi_addr)
+> +static void iproc_pcie_paxc_v2_msi_steer(struct iproc_pcie *pcie, u64 
+> msi_addr,
+> +					 bool enable)
+>  {
+>  	u32 val;
 > 
->> +static int pci_dev_str_match(struct pci_dev *dev, const char *p,
->> +                            const char **endptr)
+> +	if (!enable) {
+> +		/*
+> +		 * Disable PAXC MSI steering. All write transfers will be
+> +		 * treated as non-MSI transfers
+> +		 */
+> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
+> +		val &= ~MSI_ENABLE_CFG;
+> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
+> +		return;
+can be dropped.
+> +	}
+> +
+>  	/*
+>  	 * Program bits [43:13] of address of GITS_TRANSLATER register into
+>  	 * bits [30:0] of the MSI base address register.  In fact, in all 
+> iProc
+> @@ -1254,7 +1266,7 @@ static int iproc_pcie_msi_steer(struct iproc_pcie 
+> *pcie,
+>  			return ret;
+>  		break;
+>  	case IPROC_PCIE_PAXC_V2:
+> -		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
+> +		iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr, true);
+>  		break;
+>  	default:
+>  		return -EINVAL;
+> @@ -1480,6 +1492,24 @@ int iproc_pcie_remove(struct iproc_pcie *pcie)
+>  }
+>  EXPORT_SYMBOL(iproc_pcie_remove);
 > 
-> This change I hope has no functional alteration, so, can be split to a
-> separate patch.
-
-That's all this patch does... Or do you want be to separate out
-documentation from implementation? That just seems a bit excessive to me.
-
-Logan
+> +/*
+> + * The MSI parsing logic in certain revisions of Broadcom PAXC based 
+> root
+> + * complex does not work and needs to be disabled
+> + */
+> +static void quirk_paxc_disable_msi_parsing(struct pci_dev *pdev)
+> +{
+> +	struct iproc_pcie *pcie = iproc_data(pdev->bus);
+> +
+> +	if (pdev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+> +		iproc_pcie_paxc_v2_msi_steer(pcie, 0, false);
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0,
+> +			quirk_paxc_disable_msi_parsing);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802,
+> +			quirk_paxc_disable_msi_parsing);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804,
+> +			quirk_paxc_disable_msi_parsing);
+> +
+>  MODULE_AUTHOR("Ray Jui <rjui@broadcom.com>");
+>  MODULE_DESCRIPTION("Broadcom iPROC PCIe common driver");
+>  MODULE_LICENSE("GPL v2");
