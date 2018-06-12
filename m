@@ -1,218 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:43756 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.99]:46144 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936346AbeFRThI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 18 Jun 2018 15:37:08 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 18 Jun 2018 13:36:36 -0600
-Message-Id: <20180618193636.16210-4-logang@deltatee.com>
-In-Reply-To: <20180618193636.16210-1-logang@deltatee.com>
-References: <20180618193636.16210-1-logang@deltatee.com>
+        id S932985AbeFLVIY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Jun 2018 17:08:24 -0400
+Date: Tue, 12 Jun 2018 16:08:20 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [GIT PULL] PCI changes for v4.18, part 2
+Message-ID: <20180612210820.GA70310@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v3 3/3] PCI: Introduce the disable_acs_redir parameter
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to support P2P traffic on a segment of the PCI hierarchy,
-we must be able to disable the ACS redirect bits for select
-PCI bridges. The bridges must be selected before the devices are
-discovered by the kernel and the IOMMU groups created. Therefore,
-a kernel command line parameter is created to specify devices
-which must have their ACS bits disabled.
+PCI changes:
 
-The new parameter takes a list of devices separated by a semicolon.
-Each device specified will have it's ACS redirect bits disabled.
-This is similar to the existing 'resource_alignment' parameter and just
-like it we also create a sysfs bus attribute which can be used to
-read the parameter. Writing the parameter is not supported
-as it would require forcibly hot plugging the affected device as
-well as all devices whose IOMMU groups might change.
+  - squash AER directory into drivers/pci/pcie/aer.c (Bjorn Helgaas)
 
-The ACS Request P2P Request Redirect, P2P Completion Redirect and P2P
-Egress Control bits are disabled which is sufficient to always allow
-passing P2P traffic uninterrupted. The bits are set after the kernel
-(optionally) enables the ACS bits itself. It is also done regardless of
-whether the kernel sets the bits or not seeing some BIOS firmware is known
-to set the bits on boot.
+  - collect all native hardware drivers under drivers/pci/controller/
+    (Shawn Lin)
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Acked-by: Christian König <christian.koenig@amd.com>
----
- Documentation/admin-guide/kernel-parameters.txt |   9 +++
- drivers/pci/pci.c                               | 103 +++++++++++++++++++++++-
- 2 files changed, 110 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index d45285e1ab6a..2ec36e258bb0 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3190,6 +3190,15 @@
- 				Adding the window is slightly risky (it may
- 				conflict with unreported devices), so this
- 				taints the kernel.
-+		disable_acs_redir=<pci_dev>[; ...]
-+				Specify one or more PCI devices (in the format
-+				specified above) separated by semicolons.
-+				Each device specified will have the PCI ACS
-+				redirect capabilities forced off which will
-+				allow P2P traffic between devices through
-+				bridges without forcing it upstream. Note:
-+				this removes isolation between devices and
-+				will make the IOMMU groups less granular.
- 
- 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
- 			Management.
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6fbad0492461..eb85bf507398 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2982,6 +2982,92 @@ void pci_request_acs(void)
- 	pci_acs_enable = 1;
- }
- 
-+#define DISABLE_ACS_REDIR_PARAM_SIZE COMMAND_LINE_SIZE
-+static char disable_acs_redir_param[DISABLE_ACS_REDIR_PARAM_SIZE] = {0};
-+static DEFINE_SPINLOCK(disable_acs_redir_lock);
-+
-+static ssize_t pci_set_disable_acs_redir_param(const char *buf, size_t count)
-+{
-+	if (count > DISABLE_ACS_REDIR_PARAM_SIZE - 1)
-+		count = DISABLE_ACS_REDIR_PARAM_SIZE - 1;
-+	spin_lock(&disable_acs_redir_lock);
-+	strncpy(disable_acs_redir_param, buf, count);
-+	disable_acs_redir_param[count] = '\0';
-+	spin_unlock(&disable_acs_redir_lock);
-+	return count;
-+}
-+
-+static ssize_t pci_disable_acs_redir_show(struct bus_type *bus, char *buf)
-+{
-+	size_t count;
-+
-+	spin_lock(&disable_acs_redir_lock);
-+	count = snprintf(buf, PAGE_SIZE, "%s\n", disable_acs_redir_param);
-+	spin_unlock(&disable_acs_redir_lock);
-+	return count;
-+}
-+
-+static BUS_ATTR(disable_acs_redir, 0444, pci_disable_acs_redir_show, NULL);
-+
-+static int __init pci_disable_acs_redir_sysfs_init(void)
-+{
-+	return bus_create_file(&pci_bus_type, &bus_attr_disable_acs_redir);
-+}
-+late_initcall(pci_disable_acs_redir_sysfs_init);
-+
-+/**
-+ * pci_disable_acs_redir - disable ACS redirect capabilities
-+ * @dev: the PCI device
-+ *
-+ * For only devices specified in the disable_acs_redir parameter.
-+ */
-+static void pci_disable_acs_redir(struct pci_dev *dev)
-+{
-+	int ret = 0;
-+	const char *p;
-+	int pos;
-+	u16 ctrl;
-+
-+	spin_lock(&disable_acs_redir_lock);
-+
-+	p = disable_acs_redir_param;
-+	while (*p) {
-+		ret = pci_dev_str_match(dev, p, &p);
-+		if (ret < 0) {
-+			pr_info_once("PCI: Can't parse disable_acs_redir parameter: %s\n",
-+				     disable_acs_redir_param);
-+
-+			break;
-+		} else if (ret == 1) {
-+			/* Found a match */
-+			break;
-+		}
-+
-+		if (*p != ';' && *p != ',') {
-+			/* End of param or invalid format */
-+			break;
-+		}
-+		p++;
-+	}
-+	spin_unlock(&disable_acs_redir_lock);
-+
-+	if (ret != 1)
-+		return;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos)
-+		return;
-+
-+	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-+
-+	/* P2P Request & Completion Redirect */
-+	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
-+
-+	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
-+
-+	pci_info(dev, "disabled ACS redirect\n");
-+}
-+
- /**
-  * pci_std_enable_acs - enable ACS on devices using standard ACS capabilites
-  * @dev: the PCI device
-@@ -3021,12 +3107,22 @@ static void pci_std_enable_acs(struct pci_dev *dev)
- void pci_enable_acs(struct pci_dev *dev)
- {
- 	if (!pci_acs_enable)
--		return;
-+		goto disable_acs_redir;
- 
- 	if (!pci_dev_specific_enable_acs(dev))
--		return;
-+		goto disable_acs_redir;
- 
- 	pci_std_enable_acs(dev);
-+
-+disable_acs_redir:
-+	/*
-+	 * Note: pci_disable_acs_redir() must be called even if
-+	 * ACS is not enabled by the kernel because the firmware
-+	 * may have unexpectedly set the flags. So if we are told
-+	 * to disable it, we should always disable it after setting
-+	 * the kernel's default preferences.
-+	 */
-+	pci_disable_acs_redir(dev);
- }
- 
- static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
-@@ -5966,6 +6062,9 @@ static int __init pci_setup(char *str)
- 				pcie_bus_config = PCIE_BUS_PEER2PEER;
- 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
- 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-+			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
-+				pci_set_disable_acs_redir_param(str + 18,
-+					strlen(str + 18));
- 			} else {
- 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
- 						str);
--- 
-2.11.0
+The following changes since commit 3a3869f1c443383ef8354ffa0e5fb8df65d8b549:
+
+  Merge tag 'pci-v4.18-changes' of git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci (2018-06-07 12:45:58 -0700)
+
+are available in the Git repository at:
+
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.18-changes-2
+
+for you to fetch changes up to ce4c7b241227ed49c0b6f0f1867653e1ee0007ef:
+
+  Merge branch 'pci/aer-squash' (2018-06-11 08:14:42 -0500)
+
+----------------------------------------------------------------
+pci-v4.18-changes-2
+
+----------------------------------------------------------------
+Bjorn Helgaas (15):
+      PCI/AER: Remove forward declarations
+      PCI/AER: Reorder code to group probe/remove stuff together
+      PCI/AER: Squash aerdrv_core.c into aerdrv.c
+      PCI/AER: Squash aerdrv_errprint.c into aerdrv.c
+      PCI/AER: Squash aerdrv_acpi.c into aerdrv.c
+      PCI/AER: Squash ecrc.c into aerdrv.c
+      PCI/AER: Remove duplicate pcie_port_bus_type declaration
+      PCI/AER: Move pcie_aer_get_firmware_first() to portdrv.h
+      PCI/AER: Move aer_irq() declaration to portdrv.h
+      PCI/AER: Move private AER things to aerdrv.c
+      PCI/AER: Squash Kconfig.debug into Kconfig
+      PCI/AER: Hoist aerdrv.c, aer_inject.c up to drivers/pci/pcie/
+      PCI/AER: Use "PCI Express" consistently in Kconfig text
+      Merge branch 'pci/renames'
+      Merge branch 'pci/aer-squash'
+
+Shawn Lin (1):
+      PCI: Collect all native drivers under drivers/pci/controller/
+
+ MAINTAINERS                                        |   70 +-
+ drivers/pci/Kconfig                                |    4 +-
+ drivers/pci/Makefile                               |    6 +-
+ drivers/pci/cadence/Kconfig                        |   27 -
+ drivers/pci/cadence/Makefile                       |    4 -
+ drivers/pci/{host => controller}/Kconfig           |   31 +-
+ drivers/pci/{host => controller}/Makefile          |    6 +
+ drivers/pci/{ => controller}/dwc/Kconfig           |    0
+ drivers/pci/{ => controller}/dwc/Makefile          |    0
+ drivers/pci/{ => controller}/dwc/pci-dra7xx.c      |    2 +-
+ drivers/pci/{ => controller}/dwc/pci-exynos.c      |    0
+ drivers/pci/{ => controller}/dwc/pci-imx6.c        |    0
+ drivers/pci/{ => controller}/dwc/pci-keystone-dw.c |    0
+ drivers/pci/{ => controller}/dwc/pci-keystone.c    |    0
+ drivers/pci/{ => controller}/dwc/pci-keystone.h    |    0
+ drivers/pci/{ => controller}/dwc/pci-layerscape.c  |    0
+ drivers/pci/{ => controller}/dwc/pcie-armada8k.c   |    0
+ drivers/pci/{ => controller}/dwc/pcie-artpec6.c    |    0
+ .../pci/{ => controller}/dwc/pcie-designware-ep.c  |    0
+ .../{ => controller}/dwc/pcie-designware-host.c    |    2 +-
+ .../{ => controller}/dwc/pcie-designware-plat.c    |    0
+ drivers/pci/{ => controller}/dwc/pcie-designware.c |    0
+ drivers/pci/{ => controller}/dwc/pcie-designware.h |    0
+ drivers/pci/{ => controller}/dwc/pcie-hisi.c       |    2 +-
+ drivers/pci/{ => controller}/dwc/pcie-histb.c      |    0
+ drivers/pci/{ => controller}/dwc/pcie-kirin.c      |    0
+ drivers/pci/{ => controller}/dwc/pcie-qcom.c       |    0
+ drivers/pci/{ => controller}/dwc/pcie-spear13xx.c  |    0
+ drivers/pci/{host => controller}/pci-aardvark.c    |    0
+ drivers/pci/{host => controller}/pci-ftpci100.c    |    0
+ drivers/pci/{host => controller}/pci-host-common.c |    0
+ .../pci/{host => controller}/pci-host-generic.c    |    0
+ drivers/pci/{host => controller}/pci-hyperv.c      |    0
+ drivers/pci/{host => controller}/pci-mvebu.c       |    0
+ drivers/pci/{host => controller}/pci-rcar-gen2.c   |    0
+ drivers/pci/{host => controller}/pci-tegra.c       |    0
+ .../pci/{host => controller}/pci-thunder-ecam.c    |    0
+ drivers/pci/{host => controller}/pci-thunder-pem.c |    0
+ drivers/pci/{host => controller}/pci-v3-semi.c     |    0
+ drivers/pci/{host => controller}/pci-versatile.c   |    0
+ drivers/pci/{host => controller}/pci-xgene-msi.c   |    0
+ drivers/pci/{host => controller}/pci-xgene.c       |    0
+ drivers/pci/{host => controller}/pcie-altera-msi.c |    0
+ drivers/pci/{host => controller}/pcie-altera.c     |    0
+ .../pci/{cadence => controller}/pcie-cadence-ep.c  |    0
+ .../{cadence => controller}/pcie-cadence-host.c    |    0
+ drivers/pci/{cadence => controller}/pcie-cadence.c |    0
+ drivers/pci/{cadence => controller}/pcie-cadence.h |    0
+ drivers/pci/{host => controller}/pcie-iproc-bcma.c |    0
+ drivers/pci/{host => controller}/pcie-iproc-msi.c  |    0
+ .../pci/{host => controller}/pcie-iproc-platform.c |    0
+ drivers/pci/{host => controller}/pcie-iproc.c      |    0
+ drivers/pci/{host => controller}/pcie-iproc.h      |    0
+ drivers/pci/{host => controller}/pcie-mediatek.c   |    0
+ drivers/pci/{host => controller}/pcie-mobiveil.c   |    0
+ drivers/pci/{host => controller}/pcie-rcar.c       |    0
+ .../pci/{host => controller}/pcie-rockchip-ep.c    |    0
+ .../pci/{host => controller}/pcie-rockchip-host.c  |    0
+ drivers/pci/{host => controller}/pcie-rockchip.c   |    0
+ drivers/pci/{host => controller}/pcie-rockchip.h   |    0
+ drivers/pci/{host => controller}/pcie-tango.c      |    0
+ drivers/pci/{host => controller}/pcie-xilinx-nwl.c |    0
+ drivers/pci/{host => controller}/pcie-xilinx.c     |    0
+ drivers/pci/{host => controller}/vmd.c             |    0
+ drivers/pci/pcie/Kconfig                           |   41 +-
+ drivers/pci/pcie/Makefile                          |    3 +-
+ drivers/pci/pcie/aer.c                             | 1377 ++++++++++++++++++++
+ drivers/pci/pcie/aer/Kconfig                       |   29 -
+ drivers/pci/pcie/aer/Kconfig.debug                 |   19 -
+ drivers/pci/pcie/aer/Makefile                      |   13 -
+ drivers/pci/pcie/aer/aerdrv.c                      |  371 ------
+ drivers/pci/pcie/aer/aerdrv.h                      |   95 --
+ drivers/pci/pcie/aer/aerdrv_acpi.c                 |  141 --
+ drivers/pci/pcie/aer/aerdrv_core.c                 |  496 -------
+ drivers/pci/pcie/aer/aerdrv_errprint.c             |  260 ----
+ drivers/pci/pcie/aer/ecrc.c                        |  117 --
+ drivers/pci/pcie/{aer => }/aer_inject.c            |    3 +-
+ drivers/pci/pcie/dpc.c                             |    1 -
+ drivers/pci/pcie/portdrv.h                         |   15 +
+ 79 files changed, 1509 insertions(+), 1626 deletions(-)
+ delete mode 100644 drivers/pci/cadence/Kconfig
+ delete mode 100644 drivers/pci/cadence/Makefile
+ rename drivers/pci/{host => controller}/Kconfig (90%)
+ rename drivers/pci/{host => controller}/Makefile (89%)
+ rename drivers/pci/{ => controller}/dwc/Kconfig (100%)
+ rename drivers/pci/{ => controller}/dwc/Makefile (100%)
+ rename drivers/pci/{ => controller}/dwc/pci-dra7xx.c (99%)
+ rename drivers/pci/{ => controller}/dwc/pci-exynos.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pci-imx6.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pci-keystone-dw.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pci-keystone.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pci-keystone.h (100%)
+ rename drivers/pci/{ => controller}/dwc/pci-layerscape.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pcie-armada8k.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pcie-artpec6.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pcie-designware-ep.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pcie-designware-host.c (99%)
+ rename drivers/pci/{ => controller}/dwc/pcie-designware-plat.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pcie-designware.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pcie-designware.h (100%)
+ rename drivers/pci/{ => controller}/dwc/pcie-hisi.c (99%)
+ rename drivers/pci/{ => controller}/dwc/pcie-histb.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pcie-kirin.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pcie-qcom.c (100%)
+ rename drivers/pci/{ => controller}/dwc/pcie-spear13xx.c (100%)
+ rename drivers/pci/{host => controller}/pci-aardvark.c (100%)
+ rename drivers/pci/{host => controller}/pci-ftpci100.c (100%)
+ rename drivers/pci/{host => controller}/pci-host-common.c (100%)
+ rename drivers/pci/{host => controller}/pci-host-generic.c (100%)
+ rename drivers/pci/{host => controller}/pci-hyperv.c (100%)
+ rename drivers/pci/{host => controller}/pci-mvebu.c (100%)
+ rename drivers/pci/{host => controller}/pci-rcar-gen2.c (100%)
+ rename drivers/pci/{host => controller}/pci-tegra.c (100%)
+ rename drivers/pci/{host => controller}/pci-thunder-ecam.c (100%)
+ rename drivers/pci/{host => controller}/pci-thunder-pem.c (100%)
+ rename drivers/pci/{host => controller}/pci-v3-semi.c (100%)
+ rename drivers/pci/{host => controller}/pci-versatile.c (100%)
+ rename drivers/pci/{host => controller}/pci-xgene-msi.c (100%)
+ rename drivers/pci/{host => controller}/pci-xgene.c (100%)
+ rename drivers/pci/{host => controller}/pcie-altera-msi.c (100%)
+ rename drivers/pci/{host => controller}/pcie-altera.c (100%)
+ rename drivers/pci/{cadence => controller}/pcie-cadence-ep.c (100%)
+ rename drivers/pci/{cadence => controller}/pcie-cadence-host.c (100%)
+ rename drivers/pci/{cadence => controller}/pcie-cadence.c (100%)
+ rename drivers/pci/{cadence => controller}/pcie-cadence.h (100%)
+ rename drivers/pci/{host => controller}/pcie-iproc-bcma.c (100%)
+ rename drivers/pci/{host => controller}/pcie-iproc-msi.c (100%)
+ rename drivers/pci/{host => controller}/pcie-iproc-platform.c (100%)
+ rename drivers/pci/{host => controller}/pcie-iproc.c (100%)
+ rename drivers/pci/{host => controller}/pcie-iproc.h (100%)
+ rename drivers/pci/{host => controller}/pcie-mediatek.c (100%)
+ rename drivers/pci/{host => controller}/pcie-mobiveil.c (100%)
+ rename drivers/pci/{host => controller}/pcie-rcar.c (100%)
+ rename drivers/pci/{host => controller}/pcie-rockchip-ep.c (100%)
+ rename drivers/pci/{host => controller}/pcie-rockchip-host.c (100%)
+ rename drivers/pci/{host => controller}/pcie-rockchip.c (100%)
+ rename drivers/pci/{host => controller}/pcie-rockchip.h (100%)
+ rename drivers/pci/{host => controller}/pcie-tango.c (100%)
+ rename drivers/pci/{host => controller}/pcie-xilinx-nwl.c (100%)
+ rename drivers/pci/{host => controller}/pcie-xilinx.c (100%)
+ rename drivers/pci/{host => controller}/vmd.c (100%)
+ create mode 100644 drivers/pci/pcie/aer.c
+ delete mode 100644 drivers/pci/pcie/aer/Kconfig
+ delete mode 100644 drivers/pci/pcie/aer/Kconfig.debug
+ delete mode 100644 drivers/pci/pcie/aer/Makefile
+ delete mode 100644 drivers/pci/pcie/aer/aerdrv.c
+ delete mode 100644 drivers/pci/pcie/aer/aerdrv.h
+ delete mode 100644 drivers/pci/pcie/aer/aerdrv_acpi.c
+ delete mode 100644 drivers/pci/pcie/aer/aerdrv_core.c
+ delete mode 100644 drivers/pci/pcie/aer/aerdrv_errprint.c
+ delete mode 100644 drivers/pci/pcie/aer/ecrc.c
+ rename drivers/pci/pcie/{aer => }/aer_inject.c (99%)
