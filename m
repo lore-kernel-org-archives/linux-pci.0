@@ -1,37 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH v1 0/2] PCI: shpchp: Minor fixes
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>
-Date: Sat, 02 Jun 2018 00:41:59 -0500
-Message-ID: <152791788214.257724.13044360353832574147.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Baoquan He <bhe@redhat.com>
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+        robh+dt@kernel.org, dan.j.williams@intel.com,
+        nicolas.pitre@linaro.org, josh@joshtriplett.org,
+        fengguang.wu@intel.com, bp@suse.de
+Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com,
+        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
+        keith.busch@intel.com, jonathan.derrick@intel.com,
+        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
+        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
+        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
+        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
+        yinghai@kernel.org, kexec@lists.infradead.org, monstr@monstr.eu,
+        davem@davemloft.net, chris@zankel.net, jcmvbkbc@gmail.com,
+        gustavo@padovan.org, maarten.lankhorst@linux.intel.com,
+        seanpaul@chromium.org, linux-parisc@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, Baoquan He <bhe@redhat.com>
+Subject: [PATCH v5 4/4] kexec_file: Load kernel at top of system RAM if required
+Date: Tue, 12 Jun 2018 11:28:31 +0800
+Message-Id: <20180612032831.29747-5-bhe@redhat.com>
+In-Reply-To: <20180612032831.29747-1-bhe@redhat.com>
+References: <20180612032831.29747-1-bhe@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-An AMD POGO check in shpchp incorrectly included any device with device ID
-0x7458, no matter what the vendor.
+For kexec_file loading, if kexec_buf.top_down is 'true', the memory which
+is used to load kernel/initrd/purgatory is supposed to be allocated from
+top to down. This is what we have been doing all along in the old kexec
+loading interface and the kexec loading is still default setting in some
+distributions. However, the current kexec_file loading interface doesn't
+do likt this. The function arch_kexec_walk_mem() it calls ignores checking
+kexec_buf.top_down, but calls walk_system_ram_res() directly to go through
+all resources of System RAM from bottom to up, to try to find memory region
+which can contain the specific kexec buffer, then call locate_mem_hole_callback()
+to allocate memory in that found memory region from top to down. This brings
+confusion especially when KASLR is widely supported , users have to make clear
+why kexec/kdump kernel loading position is different between these two
+interfaces in order to exclude unnecessary noises. Hence these two interfaces
+need be unified on behaviour.
 
-Also, use pci_info() instead of dbg() for messages related to OSHP.
-They're important enough that they should appear in dmesg.
+Here add checking if kexec_buf.top_down is 'true' in arch_kexec_walk_mem(),
+if yes, call the newly added walk_system_ram_res_rev() to find memory region
+from top to down to load kernel.
 
-I intend to include these along with Mika's shpchp updates.
-
+Signed-off-by: Baoquan He <bhe@redhat.com>
+Cc: Eric Biederman <ebiederm@xmission.com>
+Cc: Vivek Goyal <vgoyal@redhat.com>
+Cc: Dave Young <dyoung@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: kexec@lists.infradead.org
 ---
+ kernel/kexec_file.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Bjorn Helgaas (2):
-      PCI: shpchp: Use dev_printk() for OSHP-related messages
-      PCI: shpchp: Fix AMD POGO identification
-
-
- drivers/pci/hotplug/acpi_pcihp.c  |   13 ++++++-------
- drivers/pci/hotplug/shpchp_ctrl.c |    8 ++++----
- 2 files changed, 10 insertions(+), 11 deletions(-)
+diff --git a/kernel/kexec_file.c b/kernel/kexec_file.c
+index 75d8e7cf040e..7a66d9d5a534 100644
+--- a/kernel/kexec_file.c
++++ b/kernel/kexec_file.c
+@@ -518,6 +518,8 @@ int __weak arch_kexec_walk_mem(struct kexec_buf *kbuf,
+ 					   IORESOURCE_SYSTEM_RAM | IORESOURCE_BUSY,
+ 					   crashk_res.start, crashk_res.end,
+ 					   kbuf, func);
++	else if (kbuf->top_down)
++		return walk_system_ram_res_rev(0, ULONG_MAX, kbuf, func);
+ 	else
+ 		return walk_system_ram_res(0, ULONG_MAX, kbuf, func);
+ }
+-- 
+2.13.6
