@@ -1,123 +1,296 @@
-Return-Path: <SRS0=bwDY=I5=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=bwDY=I5=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bh-25.webhostbox.net ([208.91.199.152]:35082 "EHLO
+        bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933685AbeFLRCb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2018 13:02:31 -0400
+Date: Tue, 12 Jun 2018 10:02:29 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Rob Herring <robh@kernel.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Scott Branden <scott.branden@broadcom.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [v4] PCI: improve host drivers compile test coverage
+Message-ID: <20180612170229.GA10141@roeck-us.net>
+References: <20180405193154.27897-1-robh@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 11 Jun 2018 15:31:44 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
- <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
- <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
- Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
- <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH NEXT 6/6] PCI/PORTDRV: Remove ERR_FATAL handling from
- pcie_portdrv_slot_reset()
-In-Reply-To: <20180607213448.GB37077@bhelgaas-glaptop.roam.corp.google.com>
-References: <1528351234-26914-1-git-send-email-poza@codeaurora.org>
- <1528351234-26914-6-git-send-email-poza@codeaurora.org>
- <94661add3e71e3694aa22c2a9cabf503@codeaurora.org>
- <20180607213448.GB37077@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <50f38cb058b29f84ca60a19825efd28a@codeaurora.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180405193154.27897-1-robh@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-06-08 03:04, Bjorn Helgaas wrote:
-> On Thu, Jun 07, 2018 at 07:18:03PM +0530, poza@codeaurora.org wrote:
->> On 2018-06-07 11:30, Oza Pawandeep wrote:
->> > We are handling ERR_FATAL by resetting the Link in software,skipping the
->> > driver pci_error_handlers callbacks, removing the devices from the PCI
->> > subsystem, and re-enumerating, as a result of that, no more calling
->> > pcie_portdrv_slot_reset in ERR_FATAL case.
->> >
->> > Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
->> >
->> > diff --git a/drivers/pci/pcie/portdrv_pci.c
->> > b/drivers/pci/pcie/portdrv_pci.c
->> > index 973f1b8..92f5d330 100644
->> > --- a/drivers/pci/pcie/portdrv_pci.c
->> > +++ b/drivers/pci/pcie/portdrv_pci.c
->> > @@ -42,17 +42,6 @@ __setup("pcie_ports=", pcie_port_setup);
->> >
->> >  /* global data */
->> >
->> > -static int pcie_portdrv_restore_config(struct pci_dev *dev)
->> > -{
->> > -	int retval;
->> > -
->> > -	retval = pci_enable_device(dev);
->> > -	if (retval)
->> > -		return retval;
->> > -	pci_set_master(dev);
->> > -	return 0;
->> > -}
->> > -
->> >  #ifdef CONFIG_PM
->> >  static int pcie_port_runtime_suspend(struct device *dev)
->> >  {
->> > @@ -162,14 +151,6 @@ static pci_ers_result_t
->> > pcie_portdrv_mmio_enabled(struct pci_dev *dev)
->> >
->> >  static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
->> >  {
->> > -	/* If fatal, restore cfg space for possible link reset at upstream */
->> > -	if (dev->error_state == pci_channel_io_frozen) {
->> > -		dev->state_saved = true;
->> > -		pci_restore_state(dev);
->> > -		pcie_portdrv_restore_config(dev);
->> > -		pci_enable_pcie_error_reporting(dev);
->> > -	}
->> > -
->> >  	return PCI_ERS_RESULT_RECOVERED;
->> >  }
->> 
->> 
->> Hi Bjorn,
->> 
->> the above patch removes ERR_FATAL handling from 
->> pcie_portdrv_slot_reset()
->> because now we are handling ERR_FATAL differently than before.
->> 
->> I tried to dig into pcie_portdrv_slot_reset() handling for ERR_FATAL 
->> case
->> where it
->> restores the config space, enable device, set master and enable error
->> reporting....
->> and as far as I understand this is being done for upstream link 
->> (bridges
->> etc..)
->> 
->> why was it done at the first point (I checked the commit description, 
->> but
->> could not really get it)
->> and do we need to handle the same thing in ERR_FATAL now ?
+On Thu, Apr 05, 2018 at 02:31:54PM -0500, Rob Herring wrote:
+> Add COMPILE_TEST on driver config options with it. Some ARM drivers
+> still have arch dependencies, so we have to keep those dependent on ARM.
 > 
-> You mean 4bf3392e0bf5 ("PCI-Express AER implemetation: pcie_portdrv
-> error handler"), which added pcie_portdrv_slot_reset()?  I agree, that
-> commit log has no useful information.  I don't know any of the history
-> behind it.
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Rob Herring <robh@kernel.org>
 
-Hi Bjorn and Keith,
+This patch has the undesirable side effect that it selects PCI_DOMAINS for
+sparc32:allmodconfig, which in turn results in
 
-broadcast_error_message()
-if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-         .....
-         pci_walk_bus(dev->subordinate, cb, &result_data);
+drivers/ata/pata_ali.c: In function 'ali_init_chipset':
+drivers/ata/pata_ali.c:469:38: error:
+	implicit declaration of function 'pci_domain_nr'; did you mean 'pci_iomap_wc'?
 
+Unfortunately, 37bd62d224c82 ("PCI: Enable PCI_DOMAINS along with generic
+PCI host controller") has pretty much the same result. No idea how to fix
+the problem, so I won't even try.
 
-so in case of ERR_FATAL, the walk bus is happening on subordinates, and 
-if I understand the walk right
-then, pcie_portdrv_slot_reset() is called only on BRIDGES/Switches
+Guenter
 
-If is never called on Root-Ports
-
-having said that, now since we are removing the devices (compare to 
-previous error callback handling in ERR_FATAL)
-I dont see the need of the above code anymore.
-
-because there is nothing to restore to any more. as we are initiating 
-re-enumeration.
-
-Regards,
-Oza.
+> ---
+> v4: Drop iProc hunks
+> 
+>  drivers/pci/dwc/Kconfig  | 24 ++++++++++++------------
+>  drivers/pci/host/Kconfig | 31 ++++++++++++++-----------------
+>  2 files changed, 26 insertions(+), 29 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> index 8c1a5167fb5b..2902544f5834 100644
+> --- a/drivers/pci/dwc/Kconfig
+> +++ b/drivers/pci/dwc/Kconfig
+> @@ -64,21 +64,21 @@ config PCIE_DW_PLAT
+>  
+>  config PCI_EXYNOS
+>  	bool "Samsung Exynos PCIe controller"
+> -	depends on SOC_EXYNOS5440
+> +	depends on SOC_EXYNOS5440 || COMPILE_TEST
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  
+>  config PCI_IMX6
+>  	bool "Freescale i.MX6 PCIe controller"
+> -	depends on SOC_IMX6Q
+> +	depends on SOC_IMX6Q || (ARM && COMPILE_TEST)
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+>  
+>  config PCIE_SPEAR13XX
+>  	bool "STMicroelectronics SPEAr PCIe controller"
+> -	depends on ARCH_SPEAR13XX
+> +	depends on ARCH_SPEAR13XX || COMPILE_TEST
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+> @@ -87,7 +87,7 @@ config PCIE_SPEAR13XX
+>  
+>  config PCI_KEYSTONE
+>  	bool "TI Keystone PCIe controller"
+> -	depends on ARCH_KEYSTONE
+> +	depends on ARCH_KEYSTONE || (ARM && COMPILE_TEST)
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+> @@ -99,7 +99,7 @@ config PCI_KEYSTONE
+>  
+>  config PCI_LAYERSCAPE
+>  	bool "Freescale Layerscape PCIe controller"
+> -	depends on OF && (ARM || ARCH_LAYERSCAPE)
+> +	depends on OF && (ARM || ARCH_LAYERSCAPE || COMPILE_TEST)
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select MFD_SYSCON
+>  	select PCIE_DW_HOST
+> @@ -107,7 +107,7 @@ config PCI_LAYERSCAPE
+>  	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+>  
+>  config PCI_HISI
+> -	depends on OF && ARM64
+> +	depends on OF && (ARM64 || COMPILE_TEST)
+>  	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+> @@ -119,7 +119,7 @@ config PCI_HISI
+>  
+>  config PCIE_QCOM
+>  	bool "Qualcomm PCIe controller"
+> -	depends on ARCH_QCOM && OF
+> +	depends on OF && (ARCH_QCOM || COMPILE_TEST)
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+> @@ -130,7 +130,7 @@ config PCIE_QCOM
+>  
+>  config PCIE_ARMADA_8K
+>  	bool "Marvell Armada-8K PCIe controller"
+> -	depends on ARCH_MVEBU
+> +	depends on ARCH_MVEBU || COMPILE_TEST
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+> @@ -145,7 +145,7 @@ config PCIE_ARTPEC6
+>  
+>  config PCIE_ARTPEC6_HOST
+>  	bool "Axis ARTPEC-6 PCIe controller Host Mode"
+> -	depends on MACH_ARTPEC6
+> +	depends on MACH_ARTPEC6 || COMPILE_TEST
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+> @@ -156,7 +156,7 @@ config PCIE_ARTPEC6_HOST
+>  
+>  config PCIE_ARTPEC6_EP
+>  	bool "Axis ARTPEC-6 PCIe controller Endpoint Mode"
+> -	depends on MACH_ARTPEC6
+> +	depends on MACH_ARTPEC6 || COMPILE_TEST
+>  	depends on PCI_ENDPOINT
+>  	select PCIE_DW_EP
+>  	select PCIE_ARTPEC6
+> @@ -165,7 +165,7 @@ config PCIE_ARTPEC6_EP
+>  	  endpoint mode. This uses the DesignWare core.
+>  
+>  config PCIE_KIRIN
+> -	depends on OF && ARM64
+> +	depends on OF && (ARM64 || COMPILE_TEST)
+>  	bool "HiSilicon Kirin series SoCs PCIe controllers"
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+> @@ -176,7 +176,7 @@ config PCIE_KIRIN
+>  
+>  config PCIE_HISI_STB
+>  	bool "HiSilicon STB SoCs PCIe controllers"
+> -	depends on ARCH_HISI
+> +	depends on ARCH_HISI || COMPILE_TEST
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	select PCIEPORTBUS
+>  	select PCIE_DW_HOST
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 0d0177ce436c..3d180b594ff2 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -5,13 +5,13 @@ menu "PCI host controller drivers"
+>  
+>  config PCI_MVEBU
+>  	bool "Marvell EBU PCIe controller"
+> -	depends on ARCH_MVEBU || ARCH_DOVE
+> +	depends on ARCH_MVEBU || ARCH_DOVE || COMPILE_TEST
+>  	depends on ARM
+>  	depends on OF
+>  
+>  config PCI_AARDVARK
+>  	bool "Aardvark PCIe controller"
+> -	depends on ARCH_MVEBU && ARM64
+> +	depends on (ARCH_MVEBU && ARM64) || COMPILE_TEST
+>  	depends on OF
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	help
+> @@ -21,7 +21,7 @@ config PCI_AARDVARK
+>  
+>  config PCIE_XILINX_NWL
+>  	bool "NWL PCIe Core"
+> -	depends on ARCH_ZYNQMP
+> +	depends on ARCH_ZYNQMP || COMPILE_TEST
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	help
+>  	 Say 'Y' here if you want kernel support for Xilinx
+> @@ -32,12 +32,11 @@ config PCIE_XILINX_NWL
+>  config PCI_FTPCI100
+>  	bool "Faraday Technology FTPCI100 PCI controller"
+>  	depends on OF
+> -	depends on ARM
+>  	default ARCH_GEMINI
+>  
+>  config PCI_TEGRA
+>  	bool "NVIDIA Tegra PCIe controller"
+> -	depends on ARCH_TEGRA
+> +	depends on ARCH_TEGRA || COMPILE_TEST
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	help
+>  	  Say Y here if you want support for the PCIe host controller found
+> @@ -45,8 +44,8 @@ config PCI_TEGRA
+>  
+>  config PCI_RCAR_GEN2
+>  	bool "Renesas R-Car Gen2 Internal PCI controller"
+> -	depends on ARM
+>  	depends on ARCH_RENESAS || COMPILE_TEST
+> +	depends on ARM
+>  	help
+>  	  Say Y here if you want internal PCI support on R-Car Gen2 SoC.
+>  	  There are 3 internal PCI controllers available with a single
+> @@ -54,7 +53,7 @@ config PCI_RCAR_GEN2
+>  
+>  config PCIE_RCAR
+>  	bool "Renesas R-Car PCIe controller"
+> -	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
+> +	depends on ARCH_RENESAS || COMPILE_TEST
+>  	depends on PCI_MSI_IRQ_DOMAIN
+>  	help
+>  	  Say Y here if you want PCIe controller support on R-Car SoCs.
+> @@ -65,7 +64,7 @@ config PCI_HOST_COMMON
+>  
+>  config PCI_HOST_GENERIC
+>  	bool "Generic PCI host controller"
+> -	depends on (ARM || ARM64) && OF
+> +	depends on OF
+>  	select PCI_HOST_COMMON
+>  	select IRQ_DOMAIN
+>  	help
+> @@ -74,14 +73,14 @@ config PCI_HOST_GENERIC
+>  
+>  config PCIE_XILINX
+>  	bool "Xilinx AXI PCIe host bridge support"
+> -	depends on ARCH_ZYNQ || MICROBLAZE || (MIPS && PCI_DRIVERS_GENERIC)
+> +	depends on ARCH_ZYNQ || MICROBLAZE || (MIPS && PCI_DRIVERS_GENERIC) || COMPILE_TEST
+>  	help
+>  	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+>  	  Host Bridge driver.
+>  
+>  config PCI_XGENE
+>  	bool "X-Gene PCIe controller"
+> -	depends on ARM64
+> +	depends on ARM64 || COMPILE_TEST
+>  	depends on OF || (ACPI && PCI_QUIRKS)
+>  	select PCIEPORTBUS
+>  	help
+> @@ -101,7 +100,7 @@ config PCI_XGENE_MSI
+>  config PCI_V3_SEMI
+>  	bool "V3 Semiconductor PCI controller"
+>  	depends on OF
+> -	depends on ARM
+> +	depends on ARM || COMPILE_TEST
+>  	default ARCH_INTEGRATOR_AP
+>  
+>  config PCI_VERSATILE
+> @@ -147,8 +146,7 @@ config PCIE_IPROC_MSI
+>  
+>  config PCIE_ALTERA
+>  	bool "Altera PCIe controller"
+> -	depends on ARM || NIOS2
+> -	depends on OF_PCI
+> +	depends on ARM || NIOS2 || COMPILE_TEST
+>  	select PCI_DOMAINS
+>  	help
+>  	  Say Y here if you want to enable PCIe controller support on Altera
+> @@ -164,7 +162,7 @@ config PCIE_ALTERA_MSI
+>  
+>  config PCI_HOST_THUNDER_PEM
+>  	bool "Cavium Thunder PCIe controller to off-chip devices"
+> -	depends on ARM64
+> +	depends on ARM64 || COMPILE_TEST
+>  	depends on OF || (ACPI && PCI_QUIRKS)
+>  	select PCI_HOST_COMMON
+>  	help
+> @@ -172,7 +170,7 @@ config PCI_HOST_THUNDER_PEM
+>  
+>  config PCI_HOST_THUNDER_ECAM
+>  	bool "Cavium Thunder ECAM controller to on-chip devices on pass-1.x silicon"
+> -	depends on ARM64
+> +	depends on ARM64 || COMPILE_TEST
+>  	depends on OF || (ACPI && PCI_QUIRKS)
+>  	select PCI_HOST_COMMON
+>  	help
+> @@ -191,9 +189,8 @@ config PCIE_ROCKCHIP
+>  
+>  config PCIE_MEDIATEK
+>  	bool "MediaTek PCIe controller"
+> -	depends on (ARM || ARM64) && (ARCH_MEDIATEK || COMPILE_TEST)
+> +	depends on ARCH_MEDIATEK || COMPILE_TEST
+>  	depends on OF
+> -	depends on PCI
+>  	select PCIEPORTBUS
+>  	help
+>  	  Say Y here if you want to enable PCIe controller support on
