@@ -1,161 +1,98 @@
-Return-Path: <SRS0=rGz8=JG=flex--rajatja.bounces.google.com=3MuMqWwcKB4Myhqh0qhnvvnsl.jvtolsnhhzrlyuls.vyn@kernel.org>
-Return-Path: <SRS0=rGz8=JG=flex--rajatja.bounces.google.com=3MuMqWwcKB4Myhqh0qhnvvnsl.jvtolsnhhzrlyuls.vyn@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 11 Jun 2018 17:55:20 -0700
+In-Reply-To: <522816f9-c33f-ee58-619e-84ee86dba418@broadcom.com>
+References: <1527631130-20045-1-git-send-email-ray.jui@broadcom.com>
+ <1527631130-20045-4-git-send-email-ray.jui@broadcom.com>
+ <f5aa804e-3174-affd-1117-31b0a5b59fc5@gmail.com>
+ <522816f9-c33f-ee58-619e-84ee86dba418@broadcom.com>
 MIME-Version: 1.0
-Date: Wed, 20 Jun 2018 16:28:38 -0700
-In-Reply-To: <20180620232841.43922-1-rajatja@google.com>
-Message-Id: <20180620232841.43922-2-rajatja@google.com>
-References: <20180522222805.80314-1-rajatja@google.com> <20180620232841.43922-1-rajatja@google.com>
-Subject: [PATCH v4 2/5] PCI/AER: Add sysfs stats for AER capable devices
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
-	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
-	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
-Cc: Rajat Jain <rajatja@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH 3/6] arm: dts: Change PCIe INTx mapping for Cygnus
+To: Ray Jui <ray.jui@broadcom.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+ Mark Rutland <mark.rutland@arm.com>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <D95617BA-7C31-4737-9514-BA3F7B09DCE2@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ devicetree@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the following AER sysfs stats to represent the counters for each
-kind of error as seen by the device:
+On June 11, 2018 5:27:20 PM PDT, Ray Jui <ray.jui@broadcom.com> wrote:
+>
+>
+>On 6/11/2018 3:36 PM, Florian Fainelli wrote:
+>> On 05/29/2018 02:58 PM, Ray Jui wrote:
+>>> Change the PCIe INTx mapping to model the 4 INTx interrupts in the
+>>> IRQ domain of the iProc PCIe controller itself
+>>>
+>>> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+>>> ---
+>>>   arch/arm/boot/dts/bcm-cygnus.dtsi | 18 ++++++++++++++----
+>>>   1 file changed, 14 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/arch/arm/boot/dts/bcm-cygnus.dtsi
+>b/arch/arm/boot/dts/bcm-cygnus.dtsi
+>>> index 699fdf9..6de21ef 100644
+>>> --- a/arch/arm/boot/dts/bcm-cygnus.dtsi
+>>> +++ b/arch/arm/boot/dts/bcm-cygnus.dtsi
+>>> @@ -254,9 +254,14 @@
+>>>   			compatible = "brcm,iproc-pcie";
+>>>   			reg = <0x18012000 0x1000>;
+>>>   
+>>> +			interrupt-controller;
+>>>   			#interrupt-cells = <1>;
+>>> -			interrupt-map-mask = <0 0 0 0>;
+>>> -			interrupt-map = <0 0 0 0 &gic GIC_SPI 100 IRQ_TYPE_NONE>;
+>>> +			interrupt-map-mask = <0 0 0 7>;
+>>> +			interrupt-map = <0 0 0 1 &pcie0 1>,
+>>> +					<0 0 0 2 &pcie0 2>,
+>>> +					<0 0 0 3 &pcie0 3>,
+>>> +					<0 0 0 4 &pcie0 4>;
+>>> +			interrupts = <GIC_SPI 100 IRQ_TYPE_NONE>;
+>> 
+>> You would want to fix those IRQ_TYPE_NONE values as well because
+>since
+>> commit 83a86fbb5b56b5eed8a476cc3fe214077d7c4f49 ("irqchip/gic: Loudly
+>> complain about the use of IRQ_TYPE_NONE") this is going to create
+>some
+>> nice warnings on boot.
+>> 
+>> I am about to send fixes for NSP and HR2 since that's what I have
+>access
+>> to at the moment, but it would be good if you could send updates to
+>the
+>> Cygnus and NS2 DTS files?
+>> 
+>> Thanks
+>> 
+>
+>Okay. Thanks for letting me know. How do you want this to be done for 
+>Cygnus and NS2?
+>
+>I guess I should have the fix patches to DTS done and sent out first, 
+>and then rebase this INTx patch series against the patches with the
+>fix.
+>
+>Does that make sense to you?
 
-dev_total_cor_errs
-dev_total_fatal_errs
-dev_total_nonfatal_errs
+Yes it does. As soon as v4.18-rc1 is tagged I will send the Device Tree fixes pull request, if I can have yours for Cygnus and NS2 in the next few days I could lump those together. Then we can either base your changes off v4.18-rc2 or a later tag that already has the DTS fixes.
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
-v4: Same as v3
-v3: Merge everything in aer.c, use "%llu" in place of "%llx"
-
- drivers/pci/pci-sysfs.c |  3 ++
- drivers/pci/pci.h       |  4 ++-
- drivers/pci/pcie/aer.c  | 74 +++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 80 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 0c4653c1d2ce..9f1cb9051d7d 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1746,6 +1746,9 @@ static const struct attribute_group *pci_dev_attr_groups[] = {
- #endif
- 	&pci_bridge_attr_group,
- 	&pcie_dev_attr_group,
-+#ifdef CONFIG_PCIEAER
-+	&aer_stats_attr_group,
-+#endif
- 	NULL,
- };
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c358e7a07f3f..9a28ec600225 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -181,7 +181,9 @@ extern const struct attribute_group *pci_dev_groups[];
- extern const struct attribute_group *pcibus_groups[];
- extern const struct device_type pci_dev_type;
- extern const struct attribute_group *pci_bus_groups[];
--
-+#ifdef CONFIG_PCIEAER
-+extern const struct attribute_group aer_stats_attr_group;
-+#endif
- 
- /**
-  * pci_match_one_device - Tell if a PCI device structure has a matching
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index f9fa994b6c33..ce0d675d7bd3 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -573,6 +573,79 @@ static const char *aer_agent_string[] = {
- 	"Transmitter ID"
- };
- 
-+#define aer_stats_aggregate_attr(field)					\
-+	static ssize_t							\
-+	field##_show(struct device *dev, struct device_attribute *attr,	\
-+		     char *buf)						\
-+{									\
-+	struct pci_dev *pdev = to_pci_dev(dev);				\
-+	return sprintf(buf, "%llu\n", pdev->aer_stats->field);		\
-+}									\
-+static DEVICE_ATTR_RO(field)
-+
-+aer_stats_aggregate_attr(dev_total_cor_errs);
-+aer_stats_aggregate_attr(dev_total_fatal_errs);
-+aer_stats_aggregate_attr(dev_total_nonfatal_errs);
-+
-+static struct attribute *aer_stats_attrs[] __ro_after_init = {
-+	&dev_attr_dev_total_cor_errs.attr,
-+	&dev_attr_dev_total_fatal_errs.attr,
-+	&dev_attr_dev_total_nonfatal_errs.attr,
-+	NULL
-+};
-+
-+static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
-+					   struct attribute *a, int n)
-+{
-+	struct device *dev = kobj_to_dev(kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (!pdev->aer_stats)
-+		return 0;
-+
-+	return a->mode;
-+}
-+
-+const struct attribute_group aer_stats_attr_group = {
-+	.name  = "aer_stats",
-+	.attrs  = aer_stats_attrs,
-+	.is_visible = aer_stats_attrs_are_visible,
-+};
-+
-+static void pci_dev_aer_stats_incr(struct pci_dev *pdev,
-+				   struct aer_err_info *info)
-+{
-+	int status, i, max = -1;
-+	u64 *counter = NULL;
-+	struct aer_stats *aer_stats = pdev->aer_stats;
-+
-+	if (!aer_stats)
-+		return;
-+
-+	switch (info->severity) {
-+	case AER_CORRECTABLE:
-+		aer_stats->dev_total_cor_errs++;
-+		counter = &aer_stats->dev_cor_errs[0];
-+		max = AER_MAX_TYPEOF_CORRECTABLE_ERRS;
-+		break;
-+	case AER_NONFATAL:
-+		aer_stats->dev_total_nonfatal_errs++;
-+		counter = &aer_stats->dev_uncor_errs[0];
-+		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
-+		break;
-+	case AER_FATAL:
-+		aer_stats->dev_total_fatal_errs++;
-+		counter = &aer_stats->dev_uncor_errs[0];
-+		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
-+		break;
-+	}
-+
-+	status = (info->status & ~info->mask);
-+	for (i = 0; i < max; i++)
-+		if (status & (1 << i))
-+			counter[i]++;
-+}
-+
- static void __print_tlp_header(struct pci_dev *dev,
- 			       struct aer_header_log_regs *t)
- {
-@@ -605,6 +678,7 @@ static void __aer_print_error(struct pci_dev *dev,
- 			pci_err(dev, "   [%2d] Unknown Error Bit%s\n",
- 				i, info->first_error == i ? " (First)" : "");
- 	}
-+	pci_dev_aer_stats_incr(dev, info);
- }
- 
- static void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
 -- 
-2.18.0.rc1.244.gcf134e6275-goog
+Florian
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
