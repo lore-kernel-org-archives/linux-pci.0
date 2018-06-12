@@ -1,119 +1,202 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:34486 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755344AbeFRWC2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jun 2018 18:02:28 -0400
-Received: by mail-wr0-f194.google.com with SMTP id a12-v6so18411588wro.1
-        for <linux-pci@vger.kernel.org>; Mon, 18 Jun 2018 15:02:27 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, alexander.duyck@gmail.com,
-        oss-drivers@netronome.com, Christoph Hellwig <hch@infradead.org>,
-        Don Dutile <ddutile@redhat.com>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCH] PCI: reset driver SR-IOV state after remove
-Date: Mon, 18 Jun 2018 15:01:42 -0700
-Message-Id: <20180618220142.16527-1-jakub.kicinski@netronome.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=GJIr=I6=broadcom.com=ray.jui@kernel.org>
+Return-Path: <SRS0=GJIr=I6=broadcom.com=ray.jui@kernel.org>
+Subject: Re: [PATCH INTERNAL 2/3] PCI: iproc: Fix up corrupted PAXC root
+ complex config registers
+From: Ray Jui <ray.jui@broadcom.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org,
+ bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+ Ray Jui <rjui@broadcom.com>
+References: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
+ <1526577692-21104-3-git-send-email-ray.jui@broadcom.com>
+ <20180530172733.GN39853@bhelgaas-glaptop.roam.corp.google.com>
+ <715d8746-1b68-4342-6258-7d9c1b5035bc@broadcom.com>
+Message-ID: <7e7ce21e-b39d-0d9e-1d75-7d0e2e432e48@broadcom.com>
+Date: Mon, 11 Jun 2018 17:18:48 -0700
+MIME-Version: 1.0
+In-Reply-To: <715d8746-1b68-4342-6258-7d9c1b5035bc@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn points out that currently core and most of the drivers don't
-clean up dev->sriov->driver_max_VFs settings on .remove().  This
-means that if a different driver is bound afterwards it will
-inherit the old setting:
+Hi Bjorn,
 
-  - load PF driver 1
-  - driver 1 calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
-  - unload PF driver 1
-  - load PF driver 2
-  # driver 2 does not know to call pci_sriov_set_totalvfs()
+On 5/30/2018 10:43 AM, Ray Jui wrote:
+> Hi Bjorn,
+> 
+> On 5/30/2018 10:27 AM, Bjorn Helgaas wrote:
+>> On Thu, May 17, 2018 at 10:21:31AM -0700, Ray Jui wrote:
+>>> On certain versions of Broadcom PAXC based root complexes, certain
+>>> regions of the configuration space are corrupted. As a result, it
+>>> prevents the Linux PCIe stack from traversing the linked list of the
+>>> capability registers completely and therefore the root complex is
+>>> not advertised as "PCIe capable". This prevents the correct PCIe RID
+>>> from being parsed in the kernel PCIe stack. A correct RID is required
+>>> for mapping to a stream ID from the SMMU or the device ID from the
+>>> GICv3 ITS
+>>>
+>>> This patch fixes up the issue by manually populating the related
+>>> PCIe capabilities based on readings from the PCIe capability structure
+>>>
+>>> Signed-off-by: Ray Jui <rjui@broadcom.com>
+>>> Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+>>> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+>>> ---
+>>>   drivers/pci/quirks.c | 95 
+>>> ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>>   1 file changed, 95 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>> index 47dfea0..0cdbd0a 100644
+>>> --- a/drivers/pci/quirks.c
+>>> +++ b/drivers/pci/quirks.c
+>>> @@ -2198,6 +2198,101 @@ 
+>>> DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0, 
+>>> quirk_paxc_bridge);
+>>>   DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd750, 
+>>> quirk_paxc_bridge);
+>>>   DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802, 
+>>> quirk_paxc_bridge);
+>>>   DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804, 
+>>> quirk_paxc_bridge);
+>>> +
+>>> +/*
+>>> + * The PCI capabilities list for certain revisions of Broadcom PAXC 
+>>> root
+>>> + * complexes is incorrectly terminated due to corrupted 
+>>> configuration space
+>>> + * registers in the range of 0x50 - 0x5f
+>>> + *
+>>> + * As a result, the capability list becomes broken and prevent 
+>>> standard PCI
+>>> + * stack from being able to traverse to the PCIe capability structure
+>>> + */
+>>> +static void quirk_paxc_pcie_capability(struct pci_dev *pdev)
+>>> +{
+>>> +    int pos, i = 0;
+>>> +    u8 next_cap;
+>>> +    u16 reg16, *cap;
+>>> +    struct pci_cap_saved_state *state;
+>>> +
+>>> +    /* bail out if PCIe capability can be found */
+>>> +    if (pdev->pcie_cap || pci_find_capability(pdev, PCI_CAP_ID_EXP))
+>>> +        return;
+>>> +
+>>> +    /* locate the power management capability */
+>>> +    pos = pci_find_capability(pdev, PCI_CAP_ID_PM);
+>>> +    if (!pos)
+>>> +        return;
+>>> +
+>>> +    /* bail out if the next capability pointer is not 0x50/0x58 */
+>>> +    pci_read_config_byte(pdev, pos + 1, &next_cap);
+>>> +    if (next_cap != 0x50 && next_cap != 0x58)
+>>> +        return;
+>>> +
+>>> +    /* bail out if we do not terminate at 0x50/0x58 */
+>>> +    pos = next_cap;
+>>> +    pci_read_config_byte(pdev, pos + 1, &next_cap);
+>>> +    if (next_cap != 0x00)
+>>> +        return;
+>>> +
+>>> +    /*
+>>> +     * On these buggy HW, PCIe capability structure is expected to 
+>>> be at
+>>> +     * 0xac and should terminate the list
+>>> +     *
+>>> +     * Borrow the similar logic from theIntel DH895xCC VFs fixup to 
+>>> save
+>>> +     * the PCIe capability list
+>>> +     */
+>>> +    pos = 0xac;
+>>> +    pci_read_config_word(pdev, pos, &reg16);
+>>> +    if (reg16 == (0x0000 | PCI_CAP_ID_EXP)) {
+>>> +        u32 status;
+>>> +
+>>> +#ifndef PCI_EXP_SAVE_REGS
+>>> +#define PCI_EXP_SAVE_REGS     7
+>>> +#endif
+>>> +        int size = PCI_EXP_SAVE_REGS * sizeof(u16);
+>>> +
+>>> +        pdev->pcie_cap = pos;
+>>> +        pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+>>> +        pdev->pcie_flags_reg = reg16;
+>>> +        pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
+>>> +        pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
+>>
+>> Is there any way you can fix this in iproc_pcie_config_read() instead,
+>> by making it notice when we're reading a corrupted part of config
+>> space, and then returning the correct data instead?  Is it just the
+>> next capability pointer that's corrupted?
+> 
+> Let me look into that and I'll get back.
+> 
+> Thanks,
+> 
+> Ray
+> 
+>>
+>> If you could fix it in the config accessor, lspci would automatically
+>> show all the correct data (I think lspci will still show the wrong
+>> data with this patch).
+>>
 
-Some drivers (e.g. nfp) used to do the clean up by calling
-pci_sriov_set_totalvfs(dev, 0), since 0 was equivalent to no driver
-limit set.  After commit 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers
-to limit total_VFs to 0") 0 no longer has this special meaning.
+I managed to get this fixed within iproc_pcie_config_read(). By doing it 
+this way, as you suggested, now lspci and dump of 
+/sys/bus/pci/devices/xxx:yyy:zzz.w all show correct data.
 
-The need to reset driver_max_VFs comes from the fact that old FW
-builds may not expose its VF limits to the drivers, and depend on
-the ability to reject the configuration change when driver notifies
-the FW as part of struct pci_driver->sriov_configure() callback.
-Therefore if there is no information on VF count limits we should
-use the PCI capability max, and not the last value set by
-pci_sriov_set_totalvfs().
+I'll send out v2 of the patch series with the fix.
 
-Reset driver_max_VFs back to total_VFs after device remove.  If
-drivers want to reload FW/reconfigure the device while driver is
-bound we may add an explicit pci_sriov_reset_totalvfs(), but for
-now no driver is doing that.
+Thanks!
 
-Fixes: 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers to limit total_VFs to 0")
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
----
- drivers/pci/iov.c        | 16 ++++++++++++++++
- drivers/pci/pci-driver.c |  1 +
- drivers/pci/pci.h        |  4 ++++
- 3 files changed, 21 insertions(+)
+Ray
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index d0d73dbbd5ca..cbbe6d8fab0c 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -574,6 +574,22 @@ void pci_iov_release(struct pci_dev *dev)
- 		sriov_release(dev);
- }
- 
-+/**
-+ * pci_iov_device_removed - clean up SR-IOV state after PF driver is detached
-+ * @dev: the PCI device
-+ */
-+void pci_iov_device_removed(struct pci_dev *dev)
-+{
-+	struct pci_sriov *iov = dev->sriov;
-+
-+	if (!dev->is_physfn)
-+		return;
-+	iov->driver_max_VFs = iov->total_VFs;
-+	if (iov->num_VFs)
-+		dev_warn(&dev->dev,
-+			 "driver left SR-IOV enabled after remove\n");
-+}
-+
- /**
-  * pci_iov_update_resource - update a VF BAR
-  * @dev: the PCI device
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index c125d53033c6..80a281cf5d21 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -445,6 +445,7 @@ static int pci_device_remove(struct device *dev)
- 		}
- 		pcibios_free_irq(pci_dev);
- 		pci_dev->driver = NULL;
-+		pci_iov_device_removed(pci_dev);
- 	}
- 
- 	/* Undo the runtime PM settings in local_pci_probe() */
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c358e7a07f3f..fc8bd4fdfb95 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -311,6 +311,7 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
- #ifdef CONFIG_PCI_IOV
- int pci_iov_init(struct pci_dev *dev);
- void pci_iov_release(struct pci_dev *dev);
-+void pci_iov_device_removed(struct pci_dev *dev);
- void pci_iov_update_resource(struct pci_dev *dev, int resno);
- resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
- void pci_restore_iov_state(struct pci_dev *dev);
-@@ -323,6 +324,9 @@ static inline int pci_iov_init(struct pci_dev *dev)
- }
- static inline void pci_iov_release(struct pci_dev *dev)
- 
-+{
-+}
-+static inline void pci_iov_device_removed(struct pci_dev *dev)
- {
- }
- static inline void pci_restore_iov_state(struct pci_dev *dev)
--- 
-2.17.1
+
+>> The quirk seems like a maintenance issue because anything that calls
+>>
+>>    pci_find_capability(pdev, PCI_CAP_ID_EXP)
+>>
+>> will get the wrong answer.
+>>
+>>> +
+>>> +        pdev->cfg_size = PCI_CFG_SPACE_EXP_SIZE;
+>>> +        if (pci_read_config_dword(pdev, PCI_CFG_SPACE_SIZE, &status) !=
+>>> +            PCIBIOS_SUCCESSFUL || (status == 0xffffffff))
+>>> +            pdev->cfg_size = PCI_CFG_SPACE_SIZE;
+>>> +
+>>> +        if (pci_find_saved_cap(pdev, PCI_CAP_ID_EXP))
+>>> +            return;
+>>> +
+>>> +        state = kzalloc(sizeof(*state) + size, GFP_KERNEL);
+>>> +        if (!state)
+>>> +            return;
+>>> +
+>>> +        state->cap.cap_nr = PCI_CAP_ID_EXP;
+>>> +        state->cap.cap_extended = 0;
+>>> +        state->cap.size = size;
+>>> +        cap = (u16 *)&state->cap.data[0];
+>>> +        pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &cap[i++]);
+>>> +        pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &cap[i++]);
+>>> +        pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &cap[i++]);
+>>> +        pcie_capability_read_word(pdev, PCI_EXP_RTCTL,  &cap[i++]);
+>>> +        pcie_capability_read_word(pdev, PCI_EXP_DEVCTL2, &cap[i++]);
+>>> +        pcie_capability_read_word(pdev, PCI_EXP_LNKCTL2, &cap[i++]);
+>>> +        pcie_capability_read_word(pdev, PCI_EXP_SLTCTL2, &cap[i++]);
+>>> +        hlist_add_head(&state->next, &pdev->saved_cap_space);
+>>> +    }
+>>> +}
+>>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 
+>>> PCI_DEVICE_ID_NX2_57810,
+>>> +            quirk_paxc_pcie_capability);
+>>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16cd,
+>>> +            quirk_paxc_pcie_capability);
+>>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0,
+>>> +            quirk_paxc_pcie_capability);
+>>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802,
+>>> +            quirk_paxc_pcie_capability);
+>>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804,
+>>> +            quirk_paxc_pcie_capability);
+>>>   #endif
+>>>   /* Originally in EDAC sources for i82875P:
+>>> -- 
+>>> 2.1.4
+>>>
