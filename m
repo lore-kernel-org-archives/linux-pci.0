@@ -1,69 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:57282 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932858AbeFUQBr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 12:01:47 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v6 00/11] Add MSI-X support on pcitest tool
-Date: Thu, 21 Jun 2018 17:01:25 +0100
-Message-Id: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+Received: from mga17.intel.com ([192.55.52.151]:32872 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933974AbeFLOlt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Jun 2018 10:41:49 -0400
+Date: Tue, 12 Jun 2018 08:44:44 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: poza@codeaurora.org
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI/AER: Prevent runtime power management during recovery
+Message-ID: <20180612144443.GA3142@localhost.localdomain>
+References: <20180611222918.1708-1-keith.busch@intel.com>
+ <08e0ba9f-69cd-ea18-ae1b-d0795cceb306@codeaurora.org>
+ <76f700a5484d82529272d94b4531e434@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <76f700a5484d82529272d94b4531e434@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Patch series made against Lorenzo's master branch.
+On Tue, Jun 12, 2018 at 01:21:53PM +0530, poza@codeaurora.org wrote:
+> On 2018-06-12 10:10, Sinan Kaya wrote:
+> > On 6/11/2018 6:29 PM, Keith Busch wrote:
+> > > A bridge that supports D3 but not hotplug will be subject to runtime
+> > > power management placing it in a non-operation power state if it
+> > > doesn't
+> > > have any devices attached. This patch will prevent this power
+> > > management
+> > > during error recovery so that the rescan at the end may be successful.
+> > 
+> > If there is no card connected, why would the bridge observe a fatal
+> > error?
+> 
+> fatal error could be coming from anywhere let us say below RootPort..
+> and RP observes it and decides to take the tree down....
+> Is that the case Keith is talking about ?
 
-Add MSI-X support on pcitest tool.
+Right, the err fatal handling removes all the devices below a bridge,
+making that bridge allowed for run time d3.
+ 
+> Why will re-enumeration be a problem even if runtime PM is active ?
+> I assume that enumeration will get bridge out of D3.
 
-Add new callbacks methods and handlers to trigger the MSI-X interrupts
-on the EP DesignWare IP driver.
-
-Allow to set/get MSI-X EP maximum capability number.
-
-Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
-
-Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
-
-Update the pcitest.sh script to support MSI-X feature tests.
-
-Gustavo Pimentel (11):
-  PCI: endpoint: Add MSI-X interfaces
-  PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
-  PCI: dwc: Add MSI-X callbacks handler
-  PCI: dwc: Rework MSI callbacks handler
-  PCI: dwc: Add legacy interrupt callback handler
-  pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
-  pci-epf-test/pci_endpoint_test: Use irq_type module parameter
-  pci-epf-test/pci_endpoint_test: Add MSI-X support
-  pci_endpoint_test: Add 2 ioctl commands
-  tools: PCI: Add MSI-X support
-  PCI: endpoint: Add MSI set maximum restriction.
-
- Documentation/ioctl/ioctl-number.txt              |   1 +
- Documentation/misc-devices/pci-endpoint-test.txt  |   6 +
- drivers/misc/pci_endpoint_test.c                  | 259 ++++++++++++++++------
- drivers/pci/controller/dwc/pci-dra7xx.c           |   2 +-
- drivers/pci/controller/dwc/pcie-artpec6.c         |   2 +-
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 205 +++++++++++++++--
- drivers/pci/controller/dwc/pcie-designware-plat.c |   7 +-
- drivers/pci/controller/dwc/pcie-designware.h      |  31 ++-
- drivers/pci/controller/pcie-cadence-ep.c          |   3 +-
- drivers/pci/controller/pcie-rockchip-ep.c         |   2 +-
- drivers/pci/endpoint/functions/pci-epf-test.c     |  81 +++++--
- drivers/pci/endpoint/pci-ep-cfs.c                 |  24 ++
- drivers/pci/endpoint/pci-epc-core.c               |  68 +++++-
- include/linux/pci-epc.h                           |  15 +-
- include/linux/pci-epf.h                           |   1 +
- include/uapi/linux/pcitest.h                      |   3 +
- tools/pci/pcitest.c                               |  51 ++++-
- tools/pci/pcitest.sh                              |  15 ++
- 18 files changed, 644 insertions(+), 132 deletions(-)
-
--- 
-2.7.4
+That doesn't seem to be the case.
