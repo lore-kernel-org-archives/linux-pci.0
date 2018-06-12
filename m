@@ -1,107 +1,154 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:60536 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934362AbeFRLdE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 18 Jun 2018 07:33:04 -0400
-Date: Mon, 18 Jun 2018 12:34:41 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Scott Branden <scott.branden@broadcom.com>
-Cc: Guenter Roeck <linux@roeck-us.net>, Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Jan Kiszka <jan.kiszka@siemens.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Russell King <linux@armlinux.org.uk>
-Subject: Re: [v4] PCI: improve host drivers compile test coverage
-Message-ID: <20180618113440.GA338@red-moon>
-References: <20180405193154.27897-1-robh@kernel.org>
- <20180612170229.GA10141@roeck-us.net>
- <20180613100935.GA7707@e107981-ln.cambridge.arm.com>
- <20180613181146.GA28856@roeck-us.net>
- <20180615125847.GA7735@e107981-ln.cambridge.arm.com>
- <980b68c0-6034-b495-753f-c75c04e0f5d1@broadcom.com>
- <3d84b647-1bc5-3b56-bca3-7a7a72d31c21@broadcom.com>
+Return-Path: <SRS0=inYE=I6=gmail.com=marek.vasut@kernel.org>
+Return-Path: <SRS0=inYE=I6=gmail.com=marek.vasut@kernel.org>
+Subject: Re: [PATCH V2 4/5] PCI: rcar: Support runtime PM, link state L1
+ handling
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
+ Phil Edworthy <phil.edworthy@renesas.com>,
+ Marek Vasut <marek.vasut+renesas@gmail.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Simon Horman <horms+renesas@verge.net.au>, Wolfram Sang <wsa@the-dreams.de>,
+ linux-renesas-soc@vger.kernel.org
+References: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
+ <20171110215843.432-5-marek.vasut+renesas@gmail.com>
+ <20171117174906.GB22599@red-moon>
+ <3e0bc374-d296-675c-f290-256cc530feb7@gmail.com>
+ <20180611135912.GD75679@bhelgaas-glaptop.roam.corp.google.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <77d1eaf8-e180-f5f5-50f0-34c45e72c553@gmail.com>
+Date: Wed, 13 Jun 2018 01:54:51 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <3d84b647-1bc5-3b56-bca3-7a7a72d31c21@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180611135912.GD75679@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 15, 2018 at 10:58:19AM -0700, Scott Branden wrote:
+On 06/11/2018 03:59 PM, Bjorn Helgaas wrote:
+> On Sun, Jun 10, 2018 at 03:57:10PM +0200, Marek Vasut wrote:
+>> On 11/17/2017 06:49 PM, Lorenzo Pieralisi wrote:
+>>> On Fri, Nov 10, 2017 at 10:58:42PM +0100, Marek Vasut wrote:
+>>>> From: Phil Edworthy <phil.edworthy@renesas.com>
+>>>>
+>>>> Most PCIe host controllers support L0s and L1 power states via ASPM.
+>>>> The R-Car hardware only supports L0s, so when the system suspends and
+>>>> resumes we have to manually handle L1.
+>>>> When the system suspends, cards can put themselves into L1 and send a
+>>>
+>>> I assumed L1 entry has to be negotiated depending upon the PCIe
+>>> hierarchy capabilities, I would appreciate if you can explain to
+>>> me what's the root cause of the issue please.
+>>
+>> You should probably ignore the suspend/resume part altogether. The issue
+>> here is that the cards can enter L1 state, while the controller won't do
+>> that automatically, it can only detect that the link went into L1 state.
+>> If that happens,the driver must manually put the controller to L1 state.
+>> The controller can transition out of L1 state automatically though.
 > 
-> 
-> On 18-06-15 10:55 AM, Scott Branden wrote:
-> >Hi Lorenzo,
-> >
-> >
-> >On 18-06-15 05:58 AM, Lorenzo Pieralisi wrote:
-> >>On Wed, Jun 13, 2018 at 11:11:46AM -0700, Guenter Roeck wrote:
-> >>>On Wed, Jun 13, 2018 at 11:09:35AM +0100, Lorenzo Pieralisi wrote:
-> >>>>[+Jan, Ley Foon, RMK]
-> >>>>
-> >>>>On Tue, Jun 12, 2018 at 10:02:29AM -0700, Guenter Roeck wrote:
-> >>>>>On Thu, Apr 05, 2018 at 02:31:54PM -0500, Rob Herring wrote:
-> >>>>>>Add COMPILE_TEST on driver config options with it. Some ARM drivers
-> >>>>>>still have arch dependencies, so we have to keep those
-> >>>>>>dependent on ARM.
-> >>>>>>
-> >>>>>>Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> >>>>>>Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >>>>>>Cc: linux-pci@vger.kernel.org
-> >>>>>>Signed-off-by: Rob Herring <robh@kernel.org>
-> >>>>>This patch has the undesirable side effect that it selects
-> >>>>>PCI_DOMAINS for
-> >>>>>sparc32:allmodconfig, which in turn results in
-> >>>>>
-> >>>>>drivers/ata/pata_ali.c: In function 'ali_init_chipset':
-> >>>>>drivers/ata/pata_ali.c:469:38: error:
-> >>>>>    implicit declaration of function 'pci_domain_nr'; did
-> >>>>>you mean 'pci_iomap_wc'?
-> >>>>>
-> >>>>>Unfortunately, 37bd62d224c82 ("PCI: Enable PCI_DOMAINS
-> >>>>>along with generic
-> >>>>>PCI host controller") has pretty much the same result. No
-> >>>>>idea how to fix
-> >>>>>the problem, so I won't even try.
-> >>>>Sorry about that.
-> >>>>
-> >>>>One option would consist in removing all PCI_DOMAINS selection from
-> >>>>drivers/pci/controller/Kconfig and delegate it to arches even though
-> >>>>this would force PCI_DOMAINS selection on all ARM platforms (it is
-> >>>>already selected for ARCH_MULTIPLATFORM).
-> >>>>
-> >>>>Or we add back arch dependency to the relevant host bridges.
-> >>>>
-> >>>>Everything else I have in mind seems overkill to me given that this
-> >>>>patch was added to improve test coverage (we could add a default
-> >>>>pci_domain_nr() stub - weak or #define - that returns 0 in case arches
-> >>>>do not provide an implementation but do we really want to do that ?).
-> >>>>
-> >>>>Thoughts appreciated.
-> >>>>
-> >>> From the definition of PCI_DOMAINS, I suspect the original
-> >>>idea was that
-> >>>drivers should depend on it, not select it. Especially auto-selecting
-> >>>it with PCI_HOST_GENERIC seems like a bad idea to me. However, that is
-> >>>just me. I'll leave it up to Bjorn to decide what if anything he wants
-> >>>to do about it.
-> >>Here is a patch that should reinstate the previous behaviour but
-> >>it will make PCI_DOMAINS a visible option on ARM 32-bit systems; whether
-> >>that's acceptable that's the question I need to answer, it should
-> >>honour old configs and it does not force PCI_DOMAINS selection on
-> >>non-DT arch/arm PCI host controllers (that do not need PCI_DOMAINS
-> >>anyway so I suspect that enabling it on all ARM 32-bit platforms
-> >>should not break anything but I preferred to be cautious).
-> >I think this change will also require a patch enabling
-> >CONFIG_PCI_DOMAINS in multi_v7_defconfig and iproc_defconfig at
-> >the very least?
-> as well as arm64/configs/defconfig?  Rather than having to change
-> all the defconfigs perhaps can to make default y in Kconfig for
-> architectures that should have it as such?
+> From earlier discussion I thought the R-Car root port did not
+> advertise L1 support.
 
-I can't do that on ARM, this would force PCI_DOMAINS on platforms
-that never relied on it and that can trigger regressions.
+Which discussion ? This one or somewhere else ?
 
-It is unfortunate but the safest option consists in selecting
-PCI_DOMAINS in the respective ARCH_* options I think.
+> If that's the case, we shouldn't enable L1
+> entry on a card.  Is the core ASPM code doing something wrong here?
 
-Lorenzo
+I can double-check, am I looking for some particular register in the
+PCIe space ?
+
+>>>> PM_ENTER_L1 DLLP to the host controller. At this point, we can no longer
+>>>> access the card's config registers.
+>>>>
+>>>> The R-Car host controller will handle taking cards out of L1 as long as
+>>>> the host controller has also been transitioned to L1 link state.
+>>>
+>>> I wonder why this can't be done in a PM restore hook but that's not
+>>> really where my question is.
+>>
+>> I suspect because the link can be in L1 during startup too?
+>>
+>>>> Ideally, we would detect the PM_ENTER_L1 DLLP using an interrupt and
+>>>> transition the host to L1 immediately. However, this patch just ensures
+>>>> that we can talk to cards after they have gone into L1.
+>>>
+>>>> When attempting a config access, it checks to see if the card has gone
+>>>> into L1, and if so, does the same for the host controller.
+>>>>
+>>>> This is based on a patch by Hien Dang <hien.dang.eb@rvc.renesas.com>
+>>>>
+>>>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>>>> Cc: linux-renesas-soc@vger.kernel.org
+>>>> ---
+>>>> V2: - Drop extra parenthesis
+>>>>     - Use GENMASK()
+>>>>     - Fix comment "The HW will handle coming of of L1.", s/of of/out of/
+>>>> ---
+>>>>  drivers/pci/host/pcie-rcar.c | 24 ++++++++++++++++++++++++
+>>>>  1 file changed, 24 insertions(+)
+>>>>
+>>>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+>>>> index ab61829db389..068bf9067ec1 100644
+>>>> --- a/drivers/pci/host/pcie-rcar.c
+>>>> +++ b/drivers/pci/host/pcie-rcar.c
+>>>> @@ -92,6 +92,13 @@
+>>>>  #define MACCTLR			0x011058
+>>>>  #define  SPEED_CHANGE		BIT(24)
+>>>>  #define  SCRAMBLE_DISABLE	BIT(27)
+>>>> +#define PMSR			0x01105c
+>>>> +#define  L1FAEG			BIT(31)
+>>>> +#define  PM_ENTER_L1RX		BIT(23)
+>>>> +#define  PMSTATE		GENMASK(18, 16)
+>>>> +#define  PMSTATE_L1		GENMASK(17, 16)
+>>>> +#define PMCTLR			0x011060
+>>>> +#define  L1_INIT		BIT(31)
+>>>>  #define MACS2R			0x011078
+>>>>  #define MACCGSPSETR		0x011084
+>>>>  #define  SPCNGRSN		BIT(31)
+>>>> @@ -191,6 +198,7 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+>>>>  		unsigned int devfn, int where, u32 *data)
+>>>>  {
+>>>>  	int dev, func, reg, index;
+>>>> +	u32 val;
+>>>>  
+>>>>  	dev = PCI_SLOT(devfn);
+>>>>  	func = PCI_FUNC(devfn);
+>>>> @@ -232,6 +240,22 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+>>>>  	if (pcie->root_bus_nr < 0)
+>>>>  		return PCIBIOS_DEVICE_NOT_FOUND;
+>>>>  
+>>>> +	/*
+>>>> +	 * If we are not in L1 link state and we have received PM_ENTER_L1 DLLP,
+>>>> +	 * transition to L1 link state. The HW will handle coming out of L1.
+>>>> +	 */
+>>>> +	val = rcar_pci_read_reg(pcie, PMSR);
+>>>> +	if (val & PM_ENTER_L1RX && (val & PMSTATE) != PMSTATE_L1) {
+>>>> +		rcar_pci_write_reg(pcie, L1_INIT, PMCTLR);
+>>>> +
+>>>> +		/* Wait until we are in L1 */
+>>>> +		while (!(val & L1FAEG))
+>>>> +			val = rcar_pci_read_reg(pcie, PMSR);
+>>>> +
+>>>> +		/* Clear flags indicating link has transitioned to L1 */
+>>>> +		rcar_pci_write_reg(pcie, L1FAEG | PM_ENTER_L1RX, PMSR);
+>>>> +	}
+>>>
+>>> I do not get why you need to add the DLLP check for _every_ given config
+>>> access and how/why it is just related to suspend/resume and not eg cold
+>>> boot (I supposed it is because devices can enter L1 upon suspend(?)), I
+>>> would ask you please to provide a thorough explanation so that I can
+>>> actually review this patch (the commit log must be rewritten nonetheless,
+>>> I do not think it is clear, at least it is not for me).
+>>
+>> See above
+>>
+>> -- 
+>> Best regards,
+>> Marek Vasut
+
+
+-- 
+Best regards,
+Marek Vasut
