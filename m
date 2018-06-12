@@ -1,87 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59254 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936028AbeF3BuE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Jun 2018 21:50:04 -0400
-Date: Fri, 29 Jun 2018 20:50:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: dmeyer@gigaio.com
-Cc: logang@deltatee.com, kurt.schwemmer@microsemi.com,
-        linux-pci@vger.kernel.org, linux-ntb@googlegroups.com,
-        bhelgaas@google.com, jdmason@kudzu.us, dave.jiang@intel.com,
-        allenbh@gmail.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] PCI Quirk Patchset for Microsemi Switchtec NTB
-Message-ID: <20180630015002.GL40928@bhelgaas-glaptop.roam.corp.google.com>
-References: <1527106686-18852-1-git-send-email-dmeyer@gigaio.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Baoquan He <bhe@redhat.com>
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+        robh+dt@kernel.org, dan.j.williams@intel.com,
+        nicolas.pitre@linaro.org, josh@joshtriplett.org,
+        fengguang.wu@intel.com, bp@suse.de
+Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com,
+        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
+        keith.busch@intel.com, jonathan.derrick@intel.com,
+        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
+        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
+        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
+        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
+        yinghai@kernel.org, kexec@lists.infradead.org, monstr@monstr.eu,
+        davem@davemloft.net, chris@zankel.net, jcmvbkbc@gmail.com,
+        gustavo@padovan.org, maarten.lankhorst@linux.intel.com,
+        seanpaul@chromium.org, linux-parisc@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, Baoquan He <bhe@redhat.com>
+Subject: [PATCH v5 0/4] resource: Use list_head to link sibling resource
+Date: Tue, 12 Jun 2018 11:28:27 +0800
+Message-Id: <20180612032831.29747-1-bhe@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1527106686-18852-1-git-send-email-dmeyer@gigaio.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 23, 2018 at 01:18:04PM -0700, dmeyer@gigaio.com wrote:
-> From: Doug Meyer <dmeyer@gigaio.com>
-> 
-> This is a resend of the patch series to enable Microsemi Switchtec
-> NTB configurations to run with the IOMMU in the hosts turned on.
-> Because of the nature PCI Quirk implementation, it was preferable
-> to migrate the Microsemi PCI vendor and device definitions to the
-> Linux canonical location. Logan Gunthorpe requested that this
-> migration be done as a separate patch in a set, and so this patch
-> series was created as shown here.
-> 
-> The first patch encapsulates the movement of constants from
-> switchtec.h to pci_ids.h, with commensurate changes to the source
-> files. This patch is not dependent on any other work.
-> 
-> The second patch is the PCI quirk implementation itself, and is
-> completely dependent upon the first patch in this series.
-> 
-> Testing of the quirk was done on with a 2-host x86-64 system
-> with all combinations of IOMMU off/on. The ntb_perf module was
-> used as test stimulus. 
-> 
-> Blessings,
-> Doug Meyer
-> 
-> Changes since v1:
-> - Call pci_device_disable() at return points to clean up properly.
-> - Changed all dev_* print macros to pci_* macros.
-> - Removed superfluous variable initializations.
-> 
-> Doug Meyer (2):
->   NTB: Migrate PCI Constants to Cannonical PCI Header
->   NTB: PCI Quirk to Enable Switchtec NT Functionality with IOMMU On
-> 
->  drivers/ntb/hw/mscc/ntb_hw_switchtec.c |   3 +-
->  drivers/pci/quirks.c                   | 197 +++++++++++++++++++++++++++++++++
->  drivers/pci/switch/switchtec.c         |  15 ++-
->  include/linux/pci_ids.h                |  32 ++++++
->  include/linux/switchtec.h              |   4 -
->  5 files changed, 238 insertions(+), 13 deletions(-)
+This patchset is doing:
+1) Replace struct resource's sibling list from singly linked list to
+list_head. Clearing out those pointer operation within singly linked
+list for better code readability.
+2) Based on list_head replacement, add a new function
+walk_system_ram_res_rev() which can does reversed iteration on
+iomem_resource's siblings.
+3) Change kexec_file loading to search system RAM top down for kernel
+loadin, using walk_system_ram_res_rev().
 
-I applied these with Logan's reviewed-by to my pci/switchtec branch for
-v4.19 with the following updates:
+Note:
+This patchset passed testing on my kvm guest, x86_64 arch with network
+enabling. The thing we need pay attetion to is that a root resource's
+child member need be initialized specifically with LIST_HEAD_INIT() if
+statically defined or INIT_LIST_HEAD() for dynamically definition. Here
+Just like we do for iomem_resource/ioport_resource, or the change in
+get_pci_domain_busn_res().
 
-  - You removed the SPDX tag from drivers/pci/switch/switchtec.c.  I assume
-    that was a mistake, so I restored it.
 
-  - I moved the PCI_VENDOR_ID_MICROSEMI definition to keep the file sorted.
+Links of the old post (Boris pointed out that we should use
+https://lkml.kernel.org/r/Message-ID, while it can't be opened from
+my side, so paste all of them here.):
+v4:
+https://lkml.kernel.org/r/20180507063224.24229-1-bhe@redhat.com
+https://lkml.org/lkml/2018/5/7/36
 
-  - I dropped the Device ID definitions per the policy at the top of the
-    file (which I mentioned on your v1 posting).
+v3:
+https://lkml.kernel.org/r/20180419001848.3041-1-bhe@redhat.com
+https://lkml.org/lkml/2018/4/18/767
 
-  - I converted all the Device ID definition uses to raw hex constants.  I
-    noticed that the following were defined by your patch, but not used:
+v2:
+https://lkml.kernel.org/r/20180408024724.16812-1-bhe@redhat.com
+https://lkml.org/lkml/2018/4/7/169
 
-      PCI_DEVICE_ID_MICROSEMI_PSX24XG3
-      PCI_DEVICE_ID_MICROSEMI_PSX32XG3
+v1:
+https://lkml.kernel.org/r/20180322033722.9279-1-bhe@redhat.com
+https://lkml.org/lkml/2018/3/21/952
 
-    I can't tell whether the quirk is supposed to apply to them or not.
+Changelog:
+v4->v5:
+  Add new patch 0001 to move duplicated reparent_resources() to
+  kernel/resource.c to make it be shared by different ARCH-es.
 
-Please review and holler if I broke something.
+  Fix several code bugs reported by test robot on ARCH powerpc and
+  microblaze.
+v3->v4:
+  Fix several bugs test robot reported. Rewrite cover letter and patch
+  log according to reviewer's comment.
 
-This touches drivers/ntb/hw/..., which isn't my area.  Let me know if you'd
-rather take these through a different tree.
+v2->v3:
+  Rename resource functions first_child() and sibling() to
+  resource_first_chils() and resource_sibling(). Dan suggested this.
 
-Bjorn
+  Move resource_first_chils() and resource_sibling() to linux/ioport.h
+  and make them as inline function. Rob suggested this. Accordingly add
+  linux/list.h including in linux/ioport.h, please help review if this
+  bring efficiency degradation or code redundancy.
+
+  The change on struct resource {} bring two pointers of size increase,
+  mention this in git log to make it more specifically, Rob suggested
+  this.
+
+v1->v2:
+  Use list_head instead to link resource siblings. This is suggested by
+  Andrew.
+
+  Rewrite walk_system_ram_res_rev() after list_head is taken to link
+  resouce siblings.
+
+Baoquan He (4):
+  resource: Move reparent_resources() to kernel/resource.c and make it
+    public
+  resource: Use list_head to link sibling resource
+  resource: add walk_system_ram_res_rev()
+  kexec_file: Load kernel at top of system RAM if required
+
+ arch/arm/plat-samsung/pm-check.c            |   6 +-
+ arch/microblaze/pci/pci-common.c            |  41 +----
+ arch/powerpc/kernel/pci-common.c            |  39 +----
+ arch/sparc/kernel/ioport.c                  |   2 +-
+ arch/xtensa/include/asm/pci-bridge.h        |   4 +-
+ drivers/eisa/eisa-bus.c                     |   2 +
+ drivers/gpu/drm/drm_memory.c                |   3 +-
+ drivers/gpu/drm/gma500/gtt.c                |   5 +-
+ drivers/hv/vmbus_drv.c                      |  52 +++---
+ drivers/input/joystick/iforce/iforce-main.c |   4 +-
+ drivers/nvdimm/namespace_devs.c             |   6 +-
+ drivers/nvdimm/nd.h                         |   5 +-
+ drivers/of/address.c                        |   4 +-
+ drivers/parisc/lba_pci.c                    |   4 +-
+ drivers/pci/host/vmd.c                      |   8 +-
+ drivers/pci/probe.c                         |   2 +
+ drivers/pci/setup-bus.c                     |   2 +-
+ include/linux/ioport.h                      |  21 ++-
+ kernel/kexec_file.c                         |   2 +
+ kernel/resource.c                           | 259 ++++++++++++++++++----------
+ 20 files changed, 244 insertions(+), 227 deletions(-)
+
+-- 
+2.13.6
