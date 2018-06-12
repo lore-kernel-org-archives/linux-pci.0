@@ -1,81 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:39899 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751362AbeFDPzb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jun 2018 11:55:31 -0400
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: bhelgaas@google.com
-Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, keith.busch@intel.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3] PCI: Check for PCIe downtraining conditions
-Date: Mon,  4 Jun 2018 10:55:21 -0500
-Message-Id: <20180604155523.14906-1-mr.nuke.me@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=GJIr=I6=broadcom.com=ray.jui@kernel.org>
+Return-Path: <SRS0=GJIr=I6=broadcom.com=ray.jui@kernel.org>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH v2 1/5] PCI: iproc: Activate PAXC bridge quirk for more devices
+Date: Mon, 11 Jun 2018 17:21:03 -0700
+Message-Id: <1528762867-16823-2-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
+References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe downtraining happens when both the device and PCIe port are
-capable of a larger bus width or higher speed than negotiated.
-Downtraining might be indicative of other problems in the system, and
-identifying this from userspace is neither intuitive, nor straigh
-forward.
+Activate PAXC bridge quirk for more PAXC based PCIe root complex with
+the following PCIe device ID:
+0xd750, 0xd802, 0xd804
 
-The easiest way to detect this is with pcie_print_link_status(),
-since the bottleneck is usually the link that is downtrained. It's not
-a perfect solution, but it works extremely well in most cases.
-
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
 ---
+ drivers/pci/quirks.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Changes since v2:
- - Check dev->is_virtfn flag
-
-Changes since v1:
- - Use pcie_print_link_status() instead of reimplementing logic
- 
- drivers/pci/probe.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac91b6fd0bcd..a88ec8c25dd5 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2146,6 +2146,25 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	return dev;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 2990ad1..47dfea0 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2195,6 +2195,9 @@ static void quirk_paxc_bridge(struct pci_dev *pdev)
  }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16cd, quirk_paxc_bridge);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0, quirk_paxc_bridge);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd750, quirk_paxc_bridge);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802, quirk_paxc_bridge);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804, quirk_paxc_bridge);
+ #endif
  
-+static void pcie_check_upstream_link(struct pci_dev *dev)
-+{
-+
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	/* Look from the device up to avoid downstream ports with no devices. */
-+	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
-+	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
-+	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
-+		return;
-+
-+	/* Multi-function PCIe share the same link/status. */
-+	if ((PCI_FUNC(dev->devfn) != 0) || dev->is_virtfn)
-+		return;
-+
-+	pcie_print_link_status(dev);
-+}
-+
- static void pci_init_capabilities(struct pci_dev *dev)
- {
- 	/* Enhanced Allocation */
-@@ -2181,6 +2200,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Advanced Error Reporting */
- 	pci_aer_init(dev);
- 
-+	/* Check link and detect downtrain errors */
-+	pcie_check_upstream_link(dev);
-+
- 	if (pci_probe_reset_function(dev) == 0)
- 		dev->reset_fn = 1;
- }
+ /* Originally in EDAC sources for i82875P:
 -- 
-2.14.4
+2.1.4
