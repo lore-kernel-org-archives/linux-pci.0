@@ -1,53 +1,157 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54052 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752137AbeFFW1W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Jun 2018 18:27:22 -0400
-Date: Wed, 6 Jun 2018 17:27:21 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Rename directory from host to controller and move
- back drivers
-Message-ID: <20180606222720.GB128611@bhelgaas-glaptop.roam.corp.google.com>
-References: <1527729157-201428-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1527729157-201428-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=GJIr=I6=broadcom.com=ray.jui@kernel.org>
+Return-Path: <SRS0=GJIr=I6=broadcom.com=ray.jui@kernel.org>
+From: Ray Jui <ray.jui@broadcom.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org,
+	Ray Jui <ray.jui@broadcom.com>,
+	Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v2 2/5] PCI: iproc: Fix up corrupted PAXC root complex config registers
+Date: Mon, 11 Jun 2018 17:21:04 -0700
+Message-Id: <1528762867-16823-3-git-send-email-ray.jui@broadcom.com>
+In-Reply-To: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
+References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 31, 2018 at 09:12:37AM +0800, Shawn Lin wrote:
-> In early discussion, the PCI drivers were scattered across three
-> different places, including host, cadence and dwc directories.
-> The reason behind that is we thought the name, host, was confusing
-> since it seems contain the driver for RC. And dwc drivers set a
-> precedent for supporting both of RC and EP mode, so that they were
-> moved to a separate directory called dwc which is parallel to the host
-> directory. Then cadence drivers follow this convention, and so on.
-> But this confuses more and potentially make the drivers/pci/ look
-> fragmented if more and more drivers follow this way.
-> 
-> So this patch rename directory from host to controller and make it
-> obvious that this is for controller drivers which applies to both
-> of RC and EP drivers. Then it moves back cadence and dwc drivers.
-> 
-> Hope all are settled down and all the following patches submitting
-> new drivers could benefit from it.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+On certain versions of Broadcom PAXC based root complexes, certain
+regions of the configuration space are corrupted. As a result, it
+prevents the Linux PCIe stack from traversing the linked list of the
+capability registers completely and therefore the root complex is
+not advertised as "PCIe capable". This prevents the correct PCIe RID
+from being parsed in the kernel PCIe stack. A correct RID is required
+for mapping to a stream ID from the SMMU or the device ID from the
+GICv3 ITS
 
-This seems reasonable to me.  It would be even nicer if you had any
-URLs for previous conversation about it.  If you find any, just
-respond here (no need to repost the patch; I can fold them into the
-changelog).
+This patch fixes up the issue by manually populating the related
+PCIe capabilities
 
-If there's consensus to do this, I can so a second pull request for
-v4.18-rc1 next week.  I haven't even done the first one yet, but
-hopefully end of this week or early next week.
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc.c | 65 +++++++++++++++++++++++++++++++++++++++----
+ drivers/pci/host/pcie-iproc.h |  3 ++
+ 2 files changed, 62 insertions(+), 6 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 3c76c5f..680f6b1 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -85,6 +85,8 @@
+ #define IMAP_VALID_SHIFT		0
+ #define IMAP_VALID			BIT(IMAP_VALID_SHIFT)
+ 
++#define IPROC_PCI_PM_CAP		0x48
++#define IPROC_PCI_PM_CAP_MASK		0xffff
+ #define IPROC_PCI_EXP_CAP		0xac
+ 
+ #define IPROC_PCIE_REG_INVALID		0xffff
+@@ -375,6 +377,17 @@ static const u16 iproc_pcie_reg_paxc_v2[] = {
+ 	[IPROC_PCIE_CFG_DATA]		= 0x1fc,
+ };
+ 
++/*
++ * List of device IDs of controllers that have corrupted capability list that
++ * require SW fixup
++ */
++static const u16 iproc_pcie_corrupt_cap_did[] = {
++	0x16cd,
++	0x16f0,
++	0xd802,
++	0xd804
++};
++
+ static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
+ {
+ 	struct iproc_pcie *pcie = bus->sysdata;
+@@ -495,6 +508,49 @@ static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
+ 	return data;
+ }
+ 
++static void iproc_pcie_fix_cap(struct iproc_pcie *pcie, int where, u32 *val)
++{
++	u32 i, dev_id;
++
++	switch (where & ~0x3) {
++	case PCI_VENDOR_ID:
++		dev_id = *val >> 16;
++
++		/*
++		 * Activate fixup for those controllers that have corrupted
++		 * capability list registers
++		 */
++		for (i = 0; i < ARRAY_SIZE(iproc_pcie_corrupt_cap_did); i++)
++			if (dev_id == iproc_pcie_corrupt_cap_did[i])
++				pcie->fix_paxc_cap = true;
++		break;
++
++	case IPROC_PCI_PM_CAP:
++		if (pcie->fix_paxc_cap) {
++			/* advertise PM, force next capability to PCIe */
++			*val &= ~IPROC_PCI_PM_CAP_MASK;
++			*val |= IPROC_PCI_EXP_CAP << 8 | PCI_CAP_ID_PM;
++		}
++		break;
++
++	case IPROC_PCI_EXP_CAP:
++		if (pcie->fix_paxc_cap) {
++			/* advertise root port, version 2, terminate here */
++			*val = (PCI_EXP_TYPE_ROOT_PORT << 4 | 2) << 16 |
++				PCI_CAP_ID_EXP;
++		}
++		break;
++
++	case IPROC_PCI_EXP_CAP + PCI_EXP_RTCTL:
++		/* Don't advertise CRS SV support */
++		*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
++		break;
++
++	default:
++		break;
++	}
++}
++
+ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+ 				  int where, int size, u32 *val)
+ {
+@@ -509,13 +565,10 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+ 	/* root complex access */
+ 	if (busno == 0) {
+ 		ret = pci_generic_config_read32(bus, devfn, where, size, val);
+-		if (ret != PCIBIOS_SUCCESSFUL)
+-			return ret;
++		if (ret == PCIBIOS_SUCCESSFUL)
++			iproc_pcie_fix_cap(pcie, where, val);
+ 
+-		/* Don't advertise CRS SV support */
+-		if ((where & ~0x3) == IPROC_PCI_EXP_CAP + PCI_EXP_RTCTL)
+-			*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
+-		return PCIBIOS_SUCCESSFUL;
++		return ret;
+ 	}
+ 
+ 	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index 814b600..9d5cfee 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -60,6 +60,8 @@ struct iproc_msi;
+  * @ep_is_internal: indicates an internal emulated endpoint device is connected
+  * @has_apb_err_disable: indicates the controller can be configured to prevent
+  * unsupported request from being forwarded as an APB bus error
++ * @fix_paxc_cap: indicates the controller has corrupted capability list in its
++ * config space registers and requires SW based fixup
+  *
+  * @need_ob_cfg: indicates SW needs to configure the outbound mapping window
+  * @ob: outbound mapping related parameters
+@@ -85,6 +87,7 @@ struct iproc_pcie {
+ 	int (*map_irq)(const struct pci_dev *, u8, u8);
+ 	bool ep_is_internal;
+ 	bool has_apb_err_disable;
++	bool fix_paxc_cap;
+ 
+ 	bool need_ob_cfg;
+ 	struct iproc_pcie_ob ob;
+-- 
+2.1.4
