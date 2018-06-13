@@ -1,59 +1,27 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 1/3] PCI: mvebu: Remove redundant platform_set_drvdata() call
-Date: Fri, 29 Jun 2018 11:10:05 +0200
-Message-Id: <20180629091007.31069-2-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180629091007.31069-1-thomas.petazzoni@bootlin.com>
-References: <20180629091007.31069-1-thomas.petazzoni@bootlin.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Nadav Haklai <nadavh@marvell.com>, Russell King <linux@arm.linux.org.uk>,
- Antoine Tenart <antoine.tenart@bootlin.com>,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
- =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:58974 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933318AbeFMGhM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 02:37:12 -0400
+Date: Tue, 12 Jun 2018 23:37:10 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Pingfan Liu <kernelfans@gmail.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [patchV2 1/2] pci: introduce an extra method for matching in
+ pci_driver
+Message-ID: <20180613063710.GA30350@infradead.org>
+References: <1528871397-17917-1-git-send-email-kernelfans@gmail.com>
+ <1528871397-17917-2-git-send-email-kernelfans@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1528871397-17917-2-git-send-email-kernelfans@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is already done earlier in mvebu_pcie_probe().
+If we successfull call ->probe twice on a device we have a much
+deeper problem than we can fix in the PCI layer or shpchp.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
- drivers/pci/controller/pci-mvebu.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index 358b56ba7c37..0e729bab14c0 100644
---- a/drivers/pci/controller/pci-mvebu.c
-+++ b/drivers/pci/controller/pci-mvebu.c
-@@ -1115,8 +1115,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 
- 	mvebu_pcie_enable(pcie);
- 
--	platform_set_drvdata(pdev, pcie);
--
- 	return 0;
- }
- 
--- 
-2.14.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Please explain the actual race or other condition that can lead to
+this and report it to the driver core maintainer.
