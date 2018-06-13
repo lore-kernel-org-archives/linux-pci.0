@@ -1,90 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:41080 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754462AbeFMH0B (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 03:26:01 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3 02/10] PCI: dra7xx: Use pci_host_alloc_intx_irqd() helper to simplify the code
-Date: Wed, 13 Jun 2018 15:25:31 +0800
-Message-Id: <1528874731-7623-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-hk2apc01on0132.outbound.protection.outlook.com ([104.47.124.132]:11929
+        "EHLO APC01-HK2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754504AbeFMUc1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Jun 2018 16:32:27 -0400
+From: Dexuan Cui <decui@microsoft.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "'olaf@aepfle.de'" <olaf@aepfle.de>,
+        "'apw@canonical.com'" <apw@canonical.com>,
+        "'jasowang@redhat.com'" <jasowang@redhat.com>
+CC: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'driverdev-devel@linuxdriverproject.org'"
+        <driverdev-devel@linuxdriverproject.org>,
+        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
+        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
+Subject: RE: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
+ hv_compose_msi_msg()
+Date: Wed, 13 Jun 2018 20:32:13 +0000
+Message-ID: <KL1P15301MB00069C79B0C674695DDBC8AABF7E0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+References: <KL1P15301MB0006EE546A7C2567B61EA783BF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <BN6PR21MB016112A4E32D76EC669818C3CA690@BN6PR21MB0161.namprd21.prod.outlook.com>
+ <KL1P15301MB0006D8314C8B40A939598056BF640@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+In-Reply-To: <KL1P15301MB0006D8314C8B40A939598056BF640@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+> From: Dexuan Cui
+> Sent: Wednesday, June 6, 2018 17:15
+> To: Haiyang Zhang <haiyangz@microsoft.com>; Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com>; Bjorn Helgaas <bhelgaas@google.com>;
+> linux-pci@vger.kernel.org; KY Srinivasan <kys@microsoft.com>; Stephen
+> Hemminger <sthemmin@microsoft.com>; olaf@aepfle.de;
+> apw@canonical.com; jasowang@redhat.com
+> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
+> vkuznets@redhat.com; marcelo.cerri@canonical.com
+> Subject: RE: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
+> hv_compose_msi_msg()
+>=20
+> > From: Haiyang Zhang
+> > Sent: Friday, May 25, 2018 12:52
+> > To: Dexuan Cui <decui@microsoft.com>; Lorenzo Pieralisi
+> > <lorenzo.pieralisi@arm.com>; Bjorn Helgaas <bhelgaas@google.com>;
+> > linux-pci@vger.kernel.org; KY Srinivasan <kys@microsoft.com>; Stephen
+> > Hemminger <sthemmin@microsoft.com>; olaf@aepfle.de;
+> > apw@canonical.com; jasowang@redhat.com
+> > Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.or=
+g;
+> > vkuznets@redhat.com; marcelo.cerri@canonical.com
+> > Subject: RE: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
+> > hv_compose_msi_msg()
+> >
+> > > From: Dexuan Cui
+> > > Sent: Tuesday, May 22, 2018 8:18 PM
+> > > To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>; Bjorn Helgaas
+> > > <bhelgaas@google.com>; linux-pci@vger.kernel.org; KY Srinivasan
+> > > <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
+> > > olaf@aepfle.de; apw@canonical.com; jasowang@redhat.com
+> > > Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.=
+org;
+> > > Haiyang Zhang <haiyangz@microsoft.com>; vkuznets@redhat.com;
+> > > marcelo.cerri@canonical.com
+> > > Subject: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
+> > > hv_compose_msi_msg()
+> > >
+> > >
+> > > Commit de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in
+> > hv_compose_msi_msg()")
+> > > uses local_bh_disable()/enable(), because hv_pci_onchannelcallback() =
+can
+> > also
+> > > run in tasklet context as the channel event callback.
+> > >
+> > > With CONFIG_PROVE_LOCKING=3Dy in the latest mainline, or old kernels =
+that
+> > > don't have commit f71b74bca637 ("irq/softirqs: Use lockdep to assert =
+IRQs
+> > are
+> > > disabled/enabled"), it turns out can we trigger a warning at the begi=
+nning
+> of
+> > > __local_bh_enable_ip(), because the upper layer irq code can call
+> > > hv_compose_msi_msg() with local irqs disabled.
+> > >
+> > > Let's fix the warning by switching to local_irq_save()/restore(). Thi=
+s is not an
+> > > issue because hv_pci_onchannelcallback() is not slow, and it not a ho=
+t path.
+> > >
+> > > Fixes: de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in
+> hv_compose_msi_msg()")
+> > > Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> > > Cc: <stable@vger.kernel.org>
+> > > Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> > > Cc: K. Y. Srinivasan <kys@microsoft.com>
+> > > ---
+> >
+> > Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+> >
+> > Thanks you.
+>=20
+> Hi Lorenzo,
+>=20
+> Can I have your reply to this patch?
+>=20
+> -- Dexuan
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+It looks Lorenzo's pci.git tree has not been updated for 3+ weeks.
+I guess Lorenzo may be on vacation.=20
 
-Changes in v3: None
-Changes in v2: None
+@Bjorn, can this patch go through your tree?
+Should I resubmit it?
 
- drivers/pci/controller/dwc/pci-dra7xx.c | 42 +++------------------------------
- 1 file changed, 3 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index cfaeef8..a281924 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -213,43 +213,6 @@ static int dra7xx_pcie_host_init(struct pcie_port *pp)
- 	.host_init = dra7xx_pcie_host_init,
- };
- 
--static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
--				irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--static const struct irq_domain_ops intx_domain_ops = {
--	.map = dra7xx_pcie_intx_map,
--	.xlate = pci_irqd_intx_xlate,
--};
--
--static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct device *dev = pci->dev;
--	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
--	struct device_node *node = dev->of_node;
--	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
--
--	if (!pcie_intc_node) {
--		dev_err(dev, "No PCIe Intc node found\n");
--		return -ENODEV;
--	}
--
--	dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--						   &intx_domain_ops, pp);
--	if (!dra7xx->irq_domain) {
--		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		return -ENODEV;
--	}
--
--	return 0;
--}
--
- static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- {
- 	struct dra7xx_pcie *dra7xx = arg;
-@@ -455,8 +418,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 		return ret;
- 	}
- 
--	ret = dra7xx_pcie_init_irq_domain(pp);
--	if (ret < 0)
-+	dra7xx->irq_domain = pci_host_alloc_intx_irqd(dev, dra7xx, true, NULL,
-+						      NULL);
-+	if (IS_ERR(dra7xx->irq_domain))
- 		return ret;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
--- 
-1.9.1
+Thanks,
+-- Dexuan
