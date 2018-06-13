@@ -1,52 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34508 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751358AbeF3B4b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Jun 2018 21:56:31 -0400
-Date: Fri, 29 Jun 2018 20:56:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v1] PCI/ASPM: Convert to use match_string() helper
-Message-ID: <20180630015629.GN40928@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180529133247.19728-1-andriy.shevchenko@linux.intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH] PCI: xilinx: add missing of_node_put()
+Date: Wed, 13 Jun 2018 19:20:44 +0200
+Message-Id: <1528910444-25593-1-git-send-email-hofrat@osadl.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, Michal Simek <michal.simek@xilinx.com>,
+ linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180529133247.19728-1-andriy.shevchenko@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 29, 2018 at 04:32:47PM +0300, Andy Shevchenko wrote:
-> The new helper returns index of the matching string in an array.
-> We are going to use it here.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+ The call to of_get_next_child() returns a node pointer with refcount
+incremented thus it must be explicitly decremented here after the last
+usage.
 
-Applied to pci/aspm for v4.19, thanks!
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Fixes: commit 8961def56845 ("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver")
+---
 
-> ---
->  drivers/pci/pcie/aspm.c | 8 +++-----
->  1 file changed, 3 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index c687c817b47d..0e88b3ad065f 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -1127,11 +1127,9 @@ static int pcie_aspm_set_policy(const char *val,
->  
->  	if (aspm_disabled)
->  		return -EPERM;
-> -	for (i = 0; i < ARRAY_SIZE(policy_str); i++)
-> -		if (!strncmp(val, policy_str[i], strlen(policy_str[i])))
-> -			break;
-> -	if (i >= ARRAY_SIZE(policy_str))
-> -		return -EINVAL;
-> +	i = match_string(policy_str, ARRAY_SIZE(policy_str), val);
-> +	if (i < 0)
-> +		return i;
->  	if (i == aspm_policy)
->  		return 0;
->  
-> -- 
-> 2.17.0
-> 
+Problem found by an experimental cocinelle script
+
+Patch was compile tested with: multi_v7_defconfig + ARCH_ZYNQ=y,
+COMPILE_TEST=y, PCIE_XILINX=y
+(with one sparse warning though not related to the change proposed)
+
+Patch is against 4.17.0 (localversion-next is next-20180613)
+
+ drivers/pci/controller/pcie-xilinx.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
+index b110a3a..7b1389d 100644
+--- a/drivers/pci/controller/pcie-xilinx.c
++++ b/drivers/pci/controller/pcie-xilinx.c
+@@ -509,6 +509,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ 	port->leg_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+ 						 &intx_domain_ops,
+ 						 port);
++	of_node_put(pcie_intc_node);
+ 	if (!port->leg_domain) {
+ 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+ 		return -ENODEV;
+-- 
+2.1.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
