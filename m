@@ -1,64 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:44789 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751900AbeFXJrg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 24 Jun 2018 05:47:36 -0400
-Date: Sun, 24 Jun 2018 11:47:31 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Lukas Wunner <lukas@wunner.de>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] genirq: Update code comments wrt recycled
- thread_mask
-In-Reply-To: <32fc25aa35ecef4b2692f57687bb7fc2a57230e2.1529828292.git.lukas@wunner.de>
-Message-ID: <alpine.DEB.2.21.1806241145320.8650@nanos.tec.linutronix.de>
-References: <32fc25aa35ecef4b2692f57687bb7fc2a57230e2.1529828292.git.lukas@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from lucky1.263xmail.com ([211.157.147.130]:36685 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933657AbeFMH1e (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 03:27:34 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v3 09/10] PCI: xilinx: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
+Date: Wed, 13 Jun 2018 15:27:09 +0800
+Message-Id: <1528874829-7959-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Lukas,
+Just avoid code duplication, but no functional change intended.
 
-On Sun, 24 Jun 2018, Lukas Wunner wrote:
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-> Previously a race existed between __free_irq() and __setup_irq() wherein
-> the thread_mask of a just removed action could be handed out to a newly
-> added action and the freed irq thread would then tread on the oneshot
-> mask bit of the newly added irq thread in irq_finalize_oneshot():
-> 
-> time
->  |  __free_irq()
->  |    raw_spin_lock_irqsave(&desc->lock, flags);
->  |    <remove action from linked list>
->  |    raw_spin_unlock_irqrestore(&desc->lock, flags);
->  |
->  |  __setup_irq()
->  |    raw_spin_lock_irqsave(&desc->lock, flags);
->  |    <traverse linked list to determine oneshot mask bit>
->  |    raw_spin_unlock_irqrestore(&desc->lock, flags);
->  |
->  |  irq_thread() of freed irq (__free_irq() waits in synchronize_irq())
->  |    irq_thread_fn()
->  |      irq_finalize_oneshot()
->  |        raw_spin_lock_irq(&desc->lock);
->  |        desc->threads_oneshot &= ~action->thread_mask;
->  |        raw_spin_unlock_irq(&desc->lock);
->  v
-> 
-> The race was known at least since 2012 when it was documented in a code
-> comment by commit e04268b0effc ("genirq: Remove paranoid warnons and
-> bogus fixups").
+---
 
-The race was known, but it was also harmless as nothing would touch stuff
-after synchronize_irq().
+Changes in v3: None
+Changes in v2: None
 
-> But it wasn't until 2017 that it was fixed by commit 9114014cf4e6
-> ("genirq: Add mutex to irq desc to serialize request/free_irq()"),
-> apparently inadvertantly so because the race is neither mentioned in the
-> commit message nor was the code comment updated.  Make up for that.
+ drivers/pci/controller/pcie-xilinx.c | 44 ++++--------------------------------
+ 1 file changed, 4 insertions(+), 40 deletions(-)
 
-Thanks for following up. This update is very well done.
-
-       tglx
+diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
+index b110a3a..8dbfc76 100644
+--- a/drivers/pci/controller/pcie-xilinx.c
++++ b/drivers/pci/controller/pcie-xilinx.c
+@@ -346,31 +346,6 @@ static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
+ 	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
+ }
+ 
+-/* INTx Functions */
+-
+-/**
+- * xilinx_pcie_intx_map - Set the handler for the INTx and mark IRQ as valid
+- * @domain: IRQ domain
+- * @irq: Virtual IRQ number
+- * @hwirq: HW interrupt number
+- *
+- * Return: Always returns 0.
+- */
+-static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+-				irq_hw_number_t hwirq)
+-{
+-	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
+-
+-	return 0;
+-}
+-
+-/* INTx IRQ Domain operations */
+-static const struct irq_domain_ops intx_domain_ops = {
+-	.map = xilinx_pcie_intx_map,
+-	.xlate = pci_irqd_intx_xlate,
+-};
+-
+ /* PCIe HW Functions */
+ 
+ /**
+@@ -497,22 +472,11 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ {
+ 	struct device *dev = port->dev;
+ 	struct device_node *node = dev->of_node;
+-	struct device_node *pcie_intc_node;
+ 
+-	/* Setup INTx */
+-	pcie_intc_node = of_get_next_child(node, NULL);
+-	if (!pcie_intc_node) {
+-		dev_err(dev, "No PCIe Intc node found\n");
+-		return -ENODEV;
+-	}
+-
+-	port->leg_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+-						 &intx_domain_ops,
+-						 port);
+-	if (!port->leg_domain) {
+-		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+-		return -ENODEV;
+-	}
++	port->leg_domain = pci_host_alloc_intx_irqd(dev, port, true, NULL,
++						    NULL);
++	if (IS_ERR(port->leg_domain))
++		return PTR_ERR(port->leg_domain);
+ 
+ 	/* Setup MSI */
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-- 
+1.9.1
