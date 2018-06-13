@@ -1,56 +1,90 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <bce1b59268ac2d659fd7cb37f89285ef2acc8316.1528990947.git.mchehab+samsung@kernel.org>
-References: <cover.1528990947.git.mchehab+samsung@kernel.org>
- <bce1b59268ac2d659fd7cb37f89285ef2acc8316.1528990947.git.mchehab+samsung@kernel.org>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Wed, 20 Jun 2018 08:42:23 +0800
-Message-ID: <CAGb2v67s29mYa+hcYFWCokmzLwi7aYyeBwDnQiTJQYxT0GxPNA@mail.gmail.com>
-Subject: Re: [PATCH v3 24/27] devicetree: fix a series of wrong file references
-To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Linux-ALSA <alsa-devel@alsa-project.org>,
- Linux Doc Mailing List <linux-doc@vger.kernel.org>,
- Maxime Ripard <maxime.ripard@bootlin.com>, linux-pci@vger.kernel.org,
- Binghui Wang <wangbinghui@hisilicon.com>,
- linux-kernel <linux-kernel@vger.kernel.org>, Lee Jones <lee.jones@linaro.org>,
- Jonathan Corbet <corbet@lwn.net>, linux-input@vger.kernel.org,
- devicetree <devicetree@vger.kernel.org>,
- Alexandre Torgue <alexandre.torgue@st.com>,
- Xiaowei Song <songxiaowei@hisilicon.com>,
- Mauro Carvalho Chehab <mchehab@infradead.org>, Mark Brown <broonie@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
- Dmitry Torokhov <dmitry.torokhov@gmail.com>,
- Liam Girdwood <lgirdwood@gmail.com>, Zhou Wang <wangzhou1@hisilicon.com>,
- Rob Herring <robh+dt@kernel.org>, Maxime Coquelin <mcoquelin.stm32@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.132]:41080 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754462AbeFMH0B (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 03:26:01 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v3 02/10] PCI: dra7xx: Use pci_host_alloc_intx_irqd() helper to simplify the code
+Date: Wed, 13 Jun 2018 15:25:31 +0800
+Message-Id: <1528874731-7623-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 15, 2018 at 12:09 AM, Mauro Carvalho Chehab
-<mchehab+samsung@kernel.org> wrote:
-> As files got renamed, their references broke.
->
-> Manually fix a series of broken refs at the DT bindings.
->
-> Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-> ---
+Just avoid code duplication, but no functional change intended.
 
->  Documentation/devicetree/bindings/mfd/sun6i-prcm.txt |  2 +-
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Acked-by: Chen-Yu Tsai <wens@csie.org>
+Changes in v3: None
+Changes in v2: None
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ drivers/pci/controller/dwc/pci-dra7xx.c | 42 +++------------------------------
+ 1 file changed, 3 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index cfaeef8..a281924 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -213,43 +213,6 @@ static int dra7xx_pcie_host_init(struct pcie_port *pp)
+ 	.host_init = dra7xx_pcie_host_init,
+ };
+ 
+-static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+-				irq_hw_number_t hwirq)
+-{
+-	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
+-
+-	return 0;
+-}
+-
+-static const struct irq_domain_ops intx_domain_ops = {
+-	.map = dra7xx_pcie_intx_map,
+-	.xlate = pci_irqd_intx_xlate,
+-};
+-
+-static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+-{
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct device *dev = pci->dev;
+-	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+-	struct device_node *node = dev->of_node;
+-	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
+-
+-	if (!pcie_intc_node) {
+-		dev_err(dev, "No PCIe Intc node found\n");
+-		return -ENODEV;
+-	}
+-
+-	dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+-						   &intx_domain_ops, pp);
+-	if (!dra7xx->irq_domain) {
+-		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+-		return -ENODEV;
+-	}
+-
+-	return 0;
+-}
+-
+ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+ {
+ 	struct dra7xx_pcie *dra7xx = arg;
+@@ -455,8 +418,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 		return ret;
+ 	}
+ 
+-	ret = dra7xx_pcie_init_irq_domain(pp);
+-	if (ret < 0)
++	dra7xx->irq_domain = pci_host_alloc_intx_irqd(dev, dra7xx, true, NULL,
++						      NULL);
++	if (IS_ERR(dra7xx->irq_domain))
+ 		return ret;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
+-- 
+1.9.1
