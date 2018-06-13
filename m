@@ -1,125 +1,159 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1530148327.28284.1.camel@mhfsdcap03>
-Subject: Re: [PATCH 1/4] PCI: mediatek: fixup mtk_pcie_find_port logical
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Thu, 28 Jun 2018 09:12:07 +0800
-In-Reply-To: <CAHp75Ve2N_Bt8FvX8xCx3JtQ+ozZE=isfsKp9swY+86Cg-78XQ@mail.gmail.com>
-References: <1530091298-28120-1-git-send-email-honghui.zhang@mediatek.com>
- <1530091298-28120-2-git-send-email-honghui.zhang@mediatek.com>
- <CAHp75Ve2N_Bt8FvX8xCx3JtQ+ozZE=isfsKp9swY+86Cg-78XQ@mail.gmail.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree <devicetree@vger.kernel.org>,
- hongkun.cao@mediatek.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- YT Shen <yt.shen@mediatek.com>, Matthias
- Brugger <matthias.bgg@gmail.com>, ryder.lee@mediatek.com,
- "moderated list:ARM/Mediatek SoC
- support" <linux-mediatek@lists.infradead.org>, yong.wu@mediatek.com,
- Bjorn Helgaas <bhelgaas@google.com>, yingjoe.chen@mediatek.com,
- Eddie Huang <eddie.huang@mediatek.com>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.133]:40363 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754452AbeFMHZk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 03:25:40 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v3 01/10] PCI: Add pci_host_alloc_intx_irqd() for allocating IRQ domain
+Date: Wed, 13 Jun 2018 15:25:20 +0800
+Message-Id: <1528874720-7575-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2018-06-27 at 19:35 +0300, Andy Shevchenko wrote:
-> On Wed, Jun 27, 2018 at 12:21 PM,  <honghui.zhang@mediatek.com> wrote:
-> > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> >
-> > Mediatek's host controller have two slots, each have it's own control
-> > registers. The host driver need to identify which slot was connected
-> > in order to access the device's configuration space. There's problem
-> > for current host driver to find out which slot was connected to for
-> > a given EP device.
-> >
-> > Assuming each slot have connect with one EP device as below:
-> >
-> >                 host bridge
-> >   bus 0 --> __________|_______
-> >            |                  |
-> >            |                  |
-> >          slot 0             slot 1
-> >   bus 1 -->|        bus 2 --> |
-> >            |                  |
-> >          EP 0               EP 1
-> >
-> > While PCI emulation, system software will scan all the PCI device
-> > starting from devfn 0. So it will get the proper port for slot0 and
-> > slot1 device when using PCI_SLOT(devfn) for match. But it will get
-> > the wrong slot for EP1: The devfn will be start from 0 when scanning
-> > EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
-> > for port0's slot value. So the host driver should not using EP's devfn
-> > but the slot's devfn(the slot which EP was connected to) for match.
-> >
-> > This patch fix the mtk_pcie_find_port's logical by using the slot's
-> > devfn for match.
-> 
-> 
-> > +       list_for_each_entry(port, &pcie->ports, list) {
-> > +               if (bus->number == 0 && port->slot == PCI_SLOT(devfn)) {
-> >                         return port;
-> > +               } else if (bus->number != 0) {
-> 
-> You can do it like (no need 'else')
-> 
-> if (...)
->  return ...;
-> if (bus->number) {
->  ...
-> }
-> 
-> > +                       pbus = bus;
-> > +                       do {
-> > +                               dev = pbus->self;
-> > +                               if (port->slot == PCI_SLOT(dev->devfn))
-> > +                                       return port;
-> > +
-> > +                               pbus = dev->bus;
-> > +                       } while (dev->bus->number != 0);
-> 
-> This can be rewritten like
-> 
-> pbus = bus;
-> while (pbus->number) {
->  dev = ...;
->  ...
->  pbus = dev->bus;
-> }
-> 
-> and no need for if (bus->number) anymore.
-> 
+It seems host drivers which allocate IRQ domain for INTx
+and the related code block looks highly similar to each other.
+Add a new helper, pci_alloc_intx_irqd(), to avoid code duplication
+as much as possible.
 
-Hi, Andy, thanks very much for your advise, I will change it in the next
-version.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-thanks.
-> > +               }
-> > +       }
-> >
-> >         return NULL;
-> >  }
-> > --
-> > 2.6.4
-> >
-> 
-> 
-> 
+---
 
+Changes in v3:
+- rename to pci_host_alloc_intx_irqd and move to probe.c
+- fix compile error reported by Kbuild Robot
 
+Changes in v2:
+- fix typo and move the code to C file.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ drivers/pci/probe.c | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h | 13 ++++++++++
+ 2 files changed, 87 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ac876e3..d37b879 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -3139,3 +3139,77 @@ int pci_hp_add_bridge(struct pci_dev *dev)
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(pci_hp_add_bridge);
++
++static int pcie_intx_map(struct irq_domain *domain, unsigned int irq,
++			 irq_hw_number_t hwirq)
++{
++	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
++	irq_set_chip_data(irq, domain->host_data);
++
++	return 0;
++}
++
++/**
++ * pci_host_alloc_intx_irqd() - Allocate INTx IRQ domain
++ * @dev: device associated with the PCI controller.
++ * @host: pointer to host specific data struct
++ * @general_xlate: flag for whether use pci_irqd_intx_xlate() helper
++ * @intx_domain_ops: pointer to driver specific struct irq_domain_ops
++ * @local_intc: pointer to driver specific interrupt controller node
++ *
++ * A simple helper for drivers to allocate IRQ domain for INTx. If
++ * intx_domain_ops is NULL, use pci_intx_domain_ops by default. And if
++ * local_intc is present, then use it firstly, otherwise, fallback to get
++ * interrupt controller node from @dev.
++ *
++ * Returns valid pointer of struct irq_domain on success, or PTR_ERR(-EINVAL)
++ * if failure occurred.
++ */
++struct irq_domain *pci_host_alloc_intx_irqd(struct device *dev, void *host,
++	bool general_xlate, const struct irq_domain_ops *intx_domain_ops,
++	struct device_node *local_intc)
++{
++	struct device_node *intc = local_intc;
++	struct irq_domain *domain = NULL;
++	struct irq_domain_ops *irqd_ops;
++	bool need_put = false;
++	int err = -EINVAL;
++
++	if (!intc) {
++		intc = of_get_next_child(dev->of_node, NULL);
++		if (!intc) {
++			dev_err(dev, "missing child interrupt-controller node\n");
++			goto err_out;
++		}
++		need_put = true;
++	}
++
++	if (!intx_domain_ops) {
++		irqd_ops = (struct irq_domain_ops *)devm_kmalloc(dev,
++				sizeof(struct irq_domain_ops), GFP_KERNEL);
++		if (!irqd_ops) {
++			err = -ENOMEM;
++			goto err_out;
++		}
++
++		irqd_ops->map = &pcie_intx_map;
++		if (general_xlate)
++			irqd_ops->xlate = &pci_irqd_intx_xlate;
++		intx_domain_ops = irqd_ops;
++	}
++#ifdef CONFIG_IRQ_DOMAIN
++	domain = irq_domain_add_linear(intc, PCI_NUM_INTX,
++				       intx_domain_ops, host);
++#endif
++	if (!domain) {
++		dev_err(dev, "failed to get a INTx IRQ domain\n");
++		goto err_out;
++	}
++
++	return domain;
++err_out:
++	if (need_put)
++		of_node_put(intc);
++	return ERR_PTR(err);
++}
++EXPORT_SYMBOL_GPL(pci_host_alloc_intx_irqd);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 340029b..06ed80d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -31,6 +31,9 @@
+ #include <linux/device.h>
+ #include <linux/interrupt.h>
+ #include <linux/io.h>
++#include <linux/irq.h>
++#include <linux/irqdomain.h>
++#include <linux/of_irq.h>
+ #include <linux/resource_ext.h>
+ #include <uapi/linux/pci.h>
+ 
+@@ -1453,6 +1456,10 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
+ 	return 0;
+ }
+ 
++extern struct irq_domain *pci_host_alloc_intx_irqd(struct device *dev,
++				void *host, bool general_xlate,
++				const struct irq_domain_ops *intx_domain_ops,
++				struct device_node *local_intc);
+ #ifdef CONFIG_PCIEPORTBUS
+ extern bool pcie_ports_disabled;
+ extern bool pcie_ports_native;
+@@ -1688,6 +1695,12 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
+ 				      unsigned long *out_hwirq,
+ 				      unsigned int *out_type)
+ { return -EINVAL; }
++
++static struct irq_domain *pci_host_alloc_intx_irqd(struct device *dev,
++				void *host, bool general_xlate,
++				const struct irq_domain_ops *intx_domain_ops,
++				struct device_node *local_intc)
++{ return ERR_PTR(-EINVAL); }
+ #endif /* CONFIG_PCI */
+ 
+ /* Include architecture-dependent settings and functions */
+-- 
+1.9.1
