@@ -1,52 +1,88 @@
-Return-Path: <SRS0=PmUz=JF=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=PmUz=JF=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH] efi/fb: Convert PCI bus address to resource if translated
- by the bridge
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Robin Murphy <robin.murphy@arm.com>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, ard.biesheuvel@linaro.org,
- "open list:EFIFB FRAMEBUFFER DRIVER" <linux-fbdev@vger.kernel.org>,
- Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
- Peter Jones <pjones@redhat.com>, linux-arm-kernel@lists.infradead.org
-References: <1526563343-28721-1-git-send-email-okaya@codeaurora.org>
- <36cf3f12-bfe8-1c38-4d2c-b785fc64a3f6@arm.com>
- <733101d0-9051-a5a6-ef64-162d8d1e10a1@codeaurora.org>
- <20180619215955.GF33049@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <61384244-49f9-2020-04f0-6e188cf6a6b7@codeaurora.org>
-Date: Tue, 19 Jun 2018 18:14:55 -0400
+Return-Path: <SRS0=fgzy=I7=arm.com=punit.agrawal@kernel.org>
+Return-Path: <SRS0=fgzy=I7=arm.com=punit.agrawal@kernel.org>
+From: Punit Agrawal <punit.agrawal@arm.com>
+To: Xie XiuQi <xiexiuqi@huawei.com>,  Hanjun Guo <guohanjun@huawei.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,  tnowicki@caviumnetworks.com,  linux-pci@vger.kernel.org,  Catalin Marinas <catalin.marinas@arm.com>,  "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,  Will Deacon <will.deacon@arm.com>,  Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,  Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,  linux-mm@kvack.org,  wanghuiqiang@huawei.com,  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,  Bjorn Helgaas <bhelgaas@google.com>,  Andrew Morton <akpm@linux-foundation.org>,  zhongjiang <zhongjiang@huawei.com>,  linux-arm <linux-arm-kernel@lists.infradead.org>, Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
+References: <1527768879-88161-2-git-send-email-xiexiuqi@huawei.com>
+	<20180606154516.GL6631@arm.com>
+	<CAErSpo6S0qtR42tjGZrFu4aMFFyThx1hkHTSowTt6t3XerpHnA@mail.gmail.com>
+	<20180607105514.GA13139@dhcp22.suse.cz>
+	<5ed798a0-6c9c-086e-e5e8-906f593ca33e@huawei.com>
+	<20180607122152.GP32433@dhcp22.suse.cz>
+	<a880df29-b656-d98d-3037-b04761c7ed78@huawei.com>
+	<20180611085237.GI13364@dhcp22.suse.cz>
+	<16c4db2f-bc70-d0f2-fb38-341d9117ff66@huawei.com>
+	<20180611134303.GC75679@bhelgaas-glaptop.roam.corp.google.com>
+	<20180611145330.GO13364@dhcp22.suse.cz>
+	<87lgbk59gs.fsf@e105922-lin.cambridge.arm.com>
+Date: Wed, 13 Jun 2018 18:39:00 +0100
+In-Reply-To: <87lgbk59gs.fsf@e105922-lin.cambridge.arm.com> (Punit Agrawal's
+	message of "Tue, 12 Jun 2018 16:08:03 +0100")
+Message-ID: <87bmce60y3.fsf@e105922-lin.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20180619215955.GF33049@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Punit Agrawal <punit.agrawal@arm.com> writes:
 
-On 6/19/2018 5:59 PM, Bjorn Helgaas wrote:
-> On Fri, May 18, 2018 at 10:20:29AM -0400, Sinan Kaya wrote:
->> On 5/18/2018 6:42 AM, Robin Murphy wrote:
->>>
->>> FWIW, now that I've actually gone and looked, it appears you could simplify the whole function quite a bit by getting rid of these and just using the new local resource directly, especially since the only actual use of size is an open-coded resource_contains().
->>
->> Posted V2 a minute ago. I did the simplification on a prior patch in order not to
->> mix the issues.
-> 
-> I don't see the V2 on linux-pci, but it sounds like Ard would merge this
-> anyway.  So I'll drop this and you can let me know if there's anything you
-> need from me.
-> 
 
-It is planned to go through fbdev tree for 4.19. 
+[...]
 
-https://patchwork.kernel.org/patch/10410895/
+>
+> CONFIG_HAVE_MEMORYLESS node is not enabled on arm64 which means we end
+> up returning the original node in the fallback path.
+>
+> Xie, does the below patch help? I can submit a proper patch if this
+> fixes the issue for you.
+>
+> -- >8 --
+> Subject: [PATCH] arm64/numa: Enable memoryless numa nodes
+>
+> Signed-off-by: Punit Agrawal <punit.agrawal@arm.com>
+> ---
+>  arch/arm64/Kconfig   | 4 ++++
+>  arch/arm64/mm/numa.c | 2 ++
+>  2 files changed, 6 insertions(+)
+>
+> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> index eb2cf4938f6d..5317e9aa93ab 100644
+> --- a/arch/arm64/Kconfig
+> +++ b/arch/arm64/Kconfig
+> @@ -756,6 +756,10 @@ config USE_PERCPU_NUMA_NODE_ID
+>  	def_bool y
+>  	depends on NUMA
+>  
+> +config HAVE_MEMORYLESS_NODES
+> +       def_bool y
+> +       depends on NUMA
+> +
+>  config HAVE_SETUP_PER_CPU_AREA
+>  	def_bool y
+>  	depends on NUMA
+> diff --git a/arch/arm64/mm/numa.c b/arch/arm64/mm/numa.c
+> index dad128ba98bf..c699dcfe93de 100644
+> --- a/arch/arm64/mm/numa.c
+> +++ b/arch/arm64/mm/numa.c
+> @@ -73,6 +73,8 @@ EXPORT_SYMBOL(cpumask_of_node);
+>  static void map_cpu_to_node(unsigned int cpu, int nid)
+>  {
+>  	set_cpu_numa_node(cpu, nid);
+> +	set_numa_mem(local_memory_node(nid));
 
-Feel free to review/ACK.
+Argh, this should be
 
-Sinan
+        set_cpu_numa_mem(cpu, local_memory_node(nid));
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+There is not guarantee that map_cpu_to_node() will be called on the
+local cpu.
+
+Hanjun, Xie - can you try with the update please?
+
+Thanks,
+Punit
+
+> +
+>  	if (nid >= 0)
+>  		cpumask_set_cpu(cpu, node_to_cpumask_map[nid]);
+>  }
