@@ -1,135 +1,215 @@
-Return-Path: <SRS0=kWo4=IY=huawei.com=xieyisheng1@kernel.org>
-Return-Path: <SRS0=kWo4=IY=huawei.com=xieyisheng1@kernel.org>
-Subject: Re: [PATCH v4] PCI ACPI: Avoid panic when PCI IO resource's size is
- not page aligned
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1528250793-57034-1-git-send-email-xieyisheng1@huawei.com>
- <20180606220143.GA128611@bhelgaas-glaptop.roam.corp.google.com>
-CC: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<guohanjun@huawei.com>, <jcm@redhat.com>, <toshi.kani@hpe.com>,
-	<tanxiaojun@huawei.com>, <wangzhou1@hisilicon.com>,
-	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<akpm@linux-foundation.org>, <kstewart@linuxfoundation.org>, Greg KH
-	<gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <b2a58563-8216-6fa6-2ca8-4ca3b5cfe807@huawei.com>
-Date: Thu, 7 Jun 2018 07:54:28 +0800
-MIME-Version: 1.0
-In-Reply-To: <20180606220143.GA128611@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:51852 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933328AbeFMC7Z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2018 22:59:25 -0400
+Received: from mail-pg0-f70.google.com ([74.125.83.70])
+        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <kai.heng.feng@canonical.com>)
+        id 1fSw0K-0004Hz-C5
+        for linux-pci@vger.kernel.org; Wed, 13 Jun 2018 02:59:24 +0000
+Received: by mail-pg0-f70.google.com with SMTP id e1-v6so353744pgp.20
+        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2018 19:59:24 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii;
+        delsp=yes;
+        format=flowed
+Mime-Version: 1.0 (Mac OS X Mail 11.4 \(3445.8.2\))
+Subject: Re: [PATCH 2/2] r8169: Reinstate ASPM Support
+From: Kai Heng Feng <kai.heng.feng@canonical.com>
+In-Reply-To: <30b033ec-2ac3-6470-be43-06044f87b81d@gmail.com>
+Date: Wed, 13 Jun 2018 10:59:17 +0800
+Cc: davem@davemloft.net, ryankao@realtek.com, hayeswang@realtek.com,
+        hau@realtek.com, romieu@fr.zoreil.com, bhelgaas@google.com,
+        netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <A4FEE5F1-9548-44B9-BE11-4D3A6A463959@canonical.com>
+References: <20180612095759.6828-1-kai.heng.feng@canonical.com>
+ <20180612095759.6828-2-kai.heng.feng@canonical.com>
+ <30b033ec-2ac3-6470-be43-06044f87b81d@gmail.com>
+To: Heiner Kallweit <hkallweit1@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-hi Bjorn,
+Hi Heiner,
 
-On 2018/6/7 6:01, Bjorn Helgaas wrote:
-> On Wed, Jun 06, 2018 at 10:06:33AM +0800, Yisheng Xie wrote:
->> Zhou reported a bug on Hisilicon arm64 D06 platform with 64KB page size:
->>
->>  [    2.470908] kernel BUG at lib/ioremap.c:72!
->>  [    2.475079] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
->>  [    2.480551] Modules linked in:
->>  [    2.483594] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.16.0-rc7-00062-g0b41260-dirty #23
->>  [    2.491756] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI Nemo 2.0 RC0 - B120 03/23/2018
->>  [    2.500614] pstate: 80c00009 (Nzcv daif +PAN +UAO)
->>  [    2.505395] pc : ioremap_page_range+0x268/0x36c
->>  [    2.509912] lr : pci_remap_iospace+0xe4/0x100
->>  [...]
->>  [    2.603733] Call trace:
->>  [    2.606168]  ioremap_page_range+0x268/0x36c
->>  [    2.610337]  pci_remap_iospace+0xe4/0x100
->>  [    2.614334]  acpi_pci_probe_root_resources+0x1d4/0x214
->>  [    2.619460]  pci_acpi_root_prepare_resources+0x18/0xa8
->>  [    2.624585]  acpi_pci_root_create+0x98/0x214
->>  [    2.628843]  pci_acpi_scan_root+0x124/0x20c
->>  [    2.633013]  acpi_pci_root_add+0x224/0x494
->>  [    2.637096]  acpi_bus_attach+0xf8/0x200
->>  [    2.640918]  acpi_bus_attach+0x98/0x200
->>  [    2.644740]  acpi_bus_attach+0x98/0x200
->>  [    2.648562]  acpi_bus_scan+0x48/0x9c
->>  [    2.652125]  acpi_scan_init+0x104/0x268
->>  [    2.655948]  acpi_init+0x308/0x374
->>  [    2.659337]  do_one_initcall+0x48/0x14c
->>  [    2.663160]  kernel_init_freeable+0x19c/0x250
->>  [    2.667504]  kernel_init+0x10/0x100
->>  [    2.670979]  ret_from_fork+0x10/0x18
->>
->> The cause is the size of PCI IO resource is 32KB, which is 4K aligned but
->> not 64KB aligned, however, ioremap_page_range() request the range as page
->> aligned or it will trigger a BUG_ON() on ioremap_pte_range() it calls, as
->> ioremap_pte_range increase the addr by PAGE_SIZE, which makes addr != end
->> until trigger BUG_ON, if its incoming end is not page aligned. More detail
->> trace is as following:
->>
->>  ioremap_page_range
->>  -> ioremap_p4d_range
->>     -> ioremap_p4d_range
->>        -> ioremap_pud_range
->>           -> ioremap_pmd_range
->>              -> ioremap_pte_range
->>
->> This patch avoid panic by align the vaddr and phys_addr.
->>
->> Reported-by: Zhou Wang <wangzhou1@hisilicon.com>
->> Tested-by: Xiaojun Tan <tanxiaojun@huawei.com>
->> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+> On Jun 13, 2018, at 3:35 AM, Heiner Kallweit <hkallweit1@gmail.com> wrote:
+>
+> On 12.06.2018 11:57, Kai-Heng Feng wrote:
+>> On newer Intel platforms, ASPM support in r8169 is the last missing
+>> puzzle to let Package C-State achieves PC8. Without ASPM support, the
+>> deepest Package C-State can hit is PC3.
+>> PC8 can save additional ~3W in comparison with PC3 on my testing
+>> platform.
+> Maybe we should replace PC8 with "beyond PC3". My system
+> (Haswell 2961Y) reaches 50% PC7 + 5% PC9 + 45% PC10 now.
+> It never seems to use PC8.
+
+My original wording are really mouthful. I'll update them in next version.
+
+The platform in question is Coffee Lake. This patch should make systems  
+newer than Skylake to hit > PC3. Older systems may not see significant  
+change.
+I'll also state these info in the next version.
+
+>
+>> The original patch is from Realtek.
+> Please add a link to this original patch.
+
+Realtek sent me the patch privately. Is it okay to upload the patch to  
+pastebin or gist?
+
+Kai-Heng
+
+>
+>> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 >> ---
->> v4:
->>  - align vaddr and phys_addr  - per Bjorn
->> v3:
->>  - pci_remap_iospace() sanitize its arguments instead - per Rafael
 >> v2:
->>  - Let the caller of ioremap_page_range() align the request by PAGE_SIZE - per Toshi
+>> - Remove module parameter.
+>> - Remove pci_disable_link_state().
 >>
->>  drivers/pci/pci.c | 12 +++++++++++-
->>  1 file changed, 11 insertions(+), 1 deletion(-)
+>>  drivers/net/ethernet/realtek/r8169.c | 41 +++++++++++++++++++---------
+>>  1 file changed, 28 insertions(+), 13 deletions(-)
 >>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index dbfe7c4..652f7d6 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -3537,6 +3537,7 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
->>  {
->>  #if defined(PCI_IOBASE) && defined(CONFIG_MMU)
->>  	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
->> +	unsigned long last_vaddr;
->>  
->>  	if (!(res->flags & IORESOURCE_IO))
->>  		return -EINVAL;
->> @@ -3544,7 +3545,16 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
->>  	if (res->end > IO_SPACE_LIMIT)
->>  		return -EINVAL;
->>  
->> -	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
->> +	/* It will be mess if vaddr's offset is not equal to phys_addr's */
->> +	if ((vaddr & ~PAGE_MASK) != (phys_addr & ~PAGE_MASK))
->> +		return -EINVAL;
+>> diff --git a/drivers/net/ethernet/realtek/r8169.c  
+>> b/drivers/net/ethernet/realtek/r8169.c
+>> index 9b55ce513a36..85f4e746b040 100644
+>> --- a/drivers/net/ethernet/realtek/r8169.c
+>> +++ b/drivers/net/ethernet/realtek/r8169.c
+>> @@ -5289,6 +5289,18 @@ static void rtl_pcie_state_l2l3_enable(struct  
+>> rtl8169_private *tp, bool enable)
+>>  	RTL_W8(tp, Config3, data);
+>>  }
+>>
+>> +static void rtl_hw_internal_aspm_clkreq_enable(struct rtl8169_private  
+>> *tp,
+>> +					       bool enable)
+>
+> Do we need this hw_internal in the function name?
+>
+>> +{
+>> +	if (enable) {
+>> +		RTL_W8(tp, Config2, RTL_R8(tp, Config2) | ClkReqEn);
+>> +		RTL_W8(tp, Config5, RTL_R8(tp, Config5) | ASPM_en);
+>> +	} else {
+>> +		RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+>> +		RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
+>> +	}
+>> +}
 >> +
->> +	/* Mappings have to be page-aligned */
->> +	last_vaddr = PAGE_ALIGN(vaddr + resource_size(res));
->> +	phys_addr &= PAGE_MASK;
->> +	vaddr &= PAGE_MASK;
-> 
-> I think this stuff should be put into ioremap_page_range().  Almost
-> every caller does this sort of thing before calling
-> ioremap_page_range(), so you could clean up a fair amount of code if
-> you added one copy into ioremap_page_range() and removed it from all
-> the callers.
-
-Actually,  I do not have strong opinion about this. Therefore, I would
-like to add ./lib/ioremap.c's maintainer(commiters), to get more suggestion.
-
-Hi Andrew, Greg and all,
-
-Could you please give some suggestion about this patch?
-
-Thanks
-Yisheng
-
-> 
->> +	return ioremap_page_range(vaddr, last_vaddr, phys_addr,
->>  				  pgprot_device(PAGE_KERNEL));
->>  #else
->>  	/* this architecture does not have memory mapped I/O space,
-> 
-> .
-> 
+>>  static void rtl_hw_start_8168bb(struct rtl8169_private *tp)
+>>  {
+>>  	RTL_W8(tp, Config3, RTL_R8(tp, Config3) & ~Beacon_en);
+>> @@ -5645,9 +5657,9 @@ static void rtl_hw_start_8168g_1(struct  
+>> rtl8169_private *tp)
+>>  	rtl_hw_start_8168g(tp);
+>>
+>>  	/* disable aspm and clock request before access ephy */
+>> -	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+>> -	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
+>> +	rtl_hw_internal_aspm_clkreq_enable(tp, false);
+>>  	rtl_ephy_init(tp, e_info_8168g_1, ARRAY_SIZE(e_info_8168g_1));
+>> +	rtl_hw_internal_aspm_clkreq_enable(tp, true);
+>>  }
+>>
+>>  static void rtl_hw_start_8168g_2(struct rtl8169_private *tp)
+>> @@ -5680,9 +5692,9 @@ static void rtl_hw_start_8411_2(struct  
+>> rtl8169_private *tp)
+>>  	rtl_hw_start_8168g(tp);
+>>
+>>  	/* disable aspm and clock request before access ephy */
+>> -	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+>> -	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
+>> +	rtl_hw_internal_aspm_clkreq_enable(tp, false);
+>>  	rtl_ephy_init(tp, e_info_8411_2, ARRAY_SIZE(e_info_8411_2));
+>> +	rtl_hw_internal_aspm_clkreq_enable(tp, true);
+>>  }
+>>
+>>  static void rtl_hw_start_8168h_1(struct rtl8169_private *tp)
+>> @@ -5699,8 +5711,7 @@ static void rtl_hw_start_8168h_1(struct  
+>> rtl8169_private *tp)
+>>  	};
+>>
+>>  	/* disable aspm and clock request before access ephy */
+>> -	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+>> -	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
+>> +	rtl_hw_internal_aspm_clkreq_enable(tp, false);
+>>  	rtl_ephy_init(tp, e_info_8168h_1, ARRAY_SIZE(e_info_8168h_1));
+>>
+>>  	RTL_W32(tp, TxConfig, RTL_R32(tp, TxConfig) | TXCFG_AUTO_FIFO);
+>> @@ -5779,6 +5790,8 @@ static void rtl_hw_start_8168h_1(struct  
+>> rtl8169_private *tp)
+>>  	r8168_mac_ocp_write(tp, 0xe63e, 0x0000);
+>>  	r8168_mac_ocp_write(tp, 0xc094, 0x0000);
+>>  	r8168_mac_ocp_write(tp, 0xc09e, 0x0000);
+>> +
+>> +	rtl_hw_internal_aspm_clkreq_enable(tp, true);
+>>  }
+>>
+>>  static void rtl_hw_start_8168ep(struct rtl8169_private *tp)
+>> @@ -5830,11 +5843,12 @@ static void rtl_hw_start_8168ep_1(struct  
+>> rtl8169_private *tp)
+>>  	};
+>>
+>>  	/* disable aspm and clock request before access ephy */
+>> -	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+>> -	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
+>> +	rtl_hw_internal_aspm_clkreq_enable(tp, false);
+>>  	rtl_ephy_init(tp, e_info_8168ep_1, ARRAY_SIZE(e_info_8168ep_1));
+>>
+>>  	rtl_hw_start_8168ep(tp);
+>> +
+>> +	rtl_hw_internal_aspm_clkreq_enable(tp, true);
+>>  }
+>>
+>>  static void rtl_hw_start_8168ep_2(struct rtl8169_private *tp)
+>> @@ -5846,14 +5860,15 @@ static void rtl_hw_start_8168ep_2(struct  
+>> rtl8169_private *tp)
+>>  	};
+>>
+>>  	/* disable aspm and clock request before access ephy */
+>> -	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+>> -	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
+>> +	rtl_hw_internal_aspm_clkreq_enable(tp, false);
+>>  	rtl_ephy_init(tp, e_info_8168ep_2, ARRAY_SIZE(e_info_8168ep_2));
+>>
+>>  	rtl_hw_start_8168ep(tp);
+>>
+>>  	RTL_W8(tp, DLLPR, RTL_R8(tp, DLLPR) & ~PFM_EN);
+>>  	RTL_W8(tp, MISC_1, RTL_R8(tp, MISC_1) & ~PFM_D3COLD_EN);
+>> +
+>> +	rtl_hw_internal_aspm_clkreq_enable(tp, true);
+>>  }
+>>
+>>  static void rtl_hw_start_8168ep_3(struct rtl8169_private *tp)
+>> @@ -5867,8 +5882,7 @@ static void rtl_hw_start_8168ep_3(struct  
+>> rtl8169_private *tp)
+>>  	};
+>>
+>>  	/* disable aspm and clock request before access ephy */
+>> -	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+>> -	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
+>> +	rtl_hw_internal_aspm_clkreq_enable(tp, false);
+>>  	rtl_ephy_init(tp, e_info_8168ep_3, ARRAY_SIZE(e_info_8168ep_3));
+>>
+>>  	rtl_hw_start_8168ep(tp);
+>> @@ -5888,6 +5902,8 @@ static void rtl_hw_start_8168ep_3(struct  
+>> rtl8169_private *tp)
+>>  	data = r8168_mac_ocp_read(tp, 0xe860);
+>>  	data |= 0x0080;
+>>  	r8168_mac_ocp_write(tp, 0xe860, data);
+>> +
+>> +	rtl_hw_internal_aspm_clkreq_enable(tp, true);
+>>  }
+>>
+>>  static void rtl_hw_start_8168(struct rtl8169_private *tp)
+>> @@ -7646,7 +7662,6 @@ static int rtl_init_one(struct pci_dev *pdev,  
+>> const struct pci_device_id *ent)
+>>  	mii->reg_num_mask = 0x1f;
+>>  	mii->supports_gmii = cfg->has_gmii;
+>>
+>> -
+>>  	/* enable device (incl. PCI PM wakeup and hotplug setup) */
+>>  	rc = pcim_enable_device(pdev);
+>>  	if (rc < 0) {
