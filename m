@@ -1,101 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay6.synopsys.com ([198.182.37.59]:42215 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964939AbeFRPBF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jun 2018 11:01:05 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v4 05/10] PCI: dwc: Add legacy interrupt callback handler
-Date: Mon, 18 Jun 2018 16:00:24 +0100
-Message-Id: <b87c5d32bd6213a3d512108bfe93d00da6a8fdb0.1529329262.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+Received: from 178.115.242.59.static.drei.at ([178.115.242.59]:58762 "EHLO
+        mail.osadl.at" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+        with ESMTP id S933704AbeFMHXC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 03:23:02 -0400
+Date: Wed, 13 Jun 2018 07:12:04 +0000
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: linux-pci@vger.kernel.org
+Subject: question regarding irq_domain_add_linear fixup in error case
+Message-ID: <20180613071204.GA14373@osadl.at>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a legacy interrupt callback handler. Currently DesignWare IP don't
-allow trigger legacy interrupts.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
+Hi !
 
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 10 ++++++++++
- drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +--
- drivers/pci/controller/dwc/pcie-designware.h      |  6 ++++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
+ I have a question regarding the MSI setup error path - if the
+ irq_domain_add_linear() there were to fail then the prevous call
+ irq_domain_add_linear() would leave the irq allocated and
+ registered in the reverse mapping (HW -> Host) so should that
+ error path no call irq_domain_clear_mapping() ?
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 89d9e52..e8a70d8 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
- 	.stop			= dw_pcie_ep_stop,
- };
- 
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct device *dev = pci->dev;
-+
-+	dev_err(dev, "EP cannot trigger legacy IRQs\n");
-+
-+	return -EINVAL;
-+}
-+
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num)
- {
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 654dcb5..90a8c95 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -84,8 +84,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 
- 	switch (type) {
- 	case PCI_EPC_IRQ_LEGACY:
--		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
--		return -EINVAL;
-+		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index a0ab12f..69e6e17 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -350,6 +350,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num);
- int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
-@@ -369,6 +370,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
- 
-+static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	return 0;
-+}
-+
- static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 					   u8 interrupt_num)
- {
--- 
-2.7.4
+ code is from linux-next 4.17.0 (localversion-next 20180613)
+
+/**
+ * xilinx_pcie_init_irq_domain - Initialize IRQ domain
+ * @port: PCIe port information
+ *
+ * Return: '0' on success and error value on failure
+ */
+static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+{
+	struct device *dev = port->dev;
+	struct device_node *node = dev->of_node;
+	struct device_node *pcie_intc_node;
+
+	/* Setup INTx */
+	pcie_intc_node = of_get_next_child(node, NULL);
+	if (!pcie_intc_node) {
+		dev_err(dev, "No PCIe Intc node found\n");
+		return -ENODEV;
+	}
+
+	port->leg_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+						 &intx_domain_ops,
+						 port);
+	if (!port->leg_domain) {
+		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+		return -ENODEV;
+	}
+
+	/* Setup MSI */
+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+		port->msi_domain = irq_domain_add_linear(node,
+							 XILINX_NUM_MSI_IRQS,
+							 &msi_domain_ops,
+							 &xilinx_pcie_msi_chip);
+		if (!port->msi_domain) {
+			dev_err(dev, "Failed to get a MSI IRQ domain\n");
++ ??			irq_domain_clear_mapping(port->leg_domain ?? ?? )
+			return -ENODEV;
+		}
+
+		xilinx_pcie_enable_msi(port);
+	}
+
+	return 0;
+}
+
+Am I missing something here - or is the cleanup in the MSI setup error case
+incomlete ?
+
+thx!
+hofrat
