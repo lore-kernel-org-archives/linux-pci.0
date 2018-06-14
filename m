@@ -1,67 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.11.71.1]:39697 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753938AbeFUA21 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Jun 2018 20:28:27 -0400
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Daniel Walker <danielwa@cisco.com>,
-        "Guilherme G. Piccoli" <guilherme@gpiccoli.net>,
-        benh@kernel.crashing.org
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-        xe-kernel@external.cisco.com, linux-kernel@vger.kernel.org,
-        Paul Mackerras <paulus@samba.org>,
-        linuxppc-dev@lists.ozlabs.org,
-        Mauro Rodrigues <maurosr@linux.vnet.ibm.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] arch: powerpc: pci-common: fix wrong return value check on phd_id
-In-Reply-To: <6d321d8a-432d-d41d-cc08-144764d644b2@cisco.com>
-References: <20180618165706.42679-1-danielwa@cisco.com> <CALJn8nPbTy3Ne2a7L71c2YZ06Ccr2j0zs6TdptfRc7O-N9u=Yg@mail.gmail.com> <c56f43f5-7902-f7c8-20e1-955ad064c4d0@cisco.com> <CALJn8nM+S7STs+_MTje1qVCpa6MvnROS2+b5_GDz2wYs8etapA@mail.gmail.com> <6d321d8a-432d-d41d-cc08-144764d644b2@cisco.com>
-Date: Thu, 21 Jun 2018 10:28:22 +1000
-Message-ID: <87in6dvv89.fsf@concordia.ellerman.id.au>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 14 Jun 2018 08:50:15 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Srinath Mannam <srinath.mannam@broadcom.com>
+Subject: Re: Requirement to get BAR pci_bus_address in user space
+Message-ID: <20180614085015.3f39b367@w520.home>
+In-Reply-To: <CABe79T5ZRBToOgCY0Myo47mkeOQ5FWrxgF-Bbdx-Pa3fmYPDGw@mail.gmail.com>
+References: <CABe79T41Cr0mjH_k2drzccHvObFwRcW3n+WKCj0JvFUBy0wz-A@mail.gmail.com>
+ <20180614102001.GA20836@lst.de>
+ <CABe79T6k387EnDrpydTbQYQ+sZoWXKUee23EDzDJqnkroOmodA@mail.gmail.com>
+ <92a9eeced36f863458ca2fd029f17a20@codeaurora.org>
+ <CABe79T5ZRBToOgCY0Myo47mkeOQ5FWrxgF-Bbdx-Pa3fmYPDGw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci-owner@vger.kernel.org, Abhishek Shah <abhishek.shah@broadcom.com>,
+ kvm@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, Vikram Prakash <vikram.prakash@broadcom.com>,
+ Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Daniel,
+On Thu, 14 Jun 2018 16:18:15 +0530
+Srinath Mannam <srinath.mannam@broadcom.com> wrote:
 
-Sorry we broke things for you.
+> Hi Sinan Kaya,
+> 
+> Here are the details,
+> 
+> The issue is, For CMB cards SQs are allocated inside device BAR memory
+> which is different from normal cards.
+> In Normal cards SQ memory allocated at host side.
+> In both the cases physical address of CQ memory is programmed in NVMe
+> controller register.
+> This method works for normal cards because CQ memory is at host side.
+> But in CMB cards pci bus address equivalent to CQ memory needs to program.
+> 
+> More details are in the patch: nvme-pci: Use PCI bus address for
+> data/queues in CMB.
+> 
+> With the above patch issue is fixed in the NVMe kernel driver, But
+> similar fix is required in SPDK library also.
+> So, We need a mechanism to get pci_bus_address in user space libraries
+> to address this issue.
 
-Daniel Walker <danielwa@cisco.com> writes:
-> On 06/19/2018 09:26 AM, Guilherme G. Piccoli wrote:
->>> [...]
->>> What your doing is changing the phb_id to some transformation of "reg" for
->>> all platforms except which have "ibm,opal-phbid". This is what we observe.
->>> This is a radical altering of the prior phb_id selection before your patch.
-...
->
-> I didn't look into changing the behavior on our side because it didn't 
-> look like the intent of the patch was to make a global change. I can 
-> take a look at changing this behavior on our side , given that this was 
-> intended by your changes.
+I don't understand the CQ vs CMB, but I think I gather that there's some
+sort of buffer that's allocated from within the devices MMIO BAR and
+some programming of the device needs to reference that buffer.
+Wouldn't you therefore use the vfio type1 IOMMU MAP_DMA ioctl to map
+the BAR into the IOVA address space and you can then use the IOVA +
+offset into the BAR for the device to reference the buffer?  It seems
+this is the same way we'd setup a peer-to-peer mapping, but we're using
+it for the device to reference itself effectively.  Thanks,
 
-You're right the change log and the patch are a bit out of sync, that
-was probably my fault.
+Alex
 
-> However, they're may be other platforms or drivers which depend on these 
-> numbers getting set a certain way, so there may be other userspace 
-> dependencies on these values.
-
-That's true, though I think yours is the first report we've had of
-problems.
-
-The old behaviour relied on device tree ordering in nearly all cases, so
-you basically get whatever order your firmware happened to flatten the
-device tree in.
-
-That tends to be consistent on a single system or with a single firmware
-version, but it's not stable in general. If your firmware changes, or
-you kexec then the ordering can change.
-
-So I'd definitely prefer we didn't go back to that behaviour, because
-it's basically "random order".
-
-If there's anything you can do on your end to cope with the new ordering
-that would be great.
-
-cheers
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
