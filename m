@@ -1,57 +1,63 @@
-Return-Path: <SRS0=lTuD=JI=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=lTuD=JI=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, sulrich@codeaurora.org, timur@codeaurora.org,
- Mike Marciniszyn <mike.marciniszyn@intel.com>,
- "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
- linux-arm-msm@vger.kernel.org,
- Dennis Dalessandro <dennis.dalessandro@intel.com>,
- open list <linux-kernel@vger.kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
- Doug Ledford <dledford@redhat.com>, linux-arm-kernel@lists.infradead.org,
- Alex Williamson <alex.williamson@redhat.com>
-References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
- <20180619214346.GD33049@bhelgaas-glaptop.roam.corp.google.com>
- <2593baec-8a28-a3e7-7ebf-7c21addda0b8@codeaurora.org>
- <20180622140125.GD108993@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <98c4531b-0b64-b9e1-ef95-562d1613d893@codeaurora.org>
-Date: Fri, 22 Jun 2018 12:04:02 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH] PCI: xilinx-nwl: add missing of_node_put()
+Date: Thu, 14 Jun 2018 11:04:34 +0200
+Message-Id: <1528967074-30024-1-git-send-email-hofrat@osadl.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, Michal Simek <michal.simek@xilinx.com>,
+ linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <20180622140125.GD108993@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/22/2018 10:01 AM, Bjorn Helgaas wrote:
->> Since Oza's DPC/AER patch to refactor fatal error handling, both
->> hotplug driver and AER/DPC driver will try removing devices and
->> perform enumeration on link events/AER events.
->>
->> Perfect environment for race condition without a change.
-> Yeah, this looks like a bit of a mess.  I guess we're getting two
-> interrupts (AER interrupt and hotplug interrupt) and we should
-> coordinate their handling somehow.  I don't have a proposal.  This
-> race could happen independent of the device reset paths, of course.
+ The call to of_get_next_child() returns a node pointer with
+refcount incremented thus it must be explicitly decremented
+here after the last usage.
 
-I was hoping for pci_reset_slot() to avoid this but it turns out
-the root port does not have any slot pointers set on my system even though
-hotplug is enabled. 
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Fixes: commit ab597d35ef11 ("PCI: xilinx-nwl: Add support for Xilinx NWL PCIe Host Controller")
+---
 
-Slot pointer is only set for the child objects.
+Problem found by an experimental cocinelle script
 
-https://patchwork.kernel.org/patch/10351515/
+Patch was compile tested with: multi_v7_defconfig + ARCH_ZYNQ=y,
+COMPILE_TEST=y, PCIE_XILINX_NWL=y
+(one sparse warning though not related to the change proposed though)
 
- * A PCI bus may host multiple slots, each slot may support a reset mechanism
- * independent of other slots.  For instance, some slots may support slot power
- * control.  In the case of a 1:1 bus to slot architecture, this function may
- * wrap the bus reset to avoid spurious slot related events such as hotplug.
- * Generally a slot reset should be attempted before a bus reset.  All of the
- * function of the slot and any subordinate buses behind the slot are reset
- * through this function.  PCI config space of all devices in the slot and
- * behind the slot is saved before and restored after reset.
+Patch is against 4.17.0 (localversion-next is next-20180613)
 
+ drivers/pci/controller/pcie-xilinx-nwl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
+index 6a4bbb5..fb32840 100644
+--- a/drivers/pci/controller/pcie-xilinx-nwl.c
++++ b/drivers/pci/controller/pcie-xilinx-nwl.c
+@@ -559,7 +559,7 @@ static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
+ 							PCI_NUM_INTX,
+ 							&legacy_domain_ops,
+ 							pcie);
+-
++	of_node_put(legacy_intc_node);
+ 	if (!pcie->legacy_irq_domain) {
+ 		dev_err(dev, "failed to create IRQ domain\n");
+ 		return -ENOMEM;
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.1.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
