@@ -1,81 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <53e4d6c3-ee19-fd04-4ba3-862d04558689@codeaurora.org>
-References: <1527654876-26716-1-git-send-email-okaya@codeaurora.org>
- <CAHp75Vc3YKAR1P_F0fwD+ueGub4gVUjP0=wv4Egf_fTSVkSUjw@mail.gmail.com>
- <53e4d6c3-ee19-fd04-4ba3-862d04558689@codeaurora.org>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Fri, 1 Jun 2018 18:24:00 +0300
-Message-ID: <CAHp75VdTyvQOqnSm67Uo5heP1otE98BbquM0TjSAorEzTgUwHQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: move early dump functionality from x86 arch into the
- common code
-To: Sinan Kaya <okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- linux-pci@vger.kernel.org, Petr Tesarik <ptesarik@suse.cz>,
- Ram Pai <linuxram@us.ibm.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>,
- "H. Peter Anvin" <hpa@zytor.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- Timur Tabi <timur@codeaurora.org>,
- "maintainer:X86 ARCHITECTURE \(32-BIT AND 64-BIT\)" <x86@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
- Thymo van Beers <thymovanbeers@gmail.com>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Tom Lendacky <thomas.lendacky@amd.com>,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
- Frederic Weisbecker <frederic@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
- Juergen Gross <jgross@suse.com>, Dou Liyang <douly.fnst@cn.fujitsu.com>,
- Borislav Petkov <bp@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- open list <linux-kernel@vger.kernel.org>,
- Philippe Ombredanne <pombredanne@nexb.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.130]:44990 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935889AbeFNBgB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 21:36:01 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v4 05/10] PCI: faraday: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
+Date: Thu, 14 Jun 2018 09:35:26 +0800
+Message-Id: <1528940126-183447-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 1, 2018 at 6:06 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 6/1/2018 11:02 AM, Andy Shevchenko wrote:
->> On Wed, May 30, 2018 at 7:34 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
->>> Move early dump functionality into common code so that it is available for
->>> all archtiectures. No need to carry arch specific reads around as the read
->>> hooks are already initialized by the time pci_setup_device() is getting
->>> called during scan.
->>
->>>  /* If set, the PCIe ATS capability will not be used. */
->>>  static bool pcie_ats_disabled;
->>>
->>> +bool pci_early_dump;
->>> +
->>
->> I didn't check above these, but maybe a good idea to add one line
->> comment what is this about?
->
-> This was discussed here:
->
-> https://www.spinics.net/lists/linux-pci/msg72859.html
+Just avoid code duplication, but no functional change intended.
 
-I understand what is it. What I'm pointing is the variable in the
-source without any comment. In the context you have in diff previous
-one has a comment.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
 
+ drivers/pci/controller/pci-ftpci100.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/controller/pci-ftpci100.c b/drivers/pci/controller/pci-ftpci100.c
+index a1ebe9e..8ace724 100644
+--- a/drivers/pci/controller/pci-ftpci100.c
++++ b/drivers/pci/controller/pci-ftpci100.c
+@@ -346,24 +346,19 @@ static int faraday_pci_setup_cascaded_irq(struct faraday_pci *p)
+ 	int irq;
+ 	int i;
+ 
+-	if (!intc) {
+-		dev_err(p->dev, "missing child interrupt-controller node\n");
+-		return -EINVAL;
+-	}
++	p->irqdomain = pci_host_alloc_intx_irqd(p->dev, p, false,
++					   &faraday_pci_irqdomain_ops, intc);
++	if (IS_ERR(p->irqdomain))
++		return PTR_ERR(p->irqdomain);
+ 
+ 	/* All PCI IRQs cascade off this one */
+ 	irq = of_irq_get(intc, 0);
+ 	if (irq <= 0) {
+ 		dev_err(p->dev, "failed to get parent IRQ\n");
++		irq_domain_remove(p->irqdomain);
+ 		return irq ?: -EINVAL;
+ 	}
+ 
+-	p->irqdomain = irq_domain_add_linear(intc, PCI_NUM_INTX,
+-					     &faraday_pci_irqdomain_ops, p);
+-	if (!p->irqdomain) {
+-		dev_err(p->dev, "failed to create Gemini PCI IRQ domain\n");
+-		return -EINVAL;
+-	}
+ 
+ 	irq_set_chained_handler_and_data(irq, faraday_pci_irq_handler, p);
+ 
 -- 
-With Best Regards,
-Andy Shevchenko
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.9.1
