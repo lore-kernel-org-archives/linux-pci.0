@@ -1,46 +1,87 @@
-Return-Path: <SRS0=wk1B=JF=gmail.com=mr.nuke.me@kernel.org>
-Return-Path: <SRS0=wk1B=JF=gmail.com=mr.nuke.me@kernel.org>
-Subject: Re: [PATCH v2 0/5] Expose PCIe AER stats via sysfs
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Rajat Jain <rajatja@google.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
- Philippe Ombredanne <pombredanne@nexb.com>,
- Kate Stewart <kstewart@linuxfoundation.org>,
- Thomas Gleixner <tglx@linutronix.de>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
- Keith Busch <keith.busch@intel.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Thomas Tai <thomas.tai@oracle.com>, linux-pci@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>,
- rajatxjain@gmail.com
-References: <20180522222805.80314-1-rajatja@google.com>
- <20180523175808.28030-1-rajatja@google.com>
- <20180619221651.GH33049@bhelgaas-glaptop.roam.corp.google.com>
- <c6a5f1ca-a3da-4dd8-1178-a017d6d771c6@gmail.com>
- <20180619182536.648e763f@gandalf.local.home>
-From: "Alex G." <mr.nuke.me@gmail.com>
-Message-ID: <2d4befa5-2b34-a4eb-f1c2-5b80c8a23f83@gmail.com>
-Date: Tue, 19 Jun 2018 17:29:14 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180619182536.648e763f@gandalf.local.home>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:35182 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935633AbeFNBg4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 21:36:56 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v4 10/10] PCI: rockchip: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
+Date: Thu, 14 Jun 2018 09:36:37 +0800
+Message-Id: <1528940197-183694-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Just avoid code duplication, but no functional change intended.
 
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-On 06/19/2018 05:25 PM, Steven Rostedt wrote:
-> On Tue, 19 Jun 2018 17:20:28 -0500
-> "Alex G." <mr.nuke.me@gmail.com> wrote:
-> 
->> I see the next phoronix headline:
->>
->> "Linux maintainer breaks things and watches in amusement as contributors
->> rush to the fix"
-> 
-> But isn't this the daily routine of every Linux maintainer?
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
 
-Phoronix wrote articles about much less interesting things than that.
+ drivers/pci/controller/pcie-rockchip-host.c | 38 +++--------------------------
+ 1 file changed, 3 insertions(+), 35 deletions(-)
 
-Alex
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index 1372d27..eb62ba4 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -699,39 +699,6 @@ static void rockchip_pcie_enable_interrupts(struct rockchip_pcie *rockchip)
+ 	rockchip_pcie_enable_bw_int(rockchip);
+ }
+ 
+-static int rockchip_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+-				  irq_hw_number_t hwirq)
+-{
+-	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
+-
+-	return 0;
+-}
+-
+-static const struct irq_domain_ops intx_domain_ops = {
+-	.map = rockchip_pcie_intx_map,
+-};
+-
+-static int rockchip_pcie_init_irq_domain(struct rockchip_pcie *rockchip)
+-{
+-	struct device *dev = rockchip->dev;
+-	struct device_node *intc = of_get_next_child(dev->of_node, NULL);
+-
+-	if (!intc) {
+-		dev_err(dev, "missing child interrupt-controller node\n");
+-		return -EINVAL;
+-	}
+-
+-	rockchip->irq_domain = irq_domain_add_linear(intc, PCI_NUM_INTX,
+-						    &intx_domain_ops, rockchip);
+-	if (!rockchip->irq_domain) {
+-		dev_err(dev, "failed to get a INTx IRQ domain\n");
+-		return -EINVAL;
+-	}
+-
+-	return 0;
+-}
+-
+ static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie *rockchip,
+ 				     int region_no, int type, u8 num_pass_bits,
+ 				     u32 lower_addr, u32 upper_addr)
+@@ -990,8 +957,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 
+ 	rockchip_pcie_enable_interrupts(rockchip);
+ 
+-	err = rockchip_pcie_init_irq_domain(rockchip);
+-	if (err < 0)
++	rockchip->irq_domain = pci_host_alloc_intx_irqd(dev, rockchip, false,
++							NULL, NULL);
++	if (IS_ERR(rockchip->irq_domain))
+ 		goto err_deinit_port;
+ 
+ 	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
+-- 
+1.9.1
