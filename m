@@ -1,157 +1,93 @@
-Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
-From: Pingfan Liu <kernelfans@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Pingfan Liu <kernelfans@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCHv2 1/2] drivers/base: only reordering consumer device when probing
-Date: Mon, 25 Jun 2018 15:47:38 +0800
-Message-Id: <1529912859-10475-2-git-send-email-kernelfans@gmail.com>
-In-Reply-To: <1529912859-10475-1-git-send-email-kernelfans@gmail.com>
-References: <1529912859-10475-1-git-send-email-kernelfans@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.131]:36976 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935710AbeFNBfF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 21:35:05 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH v4 02/10] PCI: dra7xx: Use pci_host_alloc_intx_irqd() helper to simplify the code
+Date: Thu, 14 Jun 2018 09:34:43 +0800
+Message-Id: <1528940083-183300-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-commit 52cdbdd49853 ("driver core: correct device's shutdown order")
-places an assumption of supplier<-consumer order on the process of probe.
-But it turns out to break down the parent <- child order in some scene.
-E.g in pci, a bridge is enabled by pci core, and behind it, the devices
-have been probed. Then comes the bridge's module, which enables extra
-feature(such as hotplug) on this bridge. This will break the
-parent<-children order and cause failure when "kexec -e" in some scenario.
+Just avoid code duplication, but no functional change intended.
 
-The detailed description of the scenario:
-An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
-match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
-to some issue. For this case, the bridge is moved after its children in
-devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
-write back buffer in flight due to the former shutdown of the bridge which
-clears the BusMaster bit.
-
-To fix this issue, only reordering a device and all of its children
-if it is a consumer.
-
-Note, the bridge involved:
-0004:00:00.0 PCI bridge: IBM Device 04c1 (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        NUMA node: 0
-        Bus: primary=00, secondary=01, subordinate=12, sec-latency=0
-        I/O behind bridge: 00000000-00000fff
-        Memory behind bridge: 80000000-ffefffff
-        Prefetchable memory behind bridge: 0006024000000000-0006027f7fffffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity- SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [48] Express (v2) Root Port (Slot-), MSI 00
-                DevCap: MaxPayload 512 bytes, PhantFunc 0
-                        ExtTag- RBE+
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 256 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 8GT/s, Width x8, ASPM not supported, Exit Latency L0s <64ns, L1 <1us
-                        ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp-
-                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 8GT/s, Width x4, TrErr- Train- SlotClk- DLActive+ BWMgmt- ABWMgmt+
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-                RootCap: CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd+
-                DevCtl2: Completion Timeout: 16ms to 55ms, TimeoutDis+, LTR-, OBFF Disabled ARIFwd+
-                LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete+, EqualizationPhase1+
-                         EqualizationPhase2+, EqualizationPhase3+, LinkEqualizationRequest-
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP+ FCP- CmpltTO+ CmpltAbrt+ UnxCmplt- RxOF- MalfTLP- ECRC+ UnsupReq- ACSViol-
-                UESvrt: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn+ ChkCap+ ChkEn+
-        Capabilities: [148 v1] #19
-
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Dave Young <dyoung@redhat.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
-note: this patch points out the code where the bug is introduced.
-and I hope it sketches out the scene. Will fold the series in one.
 
----
- drivers/base/base.h | 1 +
- drivers/base/core.c | 9 +++++++++
- drivers/base/dd.c   | 9 ++-------
- 3 files changed, 12 insertions(+), 7 deletions(-)
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
 
-diff --git a/drivers/base/base.h b/drivers/base/base.h
-index a75c302..37f86ca 100644
---- a/drivers/base/base.h
-+++ b/drivers/base/base.h
-@@ -135,6 +135,7 @@ extern void device_unblock_probing(void);
+ drivers/pci/controller/dwc/pci-dra7xx.c | 42 +++------------------------------
+ 1 file changed, 3 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index cfaeef8..a281924 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -213,43 +213,6 @@ static int dra7xx_pcie_host_init(struct pcie_port *pp)
+ 	.host_init = dra7xx_pcie_host_init,
+ };
  
- /* /sys/devices directory */
- extern struct kset *devices_kset;
-+extern int device_reorder_consumer(struct device *dev);
- extern void devices_kset_move_last(struct device *dev);
- 
- #if defined(CONFIG_MODULES) && defined(CONFIG_SYSFS)
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 36622b5..66f06ff 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -123,6 +123,15 @@ static int device_is_dependent(struct device *dev, void *target)
- 	return ret;
- }
- 
-+/* a temporary place holder to mark out the root cause of the bug.
-+ * The proposal algorithm will come in next patch
-+ */
-+int device_reorder_consumer(struct device *dev)
-+{
-+	devices_kset_move_last(dev);
-+	return 0;
-+}
-+
- static int device_reorder_to_tail(struct device *dev, void *not_used)
+-static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+-				irq_hw_number_t hwirq)
+-{
+-	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
+-
+-	return 0;
+-}
+-
+-static const struct irq_domain_ops intx_domain_ops = {
+-	.map = dra7xx_pcie_intx_map,
+-	.xlate = pci_irqd_intx_xlate,
+-};
+-
+-static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+-{
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct device *dev = pci->dev;
+-	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+-	struct device_node *node = dev->of_node;
+-	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
+-
+-	if (!pcie_intc_node) {
+-		dev_err(dev, "No PCIe Intc node found\n");
+-		return -ENODEV;
+-	}
+-
+-	dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+-						   &intx_domain_ops, pp);
+-	if (!dra7xx->irq_domain) {
+-		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+-		return -ENODEV;
+-	}
+-
+-	return 0;
+-}
+-
+ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
  {
- 	struct device_link *link;
-diff --git a/drivers/base/dd.c b/drivers/base/dd.c
-index 1435d72..c74f23c 100644
---- a/drivers/base/dd.c
-+++ b/drivers/base/dd.c
-@@ -434,13 +434,8 @@ static int really_probe(struct device *dev, struct device_driver *drv)
- 			goto probe_failed;
+ 	struct dra7xx_pcie *dra7xx = arg;
+@@ -455,8 +418,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 		return ret;
  	}
  
--	/*
--	 * Ensure devices are listed in devices_kset in correct order
--	 * It's important to move Dev to the end of devices_kset before
--	 * calling .probe, because it could be recursive and parent Dev
--	 * should always go first
--	 */
--	devices_kset_move_last(dev);
-+	/* only reoder consumer and its children after suppliers.*/
-+	device_reorder_consumer(dev);
+-	ret = dra7xx_pcie_init_irq_domain(pp);
+-	if (ret < 0)
++	dra7xx->irq_domain = pci_host_alloc_intx_irqd(dev, dra7xx, true, NULL,
++						      NULL);
++	if (IS_ERR(dra7xx->irq_domain))
+ 		return ret;
  
- 	if (dev->bus->probe) {
- 		ret = dev->bus->probe(dev);
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
 -- 
-2.7.4
+1.9.1
