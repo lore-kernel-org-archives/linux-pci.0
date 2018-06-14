@@ -1,53 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:35586 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752194AbeGADzY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jun 2018 23:55:24 -0400
-Received: by mail-pl0-f68.google.com with SMTP id k1-v6so6341323plt.2
-        for <linux-pci@vger.kernel.org>; Sat, 30 Jun 2018 20:55:24 -0700 (PDT)
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
-        Shawn Guo <shawn.guo@linaro.org>
-Subject: [PATCH v3 3/9] PCI: keystone: Drop unnecessary root_bus_nr setting
-Date: Sun,  1 Jul 2018 11:54:45 +0800
-Message-Id: <1530417291-30495-4-git-send-email-shawn.guo@linaro.org>
-In-Reply-To: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
-References: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
+Received: from lucky1.263xmail.com ([211.157.147.133]:37681 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935910AbeFNBfT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 21:35:19 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH v4 03/10] PCI: keystone-dw: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
+Date: Thu, 14 Jun 2018 09:34:54 +0800
+Message-Id: <1528940094-183348-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function dw_pcie_host_init() already initializes the root_bus_nr field
-of 'struct pcie_port', so the -1 assignment prior to calling
-dw_pcie_host_init() in platform specific driver is not really needed.
-Drop it.
+Just avoid code duplication, but no functional change intended.
 
-Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-Cc: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- drivers/pci/controller/dwc/pci-keystone.c | 1 -
- 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 3722a5f31e5e..e88bd221fffe 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -347,7 +347,6 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
- 		}
- 	}
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pci/controller/dwc/pci-keystone-dw.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-keystone-dw.c b/drivers/pci/controller/dwc/pci-keystone-dw.c
+index 0682213..a45809d 100644
+--- a/drivers/pci/controller/dwc/pci-keystone-dw.c
++++ b/drivers/pci/controller/dwc/pci-keystone-dw.c
+@@ -470,15 +470,12 @@ int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
+ 	ks_pcie->app = *res;
  
--	pp->root_bus_nr = -1;
- 	pp->ops = &keystone_pcie_host_ops;
- 	ret = ks_dw_pcie_host_init(ks_pcie, ks_pcie->msi_intc_np);
- 	if (ret) {
+ 	/* Create legacy IRQ domain */
+-	ks_pcie->legacy_irq_domain =
+-			irq_domain_add_linear(ks_pcie->legacy_intc_np,
+-					PCI_NUM_INTX,
++	ks_pcie->legacy_irq_domain = pci_host_alloc_intx_irqd(dev, ks_pcie,
++					false,
+ 					&ks_dw_pcie_legacy_irq_domain_ops,
+-					NULL);
+-	if (!ks_pcie->legacy_irq_domain) {
+-		dev_err(dev, "Failed to add irq domain for legacy irqs\n");
+-		return -EINVAL;
+-	}
++					ks_pcie->legacy_intc_np);
++	if (IS_ERR(ks_pcie->legacy_irq_domain))
++		return PTR_ERR(ks_pcie->legacy_irq_domain);
+ 
+ 	return dw_pcie_host_init(pp);
+ }
 -- 
 1.9.1
