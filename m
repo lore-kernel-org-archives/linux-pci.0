@@ -1,33 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 22 Jun 2018 14:08:50 +0900 (KST)
-Message-Id: <20180622.140850.2131338572840772705.davem@davemloft.net>
-To: kai.heng.feng@canonical.com
-Cc: ryankao@realtek.com, hayeswang@realtek.com, hau@realtek.com,
-        hkallweit1@gmail.com, romieu@fr.zoreil.com, bhelgaas@google.com,
-        acelan.kao@canonical.com, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH net-next v4 2/2] r8169: Reinstate ASPM Support
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20180621083039.22545-2-kai.heng.feng@canonical.com>
-References: <20180621083039.22545-1-kai.heng.feng@canonical.com>
-        <20180621083039.22545-2-kai.heng.feng@canonical.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:47269 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935745AbeFNCvX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Jun 2018 22:51:23 -0400
+Message-ID: <1528973481.21961.0.camel@intel.com>
+Subject: Re: [PATCH v4 06/10] PCI: altera: Use pci_host_alloc_intx_irqd()
+ helper to get irq domain for INTx
+From: Ley Foon Tan <ley.foon.tan@intel.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org
+Date: Thu, 14 Jun 2018 18:51:21 +0800
+In-Reply-To: <1528940145-183495-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
+         <1528940145-183495-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Date: Thu, 21 Jun 2018 16:30:39 +0800
-
-> On Intel platforms (Skylake and newer), ASPM support in r8169 is the
-> last missing puzzle to let CPU's Package C-State reaches PC8.  Without
-> ASPM support, the CPU cannot reach beyond PC3. PC8 can save additional
-> ~3W in comparison with PC3 on a Coffee Lake platform, Dell G3 3779.
+On Thu, 2018-06-14 at 09:35 +0800, Shawn Lin wrote:
+> Just avoid code duplication, but no functional change intended.
 > 
-> This is based on the work from Chunhao Lin <hau@realtek.com>.
+> Cc: Ley Foon Tan <ley.foon.tan@intel.com>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+
+Reviewed-by: Ley Foon Tan <ley.foon.tan@intel.com>
+> ---
 > 
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-
-Also applied.
-
-Thank you for being so persistent.
+> Changes in v4: None
+> Changes in v3: None
+> Changes in v2: None
+> 
+>  drivers/pci/controller/pcie-altera.c | 38 ++++--------------------
+> ------------
+>  1 file changed, 4 insertions(+), 34 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-altera.c
+> b/drivers/pci/controller/pcie-altera.c
+> index 7d05e51..0915c8b 100644
+> --- a/drivers/pci/controller/pcie-altera.c
+> +++ b/drivers/pci/controller/pcie-altera.c
+> @@ -443,19 +443,6 @@ static void altera_pcie_retrain(struct
+> altera_pcie *pcie)
+>  	}
+>  }
+>  
+> -static int altera_pcie_intx_map(struct irq_domain *domain, unsigned
+> int irq,
+> -				irq_hw_number_t hwirq)
+> -{
+> -	irq_set_chip_and_handler(irq, &dummy_irq_chip,
+> handle_simple_irq);
+> -	irq_set_chip_data(irq, domain->host_data);
+> -	return 0;
+> -}
+> -
+> -static const struct irq_domain_ops intx_domain_ops = {
+> -	.map = altera_pcie_intx_map,
+> -	.xlate = pci_irqd_intx_xlate,
+> -};
+> -
+>  static void altera_pcie_isr(struct irq_desc *desc)
+>  {
+>  	struct irq_chip *chip = irq_desc_get_chip(desc);
+> @@ -519,22 +506,6 @@ static int
+> altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
+>  	return err;
+>  }
+>  
+> -static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
+> -{
+> -	struct device *dev = &pcie->pdev->dev;
+> -	struct device_node *node = dev->of_node;
+> -
+> -	/* Setup INTx */
+> -	pcie->irq_domain = irq_domain_add_linear(node, PCI_NUM_INTX,
+> -					&intx_domain_ops, pcie);
+> -	if (!pcie->irq_domain) {
+> -		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+> -		return -ENOMEM;
+> -	}
+> -
+> -	return 0;
+> -}
+> -
+>  static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+>  {
+>  	struct device *dev = &pcie->pdev->dev;
+> @@ -592,11 +563,10 @@ static int altera_pcie_probe(struct
+> platform_device *pdev)
+>  		return ret;
+>  	}
+>  
+> -	ret = altera_pcie_init_irq_domain(pcie);
+> -	if (ret) {
+> -		dev_err(dev, "Failed creating IRQ Domain\n");
+> -		return ret;
+> -	}
+> +	pcie->irq_domain = pci_host_alloc_intx_irqd(dev, pcie, true,
+> NULL,
+> +						    dev->of_node);
+> +	if (IS_ERR(pcie->irq_domain))
+> +		return PTR_ERR(pcie->irq_domain);
+>  
+>  	/* clear all interrupts */
+>  	cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
