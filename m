@@ -1,65 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:35056 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935766AbeFNBgg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 21:36:36 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 08/10] PCI: xilinx-nwl: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Thu, 14 Jun 2018 09:36:10 +0800
-Message-Id: <1528940170-183596-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.99]:59250 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756235AbeFOSfN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Jun 2018 14:35:13 -0400
+Received: from mail-it0-f50.google.com (mail-it0-f50.google.com [209.85.214.50])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7A0BE208B8
+        for <linux-pci@vger.kernel.org>; Fri, 15 Jun 2018 18:35:12 +0000 (UTC)
+Received: by mail-it0-f50.google.com with SMTP id u4-v6so4001687itg.0
+        for <linux-pci@vger.kernel.org>; Fri, 15 Jun 2018 11:35:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <980b68c0-6034-b495-753f-c75c04e0f5d1@broadcom.com>
+References: <20180405193154.27897-1-robh@kernel.org> <20180612170229.GA10141@roeck-us.net>
+ <20180613100935.GA7707@e107981-ln.cambridge.arm.com> <20180613181146.GA28856@roeck-us.net>
+ <20180615125847.GA7735@e107981-ln.cambridge.arm.com> <980b68c0-6034-b495-753f-c75c04e0f5d1@broadcom.com>
+From: Rob Herring <robh@kernel.org>
+Date: Fri, 15 Jun 2018 12:34:51 -0600
+Message-ID: <CAL_JsqLUR_5Hnaws3Dt8ujetq8R-TxnG9wvOe4y6HT50KrNnbQ@mail.gmail.com>
+Subject: Re: [v4] PCI: improve host drivers compile test coverage
+To: Scott Branden <scott.branden@broadcom.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Jan Kiszka <jan.kiszka@siemens.com>,
+        Ley Foon Tan <lftan@altera.com>,
+        Russell King <linux@armlinux.org.uk>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+On Fri, Jun 15, 2018 at 11:55 AM, Scott Branden
+<scott.branden@broadcom.com> wrote:
+> Hi Lorenzo,
+>
+>
+>
+> On 18-06-15 05:58 AM, Lorenzo Pieralisi wrote:
+>>
+>> On Wed, Jun 13, 2018 at 11:11:46AM -0700, Guenter Roeck wrote:
+>>>
+>>> On Wed, Jun 13, 2018 at 11:09:35AM +0100, Lorenzo Pieralisi wrote:
+>>>>
+>>>> [+Jan, Ley Foon, RMK]
+>>>>
+>>>> On Tue, Jun 12, 2018 at 10:02:29AM -0700, Guenter Roeck wrote:
+>>>>>
+>>>>> On Thu, Apr 05, 2018 at 02:31:54PM -0500, Rob Herring wrote:
+>>>>>>
+>>>>>> Add COMPILE_TEST on driver config options with it. Some ARM drivers
+>>>>>> still have arch dependencies, so we have to keep those dependent on
+>>>>>> ARM.
+>>>>>>
+>>>>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>>>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>>>>> Cc: linux-pci@vger.kernel.org
+>>>>>> Signed-off-by: Rob Herring <robh@kernel.org>
+>>>>>
+>>>>> This patch has the undesirable side effect that it selects PCI_DOMAINS
+>>>>> for
+>>>>> sparc32:allmodconfig, which in turn results in
+>>>>>
+>>>>> drivers/ata/pata_ali.c: In function 'ali_init_chipset':
+>>>>> drivers/ata/pata_ali.c:469:38: error:
+>>>>>         implicit declaration of function 'pci_domain_nr'; did you mean
+>>>>> 'pci_iomap_wc'?
+>>>>>
+>>>>> Unfortunately, 37bd62d224c82 ("PCI: Enable PCI_DOMAINS along with
+>>>>> generic
+>>>>> PCI host controller") has pretty much the same result. No idea how to
+>>>>> fix
+>>>>> the problem, so I won't even try.
+>>>>
+>>>> Sorry about that.
+>>>>
+>>>> One option would consist in removing all PCI_DOMAINS selection from
+>>>> drivers/pci/controller/Kconfig and delegate it to arches even though
+>>>> this would force PCI_DOMAINS selection on all ARM platforms (it is
+>>>> already selected for ARCH_MULTIPLATFORM).
+>>>>
+>>>> Or we add back arch dependency to the relevant host bridges.
+>>>>
+>>>> Everything else I have in mind seems overkill to me given that this
+>>>> patch was added to improve test coverage (we could add a default
+>>>> pci_domain_nr() stub - weak or #define - that returns 0 in case arches
+>>>> do not provide an implementation but do we really want to do that ?).
+>>>>
+>>>> Thoughts appreciated.
+>>>>
+>>>  From the definition of PCI_DOMAINS, I suspect the original idea was that
+>>> drivers should depend on it, not select it. Especially auto-selecting
+>>> it with PCI_HOST_GENERIC seems like a bad idea to me. However, that is
+>>> just me. I'll leave it up to Bjorn to decide what if anything he wants
+>>> to do about it.
+>>
+>> Here is a patch that should reinstate the previous behaviour but
+>> it will make PCI_DOMAINS a visible option on ARM 32-bit systems; whether
+>> that's acceptable that's the question I need to answer, it should
+>> honour old configs and it does not force PCI_DOMAINS selection on
+>> non-DT arch/arm PCI host controllers (that do not need PCI_DOMAINS
+>> anyway so I suspect that enabling it on all ARM 32-bit platforms
+>> should not break anything but I preferred to be cautious).
+>
+> I think this change will also require a patch enabling CONFIG_PCI_DOMAINS in
+> multi_v7_defconfig and iproc_defconfig at the very least?
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Perhaps the sub-arches that want this should select it. It is more a
+platform option/decision more than a controller option.
 
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- drivers/pci/controller/pcie-xilinx-nwl.c | 22 +++++-----------------
- 1 file changed, 5 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
-index 6a4bbb5..b0d13bb 100644
---- a/drivers/pci/controller/pcie-xilinx-nwl.c
-+++ b/drivers/pci/controller/pcie-xilinx-nwl.c
-@@ -546,24 +546,12 @@ static int nwl_pcie_init_msi_irq_domain(struct nwl_pcie *pcie)
- static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
--	struct device_node *node = dev->of_node;
--	struct device_node *legacy_intc_node;
--
--	legacy_intc_node = of_get_next_child(node, NULL);
--	if (!legacy_intc_node) {
--		dev_err(dev, "No legacy intc node found\n");
--		return -EINVAL;
--	}
- 
--	pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node,
--							PCI_NUM_INTX,
--							&legacy_domain_ops,
--							pcie);
--
--	if (!pcie->legacy_irq_domain) {
--		dev_err(dev, "failed to create IRQ domain\n");
--		return -ENOMEM;
--	}
-+	pcie->legacy_irq_domain = pci_host_alloc_intx_irqd(dev, pcie, false,
-+							   &legacy_domain_ops,
-+							   NULL);
-+	if (IS_ERR(pcie->legacy_irq_domain))
-+		return PTR_ERR(pcie->legacy_irq_domain);
- 
- 	raw_spin_lock_init(&pcie->leg_mask_lock);
- 	nwl_pcie_init_msi_irq_domain(pcie);
--- 
-1.9.1
+Rob
