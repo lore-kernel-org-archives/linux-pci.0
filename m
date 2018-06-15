@@ -1,53 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:44777 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752177AbeGADza (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jun 2018 23:55:30 -0400
-Received: by mail-pl0-f66.google.com with SMTP id m16-v6so6330047pls.11
-        for <linux-pci@vger.kernel.org>; Sat, 30 Jun 2018 20:55:30 -0700 (PDT)
-From: Shawn Guo <shawn.guo@linaro.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
-        Shawn Guo <shawn.guo@linaro.org>
-Subject: [PATCH v3 4/9] PCI: armada8k: Drop unnecessary root_bus_nr setting
-Date: Sun,  1 Jul 2018 11:54:46 +0800
-Message-Id: <1530417291-30495-5-git-send-email-shawn.guo@linaro.org>
-In-Reply-To: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
-References: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1529030875.28160.10.camel@mhfsdcap03>
+Subject: Re: [PATCH v3] PCI: mediatek: Add system pm support for MT2712
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Fri, 15 Jun 2018 10:47:55 +0800
+In-Reply-To: <CAHp75VcEp2kFO4hncvMS4Dh1AzvoFbrps7+FLmdk0RLyNTHz7g@mail.gmail.com>
+References: <1527822270-30280-1-git-send-email-honghui.zhang@mediatek.com>
+ <CAHp75VeBTmC=3nJ-t+OO9bp0mzJuTYsGBwi8fokT16bu2nE9RA@mail.gmail.com>
+ <1527850145.28160.6.camel@mhfsdcap03>
+ <CAHp75VcEp2kFO4hncvMS4Dh1AzvoFbrps7+FLmdk0RLyNTHz7g@mail.gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree <devicetree@vger.kernel.org>,
+ hongkun.cao@mediatek.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, xinping.qian@mediatek.com,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, yt.shen@mediatek.com,
+ Matthias Brugger <matthias.bgg@gmail.com>, ryder.lee@mediatek.com, "moderated
+ list:ARM/Mediatek SoC support" <linux-mediatek@lists.infradead.org>,
+ yong.wu@mediatek.com, Bjorn
+ Helgaas <bhelgaas@google.com>, yingjoe.chen@mediatek.com,
+ Arnd Bergmann <arnd.bergmann@linaro.org>,
+ Eddie Huang <eddie.huang@mediatek.com>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function dw_pcie_host_init() already initializes the root_bus_nr field
-of 'struct pcie_port', so the -1 assignment prior to calling
-dw_pcie_host_init() in platform specific driver is not really needed.
-Drop it.
+On Fri, 2018-06-01 at 13:52 +0300, Andy Shevchenko wrote:
+> On Fri, Jun 1, 2018 at 1:49 PM, Honghui Zhang
+> <honghui.zhang@mediatek.com> wrote:
+> > On Fri, 2018-06-01 at 13:17 +0300, Andy Shevchenko wrote:
+> >> On Fri, Jun 1, 2018 at 6:04 AM,  <honghui.zhang@mediatek.com> wrote:
+> >> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> >>
+> >> > +#ifdef CONFIG_PM_SLEEP
+> >> > +static int mtk_pcie_suspend_noirq(struct device *dev)
+> >>
+> >> __maybe_unused
+> >>
+> >
+> > Hi, Andy, thanks for your review.
+> > Bjorn had point this out that at:
+> > https://www.spinics.net/lists/arm-kernel/msg656774.html
+> 
+> Nice, one more maintainer with strong opinion here.
+> 
+> Arnd, that's what I mentioned as a split in opinions earlier.
+> Any new developer or even existing contributor would be now really
+> confusing since maintainers asked for two different approaches on the
+> same matter.
+> 
 
-Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-Acked-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
- drivers/pci/controller/dwc/pcie-armada8k.c | 1 -
- 1 file changed, 1 deletion(-)
+Hi, Arnd, Do you have any comments about this patch? Sorry I missed the
+previous discussion about which should be used for this approach.
 
-diff --git a/drivers/pci/controller/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
-index 072fd7ecc29f..0c389a30ef5d 100644
---- a/drivers/pci/controller/dwc/pcie-armada8k.c
-+++ b/drivers/pci/controller/dwc/pcie-armada8k.c
-@@ -172,7 +172,6 @@ static int armada8k_add_pcie_port(struct armada8k_pcie *pcie,
- 	struct device *dev = &pdev->dev;
- 	int ret;
- 
--	pp->root_bus_nr = -1;
- 	pp->ops = &armada8k_pcie_host_ops;
- 
- 	pp->irq = platform_get_irq(pdev, 0);
--- 
-1.9.1
+thanks.
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
