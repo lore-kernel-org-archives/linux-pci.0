@@ -1,166 +1,164 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 1 Jun 2018 08:49:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 1/7] PCI: Take all bridges into account when
- calculating bus numbers for extension
-Message-ID: <20180601134958.GB119987@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
- <20180528124756.78512-2-mika.westerberg@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180528124756.78512-2-mika.westerberg@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+To: davem@davemloft.net
+Cc: ryankao@realtek.com, hayeswang@realtek.com, hau@realtek.com,
+        hkallweit1@gmail.com, romieu@fr.zoreil.com, bhelgaas@google.com,
+        acelan.kao@canonical.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>
+Subject: [PATCH net-next v3 2/2] r8169: Reinstate ASPM Support
+Date: Fri, 15 Jun 2018 13:32:19 +0800
+Message-Id: <20180615053219.14053-2-kai.heng.feng@canonical.com>
+In-Reply-To: <20180615053219.14053-1-kai.heng.feng@canonical.com>
+References: <20180615053219.14053-1-kai.heng.feng@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 28, 2018 at 03:47:50PM +0300, Mika Westerberg wrote:
-> When distributing extra buses between hotplug bridges for future
-> extension we currently fail to take into account the fact that there
-> might be non-hotplug bridges on the bus after the hotplug bridges. In
-> this particular system we have following topology:
-> 
->   01:00.0 --+- 02:00.0 -- Thunderbolt host controller
->             +- 02:01.0 (HotPlug+)
->             \- 02:02.0 -- xHCI host controller
-> 
-> Now, pci_scan_child_bus_extend() is supposed to distribute remaining bus
-> numbers to the hotplug bridge at 02:01.0 but only after all bridges on
-> that bus have been been accounted for. Since we don't check upfront that
-> there will be another non-hotplug bridge after the hotplug bridge
-> 02:01.0 it will inadvertently extend over the bus space of the
-> non-hotplug bridge:
+On Intel Coffe Lake platforms, ASPM support in r8169 is the last missing
+puzzle to let CPU's Package C-State reaches PC8.
+Without ASPM support, the CPU cannot reach beyond PC3. PC8 can save
+additional ~3W in comparison with PC3 on my testing platform, Dell G3
+3779.
 
-Just to make sure I understand this correctly, I think this situation
-arises when we hot-add 01:00.0.  The port above 01:00.0 was probably
-programmed by the BIOS like this:
+This is based on the work from Chunhao Lin <hau@realtek.com>.
 
-  pci 0000:00:1b.0: PCI bridge to [bus 01-39]
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+---
+v3:
+- Change commit message wording.
+- Rename the function to rtl_hw_aspm_clkreq_enable().
 
-01:00.0 is the only device on bus 01, so we give it everything that's
-left:
+v2:
+- Remove module parameter.
+- Remove pci_disable_link_state().
 
->   pci 0000:01:00.0: PCI bridge to [bus 02-39]
->   ...
+ drivers/net/ethernet/realtek/r8169.c | 40 +++++++++++++++++++---------
+ 1 file changed, 27 insertions(+), 13 deletions(-)
 
-There are three bridges on bus 02, so we need to distribute the
-remaining [bus 03-39] range among them.  Previously we only assigned
-bus numbers to "is_hotplug_bridge" devices (basically those with
-PCI_EXP_SLTCAP_HPC or ACPI hotplug methods).
-
-In this case, the only one with "is_hotplug_bridge" is 02:01.0.
-
-We looked at 02:00.0, which is a bridge but doesn't have
-PCI_EXP_SLTCAP_HPC set, so we gave it one secondary bus number:
-
-  pci 0000:02:00.0: PCI bridge to [bus 03]
-
-Then we looked at 02:01.0, which *does* have PCI_EXP_SLTCAP_HPC, and
-we know it's the only "is_hotplug_bridge", so we gave it the rest:
-
-  pci 0000:02:01.0: PCI bridge to [bus 04-39]
-
-Then we get to 02:02.0.  There are no bus numbers available, so we
-can't reach anything below it.
-
-And this patch fixes it by assigning at least one bus number to every
-bridge, even if it doesn't have PCI_EXP_SLTCAP_HPC?
-
-Is that right?
-
-(The messages we print are sort of weird because we claim to scan bus
-3a, but config accesses to 3a will never even reach the 01:00.0
-bridge.  But that's a problem for another day.)
-
->   pci_bus 0000:04: [bus 04-39] extended by 0x35
->   pci_bus 0000:04: bus scan returning with max=39
->   pci_bus 0000:04: busn_res: [bus 04-39] end is updated to 39
->   pci 0000:02:02.0: scanning [bus 00-00] behind bridge, pass 1
->   pci_bus 0000:3a: scanning bus
->   pci_bus 0000:3a: bus scan returning with max=3a
->   pci_bus 0000:3a: busn_res: [bus 3a] end is updated to 3a
->   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:02 [bus 02-39]
->   pci_bus 0000:3a: [bus 3a] partially hidden behind bridge 0000:01 [bus 01-39]
->   pci_bus 0000:02: bus scan returning with max=3a
->   pci_bus 0000:02: busn_res: [bus 02-39] end can not be updated to 3a
-> 
-> Resulting 'lspci -t' output looks like this:
-> 
->   +-1b.0-[01-39]----00.0-[02-3a]--+-00.0-[03]----00.0
->                              ^^   +-01.0-[04-39]--
->                                   \-02.0-[3a]----00.0
->                                           ^^
-> The xHCI host controller (3a:00.0) behind downstream bridge at 02:02.0
-> is not usable anymore.
-> 
-> To fix this reserve at least one bus for each bridge during scanning of
-> already configured bridges. Then we use this information in the second
-> scan to correct the available extra bus space for hotplug bridges.
-> 
-> After this change the 'lspci -t' output is what is expected:
-> 
->   +-1b.0-[01-39]----00.0-[02-39]--+-00.0-[03]----00.0
->                                   +-01.0-[04-38]--
->                                   \-02.0-[39]----00.0
-> 
-> Fixes: 1c02ea810065 ("PCI: Distribute available buses to hotplug-capable bridges")
-> Reported-by: Mario Limonciello <mario.limonciello@dell.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Cc: stable@vger.kernel.org
-> ---
->  drivers/pci/probe.c | 15 ++++++++++++---
->  1 file changed, 12 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index d14e8f827d53..8f384e7ca2c2 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2634,7 +2634,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
->  	for_each_pci_bridge(dev, bus) {
->  		cmax = max;
->  		max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
-> -		used_buses += cmax - max;
-> +		/*
-> +		 * Reserve one bus for each bridge now to avoid
-> +		 * extending hotplug bridges too much during the second
-> +		 * scan below.
-> +		 */
-> +		used_buses++;
-> +		if (cmax - max > 1)
-> +			used_buses += cmax - max - 1;
->  	}
->  
->  	/* Scan bridges that need to be reconfigured */
-> @@ -2657,12 +2664,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
->  			 * bridges if any.
->  			 */
->  			buses = available_buses / hotplug_bridges;
-> -			buses = min(buses, available_buses - used_buses);
-> +			buses = min(buses, available_buses - used_buses + 1);
->  		}
->  
->  		cmax = max;
->  		max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
-> -		used_buses += max - cmax;
-> +		/* One bus is already accounted so don't add it again */
-> +		if (max - cmax > 1)
-> +			used_buses += max - cmax - 1;
->  	}
->  
->  	/*
-> -- 
-> 2.17.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
+index 9b55ce513a36..269ac7561368 100644
+--- a/drivers/net/ethernet/realtek/r8169.c
++++ b/drivers/net/ethernet/realtek/r8169.c
+@@ -5289,6 +5289,17 @@ static void rtl_pcie_state_l2l3_enable(struct rtl8169_private *tp, bool enable)
+ 	RTL_W8(tp, Config3, data);
+ }
+ 
++static void rtl_hw_aspm_clkreq_enable(struct rtl8169_private *tp, bool enable)
++{
++	if (enable) {
++		RTL_W8(tp, Config2, RTL_R8(tp, Config2) | ClkReqEn);
++		RTL_W8(tp, Config5, RTL_R8(tp, Config5) | ASPM_en);
++	} else {
++		RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
++		RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
++	}
++}
++
+ static void rtl_hw_start_8168bb(struct rtl8169_private *tp)
+ {
+ 	RTL_W8(tp, Config3, RTL_R8(tp, Config3) & ~Beacon_en);
+@@ -5645,9 +5656,9 @@ static void rtl_hw_start_8168g_1(struct rtl8169_private *tp)
+ 	rtl_hw_start_8168g(tp);
+ 
+ 	/* disable aspm and clock request before access ephy */
+-	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+-	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
++	rtl_hw_aspm_clkreq_enable(tp, false);
+ 	rtl_ephy_init(tp, e_info_8168g_1, ARRAY_SIZE(e_info_8168g_1));
++	rtl_hw_aspm_clkreq_enable(tp, true);
+ }
+ 
+ static void rtl_hw_start_8168g_2(struct rtl8169_private *tp)
+@@ -5680,9 +5691,9 @@ static void rtl_hw_start_8411_2(struct rtl8169_private *tp)
+ 	rtl_hw_start_8168g(tp);
+ 
+ 	/* disable aspm and clock request before access ephy */
+-	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+-	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
++	rtl_hw_aspm_clkreq_enable(tp, false);
+ 	rtl_ephy_init(tp, e_info_8411_2, ARRAY_SIZE(e_info_8411_2));
++	rtl_hw_aspm_clkreq_enable(tp, true);
+ }
+ 
+ static void rtl_hw_start_8168h_1(struct rtl8169_private *tp)
+@@ -5699,8 +5710,7 @@ static void rtl_hw_start_8168h_1(struct rtl8169_private *tp)
+ 	};
+ 
+ 	/* disable aspm and clock request before access ephy */
+-	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+-	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
++	rtl_hw_aspm_clkreq_enable(tp, false);
+ 	rtl_ephy_init(tp, e_info_8168h_1, ARRAY_SIZE(e_info_8168h_1));
+ 
+ 	RTL_W32(tp, TxConfig, RTL_R32(tp, TxConfig) | TXCFG_AUTO_FIFO);
+@@ -5779,6 +5789,8 @@ static void rtl_hw_start_8168h_1(struct rtl8169_private *tp)
+ 	r8168_mac_ocp_write(tp, 0xe63e, 0x0000);
+ 	r8168_mac_ocp_write(tp, 0xc094, 0x0000);
+ 	r8168_mac_ocp_write(tp, 0xc09e, 0x0000);
++
++	rtl_hw_aspm_clkreq_enable(tp, true);
+ }
+ 
+ static void rtl_hw_start_8168ep(struct rtl8169_private *tp)
+@@ -5830,11 +5842,12 @@ static void rtl_hw_start_8168ep_1(struct rtl8169_private *tp)
+ 	};
+ 
+ 	/* disable aspm and clock request before access ephy */
+-	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+-	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
++	rtl_hw_aspm_clkreq_enable(tp, false);
+ 	rtl_ephy_init(tp, e_info_8168ep_1, ARRAY_SIZE(e_info_8168ep_1));
+ 
+ 	rtl_hw_start_8168ep(tp);
++
++	rtl_hw_aspm_clkreq_enable(tp, true);
+ }
+ 
+ static void rtl_hw_start_8168ep_2(struct rtl8169_private *tp)
+@@ -5846,14 +5859,15 @@ static void rtl_hw_start_8168ep_2(struct rtl8169_private *tp)
+ 	};
+ 
+ 	/* disable aspm and clock request before access ephy */
+-	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+-	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
++	rtl_hw_aspm_clkreq_enable(tp, false);
+ 	rtl_ephy_init(tp, e_info_8168ep_2, ARRAY_SIZE(e_info_8168ep_2));
+ 
+ 	rtl_hw_start_8168ep(tp);
+ 
+ 	RTL_W8(tp, DLLPR, RTL_R8(tp, DLLPR) & ~PFM_EN);
+ 	RTL_W8(tp, MISC_1, RTL_R8(tp, MISC_1) & ~PFM_D3COLD_EN);
++
++	rtl_hw_aspm_clkreq_enable(tp, true);
+ }
+ 
+ static void rtl_hw_start_8168ep_3(struct rtl8169_private *tp)
+@@ -5867,8 +5881,7 @@ static void rtl_hw_start_8168ep_3(struct rtl8169_private *tp)
+ 	};
+ 
+ 	/* disable aspm and clock request before access ephy */
+-	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
+-	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
++	rtl_hw_aspm_clkreq_enable(tp, false);
+ 	rtl_ephy_init(tp, e_info_8168ep_3, ARRAY_SIZE(e_info_8168ep_3));
+ 
+ 	rtl_hw_start_8168ep(tp);
+@@ -5888,6 +5901,8 @@ static void rtl_hw_start_8168ep_3(struct rtl8169_private *tp)
+ 	data = r8168_mac_ocp_read(tp, 0xe860);
+ 	data |= 0x0080;
+ 	r8168_mac_ocp_write(tp, 0xe860, data);
++
++	rtl_hw_aspm_clkreq_enable(tp, true);
+ }
+ 
+ static void rtl_hw_start_8168(struct rtl8169_private *tp)
+@@ -7646,7 +7661,6 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	mii->reg_num_mask = 0x1f;
+ 	mii->supports_gmii = cfg->has_gmii;
+ 
+-
+ 	/* enable device (incl. PCI PM wakeup and hotplug setup) */
+ 	rc = pcim_enable_device(pdev);
+ 	if (rc < 0) {
+-- 
+2.17.0
