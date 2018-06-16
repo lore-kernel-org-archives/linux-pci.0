@@ -1,52 +1,51 @@
-Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 12 Jun 2018 14:00:40 +0530
-From: poza@codeaurora.org
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH v2 1/5] PCI: iproc: Activate PAXC bridge quirk for more
- devices
-In-Reply-To: <1528762867-16823-2-git-send-email-ray.jui@broadcom.com>
-References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
- <1528762867-16823-2-git-send-email-ray.jui@broadcom.com>
-Message-ID: <8c6d5faccee6723ccb635f538105f1cc@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:41297 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932871AbeFPTd0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:33:26 -0400
+Message-Id: <f0917c7e8e6fba0c41f0e4d9ff33869394eae82c.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 05/32] PCI: pciehp: Drop unnecessary NULL pointer check
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-06-12 05:51, Ray Jui wrote:
-> Activate PAXC bridge quirk for more PAXC based PCIe root complex with
-> the following PCIe device ID:
-> 0xd750, 0xd802, 0xd804
-> 
-> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-> ---
->  drivers/pci/quirks.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 2990ad1..47dfea0 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2195,6 +2195,9 @@ static void quirk_paxc_bridge(struct pci_dev 
-> *pdev)
->  }
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16cd, 
-> quirk_paxc_bridge);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0, 
-> quirk_paxc_bridge);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd750, 
-> quirk_paxc_bridge);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802, 
-> quirk_paxc_bridge);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804, 
-> quirk_paxc_bridge);
->  #endif
-> 
->  /* Originally in EDAC sources for i82875P:
+pciehp_disable_slot() checks if the ctrl attribute of the slot is NULL
+and bails out if so.  However the function is not called prior to the
+attribute being set in pcie_init_slot(), and pcie_init_slot() is not
+called if ctrl is NULL.  So the check is unnecessary.  Drop it.
 
-Reviewed-by: Oza Pawandeep <poza@codeaurora.org>
+It has been present ever since the driver was introduced in 2004, but it
+was already unnecessary back then:
+https://git.kernel.org/tglx/history/c/c16b4b14d980
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index c684faa43387..4a4639b7a479 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -412,9 +412,6 @@ int pciehp_disable_slot(struct slot *p_slot)
+ 	u8 getstatus = 0;
+ 	struct controller *ctrl = p_slot->ctrl;
+ 
+-	if (!p_slot->ctrl)
+-		return 1;
+-
+ 	if (POWER_CTRL(p_slot->ctrl)) {
+ 		pciehp_get_power_status(p_slot, &getstatus);
+ 		if (!getstatus) {
+-- 
+2.17.1
