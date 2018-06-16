@@ -1,249 +1,394 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sat, 2 Jun 2018 00:46:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 4/7] ACPI/hotplug/PCI: Do not scan all bridges when
- native PCIe hotplug is used
-Message-ID: <20180602054659.GB187972@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
- <20180529160155.1738-1-mika.westerberg@linux.intel.com>
- <20180601213505.GA199634@bhelgaas-glaptop.roam.corp.google.com>
- <20180601214818.GK15419@lahna.fi.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180601214818.GK15419@lahna.fi.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:34041 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933004AbeFPTi0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:38:26 -0400
+Message-Id: <ad8ef05242c00ce95aae64ca983cb3152cc8eb70.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 17/32] PCI: pciehp: Enable/disable exclusively from IRQ thread
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 02, 2018 at 12:48:18AM +0300, Mika Westerberg wrote:
-> On Fri, Jun 01, 2018 at 04:35:05PM -0500, Bjorn Helgaas wrote:
-> > On Tue, May 29, 2018 at 07:01:55PM +0300, Mika Westerberg wrote:
-> > > When a system is using native PCIe hotplug for Thunderbolt it will be
-> > > only present in the system when there is a device connected. This pretty
-> > > much follows the BIOS assisted hotplug behaviour.
-> > > ...
-> > 
-> > > +static void acpiphp_native_scan_bridge(struct pci_dev *bridge)
-> > > +{
-> > > +	struct pci_bus *bus = bridge->subordinate;
-> > > +	struct pci_dev *dev;
-> > > +	int max;
-> > > +
-> > > +	if (!bus)
-> > > +		return;
-> > > +
-> > > +	max = bus->busn_res.start;
-> > > +	/* Scan already configured non-hotplug bridges */
-> > > +	for_each_pci_bridge(dev, bus) {
-> > > +		if (!dev->is_hotplug_bridge)
-> > 
-> > Here we test "dev->is_hotplug_bridge" and below we use
-> > "hotplug_is_native(bus->self)".  Is the difference significant, or
-> > should we use hotplug_is_native() here as well?
-> > 
-> > If we do need to use is_hotplug_bridge here, maybe a comment about the
-> > difference would be helpful.
-> 
-> I think here hotplug_is_native() would work as well. The idea is
-> that we need to avoid scanning bridges that are handled by pciehp
-> (or shpchp).
+Besides the IRQ thread, there are several other places in the driver
+which enable or disable the slot:
 
-I made that change on my branch.  That way we won't have to worry
-about the cases where we set is_hotplug_bridge based on some ACPI
-methods.  I think those would be bugs because I think we *do* want
-acpiphp to scan them, and if we tested "!dev->is_hotplug_bridge", we
-would not scan them.
+- pciehp_probe() enables the slot if it's occupied and the pciehp_force
+  module parameter is used.
 
-Here's what's on my branch:
+- pciehp_resume() enables or disables the slot after system sleep.
 
-commit eb4c82c49180cf46dd7f9ed15ea96d1da190fea6
-Author: Mika Westerberg <mika.westerberg@linux.intel.com>
-Date:   Tue May 29 19:01:55 2018 +0300
+- pciehp_queue_pushbutton_work() enables or disables the slot after the
+  5 second delay following an Attention Button press.
 
-    ACPI / hotplug / PCI: Don't scan bridges managed by native hotplug
-    
-    When acpiphp re-enumerates a PCI hierarchy because of an ACPI Notify()
-    event, we should skip bridges managed by native hotplug (pciehp or shpchp).
-    We don't want to scan below a native hotplug bridge until the hotplug
-    controller generates a hot-add event.
-    
-    A typical scenario is a Root Port leading to a Thunderbolt host router that
-    remains powered off until something is connected to it.  See [1] for the
-    lspci details.
-    
-      1. Before something is connected, only the Root Port exists.  It has
-         PCI_EXP_SLTCAP_HPC set and pciehp is responsible for hotplug:
-    
-           00:1b.0 Root Port (HotPlug+)
-    
-      2. When a USB-C or Thunderbolt device is connected, the Switch in the
-         Thunderbolt host router is powered up, the Root Port signals a hotplug
-         add event and pciehp enumerates the Switch:
-    
-           01:00.0 Switch Upstream Port   to [bus 02-39]
-           02:00.0 Switch Downstream Port to [bus 03]    (HotPlug-, to NHI)
-           02:01.0 Switch Downstream Port to [bus 04-38] (HotPlug+, to Thunderbolt connector)
-           02:02.0 Switch Downstream Port to [bus 39]    (HotPlug-, to xHCI)
-    
-         The 02:00.0 and 02:02.0 Ports lead to Endpoints that are not powered
-         up yet.  The Ports have PCI_EXP_SLTCAP_HPC cleared, so pciehp doesn't
-         handle hotplug for them and we assign minimal resources to them.
-    
-         The 02:01.0 Port has PCI_EXP_SLTCAP_HPC set, so pciehp handles native
-         hotplug events for it.
-    
-      3. The BIOS powers up the xHCI controller.  If a Thunderbolt device was
-         connected (not just a USB-C device), it also powers up the NHI.  Then
-         it sends an ACPI Notify() to the Root Port, and acpiphp enumerates the
-         new device(s):
-    
-           03:00.0 Thunderbolt Host Controller (NHI) Endpoint
-           39:00.0 xHCI Endpoint
-    
-      4. If a Thunderbolt device was connected, the host router firmware uses
-         the NHI to set up Thunderbolt tunnels and triggers a native hotplug
-         event (via 02:01.0 in this example).  Then pciehp enumerates the new
-         Thunderbolt devices:
-    
-           04:00.0 Switch Upstream Port   to [bus 05-38]
-           05:01.0 Switch Downstream Port to [bus 06-09] (HotPlug-)
-           05:04.0 Switch Downstream Port to [bus 0a-38] (HotPlug+)
-    
-         In this example, 05:01.0 leads to another Switch and some NICs.  This
-         subtree is static, so 05:01.0 doesn't support hotplug and has
-         PCI_EXP_SLTCAP_HPC cleared.
-    
-    In step 3, acpiphp previously enumerated everything below the Root Port,
-    including things below the 02:01.0 Port.  We don't want that because pciehp
-    expects to manage hotplug below that Port, and firmware on the host router
-    may be in the middle of configuring its Link so it may not be ready yet.
-    
-    To make this work better with the native PCIe (pciehp) and standard PCI
-    (shpchp) hotplug drivers, we let them handle all slot management and
-    resource allocation for hotplug bridges and restrict ACPI hotplug to
-    non-hotplug bridges.
-    
-    [1] https://bugzilla.kernel.org/show_bug.cgi?id=199581#c5
-    Link: https://lkml.kernel.org/r/20180529160155.1738-1-mika.westerberg@linux.intel.com
-    Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-    [bhelgaas: changelog, use hotplug_is_native() instead of
-    dev->is_hotplug_bridge]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-    Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+- pciehp_sysfs_enable_slot() and pciehp_sysfs_disable_slot() enable or
+  disable the slot on sysfs write.
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index b45b375c0e6c..bc9e19642567 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -287,11 +287,12 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
- 	/*
- 	 * Expose slots to user space for functions that have _EJ0 or _RMV or
- 	 * are located in dock stations.  Do not expose them for devices handled
--	 * by the native PCIe hotplug (PCIeHP), becuase that code is supposed to
--	 * expose slots to user space in those cases.
-+	 * by the native PCIe hotplug (PCIeHP) or standard PCI hotplug
-+	 * (SHPCHP), because that code is supposed to expose slots to user
-+	 * space in those cases.
- 	 */
- 	if ((acpi_pci_check_ejectable(pbus, handle) || is_dock_device(adev))
--	    && !(pdev && pdev->is_hotplug_bridge && pciehp_is_native(pdev))) {
-+	    && !(pdev && hotplug_is_native(pdev))) {
- 		unsigned long long sun;
- 		int retval;
+This requires locking and complicates pciehp's state machine.
+
+A simplification can be achieved by enabling and disabling the slot
+exclusively from the IRQ thread.
+
+Amend the functions listed above to request slot enable/disablement from
+the IRQ thread by either synthesizing a Presence Detect Changed event or,
+in the case of a disable user request (via sysfs or an Attention Button
+press), submitting a newly introduced force disable request.  The latter
+is needed because the slot shall be forced off despite being occupied.
+For this force disable request, avoid colliding with Slot Status register
+bits by using a bit number greater than 16.
+
+For synchronous execution of requests (on sysfs write), wait for the
+request to finish and retrieve the result.  There can only ever be one
+sysfs write in flight due to the locking in kernfs_fop_write(), hence
+there is no risk of returning the result of a different sysfs request to
+user space.
+
+The POWERON_STATE and POWEROFF_STATE is now no longer entered by the
+above-listed functions, but solely by the IRQ thread when it begins a
+power transition.  Afterwards, it moves to STATIC_STATE.  The same
+applies to canceling the Attention Button work, it likewise becomes an
+IRQ thread only operation.
+
+An immediate consequence is that the POWERON_STATE and POWEROFF_STATE is
+never observed by the IRQ thread itself, only by functions called in a
+different context, such as pciehp_sysfs_enable_slot().  So remove
+handling of these states from pciehp_handle_button_press() and
+pciehp_handle_link_change() which are exclusively called from the IRQ
+thread.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pciehp.h      | 18 ++++++
+ drivers/pci/hotplug/pciehp_core.c | 22 +++++--
+ drivers/pci/hotplug/pciehp_ctrl.c | 99 +++++++++++++++----------------
+ drivers/pci/hotplug/pciehp_hpc.c  | 14 ++++-
+ 4 files changed, 93 insertions(+), 60 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 1ba335d6563a..ed42dde5f9ac 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -105,6 +105,9 @@ struct slot {
+  *	that has not yet been cleared by the user
+  * @pending_events: used by the IRQ handler to save events retrieved from the
+  *	Slot Status register for later consumption by the IRQ thread
++ * @request_result: result of last user request submitted to the IRQ thread
++ * @requester: wait queue to wake up on completion of user request,
++ *	used for synchronous slot enable/disable request via sysfs
+  */
+ struct controller {
+ 	struct mutex ctrl_lock;
+@@ -120,6 +123,8 @@ struct controller {
+ 	unsigned int notification_enabled:1;
+ 	unsigned int power_fault_detected;
+ 	atomic_t pending_events;
++	int request_result;
++	wait_queue_head_t requester;
+ };
  
-@@ -430,6 +431,29 @@ static int acpiphp_rescan_slot(struct acpiphp_slot *slot)
- 	return pci_scan_slot(slot->bus, PCI_DEVFN(slot->device, 0));
+ /**
+@@ -141,6 +146,17 @@ struct controller {
+ #define POWEROFF_STATE			4
+ #define ON_STATE			5
+ 
++/**
++ * DOC: Flags to request an action from the IRQ thread
++ *
++ * These are stored together with events read from the Slot Status register,
++ * hence must be greater than its 16-bit width.
++ *
++ * %DISABLE_SLOT: Disable the slot in response to a user request via sysfs or
++ *	an Attention Button press after the 5 second delay
++ */
++#define DISABLE_SLOT		(1 << 16)
++
+ #define ATTN_BUTTN(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_ABP)
+ #define POWER_CTRL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_PCP)
+ #define MRL_SENS(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_MRLSP)
+@@ -153,7 +169,9 @@ struct controller {
+ 
+ int pciehp_sysfs_enable_slot(struct slot *slot);
+ int pciehp_sysfs_disable_slot(struct slot *slot);
++void pciehp_request(struct controller *ctrl, int action);
+ void pciehp_handle_button_press(struct slot *slot);
++void pciehp_handle_disable_request(struct slot *slot);
+ void pciehp_handle_link_change(struct slot *slot);
+ void pciehp_handle_presence_change(struct slot *slot);
+ int pciehp_configure_device(struct slot *p_slot);
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index cde32e137f6c..b11f0db0695f 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -240,13 +240,19 @@ static int pciehp_probe(struct pcie_device *dev)
+ 	}
+ 
+ 	/* Check if slot is occupied */
++	mutex_lock(&slot->lock);
+ 	pciehp_get_adapter_status(slot, &occupied);
+ 	pciehp_get_power_status(slot, &poweron);
+-	if (occupied && pciehp_force)
+-		pciehp_enable_slot(slot);
++	if (pciehp_force &&
++	    ((occupied && (slot->state == OFF_STATE ||
++			   slot->state == BLINKINGON_STATE)) ||
++	     (!occupied && (slot->state == ON_STATE ||
++			    slot->state == BLINKINGOFF_STATE))))
++		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
+ 	/* If empty slot's power status is on, turn power off */
+ 	if (!occupied && poweron && POWER_CTRL(ctrl))
+ 		pciehp_power_off_slot(slot);
++	mutex_unlock(&slot->lock);
+ 
+ 	return 0;
+ 
+@@ -290,10 +296,14 @@ static int pciehp_resume(struct pcie_device *dev)
+ 
+ 	/* Check if slot is occupied */
+ 	pciehp_get_adapter_status(slot, &status);
+-	if (status)
+-		pciehp_enable_slot(slot);
+-	else
+-		pciehp_disable_slot(slot);
++	mutex_lock(&slot->lock);
++	if ((status && (slot->state == OFF_STATE ||
++			slot->state == BLINKINGON_STATE)) ||
++	    (!status && (slot->state == ON_STATE ||
++			 slot->state == BLINKINGOFF_STATE)))
++		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
++	mutex_unlock(&slot->lock);
++
+ 	return 0;
+ }
+ #endif /* PM */
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 627e846df802..70bad847a450 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -122,22 +122,26 @@ static void remove_board(struct slot *p_slot)
+ 	pciehp_green_led_off(p_slot);
  }
  
-+static void acpiphp_native_scan_bridge(struct pci_dev *bridge)
++void pciehp_request(struct controller *ctrl, int action)
 +{
-+	struct pci_bus *bus = bridge->subordinate;
-+	struct pci_dev *dev;
-+	int max;
-+
-+	if (!bus)
-+		return;
-+
-+	max = bus->busn_res.start;
-+	/* Scan already configured non-hotplug bridges */
-+	for_each_pci_bridge(dev, bus) {
-+		if (!hotplug_is_native(dev))
-+			max = pci_scan_bridge(bus, dev, max, 0);
-+	}
-+
-+	/* Scan non-hotplug bridges that need to be reconfigured */
-+	for_each_pci_bridge(dev, bus) {
-+		if (!hotplug_is_native(dev))
-+			max = pci_scan_bridge(bus, dev, max, 1);
-+	}
++	atomic_or(action, &ctrl->pending_events);
++	if (!pciehp_poll_mode)
++		irq_wake_thread(ctrl->pcie->irq, ctrl);
 +}
 +
- /**
-  * enable_slot - enable, configure a slot
-  * @slot: slot to be enabled
-@@ -442,25 +466,42 @@ static void enable_slot(struct acpiphp_slot *slot)
- 	struct pci_dev *dev;
- 	struct pci_bus *bus = slot->bus;
- 	struct acpiphp_func *func;
--	int max, pass;
--	LIST_HEAD(add_list);
+ void pciehp_queue_pushbutton_work(struct work_struct *work)
+ {
+ 	struct slot *p_slot = container_of(work, struct slot, work.work);
++	struct controller *ctrl = p_slot->ctrl;
  
--	acpiphp_rescan_slot(slot);
--	max = acpiphp_max_busnr(bus);
--	for (pass = 0; pass < 2; pass++) {
-+	if (bus->self && hotplug_is_native(bus->self)) {
-+		/*
-+		 * If native hotplug is used, it will take care of hotplug
-+		 * slot management and resource allocation for hotplug
-+		 * bridges. However, ACPI hotplug may still be used for
-+		 * non-hotplug bridges to bring in additional devices such
-+		 * as a Thunderbolt host controller.
-+		 */
- 		for_each_pci_bridge(dev, bus) {
--			if (PCI_SLOT(dev->devfn) != slot->device)
--				continue;
--
--			max = pci_scan_bridge(bus, dev, max, pass);
--			if (pass && dev->subordinate) {
--				check_hotplug_bridge(slot, dev);
--				pcibios_resource_survey_bus(dev->subordinate);
--				__pci_bus_size_bridges(dev->subordinate, &add_list);
-+			if (PCI_SLOT(dev->devfn) == slot->device)
-+				acpiphp_native_scan_bridge(dev);
-+		}
-+		pci_assign_unassigned_bridge_resources(bus->self);
-+	} else {
-+		LIST_HEAD(add_list);
-+		int max, pass;
-+
-+		acpiphp_rescan_slot(slot);
-+		max = acpiphp_max_busnr(bus);
-+		for (pass = 0; pass < 2; pass++) {
-+			for_each_pci_bridge(dev, bus) {
-+				if (PCI_SLOT(dev->devfn) != slot->device)
-+					continue;
-+
-+				max = pci_scan_bridge(bus, dev, max, pass);
-+				if (pass && dev->subordinate) {
-+					check_hotplug_bridge(slot, dev);
-+					pcibios_resource_survey_bus(dev->subordinate);
-+					__pci_bus_size_bridges(dev->subordinate,
-+							       &add_list);
-+				}
- 			}
- 		}
-+		__pci_bus_assign_resources(bus, &add_list, NULL);
+ 	mutex_lock(&p_slot->lock);
+ 	switch (p_slot->state) {
+ 	case BLINKINGOFF_STATE:
+-		p_slot->state = POWEROFF_STATE;
+-		mutex_unlock(&p_slot->lock);
+-		pciehp_disable_slot(p_slot);
+-		return;
++		pciehp_request(ctrl, DISABLE_SLOT);
++		break;
+ 	case BLINKINGON_STATE:
+-		p_slot->state = POWERON_STATE;
+-		mutex_unlock(&p_slot->lock);
+-		pciehp_enable_slot(p_slot);
+-		return;
++		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
++		break;
+ 	default:
+ 		break;
  	}
--	__pci_bus_assign_resources(bus, &add_list, NULL);
+@@ -186,16 +190,6 @@ void pciehp_handle_button_press(struct slot *p_slot)
+ 		ctrl_info(ctrl, "Slot(%s): Action canceled due to button press\n",
+ 			  slot_name(p_slot));
+ 		break;
+-	case POWEROFF_STATE:
+-	case POWERON_STATE:
+-		/*
+-		 * Ignore if the slot is on power-on or power-off state;
+-		 * this means that the previous attention button action
+-		 * to hot-add or hot-remove is undergoing
+-		 */
+-		ctrl_info(ctrl, "Slot(%s): Button ignored\n",
+-			  slot_name(p_slot));
+-		break;
+ 	default:
+ 		ctrl_err(ctrl, "Slot(%s): Ignoring invalid state %#x\n",
+ 			 slot_name(p_slot), p_slot->state);
+@@ -204,6 +198,22 @@ void pciehp_handle_button_press(struct slot *p_slot)
+ 	mutex_unlock(&p_slot->lock);
+ }
  
- 	acpiphp_sanitize_bus(bus);
- 	pcie_bus_configure_settings(bus);
++void pciehp_handle_disable_request(struct slot *slot)
++{
++	struct controller *ctrl = slot->ctrl;
++
++	mutex_lock(&slot->lock);
++	switch (slot->state) {
++	case BLINKINGON_STATE:
++	case BLINKINGOFF_STATE:
++		cancel_delayed_work(&slot->work);
++	}
++	slot->state = POWEROFF_STATE;
++	mutex_unlock(&slot->lock);
++
++	ctrl->request_result = pciehp_disable_slot(slot);
++}
++
+ void pciehp_handle_link_change(struct slot *p_slot)
+ {
+ 	struct controller *ctrl = p_slot->ctrl;
+@@ -232,32 +242,6 @@ void pciehp_handle_link_change(struct slot *p_slot)
+ 		}
+ 		return;
+ 		break;
+-	case POWERON_STATE:
+-		if (link_active) {
+-			ctrl_info(ctrl, "Slot(%s): Link Up event ignored; already powering on\n",
+-				  slot_name(p_slot));
+-		} else {
+-			p_slot->state = POWEROFF_STATE;
+-			mutex_unlock(&p_slot->lock);
+-			ctrl_info(ctrl, "Slot(%s): Link Down event queued; currently getting powered on\n",
+-				  slot_name(p_slot));
+-			pciehp_disable_slot(p_slot);
+-			return;
+-		}
+-		break;
+-	case POWEROFF_STATE:
+-		if (link_active) {
+-			p_slot->state = POWERON_STATE;
+-			mutex_unlock(&p_slot->lock);
+-			ctrl_info(ctrl, "Slot(%s): Link Up event queued; currently getting powered off\n",
+-				  slot_name(p_slot));
+-			pciehp_enable_slot(p_slot);
+-			return;
+-		} else {
+-			ctrl_info(ctrl, "Slot(%s): Link Down event ignored; already powering off\n",
+-				  slot_name(p_slot));
+-		}
+-		break;
+ 	default:
+ 		ctrl_err(ctrl, "Slot(%s): Ignoring invalid state %#x\n",
+ 			 slot_name(p_slot), p_slot->state);
+@@ -272,6 +256,12 @@ void pciehp_handle_presence_change(struct slot *slot)
+ 	u8 present;
+ 
+ 	mutex_lock(&slot->lock);
++	switch (slot->state) {
++	case BLINKINGON_STATE:
++	case BLINKINGOFF_STATE:
++		cancel_delayed_work(&slot->work);
++	}
++
+ 	pciehp_get_adapter_status(slot, &present);
+ 	ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
+ 		  present ? "" : "not ");
+@@ -279,7 +269,7 @@ void pciehp_handle_presence_change(struct slot *slot)
+ 	if (present) {
+ 		slot->state = POWERON_STATE;
+ 		mutex_unlock(&slot->lock);
+-		pciehp_enable_slot(slot);
++		ctrl->request_result = pciehp_enable_slot(slot);
+ 	} else {
+ 		slot->state = POWEROFF_STATE;
+ 		mutex_unlock(&slot->lock);
+@@ -383,11 +373,17 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
+ 	mutex_lock(&p_slot->lock);
+ 	switch (p_slot->state) {
+ 	case BLINKINGON_STATE:
+-		cancel_delayed_work(&p_slot->work);
+ 	case OFF_STATE:
+-		p_slot->state = POWERON_STATE;
+ 		mutex_unlock(&p_slot->lock);
+-		return pciehp_enable_slot(p_slot);
++		/*
++		 * The IRQ thread becomes a no-op if the user pulls out the
++		 * card before the thread wakes up, so initialize to -ENODEV.
++		 */
++		ctrl->request_result = -ENODEV;
++		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
++		wait_event(ctrl->requester,
++			   !atomic_read(&ctrl->pending_events));
++		return ctrl->request_result;
+ 	case POWERON_STATE:
+ 		ctrl_info(ctrl, "Slot(%s): Already in powering on state\n",
+ 			  slot_name(p_slot));
+@@ -415,11 +411,12 @@ int pciehp_sysfs_disable_slot(struct slot *p_slot)
+ 	mutex_lock(&p_slot->lock);
+ 	switch (p_slot->state) {
+ 	case BLINKINGOFF_STATE:
+-		cancel_delayed_work(&p_slot->work);
+ 	case ON_STATE:
+-		p_slot->state = POWEROFF_STATE;
+ 		mutex_unlock(&p_slot->lock);
+-		return pciehp_disable_slot(p_slot);
++		pciehp_request(ctrl, DISABLE_SLOT);
++		wait_event(ctrl->requester,
++			   !atomic_read(&ctrl->pending_events));
++		return ctrl->request_result;
+ 	case POWEROFF_STATE:
+ 		ctrl_info(ctrl, "Slot(%s): Already in powering off state\n",
+ 			  slot_name(p_slot));
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 564a904d7fa9..9aea0bdbb019 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -595,11 +595,16 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+ 	}
+ 
+ 	/*
++	 * Disable requests have higher priority than Presence Detect Changed
++	 * or Data Link Layer State Changed events.
++	 *
+ 	 * Check Link Status Changed at higher precedence than Presence
+ 	 * Detect Changed.  The PDS value may be set to "card present" from
+ 	 * out-of-band detection, which may be in conflict with a Link Down.
+ 	 */
+-	if (events & PCI_EXP_SLTSTA_DLLSC)
++	if (events & DISABLE_SLOT)
++		pciehp_handle_disable_request(slot);
++	else if (events & PCI_EXP_SLTSTA_DLLSC)
+ 		pciehp_handle_link_change(slot);
+ 	else if (events & PCI_EXP_SLTSTA_PDC)
+ 		pciehp_handle_presence_change(slot);
+@@ -612,6 +617,7 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+ 		pciehp_green_led_off(slot);
+ 	}
+ 
++	wake_up(&ctrl->requester);
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -625,8 +631,9 @@ static int pciehp_poll(void *data)
+ 		if (kthread_should_park())
+ 			kthread_parkme();
+ 
+-		/* poll for interrupt events */
+-		while (pciehp_isr(IRQ_NOTCONNECTED, ctrl) == IRQ_WAKE_THREAD)
++		/* poll for interrupt events or user requests */
++		while (pciehp_isr(IRQ_NOTCONNECTED, ctrl) == IRQ_WAKE_THREAD ||
++		       atomic_read(&ctrl->pending_events))
+ 			pciehp_ist(IRQ_NOTCONNECTED, ctrl);
+ 
+ 		if (pciehp_poll_time <= 0 || pciehp_poll_time > 60)
+@@ -829,6 +836,7 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 
+ 	ctrl->slot_cap = slot_cap;
+ 	mutex_init(&ctrl->ctrl_lock);
++	init_waitqueue_head(&ctrl->requester);
+ 	init_waitqueue_head(&ctrl->queue);
+ 	dbg_ctrl(ctrl);
+ 
+-- 
+2.17.1
