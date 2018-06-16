@@ -1,87 +1,101 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v5 09/11] pci_endpoint_test: Add 2 ioctl commands
-To: Randy Dunlap <rdunlap@infradead.org>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
-        "sboyd@codeaurora.org" <sboyd@codeaurora.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
- <8695864db0191b2e85ed81e97a8990baea3468fa.1529507416.git.gustavo.pimentel@synopsys.com>
- <dd75ced1-e4c3-8c94-3bab-200e2ecdd8b8@infradead.org>
-From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Message-ID: <f16f99f4-0749-3273-7c5a-7c38503c27a9@synopsys.com>
-Date: Thu, 21 Jun 2018 11:23:28 +0100
-MIME-Version: 1.0
-In-Reply-To: <dd75ced1-e4c3-8c94-3bab-200e2ecdd8b8@infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:39623 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932542AbeFPTaL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:30:11 -0400
+Message-Id: <d68814c62c1c2cb62d6880844b285990f25f1cb5.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 15/32] PCI: pciehp: Publish to user space last on probe
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/06/2018 19:12, Randy Dunlap wrote:
-> On 06/20/2018 09:28 AM, Gustavo Pimentel wrote:
->> Add MSI-X support and update driver documentation accordingly.
->>
->> Add 2 new IOCTL commands:
->>  - Allow to reconfigure driver IRQ type in runtime.
->>  - Allow to retrieve current driver IRQ type configured.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->> Change v2->v3:                                                                              |  --------------------------------------------------------------------------------------------
->>  - New patch file created base on the previous patch                                        |  --------------------------------------------------------------------------------------------
->> "misc: pci_endpoint_test: Add MSI-X support" patch file following                           |  --------------------------------------------------------------------------------------------
->> Kishon's suggestion.                                                                        |  --------------------------------------------------------------------------------------------
->> Change v3->v4:                                                                              |  --------------------------------------------------------------------------------------------
->>  - Rebased to Lorenzo's master branch v4.18-rc1.
->> Change v4->v5:
->>  - Nothing changed, just to follow the patch set version.
->>
->>  Documentation/misc-devices/pci-endpoint-test.txt |   3 +
->>  drivers/misc/pci_endpoint_test.c                 | 177 +++++++++++++++++------
->>  2 files changed, 132 insertions(+), 48 deletions(-)
->>
->> diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
->> index fdfa0f6..58ccca4 100644
->> --- a/Documentation/misc-devices/pci-endpoint-test.txt
->> +++ b/Documentation/misc-devices/pci-endpoint-test.txt
->> @@ -28,6 +28,9 @@ ioctl
->>  	      to be tested should be passed as argument.
->>   PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
->>  	      to be tested should be passed as argument.
->> + PCITEST_SET_IRQTYPE: Changes driver IRQ type configuration. The IRQ type
->> +	      should be passed as argument (0: Legacy, 1:MSI, 2:MSI-X).
->> + PCITEST_GET_IRQTYPE: Gets driver IRQ type configuration.
->>   PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
->>  		as argument.
->>   PCITEST_READ: Perform read tests. The size of the buffer should be passed
->> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
->> index 2b58887..82fa0c2 100644
->> --- a/drivers/misc/pci_endpoint_test.c
->> +++ b/drivers/misc/pci_endpoint_test.c
-> 
-> Hi,
-> 
-> The ioctl "type" (as "type" is used in <uapi/asm-generic/ioctl.h>),
-> value of 'P' in this case, should be documented in
-> Documentation/ioctl/ioctl-number.txt.
+The PCI hotplug core has just been refactored to separate slot
+initialization for in-kernel use from publication to user space.
 
-Hi Randy,
+Take advantage of it in pciehp by publishing to user space last on
+probe.  This will allow enable/disablement of the slot exclusively from
+the IRQ thread because the IRQ is requested after initialization for
+in-kernel use (thereby getting its unique name needed by the IRQ thread)
+but before user space is able to submit enable/disable requests.
 
-I wasn't aware of this file. Adding the entry bellow would be suitable?
+On teardown, the order is the same in reverse:  The user space interface
+is removed prior to freeing the IRQ and destroying the slot.
 
-'P'    01-09   drivers/misc/pci_endpoint_test.c        conflict!
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pciehp_core.c | 20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
 
-Regards,
-Gustavo
-
-> 
-> thanks,
-> 
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 37d8f81e548f..cde32e137f6c 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -100,10 +100,10 @@ static int init_slot(struct controller *ctrl)
+ 	slot->hotplug_slot = hotplug;
+ 	snprintf(name, SLOT_NAME_SIZE, "%u", PSN(ctrl));
+ 
+-	retval = pci_hp_register(hotplug,
+-				 ctrl->pcie->port->subordinate, 0, name);
++	retval = pci_hp_initialize(hotplug,
++				   ctrl->pcie->port->subordinate, 0, name);
+ 	if (retval)
+-		ctrl_err(ctrl, "pci_hp_register failed: error %d\n", retval);
++		ctrl_err(ctrl, "pci_hp_initialize failed: error %d\n", retval);
+ out:
+ 	if (retval) {
+ 		kfree(ops);
+@@ -117,7 +117,7 @@ static void cleanup_slot(struct controller *ctrl)
+ {
+ 	struct hotplug_slot *hotplug_slot = ctrl->slot->hotplug_slot;
+ 
+-	pci_hp_deregister(hotplug_slot);
++	pci_hp_destroy(hotplug_slot);
+ 	kfree(hotplug_slot->ops);
+ 	kfree(hotplug_slot->info);
+ 	kfree(hotplug_slot);
+@@ -231,8 +231,15 @@ static int pciehp_probe(struct pcie_device *dev)
+ 		goto err_out_free_ctrl_slot;
+ 	}
+ 
+-	/* Check if slot is occupied */
++	/* Publish to user space */
+ 	slot = ctrl->slot;
++	rc = pci_hp_add(slot->hotplug_slot);
++	if (rc) {
++		ctrl_err(ctrl, "Publication to user space failed (%d)\n", rc);
++		goto err_out_shutdown_notification;
++	}
++
++	/* Check if slot is occupied */
+ 	pciehp_get_adapter_status(slot, &occupied);
+ 	pciehp_get_power_status(slot, &poweron);
+ 	if (occupied && pciehp_force)
+@@ -243,6 +250,8 @@ static int pciehp_probe(struct pcie_device *dev)
+ 
+ 	return 0;
+ 
++err_out_shutdown_notification:
++	pcie_shutdown_notification(ctrl);
+ err_out_free_ctrl_slot:
+ 	cleanup_slot(ctrl);
+ err_out_release_ctlr:
+@@ -254,6 +263,7 @@ static void pciehp_remove(struct pcie_device *dev)
+ {
+ 	struct controller *ctrl = get_service_data(dev);
+ 
++	pci_hp_del(ctrl->slot->hotplug_slot);
+ 	pcie_shutdown_notification(ctrl);
+ 	cleanup_slot(ctrl);
+ 	pciehp_release_ctrl(ctrl);
+-- 
+2.17.1
