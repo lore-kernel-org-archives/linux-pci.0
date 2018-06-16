@@ -1,100 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:41993 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935356AbeF2K1z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jun 2018 06:27:55 -0400
-Received: by mail-qk0-f193.google.com with SMTP id u62-v6so4616392qkf.9
-        for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2018 03:27:54 -0700 (PDT)
-From: Hari Vyas <hari.vyas@broadcom.com>
-To: bhelgaas@google.com, benh@kernel.crashing.org
-Cc: linux-pci@vger.kernel.org, ray.jui@broadcom.com,
-        Hari Vyas <hari.vyas@broadcom.com>
-Subject: [PATCH v2 2/3] PCI: use new pci function to get device addition state
-Date: Fri, 29 Jun 2018 15:57:40 +0530
-Message-Id: <1530268061-17324-3-git-send-email-hari.vyas@broadcom.com>
-In-Reply-To: <1530268061-17324-1-git-send-email-hari.vyas@broadcom.com>
-References: <1530268061-17324-1-git-send-email-hari.vyas@broadcom.com>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:43993 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932554AbeFPTc4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:32:56 -0400
+Message-Id: <c91a547edf3d2de26c38a7452cabacf636891e3f.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 23/32] PCI: pciehp: Avoid slot access during reset
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org, Rajat Jain <rajatja@google.com>,
+        Alex Williamson <alex.williamson@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Due to one race condition happening while updating pci
-device addition and master status bits in a particular
-scenario, device addition state is moved to a independent
-private flag variable.
+The ->reset_slot callback introduced by commits:
 
-This change uses newly proposed pci_dev_is_added() function
-to retrieve device addition state.
+2e35afaefe64 ("PCI: pciehp: Add reset_slot() method") and
+06a8d89af551 ("PCI: pciehp: Disable link notification across slot reset")
 
-Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
+disables notification of Presence Detect Changed and Data Link Layer
+State Changed events for the duration of a secondary bus reset.
+
+Presumably a bus reset not only triggers these events, but also clears
+the Presence Detect State bit in the Slot Status register and the Data
+Link Layer Link Active bit in the Link Status register momentarily.
+
+pciehp should therefore ensure that any parts of the driver that access
+those bits do not run concurrently.  The only precaution the commits
+took to that effect was to halt interrupt polling.  They made no effort
+to drain the slot workqueue, cancel an outstanding Attention Button
+work, or block slot enable/disable requests via sysfs and in the ->probe
+hook.
+
+Now that pciehp is converted to enable/disable the slot exclusively from
+the IRQ thread, the only places accessing the two above-mentioned bits
+are the IRQ thread and the ->probe hook.  Add locking to serialize them
+with a bus reset.  This obviates the need to halt interrupt polling.
+Do not add locking to the ->get_adapter_status sysfs callback to afford
+users unfettered access to that bit.
+
+Cc: Rajat Jain <rajatja@google.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- arch/powerpc/kernel/pci-common.c          | 4 +++-
- arch/powerpc/platforms/powernv/pci-ioda.c | 3 ++-
- arch/powerpc/platforms/pseries/setup.c    | 3 ++-
- 3 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/pci/hotplug/pciehp.h      |  5 +++++
+ drivers/pci/hotplug/pciehp_core.c |  2 ++
+ drivers/pci/hotplug/pciehp_hpc.c  | 14 +++++++-------
+ 3 files changed, 14 insertions(+), 7 deletions(-)
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index fe9733f..471aac3 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -42,6 +42,8 @@
- #include <asm/ppc-pci.h>
- #include <asm/eeh.h>
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 47cd9af5caf3..bb015be34894 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -21,6 +21,7 @@
+ #include <linux/delay.h>
+ #include <linux/sched/signal.h>		/* signal_pending() */
+ #include <linux/mutex.h>
++#include <linux/rwsem.h>
+ #include <linux/workqueue.h>
  
-+#include "../../../drivers/pci/pci.h"
+ #include "../pcie/portdrv.h"
+@@ -80,6 +81,9 @@ struct slot {
+  * struct controller - PCIe hotplug controller
+  * @ctrl_lock: serializes writes to the Slot Control register
+  * @pcie: pointer to the controller's PCIe port service device
++ * @reset_lock: prevents access to the Data Link Layer Link Active bit in the
++ *	Link Status register and to the Presence Detect State bit in the Slot
++ *	Status register during a slot reset which may cause them to flap
+  * @slot: pointer to the controller's slot structure
+  * @queue: wait queue to wake up on reception of a Command Completed event,
+  *	used for synchronous writes to the Slot Control register
+@@ -109,6 +113,7 @@ struct slot {
+ struct controller {
+ 	struct mutex ctrl_lock;
+ 	struct pcie_device *pcie;
++	struct rw_semaphore reset_lock;
+ 	struct slot *slot;
+ 	wait_queue_head_t queue;
+ 	u32 slot_cap;
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index f4eaa9944699..1be8871e7439 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -237,6 +237,7 @@ static int pciehp_probe(struct pcie_device *dev)
+ 	}
+ 
+ 	/* Check if slot is occupied */
++	down_read(&ctrl->reset_lock);
+ 	mutex_lock(&slot->lock);
+ 	pciehp_get_adapter_status(slot, &occupied);
+ 	pciehp_get_power_status(slot, &poweron);
+@@ -249,6 +250,7 @@ static int pciehp_probe(struct pcie_device *dev)
+ 	if (!occupied && poweron && POWER_CTRL(ctrl))
+ 		pciehp_power_off_slot(slot);
+ 	mutex_unlock(&slot->lock);
++	up_read(&ctrl->reset_lock);
+ 
+ 	return 0;
+ 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 3c0adf4967a8..a89ae65d3c7c 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -603,10 +603,12 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+ 	 * Disable requests have higher priority than Presence Detect Changed
+ 	 * or Data Link Layer State Changed events.
+ 	 */
++	down_read(&ctrl->reset_lock);
+ 	if (events & DISABLE_SLOT)
+ 		pciehp_handle_disable_request(slot);
+ 	else if (events & (PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC))
+ 		pciehp_handle_presence_or_link_change(slot, events);
++	up_read(&ctrl->reset_lock);
+ 
+ 	/* Check Power Fault Detected */
+ 	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+@@ -627,9 +629,6 @@ static int pciehp_poll(void *data)
+ 	schedule_timeout_idle(10 * HZ); /* start with 10 sec delay */
+ 
+ 	while (!kthread_should_stop()) {
+-		if (kthread_should_park())
+-			kthread_parkme();
+-
+ 		/* poll for interrupt events or user requests */
+ 		while (pciehp_isr(IRQ_NOTCONNECTED, ctrl) == IRQ_WAKE_THREAD ||
+ 		       atomic_read(&ctrl->pending_events))
+@@ -723,6 +722,8 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+ 	if (probe)
+ 		return 0;
+ 
++	down_write(&ctrl->reset_lock);
 +
- /* hose_spinlock protects accesses to the the phb_bitmap. */
- static DEFINE_SPINLOCK(hose_spinlock);
- LIST_HEAD(hose_list);
-@@ -1014,7 +1016,7 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
- 		/* Cardbus can call us to add new devices to a bus, so ignore
- 		 * those who are already fully discovered
- 		 */
--		if (dev->is_added)
-+		if (pci_dev_is_added(dev))
- 			continue;
+ 	if (!ATTN_BUTTN(ctrl)) {
+ 		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
+ 		stat_mask |= PCI_EXP_SLTSTA_PDC;
+@@ -733,8 +734,6 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+ 	pcie_write_cmd(ctrl, 0, ctrl_mask);
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, 0);
+-	if (pciehp_poll_mode)
+-		kthread_park(ctrl->poll_thread);
  
- 		pcibios_setup_device(dev);
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 5bd0eb6..70b2e1e 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -46,6 +46,7 @@
+ 	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
  
- #include "powernv.h"
- #include "pci.h"
-+#include "../../../../drivers/pci/pci.h"
+@@ -742,8 +741,8 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+ 	pcie_write_cmd_nowait(ctrl, ctrl_mask, ctrl_mask);
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
+-	if (pciehp_poll_mode)
+-		kthread_unpark(ctrl->poll_thread);
++
++	up_write(&ctrl->reset_lock);
+ 	return 0;
+ }
  
- #define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs	*/
- #define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR	*/
-@@ -3138,7 +3139,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 	struct pci_dn *pdn;
- 	int mul, total_vfs;
+@@ -834,6 +833,7 @@ struct controller *pcie_init(struct pcie_device *dev)
  
--	if (!pdev->is_physfn || pdev->is_added)
-+	if (!pdev->is_physfn || pci_dev_is_added(pdev))
- 		return;
- 
- 	pdn = pci_get_pdn(pdev);
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index 139f0af..8a4868a 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -71,6 +71,7 @@
- #include <asm/security_features.h>
- 
- #include "pseries.h"
-+#include "../../../../drivers/pci/pci.h"
- 
- int CMO_PrPSP = -1;
- int CMO_SecPSP = -1;
-@@ -664,7 +665,7 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
- 	const int *indexes;
- 	struct device_node *dn = pci_device_to_OF_node(pdev);
- 
--	if (!pdev->is_physfn || pdev->is_added)
-+	if (!pdev->is_physfn || pci_dev_is_added(pdev))
- 		return;
- 	/*Firmware must support open sriov otherwise dont configure*/
- 	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
+ 	ctrl->slot_cap = slot_cap;
+ 	mutex_init(&ctrl->ctrl_lock);
++	init_rwsem(&ctrl->reset_lock);
+ 	init_waitqueue_head(&ctrl->requester);
+ 	init_waitqueue_head(&ctrl->queue);
+ 	dbg_ctrl(ctrl);
 -- 
-1.9.1
+2.17.1
