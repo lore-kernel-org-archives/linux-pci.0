@@ -1,302 +1,236 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 2/7] PCI: dwc: Add MSI-X callbacks handler
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
- <24e9cdc20d57aaea0bcb62879824c57004df46c9.1526576613.git.gustavo.pimentel@synopsys.com>
- <758acd51-a36a-ae68-2e28-5ce184707dda@ti.com>
-From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Message-ID: <0759e266-505f-41cc-5213-eabbff2512ad@synopsys.com>
-Date: Fri, 1 Jun 2018 12:05:13 +0100
-MIME-Version: 1.0
-In-Reply-To: <758acd51-a36a-ae68-2e28-5ce184707dda@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:46473 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932554AbeFPTcP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:32:15 -0400
+Message-Id: <b35dea070133ed17e1026235c34b9c7d98423720.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 21/32] PCI: pciehp: Become resilient to missed events
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org, Stefan Roese <sr@denx.de>,
+        Mayurkumar Patel <mayurkumar.patel@intel.com>,
+        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/05/2018 11:49, Kishon Vijay Abraham I wrote:
-> Hi,
-> 
-> On Thursday 17 May 2018 10:39 PM, Gustavo Pimentel wrote:
->> Change pcie_raise_irq() signature, namely the interrupt_num variable type
->> from u8 to u16 to accommodate 2048 maximum MSI-X interrupts.
->>
->> Add PCIe config space capability search function.
->>
->> Add sysfs set/get interface to allow the change of EP MSI-X maximum number.
->>
->> Add EP MSI-X callback for triggering interruptions.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->> Change v1->v2:
->>  - Nothing changed, just to follow the patch set version.
->>
->>  drivers/pci/dwc/pci-dra7xx.c           |   2 +-
->>  drivers/pci/dwc/pcie-artpec6.c         |   2 +-
->>  drivers/pci/dwc/pcie-designware-ep.c   | 146 ++++++++++++++++++++++++++++++++-
->>  drivers/pci/dwc/pcie-designware-plat.c |   4 +-
->>  drivers/pci/dwc/pcie-designware.h      |  14 +++-
->>  5 files changed, 163 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
->> index f688204..bdf948b 100644
->> --- a/drivers/pci/dwc/pci-dra7xx.c
->> +++ b/drivers/pci/dwc/pci-dra7xx.c
->> @@ -370,7 +370,7 @@ static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
->>  }
->>  
->>  static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
->> -				 enum pci_epc_irq_type type, u8 interrupt_num)
->> +				 enum pci_epc_irq_type type, u16 interrupt_num)
->>  {
->>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
->> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
->> index 321b56c..9a2474b 100644
->> --- a/drivers/pci/dwc/pcie-artpec6.c
->> +++ b/drivers/pci/dwc/pcie-artpec6.c
->> @@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
->>  }
->>  
->>  static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
->> -				  enum pci_epc_irq_type type, u8 interrupt_num)
->> +				  enum pci_epc_irq_type type, u16 interrupt_num)
->>  {
->>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> 
-> I think you should change pci_epc_raise_irq (in previous patch) and the above
-> two changes in a separate patch. You can also include pcie-cadence-ep.c along
-> with that.
+A hotplug port's Slot Status register does not count how often each type
+of event occurred, it only records the fact *that* an event has occurred.
 
-Ok.
+Previously pciehp queued a work item for each event.  But if it missed
+an event, e.g. removal of a card in-between two back-to-back insertions,
+it queued up the wrong work item or no work item at all.  Commit
+fad214b0aa72 ("PCI: pciehp: Process all hotplug events before looking
+for new ones") sought to improve the situation by shrinking the window
+during which events may be missed.
 
->>  
->> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
->> index 1eec441..e5f2377 100644
->> --- a/drivers/pci/dwc/pcie-designware-ep.c
->> +++ b/drivers/pci/dwc/pcie-designware-ep.c
->> @@ -40,6 +40,39 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
->>  	__dw_pcie_ep_reset_bar(pci, bar, 0);
->>  }
->>  
->> +u8 __dw_pcie_ep_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
->> +			      u8 cap)
->> +{
->> +	u8 cap_id, next_cap_ptr;
->> +	u16 reg;
->> +
->> +	reg = dw_pcie_readw_dbi(pci, cap_ptr);
->> +	next_cap_ptr = (reg & 0xff00) >> 8;
->> +	cap_id = (reg & 0x00ff);
->> +
->> +	if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
->> +		return 0;
->> +
->> +	if (cap_id == cap)
->> +		return cap_ptr;
->> +
->> +	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
->> +}
->> +
->> +u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
->> +{
->> +	u8 next_cap_ptr;
->> +	u16 reg;
->> +
->> +	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
->> +	next_cap_ptr = (reg & 0x00ff);
->> +
->> +	if (!next_cap_ptr)
->> +		return 0;
->> +
->> +	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
->> +}
->> +
->>  static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
->>  				   struct pci_epf_header *hdr)
->>  {
->> @@ -241,8 +274,47 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
->>  	return 0;
->>  }
->>  
->> +static int dw_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
->> +{
->> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->> +	u32 val, reg;
->> +
->> +	if (!ep->msix_cap)
->> +		return 0;
-> 
-> return -EINVAL?
+But Stefan Roese reports unbalanced Card present and Link Up events,
+suggesting that we're still missing events if they occur very rapidly.
+Bjorn Helgaas responds that he considers pciehp's event handling
+"baroque" and calls for its simplification and rationalization:
+https://patchwork.ozlabs.org/patch/867418/
 
-Definitely yes. Well spotted!
+It gets worse once a hotplug port is runtime suspended:  The port can
+signal an interrupt while it and its parents are in D3hot, i.e. while
+it is inaccessible.  By the time we've runtime resumed all parents to D0
+and read the port's Slot Status register, we may have missed an arbitrary
+number of events.  Event handling therefore needs to be reworked to
+become resilient to missed events.
 
-> 
-> or pci_epc_get_msix() will return 1.
->> +
->> +	reg = ep->msix_cap + PCI_MSIX_FLAGS;
->> +	val = dw_pcie_readw_dbi(pci, reg);
->> +	if (!(val & PCI_MSIX_FLAGS_ENABLE))
->> +		return -EINVAL;
->> +
->> +	val &= PCI_MSIX_FLAGS_QSIZE;
->> +
->> +	return val;
->> +}
->> +
->> +static int dw_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
->> +{
->> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->> +	u32 val, reg;
->> +
->> +	if (!ep->msix_cap)
->> +		return 0;
-> 
-> here too return -EINVAL.
+Assume that a Presence Detect Changed event has occurred.
+Consider the following truth table:
+- Slot is in OFF_STATE and is currently empty.    => Do nothing.
+  (The event is trailing a Link Down or we've
+  missed an insertion and subsequent removal.)
+- Slot is in OFF_STATE and is currently occupied. => Turn the slot on.
+- Slot is in ON_STATE  and is currently empty.    => Turn the slot off.
+- Slot is in ON_STATE  and is currently occupied. => Turn the slot off,
+  (Be cautious and assume the card in                then back on.
+  the slot isn't the same as before.)
 
-A copy & paste bug :)
+This leads to the following simple algorithm:
+1 If the slot is in ON_STATE, turn it off unconditionally.
+2 If the slot is currently occupied, turn it on.
 
->> +
->> +	reg = ep->msix_cap + PCI_MSIX_FLAGS;
->> +	val = dw_pcie_readw_dbi(pci, reg);
->> +	val &= ~PCI_MSIX_FLAGS_QSIZE;
->> +	val |= interrupts;
->> +	dw_pcie_dbi_ro_wr_en(pci);
->> +	dw_pcie_writew_dbi(pci, reg, val);
->> +	dw_pcie_dbi_ro_wr_dis(pci);
->> +
->> +	return 0;
->> +}
->> +
->>  static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
->> -				enum pci_epc_irq_type type, u8 interrupt_num)
->> +				enum pci_epc_irq_type type, u16 interrupt_num)
->>  {
->>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->>  
->> @@ -282,6 +354,8 @@ static const struct pci_epc_ops epc_ops = {
->>  	.unmap_addr		= dw_pcie_ep_unmap_addr,
->>  	.set_msi		= dw_pcie_ep_set_msi,
->>  	.get_msi		= dw_pcie_ep_get_msi,
->> +	.set_msix		= dw_pcie_ep_set_msix,
->> +	.get_msix		= dw_pcie_ep_get_msix,
->>  	.raise_irq		= dw_pcie_ep_raise_irq,
->>  	.start			= dw_pcie_ep_start,
->>  	.stop			= dw_pcie_ep_stop,
->> @@ -322,6 +396,64 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
->>  	return 0;
->>  }
->>  
->> +int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
->> +			     u16 interrupt_num)
->> +{
->> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->> +	struct pci_epc *epc = ep->epc;
->> +	u16 tbl_offset, bir;
->> +	u32 bar_addr_upper, bar_addr_lower;
->> +	u32 msg_addr_upper, msg_addr_lower;
->> +	u32 reg, msg_data, vec_ctrl;
->> +	u64 tbl_addr, msg_addr, reg_u64;
->> +	void __iomem *msix_tbl;
->> +	int ret;
->> +
->> +	reg = ep->msix_cap + PCI_MSIX_TABLE;
->> +	tbl_offset = dw_pcie_readl_dbi(pci, reg);
->> +	bir = (tbl_offset & PCI_MSIX_TABLE_BIR);
->> +	tbl_offset &= PCI_MSIX_TABLE_OFFSET;
->> +	tbl_offset >>= 3;
->> +
->> +	reg = PCI_BASE_ADDRESS_0 + (4 * bir);
->> +	bar_addr_lower = dw_pcie_readl_dbi(pci, reg);
->> +	reg_u64 = (bar_addr_lower & PCI_BASE_ADDRESS_MEM_TYPE_MASK);
->> +	if (reg_u64 == PCI_BASE_ADDRESS_MEM_TYPE_64)
->> +		bar_addr_upper = dw_pcie_readl_dbi(pci, reg + 4);
->> +	else
->> +		bar_addr_upper = 0;
-> 
-> You can skip else if you can use something like below>
-> bar_addr_upper = 0
-> bar_addr_lower = dw_pcie_readl_dbi(pci, reg);
-> reg_u64 = (bar_addr_lower & PCI_BASE_ADDRESS_MEM_TYPE_MASK);
-> if (reg_u64 == PCI_BASE_ADDRESS_MEM_TYPE_64)
-> 	bar_addr_upper = dw_pcie_readl_dbi(pci, reg + 4);
+Because those actions are now carried out synchronously, rather than by
+scheduled work items, pciehp reacts to the *current* situation and
+missed events no longer matter.
 
-Sure.
+Data Link Layer State Changed events can be handled identically to
+Presence Detect Changed events.  Note that in the above truth table,
+a Link Up trailing a Card present event didn't have to be accounted for:
+It is filtered out by pciehp_check_link_status().
 
->> +
->> +	tbl_addr = ((u64) bar_addr_upper) << 32 | bar_addr_lower;
->> +	tbl_addr += (tbl_offset + ((interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE));
->> +	tbl_addr &= PCI_BASE_ADDRESS_MEM_MASK;
->> +
->> +	msix_tbl = ioremap_nocache(ep->phys_base + tbl_addr, ep->addr_size);
-> 
-> Why do you want to ioremap the entire address region?
+As for Attention Button Pressed events, PCIe r4.0, sec 6.7.1.5 says:
+"Once the Power Indicator begins blinking, a 5-second abort interval
+exists during which a second depression of the Attention Button cancels
+the operation."  In other words, the user can only expect the system to
+react to a button press after it starts blinking.  Missed button presses
+that occur in-between are irrelevant.
 
-Hum, this was from my initial tests...
-I guess, I could limit it to the MSIX entry size (PCI_MSIX_ENTRY_SIZE).
+Cc: Stefan Roese <sr@denx.de>
+Cc: Mayurkumar Patel <mayurkumar.patel@intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pciehp.h      |  3 +-
+ drivers/pci/hotplug/pciehp_ctrl.c | 80 ++++++++++++++-----------------
+ drivers/pci/hotplug/pciehp_hpc.c  | 10 +---
+ 3 files changed, 40 insertions(+), 53 deletions(-)
 
->> +	if (!msix_tbl)
->> +		return -EINVAL;
->> +
->> +	msg_addr_lower = readl(msix_tbl + PCI_MSIX_ENTRY_LOWER_ADDR);
->> +	msg_addr_upper = readl(msix_tbl + PCI_MSIX_ENTRY_UPPER_ADDR);
->> +	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
->> +	msg_data = readl(msix_tbl + PCI_MSIX_ENTRY_DATA);
->> +	vec_ctrl = readl(msix_tbl + PCI_MSIX_ENTRY_VECTOR_CTRL);
->> +
->> +	if (vec_ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT)
->> +		return -EPERM;
->> +
->> +	iounmap(msix_tbl);
-
-I noticed now this bug... The ioumap should be above the if.
-
->> +
->> +	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msix_mem_phys, msg_addr,
->> +				  epc->mem->page_size);
->> +	if (ret)
->> +		return ret;
->> +
->> +	writel(msg_data, ep->msix_mem);
->> +
->> +	dw_pcie_ep_unmap_addr(epc, func_no, ep->msix_mem_phys);
->> +
->> +	return 0;
->> +}
->> +
->>  void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
->>  {
->>  	struct pci_epc *epc = ep->epc;
->> @@ -329,6 +461,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
->>  	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
->>  			      epc->mem->page_size);
->>  
->> +	pci_epc_mem_free_addr(epc, ep->msix_mem_phys, ep->msix_mem,
->> +			      epc->mem->page_size);
->> +
->>  	pci_epc_mem_exit(epc);
->>  }
->>  
->> @@ -410,6 +545,15 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
->>  		dev_err(dev, "Failed to reserve memory for MSI\n");
->>  		return -ENOMEM;
->>  	}
->> +	ep->msi_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSI);
-> 
-> msi_cap is not used anywhere else.
-> 
-> Thanks
-> Kishon
-> 
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 9c75acd291fb..47cd9af5caf3 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -169,8 +169,7 @@ int pciehp_sysfs_disable_slot(struct slot *slot);
+ void pciehp_request(struct controller *ctrl, int action);
+ void pciehp_handle_button_press(struct slot *slot);
+ void pciehp_handle_disable_request(struct slot *slot);
+-void pciehp_handle_link_change(struct slot *slot);
+-void pciehp_handle_presence_change(struct slot *slot);
++void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events);
+ int pciehp_configure_device(struct slot *p_slot);
+ void pciehp_unconfigure_device(struct slot *p_slot);
+ void pciehp_queue_pushbutton_work(struct work_struct *work);
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 4a12e70aacd0..811019902ada 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -217,66 +217,60 @@ void pciehp_handle_disable_request(struct slot *slot)
+ 	ctrl->request_result = pciehp_disable_slot(slot);
+ }
+ 
+-void pciehp_handle_link_change(struct slot *p_slot)
++void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
+ {
+-	struct controller *ctrl = p_slot->ctrl;
++	struct controller *ctrl = slot->ctrl;
+ 	bool link_active;
++	u8 present;
+ 
+-	mutex_lock(&p_slot->lock);
+-	link_active = pciehp_check_link_active(ctrl);
+-
+-	switch (p_slot->state) {
+-	case BLINKINGON_STATE:
++	/*
++	 * If the slot is on and presence or link has changed, turn it off.
++	 * Even if it's occupied again, we cannot assume the card is the same.
++	 */
++	mutex_lock(&slot->lock);
++	switch (slot->state) {
+ 	case BLINKINGOFF_STATE:
+-		cancel_delayed_work(&p_slot->work);
+-		/* Fall through */
++		cancel_delayed_work(&slot->work);
+ 	case ON_STATE:
+-	case OFF_STATE:
+-		if (link_active) {
+-			p_slot->state = POWERON_STATE;
+-			mutex_unlock(&p_slot->lock);
+-			ctrl_info(ctrl, "Slot(%s): Link Up\n", slot_name(p_slot));
+-			pciehp_enable_slot(p_slot);
+-		} else {
+-			p_slot->state = POWEROFF_STATE;
+-			mutex_unlock(&p_slot->lock);
+-			ctrl_info(ctrl, "Slot(%s): Link Down\n", slot_name(p_slot));
+-			pciehp_disable_slot(p_slot);
+-		}
+-		return;
++		slot->state = POWEROFF_STATE;
++		mutex_unlock(&slot->lock);
++		if (events & PCI_EXP_SLTSTA_DLLSC)
++			ctrl_info(ctrl, "Slot(%s): Link Down\n",
++				  slot_name(slot));
++		if (events & PCI_EXP_SLTSTA_PDC)
++			ctrl_info(ctrl, "Slot(%s): Card not present\n",
++				  slot_name(slot));
++		pciehp_disable_slot(slot);
+ 		break;
+ 	default:
+-		ctrl_err(ctrl, "Slot(%s): Ignoring invalid state %#x\n",
+-			 slot_name(p_slot), p_slot->state);
+-		break;
++		mutex_unlock(&slot->lock);
+ 	}
+-	mutex_unlock(&p_slot->lock);
+-}
+-
+-void pciehp_handle_presence_change(struct slot *slot)
+-{
+-	struct controller *ctrl = slot->ctrl;
+-	u8 present;
+ 
++	/* Turn the slot on if it's occupied or link is up */
+ 	mutex_lock(&slot->lock);
++	pciehp_get_adapter_status(slot, &present);
++	link_active = pciehp_check_link_active(ctrl);
++	if (!present && !link_active) {
++		mutex_unlock(&slot->lock);
++		return;
++	}
++
+ 	switch (slot->state) {
+ 	case BLINKINGON_STATE:
+-	case BLINKINGOFF_STATE:
+ 		cancel_delayed_work(&slot->work);
+-	}
+-
+-	pciehp_get_adapter_status(slot, &present);
+-	ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
+-		  present ? "" : "not ");
+-
+-	if (present) {
++	case OFF_STATE:
+ 		slot->state = POWERON_STATE;
+ 		mutex_unlock(&slot->lock);
++		if (present)
++			ctrl_info(ctrl, "Slot(%s): Card present\n",
++				  slot_name(slot));
++		if (link_active)
++			ctrl_info(ctrl, "Slot(%s): Link Up\n",
++				  slot_name(slot));
+ 		ctrl->request_result = pciehp_enable_slot(slot);
+-	} else {
+-		slot->state = POWEROFF_STATE;
++		break;
++	default:
+ 		mutex_unlock(&slot->lock);
+-		pciehp_disable_slot(slot);
+ 	}
+ }
+ 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index adc6a89a3b5d..b746c3b52719 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -602,17 +602,11 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+ 	/*
+ 	 * Disable requests have higher priority than Presence Detect Changed
+ 	 * or Data Link Layer State Changed events.
+-	 *
+-	 * Check Link Status Changed at higher precedence than Presence
+-	 * Detect Changed.  The PDS value may be set to "card present" from
+-	 * out-of-band detection, which may be in conflict with a Link Down.
+ 	 */
+ 	if (events & DISABLE_SLOT)
+ 		pciehp_handle_disable_request(slot);
+-	else if (events & PCI_EXP_SLTSTA_DLLSC)
+-		pciehp_handle_link_change(slot);
+-	else if (events & PCI_EXP_SLTSTA_PDC)
+-		pciehp_handle_presence_change(slot);
++	else if (events & (PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC))
++		pciehp_handle_presence_or_link_change(slot, events);
+ 
+ 	/* Check Power Fault Detected */
+ 	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+-- 
+2.17.1
