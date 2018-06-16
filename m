@@ -1,85 +1,121 @@
-Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
-From: Pingfan Liu <kernelfans@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Pingfan Liu <kernelfans@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 1/3] drivers/base: introduce some help routines for reordering a group of dev
-Date: Mon, 25 Jun 2018 13:23:05 +0800
-Message-Id: <1529904187-18673-2-git-send-email-kernelfans@gmail.com>
-In-Reply-To: <1529904187-18673-1-git-send-email-kernelfans@gmail.com>
-References: <1529904187-18673-1-git-send-email-kernelfans@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:44687 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932542AbeFPTZn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:25:43 -0400
+Message-Id: <fdcfc1e7753648a2a3d371eed4ca4bd4972b17f6.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 02/32] PCI: pciehp: Fix UAF on unplug
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch introduce some help routines used by next patch. It aims to
-ease reviewing, while the next patch will concentrate on algorithm.
+When pciehp is unbound (e.g. on unplug of a Thunderbolt device), the
+hotplug_slot struct is deregistered and thus freed before freeing the
+IRQ.  The IRQ handler and the work items it schedules print the slot
+name referenced from the freed structure in various informational and
+debug log messages, each time resulting in a quadruple dereference of
+freed pointers (hotplug_slot -> pci_slot -> kobject -> name).
 
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Dave Young <dyoung@redhat.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+At best the slot name is logged as "(null)", at worst kernel memory is
+exposed in logs or the driver crashes:
+    pciehp 0000:10:00.0:pcie204: Slot((null)): Card not present
+
+An attacker may provoke the bug by unplugging multiple devices on a
+Thunderbolt daisy chain at once.  Unplugging can also be simulated by
+powering down slots via sysfs.  The bug is particularly easy to trigger
+in poll mode.
+
+It has been present since the driver's introduction in 2004:
+https://git.kernel.org/tglx/history/c/c16b4b14d980
+
+Fix by rearranging teardown such that the IRQ is freed first.  Run the
+work items queued by the IRQ handler to completion before freeing the
+hotplug_slot struct by draining the work queue from the ->release_slot
+callback which is invoked by pci_hp_deregister().
+
+Cc: stable@vger.kernel.org # v2.6.4
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- drivers/base/core.c | 38 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ drivers/pci/hotplug/pciehp.h      | 1 +
+ drivers/pci/hotplug/pciehp_core.c | 7 +++++++
+ drivers/pci/hotplug/pciehp_hpc.c  | 4 +---
+ 3 files changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 36622b5..8113d2c 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -123,6 +123,44 @@ static int device_is_dependent(struct device *dev, void *target)
- 	return ret;
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 5f892065585e..fca87a1a2b22 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -119,6 +119,7 @@ int pciehp_unconfigure_device(struct slot *p_slot);
+ void pciehp_queue_pushbutton_work(struct work_struct *work);
+ struct controller *pcie_init(struct pcie_device *dev);
+ int pcie_init_notification(struct controller *ctrl);
++void pcie_shutdown_notification(struct controller *ctrl);
+ int pciehp_enable_slot(struct slot *p_slot);
+ int pciehp_disable_slot(struct slot *p_slot);
+ void pcie_reenable_notification(struct controller *ctrl);
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 44a6a63802d5..2ba59fc94827 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -62,6 +62,12 @@ static int reset_slot(struct hotplug_slot *slot, int probe);
+  */
+ static void release_slot(struct hotplug_slot *hotplug_slot)
+ {
++	struct slot *slot = hotplug_slot->private;
++
++	/* queued work needs hotplug_slot name */
++	cancel_delayed_work(&slot->work);
++	drain_workqueue(slot->wq);
++
+ 	kfree(hotplug_slot->ops);
+ 	kfree(hotplug_slot->info);
+ 	kfree(hotplug_slot);
+@@ -264,6 +270,7 @@ static void pciehp_remove(struct pcie_device *dev)
+ {
+ 	struct controller *ctrl = get_service_data(dev);
+ 
++	pcie_shutdown_notification(ctrl);
+ 	cleanup_slot(ctrl);
+ 	pciehp_release_ctrl(ctrl);
+ }
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 718b6073afad..26b85440053e 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -765,7 +765,7 @@ int pcie_init_notification(struct controller *ctrl)
+ 	return 0;
  }
  
-+struct pos_info {
-+	struct device *pos;
-+	struct device *tail;
-+};
-+
-+/* caller takes the devices_kset->list_lock */
-+static int descendants_reorder_after_pos(struct device *dev,
-+	void *data)
-+{
-+	struct device *pos;
-+	struct pos_info *p = data;
-+
-+	pos = p->pos;
-+	pr_debug("devices_kset: Moving %s after %s\n",
-+		 dev_name(dev), dev_name(pos));
-+	device_for_each_child(dev, p, descendants_reorder_after_pos);
-+	/* children at the tail */
-+	list_move(&dev->kobj.entry, &pos->kobj.entry);
-+	/* record the right boundary of the section */
-+	if (p->tail == NULL)
-+		p->tail = dev;
-+	return 0;
-+}
-+
-+/* iterate over an open section */
-+#define list_opensect_for_each_reverse(cur, left, right)	\
-+	for (cur = right->prev; cur == left; cur = cur->prev)
-+
-+static bool is_consumer(struct device *query, struct device *supplier)
-+{
-+	struct device_link *link;
-+	/* todo, lock protection */
-+	list_for_each_entry(link, &supplier->links.consumers, s_node)
-+		if (link->consumer == query)
-+			return true;
-+	return false;
-+}
-+
- static int device_reorder_to_tail(struct device *dev, void *not_used)
+-static void pcie_shutdown_notification(struct controller *ctrl)
++void pcie_shutdown_notification(struct controller *ctrl)
  {
- 	struct device_link *link;
+ 	if (ctrl->notification_enabled) {
+ 		pcie_disable_notification(ctrl);
+@@ -800,7 +800,6 @@ static int pcie_init_slot(struct controller *ctrl)
+ static void pcie_cleanup_slot(struct controller *ctrl)
+ {
+ 	struct slot *slot = ctrl->slot;
+-	cancel_delayed_work(&slot->work);
+ 	destroy_workqueue(slot->wq);
+ 	kfree(slot);
+ }
+@@ -893,7 +892,6 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 
+ void pciehp_release_ctrl(struct controller *ctrl)
+ {
+-	pcie_shutdown_notification(ctrl);
+ 	pcie_cleanup_slot(ctrl);
+ 	kfree(ctrl);
+ }
 -- 
-2.7.4
+2.17.1
