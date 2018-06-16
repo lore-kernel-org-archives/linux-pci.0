@@ -1,101 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33002 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751772AbeFEWKE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Jun 2018 18:10:04 -0400
-Date: Tue, 5 Jun 2018 17:09:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, Alex_Gagniuc@Dellteam.com,
-        Scott Bauer <scott.bauer@intel.com>
-Subject: Re: [PATCH 4/4] PCI/AER: Lock pci topology when scanning errors
-Message-ID: <20180605220911.GB226399@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180409220444.6632-1-keith.busch@intel.com>
- <20180409220444.6632-5-keith.busch@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180409220444.6632-5-keith.busch@intel.com>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:33613 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933027AbeFPTi0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:38:26 -0400
+Message-Id: <034a190ba172c91adb0a9cc5225716d4aa69d78e.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 13/32] PCI: pciehp: Drop slot workqueue
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 09, 2018 at 04:04:44PM -0600, Keith Busch wrote:
-> The side effects of surprise removal may trigger AER handling. The AER
-> handling walks the pci topology and may access a pci_dev that is being
-> freed by the hotplug handler.
-> 
-> This patch fixes that use-after-free by locking the PCI topology in
-> the AER handler so it isn't racing with the pciehp removal.
-> 
-> Since the AER handler now runs under a global PCI lock, the rpc specific
-> mutex is no longer necessary.
-> 
-> Reported-by: Alex Gagniuc <Alex_Gagniuc@Dellteam.com>
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/pcie/aer/aerdrv.c      | 1 -
->  drivers/pci/pcie/aer/aerdrv.h      | 5 -----
->  drivers/pci/pcie/aer/aerdrv_core.c | 4 ++--
->  3 files changed, 2 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> index 0b2eb88c422b..b88e5e2f3700 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.c
-> +++ b/drivers/pci/pcie/aer/aerdrv.c
-> @@ -237,7 +237,6 @@ static struct aer_rpc *aer_alloc_rpc(struct pcie_device *dev)
->  	rpc->rpd = pci_dev_get(dev->port);
->  	kref_init(&rpc->ref);
->  	INIT_WORK(&rpc->dpc_handler, aer_isr);
-> -	mutex_init(&rpc->rpc_mutex);
->  
->  	/* Use PCIe bus function to store rpc into PCIe device */
->  	set_service_data(dev, rpc);
-> diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-> index f886521e2c7b..b90fc5d4cda2 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.h
-> +++ b/drivers/pci/pcie/aer/aerdrv.h
-> @@ -70,11 +70,6 @@ struct aer_rpc {
->  					 * Lock access to Error Status/ID Regs
->  					 * and error producer/consumer index
->  					 */
-> -	struct mutex rpc_mutex;		/*
-> -					 * only one thread could do
-> -					 * recovery on the same
-> -					 * root port hierarchy
-> -					 */
->  };
->  
->  struct aer_broadcast_data {
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index e4059d7fa7fa..de210b7439eb 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -796,10 +796,10 @@ void aer_isr(struct work_struct *work)
->  	struct aer_rpc *rpc = container_of(work, struct aer_rpc, dpc_handler);
->  	struct aer_err_source uninitialized_var(e_src);
->  
-> -	mutex_lock(&rpc->rpc_mutex);
-> +	pci_lock_rescan_remove();
->  	while (get_e_source(rpc, &e_src))
->  		aer_isr_one_error(rpc, &e_src);
-> -	mutex_unlock(&rpc->rpc_mutex);
-> +	pci_unlock_rescan_remove();
+Previously the slot workqueue was used to handle events and enable or
+disable the slot.  That's no longer the case as those tasks are done
+synchronously in the IRQ thread.  The slot workqueue is thus merely used
+to handle a button press after the 5 second delay and only one such work
+item may be in flight at any given time.  A separate workqueue isn't
+necessary for this simple task, so use the system workqueue instead.
 
-I think this needs to be updated after Oza's patches, doesn't it?
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pciehp.h      | 2 --
+ drivers/pci/hotplug/pciehp_core.c | 6 ------
+ drivers/pci/hotplug/pciehp_ctrl.c | 2 +-
+ drivers/pci/hotplug/pciehp_hpc.c  | 9 +--------
+ 4 files changed, 2 insertions(+), 17 deletions(-)
 
-It looks like this would deadlock if I applied it to my current "next"
-branch as-is:
-
-  aer_isr
-    pci_lock_rescan_remove
-    aer_isr_one_error
-      aer_process_err_devices
-        handle_error_source
-          pcie_do_fatal_recovery
-            pci_lock_rescan_remove      <-- deadlock
-
->       aer_release(rpc);
->  }
-> -- 
-> 2.14.3
-> 
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 82ff77cc92f5..0d005c5fabfa 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -69,7 +69,6 @@ do {									\
+  *	protects scheduling, execution and cancellation of @work
+  * @hotplug_lock: serializes calls to pciehp_enable_slot() and
+  *	pciehp_disable_slot()
+- * @wq: work queue on which @work is scheduled
+  */
+ struct slot {
+ 	u8 state;
+@@ -78,7 +77,6 @@ struct slot {
+ 	struct delayed_work work;
+ 	struct mutex lock;
+ 	struct mutex hotplug_lock;
+-	struct workqueue_struct *wq;
+ };
+ 
+ /**
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 8a2133856dfd..b360645377c2 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -62,12 +62,6 @@ static int reset_slot(struct hotplug_slot *slot, int probe);
+  */
+ static void release_slot(struct hotplug_slot *hotplug_slot)
+ {
+-	struct slot *slot = hotplug_slot->private;
+-
+-	/* queued work needs hotplug_slot name */
+-	cancel_delayed_work(&slot->work);
+-	drain_workqueue(slot->wq);
+-
+ 	kfree(hotplug_slot->ops);
+ 	kfree(hotplug_slot->info);
+ 	kfree(hotplug_slot);
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 5763e81be2ed..a4a8a5457aca 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -165,7 +165,7 @@ void pciehp_handle_button_press(struct slot *p_slot)
+ 		/* blink green LED and turn off amber */
+ 		pciehp_green_led_blink(p_slot);
+ 		pciehp_set_attention_status(p_slot, 0);
+-		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
++		schedule_delayed_work(&p_slot->work, 5 * HZ);
+ 		break;
+ 	case BLINKINGOFF_STATE:
+ 	case BLINKINGON_STATE:
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index bc70762cbba1..0898501eea93 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -767,25 +767,18 @@ static int pcie_init_slot(struct controller *ctrl)
+ 	if (!slot)
+ 		return -ENOMEM;
+ 
+-	slot->wq = alloc_ordered_workqueue("pciehp-%u", 0, PSN(ctrl));
+-	if (!slot->wq)
+-		goto abort;
+-
+ 	slot->ctrl = ctrl;
+ 	mutex_init(&slot->lock);
+ 	mutex_init(&slot->hotplug_lock);
+ 	INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
+ 	ctrl->slot = slot;
+ 	return 0;
+-abort:
+-	kfree(slot);
+-	return -ENOMEM;
+ }
+ 
+ static void pcie_cleanup_slot(struct controller *ctrl)
+ {
+ 	struct slot *slot = ctrl->slot;
+-	destroy_workqueue(slot->wq);
++	cancel_delayed_work_sync(&slot->work);
+ 	kfree(slot);
+ }
+ 
+-- 
+2.17.1
