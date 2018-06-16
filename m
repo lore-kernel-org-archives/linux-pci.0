@@ -1,90 +1,62 @@
-Return-Path: <SRS0=Mck3=JP=linux.ee=mroos@kernel.org>
-Return-Path: <SRS0=Mck3=JP=linux.ee=mroos@kernel.org>
-Date: Fri, 29 Jun 2018 13:06:55 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-Sender: mroos@math.ut.ee
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-    sparclinux@vger.kernel.org
-Subject: Re: sparc64 PCI BAR allocation is still problematic
-In-Reply-To: <20180620220525.GC108993@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.LRH.2.21.1806291158320.6026@math.ut.ee>
-References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee> <20180620220525.GC108993@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:37693 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932898AbeFPTfb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:35:31 -0400
+Message-Id: <b835565f9e9e234dbae1b78ab83c703f78d0710c.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 01/32] PCI: hotplug: Don't leak pci_slot on registration
+ failure
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org, Greg Kroah-Hartman <greg@kroah.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > This is a followup on the thread https://lkml.org/lkml/2015/10/7/135 and 
-> > corresponding https://bugzilla.kernel.org/show_bug.cgi?id=117191 entry.
-> > 
-> > I saw some sparc64 PCI allocation changes in yesterdays git and compiled 
-> > 4.16.0-10242-gf605ba9 on most of my sparc64 machines to test if the PCI 
-> > BAR allocation problems introduced in 4.3 were fixed on some of them. 
-> > Alas, no change at all - of the test machines, none showed any changes 
-> > in the error messages in "dmesg | grep BAR".
-> > 
-> > There was one test machine, T1000 with no addon cards, that did not 
-> > encounter any problem, before or after the recent patch. All the other 
-> > test machines tried still have the BAR allocation problems.
-> > 
-> > The errors seem to cluster into 3 categories:
-> > 
-> > 1. many devices fail BAR allocations
-> > 2. one of the Davicom Ethernet devices fails BAR allocation
-> > 3. Uli ISA bridge fails BAR allocation.
-> > 
-> > Full current dmesg and lspci info is also available if there is any 
-> > interest. I did not include it all here, which machines are interesting?
-> 
-> Hi Meelis,
-> 
-> Fixes for the worst of these issues are in v4.18-rc1.
+If addition of sysfs files fails on registration of a hotplug slot, the
+struct pci_slot as well as the entry in the slot_list is leaked.  The
+issue has been present since the hotplug core was introduced in 2002:
+https://git.kernel.org/tglx/history/c/a8a2069f432c
 
-Thank you!
+Perhaps the idea was that even though sysfs addition fails, the slot
+should still be usable.  But that's not how drivers use the interface,
+they abort probe if a non-zero value is returned.
+
+Cc: stable@vger.kernel.org # v2.4.15+
+Cc: Greg Kroah-Hartman <greg@kroah.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pci_hotplug_core.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index af92fed46ab7..fd93783a87b0 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -438,8 +438,17 @@ int __pci_hp_register(struct hotplug_slot *slot, struct pci_bus *bus,
+ 	list_add(&slot->slot_list, &pci_hotplug_slot_list);
  
-> I think there are still cases where we will complain about conflicts.
-> Some of these look like they result from OF/DT descriptions that
-> contain conflicts, and they may not cause a problem other than the
-> message itself.
-
-Video RAM area related BAR messages are gone from all servers.
-
-V100 OK
-V120 OK
-Netra X1 OK
-Netra T1-200 OK
-Netra T1-105 OK
-
-T2000 still has "no compatible bridge window" about ULi ISA Bridge:
-
-[    3.767832] pci 0001:05:02.0: can't claim BAR 0 [io  0xf010000000-0xf01000ffff]: no compatible bridge window
-
-V245 still has "no compatible bridge window" about ULI ISA Bridge:
-
-[    4.522892] pci 0000:05:1e.0: can't claim BAR 0 [io  0x7f810000000-0x7f810000fff]: no compatible bridge window
-
-
-ULi PMU resource conflict still present on these servers:
-
-V210
-V240
-V440
-Blade 100
-
-On Blade 100 it is different than the newer V*:
-[    9.100363] pci 0000:00:07.0: can't claim BAR 0 [io  0x1fe02000000-0x1fe0200ffff]: address conflict with 0000:00:03.0 [io  0x1fe02000600-0x1fe0200061f]
-
-00:03.0 Non-VGA unclassified device: ULi Electronics Inc. M7101 Power Management Controller [PMU]
-00:07.0 ISA bridge: ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge [Aladdin IV/V/V+]
-
-
-Additionally, ULi ISA Bridge self-conflict still present - is that 
-because it was already reserved by the OF? On these machines:
-
-V210
-V240
-V440
-
-
+ 	result = fs_add_slot(pci_slot);
++	if (result)
++		goto err_list_del;
++
+ 	kobject_uevent(&pci_slot->kobj, KOBJ_ADD);
+ 	dbg("Added slot %s to the list\n", name);
++	goto out;
++
++err_list_del:
++	list_del(&slot->slot_list);
++	pci_slot->hotplug = NULL;
++	pci_destroy_slot(pci_slot);
+ out:
+ 	mutex_unlock(&pci_hp_mutex);
+ 	return result;
 -- 
-Meelis Roos (mroos@linux.ee)
+2.17.1
