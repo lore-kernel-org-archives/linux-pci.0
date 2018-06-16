@@ -1,63 +1,75 @@
-Return-Path: <SRS0=QIuN=JM=arm.com=punit.agrawal@kernel.org>
-Return-Path: <SRS0=QIuN=JM=arm.com=punit.agrawal@kernel.org>
-From: Punit Agrawal <punit.agrawal@arm.com>
-To: Jonathan Cameron <jonathan.cameron@huawei.com>
-Cc: Michal Hocko <mhocko@kernel.org>,  Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,  Catalin Marinas <catalin.marinas@arm.com>,  <tnowicki@caviumnetworks.com>,  Xie XiuQi <xiexiuqi@huawei.com>,  <linux-pci@vger.kernel.org>,  "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,  Will Deacon <will.deacon@arm.com>,  "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,  Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,  <linux-mm@kvack.org>,  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,  Bjorn Helgaas <helgaas@kernel.org>,  linux-arm <linux-arm-kernel@lists.infradead.org>,  Hanjun Guo <guohanjun@huawei.com>,  Bjorn Helgaas <bhelgaas@google.com>,  Andrew Morton <akpm@linux-foundation.org>,  zhongjiang <zhongjiang@huawei.com>,  <wanghuiqiang@huawei.com>
-Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
-References: <20180619120714.GE13685@dhcp22.suse.cz>
-	<874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
-	<20180619140818.GA16927@e107981-ln.cambridge.arm.com>
-	<87wouu3jz1.fsf@e105922-lin.cambridge.arm.com>
-	<20180619151425.GH13685@dhcp22.suse.cz>
-	<87r2l23i2b.fsf@e105922-lin.cambridge.arm.com>
-	<20180619163256.GA18952@e107981-ln.cambridge.arm.com>
-	<814205eb-ae86-a519-bed0-f09b8e2d3a02@huawei.com>
-	<87602d3ccl.fsf@e105922-lin.cambridge.arm.com>
-	<5c083c9c-473f-f504-848b-48506d0fd380@huawei.com>
-	<20180622091153.GU10465@dhcp22.suse.cz>
-	<87y3f7yv89.fsf@e105922-lin.cambridge.arm.com>
-	<20180622184223.00007bc3@huawei.com>
-Date: Tue, 26 Jun 2018 18:27:01 +0100
-In-Reply-To: <20180622184223.00007bc3@huawei.com> (Jonathan Cameron's message
-	of "Fri, 22 Jun 2018 18:42:23 +0100")
-Message-ID: <87muvhwja2.fsf@e105922-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:48475 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932667AbeFPTby (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:31:54 -0400
+Message-Id: <c48e201894c0bd92a9c13dc04056ed08cf4abe6d.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 20/32] PCI: pciehp: Tolerate initially unstable link
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org, Stefan Roese <sr@denx.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Jonathan Cameron <jonathan.cameron@huawei.com> writes:
+When a device is hotplugged, Presence Detect and Link Up events often do
+not occur simultaneously, but with a lag of a few milliseconds.  Only
+the first event received is relevant, the other one can be disregarded.
 
-[...]
+Moreover, Stefan Roese reports that on certain platforms, Link State and
+Presence Detect may flap for up to 100 ms before stabilizing, suggesting
+that such events should be disregarded for at least this long:
+https://patchwork.ozlabs.org/patch/867418/
 
->
-> I'll test it when back in the office, but I had a similar issue with
-> memory only nodes when I moved the SRAT listing for cpus from the 4
-> 4th mode to the 3rd node to fake some memory I could hot unplug.
-> This gave a memory only node for the last node on the system.
->
-> When I instead moved cpus from the 3rd node to the 4th (so the node
-> with only memory was now in the middle, everything worked).
->
-> Was odd, and I'd been meaning to chase it down but hadn't gotten to it
-> yet.  If I get time I'll put together some test firmwares as see if there
-> are any other nasty corner cases we aren't handling.
+On slot enablement, pciehp_check_link_status() waits for 100 ms per
+PCIe r4.0, sec 6.7.3.3, then probes the hotplugged device's vendor
+register for up to 1 second.
 
-If you get a chance, it'd be really helpful to test reversing the
-ordering of entries in the SRAT and booting with a restricted
-NR_CPUS.
+If this succeeds, the link is definitely up, so ignore any Presence
+Detect or Link State events that occurred up to this point.
 
-This issue was found through code inspection.
+pciehp_check_link_status() then checks the Link Training bit in the
+Link Status register.  This is the final opportunity to detect
+inaccessibility of the device and abort slot enablement.  Any link
+or presence change that occurs afterwards will cause the slot to be
+disabled again immediately after attempting to enable it.
 
-Please make sure to use the updated patch from Lorenzo for your
-tests[0].
+The astute reviewer may appreciate that achieving this behavior would be
+more complicated had pciehp not just been converted to enable/disable
+the slot exclusively from the IRQ thread:  When the slot is enabled via
+sysfs, each link or presence flap would otherwise cause the IRQ thread
+to run and it would have to sense that those events are belonging to a
+concurrent slot enablement operation and disregard them.  It would be
+much more difficult than this mere 3 line change.
 
-[0] https://marc.info/?l=linux-acpi&m=152998665713983&w=2
+Cc: Stefan Roese <sr@denx.de>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pciehp_hpc.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
->
-> Jonathan
->
->> 
->> _______________________________________________
->> linux-arm-kernel mailing list
->> linux-arm-kernel@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index c795d32dbb73..adc6a89a3b5d 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -270,6 +270,11 @@ int pciehp_check_link_status(struct controller *ctrl)
+ 	found = pci_bus_check_dev(ctrl->pcie->port->subordinate,
+ 					PCI_DEVFN(0, 0));
+ 
++	/* ignore link or presence changes up to this point */
++	if (found)
++		atomic_and(~(PCI_EXP_SLTSTA_DLLSC | PCI_EXP_SLTSTA_PDC),
++			   &ctrl->pending_events);
++
+ 	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+ 	ctrl_dbg(ctrl, "%s: lnk_status = %x\n", __func__, lnk_status);
+ 	if ((lnk_status & PCI_EXP_LNKSTA_LT) ||
+-- 
+2.17.1
