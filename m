@@ -1,132 +1,98 @@
-Return-Path: <SRS0=ytgX=I3=mobiveil.co.in=l.subrahmanya@kernel.org>
-Return-Path: <SRS0=ytgX=I3=mobiveil.co.in=l.subrahmanya@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <80853b92d0f69f32f2f0e2bbcd106993@codeaurora.org>
-References: <CAFZiPx29KrKGDJiQ8huTpuVb7tMn=wjMWAvJEZaBiV7eSXYMSQ@mail.gmail.com>
- <20180606125025.GA100923@bhelgaas-glaptop.roam.corp.google.com>
- <CAFZiPx0UUB25kOgSNzUruNLom4=F5y==QbF_Q2g1uPA7csGOHA@mail.gmail.com> <80853b92d0f69f32f2f0e2bbcd106993@codeaurora.org>
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date: Sat, 9 Jun 2018 15:38:28 +0530
-Message-ID: <CAFZiPx3oJQpsg3SQ_6ZbLdJto5JHwcpvuh16DOgAK7HbhTuxdg@mail.gmail.com>
-Subject: Re: pci_error_handlers for pci_host_bridge ?
-To: poza@codeaurora.org
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci-owner@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:51901 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932788AbeFPTej (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:34:39 -0400
+Message-Id: <5eb3919f0ad63e8cdb27bffbdf6d879e25a88476.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 28/32] PCI: pciehp: Resume to D0 on enable/disable
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Poza,
+pciehp's IRQ thread ensures accessibility of the port by runtime resuming
+its parent to D0.  However when the slot is enabled/disabled, the port
+itself needs to be in D0 because its secondary bus is accessed in:
 
+    pciehp_check_link_status(),
+    pciehp_configure_device() (both called from board_added())
+and
+    pciehp_unconfigure_device() (called from remove_board()).
 
-On Thu, Jun 7, 2018 at 4:20 PM, <poza@codeaurora.org> wrote:
->
-> On 2018-06-07 15:45, Subrahmanya Lingappa wrote:
->>
->> Bjorn,
->>
->> On Wed, Jun 6, 2018 at 6:20 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>>
->>> Hi Subrahmanya,
->>>
->>> On Wed, Jun 06, 2018 at 05:57:17PM +0530, Subrahmanya Lingappa wrote:
->>>>
->>>> Hi,
->>>> according to https://github.com/torvalds/linux/blob/master/Documentation/PCI/pci-error-recovery.txt
->>>>
->>>> as part of AER handling, struct pci_error_handlers{} is implemented by
->>>> endpoint drivers to handle device specific recovery steps for "struct
->>>> pci_driver".
->>>>
->>>> But we have a platform_driver which implements "struct
->>>> pci_host_bridge" which also supports AER capability how can we support
->>>> pci_error_handlers() for the host bridge drivers ?
->>>
->>>
->>> I assume you're referring to Mobiveil.  Can you explain more of the
->>> topology here?  Can you also include "sudo lspci -vv" output?
->>>
->> Yes, it is for Mobiveil's Host bridge driver :
->> https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/drivers/pci/host/pcie-mobiveil.c
->> lspci output is now is not available, I'll try to get it sooner.
->>
->> we have an endpoint connected directly to Rootport as follows
->> RC Rootport ----->BUS------> EP
->>
->>> The AER capability is an optional capability of PCIe device functions.
->>> A host bridge is not itself a PCIe function; it's a bridge between a
->>> platform-specific host bus and the PCIe bus.
->>>
->>> Sometimes there is a PCI function that corresponds to the host bridge,
->>> but that's not required by the PCI specs and there is no generic
->>> programming model for it.
->>>
->>> If you have an PCIe function corresponding to the Mobiveil host
->>> bridge, and it has an AER capability, what would you want the error
->>> handlers to do?  This function would not normally be a Root Port or
->>> other type 1 PCI-to-PCI bridge device, so it's not clear how its AER
->>> would integrate with the PCIe hierarchy.
->>>
->> Yes we do have a PCI function with AER capability, after an AER reported by EP,
->> AER driver initiates an hot_reset on subordinate bus, which happens to
->> be downstream port
->> for RC. So we get a downstream port link down happens in this case RC
->> driver needs to follow
->> a specific register restore sequence, which is most of the HW specific
->> initialization done in probe function of the driver  to recover
->> properly.
->
->
-> Are you looking at something similar to pci_error_handlers to be called for your RC driver ?
-> where probably you are expecting during ERR_NONFATAL recovery you would want to restore some of your platform
-> specific registers. I dont think that support exists now. since pci_error_handlers is of struct pci_driver
-> while yours is platform driver.
->
-Yes, that's why I asked this question here to ask how do we handle in
-case of a platform driver.
+Thus, acquire a runtime PM ref on enable/disablement of the slot.
 
->
-> Although please also note that ERR_FATAL is no more handled with error and recovery callbacks.
-> that are just going to be handled with removal, re-enumeration of the devices.
->
-> but I suppose in any case you want to restore the registers in any type of uncorrectable error.
->
-yes
+Yinghai Lu additionally discovered that some SkyLake servers feature a
+Power Controller for their PCIe hotplug ports (PCIe r3.1, sec 6.7.1.8)
+which requires the port to be in D0 when invoking
+    pciehp_power_on_slot() (likewise called from board_added()).
 
->
-> although this is really platform specific, some sort of quirk I cna think of, but again err.c has to check
-> that quirk's existence and calls platform specific callback
-> (that again I am not sure because such things do not exist with respect to error/recovery callbacks)
->
-can you point me to any other cases this scheme might have been implemented ?
+If slot power is turned on while in D3hot, link training later fails:
+https://lkml.org/lkml/2017/2/5/13
 
->
-> Yeah just re-thinking, this is too specific, not to be addressed by generic framework I think.
->
->> I was wondering if this can be handled by using AER error handlers, or
->> would suggest a better way to handle this ?
->>
->> As of now plan is to handle this situation is by calling a minimal
->> probe recovery sequence after link down interrupt within the
->> driver interrupt service routine.
->
->
-> Well I think that is a better place,
-> I was wondering why are you loosing registers at the first point ?
-> Is because of link down even you are loosing them ? some issue with hw !
->
-yes, due to AER FATAL error link reset happens on subordinate bus, in
-this case since EP is directly connected to root port,
-its a downstream port link down, in this case RC is designed to get
-reset to its config registers, though PCI config space remains intact.
+The spec is silent about such a requirement, but it seems prudent to
+assume that any hotplug port with a Power Controller may need this.
 
-Thanks.
+The present commit holds a runtime PM ref whenever slot power is turned
+on and off, but it doesn't keep the port in D0 as long as slot power is
+on.  If vendors determine that's necessary, they need to amend pciehp to
+acquire a runtime PM ref in pciehp_power_on_slot() and release one in
+pciehp_power_off_slot().
 
->
->
-> Lets hear from Bjorn anyway, I am curious.
->
->>
->>> Bjorn
->>
->>
->> Thanks,
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Ashok Raj <ashok.raj@intel.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 811019902ada..6855933ab372 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -17,6 +17,7 @@
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+ #include <linux/slab.h>
++#include <linux/pm_runtime.h>
+ #include <linux/pci.h>
+ #include "../pci.h"
+ #include "pciehp.h"
+@@ -310,9 +311,11 @@ static int pciehp_enable_slot(struct slot *slot)
+ 	struct controller *ctrl = slot->ctrl;
+ 	int ret;
+ 
++	pm_runtime_get_sync(&ctrl->pcie->port->dev);
+ 	ret = __pciehp_enable_slot(slot);
+ 	if (ret && ATTN_BUTTN(ctrl))
+ 		pciehp_green_led_off(slot); /* may be blinking */
++	pm_runtime_put(&ctrl->pcie->port->dev);
+ 
+ 	mutex_lock(&slot->lock);
+ 	slot->state = ret ? OFF_STATE : ON_STATE;
+@@ -341,9 +344,12 @@ static int __pciehp_disable_slot(struct slot *p_slot)
+ 
+ static int pciehp_disable_slot(struct slot *slot)
+ {
++	struct controller *ctrl = slot->ctrl;
+ 	int ret;
+ 
++	pm_runtime_get_sync(&ctrl->pcie->port->dev);
+ 	ret = __pciehp_disable_slot(slot);
++	pm_runtime_put(&ctrl->pcie->port->dev);
+ 
+ 	mutex_lock(&slot->lock);
+ 	slot->state = OFF_STATE;
+-- 
+2.17.1
