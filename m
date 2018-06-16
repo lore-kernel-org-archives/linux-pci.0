@@ -1,138 +1,103 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH V3] PCI: Enable PASID when End-to-End TLP is supported by all
- bridges
-Date: Sat, 30 Jun 2018 11:24:24 -0400
-Message-Id: <1530372264-20653-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:48961 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932542AbeFPT10 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:27:26 -0400
+Message-Id: <96b1a71f1aece3acf21614e822b46ece9731e8ba.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 07/32] PCI: pciehp: Document struct slot and struct controller
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A PCIe endpoint carries the process address space identifier (PASID) in
-the TLP prefix as part of the memory read/write transaction. The address
-information in the TLP is relevant only for a given PASID context.
+Document the driver's data structures to lower the barrier to entry for
+contributors.
 
-An IOMMU takes PASID value and the address information from the
-TLP to look up the physical address in the system.
-
-PASID is an End-End TLP Prefix (PCIe r4.0, sec 6.20).  Sec 2.2.10.2 says
-
-  It is an error to receive a TLP with an End-End TLP Prefix by a
-  Receiver that does not support End-End TLP Prefixes. A TLP in
-  violation of this rule is handled as a Malformed TLP. This is a
-  reported error associated with the Receiving Port (see Section 6.2).
-
-Prevent error condition by proactively requiring End-to-End TLP
-prefix to be supported on the entire data path between the endpoint and
-the root port before enabling PASID.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- drivers/pci/ats.c             |  3 +++
- drivers/pci/probe.c           | 24 ++++++++++++++++++++++++
- include/linux/pci.h           |  1 +
- include/uapi/linux/pci_regs.h |  1 +
- 4 files changed, 29 insertions(+)
+ drivers/pci/hotplug/pciehp.h | 48 +++++++++++++++++++++++++++++++++---
+ 1 file changed, 44 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 4923a2a..5b78f3b 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -273,6 +273,9 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
- 	if (WARN_ON(pdev->pasid_enabled))
- 		return -EBUSY;
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index acdeb08cbcba..c3d63e5b650f 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -57,11 +57,26 @@ do {									\
+ 	dev_warn(&ctrl->pcie->device, format, ## arg)
  
-+	if (!pdev->eetlp_prefix_path)
-+		return -EINVAL;
+ #define SLOT_NAME_SIZE 10
 +
- 	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PASID);
- 	if (!pos)
- 		return -EINVAL;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac876e3..39fd3ac 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2042,6 +2042,29 @@ static void pci_configure_ltr(struct pci_dev *dev)
- #endif
- }
++/**
++ * struct slot - PCIe hotplug slot
++ * @state: current state machine position
++ * @ctrl: pointer to the slot's controller structure
++ * @hotplug_slot: pointer to the structure registered with the PCI hotplug core
++ * @work: work item to turn the slot on or off after 5 seconds in response to
++ *	an Attention Button press
++ * @lock: protects reads and writes of @state;
++ *	protects scheduling, execution and cancellation of @work
++ * @hotplug_lock: serializes calls to pciehp_enable_slot() and
++ *	pciehp_disable_slot()
++ * @wq: work queue on which @work is scheduled;
++ *	also used to queue interrupt events and slot enablement and disablement
++ */
+ struct slot {
+ 	u8 state;
+ 	struct controller *ctrl;
+ 	struct hotplug_slot *hotplug_slot;
+-	struct delayed_work work;	/* work for button event */
++	struct delayed_work work;
+ 	struct mutex lock;
+ 	struct mutex hotplug_lock;
+ 	struct workqueue_struct *wq;
+@@ -73,11 +88,36 @@ struct event_info {
+ 	struct work_struct work;
+ };
  
-+static void pci_configure_eetlp_prefix(struct pci_dev *dev)
-+{
-+#ifdef CONFIG_PCI_PASID
-+	struct pci_dev *bridge;
-+	u32 cap;
-+
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
-+	if (!(cap & PCI_EXP_DEVCAP2_E2ETLP))
-+		return;
-+
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
-+		dev->eetlp_prefix_path = 1;
-+	else {
-+		bridge = pci_upstream_bridge(dev);
-+		if (bridge && bridge->eetlp_prefix_path)
-+			dev->eetlp_prefix_path = 1;
-+	}
-+#endif
-+}
-+
- static void pci_configure_device(struct pci_dev *dev)
- {
- 	struct hotplug_params hpp;
-@@ -2051,6 +2074,7 @@ static void pci_configure_device(struct pci_dev *dev)
- 	pci_configure_extended_tags(dev, NULL);
- 	pci_configure_relaxed_ordering(dev);
- 	pci_configure_ltr(dev);
-+	pci_configure_eetlp_prefix(dev);
- 
- 	memset(&hpp, 0, sizeof(hpp));
- 	ret = pci_get_hp_params(dev, &hpp);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 340029b..6ba8184 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -350,6 +350,7 @@ struct pci_dev {
- 	unsigned int	ltr_path:1;	/* Latency Tolerance Reporting
- 					   supported from root to here */
- #endif
-+	unsigned int	eetlp_prefix_path:1;	/* End-to-End TLP Prefix */
- 
- 	pci_channel_state_t error_state;	/* Current connectivity state */
- 	struct device	dev;			/* Generic device interface */
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 4da87e2..a617ab2 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -636,6 +636,7 @@
- #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
- #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
- #define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x00080000 /* Re-use WAKE# for OBFF */
-+#define PCI_EXP_DEVCAP2_E2ETLP		0x00200000 /* End-to-End TLP Prefix */
- #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
- #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout Value */
- #define  PCI_EXP_DEVCTL2_COMP_TMOUT_DIS	0x0010	/* Completion Timeout Disable */
++/**
++ * struct controller - PCIe hotplug controller
++ * @ctrl_lock: serializes writes to the Slot Control register
++ * @pcie: pointer to the controller's PCIe port service device
++ * @slot: pointer to the controller's slot structure
++ * @queue: wait queue to wake up on reception of a Command Completed event,
++ *	used for synchronous writes to the Slot Control register
++ * @slot_cap: cached copy of the Slot Capabilities register
++ * @slot_ctrl: cached copy of the Slot Control register
++ * @poll_timer: timer to poll for slot events if no IRQ is available,
++ *	enabled with pciehp_poll_mode module parameter
++ * @cmd_started: jiffies when the Slot Control register was last written;
++ *	the next write is allowed 1 second later, absent a Command Completed
++ *	interrupt (PCIe r4.0, sec 6.7.3.2)
++ * @cmd_busy: flag set on Slot Control register write, cleared by IRQ handler
++ *	on reception of a Command Completed event
++ * @link_active_reporting: cached copy of Data Link Layer Link Active Reporting
++ *	Capable bit in Link Capabilities register; if this bit is zero, the
++ *	Data Link Layer Link Active bit in the Link Status register will never
++ *	be set and the driver is thus confined to wait 1 second before assuming
++ *	the link to a hotplugged device is up and accessing it
++ * @notification_enabled: whether the IRQ was requested successfully
++ * @power_fault_detected: whether a power fault was detected by the hardware
++ *	that has not yet been cleared by the user
++ */
+ struct controller {
+-	struct mutex ctrl_lock;		/* controller lock */
+-	struct pcie_device *pcie;	/* PCI Express port service */
++	struct mutex ctrl_lock;
++	struct pcie_device *pcie;
+ 	struct slot *slot;
+-	wait_queue_head_t queue;	/* sleep & wake process */
++	wait_queue_head_t queue;
+ 	u32 slot_cap;
+ 	u16 slot_ctrl;
+ 	struct timer_list poll_timer;
 -- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.17.1
