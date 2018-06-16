@@ -1,36 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:37225 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751905AbeFZHV7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2018 03:21:59 -0400
-Received: by mail-io0-f195.google.com with SMTP id s26-v6so14989535ioj.4
-        for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2018 00:21:58 -0700 (PDT)
-MIME-Version: 1.0
-References: <1529766899-1994-1-git-send-email-hofrat@osadl.org>
-In-Reply-To: <1529766899-1994-1-git-send-email-hofrat@osadl.org>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Tue, 26 Jun 2018 09:21:46 +0200
-Message-ID: <CACRpkda9G+y2Q-UtMPsHaopoB42F9st=ZY92EEGVk9sOXLODJA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: faraday: add missing of_node_put()
-To: Nicholas Mc Guire <hofrat@osadl.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mailout1.hostsharing.net ([83.223.95.204]:41611 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932898AbeFPTfU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:35:20 -0400
+Message-Id: <0f74c21aab2c69a06202b960992b4e1595bdbd7d.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 30/32] PCI: sysfs: Resume to D0 on function reset
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 23, 2018 at 5:16 PM Nicholas Mc Guire <hofrat@osadl.org> wrote:
+When performing a function reset via sysfs, the device's config space is
+accessed in places such as pcie_flr() and its mmio space is accessed e.g.
+in reset_ivb_igd(), so ensure accessibility by resuming the device to D0.
 
->  The call to of_get_next_child() returns a node pointer with refcount
-> incremented thus it must be explicitly decremented here in the error
-> path and after the last usage.
->
-> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
-> Fixes: commit d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Ashok Raj <ashok.raj@intel.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pci-sysfs.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-
-Yours,
-Linus Walleij
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 0c4653c1d2ce..a3df6b57df0f 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1449,7 +1449,9 @@ static ssize_t reset_store(struct device *dev, struct device_attribute *attr,
+ 	if (val != 1)
+ 		return -EINVAL;
+ 
++	pm_runtime_get_sync(dev);
+ 	result = pci_reset_function(pdev);
++	pm_runtime_put(dev);
+ 	if (result < 0)
+ 		return result;
+ 
+-- 
+2.17.1
