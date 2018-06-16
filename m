@@ -1,43 +1,94 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 4 Jun 2018 12:49:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v1 0/2] PCI: shpchp: Minor fixes
-Message-ID: <20180604174924.GB30381@bhelgaas-glaptop.roam.corp.google.com>
-References: <152791788214.257724.13044360353832574147.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <152791788214.257724.13044360353832574147.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:35335 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932554AbeFPTdQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:33:16 -0400
+Message-Id: <a85cfc8b6dc0a52e2f1d84e806e277adde9c1a5b.1529173804.git.lukas@wunner.de>
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <cover.1529173804.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sat, 16 Jun 2018 21:25:00 +0200
+Subject: [PATCH 24/32] PCI: portdrv: Deduplicate PM callback iterator
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 02, 2018 at 12:41:59AM -0500, Bjorn Helgaas wrote:
-> An AMD POGO check in shpchp incorrectly included any device with device ID
-> 0x7458, no matter what the vendor.
-> 
-> Also, use pci_info() instead of dbg() for messages related to OSHP.
-> They're important enough that they should appear in dmesg.
-> 
-> I intend to include these along with Mika's shpchp updates.
-> 
-> ---
-> 
-> Bjorn Helgaas (2):
->       PCI: shpchp: Use dev_printk() for OSHP-related messages
->       PCI: shpchp: Fix AMD POGO identification
-> 
-> 
->  drivers/pci/hotplug/acpi_pcihp.c  |   13 ++++++-------
->  drivers/pci/hotplug/shpchp_ctrl.c |    8 ++++----
->  2 files changed, 10 insertions(+), 11 deletions(-)
+Replace suspend_iter() and resume_iter() with a single function pm_iter()
+to allow addition of port service callbacks for further power management
+phases without having to add another iterator each time.
 
-I applied these with reviewed-by from Mika and Rafael to pci/hotplug for
-v4.18.
+No functional change intended.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pcie/portdrv_core.c | 30 ++++++++++++------------------
+ 1 file changed, 12 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index e0261ad4bcdd..13a248575a14 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -353,14 +353,19 @@ int pcie_port_device_register(struct pci_dev *dev)
+ }
+ 
+ #ifdef CONFIG_PM
+-static int suspend_iter(struct device *dev, void *data)
++typedef int (*pcie_pm_callback_t)(struct pcie_device *);
++
++static int pm_iter(struct device *dev, void *data)
+ {
+ 	struct pcie_port_service_driver *service_driver;
++	size_t offset = *(size_t *)data;
++	pcie_pm_callback_t cb;
+ 
+ 	if ((dev->bus == &pcie_port_bus_type) && dev->driver) {
+ 		service_driver = to_service_driver(dev->driver);
+-		if (service_driver->suspend)
+-			service_driver->suspend(to_pcie_device(dev));
++		cb = *(pcie_pm_callback_t *)((void *)service_driver + offset);
++		if (cb)
++			return cb(to_pcie_device(dev));
+ 	}
+ 	return 0;
+ }
+@@ -371,20 +376,8 @@ static int suspend_iter(struct device *dev, void *data)
+  */
+ int pcie_port_device_suspend(struct device *dev)
+ {
+-	return device_for_each_child(dev, NULL, suspend_iter);
+-}
+-
+-static int resume_iter(struct device *dev, void *data)
+-{
+-	struct pcie_port_service_driver *service_driver;
+-
+-	if ((dev->bus == &pcie_port_bus_type) &&
+-	    (dev->driver)) {
+-		service_driver = to_service_driver(dev->driver);
+-		if (service_driver->resume)
+-			service_driver->resume(to_pcie_device(dev));
+-	}
+-	return 0;
++	size_t off = offsetof(struct pcie_port_service_driver, suspend);
++	return device_for_each_child(dev, &off, pm_iter);
+ }
+ 
+ /**
+@@ -393,7 +386,8 @@ static int resume_iter(struct device *dev, void *data)
+  */
+ int pcie_port_device_resume(struct device *dev)
+ {
+-	return device_for_each_child(dev, NULL, resume_iter);
++	size_t off = offsetof(struct pcie_port_service_driver, resume);
++	return device_for_each_child(dev, &off, pm_iter);
+ }
+ #endif /* PM */
+ 
+-- 
+2.17.1
