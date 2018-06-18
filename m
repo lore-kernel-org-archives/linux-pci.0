@@ -1,38 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:44175 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754377AbeFMGaH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 02:30:07 -0400
-Received: by mail-pg0-f65.google.com with SMTP id p21-v6so755399pgd.11
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2018 23:30:07 -0700 (PDT)
-From: Pingfan Liu <kernelfans@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [patchV2 0/2] shpchp: no claim on pcie port device
-Date: Wed, 13 Jun 2018 14:29:55 +0800
-Message-Id: <1528871397-17917-1-git-send-email-kernelfans@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56110 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754628AbeFRVzG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 18 Jun 2018 17:55:06 -0400
+Date: Mon, 18 Jun 2018 15:55:04 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>
+Subject: Re: [PATCH v3 2/3] PCI: Allow specifying devices using a base bus
+ and path of devfns
+Message-ID: <20180618155504.68e56358@t450s.home>
+In-Reply-To: <20180618193636.16210-3-logang@deltatee.com>
+References: <20180618193636.16210-1-logang@deltatee.com>
+        <20180618193636.16210-3-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Linux Device Driver Model allows a physical device to be handled
-by only a single driver. But at present, both shpchp and portdrv_pci
-claim PCI_CLASS_BRIDGE_PCI. This cause problems, such as the wrong
-shutdown seq. This series keeps shpchp driver away from pcie port device.
+On Mon, 18 Jun 2018 13:36:35 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-V1 -> V2:
-implement the checking in the process of matching, instead of probing,
-which is too late.
+> When specifying PCI devices on the kernel command line using a
+> BDF, the bus numbers can change when adding or replacing a device,
+> changing motherboard firmware, or applying kernel parameters like
+> pci=assign-buses. When this happens, it is usually undesirable to
+> apply whatever command line tweak to the wrong device.
+> 
+> Therefore, it is useful to be able to specify devices with a base
+> bus number and the path of devfns needed to get to it. (Similar to
+> the "device scope" structure in the Intel VT-d spec, Section 8.3.1.)
+> 
+> Thus, we add an option to specify devices in the following format:
+> 
+> [<domain>:]<bus>:<slot>.<func>[/<slot>.<func>][/ ...]
+> 
+> The path can be any segment within the PCI hierarchy of any length and
+> determined through the use of 'lspci -t'. When specified this way, it is
+> less likely that a renumbered bus will result in a valid device specification
+> and the tweak won't be applied to the wrong device.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Stephen Bates <sbates@raithlin.com>
+> Acked-by: Christian König <christian.koenig@amd.com>
+> ---
+>  Documentation/admin-guide/kernel-parameters.txt |   8 +-
+>  drivers/pci/pci.c                               | 120 ++++++++++++++++++++----
+>  2 files changed, 106 insertions(+), 22 deletions(-)
 
-Pingfan Liu (2):
-  pci: introduce an extra method for matching in pci_driver
-  pci/shpchp: no claim on pcie port device
-
- drivers/pci/hotplug/shpchp_core.c | 13 +++++++++++++
- drivers/pci/pci-driver.c          |  4 ++++
- include/linux/pci.h               |  2 ++
- 3 files changed, 19 insertions(+)
-
--- 
-2.7.4
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
