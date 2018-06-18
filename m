@@ -1,171 +1,227 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
-To: Michal Hocko <mhocko@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-References: <1527768879-88161-1-git-send-email-xiexiuqi@huawei.com>
- <1527768879-88161-2-git-send-email-xiexiuqi@huawei.com>
- <20180606154516.GL6631@arm.com>
- <CAErSpo6S0qtR42tjGZrFu4aMFFyThx1hkHTSowTt6t3XerpHnA@mail.gmail.com>
- <20180607105514.GA13139@dhcp22.suse.cz>
-From: Hanjun Guo <guohanjun@huawei.com>
-Message-ID: <5ed798a0-6c9c-086e-e5e8-906f593ca33e@huawei.com>
-Date: Thu, 7 Jun 2018 19:55:53 +0800
-MIME-Version: 1.0
-In-Reply-To: <20180607105514.GA13139@dhcp22.suse.cz>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: tnowicki@caviumnetworks.com, xiexiuqi@huawei.com, linux-pci@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>,
- "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- Will Deacon <will.deacon@arm.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>, linux-mm@kvack.org,
- wanghuiqiang@huawei.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Andrew Morton <akpm@linux-foundation.org>,
- linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay6.synopsys.com ([198.182.37.59]:42214 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964941AbeFRPBF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jun 2018 11:01:05 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v4 08/10] pci-epf-test/pci_endpoint_test: Add MSI-X support
+Date: Mon, 18 Jun 2018 16:00:27 +0100
+Message-Id: <3ff6730168b9535a12720b998585aec2d0aac528.1529329262.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018/6/7 18:55, Michal Hocko wrote:
-> On Wed 06-06-18 15:39:34, Bjorn Helgaas wrote:
->> [+cc akpm, linux-mm, linux-pci]
->>
->> On Wed, Jun 6, 2018 at 10:44 AM Will Deacon <will.deacon@arm.com> wrote:
->>>
->>> On Thu, May 31, 2018 at 08:14:38PM +0800, Xie XiuQi wrote:
->>>> A numa system may return node which is not online.
->>>> For example, a numa node:
->>>> 1) without memory
->>>> 2) NR_CPUS is very small, and the cpus on the node are not brought up
->>>>
->>>> In this situation, we use NUMA_NO_NODE to avoid oops.
->>>>
->>>> [   25.732905] Unable to handle kernel NULL pointer dereference at virtual address 00001988
->>>> [   25.740982] Mem abort info:
->>>> [   25.743762]   ESR = 0x96000005
->>>> [   25.746803]   Exception class = DABT (current EL), IL = 32 bits
->>>> [   25.752711]   SET = 0, FnV = 0
->>>> [   25.755751]   EA = 0, S1PTW = 0
->>>> [   25.758878] Data abort info:
->>>> [   25.761745]   ISV = 0, ISS = 0x00000005
->>>> [   25.765568]   CM = 0, WnR = 0
->>>> [   25.768521] [0000000000001988] user address but active_mm is swapper
->>>> [   25.774861] Internal error: Oops: 96000005 [#1] SMP
->>>> [   25.779724] Modules linked in:
->>>> [   25.782768] CPU: 1 PID: 1 Comm: swapper/0 Not tainted 4.17.0-rc6-mpam+ #115
->>>> [   25.789714] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 EC UEFI Nemo 2.0 RC0 - B305 05/28/2018
->>>> [   25.798831] pstate: 80c00009 (Nzcv daif +PAN +UAO)
->>>> [   25.803612] pc : __alloc_pages_nodemask+0xf0/0xe70
->>>> [   25.808389] lr : __alloc_pages_nodemask+0x184/0xe70
->>>> [   25.813252] sp : ffff00000996f660
->>>> [   25.816553] x29: ffff00000996f660 x28: 0000000000000000
->>>> [   25.821852] x27: 00000000014012c0 x26: 0000000000000000
->>>> [   25.827150] x25: 0000000000000003 x24: ffff000008099eac
->>>> [   25.832449] x23: 0000000000400000 x22: 0000000000000000
->>>> [   25.837747] x21: 0000000000000001 x20: 0000000000000000
->>>> [   25.843045] x19: 0000000000400000 x18: 0000000000010e00
->>>> [   25.848343] x17: 000000000437f790 x16: 0000000000000020
->>>> [   25.853641] x15: 0000000000000000 x14: 6549435020524541
->>>> [   25.858939] x13: 20454d502067756c x12: 0000000000000000
->>>> [   25.864237] x11: ffff00000996f6f0 x10: 0000000000000006
->>>> [   25.869536] x9 : 00000000000012a4 x8 : ffff8023c000ff90
->>>> [   25.874834] x7 : 0000000000000000 x6 : ffff000008d73c08
->>>> [   25.880132] x5 : 0000000000000000 x4 : 0000000000000081
->>>> [   25.885430] x3 : 0000000000000000 x2 : 0000000000000000
->>>> [   25.890728] x1 : 0000000000000001 x0 : 0000000000001980
->>>> [   25.896027] Process swapper/0 (pid: 1, stack limit = 0x        (ptrval))
->>>> [   25.902712] Call trace:
->>>> [   25.905146]  __alloc_pages_nodemask+0xf0/0xe70
->>>> [   25.909577]  allocate_slab+0x94/0x590
->>>> [   25.913225]  new_slab+0x68/0xc8
->>>> [   25.916353]  ___slab_alloc+0x444/0x4f8
->>>> [   25.920088]  __slab_alloc+0x50/0x68
->>>> [   25.923562]  kmem_cache_alloc_node_trace+0xe8/0x230
->>>> [   25.928426]  pci_acpi_scan_root+0x94/0x278
->>>> [   25.932510]  acpi_pci_root_add+0x228/0x4b0
->>>> [   25.936593]  acpi_bus_attach+0x10c/0x218
->>>> [   25.940501]  acpi_bus_attach+0xac/0x218
->>>> [   25.944323]  acpi_bus_attach+0xac/0x218
->>>> [   25.948144]  acpi_bus_scan+0x5c/0xc0
->>>> [   25.951708]  acpi_scan_init+0xf8/0x254
->>>> [   25.955443]  acpi_init+0x310/0x37c
->>>> [   25.958831]  do_one_initcall+0x54/0x208
->>>> [   25.962653]  kernel_init_freeable+0x244/0x340
->>>> [   25.966999]  kernel_init+0x18/0x118
->>>> [   25.970474]  ret_from_fork+0x10/0x1c
->>>> [   25.974036] Code: 7100047f 321902a4 1a950095 b5000602 (b9400803)
->>>> [   25.980162] ---[ end trace 64f0893eb21ec283 ]---
->>>> [   25.984765] Kernel panic - not syncing: Fatal exception
->>>>
->>>> Signed-off-by: Xie XiuQi <xiexiuqi@huawei.com>
->>>> Tested-by: Huiqiang Wang <wanghuiqiang@huawei.com>
->>>> Cc: Hanjun Guo <hanjun.guo@linaro.org>
->>>> Cc: Tomasz Nowicki <Tomasz.Nowicki@caviumnetworks.com>
->>>> Cc: Xishi Qiu <qiuxishi@huawei.com>
->>>> ---
->>>>  arch/arm64/kernel/pci.c | 3 +++
->>>>  1 file changed, 3 insertions(+)
->>>>
->>>> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->>>> index 0e2ea1c..e17cc45 100644
->>>> --- a/arch/arm64/kernel/pci.c
->>>> +++ b/arch/arm64/kernel/pci.c
->>>> @@ -170,6 +170,9 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->>>>       struct pci_bus *bus, *child;
->>>>       struct acpi_pci_root_ops *root_ops;
->>>>
->>>> +     if (node != NUMA_NO_NODE && !node_online(node))
->>>> +             node = NUMA_NO_NODE;
->>>> +
->>>
->>> This really feels like a bodge, but it does appear to be what other
->>> architectures do, so:
->>>
->>> Acked-by: Will Deacon <will.deacon@arm.com>
->>
->> I agree, this doesn't feel like something we should be avoiding in the
->> caller of kzalloc_node().
->>
->> I would not expect kzalloc_node() to return memory that's offline, no
->> matter what node we told it to allocate from.  I could imagine it
->> returning failure, or returning memory from a node that *is* online,
->> but returning a pointer to offline memory seems broken.
->>
->> Are we putting memory that's offline in the free list?  I don't know
->> where to look to figure this out.
-> 
-> I am not sure I have the full context but pci_acpi_scan_root calls
-> kzalloc_node(sizeof(*info), GFP_KERNEL, node)
-> and that should fall back to whatever node that is online. Offline node
-> shouldn't keep any pages behind. So there must be something else going
-> on here and the patch is not the right way to handle it. What does
-> faddr2line __alloc_pages_nodemask+0xf0 tells on this kernel?
+Add MSI-X support and update driver documentation accordingly.
 
-The whole context is:
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v2->v3:
+ - New patch file created base on the previous patch
+"misc: pci_endpoint_test: Add MSI-X support" patch file following
+Kishon's suggestion.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
 
-The system is booted with a NUMA node has no memory attaching to it
-(memory-less NUMA node), also with NR_CPUS less than CPUs presented
-in MADT, so CPUs on this memory-less node are not brought up, and
-this NUMA node will not be online (but SRAT presents this NUMA node);
+ Documentation/misc-devices/pci-endpoint-test.txt |  3 +++
+ drivers/misc/pci_endpoint_test.c                 | 28 ++++++++++++++++++------
+ drivers/pci/endpoint/functions/pci-epf-test.c    | 23 ++++++++++++++++++-
+ 3 files changed, 46 insertions(+), 8 deletions(-)
 
-Devices attaching to this NUMA node such as PCI host bridge still
-return the valid NUMA node via _PXM, but actually that valid NUMA node
-is not online which lead to this issue.
-
-Thanks
-Hanjun
-
-> 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
+index 4ebc359..fdfa0f6 100644
+--- a/Documentation/misc-devices/pci-endpoint-test.txt
++++ b/Documentation/misc-devices/pci-endpoint-test.txt
+@@ -10,6 +10,7 @@ The PCI driver for the test device performs the following tests
+ 	*) verifying addresses programmed in BAR
+ 	*) raise legacy IRQ
+ 	*) raise MSI IRQ
++	*) raise MSI-X IRQ
+ 	*) read data
+ 	*) write data
+ 	*) copy data
+@@ -25,6 +26,8 @@ ioctl
+  PCITEST_LEGACY_IRQ: Tests legacy IRQ
+  PCITEST_MSI: Tests message signalled interrupts. The MSI number
+ 	      to be tested should be passed as argument.
++ PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
++	      to be tested should be passed as argument.
+  PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
+ 		as argument.
+  PCITEST_READ: Perform read tests. The size of the buffer should be passed
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 8f2061a..8d15dbe 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -39,12 +39,14 @@
+ 
+ #define IRQ_TYPE_LEGACY				0
+ #define IRQ_TYPE_MSI				1
++#define IRQ_TYPE_MSIX				2
+ 
+ #define PCI_ENDPOINT_TEST_MAGIC			0x0
+ 
+ #define PCI_ENDPOINT_TEST_COMMAND		0x4
+ #define COMMAND_RAISE_LEGACY_IRQ		BIT(0)
+ #define COMMAND_RAISE_MSI_IRQ			BIT(1)
++#define COMMAND_RAISE_MSIX_IRQ			BIT(2)
+ #define COMMAND_READ				BIT(3)
+ #define COMMAND_WRITE				BIT(4)
+ #define COMMAND_COPY				BIT(5)
+@@ -83,7 +85,7 @@ MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
+ 
+ static int irq_type = IRQ_TYPE_MSI;
+ module_param(irq_type, int, 0444);
+-MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI)");
++MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI, 2 - MSI-X)");
+ 
+ enum pci_barno {
+ 	BAR_0,
+@@ -201,16 +203,18 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
+ }
+ 
+ static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
+-				      u8 irq_num)
++				       u16 irq_num, bool msix)
+ {
+ 	u32 val;
+ 	struct pci_dev *pdev = test->pdev;
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+-				 IRQ_TYPE_MSI);
++				 msix == false ? IRQ_TYPE_MSI :
++				 IRQ_TYPE_MSIX);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, irq_num);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 COMMAND_RAISE_MSI_IRQ);
++				 msix == false ? COMMAND_RAISE_MSI_IRQ :
++				 COMMAND_RAISE_MSIX_IRQ);
+ 	val = wait_for_completion_timeout(&test->irq_raised,
+ 					  msecs_to_jiffies(1000));
+ 	if (!val)
+@@ -455,7 +459,8 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
+ 		ret = pci_endpoint_test_legacy_irq(test);
+ 		break;
+ 	case PCITEST_MSI:
+-		ret = pci_endpoint_test_msi_irq(test, arg);
++	case PCITEST_MSIX:
++		ret = pci_endpoint_test_msi_irq(test, arg, cmd == PCITEST_MSIX);
+ 		break;
+ 	case PCITEST_WRITE:
+ 		ret = pci_endpoint_test_write(test, arg);
+@@ -542,6 +547,12 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 			dev_err(dev, "Failed to get MSI interrupts\n");
+ 		test->num_irqs = irq;
+ 		break;
++	case IRQ_TYPE_MSIX:
++		irq = pci_alloc_irq_vectors(pdev, 1, 2048, PCI_IRQ_MSIX);
++		if (irq < 0)
++			dev_err(dev, "Failed to get MSI-X interrupts\n");
++		test->num_irqs = irq;
++		break;
+ 	default:
+ 		dev_err(dev, "Invalid IRQ type selected\n");
+ 	}
+@@ -559,8 +570,9 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 				       pci_endpoint_test_irqhandler,
+ 				       IRQF_SHARED, DRV_MODULE_NAME, test);
+ 		if (err)
+-			dev_err(dev, "failed to request IRQ %d for MSI %d\n",
+-				pci_irq_vector(pdev, i), i + 1);
++			dev_err(dev, "Failed to request IRQ %d for MSI%s %d\n",
++				pci_irq_vector(pdev, i),
++				irq_type == IRQ_TYPE_MSIX ? "-X" : "", i + 1);
+ 	}
+ 
+ 	for (bar = BAR_0; bar <= BAR_5; bar++) {
+@@ -626,6 +638,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 
+ err_disable_msi:
+ 	pci_disable_msi(pdev);
++	pci_disable_msix(pdev);
+ 	pci_release_regions(pdev);
+ 
+ err_disable_pdev:
+@@ -657,6 +670,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ 	for (i = 0; i < test->num_irqs; i++)
+ 		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, i), test);
+ 	pci_disable_msi(pdev);
++	pci_disable_msix(pdev);
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+ }
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index ff92524..bfef6d1 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -20,9 +20,11 @@
+ 
+ #define IRQ_TYPE_LEGACY			0
+ #define IRQ_TYPE_MSI			1
++#define IRQ_TYPE_MSIX			2
+ 
+ #define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+ #define COMMAND_RAISE_MSI_IRQ		BIT(1)
++#define COMMAND_RAISE_MSIX_IRQ		BIT(2)
+ #define COMMAND_READ			BIT(3)
+ #define COMMAND_WRITE			BIT(4)
+ #define COMMAND_COPY			BIT(5)
+@@ -265,6 +267,9 @@ static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq_type,
+ 	case IRQ_TYPE_MSI:
+ 		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
+ 		break;
++	case IRQ_TYPE_MSIX:
++		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSIX, irq);
++		break;
+ 	default:
+ 		dev_err(dev, "Failed to raise IRQ, unknown type\n");
+ 		break;
+@@ -291,7 +296,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 	reg->command = 0;
+ 	reg->status = 0;
+ 
+-	if (reg->irq_type > IRQ_TYPE_MSI) {
++	if (reg->irq_type > IRQ_TYPE_MSIX) {
+ 		dev_err(dev, "Failed to detect IRQ type\n");
+ 		goto reset_handler;
+ 	}
+@@ -345,6 +350,16 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 		goto reset_handler;
+ 	}
+ 
++	if (command & COMMAND_RAISE_MSIX_IRQ) {
++		count = pci_epc_get_msix(epc, epf->func_no);
++		if (reg->irq_number > count || count <= 0)
++			goto reset_handler;
++		reg->status = STATUS_IRQ_RAISED;
++		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSIX,
++				  reg->irq_number);
++		goto reset_handler;
++	}
++
+ reset_handler:
+ 	queue_delayed_work(kpcitest_workqueue, &epf_test->cmd_handler,
+ 			   msecs_to_jiffies(1));
+@@ -480,6 +495,12 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+ 		return ret;
+ 	}
+ 
++	ret = pci_epc_set_msix(epc, epf->func_no, epf->msix_interrupts);
++	if (ret) {
++		dev_err(dev, "MSI-X configuration failed\n");
++		return ret;
++	}
++
+ 	if (!epf_test->linkup_notifier)
+ 		queue_work(kpcitest_workqueue, &epf_test->cmd_handler.work);
+ 
+-- 
+2.7.4
