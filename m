@@ -1,23 +1,22 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:57293 "EHLO
+Received: from smtprelay.synopsys.com ([198.182.37.59]:42217 "EHLO
         smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933395AbeFUQBu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 12:01:50 -0400
+        with ESMTP id S964947AbeFRPBG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jun 2018 11:01:06 -0400
 From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
         Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
+        adouglas@cadence.com, jesper.nilsson@axis.com
 Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v6 09/11] pci_endpoint_test: Add 2 ioctl commands
-Date: Thu, 21 Jun 2018 17:01:34 +0100
-Message-Id: <848ce0dbff24fcdd6bb7b45cb14a766820d4e9fb.1529595907.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v4 09/10] pci_endpoint_test: Add 2 ioctl commands
+Date: Mon, 18 Jun 2018 16:00:28 +0100
+Message-Id: <b10530671bdcda8b9d2bb25048ad9048f814c608.1529329262.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
@@ -29,39 +28,17 @@ Add 2 new IOCTL commands:
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
-Change v2->v3:                                                                              |  --------------------------------------------------------------------------------------------
- - New patch file created base on the previous patch                                        |  --------------------------------------------------------------------------------------------
-"misc: pci_endpoint_test: Add MSI-X support" patch file following                           |  --------------------------------------------------------------------------------------------
-Kishon's suggestion.                                                                        |  --------------------------------------------------------------------------------------------
-Change v3->v4:                                                                              |  --------------------------------------------------------------------------------------------
+Change v2->v3:
+ - New patch file created base on the previous patch
+"misc: pci_endpoint_test: Add MSI-X support" patch file following
+Kishon's suggestion.
+Change v3->v4:
  - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
-Change v5->v6:
- - Moved PCITEST_SET_IRQTYPE and PCITEST_GET_IRQTYPE ioctl entries
-from patch #10 to here.
- - Increased ioctl parameters range associated to
-drivers/misc/pci_endpoint_test.c driver.
 
- Documentation/ioctl/ioctl-number.txt             |   2 +-
  Documentation/misc-devices/pci-endpoint-test.txt |   3 +
  drivers/misc/pci_endpoint_test.c                 | 177 +++++++++++++++++------
- include/uapi/linux/pcitest.h                     |   2 +
- 4 files changed, 135 insertions(+), 49 deletions(-)
+ 2 files changed, 132 insertions(+), 48 deletions(-)
 
-diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
-index 65259d4..c15c4f3 100644
---- a/Documentation/ioctl/ioctl-number.txt
-+++ b/Documentation/ioctl/ioctl-number.txt
-@@ -166,7 +166,7 @@ Code  Seq#(hex)	Include File		Comments
- 'P'	all	linux/soundcard.h	conflict!
- 'P'	60-6F	sound/sscape_ioctl.h	conflict!
- 'P'	00-0F	drivers/usb/class/usblp.c	conflict!
--'P'	01-07	drivers/misc/pci_endpoint_test.c	conflict!
-+'P'	01-09	drivers/misc/pci_endpoint_test.c	conflict!
- 'Q'	all	linux/soundcard.h
- 'R'	00-1F	linux/random.h		conflict!
- 'R'	01	linux/rfkill.h		conflict!
 diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
 index fdfa0f6..58ccca4 100644
 --- a/Documentation/misc-devices/pci-endpoint-test.txt
@@ -77,7 +54,7 @@ index fdfa0f6..58ccca4 100644
  		as argument.
   PCITEST_READ: Perform read tests. The size of the buffer should be passed
 diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 2b58887..82fa0c2 100644
+index 8d15dbe..df2017f 100644
 --- a/drivers/misc/pci_endpoint_test.c
 +++ b/drivers/misc/pci_endpoint_test.c
 @@ -157,6 +157,87 @@ static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
@@ -316,17 +293,5 @@ index 2b58887..82fa0c2 100644
  	pci_release_regions(pdev);
  	pci_disable_device(pdev);
  }
-diff --git a/include/uapi/linux/pcitest.h b/include/uapi/linux/pcitest.h
-index d746fb1..cbf422e 100644
---- a/include/uapi/linux/pcitest.h
-+++ b/include/uapi/linux/pcitest.h
-@@ -17,5 +17,7 @@
- #define PCITEST_READ		_IOW('P', 0x5, unsigned long)
- #define PCITEST_COPY		_IOW('P', 0x6, unsigned long)
- #define PCITEST_MSIX		_IOW('P', 0x7, int)
-+#define PCITEST_SET_IRQTYPE	_IOW('P', 0x8, int)
-+#define PCITEST_GET_IRQTYPE	_IO('P', 0x9)
- 
- #endif /* __UAPI_LINUX_PCITEST_H */
 -- 
 2.7.4
