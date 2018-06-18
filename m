@@ -1,202 +1,101 @@
-Return-Path: <SRS0=GJIr=I6=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=GJIr=I6=broadcom.com=ray.jui@kernel.org>
-Subject: Re: [PATCH INTERNAL 2/3] PCI: iproc: Fix up corrupted PAXC root
- complex config registers
-From: Ray Jui <ray.jui@broadcom.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org,
- bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
- Ray Jui <rjui@broadcom.com>
-References: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
- <1526577692-21104-3-git-send-email-ray.jui@broadcom.com>
- <20180530172733.GN39853@bhelgaas-glaptop.roam.corp.google.com>
- <715d8746-1b68-4342-6258-7d9c1b5035bc@broadcom.com>
-Message-ID: <7e7ce21e-b39d-0d9e-1d75-7d0e2e432e48@broadcom.com>
-Date: Mon, 11 Jun 2018 17:18:48 -0700
-MIME-Version: 1.0
-In-Reply-To: <715d8746-1b68-4342-6258-7d9c1b5035bc@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay6.synopsys.com ([198.182.37.59]:42215 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964939AbeFRPBF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jun 2018 11:01:05 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v4 05/10] PCI: dwc: Add legacy interrupt callback handler
+Date: Mon, 18 Jun 2018 16:00:24 +0100
+Message-Id: <b87c5d32bd6213a3d512108bfe93d00da6a8fdb0.1529329262.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Add a legacy interrupt callback handler. Currently DesignWare IP don't
+allow trigger legacy interrupts.
 
-On 5/30/2018 10:43 AM, Ray Jui wrote:
-> Hi Bjorn,
-> 
-> On 5/30/2018 10:27 AM, Bjorn Helgaas wrote:
->> On Thu, May 17, 2018 at 10:21:31AM -0700, Ray Jui wrote:
->>> On certain versions of Broadcom PAXC based root complexes, certain
->>> regions of the configuration space are corrupted. As a result, it
->>> prevents the Linux PCIe stack from traversing the linked list of the
->>> capability registers completely and therefore the root complex is
->>> not advertised as "PCIe capable". This prevents the correct PCIe RID
->>> from being parsed in the kernel PCIe stack. A correct RID is required
->>> for mapping to a stream ID from the SMMU or the device ID from the
->>> GICv3 ITS
->>>
->>> This patch fixes up the issue by manually populating the related
->>> PCIe capabilities based on readings from the PCIe capability structure
->>>
->>> Signed-off-by: Ray Jui <rjui@broadcom.com>
->>> Reviewed-by: Anup Patel <anup.patel@broadcom.com>
->>> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
->>> ---
->>>   drivers/pci/quirks.c | 95 
->>> ++++++++++++++++++++++++++++++++++++++++++++++++++++
->>>   1 file changed, 95 insertions(+)
->>>
->>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> index 47dfea0..0cdbd0a 100644
->>> --- a/drivers/pci/quirks.c
->>> +++ b/drivers/pci/quirks.c
->>> @@ -2198,6 +2198,101 @@ 
->>> DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0, 
->>> quirk_paxc_bridge);
->>>   DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd750, 
->>> quirk_paxc_bridge);
->>>   DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802, 
->>> quirk_paxc_bridge);
->>>   DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804, 
->>> quirk_paxc_bridge);
->>> +
->>> +/*
->>> + * The PCI capabilities list for certain revisions of Broadcom PAXC 
->>> root
->>> + * complexes is incorrectly terminated due to corrupted 
->>> configuration space
->>> + * registers in the range of 0x50 - 0x5f
->>> + *
->>> + * As a result, the capability list becomes broken and prevent 
->>> standard PCI
->>> + * stack from being able to traverse to the PCIe capability structure
->>> + */
->>> +static void quirk_paxc_pcie_capability(struct pci_dev *pdev)
->>> +{
->>> +    int pos, i = 0;
->>> +    u8 next_cap;
->>> +    u16 reg16, *cap;
->>> +    struct pci_cap_saved_state *state;
->>> +
->>> +    /* bail out if PCIe capability can be found */
->>> +    if (pdev->pcie_cap || pci_find_capability(pdev, PCI_CAP_ID_EXP))
->>> +        return;
->>> +
->>> +    /* locate the power management capability */
->>> +    pos = pci_find_capability(pdev, PCI_CAP_ID_PM);
->>> +    if (!pos)
->>> +        return;
->>> +
->>> +    /* bail out if the next capability pointer is not 0x50/0x58 */
->>> +    pci_read_config_byte(pdev, pos + 1, &next_cap);
->>> +    if (next_cap != 0x50 && next_cap != 0x58)
->>> +        return;
->>> +
->>> +    /* bail out if we do not terminate at 0x50/0x58 */
->>> +    pos = next_cap;
->>> +    pci_read_config_byte(pdev, pos + 1, &next_cap);
->>> +    if (next_cap != 0x00)
->>> +        return;
->>> +
->>> +    /*
->>> +     * On these buggy HW, PCIe capability structure is expected to 
->>> be at
->>> +     * 0xac and should terminate the list
->>> +     *
->>> +     * Borrow the similar logic from theIntel DH895xCC VFs fixup to 
->>> save
->>> +     * the PCIe capability list
->>> +     */
->>> +    pos = 0xac;
->>> +    pci_read_config_word(pdev, pos, &reg16);
->>> +    if (reg16 == (0x0000 | PCI_CAP_ID_EXP)) {
->>> +        u32 status;
->>> +
->>> +#ifndef PCI_EXP_SAVE_REGS
->>> +#define PCI_EXP_SAVE_REGS     7
->>> +#endif
->>> +        int size = PCI_EXP_SAVE_REGS * sizeof(u16);
->>> +
->>> +        pdev->pcie_cap = pos;
->>> +        pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
->>> +        pdev->pcie_flags_reg = reg16;
->>> +        pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
->>> +        pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
->>
->> Is there any way you can fix this in iproc_pcie_config_read() instead,
->> by making it notice when we're reading a corrupted part of config
->> space, and then returning the correct data instead?  Is it just the
->> next capability pointer that's corrupted?
-> 
-> Let me look into that and I'll get back.
-> 
-> Thanks,
-> 
-> Ray
-> 
->>
->> If you could fix it in the config accessor, lspci would automatically
->> show all the correct data (I think lspci will still show the wrong
->> data with this patch).
->>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
 
-I managed to get this fixed within iproc_pcie_config_read(). By doing it 
-this way, as you suggested, now lspci and dump of 
-/sys/bus/pci/devices/xxx:yyy:zzz.w all show correct data.
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 10 ++++++++++
+ drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +--
+ drivers/pci/controller/dwc/pcie-designware.h      |  6 ++++++
+ 3 files changed, 17 insertions(+), 2 deletions(-)
 
-I'll send out v2 of the patch series with the fix.
-
-Thanks!
-
-Ray
-
-
->> The quirk seems like a maintenance issue because anything that calls
->>
->>    pci_find_capability(pdev, PCI_CAP_ID_EXP)
->>
->> will get the wrong answer.
->>
->>> +
->>> +        pdev->cfg_size = PCI_CFG_SPACE_EXP_SIZE;
->>> +        if (pci_read_config_dword(pdev, PCI_CFG_SPACE_SIZE, &status) !=
->>> +            PCIBIOS_SUCCESSFUL || (status == 0xffffffff))
->>> +            pdev->cfg_size = PCI_CFG_SPACE_SIZE;
->>> +
->>> +        if (pci_find_saved_cap(pdev, PCI_CAP_ID_EXP))
->>> +            return;
->>> +
->>> +        state = kzalloc(sizeof(*state) + size, GFP_KERNEL);
->>> +        if (!state)
->>> +            return;
->>> +
->>> +        state->cap.cap_nr = PCI_CAP_ID_EXP;
->>> +        state->cap.cap_extended = 0;
->>> +        state->cap.size = size;
->>> +        cap = (u16 *)&state->cap.data[0];
->>> +        pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &cap[i++]);
->>> +        pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &cap[i++]);
->>> +        pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &cap[i++]);
->>> +        pcie_capability_read_word(pdev, PCI_EXP_RTCTL,  &cap[i++]);
->>> +        pcie_capability_read_word(pdev, PCI_EXP_DEVCTL2, &cap[i++]);
->>> +        pcie_capability_read_word(pdev, PCI_EXP_LNKCTL2, &cap[i++]);
->>> +        pcie_capability_read_word(pdev, PCI_EXP_SLTCTL2, &cap[i++]);
->>> +        hlist_add_head(&state->next, &pdev->saved_cap_space);
->>> +    }
->>> +}
->>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 
->>> PCI_DEVICE_ID_NX2_57810,
->>> +            quirk_paxc_pcie_capability);
->>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16cd,
->>> +            quirk_paxc_pcie_capability);
->>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0,
->>> +            quirk_paxc_pcie_capability);
->>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802,
->>> +            quirk_paxc_pcie_capability);
->>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804,
->>> +            quirk_paxc_pcie_capability);
->>>   #endif
->>>   /* Originally in EDAC sources for i82875P:
->>> -- 
->>> 2.1.4
->>>
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 89d9e52..e8a70d8 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
+ 	.stop			= dw_pcie_ep_stop,
+ };
+ 
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct device *dev = pci->dev;
++
++	dev_err(dev, "EP cannot trigger legacy IRQs\n");
++
++	return -EINVAL;
++}
++
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num)
+ {
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 654dcb5..90a8c95 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -84,8 +84,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 
+ 	switch (type) {
+ 	case PCI_EPC_IRQ_LEGACY:
+-		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
+-		return -EINVAL;
++		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
+ 	case PCI_EPC_IRQ_MSI:
+ 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
+ 	case PCI_EPC_IRQ_MSIX:
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index a0ab12f..69e6e17 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -350,6 +350,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num);
+ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+@@ -369,6 +370,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
+ 
++static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	return 0;
++}
++
+ static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 					   u8 interrupt_num)
+ {
+-- 
+2.7.4
