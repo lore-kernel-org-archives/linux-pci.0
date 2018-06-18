@@ -1,80 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:40955 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751182AbeFVIB2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2018 04:01:28 -0400
-Date: Fri, 22 Jun 2018 10:01:25 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] genirq: Synchronize only with single thread on free_irq()
-Message-ID: <20180622080125.GA13709@wunner.de>
-References: <8f770886632640321592873e4c902218d42c436b.1527194314.git.lukas@wunner.de>
- <alpine.DEB.2.21.1806212217571.1591@nanos.tec.linutronix.de>
+Received: from mga17.intel.com ([192.55.52.151]:36676 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935893AbeFRTMb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 18 Jun 2018 15:12:31 -0400
+Date: Tue, 19 Jun 2018 03:12:07 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc: kbuild-all@01.org, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [RFC PATCH] PCI: dwc: dw_pcie_ep_find_capability() can be static
+Message-ID: <20180618191207.GA111117@ivb43>
+References: <5beae521c5ee475b1c0e04f5eec07d0120b0fa2b.1529329262.git.gustavo.pimentel@synopsys.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.21.1806212217571.1591@nanos.tec.linutronix.de>
+In-Reply-To: <5beae521c5ee475b1c0e04f5eec07d0120b0fa2b.1529329262.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 21, 2018 at 10:21:44PM +0200, Thomas Gleixner wrote:
-> On Thu, 24 May 2018, Lukas Wunner wrote:
-> >  static int irq_wait_for_interrupt(struct irqaction *action)
-> >  {
-> > -	set_current_state(TASK_INTERRUPTIBLE);
-> > +	for (;;) {
-> > +		set_current_state(TASK_INTERRUPTIBLE);
-> >  
-> > -	while (!kthread_should_stop()) {
-> > +		if (kthread_should_stop()) {
-> > +			/* may need to run one last time. */
-> > +			if (test_and_clear_bit(IRQTF_RUNTHREAD,
-> > +					       &action->thread_flags)) {
-> > +				__set_current_state(TASK_RUNNING);
-> > +				return 0;
-> > +			}
-> > +			__set_current_state(TASK_RUNNING);
-> > +			return -1;
-> > +		}
-> >  
-> >  		if (test_and_clear_bit(IRQTF_RUNTHREAD,
-> >  				       &action->thread_flags)) {
-> > @@ -766,10 +776,7 @@ static int irq_wait_for_interrupt(struct irqaction *action)
-> >  			return 0;
-> >  		}
-> >  		schedule();
-> > -		set_current_state(TASK_INTERRUPTIBLE);
-> >  	}
-> > -	__set_current_state(TASK_RUNNING);
-> > -	return -1;
-> >  }
-> >  
-> >  /*
-> > @@ -990,7 +997,7 @@ static int irq_thread(void *data)
-> >  	/*
-> >  	 * This is the regular exit path. __free_irq() is stopping the
-> >  	 * thread via kthread_stop() after calling
-> > -	 * synchronize_irq(). So neither IRQTF_RUNTHREAD nor the
-> > +	 * synchronize_hardirq(). So neither IRQTF_RUNTHREAD nor the
-> >  	 * oneshot mask bit can be set. We cannot verify that as we
-> >  	 * cannot touch the oneshot mask at this point anymore as
-> >  	 * __setup_irq() might have given out currents thread_mask
-> > @@ -1595,7 +1602,7 @@ static struct irqaction *__free_irq(struct irq_desc *desc, void *dev_id)
-> >  	unregister_handler_proc(irq, action);
-> >  
-> >  	/* Make sure it's not being used on another CPU: */
-> > -	synchronize_irq(irq);
-> > +	synchronize_hardirq(irq);
-> 
-> So after that, action can be freed and when the thread above tries to
-> access it. Nice Use After Free. That needs more thought.
 
-No, after that, kthread_stop() is called which blocks until the IRQ
-thread has completed.  Only then is the action freed.
+Fixes: 43f8cf4686e0 ("PCI: dwc: Add MSI-X callbacks handler")
+Signed-off-by: kbuild test robot <fengguang.wu@intel.com>
+---
+ pcie-designware-ep.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-
-Lukas
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index beee64e..ffc2065 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -59,7 +59,7 @@ static u8 __dw_pcie_ep_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
+ 	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+ }
+ 
+-u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
++static u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
+ {
+ 	u8 next_cap_ptr;
+ 	u16 reg;
