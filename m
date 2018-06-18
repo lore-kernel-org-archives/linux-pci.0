@@ -1,102 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:42745 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751411AbeFVULb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2018 16:11:31 -0400
-Date: Fri, 22 Jun 2018 22:11:26 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Lukas Wunner <lukas@wunner.de>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] genirq: Synchronize only with single thread on
- free_irq()
-In-Reply-To: <alpine.DEB.2.21.1806222144160.1589@nanos.tec.linutronix.de>
-Message-ID: <alpine.DEB.2.21.1806222155230.1589@nanos.tec.linutronix.de>
-References: <8f770886632640321592873e4c902218d42c436b.1527194314.git.lukas@wunner.de> <alpine.DEB.2.21.1806212217571.1591@nanos.tec.linutronix.de> <20180622080125.GA13709@wunner.de> <alpine.DEB.2.21.1806222144160.1589@nanos.tec.linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: bhelgaas@google.com
+Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, andy.shevchenko@gmail.com,
+        okaya@codeaurora.org, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v4] PCI: Check for PCIe downtraining conditions
+Date: Mon, 18 Jun 2018 11:07:32 -0500
+Message-Id: <20180618160734.8134-1-mr.nuke.me@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 22 Jun 2018, Thomas Gleixner wrote:
-> On Fri, 22 Jun 2018, Lukas Wunner wrote:
-> > On Thu, Jun 21, 2018 at 10:21:44PM +0200, Thomas Gleixner wrote:
-> > > On Thu, 24 May 2018, Lukas Wunner wrote:
-> > > >  static int irq_wait_for_interrupt(struct irqaction *action)
-> > > >  {
-> > > > -	set_current_state(TASK_INTERRUPTIBLE);
-> > > > +	for (;;) {
-> > > > +		set_current_state(TASK_INTERRUPTIBLE);
-> > > >  
-> > > > -	while (!kthread_should_stop()) {
-> > > > +		if (kthread_should_stop()) {
-> > > > +			/* may need to run one last time. */
-> > > > +			if (test_and_clear_bit(IRQTF_RUNTHREAD,
-> > > > +					       &action->thread_flags)) {
-> > > > +				__set_current_state(TASK_RUNNING);
-> > > > +				return 0;
-> > > > +			}
-> > > > +			__set_current_state(TASK_RUNNING);
-> > > > +			return -1;
-> > > > +		}
-> > > >  
-> > > >  		if (test_and_clear_bit(IRQTF_RUNTHREAD,
-> > > >  				       &action->thread_flags)) {
-> > > > @@ -766,10 +776,7 @@ static int irq_wait_for_interrupt(struct irqaction *action)
-> > > >  			return 0;
-> > > >  		}
-> > > >  		schedule();
-> > > > -		set_current_state(TASK_INTERRUPTIBLE);
-> > > >  	}
-> > > > -	__set_current_state(TASK_RUNNING);
-> > > > -	return -1;
-> > > >  }
-> > > >  
-> > > >  /*
-> > > > @@ -990,7 +997,7 @@ static int irq_thread(void *data)
-> > > >  	/*
-> > > >  	 * This is the regular exit path. __free_irq() is stopping the
-> > > >  	 * thread via kthread_stop() after calling
-> > > > -	 * synchronize_irq(). So neither IRQTF_RUNTHREAD nor the
-> > > > +	 * synchronize_hardirq(). So neither IRQTF_RUNTHREAD nor the
-> > > >  	 * oneshot mask bit can be set. We cannot verify that as we
-> > > >  	 * cannot touch the oneshot mask at this point anymore as
-> > > >  	 * __setup_irq() might have given out currents thread_mask
-> > > > @@ -1595,7 +1602,7 @@ static struct irqaction *__free_irq(struct irq_desc *desc, void *dev_id)
-> > > >  	unregister_handler_proc(irq, action);
-> > > >  
-> > > >  	/* Make sure it's not being used on another CPU: */
-> > > > -	synchronize_irq(irq);
-> > > > +	synchronize_hardirq(irq);
-> > > 
-> > > So after that, action can be freed and when the thread above tries to
-> > > access it. Nice Use After Free. That needs more thought.
-> > 
-> > No, after that, kthread_stop() is called which blocks until the IRQ
-> > thread has completed.  Only then is the action freed.
-> 
-> Missed that. Fair enough.
+PCIe downtraining happens when both the device and PCIe port are
+capable of a larger bus width or higher speed than negotiated.
+Downtraining might be indicative of other problems in the system, and
+identifying this from userspace is neither intuitive, nor straigh
+forward.
 
-I just had to go back and figure out why I missed it:
+The easiest way to detect this is with pcie_print_link_status(),
+since the bottleneck is usually the link that is downtrained. It's not
+a perfect solution, but it works extremely well in most cases.
 
-kthread_stop() is only half of the story. Just look at the comment above:
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
 
-		 * oneshot mask bit can be set.  We cannot verify that as we
-		 * cannot touch the oneshot mask at this point anymore as
-		 * __setup_irq() might have given out currents thread_mask
+Changes since v3:
+ - Remove extra newline and parentheses.
+ - Make sure v4.18-rc1 is still happy with the change (it is).
 
-But you got lucky. That comment is not longer accurate because at the time
-when it was written desc->request_mutex did not exist.
+Changes since v2:
+ - Check dev->is_virtfn flag
 
-It's there now and prevents a concurrent request_irq() coming in after
-dropping desc->lock and handing out the oneshot mask bit. It that wouldn't
-be the case, then your scheme would be very subtly busted.
+Changes since v1:
+ - Use pcie_print_link_status() instead of reimplementing logic
 
-This really needs to be documented in the code, the comment needs to be
-fixed and the changelog needs a proper explanation of all that.
+ drivers/pci/probe.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-Thanks,
-
-	tglx
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ac876e32de4b..5e0d0a34fe8c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2205,6 +2205,24 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	return dev;
+ }
+ 
++static void pcie_check_upstream_link(struct pci_dev *dev)
++{
++	if (!pci_is_pcie(dev))
++		return;
++
++	/* Look from the device up to avoid downstream ports with no devices. */
++	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
++	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
++	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
++		return;
++
++	/* Multi-function PCIe share the same link/status. */
++	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
++		return;
++
++	pcie_print_link_status(dev);
++}
++
+ static void pci_init_capabilities(struct pci_dev *dev)
+ {
+ 	/* Enhanced Allocation */
+@@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	/* Advanced Error Reporting */
+ 	pci_aer_init(dev);
+ 
++	/* Check link and detect downtrain errors */
++	pcie_check_upstream_link(dev);
++
+ 	if (pci_probe_reset_function(dev) == 0)
+ 		dev->reset_fn = 1;
+ }
+-- 
+2.14.3
