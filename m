@@ -1,188 +1,193 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:37138 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932895AbeF2K1w (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jun 2018 06:27:52 -0400
-Received: by mail-qt0-f195.google.com with SMTP id a18-v6so7342153qtj.4
-        for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2018 03:27:52 -0700 (PDT)
-From: Hari Vyas <hari.vyas@broadcom.com>
-To: bhelgaas@google.com, benh@kernel.crashing.org
-Cc: linux-pci@vger.kernel.org, ray.jui@broadcom.com,
-        Hari Vyas <hari.vyas@broadcom.com>
-Subject: [PATCH v2 1/3] PCI: Data corruption happening due to race condition
-Date: Fri, 29 Jun 2018 15:57:39 +0530
-Message-Id: <1530268061-17324-2-git-send-email-hari.vyas@broadcom.com>
-In-Reply-To: <1530268061-17324-1-git-send-email-hari.vyas@broadcom.com>
-References: <1530268061-17324-1-git-send-email-hari.vyas@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v3 24/27] devicetree: fix a series of wrong file references
+To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Linux Doc Mailing List
+ <linux-doc@vger.kernel.org>
+References: <cover.1528990947.git.mchehab+samsung@kernel.org>
+ <bce1b59268ac2d659fd7cb37f89285ef2acc8316.1528990947.git.mchehab+samsung@kernel.org>
+From: Alexandre Torgue <alexandre.torgue@st.com>
+Message-ID: <93406d06-69c3-01b9-71d3-06f3db8d0370@st.com>
+Date: Mon, 18 Jun 2018 09:57:14 +0200
+MIME-Version: 1.0
+In-Reply-To: <bce1b59268ac2d659fd7cb37f89285ef2acc8316.1528990947.git.mchehab+samsung@kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, linux-input@vger.kernel.org,
+ alsa-devel@alsa-project.org, Binghui Wang <wangbinghui@hisilicon.com>,
+ Maxime Coquelin <mcoquelin.stm32@gmail.com>, Jonathan Corbet <corbet@lwn.net>,
+ Maxime Ripard <maxime.ripard@bootlin.com>, Liam Girdwood <lgirdwood@gmail.com>,
+ Mark Brown <broonie@kernel.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Mauro Carvalho Chehab <mchehab@infradead.org>, Chen-Yu Tsai <wens@csie.org>,
+ Rob Herring <robh+dt@kernel.org>, linux-arm-kernel@lists.infradead.org,
+ Zhou Wang <wangzhou1@hisilicon.com>, Xiaowei Song <songxiaowei@hisilicon.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Lee Jones <lee.jones@linaro.org>,
+ devicetree@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a pci device is detected, a variable is_added is set to
-1 in pci device structure and proc, sys entries are created.
-
-When a pci device is removed, first is_added is checked for one
-and then device is detached with clearing of proc and sys
-entries and at end, is_added is set to 0.
-
-is_added and is_busmaster are bit fields in pci_dev structure
-sharing same memory location.
-
-A strange issue was observed with multiple times removal and
-rescan of a pcie nvme device using sysfs commands where is_added
-flag was observed as zero instead of one while removing device
-and proc,sys entries are not cleared.  This causes issue in
-later device addition with warning message "proc_dir_entry"
-already registered.
-
-Debugging revealed a race condition between pcie core driver
-enabling is_added bit(pci_bus_add_device()) and nvme driver
-reset work-queue enabling is_busmaster bit (by pci_set_master()).
-As both fields are not handled in atomic manner and that clears
-is_added bit.
-
-Fix moves device addition is_added bit to separate private flag
-variable and use different atomic functions to set, clear and
-retrieve device addition state. As is_added shares different
-memory location so race condition is avoided.
-
-Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
----
- drivers/pci/bus.c    |  6 +++---
- drivers/pci/pci.c    |  1 +
- drivers/pci/pci.h    | 18 ++++++++++++++++++
- drivers/pci/probe.c  |  4 ++--
- drivers/pci/remove.c |  5 +++--
- include/linux/pci.h  |  1 -
- 6 files changed, 27 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 35b7fc8..8674019 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -330,7 +330,7 @@ void pci_bus_add_device(struct pci_dev *dev)
- 		return;
- 	}
- 
--	dev->is_added = 1;
-+	pci_dev_set_added(dev, NULL);
- }
- EXPORT_SYMBOL_GPL(pci_bus_add_device);
- 
-@@ -347,14 +347,14 @@ void pci_bus_add_devices(const struct pci_bus *bus)
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		/* Skip already-added devices */
--		if (dev->is_added)
-+		if (pci_dev_is_added(dev))
- 			continue;
- 		pci_bus_add_device(dev);
- 	}
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		/* Skip if device attach failed */
--		if (!dev->is_added)
-+		if (!pci_dev_is_added(dev))
- 			continue;
- 		child = dev->subordinate;
- 		if (child)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 97acba7..baefd55 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3675,6 +3675,7 @@ static void __pci_set_master(struct pci_dev *dev, bool enable)
- 			enable ? "enabling" : "disabling");
- 		pci_write_config_word(dev, PCI_COMMAND, cmd);
- 	}
-+
- 	dev->is_busmaster = enable;
- }
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c358e7a0..c924a4c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -288,6 +288,7 @@ struct pci_sriov {
- 
- /* pci_dev priv_flags */
- #define PCI_DEV_DISCONNECTED 0
-+#define PCI_DEV_ADDED 1
- 
- static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
- {
-@@ -300,6 +301,23 @@ static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
- 	return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
- }
- 
-+static inline int pci_dev_set_added(struct pci_dev *dev, void *unused)
-+{
-+	set_bit(PCI_DEV_ADDED, &dev->priv_flags);
-+	return 0;
-+}
-+
-+static inline int pci_dev_clear_added(struct pci_dev *dev, void *unused)
-+{
-+	clear_bit(PCI_DEV_ADDED, &dev->priv_flags);
-+	return 0;
-+}
-+
-+static inline bool pci_dev_is_added(const struct pci_dev *dev)
-+{
-+	return test_bit(PCI_DEV_ADDED, &dev->priv_flags);
-+}
-+
- #ifdef CONFIG_PCI_ATS
- void pci_restore_ats_state(struct pci_dev *dev);
- #else
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac876e3..611adcd 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2433,13 +2433,13 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
- 	dev = pci_scan_single_device(bus, devfn);
- 	if (!dev)
- 		return 0;
--	if (!dev->is_added)
-+	if (!pci_dev_is_added(dev))
- 		nr++;
- 
- 	for (fn = next_fn(bus, dev, 0); fn > 0; fn = next_fn(bus, dev, fn)) {
- 		dev = pci_scan_single_device(bus, devfn + fn);
- 		if (dev) {
--			if (!dev->is_added)
-+			if (!pci_dev_is_added(dev))
- 				nr++;
- 			dev->multifunction = 1;
- 		}
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 6f072ea..a272cdc 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -19,11 +19,12 @@ static void pci_stop_dev(struct pci_dev *dev)
- {
- 	pci_pme_active(dev, false);
- 
--	if (dev->is_added) {
-+	if (pci_dev_is_added(dev)) {
- 		device_release_driver(&dev->dev);
- 		pci_proc_detach_device(dev);
- 		pci_remove_sysfs_dev_files(dev);
--		dev->is_added = 0;
-+
-+		pci_dev_clear_added(dev, NULL);
- 	}
- 
- 	if (dev->bus->self)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 340029b..506125b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -368,7 +368,6 @@ struct pci_dev {
- 	unsigned int	transparent:1;		/* Subtractive decode bridge */
- 	unsigned int	multifunction:1;	/* Multi-function device */
- 
--	unsigned int	is_added:1;
- 	unsigned int	is_busmaster:1;		/* Is busmaster */
- 	unsigned int	no_msi:1;		/* May not use MSI */
- 	unsigned int	no_64bit_msi:1; 	/* May only use 32-bit MSIs */
--- 
-1.9.1
+CgpPbiAwNi8xNC8yMDE4IDA2OjA5IFBNLCBNYXVybyBDYXJ2YWxobyBDaGVoYWIgd3JvdGU6Cj4g
+QXMgZmlsZXMgZ290IHJlbmFtZWQsIHRoZWlyIHJlZmVyZW5jZXMgYnJva2UuCj4gCj4gTWFudWFs
+bHkgZml4IGEgc2VyaWVzIG9mIGJyb2tlbiByZWZzIGF0IHRoZSBEVCBiaW5kaW5ncy4KPiAKPiBT
+aWduZWQtb2ZmLWJ5OiBNYXVybyBDYXJ2YWxobyBDaGVoYWIgPG1jaGVoYWIrc2Ftc3VuZ0BrZXJu
+ZWwub3JnPgo+IC0tLQoKRm9yIHN0bTMyIHBhcnQ6CgpBY2tlZC1ieTogQWxleGFuZHJlIFRPUkdV
+RSA8YWxleGFuZHJlLnRvcmd1ZUBzdC5jb20+CgpUaGFua3MKQWxleAoKCj4gICAuLi4vZGV2aWNl
+dHJlZS9iaW5kaW5ncy9pbnB1dC9ybWk0L3JtaV8yZF9zZW5zb3IudHh0IHwgIDIgKy0KPiAgIERv
+Y3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9tZmQvc3VuNmktcHJjbS50eHQgfCAgMiAr
+LQo+ICAgLi4uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2hpc2lsaWNvbi1wY2llLnR4dCAgICAg
+ICB8ICAyICstCj4gICBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2tpcmlu
+LXBjaWUudHh0IHwgIDIgKy0KPiAgIC4uLi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9wY2kta2V5
+c3RvbmUudHh0ICAgICAgICAgfCAgNCArKy0tCj4gICAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9z
+b3VuZC9zdCxzdG0zMi1pMnMudHh0ICAgICAgIHwgIDIgKy0KPiAgIC4uLi9kZXZpY2V0cmVlL2Jp
+bmRpbmdzL3NvdW5kL3N0LHN0bTMyLXNhaS50eHQgICAgICAgfCAgMiArLQo+ICAgTUFJTlRBSU5F
+UlMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8IDEyICsrKysrKy0t
+LS0tLQo+ICAgOCBmaWxlcyBjaGFuZ2VkLCAxNCBpbnNlcnRpb25zKCspLCAxNCBkZWxldGlvbnMo
+LSkKPiAKPiBkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2lu
+cHV0L3JtaTQvcm1pXzJkX3NlbnNvci50eHQgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmlu
+ZGluZ3MvaW5wdXQvcm1pNC9ybWlfMmRfc2Vuc29yLnR4dAo+IGluZGV4IGYyYzMwYzhiNzI1ZC4u
+OWFmZmZiZGY2ZTI4IDEwMDY0NAo+IC0tLSBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5k
+aW5ncy9pbnB1dC9ybWk0L3JtaV8yZF9zZW5zb3IudHh0Cj4gKysrIGIvRG9jdW1lbnRhdGlvbi9k
+ZXZpY2V0cmVlL2JpbmRpbmdzL2lucHV0L3JtaTQvcm1pXzJkX3NlbnNvci50eHQKPiBAQCAtMTIs
+NyArMTIsNyBAQCBBZGRpdGlvbmFsIGRvY3VtZW50YXRpb24gZm9yIEYxMSBjYW4gYmUgZm91bmQg
+YXQ6Cj4gICBodHRwOi8vd3d3LnN5bmFwdGljcy5jb20vc2l0ZXMvZGVmYXVsdC9maWxlcy81MTEt
+MDAwMTM2LTAxLVJldi1FLVJNSTQtSW50ZXJmYWNpbmctR3VpZGUucGRmCj4gICAKPiAgIE9wdGlv
+bmFsIFRvdWNoIFByb3BlcnRpZXM6Cj4gLURlc2NyaXB0aW9uIGluIERvY3VtZW50YXRpb24vZGV2
+aWNldHJlZS9iaW5kaW5ncy9pbnB1dC90b3VjaAo+ICtEZXNjcmlwdGlvbiBpbiBEb2N1bWVudGF0
+aW9uL2RldmljZXRyZWUvYmluZGluZ3MvaW5wdXQvdG91Y2hzY3JlZW4KPiAgIC0gdG91Y2hzY3Jl
+ZW4taW52ZXJ0ZWQteAo+ICAgLSB0b3VjaHNjcmVlbi1pbnZlcnRlZC15Cj4gICAtIHRvdWNoc2Ny
+ZWVuLXN3YXBwZWQteC15Cj4gZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9i
+aW5kaW5ncy9tZmQvc3VuNmktcHJjbS50eHQgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmlu
+ZGluZ3MvbWZkL3N1bjZpLXByY20udHh0Cj4gaW5kZXggNGQyMWZmZGIwZmMxLi5kYWEwOTFjMmU2
+N2IgMTAwNjQ0Cj4gLS0tIGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL21mZC9z
+dW42aS1wcmNtLnR4dAo+ICsrKyBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9t
+ZmQvc3VuNmktcHJjbS50eHQKPiBAQCAtOCw3ICs4LDcgQEAgUmVxdWlyZWQgcHJvcGVydGllczoK
+PiAgICAtIHJlZzogVGhlIFBSQ00gcmVnaXN0ZXJzIHJhbmdlCj4gICAKPiAgIFRoZSBwcmNtIG5v
+ZGUgbWF5IGNvbnRhaW4gc2V2ZXJhbCBzdWJkZXZpY2VzIGRlZmluaXRpb25zOgo+IC0gLSBzZWUg
+RG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2Nsay9zdW54aS50eHQgZm9yIGNsb2NrIGRldmljZXMK
+PiArIC0gc2VlIERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9jbG9jay9zdW54aS50
+eHQgZm9yIGNsb2NrIGRldmljZXMKPiAgICAtIHNlZSBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUv
+YmluZGluZ3MvcmVzZXQvYWxsd2lubmVyLHN1bnhpLWNsb2NrLXJlc2V0LnR4dCBmb3IgcmVzZXQK
+PiAgICAgIGNvbnRyb2xsZXIgZGV2aWNlcwo+ICAgCj4gZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRp
+b24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvaGlzaWxpY29uLXBjaWUudHh0IGIvRG9jdW1lbnRh
+dGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9oaXNpbGljb24tcGNpZS50eHQKPiBpbmRleCA3
+YmY5ZGYwNDdhMWUuLjBkY2I4N2Q2NTU0ZiAxMDA2NDQKPiAtLS0gYS9Eb2N1bWVudGF0aW9uL2Rl
+dmljZXRyZWUvYmluZGluZ3MvcGNpL2hpc2lsaWNvbi1wY2llLnR4dAo+ICsrKyBiL0RvY3VtZW50
+YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvaGlzaWxpY29uLXBjaWUudHh0Cj4gQEAgLTMs
+NyArMyw3IEBAIEhpU2lsaWNvbiBIaXAwNSBhbmQgSGlwMDYgUENJZSBob3N0IGJyaWRnZSBEVCBk
+ZXNjcmlwdGlvbgo+ICAgSGlTaWxpY29uIFBDSWUgaG9zdCBjb250cm9sbGVyIGlzIGJhc2VkIG9u
+IHRoZSBTeW5vcHN5cyBEZXNpZ25XYXJlIFBDSSBjb3JlLgo+ICAgSXQgc2hhcmVzIGNvbW1vbiBm
+dW5jdGlvbnMgd2l0aCB0aGUgUENJZSBEZXNpZ25XYXJlIGNvcmUgZHJpdmVyIGFuZCBpbmhlcml0
+cwo+ICAgY29tbW9uIHByb3BlcnRpZXMgZGVmaW5lZCBpbgo+IC1Eb2N1bWVudGF0aW9uL2Rldmlj
+ZXRyZWUvYmluZGluZ3MvcGNpL2Rlc2lnbndhcmUtcGNpLnR4dC4KPiArRG9jdW1lbnRhdGlvbi9k
+ZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9kZXNpZ253YXJlLXBjaWUudHh0Lgo+ICAgCj4gICBBZGRp
+dGlvbmFsIHByb3BlcnRpZXMgYXJlIGRlc2NyaWJlZCBoZXJlOgo+ICAgCj4gZGlmZiAtLWdpdCBh
+L0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kva2lyaW4tcGNpZS50eHQgYi9E
+b2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2tpcmluLXBjaWUudHh0Cj4gaW5k
+ZXggNmUyMTdjNjMxMjNkLi42YmJlNDM4MThhZDUgMTAwNjQ0Cj4gLS0tIGEvRG9jdW1lbnRhdGlv
+bi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9raXJpbi1wY2llLnR4dAo+ICsrKyBiL0RvY3VtZW50
+YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kva2lyaW4tcGNpZS50eHQKPiBAQCAtMyw3ICsz
+LDcgQEAgSGlTaWxpY29uIEtpcmluIFNvQ3MgUENJZSBob3N0IERUIGRlc2NyaXB0aW9uCj4gICBL
+aXJpbiBQQ0llIGhvc3QgY29udHJvbGxlciBpcyBiYXNlZCBvbiB0aGUgU3lub3BzeXMgRGVzaWdu
+V2FyZSBQQ0kgY29yZS4KPiAgIEl0IHNoYXJlcyBjb21tb24gZnVuY3Rpb25zIHdpdGggdGhlIFBD
+SWUgRGVzaWduV2FyZSBjb3JlIGRyaXZlciBhbmQKPiAgIGluaGVyaXRzIGNvbW1vbiBwcm9wZXJ0
+aWVzIGRlZmluZWQgaW4KPiAtRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9k
+ZXNpZ253YXJlLXBjaS50eHQuCj4gK0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9w
+Y2kvZGVzaWdud2FyZS1wY2llLnR4dC4KPiAgIAo+ICAgQWRkaXRpb25hbCBwcm9wZXJ0aWVzIGFy
+ZSBkZXNjcmliZWQgaGVyZToKPiAgIAo+IGRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2Rldmlj
+ZXRyZWUvYmluZGluZ3MvcGNpL3BjaS1rZXlzdG9uZS50eHQgYi9Eb2N1bWVudGF0aW9uL2Rldmlj
+ZXRyZWUvYmluZGluZ3MvcGNpL3BjaS1rZXlzdG9uZS50eHQKPiBpbmRleCA3ZTA1NDg3NTQ0ZWQu
+LjNkNGEyMDliMGZkMCAxMDA2NDQKPiAtLS0gYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmlu
+ZGluZ3MvcGNpL3BjaS1rZXlzdG9uZS50eHQKPiArKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRy
+ZWUvYmluZGluZ3MvcGNpL3BjaS1rZXlzdG9uZS50eHQKPiBAQCAtMyw5ICszLDkgQEAgVEkgS2V5
+c3RvbmUgUENJZSBpbnRlcmZhY2UKPiAgIEtleXN0b25lIFBDSSBob3N0IENvbnRyb2xsZXIgaXMg
+YmFzZWQgb24gdGhlIFN5bm9wc3lzIERlc2lnbldhcmUgUENJCj4gICBoYXJkd2FyZSB2ZXJzaW9u
+IDMuNjUuICBJdCBzaGFyZXMgY29tbW9uIGZ1bmN0aW9ucyB3aXRoIHRoZSBQQ0llIERlc2lnbldh
+cmUKPiAgIGNvcmUgZHJpdmVyIGFuZCBpbmhlcml0cyBjb21tb24gcHJvcGVydGllcyBkZWZpbmVk
+IGluCj4gLURvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvZGVzaWdud2FyZS1w
+Y2kudHh0Cj4gK0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvZGVzaWdud2Fy
+ZS1wY2llLnR4dAo+ICAgCj4gLVBsZWFzZSByZWZlciB0byBEb2N1bWVudGF0aW9uL2RldmljZXRy
+ZWUvYmluZGluZ3MvcGNpL2Rlc2lnbndhcmUtcGNpLnR4dAo+ICtQbGVhc2UgcmVmZXIgdG8gRG9j
+dW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9kZXNpZ253YXJlLXBjaWUudHh0Cj4g
+ICBmb3IgdGhlIGRldGFpbHMgb2YgRGVzaWduV2FyZSBEVCBiaW5kaW5ncy4gIEFkZGl0aW9uYWwg
+cHJvcGVydGllcyBhcmUKPiAgIGRlc2NyaWJlZCBoZXJlIGFzIHdlbGwgYXMgcHJvcGVydGllcyB0
+aGF0IGFyZSBub3QgYXBwbGljYWJsZS4KPiAgIAo+IGRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9u
+L2RldmljZXRyZWUvYmluZGluZ3Mvc291bmQvc3Qsc3RtMzItaTJzLnR4dCBiL0RvY3VtZW50YXRp
+b24vZGV2aWNldHJlZS9iaW5kaW5ncy9zb3VuZC9zdCxzdG0zMi1pMnMudHh0Cj4gaW5kZXggNGJk
+YTUyMDQyNDAyLi41OGMzNDEzMDA1NTIgMTAwNjQ0Cj4gLS0tIGEvRG9jdW1lbnRhdGlvbi9kZXZp
+Y2V0cmVlL2JpbmRpbmdzL3NvdW5kL3N0LHN0bTMyLWkycy50eHQKPiArKysgYi9Eb2N1bWVudGF0
+aW9uL2RldmljZXRyZWUvYmluZGluZ3Mvc291bmQvc3Qsc3RtMzItaTJzLnR4dAo+IEBAIC0xOCw3
+ICsxOCw3IEBAIFJlcXVpcmVkIHByb3BlcnRpZXM6Cj4gICAgICAgU2VlIERvY3VtZW50YXRpb24v
+ZGV2aWNldHJlZS9iaW5kaW5ncy9kbWEvc3RtMzItZG1hLnR4dC4KPiAgICAgLSBkbWEtbmFtZXM6
+IElkZW50aWZpZXIgZm9yIGVhY2ggRE1BIHJlcXVlc3QgbGluZS4gTXVzdCBiZSAidHgiIGFuZCAi
+cngiLgo+ICAgICAtIHBpbmN0cmwtbmFtZXM6IHNob3VsZCBjb250YWluIG9ubHkgdmFsdWUgImRl
+ZmF1bHQiCj4gLSAgLSBwaW5jdHJsLTA6IHNlZSBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmlu
+ZGluZ3MvcGluY3RybC9waW5jdHJsLXN0bTMyLnR4dAo+ICsgIC0gcGluY3RybC0wOiBzZWUgRG9j
+dW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BpbmN0cmwvc3Qsc3RtMzItcGluY3RybC50
+eHQKPiAgIAo+ICAgT3B0aW9uYWwgcHJvcGVydGllczoKPiAgICAgLSByZXNldHM6IFJlZmVyZW5j
+ZSB0byBhIHJlc2V0IGNvbnRyb2xsZXIgYXNzZXJ0aW5nIHRoZSByZXNldCBjb250cm9sbGVyCj4g
+ZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9zb3VuZC9zdCxz
+dG0zMi1zYWkudHh0IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3NvdW5kL3N0
+LHN0bTMyLXNhaS50eHQKPiBpbmRleCBmMzAxY2RmMGI3ZTYuLjNhM2ZjNTA2ZTQzYSAxMDA2NDQK
+PiAtLS0gYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mvc291bmQvc3Qsc3RtMzIt
+c2FpLnR4dAo+ICsrKyBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9zb3VuZC9z
+dCxzdG0zMi1zYWkudHh0Cj4gQEAgLTM3LDcgKzM3LDcgQEAgU0FJIHN1Ym5vZGVzIHJlcXVpcmVk
+IHByb3BlcnRpZXM6Cj4gICAJInR4IjogaWYgc2FpIHN1Yi1ibG9jayBpcyBjb25maWd1cmVkIGFz
+IHBsYXliYWNrIERBSQo+ICAgCSJyeCI6IGlmIHNhaSBzdWItYmxvY2sgaXMgY29uZmlndXJlZCBh
+cyBjYXB0dXJlIERBSQo+ICAgICAtIHBpbmN0cmwtbmFtZXM6IHNob3VsZCBjb250YWluIG9ubHkg
+dmFsdWUgImRlZmF1bHQiCj4gLSAgLSBwaW5jdHJsLTA6IHNlZSBEb2N1bWVudGF0aW9uL2Rldmlj
+ZXRyZWUvYmluZGluZ3MvcGluY3RybC9waW5jdHJsLXN0bTMyLnR4dAo+ICsgIC0gcGluY3RybC0w
+OiBzZWUgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BpbmN0cmwvc3Qsc3RtMzIt
+cGluY3RybC50eHQKPiAgIAo+ICAgU0FJIHN1Ym5vZGVzIE9wdGlvbmFsIHByb3BlcnRpZXM6Cj4g
+ICAgIC0gc3Qsc3luYzogc3BlY2lmeSBzeW5jaHJvbml6YXRpb24gbW9kZS4KPiBkaWZmIC0tZ2l0
+IGEvTUFJTlRBSU5FUlMgYi9NQUlOVEFJTkVSUwo+IGluZGV4IDY3NjQxZjViYjM3My4uNjljOWU5
+OTI0OTAyIDEwMDY0NAo+IC0tLSBhL01BSU5UQUlORVJTCj4gKysrIGIvTUFJTlRBSU5FUlMKPiBA
+QCAtNjk2NSw3ICs2OTY1LDcgQEAgSUlPIE1VTFRJUExFWEVSCj4gICBNOglQZXRlciBSb3NpbiA8
+cGVkYUBheGVudGlhLnNlPgo+ICAgTDoJbGludXgtaWlvQHZnZXIua2VybmVsLm9yZwo+ICAgUzoJ
+TWFpbnRhaW5lZAo+IC1GOglEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvaWlvL211
+bHRpcGxleGVyL2lpby1tdXgudHh0Cj4gK0Y6CURvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5k
+aW5ncy9paW8vbXVsdGlwbGV4ZXIvaW8tY2hhbm5lbC1tdXgudHh0Cj4gICBGOglkcml2ZXJzL2lp
+by9tdWx0aXBsZXhlci9paW8tbXV4LmMKPiAgIAo+ICAgSUlPIFNVQlNZU1RFTSBBTkQgRFJJVkVS
+Uwo+IEBAIC05Njk1LDcgKzk2OTUsNyBAQCBNWFNGQiBEUk0gRFJJVkVSCj4gICBNOglNYXJlayBW
+YXN1dCA8bWFyZXhAZGVueC5kZT4KPiAgIFM6CVN1cHBvcnRlZAo+ICAgRjoJZHJpdmVycy9ncHUv
+ZHJtL214c2ZiLwo+IC1GOglEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvZGlzcGxh
+eS9teHNmYi1kcm0udHh0Cj4gK0Y6CURvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9k
+aXNwbGF5L214c2ZiLnR4dAo+ICAgCj4gICBNWVJJQ09NIE1ZUkktMTBHIDEwR2JFIERSSVZFUiAo
+TVlSSTEwR0UpCj4gICBNOglDaHJpcyBMZWUgPGNocmlzdG9waGVyLmxlZUBjc3BpLmNvbT4KPiBA
+QCAtMTA4ODQsNyArMTA4ODQsNyBAQCBNOglXaWxsIERlYWNvbiA8d2lsbC5kZWFjb25AYXJtLmNv
+bT4KPiAgIEw6CWxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcKPiAgIEw6CWxpbnV4LWFybS1rZXJu
+ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZyAobW9kZXJhdGVkIGZvciBub24tc3Vic2NyaWJlcnMpCj4g
+ICBTOglNYWludGFpbmVkCj4gLUY6CURvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9w
+Y2kvY29udHJvbGxlci1nZW5lcmljLXBjaS50eHQKPiArRjoJRG9jdW1lbnRhdGlvbi9kZXZpY2V0
+cmVlL2JpbmRpbmdzL3BjaS9ob3N0LWdlbmVyaWMtcGNpLnR4dAo+ICAgRjoJZHJpdmVycy9wY2kv
+Y29udHJvbGxlci9wY2ktaG9zdC1jb21tb24uYwo+ICAgRjoJZHJpdmVycy9wY2kvY29udHJvbGxl
+ci9wY2ktaG9zdC1nZW5lcmljLmMKPiAgIAo+IEBAIC0xMTA2NSw3ICsxMTA2NSw3IEBAIE06CVhp
+YW93ZWkgU29uZyA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4KPiAgIE06CUJpbmdodWkgV2Fu
+ZyA8d2FuZ2JpbmdodWlAaGlzaWxpY29uLmNvbT4KPiAgIEw6CWxpbnV4LXBjaUB2Z2VyLmtlcm5l
+bC5vcmcKPiAgIFM6CU1haW50YWluZWQKPiAtRjoJRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2Jp
+bmRpbmdzL3BjaS9wY2llLWtpcmluLnR4dAo+ICtGOglEb2N1bWVudGF0aW9uL2RldmljZXRyZWUv
+YmluZGluZ3MvcGNpL2tpcmluLXBjaWUudHh0Cj4gICBGOglkcml2ZXJzL3BjaS9jb250cm9sbGVy
+L2R3Yy9wY2llLWtpcmluLmMKPiAgIAo+ICAgUENJRSBEUklWRVIgRk9SIEhJU0lMSUNPTiBTVEIK
+PiBAQCAtMTI0NTYsNyArMTI0NTYsNyBAQCBMOglsaW51eC1jcnlwdG9Admdlci5rZXJuZWwub3Jn
+Cj4gICBMOglsaW51eC1zYW1zdW5nLXNvY0B2Z2VyLmtlcm5lbC5vcmcKPiAgIFM6CU1haW50YWlu
+ZWQKPiAgIEY6CWRyaXZlcnMvY3J5cHRvL2V4eW5vcy1ybmcuYwo+IC1GOglEb2N1bWVudGF0aW9u
+L2RldmljZXRyZWUvYmluZGluZ3MvY3J5cHRvL3NhbXN1bmcsZXh5bm9zLXJuZzQudHh0Cj4gK0Y6
+CURvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9ybmcvc2Ftc3VuZyxleHlub3M0LXJu
+Zy50eHQKPiAgIAo+ICAgU0FNU1VORyBFWFlOT1MgVFJVRSBSQU5ET00gTlVNQkVSIEdFTkVSQVRP
+UiAoVFJORykgRFJJVkVSCj4gICBNOgnFgXVrYXN6IFN0ZWxtYWNoIDxsLnN0ZWxtYWNoQHNhbXN1
+bmcuY29tPgo+IEBAIC0xMzU3MCw3ICsxMzU3MCw3IEBAIEY6CWRyaXZlcnMvKi9zdG0zMi0qdGlt
+ZXIqCj4gICBGOglkcml2ZXJzL3B3bS9wd20tc3RtMzIqCj4gICBGOglpbmNsdWRlL2xpbnV4Lyov
+c3RtMzItKnRpbSoKPiAgIEY6CURvY3VtZW50YXRpb24vQUJJL3Rlc3RpbmcvKnRpbWVyLXN0bTMy
+Cj4gLUY6CURvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy8qL3N0bTMyLSp0aW1lcgo+
+ICtGOglEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvKi9zdG0zMi0qdGltZXIqCj4g
+ICBGOglEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcHdtL3B3bS1zdG0zMioKPiAg
+IAo+ICAgU1RNTUFDIEVUSEVSTkVUIERSSVZFUgo+IAoKX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGlu
+dXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQu
+b3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
