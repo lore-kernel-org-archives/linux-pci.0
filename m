@@ -1,148 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51098 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754162AbeFTENi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2018 00:13:38 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Scott Branden <scott.branden@broadcom.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Peter Xu <peterx@redhat.com>,
-        Kirti Wankhede <kwankhede@nvidia.com>,
-        linux-kernel@vger.kernel.org (open list),
-        kvm@vger.kernel.org (open list:VFIO DRIVER)
-Subject: [PATCH V2 4/5] PCI: Unify try slot and bus reset API
-Date: Wed, 20 Jun 2018 00:12:57 -0400
-Message-Id: <1529467995-28780-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1529467995-28780-1-git-send-email-okaya@codeaurora.org>
-References: <1529467995-28780-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+        Russell King <linux@armlinux.org.uk>,
+        Jan Kiszka <jan.kiszka@siemens.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Ley Foon Tan <lftan@altera.com>
+Subject: [PATCH] PCI: controller: Move PCI_DOMAINS selection to arch Kconfig
+Date: Mon, 18 Jun 2018 12:21:15 +0100
+Message-Id: <20180618112115.23759-1-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Drivers are expected to call pci_try_reset_slot() or pci_try_reset_bus() by
-querying if a system supports hotplug or not. A survey showed that most
-drivers don't do this and we are leaking hotplug capability to the user.
+Commit 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
+added configuration options to allow PCI host controller drivers to be
+compile tested on all architectures.
 
-Hide pci_try_slot_reset() from drivers and embed into pci_try_bus_reset().
-Change pci_try_reset_bus() parameter from struct pci_bus to struct pci_dev.
+Some host controller drivers (eg PCIE_ALTERA) config entries select
+the PCI_DOMAINS config option to enable PCI domains management in
+the kernel. Now that host controller drivers can be compiled on
+all architectures, this triggers build regressions on arches that
+do not implement the PCI_DOMAINS required API (ie pci_domain_nr()):
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+drivers/ata/pata_ali.c: In function 'ali_init_chipset':
+drivers/ata/pata_ali.c:469:38: error:
+        implicit declaration of function 'pci_domain_nr';
+                                          did you mean 'pci_iomap_wc'?
+
+The PCI_DOMAINS config option is meant to be selected by the arch
+configuration since it is an arch rather a than host controller option.
+
+Move the PCI_DOMAINS selection to the sub-arch Kconfig entries,
+therefore fixing the build regression.
+
+Fixes: 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
+Link: https://lkml.kernel.org/r/20180612170229.GA10141@roeck-us.net
+Reported-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Scott Branden <scott.branden@broadcom.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: Guenter Roeck <linux@roeck-us.net>
+Cc: Ley Foon Tan <lftan@altera.com>
 ---
- drivers/pci/pci.c           | 26 +++++++++++++++++++++-----
- drivers/vfio/pci/vfio_pci.c |  6 ++----
- include/linux/pci.h         |  3 +--
- 3 files changed, 24 insertions(+), 11 deletions(-)
+ arch/arm/Kconfig               | 1 +
+ arch/arm/mach-bcm/Kconfig      | 1 +
+ arch/arm/mach-socfpga/Kconfig  | 1 +
+ drivers/pci/controller/Kconfig | 3 ---
+ 4 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 236220c..79a1566 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4817,12 +4817,12 @@ int pci_reset_slot(struct pci_slot *slot)
- EXPORT_SYMBOL_GPL(pci_reset_slot);
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 54eeb8d00bc6..7f1633dd9e07 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -701,6 +701,7 @@ config ARCH_VIRT
+ 	select ARM_GIC_V3_ITS if PCI
+ 	select ARM_PSCI
+ 	select HAVE_ARM_ARCH_TIMER
++	select PCI_DOMAINS if PCI
  
- /**
-- * pci_try_reset_slot - Try to reset a PCI slot
-+ * __pci_try_reset_slot - Try to reset a PCI slot
-  * @slot: PCI slot to reset
-  *
-  * Same as above except return -EAGAIN if the slot cannot be locked
-  */
--int pci_try_reset_slot(struct pci_slot *slot)
-+static int __pci_try_reset_slot(struct pci_slot *slot)
- {
- 	int rc;
+ #
+ # This is sorted alphabetically by mach-* pathname.  However, plat-*
+diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
+index c46a728df44e..25aac6ee2ab1 100644
+--- a/arch/arm/mach-bcm/Kconfig
++++ b/arch/arm/mach-bcm/Kconfig
+@@ -20,6 +20,7 @@ config ARCH_BCM_IPROC
+ 	select GPIOLIB
+ 	select ARM_AMBA
+ 	select PINCTRL
++	select PCI_DOMAINS if PCI
+ 	help
+ 	  This enables support for systems based on Broadcom IPROC architected SoCs.
+ 	  The IPROC complex contains one or more ARM CPUs along with common
+diff --git a/arch/arm/mach-socfpga/Kconfig b/arch/arm/mach-socfpga/Kconfig
+index d0f62eacf59d..4adb901dd5eb 100644
+--- a/arch/arm/mach-socfpga/Kconfig
++++ b/arch/arm/mach-socfpga/Kconfig
+@@ -10,6 +10,7 @@ menuconfig ARCH_SOCFPGA
+ 	select HAVE_ARM_SCU
+ 	select HAVE_ARM_TWD if SMP
+ 	select MFD_SYSCON
++	select PCI_DOMAINS if PCI
  
-@@ -4843,7 +4843,6 @@ int pci_try_reset_slot(struct pci_slot *slot)
+ if ARCH_SOCFPGA
+ config SOCFPGA_SUSPEND
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 18fa09b3ac8f..cc9fa02d32a0 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -96,7 +96,6 @@ config PCI_HOST_GENERIC
+ 	depends on OF
+ 	select PCI_HOST_COMMON
+ 	select IRQ_DOMAIN
+-	select PCI_DOMAINS
+ 	help
+ 	  Say Y here if you want to support a simple generic PCI host
+ 	  controller, such as the one emulated by kvmtool.
+@@ -138,7 +137,6 @@ config PCI_VERSATILE
  
- 	return rc;
- }
--EXPORT_SYMBOL_GPL(pci_try_reset_slot);
- 
- static int pci_bus_reset(struct pci_bus *bus, int probe)
- {
-@@ -4906,12 +4905,12 @@ int pci_reset_bus(struct pci_bus *bus)
- EXPORT_SYMBOL_GPL(pci_reset_bus);
- 
- /**
-- * pci_try_reset_bus - Try to reset a PCI bus
-+ * __pci_try_reset_bus - Try to reset a PCI bus
-  * @bus: top level PCI bus to reset
-  *
-  * Same as above except return -EAGAIN if the bus cannot be locked
-  */
--int pci_try_reset_bus(struct pci_bus *bus)
-+static int __pci_try_reset_bus(struct pci_bus *bus)
- {
- 	int rc;
- 
-@@ -4932,6 +4931,23 @@ int pci_try_reset_bus(struct pci_bus *bus)
- 
- 	return rc;
- }
-+
-+/**
-+ * pci_try_reset_bus - Try to reset a PCI bus
-+ * @pdev: top level PCI device to reset via slot/bus
-+ *
-+ * Same as above except return -EAGAIN if the bus cannot be locked
-+ */
-+int pci_try_reset_bus(struct pci_dev *pdev)
-+{
-+	bool slot = false;
-+
-+	if (!pci_probe_reset_slot(pdev->slot))
-+		slot = true;
-+
-+	return slot ? __pci_try_reset_slot(pdev->slot) :
-+			__pci_try_reset_bus(pdev->bus);
-+}
- EXPORT_SYMBOL_GPL(pci_try_reset_bus);
- 
- /**
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index b423a30..71018ec 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -1010,8 +1010,7 @@ static long vfio_pci_ioctl(void *device_data,
- 						    &info, slot);
- 		if (!ret)
- 			/* User has access, do the reset */
--			ret = slot ? pci_try_reset_slot(vdev->pdev->slot) :
--				     pci_try_reset_bus(vdev->pdev->bus);
-+			ret = pci_try_reset_bus(vdev->pdev);
- 
- hot_reset_release:
- 		for (i--; i >= 0; i--)
-@@ -1373,8 +1372,7 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
- 	}
- 
- 	if (needs_reset)
--		ret = slot ? pci_try_reset_slot(vdev->pdev->slot) :
--			     pci_try_reset_bus(vdev->pdev->bus);
-+		ret = pci_try_reset_bus(vdev->pdev);
- 
- put_devs:
- 	for (i = 0; i < devs.cur_index; i++) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6b12ce2..f5c85b6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1096,10 +1096,9 @@ int pci_reset_function_locked(struct pci_dev *dev);
- int pci_try_reset_function(struct pci_dev *dev);
- int pci_probe_reset_slot(struct pci_slot *slot);
- int pci_reset_slot(struct pci_slot *slot);
--int pci_try_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
- int pci_reset_bus(struct pci_bus *bus);
--int pci_try_reset_bus(struct pci_bus *bus);
-+int pci_try_reset_bus(struct pci_dev *dev);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
+ config PCIE_IPROC
+ 	tristate
+-	select PCI_DOMAINS
+ 	help
+ 	  This enables the iProc PCIe core controller support for Broadcom's
+ 	  iProc family of SoCs. An appropriate bus interface driver needs
+@@ -176,7 +174,6 @@ config PCIE_IPROC_MSI
+ config PCIE_ALTERA
+ 	bool "Altera PCIe controller"
+ 	depends on ARM || NIOS2 || COMPILE_TEST
+-	select PCI_DOMAINS
+ 	help
+ 	  Say Y here if you want to enable PCIe controller support on Altera
+ 	  FPGA.
 -- 
-2.7.4
+2.15.0
