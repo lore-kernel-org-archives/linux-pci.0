@@ -1,99 +1,147 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com, sboyd@codeaurora.org
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v5 05/11] PCI: dwc: Add legacy interrupt callback handler
-Date: Wed, 20 Jun 2018 17:28:27 +0100
-Message-Id: <e5c126ef57b51488ad07dda882be930260e739aa.1529507416.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529507416.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from david.siemens.de ([192.35.17.14]:54655 "EHLO david.siemens.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752835AbeFRQxs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 18 Jun 2018 12:53:48 -0400
+Subject: Re: [v4] PCI: improve host drivers compile test coverage
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rob Herring <robh@kernel.org>,
+        Scott Branden <scott.branden@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Ley Foon Tan <lftan@altera.com>,
+        Russell King <linux@armlinux.org.uk>
+References: <20180405193154.27897-1-robh@kernel.org>
+ <20180612170229.GA10141@roeck-us.net>
+ <20180613100935.GA7707@e107981-ln.cambridge.arm.com>
+ <20180613181146.GA28856@roeck-us.net>
+ <20180615125847.GA7735@e107981-ln.cambridge.arm.com>
+ <980b68c0-6034-b495-753f-c75c04e0f5d1@broadcom.com>
+ <CAL_JsqLUR_5Hnaws3Dt8ujetq8R-TxnG9wvOe4y6HT50KrNnbQ@mail.gmail.com>
+ <20180618093201.GA18994@e107981-ln.cambridge.arm.com>
+ <45f29e28-d3d4-b1e6-249e-ac28b6ec6a36@siemens.com>
+ <20180618125255.GA356@red-moon>
+From: Jan Kiszka <jan.kiszka@siemens.com>
+Message-ID: <03d3eac6-4711-2bd5-4ab5-fc2f77d5e4ad@siemens.com>
+Date: Mon, 18 Jun 2018 18:53:10 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180618125255.GA356@red-moon>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a legacy interrupt callback handler. Currently DesignWare IP don't
-allow trigger legacy interrupts.
+On 2018-06-18 14:52, Lorenzo Pieralisi wrote:
+> On Mon, Jun 18, 2018 at 01:42:25PM +0200, Jan Kiszka wrote:
+>> On 2018-06-18 11:32, Lorenzo Pieralisi wrote:
+>>> On Fri, Jun 15, 2018 at 12:34:51PM -0600, Rob Herring wrote:
+>>>> On Fri, Jun 15, 2018 at 11:55 AM, Scott Branden
+>>>> <scott.branden@broadcom.com> wrote:
+>>>>> Hi Lorenzo,
+>>>>>
+>>>>>
+>>>>>
+>>>>> On 18-06-15 05:58 AM, Lorenzo Pieralisi wrote:
+>>>>>>
+>>>>>> On Wed, Jun 13, 2018 at 11:11:46AM -0700, Guenter Roeck wrote:
+>>>>>>>
+>>>>>>> On Wed, Jun 13, 2018 at 11:09:35AM +0100, Lorenzo Pieralisi wrote:
+>>>>>>>>
+>>>>>>>> [+Jan, Ley Foon, RMK]
+>>>>>>>>
+>>>>>>>> On Tue, Jun 12, 2018 at 10:02:29AM -0700, Guenter Roeck wrote:
+>>>>>>>>>
+>>>>>>>>> On Thu, Apr 05, 2018 at 02:31:54PM -0500, Rob Herring wrote:
+>>>>>>>>>>
+>>>>>>>>>> Add COMPILE_TEST on driver config options with it. Some ARM drivers
+>>>>>>>>>> still have arch dependencies, so we have to keep those dependent on
+>>>>>>>>>> ARM.
+>>>>>>>>>>
+>>>>>>>>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>>>>>>>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>>>>>>>>> Cc: linux-pci@vger.kernel.org
+>>>>>>>>>> Signed-off-by: Rob Herring <robh@kernel.org>
+>>>>>>>>>
+>>>>>>>>> This patch has the undesirable side effect that it selects PCI_DOMAINS
+>>>>>>>>> for
+>>>>>>>>> sparc32:allmodconfig, which in turn results in
+>>>>>>>>>
+>>>>>>>>> drivers/ata/pata_ali.c: In function 'ali_init_chipset':
+>>>>>>>>> drivers/ata/pata_ali.c:469:38: error:
+>>>>>>>>>         implicit declaration of function 'pci_domain_nr'; did you mean
+>>>>>>>>> 'pci_iomap_wc'?
+>>>>>>>>>
+>>>>>>>>> Unfortunately, 37bd62d224c82 ("PCI: Enable PCI_DOMAINS along with
+>>>>>>>>> generic
+>>>>>>>>> PCI host controller") has pretty much the same result. No idea how to
+>>>>>>>>> fix
+>>>>>>>>> the problem, so I won't even try.
+>>>>>>>>
+>>>>>>>> Sorry about that.
+>>>>>>>>
+>>>>>>>> One option would consist in removing all PCI_DOMAINS selection from
+>>>>>>>> drivers/pci/controller/Kconfig and delegate it to arches even though
+>>>>>>>> this would force PCI_DOMAINS selection on all ARM platforms (it is
+>>>>>>>> already selected for ARCH_MULTIPLATFORM).
+>>>>>>>>
+>>>>>>>> Or we add back arch dependency to the relevant host bridges.
+>>>>>>>>
+>>>>>>>> Everything else I have in mind seems overkill to me given that this
+>>>>>>>> patch was added to improve test coverage (we could add a default
+>>>>>>>> pci_domain_nr() stub - weak or #define - that returns 0 in case arches
+>>>>>>>> do not provide an implementation but do we really want to do that ?).
+>>>>>>>>
+>>>>>>>> Thoughts appreciated.
+>>>>>>>>
+>>>>>>>  From the definition of PCI_DOMAINS, I suspect the original idea was that
+>>>>>>> drivers should depend on it, not select it. Especially auto-selecting
+>>>>>>> it with PCI_HOST_GENERIC seems like a bad idea to me. However, that is
+>>>>>>> just me. I'll leave it up to Bjorn to decide what if anything he wants
+>>>>>>> to do about it.
+>>>>>>
+>>>>>> Here is a patch that should reinstate the previous behaviour but
+>>>>>> it will make PCI_DOMAINS a visible option on ARM 32-bit systems; whether
+>>>>>> that's acceptable that's the question I need to answer, it should
+>>>>>> honour old configs and it does not force PCI_DOMAINS selection on
+>>>>>> non-DT arch/arm PCI host controllers (that do not need PCI_DOMAINS
+>>>>>> anyway so I suspect that enabling it on all ARM 32-bit platforms
+>>>>>> should not break anything but I preferred to be cautious).
+>>>>>
+>>>>> I think this change will also require a patch enabling CONFIG_PCI_DOMAINS in
+>>>>> multi_v7_defconfig and iproc_defconfig at the very least?
+>>>>
+>>>> Perhaps the sub-arches that want this should select it. It is more a
+>>>> platform option/decision more than a controller option.
+>>>
+>>> Yes, that makes sense, I assume ARCH_VIRT is a sensible choice for
+>>> virtual machines configuration, Jan ?
+>>>
+>>> I will add a PCI_DOMAINS selection to all (ARM) arches that select
+>>> PCI_DOMAINS in drivers/pci/controller/Kconfig.
+>>>
+>>> For Jailhouse configurations I need Jan's input, I assume adding
+>>> the selection to ARCH_VIRT is the correct way forward, please let
+>>> me know asap.
+>>
+>> So far, there is no need on ARM or ARM64 declare a special platform in
+>> order to run as Jailhouse (secondary) guest.
+>>
+>> My original patch was just about making PCI_DOMAINS manually
+>> configurable, which would have been fine for our use case.
+> 
+> I need more details on your system configuration to make sure we can fix
+> this in a way that does not upset anybody; I am not a big fan of making
+> PCI_DOMAINS visible since it affects other platforms and it is different
+> from how it is managed for all other arches, so please provide details.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
+Our setup is as follows: A platform, e.g. Jetson TK1 or TX1/2, already
+has one PCI host controller. When enabling Jailhouse on it (from within
+a running Linux), this adds the generic PCI host controller as virtual
+one. So we need to configure the system to support both controllers and
+PCI domains. But, otherwise, the system does not look different from a
+physical one.
 
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 10 ++++++++++
- drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +--
- drivers/pci/controller/dwc/pcie-designware.h      |  6 ++++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
+Jan
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 1f98db3..70d0688 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
- 	.stop			= dw_pcie_ep_stop,
- };
- 
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct device *dev = pci->dev;
-+
-+	dev_err(dev, "EP cannot trigger legacy IRQs\n");
-+
-+	return -EINVAL;
-+}
-+
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num)
- {
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 654dcb5..90a8c95 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -84,8 +84,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 
- 	switch (type) {
- 	case PCI_EPC_IRQ_LEGACY:
--		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
--		return -EINVAL;
-+		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index a0ab12f..69e6e17 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -350,6 +350,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num);
- int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
-@@ -369,6 +370,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
- 
-+static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	return 0;
-+}
-+
- static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 					   u8 interrupt_num)
- {
 -- 
-2.7.4
+Siemens AG, Corporate Technology, CT RDA IOT SES-DE
+Corporate Competence Center Embedded Linux
