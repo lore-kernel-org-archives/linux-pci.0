@@ -1,47 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45038 "EHLO mail.kernel.org"
+Received: from ale.deltatee.com ([207.54.116.67]:44692 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933323AbeFKN0y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Jun 2018 09:26:54 -0400
-Date: Mon, 11 Jun 2018 08:26:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Keith Busch <keith.busch@intel.com>,
-        Borislav Petkov <bp@alien8.de>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH v1 00/13] PCI/AER: Squash into one file
-Message-ID: <20180611132653.GB75679@bhelgaas-glaptop.roam.corp.google.com>
-References: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        id S933073AbeFRVuJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 18 Jun 2018 17:50:09 -0400
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20180618193636.16210-1-logang@deltatee.com>
+ <20180618193636.16210-2-logang@deltatee.com>
+ <20180618154430.1af3d42f@t450s.home>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <c2053508-0880-5b7b-fd2f-260d260f33f9@deltatee.com>
+Date: Mon, 18 Jun 2018 15:49:49 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180618154430.1af3d42f@t450s.home>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v3 1/3] PCI: Make specifying PCI devices in kernel
+ parameters reusable
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 08, 2018 at 03:04:45PM -0500, Bjorn Helgaas wrote:
-> The AER code is scattered across several files and buried a little too deep
-> in the hierarchy, which makes it a bit of a hassle to browse.  Consolidate
-> it all in a single file (plus the optional aer_inject module) and move it
-> up one level to drivers/pci/pcie/aer.c.
+On 6/18/2018 3:44 PM, Alex Williamson wrote:
+>> + *
+>> + * The second format matches devices using IDs in the configuration
+>> + * space which may match multiple devices in the system. A value of 0
+>> + * for any field will match all devices.
 > 
-> This is all pure code moves; no functional changes intended.
+> I realize this is not a change in behavior, but since we're spelling it
+> out in a proper comment rather than burying it in the implementation,
+> using 0 as a wildcard is rather questionable behavior.  It always
+> surprises me when I read this because pci_match_one_device() uses
+> PCI_ANY_ID (~0) as a wildcard and as a result of struct pci_device_id
+> using __u32 for these fields, we actually need to specify ffffffff on
+> the commandline to get a wildcard match for dynamic ids.  The latter is
+> tedious to use, but I think it's more correct, and the use of a __u32 is
+> probably attributed to the fact that 0xffff is only reserved for vendor
+> ID, the spec doesn't seem to reserve any entries from the vendor's
+> device ID range.
 > 
-> ---
-> 
-> Bjorn Helgaas (13):
->       PCI/AER: Remove forward declarations
->       PCI/AER: Reorder code to group probe/remove stuff together
->       PCI/AER: Squash aerdrv_core.c into aerdrv.c
->       PCI/AER: Squash aerdrv_errprint.c into aerdrv.c
->       PCI/AER: Squash aerdrv_acpi.c into aerdrv.c
->       PCI/AER: Squash ecrc.c into aerdrv.c
->       PCI/AER: Remove duplicate pcie_port_bus_type declaration
->       PCI/AER: Move pcie_aer_get_firmware_first() to portdrv.h
->       PCI/AER: Move aer_irq() declaration to portdrv.h
->       PCI/AER: Move private AER things to aerdrv.c
->       PCI/AER: Squash Kconfig.debug into Kconfig
->       PCI/AER: Hoist aerdrv.c, aer_inject.c up to drivers/pci/pcie/
->       PCI/AER: Use "PCI Express" consistently in Kconfig text
+> There's probably really no path to resolve these, but acknowledging the
+> difference in this comment block might be helpful in the future.
 
-Applied to pci/aer-squash with Keith's reviewed-by for v4.18.
+Ok, I'll add a note in the comment.
+>> +		ret = pci_dev_str_match(dev, p, &p);
+>> +		if (ret == 1) {
+>> +			*resize = true;
+>> +			if (align_order == -1)
+>> +				align = PAGE_SIZE;
+>> +			else
+>> +				align = 1 << align_order;
+>> +			break;
+>> +		} else if (ret < 0) {
+>> +			pr_info("PCI: Can't parse resource_alignment parameter: pci:%s\n",
+> 
+> 
+> The "pci:" prefix on %s doesn't make sense now, it was used above when
+> the pointer was already advanced past this token, now I believe it would
+> lead to "pci:pci:xxxx:yyyy" or "pci:xx:yy.z".  Thanks,
+
+Yup, nice catch. I'll fix it for v4.
+
+Logan
