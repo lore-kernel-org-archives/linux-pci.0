@@ -1,394 +1,303 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:34041 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933004AbeFPTi0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:38:26 -0400
-Message-Id: <ad8ef05242c00ce95aae64ca983cb3152cc8eb70.1529173804.git.lukas@wunner.de>
-In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 16 Jun 2018 21:25:00 +0200
-Subject: [PATCH 17/32] PCI: pciehp: Enable/disable exclusively from IRQ thread
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org
+Received: from mx1.redhat.com ([209.132.183.28]:33694 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933241AbeFRVod (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 18 Jun 2018 17:44:33 -0400
+Date: Mon, 18 Jun 2018 15:44:30 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>
+Subject: Re: [PATCH v3 1/3] PCI: Make specifying PCI devices in kernel
+ parameters reusable
+Message-ID: <20180618154430.1af3d42f@t450s.home>
+In-Reply-To: <20180618193636.16210-2-logang@deltatee.com>
+References: <20180618193636.16210-1-logang@deltatee.com>
+        <20180618193636.16210-2-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Besides the IRQ thread, there are several other places in the driver
-which enable or disable the slot:
+On Mon, 18 Jun 2018 13:36:34 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-- pciehp_probe() enables the slot if it's occupied and the pciehp_force
-  module parameter is used.
+> Separate out the code to match a PCI device with a string (typically
+> originating from a kernel parameter) from the
+> pci_specified_resource_alignment() function into its own helper
+> function.
+> 
+> While we are at it, this change fixes the kernel style of the function
+> (fixing a number of long lines and extra parentheses).
+> 
+> Additionally, make the analogous change to the kernel parameter
+> documentation: Separating the description of how to specify a PCI device
+> into it's own section at the head of the pci= parameter.
+> 
+> This patch should have no functional alterations.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Stephen Bates <sbates@raithlin.com>
+> Acked-by: Christian König <christian.koenig@amd.com>
+> ---
+>  Documentation/admin-guide/kernel-parameters.txt |  26 +++-
+>  drivers/pci/pci.c                               | 153 +++++++++++++++---------
+>  2 files changed, 120 insertions(+), 59 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index efc7aa7a0670..760fb2b0b349 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -2994,7 +2994,24 @@
+>  			See header of drivers/block/paride/pcd.c.
+>  			See also Documentation/blockdev/paride.txt.
+>  
+> -	pci=option[,option...]	[PCI] various PCI subsystem options:
+> +	pci=option[,option...]	[PCI] various PCI subsystem options.
+> +
+> +				Some options herein operate on a specific device
+> +				or a set of devices (<pci_dev>). These are
+> +				specified in one of the following formats:
+> +
+> +				[<domain>:]<bus>:<slot>.<func>
+> +				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+> +
+> +				Note: the first format specifies a PCI
+> +				bus/slot/function address which may change
+> +				if new hardware is inserted, if motherboard
+> +				firmware changes, or due to changes caused
+> +				by other kernel parameters. The second format
 
-- pciehp_resume() enables or disables the slot after system sleep.
+Nit, is it worth noting that when unspecified, domain is zero?
 
-- pciehp_queue_pushbutton_work() enables or disables the slot after the
-  5 second delay following an Attention Button press.
+> +				selects devices using IDs from the
+> +				configuration space which may match multiple
+> +				devices in the system.
+> +
+>  		earlydump	[X86] dump PCI config space before the kernel
+>  				changes anything
+>  		off		[X86] don't probe for the PCI bus
+> @@ -3123,11 +3140,10 @@
+>  				window. The default value is 64 megabytes.
+>  		resource_alignment=
+>  				Format:
+> -				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
+> -				[<order of align>@]pci:<vendor>:<device>\
+> -						[:<subvendor>:<subdevice>][; ...]
+> +				[<order of align>@]<pci_dev>[; ...]
+>  				Specifies alignment and device to reassign
+> -				aligned memory resources.
+> +				aligned memory resources. How to
+> +				specify the device is described above.
+>  				If <order of align> is not specified,
+>  				PAGE_SIZE is used as alignment.
+>  				PCI-PCI bridge can be specified, if resource
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 97acba712e4e..bec1bef6f326 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -191,6 +191,88 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar)
+>  EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
+>  #endif
+>  
+> +/**
+> + * pci_dev_str_match - test if a string matches a device
+> + * @dev:    the PCI device to test
+> + * @p:      string to match the device against
+> + * @endptr: pointer to the string after the match
+> + *
+> + * Test if a string (typically from a kernel parameter) matches a
+> + * specified. The string may be of one of two forms formats:
+> + *
+> + *   [<domain>:]<bus>:<slot>.<func>
+> + *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+> + *
+> + * The first format specifies a PCI bus/slot/function address which
+> + * may change if new hardware is inserted, if motherboard firmware changes,
+> + * or due to changes caused in kernel parameters.
+> + *
+> + * The second format matches devices using IDs in the configuration
+> + * space which may match multiple devices in the system. A value of 0
+> + * for any field will match all devices.
 
-- pciehp_sysfs_enable_slot() and pciehp_sysfs_disable_slot() enable or
-  disable the slot on sysfs write.
+I realize this is not a change in behavior, but since we're spelling it
+out in a proper comment rather than burying it in the implementation,
+using 0 as a wildcard is rather questionable behavior.  It always
+surprises me when I read this because pci_match_one_device() uses
+PCI_ANY_ID (~0) as a wildcard and as a result of struct pci_device_id
+using __u32 for these fields, we actually need to specify ffffffff on
+the commandline to get a wildcard match for dynamic ids.  The latter is
+tedious to use, but I think it's more correct, and the use of a __u32 is
+probably attributed to the fact that 0xffff is only reserved for vendor
+ID, the spec doesn't seem to reserve any entries from the vendor's
+device ID range.
 
-This requires locking and complicates pciehp's state machine.
+There's probably really no path to resolve these, but acknowledging the
+difference in this comment block might be helpful in the future.
 
-A simplification can be achieved by enabling and disabling the slot
-exclusively from the IRQ thread.
+> + *
+> + * Returns 1 if the string matches the device, 0 if it does not and
+> + * a negative error code if the string cannot be parsed.
+> + */
+> +static int pci_dev_str_match(struct pci_dev *dev, const char *p,
+> +			     const char **endptr)
+> +{
+> +	int ret;
+> +	int seg, bus, slot, func, count;
+> +	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+> +
+> +	if (strncmp(p, "pci:", 4) == 0) {
+> +		/* PCI vendor/device (subvendor/subdevice) ids are specified */
+> +		p += 4;
+> +		ret = sscanf(p, "%hx:%hx:%hx:%hx%n", &vendor, &device,
+> +			     &subsystem_vendor, &subsystem_device, &count);
+> +		if (ret != 4) {
+> +			ret = sscanf(p, "%hx:%hx%n", &vendor, &device, &count);
+> +			if (ret != 2)
+> +				return -EINVAL;
+> +
+> +			subsystem_vendor = 0;
+> +			subsystem_device = 0;
+> +		}
+> +
+> +		p += count;
+> +
+> +		if ((!vendor || vendor == dev->vendor) &&
+> +		    (!device || device == dev->device) &&
+> +		    (!subsystem_vendor ||
+> +			    subsystem_vendor == dev->subsystem_vendor) &&
+> +		    (!subsystem_device ||
+> +			    subsystem_device == dev->subsystem_device))
+> +			goto found;
+> +
+> +	} else {
+> +		/* PCI Bus,Slot,Function ids are specified */
+> +		ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
+> +			     &func, &count);
+> +		if (ret != 4) {
+> +			seg = 0;
+> +			ret = sscanf(p, "%x:%x.%x%n", &bus, &slot,
+> +				     &func, &count);
+> +			if (ret != 3)
+> +				return -EINVAL;
+> +		}
+> +
+> +		p += count;
+> +
+> +		if (seg == pci_domain_nr(dev->bus) &&
+> +		    bus == dev->bus->number &&
+> +		    slot == PCI_SLOT(dev->devfn) &&
+> +		    func == PCI_FUNC(dev->devfn))
+> +			goto found;
+> +	}
+> +
+> +	*endptr = p;
+> +	return 0;
+> +
+> +found:
+> +	*endptr = p;
+> +	return 1;
+> +}
+>  
+>  static int __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
+>  				   u8 pos, int cap, int *ttl)
+> @@ -5454,10 +5536,10 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
+>  static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+>  							bool *resize)
+>  {
+> -	int seg, bus, slot, func, align_order, count;
+> -	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+> +	int align_order, count;
+>  	resource_size_t align = pcibios_default_alignment();
+> -	char *p;
+> +	const char *p;
+> +	int ret;
+>  
+>  	spin_lock(&resource_alignment_lock);
+>  	p = resource_alignment_param;
+> @@ -5477,58 +5559,21 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+>  		} else {
+>  			align_order = -1;
+>  		}
+> -		if (strncmp(p, "pci:", 4) == 0) {
+> -			/* PCI vendor/device (subvendor/subdevice) ids are specified */
+> -			p += 4;
+> -			if (sscanf(p, "%hx:%hx:%hx:%hx%n",
+> -				&vendor, &device, &subsystem_vendor, &subsystem_device, &count) != 4) {
+> -				if (sscanf(p, "%hx:%hx%n", &vendor, &device, &count) != 2) {
+> -					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: pci:%s\n",
+> -						p);
+> -					break;
+> -				}
+> -				subsystem_vendor = subsystem_device = 0;
+> -			}
+> -			p += count;
+> -			if ((!vendor || (vendor == dev->vendor)) &&
+> -				(!device || (device == dev->device)) &&
+> -				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
+> -				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
+> -				*resize = true;
+> -				if (align_order == -1)
+> -					align = PAGE_SIZE;
+> -				else
+> -					align = 1 << align_order;
+> -				/* Found */
+> -				break;
+> -			}
+> -		}
+> -		else {
+> -			if (sscanf(p, "%x:%x:%x.%x%n",
+> -				&seg, &bus, &slot, &func, &count) != 4) {
+> -				seg = 0;
+> -				if (sscanf(p, "%x:%x.%x%n",
+> -						&bus, &slot, &func, &count) != 3) {
+> -					/* Invalid format */
+> -					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
+> -						p);
+> -					break;
+> -				}
+> -			}
+> -			p += count;
+> -			if (seg == pci_domain_nr(dev->bus) &&
+> -				bus == dev->bus->number &&
+> -				slot == PCI_SLOT(dev->devfn) &&
+> -				func == PCI_FUNC(dev->devfn)) {
+> -				*resize = true;
+> -				if (align_order == -1)
+> -					align = PAGE_SIZE;
+> -				else
+> -					align = 1 << align_order;
+> -				/* Found */
+> -				break;
+> -			}
+> +
+> +		ret = pci_dev_str_match(dev, p, &p);
+> +		if (ret == 1) {
+> +			*resize = true;
+> +			if (align_order == -1)
+> +				align = PAGE_SIZE;
+> +			else
+> +				align = 1 << align_order;
+> +			break;
+> +		} else if (ret < 0) {
+> +			pr_info("PCI: Can't parse resource_alignment parameter: pci:%s\n",
 
-Amend the functions listed above to request slot enable/disablement from
-the IRQ thread by either synthesizing a Presence Detect Changed event or,
-in the case of a disable user request (via sysfs or an Attention Button
-press), submitting a newly introduced force disable request.  The latter
-is needed because the slot shall be forced off despite being occupied.
-For this force disable request, avoid colliding with Slot Status register
-bits by using a bit number greater than 16.
 
-For synchronous execution of requests (on sysfs write), wait for the
-request to finish and retrieve the result.  There can only ever be one
-sysfs write in flight due to the locking in kernfs_fop_write(), hence
-there is no risk of returning the result of a different sysfs request to
-user space.
+The "pci:" prefix on %s doesn't make sense now, it was used above when
+the pointer was already advanced past this token, now I believe it would
+lead to "pci:pci:xxxx:yyyy" or "pci:xx:yy.z".  Thanks,
 
-The POWERON_STATE and POWEROFF_STATE is now no longer entered by the
-above-listed functions, but solely by the IRQ thread when it begins a
-power transition.  Afterwards, it moves to STATIC_STATE.  The same
-applies to canceling the Attention Button work, it likewise becomes an
-IRQ thread only operation.
-
-An immediate consequence is that the POWERON_STATE and POWEROFF_STATE is
-never observed by the IRQ thread itself, only by functions called in a
-different context, such as pciehp_sysfs_enable_slot().  So remove
-handling of these states from pciehp_handle_button_press() and
-pciehp_handle_link_change() which are exclusively called from the IRQ
-thread.
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pciehp.h      | 18 ++++++
- drivers/pci/hotplug/pciehp_core.c | 22 +++++--
- drivers/pci/hotplug/pciehp_ctrl.c | 99 +++++++++++++++----------------
- drivers/pci/hotplug/pciehp_hpc.c  | 14 ++++-
- 4 files changed, 93 insertions(+), 60 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 1ba335d6563a..ed42dde5f9ac 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -105,6 +105,9 @@ struct slot {
-  *	that has not yet been cleared by the user
-  * @pending_events: used by the IRQ handler to save events retrieved from the
-  *	Slot Status register for later consumption by the IRQ thread
-+ * @request_result: result of last user request submitted to the IRQ thread
-+ * @requester: wait queue to wake up on completion of user request,
-+ *	used for synchronous slot enable/disable request via sysfs
-  */
- struct controller {
- 	struct mutex ctrl_lock;
-@@ -120,6 +123,8 @@ struct controller {
- 	unsigned int notification_enabled:1;
- 	unsigned int power_fault_detected;
- 	atomic_t pending_events;
-+	int request_result;
-+	wait_queue_head_t requester;
- };
- 
- /**
-@@ -141,6 +146,17 @@ struct controller {
- #define POWEROFF_STATE			4
- #define ON_STATE			5
- 
-+/**
-+ * DOC: Flags to request an action from the IRQ thread
-+ *
-+ * These are stored together with events read from the Slot Status register,
-+ * hence must be greater than its 16-bit width.
-+ *
-+ * %DISABLE_SLOT: Disable the slot in response to a user request via sysfs or
-+ *	an Attention Button press after the 5 second delay
-+ */
-+#define DISABLE_SLOT		(1 << 16)
-+
- #define ATTN_BUTTN(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_ABP)
- #define POWER_CTRL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_PCP)
- #define MRL_SENS(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_MRLSP)
-@@ -153,7 +169,9 @@ struct controller {
- 
- int pciehp_sysfs_enable_slot(struct slot *slot);
- int pciehp_sysfs_disable_slot(struct slot *slot);
-+void pciehp_request(struct controller *ctrl, int action);
- void pciehp_handle_button_press(struct slot *slot);
-+void pciehp_handle_disable_request(struct slot *slot);
- void pciehp_handle_link_change(struct slot *slot);
- void pciehp_handle_presence_change(struct slot *slot);
- int pciehp_configure_device(struct slot *p_slot);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index cde32e137f6c..b11f0db0695f 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -240,13 +240,19 @@ static int pciehp_probe(struct pcie_device *dev)
- 	}
- 
- 	/* Check if slot is occupied */
-+	mutex_lock(&slot->lock);
- 	pciehp_get_adapter_status(slot, &occupied);
- 	pciehp_get_power_status(slot, &poweron);
--	if (occupied && pciehp_force)
--		pciehp_enable_slot(slot);
-+	if (pciehp_force &&
-+	    ((occupied && (slot->state == OFF_STATE ||
-+			   slot->state == BLINKINGON_STATE)) ||
-+	     (!occupied && (slot->state == ON_STATE ||
-+			    slot->state == BLINKINGOFF_STATE))))
-+		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
- 	/* If empty slot's power status is on, turn power off */
- 	if (!occupied && poweron && POWER_CTRL(ctrl))
- 		pciehp_power_off_slot(slot);
-+	mutex_unlock(&slot->lock);
- 
- 	return 0;
- 
-@@ -290,10 +296,14 @@ static int pciehp_resume(struct pcie_device *dev)
- 
- 	/* Check if slot is occupied */
- 	pciehp_get_adapter_status(slot, &status);
--	if (status)
--		pciehp_enable_slot(slot);
--	else
--		pciehp_disable_slot(slot);
-+	mutex_lock(&slot->lock);
-+	if ((status && (slot->state == OFF_STATE ||
-+			slot->state == BLINKINGON_STATE)) ||
-+	    (!status && (slot->state == ON_STATE ||
-+			 slot->state == BLINKINGOFF_STATE)))
-+		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
-+	mutex_unlock(&slot->lock);
-+
- 	return 0;
- }
- #endif /* PM */
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 627e846df802..70bad847a450 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -122,22 +122,26 @@ static void remove_board(struct slot *p_slot)
- 	pciehp_green_led_off(p_slot);
- }
- 
-+void pciehp_request(struct controller *ctrl, int action)
-+{
-+	atomic_or(action, &ctrl->pending_events);
-+	if (!pciehp_poll_mode)
-+		irq_wake_thread(ctrl->pcie->irq, ctrl);
-+}
-+
- void pciehp_queue_pushbutton_work(struct work_struct *work)
- {
- 	struct slot *p_slot = container_of(work, struct slot, work.work);
-+	struct controller *ctrl = p_slot->ctrl;
- 
- 	mutex_lock(&p_slot->lock);
- 	switch (p_slot->state) {
- 	case BLINKINGOFF_STATE:
--		p_slot->state = POWEROFF_STATE;
--		mutex_unlock(&p_slot->lock);
--		pciehp_disable_slot(p_slot);
--		return;
-+		pciehp_request(ctrl, DISABLE_SLOT);
-+		break;
- 	case BLINKINGON_STATE:
--		p_slot->state = POWERON_STATE;
--		mutex_unlock(&p_slot->lock);
--		pciehp_enable_slot(p_slot);
--		return;
-+		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
-+		break;
- 	default:
- 		break;
- 	}
-@@ -186,16 +190,6 @@ void pciehp_handle_button_press(struct slot *p_slot)
- 		ctrl_info(ctrl, "Slot(%s): Action canceled due to button press\n",
- 			  slot_name(p_slot));
- 		break;
--	case POWEROFF_STATE:
--	case POWERON_STATE:
--		/*
--		 * Ignore if the slot is on power-on or power-off state;
--		 * this means that the previous attention button action
--		 * to hot-add or hot-remove is undergoing
--		 */
--		ctrl_info(ctrl, "Slot(%s): Button ignored\n",
--			  slot_name(p_slot));
--		break;
- 	default:
- 		ctrl_err(ctrl, "Slot(%s): Ignoring invalid state %#x\n",
- 			 slot_name(p_slot), p_slot->state);
-@@ -204,6 +198,22 @@ void pciehp_handle_button_press(struct slot *p_slot)
- 	mutex_unlock(&p_slot->lock);
- }
- 
-+void pciehp_handle_disable_request(struct slot *slot)
-+{
-+	struct controller *ctrl = slot->ctrl;
-+
-+	mutex_lock(&slot->lock);
-+	switch (slot->state) {
-+	case BLINKINGON_STATE:
-+	case BLINKINGOFF_STATE:
-+		cancel_delayed_work(&slot->work);
-+	}
-+	slot->state = POWEROFF_STATE;
-+	mutex_unlock(&slot->lock);
-+
-+	ctrl->request_result = pciehp_disable_slot(slot);
-+}
-+
- void pciehp_handle_link_change(struct slot *p_slot)
- {
- 	struct controller *ctrl = p_slot->ctrl;
-@@ -232,32 +242,6 @@ void pciehp_handle_link_change(struct slot *p_slot)
- 		}
- 		return;
- 		break;
--	case POWERON_STATE:
--		if (link_active) {
--			ctrl_info(ctrl, "Slot(%s): Link Up event ignored; already powering on\n",
--				  slot_name(p_slot));
--		} else {
--			p_slot->state = POWEROFF_STATE;
--			mutex_unlock(&p_slot->lock);
--			ctrl_info(ctrl, "Slot(%s): Link Down event queued; currently getting powered on\n",
--				  slot_name(p_slot));
--			pciehp_disable_slot(p_slot);
--			return;
--		}
--		break;
--	case POWEROFF_STATE:
--		if (link_active) {
--			p_slot->state = POWERON_STATE;
--			mutex_unlock(&p_slot->lock);
--			ctrl_info(ctrl, "Slot(%s): Link Up event queued; currently getting powered off\n",
--				  slot_name(p_slot));
--			pciehp_enable_slot(p_slot);
--			return;
--		} else {
--			ctrl_info(ctrl, "Slot(%s): Link Down event ignored; already powering off\n",
--				  slot_name(p_slot));
--		}
--		break;
- 	default:
- 		ctrl_err(ctrl, "Slot(%s): Ignoring invalid state %#x\n",
- 			 slot_name(p_slot), p_slot->state);
-@@ -272,6 +256,12 @@ void pciehp_handle_presence_change(struct slot *slot)
- 	u8 present;
- 
- 	mutex_lock(&slot->lock);
-+	switch (slot->state) {
-+	case BLINKINGON_STATE:
-+	case BLINKINGOFF_STATE:
-+		cancel_delayed_work(&slot->work);
-+	}
-+
- 	pciehp_get_adapter_status(slot, &present);
- 	ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
- 		  present ? "" : "not ");
-@@ -279,7 +269,7 @@ void pciehp_handle_presence_change(struct slot *slot)
- 	if (present) {
- 		slot->state = POWERON_STATE;
- 		mutex_unlock(&slot->lock);
--		pciehp_enable_slot(slot);
-+		ctrl->request_result = pciehp_enable_slot(slot);
- 	} else {
- 		slot->state = POWEROFF_STATE;
- 		mutex_unlock(&slot->lock);
-@@ -383,11 +373,17 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
- 	mutex_lock(&p_slot->lock);
- 	switch (p_slot->state) {
- 	case BLINKINGON_STATE:
--		cancel_delayed_work(&p_slot->work);
- 	case OFF_STATE:
--		p_slot->state = POWERON_STATE;
- 		mutex_unlock(&p_slot->lock);
--		return pciehp_enable_slot(p_slot);
-+		/*
-+		 * The IRQ thread becomes a no-op if the user pulls out the
-+		 * card before the thread wakes up, so initialize to -ENODEV.
-+		 */
-+		ctrl->request_result = -ENODEV;
-+		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
-+		wait_event(ctrl->requester,
-+			   !atomic_read(&ctrl->pending_events));
-+		return ctrl->request_result;
- 	case POWERON_STATE:
- 		ctrl_info(ctrl, "Slot(%s): Already in powering on state\n",
- 			  slot_name(p_slot));
-@@ -415,11 +411,12 @@ int pciehp_sysfs_disable_slot(struct slot *p_slot)
- 	mutex_lock(&p_slot->lock);
- 	switch (p_slot->state) {
- 	case BLINKINGOFF_STATE:
--		cancel_delayed_work(&p_slot->work);
- 	case ON_STATE:
--		p_slot->state = POWEROFF_STATE;
- 		mutex_unlock(&p_slot->lock);
--		return pciehp_disable_slot(p_slot);
-+		pciehp_request(ctrl, DISABLE_SLOT);
-+		wait_event(ctrl->requester,
-+			   !atomic_read(&ctrl->pending_events));
-+		return ctrl->request_result;
- 	case POWEROFF_STATE:
- 		ctrl_info(ctrl, "Slot(%s): Already in powering off state\n",
- 			  slot_name(p_slot));
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 564a904d7fa9..9aea0bdbb019 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -595,11 +595,16 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
- 	}
- 
- 	/*
-+	 * Disable requests have higher priority than Presence Detect Changed
-+	 * or Data Link Layer State Changed events.
-+	 *
- 	 * Check Link Status Changed at higher precedence than Presence
- 	 * Detect Changed.  The PDS value may be set to "card present" from
- 	 * out-of-band detection, which may be in conflict with a Link Down.
- 	 */
--	if (events & PCI_EXP_SLTSTA_DLLSC)
-+	if (events & DISABLE_SLOT)
-+		pciehp_handle_disable_request(slot);
-+	else if (events & PCI_EXP_SLTSTA_DLLSC)
- 		pciehp_handle_link_change(slot);
- 	else if (events & PCI_EXP_SLTSTA_PDC)
- 		pciehp_handle_presence_change(slot);
-@@ -612,6 +617,7 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
- 		pciehp_green_led_off(slot);
- 	}
- 
-+	wake_up(&ctrl->requester);
- 	return IRQ_HANDLED;
- }
- 
-@@ -625,8 +631,9 @@ static int pciehp_poll(void *data)
- 		if (kthread_should_park())
- 			kthread_parkme();
- 
--		/* poll for interrupt events */
--		while (pciehp_isr(IRQ_NOTCONNECTED, ctrl) == IRQ_WAKE_THREAD)
-+		/* poll for interrupt events or user requests */
-+		while (pciehp_isr(IRQ_NOTCONNECTED, ctrl) == IRQ_WAKE_THREAD ||
-+		       atomic_read(&ctrl->pending_events))
- 			pciehp_ist(IRQ_NOTCONNECTED, ctrl);
- 
- 		if (pciehp_poll_time <= 0 || pciehp_poll_time > 60)
-@@ -829,6 +836,7 @@ struct controller *pcie_init(struct pcie_device *dev)
- 
- 	ctrl->slot_cap = slot_cap;
- 	mutex_init(&ctrl->ctrl_lock);
-+	init_waitqueue_head(&ctrl->requester);
- 	init_waitqueue_head(&ctrl->queue);
- 	dbg_ctrl(ctrl);
- 
--- 
-2.17.1
+Alex
