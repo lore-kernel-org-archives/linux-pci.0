@@ -1,159 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:40363 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754452AbeFMHZk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 03:25:40 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3 01/10] PCI: Add pci_host_alloc_intx_irqd() for allocating IRQ domain
-Date: Wed, 13 Jun 2018 15:25:20 +0800
-Message-Id: <1528874720-7575-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=dqUP=JF=arm.com=punit.agrawal@kernel.org>
+Return-Path: <SRS0=dqUP=JF=arm.com=punit.agrawal@kernel.org>
+From: Punit Agrawal <punit.agrawal@arm.com>
+To: Michal Hocko <mhocko@kernel.org>, Xie XiuQi <xiexiuqi@huawei.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>,  Bjorn Helgaas <helgaas@kernel.org>,  <tnowicki@caviumnetworks.com>,  <linux-pci@vger.kernel.org>,  Catalin Marinas <catalin.marinas@arm.com>,  "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,  Will Deacon <will.deacon@arm.com>,  Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,  Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,  <linux-mm@kvack.org>,  <wanghuiqiang@huawei.com>,  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,  Bjorn Helgaas <bhelgaas@google.com>,  Andrew Morton <akpm@linux-foundation.org>,  zhongjiang <zhongjiang@huawei.com>,  linux-arm <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
+References: <5ed798a0-6c9c-086e-e5e8-906f593ca33e@huawei.com>
+	<20180607122152.GP32433@dhcp22.suse.cz>
+	<a880df29-b656-d98d-3037-b04761c7ed78@huawei.com>
+	<20180611085237.GI13364@dhcp22.suse.cz>
+	<16c4db2f-bc70-d0f2-fb38-341d9117ff66@huawei.com>
+	<20180611134303.GC75679@bhelgaas-glaptop.roam.corp.google.com>
+	<20180611145330.GO13364@dhcp22.suse.cz>
+	<87lgbk59gs.fsf@e105922-lin.cambridge.arm.com>
+	<87bmce60y3.fsf@e105922-lin.cambridge.arm.com>
+	<8b715082-14d4-f10b-d2d6-b23be7e4bf7e@huawei.com>
+	<20180619120714.GE13685@dhcp22.suse.cz>
+Date: Tue, 19 Jun 2018 13:52:16 +0100
+In-Reply-To: <20180619120714.GE13685@dhcp22.suse.cz> (Michal Hocko's message
+	of "Tue, 19 Jun 2018 14:07:14 +0200")
+Message-ID: <874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-It seems host drivers which allocate IRQ domain for INTx
-and the related code block looks highly similar to each other.
-Add a new helper, pci_alloc_intx_irqd(), to avoid code duplication
-as much as possible.
+Michal Hocko <mhocko@kernel.org> writes:
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> On Tue 19-06-18 20:03:07, Xie XiuQi wrote:
+> [...]
+>> I tested on a arm board with 128 cores 4 numa nodes, but I set CONFIG_NR_CPUS=72.
+>> Then node 3 is not be created, because node 3 has no memory, and no cpu.
+>> But some pci device may related to node 3, which be set in ACPI table.
+>
+> Could you double check that zonelists for node 3 are generated
+> correctly?
 
----
+The cpus in node 3 aren't onlined and there's no memory attached - I
+suspect that no zonelists are built for this node.
 
-Changes in v3:
-- rename to pci_host_alloc_intx_irqd and move to probe.c
-- fix compile error reported by Kbuild Robot
+We skip creating a node, if the number of SRAT entries parsed exceeds
+NR_CPUS[0]. This in turn prevents onlining the numa node and so no
+zonelists will be created for it.
 
-Changes in v2:
-- fix typo and move the code to C file.
+I think the problem will go away if the cpus are restricted via the
+kernel command line by setting nr_cpus.
 
- drivers/pci/probe.c | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h | 13 ++++++++++
- 2 files changed, 87 insertions(+)
+Xie, can you try the below patch on top of the one enabling memoryless
+nodes? I'm not sure this is the right solution but at least it'll
+confirm the problem.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac876e3..d37b879 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -3139,3 +3139,77 @@ int pci_hp_add_bridge(struct pci_dev *dev)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(pci_hp_add_bridge);
-+
-+static int pcie_intx_map(struct irq_domain *domain, unsigned int irq,
-+			 irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+
-+	return 0;
-+}
-+
-+/**
-+ * pci_host_alloc_intx_irqd() - Allocate INTx IRQ domain
-+ * @dev: device associated with the PCI controller.
-+ * @host: pointer to host specific data struct
-+ * @general_xlate: flag for whether use pci_irqd_intx_xlate() helper
-+ * @intx_domain_ops: pointer to driver specific struct irq_domain_ops
-+ * @local_intc: pointer to driver specific interrupt controller node
-+ *
-+ * A simple helper for drivers to allocate IRQ domain for INTx. If
-+ * intx_domain_ops is NULL, use pci_intx_domain_ops by default. And if
-+ * local_intc is present, then use it firstly, otherwise, fallback to get
-+ * interrupt controller node from @dev.
-+ *
-+ * Returns valid pointer of struct irq_domain on success, or PTR_ERR(-EINVAL)
-+ * if failure occurred.
-+ */
-+struct irq_domain *pci_host_alloc_intx_irqd(struct device *dev, void *host,
-+	bool general_xlate, const struct irq_domain_ops *intx_domain_ops,
-+	struct device_node *local_intc)
-+{
-+	struct device_node *intc = local_intc;
-+	struct irq_domain *domain = NULL;
-+	struct irq_domain_ops *irqd_ops;
-+	bool need_put = false;
-+	int err = -EINVAL;
-+
-+	if (!intc) {
-+		intc = of_get_next_child(dev->of_node, NULL);
-+		if (!intc) {
-+			dev_err(dev, "missing child interrupt-controller node\n");
-+			goto err_out;
-+		}
-+		need_put = true;
-+	}
-+
-+	if (!intx_domain_ops) {
-+		irqd_ops = (struct irq_domain_ops *)devm_kmalloc(dev,
-+				sizeof(struct irq_domain_ops), GFP_KERNEL);
-+		if (!irqd_ops) {
-+			err = -ENOMEM;
-+			goto err_out;
-+		}
-+
-+		irqd_ops->map = &pcie_intx_map;
-+		if (general_xlate)
-+			irqd_ops->xlate = &pci_irqd_intx_xlate;
-+		intx_domain_ops = irqd_ops;
-+	}
-+#ifdef CONFIG_IRQ_DOMAIN
-+	domain = irq_domain_add_linear(intc, PCI_NUM_INTX,
-+				       intx_domain_ops, host);
-+#endif
-+	if (!domain) {
-+		dev_err(dev, "failed to get a INTx IRQ domain\n");
-+		goto err_out;
-+	}
-+
-+	return domain;
-+err_out:
-+	if (need_put)
-+		of_node_put(intc);
-+	return ERR_PTR(err);
-+}
-+EXPORT_SYMBOL_GPL(pci_host_alloc_intx_irqd);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 340029b..06ed80d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -31,6 +31,9 @@
- #include <linux/device.h>
- #include <linux/interrupt.h>
- #include <linux/io.h>
-+#include <linux/irq.h>
-+#include <linux/irqdomain.h>
-+#include <linux/of_irq.h>
- #include <linux/resource_ext.h>
- #include <uapi/linux/pci.h>
- 
-@@ -1453,6 +1456,10 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
- 	return 0;
- }
- 
-+extern struct irq_domain *pci_host_alloc_intx_irqd(struct device *dev,
-+				void *host, bool general_xlate,
-+				const struct irq_domain_ops *intx_domain_ops,
-+				struct device_node *local_intc);
- #ifdef CONFIG_PCIEPORTBUS
- extern bool pcie_ports_disabled;
- extern bool pcie_ports_native;
-@@ -1688,6 +1695,12 @@ static inline int pci_irqd_intx_xlate(struct irq_domain *d,
- 				      unsigned long *out_hwirq,
- 				      unsigned int *out_type)
- { return -EINVAL; }
-+
-+static struct irq_domain *pci_host_alloc_intx_irqd(struct device *dev,
-+				void *host, bool general_xlate,
-+				const struct irq_domain_ops *intx_domain_ops,
-+				struct device_node *local_intc)
-+{ return ERR_PTR(-EINVAL); }
- #endif /* CONFIG_PCI */
- 
- /* Include architecture-dependent settings and functions */
--- 
-1.9.1
+Thanks,
+Punit
+
+[0] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm64/kernel/acpi_numa.c?h=v4.18-rc1#n73
+
+-- >8 --
+diff --git a/arch/arm64/kernel/acpi_numa.c b/arch/arm64/kernel/acpi_numa.c
+index d190a7b231bf..fea0f7164f1a 100644
+--- a/arch/arm64/kernel/acpi_numa.c
++++ b/arch/arm64/kernel/acpi_numa.c
+@@ -70,11 +70,9 @@ void __init acpi_numa_gicc_affinity_init(struct acpi_srat_gicc_affinity *pa)
+        if (!(pa->flags & ACPI_SRAT_GICC_ENABLED))
+                return;
+
+-   if (cpus_in_srat >= NR_CPUS) {
++ if (cpus_in_srat >= NR_CPUS)
+                pr_warn_once("SRAT: cpu_to_node_map[%d] is too small, may not be able to use all cpus\n",
+                             NR_CPUS);
+-           return;
+-   }
+
+        pxm = pa->proximity_domain;
+        node = acpi_map_pxm_to_node(pxm);
