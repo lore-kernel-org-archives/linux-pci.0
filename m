@@ -1,125 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 2/6] PCI: iproc: Add INTx support with better modeling
-To: poza@codeaurora.org
-References: <1527631130-20045-1-git-send-email-ray.jui@broadcom.com>
- <1527631130-20045-3-git-send-email-ray.jui@broadcom.com>
- <3ecc33ebe3db1f010f5c8938dfb87677@codeaurora.org>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <89adfced-75d6-9ad2-0a39-1fbdf9a33cb0@broadcom.com>
-Date: Tue, 12 Jun 2018 10:06:34 -0700
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] arch: powerpc: pci-common: fix wrong return value check
+ on phd_id
+To: "Guilherme G. Piccoli" <guilherme@gpiccoli.net>,
+        mpe@ellerman.id.au, benh@kernel.crashing.org
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+        xe-kernel@external.cisco.com, linux-kernel@vger.kernel.org,
+        Paul Mackerras <paulus@samba.org>,
+        linuxppc-dev@lists.ozlabs.org,
+        Mauro Rodrigues <maurosr@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org
+References: <20180618165706.42679-1-danielwa@cisco.com>
+ <CALJn8nPbTy3Ne2a7L71c2YZ06Ccr2j0zs6TdptfRc7O-N9u=Yg@mail.gmail.com>
+ <c56f43f5-7902-f7c8-20e1-955ad064c4d0@cisco.com>
+ <CALJn8nM+S7STs+_MTje1qVCpa6MvnROS2+b5_GDz2wYs8etapA@mail.gmail.com>
+From: Daniel Walker <danielwa@cisco.com>
+Message-ID: <6d321d8a-432d-d41d-cc08-144764d644b2@cisco.com>
+Date: Tue, 19 Jun 2018 09:57:15 -0700
 MIME-Version: 1.0
-In-Reply-To: <3ecc33ebe3db1f010f5c8938dfb87677@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list@broadcom.com, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci-owner@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CALJn8nM+S7STs+_MTje1qVCpa6MvnROS2+b5_GDz2wYs8etapA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CgpPbiA2LzEyLzIwMTggMTo1MiBBTSwgcG96YUBjb2RlYXVyb3JhLm9yZyB3cm90ZToKPiBPbiAy
-MDE4LTA1LTMwIDAzOjI4LCBSYXkgSnVpIHdyb3RlOgo+PiBBZGQgUENJZSBsZWdhY3kgaW50ZXJy
-dXB0IElOVHggc3VwcG9ydCB0byB0aGUgaVByb2MgUENJZSBkcml2ZXIgYnkKPj4gbW9kZWxpbmcg
-aXQgd2l0aCBpdHMgb3duIElSUSBkb21haW4uIEFsbCA0IGludGVycnVwdHMgSU5UQSwgSU5UQiwg
-SU5UQywKPj4gSU5URCBzaGFyZSB0aGUgc2FtZSBpbnRlcnJ1cHQgbGluZSBjb25uZWN0ZWQgdG8g
-dGhlIEdJQyBpbiB0aGUgc3lzdGVtLAo+PiB3aGlsZSB0aGUgc3RhdHVzIG9mIGVhY2ggSU5UeCBj
-YW4gYmUgb2J0YWluZWQgdGhyb3VnaCB0aGUgSU5UWCBDU1IKPj4gcmVnaXN0ZXIKPj4KPj4gU2ln
-bmVkLW9mZi1ieTogUmF5IEp1aSA8cmF5Lmp1aUBicm9hZGNvbS5jb20+Cj4+IC0tLQo+PiDCoGRy
-aXZlcnMvcGNpL2hvc3QvcGNpZS1pcHJvYy1wbGF0Zm9ybS5jIHzCoCAyICsKPj4gwqBkcml2ZXJz
-L3BjaS9ob3N0L3BjaWUtaXByb2MuY8KgwqDCoMKgwqDCoMKgwqDCoCB8IDk1IAo+PiArKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKystCj4+IMKgZHJpdmVycy9wY2kvaG9zdC9wY2llLWlw
-cm9jLmjCoMKgwqDCoMKgwqDCoMKgwqAgfMKgIDYgKysrCj4+IMKgMyBmaWxlcyBjaGFuZ2VkLCAx
-MDEgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKPj4KPj4gZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvcGNpL2hvc3QvcGNpZS1pcHJvYy1wbGF0Zm9ybS5jCj4+IGIvZHJpdmVycy9wY2kvaG9zdC9w
-Y2llLWlwcm9jLXBsYXRmb3JtLmMKPj4gaW5kZXggZTc2NGEyYS4uN2E1MWU2YyAxMDA2NDQKPj4g
-LS0tIGEvZHJpdmVycy9wY2kvaG9zdC9wY2llLWlwcm9jLXBsYXRmb3JtLmMKPj4gKysrIGIvZHJp
-dmVycy9wY2kvaG9zdC9wY2llLWlwcm9jLXBsYXRmb3JtLmMKPj4gQEAgLTcwLDYgKzcwLDggQEAg
-c3RhdGljIGludCBpcHJvY19wY2llX3BsdGZtX3Byb2JlKHN0cnVjdAo+PiBwbGF0Zm9ybV9kZXZp
-Y2UgKnBkZXYpCj4+IMKgwqDCoMKgIH0KPj4gwqDCoMKgwqAgcGNpZS0+YmFzZV9hZGRyID0gcmVn
-LnN0YXJ0Owo+Pgo+PiArwqDCoMKgIHBjaWUtPmlycSA9IHBsYXRmb3JtX2dldF9pcnEocGRldiwg
-MCk7Cj4+ICsKPj4gwqDCoMKgwqAgaWYgKG9mX3Byb3BlcnR5X3JlYWRfYm9vbChucCwgImJyY20s
-cGNpZS1vYiIpKSB7Cj4+IMKgwqDCoMKgwqDCoMKgwqAgdTMyIHZhbDsKPj4KPj4gZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1pcHJvYy5jIAo+PiBiL2RyaXZlcnMvcGNpL2hvc3Qv
-cGNpZS1pcHJvYy5jCj4+IGluZGV4IDE0ZjM3NGQuLjBiZDJjMTQgMTAwNjQ0Cj4+IC0tLSBhL2Ry
-aXZlcnMvcGNpL2hvc3QvcGNpZS1pcHJvYy5jCj4+ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNp
-ZS1pcHJvYy5jCj4+IEBAIC0xNCw2ICsxNCw3IEBACj4+IMKgI2luY2x1ZGUgPGxpbnV4L2RlbGF5
-Lmg+Cj4+IMKgI2luY2x1ZGUgPGxpbnV4L2ludGVycnVwdC5oPgo+PiDCoCNpbmNsdWRlIDxsaW51
-eC9pcnFjaGlwL2FybS1naWMtdjMuaD4KPj4gKyNpbmNsdWRlIDxsaW51eC9pcnFjaGlwL2NoYWlu
-ZWRfaXJxLmg+Cj4+IMKgI2luY2x1ZGUgPGxpbnV4L3BsYXRmb3JtX2RldmljZS5oPgo+PiDCoCNp
-bmNsdWRlIDxsaW51eC9vZl9hZGRyZXNzLmg+Cj4+IMKgI2luY2x1ZGUgPGxpbnV4L29mX3BjaS5o
-Pgo+PiBAQCAtMjY0LDYgKzI2NSw3IEBAIGVudW0gaXByb2NfcGNpZV9yZWcgewo+Pgo+PiDCoMKg
-wqDCoCAvKiBlbmFibGUgSU5UeCAqLwo+PiDCoMKgwqDCoCBJUFJPQ19QQ0lFX0lOVFhfRU4sCj4+
-ICvCoMKgwqAgSVBST0NfUENJRV9JTlRYX0NTUiwKPj4KPj4gwqDCoMKgwqAgLyogb3V0Ym91bmQg
-YWRkcmVzcyBtYXBwaW5nICovCj4+IMKgwqDCoMKgIElQUk9DX1BDSUVfT0FSUjAsCj4+IEBAIC0z
-MDUsNiArMzA3LDcgQEAgc3RhdGljIGNvbnN0IHUxNiBpcHJvY19wY2llX3JlZ19wYXhiX2JjbWFb
-XSA9IHsKPj4gwqDCoMKgwqAgW0lQUk9DX1BDSUVfQ0ZHX0FERFJdwqDCoMKgwqDCoMKgwqAgPSAw
-eDFmOCwKPj4gwqDCoMKgwqAgW0lQUk9DX1BDSUVfQ0ZHX0RBVEFdwqDCoMKgwqDCoMKgwqAgPSAw
-eDFmYywKPj4gwqDCoMKgwqAgW0lQUk9DX1BDSUVfSU5UWF9FTl3CoMKgwqDCoMKgwqDCoCA9IDB4
-MzMwLAo+PiArwqDCoMKgIFtJUFJPQ19QQ0lFX0lOVFhfQ1NSXcKgwqDCoMKgwqDCoMKgID0gMHgz
-MzQsCj4+IMKgwqDCoMKgIFtJUFJPQ19QQ0lFX0xJTktfU1RBVFVTXcKgwqDCoCA9IDB4ZjBjLAo+
-PiDCoH07Cj4+Cj4+IEBAIC0zMTYsNiArMzE5LDcgQEAgc3RhdGljIGNvbnN0IHUxNiBpcHJvY19w
-Y2llX3JlZ19wYXhiW10gPSB7Cj4+IMKgwqDCoMKgIFtJUFJPQ19QQ0lFX0NGR19BRERSXcKgwqDC
-oMKgwqDCoMKgID0gMHgxZjgsCj4+IMKgwqDCoMKgIFtJUFJPQ19QQ0lFX0NGR19EQVRBXcKgwqDC
-oMKgwqDCoMKgID0gMHgxZmMsCj4+IMKgwqDCoMKgIFtJUFJPQ19QQ0lFX0lOVFhfRU5dwqDCoMKg
-wqDCoMKgwqAgPSAweDMzMCwKPj4gK8KgwqDCoCBbSVBST0NfUENJRV9JTlRYX0NTUl3CoMKgwqDC
-oMKgwqDCoCA9IDB4MzM0LAo+PiDCoMKgwqDCoCBbSVBST0NfUENJRV9PQVJSMF3CoMKgwqDCoMKg
-wqDCoCA9IDB4ZDIwLAo+PiDCoMKgwqDCoCBbSVBST0NfUENJRV9PTUFQMF3CoMKgwqDCoMKgwqDC
-oCA9IDB4ZDQwLAo+PiDCoMKgwqDCoCBbSVBST0NfUENJRV9PQVJSMV3CoMKgwqDCoMKgwqDCoCA9
-IDB4ZDI4LAo+PiBAQCAtMzMyLDYgKzMzNiw3IEBAIHN0YXRpYyBjb25zdCB1MTYgaXByb2NfcGNp
-ZV9yZWdfcGF4Yl92MltdID0gewo+PiDCoMKgwqDCoCBbSVBST0NfUENJRV9DRkdfQUREUl3CoMKg
-wqDCoMKgwqDCoCA9IDB4MWY4LAo+PiDCoMKgwqDCoCBbSVBST0NfUENJRV9DRkdfREFUQV3CoMKg
-wqDCoMKgwqDCoCA9IDB4MWZjLAo+PiDCoMKgwqDCoCBbSVBST0NfUENJRV9JTlRYX0VOXcKgwqDC
-oMKgwqDCoMKgID0gMHgzMzAsCj4+ICvCoMKgwqAgW0lQUk9DX1BDSUVfSU5UWF9DU1JdwqDCoMKg
-wqDCoMKgwqAgPSAweDMzNCwKPj4gwqDCoMKgwqAgW0lQUk9DX1BDSUVfT0FSUjBdwqDCoMKgwqDC
-oMKgwqAgPSAweGQyMCwKPj4gwqDCoMKgwqAgW0lQUk9DX1BDSUVfT01BUDBdwqDCoMKgwqDCoMKg
-wqAgPSAweGQ0MCwKPj4gwqDCoMKgwqAgW0lQUk9DX1BDSUVfT0FSUjFdwqDCoMKgwqDCoMKgwqAg
-PSAweGQyOCwKPj4gQEAgLTc4Miw5ICs3ODcsOTAgQEAgc3RhdGljIGludCBpcHJvY19wY2llX2No
-ZWNrX2xpbmsoc3RydWN0IAo+PiBpcHJvY19wY2llICpwY2llKQo+PiDCoMKgwqDCoCByZXR1cm4g
-bGlua19pc19hY3RpdmUgPyAwIDogLUVOT0RFVjsKPj4gwqB9Cj4+Cj4+IC1zdGF0aWMgdm9pZCBp
-cHJvY19wY2llX2VuYWJsZShzdHJ1Y3QgaXByb2NfcGNpZSAqcGNpZSkKPj4gK3N0YXRpYyBpbnQg
-aXByb2NfcGNpZV9pbnR4X21hcChzdHJ1Y3QgaXJxX2RvbWFpbiAqZG9tYWluLCB1bnNpZ25lZCAK
-Pj4gaW50IGlycSwKPj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBpcnFf
-aHdfbnVtYmVyX3QgaHdpcnEpCj4+IMKgewo+PiArwqDCoMKgIGlycV9zZXRfY2hpcF9hbmRfaGFu
-ZGxlcihpcnEsICZkdW1teV9pcnFfY2hpcCwgaGFuZGxlX3NpbXBsZV9pcnEpOwo+PiArwqDCoMKg
-IGlycV9zZXRfY2hpcF9kYXRhKGlycSwgZG9tYWluLT5ob3N0X2RhdGEpOwo+PiArCj4+ICvCoMKg
-wqAgcmV0dXJuIDA7Cj4+ICt9Cj4+ICsKPj4gK3N0YXRpYyBjb25zdCBzdHJ1Y3QgaXJxX2RvbWFp
-bl9vcHMgaW50eF9kb21haW5fb3BzID0gewo+PiArwqDCoMKgIC5tYXAgPSBpcHJvY19wY2llX2lu
-dHhfbWFwLAo+PiArfTsKPj4gKwo+PiArc3RhdGljIHZvaWQgaXByb2NfcGNpZV9pc3Ioc3RydWN0
-IGlycV9kZXNjICpkZXNjKQo+PiArewo+PiArwqDCoMKgIHN0cnVjdCBpcnFfY2hpcCAqY2hpcCA9
-IGlycV9kZXNjX2dldF9jaGlwKGRlc2MpOwo+PiArwqDCoMKgIHN0cnVjdCBpcHJvY19wY2llICpw
-Y2llOwo+PiArwqDCoMKgIHN0cnVjdCBkZXZpY2UgKmRldjsKPj4gK8KgwqDCoCB1bnNpZ25lZCBs
-b25nIHN0YXR1czsKPj4gK8KgwqDCoCB1MzIgYml0LCB2aXJxOwo+PiArCj4+ICvCoMKgwqAgY2hh
-aW5lZF9pcnFfZW50ZXIoY2hpcCwgZGVzYyk7Cj4+ICvCoMKgwqAgcGNpZSA9IGlycV9kZXNjX2dl
-dF9oYW5kbGVyX2RhdGEoZGVzYyk7Cj4+ICvCoMKgwqAgZGV2ID0gcGNpZS0+ZGV2Owo+PiArCj4+
-ICvCoMKgwqAgLyogZ28gdGhyb3VnaCBJTlR4IEEsIEIsIEMsIEQgdW50aWwgYWxsIGludGVycnVw
-dHMgYXJlIGhhbmRsZWQgKi8KPj4gK8KgwqDCoCB3aGlsZSAoKHN0YXR1cyA9IGlwcm9jX3BjaWVf
-cmVhZF9yZWcocGNpZSwgSVBST0NfUENJRV9JTlRYX0NTUikgJgo+PiArwqDCoMKgwqDCoMKgwqAg
-U1lTX1JDX0lOVFhfTUFTSykgIT0gMCkgewo+PiArwqDCoMKgwqDCoMKgwqAgZm9yX2VhY2hfc2V0
-X2JpdChiaXQsICZzdGF0dXMsIFBDSV9OVU1fSU5UWCkgewo+PiArwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoCB2aXJxID0gaXJxX2ZpbmRfbWFwcGluZyhwY2llLT5pcnFfZG9tYWluLCBiaXQgKyAxKTsK
-Pj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqAgaWYgKHZpcnEpCj4+ICvCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqAgZ2VuZXJpY19oYW5kbGVfaXJxKHZpcnEpOwo+PiArwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoCBlbHNlCj4+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgZGV2X2Vy
-cihkZXYsICJ1bmV4cGVjdGVkIElOVHgldVxuIiwgYml0KTsKPj4gK8KgwqDCoMKgwqDCoMKgIH0K
-Pj4gK8KgwqDCoCB9Cj4+ICsKPiAKPiBBcmUgdGhlc2UgbGV2ZWwgb3IgZWRnZSBpbnRlcnJ1cHRz
-ID8gYWx0aG91Z2ggSSBzZWUgRFQgc2F5czogSVJRX1RZUEVfTk9ORQoKRFQgZW50cmllcyBzaG91
-bGQgYmUgZml4ZWQgdG8gdHJpZ2dlciBvbiBsZXZlbCBISUdIIGxpa2UgRmxvcmlhbiBhbmQgSSAK
-ZGlzY3Vzc2VkIG9uIHRoZSBtYWlsaW5nIGxpc3QgeWVzdGVyZGF5LiBJdCBsb29rcyBsaWtlIHlv
-dSBhcmUgbWlzc2luZyBhIApsb3Qgb2YgZGlzY3Vzc2lvbnMgb24gdGhlIG1haWxpbmcgbGlzdC4g
-Q291bGQgeW91IHBsZWFzZSBoZWxwIHRvIG1ha2UgCnN1cmUgeW91IHJlYWQgYWxsIHRoZSBleGlz
-dGluZyBkaXNjdXNzaW9ucyB3aGVuIGNvbW1lbnRpbmcgb24gYSBwYXRjaD8KCj4gZG8geW91IG5v
-dCBuZWVkIHRvIGNsZWFyIGludGVycnVwdCBzdGF0dXMgYml0cyBpbiBJUFJPQ19QQ0lFX0lOVFhf
-Q1NSID8KPiAKClJPCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0
-cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGlu
-Zm8vbGludXgtYXJtLWtlcm5lbAo=
+On 06/19/2018 09:26 AM, Guilherme G. Piccoli wrote:
+>> [...]
+>> What your doing is changing the phb_id to some transformation of "reg" for
+>> all platforms except which have "ibm,opal-phbid". This is what we observe.
+>> This is a radical altering of the prior phb_id selection before your patch.
+>>
+>> The question is, was that your intent ? We are expecting these numbers
+>> aren't getting altered in this way, this is why we have the patch. Your
+>> patch description appears to suggest you want this type of selection for
+>> "... pSeries and PowerNV cases)." , so I am assuming you did this by
+>> mistake. Also I don't see a reason to make this change for all platforms.
+> It was the intent - whenever we have device-tree information, the idea is to
+> use it to have more consistent numbering across reboots and PCI hotplugs.
+> The reason to change that originally is hotplugging a PCI device added
+> the device with a different PHB/Domain value, and network predictable naming
+> messed-up interfaces' names, leading to a machine without networking.
+
+Ok ..
+
+>
+>
+>> [...]
+>>
+>> We have already done this, that is how we determined your patch was changing
+>> the domain values. There isn't much to tell w.r.t this issue on our side, we
+>> are expecting the domain numbers are set a specific way and they aren't
+>> getting set that way. The drivers which are looking for PCI devices are not
+>> in kernel space, and the PCI domain values are getting taken from userspace.
+>>
+> Oh okay, I imagined it was some crazy userspace-based PCI domain scheme
+> that led you to report the issue - confirmed heheh
+> So, you expect the old behavior right? Incremental PHB numbering.
+> I think we could have a kernel config option to allow that, this way
+> you could rebuild your kernel with that option and keep the old behavior.
+>
+> This idea needs to be validated by the maintainers, or perhaps they could
+> propose another way to keep the old behavior to interested parties.
+>
+> [Looping linux-pci too - original thread at:
+> https://lists.ozlabs.org/pipermail/linuxppc-dev/2018-June/174760.html]
+
+I didn't look into changing the behavior on our side because it didn't 
+look like the intent of the patch was to make a global change. I can 
+take a look at changing this behavior on our side , given that this was 
+intended by your changes.
+
+However, they're may be other platforms or drivers which depend on these 
+numbers getting set a certain way, so there may be other userspace 
+dependencies on these values.
+
+Daniel
