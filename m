@@ -1,76 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51668 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753115AbeFHUMp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 8 Jun 2018 16:12:45 -0400
-Subject: [PATCH v1 7/9] PCI/portdrv: Move private definitions to
- portdrv_pci.c
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 19 Jun 2018 16:59:55 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Oza Pawandeep <poza@codeaurora.org>, linux-kernel@vger.kernel.org
-Date: Fri, 08 Jun 2018 15:12:44 -0500
-Message-ID: <152848876423.14051.16979792429494986407.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152848853199.14051.12670957565366345798.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152848853199.14051.12670957565366345798.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH] efi/fb: Convert PCI bus address to resource if
+ translated by the bridge
+Message-ID: <20180619215955.GF33049@bhelgaas-glaptop.roam.corp.google.com>
+References: <1526563343-28721-1-git-send-email-okaya@codeaurora.org>
+ <36cf3f12-bfe8-1c38-4d2c-b785fc64a3f6@arm.com>
+ <733101d0-9051-a5a6-ef64-162d8d1e10a1@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <733101d0-9051-a5a6-ef64-162d8d1e10a1@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:EFIFB FRAMEBUFFER DRIVER" <linux-fbdev@vger.kernel.org>,
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ linux-pci@vger.kernel.org, timur@codeaurora.org, ard.biesheuvel@linaro.org,
+ open list <linux-kernel@vger.kernel.org>,
+ "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
+ Peter Jones <pjones@redhat.com>, linux-arm-msm@vger.kernel.org,
+ Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Fri, May 18, 2018 at 10:20:29AM -0400, Sinan Kaya wrote:
+> On 5/18/2018 6:42 AM, Robin Murphy wrote:
+> > 
+> > FWIW, now that I've actually gone and looked, it appears you could simplify the whole function quite a bit by getting rid of these and just using the new local resource directly, especially since the only actual use of size is an open-coded resource_contains().
+> 
+> Posted V2 a minute ago. I did the simplification on a prior patch in order not to
+> mix the issues.
 
-Move private definitions to portdrv_pci.c.  No functional change intended.
+I don't see the V2 on linux-pci, but it sounds like Ard would merge this
+anyway.  So I'll drop this and you can let me know if there's anything you
+need from me.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/portdrv.h     |    9 ---------
- drivers/pci/pcie/portdrv_pci.c |    9 +++++++++
- 2 files changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index ab3631a61347..20344e1bf247 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -69,15 +69,6 @@ struct pcie_port_service_driver {
- int pcie_port_service_register(struct pcie_port_service_driver *new);
- void pcie_port_service_unregister(struct pcie_port_service_driver *new);
- 
--/*
-- * The PCIe Capability Interrupt Message Number (PCIe r3.1, sec 7.8.2) must
-- * be one of the first 32 MSI-X entries.  Per PCI r3.0, sec 6.8.3.1, MSI
-- * supports a maximum of 32 vectors per function.
-- */
--#define PCIE_PORT_MAX_MSI_ENTRIES	32
--
--#define get_descriptor_id(type, service) (((type - 4) << 8) | service)
--
- extern struct bus_type pcie_port_bus_type;
- int __must_check pcie_port_bus_register(void);
- void pcie_port_bus_unregister(void);
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 1375e91c268f..76ad08e97a6f 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -363,6 +363,13 @@ static int pcie_message_numbers(struct pci_dev *dev, int mask,
- 	return nvec;
- }
- 
-+/*
-+ * The PCIe Capability Interrupt Message Number (PCIe r3.1, sec 7.8.2) must
-+ * be one of the first 32 MSI-X entries.  Per PCI r3.0, sec 6.8.3.1, MSI
-+ * supports a maximum of 32 vectors per function.
-+ */
-+#define PCIE_PORT_MAX_MSI_ENTRIES	32
-+
- /**
-  * pcie_port_enable_irq_vec - try to set up MSI-X or MSI as interrupt mode
-  * for given port
-@@ -528,6 +535,8 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	return services;
- }
- 
-+#define get_descriptor_id(type, service) (((type - 4) << 8) | service)
-+
- /**
-  * pcie_device_init - allocate and initialize PCI Express port service device
-  * @pdev: PCI Express port to associate the service device with
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
