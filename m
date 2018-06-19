@@ -1,160 +1,404 @@
-Return-Path: <SRS0=ZA3X=JG=flex--rajatja.bounces.google.com=386kpWwcKB8w9s1sB1sy66y3w.u64zw3yssA2w95w3.69y@kernel.org>
-Return-Path: <SRS0=ZA3X=JG=flex--rajatja.bounces.google.com=386kpWwcKB8w9s1sB1sy66y3w.u64zw3yssA2w95w3.69y@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54972 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966700AbeFSQ47 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Jun 2018 12:56:59 -0400
+Date: Tue, 19 Jun 2018 11:56:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Christoph Hellwig <hch@infradead.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: hotplug: Delete skeleton driver
+Message-ID: <20180619165657.GA33049@bhelgaas-glaptop.roam.corp.google.com>
+References: <a451571d5b24bee5d426c02636fc89c23e28f09e.1529412380.git.lukas@wunner.de>
 MIME-Version: 1.0
-Date: Tue, 19 Jun 2018 18:12:07 -0700
-In-Reply-To: <20180620011210.254601-1-rajatja@google.com>
-Message-Id: <20180620011210.254601-2-rajatja@google.com>
-References: <20180619221651.GH33049@bhelgaas-glaptop.roam.corp.google.com> <20180620011210.254601-1-rajatja@google.com>
-Subject: [PATCH v3 2/5] PCI/AER: Add sysfs stats for AER capable devices
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
-	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
-	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
-Cc: Rajat Jain <rajatja@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a451571d5b24bee5d426c02636fc89c23e28f09e.1529412380.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the following AER sysfs stats to represent the counters for each
-kind of error as seen by the device:
+On Tue, Jun 19, 2018 at 04:26:50PM +0200, Lukas Wunner wrote:
+> Ten years ago, commit 58319b802a61 ("PCI: Hotplug core: remove 'name'")
+> dropped the name element from struct hotplug_slot but neglected to
+> update the skeleton driver.
+> 
+> That same year, commit f46753c5e354 ("PCI: introduce pci_slot") raised the
+> number of arguments to pci_hp_register() from one to four.
+> 
+> Fourteen years ago, historic commit 7ab60fc1b8e7 ("PCI Hotplug skeleton:
+> final cleanups") removed all usages of the retval variable from
+> pcihp_skel_init() but not the variable itself, provoking a compiler
+> warning:
+> https://git.kernel.org/tglx/history/c/7ab60fc1b8e7
+> 
+> It seems fair to assume the driver hasn't been used as a template for a
+> new driver in a while.  Per Bjorn's and Christoph's preference, delete it.
+> 
+> Cc: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
-dev_total_cor_errs
-dev_total_fatal_errs
-dev_total_nonfatal_errs
+Applied to pci/hotplug for v4.19, thanks!
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
-v3: Merge everything in aer.c, use "%llu" in place of "%llx"
-
- drivers/pci/pci-sysfs.c |  3 ++
- drivers/pci/pci.h       |  4 ++-
- drivers/pci/pcie/aer.c  | 74 +++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 80 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 0c4653c1d2ce..9f1cb9051d7d 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1746,6 +1746,9 @@ static const struct attribute_group *pci_dev_attr_groups[] = {
- #endif
- 	&pci_bridge_attr_group,
- 	&pcie_dev_attr_group,
-+#ifdef CONFIG_PCIEAER
-+	&aer_stats_attr_group,
-+#endif
- 	NULL,
- };
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c358e7a07f3f..9a28ec600225 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -181,7 +181,9 @@ extern const struct attribute_group *pci_dev_groups[];
- extern const struct attribute_group *pcibus_groups[];
- extern const struct device_type pci_dev_type;
- extern const struct attribute_group *pci_bus_groups[];
--
-+#ifdef CONFIG_PCIEAER
-+extern const struct attribute_group aer_stats_attr_group;
-+#endif
- 
- /**
-  * pci_match_one_device - Tell if a PCI device structure has a matching
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index f9fa994b6c33..ce0d675d7bd3 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -573,6 +573,79 @@ static const char *aer_agent_string[] = {
- 	"Transmitter ID"
- };
- 
-+#define aer_stats_aggregate_attr(field)					\
-+	static ssize_t							\
-+	field##_show(struct device *dev, struct device_attribute *attr,	\
-+		     char *buf)						\
-+{									\
-+	struct pci_dev *pdev = to_pci_dev(dev);				\
-+	return sprintf(buf, "%llu\n", pdev->aer_stats->field);		\
-+}									\
-+static DEVICE_ATTR_RO(field)
-+
-+aer_stats_aggregate_attr(dev_total_cor_errs);
-+aer_stats_aggregate_attr(dev_total_fatal_errs);
-+aer_stats_aggregate_attr(dev_total_nonfatal_errs);
-+
-+static struct attribute *aer_stats_attrs[] __ro_after_init = {
-+	&dev_attr_dev_total_cor_errs.attr,
-+	&dev_attr_dev_total_fatal_errs.attr,
-+	&dev_attr_dev_total_nonfatal_errs.attr,
-+	NULL
-+};
-+
-+static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
-+					   struct attribute *a, int n)
-+{
-+	struct device *dev = kobj_to_dev(kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (!pdev->aer_stats)
-+		return 0;
-+
-+	return a->mode;
-+}
-+
-+const struct attribute_group aer_stats_attr_group = {
-+	.name  = "aer_stats",
-+	.attrs  = aer_stats_attrs,
-+	.is_visible = aer_stats_attrs_are_visible,
-+};
-+
-+static void pci_dev_aer_stats_incr(struct pci_dev *pdev,
-+				   struct aer_err_info *info)
-+{
-+	int status, i, max = -1;
-+	u64 *counter = NULL;
-+	struct aer_stats *aer_stats = pdev->aer_stats;
-+
-+	if (!aer_stats)
-+		return;
-+
-+	switch (info->severity) {
-+	case AER_CORRECTABLE:
-+		aer_stats->dev_total_cor_errs++;
-+		counter = &aer_stats->dev_cor_errs[0];
-+		max = AER_MAX_TYPEOF_CORRECTABLE_ERRS;
-+		break;
-+	case AER_NONFATAL:
-+		aer_stats->dev_total_nonfatal_errs++;
-+		counter = &aer_stats->dev_uncor_errs[0];
-+		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
-+		break;
-+	case AER_FATAL:
-+		aer_stats->dev_total_fatal_errs++;
-+		counter = &aer_stats->dev_uncor_errs[0];
-+		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
-+		break;
-+	}
-+
-+	status = (info->status & ~info->mask);
-+	for (i = 0; i < max; i++)
-+		if (status & (1 << i))
-+			counter[i]++;
-+}
-+
- static void __print_tlp_header(struct pci_dev *dev,
- 			       struct aer_header_log_regs *t)
- {
-@@ -605,6 +678,7 @@ static void __aer_print_error(struct pci_dev *dev,
- 			pci_err(dev, "   [%2d] Unknown Error Bit%s\n",
- 				i, info->first_error == i ? " (First)" : "");
- 	}
-+	pci_dev_aer_stats_incr(dev, info);
- }
- 
- static void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
--- 
-2.18.0.rc1.244.gcf134e6275-goog
+> ---
+>  drivers/pci/hotplug/pcihp_skeleton.c | 348 -----------------------------------
+>  1 file changed, 348 deletions(-)
+>  delete mode 100644 drivers/pci/hotplug/pcihp_skeleton.c
+> 
+> diff --git a/drivers/pci/hotplug/pcihp_skeleton.c b/drivers/pci/hotplug/pcihp_skeleton.c
+> deleted file mode 100644
+> index c19694a..0000000
+> --- a/drivers/pci/hotplug/pcihp_skeleton.c
+> +++ /dev/null
+> @@ -1,348 +0,0 @@
+> -// SPDX-License-Identifier: GPL-2.0+
+> -/*
+> - * PCI Hot Plug Controller Skeleton Driver - 0.3
+> - *
+> - * Copyright (C) 2001,2003 Greg Kroah-Hartman (greg@kroah.com)
+> - * Copyright (C) 2001,2003 IBM Corp.
+> - *
+> - * All rights reserved.
+> - *
+> - * This driver is to be used as a skeleton driver to show how to interface
+> - * with the pci hotplug core easily.
+> - *
+> - * Send feedback to <greg@kroah.com>
+> - *
+> - */
+> -
+> -#include <linux/module.h>
+> -#include <linux/moduleparam.h>
+> -#include <linux/kernel.h>
+> -#include <linux/slab.h>
+> -#include <linux/pci.h>
+> -#include <linux/pci_hotplug.h>
+> -#include <linux/init.h>
+> -
+> -#define SLOT_NAME_SIZE	10
+> -struct slot {
+> -	u8 number;
+> -	struct hotplug_slot *hotplug_slot;
+> -	struct list_head slot_list;
+> -	char name[SLOT_NAME_SIZE];
+> -};
+> -
+> -static LIST_HEAD(slot_list);
+> -
+> -#define MY_NAME	"pcihp_skeleton"
+> -
+> -#define dbg(format, arg...)					\
+> -	do {							\
+> -		if (debug)					\
+> -			printk(KERN_DEBUG "%s: " format "\n",	\
+> -				MY_NAME, ## arg);		\
+> -	} while (0)
+> -#define err(format, arg...) printk(KERN_ERR "%s: " format "\n", MY_NAME, ## arg)
+> -#define info(format, arg...) printk(KERN_INFO "%s: " format "\n", MY_NAME, ## arg)
+> -#define warn(format, arg...) printk(KERN_WARNING "%s: " format "\n", MY_NAME, ## arg)
+> -
+> -/* local variables */
+> -static bool debug;
+> -static int num_slots;
+> -
+> -#define DRIVER_VERSION	"0.3"
+> -#define DRIVER_AUTHOR	"Greg Kroah-Hartman <greg@kroah.com>"
+> -#define DRIVER_DESC	"Hot Plug PCI Controller Skeleton Driver"
+> -
+> -MODULE_AUTHOR(DRIVER_AUTHOR);
+> -MODULE_DESCRIPTION(DRIVER_DESC);
+> -MODULE_LICENSE("GPL");
+> -module_param(debug, bool, 0644);
+> -MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
+> -
+> -static int enable_slot(struct hotplug_slot *slot);
+> -static int disable_slot(struct hotplug_slot *slot);
+> -static int set_attention_status(struct hotplug_slot *slot, u8 value);
+> -static int hardware_test(struct hotplug_slot *slot, u32 value);
+> -static int get_power_status(struct hotplug_slot *slot, u8 *value);
+> -static int get_attention_status(struct hotplug_slot *slot, u8 *value);
+> -static int get_latch_status(struct hotplug_slot *slot, u8 *value);
+> -static int get_adapter_status(struct hotplug_slot *slot, u8 *value);
+> -
+> -static struct hotplug_slot_ops skel_hotplug_slot_ops = {
+> -	.enable_slot =		enable_slot,
+> -	.disable_slot =		disable_slot,
+> -	.set_attention_status =	set_attention_status,
+> -	.hardware_test =	hardware_test,
+> -	.get_power_status =	get_power_status,
+> -	.get_attention_status =	get_attention_status,
+> -	.get_latch_status =	get_latch_status,
+> -	.get_adapter_status =	get_adapter_status,
+> -};
+> -
+> -static int enable_slot(struct hotplug_slot *hotplug_slot)
+> -{
+> -	struct slot *slot = hotplug_slot->private;
+> -	int retval = 0;
+> -
+> -	dbg("%s - physical_slot = %s\n", __func__, hotplug_slot->name);
+> -
+> -	/*
+> -	 * Fill in code here to enable the specified slot
+> -	 */
+> -
+> -	return retval;
+> -}
+> -
+> -static int disable_slot(struct hotplug_slot *hotplug_slot)
+> -{
+> -	struct slot *slot = hotplug_slot->private;
+> -	int retval = 0;
+> -
+> -	dbg("%s - physical_slot = %s\n", __func__, hotplug_slot->name);
+> -
+> -	/*
+> -	 * Fill in code here to disable the specified slot
+> -	 */
+> -
+> -	return retval;
+> -}
+> -
+> -static int set_attention_status(struct hotplug_slot *hotplug_slot, u8 status)
+> -{
+> -	struct slot *slot = hotplug_slot->private;
+> -	int retval = 0;
+> -
+> -	dbg("%s - physical_slot = %s\n", __func__, hotplug_slot->name);
+> -
+> -	switch (status) {
+> -	case 0:
+> -		/*
+> -		 * Fill in code here to turn light off
+> -		 */
+> -		break;
+> -
+> -	case 1:
+> -	default:
+> -		/*
+> -		 * Fill in code here to turn light on
+> -		 */
+> -		break;
+> -	}
+> -
+> -	return retval;
+> -}
+> -
+> -static int hardware_test(struct hotplug_slot *hotplug_slot, u32 value)
+> -{
+> -	struct slot *slot = hotplug_slot->private;
+> -	int retval = 0;
+> -
+> -	dbg("%s - physical_slot = %s\n", __func__, hotplug_slot->name);
+> -
+> -	switch (value) {
+> -	case 0:
+> -		/* Specify a test here */
+> -		break;
+> -	case 1:
+> -		/* Specify another test here */
+> -		break;
+> -	}
+> -
+> -	return retval;
+> -}
+> -
+> -static int get_power_status(struct hotplug_slot *hotplug_slot, u8 *value)
+> -{
+> -	struct slot *slot = hotplug_slot->private;
+> -	int retval = 0;
+> -
+> -	dbg("%s - physical_slot = %s\n", __func__, hotplug_slot->name);
+> -
+> -	/*
+> -	 * Fill in logic to get the current power status of the specific
+> -	 * slot and store it in the *value location.
+> -	 */
+> -
+> -	return retval;
+> -}
+> -
+> -static int get_attention_status(struct hotplug_slot *hotplug_slot, u8 *value)
+> -{
+> -	struct slot *slot = hotplug_slot->private;
+> -	int retval = 0;
+> -
+> -	dbg("%s - physical_slot = %s\n", __func__, hotplug_slot->name);
+> -
+> -	/*
+> -	 * Fill in logic to get the current attention status of the specific
+> -	 * slot and store it in the *value location.
+> -	 */
+> -
+> -	return retval;
+> -}
+> -
+> -static int get_latch_status(struct hotplug_slot *hotplug_slot, u8 *value)
+> -{
+> -	struct slot *slot = hotplug_slot->private;
+> -	int retval = 0;
+> -
+> -	dbg("%s - physical_slot = %s\n", __func__, hotplug_slot->name);
+> -
+> -	/*
+> -	 * Fill in logic to get the current latch status of the specific
+> -	 * slot and store it in the *value location.
+> -	 */
+> -
+> -	return retval;
+> -}
+> -
+> -static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+> -{
+> -	struct slot *slot = hotplug_slot->private;
+> -	int retval = 0;
+> -
+> -	dbg("%s - physical_slot = %s\n", __func__, hotplug_slot->name);
+> -
+> -	/*
+> -	 * Fill in logic to get the current adapter status of the specific
+> -	 * slot and store it in the *value location.
+> -	 */
+> -
+> -	return retval;
+> -}
+> -
+> -static void release_slot(struct hotplug_slot *hotplug_slot)
+> -{
+> -	struct slot *slot = hotplug_slot->private;
+> -
+> -	dbg("%s - physical_slot = %s\n", __func__, hotplug_slot->name);
+> -	kfree(slot->hotplug_slot->info);
+> -	kfree(slot->hotplug_slot);
+> -	kfree(slot);
+> -}
+> -
+> -static void make_slot_name(struct slot *slot)
+> -{
+> -	/*
+> -	 * Stupid way to make a filename out of the slot name.
+> -	 * replace this if your hardware provides a better way to name slots.
+> -	 */
+> -	snprintf(slot->hotplug_slot->name, SLOT_NAME_SIZE, "%d", slot->number);
+> -}
+> -
+> -/**
+> - * init_slots - initialize 'struct slot' structures for each slot
+> - *
+> - */
+> -static int __init init_slots(void)
+> -{
+> -	struct slot *slot;
+> -	struct hotplug_slot *hotplug_slot;
+> -	struct hotplug_slot_info *info;
+> -	int retval;
+> -	int i;
+> -
+> -	/*
+> -	 * Create a structure for each slot, and register that slot
+> -	 * with the pci_hotplug subsystem.
+> -	 */
+> -	for (i = 0; i < num_slots; ++i) {
+> -		slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+> -		if (!slot) {
+> -			retval = -ENOMEM;
+> -			goto error;
+> -		}
+> -
+> -		hotplug_slot = kzalloc(sizeof(*hotplug_slot), GFP_KERNEL);
+> -		if (!hotplug_slot) {
+> -			retval = -ENOMEM;
+> -			goto error_slot;
+> -		}
+> -		slot->hotplug_slot = hotplug_slot;
+> -
+> -		info = kzalloc(sizeof(*info), GFP_KERNEL);
+> -		if (!info) {
+> -			retval = -ENOMEM;
+> -			goto error_hpslot;
+> -		}
+> -		hotplug_slot->info = info;
+> -
+> -		slot->number = i;
+> -
+> -		hotplug_slot->name = slot->name;
+> -		hotplug_slot->private = slot;
+> -		hotplug_slot->release = &release_slot;
+> -		make_slot_name(slot);
+> -		hotplug_slot->ops = &skel_hotplug_slot_ops;
+> -
+> -		/*
+> -		 * Initialize the slot info structure with some known
+> -		 * good values.
+> -		 */
+> -		get_power_status(hotplug_slot, &info->power_status);
+> -		get_attention_status(hotplug_slot, &info->attention_status);
+> -		get_latch_status(hotplug_slot, &info->latch_status);
+> -		get_adapter_status(hotplug_slot, &info->adapter_status);
+> -
+> -		dbg("registering slot %d\n", i);
+> -		retval = pci_hp_register(slot->hotplug_slot);
+> -		if (retval) {
+> -			err("pci_hp_register failed with error %d\n", retval);
+> -			goto error_info;
+> -		}
+> -
+> -		/* add slot to our internal list */
+> -		list_add(&slot->slot_list, &slot_list);
+> -	}
+> -
+> -	return 0;
+> -error_info:
+> -	kfree(info);
+> -error_hpslot:
+> -	kfree(hotplug_slot);
+> -error_slot:
+> -	kfree(slot);
+> -error:
+> -	return retval;
+> -}
+> -
+> -static void __exit cleanup_slots(void)
+> -{
+> -	struct slot *slot, *next;
+> -
+> -	/*
+> -	 * Unregister all of our slots with the pci_hotplug subsystem.
+> -	 * Memory will be freed in release_slot() callback after slot's
+> -	 * lifespan is finished.
+> -	 */
+> -	list_for_each_entry_safe(slot, next, &slot_list, slot_list) {
+> -		list_del(&slot->slot_list);
+> -		pci_hp_deregister(slot->hotplug_slot);
+> -	}
+> -}
+> -
+> -static int __init pcihp_skel_init(void)
+> -{
+> -	int retval;
+> -
+> -	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
+> -	/*
+> -	 * Do specific initialization stuff for your driver here
+> -	 * like initializing your controller hardware (if any) and
+> -	 * determining the number of slots you have in the system
+> -	 * right now.
+> -	 */
+> -	num_slots = 5;
+> -
+> -	return init_slots();
+> -}
+> -
+> -static void __exit pcihp_skel_exit(void)
+> -{
+> -	/*
+> -	 * Clean everything up.
+> -	 */
+> -	cleanup_slots();
+> -}
+> -
+> -module_init(pcihp_skel_init);
+> -module_exit(pcihp_skel_exit);
+> -- 
+> 2.17.1
+> 
