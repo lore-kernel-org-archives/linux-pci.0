@@ -1,70 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47876 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932253AbeFYW7m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 25 Jun 2018 18:59:42 -0400
-Subject: [PATCH v1 1/4] PCI: shpchp: Manage SHPC unconditionally on non-ACPI
- systems
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:42581 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030528AbeFST6s (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2018 15:58:48 -0400
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: bhelgaas@google.com, keith.busch@intel.com
+Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Date: Mon, 25 Jun 2018 17:59:40 -0500
-Message-ID: <152996758037.260522.6880919949506497973.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152996746234.260522.11381067633352986554.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152996746234.260522.11381067633352986554.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Subject: [PATCH v2] PCI/AER: Fix aerdrv loading with "pcie_ports=native" parameter
+Date: Tue, 19 Jun 2018 14:58:20 -0500
+Message-Id: <20180619195835.5423-1-mr.nuke.me@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+According to the documentation, "pcie_ports=native", linux should use
+native AER and DPC services. While that is true for the _OSC method
+parsing, this is not the only place that is checked. Should the HEST
+table list PCIe ports as firmware-first, linux will not use native
+services.
 
-If acpi_pci_find_root() returns NULL, it means there's no ACPI host bridge
-device (PNP0A03 or PNP0A08), and the OS is always allowed to manage the
-SHPC, so return success in that case.
+This happens because aer_acpi_firmware_first() doesn't take
+'pcie_ports' into account. This is wrong. DPC uses the same logic when
+it decides whether to load or not, so fixing this also fixes DPC not
+loading.
 
-This fixes a NULL pointer dereference when CONFIG_ACPI=y but the current
-hardware/firmware platform doesn't support ACPI.  In that case,
-acpi_get_hp_hw_control_from_firmware() is implemented but
-acpi_pci_find_root() returns NULL.
-
-Fixes: 90cc0c3cc709 ("PCI: shpchp: Add shpchp_is_native()")
-Link: https://lkml.kernel.org/r/20180621164715.28160-1-marc.zyngier@arm.com
-Reported-by: Marc Zyngier <marc.zyngier@arm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 ---
- drivers/pci/hotplug/acpi_pcihp.c |   10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/pci/pcie/aer.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-index 3979f89b250a..5bd6c1573295 100644
---- a/drivers/pci/hotplug/acpi_pcihp.c
-+++ b/drivers/pci/hotplug/acpi_pcihp.c
-@@ -7,7 +7,6 @@
-  * All rights reserved.
-  *
-  * Send feedback to <kristen.c.accardi@intel.com>
-- *
-  */
+Changes since v1:
+ - Re-tested with latest and greatest (v4.18-rc1) -- works great
+
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index a2e88386af28..98ced0f7c850 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -291,7 +291,7 @@ static void aer_set_firmware_first(struct pci_dev *pci_dev)
  
- #include <linux/module.h>
-@@ -87,8 +86,17 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
- 		return 0;
+ 	rc = apei_hest_parse(aer_hest_parse, &info);
  
- 	/* If _OSC exists, we should not evaluate OSHP */
+-	if (rc)
++	if (rc || pcie_ports_native)
+ 		pci_dev->__aer_firmware_first = 0;
+ 	else
+ 		pci_dev->__aer_firmware_first = info.firmware_first;
+@@ -327,6 +327,9 @@ bool aer_acpi_firmware_first(void)
+ 		apei_hest_parse(aer_hest_parse, &info);
+ 		aer_firmware_first = info.firmware_first;
+ 		parsed = true;
++		if (pcie_ports_native)
++			aer_firmware_first = 0;
 +
-+	/*
-+	 * If there's no ACPI host bridge (i.e., ACPI support is compiled
-+	 * into the kernel but the hardware platform doesn't support ACPI),
-+	 * there's nothing to do here.
-+	 */
- 	host = pci_find_host_bridge(pdev->bus);
- 	root = acpi_pci_find_root(ACPI_HANDLE(&host->dev));
-+	if (!root)
-+		return 0;
-+
- 	if (root->osc_support_set)
- 		goto no_control;
- 
+ 	}
+ 	return aer_firmware_first;
+ }
+-- 
+2.14.3
