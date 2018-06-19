@@ -1,49 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:38536 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751641AbeFYVGQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2018 17:06:16 -0400
-Received: by mail-qt0-f194.google.com with SMTP id c5-v6so2522684qth.5
-        for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2018 14:06:15 -0700 (PDT)
-From: Alex Deucher <alexdeucher@gmail.com>
-To: amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        airlied@gmail.com, linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: Alex Deucher <alexander.deucher@amd.com>
-Subject: [PATCH 0/5] drm: use core pcie functionality for pcie gen/width
-Date: Mon, 25 Jun 2018 16:06:01 -0500
-Message-Id: <20180625210606.2736-1-alexander.deucher@amd.com>
+Received: from mail.kernel.org ([198.145.29.99]:60580 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935985AbeFSVbX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Jun 2018 17:31:23 -0400
+Date: Tue, 19 Jun 2018 16:31:22 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCHv2 0/7] DPC updates
+Message-ID: <20180619213121.GB33049@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180402162203.3370-1-keith.busch@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180402162203.3370-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series exports some pcie helper functions for use by drivers and
-fixes up the amdgpu and radeon drivers to use this core functionality
-rather than the duplicated functionality in the drm.  Finally we remove
-the drm helpers since the duplicate the pcie functionality of the core.
-This also adds proper pcie gen4 detection for amdgpu.
+On Mon, Apr 02, 2018 at 10:21:56AM -0600, Keith Busch wrote:
+> I am terribly sorry about the delay getting this back to you. I had some
+> scheduling issues with test equipment and other unrelated conflicts.
+> 
+> I added Oza's legacy IRQ fix into this series, as I didn't see this
+> staged yet, and it really does fix some issues as well as provide the
+> means to clean up other parts.
+> 
+> I'm sending this later than I intended, but hoping you might see a way
+> to including this to 4.17. I can rebase to 'next' where the file is
+> renamed to 'dpc.c'.
+> 
+> Keith Busch (6):
+>   PCI/DPC: Enable ERR_COR
+>   PCI/DPC: Leave interrupts enabled while handling event
+>   PCI/DPC: Defer event handling to work queue
+>   PCI/DPC: Remove rp_pio_status from dpc struct
+>   PCI/AER: API for obtaining AER information
+>   PCI/DPC: Print AER status in DPC event handling
+> 
+> Oza Pawandeep (1):
+>   PCI/DPC: Fix PCI legacy interrupt acknowledgement
+> 
+>  drivers/pci/pcie/aer/aerdrv.h      |   1 +
+>  drivers/pci/pcie/aer/aerdrv_core.c |   8 +--
+>  drivers/pci/pcie/pcie-dpc.c        | 106 +++++++++++++++++--------------------
+>  include/uapi/linux/pci_regs.h      |   1 +
+>  4 files changed, 55 insertions(+), 61 deletions(-)
 
-Alex Deucher (5):
-  pci: export pcie_get_speed_cap and pcie_get_width_cap
-  drm/amdgpu: update amd_pcie.h to include gen4 speeds
-  drm/amdgpu: use pcie functions for link width and speed
-  drm/radeon: use pcie functions for link width
-  drm: drop drm_pcie_get_speed_cap_mask and drm_pcie_get_max_link_width
+Hi Keith, I'm sorry, with the exception of Oza's patch, I didn't get
+these applied, and now they don't apply cleanly.  Would you mind
+rebasing them to v4.18-rc1?
 
- drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 83 +++++++++++++++++++++---------
- drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c    |  7 ++-
- drivers/gpu/drm/amd/amdgpu/ci_dpm.c        |  3 +-
- drivers/gpu/drm/amd/amdgpu/si_dpm.c        |  3 +-
- drivers/gpu/drm/amd/include/amd_pcie.h     |  2 +
- drivers/gpu/drm/drm_pci.c                  | 58 ---------------------
- drivers/gpu/drm/radeon/ci_dpm.c            | 20 +++++--
- drivers/gpu/drm/radeon/cik.c               | 22 ++++----
- drivers/gpu/drm/radeon/r600_dpm.c          |  4 +-
- drivers/gpu/drm/radeon/radeon.h            |  4 ++
- drivers/gpu/drm/radeon/si.c                | 22 ++++----
- drivers/gpu/drm/radeon/si_dpm.c            | 20 +++++--
- drivers/pci/pci.c                          |  2 +
- include/drm/drm_pci.h                      |  7 ---
- include/linux/pci.h                        |  3 ++
- 15 files changed, 132 insertions(+), 128 deletions(-)
-
--- 
-2.13.6
+Bjorn
