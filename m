@@ -1,131 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from thoth.sbs.de ([192.35.17.2]:54074 "EHLO thoth.sbs.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933381AbeFRLnM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 18 Jun 2018 07:43:12 -0400
-Subject: Re: [v4] PCI: improve host drivers compile test coverage
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>
-Cc: Scott Branden <scott.branden@broadcom.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ley Foon Tan <lftan@altera.com>,
-        Russell King <linux@armlinux.org.uk>
-References: <20180405193154.27897-1-robh@kernel.org>
- <20180612170229.GA10141@roeck-us.net>
- <20180613100935.GA7707@e107981-ln.cambridge.arm.com>
- <20180613181146.GA28856@roeck-us.net>
- <20180615125847.GA7735@e107981-ln.cambridge.arm.com>
- <980b68c0-6034-b495-753f-c75c04e0f5d1@broadcom.com>
- <CAL_JsqLUR_5Hnaws3Dt8ujetq8R-TxnG9wvOe4y6HT50KrNnbQ@mail.gmail.com>
- <20180618093201.GA18994@e107981-ln.cambridge.arm.com>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-Message-ID: <45f29e28-d3d4-b1e6-249e-ac28b6ec6a36@siemens.com>
-Date: Mon, 18 Jun 2018 13:42:25 +0200
+Return-Path: <SRS0=EJf8=JF=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=EJf8=JF=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 19 Jun 2018 15:08:26 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Punit Agrawal <punit.agrawal@arm.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Xie XiuQi <xiexiuqi@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, tnowicki@caviumnetworks.com,
+	linux-pci@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+	linux-mm@kvack.org, wanghuiqiang@huawei.com,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	zhongjiang <zhongjiang@huawei.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
+Message-ID: <20180619140818.GA16927@e107981-ln.cambridge.arm.com>
+References: <a880df29-b656-d98d-3037-b04761c7ed78@huawei.com>
+ <20180611085237.GI13364@dhcp22.suse.cz>
+ <16c4db2f-bc70-d0f2-fb38-341d9117ff66@huawei.com>
+ <20180611134303.GC75679@bhelgaas-glaptop.roam.corp.google.com>
+ <20180611145330.GO13364@dhcp22.suse.cz>
+ <87lgbk59gs.fsf@e105922-lin.cambridge.arm.com>
+ <87bmce60y3.fsf@e105922-lin.cambridge.arm.com>
+ <8b715082-14d4-f10b-d2d6-b23be7e4bf7e@huawei.com>
+ <20180619120714.GE13685@dhcp22.suse.cz>
+ <874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20180618093201.GA18994@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-06-18 11:32, Lorenzo Pieralisi wrote:
-> On Fri, Jun 15, 2018 at 12:34:51PM -0600, Rob Herring wrote:
->> On Fri, Jun 15, 2018 at 11:55 AM, Scott Branden
->> <scott.branden@broadcom.com> wrote:
->>> Hi Lorenzo,
->>>
->>>
->>>
->>> On 18-06-15 05:58 AM, Lorenzo Pieralisi wrote:
->>>>
->>>> On Wed, Jun 13, 2018 at 11:11:46AM -0700, Guenter Roeck wrote:
->>>>>
->>>>> On Wed, Jun 13, 2018 at 11:09:35AM +0100, Lorenzo Pieralisi wrote:
->>>>>>
->>>>>> [+Jan, Ley Foon, RMK]
->>>>>>
->>>>>> On Tue, Jun 12, 2018 at 10:02:29AM -0700, Guenter Roeck wrote:
->>>>>>>
->>>>>>> On Thu, Apr 05, 2018 at 02:31:54PM -0500, Rob Herring wrote:
->>>>>>>>
->>>>>>>> Add COMPILE_TEST on driver config options with it. Some ARM drivers
->>>>>>>> still have arch dependencies, so we have to keep those dependent on
->>>>>>>> ARM.
->>>>>>>>
->>>>>>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>>>>>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
->>>>>>>> Cc: linux-pci@vger.kernel.org
->>>>>>>> Signed-off-by: Rob Herring <robh@kernel.org>
->>>>>>>
->>>>>>> This patch has the undesirable side effect that it selects PCI_DOMAINS
->>>>>>> for
->>>>>>> sparc32:allmodconfig, which in turn results in
->>>>>>>
->>>>>>> drivers/ata/pata_ali.c: In function 'ali_init_chipset':
->>>>>>> drivers/ata/pata_ali.c:469:38: error:
->>>>>>>         implicit declaration of function 'pci_domain_nr'; did you mean
->>>>>>> 'pci_iomap_wc'?
->>>>>>>
->>>>>>> Unfortunately, 37bd62d224c82 ("PCI: Enable PCI_DOMAINS along with
->>>>>>> generic
->>>>>>> PCI host controller") has pretty much the same result. No idea how to
->>>>>>> fix
->>>>>>> the problem, so I won't even try.
->>>>>>
->>>>>> Sorry about that.
->>>>>>
->>>>>> One option would consist in removing all PCI_DOMAINS selection from
->>>>>> drivers/pci/controller/Kconfig and delegate it to arches even though
->>>>>> this would force PCI_DOMAINS selection on all ARM platforms (it is
->>>>>> already selected for ARCH_MULTIPLATFORM).
->>>>>>
->>>>>> Or we add back arch dependency to the relevant host bridges.
->>>>>>
->>>>>> Everything else I have in mind seems overkill to me given that this
->>>>>> patch was added to improve test coverage (we could add a default
->>>>>> pci_domain_nr() stub - weak or #define - that returns 0 in case arches
->>>>>> do not provide an implementation but do we really want to do that ?).
->>>>>>
->>>>>> Thoughts appreciated.
->>>>>>
->>>>>  From the definition of PCI_DOMAINS, I suspect the original idea was that
->>>>> drivers should depend on it, not select it. Especially auto-selecting
->>>>> it with PCI_HOST_GENERIC seems like a bad idea to me. However, that is
->>>>> just me. I'll leave it up to Bjorn to decide what if anything he wants
->>>>> to do about it.
->>>>
->>>> Here is a patch that should reinstate the previous behaviour but
->>>> it will make PCI_DOMAINS a visible option on ARM 32-bit systems; whether
->>>> that's acceptable that's the question I need to answer, it should
->>>> honour old configs and it does not force PCI_DOMAINS selection on
->>>> non-DT arch/arm PCI host controllers (that do not need PCI_DOMAINS
->>>> anyway so I suspect that enabling it on all ARM 32-bit platforms
->>>> should not break anything but I preferred to be cautious).
->>>
->>> I think this change will also require a patch enabling CONFIG_PCI_DOMAINS in
->>> multi_v7_defconfig and iproc_defconfig at the very least?
->>
->> Perhaps the sub-arches that want this should select it. It is more a
->> platform option/decision more than a controller option.
+On Tue, Jun 19, 2018 at 01:52:16PM +0100, Punit Agrawal wrote:
+> Michal Hocko <mhocko@kernel.org> writes:
 > 
-> Yes, that makes sense, I assume ARCH_VIRT is a sensible choice for
-> virtual machines configuration, Jan ?
+> > On Tue 19-06-18 20:03:07, Xie XiuQi wrote:
+> > [...]
+> >> I tested on a arm board with 128 cores 4 numa nodes, but I set CONFIG_NR_CPUS=72.
+> >> Then node 3 is not be created, because node 3 has no memory, and no cpu.
+> >> But some pci device may related to node 3, which be set in ACPI table.
+> >
+> > Could you double check that zonelists for node 3 are generated
+> > correctly?
 > 
-> I will add a PCI_DOMAINS selection to all (ARM) arches that select
-> PCI_DOMAINS in drivers/pci/controller/Kconfig.
+> The cpus in node 3 aren't onlined and there's no memory attached - I
+> suspect that no zonelists are built for this node.
 > 
-> For Jailhouse configurations I need Jan's input, I assume adding
-> the selection to ARCH_VIRT is the correct way forward, please let
-> me know asap.
+> We skip creating a node, if the number of SRAT entries parsed exceeds
+> NR_CPUS[0]. This in turn prevents onlining the numa node and so no
+> zonelists will be created for it.
+> 
+> I think the problem will go away if the cpus are restricted via the
+> kernel command line by setting nr_cpus.
+> 
+> Xie, can you try the below patch on top of the one enabling memoryless
+> nodes? I'm not sure this is the right solution but at least it'll
+> confirm the problem.
 
-So far, there is no need on ARM or ARM64 declare a special platform in
-order to run as Jailhouse (secondary) guest.
+This issue looks familiar (or at least related):
 
-My original patch was just about making PCI_DOMAINS manually
-configurable, which would have been fine for our use case.
+git log d3bd058826aa
 
-Jan
+The reason why the NR_CPUS guard is there is to avoid overflowing
+the early_node_cpu_hwid array. IA64 does something different in
+that respect compared to x86, we have to have a look into this.
 
--- 
-Siemens AG, Corporate Technology, CT RDA IOT SES-DE
-Corporate Competence Center Embedded Linux
+Regardless, AFAICS the proximity domains to nodes mappings should not
+depend on CONFIG_NR_CPUS, it seems that there is something wrong in that
+in ARM64 ACPI SRAT parsing.
+
+Lorenzo
+
+> 
+> Thanks,
+> Punit
+> 
+> [0] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm64/kernel/acpi_numa.c?h=v4.18-rc1#n73
+> 
+> -- >8 --
+> diff --git a/arch/arm64/kernel/acpi_numa.c b/arch/arm64/kernel/acpi_numa.c
+> index d190a7b231bf..fea0f7164f1a 100644
+> --- a/arch/arm64/kernel/acpi_numa.c
+> +++ b/arch/arm64/kernel/acpi_numa.c
+> @@ -70,11 +70,9 @@ void __init acpi_numa_gicc_affinity_init(struct acpi_srat_gicc_affinity *pa)
+>         if (!(pa->flags & ACPI_SRAT_GICC_ENABLED))
+>                 return;
+> 
+> -   if (cpus_in_srat >= NR_CPUS) {
+> + if (cpus_in_srat >= NR_CPUS)
+>                 pr_warn_once("SRAT: cpu_to_node_map[%d] is too small, may not be able to use all cpus\n",
+>                              NR_CPUS);
+> -           return;
+> -   }
+> 
+>         pxm = pa->proximity_domain;
+>         node = acpi_map_pxm_to_node(pxm);
