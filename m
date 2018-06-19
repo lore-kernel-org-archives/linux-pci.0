@@ -1,139 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH V4 5/7] PCI: Deprecate pci_reset_bus() and pci_reset_slot()
- functions
-Date: Thu, 28 Jun 2018 15:31:03 -0400
-Message-Id: <1530214274-21139-5-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
-References: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:18179 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752707AbeFSXNi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Jun 2018 19:13:38 -0400
+Date: Tue, 19 Jun 2018 17:16:46 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
+        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Subject: Re: [PATCH 09/32] PCI: pciehp: Convert to threaded IRQ
+Message-ID: <20180619231646.GA22648@localhost.localdomain>
+References: <cover.1529173804.git.lukas@wunner.de>
+ <b65b18957cec018dec5c1f1c3de0e2e47b46b265.1529173804.git.lukas@wunner.de>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b65b18957cec018dec5c1f1c3de0e2e47b46b265.1529173804.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_reset_bus() and pci_reset_slot() functions are not being used by
-any code. Remove them from the kernel in favor of pci_try_reset_bus()
-and pci_try_reset_slot() functions.
+On Sat, Jun 16, 2018 at 12:25:00PM -0700, Lukas Wunner wrote:
+> pciehp's IRQ handler queues up a work item for each event signaled by
+> the hardware.  A more modern alternative is to let a long running
+> kthread service the events.  The IRQ handler's sole job is then to check
+> whether the IRQ originated from the device in question, acknowledge its
+> receipt to the hardware to quiesce the interrupt and wake up the kthread.
+> 
+> One benefit is reduced latency to handle the IRQ, which is a necessity
+> for realtime environments.  Another benefit is that we can make pciehp
+> simpler and more robust by handling events synchronously in process
+> context, rather than asynchronously by queueing up work items.  pciehp's
+> usage of work items is a historic artifact, it predates the introduction
+> of threaded IRQ handlers by two years.  (The former was introduced in
+> 2007 with commit 5d386e1ac402 ("pciehp: Event handling rework"), the
+> latter in 2009 with commit 3aa551c9b4c4 ("genirq: add threaded interrupt
+> handler support").)
+> 
+> Convert pciehp to threaded IRQ handling by retrieving the pending events
+> in pciehp_isr(), saving them for later consumption by the thread handler
+> pciehp_ist() and clearing them in the Slot Status register.
+> 
+> By clearing the Slot Status (and thereby acknowledging the events) in
+> pciehp_isr(), we can avoid requesting the IRQ with IRQF_ONESHOT, which
+> would have the unpleasant side effect of starving devices sharing the
+> IRQ until pciehp_ist() has finished.
+> 
+> pciehp_isr() does not count how many times each event occurred, but
+> merely records the fact *that* an event occurred.  If the same event
+> occurs a second time before pciehp_ist() is woken, that second event
+> will not be recorded separately, which is problematic according to
+> commit fad214b0aa72 ("PCI: pciehp: Process all hotplug events before
+> looking for new ones") because we may miss removal of a card in-between
+> two back-to-back insertions.  We're about to make pciehp_ist() resilient
+> to missed events.  The present commit regresses the driver's behavior
+> temporarily in order to separate the changes into reviewable chunks.
+> This doesn't affect regular slow-motion hotplug, only plug-unplug-plug
+> operations that happen in a timespan shorter than wakeup of the IRQ
+> thread.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pci.c   | 55 ++---------------------------------------------------
- include/linux/pci.h |  2 --
- 2 files changed, 2 insertions(+), 55 deletions(-)
+I like the series over-all. Definitely an improvement.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 79a1566..6cec722 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4784,9 +4784,9 @@ int pci_probe_reset_slot(struct pci_slot *slot)
- EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
- 
- /**
-- * pci_reset_slot - reset a PCI slot
-+ * __pci_try_reset_slot - Try to reset a PCI slot
-  * @slot: PCI slot to reset
-- *
-+ *`
-  * A PCI bus may host multiple slots, each slot may support a reset mechanism
-  * independent of other slots.  For instance, some slots may support slot power
-  * control.  In the case of a 1:1 bus to slot architecture, this function may
-@@ -4796,30 +4796,6 @@ EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
-  * through this function.  PCI config space of all devices in the slot and
-  * behind the slot is saved before and restored after reset.
-  *
-- * Return 0 on success, non-zero on error.
-- */
--int pci_reset_slot(struct pci_slot *slot)
--{
--	int rc;
--
--	rc = pci_slot_reset(slot, 1);
--	if (rc)
--		return rc;
--
--	pci_slot_save_and_disable(slot);
--
--	rc = pci_slot_reset(slot, 0);
--
--	pci_slot_restore(slot);
--
--	return rc;
--}
--EXPORT_SYMBOL_GPL(pci_reset_slot);
--
--/**
-- * __pci_try_reset_slot - Try to reset a PCI slot
-- * @slot: PCI slot to reset
-- *
-  * Same as above except return -EAGAIN if the slot cannot be locked
-  */
- static int __pci_try_reset_slot(struct pci_slot *slot)
-@@ -4878,33 +4854,6 @@ int pci_probe_reset_bus(struct pci_bus *bus)
- EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
- 
- /**
-- * pci_reset_bus - reset a PCI bus
-- * @bus: top level PCI bus to reset
-- *
-- * Do a bus reset on the given bus and any subordinate buses, saving
-- * and restoring state of all devices.
-- *
-- * Return 0 on success, non-zero on error.
-- */
--int pci_reset_bus(struct pci_bus *bus)
--{
--	int rc;
--
--	rc = pci_bus_reset(bus, 1);
--	if (rc)
--		return rc;
--
--	pci_bus_save_and_disable(bus);
--
--	rc = pci_bus_reset(bus, 0);
--
--	pci_bus_restore(bus);
--
--	return rc;
--}
--EXPORT_SYMBOL_GPL(pci_reset_bus);
--
--/**
-  * __pci_try_reset_bus - Try to reset a PCI bus
-  * @bus: top level PCI bus to reset
-  *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f5c85b6..ad0c89a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1095,9 +1095,7 @@ int pci_reset_function(struct pci_dev *dev);
- int pci_reset_function_locked(struct pci_dev *dev);
- int pci_try_reset_function(struct pci_dev *dev);
- int pci_probe_reset_slot(struct pci_slot *slot);
--int pci_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
--int pci_reset_bus(struct pci_bus *bus);
- int pci_try_reset_bus(struct pci_dev *dev);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
--- 
-2.7.4
+I am a little concered about what may happen if we need to remove the
+bridge while its irq thread is running. The task removing the bridge
+is holding the pci_rescan_remove_lock so when it tries to free the
+bridge IRQ, the IRQ subsystem may not be able to progress because the
+action->thread may be waiting to take the same lock.
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+It actually looks like the same deadlock already exists in the current
+implementation when it takes down its workqueue, but it's a lot harder to
+follow all the different work tasks before this clean-up. Maybe removing
+bridges isn't very common, but it's just something I noticed.
