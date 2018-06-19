@@ -1,81 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: n0000b.n000b@gmail.com, LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Lukas Wunner <lukas@wunner.de>
-Subject: [PATCH v2] PCI / ACPI / PM: Resume bridges w/o drivers on suspend-to-RAM
-Date: Fri, 29 Jun 2018 10:34:40 +0200
-Message-ID: <2518711.SfHWAsyaFM@aspire.rjw.lan>
-In-Reply-To: <35587465.8Nave9aG7d@aspire.rjw.lan>
-References: <35587465.8Nave9aG7d@aspire.rjw.lan>
+Return-Path: <SRS0=PmUz=JF=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=PmUz=JF=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH] efi/fb: Convert PCI bus address to resource if translated
+ by the bridge
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Robin Murphy <robin.murphy@arm.com>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, ard.biesheuvel@linaro.org,
+ "open list:EFIFB FRAMEBUFFER DRIVER" <linux-fbdev@vger.kernel.org>,
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
+ Peter Jones <pjones@redhat.com>, linux-arm-kernel@lists.infradead.org
+References: <1526563343-28721-1-git-send-email-okaya@codeaurora.org>
+ <36cf3f12-bfe8-1c38-4d2c-b785fc64a3f6@arm.com>
+ <733101d0-9051-a5a6-ef64-162d8d1e10a1@codeaurora.org>
+ <20180619215955.GF33049@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <61384244-49f9-2020-04f0-6e188cf6a6b7@codeaurora.org>
+Date: Tue, 19 Jun 2018 18:14:55 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20180619215955.GF33049@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Bjorn,
 
-It is reported that commit c62ec4610c40 (PM / core: Fix direct_complete
-handling for devices with no callbacks) introduced a system suspend
-regression on Samsung 305V4A by allowing a PCI bridge (not a PCIe
-port) to stay in D3 over suspend-to-RAM, which is a side effect of
-setting power.direct_complete for the children of that bridge that
-have no PM callbacks.
+On 6/19/2018 5:59 PM, Bjorn Helgaas wrote:
+> On Fri, May 18, 2018 at 10:20:29AM -0400, Sinan Kaya wrote:
+>> On 5/18/2018 6:42 AM, Robin Murphy wrote:
+>>>
+>>> FWIW, now that I've actually gone and looked, it appears you could simplify the whole function quite a bit by getting rid of these and just using the new local resource directly, especially since the only actual use of size is an open-coded resource_contains().
+>>
+>> Posted V2 a minute ago. I did the simplification on a prior patch in order not to
+>> mix the issues.
+> 
+> I don't see the V2 on linux-pci, but it sounds like Ard would merge this
+> anyway.  So I'll drop this and you can let me know if there's anything you
+> need from me.
+> 
 
-On the majority of systems PCI bridges are not allowed to be
-runtime-suspended (the power/control sysfs attribute is set to "on"
-for them by default), but user space can change that setting and if
-it does so and a given bridge has no children with PM callbacks, the
-direct_complete optimization will be applied to it and it will stay
-in suspend over system suspend.  Apparently, that confuses the
-platform firmware on the affected machine and that may very well
-happen elsewhere, so avoid the direct_complete optimization for
-PCI bridges with no drivers (if there is a driver, it should take
-care of the PM handling) on suspend-to-RAM altogether (that should
-not matter for suspend-to-idle as platform firmware is not involved
-in it).
+It is planned to go through fbdev tree for 4.19. 
 
-Fixes: c62ec4610c40 (PM / core: Fix direct_complete handling for devices with no callbacks)
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=199941
-Reported-by: n0000b.n000b@gmail.com
-Tested-by: n0000b.n000b@gmail.com
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
+https://patchwork.kernel.org/patch/10410895/
 
--> v2: Make the patch work for PCI bridges without ACPI companion objects.
+Feel free to review/ACK.
 
-Since that doesn't really change the idea etc, but only makes the check
-to be made earlier, I've added the Reviewed-by and Acked-by tags given to
-the previous version.  If that's not right, please let me know.
+Sinan
 
----
- drivers/pci/pci-acpi.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
-
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -629,6 +629,15 @@ static bool acpi_pci_need_resume(struct
- {
- 	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
- 
-+	/*
-+	 * In some cases (eg. Samsung 305V4A) leaving a bridge in suspend
-+	 * confuses the platform firmware, so avoid doing that, unless the
-+	 * bridge has a driver that should take care of PM handling.
-+	 */
-+	if (pci_is_bridge(dev) && !dev->driver &&
-+	    acpi_target_system_state() != ACPI_STATE_S0)
-+		return true;
-+
- 	if (!adev || !acpi_device_power_manageable(adev))
- 		return false;
- 
-
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
