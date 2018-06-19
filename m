@@ -1,160 +1,286 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:52612 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933467AbeFUQyF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Jun 2018 12:54:05 -0400
-Date: Thu, 21 Jun 2018 17:54:00 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jan Kiszka <jan.kiszka@siemens.com>,
-        Scott Branden <scott.branden@broadcom.com>,
-        Ley Foon Tan <lftan@altera.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Will Deacon <will.deacon@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH v2] PCI: controller: Move PCI_DOMAINS selection to arch
- Kconfig
-Message-ID: <20180621165400.GB14519@e107981-ln.cambridge.arm.com>
-References: <20180619112105.14457-1-lorenzo.pieralisi@arm.com>
- <30bb8a16-f829-a5a4-265f-2d1112d8d0bf@siemens.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45084 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750739AbeFSGD4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2018 02:03:56 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <30bb8a16-f829-a5a4-265f-2d1112d8d0bf@siemens.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 19 Jun 2018 11:33:53 +0530
+From: poza@codeaurora.org
+To: Rajat Jain <rajatja@google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Frederick Lawler <fred@fredlawl.com>,
+        "Busch, Keith" <keith.busch@intel.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Thomas Tai <thomas.tai@oracle.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        linux-pci <linux-pci@vger.kernel.org>, linux-doc@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>,
+        Rajat Jain <rajatxjain@gmail.com>
+Subject: Re: [PATCH v2 5/5] Documentation/ABI: Add details of PCI AER
+ statistics
+In-Reply-To: <CACK8Z6EHDv0d5zwgKj2N+DyxKEj9dVkSoN2Y_HTOKv8L9p-OAg@mail.gmail.com>
+References: <20180522222805.80314-1-rajatja@google.com>
+ <20180523175808.28030-1-rajatja@google.com>
+ <20180523175808.28030-6-rajatja@google.com>
+ <c27290dd401bb2954db4959559c39a00@codeaurora.org>
+ <CACK8Z6EHDv0d5zwgKj2N+DyxKEj9dVkSoN2Y_HTOKv8L9p-OAg@mail.gmail.com>
+Message-ID: <7e146f62d1fa82a6f37848b22efc1b97@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 20, 2018 at 10:07:33AM +0200, Jan Kiszka wrote:
-> On 2018-06-19 13:21, Lorenzo Pieralisi wrote:
-> > Commit 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
-> > added configuration options to allow PCI host controller drivers to be
-> > compile tested on all architectures.
-> > 
-> > Some host controller drivers (eg PCIE_ALTERA) config entries select
-> > the PCI_DOMAINS config option to enable PCI domains management in
-> > the kernel. Now that host controller drivers can be compiled on
-> > all architectures, this triggers build regressions on arches that
-> > do not implement the PCI_DOMAINS required API (ie pci_domain_nr()):
-> > 
-> > drivers/ata/pata_ali.c: In function 'ali_init_chipset':
-> > drivers/ata/pata_ali.c:469:38: error:
-> >         implicit declaration of function 'pci_domain_nr';
-> >                                           did you mean 'pci_iomap_wc'?
-> > 
-> > Furthemore, some software configurations (ie Jailhouse) require a
-> > PCI_DOMAINS enabled kernel to configure multiple host controllers
-> > without having an explicit dependency on the ARM platform on which
-> > they run.
-> > 
-> > Make PCI_DOMAINS a visible configuration option on ARM so that software
-> > configurations that need it can manually select it and move the
-> > PCI_DOMAINS selection from PCI controllers configuration file to ARM
-> > sub-arch config entries that currently require it, fixing the issue.
-> > 
-> > Fixes: 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
-> > Link: https://lkml.kernel.org/r/20180612170229.GA10141@roeck-us.net
-> > Reported-by: Guenter Roeck <linux@roeck-us.net>
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Scott Branden <scott.branden@broadcom.com>
-> > Cc: Will Deacon <will.deacon@arm.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Rob Herring <robh@kernel.org>
-> > Cc: Russell King <linux@armlinux.org.uk>
-> > Cc: Jan Kiszka <jan.kiszka@siemens.com>
-> > Cc: Guenter Roeck <linux@roeck-us.net>
-> > Cc: Ley Foon Tan <lftan@altera.com>
-> > ---
-> > v1 -> v2
-> > 	- Removed ARCH_VIRT PCI_DOMAINS selection
-> > 	- Added PCI_DOMAINS visible config option
-> > 
-> > v1: https://marc.info/?l=linux-pci&m=152932092612352&w=2
-> > 
-> >  arch/arm/Kconfig               | 8 +++++++-
-> >  arch/arm/mach-bcm/Kconfig      | 1 +
-> >  arch/arm/mach-socfpga/Kconfig  | 1 +
-> >  drivers/pci/controller/Kconfig | 3 ---
-> >  4 files changed, 9 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> > index 54eeb8d00bc6..843edfd000be 100644
-> > --- a/arch/arm/Kconfig
-> > +++ b/arch/arm/Kconfig
-> > @@ -1245,8 +1245,14 @@ config PCI
-> >  	  VESA. If you have PCI, say Y, otherwise N.
-> >  
-> >  config PCI_DOMAINS
-> > -	bool
-> > +	bool "Support for multiple PCI domains"
-> >  	depends on PCI
-> > +	help
-> > +	  Enable PCI domains kernel management. Say Y if your machine
-> > +	  has a PCI bus hierarchy that requires more than one PCI
-> > +	  domain (aka segment) to be correctly managed. Say N otherwise.
-> > +
-> > +	  If you don't know what to do here, say N.
-> >  
-> >  config PCI_DOMAINS_GENERIC
-> >  	def_bool PCI_DOMAINS
-> > diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
-> > index c46a728df44e..25aac6ee2ab1 100644
-> > --- a/arch/arm/mach-bcm/Kconfig
-> > +++ b/arch/arm/mach-bcm/Kconfig
-> > @@ -20,6 +20,7 @@ config ARCH_BCM_IPROC
-> >  	select GPIOLIB
-> >  	select ARM_AMBA
-> >  	select PINCTRL
-> > +	select PCI_DOMAINS if PCI
-> >  	help
-> >  	  This enables support for systems based on Broadcom IPROC architected SoCs.
-> >  	  The IPROC complex contains one or more ARM CPUs along with common
-> > diff --git a/arch/arm/mach-socfpga/Kconfig b/arch/arm/mach-socfpga/Kconfig
-> > index d0f62eacf59d..4adb901dd5eb 100644
-> > --- a/arch/arm/mach-socfpga/Kconfig
-> > +++ b/arch/arm/mach-socfpga/Kconfig
-> > @@ -10,6 +10,7 @@ menuconfig ARCH_SOCFPGA
-> >  	select HAVE_ARM_SCU
-> >  	select HAVE_ARM_TWD if SMP
-> >  	select MFD_SYSCON
-> > +	select PCI_DOMAINS if PCI
-> >  
-> >  if ARCH_SOCFPGA
-> >  config SOCFPGA_SUSPEND
-> > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-> > index 18fa09b3ac8f..cc9fa02d32a0 100644
-> > --- a/drivers/pci/controller/Kconfig
-> > +++ b/drivers/pci/controller/Kconfig
-> > @@ -96,7 +96,6 @@ config PCI_HOST_GENERIC
-> >  	depends on OF
-> >  	select PCI_HOST_COMMON
-> >  	select IRQ_DOMAIN
-> > -	select PCI_DOMAINS
-> >  	help
-> >  	  Say Y here if you want to support a simple generic PCI host
-> >  	  controller, such as the one emulated by kvmtool.
-> > @@ -138,7 +137,6 @@ config PCI_VERSATILE
-> >  
-> >  config PCIE_IPROC
-> >  	tristate
-> > -	select PCI_DOMAINS
-> >  	help
-> >  	  This enables the iProc PCIe core controller support for Broadcom's
-> >  	  iProc family of SoCs. An appropriate bus interface driver needs
-> > @@ -176,7 +174,6 @@ config PCIE_IPROC_MSI
-> >  config PCIE_ALTERA
-> >  	bool "Altera PCIe controller"
-> >  	depends on ARM || NIOS2 || COMPILE_TEST
-> > -	select PCI_DOMAINS
-> >  	help
-> >  	  Say Y here if you want to enable PCIe controller support on Altera
-> >  	  FPGA.
-> > 
+On 2018-06-19 05:41, Rajat Jain wrote:
+> Hello,
 > 
-> Acked-by: Jan Kiszka <jan.kiszka@siemens.com>
+> On Sat, Jun 16, 2018 at 10:24 PM <poza@codeaurora.org> wrote:
+>> 
+>> On 2018-05-23 23:28, Rajat Jain wrote:
+>> > Add the PCI AER statistics details to
+>> > Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+>> > and provide a pointer to it in
+>> > Documentation/PCI/pcieaer-howto.txt
+>> >
+>> > Signed-off-by: Rajat Jain <rajatja@google.com>
+>> > ---
+>> > v2: Move the documentation to Documentation/ABI/
+>> >
+>> >  .../testing/sysfs-bus-pci-devices-aer_stats   | 103 ++++++++++++++++++
+>> >  Documentation/PCI/pcieaer-howto.txt           |   5 +
+>> >  2 files changed, 108 insertions(+)
+>> >  create mode 100644
+>> > Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+>> >
+>> > diff --git a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+>> > b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+>> > new file mode 100644
+>> > index 000000000000..f55c389290ac
+>> > --- /dev/null
+>> > +++ b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+>> > @@ -0,0 +1,103 @@
+>> > +==========================
+>> > +PCIe Device AER statistics
+>> > +==========================
+>> > +These attributes show up under all the devices that are AER capable.
+>> > These
+>> > +statistical counters indicate the errors "as seen/reported by the
+>> > device".
+>> > +Note that this may mean that if an end point is causing problems, the
+>> > AER
+>> > +counters may increment at its link partner (e.g. root port) because
+>> > the
+>> > +errors will be "seen" / reported by the link partner and not the the
+>> > +problematic end point itself (which may report all counters as 0 as it
+>> > never
+>> > +saw any problems).
+>> > +
+>> > +Where:               /sys/bus/pci/devices/<dev>/aer_stats/dev_total_cor_errs
+>> > +Date:                May 2018
+>> > +Kernel Version: 4.17.0
+>> > +Contact:     linux-pci@vger.kernel.org, rajatja@google.com
+>> > +Description: Total number of correctable errors seen and reported by
+>> > this
+>> > +             PCI device using ERR_COR.
+>> > +
+>> > +Where:               /sys/bus/pci/devices/<dev>/aer_stats/dev_total_fatal_errs
+>> > +Date:                May 2018
+>> > +Kernel Version: 4.17.0
+>> > +Contact:     linux-pci@vger.kernel.org, rajatja@google.com
+>> > +Description: Total number of uncorrectable fatal errors seen and
+>> > reported
+>> > +             by this PCI device using ERR_FATAL.
+>> > +
+>> > +Where:               /sys/bus/pci/devices/<dev>/aer_stats/dev_total_nonfatal_errs
+>> > +Date:                May 2018
+>> > +Kernel Version: 4.17.0
+>> > +Contact:     linux-pci@vger.kernel.org, rajatja@google.com
+>> > +Description: Total number of uncorrectable non-fatal errors seen and
+>> > reported
+>> > +             by this PCI device using ERR_NONFATAL.
+>> > +
+>> > +Where:               /sys/bus/pci/devices/<dev>/aer_stats/dev_breakdown_correctable
+>> > +Date:                May 2018
+>> > +Kernel Version: 4.17.0
+>> > +Contact:     linux-pci@vger.kernel.org, rajatja@google.com
+>> > +Description: Breakdown of of correctable errors seen and reported by
+>> > this
+>> > +             PCI device using ERR_COR. A sample result looks like this:
+>> > +-----------------------------------------
+>> > +Receiver Error = 0x174
+>> > +Bad TLP = 0x19
+>> > +Bad DLLP = 0x3
+>> > +RELAY_NUM Rollover = 0x0
+>> > +Replay Timer Timeout = 0x1
+>> > +Advisory Non-Fatal = 0x0
+>> > +Corrected Internal Error = 0x0
+>> > +Header Log Overflow = 0x0
+>> > +-----------------------------------------
+>> why hex display ? decimal is easy to read as these are counters.
+> 
+> Have no particular preference. Since these can be potentially large
+> numbers, just had a random thought that hex might make it more
+> concise. I can change to decimal if that is preferable.
+> 
+>> > +
+>> > +Where:               /sys/bus/pci/devices/<dev>/aer_stats/dev_breakdown_uncorrectable
+>> > +Date:                May 2018
+>> > +Kernel Version: 4.17.0
+>> > +Contact:     linux-pci@vger.kernel.org, rajatja@google.com
+>> > +Description: Breakdown of of correctable errors seen and reported by
+>> > this
+>> > +             PCI device using ERR_FATAL or ERR_NONFATAL. A sample result
+>> > +             looks like this:
+>> > +-----------------------------------------
+>> > +Undefined = 0x0
+>> > +Data Link Protocol = 0x0
+>> > +Surprise Down Error = 0x0
+>> > +Poisoned TLP = 0x0
+>> > +Flow Control Protocol = 0x0
+>> > +Completion Timeout = 0x0
+>> > +Completer Abort = 0x0
+>> > +Unexpected Completion = 0x0
+>> > +Receiver Overflow = 0x0
+>> > +Malformed TLP = 0x0
+>> > +ECRC = 0x0
+>> > +Unsupported Request = 0x0
+>> > +ACS Violation = 0x0
+>> > +Uncorrectable Internal Error = 0x0
+>> > +MC Blocked TLP = 0x0
+>> > +AtomicOp Egress Blocked = 0x0
+>> > +TLP Prefix Blocked Error = 0x0
+>> > +-----------------------------------------
+>> > +
+>> > +============================
+>> > +PCIe Rootport AER statistics
+>> > +============================
+>> > +These attributes showup under only the rootports that are AER capable.
+>> > These
+>> > +indicate the number of error messages as "reported to" the rootport.
+>> > Please note
+>> > +that the rootports also transmit (internally) the ERR_* messages for
+>> > errors seen
+>> > +by the internal rootport PCI device, so these counters includes them
+>> > and are
+>> > +thus cumulative of all the error messages on the PCI hierarchy
+>> > originating
+>> > +at that root port.
+>> 
+>> what about switches and bridges ?
+> 
+> What about them? AIUI, the switches forward the ERR_ messages from
+> downstream devices to the rootport, like they do with standard
+> messages. They can potentially generate their own ERR_ message and
+> that would be reported no different than other end point devices.
 
-Thanks a lot. Scott, Ley Foon, does it work for you ? I would like
-to ask Bjorn to send it asap since the build on sparc is still broken.
 
-Thanks,
-Lorenzo
+yes, what I meant to ask is; the ERR_FATAL msg coming from EP, can be 
+contained by switch
+and the error handling code thinks that, the error is contained by 
+switch irrespective of
+AER or DPC, and it will think that the problem could be with 
+Switch/bridge upstream link.
+
+hence the pci_dev of the switch where you should be increment your 
+counters.
+of course ER_FATAL would have traversed till RP, but that doesnt meant 
+that
+you account the error there.
+
+> 
+>> Also Can you give some idea as e.g what is the difference between
+>> dev_total_fatal_errs and rootport_total_fatal_errs  (assuming that 
+>> both
+>> are same pci_dev.
+> 
+> For a pci_dev representing the rootport:
+> 
+> dev_total_fatal_errors = how many times this PCI device *experienced*
+> a fatal problem on its own (i.e. either link issues while talking to
+> its link partner, or some internal errors).
+> 
+> rootport_total_fatal_errors = how many times this rootport was
+> *informed* about a problem (via ERR_* messages) in the PCI hierarchy
+> that originates at it (can be any link further downstream). This
+> includes the dev_total_fatal_errors also, because any errors detected
+> by the rootport are also "informed" to itself via ERR_* messages. In
+> reality, this is just the total number of ERR_FATAL messages received
+> at the rootport. This sysfs attribute will only exist for root ports.
+> 
+>> 
+>> rootport_total_fatal_errs gives me an idea that how many times things
+>> have been failed under this pci_dev ?
+> 
+> Yes, as above.
+> 
+>> which means num of downstream link problems. but I am still trying to
+>> make sense as how it could be used,
+>> since we dont have BDF information associated with the number of 
+>> errors
+>> anywhere (except these AER print messages)
+>> 
+> 
+> Agree. That is a limitation. The challenges being more record keeping,
+> more complicated sysfs representation, and given that PCI devices may
+> come and go, how do we know it is the same device before we collate
+> their stats etc.
+> 
+>> 
+>> and dev_total_fatal_errs as you mentioned above that problematic EP,
+>> then say root-port will report it and increment
+>> dev_total_fatal_errs ++
+>> does it also increment root-port_total_fatal_errs ++ in above scenario 
+>> ?
+> 
+> Yes, as above, it will also root-port_total_fatal_errs++ for the root
+> port of that hierarchy.
+> 
+> Thanks,
+> 
+> Rajat
+> 
+>> 
+>> > +
+>> > +Where:               /sys/bus/pci/devices/<dev>/aer_stats/rootport_total_cor_errs
+>> > +Date:                May 2018
+>> > +Kernel Version: 4.17.0
+>> > +Contact:     linux-pci@vger.kernel.org, rajatja@google.com
+>> > +Description: Total number of ERR_COR messages reported to rootport.
+>> > +
+>> > +Where:               /sys/bus/pci/devices/<dev>/aer_stats/rootport_total_fatal_errs
+>> > +Date:                May 2018
+>> > +Kernel Version: 4.17.0
+>> > +Contact:     linux-pci@vger.kernel.org, rajatja@google.com
+>> > +Description: Total number of ERR_FATAL messages reported to rootport.
+>> > +
+>> > +Where:
+>> > /sys/bus/pci/devices/<dev>/aer_stats/rootport_total_nonfatal_errs
+>> > +Date:                May 2018
+>> > +Kernel Version: 4.17.0
+>> > +Contact:     linux-pci@vger.kernel.org, rajatja@google.com
+>> > +Description: Total number of ERR_NONFATAL messages reported to
+>> > rootport.
+>> > diff --git a/Documentation/PCI/pcieaer-howto.txt
+>> > b/Documentation/PCI/pcieaer-howto.txt
+>> > index acd0dddd6bb8..91b6e677cb8c 100644
+>> > --- a/Documentation/PCI/pcieaer-howto.txt
+>> > +++ b/Documentation/PCI/pcieaer-howto.txt
+>> > @@ -73,6 +73,11 @@ In the example, 'Requester ID' means the ID of the
+>> > device who sends
+>> >  the error message to root port. Pls. refer to pci express specs for
+>> >  other fields.
+>> >
+>> > +2.4 AER Statistics / Counters
+>> > +
+>> > +When PCIe AER errors are captured, the counters / statistics are also
+>> > exposed
+>> > +in form of sysfs attributes which are documented at
+>> > +Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+>> >
+>> >  3. Developer Guide
