@@ -1,221 +1,84 @@
-Return-Path: <SRS0=dUK+=JG=netronome.com=jakub.kicinski@kernel.org>
-Return-Path: <SRS0=dUK+=JG=netronome.com=jakub.kicinski@kernel.org>
-Date: Tue, 19 Jun 2018 19:56:43 -0700
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- netdev@vger.kernel.org, Sathya Perla <sathya.perla@broadcom.com>, Felix
- Manlunas <felix.manlunas@caviumnetworks.com>, alexander.duyck@gmail.com,
- john.fastabend@gmail.com, Jacob Keller <jacob.e.keller@intel.com>, Donald
- Dutile <ddutile@redhat.com>, oss-drivers@netronome.com, Christoph Hellwig
- <hch@infradead.org>
-Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
-Message-ID: <20180619195643.7800f7ea@cakuba.netronome.com>
-In-Reply-To: <20180619213715.GC33049@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180402224652.4058-1-jakub.kicinski@netronome.com>
-	<20180524235748.GD15320@bhelgaas-glaptop.roam.corp.google.com>
-	<20180524182015.1af7b4c9@cakuba>
-	<20180525140223.GA45098@bhelgaas-glaptop.roam.corp.google.com>
-	<20180619213715.GC33049@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=dqUP=JF=arm.com=punit.agrawal@kernel.org>
+Return-Path: <SRS0=dqUP=JF=arm.com=punit.agrawal@kernel.org>
+From: Punit Agrawal <punit.agrawal@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Michal Hocko <mhocko@kernel.org>,  Xie XiuQi <xiexiuqi@huawei.com>,  Hanjun Guo <guohanjun@huawei.com>,  Bjorn Helgaas <helgaas@kernel.org>,  <tnowicki@caviumnetworks.com>,  <linux-pci@vger.kernel.org>,  Catalin Marinas <catalin.marinas@arm.com>,  "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,  Will Deacon <will.deacon@arm.com>,  Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,  Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,  <linux-mm@kvack.org>,  <wanghuiqiang@huawei.com>,  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,  Bjorn Helgaas <bhelgaas@google.com>,  Andrew Morton <akpm@linux-foundation.org>,  zhongjiang <zhongjiang@huawei.com>,  linux-arm <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
+References: <a880df29-b656-d98d-3037-b04761c7ed78@huawei.com>
+	<20180611085237.GI13364@dhcp22.suse.cz>
+	<16c4db2f-bc70-d0f2-fb38-341d9117ff66@huawei.com>
+	<20180611134303.GC75679@bhelgaas-glaptop.roam.corp.google.com>
+	<20180611145330.GO13364@dhcp22.suse.cz>
+	<87lgbk59gs.fsf@e105922-lin.cambridge.arm.com>
+	<87bmce60y3.fsf@e105922-lin.cambridge.arm.com>
+	<8b715082-14d4-f10b-d2d6-b23be7e4bf7e@huawei.com>
+	<20180619120714.GE13685@dhcp22.suse.cz>
+	<874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
+	<20180619140818.GA16927@e107981-ln.cambridge.arm.com>
+Date: Tue, 19 Jun 2018 15:54:26 +0100
+In-Reply-To: <20180619140818.GA16927@e107981-ln.cambridge.arm.com> (Lorenzo
+	Pieralisi's message of "Tue, 19 Jun 2018 15:08:26 +0100")
+Message-ID: <87wouu3jz1.fsf@e105922-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 19 Jun 2018 16:37:15 -0500, Bjorn Helgaas wrote:
-> On Fri, May 25, 2018 at 09:02:23AM -0500, Bjorn Helgaas wrote:
-> > On Thu, May 24, 2018 at 06:20:15PM -0700, Jakub Kicinski wrote:  
-> > > Hi Bjorn!
-> > > 
-> > > On Thu, 24 May 2018 18:57:48 -0500, Bjorn Helgaas wrote:  
-> > > > On Mon, Apr 02, 2018 at 03:46:52PM -0700, Jakub Kicinski wrote:  
-> > > > > Some user space depends on enabling sriov_totalvfs number of VFs
-> > > > > to not fail, e.g.:
-> > > > > 
-> > > > > $ cat .../sriov_totalvfs > .../sriov_numvfs
-> > > > > 
-> > > > > For devices which VF support depends on loaded FW we have the
-> > > > > pci_sriov_{g,s}et_totalvfs() API.  However, this API uses 0 as
-> > > > > a special "unset" value, meaning drivers can't limit sriov_totalvfs
-> > > > > to 0.  Remove the special values completely and simply initialize
-> > > > > driver_max_VFs to total_VFs.  Then always use driver_max_VFs.
-> > > > > Add a helper for drivers to reset the VF limit back to total.    
-> > > > 
-> > > > I still can't really make sense out of the changelog.
-> > > >
-> > > > I think part of the reason it's confusing is because there are two
-> > > > things going on:
-> > > > 
-> > > >   1) You want this:
-> > > >   
-> > > >        pci_sriov_set_totalvfs(dev, 0);
-> > > >        x = pci_sriov_get_totalvfs(dev) 
-> > > > 
-> > > >      to return 0 instead of total_VFs.  That seems to connect with
-> > > >      your subject line.  It means "sriov_totalvfs" in sysfs could be
-> > > >      0, but I don't know how that is useful (I'm sure it is; just
-> > > >      educate me :))  
-> > > 
-> > > Let me just quote the bug report that got filed on our internal bug
-> > > tracker :)
-> > > 
-> > >   When testing Juju Openstack with Ubuntu 18.04, enabling SR-IOV causes
-> > >   errors because Juju gets the sriov_totalvfs for SR-IOV-capable device
-> > >   then tries to set that as the sriov_numvfs parameter.
-> > > 
-> > >   For SR-IOV incapable FW, the sriov_totalvfs parameter should be 0, 
-> > >   but it's set to max.  When FW is switched to flower*, the correct 
-> > >   sriov_totalvfs value is presented.
-> > > 
-> > > * flower is a project name  
-> > 
-> > From the point of view of the PCI core (which knows nothing about
-> > device firmware and relies on the architected config space described
-> > by the PCIe spec), this sounds like an erratum: with some firmware
-> > installed, the device is not capable of SR-IOV, but still advertises
-> > an SR-IOV capability with "TotalVFs > 0".
-> > 
-> > Regardless of whether that's an erratum, we do allow PF drivers to use
-> > pci_sriov_set_totalvfs() to limit the number of VFs that may be
-> > enabled by writing to the PF's "sriov_numvfs" sysfs file.
-> > 
-> > But the current implementation does not allow a PF driver to limit VFs
-> > to 0, and that does seem nonsensical.
-> >   
-> > > My understanding is OpenStack uses sriov_totalvfs to determine how many
-> > > VFs can be enabled, looks like this is the code:
-> > > 
-> > > http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n464
-> > >   
-> > > >   2) You're adding the pci_sriov_reset_totalvfs() interface.  I'm not
-> > > >      sure what you intend for this.  Is *every* driver supposed to
-> > > >      call it in .remove()?  Could/should this be done in the core
-> > > >      somehow instead of depending on every driver?  
-> > > 
-> > > Good question, I was just thinking yesterday we may want to call it
-> > > from the core, but I don't think it's strictly necessary nor always
-> > > sufficient (we may reload FW without re-probing).
-> > > 
-> > > We have a device which supports different number of VFs based on the FW
-> > > loaded.  Some legacy FWs does not inform the driver how many VFs it can
-> > > support, because it supports max.  So the flow in our driver is this:
-> > > 
-> > > load_fw(dev);
-> > > ...
-> > > max_vfs = ask_fw_for_max_vfs(dev);
-> > > if (max_vfs >= 0)
-> > > 	return pci_sriov_set_totalvfs(dev, max_vfs);
-> > > else /* FW didn't tell us, assume max */
-> > > 	return pci_sriov_reset_totalvfs(dev); 
-> > > 
-> > > We also reset the max on device remove, but that's not strictly
-> > > necessary.
-> > > 
-> > > Other users of pci_sriov_set_totalvfs() always know the value to set
-> > > the total to (either always get it from FW or it's a constant).
-> > > 
-> > > If you prefer we can work out the correct max for those legacy cases in
-> > > the driver as well, although it seemed cleaner to just ask the core,
-> > > since it already has total_VFs value handy :)
-> > >   
-> > > > I'm also having a hard time connecting your user-space command example
-> > > > with the rest of this.  Maybe it will make more sense to me tomorrow
-> > > > after some coffee.  
-> > > 
-> > > OpenStack assumes it will always be able to set sriov_numvfs to
-> > > sriov_totalvfs, see this 'if':
-> > > 
-> > > http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n512  
-> > 
-> > Thanks for educating me.  I think there are two issues here that we
-> > can separate.  I extracted the patch below for the first.
-> > 
-> > The second is the question of resetting driver_max_VFs.  I think we
-> > currently have a general issue in the core:
-> > 
-> >   - load PF driver 1
-> >   - driver calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
-> >   - unload PF driver 1
-> >   - load PF driver 2
-> > 
-> > Now driver_max_VFs is still stuck at the lower value set by driver 1.
-> > I don't think that's the way this should work.
-> > 
-> > I guess this is partly a consequence of setting driver_max_VFs in
-> > sriov_init(), which is called before driver attach and should only
-> > depend on hardware characteristics, so it is related to the patch
-> > below.  But I think we should fix it in general, not just for
-> > netronome.  
-> 
-> Hi Jakub, the patch below is in v4.18-rc1 as 8d85a7a4f2c9 ("PCI/IOV:
-> Allow PF drivers to limit total_VFs to 0").  If there's more we need
-> to do here, would you mind rebasing what's left to v4.18-rc1 and
-> reposting it?
+Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> writes:
 
-Hi Bjorn!
+> On Tue, Jun 19, 2018 at 01:52:16PM +0100, Punit Agrawal wrote:
+>> Michal Hocko <mhocko@kernel.org> writes:
+>> 
+>> > On Tue 19-06-18 20:03:07, Xie XiuQi wrote:
+>> > [...]
+>> >> I tested on a arm board with 128 cores 4 numa nodes, but I set CONFIG_NR_CPUS=72.
+>> >> Then node 3 is not be created, because node 3 has no memory, and no cpu.
+>> >> But some pci device may related to node 3, which be set in ACPI table.
+>> >
+>> > Could you double check that zonelists for node 3 are generated
+>> > correctly?
+>> 
+>> The cpus in node 3 aren't onlined and there's no memory attached - I
+>> suspect that no zonelists are built for this node.
+>> 
+>> We skip creating a node, if the number of SRAT entries parsed exceeds
+>> NR_CPUS[0]. This in turn prevents onlining the numa node and so no
+>> zonelists will be created for it.
+>> 
+>> I think the problem will go away if the cpus are restricted via the
+>> kernel command line by setting nr_cpus.
+>> 
+>> Xie, can you try the below patch on top of the one enabling memoryless
+>> nodes? I'm not sure this is the right solution but at least it'll
+>> confirm the problem.
+>
+> This issue looks familiar (or at least related):
+>
+> git log d3bd058826aa
 
-Thanks a lot for looking into this!  My understanding is that we have
-two ways forward:
- - add a pci_sriov_reset_totalvfs() helper for drivers to call;
- - make the core reset the totalVFs after driver is detached.
+Indeed. Thanks for digging into this.
 
-IMHO second option is better.  I went ahead and posted:
+>
+> The reason why the NR_CPUS guard is there is to avoid overflowing
+> the early_node_cpu_hwid array.
 
-https://patchwork.ozlabs.org/patch/931210/
+Ah right... I missed that. The below patch is definitely not what we
+want.
 
-This works very well for nfp driver (modulo minor clean ups but I'd
-rather route those via networking trees to avoid conflicts).
+> IA64 does something different in
+> that respect compared to x86, we have to have a look into this.
+>
+> Regardless, AFAICS the proximity domains to nodes mappings should not
+> depend on CONFIG_NR_CPUS, it seems that there is something wrong in that
+> in ARM64 ACPI SRAT parsing.
 
-> > commit 4a338bc6f94b9ad824ac944f5dfc249d6838719c
-> > Author: Jakub Kicinski <jakub.kicinski@netronome.com>
-> > Date:   Fri May 25 08:18:34 2018 -0500
-> > 
-> >     PCI/IOV: Allow PF drivers to limit total_VFs to 0
-> >     
-> >     Some SR-IOV PF drivers implement .sriov_configure(), which allows
-> >     user-space to enable VFs by writing the desired number of VFs to the sysfs
-> >     "sriov_numvfs" file (see sriov_numvfs_store()).
-> >     
-> >     The PCI core limits the number of VFs to the TotalVFs advertised by the
-> >     device in its SR-IOV capability.  The PF driver can limit the number of VFs
-> >     to even fewer (it may have pre-allocated data structures or knowledge of
-> >     device limitations) by calling pci_sriov_set_totalvfs(), but previously it
-> >     could not limit the VFs to 0.
-> >     
-> >     Change pci_sriov_get_totalvfs() so it always respects the VF limit imposed
-> >     by the PF driver, even if the limit is 0.
-> >     
-> >     This sequence:
-> >     
-> >       pci_sriov_set_totalvfs(dev, 0);
-> >       x = pci_sriov_get_totalvfs(dev);
-> >     
-> >     previously set "x" to TotalVFs from the SR-IOV capability.  Now it will set
-> >     "x" to 0.
-> >     
-> >     Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
-> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> > index 192b82898a38..d0d73dbbd5ca 100644
-> > --- a/drivers/pci/iov.c
-> > +++ b/drivers/pci/iov.c
-> > @@ -469,6 +469,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
-> >  	iov->nres = nres;
-> >  	iov->ctrl = ctrl;
-> >  	iov->total_VFs = total;
-> > +	iov->driver_max_VFs = total;
-> >  	pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_device);
-> >  	iov->pgsz = pgsz;
-> >  	iov->self = dev;
-> > @@ -827,10 +828,7 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
-> >  	if (!dev->is_physfn)
-> >  		return 0;
-> >  
-> > -	if (dev->sriov->driver_max_VFs)
-> > -		return dev->sriov->driver_max_VFs;
-> > -
-> > -	return dev->sriov->total_VFs;
-> > +	return dev->sriov->driver_max_VFs;
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
-> >    
+Not only SRAT parsing but it looks like there is a similar restriction
+while parsing the ACPI MADT in acpi_map_gic_cpu_interface().
+
+The incomplete parsing introduces a dependency on the ordering of
+entries being aligned between SRAT and MADT when NR_CPUS is
+restricted. We want to parse the entire table in both cases so that the
+code is robust to reordering of entries.
+
+In terms of $SUBJECT, I wonder if it's worth taking the original patch
+as a temporary fix (it'll also be easier to backport) while we work on
+fixing these other issues and enabling memoryless nodes.
