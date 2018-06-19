@@ -1,84 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38444 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933440AbeFVKLv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2018 06:11:51 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45746 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756270AbeFSJ1w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Jun 2018 05:27:52 -0400
+Date: Tue, 19 Jun 2018 10:27:45 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: Rob Herring <robh@kernel.org>,
+        Scott Branden <scott.branden@broadcom.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Ley Foon Tan <lftan@altera.com>,
+        Russell King <linux@armlinux.org.uk>
+Subject: Re: [v4] PCI: improve host drivers compile test coverage
+Message-ID: <20180619092745.GA7270@e107981-ln.cambridge.arm.com>
+References: <20180612170229.GA10141@roeck-us.net>
+ <20180613100935.GA7707@e107981-ln.cambridge.arm.com>
+ <20180613181146.GA28856@roeck-us.net>
+ <20180615125847.GA7735@e107981-ln.cambridge.arm.com>
+ <980b68c0-6034-b495-753f-c75c04e0f5d1@broadcom.com>
+ <CAL_JsqLUR_5Hnaws3Dt8ujetq8R-TxnG9wvOe4y6HT50KrNnbQ@mail.gmail.com>
+ <20180618093201.GA18994@e107981-ln.cambridge.arm.com>
+ <45f29e28-d3d4-b1e6-249e-ac28b6ec6a36@siemens.com>
+ <20180618125255.GA356@red-moon>
+ <03d3eac6-4711-2bd5-4ab5-fc2f77d5e4ad@siemens.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 22 Jun 2018 15:41:50 +0530
-From: poza@codeaurora.org
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH 5/7] PCI/DPC: Print AER status in DPC event handling
-In-Reply-To: <20180621140525.GB26623@localhost.localdomain>
-References: <20180620213833.25072-1-keith.busch@intel.com>
- <20180620213833.25072-5-keith.busch@intel.com>
- <9cc1594055f03c0e4b4d1b50384107e8@codeaurora.org>
- <20180621140525.GB26623@localhost.localdomain>
-Message-ID: <f25c5f839166d0f94fc8a1b6def2fe14@codeaurora.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <03d3eac6-4711-2bd5-4ab5-fc2f77d5e4ad@siemens.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-06-21 19:35, Keith Busch wrote:
-> On Thu, Jun 21, 2018 at 02:46:10PM +0530, poza@codeaurora.org wrote:
->> On 2018-06-21 03:08, Keith Busch wrote:
->> > @@ -185,6 +187,10 @@ static void dpc_work(struct work_struct *work)
->> >  	/* show RP PIO error detail information */
->> >  	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
->> >  		dpc_process_rp_pio_error(dpc);
->> > +	else if (reason == 0 && aer_get_device_error_info(pdev, &info)) {
->> > +		aer_print_error(pdev, &info);
->> > +		pci_cleanup_aer_uncorrect_error_status(pdev);
->> 
->> 6.2.10 for Downstream Port Containment:
->> 
->>   When DPC is triggered due to receipt of an uncorrectable error 
->> Message,
->>   the Requester ID from the Message is recorded in the DPC Error
->>   Source ID register and that Message is discarded and not forwarded
->>   Upstream. When DPC is triggered by an unmasked uncorrectable error,
->>   that error will not be signaled with an uncorrectable error Message,
->>   even if otherwise enabled.
->> 
->> Inst the message is discarded and not forwarded to upstream.
->> which means that we should not find AER status set in RP or Switch.
->> in other words, at time either we will find DPC or AER triggered but 
->> not
->> both at the same time.
->> then when DPC is triggered why do we need to
->> pci_cleanup_aer_uncorrect_error_status(pdev); ?
+On Mon, Jun 18, 2018 at 06:53:10PM +0200, Jan Kiszka wrote:
+> On 2018-06-18 14:52, Lorenzo Pieralisi wrote:
+> > On Mon, Jun 18, 2018 at 01:42:25PM +0200, Jan Kiszka wrote:
+> >> On 2018-06-18 11:32, Lorenzo Pieralisi wrote:
+> >>> On Fri, Jun 15, 2018 at 12:34:51PM -0600, Rob Herring wrote:
+> >>>> On Fri, Jun 15, 2018 at 11:55 AM, Scott Branden
+> >>>> <scott.branden@broadcom.com> wrote:
+> >>>>> Hi Lorenzo,
+> >>>>>
+> >>>>>
+> >>>>>
+> >>>>> On 18-06-15 05:58 AM, Lorenzo Pieralisi wrote:
+> >>>>>>
+> >>>>>> On Wed, Jun 13, 2018 at 11:11:46AM -0700, Guenter Roeck wrote:
+> >>>>>>>
+> >>>>>>> On Wed, Jun 13, 2018 at 11:09:35AM +0100, Lorenzo Pieralisi wrote:
+> >>>>>>>>
+> >>>>>>>> [+Jan, Ley Foon, RMK]
+> >>>>>>>>
+> >>>>>>>> On Tue, Jun 12, 2018 at 10:02:29AM -0700, Guenter Roeck wrote:
+> >>>>>>>>>
+> >>>>>>>>> On Thu, Apr 05, 2018 at 02:31:54PM -0500, Rob Herring wrote:
+> >>>>>>>>>>
+> >>>>>>>>>> Add COMPILE_TEST on driver config options with it. Some ARM drivers
+> >>>>>>>>>> still have arch dependencies, so we have to keep those dependent on
+> >>>>>>>>>> ARM.
+> >>>>>>>>>>
+> >>>>>>>>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >>>>>>>>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >>>>>>>>>> Cc: linux-pci@vger.kernel.org
+> >>>>>>>>>> Signed-off-by: Rob Herring <robh@kernel.org>
+> >>>>>>>>>
+> >>>>>>>>> This patch has the undesirable side effect that it selects PCI_DOMAINS
+> >>>>>>>>> for
+> >>>>>>>>> sparc32:allmodconfig, which in turn results in
+> >>>>>>>>>
+> >>>>>>>>> drivers/ata/pata_ali.c: In function 'ali_init_chipset':
+> >>>>>>>>> drivers/ata/pata_ali.c:469:38: error:
+> >>>>>>>>>         implicit declaration of function 'pci_domain_nr'; did you mean
+> >>>>>>>>> 'pci_iomap_wc'?
+> >>>>>>>>>
+> >>>>>>>>> Unfortunately, 37bd62d224c82 ("PCI: Enable PCI_DOMAINS along with
+> >>>>>>>>> generic
+> >>>>>>>>> PCI host controller") has pretty much the same result. No idea how to
+> >>>>>>>>> fix
+> >>>>>>>>> the problem, so I won't even try.
+> >>>>>>>>
+> >>>>>>>> Sorry about that.
+> >>>>>>>>
+> >>>>>>>> One option would consist in removing all PCI_DOMAINS selection from
+> >>>>>>>> drivers/pci/controller/Kconfig and delegate it to arches even though
+> >>>>>>>> this would force PCI_DOMAINS selection on all ARM platforms (it is
+> >>>>>>>> already selected for ARCH_MULTIPLATFORM).
+> >>>>>>>>
+> >>>>>>>> Or we add back arch dependency to the relevant host bridges.
+> >>>>>>>>
+> >>>>>>>> Everything else I have in mind seems overkill to me given that this
+> >>>>>>>> patch was added to improve test coverage (we could add a default
+> >>>>>>>> pci_domain_nr() stub - weak or #define - that returns 0 in case arches
+> >>>>>>>> do not provide an implementation but do we really want to do that ?).
+> >>>>>>>>
+> >>>>>>>> Thoughts appreciated.
+> >>>>>>>>
+> >>>>>>>  From the definition of PCI_DOMAINS, I suspect the original idea was that
+> >>>>>>> drivers should depend on it, not select it. Especially auto-selecting
+> >>>>>>> it with PCI_HOST_GENERIC seems like a bad idea to me. However, that is
+> >>>>>>> just me. I'll leave it up to Bjorn to decide what if anything he wants
+> >>>>>>> to do about it.
+> >>>>>>
+> >>>>>> Here is a patch that should reinstate the previous behaviour but
+> >>>>>> it will make PCI_DOMAINS a visible option on ARM 32-bit systems; whether
+> >>>>>> that's acceptable that's the question I need to answer, it should
+> >>>>>> honour old configs and it does not force PCI_DOMAINS selection on
+> >>>>>> non-DT arch/arm PCI host controllers (that do not need PCI_DOMAINS
+> >>>>>> anyway so I suspect that enabling it on all ARM 32-bit platforms
+> >>>>>> should not break anything but I preferred to be cautious).
+> >>>>>
+> >>>>> I think this change will also require a patch enabling CONFIG_PCI_DOMAINS in
+> >>>>> multi_v7_defconfig and iproc_defconfig at the very least?
+> >>>>
+> >>>> Perhaps the sub-arches that want this should select it. It is more a
+> >>>> platform option/decision more than a controller option.
+> >>>
+> >>> Yes, that makes sense, I assume ARCH_VIRT is a sensible choice for
+> >>> virtual machines configuration, Jan ?
+> >>>
+> >>> I will add a PCI_DOMAINS selection to all (ARM) arches that select
+> >>> PCI_DOMAINS in drivers/pci/controller/Kconfig.
+> >>>
+> >>> For Jailhouse configurations I need Jan's input, I assume adding
+> >>> the selection to ARCH_VIRT is the correct way forward, please let
+> >>> me know asap.
+> >>
+> >> So far, there is no need on ARM or ARM64 declare a special platform in
+> >> order to run as Jailhouse (secondary) guest.
+> >>
+> >> My original patch was just about making PCI_DOMAINS manually
+> >> configurable, which would have been fine for our use case.
+> > 
+> > I need more details on your system configuration to make sure we can fix
+> > this in a way that does not upset anybody; I am not a big fan of making
+> > PCI_DOMAINS visible since it affects other platforms and it is different
+> > from how it is managed for all other arches, so please provide details.
 > 
-> According to the sequence diagram in 6.2.5, an uncorrectable error has
-> the cooresponding bits set in the Device Status and AER Uncorrectable
-> Error Status registers before DPC specifics are considered. DPC just
-> suppresses the ERR_[NON]FATAL messages, but the detecting ports AER
-> status, if implemented, should reflect what occured.
+> Our setup is as follows: A platform, e.g. Jetson TK1 or TX1/2, already
+> has one PCI host controller. When enabling Jailhouse on it (from within
+> a running Linux), this adds the generic PCI host controller as virtual
+> one. So we need to configure the system to support both controllers and
+> PCI domains. But, otherwise, the system does not look different from a
+> physical one.
 
-Hi Keith,
+Well, it looks like the only sensible way forward is to amend the
+patch below and make PCI_DOMAINS a visible option on ARM and still
+select it from the sub-arch entries that need it:
 
-was thinking that current code
-pcie_do_fatal_recovery already does call
+https://marc.info/?l=linux-pci&m=152932092612352&w=2
 
-if ((service == PCIE_PORT_SERVICE_AER) &&
-	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
-		/*
-		 * If the error is reported by a bridge, we think this error
-		 * is related to the downstream link of the bridge, so we
-		 * do error recovery on all subordinates of the bridge instead
-		 * of the bridge and clear the error status of the bridge.
-		 */
-		pci_cleanup_aer_uncorrect_error_status(dev);
-	}
+If there are other ideas I am happy to hear them.
 
-
-instead of calling it here in dpc driver, can we make use of that 
-existing call ?
-probably we just might need to remove
-if ((service == PCIE_PORT_SERVICE_AER) condition
-
-Regards,
-Oza.
+Lorenzo
