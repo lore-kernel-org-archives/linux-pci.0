@@ -1,51 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:41297 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932871AbeFPTd0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:33:26 -0400
-Message-Id: <f0917c7e8e6fba0c41f0e4d9ff33869394eae82c.1529173804.git.lukas@wunner.de>
-In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 16 Jun 2018 21:25:00 +0200
-Subject: [PATCH 05/32] PCI: pciehp: Drop unnecessary NULL pointer check
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=dqUP=JF=arm.com=punit.agrawal@kernel.org>
+Return-Path: <SRS0=dqUP=JF=arm.com=punit.agrawal@kernel.org>
+From: Punit Agrawal <punit.agrawal@arm.com>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,  Xie XiuQi <xiexiuqi@huawei.com>,  Hanjun Guo <guohanjun@huawei.com>,  Bjorn Helgaas <helgaas@kernel.org>,  <tnowicki@caviumnetworks.com>,  <linux-pci@vger.kernel.org>,  Catalin Marinas <catalin.marinas@arm.com>,  "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,  Will Deacon <will.deacon@arm.com>,  Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,  Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,  <linux-mm@kvack.org>,  <wanghuiqiang@huawei.com>,  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,  Bjorn Helgaas <bhelgaas@google.com>,  Andrew Morton <akpm@linux-foundation.org>,  zhongjiang <zhongjiang@huawei.com>,  linux-arm <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
+References: <16c4db2f-bc70-d0f2-fb38-341d9117ff66@huawei.com>
+	<20180611134303.GC75679@bhelgaas-glaptop.roam.corp.google.com>
+	<20180611145330.GO13364@dhcp22.suse.cz>
+	<87lgbk59gs.fsf@e105922-lin.cambridge.arm.com>
+	<87bmce60y3.fsf@e105922-lin.cambridge.arm.com>
+	<8b715082-14d4-f10b-d2d6-b23be7e4bf7e@huawei.com>
+	<20180619120714.GE13685@dhcp22.suse.cz>
+	<874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
+	<20180619140818.GA16927@e107981-ln.cambridge.arm.com>
+	<87wouu3jz1.fsf@e105922-lin.cambridge.arm.com>
+	<20180619151425.GH13685@dhcp22.suse.cz>
+Date: Tue, 19 Jun 2018 16:35:40 +0100
+In-Reply-To: <20180619151425.GH13685@dhcp22.suse.cz> (Michal Hocko's message
+	of "Tue, 19 Jun 2018 17:14:25 +0200")
+Message-ID: <87r2l23i2b.fsf@e105922-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-pciehp_disable_slot() checks if the ctrl attribute of the slot is NULL
-and bails out if so.  However the function is not called prior to the
-attribute being set in pcie_init_slot(), and pcie_init_slot() is not
-called if ctrl is NULL.  So the check is unnecessary.  Drop it.
+Michal Hocko <mhocko@kernel.org> writes:
 
-It has been present ever since the driver was introduced in 2004, but it
-was already unnecessary back then:
-https://git.kernel.org/tglx/history/c/c16b4b14d980
+> On Tue 19-06-18 15:54:26, Punit Agrawal wrote:
+> [...]
+>> In terms of $SUBJECT, I wonder if it's worth taking the original patch
+>> as a temporary fix (it'll also be easier to backport) while we work on
+>> fixing these other issues and enabling memoryless nodes.
+>
+> Well, x86 already does that but copying this antipatern is not really
+> nice. So it is good as a quick fix but it would be definitely much
+> better to have a robust fix. Who knows how many other places might hit
+> this. You certainly do not want to add a hack like this all over...
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pciehp_ctrl.c | 3 ---
- 1 file changed, 3 deletions(-)
+Completely agree! I was only suggesting it as a temporary measure,
+especially as it looked like a proper fix might be invasive.
 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index c684faa43387..4a4639b7a479 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -412,9 +412,6 @@ int pciehp_disable_slot(struct slot *p_slot)
- 	u8 getstatus = 0;
- 	struct controller *ctrl = p_slot->ctrl;
- 
--	if (!p_slot->ctrl)
--		return 1;
--
- 	if (POWER_CTRL(p_slot->ctrl)) {
- 		pciehp_get_power_status(p_slot, &getstatus);
- 		if (!getstatus) {
--- 
-2.17.1
+Another fix might be to change the node specific allocation to node
+agnostic allocations. It isn't clear why the allocation is being
+requested from a specific node. I think Lorenzo suggested this in one of
+the threads.
+
+I've started putting together a set fixing the issues identified in this
+thread. It should give a better idea on the best course of action.
