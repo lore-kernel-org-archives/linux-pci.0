@@ -1,187 +1,66 @@
-Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f195.google.com ([209.85.223.195]:37916 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966676AbeFSQ1K (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jun 2018 12:27:10 -0400
+Received: by mail-io0-f195.google.com with SMTP id l19-v6so762960ioj.5
+        for <linux-pci@vger.kernel.org>; Tue, 19 Jun 2018 09:27:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 12 Jun 2018 13:57:42 +0530
-From: poza@codeaurora.org
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org, Ray Jui <rjui@broadcom.com>,
- linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH v2 2/5] PCI: iproc: Fix up corrupted PAXC root complex
- config registers
-In-Reply-To: <1528762867-16823-3-git-send-email-ray.jui@broadcom.com>
-References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
- <1528762867-16823-3-git-send-email-ray.jui@broadcom.com>
-Message-ID: <2bafb8ae70029279a1849fb68a020d18@codeaurora.org>
+In-Reply-To: <c56f43f5-7902-f7c8-20e1-955ad064c4d0@cisco.com>
+References: <20180618165706.42679-1-danielwa@cisco.com> <CALJn8nPbTy3Ne2a7L71c2YZ06Ccr2j0zs6TdptfRc7O-N9u=Yg@mail.gmail.com>
+ <c56f43f5-7902-f7c8-20e1-955ad064c4d0@cisco.com>
+From: "Guilherme G. Piccoli" <guilherme@gpiccoli.net>
+Date: Tue, 19 Jun 2018 13:26:29 -0300
+Message-ID: <CALJn8nM+S7STs+_MTje1qVCpa6MvnROS2+b5_GDz2wYs8etapA@mail.gmail.com>
+Subject: Re: [PATCH] arch: powerpc: pci-common: fix wrong return value check
+ on phd_id
+To: Daniel Walker <danielwa@cisco.com>, mpe@ellerman.id.au,
+        benh@kernel.crashing.org
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+        xe-kernel@external.cisco.com, linux-kernel@vger.kernel.org,
+        Paul Mackerras <paulus@samba.org>,
+        linuxppc-dev@lists.ozlabs.org,
+        Mauro Rodrigues <maurosr@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-06-12 05:51, Ray Jui wrote:
-> On certain versions of Broadcom PAXC based root complexes, certain
-> regions of the configuration space are corrupted. As a result, it
-> prevents the Linux PCIe stack from traversing the linked list of the
-> capability registers completely and therefore the root complex is
-> not advertised as "PCIe capable". This prevents the correct PCIe RID
-> from being parsed in the kernel PCIe stack. A correct RID is required
-> for mapping to a stream ID from the SMMU or the device ID from the
-> GICv3 ITS
-> 
-> This patch fixes up the issue by manually populating the related
-> PCIe capabilities
-> 
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> ---
->  drivers/pci/host/pcie-iproc.c | 65 
-> +++++++++++++++++++++++++++++++++++++++----
->  drivers/pci/host/pcie-iproc.h |  3 ++
->  2 files changed, 62 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-iproc.c 
-> b/drivers/pci/host/pcie-iproc.c
-> index 3c76c5f..680f6b1 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -85,6 +85,8 @@
->  #define IMAP_VALID_SHIFT		0
->  #define IMAP_VALID			BIT(IMAP_VALID_SHIFT)
-> 
-> +#define IPROC_PCI_PM_CAP		0x48
-> +#define IPROC_PCI_PM_CAP_MASK		0xffff
->  #define IPROC_PCI_EXP_CAP		0xac
-> 
->  #define IPROC_PCIE_REG_INVALID		0xffff
-> @@ -375,6 +377,17 @@ static const u16 iproc_pcie_reg_paxc_v2[] = {
->  	[IPROC_PCIE_CFG_DATA]		= 0x1fc,
->  };
-> 
-> +/*
-> + * List of device IDs of controllers that have corrupted capability 
-> list that
-> + * require SW fixup
-> + */
-> +static const u16 iproc_pcie_corrupt_cap_did[] = {
-> +	0x16cd,
-> +	0x16f0,
-> +	0xd802,
-> +	0xd804
-> +};
-> +
->  static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
->  {
->  	struct iproc_pcie *pcie = bus->sysdata;
-> @@ -495,6 +508,49 @@ static unsigned int iproc_pcie_cfg_retry(void
-> __iomem *cfg_data_p)
->  	return data;
->  }
-> 
-> +static void iproc_pcie_fix_cap(struct iproc_pcie *pcie, int where, u32 
-> *val)
-> +{
-> +	u32 i, dev_id;
-> +
-> +	switch (where & ~0x3) {
-> +	case PCI_VENDOR_ID:
-> +		dev_id = *val >> 16;
-> +
-> +		/*
-> +		 * Activate fixup for those controllers that have corrupted
-> +		 * capability list registers
-> +		 */
-> +		for (i = 0; i < ARRAY_SIZE(iproc_pcie_corrupt_cap_did); i++)
-> +			if (dev_id == iproc_pcie_corrupt_cap_did[i])
-> +				pcie->fix_paxc_cap = true;
+> [...]
+> What your doing is changing the phb_id to some transformation of "reg" for
+> all platforms except which have "ibm,opal-phbid". This is what we observe.
+> This is a radical altering of the prior phb_id selection before your patch.
+>
+> The question is, was that your intent ? We are expecting these numbers
+> aren't getting altered in this way, this is why we have the patch. Your
+> patch description appears to suggest you want this type of selection for
+> "... pSeries and PowerNV cases)." , so I am assuming you did this by
+> mistake. Also I don't see a reason to make this change for all platforms.
 
-and I think this code will try to fix up every time config space is 
-read.
-Does this get corrupted often, randomly ?
-Can it not be solved by using one time Quirk ?
-and if not Quirk, you dont want to be setting pcie->fix_paxc_cap = false 
-somewhere
+It was the intent - whenever we have device-tree information, the idea is to
+use it to have more consistent numbering across reboots and PCI hotplugs.
+The reason to change that originally is hotplugging a PCI device added
+the device with a different PHB/Domain value, and network predictable naming
+messed-up interfaces' names, leading to a machine without networking.
 
-besides, pcie->fix_paxc_cap = true; is set if PCI_VENDOR_ID is read 
-first.
-and rest cases stay with the assumption that PCI_VENDOR_ID will be read 
-first.
-which is infact read first during enumeration
-(that is the assumption code is making), but that is safe assumption to 
-make I think.
 
-> +		break;
-> +
-> +	case IPROC_PCI_PM_CAP:
-> +		if (pcie->fix_paxc_cap) {
-> +			/* advertise PM, force next capability to PCIe */
-> +			*val &= ~IPROC_PCI_PM_CAP_MASK;
-> +			*val |= IPROC_PCI_EXP_CAP << 8 | PCI_CAP_ID_PM;
-> +		}
-> +		break;
-> +
-> +	case IPROC_PCI_EXP_CAP:
-> +		if (pcie->fix_paxc_cap) {
-> +			/* advertise root port, version 2, terminate here */
-> +			*val = (PCI_EXP_TYPE_ROOT_PORT << 4 | 2) << 16 |
-> +				PCI_CAP_ID_EXP;
-> +		}
-> +		break;
-> +
-> +	case IPROC_PCI_EXP_CAP + PCI_EXP_RTCTL:
-> +		/* Don't advertise CRS SV support */
-> +		*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
-> +		break;
-> +
-> +	default:
-> +		break;
-> +	}
-> +}
-> +
->  static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int 
-> devfn,
->  				  int where, int size, u32 *val)
->  {
-> @@ -509,13 +565,10 @@ static int iproc_pcie_config_read(struct pci_bus
-> *bus, unsigned int devfn,
->  	/* root complex access */
->  	if (busno == 0) {
->  		ret = pci_generic_config_read32(bus, devfn, where, size, val);
-> -		if (ret != PCIBIOS_SUCCESSFUL)
-> -			return ret;
-> +		if (ret == PCIBIOS_SUCCESSFUL)
-> +			iproc_pcie_fix_cap(pcie, where, val);
-> 
-> -		/* Don't advertise CRS SV support */
-> -		if ((where & ~0x3) == IPROC_PCI_EXP_CAP + PCI_EXP_RTCTL)
-> -			*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
-> -		return PCIBIOS_SUCCESSFUL;
-> +		return ret;
->  	}
-> 
->  	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
-> diff --git a/drivers/pci/host/pcie-iproc.h 
-> b/drivers/pci/host/pcie-iproc.h
-> index 814b600..9d5cfee 100644
-> --- a/drivers/pci/host/pcie-iproc.h
-> +++ b/drivers/pci/host/pcie-iproc.h
-> @@ -60,6 +60,8 @@ struct iproc_msi;
->   * @ep_is_internal: indicates an internal emulated endpoint device is 
-> connected
->   * @has_apb_err_disable: indicates the controller can be configured to 
-> prevent
->   * unsupported request from being forwarded as an APB bus error
-> + * @fix_paxc_cap: indicates the controller has corrupted capability 
-> list in its
-> + * config space registers and requires SW based fixup
->   *
->   * @need_ob_cfg: indicates SW needs to configure the outbound mapping 
-> window
->   * @ob: outbound mapping related parameters
-> @@ -85,6 +87,7 @@ struct iproc_pcie {
->  	int (*map_irq)(const struct pci_dev *, u8, u8);
->  	bool ep_is_internal;
->  	bool has_apb_err_disable;
-> +	bool fix_paxc_cap;
-> 
->  	bool need_ob_cfg;
->  	struct iproc_pcie_ob ob;
+> [...]
+>
+> We have already done this, that is how we determined your patch was changing
+> the domain values. There isn't much to tell w.r.t this issue on our side, we
+> are expecting the domain numbers are set a specific way and they aren't
+> getting set that way. The drivers which are looking for PCI devices are not
+> in kernel space, and the PCI domain values are getting taken from userspace.
+>
+
+Oh okay, I imagined it was some crazy userspace-based PCI domain scheme
+that led you to report the issue - confirmed heheh
+So, you expect the old behavior right? Incremental PHB numbering.
+I think we could have a kernel config option to allow that, this way
+you could rebuild your kernel with that option and keep the old behavior.
+
+This idea needs to be validated by the maintainers, or perhaps they could
+propose another way to keep the old behavior to interested parties.
+
+[Looping linux-pci too - original thread at:
+https://lists.ozlabs.org/pipermail/linuxppc-dev/2018-June/174760.html]
