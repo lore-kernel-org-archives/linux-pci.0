@@ -1,50 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:35426 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932944AbeFLHU1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2018 03:20:27 -0400
-Received: by mail-it0-f66.google.com with SMTP id a3-v6so14185122itd.0
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2018 00:20:27 -0700 (PDT)
+Received: from mail.kernel.org ([198.145.29.99]:51868 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933249AbeFTWF2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Jun 2018 18:05:28 -0400
+Date: Wed, 20 Jun 2018 17:05:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+        sparclinux@vger.kernel.org
+Subject: Re: sparc64 PCI BAR allocation is still problematic
+Message-ID: <20180620220525.GC108993@bhelgaas-glaptop.roam.corp.google.com>
+References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
 MIME-Version: 1.0
-References: <1528785733-19442-1-git-send-email-kernelfans@gmail.com> <20180612065727.GA5195@infradead.org>
-In-Reply-To: <20180612065727.GA5195@infradead.org>
-From: Pingfan Liu <kernelfans@gmail.com>
-Date: Tue, 12 Jun 2018 15:20:15 +0800
-Message-ID: <CAFgQCTvYDbw3fv7k-Y999F2fCfCs7TiGd4xd6isp0wZBr8dT3Q@mail.gmail.com>
-Subject: Re: [PATCH] pci/shpchp: no claim on pcie port device
-To: hch@infradead.org
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 12, 2018 at 2:57 PM Christoph Hellwig <hch@infradead.org> wrote:
->
-> On Tue, Jun 12, 2018 at 02:42:13PM +0800, Pingfan Liu wrote:
-> > The Linux Device Driver Model allows a physical device to be handled
-> > by only a single driver. But at present, both shpchp and portdrv_pci
-> > claim PCI_CLASS_BRIDGE_PCI, and touch devices_kset. This causes a
-> > few problems, one is the wrong shutdown seq of devices, owing to the
-> > broken devices_kset.
->
-> How can they both touch devices_kset?  Once one driver has claimed the
-> device it should not be available to others.
->
-Unfortunately, it could be.  There are two code path for do_one_initcall
-kernel_init->..->do_one_initcall->pcie_portdrv_init
-And
-load_module->do_init_module->do_one_initcall->shpcd_init
-> > +     /* do not claim pcie port device */
-> > +     if (pci_is_pcie(dev) &&
-> > +         ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) ||
-> > +          (pci_pcie_type(dev) == PCI_EXP_TYPE_UPSTREAM) ||
-> > +          (pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM)))
-> > +             return -ENODEV;
->
-> No need for the inner braces.
+On Sun, Apr 08, 2018 at 09:44:57PM +0300, Meelis Roos wrote:
+> This is a followup on the thread https://lkml.org/lkml/2015/10/7/135 and 
+> corresponding https://bugzilla.kernel.org/show_bug.cgi?id=117191 entry.
+> 
+> I saw some sparc64 PCI allocation changes in yesterdays git and compiled 
+> 4.16.0-10242-gf605ba9 on most of my sparc64 machines to test if the PCI 
+> BAR allocation problems introduced in 4.3 were fixed on some of them. 
+> Alas, no change at all - of the test machines, none showed any changes 
+> in the error messages in "dmesg | grep BAR".
+> 
+> There was one test machine, T1000 with no addon cards, that did not 
+> encounter any problem, before or after the recent patch. All the other 
+> test machines tried still have the BAR allocation problems.
+> 
+> The errors seem to cluster into 3 categories:
+> 
+> 1. many devices fail BAR allocations
+> 2. one of the Davicom Ethernet devices fails BAR allocation
+> 3. Uli ISA bridge fails BAR allocation.
+> 
+> Full current dmesg and lspci info is also available if there is any 
+> interest. I did not include it all here, which machines are interesting?
 
-OK.
+Hi Meelis,
 
-Thanks,
-Pingfan
+Fixes for the worst of these issues are in v4.18-rc1.
+
+I think there are still cases where we will complain about conflicts.
+Some of these look like they result from OF/DT descriptions that
+contain conflicts, and they may not cause a problem other than the
+message itself.
+
+If you have a chance to try out v4.18-rc1 or later and if you still
+see things broken, please let me know and include the dmesg log.
+
+Bjorn
