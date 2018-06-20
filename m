@@ -1,222 +1,268 @@
-Return-Path: <SRS0=hNSE=JH=gmail.com=rajatxjain@kernel.org>
-Return-Path: <SRS0=hNSE=JH=gmail.com=rajatxjain@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <20180621131734.GA14136@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180522222805.80314-1-rajatja@google.com> <20180620234147.48438-1-rajatja@google.com>
- <20180621131734.GA14136@bhelgaas-glaptop.roam.corp.google.com>
-From: Rajat Jain <rajatxjain@gmail.com>
-Date: Thu, 21 Jun 2018 13:41:08 -0700
-Message-ID: <CAA93t1o0EgL+wJ3tkE03iJSD=qc2zXQHXdNzUFg5K8awUoezNA@mail.gmail.com>
-Subject: Re: [PATCH v5 1/5] PCI/AER: Define and allocate aer_stats structure
- for AER capable devices
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Rajat Jain <rajatja@google.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>, Philippe Ombredanne <pombredanne@nexb.com>,
-	Kate Stewart <kstewart@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Frederick Lawler <fred@fredlawl.com>,
-	Oza Pawandeep <poza@codeaurora.org>, Keith Busch <keith.busch@intel.com>,
-	Alexandru Gagniuc <mr.nuke.me@gmail.com>, Thomas Tai <thomas.tai@oracle.com>,
-	"Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci <linux-pci@vger.kernel.org>,
-	linux-doc <linux-doc@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jes Sorensen <jsorensen@fb.com>,
-	Kyle McMartin <jkkm@fb.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1528164985-14099-1-git-send-email-okaya@codeaurora.org>
+References: <1528164985-14099-1-git-send-email-okaya@codeaurora.org>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 20 Jun 2018 16:46:02 +0300
+Message-ID: <CAHp75VekLHxB43b=7jCvuqhibz8ynfQGhwFXHkM+0orNCETjVA@mail.gmail.com>
+Subject: Re: [PATCH V4] PCI: move early dump functionality from x86 arch into
+ the common code
+To: Sinan Kaya <okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Kate Stewart <kstewart@linuxfoundation.org>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ linux-pci@vger.kernel.org, Petr Tesarik <ptesarik@suse.cz>,
+ Ram Pai <linuxram@us.ibm.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>,
+ "H. Peter Anvin" <hpa@zytor.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+ Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
+ Timur Tabi <timur@codeaurora.org>,
+ "maintainer:X86 ARCHITECTURE \(32-BIT AND 64-BIT\)" <x86@kernel.org>,
+ Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
+ Thymo van Beers <thymovanbeers@gmail.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Tom Lendacky <thomas.lendacky@amd.com>, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-arm-msm@vger.kernel.org, Frederic Weisbecker <frederic@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+ Juergen Gross <jgross@suse.com>, Dou Liyang <douly.fnst@cn.fujitsu.com>,
+ Borislav Petkov <bp@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ Philippe Ombredanne <pombredanne@nexb.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 21, 2018 at 6:17 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Jun 20, 2018 at 04:41:43PM -0700, Rajat Jain wrote:
->> Define a structure to hold the AER statistics. There are 2 groups
->> of statistics: dev_* counters that are to be collected for all AER
->> capable devices and rootport_* counters that are collected for all
->> (AER capable) rootports only. Allocate and free this structure when
->> device is added or released (thus counters survive the lifetime of the
->> device).
->>
->> Signed-off-by: Rajat Jain <rajatja@google.com>
->> ---
->> v5: Same as v4
->> v4: Same as v3
->> v3: Merge everything in aer.c
->>
->>  drivers/pci/pcie/aer.c | 60 ++++++++++++++++++++++++++++++++++++++++++
->>  drivers/pci/probe.c    |  1 +
->>  include/linux/pci.h    |  3 +++
->>  3 files changed, 64 insertions(+)
->>
->> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
->> index a2e88386af28..f9fa994b6c33 100644
->> --- a/drivers/pci/pcie/aer.c
->> +++ b/drivers/pci/pcie/aer.c
->> @@ -33,6 +33,9 @@
->>  #define AER_ERROR_SOURCES_MAX                100
->>  #define AER_MAX_MULTI_ERR_DEVICES    5       /* Not likely to have more */
->>
->> +#define AER_MAX_TYPEOF_CORRECTABLE_ERRS 16   /* as per PCI_ERR_COR_STATUS */
->> +#define AER_MAX_TYPEOF_UNCORRECTABLE_ERRS 26 /* as per PCI_ERR_UNCOR_STATUS*/
->> +
->>  struct aer_err_info {
->>       struct pci_dev *dev[AER_MAX_MULTI_ERR_DEVICES];
->>       int error_dev_num;
->> @@ -76,6 +79,40 @@ struct aer_rpc {
->>                                        */
->>  };
->>
->> +/* AER stats for the device */
->> +struct aer_stats {
->> +
->> +     /*
->> +      * Fields for all AER capable devices. They indicate the errors
->> +      * "as seen by this device". Note that this may mean that if an
->> +      * end point is causing problems, the AER counters may increment
->> +      * at its link partner (e.g. root port) because the errors will be
->> +      * "seen" by the link partner and not the the problematic end point
->> +      * itself (which may report all counters as 0 as it never saw any
->> +      * problems).
->> +      */
->> +     /* Individual counters for different type of correctable errors */
->> +     u64 dev_cor_errs[AER_MAX_TYPEOF_CORRECTABLE_ERRS];
->> +     /* Individual counters for different type of uncorrectable errors */
->> +     u64 dev_uncor_errs[AER_MAX_TYPEOF_UNCORRECTABLE_ERRS];
->> +     /* Total number of correctable errors seen by this device */
->> +     u64 dev_total_cor_errs;
->> +     /* Total number of fatal uncorrectable errors seen by this device */
->> +     u64 dev_total_fatal_errs;
->> +     /* Total number of fatal uncorrectable errors seen by this device */
->> +     u64 dev_total_nonfatal_errs;
->> +
->> +     /*
->> +      * Fields for Root ports only, these indicate the total number of
->> +      * ERR_COR, ERR_FATAL, and ERR_NONFATAL messages received by the
->> +      * rootport, INCLUDING the ones that are generated internally (by
->> +      * the rootport itself)
+On Tue, Jun 5, 2018 at 5:16 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> Move early dump functionality into common code so that it is available for
+> all archtiectures. No need to carry arch specific reads around as the read
+> hooks are already initialized by the time pci_setup_device() is getting
+> called during scan.
 >
-> Strictly speaking, I think these are applicable for both root ports
-> and root complex event collectors, right?
 
-Correct, I will reword this comment to state this.
+It didn't break my setup on x86 at least. Thus,
 
+Tested-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  Documentation/admin-guide/kernel-parameters.txt |  2 +-
+>  arch/x86/include/asm/pci-direct.h               |  4 ---
+>  arch/x86/kernel/setup.c                         |  5 ---
+>  arch/x86/pci/common.c                           |  4 ---
+>  arch/x86/pci/early.c                            | 44 -------------------------
+>  drivers/pci/pci.c                               |  5 +++
+>  drivers/pci/pci.h                               |  1 +
+>  drivers/pci/probe.c                             | 19 +++++++++++
+>  8 files changed, 26 insertions(+), 58 deletions(-)
 >
->> +      */
->> +     u64 rootport_total_cor_errs;
->> +     u64 rootport_total_fatal_errs;
->> +     u64 rootport_total_nonfatal_errs;
->> +};
->> +
->>  #define AER_LOG_TLP_MASKS            (PCI_ERR_UNC_POISON_TLP|        \
->>                                       PCI_ERR_UNC_ECRC|               \
->>                                       PCI_ERR_UNC_UNSUP|              \
->> @@ -402,12 +439,35 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
->>       return 0;
->>  }
->>
->> +static int pci_aer_stats_init(struct pci_dev *pdev)
->> +{
->> +     pdev->aer_stats = kzalloc(sizeof(struct aer_stats), GFP_KERNEL);
->> +     if (!pdev->aer_stats) {
->> +             dev_err(&pdev->dev, "No memory for aer_stats\n");
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index e490902..e64f1d8 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -2995,7 +2995,7 @@
+>                         See also Documentation/blockdev/paride.txt.
 >
-> pci_err(), if we need the message at all.
+>         pci=option[,option...]  [PCI] various PCI subsystem options:
+> -               earlydump       [X86] dump PCI config space before the kernel
+> +               earlydump       dump PCI config space before the kernel
+>                                 changes anything
+>                 off             [X86] don't probe for the PCI bus
+>                 bios            [X86-32] force use of PCI BIOS, don't access
+> diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
+> index e1084f7..94597a3 100644
+> --- a/arch/x86/include/asm/pci-direct.h
+> +++ b/arch/x86/include/asm/pci-direct.h
+> @@ -15,8 +15,4 @@ extern void write_pci_config_byte(u8 bus, u8 slot, u8 func, u8 offset, u8 val);
+>  extern void write_pci_config_16(u8 bus, u8 slot, u8 func, u8 offset, u16 val);
 >
-> Based on c7abb2352c29 ("PCI: Remove unnecessary messages for memory
-> allocation failures"), I'd be inclined to drop the message completely.
-
-Will do.
-
+>  extern int early_pci_allowed(void);
+> -
+> -extern unsigned int pci_early_dump_regs;
+> -extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
+> -extern void early_dump_pci_devices(void);
+>  #endif /* _ASM_X86_PCI_DIRECT_H */
+> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+> index 2f86d88..480f250 100644
+> --- a/arch/x86/kernel/setup.c
+> +++ b/arch/x86/kernel/setup.c
+> @@ -991,11 +991,6 @@ void __init setup_arch(char **cmdline_p)
+>                 setup_clear_cpu_cap(X86_FEATURE_APIC);
+>         }
 >
->> +             return -ENOMEM;
->> +     }
->> +     return 0;
->> +}
->> +
->> +static void pci_aer_stats_exit(struct pci_dev *pdev)
->> +{
->> +     kfree(pdev->aer_stats);
->> +     pdev->aer_stats = NULL;
->> +}
->> +
->>  int pci_aer_init(struct pci_dev *dev)
->>  {
->>       dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
->> +     if (!dev->aer_cap || pci_aer_stats_init(dev))
->> +             return -EIO;
+> -#ifdef CONFIG_PCI
+> -       if (pci_early_dump_regs)
+> -               early_dump_pci_devices();
+> -#endif
+> -
+>         e820__reserve_setup_data();
+>         e820__finish_early_params();
 >
-> This skips pci_cleanup_aer_error_status_regs() if the kzalloc() fails.
-> I think we should still do pci_cleanup_aer_error_status_regs(), even
-> if the alloc fails.
-
-Will do.
-
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 563049c..d4ec117 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -22,7 +22,6 @@
+>  unsigned int pci_probe = PCI_PROBE_BIOS | PCI_PROBE_CONF1 | PCI_PROBE_CONF2 |
+>                                 PCI_PROBE_MMCONF;
 >
-> Nobody checks the return value of pci_aer_init(), so I think you can
-> simplify this by making these functions void.
-
-Will do.
-
+> -unsigned int pci_early_dump_regs;
+>  static int pci_bf_sort;
+>  int pci_routeirq;
+>  int noioapicquirk;
+> @@ -599,9 +598,6 @@ char *__init pcibios_setup(char *str)
+>                 pci_probe |= PCI_BIG_ROOT_WINDOW;
+>                 return NULL;
+>  #endif
+> -       } else if (!strcmp(str, "earlydump")) {
+> -               pci_early_dump_regs = 1;
+> -               return NULL;
+>         } else if (!strcmp(str, "routeirq")) {
+>                 pci_routeirq = 1;
+>                 return NULL;
+> diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
+> index e5f753c..f5fc953 100644
+> --- a/arch/x86/pci/early.c
+> +++ b/arch/x86/pci/early.c
+> @@ -57,47 +57,3 @@ int early_pci_allowed(void)
+>                         PCI_PROBE_CONF1;
+>  }
 >
-> Maybe even squash them together, i.e., do the kzalloc() directly in
-> pci_aer_init() and the kfree() directly in pci_aer_exit()?
-
-Will do.
-
+> -void early_dump_pci_device(u8 bus, u8 slot, u8 func)
+> -{
+> -       u32 value[256 / 4];
+> -       int i;
+> -
+> -       pr_info("pci 0000:%02x:%02x.%d config space:\n", bus, slot, func);
+> -
+> -       for (i = 0; i < 256; i += 4)
+> -               value[i / 4] = read_pci_config(bus, slot, func, i);
+> -
+> -       print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value, 256, false);
+> -}
+> -
+> -void early_dump_pci_devices(void)
+> -{
+> -       unsigned bus, slot, func;
+> -
+> -       if (!early_pci_allowed())
+> -               return;
+> -
+> -       for (bus = 0; bus < 256; bus++) {
+> -               for (slot = 0; slot < 32; slot++) {
+> -                       for (func = 0; func < 8; func++) {
+> -                               u32 class;
+> -                               u8 type;
+> -
+> -                               class = read_pci_config(bus, slot, func,
+> -                                                       PCI_CLASS_REVISION);
+> -                               if (class == 0xffffffff)
+> -                                       continue;
+> -
+> -                               early_dump_pci_device(bus, slot, func);
+> -
+> -                               if (func == 0) {
+> -                                       type = read_pci_config_byte(bus, slot,
+> -                                                                   func,
+> -                                                              PCI_HEADER_TYPE);
+> -                                       if (!(type & 0x80))
+> -                                               break;
+> -                               }
+> -                       }
+> -               }
+> -       }
+> -}
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 97acba7..04052dc 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -115,6 +115,9 @@ static bool pcie_ari_disabled;
+>  /* If set, the PCIe ATS capability will not be used. */
+>  static bool pcie_ats_disabled;
 >
->>       return pci_cleanup_aer_error_status_regs(dev);
->>  }
->>
->> +void pci_aer_exit(struct pci_dev *dev)
->> +{
->> +     pci_aer_stats_exit(dev);
->> +}
->> +
->>  #define AER_AGENT_RECEIVER           0
->>  #define AER_AGENT_REQUESTER          1
->>  #define AER_AGENT_COMPLETER          2
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index ac876e32de4b..48edd0c9e4bc 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -2064,6 +2064,7 @@ static void pci_configure_device(struct pci_dev *dev)
->>
->>  static void pci_release_capabilities(struct pci_dev *dev)
->>  {
->> +     pci_aer_exit(dev);
->>       pci_vpd_release(dev);
->>       pci_iov_release(dev);
->>       pci_free_cap_save_buffers(dev);
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 340029b2fb38..8d59c6c19a19 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -299,6 +299,7 @@ struct pci_dev {
->>       u8              hdr_type;       /* PCI header type (`multi' flag masked out) */
->>  #ifdef CONFIG_PCIEAER
->>       u16             aer_cap;        /* AER capability offset */
->> +     struct aer_stats *aer_stats;    /* AER stats for this device */
->>  #endif
->>       u8              pcie_cap;       /* PCIe capability offset */
->>       u8              msi_cap;        /* MSI capability offset */
->> @@ -1471,10 +1472,12 @@ static inline bool pcie_aspm_support_enabled(void) { return false; }
->>  void pci_no_aer(void);
->>  bool pci_aer_available(void);
->>  int pci_aer_init(struct pci_dev *dev);
->> +void pci_aer_exit(struct pci_dev *dev);
+> +/* If set, the PCI config space of each device is printed during boot. */
+> +bool pci_early_dump;
+> +
+>  bool pci_ats_disabled(void)
+>  {
+>         return pcie_ats_disabled;
+> @@ -5805,6 +5808,8 @@ static int __init pci_setup(char *str)
+>                                 pcie_ats_disabled = true;
+>                         } else if (!strcmp(str, "noaer")) {
+>                                 pci_no_aer();
+> +                       } else if (!strcmp(str, "earlydump")) {
+> +                               pci_early_dump = true;
+>                         } else if (!strncmp(str, "realloc=", 8)) {
+>                                 pci_realloc_get_opt(str + 8);
+>                         } else if (!strncmp(str, "realloc", 7)) {
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index c358e7a0..c33265e 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -7,6 +7,7 @@
+>  #define PCI_VSEC_ID_INTEL_TBT  0x1234  /* Thunderbolt */
 >
-> With the exception of pci_aer_available(), these are only used inside
-> drivers/pci.  This might be a good opportunity to move those private
-> things to drivers/pci/pci.h (in a separate patch, of course).
-
-
-Will do.
-
+>  extern const unsigned char pcie_link_speed[];
+> +extern bool pci_early_dump;
 >
->>  #else
->>  static inline void pci_no_aer(void) { }
->>  static inline bool pci_aer_available(void) { return false; }
->>  static inline int pci_aer_init(struct pci_dev *d) { return -ENODEV; }
->> +static inline void pci_aer_exit(struct pci_dev *d) { }
->>  #endif
->>
->>  #ifdef CONFIG_PCIE_ECRC
->> --
->> 2.18.0.rc1.244.gcf134e6275-goog
->>
+>  bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 56771f3..3678f0a 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1545,6 +1545,23 @@ static int pci_intx_mask_broken(struct pci_dev *dev)
+>         return 0;
+>  }
+>
+> +static void early_dump_pci_device(struct pci_dev *pdev)
+> +{
+> +       u32 value[256 / 4];
+> +       int i;
+> +
+> +       if (!pci_early_dump)
+> +               return;
+> +
+> +       pci_info(pdev, "config space:\n");
+> +
+> +       for (i = 0; i < 256; i += 4)
+> +               pci_read_config_dword(pdev, i, &value[i / 4]);
+> +
+> +       print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value,
+> +                      256, false);
+> +}
+> +
+>  /**
+>   * pci_setup_device - Fill in class and map information of a device
+>   * @dev: the device structure to fill
+> @@ -1594,6 +1611,8 @@ int pci_setup_device(struct pci_dev *dev)
+>         pci_printk(KERN_DEBUG, dev, "[%04x:%04x] type %02x class %#08x\n",
+>                    dev->vendor, dev->device, dev->hdr_type, dev->class);
+>
+> +       early_dump_pci_device(dev);
+> +
+>         /* Need to have dev->class ready */
+>         dev->cfg_size = pci_cfg_space_size(dev);
+>
+> --
+> 2.7.4
+>
+
+
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
