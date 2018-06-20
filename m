@@ -1,57 +1,40 @@
-Return-Path: <SRS0=8/78=I4=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=8/78=I4=h08.hostsharing.net=foo00@kernel.org>
-Date: Sun, 10 Jun 2018 18:23:29 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH v1 0/9] PCI/portdrv: Squash into one file
-Message-ID: <20180610162329.GA30241@wunner.de>
-References: <152848853199.14051.12670957565366345798.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20180608203810.GA19717@wunner.de>
- <CAErSpo68YimHfzyLC6CqukPGb=5di6oMFth1rG3Ub3ZwVha7=g@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.37.59]:52956 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753541AbeFTTKG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2018 15:10:06 -0400
+From: Alexey Brodkin <Alexey.Brodkin@synopsys.com>
+To: "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>
+CC: "robh@kernel.org" <robh@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Eugeniy.Paltsev@synopsys.com" <Eugeniy.Paltsev@synopsys.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Vineet Gupta <Vineet.Gupta1@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-snps-arc@lists.infradead.org"
+        <linux-snps-arc@lists.infradead.org>
+Subject: Re: [PATCH v2] ARC: Add PCIe support for ARC HSDK platform
+Date: Wed, 20 Jun 2018 19:09:59 +0000
+Message-ID: <ba16de7195ab84cc6f29f1a7ec2844dbc202392d.camel@synopsys.com>
+References: <9f41b2f9d6da018563fa35aee462ddb60afd922f.1529505192.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <9f41b2f9d6da018563fa35aee462ddb60afd922f.1529505192.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo68YimHfzyLC6CqukPGb=5di6oMFth1rG3Ub3ZwVha7=g@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[cc += linux-pci, sorry, forgot to copy the list when first replying to
-your message, I hope this is appropriate]
-
-On Fri, Jun 08, 2018 at 04:06:39PM -0500, Bjorn Helgaas wrote:
-> On Fri, Jun 8, 2018 at 3:38 PM Lukas Wunner <lukas@wunner.de> wrote:
-> > On Fri, Jun 08, 2018 at 03:12:00PM -0500, Bjorn Helgaas wrote:
-> > > The portdrv code is scattered across several files, which makes it a bit
-> > > of a hassle to browse.  Consolidate it all in a single file.
-> >
-> > Why?  By that logic we could concatinate the whole kernel into a single
-> > file.  The rationale of splitting into multiple files is to separate
-> > distinct components.  In the case of portdrv, this means separating
-> > the portion that interfaces with the PCI core (for the port's pci_dev)
-> > from the portion that interfaces with the service drivers.
-> 
-> My experience with portdrv and AER and all the hotplug drivers is that
-> I want to look at something but I don't know the exact name.  For
-> example, I might want to look at the interrupt handling code.  One
-> plausible way is to start up cscope, search for files "aer/aer", guess
-> which file contains it, find it's wrong, try the next one, etc.  If I
-> were smarter I suppose I would search for callers of request_irq() and
-> grep out "aer".  But that all feels like a hassle.
-
-"git grep" does a pretty good job for me to locate stuff like this, e.g.:
-
-Locate request_irq in all of AER:
-git grep request_irq drivers/pci/pcie/aer
-(the aer directory can be omitted if you first cd into it)
-
-Locate request_irq in all of AER in Linus' current tree:
-git grep request_irq torvalds/master -- drivers/pci/pcie/aer
-(assuming that the git remote of Linus' tree is named "torvalds")
-
-Use -e if you grep for something prefixed with a dash, such as callback
-invocations:
-git grep -e '->reset_slot' drivers/pci
-
-If you're in a subdirectory but would like to search the entire tree:
-git grep -e '->reset_slot' :/
-
-And so on...
+SGkgR3VzdGF2bywNCg0KT24gV2VkLCAyMDE4LTA2LTIwIGF0IDE3OjM2ICswMTAwLCBHdXN0YXZv
+IFBpbWVudGVsIHdyb3RlOg0KPiBBZGQgUENJIHN1cHBvcnQgdG8gdGhlIEFSQyBIU0RLIHBsYXRm
+b3JtIGFsbG93aW5nIHRvIHVzZSB0aGUgZ2VuZXJpYyBQQ0kNCj4gc2V0dXAgZnVuY3Rpb25zLg0K
+PiANCj4gU2lnbmVkLW9mZi1ieTogR3VzdGF2byBQaW1lbnRlbCA8Z3VzdGF2by5waW1lbnRlbEBz
+eW5vcHN5cy5jb20+DQo+IC0tLQ0KPiBDaGFuZ2UgdjEtPnYyOg0KPiAgLSBTcGxpdCBpbml0aWFs
+IHBhdGNoLCBmb2xsb3dpbmcgQWxleGV5IEJyb2RraW4gc3VnZ2VzdGlvbi4NCj4gDQo+ICBhcmNo
+L2FyYy9wbGF0LWhzZGsvS2NvbmZpZyB8IDEgKw0KPiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0
+aW9uKCspDQo+IA0KPiBkaWZmIC0tZ2l0IGEvYXJjaC9hcmMvcGxhdC1oc2RrL0tjb25maWcgYi9h
+cmNoL2FyYy9wbGF0LWhzZGsvS2NvbmZpZw0KPiBpbmRleCAxOWFiM2NmLi41NTZiYzVlIDEwMDY0
+NA0KPiAtLS0gYS9hcmNoL2FyYy9wbGF0LWhzZGsvS2NvbmZpZw0KPiArKysgYi9hcmNoL2FyYy9w
+bGF0LWhzZGsvS2NvbmZpZw0KPiBAQCAtOSwzICs5LDQgQEAgbWVudWNvbmZpZyBBUkNfU09DX0hT
+REsNCj4gIAlib29sICJBUkMgSFMgRGV2ZWxvcG1lbnQgS2l0IFNPQyINCj4gIAlzZWxlY3QgQ0xL
+X0hTREsNCj4gIAlzZWxlY3QgUkVTRVRfSFNESw0KPiArCXNlbGVjdCBNSUdIVF9IQVZFX1BDSQ0K
+DQpBZGRpbmcgQmpvcm4gYW5kIGxpbnV4LXBjaSBtYWlsaW5nIGxpc3RzLCBvdGhlcndpc2UuLi4N
+Cg0KQWNrZWQtYnk6IEFsZXhleSBCcm9ka2luIDxhYnJvZGtpbkBzeW5vcHN5cy5jb20+DQoNCg==
