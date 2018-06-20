@@ -1,64 +1,145 @@
-Return-Path: <SRS0=4R7u=JH=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=4R7u=JH=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Thu, 21 Jun 2018 17:48:29 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/5] Improve Broadcom PAXC support
-Message-ID: <20180621164821.GA14519@e107981-ln.cambridge.arm.com>
-References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
- <45945371-3cd7-102d-bb47-69a60435542b@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45945371-3cd7-102d-bb47-69a60435542b@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:20585 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933433AbeFTVfX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Jun 2018 17:35:23 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 4/7] PCI/AER: API for obtaining AER information
+Date: Wed, 20 Jun 2018 15:38:30 -0600
+Message-Id: <20180620213833.25072-4-keith.busch@intel.com>
+In-Reply-To: <20180620213833.25072-1-keith.busch@intel.com>
+References: <20180620213833.25072-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 20, 2018 at 10:26:28AM -0700, Ray Jui wrote:
-> Hi Lorenzo/Bjorn,
-> 
-> Could you please help to review this patch series when you have time?
-> 
-> I believe I have addressed major comment in v1 from Bjorn and answered all
-> questions from Lorenzo.
+This exports some commone AER functions and structures for other drivers
+to use. Since this is making the function externally visible, appending
+"aer_" prefix to the function name.
 
-I will have a look next week, sorry for the delay.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/aer.c | 30 +++++-------------------------
+ include/linux/aer.h    | 24 ++++++++++++++++++++++++
+ 2 files changed, 29 insertions(+), 25 deletions(-)
 
-Thanks,
-Lorenzo
-
-> Thanks,
-> 
-> Ray
-> 
-> On 6/11/2018 5:21 PM, Ray Jui wrote:
-> >This patch series improves the Broadcom PAXC support by 1) adding more
-> >quirks for specific versions of PAXC controllers; 2) adding logic to
-> >reject internally unconfigured physical functions from the embedded
-> >network processor acting as endpoint; 3) reducing verbose print level
-> >in the outbound/inbound mapping code
-> >
-> >This patch series is based off v4.17 and is available on GIHUB:
-> >repo: https://github.com/Broadcom/arm64-linux.git
-> >branch: sr-paxc-v2
-> >
-> >Changes since v1:
-> >  - consolidate 2 PAXC related patch series into 1
-> >  - change the way how the capability list corruption is handled, per
-> >recommendation from Bjorn. Now handle and fix up the corruption at
-> >the config register read
-> >  - rebase to v4.17
-> >
-> >Ray Jui (5):
-> >   PCI: iproc: Activate PAXC bridge quirk for more devices
-> >   PCI: iproc: Fix up corrupted PAXC root complex config registers
-> >   PCI: iproc: Disable MSI parsing in certain PAXC blocks
-> >   PCI: iproc: Reject unconfigured physical functions from PAXC
-> >   PCI: iproc: Reduce inbound/outbound mapping print level
-> >
-> >  drivers/pci/host/pcie-iproc.c | 159 +++++++++++++++++++++++++++++++++++-------
-> >  drivers/pci/host/pcie-iproc.h |   8 +++
-> >  drivers/pci/quirks.c          |   3 +
-> >  3 files changed, 144 insertions(+), 26 deletions(-)
-> >
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index a2e88386af28..0a60275f0582 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -31,26 +31,6 @@
+ #include "portdrv.h"
+ 
+ #define AER_ERROR_SOURCES_MAX		100
+-#define AER_MAX_MULTI_ERR_DEVICES	5	/* Not likely to have more */
+-
+-struct aer_err_info {
+-	struct pci_dev *dev[AER_MAX_MULTI_ERR_DEVICES];
+-	int error_dev_num;
+-
+-	unsigned int id:16;
+-
+-	unsigned int severity:2;	/* 0:NONFATAL | 1:FATAL | 2:COR */
+-	unsigned int __pad1:5;
+-	unsigned int multi_error_valid:1;
+-
+-	unsigned int first_error:5;
+-	unsigned int __pad2:2;
+-	unsigned int tlp_header_valid:1;
+-
+-	unsigned int status;		/* COR/UNCOR Error Status */
+-	unsigned int mask;		/* COR/UNCOR Error Mask */
+-	struct aer_header_log_regs tlp;	/* TLP Header */
+-};
+ 
+ struct aer_err_source {
+ 	unsigned int status;
+@@ -547,7 +527,7 @@ static void __aer_print_error(struct pci_dev *dev,
+ 	}
+ }
+ 
+-static void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
++void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ {
+ 	int layer, agent;
+ 	int id = ((dev->bus->number << 8) | dev->devfn);
+@@ -876,7 +856,7 @@ EXPORT_SYMBOL_GPL(aer_recover_queue);
+ #endif
+ 
+ /**
+- * get_device_error_info - read error status from dev and store it to info
++ * aer_get_device_error_info - read error status from dev and store it to info
+  * @dev: pointer to the device expected to have a error record
+  * @info: pointer to structure to store the error record
+  *
+@@ -884,7 +864,7 @@ EXPORT_SYMBOL_GPL(aer_recover_queue);
+  *
+  * Note that @info is reused among all error devices. Clear fields properly.
+  */
+-static int get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
++int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+ {
+ 	int pos, temp;
+ 
+@@ -942,11 +922,11 @@ static inline void aer_process_err_devices(struct aer_err_info *e_info)
+ 
+ 	/* Report all before handle them, not to lost records by reset etc. */
+ 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+-		if (get_device_error_info(e_info->dev[i], e_info))
++		if (aer_get_device_error_info(e_info->dev[i], e_info))
+ 			aer_print_error(e_info->dev[i], e_info);
+ 	}
+ 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+-		if (get_device_error_info(e_info->dev[i], e_info))
++		if (aer_get_device_error_info(e_info->dev[i], e_info))
+ 			handle_error_source(e_info->dev[i], e_info);
+ 	}
+ }
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 514bffa11dbb..58fa04cc7407 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -40,6 +40,27 @@ struct aer_capability_regs {
+ 	u16 uncor_err_source;
+ };
+ 
++#define AER_MAX_MULTI_ERR_DEVICES	5	/* Not likely to have more */
++
++struct aer_err_info {
++	struct pci_dev *dev[AER_MAX_MULTI_ERR_DEVICES];
++	int error_dev_num;
++
++	unsigned int id:16;
++
++	unsigned int severity:2;	/* 0:NONFATAL | 1:FATAL | 2:COR */
++	unsigned int __pad1:5;
++	unsigned int multi_error_valid:1;
++
++	unsigned int first_error:5;
++	unsigned int __pad2:2;
++	unsigned int tlp_header_valid:1;
++
++	unsigned int status;		/* COR/UNCOR Error Status */
++	unsigned int mask;		/* COR/UNCOR Error Mask */
++	struct aer_header_log_regs tlp;	/* TLP Header */
++};
++
+ #if defined(CONFIG_PCIEAER)
+ /* PCIe port driver needs this function to enable AER */
+ int pci_enable_pcie_error_reporting(struct pci_dev *dev);
+@@ -65,6 +86,9 @@ static inline int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+ }
+ #endif
+ 
++int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info);
++void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
++
+ void cper_print_aer(struct pci_dev *dev, int aer_severity,
+ 		    struct aer_capability_regs *aer);
+ int cper_severity_to_aer(int cper_severity);
+-- 
+2.14.3
