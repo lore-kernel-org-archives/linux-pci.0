@@ -1,18 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 29 Jun 2018 18:30:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Subject: Re: [PATCH] PCI: Clean up resource allocation in
- devm_of_pci_get_host_bridge_resources()
-Message-ID: <20180629233034.GH40928@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1526375226.git.jan.kiszka@siemens.com>
- <3aeb2ed038cbce8fe744b614dc19d414555a7e8f.1526375226.git.jan.kiszka@siemens.com>
- <CAHp75VeUbjobse6uLeM4h_xXRUw+YUQUN+EOye67AJy77a5euQ@mail.gmail.com>
- <CAHp75VeM7_8+9QJjOypXaiBhpWP4B5KACdUQ-p3frbS3jPh=OQ@mail.gmail.com>
- <f35b2972-aa40-5397-facb-765cafe7c315@siemens.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V2 2/5] IB/hfi1: use pci_reset_bus() for initiating pci
+ secondary bus reset
+Date: Wed, 20 Jun 2018 00:12:55 -0400
+Message-Id: <1529467995-28780-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1529467995-28780-1-git-send-email-okaya@codeaurora.org>
+References: <1529467995-28780-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <f35b2972-aa40-5397-facb-765cafe7c315@siemens.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,71 +17,47 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, linux-pci@vger.kernel.org,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Andy Shevchenko <andy.shevchenko@gmail.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Vladimir Zapolskiy <vladimir_zapolskiy@mentor.com>,
- Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
+Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>,
+ "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
+ linux-arm-msm@vger.kernel.org,
+ Dennis Dalessandro <dennis.dalessandro@intel.com>,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Doug Ledford <dledford@redhat.com>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 16, 2018 at 02:31:44PM +0200, Jan Kiszka wrote:
-> Instead of first allocating and then freeing memory for struct resource
-> in case we cannot parse a PCI resource from the device tree, work
-> against a local struct and kmemdup it when we decide to go with it.
-> 
-> Suggested-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Getting ready to hide pci_reset_bridge_secondary_bus() from the drivers.
+pci_reset_bridge_secondary_bus() should only be used internally by the
+PCI code itself.
 
-Applied with Vladimir's reviewed-by to pci/resource for v4.19, thanks!
+Other drivers should rely on higher level pci_reset_xxx() API.
 
-> ---
->  drivers/pci/of.c | 14 ++++++--------
->  1 file changed, 6 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index b06585a1da75..fc0f906c5c25 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -266,7 +266,7 @@ int devm_of_pci_get_host_bridge_resources(struct device *dev,
->  			struct list_head *resources, resource_size_t *io_base)
->  {
->  	struct device_node *dev_node = dev->of_node;
-> -	struct resource *res;
-> +	struct resource *res, tmp_res;
->  	struct resource *bus_range;
->  	struct of_pci_range range;
->  	struct of_pci_range_parser parser;
-> @@ -320,18 +320,16 @@ int devm_of_pci_get_host_bridge_resources(struct device *dev,
->  		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
->  			continue;
->  
-> -		res = devm_kzalloc(dev, sizeof(struct resource), GFP_KERNEL);
-> +		err = of_pci_range_to_resource(&range, dev_node, &tmp_res);
-> +		if (err)
-> +			continue;
-> +
-> +		res = devm_kmemdup(dev, &tmp_res, sizeof(tmp_res), GFP_KERNEL);
->  		if (!res) {
->  			err = -ENOMEM;
->  			goto failed;
->  		}
->  
-> -		err = of_pci_range_to_resource(&range, dev_node, res);
-> -		if (err) {
-> -			devm_kfree(dev, res);
-> -			continue;
-> -		}
-> -
->  		if (resource_type(res) == IORESOURCE_IO) {
->  			if (!io_base) {
->  				dev_err(dev,
-> -- 
-> 2.13.6
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/infiniband/hw/hfi1/pcie.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
+index 4d4371b..a6d695a 100644
+--- a/drivers/infiniband/hw/hfi1/pcie.c
++++ b/drivers/infiniband/hw/hfi1/pcie.c
+@@ -905,9 +905,7 @@ static int trigger_sbr(struct hfi1_devdata *dd)
+ 	 * delay after a reset is required.  Per spec requirements,
+ 	 * the link is either working or not after that point.
+ 	 */
+-	pci_reset_bridge_secondary_bus(dev->bus->self);
+-
+-	return 0;
++	return pci_reset_bus(dev->bus);
+ }
+ 
+ /*
+-- 
+2.7.4
+
 
 _______________________________________________
 linux-arm-kernel mailing list
