@@ -1,66 +1,161 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37378 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935912AbeFSV5W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Jun 2018 17:57:22 -0400
-Date: Tue, 19 Jun 2018 16:57:20 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>, bhelgaas@google.com,
-        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, Dongdong Liu <liudongdong3@huawei.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: DPC: Clear AER status bits before disabling port
- containment
-Message-ID: <20180619215720.GE33049@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180516213306.27027-1-mr.nuke.me@gmail.com>
- <605540c0-b6c5-89a2-9d50-12a3005d9f88@codeaurora.org>
- <20180516231220.GA21659@localhost.localdomain>
+Return-Path: <SRS0=rGz8=JG=flex--rajatja.bounces.google.com=3MuMqWwcKB4Myhqh0qhnvvnsl.jvtolsnhhzrlyuls.vyn@kernel.org>
+Return-Path: <SRS0=rGz8=JG=flex--rajatja.bounces.google.com=3MuMqWwcKB4Myhqh0qhnvvnsl.jvtolsnhhzrlyuls.vyn@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180516231220.GA21659@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+Date: Wed, 20 Jun 2018 16:28:38 -0700
+In-Reply-To: <20180620232841.43922-1-rajatja@google.com>
+Message-Id: <20180620232841.43922-2-rajatja@google.com>
+References: <20180522222805.80314-1-rajatja@google.com> <20180620232841.43922-1-rajatja@google.com>
+Subject: [PATCH v4 2/5] PCI/AER: Add sysfs stats for AER capable devices
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
+	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
+	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
+Cc: Rajat Jain <rajatja@google.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 16, 2018 at 05:12:21PM -0600, Keith Busch wrote:
-> On Wed, May 16, 2018 at 06:44:22PM -0400, Sinan Kaya wrote:
-> > On 5/16/2018 5:33 PM, Alexandru Gagniuc wrote:
-> > > AER status bits are sticky, and they survive system resets. Downstream
-> > > devices are usually taken care of after re-enumerating the downstream
-> > > busses, as the AER bits are cleared during probe().
-> > > 
-> > > However, nothing clears the bits of the port which contained the
-> > > error. These sticky bits may leave some BIOSes to think that something
-> > > bad happened, and print ominous messages on next boot. To prevent this,
-> > > tidy up the AER status bits before releasing containment.
-> > > 
-> > > Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> > > ---
-> > >  drivers/pci/pcie/dpc.c | 4 ++++
-> > >  1 file changed, 4 insertions(+)
-> > > 
-> > > diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-> > > index 8c57d607e603..bf82d6936556 100644
-> > > --- a/drivers/pci/pcie/dpc.c
-> > > +++ b/drivers/pci/pcie/dpc.c
-> > > @@ -112,6 +112,10 @@ static void dpc_work(struct work_struct *work)
-> > >  		dpc->rp_pio_status = 0;
-> > >  	}
-> > >  
-> > > +	/* DPC event made a mess of our AER status bits. Clean them up. */
-> > > +	pci_cleanup_aer_error_status_regs(pdev);
-> > > +	/* TODO: Should we also use aer_print_error to log the event? */
-> > > +
-> > >  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
-> > >  		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
-> > >  
-> > > 
-> > 
-> > I think Keith has a patch to fix this. It was under review at some point.
-> 
-> Right, I do intend to following up on this, but I've had some trouble
-> finding time the last few weeks. Sorry about that, things will clear up
-> for me shortly.
+Add the following AER sysfs stats to represent the counters for each
+kind of error as seen by the device:
 
-I'll drop this (Alexandru's) patch for now, waiting for your update, Keith.
+dev_total_cor_errs
+dev_total_fatal_errs
+dev_total_nonfatal_errs
+
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+v4: Same as v3
+v3: Merge everything in aer.c, use "%llu" in place of "%llx"
+
+ drivers/pci/pci-sysfs.c |  3 ++
+ drivers/pci/pci.h       |  4 ++-
+ drivers/pci/pcie/aer.c  | 74 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 80 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 0c4653c1d2ce..9f1cb9051d7d 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1746,6 +1746,9 @@ static const struct attribute_group *pci_dev_attr_groups[] = {
+ #endif
+ 	&pci_bridge_attr_group,
+ 	&pcie_dev_attr_group,
++#ifdef CONFIG_PCIEAER
++	&aer_stats_attr_group,
++#endif
+ 	NULL,
+ };
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index c358e7a07f3f..9a28ec600225 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -181,7 +181,9 @@ extern const struct attribute_group *pci_dev_groups[];
+ extern const struct attribute_group *pcibus_groups[];
+ extern const struct device_type pci_dev_type;
+ extern const struct attribute_group *pci_bus_groups[];
+-
++#ifdef CONFIG_PCIEAER
++extern const struct attribute_group aer_stats_attr_group;
++#endif
+ 
+ /**
+  * pci_match_one_device - Tell if a PCI device structure has a matching
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index f9fa994b6c33..ce0d675d7bd3 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -573,6 +573,79 @@ static const char *aer_agent_string[] = {
+ 	"Transmitter ID"
+ };
+ 
++#define aer_stats_aggregate_attr(field)					\
++	static ssize_t							\
++	field##_show(struct device *dev, struct device_attribute *attr,	\
++		     char *buf)						\
++{									\
++	struct pci_dev *pdev = to_pci_dev(dev);				\
++	return sprintf(buf, "%llu\n", pdev->aer_stats->field);		\
++}									\
++static DEVICE_ATTR_RO(field)
++
++aer_stats_aggregate_attr(dev_total_cor_errs);
++aer_stats_aggregate_attr(dev_total_fatal_errs);
++aer_stats_aggregate_attr(dev_total_nonfatal_errs);
++
++static struct attribute *aer_stats_attrs[] __ro_after_init = {
++	&dev_attr_dev_total_cor_errs.attr,
++	&dev_attr_dev_total_fatal_errs.attr,
++	&dev_attr_dev_total_nonfatal_errs.attr,
++	NULL
++};
++
++static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
++					   struct attribute *a, int n)
++{
++	struct device *dev = kobj_to_dev(kobj);
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (!pdev->aer_stats)
++		return 0;
++
++	return a->mode;
++}
++
++const struct attribute_group aer_stats_attr_group = {
++	.name  = "aer_stats",
++	.attrs  = aer_stats_attrs,
++	.is_visible = aer_stats_attrs_are_visible,
++};
++
++static void pci_dev_aer_stats_incr(struct pci_dev *pdev,
++				   struct aer_err_info *info)
++{
++	int status, i, max = -1;
++	u64 *counter = NULL;
++	struct aer_stats *aer_stats = pdev->aer_stats;
++
++	if (!aer_stats)
++		return;
++
++	switch (info->severity) {
++	case AER_CORRECTABLE:
++		aer_stats->dev_total_cor_errs++;
++		counter = &aer_stats->dev_cor_errs[0];
++		max = AER_MAX_TYPEOF_CORRECTABLE_ERRS;
++		break;
++	case AER_NONFATAL:
++		aer_stats->dev_total_nonfatal_errs++;
++		counter = &aer_stats->dev_uncor_errs[0];
++		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
++		break;
++	case AER_FATAL:
++		aer_stats->dev_total_fatal_errs++;
++		counter = &aer_stats->dev_uncor_errs[0];
++		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
++		break;
++	}
++
++	status = (info->status & ~info->mask);
++	for (i = 0; i < max; i++)
++		if (status & (1 << i))
++			counter[i]++;
++}
++
+ static void __print_tlp_header(struct pci_dev *dev,
+ 			       struct aer_header_log_regs *t)
+ {
+@@ -605,6 +678,7 @@ static void __aer_print_error(struct pci_dev *dev,
+ 			pci_err(dev, "   [%2d] Unknown Error Bit%s\n",
+ 				i, info->first_error == i ? " (First)" : "");
+ 	}
++	pci_dev_aer_stats_incr(dev, info);
+ }
+ 
+ static void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+-- 
+2.18.0.rc1.244.gcf134e6275-goog
