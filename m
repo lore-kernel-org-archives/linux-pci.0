@@ -1,210 +1,170 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34032 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967221AbeFSVhR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Jun 2018 17:37:17 -0400
-Date: Tue, 19 Jun 2018 16:37:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jakub Kicinski <jakub.kicinski@netronome.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, Sathya Perla <sathya.perla@broadcom.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        alexander.duyck@gmail.com, john.fastabend@gmail.com,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Donald Dutile <ddutile@redhat.com>, oss-drivers@netronome.com,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
-Message-ID: <20180619213715.GC33049@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180402224652.4058-1-jakub.kicinski@netronome.com>
- <20180524235748.GD15320@bhelgaas-glaptop.roam.corp.google.com>
- <20180524182015.1af7b4c9@cakuba>
- <20180525140223.GA45098@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=hoBd=JG=flex--rajatja.bounces.google.com=3_6kpWwcKB9gL4D4ND4AIIAF8.6IGB8FA44ME8LH8F.ILA@kernel.org>
+Return-Path: <SRS0=hoBd=JG=flex--rajatja.bounces.google.com=3_6kpWwcKB9gL4D4ND4AIIAF8.6IGB8FA44ME8LH8F.ILA@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180525140223.GA45098@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Date: Tue, 19 Jun 2018 18:12:10 -0700
+In-Reply-To: <20180620011210.254601-1-rajatja@google.com>
+Message-Id: <20180620011210.254601-5-rajatja@google.com>
+References: <20180619221651.GH33049@bhelgaas-glaptop.roam.corp.google.com> <20180620011210.254601-1-rajatja@google.com>
+Subject: [PATCH v3 5/5] Documentation/ABI: Add details of PCI AER statistics
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
+	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
+	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
+Cc: Rajat Jain <rajatja@google.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2018 at 09:02:23AM -0500, Bjorn Helgaas wrote:
-> On Thu, May 24, 2018 at 06:20:15PM -0700, Jakub Kicinski wrote:
-> > Hi Bjorn!
-> > 
-> > On Thu, 24 May 2018 18:57:48 -0500, Bjorn Helgaas wrote:
-> > > On Mon, Apr 02, 2018 at 03:46:52PM -0700, Jakub Kicinski wrote:
-> > > > Some user space depends on enabling sriov_totalvfs number of VFs
-> > > > to not fail, e.g.:
-> > > > 
-> > > > $ cat .../sriov_totalvfs > .../sriov_numvfs
-> > > > 
-> > > > For devices which VF support depends on loaded FW we have the
-> > > > pci_sriov_{g,s}et_totalvfs() API.  However, this API uses 0 as
-> > > > a special "unset" value, meaning drivers can't limit sriov_totalvfs
-> > > > to 0.  Remove the special values completely and simply initialize
-> > > > driver_max_VFs to total_VFs.  Then always use driver_max_VFs.
-> > > > Add a helper for drivers to reset the VF limit back to total.  
-> > > 
-> > > I still can't really make sense out of the changelog.
-> > >
-> > > I think part of the reason it's confusing is because there are two
-> > > things going on:
-> > > 
-> > >   1) You want this:
-> > >   
-> > >        pci_sriov_set_totalvfs(dev, 0);
-> > >        x = pci_sriov_get_totalvfs(dev) 
-> > > 
-> > >      to return 0 instead of total_VFs.  That seems to connect with
-> > >      your subject line.  It means "sriov_totalvfs" in sysfs could be
-> > >      0, but I don't know how that is useful (I'm sure it is; just
-> > >      educate me :))
-> > 
-> > Let me just quote the bug report that got filed on our internal bug
-> > tracker :)
-> > 
-> >   When testing Juju Openstack with Ubuntu 18.04, enabling SR-IOV causes
-> >   errors because Juju gets the sriov_totalvfs for SR-IOV-capable device
-> >   then tries to set that as the sriov_numvfs parameter.
-> > 
-> >   For SR-IOV incapable FW, the sriov_totalvfs parameter should be 0, 
-> >   but it's set to max.  When FW is switched to flower*, the correct 
-> >   sriov_totalvfs value is presented.
-> > 
-> > * flower is a project name
-> 
-> From the point of view of the PCI core (which knows nothing about
-> device firmware and relies on the architected config space described
-> by the PCIe spec), this sounds like an erratum: with some firmware
-> installed, the device is not capable of SR-IOV, but still advertises
-> an SR-IOV capability with "TotalVFs > 0".
-> 
-> Regardless of whether that's an erratum, we do allow PF drivers to use
-> pci_sriov_set_totalvfs() to limit the number of VFs that may be
-> enabled by writing to the PF's "sriov_numvfs" sysfs file.
-> 
-> But the current implementation does not allow a PF driver to limit VFs
-> to 0, and that does seem nonsensical.
-> 
-> > My understanding is OpenStack uses sriov_totalvfs to determine how many
-> > VFs can be enabled, looks like this is the code:
-> > 
-> > http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n464
-> > 
-> > >   2) You're adding the pci_sriov_reset_totalvfs() interface.  I'm not
-> > >      sure what you intend for this.  Is *every* driver supposed to
-> > >      call it in .remove()?  Could/should this be done in the core
-> > >      somehow instead of depending on every driver?
-> > 
-> > Good question, I was just thinking yesterday we may want to call it
-> > from the core, but I don't think it's strictly necessary nor always
-> > sufficient (we may reload FW without re-probing).
-> > 
-> > We have a device which supports different number of VFs based on the FW
-> > loaded.  Some legacy FWs does not inform the driver how many VFs it can
-> > support, because it supports max.  So the flow in our driver is this:
-> > 
-> > load_fw(dev);
-> > ...
-> > max_vfs = ask_fw_for_max_vfs(dev);
-> > if (max_vfs >= 0)
-> > 	return pci_sriov_set_totalvfs(dev, max_vfs);
-> > else /* FW didn't tell us, assume max */
-> > 	return pci_sriov_reset_totalvfs(dev); 
-> > 
-> > We also reset the max on device remove, but that's not strictly
-> > necessary.
-> > 
-> > Other users of pci_sriov_set_totalvfs() always know the value to set
-> > the total to (either always get it from FW or it's a constant).
-> > 
-> > If you prefer we can work out the correct max for those legacy cases in
-> > the driver as well, although it seemed cleaner to just ask the core,
-> > since it already has total_VFs value handy :)
-> > 
-> > > I'm also having a hard time connecting your user-space command example
-> > > with the rest of this.  Maybe it will make more sense to me tomorrow
-> > > after some coffee.
-> > 
-> > OpenStack assumes it will always be able to set sriov_numvfs to
-> > sriov_totalvfs, see this 'if':
-> > 
-> > http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n512
-> 
-> Thanks for educating me.  I think there are two issues here that we
-> can separate.  I extracted the patch below for the first.
-> 
-> The second is the question of resetting driver_max_VFs.  I think we
-> currently have a general issue in the core:
-> 
->   - load PF driver 1
->   - driver calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
->   - unload PF driver 1
->   - load PF driver 2
-> 
-> Now driver_max_VFs is still stuck at the lower value set by driver 1.
-> I don't think that's the way this should work.
-> 
-> I guess this is partly a consequence of setting driver_max_VFs in
-> sriov_init(), which is called before driver attach and should only
-> depend on hardware characteristics, so it is related to the patch
-> below.  But I think we should fix it in general, not just for
-> netronome.
+Add the PCI AER statistics details to
+Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+and provide a pointer to it in
+Documentation/PCI/pcieaer-howto.txt
 
-Hi Jakub, the patch below is in v4.18-rc1 as 8d85a7a4f2c9 ("PCI/IOV:
-Allow PF drivers to limit total_VFs to 0").  If there's more we need
-to do here, would you mind rebasing what's left to v4.18-rc1 and
-reposting it?
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+v3: Add some more details, use decimal instead of hex
 
-> commit 4a338bc6f94b9ad824ac944f5dfc249d6838719c
-> Author: Jakub Kicinski <jakub.kicinski@netronome.com>
-> Date:   Fri May 25 08:18:34 2018 -0500
-> 
->     PCI/IOV: Allow PF drivers to limit total_VFs to 0
->     
->     Some SR-IOV PF drivers implement .sriov_configure(), which allows
->     user-space to enable VFs by writing the desired number of VFs to the sysfs
->     "sriov_numvfs" file (see sriov_numvfs_store()).
->     
->     The PCI core limits the number of VFs to the TotalVFs advertised by the
->     device in its SR-IOV capability.  The PF driver can limit the number of VFs
->     to even fewer (it may have pre-allocated data structures or knowledge of
->     device limitations) by calling pci_sriov_set_totalvfs(), but previously it
->     could not limit the VFs to 0.
->     
->     Change pci_sriov_get_totalvfs() so it always respects the VF limit imposed
->     by the PF driver, even if the limit is 0.
->     
->     This sequence:
->     
->       pci_sriov_set_totalvfs(dev, 0);
->       x = pci_sriov_get_totalvfs(dev);
->     
->     previously set "x" to TotalVFs from the SR-IOV capability.  Now it will set
->     "x" to 0.
->     
->     Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 192b82898a38..d0d73dbbd5ca 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -469,6 +469,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
->  	iov->nres = nres;
->  	iov->ctrl = ctrl;
->  	iov->total_VFs = total;
-> +	iov->driver_max_VFs = total;
->  	pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_device);
->  	iov->pgsz = pgsz;
->  	iov->self = dev;
-> @@ -827,10 +828,7 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
->  	if (!dev->is_physfn)
->  		return 0;
->  
-> -	if (dev->sriov->driver_max_VFs)
-> -		return dev->sriov->driver_max_VFs;
-> -
-> -	return dev->sriov->total_VFs;
-> +	return dev->sriov->driver_max_VFs;
->  }
->  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
->  
+ .../testing/sysfs-bus-pci-devices-aer_stats   | 111 ++++++++++++++++++
+ Documentation/PCI/pcieaer-howto.txt           |   5 +
+ 2 files changed, 116 insertions(+)
+ create mode 100644 Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+new file mode 100644
+index 000000000000..3ed5a682be87
+--- /dev/null
++++ b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+@@ -0,0 +1,111 @@
++==========================
++PCIe Device AER statistics
++==========================
++These attributes show up under all the devices that are AER capable. These
++statistical counters indicate the errors "as seen/reported by the device".
++Note that this may mean that if an end point is causing problems, the AER
++counters may increment at its link partner (e.g. root port) because the
++errors will be "seen" / reported by the link partner and not the the
++problematic end point itself (which may report all counters as 0 as it never
++saw any problems).
++
++Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_total_cor_errs
++Date:		May 2018
++Kernel Version: 4.17.0
++Contact:	linux-pci@vger.kernel.org, rajatja@google.com
++Description:	Total number of correctable errors seen and reported by this
++		PCI device using ERR_COR.
++
++Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_total_fatal_errs
++Date:		May 2018
++Kernel Version: 4.17.0
++Contact:	linux-pci@vger.kernel.org, rajatja@google.com
++Description:	Total number of uncorrectable fatal errors seen and reported
++		by this PCI device using ERR_FATAL.
++
++Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_total_nonfatal_errs
++Date:		May 2018
++Kernel Version: 4.17.0
++Contact:	linux-pci@vger.kernel.org, rajatja@google.com
++Description:	Total number of uncorrectable non-fatal errors seen and reported
++		by this PCI device using ERR_NONFATAL.
++
++Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_breakdown_correctable
++Date:		May 2018
++Kernel Version: 4.17.0
++Contact:	linux-pci@vger.kernel.org, rajatja@google.com
++Description:	Breakdown of correctable errors seen and reported by this
++		PCI device using ERR_COR. Note that the sum total of all errors
++		in dev_breakdown_correctable may exceed dev_total_cor_errs
++		because a device is allowed to merge multiple correctable and
++		send a single ERR_COR for them (which is what dev_total_cor_errs
++		counts). A sample output for this attribute looks like this:
++-----------------------------------------
++Receiver Error = 174
++Bad TLP = 19
++Bad DLLP = 3
++RELAY_NUM Rollover = 0
++Replay Timer Timeout = 1
++Advisory Non-Fatal = 0
++Corrected Internal Error = 0
++Header Log Overflow = 0
++-----------------------------------------
++
++Where:		/sys/bus/pci/devices/<dev>/aer_stats/dev_breakdown_uncorrectable
++Date:		May 2018
++Kernel Version: 4.17.0
++Contact:	linux-pci@vger.kernel.org, rajatja@google.com
++Description:	Breakdown of of correctable errors seen and reported by this
++		PCI device using ERR_FATAL or ERR_NONFATAL. Note that the sum
++		total of all errors in dev_breakdown_uncorrectable may exceed
++		(dev_total_fatal_errs + dev_total_nonfatal_errs) because a
++		device is allowed to merge multiple errors at the same severity
++		and send a single ERR_FATAL/ERR_NON_FATAL for them.
++		A sample output for this attribute looks like this:
++-----------------------------------------
++Undefined = 0
++Data Link Protocol = 0
++Surprise Down Error = 0
++Poisoned TLP = 0
++Flow Control Protocol = 0
++Completion Timeout = 0
++Completer Abort = 0
++Unexpected Completion = 0
++Receiver Overflow = 0
++Malformed TLP = 0
++ECRC = 0
++Unsupported Request = 0
++ACS Violation = 0
++Uncorrectable Internal Error = 0
++MC Blocked TLP = 0
++AtomicOp Egress Blocked = 0
++TLP Prefix Blocked Error = 0
++-----------------------------------------
++
++============================
++PCIe Rootport AER statistics
++============================
++These attributes showup under only the rootports that are AER capable. These
++indicate the number of error messages as "reported to" the rootport. Please note
++that the rootports also transmit (internally) the ERR_* messages for errors seen
++by the internal rootport PCI device, so these counters includes them and are
++thus cumulative of all the error messages on the PCI hierarchy originating
++at that root port.
++
++Where:		/sys/bus/pci/devices/<dev>/aer_stats/rootport_total_cor_errs
++Date:		May 2018
++Kernel Version: 4.17.0
++Contact:	linux-pci@vger.kernel.org, rajatja@google.com
++Description:	Total number of ERR_COR messages reported to rootport.
++
++Where:		/sys/bus/pci/devices/<dev>/aer_stats/rootport_total_fatal_errs
++Date:		May 2018
++Kernel Version: 4.17.0
++Contact:	linux-pci@vger.kernel.org, rajatja@google.com
++Description:	Total number of ERR_FATAL messages reported to rootport.
++
++Where:	    /sys/bus/pci/devices/<dev>/aer_stats/rootport_total_nonfatal_errs
++Date:		May 2018
++Kernel Version: 4.17.0
++Contact:	linux-pci@vger.kernel.org, rajatja@google.com
++Description:	Total number of ERR_NONFATAL messages reported to rootport.
+diff --git a/Documentation/PCI/pcieaer-howto.txt b/Documentation/PCI/pcieaer-howto.txt
+index acd0dddd6bb8..91b6e677cb8c 100644
+--- a/Documentation/PCI/pcieaer-howto.txt
++++ b/Documentation/PCI/pcieaer-howto.txt
+@@ -73,6 +73,11 @@ In the example, 'Requester ID' means the ID of the device who sends
+ the error message to root port. Pls. refer to pci express specs for
+ other fields.
+ 
++2.4 AER Statistics / Counters
++
++When PCIe AER errors are captured, the counters / statistics are also exposed
++in form of sysfs attributes which are documented at
++Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+ 
+ 3. Developer Guide
+ 
+-- 
+2.18.0.rc1.244.gcf134e6275-goog
