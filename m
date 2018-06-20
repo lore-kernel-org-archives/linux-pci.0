@@ -1,239 +1,168 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:38720 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932650AbeFLDev (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Jun 2018 23:34:51 -0400
-Date: Tue, 12 Jun 2018 11:34:43 +0800
-From: Baoquan He <bhe@redhat.com>
-To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-        robh+dt@kernel.org, dan.j.williams@intel.com,
-        nicolas.pitre@linaro.org, josh@joshtriplett.org,
-        fengguang.wu@intel.com, bp@suse.de
-Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com,
-        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
-        keith.busch@intel.com, jonathan.derrick@intel.com,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
-        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
-        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
-        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
-        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
-        yinghai@kernel.org, kexec@lists.infradead.org, monstr@monstr.eu,
-        davem@davemloft.net, chris@zankel.net, jcmvbkbc@gmail.com,
-        gustavo@padovan.org, maarten.lankhorst@linux.intel.com,
-        seanpaul@chromium.org, linux-parisc@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: [PATCH v5 1/4] resource: Move reparent_resources() to
- kernel/resource.c and make it public
-Message-ID: <20180612033443.GB1820@MiWiFi-R3L-srv>
-References: <20180612032831.29747-1-bhe@redhat.com>
- <20180612032831.29747-2-bhe@redhat.com>
+Return-Path: <SRS0=xmdP=JG=flex--rajatja.bounces.google.com=37qkpWwcKB8c4nwn6wnt11tyr.p1zurytnn5xr40ry.14t@kernel.org>
+Return-Path: <SRS0=xmdP=JG=flex--rajatja.bounces.google.com=37qkpWwcKB8c4nwn6wnt11tyr.p1zurytnn5xr40ry.14t@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180612032831.29747-2-bhe@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Date: Tue, 19 Jun 2018 18:12:06 -0700
+In-Reply-To: <20180619221651.GH33049@bhelgaas-glaptop.roam.corp.google.com>
+Message-Id: <20180620011210.254601-1-rajatja@google.com>
+References: <20180619221651.GH33049@bhelgaas-glaptop.roam.corp.google.com>
+Subject: [PATCH v3 1/5] PCI/AER: Define and allocate aer_stats structure for
+ AER capable devices
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
+	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
+	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
+Cc: Rajat Jain <rajatja@google.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/12/18 at 11:28am, Baoquan He wrote:
-> reparent_resources() is duplicated in arch/microblaze/pci/pci-common.c
-> and arch/powerpc/kernel/pci-common.c, so move it to kernel/resource.c
-> so that it's shared. Later its code also need be updated using list_head
-> to replace singly linked list.
-> 
-> Signed-off-by: Baoquan He <bhe@redhat.com>
-> Cc: Michal Simek <monstr@monstr.eu>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: Michael Ellerman <mpe@ellerman.id.au>
-> ---
-> v4->v5:
->   Fix several code bugs reported by test robot on ARCH powerpc and
->   microblaze.
+Define a structure to hold the AER statistics. There are 2 groups
+of statistics: dev_* counters that are to be collected for all AER
+capable devices and rootport_* counters that are collected for all
+(AER capable) rootports only. Allocate and free this structure when
+device is added or released (thus counters survive the lifetime of the
+device).
 
-Oops, I mistakenly added the patch change log of the current patch 0002
-here. This patch is a newly added one.
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+v3: Merge everything in aer.c
 
-> 
-> v3->v4:
->   Fix several bugs test robot reported. And change patch log.
-> 
-> v2->v3:
->   Rename resource functions first_child() and sibling() to
->   resource_first_chils() and resource_sibling(). Dan suggested this.
-> 
->   Move resource_first_chils() and resource_sibling() to linux/ioport.h
->   and make them as inline function. Rob suggested this. Accordingly add
->   linux/list.h including in linux/ioport.h, please help review if this
->   bring efficiency degradation or code redundancy.
-> 
->   The change on struct resource {} bring two pointers of size increase,
->   mention this in git log to make it more specifically, Rob suggested
->   this.
-> 
->  arch/microblaze/pci/pci-common.c | 37 -------------------------------------
->  arch/powerpc/kernel/pci-common.c | 35 -----------------------------------
->  include/linux/ioport.h           |  1 +
->  kernel/resource.c                | 36 ++++++++++++++++++++++++++++++++++++
->  4 files changed, 37 insertions(+), 72 deletions(-)
-> 
-> diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-> index f34346d56095..7899bafab064 100644
-> --- a/arch/microblaze/pci/pci-common.c
-> +++ b/arch/microblaze/pci/pci-common.c
-> @@ -619,43 +619,6 @@ int pcibios_add_device(struct pci_dev *dev)
->  EXPORT_SYMBOL(pcibios_add_device);
->  
->  /*
-> - * Reparent resource children of pr that conflict with res
-> - * under res, and make res replace those children.
-> - */
-> -static int __init reparent_resources(struct resource *parent,
-> -				     struct resource *res)
-> -{
-> -	struct resource *p, **pp;
-> -	struct resource **firstpp = NULL;
-> -
-> -	for (pp = &parent->child; (p = *pp) != NULL; pp = &p->sibling) {
-> -		if (p->end < res->start)
-> -			continue;
-> -		if (res->end < p->start)
-> -			break;
-> -		if (p->start < res->start || p->end > res->end)
-> -			return -1;	/* not completely contained */
-> -		if (firstpp == NULL)
-> -			firstpp = pp;
-> -	}
-> -	if (firstpp == NULL)
-> -		return -1;	/* didn't find any conflicting entries? */
-> -	res->parent = parent;
-> -	res->child = *firstpp;
-> -	res->sibling = *pp;
-> -	*firstpp = res;
-> -	*pp = NULL;
-> -	for (p = res->child; p != NULL; p = p->sibling) {
-> -		p->parent = res;
-> -		pr_debug("PCI: Reparented %s [%llx..%llx] under %s\n",
-> -			 p->name,
-> -			 (unsigned long long)p->start,
-> -			 (unsigned long long)p->end, res->name);
-> -	}
-> -	return 0;
-> -}
-> -
-> -/*
->   *  Handle resources of PCI devices.  If the world were perfect, we could
->   *  just allocate all the resource regions and do nothing more.  It isn't.
->   *  On the other hand, we cannot just re-allocate all devices, as it would
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index fe9733ffffaa..926035bb378d 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -1088,41 +1088,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->  EXPORT_SYMBOL(pcibios_align_resource);
->  
->  /*
-> - * Reparent resource children of pr that conflict with res
-> - * under res, and make res replace those children.
-> - */
-> -static int reparent_resources(struct resource *parent,
-> -				     struct resource *res)
-> -{
-> -	struct resource *p, **pp;
-> -	struct resource **firstpp = NULL;
-> -
-> -	for (pp = &parent->child; (p = *pp) != NULL; pp = &p->sibling) {
-> -		if (p->end < res->start)
-> -			continue;
-> -		if (res->end < p->start)
-> -			break;
-> -		if (p->start < res->start || p->end > res->end)
-> -			return -1;	/* not completely contained */
-> -		if (firstpp == NULL)
-> -			firstpp = pp;
-> -	}
-> -	if (firstpp == NULL)
-> -		return -1;	/* didn't find any conflicting entries? */
-> -	res->parent = parent;
-> -	res->child = *firstpp;
-> -	res->sibling = *pp;
-> -	*firstpp = res;
-> -	*pp = NULL;
-> -	for (p = res->child; p != NULL; p = p->sibling) {
-> -		p->parent = res;
-> -		pr_debug("PCI: Reparented %s %pR under %s\n",
-> -			 p->name, p, res->name);
-> -	}
-> -	return 0;
-> -}
-> -
-> -/*
->   *  Handle resources of PCI devices.  If the world were perfect, we could
->   *  just allocate all the resource regions and do nothing more.  It isn't.
->   *  On the other hand, we cannot just re-allocate all devices, as it would
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index da0ebaec25f0..dfdcd0bfe54e 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -192,6 +192,7 @@ extern int allocate_resource(struct resource *root, struct resource *new,
->  struct resource *lookup_resource(struct resource *root, resource_size_t start);
->  int adjust_resource(struct resource *res, resource_size_t start,
->  		    resource_size_t size);
-> +int reparent_resources(struct resource *parent, struct resource *res);
->  resource_size_t resource_alignment(struct resource *res);
->  static inline resource_size_t resource_size(const struct resource *res)
->  {
-> diff --git a/kernel/resource.c b/kernel/resource.c
-> index 30e1bc68503b..5e7c56d5d838 100644
-> --- a/kernel/resource.c
-> +++ b/kernel/resource.c
-> @@ -983,6 +983,42 @@ int adjust_resource(struct resource *res, resource_size_t start,
->  }
->  EXPORT_SYMBOL(adjust_resource);
->  
-> +/*
-> + * Reparent resource children of pr that conflict with res
-> + * under res, and make res replace those children.
-> + */
-> +static int reparent_resources(struct resource *parent,
-> +				     struct resource *res)
-> +{
-> +	struct resource *p, **pp;
-> +	struct resource **firstpp = NULL;
-> +
-> +	for (pp = &parent->child; (p = *pp) != NULL; pp = &p->sibling) {
-> +		if (p->end < res->start)
-> +			continue;
-> +		if (res->end < p->start)
-> +			break;
-> +		if (p->start < res->start || p->end > res->end)
-> +			return -1;	/* not completely contained */
-> +		if (firstpp == NULL)
-> +			firstpp = pp;
-> +	}
-> +	if (firstpp == NULL)
-> +		return -1;	/* didn't find any conflicting entries? */
-> +	res->parent = parent;
-> +	res->child = *firstpp;
-> +	res->sibling = *pp;
-> +	*firstpp = res;
-> +	*pp = NULL;
-> +	for (p = res->child; p != NULL; p = p->sibling) {
-> +		p->parent = res;
-> +		pr_debug("PCI: Reparented %s %pR under %s\n",
-> +			 p->name, p, res->name);
-> +	}
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL(reparent_resources);
-> +
->  static void __init __reserve_region_with_split(struct resource *root,
->  		resource_size_t start, resource_size_t end,
->  		const char *name)
-> -- 
-> 2.13.6
-> 
+ drivers/pci/pcie/aer.c | 60 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c    |  1 +
+ include/linux/pci.h    |  3 +++
+ 3 files changed, 64 insertions(+)
+
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index a2e88386af28..f9fa994b6c33 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -33,6 +33,9 @@
+ #define AER_ERROR_SOURCES_MAX		100
+ #define AER_MAX_MULTI_ERR_DEVICES	5	/* Not likely to have more */
+ 
++#define AER_MAX_TYPEOF_CORRECTABLE_ERRS 16	/* as per PCI_ERR_COR_STATUS */
++#define AER_MAX_TYPEOF_UNCORRECTABLE_ERRS 26	/* as per PCI_ERR_UNCOR_STATUS*/
++
+ struct aer_err_info {
+ 	struct pci_dev *dev[AER_MAX_MULTI_ERR_DEVICES];
+ 	int error_dev_num;
+@@ -76,6 +79,40 @@ struct aer_rpc {
+ 					 */
+ };
+ 
++/* AER stats for the device */
++struct aer_stats {
++
++	/*
++	 * Fields for all AER capable devices. They indicate the errors
++	 * "as seen by this device". Note that this may mean that if an
++	 * end point is causing problems, the AER counters may increment
++	 * at its link partner (e.g. root port) because the errors will be
++	 * "seen" by the link partner and not the the problematic end point
++	 * itself (which may report all counters as 0 as it never saw any
++	 * problems).
++	 */
++	/* Individual counters for different type of correctable errors */
++	u64 dev_cor_errs[AER_MAX_TYPEOF_CORRECTABLE_ERRS];
++	/* Individual counters for different type of uncorrectable errors */
++	u64 dev_uncor_errs[AER_MAX_TYPEOF_UNCORRECTABLE_ERRS];
++	/* Total number of correctable errors seen by this device */
++	u64 dev_total_cor_errs;
++	/* Total number of fatal uncorrectable errors seen by this device */
++	u64 dev_total_fatal_errs;
++	/* Total number of fatal uncorrectable errors seen by this device */
++	u64 dev_total_nonfatal_errs;
++
++	/*
++	 * Fields for Root ports only, these indicate the total number of
++	 * ERR_COR, ERR_FATAL, and ERR_NONFATAL messages received by the
++	 * rootport, INCLUDING the ones that are generated internally (by
++	 * the rootport itself)
++	 */
++	u64 rootport_total_cor_errs;
++	u64 rootport_total_fatal_errs;
++	u64 rootport_total_nonfatal_errs;
++};
++
+ #define AER_LOG_TLP_MASKS		(PCI_ERR_UNC_POISON_TLP|	\
+ 					PCI_ERR_UNC_ECRC|		\
+ 					PCI_ERR_UNC_UNSUP|		\
+@@ -402,12 +439,35 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
++static int pci_aer_stats_init(struct pci_dev *pdev)
++{
++	pdev->aer_stats = kzalloc(sizeof(struct aer_stats), GFP_KERNEL);
++	if (!pdev->aer_stats) {
++		dev_err(&pdev->dev, "No memory for aer_stats\n");
++		return -ENOMEM;
++	}
++	return 0;
++}
++
++static void pci_aer_stats_exit(struct pci_dev *pdev)
++{
++	kfree(pdev->aer_stats);
++	pdev->aer_stats = NULL;
++}
++
+ int pci_aer_init(struct pci_dev *dev)
+ {
+ 	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
++	if (!dev->aer_cap || pci_aer_stats_init(dev))
++		return -EIO;
+ 	return pci_cleanup_aer_error_status_regs(dev);
+ }
+ 
++void pci_aer_exit(struct pci_dev *dev)
++{
++	pci_aer_stats_exit(dev);
++}
++
+ #define AER_AGENT_RECEIVER		0
+ #define AER_AGENT_REQUESTER		1
+ #define AER_AGENT_COMPLETER		2
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ac876e32de4b..48edd0c9e4bc 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2064,6 +2064,7 @@ static void pci_configure_device(struct pci_dev *dev)
+ 
+ static void pci_release_capabilities(struct pci_dev *dev)
+ {
++	pci_aer_exit(dev);
+ 	pci_vpd_release(dev);
+ 	pci_iov_release(dev);
+ 	pci_free_cap_save_buffers(dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 340029b2fb38..8d59c6c19a19 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -299,6 +299,7 @@ struct pci_dev {
+ 	u8		hdr_type;	/* PCI header type (`multi' flag masked out) */
+ #ifdef CONFIG_PCIEAER
+ 	u16		aer_cap;	/* AER capability offset */
++	struct aer_stats *aer_stats;	/* AER stats for this device */
+ #endif
+ 	u8		pcie_cap;	/* PCIe capability offset */
+ 	u8		msi_cap;	/* MSI capability offset */
+@@ -1471,10 +1472,12 @@ static inline bool pcie_aspm_support_enabled(void) { return false; }
+ void pci_no_aer(void);
+ bool pci_aer_available(void);
+ int pci_aer_init(struct pci_dev *dev);
++void pci_aer_exit(struct pci_dev *dev);
+ #else
+ static inline void pci_no_aer(void) { }
+ static inline bool pci_aer_available(void) { return false; }
+ static inline int pci_aer_init(struct pci_dev *d) { return -ENODEV; }
++static inline void pci_aer_exit(struct pci_dev *d) { }
+ #endif
+ 
+ #ifdef CONFIG_PCIE_ECRC
+-- 
+2.18.0.rc1.244.gcf134e6275-goog
