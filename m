@@ -1,254 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4] PCI: move early dump functionality from x86 arch into the
- common code
-Date: Mon,  4 Jun 2018 22:16:09 -0400
-Message-Id: <1528164985-14099-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=WtrO=JG=flex--rajatja.bounces.google.com=3TOYqWwcKB6MUDMDWMDJRRJOH.FRPKHOJDDVNHUQHO.RUJ@kernel.org>
+Return-Path: <SRS0=WtrO=JG=flex--rajatja.bounces.google.com=3TOYqWwcKB6MUDMDWMDJRRJOH.FRPKHOJDDVNHUQHO.RUJ@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- Petr Tesarik <ptesarik@suse.cz>, Ram Pai <linuxram@us.ibm.com>,
- Sinan Kaya <okaya@codeaurora.org>, Kai-Heng Feng <kai.heng.feng@canonical.com>,
- "H. Peter Anvin" <hpa@zytor.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- "maintainer:X86 ARCHITECTURE 32-BIT AND 64-BIT" <x86@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
- Thymo van Beers <thymovanbeers@gmail.com>, Borislav Petkov <bp@suse.de>,
- Tom Lendacky <thomas.lendacky@amd.com>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-arm-msm@vger.kernel.org, Frederic Weisbecker <frederic@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org, Juergen Gross <jgross@suse.com>,
- Dou Liyang <douly.fnst@cn.fujitsu.com>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- open list <linux-kernel@vger.kernel.org>,
- Philippe Ombredanne <pombredanne@nexb.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Date: Wed, 20 Jun 2018 16:41:45 -0700
+In-Reply-To: <20180620234147.48438-1-rajatja@google.com>
+Message-Id: <20180620234147.48438-3-rajatja@google.com>
+References: <20180522222805.80314-1-rajatja@google.com> <20180620234147.48438-1-rajatja@google.com>
+Subject: [PATCH v5 3/5] PCI/AER: Add sysfs attributes to provide breakdown of AERs
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
+	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
+	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
+Cc: Rajat Jain <rajatja@google.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Move early dump functionality into common code so that it is available for
-all archtiectures. No need to carry arch specific reads around as the read
-hooks are already initialized by the time pci_setup_device() is getting
-called during scan.
+Add sysfs attributes to provide breakdown of the AERs seen,
+into different type of correctable or uncorrectable errors:
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+dev_breakdown_correctable
+dev_breakdown_uncorrectable
+
+Signed-off-by: Rajat Jain <rajatja@google.com>
 ---
- Documentation/admin-guide/kernel-parameters.txt |  2 +-
- arch/x86/include/asm/pci-direct.h               |  4 ---
- arch/x86/kernel/setup.c                         |  5 ---
- arch/x86/pci/common.c                           |  4 ---
- arch/x86/pci/early.c                            | 44 -------------------------
- drivers/pci/pci.c                               |  5 +++
- drivers/pci/pci.h                               |  1 +
- drivers/pci/probe.c                             | 19 +++++++++++
- 8 files changed, 26 insertions(+), 58 deletions(-)
+v5: Fix the signature
+v4: use "%llu" in place of "%llx"
+v3: Merge everything in aer.c
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index e490902..e64f1d8 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -2995,7 +2995,7 @@
- 			See also Documentation/blockdev/paride.txt.
+ drivers/pci/pcie/aer.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index ce0d675d7bd3..c989bb5bb6f1 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -587,10 +587,38 @@ aer_stats_aggregate_attr(dev_total_cor_errs);
+ aer_stats_aggregate_attr(dev_total_fatal_errs);
+ aer_stats_aggregate_attr(dev_total_nonfatal_errs);
  
- 	pci=option[,option...]	[PCI] various PCI subsystem options:
--		earlydump	[X86] dump PCI config space before the kernel
-+		earlydump	dump PCI config space before the kernel
- 				changes anything
- 		off		[X86] don't probe for the PCI bus
- 		bios		[X86-32] force use of PCI BIOS, don't access
-diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
-index e1084f7..94597a3 100644
---- a/arch/x86/include/asm/pci-direct.h
-+++ b/arch/x86/include/asm/pci-direct.h
-@@ -15,8 +15,4 @@ extern void write_pci_config_byte(u8 bus, u8 slot, u8 func, u8 offset, u8 val);
- extern void write_pci_config_16(u8 bus, u8 slot, u8 func, u8 offset, u16 val);
- 
- extern int early_pci_allowed(void);
--
--extern unsigned int pci_early_dump_regs;
--extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
--extern void early_dump_pci_devices(void);
- #endif /* _ASM_X86_PCI_DIRECT_H */
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 2f86d88..480f250 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -991,11 +991,6 @@ void __init setup_arch(char **cmdline_p)
- 		setup_clear_cpu_cap(X86_FEATURE_APIC);
- 	}
- 
--#ifdef CONFIG_PCI
--	if (pci_early_dump_regs)
--		early_dump_pci_devices();
--#endif
--
- 	e820__reserve_setup_data();
- 	e820__finish_early_params();
- 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 563049c..d4ec117 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -22,7 +22,6 @@
- unsigned int pci_probe = PCI_PROBE_BIOS | PCI_PROBE_CONF1 | PCI_PROBE_CONF2 |
- 				PCI_PROBE_MMCONF;
- 
--unsigned int pci_early_dump_regs;
- static int pci_bf_sort;
- int pci_routeirq;
- int noioapicquirk;
-@@ -599,9 +598,6 @@ char *__init pcibios_setup(char *str)
- 		pci_probe |= PCI_BIG_ROOT_WINDOW;
- 		return NULL;
- #endif
--	} else if (!strcmp(str, "earlydump")) {
--		pci_early_dump_regs = 1;
--		return NULL;
- 	} else if (!strcmp(str, "routeirq")) {
- 		pci_routeirq = 1;
- 		return NULL;
-diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
-index e5f753c..f5fc953 100644
---- a/arch/x86/pci/early.c
-+++ b/arch/x86/pci/early.c
-@@ -57,47 +57,3 @@ int early_pci_allowed(void)
- 			PCI_PROBE_CONF1;
- }
- 
--void early_dump_pci_device(u8 bus, u8 slot, u8 func)
--{
--	u32 value[256 / 4];
--	int i;
--
--	pr_info("pci 0000:%02x:%02x.%d config space:\n", bus, slot, func);
--
--	for (i = 0; i < 256; i += 4)
--		value[i / 4] = read_pci_config(bus, slot, func, i);
--
--	print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value, 256, false);
--}
--
--void early_dump_pci_devices(void)
--{
--	unsigned bus, slot, func;
--
--	if (!early_pci_allowed())
--		return;
--
--	for (bus = 0; bus < 256; bus++) {
--		for (slot = 0; slot < 32; slot++) {
--			for (func = 0; func < 8; func++) {
--				u32 class;
--				u8 type;
--
--				class = read_pci_config(bus, slot, func,
--							PCI_CLASS_REVISION);
--				if (class == 0xffffffff)
--					continue;
--
--				early_dump_pci_device(bus, slot, func);
--
--				if (func == 0) {
--					type = read_pci_config_byte(bus, slot,
--								    func,
--							       PCI_HEADER_TYPE);
--					if (!(type & 0x80))
--						break;
--				}
--			}
--		}
--	}
--}
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 97acba7..04052dc 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -115,6 +115,9 @@ static bool pcie_ari_disabled;
- /* If set, the PCIe ATS capability will not be used. */
- static bool pcie_ats_disabled;
- 
-+/* If set, the PCI config space of each device is printed during boot. */
-+bool pci_early_dump;
++#define aer_stats_breakdown_attr(field, stats_array, strings_array)	\
++	static ssize_t							\
++	field##_show(struct device *dev, struct device_attribute *attr,	\
++		     char *buf)						\
++{									\
++	unsigned int i;							\
++	char *str = buf;						\
++	struct pci_dev *pdev = to_pci_dev(dev);				\
++	u64 *stats = pdev->aer_stats->stats_array;			\
++	for (i = 0; i < ARRAY_SIZE(strings_array); i++) {		\
++		if (strings_array[i])					\
++			str += sprintf(str, "%s = 0x%llu\n",		\
++				       strings_array[i], stats[i]);	\
++		else if (stats[i])					\
++			str += sprintf(str, #stats_array "bit[%d] = 0x%llu\n",\
++				       i, stats[i]);			\
++	}								\
++	return str-buf;							\
++}									\
++static DEVICE_ATTR_RO(field)
 +
- bool pci_ats_disabled(void)
- {
- 	return pcie_ats_disabled;
-@@ -5805,6 +5808,8 @@ static int __init pci_setup(char *str)
- 				pcie_ats_disabled = true;
- 			} else if (!strcmp(str, "noaer")) {
- 				pci_no_aer();
-+			} else if (!strcmp(str, "earlydump")) {
-+				pci_early_dump = true;
- 			} else if (!strncmp(str, "realloc=", 8)) {
- 				pci_realloc_get_opt(str + 8);
- 			} else if (!strncmp(str, "realloc", 7)) {
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c358e7a0..c33265e 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -7,6 +7,7 @@
- #define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
- 
- extern const unsigned char pcie_link_speed[];
-+extern bool pci_early_dump;
- 
- bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 56771f3..3678f0a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1545,6 +1545,23 @@ static int pci_intx_mask_broken(struct pci_dev *dev)
- 	return 0;
- }
- 
-+static void early_dump_pci_device(struct pci_dev *pdev)
-+{
-+	u32 value[256 / 4];
-+	int i;
++aer_stats_breakdown_attr(dev_breakdown_correctable, dev_cor_errs,
++			 aer_correctable_error_string);
++aer_stats_breakdown_attr(dev_breakdown_uncorrectable, dev_uncor_errs,
++			 aer_uncorrectable_error_string);
 +
-+	if (!pci_early_dump)
-+		return;
-+
-+	pci_info(pdev, "config space:\n");
-+
-+	for (i = 0; i < 256; i += 4)
-+		pci_read_config_dword(pdev, i, &value[i / 4]);
-+
-+	print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value,
-+		       256, false);
-+}
-+
- /**
-  * pci_setup_device - Fill in class and map information of a device
-  * @dev: the device structure to fill
-@@ -1594,6 +1611,8 @@ int pci_setup_device(struct pci_dev *dev)
- 	pci_printk(KERN_DEBUG, dev, "[%04x:%04x] type %02x class %#08x\n",
- 		   dev->vendor, dev->device, dev->hdr_type, dev->class);
- 
-+	early_dump_pci_device(dev);
-+
- 	/* Need to have dev->class ready */
- 	dev->cfg_size = pci_cfg_space_size(dev);
+ static struct attribute *aer_stats_attrs[] __ro_after_init = {
+ 	&dev_attr_dev_total_cor_errs.attr,
+ 	&dev_attr_dev_total_fatal_errs.attr,
+ 	&dev_attr_dev_total_nonfatal_errs.attr,
++	&dev_attr_dev_breakdown_correctable.attr,
++	&dev_attr_dev_breakdown_uncorrectable.attr,
+ 	NULL
+ };
  
 -- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.18.0.rc1.244.gcf134e6275-goog
