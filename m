@@ -1,119 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:38552 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751347AbeFYVGX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2018 17:06:23 -0400
-Received: by mail-qt0-f193.google.com with SMTP id c5-v6so2523000qth.5
-        for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2018 14:06:23 -0700 (PDT)
-From: Alex Deucher <alexdeucher@gmail.com>
-To: amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        airlied@gmail.com, linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: Alex Deucher <alexander.deucher@amd.com>
-Subject: [PATCH 5/5] drm: drop drm_pcie_get_speed_cap_mask and drm_pcie_get_max_link_width
-Date: Mon, 25 Jun 2018 16:06:06 -0500
-Message-Id: <20180625210606.2736-6-alexander.deucher@amd.com>
-In-Reply-To: <20180625210606.2736-1-alexander.deucher@amd.com>
-References: <20180625210606.2736-1-alexander.deucher@amd.com>
+Received: from mga03.intel.com ([134.134.136.65]:20584 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933285AbeFTVfW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Jun 2018 17:35:22 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 1/7] PCI/DPC: Leave interrupts enabled while handling event
+Date: Wed, 20 Jun 2018 15:38:27 -0600
+Message-Id: <20180620213833.25072-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These functions duplicated functionality which was ultimately added
-to the pci core.
+Now that the DPC driver clears the interrupt status before exiting the
+irq handler, we don't need to abuse the DPC control register to know if
+a shared interrupt is for a new DPC event: a DPC port can not trigger
+a second interrupt until the host clears the trigger status later in the
+work queue handler.
 
-All users of these functions have been ported to using the newly
-exposed pci functionality.  These functions are no longer used,
-so drop them.
-
-Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- drivers/gpu/drm/drm_pci.c | 58 -----------------------------------------------
- include/drm/drm_pci.h     |  7 ------
- 2 files changed, 65 deletions(-)
+ drivers/pci/pcie/dpc.c | 23 +++++------------------
+ 1 file changed, 5 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
-index 4db9c515b74f..896e42a34895 100644
---- a/drivers/gpu/drm/drm_pci.c
-+++ b/drivers/gpu/drm/drm_pci.c
-@@ -326,64 +326,6 @@ int drm_legacy_pci_init(struct drm_driver *driver, struct pci_driver *pdriver)
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 921ed979109d..972aac892846 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -77,7 +77,7 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+ 	struct dpc_dev *dpc;
+ 	struct pcie_device *pciedev;
+ 	struct device *devdpc;
+-	u16 cap, ctl;
++	u16 cap;
+ 
+ 	/*
+ 	 * DPC disables the Link automatically in hardware, so it has
+@@ -105,10 +105,6 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
+ 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+ 			      PCI_EXP_DPC_STATUS_TRIGGER);
+ 
+-	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+-	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+-			      ctl | PCI_EXP_DPC_CTL_INT_EN);
+-
+ 	return PCI_ERS_RESULT_RECOVERED;
  }
- EXPORT_SYMBOL(drm_legacy_pci_init);
  
--int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
--{
--	struct pci_dev *root;
--	u32 lnkcap, lnkcap2;
+@@ -183,16 +179,11 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 	struct dpc_dev *dpc = (struct dpc_dev *)context;
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	struct device *dev = &dpc->dev->device;
+-	u16 cap = dpc->cap_pos, ctl, status, source, reason, ext_reason;
 -
--	*mask = 0;
--	if (!dev->pdev)
--		return -EINVAL;
+-	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
 -
--	root = dev->pdev->bus->self;
--
--	/* we've been informed via and serverworks don't make the cut */
--	if (root->vendor == PCI_VENDOR_ID_VIA ||
--	    root->vendor == PCI_VENDOR_ID_SERVERWORKS)
--		return -EINVAL;
--
--	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
--	pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
--
--	if (lnkcap2) {	/* PCIe r3.0-compliant */
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
--			*mask |= DRM_PCIE_SPEED_25;
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
--			*mask |= DRM_PCIE_SPEED_50;
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
--			*mask |= DRM_PCIE_SPEED_80;
--	} else {	/* pre-r3.0 */
--		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
--			*mask |= DRM_PCIE_SPEED_25;
--		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
--			*mask |= (DRM_PCIE_SPEED_25 | DRM_PCIE_SPEED_50);
--	}
--
--	DRM_INFO("probing gen 2 caps for device %x:%x = %x/%x\n", root->vendor, root->device, lnkcap, lnkcap2);
--	return 0;
--}
--EXPORT_SYMBOL(drm_pcie_get_speed_cap_mask);
--
--int drm_pcie_get_max_link_width(struct drm_device *dev, u32 *mlw)
--{
--	struct pci_dev *root;
--	u32 lnkcap;
--
--	*mlw = 0;
--	if (!dev->pdev)
--		return -EINVAL;
--
--	root = dev->pdev->bus->self;
--
--	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
--
--	*mlw = (lnkcap & PCI_EXP_LNKCAP_MLW) >> 4;
--
--	DRM_INFO("probing mlw for device %x:%x = %x\n", root->vendor, root->device, lnkcap);
--	return 0;
--}
--EXPORT_SYMBOL(drm_pcie_get_max_link_width);
--
- #else
+-	if (!(ctl & PCI_EXP_DPC_CTL_INT_EN) || ctl == (u16)(~0))
+-		return IRQ_NONE;
++	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
  
- void drm_pci_agp_destroy(struct drm_device *dev) {}
-diff --git a/include/drm/drm_pci.h b/include/drm/drm_pci.h
-index 674599025d7d..8181e9e7cf1d 100644
---- a/include/drm/drm_pci.h
-+++ b/include/drm/drm_pci.h
-@@ -58,11 +58,4 @@ static inline int drm_get_pci_dev(struct pci_dev *pdev,
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 
+-	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT))
++	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT) || status == (u16)(~0))
+ 		return IRQ_NONE;
+ 
+ 	if (!(status & PCI_EXP_DPC_STATUS_TRIGGER)) {
+@@ -201,9 +192,6 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 		return IRQ_HANDLED;
+ 	}
+ 
+-	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+-			      ctl & ~PCI_EXP_DPC_CTL_INT_EN);
+-
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID,
+ 			     &source);
+ 
+@@ -226,9 +214,8 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 
+ 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+ 			      PCI_EXP_DPC_STATUS_INTERRUPT);
+-
+-	schedule_work(&dpc->work);
+-
++	if (status & PCI_EXP_DPC_STATUS_TRIGGER)
++		schedule_work(&dpc->work);
+ 	return IRQ_HANDLED;
  }
- #endif
  
--#define DRM_PCIE_SPEED_25 1
--#define DRM_PCIE_SPEED_50 2
--#define DRM_PCIE_SPEED_80 4
--
--int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *speed_mask);
--int drm_pcie_get_max_link_width(struct drm_device *dev, u32 *mlw);
--
- #endif /* _DRM_PCI_H_ */
 -- 
-2.13.6
+2.14.3
