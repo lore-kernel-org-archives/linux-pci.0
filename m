@@ -1,197 +1,55 @@
-Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
-From: Pingfan Liu <kernelfans@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Pingfan Liu <kernelfans@gmail.com>,
+Return-Path: <SRS0=wwcj=JG=intel.com=lkp@kernel.org>
+Return-Path: <SRS0=wwcj=JG=intel.com=lkp@kernel.org>
+Date: Wed, 20 Jun 2018 11:13:40 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Rajat Jain <rajatja@google.com>
+Cc: kbuild-all@01.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Philippe Ombredanne <pombredanne@nexb.com>,
+	Kate Stewart <kstewart@linuxfoundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCHv2 2/2] drivers/base: reorder consumer and its children behind suppliers
-Date: Mon, 25 Jun 2018 15:47:39 +0800
-Message-Id: <1529912859-10475-3-git-send-email-kernelfans@gmail.com>
-In-Reply-To: <1529912859-10475-1-git-send-email-kernelfans@gmail.com>
-References: <1529912859-10475-1-git-send-email-kernelfans@gmail.com>
+	Frederick Lawler <fred@fredlawl.com>,
+	Oza Pawandeep <poza@codeaurora.org>,
+	Keith Busch <keith.busch@intel.com>,
+	Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+	Thomas Tai <thomas.tai@oracle.com>,
+	"Steven Rostedt (VMware)" <rostedt@goodmis.org>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
+	Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com,
+	helgaas@kernel.org, Rajat Jain <rajatja@google.com>
+Subject: Re: [PATCH v3 4/5] PCI/AER: Add sysfs attributes for rootport
+ cumulative stats
+Message-ID: <201806201004.xjxc8kiz%fengguang.wu@intel.com>
+References: <20180620011210.254601-4-rajatja@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180620011210.254601-4-rajatja@google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-commit 52cdbdd49853 ("driver core: correct device's shutdown order")
-introduces supplier<-consumer order in devices_kset. The commit tries
-to cleverly maintain both parent<-child and supplier<-consumer order by
-reordering a device when probing. This method makes things simple and
-clean, but unfortunately, breaks parent<-child order in some case,
-which is described in next patch in this series.
-Here this patch tries to resolve supplier<-consumer by only reordering a
-device when it has suppliers, and takes care of the following scenario:
-    [consumer, children] [ ... potential ... ] supplier
-                         ^                   ^
-After moving the consumer and its children after the supplier, the
-potentail section may contain consumers whose supplier is inside
-children, and this poses the requirement to dry out all consumpers in
-the section recursively.
+Hi Rajat,
 
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Dave Young <dyoung@redhat.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
----
-note: there is lock issue in this patch, should be fixed in next version
+Thank you for the patch! Perhaps something to improve:
+
+[auto build test WARNING on pci/next]
+[also build test WARNING on v4.18-rc1 next-20180619]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+
+url:    https://github.com/0day-ci/linux/commits/Rajat-Jain/PCI-AER-Define-and-allocate-aer_stats-structure-for-AER-capable-devices/20180620-091551
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
+
+
+sparse warnings: (new ones prefixed by >>)
+
+>> drivers/pci/pcie/aer.c:689:6: sparse: symbol 'pci_rootport_aer_stats_incr' was not declared. Should it be static?
+
+Please review and possibly fold the followup patch.
 
 ---
- drivers/base/core.c | 132 ++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 129 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 66f06ff..db30e86 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -123,12 +123,138 @@ static int device_is_dependent(struct device *dev, void *target)
- 	return ret;
- }
- 
--/* a temporary place holder to mark out the root cause of the bug.
-- * The proposal algorithm will come in next patch
-+struct pos_info {
-+	struct device *pos;
-+	struct device *tail;
-+};
-+
-+/* caller takes the devices_kset->list_lock */
-+static int descendants_reorder_after_pos(struct device *dev,
-+	void *data)
-+{
-+	struct device *pos;
-+	struct pos_info *p = data;
-+
-+	pos = p->pos;
-+	pr_debug("devices_kset: Moving %s after %s\n",
-+		 dev_name(dev), dev_name(pos));
-+	device_for_each_child(dev, p, descendants_reorder_after_pos);
-+	/* children at the tail */
-+	list_move(&dev->kobj.entry, &pos->kobj.entry);
-+	/* record the right boundary of the section */
-+	if (p->tail == NULL)
-+		p->tail = dev;
-+	return 0;
-+}
-+
-+/* iterate over an open section */
-+#define list_opensect_for_each_reverse(cur, left, right)	\
-+	for (cur = right->prev; cur == left; cur = cur->prev)
-+
-+static bool is_consumer(struct device *query, struct device *supplier)
-+{
-+	struct device_link *link;
-+	/* todo, lock protection */
-+	list_for_each_entry(link, &supplier->links.consumers, s_node)
-+		if (link->consumer == query)
-+			return true;
-+	return false;
-+}
-+
-+/* recursively move the potential consumers in open section (left, right)
-+ * after the barrier
-+ */
-+static int __device_reorder_consumer(struct device *consumer,
-+	struct list_head *left, struct list_head *right,
-+	struct pos_info *p)
-+{
-+	struct list_head *iter;
-+	struct device *c_dev, *s_dev, *tail_dev;
-+
-+	descendants_reorder_after_pos(consumer, p);
-+	tail_dev = p->tail;
-+	/* (left, right) may contain consumers, hence checking if any moved
-+	 * child serving as supplier. The reversing order help us to meet
-+	 * the last supplier of a consumer.
-+	 */
-+	list_opensect_for_each_reverse(iter, left, right) {
-+		struct list_head *l_iter, *moved_left, *moved_right;
-+
-+		moved_left = (&consumer->kobj.entry)->prev;
-+		moved_right = tail_dev->kobj.entry.next;
-+		/* the moved section may contain potential suppliers */
-+		list_opensect_for_each_reverse(l_iter, moved_left,
-+			moved_right) {
-+			s_dev = list_entry(l_iter, struct device, kobj.entry);
-+			c_dev = list_entry(iter, struct device, kobj.entry);
-+			/* to fix: this poses extra effort for locking */
-+			if (is_consumer(c_dev, s_dev)) {
-+				p->tail = NULL;
-+				/* to fix: lock issue */
-+				p->pos =  s_dev;
-+				/* reorder after the last supplier */
-+				__device_reorder_consumer(c_dev,
-+					l_iter, right, p);
-+			}
-+		}
-+	}
-+	return 0;
-+}
-+
-+static int find_last_supplier(struct device *dev, struct device *supplier)
-+{
-+	struct device_link *link;
-+
-+	list_for_each_entry_reverse(link, &dev->links.suppliers, c_node) {
-+		if (link->supplier == supplier)
-+			return 1;
-+	}
-+	if (dev == supplier)
-+		return -1;
-+	return 0;
-+}
-+
-+/* When reodering, take care of the range of (old_pos(dev), new_pos(dev)),
-+ * there may be requirement to recursively move item.
-  */
- int device_reorder_consumer(struct device *dev)
- {
--	devices_kset_move_last(dev);
-+	struct list_head *iter, *left, *right;
-+	struct device *cur_dev;
-+	struct pos_info info;
-+	int ret, idx;
-+
-+	idx = device_links_read_lock();
-+	if (list_empty(&dev->links.suppliers)) {
-+		device_links_read_unlock(idx);
-+		return 0;
-+	}
-+	spin_lock(&devices_kset->list_lock);
-+	list_for_each_prev(iter, &devices_kset->list) {
-+		cur_dev = list_entry(iter, struct device, kobj.entry);
-+		ret = find_last_supplier(dev, cur_dev);
-+		switch (ret) {
-+		case -1:
-+			goto unlock;
-+		case 1:
-+			break;
-+		case 0:
-+			continue;
-+		}
-+	}
-+	BUG_ON(!ret);
-+
-+	/* record the affected open section */
-+	left = dev->kobj.entry.prev;
-+	right = iter;
-+	info.pos = list_entry(iter, struct device, kobj.entry);
-+	info.tail = NULL;
-+	/* dry out the consumers in (left,right) */
-+	__device_reorder_consumer(dev, left, right, &info);
-+
-+unlock:
-+	spin_unlock(&devices_kset->list_lock);
-+	device_links_read_unlock(idx);
- 	return 0;
- }
- 
--- 
-2.7.4
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
