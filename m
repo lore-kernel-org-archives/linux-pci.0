@@ -1,236 +1,221 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:46473 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932554AbeFPTcP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:32:15 -0400
-Message-Id: <b35dea070133ed17e1026235c34b9c7d98423720.1529173804.git.lukas@wunner.de>
-In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 16 Jun 2018 21:25:00 +0200
-Subject: [PATCH 21/32] PCI: pciehp: Become resilient to missed events
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org, Stefan Roese <sr@denx.de>,
-        Mayurkumar Patel <mayurkumar.patel@intel.com>,
-        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=dUK+=JG=netronome.com=jakub.kicinski@kernel.org>
+Return-Path: <SRS0=dUK+=JG=netronome.com=jakub.kicinski@kernel.org>
+Date: Tue, 19 Jun 2018 19:56:43 -0700
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ netdev@vger.kernel.org, Sathya Perla <sathya.perla@broadcom.com>, Felix
+ Manlunas <felix.manlunas@caviumnetworks.com>, alexander.duyck@gmail.com,
+ john.fastabend@gmail.com, Jacob Keller <jacob.e.keller@intel.com>, Donald
+ Dutile <ddutile@redhat.com>, oss-drivers@netronome.com, Christoph Hellwig
+ <hch@infradead.org>
+Subject: Re: [PATCH] PCI: allow drivers to limit the number of VFs to 0
+Message-ID: <20180619195643.7800f7ea@cakuba.netronome.com>
+In-Reply-To: <20180619213715.GC33049@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180402224652.4058-1-jakub.kicinski@netronome.com>
+	<20180524235748.GD15320@bhelgaas-glaptop.roam.corp.google.com>
+	<20180524182015.1af7b4c9@cakuba>
+	<20180525140223.GA45098@bhelgaas-glaptop.roam.corp.google.com>
+	<20180619213715.GC33049@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-A hotplug port's Slot Status register does not count how often each type
-of event occurred, it only records the fact *that* an event has occurred.
+On Tue, 19 Jun 2018 16:37:15 -0500, Bjorn Helgaas wrote:
+> On Fri, May 25, 2018 at 09:02:23AM -0500, Bjorn Helgaas wrote:
+> > On Thu, May 24, 2018 at 06:20:15PM -0700, Jakub Kicinski wrote:  
+> > > Hi Bjorn!
+> > > 
+> > > On Thu, 24 May 2018 18:57:48 -0500, Bjorn Helgaas wrote:  
+> > > > On Mon, Apr 02, 2018 at 03:46:52PM -0700, Jakub Kicinski wrote:  
+> > > > > Some user space depends on enabling sriov_totalvfs number of VFs
+> > > > > to not fail, e.g.:
+> > > > > 
+> > > > > $ cat .../sriov_totalvfs > .../sriov_numvfs
+> > > > > 
+> > > > > For devices which VF support depends on loaded FW we have the
+> > > > > pci_sriov_{g,s}et_totalvfs() API.  However, this API uses 0 as
+> > > > > a special "unset" value, meaning drivers can't limit sriov_totalvfs
+> > > > > to 0.  Remove the special values completely and simply initialize
+> > > > > driver_max_VFs to total_VFs.  Then always use driver_max_VFs.
+> > > > > Add a helper for drivers to reset the VF limit back to total.    
+> > > > 
+> > > > I still can't really make sense out of the changelog.
+> > > >
+> > > > I think part of the reason it's confusing is because there are two
+> > > > things going on:
+> > > > 
+> > > >   1) You want this:
+> > > >   
+> > > >        pci_sriov_set_totalvfs(dev, 0);
+> > > >        x = pci_sriov_get_totalvfs(dev) 
+> > > > 
+> > > >      to return 0 instead of total_VFs.  That seems to connect with
+> > > >      your subject line.  It means "sriov_totalvfs" in sysfs could be
+> > > >      0, but I don't know how that is useful (I'm sure it is; just
+> > > >      educate me :))  
+> > > 
+> > > Let me just quote the bug report that got filed on our internal bug
+> > > tracker :)
+> > > 
+> > >   When testing Juju Openstack with Ubuntu 18.04, enabling SR-IOV causes
+> > >   errors because Juju gets the sriov_totalvfs for SR-IOV-capable device
+> > >   then tries to set that as the sriov_numvfs parameter.
+> > > 
+> > >   For SR-IOV incapable FW, the sriov_totalvfs parameter should be 0, 
+> > >   but it's set to max.  When FW is switched to flower*, the correct 
+> > >   sriov_totalvfs value is presented.
+> > > 
+> > > * flower is a project name  
+> > 
+> > From the point of view of the PCI core (which knows nothing about
+> > device firmware and relies on the architected config space described
+> > by the PCIe spec), this sounds like an erratum: with some firmware
+> > installed, the device is not capable of SR-IOV, but still advertises
+> > an SR-IOV capability with "TotalVFs > 0".
+> > 
+> > Regardless of whether that's an erratum, we do allow PF drivers to use
+> > pci_sriov_set_totalvfs() to limit the number of VFs that may be
+> > enabled by writing to the PF's "sriov_numvfs" sysfs file.
+> > 
+> > But the current implementation does not allow a PF driver to limit VFs
+> > to 0, and that does seem nonsensical.
+> >   
+> > > My understanding is OpenStack uses sriov_totalvfs to determine how many
+> > > VFs can be enabled, looks like this is the code:
+> > > 
+> > > http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n464
+> > >   
+> > > >   2) You're adding the pci_sriov_reset_totalvfs() interface.  I'm not
+> > > >      sure what you intend for this.  Is *every* driver supposed to
+> > > >      call it in .remove()?  Could/should this be done in the core
+> > > >      somehow instead of depending on every driver?  
+> > > 
+> > > Good question, I was just thinking yesterday we may want to call it
+> > > from the core, but I don't think it's strictly necessary nor always
+> > > sufficient (we may reload FW without re-probing).
+> > > 
+> > > We have a device which supports different number of VFs based on the FW
+> > > loaded.  Some legacy FWs does not inform the driver how many VFs it can
+> > > support, because it supports max.  So the flow in our driver is this:
+> > > 
+> > > load_fw(dev);
+> > > ...
+> > > max_vfs = ask_fw_for_max_vfs(dev);
+> > > if (max_vfs >= 0)
+> > > 	return pci_sriov_set_totalvfs(dev, max_vfs);
+> > > else /* FW didn't tell us, assume max */
+> > > 	return pci_sriov_reset_totalvfs(dev); 
+> > > 
+> > > We also reset the max on device remove, but that's not strictly
+> > > necessary.
+> > > 
+> > > Other users of pci_sriov_set_totalvfs() always know the value to set
+> > > the total to (either always get it from FW or it's a constant).
+> > > 
+> > > If you prefer we can work out the correct max for those legacy cases in
+> > > the driver as well, although it seemed cleaner to just ask the core,
+> > > since it already has total_VFs value handy :)
+> > >   
+> > > > I'm also having a hard time connecting your user-space command example
+> > > > with the rest of this.  Maybe it will make more sense to me tomorrow
+> > > > after some coffee.  
+> > > 
+> > > OpenStack assumes it will always be able to set sriov_numvfs to
+> > > sriov_totalvfs, see this 'if':
+> > > 
+> > > http://git.openstack.org/cgit/openstack/charm-neutron-openvswitch/tree/hooks/neutron_ovs_utils.py#n512  
+> > 
+> > Thanks for educating me.  I think there are two issues here that we
+> > can separate.  I extracted the patch below for the first.
+> > 
+> > The second is the question of resetting driver_max_VFs.  I think we
+> > currently have a general issue in the core:
+> > 
+> >   - load PF driver 1
+> >   - driver calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
+> >   - unload PF driver 1
+> >   - load PF driver 2
+> > 
+> > Now driver_max_VFs is still stuck at the lower value set by driver 1.
+> > I don't think that's the way this should work.
+> > 
+> > I guess this is partly a consequence of setting driver_max_VFs in
+> > sriov_init(), which is called before driver attach and should only
+> > depend on hardware characteristics, so it is related to the patch
+> > below.  But I think we should fix it in general, not just for
+> > netronome.  
+> 
+> Hi Jakub, the patch below is in v4.18-rc1 as 8d85a7a4f2c9 ("PCI/IOV:
+> Allow PF drivers to limit total_VFs to 0").  If there's more we need
+> to do here, would you mind rebasing what's left to v4.18-rc1 and
+> reposting it?
 
-Previously pciehp queued a work item for each event.  But if it missed
-an event, e.g. removal of a card in-between two back-to-back insertions,
-it queued up the wrong work item or no work item at all.  Commit
-fad214b0aa72 ("PCI: pciehp: Process all hotplug events before looking
-for new ones") sought to improve the situation by shrinking the window
-during which events may be missed.
+Hi Bjorn!
 
-But Stefan Roese reports unbalanced Card present and Link Up events,
-suggesting that we're still missing events if they occur very rapidly.
-Bjorn Helgaas responds that he considers pciehp's event handling
-"baroque" and calls for its simplification and rationalization:
-https://patchwork.ozlabs.org/patch/867418/
+Thanks a lot for looking into this!  My understanding is that we have
+two ways forward:
+ - add a pci_sriov_reset_totalvfs() helper for drivers to call;
+ - make the core reset the totalVFs after driver is detached.
 
-It gets worse once a hotplug port is runtime suspended:  The port can
-signal an interrupt while it and its parents are in D3hot, i.e. while
-it is inaccessible.  By the time we've runtime resumed all parents to D0
-and read the port's Slot Status register, we may have missed an arbitrary
-number of events.  Event handling therefore needs to be reworked to
-become resilient to missed events.
+IMHO second option is better.  I went ahead and posted:
 
-Assume that a Presence Detect Changed event has occurred.
-Consider the following truth table:
-- Slot is in OFF_STATE and is currently empty.    => Do nothing.
-  (The event is trailing a Link Down or we've
-  missed an insertion and subsequent removal.)
-- Slot is in OFF_STATE and is currently occupied. => Turn the slot on.
-- Slot is in ON_STATE  and is currently empty.    => Turn the slot off.
-- Slot is in ON_STATE  and is currently occupied. => Turn the slot off,
-  (Be cautious and assume the card in                then back on.
-  the slot isn't the same as before.)
+https://patchwork.ozlabs.org/patch/931210/
 
-This leads to the following simple algorithm:
-1 If the slot is in ON_STATE, turn it off unconditionally.
-2 If the slot is currently occupied, turn it on.
+This works very well for nfp driver (modulo minor clean ups but I'd
+rather route those via networking trees to avoid conflicts).
 
-Because those actions are now carried out synchronously, rather than by
-scheduled work items, pciehp reacts to the *current* situation and
-missed events no longer matter.
-
-Data Link Layer State Changed events can be handled identically to
-Presence Detect Changed events.  Note that in the above truth table,
-a Link Up trailing a Card present event didn't have to be accounted for:
-It is filtered out by pciehp_check_link_status().
-
-As for Attention Button Pressed events, PCIe r4.0, sec 6.7.1.5 says:
-"Once the Power Indicator begins blinking, a 5-second abort interval
-exists during which a second depression of the Attention Button cancels
-the operation."  In other words, the user can only expect the system to
-react to a button press after it starts blinking.  Missed button presses
-that occur in-between are irrelevant.
-
-Cc: Stefan Roese <sr@denx.de>
-Cc: Mayurkumar Patel <mayurkumar.patel@intel.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pciehp.h      |  3 +-
- drivers/pci/hotplug/pciehp_ctrl.c | 80 ++++++++++++++-----------------
- drivers/pci/hotplug/pciehp_hpc.c  | 10 +---
- 3 files changed, 40 insertions(+), 53 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 9c75acd291fb..47cd9af5caf3 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -169,8 +169,7 @@ int pciehp_sysfs_disable_slot(struct slot *slot);
- void pciehp_request(struct controller *ctrl, int action);
- void pciehp_handle_button_press(struct slot *slot);
- void pciehp_handle_disable_request(struct slot *slot);
--void pciehp_handle_link_change(struct slot *slot);
--void pciehp_handle_presence_change(struct slot *slot);
-+void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events);
- int pciehp_configure_device(struct slot *p_slot);
- void pciehp_unconfigure_device(struct slot *p_slot);
- void pciehp_queue_pushbutton_work(struct work_struct *work);
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 4a12e70aacd0..811019902ada 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -217,66 +217,60 @@ void pciehp_handle_disable_request(struct slot *slot)
- 	ctrl->request_result = pciehp_disable_slot(slot);
- }
- 
--void pciehp_handle_link_change(struct slot *p_slot)
-+void pciehp_handle_presence_or_link_change(struct slot *slot, u32 events)
- {
--	struct controller *ctrl = p_slot->ctrl;
-+	struct controller *ctrl = slot->ctrl;
- 	bool link_active;
-+	u8 present;
- 
--	mutex_lock(&p_slot->lock);
--	link_active = pciehp_check_link_active(ctrl);
--
--	switch (p_slot->state) {
--	case BLINKINGON_STATE:
-+	/*
-+	 * If the slot is on and presence or link has changed, turn it off.
-+	 * Even if it's occupied again, we cannot assume the card is the same.
-+	 */
-+	mutex_lock(&slot->lock);
-+	switch (slot->state) {
- 	case BLINKINGOFF_STATE:
--		cancel_delayed_work(&p_slot->work);
--		/* Fall through */
-+		cancel_delayed_work(&slot->work);
- 	case ON_STATE:
--	case OFF_STATE:
--		if (link_active) {
--			p_slot->state = POWERON_STATE;
--			mutex_unlock(&p_slot->lock);
--			ctrl_info(ctrl, "Slot(%s): Link Up\n", slot_name(p_slot));
--			pciehp_enable_slot(p_slot);
--		} else {
--			p_slot->state = POWEROFF_STATE;
--			mutex_unlock(&p_slot->lock);
--			ctrl_info(ctrl, "Slot(%s): Link Down\n", slot_name(p_slot));
--			pciehp_disable_slot(p_slot);
--		}
--		return;
-+		slot->state = POWEROFF_STATE;
-+		mutex_unlock(&slot->lock);
-+		if (events & PCI_EXP_SLTSTA_DLLSC)
-+			ctrl_info(ctrl, "Slot(%s): Link Down\n",
-+				  slot_name(slot));
-+		if (events & PCI_EXP_SLTSTA_PDC)
-+			ctrl_info(ctrl, "Slot(%s): Card not present\n",
-+				  slot_name(slot));
-+		pciehp_disable_slot(slot);
- 		break;
- 	default:
--		ctrl_err(ctrl, "Slot(%s): Ignoring invalid state %#x\n",
--			 slot_name(p_slot), p_slot->state);
--		break;
-+		mutex_unlock(&slot->lock);
- 	}
--	mutex_unlock(&p_slot->lock);
--}
--
--void pciehp_handle_presence_change(struct slot *slot)
--{
--	struct controller *ctrl = slot->ctrl;
--	u8 present;
- 
-+	/* Turn the slot on if it's occupied or link is up */
- 	mutex_lock(&slot->lock);
-+	pciehp_get_adapter_status(slot, &present);
-+	link_active = pciehp_check_link_active(ctrl);
-+	if (!present && !link_active) {
-+		mutex_unlock(&slot->lock);
-+		return;
-+	}
-+
- 	switch (slot->state) {
- 	case BLINKINGON_STATE:
--	case BLINKINGOFF_STATE:
- 		cancel_delayed_work(&slot->work);
--	}
--
--	pciehp_get_adapter_status(slot, &present);
--	ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
--		  present ? "" : "not ");
--
--	if (present) {
-+	case OFF_STATE:
- 		slot->state = POWERON_STATE;
- 		mutex_unlock(&slot->lock);
-+		if (present)
-+			ctrl_info(ctrl, "Slot(%s): Card present\n",
-+				  slot_name(slot));
-+		if (link_active)
-+			ctrl_info(ctrl, "Slot(%s): Link Up\n",
-+				  slot_name(slot));
- 		ctrl->request_result = pciehp_enable_slot(slot);
--	} else {
--		slot->state = POWEROFF_STATE;
-+		break;
-+	default:
- 		mutex_unlock(&slot->lock);
--		pciehp_disable_slot(slot);
- 	}
- }
- 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index adc6a89a3b5d..b746c3b52719 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -602,17 +602,11 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
- 	/*
- 	 * Disable requests have higher priority than Presence Detect Changed
- 	 * or Data Link Layer State Changed events.
--	 *
--	 * Check Link Status Changed at higher precedence than Presence
--	 * Detect Changed.  The PDS value may be set to "card present" from
--	 * out-of-band detection, which may be in conflict with a Link Down.
- 	 */
- 	if (events & DISABLE_SLOT)
- 		pciehp_handle_disable_request(slot);
--	else if (events & PCI_EXP_SLTSTA_DLLSC)
--		pciehp_handle_link_change(slot);
--	else if (events & PCI_EXP_SLTSTA_PDC)
--		pciehp_handle_presence_change(slot);
-+	else if (events & (PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_DLLSC))
-+		pciehp_handle_presence_or_link_change(slot, events);
- 
- 	/* Check Power Fault Detected */
- 	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
--- 
-2.17.1
+> > commit 4a338bc6f94b9ad824ac944f5dfc249d6838719c
+> > Author: Jakub Kicinski <jakub.kicinski@netronome.com>
+> > Date:   Fri May 25 08:18:34 2018 -0500
+> > 
+> >     PCI/IOV: Allow PF drivers to limit total_VFs to 0
+> >     
+> >     Some SR-IOV PF drivers implement .sriov_configure(), which allows
+> >     user-space to enable VFs by writing the desired number of VFs to the sysfs
+> >     "sriov_numvfs" file (see sriov_numvfs_store()).
+> >     
+> >     The PCI core limits the number of VFs to the TotalVFs advertised by the
+> >     device in its SR-IOV capability.  The PF driver can limit the number of VFs
+> >     to even fewer (it may have pre-allocated data structures or knowledge of
+> >     device limitations) by calling pci_sriov_set_totalvfs(), but previously it
+> >     could not limit the VFs to 0.
+> >     
+> >     Change pci_sriov_get_totalvfs() so it always respects the VF limit imposed
+> >     by the PF driver, even if the limit is 0.
+> >     
+> >     This sequence:
+> >     
+> >       pci_sriov_set_totalvfs(dev, 0);
+> >       x = pci_sriov_get_totalvfs(dev);
+> >     
+> >     previously set "x" to TotalVFs from the SR-IOV capability.  Now it will set
+> >     "x" to 0.
+> >     
+> >     Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > 
+> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> > index 192b82898a38..d0d73dbbd5ca 100644
+> > --- a/drivers/pci/iov.c
+> > +++ b/drivers/pci/iov.c
+> > @@ -469,6 +469,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+> >  	iov->nres = nres;
+> >  	iov->ctrl = ctrl;
+> >  	iov->total_VFs = total;
+> > +	iov->driver_max_VFs = total;
+> >  	pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_device);
+> >  	iov->pgsz = pgsz;
+> >  	iov->self = dev;
+> > @@ -827,10 +828,7 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+> >  	if (!dev->is_physfn)
+> >  		return 0;
+> >  
+> > -	if (dev->sriov->driver_max_VFs)
+> > -		return dev->sriov->driver_max_VFs;
+> > -
+> > -	return dev->sriov->total_VFs;
+> > +	return dev->sriov->driver_max_VFs;
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+> >    
