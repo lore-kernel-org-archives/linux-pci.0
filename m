@@ -1,152 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45746 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756270AbeFSJ1w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Jun 2018 05:27:52 -0400
-Date: Tue, 19 Jun 2018 10:27:45 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: Rob Herring <robh@kernel.org>,
-        Scott Branden <scott.branden@broadcom.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ley Foon Tan <lftan@altera.com>,
-        Russell King <linux@armlinux.org.uk>
-Subject: Re: [v4] PCI: improve host drivers compile test coverage
-Message-ID: <20180619092745.GA7270@e107981-ln.cambridge.arm.com>
-References: <20180612170229.GA10141@roeck-us.net>
- <20180613100935.GA7707@e107981-ln.cambridge.arm.com>
- <20180613181146.GA28856@roeck-us.net>
- <20180615125847.GA7735@e107981-ln.cambridge.arm.com>
- <980b68c0-6034-b495-753f-c75c04e0f5d1@broadcom.com>
- <CAL_JsqLUR_5Hnaws3Dt8ujetq8R-TxnG9wvOe4y6HT50KrNnbQ@mail.gmail.com>
- <20180618093201.GA18994@e107981-ln.cambridge.arm.com>
- <45f29e28-d3d4-b1e6-249e-ac28b6ec6a36@siemens.com>
- <20180618125255.GA356@red-moon>
- <03d3eac6-4711-2bd5-4ab5-fc2f77d5e4ad@siemens.com>
+Return-Path: <SRS0=lN9j=JG=flex--rajatja.bounces.google.com=3SeYqWwcKB6ARAJATJAGOOGLE.COMHELGAASKERNEL.ORG@kernel.org>
+Return-Path: <SRS0=lN9j=JG=flex--rajatja.bounces.google.com=3SeYqWwcKB6ARAJATJAGOOGLE.COMHELGAASKERNEL.ORG@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <03d3eac6-4711-2bd5-4ab5-fc2f77d5e4ad@siemens.com>
-Sender: linux-pci-owner@vger.kernel.org
+Date: Wed, 20 Jun 2018 16:41:44 -0700
+In-Reply-To: <20180620234147.48438-1-rajatja@google.com>
+Message-Id: <20180620234147.48438-2-rajatja@google.com>
+References: <20180522222805.80314-1-rajatja@google.com> <20180620234147.48438-1-rajatja@google.com>
+Subject: [PATCH v5 2/5] PCI/AER: Add sysfs stats for AER capable devices
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
+	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
+	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
+Cc: Rajat Jain <rajatja@google.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 18, 2018 at 06:53:10PM +0200, Jan Kiszka wrote:
-> On 2018-06-18 14:52, Lorenzo Pieralisi wrote:
-> > On Mon, Jun 18, 2018 at 01:42:25PM +0200, Jan Kiszka wrote:
-> >> On 2018-06-18 11:32, Lorenzo Pieralisi wrote:
-> >>> On Fri, Jun 15, 2018 at 12:34:51PM -0600, Rob Herring wrote:
-> >>>> On Fri, Jun 15, 2018 at 11:55 AM, Scott Branden
-> >>>> <scott.branden@broadcom.com> wrote:
-> >>>>> Hi Lorenzo,
-> >>>>>
-> >>>>>
-> >>>>>
-> >>>>> On 18-06-15 05:58 AM, Lorenzo Pieralisi wrote:
-> >>>>>>
-> >>>>>> On Wed, Jun 13, 2018 at 11:11:46AM -0700, Guenter Roeck wrote:
-> >>>>>>>
-> >>>>>>> On Wed, Jun 13, 2018 at 11:09:35AM +0100, Lorenzo Pieralisi wrote:
-> >>>>>>>>
-> >>>>>>>> [+Jan, Ley Foon, RMK]
-> >>>>>>>>
-> >>>>>>>> On Tue, Jun 12, 2018 at 10:02:29AM -0700, Guenter Roeck wrote:
-> >>>>>>>>>
-> >>>>>>>>> On Thu, Apr 05, 2018 at 02:31:54PM -0500, Rob Herring wrote:
-> >>>>>>>>>>
-> >>>>>>>>>> Add COMPILE_TEST on driver config options with it. Some ARM drivers
-> >>>>>>>>>> still have arch dependencies, so we have to keep those dependent on
-> >>>>>>>>>> ARM.
-> >>>>>>>>>>
-> >>>>>>>>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> >>>>>>>>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >>>>>>>>>> Cc: linux-pci@vger.kernel.org
-> >>>>>>>>>> Signed-off-by: Rob Herring <robh@kernel.org>
-> >>>>>>>>>
-> >>>>>>>>> This patch has the undesirable side effect that it selects PCI_DOMAINS
-> >>>>>>>>> for
-> >>>>>>>>> sparc32:allmodconfig, which in turn results in
-> >>>>>>>>>
-> >>>>>>>>> drivers/ata/pata_ali.c: In function 'ali_init_chipset':
-> >>>>>>>>> drivers/ata/pata_ali.c:469:38: error:
-> >>>>>>>>>         implicit declaration of function 'pci_domain_nr'; did you mean
-> >>>>>>>>> 'pci_iomap_wc'?
-> >>>>>>>>>
-> >>>>>>>>> Unfortunately, 37bd62d224c82 ("PCI: Enable PCI_DOMAINS along with
-> >>>>>>>>> generic
-> >>>>>>>>> PCI host controller") has pretty much the same result. No idea how to
-> >>>>>>>>> fix
-> >>>>>>>>> the problem, so I won't even try.
-> >>>>>>>>
-> >>>>>>>> Sorry about that.
-> >>>>>>>>
-> >>>>>>>> One option would consist in removing all PCI_DOMAINS selection from
-> >>>>>>>> drivers/pci/controller/Kconfig and delegate it to arches even though
-> >>>>>>>> this would force PCI_DOMAINS selection on all ARM platforms (it is
-> >>>>>>>> already selected for ARCH_MULTIPLATFORM).
-> >>>>>>>>
-> >>>>>>>> Or we add back arch dependency to the relevant host bridges.
-> >>>>>>>>
-> >>>>>>>> Everything else I have in mind seems overkill to me given that this
-> >>>>>>>> patch was added to improve test coverage (we could add a default
-> >>>>>>>> pci_domain_nr() stub - weak or #define - that returns 0 in case arches
-> >>>>>>>> do not provide an implementation but do we really want to do that ?).
-> >>>>>>>>
-> >>>>>>>> Thoughts appreciated.
-> >>>>>>>>
-> >>>>>>>  From the definition of PCI_DOMAINS, I suspect the original idea was that
-> >>>>>>> drivers should depend on it, not select it. Especially auto-selecting
-> >>>>>>> it with PCI_HOST_GENERIC seems like a bad idea to me. However, that is
-> >>>>>>> just me. I'll leave it up to Bjorn to decide what if anything he wants
-> >>>>>>> to do about it.
-> >>>>>>
-> >>>>>> Here is a patch that should reinstate the previous behaviour but
-> >>>>>> it will make PCI_DOMAINS a visible option on ARM 32-bit systems; whether
-> >>>>>> that's acceptable that's the question I need to answer, it should
-> >>>>>> honour old configs and it does not force PCI_DOMAINS selection on
-> >>>>>> non-DT arch/arm PCI host controllers (that do not need PCI_DOMAINS
-> >>>>>> anyway so I suspect that enabling it on all ARM 32-bit platforms
-> >>>>>> should not break anything but I preferred to be cautious).
-> >>>>>
-> >>>>> I think this change will also require a patch enabling CONFIG_PCI_DOMAINS in
-> >>>>> multi_v7_defconfig and iproc_defconfig at the very least?
-> >>>>
-> >>>> Perhaps the sub-arches that want this should select it. It is more a
-> >>>> platform option/decision more than a controller option.
-> >>>
-> >>> Yes, that makes sense, I assume ARCH_VIRT is a sensible choice for
-> >>> virtual machines configuration, Jan ?
-> >>>
-> >>> I will add a PCI_DOMAINS selection to all (ARM) arches that select
-> >>> PCI_DOMAINS in drivers/pci/controller/Kconfig.
-> >>>
-> >>> For Jailhouse configurations I need Jan's input, I assume adding
-> >>> the selection to ARCH_VIRT is the correct way forward, please let
-> >>> me know asap.
-> >>
-> >> So far, there is no need on ARM or ARM64 declare a special platform in
-> >> order to run as Jailhouse (secondary) guest.
-> >>
-> >> My original patch was just about making PCI_DOMAINS manually
-> >> configurable, which would have been fine for our use case.
-> > 
-> > I need more details on your system configuration to make sure we can fix
-> > this in a way that does not upset anybody; I am not a big fan of making
-> > PCI_DOMAINS visible since it affects other platforms and it is different
-> > from how it is managed for all other arches, so please provide details.
-> 
-> Our setup is as follows: A platform, e.g. Jetson TK1 or TX1/2, already
-> has one PCI host controller. When enabling Jailhouse on it (from within
-> a running Linux), this adds the generic PCI host controller as virtual
-> one. So we need to configure the system to support both controllers and
-> PCI domains. But, otherwise, the system does not look different from a
-> physical one.
+Add the following AER sysfs stats to represent the counters for each
+kind of error as seen by the device:
 
-Well, it looks like the only sensible way forward is to amend the
-patch below and make PCI_DOMAINS a visible option on ARM and still
-select it from the sub-arch entries that need it:
+dev_total_cor_errs
+dev_total_fatal_errs
+dev_total_nonfatal_errs
 
-https://marc.info/?l=linux-pci&m=152932092612352&w=2
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+v5: same as v4
+v4: Same as v3
+v3: Merge everything in aer.c, use "%llu" in place of "%llx"
 
-If there are other ideas I am happy to hear them.
+ drivers/pci/pci-sysfs.c |  3 ++
+ drivers/pci/pci.h       |  4 ++-
+ drivers/pci/pcie/aer.c  | 74 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 80 insertions(+), 1 deletion(-)
 
-Lorenzo
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 0c4653c1d2ce..9f1cb9051d7d 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1746,6 +1746,9 @@ static const struct attribute_group *pci_dev_attr_groups[] = {
+ #endif
+ 	&pci_bridge_attr_group,
+ 	&pcie_dev_attr_group,
++#ifdef CONFIG_PCIEAER
++	&aer_stats_attr_group,
++#endif
+ 	NULL,
+ };
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index c358e7a07f3f..9a28ec600225 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -181,7 +181,9 @@ extern const struct attribute_group *pci_dev_groups[];
+ extern const struct attribute_group *pcibus_groups[];
+ extern const struct device_type pci_dev_type;
+ extern const struct attribute_group *pci_bus_groups[];
+-
++#ifdef CONFIG_PCIEAER
++extern const struct attribute_group aer_stats_attr_group;
++#endif
+ 
+ /**
+  * pci_match_one_device - Tell if a PCI device structure has a matching
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index f9fa994b6c33..ce0d675d7bd3 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -573,6 +573,79 @@ static const char *aer_agent_string[] = {
+ 	"Transmitter ID"
+ };
+ 
++#define aer_stats_aggregate_attr(field)					\
++	static ssize_t							\
++	field##_show(struct device *dev, struct device_attribute *attr,	\
++		     char *buf)						\
++{									\
++	struct pci_dev *pdev = to_pci_dev(dev);				\
++	return sprintf(buf, "%llu\n", pdev->aer_stats->field);		\
++}									\
++static DEVICE_ATTR_RO(field)
++
++aer_stats_aggregate_attr(dev_total_cor_errs);
++aer_stats_aggregate_attr(dev_total_fatal_errs);
++aer_stats_aggregate_attr(dev_total_nonfatal_errs);
++
++static struct attribute *aer_stats_attrs[] __ro_after_init = {
++	&dev_attr_dev_total_cor_errs.attr,
++	&dev_attr_dev_total_fatal_errs.attr,
++	&dev_attr_dev_total_nonfatal_errs.attr,
++	NULL
++};
++
++static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
++					   struct attribute *a, int n)
++{
++	struct device *dev = kobj_to_dev(kobj);
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (!pdev->aer_stats)
++		return 0;
++
++	return a->mode;
++}
++
++const struct attribute_group aer_stats_attr_group = {
++	.name  = "aer_stats",
++	.attrs  = aer_stats_attrs,
++	.is_visible = aer_stats_attrs_are_visible,
++};
++
++static void pci_dev_aer_stats_incr(struct pci_dev *pdev,
++				   struct aer_err_info *info)
++{
++	int status, i, max = -1;
++	u64 *counter = NULL;
++	struct aer_stats *aer_stats = pdev->aer_stats;
++
++	if (!aer_stats)
++		return;
++
++	switch (info->severity) {
++	case AER_CORRECTABLE:
++		aer_stats->dev_total_cor_errs++;
++		counter = &aer_stats->dev_cor_errs[0];
++		max = AER_MAX_TYPEOF_CORRECTABLE_ERRS;
++		break;
++	case AER_NONFATAL:
++		aer_stats->dev_total_nonfatal_errs++;
++		counter = &aer_stats->dev_uncor_errs[0];
++		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
++		break;
++	case AER_FATAL:
++		aer_stats->dev_total_fatal_errs++;
++		counter = &aer_stats->dev_uncor_errs[0];
++		max = AER_MAX_TYPEOF_UNCORRECTABLE_ERRS;
++		break;
++	}
++
++	status = (info->status & ~info->mask);
++	for (i = 0; i < max; i++)
++		if (status & (1 << i))
++			counter[i]++;
++}
++
+ static void __print_tlp_header(struct pci_dev *dev,
+ 			       struct aer_header_log_regs *t)
+ {
+@@ -605,6 +678,7 @@ static void __aer_print_error(struct pci_dev *dev,
+ 			pci_err(dev, "   [%2d] Unknown Error Bit%s\n",
+ 				i, info->first_error == i ? " (First)" : "");
+ 	}
++	pci_dev_aer_stats_incr(dev, info);
+ }
+ 
+ static void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+-- 
+2.18.0.rc1.244.gcf134e6275-goog
