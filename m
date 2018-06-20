@@ -1,121 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:32917 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932554AbeFPTcf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:32:35 -0400
-Message-Id: <617e37a86150a1f5dec684217596e879718f5d33.1529173804.git.lukas@wunner.de>
-In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 16 Jun 2018 21:25:00 +0200
-Subject: [PATCH 22/32] PCI: pciehp: Always enable occupied slot on probe
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org
+Received: from mail.kernel.org ([198.145.29.99]:42666 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932929AbeFTVN6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Jun 2018 17:13:58 -0400
+Date: Wed, 20 Jun 2018 16:13:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rafal <uzg@wp.pl>
+Cc: linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>
+Subject: Re: Fwd: [Bug 199879] New: Very basic the Pci device is not resumed
+ from suspend mode
+Message-ID: <20180620211349.GB108993@bhelgaas-glaptop.roam.corp.google.com>
+References: <bug-199879-41252@https.bugzilla.kernel.org/>
+ <CAErSpo5U9D5kmYix2SbcJH_mW8urpmZcgN6Zh=FbGtLch+ACuA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5U9D5kmYix2SbcJH_mW8urpmZcgN6Zh=FbGtLch+ACuA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Per PCIe r4.0, sec 6.7.3.4, a "port may optionally send an MSI when
-there are hot-plug events that occur while interrupt generation is
-disabled, and interrupt generation is subsequently enabled."
+[+to Rafal]
 
-On probe, we currently clear all event bits in the Slot Status register
-with the notable exception of the Presence Detect Changed bit.  Thereby
-we seek to receive an interrupt for an already occupied slot once event
-notification is enabled.
+Sorry, I'm an idiot and forgot to include Rafal, the submitter, when I
+forwarded this report to the mailing lists.
 
-But because the interrupt is optional, users may have to specify the
-pciehp_force parameter on the command line, which is inconvenient.
+I suspect that the config accessors used by lspci should temporarily
+wake up devices that are asleep, instead of reporting 0xff data (or if
+that's not feasible, maybe we should add a comment in the kernel and a
+note in the lspci man page).
 
-Moreover, now that pciehp's event handling has become resilient to
-missed events, a Presence Detect Changed interrupt for a slot which is
-powered on is interpreted as removal of the card.  If the slot has
-already been brought up by the BIOS, receiving such an interrupt on
-probe causes the slot to be powered off and immediately back on, which
-is likewise undesirable.
+I'm not sure yet where to go beyond that.
 
-Avoid both issues by making the behavior of pciehp_force the default and
-clearing the Presence Detect Changed bit on probe.
-
-Note that the stated purpose of pciehp_force per the MODULE_PARM_DESC
-("Force pciehp, even if OSHP is missing") seems nonsensical because the
-OSHP control method is only relevant for SHCP slots according to the
-PCI Firmware specification r3.0, sec 4.8.
-
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pciehp_core.c | 12 ++++--------
- drivers/pci/hotplug/pciehp_hpc.c  |  9 ++-------
- 2 files changed, 6 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index b11f0db0695f..f4eaa9944699 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -30,7 +30,6 @@
- bool pciehp_debug;
- bool pciehp_poll_mode;
- int pciehp_poll_time;
--static bool pciehp_force;
- 
- /*
-  * not really modular, but the easiest way to keep compat with existing
-@@ -39,11 +38,9 @@ static bool pciehp_force;
- module_param(pciehp_debug, bool, 0644);
- module_param(pciehp_poll_mode, bool, 0644);
- module_param(pciehp_poll_time, int, 0644);
--module_param(pciehp_force, bool, 0644);
- MODULE_PARM_DESC(pciehp_debug, "Debugging mode enabled or not");
- MODULE_PARM_DESC(pciehp_poll_mode, "Using polling mechanism for hot-plug events or not");
- MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
--MODULE_PARM_DESC(pciehp_force, "Force pciehp, even if OSHP is missing");
- 
- #define PCIE_MODULE_NAME "pciehp"
- 
-@@ -243,11 +240,10 @@ static int pciehp_probe(struct pcie_device *dev)
- 	mutex_lock(&slot->lock);
- 	pciehp_get_adapter_status(slot, &occupied);
- 	pciehp_get_power_status(slot, &poweron);
--	if (pciehp_force &&
--	    ((occupied && (slot->state == OFF_STATE ||
--			   slot->state == BLINKINGON_STATE)) ||
--	     (!occupied && (slot->state == ON_STATE ||
--			    slot->state == BLINKINGOFF_STATE))))
-+	if ((occupied && (slot->state == OFF_STATE ||
-+			  slot->state == BLINKINGON_STATE)) ||
-+	    (!occupied && (slot->state == ON_STATE ||
-+			   slot->state == BLINKINGOFF_STATE)))
- 		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
- 	/* If empty slot's power status is on, turn power off */
- 	if (!occupied && poweron && POWER_CTRL(ctrl))
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index b746c3b52719..3c0adf4967a8 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -843,16 +843,11 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	if (link_cap & PCI_EXP_LNKCAP_DLLLARC)
- 		ctrl->link_active_reporting = 1;
- 
--	/*
--	 * Clear all remaining event bits in Slot Status register except
--	 * Presence Detect Changed. We want to make sure possible
--	 * hotplug event is triggered when the interrupt is unmasked so
--	 * that we don't lose that event.
--	 */
-+	/* Clear all remaining event bits in Slot Status register. */
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
- 		PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
- 		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_CC |
--		PCI_EXP_SLTSTA_DLLSC);
-+		PCI_EXP_SLTSTA_DLLSC | PCI_EXP_SLTSTA_PDC);
- 
- 	ctrl_info(ctrl, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c%s\n",
- 		(slot_cap & PCI_EXP_SLTCAP_PSN) >> 19,
--- 
-2.17.1
+On Wed, May 30, 2018 at 07:41:35AM -0700, Bjorn Helgaas wrote:
+> [+cc linux-pci, linux-kernel, linux-pm]
+> 
+> I'm not sure I understand the problem yet, so please correct me if I'm wrong:
+> 
+>   - Your system has both Nvidia and Intel graphics devices
+> 
+>   - When you use Intel graphics, lspci, lshw, and /proc/bus/pci for
+> the Nvidia device show invalid data (0xff) after suspend/resume
+> 
+>   - When you use Nvidia graphics, suspend/resume doesn't work (instead
+> of resuming, you just get a blank screen)
+> 
+> Can you attach the output of "sudo lspci -vv" to the bugzilla, please?
+> 
+> ---------- Forwarded message ---------
+> From: <bugzilla-daemon@bugzilla.kernel.org>
+> Date: Tue, May 29, 2018 at 1:29 PM
+> Subject: [Bug 199879] New: Very basic the Pci device is not resumed
+> from suspend mode
+> To: <bhelgaas@google.com>
+> 
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=199879
+> 
+>             Bug ID: 199879
+>            Summary: Very basic the Pci device is not resumed from suspend
+>                     mode
+>            Product: Drivers
+>            Version: 2.5
+>     Kernel Version: kernel-4.15.17
+>           Hardware: x86-64
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: high
+>           Priority: P1
+>          Component: PCI
+>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>           Reporter: uzg@wp.pl
+>         Regression: No
+> 
+> Hi, I have problem with very basic device. Device pci-e not resume from
+> suspend. Only sleep.
+> 
+> I have a problem with anyone interested in it, because everyone thinks it is
+> the fault of the device drivers themselves. But this is not a problem.
+> 
+> This device is a basic device. I've already installed drivers on various
+> hardware and it has always been ok, but not this time.
+> 
+> I'm an electronics technician. After diagnosing what I managed, in my opinion
+> the device remains asleep.
+> 
+> Where does my application come from?
+> I have multiuser mode and I do not use this device. After suspend lspci and
+> lshw show normal data. Normal data is in /proc/bus/pci/...
+> Next suspend and resume, and...
+> lspci see hardware, but is error
+> lshw see hardware as undefined device
+> data in /proc/bus/pci/... is only 0xFF
+> Hardware sleep, not work, not ready. This is bug.
+> 
+> But since the problem concerns the graphics card in the configuration with the
+> second default Intel card, everyone thinks that this is another driver problem
+> as always and nobody wants to take a look at it :(
+> 
+> The problem is easy to recognize. On the internet, I've seen a lot of
+> unresolved problems in which I could see exactly what I found.
+> 
+> My hardware is Lenovo with NVidia and Intel Graphics. Problem is with NVidia. I
+> tested Z710 and Z50-70. The first symptom of the problem is lspci in multiuser
+> mode (or when is XServer with intel graphics). After suspend NVidia have e.g
+> "rev. A1", after resume is "rev. FF". Next symptom lshw and /proc/bus/pci/...
+> When system started with normal NVidia driver, system not resume and halt, only
+> black screen.
+> 
+> There are many examples on the Internet with unsolved problems e.g
+> https://www.lwks.com/index.php?option=com_kunena&func=view&catid=21&id=124374&Itemid=81
+> 
+> --
+> You are receiving this mail because:
+> You are watching the assignee of the bug.
