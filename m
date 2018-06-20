@@ -1,99 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41398 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932316AbeF2TTc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Jun 2018 15:19:32 -0400
-Date: Fri, 29 Jun 2018 14:19:30 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        n0000b.n000b@gmail.com, LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v2] PCI / ACPI / PM: Resume bridges w/o drivers on
- suspend-to-RAM
-Message-ID: <20180629191930.GA40928@bhelgaas-glaptop.roam.corp.google.com>
-References: <35587465.8Nave9aG7d@aspire.rjw.lan>
- <2518711.SfHWAsyaFM@aspire.rjw.lan>
+Received: from smtprelay.synopsys.com ([198.182.37.59]:50905 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751166AbeFTJY0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2018 05:24:26 -0400
+Subject: Re: [PATCH v2] PCI: controller: dwc: Do not let PCIE_DW_PLAT_HOST
+ default to yes
+To: Geert Uytterhoeven <geert+renesas@glider.be>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20180619171917.19932-1-geert+renesas@glider.be>
+From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Message-ID: <7d974ab2-27e9-98d7-36bb-91e87d92b7bf@synopsys.com>
+Date: Wed, 20 Jun 2018 10:22:06 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2518711.SfHWAsyaFM@aspire.rjw.lan>
+In-Reply-To: <20180619171917.19932-1-geert+renesas@glider.be>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 29, 2018 at 10:34:40AM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Geert,
+
+On 19/06/2018 18:19, Geert Uytterhoeven wrote:
+> PCIE_DW_PLAT_HOST does not have any platform dependency, so it should
+> not default to yes.
+
+That's right, thanks.
+
+Regards,
+Gustavo
+
+Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 > 
-> It is reported that commit c62ec4610c40 (PM / core: Fix direct_complete
-> handling for devices with no callbacks) introduced a system suspend
-> regression on Samsung 305V4A by allowing a PCI bridge (not a PCIe
-> port) to stay in D3 over suspend-to-RAM, which is a side effect of
-> setting power.direct_complete for the children of that bridge that
-> have no PM callbacks.
-> 
-> On the majority of systems PCI bridges are not allowed to be
-> runtime-suspended (the power/control sysfs attribute is set to "on"
-> for them by default), but user space can change that setting and if
-> it does so and a given bridge has no children with PM callbacks, the
-> direct_complete optimization will be applied to it and it will stay
-> in suspend over system suspend.  Apparently, that confuses the
-> platform firmware on the affected machine and that may very well
-> happen elsewhere, so avoid the direct_complete optimization for
-> PCI bridges with no drivers (if there is a driver, it should take
-> care of the PM handling) on suspend-to-RAM altogether (that should
-> not matter for suspend-to-idle as platform firmware is not involved
-> in it).
-> 
-> Fixes: c62ec4610c40 (PM / core: Fix direct_complete handling for devices with no callbacks)
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=199941
-> Reported-by: n0000b.n000b@gmail.com
-> Tested-by: n0000b.n000b@gmail.com
-> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Fixes: 1d906b22076e12cf ("PCI: dwc: Add support for EP mode")
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 > ---
-> 
-> -> v2: Make the patch work for PCI bridges without ACPI companion objects.
-> 
-> Since that doesn't really change the idea etc, but only makes the check
-> to be made earlier, I've added the Reviewed-by and Acked-by tags given to
-> the previous version.  If that's not right, please let me know.
-
-Keeping my ack is fine, and I assume you'll apply this.
-
-It would be nice to see that ACPI spec reference (the spec version and
-section number, not necessarily all the text) in the changelog or
-maybe even a comment in the code.
-
+> v2:
+>   - Rebased on top of the big PCI controller move.
 > ---
->  drivers/pci/pci-acpi.c |    9 +++++++++
->  1 file changed, 9 insertions(+)
+>  drivers/pci/controller/dwc/Kconfig | 1 -
+>  1 file changed, 1 deletion(-)
 > 
-> Index: linux-pm/drivers/pci/pci-acpi.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-acpi.c
-> +++ linux-pm/drivers/pci/pci-acpi.c
-> @@ -629,6 +629,15 @@ static bool acpi_pci_need_resume(struct
->  {
->  	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
->  
-> +	/*
-> +	 * In some cases (eg. Samsung 305V4A) leaving a bridge in suspend
-> +	 * confuses the platform firmware, so avoid doing that, unless the
-> +	 * bridge has a driver that should take care of PM handling.
-> +	 */
-> +	if (pci_is_bridge(dev) && !dev->driver &&
-> +	    acpi_target_system_state() != ACPI_STATE_S0)
-> +		return true;
-> +
->  	if (!adev || !acpi_device_power_manageable(adev))
->  		return false;
->  
+> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+> index 16f52c626b4bd510..91b0194240a57e8f 100644
+> --- a/drivers/pci/controller/dwc/Kconfig
+> +++ b/drivers/pci/controller/dwc/Kconfig
+> @@ -58,7 +58,6 @@ config PCIE_DW_PLAT_HOST
+>  	depends on PCI && PCI_MSI_IRQ_DOMAIN
+>  	select PCIE_DW_HOST
+>  	select PCIE_DW_PLAT
+> -	default y
+>  	help
+>  	  Enables support for the PCIe controller in the Designware IP to
+>  	  work in host mode. There are two instances of PCIe controller in
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
