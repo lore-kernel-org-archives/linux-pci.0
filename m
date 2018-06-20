@@ -1,203 +1,188 @@
-Return-Path: <SRS0=GJIr=I6=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=GJIr=I6=broadcom.com=ray.jui@kernel.org>
-Subject: Re: [PATCH v2 2/5] PCI: iproc: Fix up corrupted PAXC root complex
- config registers
-To: poza@codeaurora.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org, Ray Jui <rjui@broadcom.com>,
- linux-pci-owner@vger.kernel.org
-References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
- <1528762867-16823-3-git-send-email-ray.jui@broadcom.com>
- <2bafb8ae70029279a1849fb68a020d18@codeaurora.org>
- <1f059e9b5ebeabf6f5a7e11a134221ae@codeaurora.org>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <330f9f0d-761a-706b-2a58-2ae15f2e0105@broadcom.com>
-Date: Tue, 12 Jun 2018 09:56:46 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.37.59]:51102 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751031AbeFTKWz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2018 06:22:55 -0400
+Subject: Re: [PATCH v4 04/10] PCI: dwc: Rework MSI callbacks handler
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "adouglas@cadence.com" <adouglas@cadence.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+ <c6320411aa93d76e3e861f6275cebb1caf6cf893.1529329262.git.gustavo.pimentel@synopsys.com>
+ <ef846300-1606-397e-c790-45ddee6b2417@ti.com>
+From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Message-ID: <f2b5e607-6e9d-69f0-087d-3dd1cd6736c5@synopsys.com>
+Date: Wed, 20 Jun 2018 11:20:27 +0100
 MIME-Version: 1.0
-In-Reply-To: <1f059e9b5ebeabf6f5a7e11a134221ae@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <ef846300-1606-397e-c790-45ddee6b2417@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi,
 
-
-On 6/12/2018 5:23 AM, poza@codeaurora.org wrote:
-> On 2018-06-12 13:57, poza@codeaurora.org wrote:
->> On 2018-06-12 05:51, Ray Jui wrote:
->>> On certain versions of Broadcom PAXC based root complexes, certain
->>> regions of the configuration space are corrupted. As a result, it
->>> prevents the Linux PCIe stack from traversing the linked list of the
->>> capability registers completely and therefore the root complex is
->>> not advertised as "PCIe capable". This prevents the correct PCIe RID
->>> from being parsed in the kernel PCIe stack. A correct RID is required
->>> for mapping to a stream ID from the SMMU or the device ID from the
->>> GICv3 ITS
->>>
->>> This patch fixes up the issue by manually populating the related
->>> PCIe capabilities
->>>
->>> Signed-off-by: Ray Jui <rjui@broadcom.com>
->>> ---
->>>  drivers/pci/host/pcie-iproc.c | 65 
->>> +++++++++++++++++++++++++++++++++++++++----
->>>  drivers/pci/host/pcie-iproc.h |  3 ++
->>>  2 files changed, 62 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/drivers/pci/host/pcie-iproc.c 
->>> b/drivers/pci/host/pcie-iproc.c
->>> index 3c76c5f..680f6b1 100644
->>> --- a/drivers/pci/host/pcie-iproc.c
->>> +++ b/drivers/pci/host/pcie-iproc.c
->>> @@ -85,6 +85,8 @@
->>>  #define IMAP_VALID_SHIFT        0
->>>  #define IMAP_VALID            BIT(IMAP_VALID_SHIFT)
->>>
->>> +#define IPROC_PCI_PM_CAP        0x48
->>> +#define IPROC_PCI_PM_CAP_MASK        0xffff
->>>  #define IPROC_PCI_EXP_CAP        0xac
->>>
->>>  #define IPROC_PCIE_REG_INVALID        0xffff
->>> @@ -375,6 +377,17 @@ static const u16 iproc_pcie_reg_paxc_v2[] = {
->>>      [IPROC_PCIE_CFG_DATA]        = 0x1fc,
->>>  };
->>>
->>> +/*
->>> + * List of device IDs of controllers that have corrupted capability 
->>> list that
->>> + * require SW fixup
->>> + */
->>> +static const u16 iproc_pcie_corrupt_cap_did[] = {
->>> +    0x16cd,
->>> +    0x16f0,
->>> +    0xd802,
->>> +    0xd804
->>> +};
->>> +
->>>  static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
->>>  {
->>>      struct iproc_pcie *pcie = bus->sysdata;
->>> @@ -495,6 +508,49 @@ static unsigned int iproc_pcie_cfg_retry(void
->>> __iomem *cfg_data_p)
->>>      return data;
->>>  }
->>>
->>> +static void iproc_pcie_fix_cap(struct iproc_pcie *pcie, int where, 
->>> u32 *val)
->>> +{
->>> +    u32 i, dev_id;
->>> +
->>> +    switch (where & ~0x3) {
->>> +    case PCI_VENDOR_ID:
->>> +        dev_id = *val >> 16;
->>> +
->>> +        /*
->>> +         * Activate fixup for those controllers that have corrupted
->>> +         * capability list registers
->>> +         */
->>> +        for (i = 0; i < ARRAY_SIZE(iproc_pcie_corrupt_cap_did); i++)
->>> +            if (dev_id == iproc_pcie_corrupt_cap_did[i])
->>> +                pcie->fix_paxc_cap = true;
->>
->> and I think this code will try to fix up every time config space is read.
->> Does this get corrupted often, randomly ?
->> Can it not be solved by using one time Quirk ?
->> and if not Quirk, you dont want to be setting pcie->fix_paxc_cap =
->> false somewhere
->>
->> besides, pcie->fix_paxc_cap = true; is set if PCI_VENDOR_ID is read 
->> first.
->> and rest cases stay with the assumption that PCI_VENDOR_ID will be 
->> read first.
->> which is infact read first during enumeration
->> (that is the assumption code is making), but that is safe assumption
->> to make I think.
->>
+On 20/06/2018 07:49, Kishon Vijay Abraham I wrote:
+> Hi,
 > 
-> ok I see that Bjorn has suggested to fix it this way instead of Quirks.
-> will just mark
+> On Monday 18 June 2018 08:30 PM, Gustavo Pimentel wrote:
+>> Remove duplicate defines located on pcie-designware.h file already
+>> available on /include/uapi/linux/pci-regs.h file.
+>>
+>> Add pci_epc_set_msi() maximum 32 interrupts validation.
+>>
+>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>> ---
+>> Change v1->v2:
+>>  - Nothing changed, just to follow the patch set version.
+>> Change v2->v3:
+>>  - Replaced wrong return value 0 to -EINVAL.
+>> Change v3->v4:
+>>  - Rebased to Lorenzo's master branch v4.18-rc1.
+>>
+>>  drivers/pci/controller/dwc/pcie-designware-ep.c | 49 +++++++++++++++++--------
+>>  drivers/pci/controller/dwc/pcie-designware.h    | 11 ------
+>>  drivers/pci/endpoint/pci-epc-core.c             |  3 +-
+>>  3 files changed, 35 insertions(+), 28 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> index ad25654..89d9e52 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> @@ -246,29 +246,38 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
+>>  
+>>  static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
+>>  {
+>> -	int val;
+>>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +	u32 val, reg;
+>> +
+>> +	if (!ep->msi_cap)
+>> +		return -EINVAL;
+>>  
+>> -	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+>> -	if (!(val & MSI_CAP_MSI_EN_MASK))
+>> +	reg = ep->msi_cap + PCI_MSI_FLAGS;
+>> +	val = dw_pcie_readw_dbi(pci, reg);
+>> +	if (!(val & PCI_MSI_FLAGS_ENABLE))
+>>  		return -EINVAL;
+>>  
+>> -	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
+>> +	val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
+>> +
+>>  	return val;
+>>  }
+>>  
+>> -static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
+>> +static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
+>>  {
+>> -	int val;
+>>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +	u32 val, reg;
+>>  
+>> -	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+>> -	val &= ~MSI_CAP_MMC_MASK;
+>> -	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
+>> +	if (!ep->msi_cap)
+>> +		return -EINVAL;
+>> +
+>> +	reg = ep->msi_cap + PCI_MSI_FLAGS;
+>> +	val = dw_pcie_readw_dbi(pci, reg);
+>> +	val &= ~PCI_MSI_FLAGS_QMASK;
+>> +	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
+>>  	dw_pcie_dbi_ro_wr_en(pci);
+>> -	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
+>> +	dw_pcie_writew_dbi(pci, reg, val);
+>>  	dw_pcie_dbi_ro_wr_dis(pci);
+>>  
+>>  	return 0;
+>> @@ -367,21 +376,29 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+>>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>>  	struct pci_epc *epc = ep->epc;
+>>  	u16 msg_ctrl, msg_data;
+>> -	u32 msg_addr_lower, msg_addr_upper;
+>> +	u32 msg_addr_lower, msg_addr_upper, reg;
+>>  	u64 msg_addr;
+>>  	bool has_upper;
+>>  	int ret;
+>>  
+>> +	if (!ep->msi_cap)
+>> +		return -EINVAL;
+>> +
+>>  	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
+>> -	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+>> +	reg = ep->msi_cap + PCI_MSI_FLAGS;
+>> +	msg_ctrl = dw_pcie_readw_dbi(pci, reg);
+>>  	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
+>> -	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
+>> +	reg = ep->msi_cap + PCI_MSI_ADDRESS_LO;
+>> +	msg_addr_lower = dw_pcie_readl_dbi(pci, reg);
+>>  	if (has_upper) {
+>> -		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
+>> -		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
+>> +		reg = ep->msi_cap + PCI_MSI_ADDRESS_HI;
+>> +		msg_addr_upper = dw_pcie_readl_dbi(pci, reg);
+>> +		reg = ep->msi_cap + PCI_MSI_DATA_64;
+>> +		msg_data = dw_pcie_readw_dbi(pci, reg);
+>>  	} else {
+>>  		msg_addr_upper = 0;
+>> -		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
+>> +		reg = ep->msi_cap + PCI_MSI_DATA_32;
+>> +		msg_data = dw_pcie_readw_dbi(pci, reg);
+>>  	}
+>>  	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
+>>  	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+>> index b22c5bb..a0ab12f 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware.h
+>> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+>> @@ -96,17 +96,6 @@
+>>  #define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
+>>  			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
+>>  
+>> -#define MSI_MESSAGE_CONTROL		0x52
+>> -#define MSI_CAP_MMC_SHIFT		1
+>> -#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
+>> -#define MSI_CAP_MME_SHIFT		4
+>> -#define MSI_CAP_MSI_EN_MASK		0x1
+>> -#define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+>> -#define MSI_MESSAGE_ADDR_L32		0x54
+>> -#define MSI_MESSAGE_ADDR_U32		0x58
+>> -#define MSI_MESSAGE_DATA_32		0x58
+>> -#define MSI_MESSAGE_DATA_64		0x5C
+>> -
+>>  #define MAX_MSI_IRQS			256
+>>  #define MAX_MSI_IRQS_PER_CTRL		32
+>>  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
+>> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+>> index c72e656..094dcc3 100644
+>> --- a/drivers/pci/endpoint/pci-epc-core.c
+>> +++ b/drivers/pci/endpoint/pci-epc-core.c
+>> @@ -201,7 +201,8 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
+>>  	u8 encode_int;
+>>  	unsigned long flags;
+>>  
+>> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+>> +	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
+>> +	    interrupts > 32)
+>>  		return -EINVAL;
+> 
+> This is not related to $patch->subject
 
-Right, and there are benefits with this approach like Bjorn has 
-explained. We now have consistent lspci and config dump output using 
-this approach.
+A new patch file will be created for this.
+Thanks,
+Gustavo
 
 > 
-> Reviewed-by: Oza Pawandeep <poza@codeaurora.org>
+> Thanks
+> Kishon
 > 
->>> +        break;
->>> +
->>> +    case IPROC_PCI_PM_CAP:
->>> +        if (pcie->fix_paxc_cap) {
->>> +            /* advertise PM, force next capability to PCIe */
->>> +            *val &= ~IPROC_PCI_PM_CAP_MASK;
->>> +            *val |= IPROC_PCI_EXP_CAP << 8 | PCI_CAP_ID_PM;
->>> +        }
->>> +        break;
->>> +
->>> +    case IPROC_PCI_EXP_CAP:
->>> +        if (pcie->fix_paxc_cap) {
->>> +            /* advertise root port, version 2, terminate here */
->>> +            *val = (PCI_EXP_TYPE_ROOT_PORT << 4 | 2) << 16 |
->>> +                PCI_CAP_ID_EXP;
->>> +        }
->>> +        break;
->>> +
->>> +    case IPROC_PCI_EXP_CAP + PCI_EXP_RTCTL:
->>> +        /* Don't advertise CRS SV support */
->>> +        *val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
->>> +        break;
->>> +
->>> +    default:
->>> +        break;
->>> +    }
->>> +}
->>> +
->>>  static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int 
->>> devfn,
->>>                    int where, int size, u32 *val)
->>>  {
->>> @@ -509,13 +565,10 @@ static int iproc_pcie_config_read(struct pci_bus
->>> *bus, unsigned int devfn,
->>>      /* root complex access */
->>>      if (busno == 0) {
->>>          ret = pci_generic_config_read32(bus, devfn, where, size, val);
->>> -        if (ret != PCIBIOS_SUCCESSFUL)
->>> -            return ret;
->>> +        if (ret == PCIBIOS_SUCCESSFUL)
->>> +            iproc_pcie_fix_cap(pcie, where, val);
->>>
->>> -        /* Don't advertise CRS SV support */
->>> -        if ((where & ~0x3) == IPROC_PCI_EXP_CAP + PCI_EXP_RTCTL)
->>> -            *val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
->>> -        return PCIBIOS_SUCCESSFUL;
->>> +        return ret;
->>>      }
->>>
->>>      cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, 
->>> where);
->>> diff --git a/drivers/pci/host/pcie-iproc.h 
->>> b/drivers/pci/host/pcie-iproc.h
->>> index 814b600..9d5cfee 100644
->>> --- a/drivers/pci/host/pcie-iproc.h
->>> +++ b/drivers/pci/host/pcie-iproc.h
->>> @@ -60,6 +60,8 @@ struct iproc_msi;
->>>   * @ep_is_internal: indicates an internal emulated endpoint device 
->>> is connected
->>>   * @has_apb_err_disable: indicates the controller can be configured 
->>> to prevent
->>>   * unsupported request from being forwarded as an APB bus error
->>> + * @fix_paxc_cap: indicates the controller has corrupted capability 
->>> list in its
->>> + * config space registers and requires SW based fixup
->>>   *
->>>   * @need_ob_cfg: indicates SW needs to configure the outbound 
->>> mapping window
->>>   * @ob: outbound mapping related parameters
->>> @@ -85,6 +87,7 @@ struct iproc_pcie {
->>>      int (*map_irq)(const struct pci_dev *, u8, u8);
->>>      bool ep_is_internal;
->>>      bool has_apb_err_disable;
->>> +    bool fix_paxc_cap;
->>>
->>>      bool need_ob_cfg;
->>>      struct iproc_pcie_ob ob;
