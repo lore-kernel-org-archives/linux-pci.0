@@ -1,271 +1,321 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:33638 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935106AbeFMKDo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Jun 2018 06:03:44 -0400
-Date: Wed, 13 Jun 2018 18:03:25 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: kbuild-all@01.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: Re: [PATCH v3 01/10] PCI: Add pci_host_alloc_intx_irqd() for
- allocating IRQ domain
-Message-ID: <201806131726.jzRH14LW%fengguang.wu@intel.com>
-References: <1528874720-7575-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:22182 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751092AbeFTGpH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2018 02:45:07 -0400
+Subject: Re: [PATCH v4 02/10] PCI: dwc: Add MSI-X callbacks handler
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
+        <adouglas@cadence.com>, <jesper.nilsson@axis.com>
+References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+ <5beae521c5ee475b1c0e04f5eec07d0120b0fa2b.1529329262.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <88d14571-694e-db83-11df-0e647f7bf3db@ti.com>
+Date: Wed, 20 Jun 2018 12:14:49 +0530
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="ibTvN161/egqYuK8"
-In-Reply-To: <1528874720-7575-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <5beae521c5ee475b1c0e04f5eec07d0120b0fa2b.1529329262.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi,
 
---ibTvN161/egqYuK8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On Monday 18 June 2018 08:30 PM, Gustavo Pimentel wrote:
+> Add PCIe config space capability search function.
+> 
+> Add sysfs set/get interface to allow the change of EP MSI-X maximum number.
+> 
+> Add EP MSI-X callback for triggering interruptions.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+> Change v1->v2:
+>  - Nothing changed, just to follow the patch set version.
+> Change v2->v3:
+>  - Moved dra7xx_pcie_raise_irq() signature change to patch file #3.
+>  - Moved artpec6_pcie_raise_irq() signature change to patch file #3.
+>  - Replaced wrong return value 0 to -EINVAL.
+>  - Removed an else if by code refactoring.
+>  - Reduced the size of ioremap_nocache mapping from ep->addr_size to
+> PCI_MSIX_ENTRY_SIZE.
+>  - Fixed a small bug. If the MSI-X vector bit has been set, the function
+> would return without executing the proper unmap.
+> Change v3->v4:
+>  - Rebased to Lorenzo's master branch v4.18-rc1.
+>  - Added static prefix to __dw_pcie_ep_find_next_cap function.
+> 
+>  drivers/pci/controller/dwc/pcie-designware-ep.c   | 146 +++++++++++++++++++++-
+>  drivers/pci/controller/dwc/pcie-designware-plat.c |   4 +-
+>  drivers/pci/controller/dwc/pcie-designware.h      |  14 ++-
+>  3 files changed, 161 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index 8650416..ad25654 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -40,6 +40,39 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+>  	__dw_pcie_ep_reset_bar(pci, bar, 0);
+>  }
+>  
+> +static u8 __dw_pcie_ep_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
+> +			      u8 cap)
+> +{
+> +	u8 cap_id, next_cap_ptr;
+> +	u16 reg;
+> +
+> +	reg = dw_pcie_readw_dbi(pci, cap_ptr);
+> +	next_cap_ptr = (reg & 0xff00) >> 8;
+> +	cap_id = (reg & 0x00ff);
+> +
+> +	if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
+> +		return 0;
+> +
+> +	if (cap_id == cap)
+> +		return cap_ptr;
+> +
+> +	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+> +}
+> +
+> +u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
 
-Hi Shawn,
+This should be static?
 
-I love your patch! Yet something to improve:
-
-[auto build test ERROR on pci/next]
-[also build test ERROR on v4.17 next-20180613]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/Shawn-Lin/Add-new-helper-to-allocate-IRQ-domain-for-host-drivers/20180613-153030
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-config: sh-rsk7269_defconfig (attached as .config)
-compiler: sh4-linux-gnu-gcc (Debian 7.2.0-11) 7.2.0
-reproduce:
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # save the attached .config to linux build tree
-        GCC_VERSION=7.2.0 make.cross ARCH=sh 
-
-All errors (new ones prefixed by >>):
-
-   In file included from arch/sh/kernel/io.c:12:0:
->> include/linux/pci.h:1699:27: error: 'pci_host_alloc_intx_irqd' defined but not used [-Werror=unused-function]
-    static struct irq_domain *pci_host_alloc_intx_irqd(struct device *dev,
-                              ^~~~~~~~~~~~~~~~~~~~~~~~
-   cc1: all warnings being treated as errors
-
-vim +/pci_host_alloc_intx_irqd +1699 include/linux/pci.h
-
-  1698	
-> 1699	static struct irq_domain *pci_host_alloc_intx_irqd(struct device *dev,
-  1700					void *host, bool general_xlate,
-  1701					const struct irq_domain_ops *intx_domain_ops,
-  1702					struct device_node *local_intc)
-  1703	{ return ERR_PTR(-EINVAL); }
-  1704	#endif /* CONFIG_PCI */
-  1705	
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-
---ibTvN161/egqYuK8
-Content-Type: application/gzip
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
-
-H4sICFXjIFsAAy5jb25maWcAjDxbc9s2s+/9FZx05kwy86WxbMd2zhk/QCAoouLNBKiLXziK
-rCSaOpI/SW6bf392QUoEqYWsTJtI2AWwBPa+S/3+2+8ee92tf852y/ns+fmX932xWmxmu8WT
-9235vPg/z0+9JNWe8KX+A5Cj5er130/bH971H73bPy684WKzWjx7fL36tvz+ChOX69Vvv/8G
-//0Ogz9fYI3N/3rbH9cfn3Hmx++r14/f53Pvvb/4upytvNs/Lv+4+Njrfag+wTyeJoEclKrI
-RB7e/2p/v7psRljOw9IXQfX1/t1sM/8BlH2aG1q28PHfq/Jp8a36/m4/LR8rEZcDkYhc8lJl
-MolSPmyW3UP6xeB4MBwLOQi1RZZmfKhzxgVSmKW5BcN1fZEdA5K0lCkOlTHLmmE/ZgBKeBqK
-XCQWfjbQrB+JMhIjEan7y/24zB/KcZoj8ebAB+bunr3tYvf60hxlP0+HIinTpFSxtZ1MpC5F
-MoKDBFplLPX91SVeWwXmaZxJ2FQLpb3l1lutd7iw9XAsGolcyTS5f/eOGi5ZodNmv5CNRDkU
-eSKicvAoMxrSB8glDYoeY0ZDJo+uGdb+7a0Pz2nvaz9nFwF3PwWfPJ6enRKHCNzLikiXYap0
-wmJx/+79ar1afHjXzFdTNZIZJ9fOUiUnZfxQiEKQCIUSkeyTIFaARBMkmeMzomUwYHu40GjP
-YcBx3vb16/bXdrf42XBYzKbVRJWxXAlkzGPZQW5VYTq2OBBG/DRmMmmPBWnOhV/qMBfMl4kl
-h6fW5yhvICGJVnty9fLnYrOlKA4fS9AnMvUlt5kBJBMg0o/o8zRgEhKCWihzoUotY+B+G6fS
-hVnxSc+2f3k7IMmbrZ687W6223qz+Xz9utotV98b2rTkwxImlIzztEh0dQKHrfrKL7M85UIp
-xNAkPZqpIegmfUxJzgtPHR8I7DItAWbvBF9LMYFzohhFVcj2dNWZL4fVB1J9wIMUATCEDPR9
-7/qg6nKZ6GGpWCC6OFfdC1c8BC7htfpuFNcgT4tM0RcIQgY8BGdHgqsVUW2ZNWicqQoUSG6W
-C8608EmkXERsSkL60RAmj4z2zenJnJdpBnwkHwWKAjIq/BOzhAviJLvYCj5YAgPyqyPLaIKB
-gb1TX6iOyiyk37tpxvpZ0HypmKD53sGNQYdJ0DW5te9A6Bh4sGwUSOv8mmH7YIHUPYR40iBk
-CUimZReN/qskzho1LNT9XiaxtJ7ONu4iCsDa5dbCfQZKJihssoNCi0nna5nJziFWwzzOJjy0
-d8jS1hHIQcKiwLfFB57BHjB6zB5g0jJlzB9JoLA+KuvZYxH3WZ5LcxUNQ4WCD7MUjgFVlIZH
-JU53iCtNY9WyjfVYSV/IAWzOC3ley5Fo6aosOHGhQKzwfeF3DhH5vTwo8v0t4iDwWDmKYbG0
-pbUz3ru4PlJ0tWuaLTbf1pufs9V84Ym/FytQugzUL0e1C8ah0YDtbQ+L+wKY5Wh7UnBHcTW/
-NGq7YwYst4pp8MksDlUR67ckISpoo62itE+pYpgPV58PxN6jaK8G0CAX4AooYACQoTQmV4/B
-G8WbTsdlkaB+kiwCZUIrKbBAgYzANLl8iLTCEJ3LHcJw/0j5DHOhSUBLahvfxHjcYZoSfjv4
-uMaA1+4D4YcgEAWyVEIXXTc0FwNg98SvPHs0sMbOHkk6j4adkXAMtypYJWgdWCwnYFgasDL7
-dGKZMQPWAV+vrJycvXPd2ZdXlMFpacFBlluC3gViPEG7MseoQFERsZw2MR1cpfO07ZUc46AZ
-JRaLU7+IwFFCYULNi2qjecY08lE9qkJlIvGPxhnXrSMx5wZe2T5mMjFU3Iqq0JECDBEEkktE
-CYKWfOcYQRY4XrSVVBVS8XT08etsC/HwX5U+edmsITJuOWyGipCpErFryRBly+qZu9tzIBJ5
-HOVhOIjmw5YBo1gVqpz7C0tQqyM8cbgaxB38p3Ro83e/6ylFfZ8FxCrooyiuJJwNxBaqpU32
-/ktfDU76NwB3hR6NC6TFIJf6tKP0CBxMqyDE4LEPSkhUIpM70cZ92k02TwqSmWbs+O6z2Wa3
-xISGp3+9LGxLwXIttYlw/RG6Zb59Qgx8iaTBoaMv8FtOY6QqeGuNGOThLRzNcvkGTsw4jbGH
-Kz9VDUY3FPGlGoKFERG9ONiRSamK/mkaVAqaR6pycnfzBrVgmSZjlos39o38+I2F1OCtgwE7
-mr95T6p4666HDHz3kycsAkmfLwb/N3dvrG+JwDFWFbWnnpr/WDy9PrccHplW8U6Spq2MyH7c
-B/OJK5O77pF48HAisVEv3Rmt596/W63XL4fUUfxwtLPl2DbA4bTfdm/3gD5JikzM6WCiD5gH
-VWA7fVDD0Veo4adg5NwxKDHhmmwD69nmUpQJwL0dqJbmStBYqfCybb1ggLVMLY4VfT3N4LHC
-25veF5ovLLQ/6dRWZ6XLi955aFfnod2chXZz3mo318TlHiF9cR1UPKHtVWeF24vP56Gd9Wy3
-F7fnod2dh/b2RSNa7+I8tLN4Aq7xPLSzWOf281mrXXw5dzXa5B/j0fmeI7wzt+2dt+3NOQ97
-XV5enHkTZwnK7eX1WWhX56F9Po+DzxNiYOGz0O7ORDtPVu/OkdXJWQ9wdX3mHZx1o1c3LcqM
-WYgXP9ebX97P2Wr2ffFzsdp56xf0QS27/VBIPsRg3sqOMIj9U4hshL6/+Pei/nNIVmE+Hfy8
-iXGm09wH+9mkXGMRp/kUo7fcTJ63J+/BmFYE6GUbenXZl7oTjwUR0zCrFAlWrTrAKoN/BrjJ
-ZLTgIoLock8UhDvCCrKKhDPjCUAAmLXqBuZ88BHK62Er1dIA7oZ0tNJg9G7eRLm5HpIJmlNU
-748rZknB2hnRw2FUMConWk1ur1Zifres5lnuV7McVgZM4aOVoxBxv+3BtIbrRe0FqwqsVJzl
-PjEdou5+mrbJU1kkdZlpsyKIg7r/Yv4c5uQVe9/3mlXiuCjrdBQEthI4Z4JJGQtFwJ1nIjfy
-NYxbLkAkWMUV5M09ZmlKBxCP/cKR+BK5EeNuceWAMCiysi8SHsYsHx4XgmbgiXvzTr18Ty0S
-WnmMfdapajQgHeZpMQhpDWPQQBMcR7Ob9Xyx3a433rfFbPe6MQFtSzPBzehIgFz6klFhCuL0
-MVwxCNadgshnRdtnxWxINWh26a9nmydv+/ryst7s7H0VlvBHEtQTpiwo0QnLXA1bm8H32tNr
-inympDZ/Xs//cp0tTOSYMMgG+4lApxdsFv99Xazmv7ztfFZndU4CWycW5OLh6KD9mFlPeuiE
-mK0wk8B/LF+2+2H29GTyC7NnT72+LDah5y/+Xs4Xnr9Z/l2Fak2BUYB67gtG5zFAkEA3jqXm
-4RE9dR6cuvXwsexdXBCnDoDLzxc2/8HI1QVtlqtV6GXuYRnrzHKGF17EGYGchVMlOcj4kSVq
-uEVwzJ9Tk4F74kybfGdLv9fjozQqEliXzjXVWMS6g0KxQ8RW3dEnT4Uf4/XX5fP+ory0a6Lh
-KWWi+aFsjqWGzevLDplzt1k/QyBu2fVaRNaErX8UeUpY955lglHHguwmQxvlrmWlRaLB7hyv
-UG38uu3SknHpidXTy3q5akkrjKP0mxQ2fZAcbcERC4p/F/PX3ewrnBh2FXmmILOzHrMvkyDW
-Jh8c+JltmmCoU5urUBXPZaaPhtH8tTJU1fAjjtMZwHq5kOVgRN5Ci8HYkUUdmFyY5prq/Nb/
-wAUf+3Dee1NJlTFcCIs+tI42PjYVoILk0/Oiq3W67QkHK6j3+yeL3T/rzV+gsaybtdwVPhT0
-Y2J2je4niGhjNwnyGFP5dEAEJJVDMSWIlRW1TQ4nq6rInCmaMkDYJ1tLMH9aUIUKQMoSu8XJ
-fC/9kGedzXAYBYeu8dcIOctpOD6XzOQp4ABTlCIu6ONU0wSYJh1KRyMCrhGkBU0cAhlt/g1M
-KMdTVZR1NWgbbi4UPVSssSUKu9TOQi6SxJGK7WD2hYP3DB54FnSeRvMMTiwZHLiAuP4DDi/6
-tg7Z5x338Pt389evy/m79uqx/1lJenOZjegYEkjGBjw0TF1v7wgH7Jup84N5i7NO4dRGDmSk
-XaWM7AQQmNbn3MnQijuYPfdpHtSutjOIOOic+6Vjh34u/QGlsqoSL167amU46yFysVHEkvLu
-4rL3QIJ9wRMHg0URp8NyBsqYvrvJJZ1iiFjmCAXD1LW9FEIg3Z/pxAs+s8lj04/FHbU0uAxm
-6lAkOM1EMjr2C5vDVNgz5whkgCLjVjhlMs4cVgGfJVH0lqFy24qKUggInBjRFYSgCkSgPIWV
-cCVpC1nmk7JfqGnZ7sjpP0Qd2+ntFttdx+XH+dlQDwRdiAlZnDNfpiSQM3qSozDJAqA0dwlg
-UA55TDzgWOYiwtDYDhyDAXJdK7NZPdQesFosnrbebu19XXiLFXppT+iheTHjBsHu86xG0EXH
-EC80SaUqNdTsOJYwSquaYCgj2krg2X6h1QdnMqABIgtLV5U5CRxNswrUr6u/Ew1kQMOi8Qkb
-ZxSWGKG4ENeC7bHY7lBj2LcTMBmlo7ZGr6LIbiTYdHgv5864o6j6j0IRZXY3XmsY/D8d3r/7
-tP26XH36sd69PL9+t0whEKnjLKC6C+DWE59FqV2Yg9DJrB3IPDZ12X4hI38vTMFy8/Of2Wbh
-Pa9nT4uNLUzBuIxS5pN+XNWEhNV/y7O2KMSOLD+XI4clrBHEKHe4VxUCdrbXy5S5iOEajm4B
-Y6MncxPtbEkKnIBNLrRa1LQOT6leC5NDi/Glgrr5zRTj6/cFLJc973pie/1RtUlQLRpJEUX4
-hdY7NVKUpg6jXSP4ed/dfmG2eQOeM9pd4H6exqhPuT+iVwC7XKJwlELTtuSwRf845kxGscCQ
-vZtxwvGyrRuqxPtyO6fuGrgvnmLhlqRAJDxKVQF8DzEQ5rEcjcXOQ7js3msVMIsMDodKmFWQ
-8ssVnxwXD/Ti39nWk6vtbvP607Q6bn+A9D15u81stcWlvOflauE9wbMuX/CjvbSWpTomhT3v
-FpuZF2QDBsF7Lc5P639WKNLezzV2FXjvMVO23Cxg80v+Ya+tMO3x7MWSe//jbRbP5q2iTmas
-QUFRq9TaHqY46P3j4REw7PFos1C43u6cQI55SGIbJ/765ZA3VTt4Ai9uovr3PFXxh66ORvoO
-yzX3xkPaMcCUQplrNQET0T86fWzDqrnSOro9V2GPFgRVrXY2Jn0QHE02n+IEK5WK0/245XlX
-Sz7sQybHGub9gzI4vGdhqKzJMx0N3ntgsb/+4+1mL4v/eNz/CDz7wUr31HKrWqTzMK9GaZdo
-D06VA+GwqqM6u1/e0QiwBztcZfPc8BmNoMNhNihROhi4ojuDoDg67GqaHOsgc456L6stNVRN
-zeTx3bZRAv4WhjR/v4GkmDoHBZwv+OcETp6dZEY4rbF5q62VnjEQ7QplDdQkPc2rBO7Ni0CF
-nLYsFeujF3ACfIIPUuXXJamOE2AHthnaryxiGt/eaHUIajq0jWliNcsHQhtXiA5qqgqK/RqA
-tMQ8qee2XIQ08V1MagwebeweCtMR7g7gtHDYOYgcMHCng9CJCwKzlKDdeNgNhTF1ePLgq7vG
-y5E5kRz0SOmYPXI5HEkUE/11JkBpTOxT2x74SzDHy6+vaP3UP8vd/IfHNvMfy91ijgUZC31/
-zDrElwZ1+wrBy/axqzpiHIuAPGxxFGaFWKmVg0MOs2P2aPdP2yC43AQYmgbmvJuf2UOKPM3Z
-6V37OTj6PG3JQP+a6ucyNwNBQcJb7Ap8QJXVrS2AwbVMWqbM7yRijieJRx7a76FaoLBgYyFJ
-kLy7/DyZ0KBE25V9CxKzHLRcS83Fo7iTLCCmSZ63leNQ3d197pUx+UJNZ2aqREw/Q8K0Gyaw
-uT+NBQ2lJ91dfWmVC9nk7u72C500VTqRtFAD56dUfcXaCFUQsFKLlx5goBTAJHTSIX6TEXKR
-CLBjLUco7EYdxDRMnuXkeSgWq6L9hoSaDPri7UWVEA/0ktgjHcD/9MWoWLVkVMX8S89RfUBQ
-G3aAKANyEMAlxP4TWjEpbViuRYKOsbn87UeeJmkGxrwlvWNeTqJB51KP544cGmssHzslpmqk
-HH/uOerYB4QrspiN0lo3K1iWFgf7RYv0akzqPnNYWIMAJ83RUFN5vCycgme1964ByYORfRjw
-dNwcwGIf59BBdK3X3Qj4EqUTqO8urtzgPo9vJ5OT8LvbU/DaMjgRuARz4Ka9VvtOuM/guk4s
-72d3V3eXlyfhmt/1eqdXuL47Db+5dcID82aYCyp5FhXKDUZ7U07GbOpEicBbFbp30etxN85E
-O2G14XoT3rsYuHGMFTsJTtESn4Gh3TdxsHhODLB6oMCYm5KHk9NzgW7W8ATcWBE3HMwF9ZiW
-7kVQW4OK3sWEDoTQ4wN9Jbl7xxE4ikoJJ3yCb3BOygFomMsc/6Yz5pnjTfhIUq04hepX+XCT
-WW1pRgRxpmk7jcAheF0O1xvBmRgwVdAhH8JzHd31HC3mDZwuAiIc4pDbuwltNBEO/7uqewiW
-WUjbunHEkrYpquo05dinImNEP/jXfgw81xicFky3gwAdHse05LTY9lJtkOWpE1AOsXdKgzqe
-bxeUK9nyYvEHTxjFPPbExmemgMKH4Nt1MjmrCy0UrBJjB9BOkNkAu9vaHtcO/MepzxQNMgZZ
-JMmhsUyYops3XmLd7P1x884HLM5tFwtv92OPRTgBY0cQbXpJiDKTlVHxiXfGVi+vO2fmUSZZ
-0e7fwYEyCLANGDnbYa4QCSuvruJthVE1Kg9j5upTQaSY4dt5XSRDe7FdbJ6xIXSJfXffZp2M
-fj0/LZQ4Tcef6fQ0ghi9Be9Io3W07lbPau5QTPspc/xEiPUIp+lX+GMyJ1DMD0u5+nEMQlrw
-UIH9dhS9a0o6fXFW8CWvjzJX5mHD2ebJ1BLkp9Q7Tnfij/OQKw5YLMiaCf8x28zmcOFWFWdv
-KvW0EcWRJcm8SiFVvU6RcQ+UjblHsHrix9ZYY2i1BcBmwW52bW8lEjn5As6inlrbRGDV+NQ5
-WP2axP3l55v28YAfk1TpaN/FJkk5UHQ+rv7JMrpeDUxdNe03XqwYDWHoOGG92Cxnz5Q2qim8
-u2yb46o0t159NIBtNd1kzajm8GqNgoHdBk+G8pkqDGx+5nZlwx7GdwpwCXV/R8OJ+2wjCJZH
-U06+ulsjtltUrcFTi3OeOFy7GqPO6v2p2QAf4AzUN9FyWkxrcKCiMsq6i7RxYq7zqBxkMiWe
-ybz573DQQAjr3+KhFUkGrnf1Cz9kRn1c/3RJy43YD1Y/oCPTDo82aujqyw3ddpWz8alWAs3/
-v7En220c2fVXjHmaA9yZyd7pezEPZS22OtpSJXnpF8OduLuNSeLATnCm//6SLEnWQpYDnDlp
-i1SpVhZ3wn+Mb2504XE7Fh+z85vzrLWBQbOAqZF48WFGr7zIq9AHpkcAXJ1f397aPFmDdyvW
-wyocKIhCdFds8SDrY+ACffjwZys5QpTiDml5iERpUi46v/Ffxwd1WowjoEV3KPmObZKfEAtD
-FQinSKmgcJDz0Ov24fi83s09IEKaoOKax7apPjARS2kK2Hj46qqVpxJ/W91NbxAI4C80bGFg
-yuoGA76+bh5H1AJDaqkBfy65JBK4mePKHCVjJuPbG/OJl4EsAuyjcsh0JaFve7j59xX2UcsA
-gnbtAeTItvIxt3k2D0BUmfG0xEJ1YATexcIx8WbMS77TeSKkU0DjS6L4zTZX6J6YcTe7QfE0
-MyYa94i94SwXYw9TQjDoCBhO7fvT2/b7+8sDJSOR1YCwBCs/Tnn5dlqgZ5GJPD6CFd+9C5I8
-5jkJBCfFzeVnPhwYwbMoD7TMsiKKSa6FFANqvLg+Oxtwit23l8aTcpgAuIiACFxeXi9WhfFA
-ihV0NJjkSPLc0p6jByhw1rlcB0s02a9ff24fDhwJ9vXw/lBePvpdvT9udyNv14Tm/YdPpIu0
-Ld5+26+BFux372/bl01zuML9+nkz+vb+/Tswvv7QfSnkiUI4RtqXZGPMVARXp2C2xSjEmJzT
-Ys8XBw+dPuyeyK3o9Wn9q9qaQ6nRulINWOrOY/gblwlw4bdnPFxncwPMcOuEAXs8dP+aRv6w
-A/Cwwz5EPjpQA+eE4c86SCeC7gkQgU/g9T74IYZdgaYrmts4ybxuHpDbxReYw4tvqCs07Epd
-wGRkJcljDgwtRJwQNJccXxtoxB8MgpeoORHB4yC+iwTHaAIXWb4KeUdeRPCA7grheRYcwS8H
-nM6nDF7mWlJLIBzWd5KlOhLkaUQJEuPqP4Z4C4n1LJi//Qn2tRck1YFOgmQcCUSV4KFwnSNw
-mqGuSwTDd90b6m4pT0gJLOUk4ukswucglAjOpdTvpVZiUiNEQNOP/PWeQNiBfVFjLe+FYh6l
-U0FZZiclBcF4Uji6FnvEYcjwIM1m8oLjvDlPeqJgYmX1jkVZhrGSgiwQgewhWchzSISRoWrW
-sfUoJM+9QdJCEGAIpoWAKoTCTeLYmblKkROLM8fOz4M0Qd2IA6FQ8TKVKWIORCUWfMQIHkM3
-dJZGnkw6QKaV4h0QrNGdwrGPdeZ5QtApgo2KXNNU+RnI8DwI/H5YQhejCIIYxXfBdZlwyhTt
-kPIYJCkWjzmqDoHvlM+jSZQuvmRL5yeKyHGegMyYQIicIvhUg7RmA4dkcoZ3/Co3PH9sCZqL
-wi9AzpW7iIHczgGiwQAOrExzDJAl8kziOTq6omNGPYDiF8sNocmK4YjyiJ/ICr2n8W4Bs6kX
-dZNItCJQAD6og0DmwCxJsh5ik09z6vkdSA8tTeH0exhBOF8dfSAbb/7N09P6ZbN7P9AUDELr
-sYk6MjRHC1U30SWBl6kCMopZDDPBFZYGXoBoOIVzikl5nFjjWNnUPeIyIqYkmiJsTpM2VsME
-H7TO6PvuHXMMMNYFev/m0wKkLck7FlEWuJguhOAUQrYoL87PprkTKTL5+fnNwokTwsxBS+6P
-neqNidGLo4fRgutbdXNz/flTtee6ux5kHwoWSnqEvJn3ypjjPa0PB465p+3q8bSDDNuarKTy
-qvvyu0UydCRPsyL43xGNG2RdNQlGj5vXzcvjYbR7sV7m397fRkc3/NHz+lctUa6fDhQKiGGB
-m8f/I6Vfu6Xp5umV4gOfd/vNaPvyfdc9UxVe7+zbh1YX1p/fGlhZZuU1rBtRhQqVfH5qPEx6
-LVHsNl5k/AvBJ6yNBv8WLuo2lvF9LSTq66Nd88HFbbQvZZKbaXb6sypWpc/fsW00jE4W+bk2
-ImUtPYlViVXo0S4EKLexQR5eleObC4eHRqn4Cyx6Xv9AizgToEUU0/duHStIrLBjZ0W5rPeh
-94kK+ILxhG6KuaBXq4CyzwlSwF6mwGbUPXfy7qSSxYV9rXv5Ce8HSXQj9wqgF7z3LpEyvywE
-PYPt2swEPE9KpDbKrh2LFQeTrBClK8Jw0Pl6R3rLT56QlNCikZ5XXhVflr7oTir8CGR6QYqk
-OUJ1ig+rK1UCoZHIA0GTtAdMDUiykrqSOprNseCDA6NfwKl3ixsK2zAYwbsoSschiAwqAkNB
-DQYIS3hb3hTBV5q3hcP7CpMNwGwF2t1nb6oy09OYNHs///nrgKXMRvH6F7oCDDd/muWWw/GC
-iHfeQCiZOmaSLZMwlD8RzA+Y4FGmFWWcR6KVtJzzdDRJ+AaTIJF9PJAxhk3If8mWNojGUSyl
-YI/g/9NorFKOadKFt+oZuvCRFytBzeYnqmLSBwsHoHEZcrmKMExuhen0+SGUC9cJm0W6cUNk
-RoBgtGcFaadqUf046drrKrHiYb877L6/jaa/Xjf7P2ajH+8bYLk554VC9eMAK4gX31WR1zY9
-/1H6mtfl6AYf9si+a3bve8EDXFc2cJD4b8+40BqzNLUEZigZXtIuY9cDJkXZSkIND2zb3Xfq
-pxXycUuqKB5ni8EY9OZ597bBeFpuBBiBX2Bw85Cb1a/Phx/sO3li6gVjdwDZBtDbctCmge/8
-XuXgzmxevv+MDqii/97kVzgm6nt+2v2Ax2bn9aO7xvvd+vFh98zBtn8mC+75/fv6CV7pv9Pq
-tbfqqtUIusCyE/9KL1W+vDOPzxqVY0bVWT9hYQMOFhhOJ1GYTFDMR8K053PGY0Lfjx5glod6
-CNy7E5Sy1WKV6r/PW+1jqjKRVJL5F+1Chc7iWOAXQkY6Qnfodgm0BrmxksvhDKu7LFVIxuWg
-AfScyBdqdXGbJujIIeQhaWNhezwWMkKe4AiZeMOA8Xa5o+fdy/Ztt+eok2b4bPXyuN9tHztk
-JfV1JuiDfEHpiQkWhss/nWOE5APy8Cyx5FkxG+AgWOUoJQF76qNMCHyKo6S3m6wRFZMS2u3Q
-UhCFBrirTsJbOCUXq275mOrRaoFhzgzZBfjl8BV8VJUvUx5vU6uxTOCV/SIpR5SrYdtXH2r7
-Smq7ixSknl7mopmGcCSf8y9jv3Mv4G8RGXqTjCl7bYejCCKQcwAmxHl/kUHjwvFeGsWhuZCg
-4cXgzWa8eEX2p9w+s/V1VlnOvUgVgRDeSUudoO9mgTmhe/BjV4ywBA08zYoobLm3+v0HkX2w
-qgr0HZtWFsBOwX2ZCUHqWNYpNFfi3GGiIwGGHujAq60YTydKi9x1XDCDtM0WTMkk/sKcMXhs
-j6f2SDRM9vnm5kzqRemHXA/8zPwVquKvtOi120xX0TtrtjAOu09mDXbr7VrZ7GV+gCld/766
-/MTBowwkHI2pWn/bHna3t9ef/zj/rb1uR9SyCPnSEWkx2ML2ejhs3h93lIV1MMJjUo/2g6aC
-5PFOwsfeNIp9HXB7Ekvetpsh37ZOog/6I50xSoiC5wHeK4JuQcIMhOJJIJ9r5TtgoQybOkEU
-gyeRGUdvxjLI8ZanVSKltbgvlZkKwNlCbtOWYZKOZeIYfS7D7tPFlRN6I0O166P5oEZlSx40
-M/FgSzuqdmntbqoaSG91f88uer8vO9kP6Il4uRJYyPGId+6cDXzSmNAk7Z4T+MlJ3hPy3bfl
-i1sBA1htvPcT+tEdSN/aZspU592wcXriyI1CSfekrRtJgMxX8rmUlq1d2RR+NCUh2mSxBa7p
-6groamca27BPl7wHYxfpE6+Z7yDdCmrsHhLP1/eQPvS5D3T8Vig500PifTB7SB/puKBh7SEJ
-h6GL9JEpuBGy8HaReONLB+nz5Qda+vyRBf58+YF5+nz1gT7dfpLnCVga3PAr4bJvN3MumVf6
-WPImUMaL2PyprZ6c909YDZCno8aQ90yNcXoi5N1SY8gLXGPI56nGkFetmYbTgzk/PZpzeTh3
-WXS7EhIu1WBe44NgTL8BV60UGVpheAFmXj+BApJ4qXl1T4OkM1VEpz621FEcn/jcRAUnUXQg
-GPRqjMhDA40QGVfjpGXE6/A703dqUEWp7yLBFw9x+nw68eJVYY6f64d/OuVkbWxepO/DWE1M
-y22G3nrdb1/e/qFQncfnzYHP8G9LnqN6ljnGXuVJHWcTyr3W3KuNNJIExiCVGGBcHeuZgATx
-x9v2eTMCwe3hn4MtwGKf77k+2SiYKA25lEe2FtRqrnQKiLkOPFV0q6pWGElpClvPnBOGgXO2
-jfx9fnZx1VYvaawfYJIVlisXlInKpy8oIWKyTDFeGBsYZ0Laa1unY54609KyrM40wEy4xo5s
-GDtkAqp7jKJRonq5vOsh9lDsXGZp3MknYWeI6ne4O0kVw+aBuqvrKvFiBbqpIk+u+SKg2BRK
-g0GTXbuKaPI3395//Oil16bpCxYFut8K+qYqHgwQ5Srs1AwM0WSpmOKOmsnGX2DSXBmCsXQ6
-t1oY/1WNjuLdFbNmNcTVPJUYL/GoObBm/H60QFsdSwcTjFx24FWlxzBnoatD016eW6sZwcUa
-xbuHf95f7Tmfrl9+9CwWIZX0KnNoqZBTI1vgalqmmNbQ8JMzv2cDrVoLnMKug72e8bq2Dnw1
-U3GJ6ck7QKSMWVkcH9d1Z3veSfRYLvVl37LLGKT+kDD15hc/excE/eoPNJM4v8dzMfr98Lp9
-odjK/xk9v79t/t3APzZvD3/++WcrkSppHKlttDW2roq2smbWaBbZrlEbOEZHx4+1yV27hzFe
-9rfhyUbmc4sEZy+bY6ZyBy71XCYEFkkVGbpwmhjm/URbOIUqj7BcX4geCHw/6auwwdFZQnZU
-OI6jaozfQLh16L7nG0EaDgOEywf9m7H0DYU7O8ZxZ6mam2rBfzOM1TPtKKwhpD9FkndrHaV7
-CkPIvFtTsiIKo0Bws7U4noZJwGRm3QvYGom9kr9WAICXWCivFWKcXFBCElcKocG9cehNqu19
-X92tWr5Vq5WgfQbXIWXk5znLaspWgdaUaOeLZQJY5Eq37MSJgetKvWUvaqe9f8IytXwGTUUr
-92EXOtEqn/I4tU91SNB+A5b3TSjlBVxrXqb9Hgrqo/FIECZxMi0tET4UCGEoL56fKDr3km1K
-Q2eActPewNb7HiPkPkVe3UYql0QoInRcUwGiFo49OMYqiTKc2LoZlcl0oVmSeHPlpk3U5Wmw
-6Jfr640JWOt0UpWWEBI/IN4dIBaCWZYQSGbhw+sIPo4KKSEQwctSsFMTFE1PIdwoMobGeiaU
-DscxG1K8VRjB7Q895At/9maMDCqOgfiB5NAEXJy4XMTRpuQbjc6supSttrYCCiuH4Amj8Iu7
-id/x7cLfvFw0NoJwjNlTquw0MDeZwEIR8ySdPNx7pLTqpgZVQM3LdA6TLkgx8GmsPmvMgOOt
-0tY8vO+3b784OfUuWAo9rYzlQC4CQ94nsPU94V53GdZrIC8J4gpMYcqCFK57tNl6Wb60XA6a
-ijv+Yn00aYYLoLeIg/EL9qSy4pq9Io7jVEwNtRr692+N7p3M01kt4Xn7X69vu9EDBgfs9qOf
-m6dXqoTQQYbxTIDithIxtR9fDJ+DfMw+HKKO4zsPE/HpIQiPL/twiKrbZvrjMxZxWKq67qDY
-k7s8ZwaJlfk6HhP1N4RSaBVYSFRfQQPP5/QFFTRRKUifetCX6jnXm361R/ZFLAtN6hTio5lW
-JuH5xW1SclmsKwwsXzPoFz4czhxa9+7LoAyYD9Ef/maou3waRZXFNGAKNqj3t5+bl7ftA9U2
-CV4ecPNjko7/bt9+jtThsHvYEshfv63bVKbunBATVE+SG+xNFfzv4izP4uX55RmvRG4OyyQy
-MOUfweEvpzbSxTWvXq9nNNOlubni7RBtHPiYE8kE9xEXbtjs7akCAj+rac+YvGSfd4+9ck3V
-dI15ObEGC6kyanDBXzUNWLLmVz11Nh5rnjOpwPmJri/cH4crba6ZPInT9eGnPFt86u2aaibK
-Yw7b4kRHZ71GrX5p+2NzeBtcEZ72Li+4jxDAuRbaK87PfKlqXHW2RGaunvQPnKrE5407Ddj9
-dgT7N4jxrwtNJ/6Jg4sYguX3iHHizALG5YX7ME7VubwjAApfYJYLANfnzvUCDN6MVsMTJ7iY
-6PPPzg/M814P7H7fvv7sFN5oKBx3YcHTlZDroMZIy3HkPIjAWTv3C8j881CyI9WbWyVBHAvh
-9A2OKZw7DxGcu8EXlHQVOKS/TpozVV+V8041KjbKvePqC859RQiB/w1c50Hq7KtJnKtickmr
-W2/AwLkaxTzrL2pjRdtvDgeb6Wm4AliMnBdG61vjq1Br1IJvr5yHIv7qHDWAp06y9NUUw7RL
-ev3yuHsepe/P3zZ7W66yTmU1PC5YUCvXfIxMNQl63KhbGIhwC1lYj7wPUQZtfokwF1SA8QT5
-UuB8SVF06upoEE0lAXwIWQsK+j4eyj2Om3neSGKb/RtGswADeqCA7cP2x8uaag6RzdbqSa3x
-YZhdrFYrRAVW+NRtVXEdJgECcOqBcBpiRcLKvZhBiYNUgGJq6rKI4h699YAvhqVgx+id3/SR
-nXe9t4qKciW0ddmTb+ABqxPrIsSRF4yXt8yrFiIdK0JRei6fasQYCxY6T747PN6TJY7GloeS
-XuN5CmtiEGaiwVp8xVLbrAKDwiaCVg55fGTrDFYPzCS2Go2Wf1+AljSri40pE1sPhoBE5aTO
-aJst7tsFl2KMwhjus1rh2XVC1r7Ad/m+kChd31P2cmbUBkN1slZXjNVXdoyJVlXKTev/A1Zr
-TzOIpwAA
-
---ibTvN161/egqYuK8--
+Thanks
+Kishon
+> +{
+> +	u8 next_cap_ptr;
+> +	u16 reg;
+> +
+> +	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
+> +	next_cap_ptr = (reg & 0x00ff);
+> +
+> +	if (!next_cap_ptr)
+> +		return 0;
+> +
+> +	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+> +}
+> +
+>  static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
+>  				   struct pci_epf_header *hdr)
+>  {
+> @@ -241,8 +274,47 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
+>  	return 0;
+>  }
+>  
+> +static int dw_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
+> +{
+> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	u32 val, reg;
+> +
+> +	if (!ep->msix_cap)
+> +		return -EINVAL;
+> +
+> +	reg = ep->msix_cap + PCI_MSIX_FLAGS;
+> +	val = dw_pcie_readw_dbi(pci, reg);
+> +	if (!(val & PCI_MSIX_FLAGS_ENABLE))
+> +		return -EINVAL;
+> +
+> +	val &= PCI_MSIX_FLAGS_QSIZE;
+> +
+> +	return val;
+> +}
+> +
+> +static int dw_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
+> +{
+> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	u32 val, reg;
+> +
+> +	if (!ep->msix_cap)
+> +		return -EINVAL;
+> +
+> +	reg = ep->msix_cap + PCI_MSIX_FLAGS;
+> +	val = dw_pcie_readw_dbi(pci, reg);
+> +	val &= ~PCI_MSIX_FLAGS_QSIZE;
+> +	val |= interrupts;
+> +	dw_pcie_dbi_ro_wr_en(pci);
+> +	dw_pcie_writew_dbi(pci, reg, val);
+> +	dw_pcie_dbi_ro_wr_dis(pci);
+> +
+> +	return 0;
+> +}
+> +
+>  static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
+> -				enum pci_epc_irq_type type, u8 interrupt_num)
+> +				enum pci_epc_irq_type type, u16 interrupt_num)
+>  {
+>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>  
+> @@ -282,6 +354,8 @@ static const struct pci_epc_ops epc_ops = {
+>  	.unmap_addr		= dw_pcie_ep_unmap_addr,
+>  	.set_msi		= dw_pcie_ep_set_msi,
+>  	.get_msi		= dw_pcie_ep_get_msi,
+> +	.set_msix		= dw_pcie_ep_set_msix,
+> +	.get_msix		= dw_pcie_ep_get_msix,
+>  	.raise_irq		= dw_pcie_ep_raise_irq,
+>  	.start			= dw_pcie_ep_start,
+>  	.stop			= dw_pcie_ep_stop,
+> @@ -322,6 +396,64 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+>  	return 0;
+>  }
+>  
+> +int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+> +			     u16 interrupt_num)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	struct pci_epc *epc = ep->epc;
+> +	u16 tbl_offset, bir;
+> +	u32 bar_addr_upper, bar_addr_lower;
+> +	u32 msg_addr_upper, msg_addr_lower;
+> +	u32 reg, msg_data, vec_ctrl;
+> +	u64 tbl_addr, msg_addr, reg_u64;
+> +	void __iomem *msix_tbl;
+> +	int ret;
+> +
+> +	reg = ep->msix_cap + PCI_MSIX_TABLE;
+> +	tbl_offset = dw_pcie_readl_dbi(pci, reg);
+> +	bir = (tbl_offset & PCI_MSIX_TABLE_BIR);
+> +	tbl_offset &= PCI_MSIX_TABLE_OFFSET;
+> +	tbl_offset >>= 3;
+> +
+> +	reg = PCI_BASE_ADDRESS_0 + (4 * bir);
+> +	bar_addr_upper = 0;
+> +	bar_addr_lower = dw_pcie_readl_dbi(pci, reg);
+> +	reg_u64 = (bar_addr_lower & PCI_BASE_ADDRESS_MEM_TYPE_MASK);
+> +	if (reg_u64 == PCI_BASE_ADDRESS_MEM_TYPE_64)
+> +		bar_addr_upper = dw_pcie_readl_dbi(pci, reg + 4);
+> +
+> +	tbl_addr = ((u64) bar_addr_upper) << 32 | bar_addr_lower;
+> +	tbl_addr += (tbl_offset + ((interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE));
+> +	tbl_addr &= PCI_BASE_ADDRESS_MEM_MASK;
+> +
+> +	msix_tbl = ioremap_nocache(ep->phys_base + tbl_addr,
+> +				   PCI_MSIX_ENTRY_SIZE);
+> +	if (!msix_tbl)
+> +		return -EINVAL;
+> +
+> +	msg_addr_lower = readl(msix_tbl + PCI_MSIX_ENTRY_LOWER_ADDR);
+> +	msg_addr_upper = readl(msix_tbl + PCI_MSIX_ENTRY_UPPER_ADDR);
+> +	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
+> +	msg_data = readl(msix_tbl + PCI_MSIX_ENTRY_DATA);
+> +	vec_ctrl = readl(msix_tbl + PCI_MSIX_ENTRY_VECTOR_CTRL);
+> +
+> +	iounmap(msix_tbl);
+> +
+> +	if (vec_ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT)
+> +		return -EPERM;
+> +
+> +	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msix_mem_phys, msg_addr,
+> +				  epc->mem->page_size);
+> +	if (ret)
+> +		return ret;
+> +
+> +	writel(msg_data, ep->msix_mem);
+> +
+> +	dw_pcie_ep_unmap_addr(epc, func_no, ep->msix_mem_phys);
+> +
+> +	return 0;
+> +}
+> +
+>  void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+>  {
+>  	struct pci_epc *epc = ep->epc;
+> @@ -329,6 +461,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+>  	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
+>  			      epc->mem->page_size);
+>  
+> +	pci_epc_mem_free_addr(epc, ep->msix_mem_phys, ep->msix_mem,
+> +			      epc->mem->page_size);
+> +
+>  	pci_epc_mem_exit(epc);
+>  }
+>  
+> @@ -412,6 +547,15 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>  		dev_err(dev, "Failed to reserve memory for MSI\n");
+>  		return -ENOMEM;
+>  	}
+> +	ep->msi_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSI);
+> +
+> +	ep->msix_mem = pci_epc_mem_alloc_addr(epc, &ep->msix_mem_phys,
+> +					     epc->mem->page_size);
+> +	if (!ep->msix_mem) {
+> +		dev_err(dev, "Failed to reserve memory for MSI-X\n");
+> +		return -ENOMEM;
+> +	}
+> +	ep->msix_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSIX);
+>  
+>  	epc->features = EPC_FEATURE_NO_LINKUP_NOTIFIER;
+>  	EPC_FEATURE_SET_BAR(epc->features, BAR_0);
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+> index 5937fed..654dcb5 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-plat.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+> @@ -78,7 +78,7 @@ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+>  
+>  static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+>  				     enum pci_epc_irq_type type,
+> -				     u8 interrupt_num)
+> +				     u16 interrupt_num)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  
+> @@ -88,6 +88,8 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+>  		return -EINVAL;
+>  	case PCI_EPC_IRQ_MSI:
+>  		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
+> +	case PCI_EPC_IRQ_MSIX:
+> +		return dw_pcie_ep_raise_msix_irq(ep, func_no, interrupt_num);
+>  	default:
+>  		dev_err(pci->dev, "UNKNOWN IRQ type\n");
+>  	}
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index bee4e25..b22c5bb 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -191,7 +191,7 @@ enum dw_pcie_as_type {
+>  struct dw_pcie_ep_ops {
+>  	void	(*ep_init)(struct dw_pcie_ep *ep);
+>  	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
+> -			     enum pci_epc_irq_type type, u8 interrupt_num);
+> +			     enum pci_epc_irq_type type, u16 interrupt_num);
+>  };
+>  
+>  struct dw_pcie_ep {
+> @@ -208,6 +208,10 @@ struct dw_pcie_ep {
+>  	u32			num_ob_windows;
+>  	void __iomem		*msi_mem;
+>  	phys_addr_t		msi_mem_phys;
+> +	void __iomem		*msix_mem;
+> +	phys_addr_t		msix_mem_phys;
+> +	u8			msi_cap;	/* MSI capability offset */
+> +	u8			msix_cap;	/* MSI-X capability offset */
+>  };
+>  
+>  struct dw_pcie_ops {
+> @@ -359,6 +363,8 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+>  void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
+>  int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+>  			     u8 interrupt_num);
+> +int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+> +			     u16 interrupt_num);
+>  void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
+>  #else
+>  static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+> @@ -380,6 +386,12 @@ static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+>  	return 0;
+>  }
+>  
+> +static inline int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+> +					   u16 interrupt_num)
+> +{
+> +	return 0;
+> +}
+> +
+>  static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+>  {
+>  }
+> 
