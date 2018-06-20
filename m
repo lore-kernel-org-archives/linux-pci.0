@@ -1,80 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:34537 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935889AbeFNBfg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 21:35:36 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH v4 04/10] PCI: aardvark: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Thu, 14 Jun 2018 09:35:08 +0800
-Message-Id: <1528940108-183399-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mga03.intel.com ([134.134.136.65]:20584 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933326AbeFTVfY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Jun 2018 17:35:24 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 5/7] PCI/DPC: Print AER status in DPC event handling
+Date: Wed, 20 Jun 2018 15:38:31 -0600
+Message-Id: <20180620213833.25072-5-keith.busch@intel.com>
+In-Reply-To: <20180620213833.25072-1-keith.busch@intel.com>
+References: <20180620213833.25072-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+A DPC enabled device suppresses ERR_(NON)FATAL messages, preventing the
+AER handler from reporting error details. If the DPC trigger reason says
+the downstream port detected the error, this patch has the DPC driver
+collect the AER uncorrectable status for logging, then clears the status.
 
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
+ drivers/pci/pcie/dpc.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- drivers/pci/controller/pci-aardvark.c | 24 +++++-------------------
- 1 file changed, 5 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index d3172d5..4c31582 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -704,37 +704,23 @@ static void advk_pcie_remove_msi_irq_domain(struct advk_pcie *pcie)
- static int advk_pcie_init_irq_domain(struct advk_pcie *pcie)
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 1b0b25ba947c..f6098dd171f3 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -6,6 +6,7 @@
+  * Copyright (C) 2016 Intel Corp.
+  */
+ 
++#include <linux/aer.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include <linux/init.h>
+@@ -161,6 +162,7 @@ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
+ 
+ static void dpc_work(struct work_struct *work)
  {
- 	struct device *dev = &pcie->pdev->dev;
--	struct device_node *node = dev->of_node;
--	struct device_node *pcie_intc_node;
- 	struct irq_chip *irq_chip;
++	struct aer_err_info info;
+ 	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	struct device *dev = &dpc->dev->device;
+@@ -185,6 +187,10 @@ static void dpc_work(struct work_struct *work)
+ 	/* show RP PIO error detail information */
+ 	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
+ 		dpc_process_rp_pio_error(dpc);
++	else if (reason == 0 && aer_get_device_error_info(pdev, &info)) {
++		aer_print_error(pdev, &info);
++		pci_cleanup_aer_uncorrect_error_status(pdev);
++	}
  
--	pcie_intc_node =  of_get_next_child(node, NULL);
--	if (!pcie_intc_node) {
--		dev_err(dev, "No PCIe Intc node found\n");
--		return -ENODEV;
--	}
--
- 	irq_chip = &pcie->irq_chip;
- 
- 	irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-irq",
- 					dev_name(dev));
--	if (!irq_chip->name) {
--		of_node_put(pcie_intc_node);
-+	if (!irq_chip->name)
- 		return -ENOMEM;
--	}
- 
- 	irq_chip->irq_mask = advk_pcie_irq_mask;
- 	irq_chip->irq_mask_ack = advk_pcie_irq_mask;
- 	irq_chip->irq_unmask = advk_pcie_irq_unmask;
- 
--	pcie->irq_domain =
--		irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--				      &advk_pcie_irq_domain_ops, pcie);
--	if (!pcie->irq_domain) {
--		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		of_node_put(pcie_intc_node);
--		return -ENOMEM;
--	}
-+	pcie->irq_domain = pci_host_alloc_intx_irqd(dev, pcie, false,
-+				&advk_pcie_irq_domain_ops, NULL);
-+	if (IS_ERR(pcie->irq_domain))
-+		return PTR_ERR(pcie->irq_domain);
- 
- 	return 0;
- }
+ 	/* We configure DPC so it only triggers on ERR_FATAL */
+ 	pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_DPC);
 -- 
-1.9.1
+2.14.3
