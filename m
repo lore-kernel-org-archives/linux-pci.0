@@ -1,168 +1,141 @@
-Return-Path: <SRS0=xmdP=JG=flex--rajatja.bounces.google.com=37qkpWwcKB8c4nwn6wnt11tyr.p1zurytnn5xr40ry.14t@kernel.org>
-Return-Path: <SRS0=xmdP=JG=flex--rajatja.bounces.google.com=37qkpWwcKB8c4nwn6wnt11tyr.p1zurytnn5xr40ry.14t@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v4 06/10] pci-epf-test/pci_endpoint_test: Cleanup
+ PCI_ENDPOINT_TEST memspace
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
+        <adouglas@cadence.com>, <jesper.nilsson@axis.com>
+References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
+ <13077810f3630c01835041e41b338dd85fa91953.1529329262.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <eea616bd-a5dd-f8bb-22b3-319401c70cc6@ti.com>
+Date: Wed, 20 Jun 2018 13:23:59 +0530
 MIME-Version: 1.0
-Date: Tue, 19 Jun 2018 18:12:06 -0700
-In-Reply-To: <20180619221651.GH33049@bhelgaas-glaptop.roam.corp.google.com>
-Message-Id: <20180620011210.254601-1-rajatja@google.com>
-References: <20180619221651.GH33049@bhelgaas-glaptop.roam.corp.google.com>
-Subject: [PATCH v3 1/5] PCI/AER: Define and allocate aer_stats structure for
- AER capable devices
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
-	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
-	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
-Cc: Rajat Jain <rajatja@google.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <13077810f3630c01835041e41b338dd85fa91953.1529329262.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Define a structure to hold the AER statistics. There are 2 groups
-of statistics: dev_* counters that are to be collected for all AER
-capable devices and rootport_* counters that are collected for all
-(AER capable) rootports only. Allocate and free this structure when
-device is added or released (thus counters survive the lifetime of the
-device).
+Hi,
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
-v3: Merge everything in aer.c
+On Monday 18 June 2018 08:30 PM, Gustavo Pimentel wrote:
+> Cleanup PCI_ENDPOINT_TEST memspace (by moving the interrupt number away
+> from command section).
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+> Change v2->v3:
+>  - New patch file created base on the previous patch
+> "misc: pci_endpoint_test: Add MSI-X support" patch file following
+> Kishon's suggestion.
+> Change v3->v4:
+>  - Rebased to Lorenzo's master branch v4.18-rc1.
+> 
+>  drivers/misc/pci_endpoint_test.c              | 84 ++++++++++++++++-----------
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 60 ++++++++++++-------
+>  2 files changed, 91 insertions(+), 53 deletions(-)
+> 
+> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+> index 7b37046..56be808 100644
+> --- a/drivers/misc/pci_endpoint_test.c
+> +++ b/drivers/misc/pci_endpoint_test.c
+> @@ -35,38 +35,42 @@
+>  
+>  #include <uapi/linux/pcitest.h>
+>  
+> -#define DRV_MODULE_NAME			"pci-endpoint-test"
+> -
+> -#define PCI_ENDPOINT_TEST_MAGIC		0x0
+> -
+> -#define PCI_ENDPOINT_TEST_COMMAND	0x4
+> -#define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+> -#define COMMAND_RAISE_MSI_IRQ		BIT(1)
+> -#define MSI_NUMBER_SHIFT		2
+> -/* 6 bits for MSI number */
+> -#define COMMAND_READ                    BIT(8)
+> -#define COMMAND_WRITE                   BIT(9)
+> -#define COMMAND_COPY                    BIT(10)
+> -
+> -#define PCI_ENDPOINT_TEST_STATUS	0x8
+> -#define STATUS_READ_SUCCESS             BIT(0)
+> -#define STATUS_READ_FAIL                BIT(1)
+> -#define STATUS_WRITE_SUCCESS            BIT(2)
+> -#define STATUS_WRITE_FAIL               BIT(3)
+> -#define STATUS_COPY_SUCCESS             BIT(4)
+> -#define STATUS_COPY_FAIL                BIT(5)
+> -#define STATUS_IRQ_RAISED               BIT(6)
+> -#define STATUS_SRC_ADDR_INVALID         BIT(7)
+> -#define STATUS_DST_ADDR_INVALID         BIT(8)
+> -
+> -#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0xc
+> +#define DRV_MODULE_NAME				"pci-endpoint-test"
+> +
+> +#define IRQ_TYPE_LEGACY				0
+> +#define IRQ_TYPE_MSI				1
+> +
+> +#define PCI_ENDPOINT_TEST_MAGIC			0x0
+> +
+> +#define PCI_ENDPOINT_TEST_COMMAND		0x4
+> +#define COMMAND_RAISE_LEGACY_IRQ		BIT(0)
+> +#define COMMAND_RAISE_MSI_IRQ			BIT(1)
 
- drivers/pci/pcie/aer.c | 60 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c    |  1 +
- include/linux/pci.h    |  3 +++
- 3 files changed, 64 insertions(+)
+Maybe you can add a comment here that BIT(2) is reserved for MSIX support
+> +#define COMMAND_READ				BIT(3)
+> +#define COMMAND_WRITE				BIT(4)
+> +#define COMMAND_COPY				BIT(5)
+> +
+> +#define PCI_ENDPOINT_TEST_STATUS		0x8
+> +#define STATUS_READ_SUCCESS			BIT(0)
+> +#define STATUS_READ_FAIL			BIT(1)
+> +#define STATUS_WRITE_SUCCESS			BIT(2)
+> +#define STATUS_WRITE_FAIL			BIT(3)
+> +#define STATUS_COPY_SUCCESS			BIT(4)
+> +#define STATUS_COPY_FAIL			BIT(5)
+> +#define STATUS_IRQ_RAISED			BIT(6)
+> +#define STATUS_SRC_ADDR_INVALID			BIT(7)
+> +#define STATUS_DST_ADDR_INVALID			BIT(8)
+> +
+> +#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0x0c
+>  #define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
+>  
+>  #define PCI_ENDPOINT_TEST_LOWER_DST_ADDR	0x14
+>  #define PCI_ENDPOINT_TEST_UPPER_DST_ADDR	0x18
+>  
+> -#define PCI_ENDPOINT_TEST_SIZE		0x1c
+> -#define PCI_ENDPOINT_TEST_CHECKSUM	0x20
+> +#define PCI_ENDPOINT_TEST_SIZE			0x1c
+> +#define PCI_ENDPOINT_TEST_CHECKSUM		0x20
+> +
+> +#define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index a2e88386af28..f9fa994b6c33 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -33,6 +33,9 @@
- #define AER_ERROR_SOURCES_MAX		100
- #define AER_MAX_MULTI_ERR_DEVICES	5	/* Not likely to have more */
- 
-+#define AER_MAX_TYPEOF_CORRECTABLE_ERRS 16	/* as per PCI_ERR_COR_STATUS */
-+#define AER_MAX_TYPEOF_UNCORRECTABLE_ERRS 26	/* as per PCI_ERR_UNCOR_STATUS*/
-+
- struct aer_err_info {
- 	struct pci_dev *dev[AER_MAX_MULTI_ERR_DEVICES];
- 	int error_dev_num;
-@@ -76,6 +79,40 @@ struct aer_rpc {
- 					 */
- };
- 
-+/* AER stats for the device */
-+struct aer_stats {
-+
-+	/*
-+	 * Fields for all AER capable devices. They indicate the errors
-+	 * "as seen by this device". Note that this may mean that if an
-+	 * end point is causing problems, the AER counters may increment
-+	 * at its link partner (e.g. root port) because the errors will be
-+	 * "seen" by the link partner and not the the problematic end point
-+	 * itself (which may report all counters as 0 as it never saw any
-+	 * problems).
-+	 */
-+	/* Individual counters for different type of correctable errors */
-+	u64 dev_cor_errs[AER_MAX_TYPEOF_CORRECTABLE_ERRS];
-+	/* Individual counters for different type of uncorrectable errors */
-+	u64 dev_uncor_errs[AER_MAX_TYPEOF_UNCORRECTABLE_ERRS];
-+	/* Total number of correctable errors seen by this device */
-+	u64 dev_total_cor_errs;
-+	/* Total number of fatal uncorrectable errors seen by this device */
-+	u64 dev_total_fatal_errs;
-+	/* Total number of fatal uncorrectable errors seen by this device */
-+	u64 dev_total_nonfatal_errs;
-+
-+	/*
-+	 * Fields for Root ports only, these indicate the total number of
-+	 * ERR_COR, ERR_FATAL, and ERR_NONFATAL messages received by the
-+	 * rootport, INCLUDING the ones that are generated internally (by
-+	 * the rootport itself)
-+	 */
-+	u64 rootport_total_cor_errs;
-+	u64 rootport_total_fatal_errs;
-+	u64 rootport_total_nonfatal_errs;
-+};
-+
- #define AER_LOG_TLP_MASKS		(PCI_ERR_UNC_POISON_TLP|	\
- 					PCI_ERR_UNC_ECRC|		\
- 					PCI_ERR_UNC_UNSUP|		\
-@@ -402,12 +439,35 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
- 	return 0;
- }
- 
-+static int pci_aer_stats_init(struct pci_dev *pdev)
-+{
-+	pdev->aer_stats = kzalloc(sizeof(struct aer_stats), GFP_KERNEL);
-+	if (!pdev->aer_stats) {
-+		dev_err(&pdev->dev, "No memory for aer_stats\n");
-+		return -ENOMEM;
-+	}
-+	return 0;
-+}
-+
-+static void pci_aer_stats_exit(struct pci_dev *pdev)
-+{
-+	kfree(pdev->aer_stats);
-+	pdev->aer_stats = NULL;
-+}
-+
- int pci_aer_init(struct pci_dev *dev)
- {
- 	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-+	if (!dev->aer_cap || pci_aer_stats_init(dev))
-+		return -EIO;
- 	return pci_cleanup_aer_error_status_regs(dev);
- }
- 
-+void pci_aer_exit(struct pci_dev *dev)
-+{
-+	pci_aer_stats_exit(dev);
-+}
-+
- #define AER_AGENT_RECEIVER		0
- #define AER_AGENT_REQUESTER		1
- #define AER_AGENT_COMPLETER		2
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac876e32de4b..48edd0c9e4bc 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2064,6 +2064,7 @@ static void pci_configure_device(struct pci_dev *dev)
- 
- static void pci_release_capabilities(struct pci_dev *dev)
- {
-+	pci_aer_exit(dev);
- 	pci_vpd_release(dev);
- 	pci_iov_release(dev);
- 	pci_free_cap_save_buffers(dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 340029b2fb38..8d59c6c19a19 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -299,6 +299,7 @@ struct pci_dev {
- 	u8		hdr_type;	/* PCI header type (`multi' flag masked out) */
- #ifdef CONFIG_PCIEAER
- 	u16		aer_cap;	/* AER capability offset */
-+	struct aer_stats *aer_stats;	/* AER stats for this device */
- #endif
- 	u8		pcie_cap;	/* PCIe capability offset */
- 	u8		msi_cap;	/* MSI capability offset */
-@@ -1471,10 +1472,12 @@ static inline bool pcie_aspm_support_enabled(void) { return false; }
- void pci_no_aer(void);
- bool pci_aer_available(void);
- int pci_aer_init(struct pci_dev *dev);
-+void pci_aer_exit(struct pci_dev *dev);
- #else
- static inline void pci_no_aer(void) { }
- static inline bool pci_aer_available(void) { return false; }
- static inline int pci_aer_init(struct pci_dev *d) { return -ENODEV; }
-+static inline void pci_aer_exit(struct pci_dev *d) { }
- #endif
- 
- #ifdef CONFIG_PCIE_ECRC
--- 
-2.18.0.rc1.244.gcf134e6275-goog
+Is this not redundant? COMMAND_RAISE_LEGACY_IRQ, COMMAND_RAISE_MSI_IRQ already
+indicates the irq type to be used.
+> +#define PCI_ENDPOINT_TEST_IRQ_NUMBER		0x28
+>  
+>  static DEFINE_IDA(pci_endpoint_test_ida);
+>  
+> @@ -179,6 +183,9 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
+>  {
+>  	u32 val;
+>  
+> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+> +				 IRQ_TYPE_LEGACY);
+> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 0);
+
+Not sure if the above writes are really required.
+>  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+>  				 COMMAND_RAISE_LEGACY_IRQ);
+>  	val = wait_for_completion_timeout(&test->irq_raised,
+> @@ -190,20 +197,22 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
+>  }
+>  
+>  static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
+> -				      u8 msi_num)
+> +				      u8 irq_num)
+
+why do you want to rename this?
+
+Thanks
+Kishon
