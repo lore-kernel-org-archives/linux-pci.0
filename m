@@ -1,67 +1,136 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 3/3] PCI: mvebu: Drop bogus comment above
- mvebu_pcie_map_registers()
-Date: Fri, 29 Jun 2018 11:10:07 +0200
-Message-Id: <20180629091007.31069-4-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20180629091007.31069-1-thomas.petazzoni@bootlin.com>
-References: <20180629091007.31069-1-thomas.petazzoni@bootlin.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Nadav Haklai <nadavh@marvell.com>, Russell King <linux@arm.linux.org.uk>,
- Antoine Tenart <antoine.tenart@bootlin.com>,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
- =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.37.59]:57291 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933389AbeFUQBt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 12:01:49 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v6 07/11] pci-epf-test/pci_endpoint_test: Use irq_type module parameter
+Date: Thu, 21 Jun 2018 17:01:32 +0100
+Message-Id: <98be2b2cfd6dfb9cdfed95da5fe8cde0a96ce37e.1529595907.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This comment has been there since the driver was introduced, but seems
-to be a leftover from previous iterations of the driver. Indeed, we do
-not lookup in a list to find the register ranges that matches the
-given port/lane, as the "reg" property is in each sub-node
-representing a PCI port. There is no lookup involved at all.
+Add new driver parameter to allow interruption type selection.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/pci/controller/pci-mvebu.c | 5 -----
- 1 file changed, 5 deletions(-)
+Change v2->v3:
+ - New patch file created base on the previous patch
+"misc: pci_endpoint_test: Add MSI-X support" patch file following
+Kishon's suggestion.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
 
-diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index 6e801cef2c5f..e168f04565e7 100644
---- a/drivers/pci/controller/pci-mvebu.c
-+++ b/drivers/pci/controller/pci-mvebu.c
-@@ -720,11 +720,6 @@ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
- 		return start;
- }
+ drivers/misc/pci_endpoint_test.c | 30 +++++++++++++++++++++---------
+ 1 file changed, 21 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 35fbfbd..4d2c9cb 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -82,6 +82,10 @@ static bool no_msi;
+ module_param(no_msi, bool, 0444);
+ MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
  
--/*
-- * Looks up the list of register addresses encoded into the reg =
-- * <...> property for one that matches the given port/lane. Once
-- * found, maps it.
-- */
- static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
- 					      struct device_node *np,
- 					      struct mvebu_pcie_port *port)
++static int irq_type = IRQ_TYPE_MSI;
++module_param(irq_type, int, 0444);
++MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI)");
++
+ enum pci_barno {
+ 	BAR_0,
+ 	BAR_1,
+@@ -108,7 +112,7 @@ struct pci_endpoint_test {
+ struct pci_endpoint_test_data {
+ 	enum pci_barno test_reg_bar;
+ 	size_t alignment;
+-	bool no_msi;
++	int irq_type;
+ };
+ 
+ static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
+@@ -291,8 +295,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
+ 				 size);
+ 
+-	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+-				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ 				 COMMAND_COPY);
+@@ -361,8 +364,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
+-	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+-				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ 				 COMMAND_READ);
+@@ -419,8 +421,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
+-	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+-				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ 				 COMMAND_WRITE);
+@@ -505,11 +506,14 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	test->alignment = 0;
+ 	test->pdev = pdev;
+ 
++	if (no_msi)
++		irq_type = IRQ_TYPE_LEGACY;
++
+ 	data = (struct pci_endpoint_test_data *)ent->driver_data;
+ 	if (data) {
+ 		test_reg_bar = data->test_reg_bar;
+ 		test->alignment = data->alignment;
+-		no_msi = data->no_msi;
++		irq_type = data->irq_type;
+ 	}
+ 
+ 	init_completion(&test->irq_raised);
+@@ -529,13 +533,21 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 
+ 	pci_set_master(pdev);
+ 
+-	if (!no_msi) {
++	switch (irq_type) {
++	case IRQ_TYPE_LEGACY:
++		irq = 0;
++		break;
++	case IRQ_TYPE_MSI:
+ 		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
+ 		if (irq < 0)
+ 			dev_err(dev, "Failed to get MSI interrupts\n");
+ 		test->num_irqs = irq;
++		break;
++	default:
++		dev_err(dev, "Invalid IRQ type selected\n");
+ 	}
+ 
++
+ 	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
+ 			       IRQF_SHARED, DRV_MODULE_NAME, test);
+ 	if (err) {
 -- 
-2.14.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.7.4
