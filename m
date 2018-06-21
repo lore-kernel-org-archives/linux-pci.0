@@ -1,277 +1,189 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <1528164985-14099-1-git-send-email-okaya@codeaurora.org>
-References: <1528164985-14099-1-git-send-email-okaya@codeaurora.org>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Tue, 5 Jun 2018 12:12:37 +0300
-Message-ID: <CAHp75VdD0Ds6dFdYWF8YpY04hiKY-LmfOU7+dPs7PkTOjbRKbw@mail.gmail.com>
-Subject: Re: [PATCH V4] PCI: move early dump functionality from x86 arch into
- the common code
-To: Sinan Kaya <okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- linux-pci@vger.kernel.org, Petr Tesarik <ptesarik@suse.cz>,
- Ram Pai <linuxram@us.ibm.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>,
- "H. Peter Anvin" <hpa@zytor.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- Timur Tabi <timur@codeaurora.org>,
- "maintainer:X86 ARCHITECTURE \(32-BIT AND 64-BIT\)" <x86@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
- Thymo van Beers <thymovanbeers@gmail.com>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Tom Lendacky <thomas.lendacky@amd.com>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-arm-msm@vger.kernel.org, Frederic Weisbecker <frederic@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
- Juergen Gross <jgross@suse.com>, Dou Liyang <douly.fnst@cn.fujitsu.com>,
- Borislav Petkov <bp@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- open list <linux-kernel@vger.kernel.org>,
- Philippe Ombredanne <pombredanne@nexb.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay6.synopsys.com ([198.182.37.59]:57292 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933391AbeFUQBt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 12:01:49 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v6 10/11] tools: PCI: Add MSI-X support
+Date: Thu, 21 Jun 2018 17:01:35 +0100
+Message-Id: <67e6549e9d872b53406aeec86bdd78d6d29e036d.1529595907.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 5, 2018 at 5:16 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> Move early dump functionality into common code so that it is available for
-> all archtiectures. No need to carry arch specific reads around as the read
-> hooks are already initialized by the time pci_setup_device() is getting
-> called during scan.
->
+Add MSI-X support to pcitest tool.
 
-Makes sense.
+Modify pcitest.sh script to accommodate MSI-X interrupt tests.
 
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+ - Allow IRQ type driver reconfiguring in runtime, follwing Kishon's
+suggestion.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Change v5->v6:
+ - Moved PCITEST_MSIX ioctl entry to patch #8.
+ - Moved PCITEST_SET_IRQTYPE and PCITEST_GET_IRQTYPE ioctl entries
+to patch #9.
 
-One style comment below, though.
+ tools/pci/pcitest.c  | 51 ++++++++++++++++++++++++++++++++++++++++++++++++++-
+ tools/pci/pcitest.sh | 15 +++++++++++++++
+ 2 files changed, 65 insertions(+), 1 deletion(-)
 
-If you wait a bit, I perhaps would be able to test on x86.
-
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  Documentation/admin-guide/kernel-parameters.txt |  2 +-
->  arch/x86/include/asm/pci-direct.h               |  4 ---
->  arch/x86/kernel/setup.c                         |  5 ---
->  arch/x86/pci/common.c                           |  4 ---
->  arch/x86/pci/early.c                            | 44 -------------------------
->  drivers/pci/pci.c                               |  5 +++
->  drivers/pci/pci.h                               |  1 +
->  drivers/pci/probe.c                             | 19 +++++++++++
->  8 files changed, 26 insertions(+), 58 deletions(-)
->
-> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-> index e490902..e64f1d8 100644
-> --- a/Documentation/admin-guide/kernel-parameters.txt
-> +++ b/Documentation/admin-guide/kernel-parameters.txt
-> @@ -2995,7 +2995,7 @@
->                         See also Documentation/blockdev/paride.txt.
->
->         pci=option[,option...]  [PCI] various PCI subsystem options:
-> -               earlydump       [X86] dump PCI config space before the kernel
-> +               earlydump       dump PCI config space before the kernel
->                                 changes anything
->                 off             [X86] don't probe for the PCI bus
->                 bios            [X86-32] force use of PCI BIOS, don't access
-> diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
-> index e1084f7..94597a3 100644
-> --- a/arch/x86/include/asm/pci-direct.h
-> +++ b/arch/x86/include/asm/pci-direct.h
-> @@ -15,8 +15,4 @@ extern void write_pci_config_byte(u8 bus, u8 slot, u8 func, u8 offset, u8 val);
->  extern void write_pci_config_16(u8 bus, u8 slot, u8 func, u8 offset, u16 val);
->
->  extern int early_pci_allowed(void);
-> -
-> -extern unsigned int pci_early_dump_regs;
-> -extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
-> -extern void early_dump_pci_devices(void);
->  #endif /* _ASM_X86_PCI_DIRECT_H */
-> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-> index 2f86d88..480f250 100644
-> --- a/arch/x86/kernel/setup.c
-> +++ b/arch/x86/kernel/setup.c
-> @@ -991,11 +991,6 @@ void __init setup_arch(char **cmdline_p)
->                 setup_clear_cpu_cap(X86_FEATURE_APIC);
->         }
->
-> -#ifdef CONFIG_PCI
-> -       if (pci_early_dump_regs)
-> -               early_dump_pci_devices();
-> -#endif
-> -
->         e820__reserve_setup_data();
->         e820__finish_early_params();
->
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 563049c..d4ec117 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -22,7 +22,6 @@
->  unsigned int pci_probe = PCI_PROBE_BIOS | PCI_PROBE_CONF1 | PCI_PROBE_CONF2 |
->                                 PCI_PROBE_MMCONF;
->
-> -unsigned int pci_early_dump_regs;
->  static int pci_bf_sort;
->  int pci_routeirq;
->  int noioapicquirk;
-> @@ -599,9 +598,6 @@ char *__init pcibios_setup(char *str)
->                 pci_probe |= PCI_BIG_ROOT_WINDOW;
->                 return NULL;
->  #endif
-> -       } else if (!strcmp(str, "earlydump")) {
-> -               pci_early_dump_regs = 1;
-> -               return NULL;
->         } else if (!strcmp(str, "routeirq")) {
->                 pci_routeirq = 1;
->                 return NULL;
-> diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
-> index e5f753c..f5fc953 100644
-> --- a/arch/x86/pci/early.c
-> +++ b/arch/x86/pci/early.c
-> @@ -57,47 +57,3 @@ int early_pci_allowed(void)
->                         PCI_PROBE_CONF1;
->  }
->
-> -void early_dump_pci_device(u8 bus, u8 slot, u8 func)
-> -{
-> -       u32 value[256 / 4];
-> -       int i;
-> -
-> -       pr_info("pci 0000:%02x:%02x.%d config space:\n", bus, slot, func);
-> -
-> -       for (i = 0; i < 256; i += 4)
-> -               value[i / 4] = read_pci_config(bus, slot, func, i);
-> -
-> -       print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value, 256, false);
-> -}
-> -
-> -void early_dump_pci_devices(void)
-> -{
-> -       unsigned bus, slot, func;
-> -
-> -       if (!early_pci_allowed())
-> -               return;
-> -
-> -       for (bus = 0; bus < 256; bus++) {
-> -               for (slot = 0; slot < 32; slot++) {
-> -                       for (func = 0; func < 8; func++) {
-> -                               u32 class;
-> -                               u8 type;
-> -
-> -                               class = read_pci_config(bus, slot, func,
-> -                                                       PCI_CLASS_REVISION);
-> -                               if (class == 0xffffffff)
-> -                                       continue;
-> -
-> -                               early_dump_pci_device(bus, slot, func);
-> -
-> -                               if (func == 0) {
-> -                                       type = read_pci_config_byte(bus, slot,
-> -                                                                   func,
-> -                                                              PCI_HEADER_TYPE);
-> -                                       if (!(type & 0x80))
-> -                                               break;
-> -                               }
-> -                       }
-> -               }
-> -       }
-> -}
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 97acba7..04052dc 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -115,6 +115,9 @@ static bool pcie_ari_disabled;
->  /* If set, the PCIe ATS capability will not be used. */
->  static bool pcie_ats_disabled;
->
-> +/* If set, the PCI config space of each device is printed during boot. */
-> +bool pci_early_dump;
-> +
->  bool pci_ats_disabled(void)
->  {
->         return pcie_ats_disabled;
-> @@ -5805,6 +5808,8 @@ static int __init pci_setup(char *str)
->                                 pcie_ats_disabled = true;
->                         } else if (!strcmp(str, "noaer")) {
->                                 pci_no_aer();
-> +                       } else if (!strcmp(str, "earlydump")) {
-> +                               pci_early_dump = true;
->                         } else if (!strncmp(str, "realloc=", 8)) {
->                                 pci_realloc_get_opt(str + 8);
->                         } else if (!strncmp(str, "realloc", 7)) {
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index c358e7a0..c33265e 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -7,6 +7,7 @@
->  #define PCI_VSEC_ID_INTEL_TBT  0x1234  /* Thunderbolt */
->
->  extern const unsigned char pcie_link_speed[];
-> +extern bool pci_early_dump;
->
->  bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 56771f3..3678f0a 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1545,6 +1545,23 @@ static int pci_intx_mask_broken(struct pci_dev *dev)
->         return 0;
->  }
->
-> +static void early_dump_pci_device(struct pci_dev *pdev)
-> +{
-> +       u32 value[256 / 4];
-> +       int i;
-> +
-> +       if (!pci_early_dump)
-> +               return;
-> +
-> +       pci_info(pdev, "config space:\n");
-> +
-> +       for (i = 0; i < 256; i += 4)
-> +               pci_read_config_dword(pdev, i, &value[i / 4]);
-> +
-
-> +       print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value,
-> +                      256, false);
-
-Logically better either to move value to second line, or move 256 on
-the first line.
-
-> +}
-> +
->  /**
->   * pci_setup_device - Fill in class and map information of a device
->   * @dev: the device structure to fill
-> @@ -1594,6 +1611,8 @@ int pci_setup_device(struct pci_dev *dev)
->         pci_printk(KERN_DEBUG, dev, "[%04x:%04x] type %02x class %#08x\n",
->                    dev->vendor, dev->device, dev->hdr_type, dev->class);
->
-> +       early_dump_pci_device(dev);
-> +
->         /* Need to have dev->class ready */
->         dev->cfg_size = pci_cfg_space_size(dev);
->
-> --
-> 2.7.4
->
-
-
-
+diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
+index 9074b47..af146bb 100644
+--- a/tools/pci/pcitest.c
++++ b/tools/pci/pcitest.c
+@@ -31,12 +31,17 @@
+ #define BILLION 1E9
+ 
+ static char *result[] = { "NOT OKAY", "OKAY" };
++static char *irq[] = { "LEGACY", "MSI", "MSI-X" };
+ 
+ struct pci_test {
+ 	char		*device;
+ 	char		barnum;
+ 	bool		legacyirq;
+ 	unsigned int	msinum;
++	unsigned int	msixnum;
++	int		irqtype;
++	bool		set_irqtype;
++	bool		get_irqtype;
+ 	bool		read;
+ 	bool		write;
+ 	bool		copy;
+@@ -65,6 +70,24 @@ static int run_test(struct pci_test *test)
+ 			fprintf(stdout, "%s\n", result[ret]);
+ 	}
+ 
++	if (test->set_irqtype) {
++		ret = ioctl(fd, PCITEST_SET_IRQTYPE, test->irqtype);
++		fprintf(stdout, "SET IRQ TYPE TO %s:\t\t", irq[test->irqtype]);
++		if (ret < 0)
++			fprintf(stdout, "FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	if (test->get_irqtype) {
++		ret = ioctl(fd, PCITEST_GET_IRQTYPE);
++		fprintf(stdout, "GET IRQ TYPE:\t\t");
++		if (ret < 0)
++			fprintf(stdout, "FAILED\n");
++		else
++			fprintf(stdout, "%s\n", irq[ret]);
++	}
++
+ 	if (test->legacyirq) {
+ 		ret = ioctl(fd, PCITEST_LEGACY_IRQ, 0);
+ 		fprintf(stdout, "LEGACY IRQ:\t");
+@@ -83,6 +106,15 @@ static int run_test(struct pci_test *test)
+ 			fprintf(stdout, "%s\n", result[ret]);
+ 	}
+ 
++	if (test->msixnum > 0 && test->msixnum <= 2048) {
++		ret = ioctl(fd, PCITEST_MSIX, test->msixnum);
++		fprintf(stdout, "MSI-X%d:\t\t", test->msixnum);
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
+ 	if (test->write) {
+ 		ret = ioctl(fd, PCITEST_WRITE, test->size);
+ 		fprintf(stdout, "WRITE (%7ld bytes):\t\t", test->size);
+@@ -133,7 +165,7 @@ int main(int argc, char **argv)
+ 	/* set default endpoint device */
+ 	test->device = "/dev/pci-endpoint-test.0";
+ 
+-	while ((c = getopt(argc, argv, "D:b:m:lrwcs:")) != EOF)
++	while ((c = getopt(argc, argv, "D:b:m:x:i:Ilrwcs:")) != EOF)
+ 	switch (c) {
+ 	case 'D':
+ 		test->device = optarg;
+@@ -151,6 +183,20 @@ int main(int argc, char **argv)
+ 		if (test->msinum < 1 || test->msinum > 32)
+ 			goto usage;
+ 		continue;
++	case 'x':
++		test->msixnum = atoi(optarg);
++		if (test->msixnum < 1 || test->msixnum > 2048)
++			goto usage;
++		continue;
++	case 'i':
++		test->irqtype = atoi(optarg);
++		if (test->irqtype < 0 || test->irqtype > 2)
++			goto usage;
++		test->set_irqtype = true;
++		continue;
++	case 'I':
++		test->get_irqtype = true;
++		continue;
+ 	case 'r':
+ 		test->read = true;
+ 		continue;
+@@ -173,6 +219,9 @@ int main(int argc, char **argv)
+ 			"\t-D <dev>		PCI endpoint test device {default: /dev/pci-endpoint-test.0}\n"
+ 			"\t-b <bar num>		BAR test (bar number between 0..5)\n"
+ 			"\t-m <msi num>		MSI test (msi number between 1..32)\n"
++			"\t-x <msix num>	\tMSI-X test (msix number between 1..2048)\n"
++			"\t-i <irq type>	\tSet IRQ type (0 - Legacy, 1 - MSI, 2 - MSI-X)\n"
++			"\t-I			Get current IRQ type configured\n"
+ 			"\t-l			Legacy IRQ test\n"
+ 			"\t-r			Read buffer test\n"
+ 			"\t-w			Write buffer test\n"
+diff --git a/tools/pci/pcitest.sh b/tools/pci/pcitest.sh
+index 77e8c85..75ed48f 100644
+--- a/tools/pci/pcitest.sh
++++ b/tools/pci/pcitest.sh
+@@ -16,7 +16,10 @@ echo
+ echo "Interrupt tests"
+ echo
+ 
++pcitest -i 0
+ pcitest -l
++
++pcitest -i 1
+ msi=1
+ 
+ while [ $msi -lt 33 ]
+@@ -26,9 +29,21 @@ do
+ done
+ echo
+ 
++pcitest -i 2
++msix=1
++
++while [ $msix -lt 2049 ]
++do
++        pcitest -x $msix
++        msix=`expr $msix + 1`
++done
++echo
++
+ echo "Read Tests"
+ echo
+ 
++pcitest -i 1
++
+ pcitest -r -s 1
+ pcitest -r -s 1024
+ pcitest -r -s 1025
 -- 
-With Best Regards,
-Andy Shevchenko
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.7.4
