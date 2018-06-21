@@ -1,105 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f169.google.com ([209.85.216.169]:44781 "EHLO
-        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933788AbeFZKRo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2018 06:17:44 -0400
-Received: by mail-qt0-f169.google.com with SMTP id 92-v6so10146378qta.11
-        for <linux-pci@vger.kernel.org>; Tue, 26 Jun 2018 03:17:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180625111525.GA30242@wunner.de>
-References: <1529921446-20452-1-git-send-email-hari.vyas@broadcom.com>
- <20180625103742.GA20292@wunner.de> <3fa3c29e023abf67fa74d6e94a27645f@mail.gmail.com>
- <20180625111525.GA30242@wunner.de>
-From: Hari Vyas <hari.vyas@broadcom.com>
-Date: Tue, 26 Jun 2018 15:47:43 +0530
-Message-ID: <CAM5rFu-Bo_prR5R2w2XfM6JkUWo8URiL6i=4tWjOpDuMkcNn-w@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Data corruption happening due to race condition
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ray Jui <ray.jui@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay6.synopsys.com ([198.182.37.59]:57286 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933047AbeFUQBr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 12:01:47 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v6 02/11] PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
+Date: Thu, 21 Jun 2018 17:01:27 +0100
+Message-Id: <90e6f3255f468103d41ab7f6b438ea3a78186e00.1529595907.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 25, 2018 at 4:45 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> On Mon, Jun 25, 2018 at 04:27:37PM +0530, Hari Vyas wrote:
->>       This issue is happening  with multiple times device removal and
->> rescan from sysfs. Card is not removed physically.
->>       Is_added bit is set after device attach which probe nvme driver.
->> NVMe driver starts one workqueue and that one is calling pci_set_master()
->> to set is_busmaster bit.
->>       With multiple times device removal and rescan from sysfs,  race
->> condition is observed and is_added bit is over-written to 0 from workqueue
->> started by NVMe driver.
->
-> Could you add a dump_stack() to pci_bus_add_device() and pci_stop_dev()
-> where the is_added bit is modified, reproduce the issue and attach the
-> resulting dmesg output to a newly opened bug on bugzilla.kernel.org?
->
+Change {cdns, dra7xx, artpec6, dw, rockchip}_pcie_ep_raise_irq() and
+pci_epc_raise_irq() signature, namely the interrupt_num variable type
+from u8 to u16 to accommodate 2048 maximum MSI-X interrupts.
 
-I have raised a Bug 200283 - PCI: Data corruption happening due to a
-race condition.
-Please note that is_added bit is lost in pci_bus_add_device() and
-__pci_set_master()
-functions. Added dump_stack() with one additional debug message to
-print cpu-id in
-pci_set_master() is called from a CPU3 workqueue and pci_bus_add_device() from
-CPU2 sysfs call.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Alan Douglas <adouglas@cadence.com>
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Move into here the pci_epc_raise_irq() signature change from patch
+file #1.
+ - Move into here the {dra7xx, artpec6}_pcie_ep_raise_irq() signature
+changes from patch file #2.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Swap patch files position (#3 -> #2).
+ - Moved dw_pcie_ep_raise_irq and dw_plat_pcie_ep_raise_irq functions
+signatures changes from patch file #3.
+ - Changed rockchip_pcie_ep_raise_irq function signature.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
 
-root@bcm958742k:~# echo 1 > /sys/bus/pci/devices/0002\:01\:00.0/remove
-[   32.385389] nvme nvme0: failed to set APST feature (-19)
-root@bcm958742k:~# echo 1 > /sys/bus/pci/rescan
-[   38.916435] pci 0002:01:00.0: BAR 0: assigned [mem
-0x500000000-0x500003fff 64bit]
-[   38.924822] nvme nvme0: pci function 0002:01:00.0
+ drivers/pci/controller/dwc/pci-dra7xx.c           | 2 +-
+ drivers/pci/controller/dwc/pcie-artpec6.c         | 2 +-
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 2 +-
+ drivers/pci/controller/dwc/pcie-designware-plat.c | 2 +-
+ drivers/pci/controller/dwc/pcie-designware.h      | 2 +-
+ drivers/pci/controller/pcie-cadence-ep.c          | 3 ++-
+ drivers/pci/controller/pcie-rockchip-ep.c         | 2 +-
+ drivers/pci/endpoint/pci-epc-core.c               | 8 ++++----
+ include/linux/pci-epc.h                           | 6 +++---
+ 9 files changed, 15 insertions(+), 14 deletions(-)
 
-[   38.929702] nvme 0002:01:00.0: pci_bus_add_device:333 cpu=2
-
-
-[   38.929705] CPU: 2 PID: 2360 Comm: sh Not tainted
-4.17.0-02102-gdcfa25a-dirty #106
-[   38.943259] Hardware name: Stingray Combo SVK (BCM958742K) (DT)
-
-
-[   38.943267] nvme 0002:01:00.0: __pci_set_master:3681 cpu=3
-
-
-[   38.949366] Call trace:
-[   38.949375]  dump_backtrace+0x0/0x1b8
-[   38.949377]  show_stack+0x14/0x1c
-[   38.964748]  dump_stack+0x90/0xb0
-[   38.968168]  pci_bus_add_device+0xbc/0xe0
-[   38.972303]  pci_bus_add_devices+0x44/0x90
-[   38.976527]  pci_bus_add_devices+0x74/0x90
-[   38.980751]  pci_rescan_bus+0x2c/0x3c
-[   38.984529]  bus_rescan_store+0x7c/0xa0
-[   38.988485]  bus_attr_store+0x20/0x34
-[   38.992264]  sysfs_kf_write+0x40/0x50
-[   38.996040]  kernfs_fop_write+0xcc/0x1cc
-[   39.000087]  __vfs_write+0x40/0x154
-[   39.003683]  vfs_write+0xa8/0x198
-[   39.007102]  ksys_write+0x58/0xbc
-[   39.010520]  sys_write+0xc/0x14
-[   39.013758]  __sys_trace_return+0x0/0x4
-
-[   39.017714] CPU: 3 PID: 50 Comm: kworker/u16:1 Not tainted
-4.17.0-02102-gdcfa25a-dirty #106
-[   39.026329] Hardware name: Stingray Combo SVK (BCM958742K) (DT)
-[   39.026336] Workqueue: nvme-reset-wq nvme_reset_work
-[   39.037561] Call trace:
-[   39.037563]  dump_backtrace+0x0/0x1b8
-[   39.037564]  show_stack+0x14/0x1c
-[   39.037566]  dump_stack+0x90/0xb0
-[   39.037569]  __pci_set_master+0xd4/0x130
-[   39.043866]  pci_set_master+0x18/0x2c
-[   39.043867]  nvme_reset_work+0x110/0x14a4
-[   39.050702]  process_one_work+0x12c/0x29c
-[   39.050704]  worker_thread+0x13c/0x410
-[   39.058522]  kthread+0xfc/0x128
-[   39.058524]  ret_from_fork+0x10/0x18
-root@bcm958742k:~#
-
-
-> Thanks,
->
-> Lukas
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index 345aab5..ce9224a 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -370,7 +370,7 @@ static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
+ }
+ 
+ static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+-				 enum pci_epc_irq_type type, u8 interrupt_num)
++				 enum pci_epc_irq_type type, u16 interrupt_num)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
+index 321b56c..9a2474b 100644
+--- a/drivers/pci/controller/dwc/pcie-artpec6.c
++++ b/drivers/pci/controller/dwc/pcie-artpec6.c
+@@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
+ }
+ 
+ static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+-				  enum pci_epc_irq_type type, u8 interrupt_num)
++				  enum pci_epc_irq_type type, u16 interrupt_num)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 8650416..b86cb99 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -242,7 +242,7 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
+ }
+ 
+ static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
+-				enum pci_epc_irq_type type, u8 interrupt_num)
++				enum pci_epc_irq_type type, u16 interrupt_num)
+ {
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 5937fed..14b6b4b 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -78,7 +78,7 @@ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+ 
+ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 				     enum pci_epc_irq_type type,
+-				     u8 interrupt_num)
++				     u16 interrupt_num)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index bee4e25..9d581c0 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -191,7 +191,7 @@ enum dw_pcie_as_type {
+ struct dw_pcie_ep_ops {
+ 	void	(*ep_init)(struct dw_pcie_ep *ep);
+ 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
+-			     enum pci_epc_irq_type type, u8 interrupt_num);
++			     enum pci_epc_irq_type type, u16 interrupt_num);
+ };
+ 
+ struct dw_pcie_ep {
+diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
+index e3fe412..208d11f 100644
+--- a/drivers/pci/controller/pcie-cadence-ep.c
++++ b/drivers/pci/controller/pcie-cadence-ep.c
+@@ -363,7 +363,8 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
+ }
+ 
+ static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
+-				  enum pci_epc_irq_type type, u8 interrupt_num)
++				  enum pci_epc_irq_type type,
++				  u16 interrupt_num)
+ {
+ 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+ 
+diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/controller/pcie-rockchip-ep.c
+index 6beba8e..b8163c5 100644
+--- a/drivers/pci/controller/pcie-rockchip-ep.c
++++ b/drivers/pci/controller/pcie-rockchip-ep.c
+@@ -472,7 +472,7 @@ static int rockchip_pcie_ep_send_msi_irq(struct rockchip_pcie_ep *ep, u8 fn,
+ 
+ static int rockchip_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
+ 				      enum pci_epc_irq_type type,
+-				      u8 interrupt_num)
++				      u16 interrupt_num)
+ {
+ 	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
+ 
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 7d77bd0..c72e656 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -131,13 +131,13 @@ EXPORT_SYMBOL_GPL(pci_epc_start);
+  * pci_epc_raise_irq() - interrupt the host system
+  * @epc: the EPC device which has to interrupt the host
+  * @func_no: the endpoint function number in the EPC device
+- * @type: specify the type of interrupt; legacy or MSI
+- * @interrupt_num: the MSI interrupt number
++ * @type: specify the type of interrupt; legacy, MSI or MSI-X
++ * @interrupt_num: the MSI or MSI-X interrupt number
+  *
+- * Invoke to raise an MSI or legacy interrupt
++ * Invoke to raise an legacy, MSI or MSI-X interrupt
+  */
+ int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
+-		      enum pci_epc_irq_type type, u8 interrupt_num)
++		      enum pci_epc_irq_type type, u16 interrupt_num)
+ {
+ 	int ret;
+ 	unsigned long flags;
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index 89f079f..bb2395b 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -35,7 +35,7 @@ enum pci_epc_irq_type {
+  *	     MSI-X capability register
+  * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
+  *	     from the MSI-X capability register
+- * @raise_irq: ops to raise a legacy or MSI interrupt
++ * @raise_irq: ops to raise a legacy, MSI or MSI-X interrupt
+  * @start: ops to start the PCI link
+  * @stop: ops to stop the PCI link
+  * @owner: the module owner containing the ops
+@@ -56,7 +56,7 @@ struct pci_epc_ops {
+ 	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
+ 	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
+ 	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
+-			     enum pci_epc_irq_type type, u8 interrupt_num);
++			     enum pci_epc_irq_type type, u16 interrupt_num);
+ 	int	(*start)(struct pci_epc *epc);
+ 	void	(*stop)(struct pci_epc *epc);
+ 	struct module *owner;
+@@ -154,7 +154,7 @@ int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
+ int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts);
+ int pci_epc_get_msix(struct pci_epc *epc, u8 func_no);
+ int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
+-		      enum pci_epc_irq_type type, u8 interrupt_num);
++		      enum pci_epc_irq_type type, u16 interrupt_num);
+ int pci_epc_start(struct pci_epc *epc);
+ void pci_epc_stop(struct pci_epc *epc);
+ struct pci_epc *pci_epc_get(const char *epc_name);
+-- 
+2.7.4
