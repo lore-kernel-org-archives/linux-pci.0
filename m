@@ -1,35 +1,46 @@
-Return-Path: <SRS0=OP+v=IU=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=OP+v=IU=linux.intel.com=mika.westerberg@kernel.org>
-Date: Sat, 2 Jun 2018 21:49:33 +0300
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga07.intel.com ([134.134.136.100]:29680 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753906AbeFULOA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Jun 2018 07:14:00 -0400
+Date: Thu, 21 Jun 2018 14:13:54 +0300
 From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH v1 2/2] PCI: shpchp: Fix AMD POGO identification
-Message-ID: <20180602184933.GU15419@lahna.fi.intel.com>
-References: <152791788214.257724.13044360353832574147.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152791813206.257724.14863139556803168986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org,
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH 32/32] PCI: Whitelist Thunderbolt ports for runtime D3
+Message-ID: <20180621111354.GW2558@lahna.fi.intel.com>
+References: <cover.1529173804.git.lukas@wunner.de>
+ <10206fe7f3967aa73ade5b24dc729de0e94c3b7f.1529173804.git.lukas@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <152791813206.257724.14863139556803168986.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <10206fe7f3967aa73ade5b24dc729de0e94c3b7f.1529173804.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 02, 2018 at 12:42:12AM -0500, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> The fix for an AMD POGO erratum related to SHPC incorrectly identified the
-> device.  The workaround should be applied only for AMD POGO devices, but it
-> was instead applied to:
-> 
->   - all AMD bridges, and
->   - all devices from any vendor with device ID 0x7458
+On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
+> +		/* Even the oldest 2010 Thunderbolt controller supports D3. */
+> +		if (bridge->is_thunderbolt)
+> +			return true;
 
-Good catch.
+I have a small concern here. In PC world native PCIe hotplug used with
+Thunderbolt comes in two flavors:
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+  - Native PCI hotplug without runtime PM
+  - Native PCI hotplug with runtime PM
+
+The former works so that even if it uses native PCIe hotplug, the power
+management is done so that the Thunderbolt host router is hot-removed
+when there is nothing connected (and that brings the power savings).
+With the above change we start putting all Thunderbolt PCIe hotplug
+ports to D3 runtime. While this probably works (and I tested it on the
+same Dell) I don't think Windows does it and it may lead to a path that
+has not been tested very thoroughly by OEMs.
+
+So I wonder if it makes sense to restrict this particular check to Apple
+hardware at this point?
