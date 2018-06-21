@@ -1,238 +1,330 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:34076 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751855AbeF1LXv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jun 2018 07:23:51 -0400
-Received: by mail-qk0-f193.google.com with SMTP id b66-v6so2725483qkj.1
-        for <linux-pci@vger.kernel.org>; Thu, 28 Jun 2018 04:23:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <6f842c91-31da-ec4b-d2ff-a90e0cd7ba3f@broadcom.com>
-References: <20180626115356.GA24588@wunner.de> <1530092297-10165-1-git-send-email-hari.vyas@broadcom.com>
- <4a27d5b4-6578-8f91-fc6f-6409733f2e15@broadcom.com> <CAM5rFu_28fwC6tnC9HG27KtHb0BNiBtdPWeTUxFAjwCv-Zs+Aw@mail.gmail.com>
- <6f842c91-31da-ec4b-d2ff-a90e0cd7ba3f@broadcom.com>
-From: Hari Vyas <hari.vyas@broadcom.com>
-Date: Thu, 28 Jun 2018 16:53:49 +0530
-Message-ID: <CAM5rFu-3p+vmvnuzVKO0v8t+ZyjDh=4xLJE94SMRkjqFOqFdkQ@mail.gmail.com>
-Subject: Re: [PATCH v1] PCI: Data corruption happening due to race condition
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay.synopsys.com ([198.182.37.59]:57289 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933379AbeFUQBt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 12:01:49 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v6 06/11] pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
+Date: Thu, 21 Jun 2018 17:01:31 +0100
+Message-Id: <85a8f5b6716249bca7311b01469193d7431dc176.1529595907.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 27, 2018 at 10:06 PM, Ray Jui <ray.jui@broadcom.com> wrote:
->
->
-> On 6/27/2018 9:32 AM, Hari Vyas wrote:
->>
->> On Wed, Jun 27, 2018 at 9:57 PM, Ray Jui <ray.jui@broadcom.com> wrote:
->>>
->>> Are you re-sending v1 version of this patch or this is actually v2?
->>>
->> This is actually v2. Forgot to give version in first patch.
->
->
-> You may choose to specify [PATCH v1]: or simply [PATCH]: on your first
-> version of the patch, so what you did in the first version was okay.
->
-> Now, prefixing the 2nd version of the patch with v1 is just wrong and causes
-> confusions. Can you fix that?
->
-> In addition, the Reviewed-by filed on me needs to be removed on v2 of this
-> patch, since I've never reviewed since you changed it from v1.
->
->
-One spin_lock_init() was missing so just added for new patch. As that patch
-should be obsolete so will take care about versioning in upcoming patch.
-I have tested with priv_flag changes and needed to modify following files.
-Changes fixing current scenario concern but eventually looks like  all pci_dev
-relevant bit fields needs to be protected using atomic operation
-keeping future in mind
-and some cleanup in other modules using pci_dev structure fields.
+Cleanup PCI_ENDPOINT_TEST memspace (by moving the interrupt number away
+from command section).
 
-I will  probably need to  raise three separate patches i.e. one for
-powerpc/ files,
-driver/pci/*.c and include/linux.h;driver/pci/pci.h. Probably need
-to include powerpc maintainer too.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v2->v3:
+ - New patch file created base on the previous patch
+"misc: pci_endpoint_test: Add MSI-X support" patch file following
+Kishon's suggestion.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Reverted irq_num rename to msi_num.
+ - Added comment about the MSI-X bit reservation for future implementation.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
 
-modified:   arch/powerpc/kernel/pci-common.c
-modified:   arch/powerpc/platforms/powernv/pci-ioda.c
-modified:   arch/powerpc/platforms/pseries/setup.c
-modified:   drivers/pci/bus.c
-modified:   drivers/pci/hotplug/acpiphp_glue.c
-modified:   drivers/pci/pci-driver.c
-modified:   drivers/pci/pci.c
-modified:   drivers/pci/pci.h
-modified:   drivers/pci/probe.c
-modified:   drivers/pci/remove.c
-modified:   include/linux/pci.h
+ drivers/misc/pci_endpoint_test.c              | 81 +++++++++++++++++----------
+ drivers/pci/endpoint/functions/pci-epf-test.c | 61 +++++++++++++-------
+ 2 files changed, 91 insertions(+), 51 deletions(-)
 
->> There was spin lock initialization issue with v1 which was not caught
->> in our environment.
->> In any case, I am trying out suggested priv_flag approach and testing it.
->> Hopefully that should be final version.
->>>
->>> Thanks,
->>>
->>> Ray
->>>
->>>
->>> On 6/27/2018 2:38 AM, Hari Vyas wrote:
->>>>
->>>>
->>>> When a pci device is detected, a variable is_added is set to
->>>> 1 in pci device structure and proc, sys entries are created.
->>>>
->>>> When a pci device is removed, first is_added is checked for one
->>>> and then device is detached with clearing of proc and sys
->>>> entries and at end, is_added is set to 0.
->>>>
->>>> is_added and is_busmaster are bit fields in pci_dev structure
->>>> sharing same memory location.
->>>>
->>>> A strange issue was observed with multiple times removal and
->>>> rescan of a pcie nvme device using sysfs commands where is_added
->>>> flag was observed as zero instead of one while removing device
->>>> and proc,sys entries are not cleared.  This causes issue in
->>>> later device addition with warning message "proc_dir_entry"
->>>> already registered.
->>>>
->>>> Debugging revealed a race condition between pcie core driver
->>>> enabling is_added bit(pci_bus_add_device()) and nvme driver
->>>> reset work-queue enabling is_busmaster bit (by pci_set_master()).
->>>> As both fields are not handled in atomic manner and that clears
->>>> is_added bit.
->>>>
->>>> Fix protects is_added and is_busmaster bits updation by a spin
->>>> locking mechanism.
->>>>
->>>> Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
->>>> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
->>>> ---
->>>>    drivers/pci/bus.c        | 3 +++
->>>>    drivers/pci/pci-driver.c | 2 ++
->>>>    drivers/pci/pci.c        | 7 +++++++
->>>>    drivers/pci/probe.c      | 1 +
->>>>    drivers/pci/remove.c     | 5 +++++
->>>>    include/linux/pci.h      | 1 +
->>>>    6 files changed, 19 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->>>> index 35b7fc8..61d389d 100644
->>>> --- a/drivers/pci/bus.c
->>>> +++ b/drivers/pci/bus.c
->>>> @@ -310,6 +310,7 @@ void __weak pcibios_bus_add_device(struct pci_dev
->>>> *pdev) { }
->>>>    void pci_bus_add_device(struct pci_dev *dev)
->>>>    {
->>>>          int retval;
->>>> +       unsigned long flags;
->>>>          /*
->>>>           * Can not put in pci_device_add yet because resources
->>>> @@ -330,7 +331,9 @@ void pci_bus_add_device(struct pci_dev *dev)
->>>>                  return;
->>>>          }
->>>>    +     spin_lock_irqsave(&dev->lock, flags);
->>>>          dev->is_added = 1;
->>>> +       spin_unlock_irqrestore(&dev->lock, flags);
->>>>    }
->>>>    EXPORT_SYMBOL_GPL(pci_bus_add_device);
->>>>    diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->>>> index c125d53..547bcd7 100644
->>>> --- a/drivers/pci/pci-driver.c
->>>> +++ b/drivers/pci/pci-driver.c
->>>> @@ -123,6 +123,8 @@ static ssize_t new_id_store(struct device_driver
->>>> *driver, const char *buf,
->>>>                  pdev->subsystem_device = subdevice;
->>>>                  pdev->class = class;
->>>>    +             spin_lock_init(&pdev->lock);
->>>> +
->>>>                  if (pci_match_id(pdrv->id_table, pdev))
->>>>                          retval = -EEXIST;
->>>>    diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>> index 97acba7..bcb1f96 100644
->>>> --- a/drivers/pci/pci.c
->>>> +++ b/drivers/pci/pci.c
->>>> @@ -1649,6 +1649,7 @@ void pci_disable_enabled_device(struct pci_dev
->>>> *dev)
->>>>    void pci_disable_device(struct pci_dev *dev)
->>>>    {
->>>>          struct pci_devres *dr;
->>>> +       unsigned long flags;
->>>>          dr = find_pci_dr(dev);
->>>>          if (dr)
->>>> @@ -1662,7 +1663,9 @@ void pci_disable_device(struct pci_dev *dev)
->>>>          do_pci_disable_device(dev);
->>>>    +     spin_lock_irqsave(&dev->lock, flags);
->>>>          dev->is_busmaster = 0;
->>>> +       spin_unlock_irqrestore(&dev->lock, flags);
->>>>    }
->>>>    EXPORT_SYMBOL(pci_disable_device);
->>>>    @@ -3664,6 +3667,7 @@ void __iomem
->>>> *devm_pci_remap_cfg_resource(struct
->>>> device *dev,
->>>>    static void __pci_set_master(struct pci_dev *dev, bool enable)
->>>>    {
->>>>          u16 old_cmd, cmd;
->>>> +       unsigned long flags;
->>>>          pci_read_config_word(dev, PCI_COMMAND, &old_cmd);
->>>>          if (enable)
->>>> @@ -3675,7 +3679,10 @@ static void __pci_set_master(struct pci_dev *dev,
->>>> bool enable)
->>>>                          enable ? "enabling" : "disabling");
->>>>                  pci_write_config_word(dev, PCI_COMMAND, cmd);
->>>>          }
->>>> +
->>>> +       spin_lock_irqsave(&dev->lock, flags);
->>>>          dev->is_busmaster = enable;
->>>> +       spin_unlock_irqrestore(&dev->lock, flags);
->>>>    }
->>>>      /**
->>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>>> index ac876e3..9203b88 100644
->>>> --- a/drivers/pci/probe.c
->>>> +++ b/drivers/pci/probe.c
->>>> @@ -2102,6 +2102,7 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
->>>>          INIT_LIST_HEAD(&dev->bus_list);
->>>>          dev->dev.type = &pci_dev_type;
->>>>          dev->bus = pci_bus_get(bus);
->>>> +       spin_lock_init(&dev->lock);
->>>>          return dev;
->>>>    }
->>>> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
->>>> index 6f072ea..ff57bd6 100644
->>>> --- a/drivers/pci/remove.c
->>>> +++ b/drivers/pci/remove.c
->>>> @@ -17,13 +17,18 @@ static void pci_free_resources(struct pci_dev *dev)
->>>>      static void pci_stop_dev(struct pci_dev *dev)
->>>>    {
->>>> +       unsigned long flags;
->>>> +
->>>>          pci_pme_active(dev, false);
->>>>          if (dev->is_added) {
->>>>                  device_release_driver(&dev->dev);
->>>>                  pci_proc_detach_device(dev);
->>>>                  pci_remove_sysfs_dev_files(dev);
->>>> +
->>>> +               spin_lock_irqsave(&dev->lock, flags);
->>>>                  dev->is_added = 0;
->>>> +               spin_unlock_irqrestore(&dev->lock, flags);
->>>>          }
->>>>          if (dev->bus->self)
->>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>>> index 340029b..6940825 100644
->>>> --- a/include/linux/pci.h
->>>> +++ b/include/linux/pci.h
->>>> @@ -365,6 +365,7 @@ struct pci_dev {
->>>>          bool            match_driver;           /* Skip attaching
->>>> driver
->>>> */
->>>>    +     spinlock_t      lock;                   /* Protect is_added and
->>>> is_busmaster */
->>>>          unsigned int    transparent:1;          /* Subtractive decode
->>>> bridge */
->>>>          unsigned int    multifunction:1;        /* Multi-function
->>>> device
->>>> */
->>>>
->
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 7b37046..35fbfbd 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -35,38 +35,43 @@
+ 
+ #include <uapi/linux/pcitest.h>
+ 
+-#define DRV_MODULE_NAME			"pci-endpoint-test"
+-
+-#define PCI_ENDPOINT_TEST_MAGIC		0x0
+-
+-#define PCI_ENDPOINT_TEST_COMMAND	0x4
+-#define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+-#define COMMAND_RAISE_MSI_IRQ		BIT(1)
+-#define MSI_NUMBER_SHIFT		2
+-/* 6 bits for MSI number */
+-#define COMMAND_READ                    BIT(8)
+-#define COMMAND_WRITE                   BIT(9)
+-#define COMMAND_COPY                    BIT(10)
+-
+-#define PCI_ENDPOINT_TEST_STATUS	0x8
+-#define STATUS_READ_SUCCESS             BIT(0)
+-#define STATUS_READ_FAIL                BIT(1)
+-#define STATUS_WRITE_SUCCESS            BIT(2)
+-#define STATUS_WRITE_FAIL               BIT(3)
+-#define STATUS_COPY_SUCCESS             BIT(4)
+-#define STATUS_COPY_FAIL                BIT(5)
+-#define STATUS_IRQ_RAISED               BIT(6)
+-#define STATUS_SRC_ADDR_INVALID         BIT(7)
+-#define STATUS_DST_ADDR_INVALID         BIT(8)
+-
+-#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0xc
++#define DRV_MODULE_NAME				"pci-endpoint-test"
++
++#define IRQ_TYPE_LEGACY				0
++#define IRQ_TYPE_MSI				1
++
++#define PCI_ENDPOINT_TEST_MAGIC			0x0
++
++#define PCI_ENDPOINT_TEST_COMMAND		0x4
++#define COMMAND_RAISE_LEGACY_IRQ		BIT(0)
++#define COMMAND_RAISE_MSI_IRQ			BIT(1)
++/* BIT(2) is reserved for raising MSI-X IRQ command */
++#define COMMAND_READ				BIT(3)
++#define COMMAND_WRITE				BIT(4)
++#define COMMAND_COPY				BIT(5)
++
++#define PCI_ENDPOINT_TEST_STATUS		0x8
++#define STATUS_READ_SUCCESS			BIT(0)
++#define STATUS_READ_FAIL			BIT(1)
++#define STATUS_WRITE_SUCCESS			BIT(2)
++#define STATUS_WRITE_FAIL			BIT(3)
++#define STATUS_COPY_SUCCESS			BIT(4)
++#define STATUS_COPY_FAIL			BIT(5)
++#define STATUS_IRQ_RAISED			BIT(6)
++#define STATUS_SRC_ADDR_INVALID			BIT(7)
++#define STATUS_DST_ADDR_INVALID			BIT(8)
++
++#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0x0c
+ #define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
+ 
+ #define PCI_ENDPOINT_TEST_LOWER_DST_ADDR	0x14
+ #define PCI_ENDPOINT_TEST_UPPER_DST_ADDR	0x18
+ 
+-#define PCI_ENDPOINT_TEST_SIZE		0x1c
+-#define PCI_ENDPOINT_TEST_CHECKSUM	0x20
++#define PCI_ENDPOINT_TEST_SIZE			0x1c
++#define PCI_ENDPOINT_TEST_CHECKSUM		0x20
++
++#define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
++#define PCI_ENDPOINT_TEST_IRQ_NUMBER		0x28
+ 
+ static DEFINE_IDA(pci_endpoint_test_ida);
+ 
+@@ -179,6 +184,9 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
+ {
+ 	u32 val;
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
++				 IRQ_TYPE_LEGACY);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 0);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ 				 COMMAND_RAISE_LEGACY_IRQ);
+ 	val = wait_for_completion_timeout(&test->irq_raised,
+@@ -195,8 +203,10 @@ static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
+ 	u32 val;
+ 	struct pci_dev *pdev = test->pdev;
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
++				 IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, msi_num);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 msi_num << MSI_NUMBER_SHIFT |
+ 				 COMMAND_RAISE_MSI_IRQ);
+ 	val = wait_for_completion_timeout(&test->irq_raised,
+ 					  msecs_to_jiffies(1000));
+@@ -281,8 +291,11 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
+ 				 size);
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
++				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 1 << MSI_NUMBER_SHIFT | COMMAND_COPY);
++				 COMMAND_COPY);
+ 
+ 	wait_for_completion(&test->irq_raised);
+ 
+@@ -348,8 +361,11 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
++				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 1 << MSI_NUMBER_SHIFT | COMMAND_READ);
++				 COMMAND_READ);
+ 
+ 	wait_for_completion(&test->irq_raised);
+ 
+@@ -403,8 +419,11 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
++				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 1 << MSI_NUMBER_SHIFT | COMMAND_WRITE);
++				 COMMAND_WRITE);
+ 
+ 	wait_for_completion(&test->irq_raised);
+ 
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 63ed706..eb9cd00 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -18,13 +18,15 @@
+ #include <linux/pci-epf.h>
+ #include <linux/pci_regs.h>
+ 
++#define IRQ_TYPE_LEGACY			0
++#define IRQ_TYPE_MSI			1
++
+ #define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+ #define COMMAND_RAISE_MSI_IRQ		BIT(1)
+-#define MSI_NUMBER_SHIFT		2
+-#define MSI_NUMBER_MASK			(0x3f << MSI_NUMBER_SHIFT)
+-#define COMMAND_READ			BIT(8)
+-#define COMMAND_WRITE			BIT(9)
+-#define COMMAND_COPY			BIT(10)
++/* BIT(2) is reserved for raising MSI-X IRQ command */
++#define COMMAND_READ			BIT(3)
++#define COMMAND_WRITE			BIT(4)
++#define COMMAND_COPY			BIT(5)
+ 
+ #define STATUS_READ_SUCCESS		BIT(0)
+ #define STATUS_READ_FAIL		BIT(1)
+@@ -56,6 +58,8 @@ struct pci_epf_test_reg {
+ 	u64	dst_addr;
+ 	u32	size;
+ 	u32	checksum;
++	u32	irq_type;
++	u32	irq_number;
+ } __packed;
+ 
+ static struct pci_epf_header test_header = {
+@@ -244,31 +248,39 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+ 	return ret;
+ }
+ 
+-static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
++static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq_type,
++				   u16 irq)
+ {
+-	u8 msi_count;
+ 	struct pci_epf *epf = epf_test->epf;
++	struct device *dev = &epf->dev;
+ 	struct pci_epc *epc = epf->epc;
+ 	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
+ 	struct pci_epf_test_reg *reg = epf_test->reg[test_reg_bar];
+ 
+ 	reg->status |= STATUS_IRQ_RAISED;
+-	msi_count = pci_epc_get_msi(epc, epf->func_no);
+-	if (irq > msi_count || msi_count <= 0)
++
++	switch (irq_type) {
++	case IRQ_TYPE_LEGACY:
+ 		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_LEGACY, 0);
+-	else
++		break;
++	case IRQ_TYPE_MSI:
+ 		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
++		break;
++	default:
++		dev_err(dev, "Failed to raise IRQ, unknown type\n");
++		break;
++	}
+ }
+ 
+ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ {
+ 	int ret;
+-	u8 irq;
+-	u8 msi_count;
++	u16 count;
+ 	u32 command;
+ 	struct pci_epf_test *epf_test = container_of(work, struct pci_epf_test,
+ 						     cmd_handler.work);
+ 	struct pci_epf *epf = epf_test->epf;
++	struct device *dev = &epf->dev;
+ 	struct pci_epc *epc = epf->epc;
+ 	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
+ 	struct pci_epf_test_reg *reg = epf_test->reg[test_reg_bar];
+@@ -280,7 +292,10 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 	reg->command = 0;
+ 	reg->status = 0;
+ 
+-	irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
++	if (reg->irq_type > IRQ_TYPE_MSI) {
++		dev_err(dev, "Failed to detect IRQ type\n");
++		goto reset_handler;
++	}
+ 
+ 	if (command & COMMAND_RAISE_LEGACY_IRQ) {
+ 		reg->status = STATUS_IRQ_RAISED;
+@@ -294,7 +309,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 			reg->status |= STATUS_WRITE_FAIL;
+ 		else
+ 			reg->status |= STATUS_WRITE_SUCCESS;
+-		pci_epf_test_raise_irq(epf_test, irq);
++		pci_epf_test_raise_irq(epf_test, reg->irq_type,
++				       reg->irq_number);
+ 		goto reset_handler;
+ 	}
+ 
+@@ -304,7 +320,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 			reg->status |= STATUS_READ_SUCCESS;
+ 		else
+ 			reg->status |= STATUS_READ_FAIL;
+-		pci_epf_test_raise_irq(epf_test, irq);
++		pci_epf_test_raise_irq(epf_test, reg->irq_type,
++				       reg->irq_number);
+ 		goto reset_handler;
+ 	}
+ 
+@@ -314,16 +331,18 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 			reg->status |= STATUS_COPY_SUCCESS;
+ 		else
+ 			reg->status |= STATUS_COPY_FAIL;
+-		pci_epf_test_raise_irq(epf_test, irq);
++		pci_epf_test_raise_irq(epf_test, reg->irq_type,
++				       reg->irq_number);
+ 		goto reset_handler;
+ 	}
+ 
+ 	if (command & COMMAND_RAISE_MSI_IRQ) {
+-		msi_count = pci_epc_get_msi(epc, epf->func_no);
+-		if (irq > msi_count || msi_count <= 0)
++		count = pci_epc_get_msi(epc, epf->func_no);
++		if (reg->irq_number > count || count <= 0)
+ 			goto reset_handler;
+ 		reg->status = STATUS_IRQ_RAISED;
+-		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
++		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI,
++				  reg->irq_number);
+ 		goto reset_handler;
+ 	}
+ 
+@@ -457,8 +476,10 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+ 		return ret;
+ 
+ 	ret = pci_epc_set_msi(epc, epf->func_no, epf->msi_interrupts);
+-	if (ret)
++	if (ret) {
++		dev_err(dev, "MSI configuration failed\n");
+ 		return ret;
++	}
+ 
+ 	if (!epf_test->linkup_notifier)
+ 		queue_work(kpcitest_workqueue, &epf_test->cmd_handler.work);
+-- 
+2.7.4
