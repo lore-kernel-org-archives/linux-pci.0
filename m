@@ -1,303 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-Date: Tue, 05 Jun 2018 07:58:09 -0400
-From: okaya@codeaurora.org
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH V4] PCI: move early dump functionality from x86 arch into
- the common code
-In-Reply-To: <CAHp75VdD0Ds6dFdYWF8YpY04hiKY-LmfOU7+dPs7PkTOjbRKbw@mail.gmail.com>
-References: <1528164985-14099-1-git-send-email-okaya@codeaurora.org>
- <CAHp75VdD0Ds6dFdYWF8YpY04hiKY-LmfOU7+dPs7PkTOjbRKbw@mail.gmail.com>
-Message-ID: <78bfd7951abae5cd5043c2c6f513a224@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- linux-pci@vger.kernel.org, Petr Tesarik <ptesarik@suse.cz>,
- Ram Pai <linuxram@us.ibm.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>,
- "H.
- Peter Anvin" <hpa@zytor.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- Timur Tabi <timur@codeaurora.org>, "maintainer:X86 ARCHITECTURE \(32-BIT AND
- 64-BIT\)" <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>,
- David Rientjes <rientjes@google.com>,
- Thymo van Beers <thymovanbeers@gmail.com>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Tom Lendacky <thomas.lendacky@amd.com>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-arm-msm@vger.kernel.org, Frederic Weisbecker <frederic@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
- Juergen Gross <jgross@suse.com>, Dou Liyang <douly.fnst@cn.fujitsu.com>,
- Borislav Petkov <bp@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- open list <linux-kernel@vger.kernel.org>,
- Philippe Ombredanne <pombredanne@nexb.com>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:52430 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933391AbeFUQrl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Jun 2018 12:47:41 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: shpchp: Fix probing logic inversion
+Date: Thu, 21 Jun 2018 17:47:15 +0100
+Message-Id: <20180621164715.28160-1-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-06-05 05:12, Andy Shevchenko wrote:
-> On Tue, Jun 5, 2018 at 5:16 AM, Sinan Kaya <okaya@codeaurora.org> 
-> wrote:
->> Move early dump functionality into common code so that it is available 
->> for
->> all archtiectures. No need to carry arch specific reads around as the 
->> read
->> hooks are already initialized by the time pci_setup_device() is 
->> getting
->> called during scan.
->> 
-> 
-> Makes sense.
-> 
-> Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> 
-> One style comment below, though.
-> 
-> If you wait a bit, I perhaps would be able to test on x86.
+Until recently, shpc_probe() would bail out pretty early in the
+absence of the SHPC capability. A logic change in the way the
+driver now checks that capability makes it go and probe the
+firmware anyway, with ugly consequences if the system is not
+ACPI based (my arm64 ThunderX is DT driven, and explodes in
+a spectacular way after getting a NULL root bridge from the
+non-existent ACPI tables...).
 
-Sure, no rush. This is a nice to have feature with no urgency.
+Take this opportunity to move the call to shpchp_is_native()
+back into shpc_probe(), making it clear that a non-ACPI system
+is not expected to use this driver.
 
-> 
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->> ---
->>  Documentation/admin-guide/kernel-parameters.txt |  2 +-
->>  arch/x86/include/asm/pci-direct.h               |  4 ---
->>  arch/x86/kernel/setup.c                         |  5 ---
->>  arch/x86/pci/common.c                           |  4 ---
->>  arch/x86/pci/early.c                            | 44 
->> -------------------------
->>  drivers/pci/pci.c                               |  5 +++
->>  drivers/pci/pci.h                               |  1 +
->>  drivers/pci/probe.c                             | 19 +++++++++++
->>  8 files changed, 26 insertions(+), 58 deletions(-)
->> 
->> diff --git a/Documentation/admin-guide/kernel-parameters.txt 
->> b/Documentation/admin-guide/kernel-parameters.txt
->> index e490902..e64f1d8 100644
->> --- a/Documentation/admin-guide/kernel-parameters.txt
->> +++ b/Documentation/admin-guide/kernel-parameters.txt
->> @@ -2995,7 +2995,7 @@
->>                         See also Documentation/blockdev/paride.txt.
->> 
->>         pci=option[,option...]  [PCI] various PCI subsystem options:
->> -               earlydump       [X86] dump PCI config space before the 
->> kernel
->> +               earlydump       dump PCI config space before the 
->> kernel
->>                                 changes anything
->>                 off             [X86] don't probe for the PCI bus
->>                 bios            [X86-32] force use of PCI BIOS, don't 
->> access
->> diff --git a/arch/x86/include/asm/pci-direct.h 
->> b/arch/x86/include/asm/pci-direct.h
->> index e1084f7..94597a3 100644
->> --- a/arch/x86/include/asm/pci-direct.h
->> +++ b/arch/x86/include/asm/pci-direct.h
->> @@ -15,8 +15,4 @@ extern void write_pci_config_byte(u8 bus, u8 slot, 
->> u8 func, u8 offset, u8 val);
->>  extern void write_pci_config_16(u8 bus, u8 slot, u8 func, u8 offset, 
->> u16 val);
->> 
->>  extern int early_pci_allowed(void);
->> -
->> -extern unsigned int pci_early_dump_regs;
->> -extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
->> -extern void early_dump_pci_devices(void);
->>  #endif /* _ASM_X86_PCI_DIRECT_H */
->> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
->> index 2f86d88..480f250 100644
->> --- a/arch/x86/kernel/setup.c
->> +++ b/arch/x86/kernel/setup.c
->> @@ -991,11 +991,6 @@ void __init setup_arch(char **cmdline_p)
->>                 setup_clear_cpu_cap(X86_FEATURE_APIC);
->>         }
->> 
->> -#ifdef CONFIG_PCI
->> -       if (pci_early_dump_regs)
->> -               early_dump_pci_devices();
->> -#endif
->> -
->>         e820__reserve_setup_data();
->>         e820__finish_early_params();
->> 
->> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
->> index 563049c..d4ec117 100644
->> --- a/arch/x86/pci/common.c
->> +++ b/arch/x86/pci/common.c
->> @@ -22,7 +22,6 @@
->>  unsigned int pci_probe = PCI_PROBE_BIOS | PCI_PROBE_CONF1 | 
->> PCI_PROBE_CONF2 |
->>                                 PCI_PROBE_MMCONF;
->> 
->> -unsigned int pci_early_dump_regs;
->>  static int pci_bf_sort;
->>  int pci_routeirq;
->>  int noioapicquirk;
->> @@ -599,9 +598,6 @@ char *__init pcibios_setup(char *str)
->>                 pci_probe |= PCI_BIG_ROOT_WINDOW;
->>                 return NULL;
->>  #endif
->> -       } else if (!strcmp(str, "earlydump")) {
->> -               pci_early_dump_regs = 1;
->> -               return NULL;
->>         } else if (!strcmp(str, "routeirq")) {
->>                 pci_routeirq = 1;
->>                 return NULL;
->> diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
->> index e5f753c..f5fc953 100644
->> --- a/arch/x86/pci/early.c
->> +++ b/arch/x86/pci/early.c
->> @@ -57,47 +57,3 @@ int early_pci_allowed(void)
->>                         PCI_PROBE_CONF1;
->>  }
->> 
->> -void early_dump_pci_device(u8 bus, u8 slot, u8 func)
->> -{
->> -       u32 value[256 / 4];
->> -       int i;
->> -
->> -       pr_info("pci 0000:%02x:%02x.%d config space:\n", bus, slot, 
->> func);
->> -
->> -       for (i = 0; i < 256; i += 4)
->> -               value[i / 4] = read_pci_config(bus, slot, func, i);
->> -
->> -       print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, 
->> value, 256, false);
->> -}
->> -
->> -void early_dump_pci_devices(void)
->> -{
->> -       unsigned bus, slot, func;
->> -
->> -       if (!early_pci_allowed())
->> -               return;
->> -
->> -       for (bus = 0; bus < 256; bus++) {
->> -               for (slot = 0; slot < 32; slot++) {
->> -                       for (func = 0; func < 8; func++) {
->> -                               u32 class;
->> -                               u8 type;
->> -
->> -                               class = read_pci_config(bus, slot, 
->> func,
->> -                                                       
->> PCI_CLASS_REVISION);
->> -                               if (class == 0xffffffff)
->> -                                       continue;
->> -
->> -                               early_dump_pci_device(bus, slot, 
->> func);
->> -
->> -                               if (func == 0) {
->> -                                       type = 
->> read_pci_config_byte(bus, slot,
->> -                                                                   
->> func,
->> -                                                              
->> PCI_HEADER_TYPE);
->> -                                       if (!(type & 0x80))
->> -                                               break;
->> -                               }
->> -                       }
->> -               }
->> -       }
->> -}
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 97acba7..04052dc 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -115,6 +115,9 @@ static bool pcie_ari_disabled;
->>  /* If set, the PCIe ATS capability will not be used. */
->>  static bool pcie_ats_disabled;
->> 
->> +/* If set, the PCI config space of each device is printed during 
->> boot. */
->> +bool pci_early_dump;
->> +
->>  bool pci_ats_disabled(void)
->>  {
->>         return pcie_ats_disabled;
->> @@ -5805,6 +5808,8 @@ static int __init pci_setup(char *str)
->>                                 pcie_ats_disabled = true;
->>                         } else if (!strcmp(str, "noaer")) {
->>                                 pci_no_aer();
->> +                       } else if (!strcmp(str, "earlydump")) {
->> +                               pci_early_dump = true;
->>                         } else if (!strncmp(str, "realloc=", 8)) {
->>                                 pci_realloc_get_opt(str + 8);
->>                         } else if (!strncmp(str, "realloc", 7)) {
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index c358e7a0..c33265e 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -7,6 +7,7 @@
->>  #define PCI_VSEC_ID_INTEL_TBT  0x1234  /* Thunderbolt */
->> 
->>  extern const unsigned char pcie_link_speed[];
->> +extern bool pci_early_dump;
->> 
->>  bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
->> 
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 56771f3..3678f0a 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1545,6 +1545,23 @@ static int pci_intx_mask_broken(struct pci_dev 
->> *dev)
->>         return 0;
->>  }
->> 
->> +static void early_dump_pci_device(struct pci_dev *pdev)
->> +{
->> +       u32 value[256 / 4];
->> +       int i;
->> +
->> +       if (!pci_early_dump)
->> +               return;
->> +
->> +       pci_info(pdev, "config space:\n");
->> +
->> +       for (i = 0; i < 256; i += 4)
->> +               pci_read_config_dword(pdev, i, &value[i / 4]);
->> +
-> 
->> +       print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, 
->> value,
->> +                      256, false);
-> 
-> Logically better either to move value to second line, or move 256 on
-> the first line.
-> 
->> +}
->> +
->>  /**
->>   * pci_setup_device - Fill in class and map information of a device
->>   * @dev: the device structure to fill
->> @@ -1594,6 +1611,8 @@ int pci_setup_device(struct pci_dev *dev)
->>         pci_printk(KERN_DEBUG, dev, "[%04x:%04x] type %02x class 
->> %#08x\n",
->>                    dev->vendor, dev->device, dev->hdr_type, 
->> dev->class);
->> 
->> +       early_dump_pci_device(dev);
->> +
->>         /* Need to have dev->class ready */
->>         dev->cfg_size = pci_cfg_space_size(dev);
->> 
->> --
->> 2.7.4
->> 
+Fixes: 90cc0c3cc709 ("PCI: shpchp: Add shpchp_is_native()")
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/hotplug/acpi_pcihp.c  | 3 ---
+ drivers/pci/hotplug/shpchp_core.c | 3 ++-
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+index 3979f89b250a..b57f29753a08 100644
+--- a/drivers/pci/hotplug/acpi_pcihp.c
++++ b/drivers/pci/hotplug/acpi_pcihp.c
+@@ -83,9 +83,6 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
+ 	 * OSHP within the scope of the hotplug controller and its parents,
+ 	 * up to the host bridge under which this controller exists.
+ 	 */
+-	if (shpchp_is_native(pdev))
+-		return 0;
+-
+ 	/* If _OSC exists, we should not evaluate OSHP */
+ 	host = pci_find_host_bridge(pdev->bus);
+ 	root = acpi_pci_find_root(ACPI_HANDLE(&host->dev));
+diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+index e91be287f292..8902fe18a636 100644
+--- a/drivers/pci/hotplug/shpchp_core.c
++++ b/drivers/pci/hotplug/shpchp_core.c
+@@ -275,7 +275,8 @@ static int shpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	int rc;
+ 	struct controller *ctrl;
+ 
+-	if (acpi_get_hp_hw_control_from_firmware(pdev))
++	if (!shpchp_is_native(pdev) ||
++	    acpi_get_hp_hw_control_from_firmware(pdev))
+ 		return -ENODEV;
+ 
+ 	ctrl = kzalloc(sizeof(*ctrl), GFP_KERNEL);
+-- 
+2.17.1
