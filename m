@@ -1,190 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 10/13] PCI/AER: Move private AER things to aerdrv.c
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Keith Busch <keith.busch@intel.com>,
-        Borislav Petkov <bp@alien8.de>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        linux-kernel@vger.kernel.org
-Date: Fri, 08 Jun 2018 15:05:47 -0500
-Message-ID: <152848834746.11888.3692087095799839481.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=5bYc=JH=flex--rajatja.bounces.google.com=3WDksWwcKB1sK3C3MC39HH9E7.5HFA7E933LD7KG7E.HK9@kernel.org>
+Return-Path: <SRS0=5bYc=JH=flex--rajatja.bounces.google.com=3WDksWwcKB1sK3C3MC39HH9E7.5HFA7E933LD7KG7E.HK9@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Date: Thu, 21 Jun 2018 16:48:26 -0700
+In-Reply-To: <20180621234829.224566-1-rajatja@google.com>
+Message-Id: <20180621234829.224566-2-rajatja@google.com>
+References: <20180621234829.224566-1-rajatja@google.com>
+Subject: [PATCH 1/4] PCI: Move pci_aer_init() and pci_no_aer() declarations to drivers/pci/pci.h
+From: Rajat Jain <rajatja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
+	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
+	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
+Cc: Rajat Jain <rajatja@google.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Since these functions are unsed only internally, move them to the PCI
+internal header file. Also, no one cares about return value of
+pci_aer_init(), so make it void.
 
-Most of the things in aerdrv.h are only used in aerdrv.c, so move them
-there.  No functional change intended.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Rajat Jain <rajatja@google.com>
 ---
- drivers/pci/pcie/aer/aerdrv.c |   64 +++++++++++++++++++++++++++++++++
- drivers/pci/pcie/aer/aerdrv.h |   79 -----------------------------------------
- 2 files changed, 63 insertions(+), 80 deletions(-)
- delete mode 100644 drivers/pci/pcie/aer/aerdrv.h
+ drivers/pci/pci.h      | 8 ++++++++
+ drivers/pci/pcie/aer.c | 4 ++--
+ include/linux/pci.h    | 4 ----
+ 3 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 51b66307e68c..3fc23fc95f98 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -27,8 +27,70 @@
- #include <acpi/apei.h>
- #include <ras/ras_event.h>
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index c358e7a07f3f..9a1af85aca77 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -452,4 +452,12 @@ static inline int devm_of_pci_get_host_bridge_resources(struct device *dev,
+ }
+ #endif
  
--#include "aerdrv.h"
- #include "../../pci.h"
-+#include "../portdrv.h"
++#ifdef CONFIG_PCIEAER
++void pci_no_aer(void);
++void pci_aer_init(struct pci_dev *dev);
++#else
++static inline void pci_no_aer(void) { }
++static inline int pci_aer_init(struct pci_dev *d) { return -ENODEV; }
++#endif
 +
-+#define AER_ERROR_SOURCES_MAX		100
-+#define AER_MAX_MULTI_ERR_DEVICES	5	/* Not likely to have more */
-+
-+struct aer_err_info {
-+	struct pci_dev *dev[AER_MAX_MULTI_ERR_DEVICES];
-+	int error_dev_num;
-+
-+	unsigned int id:16;
-+
-+	unsigned int severity:2;	/* 0:NONFATAL | 1:FATAL | 2:COR */
-+	unsigned int __pad1:5;
-+	unsigned int multi_error_valid:1;
-+
-+	unsigned int first_error:5;
-+	unsigned int __pad2:2;
-+	unsigned int tlp_header_valid:1;
-+
-+	unsigned int status;		/* COR/UNCOR Error Status */
-+	unsigned int mask;		/* COR/UNCOR Error Mask */
-+	struct aer_header_log_regs tlp;	/* TLP Header */
-+};
-+
-+struct aer_err_source {
-+	unsigned int status;
-+	unsigned int id;
-+};
-+
-+struct aer_rpc {
-+	struct pci_dev *rpd;		/* Root Port device */
-+	struct work_struct dpc_handler;
-+	struct aer_err_source e_sources[AER_ERROR_SOURCES_MAX];
-+	struct aer_err_info e_info;
-+	unsigned short prod_idx;	/* Error Producer Index */
-+	unsigned short cons_idx;	/* Error Consumer Index */
-+	int isr;
-+	spinlock_t e_lock;		/*
-+					 * Lock access to Error Status/ID Regs
-+					 * and error producer/consumer index
-+					 */
-+	struct mutex rpc_mutex;		/*
-+					 * only one thread could do
-+					 * recovery on the same
-+					 * root port hierarchy
-+					 */
-+};
-+
-+#define AER_LOG_TLP_MASKS		(PCI_ERR_UNC_POISON_TLP|	\
-+					PCI_ERR_UNC_ECRC|		\
-+					PCI_ERR_UNC_UNSUP|		\
-+					PCI_ERR_UNC_COMP_ABORT|		\
-+					PCI_ERR_UNC_UNX_COMP|		\
-+					PCI_ERR_UNC_MALF_TLP)
-+
-+#define SYSTEM_ERROR_INTR_ON_MESG_MASK	(PCI_EXP_RTCTL_SECEE|	\
-+					PCI_EXP_RTCTL_SENFEE|	\
-+					PCI_EXP_RTCTL_SEFEE)
-+#define ROOT_PORT_INTR_ON_MESG_MASK	(PCI_ERR_ROOT_CMD_COR_EN|	\
-+					PCI_ERR_ROOT_CMD_NONFATAL_EN|	\
-+					PCI_ERR_ROOT_CMD_FATAL_EN)
-+#define ERR_COR_ID(d)			(d & 0xffff)
-+#define ERR_UNCOR_ID(d)			(d >> 16)
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index a2e88386af28..11482669b93b 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -402,10 +402,10 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+ 	return 0;
+ }
  
- static int pcie_aer_disable;
+-int pci_aer_init(struct pci_dev *dev)
++void pci_aer_init(struct pci_dev *dev)
+ {
+ 	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+-	return pci_cleanup_aer_error_status_regs(dev);
++	pci_cleanup_aer_error_status_regs(dev);
+ }
  
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-deleted file mode 100644
-index 9867950635df..000000000000
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ /dev/null
-@@ -1,79 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--/*
-- * Copyright (C) 2006 Intel Corp.
-- *	Tom Long Nguyen (tom.l.nguyen@intel.com)
-- *	Zhang Yanmin (yanmin.zhang@intel.com)
-- */
--
--#ifndef _AERDRV_H_
--#define _AERDRV_H_
--
--#include <linux/workqueue.h>
--#include <linux/aer.h>
--#include <linux/interrupt.h>
--
--#include "../portdrv.h"
--
--#define SYSTEM_ERROR_INTR_ON_MESG_MASK	(PCI_EXP_RTCTL_SECEE|	\
--					PCI_EXP_RTCTL_SENFEE|	\
--					PCI_EXP_RTCTL_SEFEE)
--#define ROOT_PORT_INTR_ON_MESG_MASK	(PCI_ERR_ROOT_CMD_COR_EN|	\
--					PCI_ERR_ROOT_CMD_NONFATAL_EN|	\
--					PCI_ERR_ROOT_CMD_FATAL_EN)
--#define ERR_COR_ID(d)			(d & 0xffff)
--#define ERR_UNCOR_ID(d)			(d >> 16)
--
--#define AER_ERROR_SOURCES_MAX		100
--
--#define AER_LOG_TLP_MASKS		(PCI_ERR_UNC_POISON_TLP|	\
--					PCI_ERR_UNC_ECRC|		\
--					PCI_ERR_UNC_UNSUP|		\
--					PCI_ERR_UNC_COMP_ABORT|		\
--					PCI_ERR_UNC_UNX_COMP|		\
--					PCI_ERR_UNC_MALF_TLP)
--
--#define AER_MAX_MULTI_ERR_DEVICES	5	/* Not likely to have more */
--struct aer_err_info {
--	struct pci_dev *dev[AER_MAX_MULTI_ERR_DEVICES];
--	int error_dev_num;
--
--	unsigned int id:16;
--
--	unsigned int severity:2;	/* 0:NONFATAL | 1:FATAL | 2:COR */
--	unsigned int __pad1:5;
--	unsigned int multi_error_valid:1;
--
--	unsigned int first_error:5;
--	unsigned int __pad2:2;
--	unsigned int tlp_header_valid:1;
--
--	unsigned int status;		/* COR/UNCOR Error Status */
--	unsigned int mask;		/* COR/UNCOR Error Mask */
--	struct aer_header_log_regs tlp;	/* TLP Header */
--};
--
--struct aer_err_source {
--	unsigned int status;
--	unsigned int id;
--};
--
--struct aer_rpc {
--	struct pci_dev *rpd;		/* Root Port device */
--	struct work_struct dpc_handler;
--	struct aer_err_source e_sources[AER_ERROR_SOURCES_MAX];
--	struct aer_err_info e_info;
--	unsigned short prod_idx;	/* Error Producer Index */
--	unsigned short cons_idx;	/* Error Consumer Index */
--	int isr;
--	spinlock_t e_lock;		/*
--					 * Lock access to Error Status/ID Regs
--					 * and error producer/consumer index
--					 */
--	struct mutex rpc_mutex;		/*
--					 * only one thread could do
--					 * recovery on the same
--					 * root port hierarchy
--					 */
--};
--
--#endif /* _AERDRV_H_ */
+ #define AER_AGENT_RECEIVER		0
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 340029b2fb38..b4ffea05c999 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1468,13 +1468,9 @@ static inline bool pcie_aspm_support_enabled(void) { return false; }
+ #endif
+ 
+ #ifdef CONFIG_PCIEAER
+-void pci_no_aer(void);
+ bool pci_aer_available(void);
+-int pci_aer_init(struct pci_dev *dev);
+ #else
+-static inline void pci_no_aer(void) { }
+ static inline bool pci_aer_available(void) { return false; }
+-static inline int pci_aer_init(struct pci_dev *d) { return -ENODEV; }
+ #endif
+ 
+ #ifdef CONFIG_PCIE_ECRC
+-- 
+2.18.0.rc2.346.g013aa6912e-goog
