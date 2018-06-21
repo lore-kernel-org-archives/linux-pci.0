@@ -1,141 +1,64 @@
-Return-Path: <SRS0=wsFM=JI=huawei.com=jonathan.cameron@kernel.org>
-Return-Path: <SRS0=wsFM=JI=huawei.com=jonathan.cameron@kernel.org>
-Date: Fri, 22 Jun 2018 18:42:23 +0100
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Punit Agrawal <punit.agrawal@arm.com>
-CC: Michal Hocko <mhocko@kernel.org>, Lorenzo Pieralisi
-	<lorenzo.pieralisi@arm.com>, Catalin Marinas <catalin.marinas@arm.com>,
-	<tnowicki@caviumnetworks.com>, Xie XiuQi <xiexiuqi@huawei.com>,
-	<linux-pci@vger.kernel.org>, "Rafael J. Wysocki"
-	<rafael.j.wysocki@intel.com>, Will Deacon <will.deacon@arm.com>, "Linux
- Kernel Mailing List" <linux-kernel@vger.kernel.org>, Jarkko Sakkinen
-	<jarkko.sakkinen@linux.intel.com>, <linux-mm@kvack.org>, Greg Kroah-Hartman
-	<gregkh@linuxfoundation.org>, Bjorn Helgaas <helgaas@kernel.org>, linux-arm
-	<linux-arm-kernel@lists.infradead.org>, Hanjun Guo <guohanjun@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Andrew Morton
-	<akpm@linux-foundation.org>, zhongjiang <zhongjiang@huawei.com>,
-	<wanghuiqiang@huawei.com>
-Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
-Message-ID: <20180622184223.00007bc3@huawei.com>
-In-Reply-To: <87y3f7yv89.fsf@e105922-lin.cambridge.arm.com>
-References: <20180619120714.GE13685@dhcp22.suse.cz>
-	<874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
-	<20180619140818.GA16927@e107981-ln.cambridge.arm.com>
-	<87wouu3jz1.fsf@e105922-lin.cambridge.arm.com>
-	<20180619151425.GH13685@dhcp22.suse.cz>
-	<87r2l23i2b.fsf@e105922-lin.cambridge.arm.com>
-	<20180619163256.GA18952@e107981-ln.cambridge.arm.com>
-	<814205eb-ae86-a519-bed0-f09b8e2d3a02@huawei.com>
-	<87602d3ccl.fsf@e105922-lin.cambridge.arm.com>
-	<5c083c9c-473f-f504-848b-48506d0fd380@huawei.com>
-	<20180622091153.GU10465@dhcp22.suse.cz>
-	<87y3f7yv89.fsf@e105922-lin.cambridge.arm.com>
+Return-Path: <SRS0=4R7u=JH=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=4R7u=JH=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 21 Jun 2018 17:48:29 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/5] Improve Broadcom PAXC support
+Message-ID: <20180621164821.GA14519@e107981-ln.cambridge.arm.com>
+References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
+ <45945371-3cd7-102d-bb47-69a60435542b@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <45945371-3cd7-102d-bb47-69a60435542b@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 22 Jun 2018 11:24:38 +0100
-Punit Agrawal <punit.agrawal@arm.com> wrote:
-
-> Michal Hocko <mhocko@kernel.org> writes:
+On Wed, Jun 20, 2018 at 10:26:28AM -0700, Ray Jui wrote:
+> Hi Lorenzo/Bjorn,
 > 
-> > On Fri 22-06-18 16:58:05, Hanjun Guo wrote:  
-> >> On 2018/6/20 19:51, Punit Agrawal wrote:  
-> >> > Xie XiuQi <xiexiuqi@huawei.com> writes:
-> >> >   
-> >> >> Hi Lorenzo, Punit,
-> >> >>
-> >> >>
-> >> >> On 2018/6/20 0:32, Lorenzo Pieralisi wrote:  
-> >> >>> On Tue, Jun 19, 2018 at 04:35:40PM +0100, Punit Agrawal wrote:  
-> >> >>>> Michal Hocko <mhocko@kernel.org> writes:
-> >> >>>>  
-> >> >>>>> On Tue 19-06-18 15:54:26, Punit Agrawal wrote:
-> >> >>>>> [...]  
-> >> >>>>>> In terms of $SUBJECT, I wonder if it's worth taking the original patch
-> >> >>>>>> as a temporary fix (it'll also be easier to backport) while we work on
-> >> >>>>>> fixing these other issues and enabling memoryless nodes.  
-> >> >>>>>
-> >> >>>>> Well, x86 already does that but copying this antipatern is not really
-> >> >>>>> nice. So it is good as a quick fix but it would be definitely much
-> >> >>>>> better to have a robust fix. Who knows how many other places might hit
-> >> >>>>> this. You certainly do not want to add a hack like this all over...  
-> >> >>>>
-> >> >>>> Completely agree! I was only suggesting it as a temporary measure,
-> >> >>>> especially as it looked like a proper fix might be invasive.
-> >> >>>>
-> >> >>>> Another fix might be to change the node specific allocation to node
-> >> >>>> agnostic allocations. It isn't clear why the allocation is being
-> >> >>>> requested from a specific node. I think Lorenzo suggested this in one of
-> >> >>>> the threads.  
-> >> >>>
-> >> >>> I think that code was just copypasted but it is better to fix the
-> >> >>> underlying issue.
-> >> >>>  
-> >> >>>> I've started putting together a set fixing the issues identified in this
-> >> >>>> thread. It should give a better idea on the best course of action.  
-> >> >>>
-> >> >>> On ACPI ARM64, this diff should do if I read the code correctly, it
-> >> >>> should be (famous last words) just a matter of mapping PXMs to nodes for
-> >> >>> every SRAT GICC entry, feel free to pick it up if it works.
-> >> >>>
-> >> >>> Yes, we can take the original patch just because it is safer for an -rc
-> >> >>> cycle even though if the patch below would do delaying the fix for a
-> >> >>> couple of -rc (to get it tested across ACPI ARM64 NUMA platforms) is
-> >> >>> not a disaster.  
-> >> >>
-> >> >> I tested this patch on my arm board, it works.  
-> >> > 
-> >> > I am assuming you tried the patch without enabling support for
-> >> > memory-less nodes.
-> >> > 
-> >> > The patch de-couples the onlining of numa nodes (as parsed from SRAT)
-> >> > from NR_CPUS restriction. When it comes to building zonelists, the node
-> >> > referenced by the PCI controller also has zonelists initialised.
-> >> > 
-> >> > So it looks like a fallback node is setup even if we don't have
-> >> > memory-less nodes enabled. I need to stare some more at the code to see
-> >> > why we need memory-less nodes at all then ...  
-> >> 
-> >> Yes, please. From my limited MM knowledge, zonelists should not be
-> >> initialised if no CPU and no memory on this node, correct me if I'm
-> >> wrong.  
+> Could you please help to review this patch series when you have time?
+> 
+> I believe I have addressed major comment in v1 from Bjorn and answered all
+> questions from Lorenzo.
+
+I will have a look next week, sorry for the delay.
+
+Thanks,
+Lorenzo
+
+> Thanks,
+> 
+> Ray
+> 
+> On 6/11/2018 5:21 PM, Ray Jui wrote:
+> >This patch series improves the Broadcom PAXC support by 1) adding more
+> >quirks for specific versions of PAXC controllers; 2) adding logic to
+> >reject internally unconfigured physical functions from the embedded
+> >network processor acting as endpoint; 3) reducing verbose print level
+> >in the outbound/inbound mapping code
 > >
-> > Well, as long as there is a code which can explicitly ask for a specific
-> > node than it is safer to have zonelists configured. Otherwise you just
-> > force callers to add hacks and figure out the proper placement there.
-> > Zonelists should be cheep to configure for all possible nodes. It's not
-> > like we are talking about huge amount of resources.  
-> 
-> I agree. The current problem stems from not configuring the zonelists
-> for nodes that don't have onlined cpu and memory. Lorenzo's patch fixes
-> the configuration of such nodes.
-> 
-> For allocation requests targeting memory-less nodes, the allocator will
-> take the slow path and fall back to one of the other nodes based on the
-> zonelists.
-> 
-> I'm not sure how common such allocations are but I'll work on enabling
-> CONFIG_HAVE_MEMORYLESS_NODES on top of Lorenzo's patch. AIUI, this
-> config improves the fallback mechanism by starting the search from a
-> near-by node with memory.
-
-I'll test it when back in the office, but I had a similar issue with
-memory only nodes when I moved the SRAT listing for cpus from the 4
-4th mode to the 3rd node to fake some memory I could hot unplug.
-This gave a memory only node for the last node on the system.
-
-When I instead moved cpus from the 3rd node to the 4th (so the node
-with only memory was now in the middle, everything worked).
-
-Was odd, and I'd been meaning to chase it down but hadn't gotten to it
-yet.  If I get time I'll put together some test firmwares as see if there
-are any other nasty corner cases we aren't handling.
-
-Jonathan
-
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> >This patch series is based off v4.17 and is available on GIHUB:
+> >repo: https://github.com/Broadcom/arm64-linux.git
+> >branch: sr-paxc-v2
+> >
+> >Changes since v1:
+> >  - consolidate 2 PAXC related patch series into 1
+> >  - change the way how the capability list corruption is handled, per
+> >recommendation from Bjorn. Now handle and fix up the corruption at
+> >the config register read
+> >  - rebase to v4.17
+> >
+> >Ray Jui (5):
+> >   PCI: iproc: Activate PAXC bridge quirk for more devices
+> >   PCI: iproc: Fix up corrupted PAXC root complex config registers
+> >   PCI: iproc: Disable MSI parsing in certain PAXC blocks
+> >   PCI: iproc: Reject unconfigured physical functions from PAXC
+> >   PCI: iproc: Reduce inbound/outbound mapping print level
+> >
+> >  drivers/pci/host/pcie-iproc.c | 159 +++++++++++++++++++++++++++++++++++-------
+> >  drivers/pci/host/pcie-iproc.h |   8 +++
+> >  drivers/pci/quirks.c          |   3 +
+> >  3 files changed, 144 insertions(+), 26 deletions(-)
+> >
