@@ -1,65 +1,38 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 13 Jun 2018 22:51:29 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Pu Wen <puwen@hygon.cn>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-        x86@kernel.org, thomas.lendacky@amd.com, peterz@infradead.org,
-        tony.luck@intel.com, pbonzini@redhat.com, rkrcmar@redhat.com,
-        boris.ostrovsky@oracle.com, jgross@suse.com, rjw@rjwysocki.net,
-        lenb@kernel.org, viresh.kumar@linaro.org, mchehab@kernel.org,
-        trenn@suse.com, shuah@kernel.org, zhangpanyong@hygon.cn,
-        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-x86_64@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-edac@vger.kernel.org,
-        linux-pm@vger.kernel.org, kvm@vger.kernel.org,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH 00/11] Add support for Hygon's Dhyana Family 18h processor
-Message-ID: <20180613205129.GD26375@zn.tnic>
-References: <1528550410-28080-1-git-send-email-puwen@hygon.cn>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1528550410-28080-1-git-send-email-puwen@hygon.cn>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.37.59]:56867 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750806AbeFUOGV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 10:06:21 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: Vineet.Gupta1@synopsys.com, eugeniy.paltsev@synopsys.com,
+        Alexey.Brodkin@synopsys.com, robh@kernel.org, bhelgaas@google.com,
+        joao.pinto@synopsys.com
+Cc: linux-snps-arc@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v2] ARC: Add PCIe support for ARC HSDK platform
+Date: Thu, 21 Jun 2018 15:06:14 +0100
+Message-Id: <e1d274a5ed756f86ced3df50538ef8c7e67ef4b6.1529589452.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 09, 2018 at 09:20:10PM +0800, Pu Wen wrote:
-> As a new x86 CPU Vendor, Chengdu Haiguang IC Design Co., Ltd (Hygon)
-> is a Joint Venture between AMD and Haiguang Information Technology Co.,
-> Ltd., and aims at providing high performance x86 processor for China
-> server market.
-> 
-> The first generation Hygon's processor(Dhyana) originates from AMD
-> technology and shares most of the architecture with AMD's family 17h,
-> but with different CPU Vendor ID("HygonGenuine")/PCIE Device Vendor ID
-> (0x1D94)/Family series number(Family 18h).
-> 
-> To enable the support of Linux kernel to Hygon's CPU, we added a new
-> vendor type (X86_VENDOR_HYGON, with value of 9) in arch/x86/include/
-> asm/processor.h, and shared most of kernel support codes with AMD
-> family 17h.
-> 
-> These patches have been applied and tested successfully in Hygon's
-> Dhyana SoC silicon. Also tested on AMD's EPYC (Family 17h) processor
-> works fine and makes no harm to existing codes.
+Add PCI support to the ARC HSDK platform allowing to use the generic PCI
+setup functions.
 
-Well, I don't like this diffstat:
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Alexey Brodkin <abrodkin@synopsys.com>
+---
+ arch/arc/plat-hsdk/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
- 37 files changed, 183 insertions(+), 56 deletions(-)
-
-which adds a lot of code checking this new vendor. But then it adds in
-the AMD paths and I don't see it being any different from an AMD CPU. So
-it does the same a Zen does but then it is Hygon.
-
-So I'd prefer to *not* sprinkle those X86_VENDOR_HYGON checks everywhere
-but simply have the vendor be X86_VENDOR_AMD and only the user-visible
-reporting to show that it is Hygon. Because to the kernel it is an AMD
-CPU - only the superficial attributes are something else. Oh well, and
-PCI device IDs but that's like another CPU revision.
-
-Thx.
-
+diff --git a/arch/arc/plat-hsdk/Kconfig b/arch/arc/plat-hsdk/Kconfig
+index 19ab3cf..556bc5e 100644
+--- a/arch/arc/plat-hsdk/Kconfig
++++ b/arch/arc/plat-hsdk/Kconfig
+@@ -9,3 +9,4 @@ menuconfig ARC_SOC_HSDK
+ 	bool "ARC HS Development Kit SOC"
+ 	select CLK_HSDK
+ 	select RESET_HSDK
++	select MIGHT_HAVE_PCI
 -- 
-Regards/Gruss,
-    Boris.
-
-Good mailing practices for 400: avoid top-posting and trim the reply.
+2.7.4
