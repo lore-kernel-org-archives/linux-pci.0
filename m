@@ -1,68 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>
-Cc: n0000b.n000b@gmail.com, Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Lukas Wunner <lukas@wunner.de>
-Subject: [PATCH] PCI / ACPI / PM: Resume bridges w/o drivers on suspend-to-RAM
-Date: Tue, 26 Jun 2018 12:06:01 +0200
-Message-ID: <35587465.8Nave9aG7d@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:16569 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933149AbeFUMUQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Jun 2018 08:20:16 -0400
+Date: Thu, 21 Jun 2018 15:19:55 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org, Greg Kroah-Hartman <greg@kroah.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mayurkumar Patel <mayurkumar.patel@intel.com>,
+        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+        Stefan Roese <sr@denx.de>, Rajat Jain <rajatja@google.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH 00/32] Rework pciehp event handling & add runtime PM
+Message-ID: <20180621121955.GZ2558@lahna.fi.intel.com>
+References: <cover.1529173804.git.lukas@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
+> Rework pciehp to use modern, threaded IRQ handling.  The slot is powered
+> on and off synchronously in the IRQ thread, no indirection via a work
+> queue anymore.
+> 
+> When the slot is enabled/disabled by the user via sysfs or an Attention
+> Button press, a request is sent to the IRQ thread.  The IRQ thread is
+> thus the sole entity enabling/disabling the slot.
+> 
+> The IRQ thread can cope with missed events, e.g. if a card is inserted
+> and immediately pulled out before the IRQ thread had a chance to react.
+> It also tolerates an initially unstable link as observed in the wild by
+> Stefan Roese.
+> 
+> Finally, runtime PM support is added.  This was the original motivation
+> of the series because runtime suspending hotplug ports is needed to power
+> down Thunderbolt controllers on idle, which saves ~1.5W per controller.
+> Runtime resuming ports takes tenths of milliseconds during which events
+> may be missed, this in turn necessitated the event handling rework.
+> 
+> I've pushed the series to GitHub to ease reviewing/fetching:
+> https://github.com/l1k/linux/commits/pciehp_runpm_v2
+> 
+> Please review and test.
 
-It is reported that commit c62ec4610c40 (PM / core: Fix direct_complete
-handling for devices with no callbacks) introduced a system suspend
-regression on Samsung 305V4A by allowing a PCI bridge (not a PCIe
-port) to stay in D3 over suspend-to-RAM, which is a side effect of
-setting power.direct_complete for the children of that bridge that
-have no PM callbacks.
-
-On the majority of systems PCI bridges are not allowed to be
-runtime-suspended (the power/control sysfs attribute is set to "on"
-for them by default), but user space can change that setting and if
-it does so and a given bridge has no children with PM callbacks, the
-direct_complete optimization will be applied to it and it will stay
-in suspend over system suspend.  Apparently, that confuses the
-platform firmware on the affected machine and that may very well
-happen elsewhere, so avoid the direct_complete optimization for
-PCI bridges with no drivers (if there is a driver, it should take
-care of the PM handling) on suspend-to-RAM altogether (that should
-not matter for suspend-to-idle as platform firmware is not involved
-in it).
-
-Fixes: c62ec4610c40 (PM / core: Fix direct_complete handling for devices with no callbacks)
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=199941
-Reported-by: n0000b.n000b@gmail.com
-Tested-by: n0000b.n000b@gmail.com
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci-acpi.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
-
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -638,6 +638,14 @@ static bool acpi_pci_need_resume(struct
- 	if (acpi_target_system_state() == ACPI_STATE_S0)
- 		return false;
- 
-+	/*
-+	 * In some cases (eg. Samsung 305V4A) leaving a bridge in suspend
-+	 * confuses the platform firmware, so avoid doing that, unless the
-+	 * bridge has a driver that should take care of PM handling.
-+	 */
-+	if (pci_is_bridge(dev) && !dev->driver)
-+		return true;
-+
- 	return !!adev->power.flags.dsw_present;
- }
- 
-
+I've tested this series on every native PCIe hotplug system I have here,
+including one non-Thunderbolt (just hotplugging NVMes) and I did not
+observe any issues. There are few minor comments for few patches but in
+general this is really nice cleanup.
