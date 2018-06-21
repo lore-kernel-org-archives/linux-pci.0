@@ -1,117 +1,103 @@
-Return-Path: <SRS0=ua9z=JO=netronome.com=jakub.kicinski@kernel.org>
-Return-Path: <SRS0=ua9z=JO=netronome.com=jakub.kicinski@kernel.org>
-Date: Thu, 28 Jun 2018 11:14:57 -0700
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Alexander Duyck <alexander.duyck@gmail.com>, oss-drivers@netronome.com,
- Christoph Hellwig <hch@infradead.org>, Don Dutile <ddutile@redhat.com>
-Subject: Re: [PATCH] PCI: reset driver SR-IOV state after remove
-Message-ID: <20180628111457.15436685@cakuba.netronome.com>
-In-Reply-To: <20180628180705.GB120578@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180618220142.16527-1-jakub.kicinski@netronome.com>
-	<20180626094002.7bf0ca16@cakuba.netronome.com>
-	<20180628135623.GE90450@bhelgaas-glaptop.roam.corp.google.com>
-	<CAJpBn1weH828hgog5ZeBC+tAsWC54qoTtC2eLf6iF=+Gx0kmtw@mail.gmail.com>
-	<20180628180705.GB120578@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:41236 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754129AbeFUTWY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 15:22:24 -0400
+Date: Thu, 21 Jun 2018 12:22:20 -0700
+From: Matthew Wilcox <willy@infradead.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Subject: Re: [PATCH v3 2/3] PCI: Allow specifying devices using a base bus
+ and path of devfns
+Message-ID: <20180621192220.GA6635@bombadil.infradead.org>
+References: <20180618193636.16210-1-logang@deltatee.com>
+ <20180618193636.16210-3-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180618193636.16210-3-logang@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 28 Jun 2018 13:07:05 -0500, Bjorn Helgaas wrote:
-> On Thu, Jun 28, 2018 at 09:17:09AM -0700, Jakub Kicinski wrote:
-> > On Thu, Jun 28, 2018 at 6:56 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:  
-> > > On Tue, Jun 26, 2018 at 09:40:02AM -0700, Jakub Kicinski wrote:  
-> > >> On Mon, 18 Jun 2018 15:01:42 -0700, Jakub Kicinski wrote:  
-> > >> > Bjorn points out that currently core and most of the drivers don't
-> > >> > clean up dev->sriov->driver_max_VFs settings on .remove().  This
-> > >> > means that if a different driver is bound afterwards it will
-> > >> > inherit the old setting:
-> > >> >
-> > >> >   - load PF driver 1
-> > >> >   - driver 1 calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
-> > >> >   - unload PF driver 1
-> > >> >   - load PF driver 2
-> > >> >   # driver 2 does not know to call pci_sriov_set_totalvfs()
-> > >> >
-> > >> > Some drivers (e.g. nfp) used to do the clean up by calling
-> > >> > pci_sriov_set_totalvfs(dev, 0), since 0 was equivalent to no driver
-> > >> > limit set.  After commit 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers
-> > >> > to limit total_VFs to 0") 0 no longer has this special meaning.
-> > >> >
-> > >> > The need to reset driver_max_VFs comes from the fact that old FW
-> > >> > builds may not expose its VF limits to the drivers, and depend on
-> > >> > the ability to reject the configuration change when driver notifies
-> > >> > the FW as part of struct pci_driver->sriov_configure() callback.
-> > >> > Therefore if there is no information on VF count limits we should
-> > >> > use the PCI capability max, and not the last value set by
-> > >> > pci_sriov_set_totalvfs().
-> > >> >
-> > >> > Reset driver_max_VFs back to total_VFs after device remove.  If
-> > >> > drivers want to reload FW/reconfigure the device while driver is
-> > >> > bound we may add an explicit pci_sriov_reset_totalvfs(), but for
-> > >> > now no driver is doing that.
-> > >> >
-> > >> > Fixes: 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers to limit total_VFs to 0")
-> > >> > Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>  
-> > >>
-> > >> Any comments? :(  Could this still make it into 4.18?  
-> > >
-> > > Is this a fix for something we broke during the v4.18 merge window?
-> > > Or does it fix something that's been broken for a long time?  I think
-> > > the latter, but haven't looked carefully yet.  
-> > 
-> > This is half of a fix, really.  NFP driver does
-> > pci_sriov_set_totalvfs(pdev, 0) to clear the limit.  Now it will
-> > disable SR-IOV completely.  If this patch gets applied I will drop
-> > those pci_sriov_set_totalvfs(pdev, 0) calls from the driver and the
-> > regression will be solved.  
-> 
-> Sorry, I missed the regression part.  8d85a7a4f2c9 ("PCI/IOV: Allow PF
-> drivers to limit total_VFs to 0") appeared in v4.18-rc1, so I guess the
-> problem is that nfp works correctly in v4.17, but is broken in v4.18-rc1?
-> 
-> I'd just like to understand the breakage and fix better.  In v4.17:
-> 
->   # nfp loaded:
->   nfp_pci_probe
->     nfp_pcie_sriov_read_nfd_limit
->       nfp_rtsym_read_le("nfd_vf_cfg_max_vfs", &err)
->       if (err)                              # FW doesn't expose limit (?)
-> 	pci_sriov_set_totalvfs(0)
-> 	  dev->sriov->driver_max_VFs = 0    # PCI_SRIOV_CTRL_VFE is clear
-> 
->   # userspace writes N to sysfs "sriov_numvfs":
->   sriov_numvfs_store                    # write N
->     pci_sriov_get_totalvfs
->       return dev->sriov->total_VFs	# since driver_max_VFs == 0
->     driver->sriov_configure(N)
->       nfp_pcie_sriov_configure(N)
->         nfp_pcie_sriov_enable(N)
-> 
-> In v4.18-rc1, it's the same except pci_sriov_get_totalvfs() now returns 0:
-> 
->   # nfp loaded:
->   nfp_pci_probe
->     nfp_pcie_sriov_read_nfd_limit
->       nfp_rtsym_read_le("nfd_vf_cfg_max_vfs", &err)
->       if (err)                              # FW doesn't expose limit (?)
-> 	pci_sriov_set_totalvfs(0)
-> 	  dev->sriov->driver_max_VFs = 0    # PCI_SRIOV_CTRL_VFE is clear
-> 
->   # userspace writes N to sysfs "sriov_numvfs":
->   sriov_numvfs_store                    # write N
->     pci_sriov_get_totalvfs
->       return 0                          # (driver_max_VFs == 0)
->     return -ERANGE                      # because N > 0
-> 
-> Am I on the right track?  
+On Mon, Jun 18, 2018 at 01:36:35PM -0600, Logan Gunthorpe wrote:
+> @@ -3000,14 +3000,18 @@
+>  				or a set of devices (<pci_dev>). These are
+>  				specified in one of the following formats:
+>  
+> -				[<domain>:]<bus>:<slot>.<func>
+> +				[<domain>:]<bus>:<slot>.<func>[/<slot>.<func>][/ ...]
 
-That's exactly it!
+How about:
++				[<domain>:]<bus>:<slot>.<func>[/<slot>.<func>]*
 
-> Sounds like we may want to merge this patch and the nfp patch to
-> remove the pci_sriov_set_totalvfs() calls together to make sure they
-> get merged in the correct order.
+> -				by other kernel parameters. The second format
+> +				by other kernel parameters. Optionally
+> +				a path from a device through multiple
 
-NFP patch coming right up!  For some reason I was planning to push it
-via the net tree, but on reflection it doesn't matter..
+I think that's "a path to a device", because you'd start by specifying the
+root port, then continuing down the hierarchy, right?
+
+> + * Test if a string (typically from a kernel parameter) formated as a
+
+formatted
+
+> + * path of slot/function addresses matches a PCI device. The string must
+> + * be of the form:
+> + *
+> + *   [<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
+> + *
+> + * A path for a device can be obtained using 'lspci -t'. Using a path
+> + * is more robust against renumbering of devices than using only
+
+I'd call it bus renumbering rather than device renumbering.  After all,
+if the device got renumbered, this would fail ;-)
+
+>   * pci_dev_str_match - test if a string matches a device
+>   * @dev:    the PCI device to test
+>   * @p:      string to match the device against
+>   * @endptr: pointer to the string after the match
+>   *
+>   * Test if a string (typically from a kernel parameter) matches a
+> - * specified. The string may be of one of two forms formats:
+> + * specified. The string may be of one of three formats:
+
+Surely just "The string may be in one of three formats"
+
+>   *
+>   *   [<domain>:]<bus>:<slot>.<func>
+> + *   path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
+>   *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
+
+I think you're dropped the "path:" prefix from your parser?
+
+>   * The first format specifies a PCI bus/slot/function address which
+>   * may change if new hardware is inserted, if motherboard firmware changes,
+>   * or due to changes caused in kernel parameters.
+>   *
+> - * The second format matches devices using IDs in the configuration
+> + * The second format specifies a PCI bus/slot/function root address and
+> + * a path of slot/function addresses to the specific device from the root.
+> + * The path for a device can be determined through the use of 'lspci -t'.
+> + * This format is more robust against renumbering issues than the first format.
+> +
+> + * The third format matches devices using IDs in the configuration
+>   * space which may match multiple devices in the system. A value of 0
+>   * for any field will match all devices.
+>   *
+
+So you probably want to reword this too.  Two formats, one with optional
+trailing path elements?
