@@ -1,167 +1,26 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH V4 6/7] PCI: Rename pci_try_reset_bus() to pci_reset_bus()
-Date: Thu, 28 Jun 2018 15:31:04 -0400
-Message-Id: <1530214274-21139-6-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
-References: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:34552 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932521AbeFUH3K (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 03:29:10 -0400
+Date: Thu, 21 Jun 2018 00:29:09 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Oza Pawandeep <poza@codeaurora.org>
+Subject: Re: [PATCH 6/7] PCI/DPC: Use threaded IRQ for bottom half handling
+Message-ID: <20180621072909.GC18738@infradead.org>
+References: <20180620213833.25072-1-keith.busch@intel.com>
+ <20180620213833.25072-6-keith.busch@intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>,
- "open list:VFIO DRIVER" <kvm@vger.kernel.org>,
- Alexey Kardashevskiy <aik@ozlabs.ru>, linux-arm-msm@vger.kernel.org,
- Dennis Dalessandro <dennis.dalessandro@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Peter Xu <peterx@redhat.com>,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Doug Ledford <dledford@redhat.com>,
- Zhenyu Wang <zhenyuw@linux.intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org,
- "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180620213833.25072-6-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that the old implementation of pci_reset_bus() is gone, replace
-pci_try_reset_bus() with pci_reset_bus().
+> -	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+> +	struct dpc_dev *dpc = (struct dpc_dev *)context;
 
-Compared to the old implementation, new code will fail immmediately with
--EAGAIN if object lock cannot be obtained.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/infiniband/hw/hfi1/pcie.c |  2 +-
- drivers/pci/pci.c                 | 18 +++++++++---------
- drivers/vfio/pci/vfio_pci.c       |  4 ++--
- include/linux/pci.h               |  2 +-
- 4 files changed, 13 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-index df4f2d3..baf7c32 100644
---- a/drivers/infiniband/hw/hfi1/pcie.c
-+++ b/drivers/infiniband/hw/hfi1/pcie.c
-@@ -905,7 +905,7 @@ static int trigger_sbr(struct hfi1_devdata *dd)
- 	 * delay after a reset is required.  Per spec requirements,
- 	 * the link is either working or not after that point.
- 	 */
--	return pci_try_reset_bus(dev);
-+	return pci_reset_bus(dev);
- }
- 
- /*
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6cec722..28a071d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4784,7 +4784,7 @@ int pci_probe_reset_slot(struct pci_slot *slot)
- EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
- 
- /**
-- * __pci_try_reset_slot - Try to reset a PCI slot
-+ * __pci_reset_slot - Try to reset a PCI slot
-  * @slot: PCI slot to reset
-  *`
-  * A PCI bus may host multiple slots, each slot may support a reset mechanism
-@@ -4798,7 +4798,7 @@ EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
-  *
-  * Same as above except return -EAGAIN if the slot cannot be locked
-  */
--static int __pci_try_reset_slot(struct pci_slot *slot)
-+static int __pci_reset_slot(struct pci_slot *slot)
- {
- 	int rc;
- 
-@@ -4854,12 +4854,12 @@ int pci_probe_reset_bus(struct pci_bus *bus)
- EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
- 
- /**
-- * __pci_try_reset_bus - Try to reset a PCI bus
-+ * __pci_reset_bus - Try to reset a PCI bus
-  * @bus: top level PCI bus to reset
-  *
-  * Same as above except return -EAGAIN if the bus cannot be locked
-  */
--static int __pci_try_reset_bus(struct pci_bus *bus)
-+static int __pci_reset_bus(struct pci_bus *bus)
- {
- 	int rc;
- 
-@@ -4882,22 +4882,22 @@ static int __pci_try_reset_bus(struct pci_bus *bus)
- }
- 
- /**
-- * pci_try_reset_bus - Try to reset a PCI bus
-+ * pci_reset_bus - Try to reset a PCI bus
-  * @pdev: top level PCI device to reset via slot/bus
-  *
-  * Same as above except return -EAGAIN if the bus cannot be locked
-  */
--int pci_try_reset_bus(struct pci_dev *pdev)
-+int pci_reset_bus(struct pci_dev *pdev)
- {
- 	bool slot = false;
- 
- 	if (!pci_probe_reset_slot(pdev->slot))
- 		slot = true;
- 
--	return slot ? __pci_try_reset_slot(pdev->slot) :
--			__pci_try_reset_bus(pdev->bus);
-+	return slot ? __pci_reset_slot(pdev->slot) :
-+			__pci_reset_bus(pdev->bus);
- }
--EXPORT_SYMBOL_GPL(pci_try_reset_bus);
-+EXPORT_SYMBOL_GPL(pci_reset_bus);
- 
- /**
-  * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 71018ec..345c0dc 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -1010,7 +1010,7 @@ static long vfio_pci_ioctl(void *device_data,
- 						    &info, slot);
- 		if (!ret)
- 			/* User has access, do the reset */
--			ret = pci_try_reset_bus(vdev->pdev);
-+			ret = pci_reset_bus(vdev->pdev);
- 
- hot_reset_release:
- 		for (i--; i >= 0; i--)
-@@ -1372,7 +1372,7 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
- 	}
- 
- 	if (needs_reset)
--		ret = pci_try_reset_bus(vdev->pdev);
-+		ret = pci_reset_bus(vdev->pdev);
- 
- put_devs:
- 	for (i = 0; i < devs.cur_index; i++) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ad0c89a..79a2c27 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1096,7 +1096,7 @@ int pci_reset_function_locked(struct pci_dev *dev);
- int pci_try_reset_function(struct pci_dev *dev);
- int pci_probe_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
--int pci_try_reset_bus(struct pci_dev *dev);
-+int pci_reset_bus(struct pci_dev *dev);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
--- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+No need to cast a void pointer.
