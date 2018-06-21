@@ -1,45 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-o-1.desy.de ([131.169.56.154]:53479 "EHLO smtp-o-1.desy.de"
+Received: from ozlabs.org ([203.11.71.1]:39697 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751700AbeFFL1F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Jun 2018 07:27:05 -0400
-Received: from smtp-buf-1.desy.de (smtp-buf-1.desy.de [131.169.56.164])
-        by smtp-o-1.desy.de (DESY-O-1) with ESMTP id 5E1E42809CE
-        for <linux-pci@vger.kernel.org>; Wed,  6 Jun 2018 13:20:40 +0200 (CEST)
-Subject: =?UTF-8?Q?Re:_pcie:_fpga:_programme_FPGA_PROM=e2=80=99s?=
-To: Muni Sekhar <munisekharrms@gmail.com>, linux-pci@vger.kernel.org,
-        linux-fpga@vger.kernel.org
-References: <CAHhAz+grcWVZAOvLL9VBHoPLiDCT3LApJTkE7GchtLA3g4U3NA@mail.gmail.com>
-From: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
-Message-ID: <c8e47c11-e3f5-589f-3a58-4aa2466cac6d@desy.de>
-Date: Wed, 6 Jun 2018 13:20:39 +0200
+        id S1753938AbeFUA21 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Jun 2018 20:28:27 -0400
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Daniel Walker <danielwa@cisco.com>,
+        "Guilherme G. Piccoli" <guilherme@gpiccoli.net>,
+        benh@kernel.crashing.org
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+        xe-kernel@external.cisco.com, linux-kernel@vger.kernel.org,
+        Paul Mackerras <paulus@samba.org>,
+        linuxppc-dev@lists.ozlabs.org,
+        Mauro Rodrigues <maurosr@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] arch: powerpc: pci-common: fix wrong return value check on phd_id
+In-Reply-To: <6d321d8a-432d-d41d-cc08-144764d644b2@cisco.com>
+References: <20180618165706.42679-1-danielwa@cisco.com> <CALJn8nPbTy3Ne2a7L71c2YZ06Ccr2j0zs6TdptfRc7O-N9u=Yg@mail.gmail.com> <c56f43f5-7902-f7c8-20e1-955ad064c4d0@cisco.com> <CALJn8nM+S7STs+_MTje1qVCpa6MvnROS2+b5_GDz2wYs8etapA@mail.gmail.com> <6d321d8a-432d-d41d-cc08-144764d644b2@cisco.com>
+Date: Thu, 21 Jun 2018 10:28:22 +1000
+Message-ID: <87in6dvv89.fsf@concordia.ellerman.id.au>
 MIME-Version: 1.0
-In-Reply-To: <CAHhAz+grcWVZAOvLL9VBHoPLiDCT3LApJTkE7GchtLA3g4U3NA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi
+Hi Daniel,
 
-why You do not use jtagplayer from Xilinx?
+Sorry we broke things for you.
 
-
-with best regards
-
-
-Ludwig
-
-
-On 06/06/2018 11:08 AM, Muni Sekhar wrote:
-> [ Please keep me in CC as I'm not subscribed to the list]
+Daniel Walker <danielwa@cisco.com> writes:
+> On 06/19/2018 09:26 AM, Guilherme G. Piccoli wrote:
+>>> [...]
+>>> What your doing is changing the phb_id to some transformation of "reg" for
+>>> all platforms except which have "ibm,opal-phbid". This is what we observe.
+>>> This is a radical altering of the prior phb_id selection before your patch.
+...
 >
-> Hi All,
->
-> We have a Kintex7 FPGA board connected to Intel Atom PC running Ubuntu
-> on PCIe bus.
-> We are looking for a tool to allow us to remotely programme FPGA
-> PROM’s via the Intel Atom PC on PCIe bus. Does any one already done
-> this or can someone share the ideas?
->
->
->
+> I didn't look into changing the behavior on our side because it didn't 
+> look like the intent of the patch was to make a global change. I can 
+> take a look at changing this behavior on our side , given that this was 
+> intended by your changes.
+
+You're right the change log and the patch are a bit out of sync, that
+was probably my fault.
+
+> However, they're may be other platforms or drivers which depend on these 
+> numbers getting set a certain way, so there may be other userspace 
+> dependencies on these values.
+
+That's true, though I think yours is the first report we've had of
+problems.
+
+The old behaviour relied on device tree ordering in nearly all cases, so
+you basically get whatever order your firmware happened to flatten the
+device tree in.
+
+That tends to be consistent on a single system or with a single firmware
+version, but it's not stable in general. If your firmware changes, or
+you kexec then the ordering can change.
+
+So I'd definitely prefer we didn't go back to that behaviour, because
+it's basically "random order".
+
+If there's anything you can do on your end to cope with the new ordering
+that would be great.
+
+cheers
