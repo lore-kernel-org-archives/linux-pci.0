@@ -1,15 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Subject: [PATCH v3 24/27] devicetree: fix a series of wrong file references
-Date: Thu, 14 Jun 2018 13:09:09 -0300
-Message-Id: <bce1b59268ac2d659fd7cb37f89285ef2acc8316.1528990947.git.mchehab+samsung@kernel.org>
-In-Reply-To: <cover.1528990947.git.mchehab+samsung@kernel.org>
-References: <cover.1528990947.git.mchehab+samsung@kernel.org>
+Date: Thu, 21 Jun 2018 12:58:53 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V2 5/5] PCI: Unify slot and bus reset API
+Message-ID: <201806211229.kMutzrVj%fengguang.wu@intel.com>
+References: <1529467995-28780-5-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <cover.1528990947.git.mchehab+samsung@kernel.org>
-References: <cover.1528990947.git.mchehab+samsung@kernel.org>
+In-Reply-To: <1529467995-28780-5-git-send-email-okaya@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,169 +15,98 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, alsa-devel@alsa-project.org,
- Maxime Ripard <maxime.ripard@bootlin.com>, linux-pci@vger.kernel.org,
- Binghui Wang <wangbinghui@hisilicon.com>, linux-kernel@vger.kernel.org,
- Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
- Lee Jones <lee.jones@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- Chen-Yu Tsai <wens@csie.org>, linux-input@vger.kernel.org,
- devicetree@vger.kernel.org, Alexandre Torgue <alexandre.torgue@st.com>,
- Xiaowei Song <songxiaowei@hisilicon.com>,
- Mauro Carvalho Chehab <mchehab@infradead.org>, Mark Brown <broonie@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org,
- Dmitry Torokhov <dmitry.torokhov@gmail.com>,
- Liam Girdwood <lgirdwood@gmail.com>, Zhou Wang <wangzhou1@hisilicon.com>,
- Rob Herring <robh+dt@kernel.org>, Maxime Coquelin <mcoquelin.stm32@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ kbuild-all@01.org, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QXMgZmlsZXMgZ290IHJlbmFtZWQsIHRoZWlyIHJlZmVyZW5jZXMgYnJva2UuCgpNYW51YWxseSBm
-aXggYSBzZXJpZXMgb2YgYnJva2VuIHJlZnMgYXQgdGhlIERUIGJpbmRpbmdzLgoKU2lnbmVkLW9m
-Zi1ieTogTWF1cm8gQ2FydmFsaG8gQ2hlaGFiIDxtY2hlaGFiK3NhbXN1bmdAa2VybmVsLm9yZz4K
-LS0tCiAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9pbnB1dC9ybWk0L3JtaV8yZF9zZW5zb3IudHh0
-IHwgIDIgKy0KIERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9tZmQvc3VuNmktcHJj
-bS50eHQgfCAgMiArLQogLi4uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2hpc2lsaWNvbi1wY2ll
-LnR4dCAgICAgICB8ICAyICstCiBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNp
-L2tpcmluLXBjaWUudHh0IHwgIDIgKy0KIC4uLi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9wY2kt
-a2V5c3RvbmUudHh0ICAgICAgICAgfCAgNCArKy0tCiAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9z
-b3VuZC9zdCxzdG0zMi1pMnMudHh0ICAgICAgIHwgIDIgKy0KIC4uLi9kZXZpY2V0cmVlL2JpbmRp
-bmdzL3NvdW5kL3N0LHN0bTMyLXNhaS50eHQgICAgICAgfCAgMiArLQogTUFJTlRBSU5FUlMgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8IDEyICsrKysrKy0tLS0tLQog
-OCBmaWxlcyBjaGFuZ2VkLCAxNCBpbnNlcnRpb25zKCspLCAxNCBkZWxldGlvbnMoLSkKCmRpZmYg
-LS1naXQgYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvaW5wdXQvcm1pNC9ybWlf
-MmRfc2Vuc29yLnR4dCBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9pbnB1dC9y
-bWk0L3JtaV8yZF9zZW5zb3IudHh0CmluZGV4IGYyYzMwYzhiNzI1ZC4uOWFmZmZiZGY2ZTI4IDEw
-MDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvaW5wdXQvcm1pNC9y
-bWlfMmRfc2Vuc29yLnR4dAorKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mv
-aW5wdXQvcm1pNC9ybWlfMmRfc2Vuc29yLnR4dApAQCAtMTIsNyArMTIsNyBAQCBBZGRpdGlvbmFs
-IGRvY3VtZW50YXRpb24gZm9yIEYxMSBjYW4gYmUgZm91bmQgYXQ6CiBodHRwOi8vd3d3LnN5bmFw
-dGljcy5jb20vc2l0ZXMvZGVmYXVsdC9maWxlcy81MTEtMDAwMTM2LTAxLVJldi1FLVJNSTQtSW50
-ZXJmYWNpbmctR3VpZGUucGRmCiAKIE9wdGlvbmFsIFRvdWNoIFByb3BlcnRpZXM6Ci1EZXNjcmlw
-dGlvbiBpbiBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvaW5wdXQvdG91Y2gKK0Rl
-c2NyaXB0aW9uIGluIERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9pbnB1dC90b3Vj
-aHNjcmVlbgogLSB0b3VjaHNjcmVlbi1pbnZlcnRlZC14CiAtIHRvdWNoc2NyZWVuLWludmVydGVk
-LXkKIC0gdG91Y2hzY3JlZW4tc3dhcHBlZC14LXkKZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24v
-ZGV2aWNldHJlZS9iaW5kaW5ncy9tZmQvc3VuNmktcHJjbS50eHQgYi9Eb2N1bWVudGF0aW9uL2Rl
-dmljZXRyZWUvYmluZGluZ3MvbWZkL3N1bjZpLXByY20udHh0CmluZGV4IDRkMjFmZmRiMGZjMS4u
-ZGFhMDkxYzJlNjdiIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGlu
-Z3MvbWZkL3N1bjZpLXByY20udHh0CisrKyBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5k
-aW5ncy9tZmQvc3VuNmktcHJjbS50eHQKQEAgLTgsNyArOCw3IEBAIFJlcXVpcmVkIHByb3BlcnRp
-ZXM6CiAgLSByZWc6IFRoZSBQUkNNIHJlZ2lzdGVycyByYW5nZQogCiBUaGUgcHJjbSBub2RlIG1h
-eSBjb250YWluIHNldmVyYWwgc3ViZGV2aWNlcyBkZWZpbml0aW9uczoKLSAtIHNlZSBEb2N1bWVu
-dGF0aW9uL2RldmljZXRyZWUvY2xrL3N1bnhpLnR4dCBmb3IgY2xvY2sgZGV2aWNlcworIC0gc2Vl
-IERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9jbG9jay9zdW54aS50eHQgZm9yIGNs
-b2NrIGRldmljZXMKICAtIHNlZSBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcmVz
-ZXQvYWxsd2lubmVyLHN1bnhpLWNsb2NrLXJlc2V0LnR4dCBmb3IgcmVzZXQKICAgIGNvbnRyb2xs
-ZXIgZGV2aWNlcwogCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGlu
-Z3MvcGNpL2hpc2lsaWNvbi1wY2llLnR4dCBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5k
-aW5ncy9wY2kvaGlzaWxpY29uLXBjaWUudHh0CmluZGV4IDdiZjlkZjA0N2ExZS4uMGRjYjg3ZDY1
-NTRmIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2hp
-c2lsaWNvbi1wY2llLnR4dAorKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mv
-cGNpL2hpc2lsaWNvbi1wY2llLnR4dApAQCAtMyw3ICszLDcgQEAgSGlTaWxpY29uIEhpcDA1IGFu
-ZCBIaXAwNiBQQ0llIGhvc3QgYnJpZGdlIERUIGRlc2NyaXB0aW9uCiBIaVNpbGljb24gUENJZSBo
-b3N0IGNvbnRyb2xsZXIgaXMgYmFzZWQgb24gdGhlIFN5bm9wc3lzIERlc2lnbldhcmUgUENJIGNv
-cmUuCiBJdCBzaGFyZXMgY29tbW9uIGZ1bmN0aW9ucyB3aXRoIHRoZSBQQ0llIERlc2lnbldhcmUg
-Y29yZSBkcml2ZXIgYW5kIGluaGVyaXRzCiBjb21tb24gcHJvcGVydGllcyBkZWZpbmVkIGluCi1E
-b2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2Rlc2lnbndhcmUtcGNpLnR4dC4K
-K0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvZGVzaWdud2FyZS1wY2llLnR4
-dC4KIAogQWRkaXRpb25hbCBwcm9wZXJ0aWVzIGFyZSBkZXNjcmliZWQgaGVyZToKIApkaWZmIC0t
-Z2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9raXJpbi1wY2llLnR4
-dCBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kva2lyaW4tcGNpZS50eHQK
-aW5kZXggNmUyMTdjNjMxMjNkLi42YmJlNDM4MThhZDUgMTAwNjQ0Ci0tLSBhL0RvY3VtZW50YXRp
-b24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kva2lyaW4tcGNpZS50eHQKKysrIGIvRG9jdW1lbnRh
-dGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9raXJpbi1wY2llLnR4dApAQCAtMyw3ICszLDcg
-QEAgSGlTaWxpY29uIEtpcmluIFNvQ3MgUENJZSBob3N0IERUIGRlc2NyaXB0aW9uCiBLaXJpbiBQ
-Q0llIGhvc3QgY29udHJvbGxlciBpcyBiYXNlZCBvbiB0aGUgU3lub3BzeXMgRGVzaWduV2FyZSBQ
-Q0kgY29yZS4KIEl0IHNoYXJlcyBjb21tb24gZnVuY3Rpb25zIHdpdGggdGhlIFBDSWUgRGVzaWdu
-V2FyZSBjb3JlIGRyaXZlciBhbmQKIGluaGVyaXRzIGNvbW1vbiBwcm9wZXJ0aWVzIGRlZmluZWQg
-aW4KLURvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvZGVzaWdud2FyZS1wY2ku
-dHh0LgorRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9kZXNpZ253YXJlLXBj
-aWUudHh0LgogCiBBZGRpdGlvbmFsIHByb3BlcnRpZXMgYXJlIGRlc2NyaWJlZCBoZXJlOgogCmRp
-ZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL3BjaS1rZXlz
-dG9uZS50eHQgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL3BjaS1rZXlz
-dG9uZS50eHQKaW5kZXggN2UwNTQ4NzU0NGVkLi4zZDRhMjA5YjBmZDAgMTAwNjQ0Ci0tLSBhL0Rv
-Y3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvcGNpLWtleXN0b25lLnR4dAorKysg
-Yi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL3BjaS1rZXlzdG9uZS50eHQK
-QEAgLTMsOSArMyw5IEBAIFRJIEtleXN0b25lIFBDSWUgaW50ZXJmYWNlCiBLZXlzdG9uZSBQQ0kg
-aG9zdCBDb250cm9sbGVyIGlzIGJhc2VkIG9uIHRoZSBTeW5vcHN5cyBEZXNpZ25XYXJlIFBDSQog
-aGFyZHdhcmUgdmVyc2lvbiAzLjY1LiAgSXQgc2hhcmVzIGNvbW1vbiBmdW5jdGlvbnMgd2l0aCB0
-aGUgUENJZSBEZXNpZ25XYXJlCiBjb3JlIGRyaXZlciBhbmQgaW5oZXJpdHMgY29tbW9uIHByb3Bl
-cnRpZXMgZGVmaW5lZCBpbgotRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9k
-ZXNpZ253YXJlLXBjaS50eHQKK0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kv
-ZGVzaWdud2FyZS1wY2llLnR4dAogCi1QbGVhc2UgcmVmZXIgdG8gRG9jdW1lbnRhdGlvbi9kZXZp
-Y2V0cmVlL2JpbmRpbmdzL3BjaS9kZXNpZ253YXJlLXBjaS50eHQKK1BsZWFzZSByZWZlciB0byBE
-b2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2Rlc2lnbndhcmUtcGNpZS50eHQK
-IGZvciB0aGUgZGV0YWlscyBvZiBEZXNpZ25XYXJlIERUIGJpbmRpbmdzLiAgQWRkaXRpb25hbCBw
-cm9wZXJ0aWVzIGFyZQogZGVzY3JpYmVkIGhlcmUgYXMgd2VsbCBhcyBwcm9wZXJ0aWVzIHRoYXQg
-YXJlIG5vdCBhcHBsaWNhYmxlLgogCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2RldmljZXRy
-ZWUvYmluZGluZ3Mvc291bmQvc3Qsc3RtMzItaTJzLnR4dCBiL0RvY3VtZW50YXRpb24vZGV2aWNl
-dHJlZS9iaW5kaW5ncy9zb3VuZC9zdCxzdG0zMi1pMnMudHh0CmluZGV4IDRiZGE1MjA0MjQwMi4u
-NThjMzQxMzAwNTUyIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGlu
-Z3Mvc291bmQvc3Qsc3RtMzItaTJzLnR4dAorKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUv
-YmluZGluZ3Mvc291bmQvc3Qsc3RtMzItaTJzLnR4dApAQCAtMTgsNyArMTgsNyBAQCBSZXF1aXJl
-ZCBwcm9wZXJ0aWVzOgogICAgIFNlZSBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mv
-ZG1hL3N0bTMyLWRtYS50eHQuCiAgIC0gZG1hLW5hbWVzOiBJZGVudGlmaWVyIGZvciBlYWNoIERN
-QSByZXF1ZXN0IGxpbmUuIE11c3QgYmUgInR4IiBhbmQgInJ4Ii4KICAgLSBwaW5jdHJsLW5hbWVz
-OiBzaG91bGQgY29udGFpbiBvbmx5IHZhbHVlICJkZWZhdWx0IgotICAtIHBpbmN0cmwtMDogc2Vl
-IERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9waW5jdHJsL3BpbmN0cmwtc3RtMzIu
-dHh0CisgIC0gcGluY3RybC0wOiBzZWUgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdz
-L3BpbmN0cmwvc3Qsc3RtMzItcGluY3RybC50eHQKIAogT3B0aW9uYWwgcHJvcGVydGllczoKICAg
-LSByZXNldHM6IFJlZmVyZW5jZSB0byBhIHJlc2V0IGNvbnRyb2xsZXIgYXNzZXJ0aW5nIHRoZSBy
-ZXNldCBjb250cm9sbGVyCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmlu
-ZGluZ3Mvc291bmQvc3Qsc3RtMzItc2FpLnR4dCBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9i
-aW5kaW5ncy9zb3VuZC9zdCxzdG0zMi1zYWkudHh0CmluZGV4IGYzMDFjZGYwYjdlNi4uM2EzZmM1
-MDZlNDNhIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mvc291
-bmQvc3Qsc3RtMzItc2FpLnR4dAorKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGlu
-Z3Mvc291bmQvc3Qsc3RtMzItc2FpLnR4dApAQCAtMzcsNyArMzcsNyBAQCBTQUkgc3Vibm9kZXMg
-cmVxdWlyZWQgcHJvcGVydGllczoKIAkidHgiOiBpZiBzYWkgc3ViLWJsb2NrIGlzIGNvbmZpZ3Vy
-ZWQgYXMgcGxheWJhY2sgREFJCiAJInJ4IjogaWYgc2FpIHN1Yi1ibG9jayBpcyBjb25maWd1cmVk
-IGFzIGNhcHR1cmUgREFJCiAgIC0gcGluY3RybC1uYW1lczogc2hvdWxkIGNvbnRhaW4gb25seSB2
-YWx1ZSAiZGVmYXVsdCIKLSAgLSBwaW5jdHJsLTA6IHNlZSBEb2N1bWVudGF0aW9uL2RldmljZXRy
-ZWUvYmluZGluZ3MvcGluY3RybC9waW5jdHJsLXN0bTMyLnR4dAorICAtIHBpbmN0cmwtMDogc2Vl
-IERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9waW5jdHJsL3N0LHN0bTMyLXBpbmN0
-cmwudHh0CiAKIFNBSSBzdWJub2RlcyBPcHRpb25hbCBwcm9wZXJ0aWVzOgogICAtIHN0LHN5bmM6
-IHNwZWNpZnkgc3luY2hyb25pemF0aW9uIG1vZGUuCmRpZmYgLS1naXQgYS9NQUlOVEFJTkVSUyBi
-L01BSU5UQUlORVJTCmluZGV4IDY3NjQxZjViYjM3My4uNjljOWU5OTI0OTAyIDEwMDY0NAotLS0g
-YS9NQUlOVEFJTkVSUworKysgYi9NQUlOVEFJTkVSUwpAQCAtNjk2NSw3ICs2OTY1LDcgQEAgSUlP
-IE1VTFRJUExFWEVSCiBNOglQZXRlciBSb3NpbiA8cGVkYUBheGVudGlhLnNlPgogTDoJbGludXgt
-aWlvQHZnZXIua2VybmVsLm9yZwogUzoJTWFpbnRhaW5lZAotRjoJRG9jdW1lbnRhdGlvbi9kZXZp
-Y2V0cmVlL2JpbmRpbmdzL2lpby9tdWx0aXBsZXhlci9paW8tbXV4LnR4dAorRjoJRG9jdW1lbnRh
-dGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2lpby9tdWx0aXBsZXhlci9pby1jaGFubmVsLW11eC50
-eHQKIEY6CWRyaXZlcnMvaWlvL211bHRpcGxleGVyL2lpby1tdXguYwogCiBJSU8gU1VCU1lTVEVN
-IEFORCBEUklWRVJTCkBAIC05Njk1LDcgKzk2OTUsNyBAQCBNWFNGQiBEUk0gRFJJVkVSCiBNOglN
-YXJlayBWYXN1dCA8bWFyZXhAZGVueC5kZT4KIFM6CVN1cHBvcnRlZAogRjoJZHJpdmVycy9ncHUv
-ZHJtL214c2ZiLwotRjoJRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2Rpc3BsYXkv
-bXhzZmItZHJtLnR4dAorRjoJRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2Rpc3Bs
-YXkvbXhzZmIudHh0CiAKIE1ZUklDT00gTVlSSS0xMEcgMTBHYkUgRFJJVkVSIChNWVJJMTBHRSkK
-IE06CUNocmlzIExlZSA8Y2hyaXN0b3BoZXIubGVlQGNzcGkuY29tPgpAQCAtMTA4ODQsNyArMTA4
-ODQsNyBAQCBNOglXaWxsIERlYWNvbiA8d2lsbC5kZWFjb25AYXJtLmNvbT4KIEw6CWxpbnV4LXBj
-aUB2Z2VyLmtlcm5lbC5vcmcKIEw6CWxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9y
-ZyAobW9kZXJhdGVkIGZvciBub24tc3Vic2NyaWJlcnMpCiBTOglNYWludGFpbmVkCi1GOglEb2N1
-bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2NvbnRyb2xsZXItZ2VuZXJpYy1wY2ku
-dHh0CitGOglEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2hvc3QtZ2VuZXJp
-Yy1wY2kudHh0CiBGOglkcml2ZXJzL3BjaS9jb250cm9sbGVyL3BjaS1ob3N0LWNvbW1vbi5jCiBG
-Oglkcml2ZXJzL3BjaS9jb250cm9sbGVyL3BjaS1ob3N0LWdlbmVyaWMuYwogCkBAIC0xMTA2NSw3
-ICsxMTA2NSw3IEBAIE06CVhpYW93ZWkgU29uZyA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4K
-IE06CUJpbmdodWkgV2FuZyA8d2FuZ2JpbmdodWlAaGlzaWxpY29uLmNvbT4KIEw6CWxpbnV4LXBj
-aUB2Z2VyLmtlcm5lbC5vcmcKIFM6CU1haW50YWluZWQKLUY6CURvY3VtZW50YXRpb24vZGV2aWNl
-dHJlZS9iaW5kaW5ncy9wY2kvcGNpZS1raXJpbi50eHQKK0Y6CURvY3VtZW50YXRpb24vZGV2aWNl
-dHJlZS9iaW5kaW5ncy9wY2kva2lyaW4tcGNpZS50eHQKIEY6CWRyaXZlcnMvcGNpL2NvbnRyb2xs
-ZXIvZHdjL3BjaWUta2lyaW4uYwogCiBQQ0lFIERSSVZFUiBGT1IgSElTSUxJQ09OIFNUQgpAQCAt
-MTI0NTYsNyArMTI0NTYsNyBAQCBMOglsaW51eC1jcnlwdG9Admdlci5rZXJuZWwub3JnCiBMOgls
-aW51eC1zYW1zdW5nLXNvY0B2Z2VyLmtlcm5lbC5vcmcKIFM6CU1haW50YWluZWQKIEY6CWRyaXZl
-cnMvY3J5cHRvL2V4eW5vcy1ybmcuYwotRjoJRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
-bmdzL2NyeXB0by9zYW1zdW5nLGV4eW5vcy1ybmc0LnR4dAorRjoJRG9jdW1lbnRhdGlvbi9kZXZp
-Y2V0cmVlL2JpbmRpbmdzL3JuZy9zYW1zdW5nLGV4eW5vczQtcm5nLnR4dAogCiBTQU1TVU5HIEVY
-WU5PUyBUUlVFIFJBTkRPTSBOVU1CRVIgR0VORVJBVE9SIChUUk5HKSBEUklWRVIKIE06CcWBdWth
-c3ogU3RlbG1hY2ggPGwuc3RlbG1hY2hAc2Ftc3VuZy5jb20+CkBAIC0xMzU3MCw3ICsxMzU3MCw3
-IEBAIEY6CWRyaXZlcnMvKi9zdG0zMi0qdGltZXIqCiBGOglkcml2ZXJzL3B3bS9wd20tc3RtMzIq
-CiBGOglpbmNsdWRlL2xpbnV4Lyovc3RtMzItKnRpbSoKIEY6CURvY3VtZW50YXRpb24vQUJJL3Rl
-c3RpbmcvKnRpbWVyLXN0bTMyCi1GOglEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mv
-Ki9zdG0zMi0qdGltZXIKK0Y6CURvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy8qL3N0
-bTMyLSp0aW1lcioKIEY6CURvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wd20vcHdt
-LXN0bTMyKgogCiBTVE1NQUMgRVRIRVJORVQgRFJJVkVSCi0tIAoyLjE3LjEKCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1h
-aWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xp
-c3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+Hi Sinan,
+
+I love your patch! Perhaps something to improve:
+
+[auto build test WARNING on pci/next]
+[also build test WARNING on v4.18-rc1 next-20180620]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+
+url:    https://github.com/0day-ci/linux/commits/Sinan-Kaya/PCI-handle-error-return-from-pci_reset_bridge_secondary_bus/20180620-121648
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
+
+
+sparse warnings: (new ones prefixed by >>)
+
+>> drivers/infiniband/hw/hfi1/pcie.c:908:33: sparse: incorrect type in argument 1 (different base types) @@    expected struct pci_dev *dev @@    got struct pci_dev *dev @@
+   drivers/infiniband/hw/hfi1/pcie.c:908:33:    expected struct pci_dev *dev
+   drivers/infiniband/hw/hfi1/pcie.c:908:33:    got struct pci_bus *bus
+   drivers/infiniband/hw/hfi1/pcie.c: In function 'trigger_sbr':
+   drivers/infiniband/hw/hfi1/pcie.c:908:23: error: passing argument 1 of 'pci_reset_bus' from incompatible pointer type [-Werror=incompatible-pointer-types]
+     return pci_reset_bus(dev->bus);
+                          ^~~
+   In file included from drivers/infiniband/hw/hfi1/pcie.c:48:0:
+   include/linux/pci.h:1099:5: note: expected 'struct pci_dev *' but argument is of type 'struct pci_bus *'
+    int pci_reset_bus(struct pci_dev *dev);
+        ^~~~~~~~~~~~~
+   cc1: some warnings being treated as errors
+
+vim +908 drivers/infiniband/hw/hfi1/pcie.c
+
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  873  
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  874  /*
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  875   * Trigger a secondary bus reset (SBR) on ourselves using our parent.
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  876   *
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  877   * Based on pci_parent_bus_reset() which is not exported by the
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  878   * kernel core.
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  879   */
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  880  static int trigger_sbr(struct hfi1_devdata *dd)
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  881  {
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  882  	struct pci_dev *dev = dd->pcidev;
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  883  	struct pci_dev *pdev;
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  884  
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  885  	/* need a parent */
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  886  	if (!dev->bus->self) {
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  887  		dd_dev_err(dd, "%s: no parent device\n", __func__);
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  888  		return -ENOTTY;
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  889  	}
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  890  
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  891  	/* should not be anyone else on the bus */
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  892  	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  893  		if (pdev != dev) {
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  894  			dd_dev_err(dd,
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  895  				   "%s: another device is on the same bus\n",
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  896  				   __func__);
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  897  			return -ENOTTY;
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  898  		}
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  899  
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  900  	/*
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  901  	 * A secondary bus reset (SBR) issues a hot reset to our device.
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  902  	 * The following routine does a 1s wait after the reset is dropped
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  903  	 * per PCI Trhfa (recovery time).  PCIe 3.0 section 6.6.1 -
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  904  	 * Conventional Reset, paragraph 3, line 35 also says that a 1s
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  905  	 * delay after a reset is required.  Per spec requirements,
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  906  	 * the link is either working or not after that point.
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  907  	 */
+f001109e drivers/infiniband/hw/hfi1/pcie.c Sinan Kaya       2018-06-20 @908  	return pci_reset_bus(dev->bus);
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  909  }
+77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  910  
+
+:::::: The code at line 908 was first introduced by commit
+:::::: f001109e94b74baebb3621ce1c7ba114a858adb3 IB/hfi1: use pci_reset_bus() for initiating pci secondary bus reset
+
+:::::: TO: Sinan Kaya <okaya@codeaurora.org>
+:::::: CC: 0day robot <lkp@intel.com>
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
