@@ -1,157 +1,122 @@
-Return-Path: <SRS0=GJIr=I6=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=GJIr=I6=broadcom.com=ray.jui@kernel.org>
-From: Ray Jui <ray.jui@broadcom.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-pci@vger.kernel.org,
-	Ray Jui <ray.jui@broadcom.com>,
-	Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v2 2/5] PCI: iproc: Fix up corrupted PAXC root complex config registers
-Date: Mon, 11 Jun 2018 17:21:04 -0700
-Message-Id: <1528762867-16823-3-git-send-email-ray.jui@broadcom.com>
-In-Reply-To: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
-References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: "robin.murphy@arm.com" <robin.murphy@arm.com>, "will.deacon@arm.com"
+ <will.deacon@arm.com>, "gregkh@linuxfoundation.org"
+ <gregkh@linuxfoundation.org>
+Subject: RE: [PATCH 0/7 v5] Support for fsl-mc bus and its devices in SMMU
+Date: Thu, 21 Jun 2018 03:59:27 +0000
+Message-ID: <HE1PR0401MB24250CEFBC0B7CC919C4388AE6760@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "stuyoder@gmail.com" <stuyoder@gmail.com>,
+ Bharat Bhushan <bharat.bhushan@nxp.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "joro@8bytes.org" <joro@8bytes.org>,
+ "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Leo Li <leoyang.li@nxp.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "frowand.list@gmail.com" <frowand.list@gmail.com>, "hch@lst.de" <hch@lst.de>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On certain versions of Broadcom PAXC based root complexes, certain
-regions of the configuration space are corrupted. As a result, it
-prevents the Linux PCIe stack from traversing the linked list of the
-capability registers completely and therefore the root complex is
-not advertised as "PCIe capable". This prevents the correct PCIe RID
-from being parsed in the kernel PCIe stack. A correct RID is required
-for mapping to a stream ID from the SMMU or the device ID from the
-GICv3 ITS
+Hi Robin/Greg k-h,
 
-This patch fixes up the issue by manually populating the related
-PCIe capabilities
+Will this patch-set be taken for the next kernel release (and via which tree)?
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
----
- drivers/pci/host/pcie-iproc.c | 65 +++++++++++++++++++++++++++++++++++++++----
- drivers/pci/host/pcie-iproc.h |  3 ++
- 2 files changed, 62 insertions(+), 6 deletions(-)
+Thanks,
+Nipun
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 3c76c5f..680f6b1 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -85,6 +85,8 @@
- #define IMAP_VALID_SHIFT		0
- #define IMAP_VALID			BIT(IMAP_VALID_SHIFT)
- 
-+#define IPROC_PCI_PM_CAP		0x48
-+#define IPROC_PCI_PM_CAP_MASK		0xffff
- #define IPROC_PCI_EXP_CAP		0xac
- 
- #define IPROC_PCIE_REG_INVALID		0xffff
-@@ -375,6 +377,17 @@ static const u16 iproc_pcie_reg_paxc_v2[] = {
- 	[IPROC_PCIE_CFG_DATA]		= 0x1fc,
- };
- 
-+/*
-+ * List of device IDs of controllers that have corrupted capability list that
-+ * require SW fixup
-+ */
-+static const u16 iproc_pcie_corrupt_cap_did[] = {
-+	0x16cd,
-+	0x16f0,
-+	0xd802,
-+	0xd804
-+};
-+
- static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
- {
- 	struct iproc_pcie *pcie = bus->sysdata;
-@@ -495,6 +508,49 @@ static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
- 	return data;
- }
- 
-+static void iproc_pcie_fix_cap(struct iproc_pcie *pcie, int where, u32 *val)
-+{
-+	u32 i, dev_id;
-+
-+	switch (where & ~0x3) {
-+	case PCI_VENDOR_ID:
-+		dev_id = *val >> 16;
-+
-+		/*
-+		 * Activate fixup for those controllers that have corrupted
-+		 * capability list registers
-+		 */
-+		for (i = 0; i < ARRAY_SIZE(iproc_pcie_corrupt_cap_did); i++)
-+			if (dev_id == iproc_pcie_corrupt_cap_did[i])
-+				pcie->fix_paxc_cap = true;
-+		break;
-+
-+	case IPROC_PCI_PM_CAP:
-+		if (pcie->fix_paxc_cap) {
-+			/* advertise PM, force next capability to PCIe */
-+			*val &= ~IPROC_PCI_PM_CAP_MASK;
-+			*val |= IPROC_PCI_EXP_CAP << 8 | PCI_CAP_ID_PM;
-+		}
-+		break;
-+
-+	case IPROC_PCI_EXP_CAP:
-+		if (pcie->fix_paxc_cap) {
-+			/* advertise root port, version 2, terminate here */
-+			*val = (PCI_EXP_TYPE_ROOT_PORT << 4 | 2) << 16 |
-+				PCI_CAP_ID_EXP;
-+		}
-+		break;
-+
-+	case IPROC_PCI_EXP_CAP + PCI_EXP_RTCTL:
-+		/* Don't advertise CRS SV support */
-+		*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
-+		break;
-+
-+	default:
-+		break;
-+	}
-+}
-+
- static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
- 				  int where, int size, u32 *val)
- {
-@@ -509,13 +565,10 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
- 	/* root complex access */
- 	if (busno == 0) {
- 		ret = pci_generic_config_read32(bus, devfn, where, size, val);
--		if (ret != PCIBIOS_SUCCESSFUL)
--			return ret;
-+		if (ret == PCIBIOS_SUCCESSFUL)
-+			iproc_pcie_fix_cap(pcie, where, val);
- 
--		/* Don't advertise CRS SV support */
--		if ((where & ~0x3) == IPROC_PCI_EXP_CAP + PCI_EXP_RTCTL)
--			*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
--		return PCIBIOS_SUCCESSFUL;
-+		return ret;
- 	}
- 
- 	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index 814b600..9d5cfee 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -60,6 +60,8 @@ struct iproc_msi;
-  * @ep_is_internal: indicates an internal emulated endpoint device is connected
-  * @has_apb_err_disable: indicates the controller can be configured to prevent
-  * unsupported request from being forwarded as an APB bus error
-+ * @fix_paxc_cap: indicates the controller has corrupted capability list in its
-+ * config space registers and requires SW based fixup
-  *
-  * @need_ob_cfg: indicates SW needs to configure the outbound mapping window
-  * @ob: outbound mapping related parameters
-@@ -85,6 +87,7 @@ struct iproc_pcie {
- 	int (*map_irq)(const struct pci_dev *, u8, u8);
- 	bool ep_is_internal;
- 	bool has_apb_err_disable;
-+	bool fix_paxc_cap;
- 
- 	bool need_ob_cfg;
- 	struct iproc_pcie_ob ob;
--- 
-2.1.4
+> -----Original Message-----
+> From: Nipun Gupta
+> Sent: Sunday, May 20, 2018 7:20 PM
+> To: robin.murphy@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
+> robh@kernel.org; mark.rutland@arm.com; catalin.marinas@arm.com;
+> gregkh@linuxfoundation.org; Laurentiu Tudor <laurentiu.tudor@nxp.com>;
+> bhelgaas@google.com
+> Cc: hch@lst.de; joro@8bytes.org; m.szyprowski@samsung.com;
+> shawnguo@kernel.org; frowand.list@gmail.com; iommu@lists.linux-
+> foundation.org; linux-kernel@vger.kernel.org; devicetree@vger.kernel.org;
+> linux-arm-kernel@lists.infradead.org; linuxppc-dev@lists.ozlabs.org; linux-
+> pci@vger.kernel.org; Bharat Bhushan <bharat.bhushan@nxp.com>;
+> stuyoder@gmail.com; Leo Li <leoyang.li@nxp.com>; Nipun Gupta
+> <nipun.gupta@nxp.com>
+> Subject: [PATCH 0/7 v5] Support for fsl-mc bus and its devices in SMMU
+> 
+> This patchset defines IOMMU DT binding for fsl-mc bus and adds
+> support in SMMU for fsl-mc bus.
+> 
+> The patch series is based on top of dma-mapping tree (for-next branch):
+> http://git.infradead.org/users/hch/dma-mapping.git
+> 
+> These patches
+>   - Define property 'iommu-map' for fsl-mc bus (patch 1)
+>   - Integrates the fsl-mc bus with the SMMU using this
+>     IOMMU binding (patch 2,3,4)
+>   - Adds the dma configuration support for fsl-mc bus (patch 5, 6)
+>   - Updates the fsl-mc device node with iommu/dma related changes (patch 7)
+> 
+> Changes in v2:
+>   - use iommu-map property for fsl-mc bus
+>   - rebase over patchset https://patchwork.kernel.org/patch/10317337/
+>     and make corresponding changes for dma configuration of devices on
+>     fsl-mc bus
+> 
+> Changes in v3:
+>   - move of_map_rid in drivers/of/address.c
+> 
+> Changes in v4:
+>   - move of_map_rid in drivers/of/base.c
+> 
+> Changes in v5:
+>   - break patch 5 in two separate patches (now patch 5/7 and patch 6/7)
+>   - add changelog text in patch 3/7 and patch 5/7
+>   - typo fix
+> 
+> Nipun Gupta (7):
+>   Docs: dt: add fsl-mc iommu-map device-tree binding
+>   iommu: of: make of_pci_map_rid() available for other devices too
+>   iommu: support iommu configuration for fsl-mc devices
+>   iommu: arm-smmu: Add support for the fsl-mc bus
+>   bus: fsl-mc: support dma configure for devices on fsl-mc bus
+>   bus: fsl-mc: set coherent dma mask for devices on fsl-mc bus
+>   arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
+> 
+>  .../devicetree/bindings/misc/fsl,qoriq-mc.txt      |  39 ++++++++
+>  arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi     |   6 +-
+>  drivers/bus/fsl-mc/fsl-mc-bus.c                    |  16 +++-
+>  drivers/iommu/arm-smmu.c                           |   7 ++
+>  drivers/iommu/iommu.c                              |  21 +++++
+>  drivers/iommu/of_iommu.c                           |  25 ++++-
+>  drivers/of/base.c                                  | 102 +++++++++++++++++++++
+>  drivers/of/irq.c                                   |   5 +-
+>  drivers/pci/of.c                                   | 101 --------------------
+>  include/linux/fsl/mc.h                             |   8 ++
+>  include/linux/iommu.h                              |   2 +
+>  include/linux/of.h                                 |  11 +++
+>  include/linux/of_pci.h                             |  10 --
+>  13 files changed, 231 insertions(+), 122 deletions(-)
+> 
+> --
+> 1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
