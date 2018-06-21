@@ -1,170 +1,46 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 11 Jun 2018 08:43:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Xie XiuQi <xiexiuqi@huawei.com>
-Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
-Message-ID: <20180611134303.GC75679@bhelgaas-glaptop.roam.corp.google.com>
-References: <1527768879-88161-1-git-send-email-xiexiuqi@huawei.com>
- <1527768879-88161-2-git-send-email-xiexiuqi@huawei.com>
- <20180606154516.GL6631@arm.com>
- <CAErSpo6S0qtR42tjGZrFu4aMFFyThx1hkHTSowTt6t3XerpHnA@mail.gmail.com>
- <20180607105514.GA13139@dhcp22.suse.cz>
- <5ed798a0-6c9c-086e-e5e8-906f593ca33e@huawei.com>
- <20180607122152.GP32433@dhcp22.suse.cz>
- <a880df29-b656-d98d-3037-b04761c7ed78@huawei.com>
- <20180611085237.GI13364@dhcp22.suse.cz>
- <16c4db2f-bc70-d0f2-fb38-341d9117ff66@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:40342 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932721AbeFUVAm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Jun 2018 17:00:42 -0400
+To: Matthew Wilcox <willy@infradead.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+References: <20180618193636.16210-1-logang@deltatee.com>
+ <20180618193636.16210-3-logang@deltatee.com>
+ <20180621192220.GA6635@bombadil.infradead.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <6a6e5417-eb7b-921f-34a7-41e22abe5541@deltatee.com>
+Date: Thu, 21 Jun 2018 15:00:07 -0600
 MIME-Version: 1.0
-In-Reply-To: <16c4db2f-bc70-d0f2-fb38-341d9117ff66@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>, tnowicki@caviumnetworks.com,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
- "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- Will Deacon <will.deacon@arm.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
- Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org,
- linux-arm <linux-arm-kernel@lists.infradead.org>,
- Hanjun Guo <guohanjun@huawei.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Andrew Morton <akpm@linux-foundation.org>, zhongjiang <zhongjiang@huawei.com>,
- wanghuiqiang@huawei.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180621192220.GA6635@bombadil.infradead.org>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v3 2/3] PCI: Allow specifying devices using a base bus and
+ path of devfns
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 11, 2018 at 08:32:10PM +0800, Xie XiuQi wrote:
-> Hi Michal,
-> 
-> On 2018/6/11 16:52, Michal Hocko wrote:
-> > On Mon 11-06-18 11:23:18, Xie XiuQi wrote:
-> >> Hi Michal,
-> >>
-> >> On 2018/6/7 20:21, Michal Hocko wrote:
-> >>> On Thu 07-06-18 19:55:53, Hanjun Guo wrote:
-> >>>> On 2018/6/7 18:55, Michal Hocko wrote:
-> >>> [...]
-> >>>>> I am not sure I have the full context but pci_acpi_scan_root calls
-> >>>>> kzalloc_node(sizeof(*info), GFP_KERNEL, node)
-> >>>>> and that should fall back to whatever node that is online. Offline node
-> >>>>> shouldn't keep any pages behind. So there must be something else going
-> >>>>> on here and the patch is not the right way to handle it. What does
-> >>>>> faddr2line __alloc_pages_nodemask+0xf0 tells on this kernel?
-> >>>>
-> >>>> The whole context is:
-> >>>>
-> >>>> The system is booted with a NUMA node has no memory attaching to it
-> >>>> (memory-less NUMA node), also with NR_CPUS less than CPUs presented
-> >>>> in MADT, so CPUs on this memory-less node are not brought up, and
-> >>>> this NUMA node will not be online (but SRAT presents this NUMA node);
-> >>>>
-> >>>> Devices attaching to this NUMA node such as PCI host bridge still
-> >>>> return the valid NUMA node via _PXM, but actually that valid NUMA node
-> >>>> is not online which lead to this issue.
-> >>>
-> >>> But we should have other numa nodes on the zonelists so the allocator
-> >>> should fall back to other node. If the zonelist is not intiailized
-> >>> properly, though, then this can indeed show up as a problem. Knowing
-> >>> which exact place has blown up would help get a better picture...
-> >>>
-> >>
-> >> I specific a non-exist node to allocate memory using kzalloc_node,
-> >> and got this following error message.
-> >>
-> >> And I found out there is just a VM_WARN, but it does not prevent the memory
-> >> allocation continue.
-> >>
-> >> This nid would be use to access NODE_DADA(nid), so if nid is invalid,
-> >> it would cause oops here.
-> >>
-> >> 459 /*
-> >> 460  * Allocate pages, preferring the node given as nid. The node must be valid and
-> >> 461  * online. For more general interface, see alloc_pages_node().
-> >> 462  */
-> >> 463 static inline struct page *
-> >> 464 __alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
-> >> 465 {
-> >> 466         VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
-> >> 467         VM_WARN_ON(!node_online(nid));
-> >> 468
-> >> 469         return __alloc_pages(gfp_mask, order, nid);
-> >> 470 }
-> >> 471
-> >>
-> >> (I wrote a ko, to allocate memory on a non-exist node using kzalloc_node().)
-> > 
-> > OK, so this is an artificialy broken code, right. You shouldn't get a
-> > non-existent node via standard APIs AFAICS. The original report was
-> > about an existing node which is offline AFAIU. That would be a different
-> > case. If I am missing something and there are legitimate users that try
-> > to allocate from non-existing nodes then we should handle that in
-> > node_zonelist.
-> 
-> I think hanjun's comments may help to understood this question:
->  - NUMA node will be built if CPUs and (or) memory are valid on this NUMA
->  node;
-> 
->  - But if we boot the system with memory-less node and also with
->  CONFIG_NR_CPUS less than CPUs in SRAT, for example, 64 CPUs total with 4
->  NUMA nodes, 16 CPUs on each NUMA node, if we boot with
->  CONFIG_NR_CPUS=48, then we will not built numa node for node 3, but with
->  devices on that numa node, alloc memory will be panic because NUMA node
->  3 is not a valid node.
-> 
-> I triggered this BUG on arm64 platform, and I found a similar bug has
-> been fixed on x86 platform. So I sent a similar patch for this bug.
-> 
-> Or, could we consider to fix it in the mm subsystem?
 
-The patch below (b755de8dfdfe) seems like totally the wrong direction.
-I don't think we want every caller of kzalloc_node() to have check for
-node_online().
+On 21/06/18 01:22 PM, Matthew Wilcox wrote:
+> On Mon, Jun 18, 2018 at 01:36:35PM -0600, Logan Gunthorpe wrote:
+> So you probably want to reword this too.  Two formats, one with optional
+> trailing path elements?
 
-Why would memory on an off-line node even be in the allocation pool?
-I wouldn't expect that memory to be put in the pool until the node
-comes online and the memory is accessible, so this sounds like some
-kind of setup issue.
+Thanks for the review Matthew! I've addressed all your feedback for a v4
+which I'll post shortly.
 
-But I'm definitely not an mm person.
-
-> From b755de8dfdfef97effaa91379ffafcb81f4d62a1 Mon Sep 17 00:00:00 2001
-> From: Yinghai Lu <Yinghai.Lu@Sun.COM>
-> Date: Wed, 20 Feb 2008 12:41:52 -0800
-> Subject: [PATCH] x86: make dev_to_node return online node
-> 
-> a numa system (with multi HT chains) may return node without ram. Aka it
-> is not online. Try to get an online node, otherwise return -1.
-> 
-> Signed-off-by: Yinghai Lu <yinghai.lu@sun.com>
-> Signed-off-by: Ingo Molnar <mingo@elte.hu>
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> ---
->  arch/x86/pci/acpi.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index d95de2f..ea8685f 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -172,6 +172,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_device *device, int do
->  		set_mp_bus_to_node(busnum, node);
->  	else
->  		node = get_mp_bus_to_node(busnum);
-> +
-> +	if (node != -1 && !node_online(node))
-> +		node = -1;
->  #endif
-> 
->  	/* Allocate per-root-bus (not per bus) arch-specific data.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Logan
