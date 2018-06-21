@@ -1,98 +1,210 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pu1apc01on0093.outbound.protection.outlook.com ([104.47.126.93]:15369
-        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752213AbeFGAO5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Jun 2018 20:14:57 -0400
-From: Dexuan Cui <decui@microsoft.com>
-To: Haiyang Zhang <haiyangz@microsoft.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>
-Subject: RE: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
- hv_compose_msi_msg()
-Date: Thu, 7 Jun 2018 00:14:39 +0000
-Message-ID: <KL1P15301MB0006D8314C8B40A939598056BF640@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-References: <KL1P15301MB0006EE546A7C2567B61EA783BF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <BN6PR21MB016112A4E32D76EC669818C3CA690@BN6PR21MB0161.namprd21.prod.outlook.com>
-In-Reply-To: <BN6PR21MB016112A4E32D76EC669818C3CA690@BN6PR21MB0161.namprd21.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=hNSE=JH=gmail.com=rajatxjain@kernel.org>
+Return-Path: <SRS0=hNSE=JH=gmail.com=rajatxjain@kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <20180621184822.GB14136@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180522222805.80314-1-rajatja@google.com> <20180620234147.48438-1-rajatja@google.com>
+ <20180620234147.48438-3-rajatja@google.com> <20180621184822.GB14136@bhelgaas-glaptop.roam.corp.google.com>
+From: Rajat Jain <rajatxjain@gmail.com>
+Date: Thu, 21 Jun 2018 14:25:07 -0700
+Message-ID: <CAA93t1rz6YGmvvORDB0ehr7Gwp-W+0HDYxEDgjtgYmGm3qMgCw@mail.gmail.com>
+Subject: Re: [PATCH v5 3/5] PCI/AER: Add sysfs attributes to provide breakdown
+ of AERs
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Rajat Jain <rajatja@google.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>, Philippe Ombredanne <pombredanne@nexb.com>,
+	Kate Stewart <kstewart@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Frederick Lawler <fred@fredlawl.com>,
+	Oza Pawandeep <poza@codeaurora.org>, Keith Busch <keith.busch@intel.com>,
+	Alexandru Gagniuc <mr.nuke.me@gmail.com>, Thomas Tai <thomas.tai@oracle.com>,
+	"Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci <linux-pci@vger.kernel.org>,
+	linux-doc <linux-doc@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jes Sorensen <jsorensen@fb.com>,
+	Kyle McMartin <jkkm@fb.com>, Tyler Baicar <tbaicar@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Haiyang Zhang
-> Sent: Friday, May 25, 2018 12:52
-> To: Dexuan Cui <decui@microsoft.com>; Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com>; Bjorn Helgaas <bhelgaas@google.com>;
-> linux-pci@vger.kernel.org; KY Srinivasan <kys@microsoft.com>; Stephen
-> Hemminger <sthemmin@microsoft.com>; olaf@aepfle.de;
-> apw@canonical.com; jasowang@redhat.com
-> Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
-> vkuznets@redhat.com; marcelo.cerri@canonical.com
-> Subject: RE: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
-> hv_compose_msi_msg()
->=20
-> > From: Dexuan Cui
-> > Sent: Tuesday, May 22, 2018 8:18 PM
-> > To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>; Bjorn Helgaas
-> > <bhelgaas@google.com>; linux-pci@vger.kernel.org; KY Srinivasan
-> > <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
-> > olaf@aepfle.de; apw@canonical.com; jasowang@redhat.com
-> > Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.or=
-g;
-> > Haiyang Zhang <haiyangz@microsoft.com>; vkuznets@redhat.com;
-> > marcelo.cerri@canonical.com
-> > Subject: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
-> > hv_compose_msi_msg()
-> >
-> >
-> > Commit de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in
-> hv_compose_msi_msg()")
-> > uses local_bh_disable()/enable(), because hv_pci_onchannelcallback() ca=
-n
-> also
-> > run in tasklet context as the channel event callback.
-> >
-> > With CONFIG_PROVE_LOCKING=3Dy in the latest mainline, or old kernels th=
-at
-> > don't have commit f71b74bca637 ("irq/softirqs: Use lockdep to assert IR=
-Qs
-> are
-> > disabled/enabled"), it turns out can we trigger a warning at the beginn=
-ing of
-> > __local_bh_enable_ip(), because the upper layer irq code can call
-> > hv_compose_msi_msg() with local irqs disabled.
-> >
-> > Let's fix the warning by switching to local_irq_save()/restore(). This =
-is not an
-> > issue because hv_pci_onchannelcallback() is not slow, and it not a hot =
-path.
-> >
-> > Fixes: de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in hv_compose_msi_msg(=
-)")
-> > Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> > Cc: <stable@vger.kernel.org>
-> > Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> > Cc: K. Y. Srinivasan <kys@microsoft.com>
-> > ---
->=20
-> Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
->=20
-> Thanks you.
+On Thu, Jun 21, 2018 at 11:48 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> [+cc Tyler for AER dmesg decoding]
+>
+> I really like this idea a lot; thanks for putting it together!
+>
+> On Wed, Jun 20, 2018 at 04:41:45PM -0700, Rajat Jain wrote:
+>> Add sysfs attributes to provide breakdown of the AERs seen,
+>> into different type of correctable or uncorrectable errors:
+>>
+>> dev_breakdown_correctable
+>> dev_breakdown_uncorrectable
+>
+> - Can you include a more complete sysfs path here in the commit log,
+>   as well as a snippet of the contents?  From the doc patch, I think
+>   it is currently:
+>
+>     /sys/bus/pci/devices/<dev>/aer_stats/dev_breakdown_correctable
+>     /sys/bus/pci/devices/<dev>/aer_stats/dev_breakdown_uncorrectable
+>
+> - I'm not sure it's worth making a new subdirectory.  What if you
+>   simply added these?
 
-Hi Lorenzo,
+Its your call. We're going to be creating 6 files for aer_stats (I'll
+be following your suggestion below), and I think it may clutter the
+directory. In my next patch, I'm going to remove the sub directory,
+but we can add that later if you feel so.
 
-Can I have your reply to this patch?
+>
+>     /sys/bus/pci/devices/<dev>/aer_correctable
+>     /sys/bus/pci/devices/<dev>/aer_uncorrectable
+>
+>   or perhaps, since you split the "total" files into
+>   cor/nonfatal/fatal, these could match?
+>
+>     /sys/bus/pci/devices/<dev>/aer_correctable
+>     /sys/bus/pci/devices/<dev>/aer_nonfatal
+>     /sys/bus/pci/devices/<dev>/aer_fatal
 
--- Dexuan
+This sounds like a better idea.
+
+>
+>   I think the nonfatal/fatal distinction might be worth exposing
+>   because some of those are configurable and the kernel handling is
+>   significantly different.  So I think it would make this more
+>   approachable if the "remove/re-enumerate" situations that will be
+>   obvious in dmesg logs were clearly connected with "aer_fatal"
+>   statistics, as opposed to being connected to some subset of what's
+>   in "aer_uncorrectable".
+
+Agree, however note that theoretically, the classification of
+uncorrectable errors into fatal or non fatal can be programmed /
+changed (by who?), so it is possible that some of the same types of
+errors may show up such that some instances in counted in fatal and
+some in non-fatal (depending on whether those bits were set while
+handling ERR_FATAL or ERR_NONFATAL respectively). Not that I think
+there is something wrong with this, just thought I will mention.
+
+>
+> - Possibly the totals that you currently have in dev_total_cor_errs
+>   could even be added to the bottom of these?  Not sure what direction
+>   would be best, and as you say, there's the potential for confusion
+>   because the individual items won't add up to the totals.  If they
+>   were in the same file, maybe that could be addressed in the label.
+
+Agree, this also sounds good.
+
+>
+> - Can you include the related doc update in the same patch?  That way
+>   the doc update is more likely to be backported along with the patch.
+
+Will do.
+
+>
+> - I was going to ask whether these should all be in a single file or
+>   whether they should be split up so there's a separate file for each
+>   type or error, each containing a single number.  But
+>   Documentation/filesystems/sysfs.txt says either is OK and
+>   /sys/devices/system/node/node0/vmstat is an example of a similar
+>   situation in an existing file, so I think what you did is perfect.
+
+Thank you, I initially thought of having a different file for each
+error, but then it looked like we're be having much more files - at
+least large enough for the number of files to overwhelm the user
+space.
+
+
+Thanks,
+
+Rajat
+
+>
+>> Signed-off-by: Rajat Jain <rajatja@google.com>
+>> ---
+>> v5: Fix the signature
+>> v4: use "%llu" in place of "%llx"
+>> v3: Merge everything in aer.c
+>>
+>>  drivers/pci/pcie/aer.c | 28 ++++++++++++++++++++++++++++
+>>  1 file changed, 28 insertions(+)
+>>
+>> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+>> index ce0d675d7bd3..c989bb5bb6f1 100644
+>> --- a/drivers/pci/pcie/aer.c
+>> +++ b/drivers/pci/pcie/aer.c
+>> @@ -587,10 +587,38 @@ aer_stats_aggregate_attr(dev_total_cor_errs);
+>>  aer_stats_aggregate_attr(dev_total_fatal_errs);
+>>  aer_stats_aggregate_attr(dev_total_nonfatal_errs);
+>>
+>> +#define aer_stats_breakdown_attr(field, stats_array, strings_array)  \
+>> +     static ssize_t                                                  \
+>> +     field##_show(struct device *dev, struct device_attribute *attr, \
+>> +                  char *buf)                                         \
+>> +{                                                                    \
+>> +     unsigned int i;                                                 \
+>> +     char *str = buf;                                                \
+>> +     struct pci_dev *pdev = to_pci_dev(dev);                         \
+>> +     u64 *stats = pdev->aer_stats->stats_array;                      \
+>
+> Nit: add a blank line here.
+
+Will do.
+
+>
+>> +     for (i = 0; i < ARRAY_SIZE(strings_array); i++) {               \
+>> +             if (strings_array[i])                                   \
+>> +                     str += sprintf(str, "%s = 0x%llu\n",            \
+>> +                                    strings_array[i], stats[i]);     \
+>> +             else if (stats[i])                                      \
+>> +                     str += sprintf(str, #stats_array "bit[%d] = 0x%llu\n",\
+>> +                                    i, stats[i]);                    \
+>
+> - I like the way this uses the same text as used in dmesg
+>   (aer_correctable_error_string[] and
+>   aer_uncorrectable_error_string[]).
+>
+> - I think this incorrectly prints a "0x" prefix for a decimal number
+>   (probably an artifact of your v4 change).
+
+Will do.
+
+>
+> - Tyler posted a patch [1] to update those dmesg strings so they match
+>   the way lspci decodes them.  I really liked that update, but we
+>   never quite finished it.  If we're going to do that, it would be
+>   nice to do it first, so we don't publish new sysfs files, then
+>   immediately change the labels used in them.
+
+Sure, I guess you can push them in the right order.
+
+>
+> - IIRC, Tyler's patch had the nice property of changing the strings so
+>   each error name had no spaces, which would make it a little easier
+>   to parse this sysfs file: each line would be a single identifier
+>   followed by a single number (I would probably remove the "=" from
+>   the middle).
+
+
+Will do.
+
+>
+> [1] https://lkml.kernel.org/r/1518034285-3543-1-git-send-email-tbaicar@codeaurora.org
+>
+>> +     }                                                               \
+>> +     return str-buf;                                                 \
+>> +}                                                                    \
+>> +static DEVICE_ATTR_RO(field)
+>> +
+>> +aer_stats_breakdown_attr(dev_breakdown_correctable, dev_cor_errs,
+>> +                      aer_correctable_error_string);
+>> +aer_stats_breakdown_attr(dev_breakdown_uncorrectable, dev_uncor_errs,
+>> +                      aer_uncorrectable_error_string);
+>> +
+>>  static struct attribute *aer_stats_attrs[] __ro_after_init = {
+>>       &dev_attr_dev_total_cor_errs.attr,
+>>       &dev_attr_dev_total_fatal_errs.attr,
+>>       &dev_attr_dev_total_nonfatal_errs.attr,
+>> +     &dev_attr_dev_breakdown_correctable.attr,
+>> +     &dev_attr_dev_breakdown_uncorrectable.attr,
+>>       NULL
+>>  };
+>>
+>> --
+>> 2.18.0.rc1.244.gcf134e6275-goog
+>>
