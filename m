@@ -1,196 +1,160 @@
-Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=sfZ0=I6=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:52612 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933467AbeFUQyF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Jun 2018 12:54:05 -0400
+Date: Thu, 21 Jun 2018 17:54:00 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jan Kiszka <jan.kiszka@siemens.com>,
+        Scott Branden <scott.branden@broadcom.com>,
+        Ley Foon Tan <lftan@altera.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Will Deacon <will.deacon@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH v2] PCI: controller: Move PCI_DOMAINS selection to arch
+ Kconfig
+Message-ID: <20180621165400.GB14519@e107981-ln.cambridge.arm.com>
+References: <20180619112105.14457-1-lorenzo.pieralisi@arm.com>
+ <30bb8a16-f829-a5a4-265f-2d1112d8d0bf@siemens.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 12 Jun 2018 17:53:16 +0530
-From: poza@codeaurora.org
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org, Ray Jui <rjui@broadcom.com>,
- linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH v2 2/5] PCI: iproc: Fix up corrupted PAXC root complex
- config registers
-In-Reply-To: <2bafb8ae70029279a1849fb68a020d18@codeaurora.org>
-References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
- <1528762867-16823-3-git-send-email-ray.jui@broadcom.com>
- <2bafb8ae70029279a1849fb68a020d18@codeaurora.org>
-Message-ID: <1f059e9b5ebeabf6f5a7e11a134221ae@codeaurora.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <30bb8a16-f829-a5a4-265f-2d1112d8d0bf@siemens.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-06-12 13:57, poza@codeaurora.org wrote:
-> On 2018-06-12 05:51, Ray Jui wrote:
->> On certain versions of Broadcom PAXC based root complexes, certain
->> regions of the configuration space are corrupted. As a result, it
->> prevents the Linux PCIe stack from traversing the linked list of the
->> capability registers completely and therefore the root complex is
->> not advertised as "PCIe capable". This prevents the correct PCIe RID
->> from being parsed in the kernel PCIe stack. A correct RID is required
->> for mapping to a stream ID from the SMMU or the device ID from the
->> GICv3 ITS
->> 
->> This patch fixes up the issue by manually populating the related
->> PCIe capabilities
->> 
->> Signed-off-by: Ray Jui <rjui@broadcom.com>
->> ---
->>  drivers/pci/host/pcie-iproc.c | 65 
->> +++++++++++++++++++++++++++++++++++++++----
->>  drivers/pci/host/pcie-iproc.h |  3 ++
->>  2 files changed, 62 insertions(+), 6 deletions(-)
->> 
->> diff --git a/drivers/pci/host/pcie-iproc.c 
->> b/drivers/pci/host/pcie-iproc.c
->> index 3c76c5f..680f6b1 100644
->> --- a/drivers/pci/host/pcie-iproc.c
->> +++ b/drivers/pci/host/pcie-iproc.c
->> @@ -85,6 +85,8 @@
->>  #define IMAP_VALID_SHIFT		0
->>  #define IMAP_VALID			BIT(IMAP_VALID_SHIFT)
->> 
->> +#define IPROC_PCI_PM_CAP		0x48
->> +#define IPROC_PCI_PM_CAP_MASK		0xffff
->>  #define IPROC_PCI_EXP_CAP		0xac
->> 
->>  #define IPROC_PCIE_REG_INVALID		0xffff
->> @@ -375,6 +377,17 @@ static const u16 iproc_pcie_reg_paxc_v2[] = {
->>  	[IPROC_PCIE_CFG_DATA]		= 0x1fc,
->>  };
->> 
->> +/*
->> + * List of device IDs of controllers that have corrupted capability 
->> list that
->> + * require SW fixup
->> + */
->> +static const u16 iproc_pcie_corrupt_cap_did[] = {
->> +	0x16cd,
->> +	0x16f0,
->> +	0xd802,
->> +	0xd804
->> +};
->> +
->>  static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
->>  {
->>  	struct iproc_pcie *pcie = bus->sysdata;
->> @@ -495,6 +508,49 @@ static unsigned int iproc_pcie_cfg_retry(void
->> __iomem *cfg_data_p)
->>  	return data;
->>  }
->> 
->> +static void iproc_pcie_fix_cap(struct iproc_pcie *pcie, int where, 
->> u32 *val)
->> +{
->> +	u32 i, dev_id;
->> +
->> +	switch (where & ~0x3) {
->> +	case PCI_VENDOR_ID:
->> +		dev_id = *val >> 16;
->> +
->> +		/*
->> +		 * Activate fixup for those controllers that have corrupted
->> +		 * capability list registers
->> +		 */
->> +		for (i = 0; i < ARRAY_SIZE(iproc_pcie_corrupt_cap_did); i++)
->> +			if (dev_id == iproc_pcie_corrupt_cap_did[i])
->> +				pcie->fix_paxc_cap = true;
+On Wed, Jun 20, 2018 at 10:07:33AM +0200, Jan Kiszka wrote:
+> On 2018-06-19 13:21, Lorenzo Pieralisi wrote:
+> > Commit 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
+> > added configuration options to allow PCI host controller drivers to be
+> > compile tested on all architectures.
+> > 
+> > Some host controller drivers (eg PCIE_ALTERA) config entries select
+> > the PCI_DOMAINS config option to enable PCI domains management in
+> > the kernel. Now that host controller drivers can be compiled on
+> > all architectures, this triggers build regressions on arches that
+> > do not implement the PCI_DOMAINS required API (ie pci_domain_nr()):
+> > 
+> > drivers/ata/pata_ali.c: In function 'ali_init_chipset':
+> > drivers/ata/pata_ali.c:469:38: error:
+> >         implicit declaration of function 'pci_domain_nr';
+> >                                           did you mean 'pci_iomap_wc'?
+> > 
+> > Furthemore, some software configurations (ie Jailhouse) require a
+> > PCI_DOMAINS enabled kernel to configure multiple host controllers
+> > without having an explicit dependency on the ARM platform on which
+> > they run.
+> > 
+> > Make PCI_DOMAINS a visible configuration option on ARM so that software
+> > configurations that need it can manually select it and move the
+> > PCI_DOMAINS selection from PCI controllers configuration file to ARM
+> > sub-arch config entries that currently require it, fixing the issue.
+> > 
+> > Fixes: 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
+> > Link: https://lkml.kernel.org/r/20180612170229.GA10141@roeck-us.net
+> > Reported-by: Guenter Roeck <linux@roeck-us.net>
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Scott Branden <scott.branden@broadcom.com>
+> > Cc: Will Deacon <will.deacon@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Rob Herring <robh@kernel.org>
+> > Cc: Russell King <linux@armlinux.org.uk>
+> > Cc: Jan Kiszka <jan.kiszka@siemens.com>
+> > Cc: Guenter Roeck <linux@roeck-us.net>
+> > Cc: Ley Foon Tan <lftan@altera.com>
+> > ---
+> > v1 -> v2
+> > 	- Removed ARCH_VIRT PCI_DOMAINS selection
+> > 	- Added PCI_DOMAINS visible config option
+> > 
+> > v1: https://marc.info/?l=linux-pci&m=152932092612352&w=2
+> > 
+> >  arch/arm/Kconfig               | 8 +++++++-
+> >  arch/arm/mach-bcm/Kconfig      | 1 +
+> >  arch/arm/mach-socfpga/Kconfig  | 1 +
+> >  drivers/pci/controller/Kconfig | 3 ---
+> >  4 files changed, 9 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> > index 54eeb8d00bc6..843edfd000be 100644
+> > --- a/arch/arm/Kconfig
+> > +++ b/arch/arm/Kconfig
+> > @@ -1245,8 +1245,14 @@ config PCI
+> >  	  VESA. If you have PCI, say Y, otherwise N.
+> >  
+> >  config PCI_DOMAINS
+> > -	bool
+> > +	bool "Support for multiple PCI domains"
+> >  	depends on PCI
+> > +	help
+> > +	  Enable PCI domains kernel management. Say Y if your machine
+> > +	  has a PCI bus hierarchy that requires more than one PCI
+> > +	  domain (aka segment) to be correctly managed. Say N otherwise.
+> > +
+> > +	  If you don't know what to do here, say N.
+> >  
+> >  config PCI_DOMAINS_GENERIC
+> >  	def_bool PCI_DOMAINS
+> > diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
+> > index c46a728df44e..25aac6ee2ab1 100644
+> > --- a/arch/arm/mach-bcm/Kconfig
+> > +++ b/arch/arm/mach-bcm/Kconfig
+> > @@ -20,6 +20,7 @@ config ARCH_BCM_IPROC
+> >  	select GPIOLIB
+> >  	select ARM_AMBA
+> >  	select PINCTRL
+> > +	select PCI_DOMAINS if PCI
+> >  	help
+> >  	  This enables support for systems based on Broadcom IPROC architected SoCs.
+> >  	  The IPROC complex contains one or more ARM CPUs along with common
+> > diff --git a/arch/arm/mach-socfpga/Kconfig b/arch/arm/mach-socfpga/Kconfig
+> > index d0f62eacf59d..4adb901dd5eb 100644
+> > --- a/arch/arm/mach-socfpga/Kconfig
+> > +++ b/arch/arm/mach-socfpga/Kconfig
+> > @@ -10,6 +10,7 @@ menuconfig ARCH_SOCFPGA
+> >  	select HAVE_ARM_SCU
+> >  	select HAVE_ARM_TWD if SMP
+> >  	select MFD_SYSCON
+> > +	select PCI_DOMAINS if PCI
+> >  
+> >  if ARCH_SOCFPGA
+> >  config SOCFPGA_SUSPEND
+> > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> > index 18fa09b3ac8f..cc9fa02d32a0 100644
+> > --- a/drivers/pci/controller/Kconfig
+> > +++ b/drivers/pci/controller/Kconfig
+> > @@ -96,7 +96,6 @@ config PCI_HOST_GENERIC
+> >  	depends on OF
+> >  	select PCI_HOST_COMMON
+> >  	select IRQ_DOMAIN
+> > -	select PCI_DOMAINS
+> >  	help
+> >  	  Say Y here if you want to support a simple generic PCI host
+> >  	  controller, such as the one emulated by kvmtool.
+> > @@ -138,7 +137,6 @@ config PCI_VERSATILE
+> >  
+> >  config PCIE_IPROC
+> >  	tristate
+> > -	select PCI_DOMAINS
+> >  	help
+> >  	  This enables the iProc PCIe core controller support for Broadcom's
+> >  	  iProc family of SoCs. An appropriate bus interface driver needs
+> > @@ -176,7 +174,6 @@ config PCIE_IPROC_MSI
+> >  config PCIE_ALTERA
+> >  	bool "Altera PCIe controller"
+> >  	depends on ARM || NIOS2 || COMPILE_TEST
+> > -	select PCI_DOMAINS
+> >  	help
+> >  	  Say Y here if you want to enable PCIe controller support on Altera
+> >  	  FPGA.
+> > 
 > 
-> and I think this code will try to fix up every time config space is 
-> read.
-> Does this get corrupted often, randomly ?
-> Can it not be solved by using one time Quirk ?
-> and if not Quirk, you dont want to be setting pcie->fix_paxc_cap =
-> false somewhere
-> 
-> besides, pcie->fix_paxc_cap = true; is set if PCI_VENDOR_ID is read 
-> first.
-> and rest cases stay with the assumption that PCI_VENDOR_ID will be read 
-> first.
-> which is infact read first during enumeration
-> (that is the assumption code is making), but that is safe assumption
-> to make I think.
-> 
+> Acked-by: Jan Kiszka <jan.kiszka@siemens.com>
 
-ok I see that Bjorn has suggested to fix it this way instead of Quirks.
-will just mark
+Thanks a lot. Scott, Ley Foon, does it work for you ? I would like
+to ask Bjorn to send it asap since the build on sparc is still broken.
 
-Reviewed-by: Oza Pawandeep <poza@codeaurora.org>
-
->> +		break;
->> +
->> +	case IPROC_PCI_PM_CAP:
->> +		if (pcie->fix_paxc_cap) {
->> +			/* advertise PM, force next capability to PCIe */
->> +			*val &= ~IPROC_PCI_PM_CAP_MASK;
->> +			*val |= IPROC_PCI_EXP_CAP << 8 | PCI_CAP_ID_PM;
->> +		}
->> +		break;
->> +
->> +	case IPROC_PCI_EXP_CAP:
->> +		if (pcie->fix_paxc_cap) {
->> +			/* advertise root port, version 2, terminate here */
->> +			*val = (PCI_EXP_TYPE_ROOT_PORT << 4 | 2) << 16 |
->> +				PCI_CAP_ID_EXP;
->> +		}
->> +		break;
->> +
->> +	case IPROC_PCI_EXP_CAP + PCI_EXP_RTCTL:
->> +		/* Don't advertise CRS SV support */
->> +		*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
->> +		break;
->> +
->> +	default:
->> +		break;
->> +	}
->> +}
->> +
->>  static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int 
->> devfn,
->>  				  int where, int size, u32 *val)
->>  {
->> @@ -509,13 +565,10 @@ static int iproc_pcie_config_read(struct pci_bus
->> *bus, unsigned int devfn,
->>  	/* root complex access */
->>  	if (busno == 0) {
->>  		ret = pci_generic_config_read32(bus, devfn, where, size, val);
->> -		if (ret != PCIBIOS_SUCCESSFUL)
->> -			return ret;
->> +		if (ret == PCIBIOS_SUCCESSFUL)
->> +			iproc_pcie_fix_cap(pcie, where, val);
->> 
->> -		/* Don't advertise CRS SV support */
->> -		if ((where & ~0x3) == IPROC_PCI_EXP_CAP + PCI_EXP_RTCTL)
->> -			*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
->> -		return PCIBIOS_SUCCESSFUL;
->> +		return ret;
->>  	}
->> 
->>  	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, 
->> where);
->> diff --git a/drivers/pci/host/pcie-iproc.h 
->> b/drivers/pci/host/pcie-iproc.h
->> index 814b600..9d5cfee 100644
->> --- a/drivers/pci/host/pcie-iproc.h
->> +++ b/drivers/pci/host/pcie-iproc.h
->> @@ -60,6 +60,8 @@ struct iproc_msi;
->>   * @ep_is_internal: indicates an internal emulated endpoint device is 
->> connected
->>   * @has_apb_err_disable: indicates the controller can be configured 
->> to prevent
->>   * unsupported request from being forwarded as an APB bus error
->> + * @fix_paxc_cap: indicates the controller has corrupted capability 
->> list in its
->> + * config space registers and requires SW based fixup
->>   *
->>   * @need_ob_cfg: indicates SW needs to configure the outbound mapping 
->> window
->>   * @ob: outbound mapping related parameters
->> @@ -85,6 +87,7 @@ struct iproc_pcie {
->>  	int (*map_irq)(const struct pci_dev *, u8, u8);
->>  	bool ep_is_internal;
->>  	bool has_apb_err_disable;
->> +	bool fix_paxc_cap;
->> 
->>  	bool need_ob_cfg;
->>  	struct iproc_pcie_ob ob;
+Thanks,
+Lorenzo
