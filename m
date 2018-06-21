@@ -1,91 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:37871 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933004AbeFPTfl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:35:41 -0400
-Message-Id: <21a663fc0115601b89dd14a93f7edaf1c841f0df.1529173804.git.lukas@wunner.de>
-In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 16 Jun 2018 21:25:00 +0200
-Subject: [PATCH 31/32] PCI: Whitelist native hotplug ports for runtime D3
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org
+Received: from smtprelay.synopsys.com ([198.182.37.59]:57282 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932858AbeFUQBr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 12:01:47 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v6 00/11] Add MSI-X support on pcitest tool
+Date: Thu, 21 Jun 2018 17:01:25 +0100
+Message-Id: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously we blacklisted PCIe hotplug ports for runtime D3 because:
+Patch series made against Lorenzo's master branch.
 
-(a) Ports handled by the firmware must not be transitioned to D3 by the
-    OS behind the firmware's back:
-    https://bugzilla.kernel.org/show_bug.cgi?id=53811
+Add MSI-X support on pcitest tool.
 
-(b) Ports handled natively by the OS lacked runtime D3 support in the
-    pciehp driver.
+Add new callbacks methods and handlers to trigger the MSI-X interrupts
+on the EP DesignWare IP driver.
 
-We've just rectified the latter, so allow users to manually enable and
-test it by passing pcie_port_pm=force on the command line.  Vendors are
-thus put in a position to validate hotplug ports for runtime D3 and
-perhaps we can someday enable it by default, but with a BIOS cutoff date.
+Allow to set/get MSI-X EP maximum capability number.
 
-Ashok Raj tested runtime D3 on hotplug ports of a SkyLake Xeon-SP in
-2017 and encountered Hardware Error NMIs, so this feature clearly cannot
-be enabled for everyone yet:
-https://lkml.org/lkml/2017/5/3/480
+Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
 
-While at it, remove an erroneous code comment I added with 97a90aee5dab
-("PCI: Consolidate conditions to allow runtime PM on PCIe ports") which
-claims that parents of a hotplug port must stay awake lest interrupts
-cannot be delivered.  That has turned out to be wrong at least for
-Thunderbolt hotplug ports.
+Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
 
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Ashok Raj <ashok.raj@intel.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/pci.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+Update the pcitest.sh script to support MSI-X feature tests.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 97acba712e4e..4099a6c14b6d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2305,18 +2305,23 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 			return false;
- 
- 		/*
--		 * Hotplug interrupts cannot be delivered if the link is down,
--		 * so parents of a hotplug port must stay awake. In addition,
--		 * hotplug ports handled by firmware in System Management Mode
-+		 * Hotplug ports handled by firmware in System Management Mode
- 		 * may not be put into D3 by the OS (Thunderbolt on non-Macs).
--		 * For simplicity, disallow in general for now.
- 		 */
--		if (bridge->is_hotplug_bridge)
-+		if (bridge->is_hotplug_bridge && !pciehp_is_native(bridge))
- 			return false;
- 
- 		if (pci_bridge_d3_force)
- 			return true;
- 
-+		/*
-+		 * Hotplug ports handled natively by the OS were not validated
-+		 * by vendors for runtime D3 at least until 2018 because there
-+		 * was no OS support.
-+		 */
-+		if (bridge->is_hotplug_bridge)
-+			return false;
-+
- 		/*
- 		 * It should be safe to put PCIe ports from 2015 or newer
- 		 * to D3.
+Gustavo Pimentel (11):
+  PCI: endpoint: Add MSI-X interfaces
+  PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
+  PCI: dwc: Add MSI-X callbacks handler
+  PCI: dwc: Rework MSI callbacks handler
+  PCI: dwc: Add legacy interrupt callback handler
+  pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
+  pci-epf-test/pci_endpoint_test: Use irq_type module parameter
+  pci-epf-test/pci_endpoint_test: Add MSI-X support
+  pci_endpoint_test: Add 2 ioctl commands
+  tools: PCI: Add MSI-X support
+  PCI: endpoint: Add MSI set maximum restriction.
+
+ Documentation/ioctl/ioctl-number.txt              |   1 +
+ Documentation/misc-devices/pci-endpoint-test.txt  |   6 +
+ drivers/misc/pci_endpoint_test.c                  | 259 ++++++++++++++++------
+ drivers/pci/controller/dwc/pci-dra7xx.c           |   2 +-
+ drivers/pci/controller/dwc/pcie-artpec6.c         |   2 +-
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 205 +++++++++++++++--
+ drivers/pci/controller/dwc/pcie-designware-plat.c |   7 +-
+ drivers/pci/controller/dwc/pcie-designware.h      |  31 ++-
+ drivers/pci/controller/pcie-cadence-ep.c          |   3 +-
+ drivers/pci/controller/pcie-rockchip-ep.c         |   2 +-
+ drivers/pci/endpoint/functions/pci-epf-test.c     |  81 +++++--
+ drivers/pci/endpoint/pci-ep-cfs.c                 |  24 ++
+ drivers/pci/endpoint/pci-epc-core.c               |  68 +++++-
+ include/linux/pci-epc.h                           |  15 +-
+ include/linux/pci-epf.h                           |   1 +
+ include/uapi/linux/pcitest.h                      |   3 +
+ tools/pci/pcitest.c                               |  51 ++++-
+ tools/pci/pcitest.sh                              |  15 ++
+ 18 files changed, 644 insertions(+), 132 deletions(-)
+
 -- 
-2.17.1
+2.7.4
