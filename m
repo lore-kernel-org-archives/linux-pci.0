@@ -1,53 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH NEXT 3/6] PCI/ERR: Cleanup ERR_FATAL of error broadcast
-Date: Thu,  7 Jun 2018 02:00:31 -0400
-Message-Id: <1528351234-26914-3-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1528351234-26914-1-git-send-email-poza@codeaurora.org>
-References: <1528351234-26914-1-git-send-email-poza@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:38967 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754251AbeFUAjS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Jun 2018 20:39:18 -0400
+Message-ID: <c03e5e63fb64d2bf503bb2e00101bf352e396ceb.camel@kernel.crashing.org>
+Subject: Re: [PATCH] arch: powerpc: pci-common: fix wrong return value check
+ on phd_id
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Michael Ellerman <mpe@ellerman.id.au>,
+        Daniel Walker <danielwa@cisco.com>,
+        "Guilherme G. Piccoli" <guilherme@gpiccoli.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+        xe-kernel@external.cisco.com, linux-kernel@vger.kernel.org,
+        Paul Mackerras <paulus@samba.org>,
+        linuxppc-dev@lists.ozlabs.org,
+        Mauro Rodrigues <maurosr@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org
+Date: Thu, 21 Jun 2018 10:38:46 +1000
+In-Reply-To: <87in6dvv89.fsf@concordia.ellerman.id.au>
+References: <20180618165706.42679-1-danielwa@cisco.com>
+         <CALJn8nPbTy3Ne2a7L71c2YZ06Ccr2j0zs6TdptfRc7O-N9u=Yg@mail.gmail.com>
+         <c56f43f5-7902-f7c8-20e1-955ad064c4d0@cisco.com>
+         <CALJn8nM+S7STs+_MTje1qVCpa6MvnROS2+b5_GDz2wYs8etapA@mail.gmail.com>
+         <6d321d8a-432d-d41d-cc08-144764d644b2@cisco.com>
+         <87in6dvv89.fsf@concordia.ellerman.id.au>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ERR_FATAL is handled by resetting the Link in software, skipping the
-driver pci_error_handlers callbacks, removing the devices from the PCI
-subsystem, and re-enumerating, so now no more ERR_FATAL handling is
-required inside pci_broadcast_error_message()
+On Thu, 2018-06-21 at 10:28 +1000, Michael Ellerman wrote:
+> 
+> That's true, though I think yours is the first report we've had of
+> problems.
+> 
+> The old behaviour relied on device tree ordering in nearly all cases, so
+> you basically get whatever order your firmware happened to flatten the
+> device tree in.
+> 
+> That tends to be consistent on a single system or with a single firmware
+> version, but it's not stable in general. If your firmware changes, or
+> you kexec then the ordering can change.
+> 
+> So I'd definitely prefer we didn't go back to that behaviour, because
+> it's basically "random order".
+> 
+> If there's anything you can do on your end to cope with the ne
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+I think the numbering change has to be coped with. However:
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 00d2875..3998ed7 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -259,15 +259,10 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- 		/*
- 		 * If the error is reported by an end point, we think this
- 		 * error is related to the upstream link of the end point.
-+		 * The error is non fatal so the bus is ok, just invoke
-+		 * the callback for the function that logged the error.
- 		 */
--		if (state == pci_channel_io_normal)
--			/*
--			 * the error is non fatal so the bus is ok, just invoke
--			 * the callback for the function that logged the error.
--			 */
--			cb(dev, &result_data);
--		else
--			pci_walk_bus(dev->bus, cb, &result_data);
-+		cb(dev, &result_data);
- 	}
- 
- 	return result_data.result;
--- 
-2.7.4
+The main issue I see is that it somewhat hard wires that "reg"
+is a 64-bit property with the "interesting" bits in the bottom,
+and that "interesting" part somewhat happens to fit in 16-bits.
+
+It would have been better to get the full address out of reg (using the
+appropriate size specified in the parent #address-cells) and hash it.
+
+Cheers,
+Ben.
