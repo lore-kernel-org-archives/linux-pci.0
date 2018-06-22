@@ -1,125 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40108 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933794AbeF2X1N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Jun 2018 19:27:13 -0400
-Date: Fri, 29 Jun 2018 18:27:11 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 22 Jun 2018 09:01:25 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rajat Jain <rajatja@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mayurkumar.patel@intel.com, rajatxjain@gmail.com
-Subject: Re: [PATCH v2] pci/aspm: Remove CONFIG_PCIEASPM_DEBUG
-Message-ID: <20180629232711.GG40928@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180508230148.121852-1-rajatja@google.com>
- <20180510233912.96454-1-rajatja@google.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
+Message-ID: <20180622140125.GD108993@bhelgaas-glaptop.roam.corp.google.com>
+References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+ <20180619214346.GD33049@bhelgaas-glaptop.roam.corp.google.com>
+ <2593baec-8a28-a3e7-7ebf-7c21addda0b8@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180510233912.96454-1-rajatja@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2593baec-8a28-a3e7-7ebf-7c21addda0b8@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>, sulrich@codeaurora.org,
+ Alex Williamson <alex.williamson@redhat.com>,
+ "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
+ linux-pci@vger.kernel.org, timur@codeaurora.org,
+ open list <linux-kernel@vger.kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Doug Ledford <dledford@redhat.com>, linux-arm-msm@vger.kernel.org,
+ Dennis Dalessandro <dennis.dalessandro@intel.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 10, 2018 at 04:39:12PM -0700, Rajat Jain wrote:
-> Currently, the linux kernel disables ASPM when a device is
-> removed from the kernel. But it is not enabled again when
-> a new device is added on that slot even if it was originally
-> enabled (by the BIOS) when the system booted up (assuming
-> POLICY_DEFAULT).
-> 
-> This was earlier discussed here:
-> https://www.spinics.net/lists/linux-pci/msg60212.html
-> 
-> And some suggestions from Bjorn here:
-> https://www.spinics.net/lists/linux-pci/msg60541.html
-> 
-> This patch picks up one of the suggestion, to remove the
-> CONFIG_PCIEASPM_DEBUG and thus make the code always
-> avilable. This provides control to userspace to control
-> ASPM on a per slot / device basis using sysfs interface.
-> 
-> Signed-off-by: Rajat Jain <rajatja@google.com>
+[+cc Alex]
 
-Applied with Sinan's reviewed-by to pci/aspm for v4.19, thanks!
+On Tue, Jun 19, 2018 at 06:21:43PM -0400, Sinan Kaya wrote:
+> On 6/19/2018 5:43 PM, Bjorn Helgaas wrote:
+> >> Hotplug driver removes the device from system when a link down interrupt
+> >> is observed and performs re-enumeration when link up interrupt is observed.
+> >>
+> >> This conflicts with what this code is trying to do. Try secondary bus reset
+> >> only if pci_reset_slot() fails/unsupported.
+> > Hi Sinan,
+> > 
+> > We had a bunch of discussion here but not sure we ever reached a
+> > consensus.  It did seem like we'd like to avoid putting hotplug
+> > knowledge in drivers, though.  What do you think the path forward is?
+> > 
+> 
+> There are multiple issues. 
+> 
+> We discussed the need for a retrain API on this thread. However,
+> retrain API may not be enough for this particular usage as the
+> device might need a full link training sequence following firmware
+> load including a hot reset message. I don't think we can remove the
+> bus reset usage in this code.
+> 
+> I'd like to start with a small one to address your comment here.
+> 
+> "I think my concern is that knowledge about this reset/link
+> down/hotplug issue is leaking out and we'll end up with different
+> reset interfaces that may or may not result in hotplug events.  This
+> seems like a confusing API because it's hard to explain which
+> interface a driver should use."
+> 
+> I'm thinking of removing pci_reset_slot() and pci_try_reset_slot()
+> functions as an exported API and fold them into pci_reset_bus() and
+> pci_try_reset_bus() API respectively.
 
-> ---
-> v2: provide function definitions for !CONFIG_PCIEASPM case
+pci_try_reset_slot() and pci_try_reset_bus() are both used by VFIO,
+but I don't see any callers of either pci_reset_slot() or
+pci_reset_bus().
+
+I suspect what happened was that we added pci_reset_slot(), used it
+in VFIO, found a deadlock, added pci_try_reset_slot(), and converted
+VFIO to use pci_try_reset_slot() to fix the deadlock, leaving no
+callers of pci_reset_slot() itself.
+
+  090a3c5322e9 ("PCI: Add pci_reset_slot() and pci_reset_bus()")
+  8b27ee60bfd6 ("vfio-pci: PCI hot reset interface")
+  61cf16d8bd38 ("PCI: Add pci_try_reset_function(), pci_try_reset_slot(), pci_try_reset_bus()")
+  890ed578df82 ("vfio-pci: Use pci "try" reset interface")
+
+I *think* pci_try_reset_slot() is already equivalent to pci_reset_slot()
+except that it returns -EAGAIN if it can't lock the slot.  But if you
+remove pci_reset_slot(), you could rename pci_try_reset_slot() to
+pci_reset_slot().  It doesn't seem like keeping "try" in the function
+name would be necessary.
+
+> This is what happens when you insert a fatal error to a hotplug
+> slot. See multiple link up/down messages.
 > 
->  drivers/pci/pci.h        | 8 ++------
->  drivers/pci/pcie/Kconfig | 8 --------
->  drivers/pci/pcie/aspm.c  | 2 --
->  3 files changed, 2 insertions(+), 16 deletions(-)
+> /_#_[__333.699731]_pcieport_0001:00:00.0:_AER:_Uncorrected_(Fatal)_error_received:_id=0000
+> [  333.748116] pcieport 0001:00:00.0: PCIe Bus Error: severity=Uncorrected (Fatal), type=Transaction Layer, id
+> [  333.816044] pcieport 0001:00:00.0:   device [17cb:0404] error status/mask=00040000/00400000
+> [  333.871581] pcieport 0001:00:00.0:    [18] Malformed TLP          (First)
+> [  333.914675] pcieport 0001:00:00.0:   TLP Header: 40000001 000000ff 00000000 00000000
+> [  333.968397] pciehp 0001:00:00.0:pcie004: Slot(2): Link Down
+> [  334.043234] iommu: Removing device 0001:01:00.4 from group 0
+> [  334.095952] iommu: Removing device 0001:01:00.3 from group 0
+> [  334.144644] iommu: Removing device 0001:01:00.2 from group 0
+> [  334.194653] iommu: Removing device 0001:01:00.1 from group 0
+> [  334.243564] pciehp 0001:00:00.0:pcie004: Slot(2): Link Up
+> [  334.282556] iommu: Removing device 0001:01:00.0 from group 0
+> [  334.330994] pciehp 0001:00:00.0:pcie004: Slot(2): Link Up event queued; currently getting powered off
+> [  334.890587] pciehp 0001:00:00.0:pcie004: Timeout on hotplug command 0x13f1 (issued 282900 msec ago)
+> [  335.070190] pciehp 0001:00:00.0:pcie004: Slot(2): Link Down
+> [  335.106960] pciehp 0001:00:00.0:pcie004: Slot(2): Link Down event queued; currently getting powered on
+> [  335.191119] pcieport 0001:00:00.0: AER: Device recovery failed
+> [  346.590153] pciehp 0001:00:00.0:pcie004: Timeout on hotplug command 0x17f1 (issued 10250 msec ago)
 > 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 023f7cf25bff..b953b2349ca1 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -358,17 +358,13 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev);
->  void pcie_aspm_exit_link_state(struct pci_dev *pdev);
->  void pcie_aspm_pm_state_change(struct pci_dev *pdev);
->  void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
-> +void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev);
-> +void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev);
->  #else
->  static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
->  static inline void pcie_aspm_exit_link_state(struct pci_dev *pdev) { }
->  static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev) { }
->  static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
-> -#endif
-> -
-> -#ifdef CONFIG_PCIEASPM_DEBUG
-> -void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev);
-> -void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev);
-> -#else
->  static inline void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev) { }
->  static inline void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev) { }
->  #endif
-> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-> index b12e28b3d8f9..089b9f559d88 100644
-> --- a/drivers/pci/pcie/Kconfig
-> +++ b/drivers/pci/pcie/Kconfig
-> @@ -46,14 +46,6 @@ config PCIEASPM
->  
->  	  When in doubt, say Y.
->  
-> -config PCIEASPM_DEBUG
-> -	bool "Debug PCI Express ASPM"
-> -	depends on PCIEASPM
-> -	default n
-> -	help
-> -	  This enables PCI Express ASPM debug support. It will add per-device
-> -	  interface to control ASPM.
-> -
->  choice
->  	prompt "Default ASPM policy"
->  	default PCIEASPM_DEFAULT
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index c687c817b47d..8ffc13d42baa 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -1161,7 +1161,6 @@ static int pcie_aspm_get_policy(char *buffer, const struct kernel_param *kp)
->  module_param_call(policy, pcie_aspm_set_policy, pcie_aspm_get_policy,
->  	NULL, 0644);
->  
-> -#ifdef CONFIG_PCIEASPM_DEBUG
->  static ssize_t link_state_show(struct device *dev,
->  		struct device_attribute *attr,
->  		char *buf)
-> @@ -1264,7 +1263,6 @@ void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev)
->  		sysfs_remove_file_from_group(&pdev->dev.kobj,
->  			&dev_attr_clk_ctl.attr, power_group);
->  }
-> -#endif
->  
->  static int __init pcie_aspm_disable(char *str)
->  {
-> -- 
-> 2.17.0.441.gb46fe60e1d-goog
+> As a suggestion:
 > 
+> 1. If the device belongs to a slot, do slot reset. 
+> 2. Otherwise, do bus reset.
+
+I assume this refers to pci_try_reset_slot() and pci_try_reset_bus(),
+which are only used by VFIO in vfio_pci_ioctl() and
+vfio_pci_try_bus_reset().
+
+Both of those callers use pci_probe_reset_slot() to decide whether to
+use pci_try_reset_slot() or pci_try_reset_bus().  If you're suggesting
+to pull that slot/bus distinction into the PCI core somehow, that
+would be fine with me, although VFIO does use the
+pci_probe_reset_slot() result for other purposes in those functions.
+
+> Since Oza's DPC/AER patch to refactor fatal error handling, both
+> hotplug driver and AER/DPC driver will try removing devices and
+> perform enumeration on link events/AER events.
+> 
+> Perfect environment for race condition without a change.
+
+Yeah, this looks like a bit of a mess.  I guess we're getting two
+interrupts (AER interrupt and hotplug interrupt) and we should
+coordinate their handling somehow.  I don't have a proposal.  This
+race could happen independent of the device reset paths, of course.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
