@@ -1,112 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] PCI: move early dump functionality from x86 arch into the
- common code
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-References: <1527654876-26716-1-git-send-email-okaya@codeaurora.org>
- <CAHp75Vc3YKAR1P_F0fwD+ueGub4gVUjP0=wv4Egf_fTSVkSUjw@mail.gmail.com>
+Return-Path: <SRS0=lTuD=JI=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=lTuD=JI=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, sulrich@codeaurora.org, timur@codeaurora.org,
+ Mike Marciniszyn <mike.marciniszyn@intel.com>,
+ "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
+ linux-arm-msm@vger.kernel.org,
+ Dennis Dalessandro <dennis.dalessandro@intel.com>,
+ open list <linux-kernel@vger.kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Doug Ledford <dledford@redhat.com>, linux-arm-kernel@lists.infradead.org,
+ Alex Williamson <alex.williamson@redhat.com>
+References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+ <20180619214346.GD33049@bhelgaas-glaptop.roam.corp.google.com>
+ <2593baec-8a28-a3e7-7ebf-7c21addda0b8@codeaurora.org>
+ <20180622140125.GD108993@bhelgaas-glaptop.roam.corp.google.com>
 From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <53e4d6c3-ee19-fd04-4ba3-862d04558689@codeaurora.org>
-Date: Fri, 1 Jun 2018 11:06:53 -0400
+Message-ID: <98c4531b-0b64-b9e1-ef95-562d1613d893@codeaurora.org>
+Date: Fri, 22 Jun 2018 12:04:02 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAHp75Vc3YKAR1P_F0fwD+ueGub4gVUjP0=wv4Egf_fTSVkSUjw@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- linux-pci@vger.kernel.org, Petr Tesarik <ptesarik@suse.cz>,
- Ram Pai <linuxram@us.ibm.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>,
- "H. Peter Anvin" <hpa@zytor.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- Christoffer Dall <cdall@linaro.org>, Jonathan Corbet <corbet@lwn.net>,
- Timur Tabi <timur@codeaurora.org>,
- "maintainer:X86 ARCHITECTURE \(32-BIT AND 64-BIT\)" <x86@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, David Rientjes <rientjes@google.com>,
- Thymo van Beers <thymovanbeers@gmail.com>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Tom Lendacky <thomas.lendacky@amd.com>,
- Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-arm-msm@vger.kernel.org,
- Frederic Weisbecker <frederic@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Andy Lutomirski <luto@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
- Juergen Gross <jgross@suse.com>, Dou Liyang <douly.fnst@cn.fujitsu.com>,
- Borislav Petkov <bp@suse.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- open list <linux-kernel@vger.kernel.org>,
- Philippe Ombredanne <pombredanne@nexb.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180622140125.GD108993@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/1/2018 11:02 AM, Andy Shevchenko wrote:
-> On Wed, May 30, 2018 at 7:34 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
->> Move early dump functionality into common code so that it is available for
->> all archtiectures. No need to carry arch specific reads around as the read
->> hooks are already initialized by the time pci_setup_device() is getting
->> called during scan.
-> 
->>  /* If set, the PCIe ATS capability will not be used. */
->>  static bool pcie_ats_disabled;
+On 6/22/2018 10:01 AM, Bjorn Helgaas wrote:
+>> Since Oza's DPC/AER patch to refactor fatal error handling, both
+>> hotplug driver and AER/DPC driver will try removing devices and
+>> perform enumeration on link events/AER events.
 >>
->> +bool pci_early_dump;
->> +
-> 
-> I didn't check above these, but maybe a good idea to add one line
-> comment what is this about?
+>> Perfect environment for race condition without a change.
+> Yeah, this looks like a bit of a mess.  I guess we're getting two
+> interrupts (AER interrupt and hotplug interrupt) and we should
+> coordinate their handling somehow.  I don't have a proposal.  This
+> race could happen independent of the device reset paths, of course.
 
-This was discussed here: 
+I was hoping for pci_reset_slot() to avoid this but it turns out
+the root port does not have any slot pointers set on my system even though
+hotplug is enabled. 
 
-https://www.spinics.net/lists/linux-pci/msg72859.html
+Slot pointer is only set for the child objects.
 
-> 
-> 
->>  extern const unsigned char pcie_link_speed[];
->> -
->> +extern bool pci_early_dump;
->>  bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
->>
-> 
-> Hmm... I would rather not attach this line to some function declarations.
+https://patchwork.kernel.org/patch/10351515/
 
-Sure
-
-> 
->> +static void early_dump_pci_device(struct pci_dev *pdev)
->> +{
->> +       u32 value[256 / 4];
->> +       int i;
->> +
->> +       dev_info(&pdev->dev, "pci 0000:%02x:%02x.%d config space:\n",
->> +                pdev->bus->number, PCI_SLOT(pdev->devfn),
->> +                PCI_FUNC(pdev->devfn));
-> 
-> Shouldn't be this changed to pci_info() ?
-
-Yeah, I need to get used to pci_info().
-
-> 
->> +
->> +       for (i = 0; i < 256; i += 4)
->> +               pci_read_config_dword(pdev, i, &value[i / 4]);
->> +
->> +       print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1, value,
->> +                      256, false);
->> +}
-> 
+ * A PCI bus may host multiple slots, each slot may support a reset mechanism
+ * independent of other slots.  For instance, some slots may support slot power
+ * control.  In the case of a 1:1 bus to slot architecture, this function may
+ * wrap the bus reset to avoid spurious slot related events such as hotplug.
+ * Generally a slot reset should be attempted before a bus reset.  All of the
+ * function of the slot and any subordinate buses behind the slot are reset
+ * through this function.  PCI config space of all devices in the slot and
+ * behind the slot is saved before and restored after reset.
 
 
 -- 
 Sinan Kaya
 Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
 Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
