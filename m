@@ -1,123 +1,63 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Don Brace <don.brace@microsemi.com>
-To: Sinan Kaya <okaya@codeaurora.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "ryan@finnie.org" <ryan@finnie.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>
-Subject: RE: [PATCH V4] scsi: hpsa: drop shutdown callback
-Date: Fri, 1 Jun 2018 20:58:09 +0000
-Message-ID: <a46c373b432946ec89fce71d6ef7b5cc@microsemi.com>
-References: <1527860768-11367-1-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1527860768-11367-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:55576 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750937AbeFVFZC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2018 01:25:02 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
- "open list:HEWLETT-PACKARD SMART ARRAY RAID
- DRIVER \(hpsa\)" <linux-scsi@vger.kernel.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- "esc.storagedev" <esc.storagedev@microsemi.com>,
- open list <linux-kernel@vger.kernel.org>,
- "stable@vger.kernel.org" <stable@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 22 Jun 2018 10:55:01 +0530
+From: poza@codeaurora.org
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH 5/7] PCI/DPC: Print AER status in DPC event handling
+In-Reply-To: <20180621140525.GB26623@localhost.localdomain>
+References: <20180620213833.25072-1-keith.busch@intel.com>
+ <20180620213833.25072-5-keith.busch@intel.com>
+ <9cc1594055f03c0e4b4d1b50384107e8@codeaurora.org>
+ <20180621140525.GB26623@localhost.localdomain>
+Message-ID: <20e2c220598d0822ee23c114648be0f7@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Sinan Kaya [mailto:okaya@codeaurora.org]
-> Sent: Friday, June 01, 2018 8:46 AM
-> To: linux-pci@vger.kernel.org; ryan@finnie.org; timur@codeaurora.org
-> Cc: linux-arm-msm@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> Sinan Kaya <okaya@codeaurora.org>; stable@vger.kernel.org; Don Brace
-> <don.brace@microsemi.com>; James E.J. Bottomley
-> <jejb@linux.vnet.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>;
-> esc.storagedev <esc.storagedev@microsemi.com>; open list:HEWLETT-
-> PACKARD SMART ARRAY RAID DRIVER (hpsa) <linux-scsi@vger.kernel.org>; open
-> list <linux-kernel@vger.kernel.org>
-> Subject: [PATCH V4] scsi: hpsa: drop shutdown callback
+On 2018-06-21 19:35, Keith Busch wrote:
+> On Thu, Jun 21, 2018 at 02:46:10PM +0530, poza@codeaurora.org wrote:
+>> On 2018-06-21 03:08, Keith Busch wrote:
+>> > @@ -185,6 +187,10 @@ static void dpc_work(struct work_struct *work)
+>> >  	/* show RP PIO error detail information */
+>> >  	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
+>> >  		dpc_process_rp_pio_error(dpc);
+>> > +	else if (reason == 0 && aer_get_device_error_info(pdev, &info)) {
+>> > +		aer_print_error(pdev, &info);
+>> > +		pci_cleanup_aer_uncorrect_error_status(pdev);
+>> 
+>> 6.2.10 for Downstream Port Containment:
+>> 
+>>   When DPC is triggered due to receipt of an uncorrectable error 
+>> Message,
+>>   the Requester ID from the Message is recorded in the DPC Error
+>>   Source ID register and that Message is discarded and not forwarded
+>>   Upstream. When DPC is triggered by an unmasked uncorrectable error,
+>>   that error will not be signaled with an uncorrectable error Message,
+>>   even if otherwise enabled.
+>> 
+>> Inst the message is discarded and not forwarded to upstream.
+>> which means that we should not find AER status set in RP or Switch.
+>> in other words, at time either we will find DPC or AER triggered but 
+>> not
+>> both at the same time.
+>> then when DPC is triggered why do we need to
+>> pci_cleanup_aer_uncorrect_error_status(pdev); ?
 > 
-> EXTERNAL EMAIL
-> 
-> 
-> 'Commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during
-> shutdown")' has been added to kernel to shutdown pending PCIe port
-> service interrupts during reboot so that a newly started kexec kernel
-> wouldn't observe pending interrupts.
-> 
-> pcie_port_device_remove() is disabling the root port and switches by
-> calling pci_disable_device() after all PCIe service drivers are shutdown.
-> 
-> This has been found to cause crashes on HP DL360 Gen9 machines during
-> reboot due to hpsa driver not clearing the bus master bit during the
-> shutdown procedure by calling pci_disable_device().
-> 
-> Disable device as part of the shutdown sequence.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> According to the sequence diagram in 6.2.5, an uncorrectable error has
+> the cooresponding bits set in the Device Status and AER Uncorrectable
+> Error Status registers before DPC specifics are considered. DPC just
+> suppresses the ERR_[NON]FATAL messages, but the detecting ports AER
+> status, if implemented, should reflect what occured.
 
-Looks good. Thanks for your patch
-Thanks for changing the patch name also.
+Okay, I see. Thanks for clarifying it.
 
-Tested-by: Don Brace <don.brace@microsemi.com>
-Acked-by: Don Brace <don.brace@microsemi.com>
-
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=199779
-> Fixes: cc27b735ad3a ("PCI/portdrv: Turn off PCIe services during shutdown")
-> Cc: stable@vger.kernel.org
-> Reported-by: Ryan Finnie <ryan@finnie.org>
-> ---
->  drivers/scsi/hpsa.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 3a9eca1..b92f86a 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -8869,7 +8869,7 @@ static void hpsa_disable_rld_caching(struct ctlr_info
-> *h)
->         kfree(options);
->  }
-> 
-> -static void hpsa_shutdown(struct pci_dev *pdev)
-> +static void __hpsa_shutdown(struct pci_dev *pdev)
->  {
->         struct ctlr_info *h;
-> 
-> @@ -8884,6 +8884,12 @@ static void hpsa_shutdown(struct pci_dev *pdev)
->         hpsa_disable_interrupt_mode(h);         /* pci_init 2 */
->  }
-> 
-> +static void hpsa_shutdown(struct pci_dev *pdev)
-> +{
-> +       __hpsa_shutdown(pdev);
-> +       pci_disable_device(pdev);
-> +}
-> +
->  static void hpsa_free_device_info(struct ctlr_info *h)
->  {
->         int i;
-> @@ -8927,7 +8933,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
->                 scsi_remove_host(h->scsi_host);         /* init_one 8 */
->         /* includes hpsa_free_irqs - init_one 4 */
->         /* includes hpsa_disable_interrupt_mode - pci_init 2 */
-> -       hpsa_shutdown(pdev);
-> +       __hpsa_shutdown(pdev);
-> 
->         hpsa_free_device_info(h);               /* scan */
-> 
-> --
-> 2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+Oza.
