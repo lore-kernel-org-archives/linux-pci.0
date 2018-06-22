@@ -1,37 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34478 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752166AbeFEWWl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Jun 2018 18:22:41 -0400
-Date: Tue, 5 Jun 2018 17:21:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Oza Pawandeep <poza@codeaurora.org>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 0/2] PCI/AER: Clean up minor logging issues
-Message-ID: <20180605222158.GD226399@bhelgaas-glaptop.roam.corp.google.com>
-References: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v4 2/3] PCI: Allow specifying devices using a base bus and
+ path of devfns
+To: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>
+References: <20180622194315.10475-1-logang@deltatee.com>
+ <20180622194315.10475-3-logang@deltatee.com>
+ <c1278ab2-63a8-19b6-9c8d-fed0b4f94c11@infradead.org>
+ <7e5b459d-f083-286c-bd6c-87cf62cc7541@deltatee.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <f4bbe0f2-1087-c626-7776-a4fb6b5457c8@infradead.org>
+Date: Fri, 22 Jun 2018 14:33:34 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <152770259826.80701.7360032106128917833.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <7e5b459d-f083-286c-bd6c-87cf62cc7541@deltatee.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 30, 2018 at 12:54:10PM -0500, Bjorn Helgaas wrote:
-> AER logging printed the plain 16-bit Requester ID straight out of the TLP,
-> which is hard to interpret, e.g., id=00e4 corresponds to what we normally
-> see as 00:1c.4 in dmesg or lspci.
-> 
-> Also, there's no need to print the vendor/device ID of the root port
-> reporting an error; we can easily find that from dmesg or lspci.
-> 
-> ---
-> 
-> Bjorn Helgaas (2):
->       PCI/AER: Decode Error Source Requester ID
->       PCI/AER: Stop printing vendor/device ID
+On 06/22/2018 01:50 PM, Logan Gunthorpe wrote:
 > 
 > 
->  drivers/pci/pcie/aer/aerdrv_errprint.c |   23 +++++++++++++----------
->  1 file changed, 13 insertions(+), 10 deletions(-)
+> On 22/06/18 02:01 PM, Randy Dunlap wrote:
+>>> Thus, we add an option to specify devices in the following format:
+>>>
+>>> [<domain>:]<bus>:<slot>.<func>[/<slot>.<func>]*
+>>
+>> Please explain the trailing '*'.  I looked thru the code and it doesn't
+>> seem to look for it or care.
+> 
+> This was Willy's suggestion and I liked it. It's similar to regular
+> expression syntax: the '*' indicating you may have any number of the
+> expression repeated in the square brackets.
 
-I applied the first but not the second to pci/aer for v4.18.
+Oh, OK.  I can do that syntax, I just didn't know that this was
+using that notation.
+
+Hopefully admins can read it that way.
+
+-- 
+~Randy
