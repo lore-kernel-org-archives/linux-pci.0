@@ -1,123 +1,107 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 19 Jun 2018 17:13:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH] PCI: Do not enable PASID when End-to-End TLP is not
- supported
-Message-ID: <20180619221359.GG33049@bhelgaas-glaptop.roam.corp.google.com>
-References: <1526748769-701-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:56076 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750950AbeFVF0H (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2018 01:26:07 -0400
 MIME-Version: 1.0
-In-Reply-To: <1526748769-701-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 22 Jun 2018 10:56:06 +0530
+From: poza@codeaurora.org
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH 1/7] PCI/DPC: Leave interrupts enabled while handling
+ event
+In-Reply-To: <20180620213833.25072-1-keith.busch@intel.com>
+References: <20180620213833.25072-1-keith.busch@intel.com>
+Message-ID: <e15b408472f371244c5b50a4c59b5d09@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 19, 2018 at 12:52:49PM -0400, Sinan Kaya wrote:
-> A PCIe endpoint carries the process address space identifier (PASID) in
-> the TLP prefix as part of the memory read/write transaction. The address
-> information in the TLP is relevant only for a given PASID context.
+On 2018-06-21 03:08, Keith Busch wrote:
+> Now that the DPC driver clears the interrupt status before exiting the
+> irq handler, we don't need to abuse the DPC control register to know if
+> a shared interrupt is for a new DPC event: a DPC port can not trigger
+> a second interrupt until the host clears the trigger status later in 
+> the
+> work queue handler.
 > 
-> A translation agent takes PASID value and the address information from the
-> TLP to look up the physical address in the system.
-> 
-> If a bridge drops the TLP prefix, the translation agent can resolve the
-> address to an incorrect location and cause data corruption. Prevent
-> this condition by requiring End-to-End TLP prefix to be supported on the
-> entire data path between the endpoint and the root port.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 > ---
->  drivers/pci/ats.c             | 16 ++++++++++++++++
->  include/uapi/linux/pci_regs.h |  1 +
->  2 files changed, 17 insertions(+)
+>  drivers/pci/pcie/dpc.c | 23 +++++------------------
+>  1 file changed, 5 insertions(+), 18 deletions(-)
 > 
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index 89305b5..0bcded5 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -265,7 +265,9 @@ EXPORT_SYMBOL_GPL(pci_reset_pri);
->  int pci_enable_pasid(struct pci_dev *pdev, int features)
->  {
->  	u16 control, supported;
-> +	struct pci_dev *bridge;
->  	int pos;
-> +	u32 cap;
->  
->  	if (WARN_ON(pdev->pasid_enabled))
->  		return -EBUSY;
-> @@ -274,6 +276,20 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
->  	if (!pos)
->  		return -EINVAL;
->  
-> +	bridge = pci_upstream_bridge(pdev);
-> +	while (bridge) {
-> +		if (!pci_find_capability(bridge, PCI_CAP_ID_EXP))
-> +			return -EINVAL;
-> +
-> +		if (pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap))
-> +			return -EINVAL;
-> +
-> +		if (!(cap & PCI_EXP_DEVCAP2_E2ETLP))
-> +			return -EINVAL;
-> +
-> +		bridge = pci_upstream_bridge(bridge);
-> +	}
-
-Hi Sinan,
-
-Would you consider implementing this in the style of c46fd358070f
-("PCI/ASPM: Enable Latency Tolerance Reporting when supported"), i.e.,
-add a bit in struct pci_dev so we don't have to search up the tree and
-re-lookup the PCIe capability several times for the endpoints of the
-hierarchy?
-
-This loop looks much like the one in pci_enable_atomic_ops_to_root()
-but doesn't use exactly the same iteration.
-
-Maybe we should someday collect up and combine all the places that
-read the capability registers so we don't have to read them multiple
-times?  Not sure if that would make readability better or worse -- it
-would add a second place to look at, while with this patch, everything
-is all in one place.
-
-> +
->  	pci_read_config_word(pdev, pos + PCI_PASID_CAP, &supported);
->  	supported &= PCI_PASID_CAP_EXEC | PCI_PASID_CAP_PRIV;
->  
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 103ba79..d91dea5 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -634,6 +634,7 @@
->  #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
->  #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
->  #define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x00080000 /* Re-use WAKE# for OBFF */
-> +#define PCI_EXP_DEVCAP2_E2ETLP		0x00200000 /* End-to-End TLP Prefix */
->  #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
->  #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout Value */
->  #define  PCI_EXP_DEVCTL2_COMP_TMOUT_DIS	0x0010	/* Completion Timeout Disable */
-> -- 
-> 2.7.4
+> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> index 921ed979109d..972aac892846 100644
+> --- a/drivers/pci/pcie/dpc.c
+> +++ b/drivers/pci/pcie/dpc.c
+> @@ -77,7 +77,7 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev 
+> *pdev)
+>  	struct dpc_dev *dpc;
+>  	struct pcie_device *pciedev;
+>  	struct device *devdpc;
+> -	u16 cap, ctl;
+> +	u16 cap;
 > 
+>  	/*
+>  	 * DPC disables the Link automatically in hardware, so it has
+> @@ -105,10 +105,6 @@ static pci_ers_result_t dpc_reset_link(struct
+> pci_dev *pdev)
+>  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+>  			      PCI_EXP_DPC_STATUS_TRIGGER);
 > 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> -	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+> -	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+> -			      ctl | PCI_EXP_DPC_CTL_INT_EN);
+> -
+>  	return PCI_ERS_RESULT_RECOVERED;
+>  }
+> 
+> @@ -183,16 +179,11 @@ static irqreturn_t dpc_irq(int irq, void 
+> *context)
+>  	struct dpc_dev *dpc = (struct dpc_dev *)context;
+>  	struct pci_dev *pdev = dpc->dev->port;
+>  	struct device *dev = &dpc->dev->device;
+> -	u16 cap = dpc->cap_pos, ctl, status, source, reason, ext_reason;
+> -
+> -	pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+> -
+> -	if (!(ctl & PCI_EXP_DPC_CTL_INT_EN) || ctl == (u16)(~0))
+> -		return IRQ_NONE;
+> +	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
+> 
+>  	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+> 
+> -	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT))
+> +	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT) || status == (u16)(~0))
+>  		return IRQ_NONE;
+> 
+>  	if (!(status & PCI_EXP_DPC_STATUS_TRIGGER)) {
+> @@ -201,9 +192,6 @@ static irqreturn_t dpc_irq(int irq, void *context)
+>  		return IRQ_HANDLED;
+>  	}
+> 
+> -	pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+> -			      ctl & ~PCI_EXP_DPC_CTL_INT_EN);
+> -
+>  	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID,
+>  			     &source);
+> 
+> @@ -226,9 +214,8 @@ static irqreturn_t dpc_irq(int irq, void *context)
+> 
+>  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+>  			      PCI_EXP_DPC_STATUS_INTERRUPT);
+> -
+> -	schedule_work(&dpc->work);
+> -
+> +	if (status & PCI_EXP_DPC_STATUS_TRIGGER)
+> +		schedule_work(&dpc->work);
+>  	return IRQ_HANDLED;
+>  }
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+
+Reviewed-by: Oza Pawandeep <poza@codeaurora.org>
+<For whole series>
