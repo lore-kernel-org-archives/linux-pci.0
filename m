@@ -1,113 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp21.cstnet.cn ([159.226.251.21]:44116 "EHLO cstnet.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753247AbeFINaV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 9 Jun 2018 09:30:21 -0400
-From: Pu Wen <puwen@hygon.cn>
-To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-        x86@kernel.org, tony.luck@intel.com, bp@alien8.de,
-        zhangpanyong@hygon.cn
-Cc: thomas.lendacky@amd.com, peterz@infradead.org, pbonzini@redhat.com,
-        rkrcmar@redhat.com, boris.ostrovsky@oracle.com, jgross@suse.com,
-        rjw@rjwysocki.net, lenb@kernel.org, viresh.kumar@linaro.org,
-        mchehab@kernel.org, trenn@suse.com, shuah@kernel.org,
-        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-x86_64@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-edac@vger.kernel.org,
-        linux-pm@vger.kernel.org, kvm@vger.kernel.org,
-        xen-devel@lists.xenproject.org, Pu Wen <puwen@hygon.cn>
-Subject: [PATCH 05/11] x86/mce: Add support for Hygon's Dhyana Family 18h processor
-Date: Sat,  9 Jun 2018 21:23:03 +0800
-Message-Id: <1528550583-28307-1-git-send-email-puwen@hygon.cn>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=wsFM=JI=huawei.com=jonathan.cameron@kernel.org>
+Return-Path: <SRS0=wsFM=JI=huawei.com=jonathan.cameron@kernel.org>
+Date: Fri, 22 Jun 2018 18:42:23 +0100
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Punit Agrawal <punit.agrawal@arm.com>
+CC: Michal Hocko <mhocko@kernel.org>, Lorenzo Pieralisi
+	<lorenzo.pieralisi@arm.com>, Catalin Marinas <catalin.marinas@arm.com>,
+	<tnowicki@caviumnetworks.com>, Xie XiuQi <xiexiuqi@huawei.com>,
+	<linux-pci@vger.kernel.org>, "Rafael J. Wysocki"
+	<rafael.j.wysocki@intel.com>, Will Deacon <will.deacon@arm.com>, "Linux
+ Kernel Mailing List" <linux-kernel@vger.kernel.org>, Jarkko Sakkinen
+	<jarkko.sakkinen@linux.intel.com>, <linux-mm@kvack.org>, Greg Kroah-Hartman
+	<gregkh@linuxfoundation.org>, Bjorn Helgaas <helgaas@kernel.org>, linux-arm
+	<linux-arm-kernel@lists.infradead.org>, Hanjun Guo <guohanjun@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Andrew Morton
+	<akpm@linux-foundation.org>, zhongjiang <zhongjiang@huawei.com>,
+	<wanghuiqiang@huawei.com>
+Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
+Message-ID: <20180622184223.00007bc3@huawei.com>
+In-Reply-To: <87y3f7yv89.fsf@e105922-lin.cambridge.arm.com>
+References: <20180619120714.GE13685@dhcp22.suse.cz>
+	<874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
+	<20180619140818.GA16927@e107981-ln.cambridge.arm.com>
+	<87wouu3jz1.fsf@e105922-lin.cambridge.arm.com>
+	<20180619151425.GH13685@dhcp22.suse.cz>
+	<87r2l23i2b.fsf@e105922-lin.cambridge.arm.com>
+	<20180619163256.GA18952@e107981-ln.cambridge.arm.com>
+	<814205eb-ae86-a519-bed0-f09b8e2d3a02@huawei.com>
+	<87602d3ccl.fsf@e105922-lin.cambridge.arm.com>
+	<5c083c9c-473f-f504-848b-48506d0fd380@huawei.com>
+	<20180622091153.GU10465@dhcp22.suse.cz>
+	<87y3f7yv89.fsf@e105922-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch enables the X86 MCE infrastructure support to Hygon
-Family 18h CPU:
-- It enable Hygon check in __mcheck_cpu_init_early(), print_mce()
-  and mce_usable_address() etc.
+On Fri, 22 Jun 2018 11:24:38 +0100
+Punit Agrawal <punit.agrawal@arm.com> wrote:
 
-Signed-off-by: Pu Wen <puwen@hygon.cn>
----
- arch/x86/kernel/cpu/mcheck/mce-severity.c |  3 ++-
- arch/x86/kernel/cpu/mcheck/mce.c          | 16 ++++++++++++----
- 2 files changed, 14 insertions(+), 5 deletions(-)
+> Michal Hocko <mhocko@kernel.org> writes:
+> 
+> > On Fri 22-06-18 16:58:05, Hanjun Guo wrote:  
+> >> On 2018/6/20 19:51, Punit Agrawal wrote:  
+> >> > Xie XiuQi <xiexiuqi@huawei.com> writes:
+> >> >   
+> >> >> Hi Lorenzo, Punit,
+> >> >>
+> >> >>
+> >> >> On 2018/6/20 0:32, Lorenzo Pieralisi wrote:  
+> >> >>> On Tue, Jun 19, 2018 at 04:35:40PM +0100, Punit Agrawal wrote:  
+> >> >>>> Michal Hocko <mhocko@kernel.org> writes:
+> >> >>>>  
+> >> >>>>> On Tue 19-06-18 15:54:26, Punit Agrawal wrote:
+> >> >>>>> [...]  
+> >> >>>>>> In terms of $SUBJECT, I wonder if it's worth taking the original patch
+> >> >>>>>> as a temporary fix (it'll also be easier to backport) while we work on
+> >> >>>>>> fixing these other issues and enabling memoryless nodes.  
+> >> >>>>>
+> >> >>>>> Well, x86 already does that but copying this antipatern is not really
+> >> >>>>> nice. So it is good as a quick fix but it would be definitely much
+> >> >>>>> better to have a robust fix. Who knows how many other places might hit
+> >> >>>>> this. You certainly do not want to add a hack like this all over...  
+> >> >>>>
+> >> >>>> Completely agree! I was only suggesting it as a temporary measure,
+> >> >>>> especially as it looked like a proper fix might be invasive.
+> >> >>>>
+> >> >>>> Another fix might be to change the node specific allocation to node
+> >> >>>> agnostic allocations. It isn't clear why the allocation is being
+> >> >>>> requested from a specific node. I think Lorenzo suggested this in one of
+> >> >>>> the threads.  
+> >> >>>
+> >> >>> I think that code was just copypasted but it is better to fix the
+> >> >>> underlying issue.
+> >> >>>  
+> >> >>>> I've started putting together a set fixing the issues identified in this
+> >> >>>> thread. It should give a better idea on the best course of action.  
+> >> >>>
+> >> >>> On ACPI ARM64, this diff should do if I read the code correctly, it
+> >> >>> should be (famous last words) just a matter of mapping PXMs to nodes for
+> >> >>> every SRAT GICC entry, feel free to pick it up if it works.
+> >> >>>
+> >> >>> Yes, we can take the original patch just because it is safer for an -rc
+> >> >>> cycle even though if the patch below would do delaying the fix for a
+> >> >>> couple of -rc (to get it tested across ACPI ARM64 NUMA platforms) is
+> >> >>> not a disaster.  
+> >> >>
+> >> >> I tested this patch on my arm board, it works.  
+> >> > 
+> >> > I am assuming you tried the patch without enabling support for
+> >> > memory-less nodes.
+> >> > 
+> >> > The patch de-couples the onlining of numa nodes (as parsed from SRAT)
+> >> > from NR_CPUS restriction. When it comes to building zonelists, the node
+> >> > referenced by the PCI controller also has zonelists initialised.
+> >> > 
+> >> > So it looks like a fallback node is setup even if we don't have
+> >> > memory-less nodes enabled. I need to stare some more at the code to see
+> >> > why we need memory-less nodes at all then ...  
+> >> 
+> >> Yes, please. From my limited MM knowledge, zonelists should not be
+> >> initialised if no CPU and no memory on this node, correct me if I'm
+> >> wrong.  
+> >
+> > Well, as long as there is a code which can explicitly ask for a specific
+> > node than it is safer to have zonelists configured. Otherwise you just
+> > force callers to add hacks and figure out the proper placement there.
+> > Zonelists should be cheep to configure for all possible nodes. It's not
+> > like we are talking about huge amount of resources.  
+> 
+> I agree. The current problem stems from not configuring the zonelists
+> for nodes that don't have onlined cpu and memory. Lorenzo's patch fixes
+> the configuration of such nodes.
+> 
+> For allocation requests targeting memory-less nodes, the allocator will
+> take the slow path and fall back to one of the other nodes based on the
+> zonelists.
+> 
+> I'm not sure how common such allocations are but I'll work on enabling
+> CONFIG_HAVE_MEMORYLESS_NODES on top of Lorenzo's patch. AIUI, this
+> config improves the fallback mechanism by starting the search from a
+> near-by node with memory.
 
-diff --git a/arch/x86/kernel/cpu/mcheck/mce-severity.c b/arch/x86/kernel/cpu/mcheck/mce-severity.c
-index 5bbd06f..610b5ff 100644
---- a/arch/x86/kernel/cpu/mcheck/mce-severity.c
-+++ b/arch/x86/kernel/cpu/mcheck/mce-severity.c
-@@ -331,7 +331,8 @@ int (*mce_severity)(struct mce *m, int tolerant, char **msg, bool is_excp) =
- 
- void __init mcheck_vendor_init_severity(void)
- {
--	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD)
-+	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD ||
-+	    boot_cpu_data.x86_vendor == X86_VENDOR_HYGON)
- 		mce_severity = mce_severity_amd;
- }
- 
-diff --git a/arch/x86/kernel/cpu/mcheck/mce.c b/arch/x86/kernel/cpu/mcheck/mce.c
-index 42cf288..4711225 100644
---- a/arch/x86/kernel/cpu/mcheck/mce.c
-+++ b/arch/x86/kernel/cpu/mcheck/mce.c
-@@ -274,7 +274,8 @@ static void print_mce(struct mce *m)
- {
- 	__print_mce(m);
- 
--	if (m->cpuvendor != X86_VENDOR_AMD)
-+	if (m->cpuvendor != X86_VENDOR_AMD &&
-+	    m->cpuvendor != X86_VENDOR_HYGON)
- 		pr_emerg_ratelimited(HW_ERR "Run the above through 'mcelog --ascii'\n");
- }
- 
-@@ -512,7 +513,8 @@ static int mce_usable_address(struct mce *m)
- 
- bool mce_is_memory_error(struct mce *m)
- {
--	if (m->cpuvendor == X86_VENDOR_AMD) {
-+	if (m->cpuvendor == X86_VENDOR_AMD ||
-+	    m->cpuvendor == X86_VENDOR_HYGON) {
- 		return amd_mce_is_memory_error(m);
- 
- 	} else if (m->cpuvendor == X86_VENDOR_INTEL) {
-@@ -543,6 +545,9 @@ static bool mce_is_correctable(struct mce *m)
- 	if (m->cpuvendor == X86_VENDOR_AMD && m->status & MCI_STATUS_DEFERRED)
- 		return false;
- 
-+	if (m->cpuvendor == X86_VENDOR_HYGON && m->status & MCI_STATUS_DEFERRED)
-+		return false;
-+
- 	if (m->status & MCI_STATUS_UC)
- 		return false;
- 
-@@ -1713,7 +1718,8 @@ static int __mcheck_cpu_ancient_init(struct cpuinfo_x86 *c)
-  */
- static void __mcheck_cpu_init_early(struct cpuinfo_x86 *c)
- {
--	if (c->x86_vendor == X86_VENDOR_AMD) {
-+	if (c->x86_vendor == X86_VENDOR_AMD ||
-+	    c->x86_vendor == X86_VENDOR_HYGON) {
- 		mce_flags.overflow_recov = !!cpu_has(c, X86_FEATURE_OVERFLOW_RECOV);
- 		mce_flags.succor	 = !!cpu_has(c, X86_FEATURE_SUCCOR);
- 		mce_flags.smca		 = !!cpu_has(c, X86_FEATURE_SMCA);
-@@ -1735,6 +1741,7 @@ static void __mcheck_cpu_init_vendor(struct cpuinfo_x86 *c)
- 		mce_adjust_timer = cmci_intel_adjust_timer;
- 		break;
- 
-+	case X86_VENDOR_HYGON:
- 	case X86_VENDOR_AMD: {
- 		mce_amd_feature_init(c);
- 		break;
-@@ -1967,7 +1974,8 @@ static void vendor_disable_error_reporting(void)
- 	 * last level cache (LLC), the integrated memory controller (iMC), etc.
- 	 */
- 	if (boot_cpu_data.x86_vendor == X86_VENDOR_INTEL ||
--	    boot_cpu_data.x86_vendor == X86_VENDOR_AMD)
-+	    boot_cpu_data.x86_vendor == X86_VENDOR_AMD ||
-+	    boot_cpu_data.x86_vendor == X86_VENDOR_HYGON)
- 		return;
- 
- 	mce_disable_error_reporting();
--- 
-2.7.4
+I'll test it when back in the office, but I had a similar issue with
+memory only nodes when I moved the SRAT listing for cpus from the 4
+4th mode to the 3rd node to fake some memory I could hot unplug.
+This gave a memory only node for the last node on the system.
+
+When I instead moved cpus from the 3rd node to the 4th (so the node
+with only memory was now in the middle, everything worked).
+
+Was odd, and I'd been meaning to chase it down but hadn't gotten to it
+yet.  If I get time I'll put together some test firmwares as see if there
+are any other nasty corner cases we aren't handling.
+
+Jonathan
+
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
