@@ -1,74 +1,45 @@
-Return-Path: <SRS0=bgEo=IZ=mobiveil.co.in=l.subrahmanya@kernel.org>
-Return-Path: <SRS0=bgEo=IZ=mobiveil.co.in=l.subrahmanya@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20180606125025.GA100923@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAFZiPx29KrKGDJiQ8huTpuVb7tMn=wjMWAvJEZaBiV7eSXYMSQ@mail.gmail.com>
- <20180606125025.GA100923@bhelgaas-glaptop.roam.corp.google.com>
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date: Thu, 7 Jun 2018 15:45:08 +0530
-Message-ID: <CAFZiPx0UUB25kOgSNzUruNLom4=F5y==QbF_Q2g1uPA7csGOHA@mail.gmail.com>
-Subject: Re: pci_error_handlers for pci_host_bridge ?
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:39608 "EHLO
+        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751649AbeFVJ6V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2018 05:58:21 -0400
+From: Oza Pawandeep <poza@codeaurora.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Cc: Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH v2 5/6] PCI/AER: Fix correctable status bits clearing in device register
+Date: Fri, 22 Jun 2018 05:58:13 -0400
+Message-Id: <1529661494-20936-6-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
+References: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+In case of correctable error Device Status Register sets
+Correctable Error Detected, which should be cleared after handling
+the error
 
-On Wed, Jun 6, 2018 at 6:20 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> Hi Subrahmanya,
->
-> On Wed, Jun 06, 2018 at 05:57:17PM +0530, Subrahmanya Lingappa wrote:
->> Hi,
->> according to https://github.com/torvalds/linux/blob/master/Documentation/PCI/pci-error-recovery.txt
->>
->> as part of AER handling, struct pci_error_handlers{} is implemented by
->> endpoint drivers to handle device specific recovery steps for "struct
->> pci_driver".
->>
->> But we have a platform_driver which implements "struct
->> pci_host_bridge" which also supports AER capability how can we support
->> pci_error_handlers() for the host bridge drivers ?
->
-> I assume you're referring to Mobiveil.  Can you explain more of the
-> topology here?  Can you also include "sudo lspci -vv" output?
->
-Yes, it is for Mobiveil's Host bridge driver :
-https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/drivers/pci/host/pcie-mobiveil.c
-lspci output is now is not available, I'll try to get it sooner.
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 
-we have an endpoint connected directly to Rootport as follows
-RC Rootport ----->BUS------> EP
-
-> The AER capability is an optional capability of PCIe device functions.
-> A host bridge is not itself a PCIe function; it's a bridge between a
-> platform-specific host bus and the PCIe bus.
->
-> Sometimes there is a PCI function that corresponds to the host bridge,
-> but that's not required by the PCI specs and there is no generic
-> programming model for it.
->
-> If you have an PCIe function corresponding to the Mobiveil host
-> bridge, and it has an AER capability, what would you want the error
-> handlers to do?  This function would not normally be a Root Port or
-> other type 1 PCI-to-PCI bridge device, so it's not clear how its AER
-> would integrate with the PCIe hierarchy.
->
-Yes we do have a PCI function with AER capability, after an AER reported by EP,
-AER driver initiates an hot_reset on subordinate bus, which happens to
-be downstream port
-for RC. So we get a downstream port link down happens in this case RC
-driver needs to follow
-a specific register restore sequence, which is most of the HW specific
-initialization done in probe function of the driver  to recover
-properly.
-I was wondering if this can be handled by using AER error handlers, or
-would suggest a better way to handle this ?
-
-As of now plan is to handle this situation is by calling a minimal
-probe recovery sequence after link down interrupt within the
-driver interrupt service routine.
-
-> Bjorn
-
-Thanks,
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index d2d6868..a42b071 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -818,6 +818,7 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
+ 		if (pos)
+ 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+ 					info->status);
++		pci_cleanup_aer_error_device_status(dev);
+ 	} else if (info->severity == AER_NONFATAL)
+ 		pcie_do_nonfatal_recovery(dev);
+ 	else if (info->severity == AER_FATAL)
+-- 
+2.7.4
