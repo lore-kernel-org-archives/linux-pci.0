@@ -1,63 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:35054 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752077AbeFLJ6J (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2018 05:58:09 -0400
-From: Kai-Heng Feng <kai.heng.feng@canonical.com>
-To: davem@davemloft.net
-Cc: ryankao@realtek.com, hayeswang@realtek.com, hau@realtek.com,
-        hkallweit1@gmail.com, romieu@fr.zoreil.com, bhelgaas@google.com,
-        netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>
-Subject: [PATCH 1/2] r8169: Don't disable ASPM in the driver
-Date: Tue, 12 Jun 2018 17:57:58 +0800
-Message-Id: <20180612095759.6828-1-kai.heng.feng@canonical.com>
+Received: from ale.deltatee.com ([207.54.116.67]:46818 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934111AbeFVTnY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Jun 2018 15:43:24 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 22 Jun 2018 13:43:12 -0600
+Message-Id: <20180622194315.10475-1-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v4 0/3] Add parameter for disabling ACS redirection for P2P
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable or disable ASPM should be done in PCI core instead of in the
-device driver.
+Hi,
 
-Commit ba04c7c93bbc ("r8169: disable ASPM") uses
-pci_disable_link_state() to disable ASPM. This is incorrect, if the
-device really needs to disable ASPM, we should use a quirk in PCI core
-to prevent the PCI core from setting ASPM altogether.
+As discussed in our PCI P2PDMA series, we'd like to add a kernel
+parameter for selectively disabling ACS redirection for select
+bridges. Seeing this turned out to be a small series in itself, we've
+decided to send this separately from the P2P work.
 
-Let's remove pci_disable_link_state() for now. Use PCI core quirks if
-any regression happens.
+This series generalizes the code already done for the resource_alignment
+option that already exists. The first patch creates a helper function
+to match PCI devices against strings based on the code that already
+existed in pci_specified_resource_alignment().
 
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
----
-v2:
-- Remove module parameter.
-- Remove pci_disable_link_state().
+The second patch expands the new helper to optionally take a path of
+PCI devfns. This is to address Alex's renumbering concern when using
+simple bus-devfns. The implementation is essentially how he described it and
+similar to the Intel VT-d spec (Section 8.3.1).
 
- drivers/net/ethernet/realtek/r8169.c | 5 -----
- 1 file changed, 5 deletions(-)
+The final patch adds the disable_acs_redir kernel parameter which takes
+a list of PCI devices and will disable the ACS P2P Request Redirect,
+ACS P2P Completion Redirect and ACS P2P Egress Control bits for the
+selected devices. This allows P2P traffic between selected bridges and
+seeing it's done at boot, before IOMMU group creating the IOMMU groups
+will be created correctly based on the bits.
 
-diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
-index 75dfac0248f4..9b55ce513a36 100644
---- a/drivers/net/ethernet/realtek/r8169.c
-+++ b/drivers/net/ethernet/realtek/r8169.c
-@@ -25,7 +25,6 @@
- #include <linux/dma-mapping.h>
- #include <linux/pm_runtime.h>
- #include <linux/firmware.h>
--#include <linux/pci-aspm.h>
- #include <linux/prefetch.h>
- #include <linux/ipv6.h>
- #include <net/ip6_checksum.h>
-@@ -7647,10 +7646,6 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	mii->reg_num_mask = 0x1f;
- 	mii->supports_gmii = cfg->has_gmii;
- 
--	/* disable ASPM completely as that cause random device stop working
--	 * problems as well as full system hangs for some PCIe devices users */
--	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
--				     PCIE_LINK_STATE_CLKPM);
- 
- 	/* enable device (incl. PCI PM wakeup and hotplug setup) */
- 	rc = pcim_enable_device(pdev);
--- 
-2.17.0
+Thanks,
+
+Logan
+
+--
+
+Changes since v3:
+* Removed some of the cruft that was copied from the resource_alignment
+  paramater (per Alex)
+* A number of docuemntation fixes as noticed by Alex and Willy
+
+Changes since v2:
+* Rebased onto v4.18-rc1 (no conflicts)
+* Minor tweaks to the documentation per Andy
+* Removed the "path:" prefix and use the path parsing code
+  for simple devices (as it works the same). Per a suggestion from Alex
+
+Changes since v1:
+
+* Reworked pci_dev_str_match_path using strrchr as suggested by Alex
+* Collected Christian's Acks
+
+--
+
+Logan Gunthorpe (3):
+  PCI: Make specifying PCI devices in kernel parameters reusable
+  PCI: Allow specifying devices using a base bus and path of devfns
+  PCI: Introduce the disable_acs_redir parameter
+
+ Documentation/admin-guide/kernel-parameters.txt |  41 +++-
+ drivers/pci/pci.c                               | 305 +++++++++++++++++++-----
+ 2 files changed, 285 insertions(+), 61 deletions(-)
+
+--
+2.11.0
