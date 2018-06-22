@@ -1,76 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:50589 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751422AbeFTLBm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2018 07:01:42 -0400
-Date: Wed, 20 Jun 2018 13:01:40 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-        "Raj, Ashok" <ashok.raj@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
-        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-        Xiongfeng Wang <xiongfeng.wang@linaro.com>
-Subject: Re: [PATCH 09/32] PCI: pciehp: Convert to threaded IRQ
-Message-ID: <20180620110140.GA8724@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
- <b65b18957cec018dec5c1f1c3de0e2e47b46b265.1529173804.git.lukas@wunner.de>
- <20180619231646.GA22648@localhost.localdomain>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38444 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933440AbeFVKLv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2018 06:11:51 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180619231646.GA22648@localhost.localdomain>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 22 Jun 2018 15:41:50 +0530
+From: poza@codeaurora.org
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH 5/7] PCI/DPC: Print AER status in DPC event handling
+In-Reply-To: <20180621140525.GB26623@localhost.localdomain>
+References: <20180620213833.25072-1-keith.busch@intel.com>
+ <20180620213833.25072-5-keith.busch@intel.com>
+ <9cc1594055f03c0e4b4d1b50384107e8@codeaurora.org>
+ <20180621140525.GB26623@localhost.localdomain>
+Message-ID: <f25c5f839166d0f94fc8a1b6def2fe14@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Xiongfeng Wang]
-
-On Tue, Jun 19, 2018 at 05:16:46PM -0600, Keith Busch wrote:
-> I am a little concered about what may happen if we need to remove the
-> bridge while its irq thread is running. The task removing the bridge
-> is holding the pci_rescan_remove_lock so when it tries to free the
-> bridge IRQ, the IRQ subsystem may not be able to progress because the
-> action->thread may be waiting to take the same lock.
+On 2018-06-21 19:35, Keith Busch wrote:
+> On Thu, Jun 21, 2018 at 02:46:10PM +0530, poza@codeaurora.org wrote:
+>> On 2018-06-21 03:08, Keith Busch wrote:
+>> > @@ -185,6 +187,10 @@ static void dpc_work(struct work_struct *work)
+>> >  	/* show RP PIO error detail information */
+>> >  	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
+>> >  		dpc_process_rp_pio_error(dpc);
+>> > +	else if (reason == 0 && aer_get_device_error_info(pdev, &info)) {
+>> > +		aer_print_error(pdev, &info);
+>> > +		pci_cleanup_aer_uncorrect_error_status(pdev);
+>> 
+>> 6.2.10 for Downstream Port Containment:
+>> 
+>>   When DPC is triggered due to receipt of an uncorrectable error 
+>> Message,
+>>   the Requester ID from the Message is recorded in the DPC Error
+>>   Source ID register and that Message is discarded and not forwarded
+>>   Upstream. When DPC is triggered by an unmasked uncorrectable error,
+>>   that error will not be signaled with an uncorrectable error Message,
+>>   even if otherwise enabled.
+>> 
+>> Inst the message is discarded and not forwarded to upstream.
+>> which means that we should not find AER status set in RP or Switch.
+>> in other words, at time either we will find DPC or AER triggered but 
+>> not
+>> both at the same time.
+>> then when DPC is triggered why do we need to
+>> pci_cleanup_aer_uncorrect_error_status(pdev); ?
 > 
-> It actually looks like the same deadlock already exists in the current
-> implementation when it takes down its workqueue, but it's a lot harder to
-> follow all the different work tasks before this clean-up. Maybe removing
-> bridges isn't very common, but it's just something I noticed.
+> According to the sequence diagram in 6.2.5, an uncorrectable error has
+> the cooresponding bits set in the Device Status and AER Uncorrectable
+> Error Status registers before DPC specifics are considered. DPC just
+> suppresses the ERR_[NON]FATAL messages, but the detecting ports AER
+> status, if implemented, should reflect what occured.
 
-In patch [03/32], "PCI: pciehp: Fix deadlock on unplug", I've fixed
-this deadlock in case the lock is contended by two pciehp instances.
+Hi Keith,
 
-But when browsing patchwork yesterday, I came across Xiongfeng Wang's
-patch "pciehp: fix a race between pciehp and removing operations by sysfs".
-It deals with the same deadlock, but the contenders for the lock are a
-pciehp instance and a sysfs "remove" request:
-https://patchwork.ozlabs.org/patch/877835/
+was thinking that current code
+pcie_do_fatal_recovery already does call
 
-We need a generic solution which works regardless of the contenders'
-type, so I'm withdrawing patch [03/32] and I'll try to come up with
-something better.
+if ((service == PCIE_PORT_SERVICE_AER) &&
+	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
+		/*
+		 * If the error is reported by a bridge, we think this error
+		 * is related to the downstream link of the bridge, so we
+		 * do error recovery on all subordinates of the bridge instead
+		 * of the bridge and clear the error status of the bridge.
+		 */
+		pci_cleanup_aer_uncorrect_error_status(dev);
+	}
 
-It seems this is about the hierarchy, we need to prevent that the lock
-is acquired to remove a device which is a child of another device which
-is already being removed, wherefore the lock is currently held.  An idea
-would be to change the API such that a struct pci_dev pointer is passed
-in to pci_lock_rescan_remove().  That's the device being removed and
-for which the lock is handed out.  If the lock is requested for a child,
-the request is denied.  The invocation would thus look like this:
 
- void pci_stop_and_remove_bus_device_locked(struct pci_dev *dev)
- {
--	pci_lock_rescan_remove();
-+	if (!pci_trylock_rescan_remove(dev));
-+		return;
- 	pci_stop_and_remove_bus_device(dev);
- 	pci_unlock_rescan_remove();
- }
+instead of calling it here in dpc driver, can we make use of that 
+existing call ?
+probably we just might need to remove
+if ((service == PCIE_PORT_SERVICE_AER) condition
 
-Thoughts?
-
-Lukas
+Regards,
+Oza.
