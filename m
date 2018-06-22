@@ -1,42 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59518 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933097AbeFTV7i (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2018 17:59:38 -0400
-Subject: Re: [PATCH 1/7] PCI/DPC: Leave interrupts enabled while handling
- event
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Oza Pawandeep <poza@codeaurora.org>
-References: <20180620213833.25072-1-keith.busch@intel.com>
- <801facdf-dbdf-12c1-c470-a97db065b232@codeaurora.org>
- <20180620215442.GA25124@localhost.localdomain>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <b7a6d420-342b-0ad2-444f-35f4529d941d@codeaurora.org>
-Date: Wed, 20 Jun 2018 17:59:36 -0400
+Return-Path: <SRS0=gGG6=JI=arm.com=punit.agrawal@kernel.org>
+Return-Path: <SRS0=gGG6=JI=arm.com=punit.agrawal@kernel.org>
+From: Punit Agrawal <punit.agrawal@arm.com>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Hanjun Guo <guohanjun@huawei.com>,  Xie XiuQi <xiexiuqi@huawei.com>,  Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,  Bjorn Helgaas <helgaas@kernel.org>,  <tnowicki@caviumnetworks.com>,  <linux-pci@vger.kernel.org>,  Catalin Marinas <catalin.marinas@arm.com>,  "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,  Will Deacon <will.deacon@arm.com>,  Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,  Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,  <linux-mm@kvack.org>,  <wanghuiqiang@huawei.com>,  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,  Bjorn Helgaas <bhelgaas@google.com>,  Andrew Morton <akpm@linux-foundation.org>,  zhongjiang <zhongjiang@huawei.com>,  linux-arm <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
+References: <20180619120714.GE13685@dhcp22.suse.cz>
+	<874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
+	<20180619140818.GA16927@e107981-ln.cambridge.arm.com>
+	<87wouu3jz1.fsf@e105922-lin.cambridge.arm.com>
+	<20180619151425.GH13685@dhcp22.suse.cz>
+	<87r2l23i2b.fsf@e105922-lin.cambridge.arm.com>
+	<20180619163256.GA18952@e107981-ln.cambridge.arm.com>
+	<814205eb-ae86-a519-bed0-f09b8e2d3a02@huawei.com>
+	<87602d3ccl.fsf@e105922-lin.cambridge.arm.com>
+	<5c083c9c-473f-f504-848b-48506d0fd380@huawei.com>
+	<20180622091153.GU10465@dhcp22.suse.cz>
+Date: Fri, 22 Jun 2018 11:24:38 +0100
+In-Reply-To: <20180622091153.GU10465@dhcp22.suse.cz> (Michal Hocko's message
+	of "Fri, 22 Jun 2018 11:11:53 +0200")
+Message-ID: <87y3f7yv89.fsf@e105922-lin.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20180620215442.GA25124@localhost.localdomain>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/20/2018 5:54 PM, Keith Busch wrote:
-> If a shared interrupt occurs for another service (say, AER) before DPC's
-> bottom half handler runs, the DPC Interrupt Status won't be set, so the
-> DPC driver will return IRQ_NONE.
+Michal Hocko <mhocko@kernel.org> writes:
 
-OK. This is what I was after. I saw that you removed a bunch of checks.
-I was worried that status check was gone too.
+> On Fri 22-06-18 16:58:05, Hanjun Guo wrote:
+>> On 2018/6/20 19:51, Punit Agrawal wrote:
+>> > Xie XiuQi <xiexiuqi@huawei.com> writes:
+>> > 
+>> >> Hi Lorenzo, Punit,
+>> >>
+>> >>
+>> >> On 2018/6/20 0:32, Lorenzo Pieralisi wrote:
+>> >>> On Tue, Jun 19, 2018 at 04:35:40PM +0100, Punit Agrawal wrote:
+>> >>>> Michal Hocko <mhocko@kernel.org> writes:
+>> >>>>
+>> >>>>> On Tue 19-06-18 15:54:26, Punit Agrawal wrote:
+>> >>>>> [...]
+>> >>>>>> In terms of $SUBJECT, I wonder if it's worth taking the original patch
+>> >>>>>> as a temporary fix (it'll also be easier to backport) while we work on
+>> >>>>>> fixing these other issues and enabling memoryless nodes.
+>> >>>>>
+>> >>>>> Well, x86 already does that but copying this antipatern is not really
+>> >>>>> nice. So it is good as a quick fix but it would be definitely much
+>> >>>>> better to have a robust fix. Who knows how many other places might hit
+>> >>>>> this. You certainly do not want to add a hack like this all over...
+>> >>>>
+>> >>>> Completely agree! I was only suggesting it as a temporary measure,
+>> >>>> especially as it looked like a proper fix might be invasive.
+>> >>>>
+>> >>>> Another fix might be to change the node specific allocation to node
+>> >>>> agnostic allocations. It isn't clear why the allocation is being
+>> >>>> requested from a specific node. I think Lorenzo suggested this in one of
+>> >>>> the threads.
+>> >>>
+>> >>> I think that code was just copypasted but it is better to fix the
+>> >>> underlying issue.
+>> >>>
+>> >>>> I've started putting together a set fixing the issues identified in this
+>> >>>> thread. It should give a better idea on the best course of action.
+>> >>>
+>> >>> On ACPI ARM64, this diff should do if I read the code correctly, it
+>> >>> should be (famous last words) just a matter of mapping PXMs to nodes for
+>> >>> every SRAT GICC entry, feel free to pick it up if it works.
+>> >>>
+>> >>> Yes, we can take the original patch just because it is safer for an -rc
+>> >>> cycle even though if the patch below would do delaying the fix for a
+>> >>> couple of -rc (to get it tested across ACPI ARM64 NUMA platforms) is
+>> >>> not a disaster.
+>> >>
+>> >> I tested this patch on my arm board, it works.
+>> > 
+>> > I am assuming you tried the patch without enabling support for
+>> > memory-less nodes.
+>> > 
+>> > The patch de-couples the onlining of numa nodes (as parsed from SRAT)
+>> > from NR_CPUS restriction. When it comes to building zonelists, the node
+>> > referenced by the PCI controller also has zonelists initialised.
+>> > 
+>> > So it looks like a fallback node is setup even if we don't have
+>> > memory-less nodes enabled. I need to stare some more at the code to see
+>> > why we need memory-less nodes at all then ...
+>> 
+>> Yes, please. From my limited MM knowledge, zonelists should not be
+>> initialised if no CPU and no memory on this node, correct me if I'm
+>> wrong.
+>
+> Well, as long as there is a code which can explicitly ask for a specific
+> node than it is safer to have zonelists configured. Otherwise you just
+> force callers to add hacks and figure out the proper placement there.
+> Zonelists should be cheep to configure for all possible nodes. It's not
+> like we are talking about huge amount of resources.
 
-Reviewed-by: Sinan Kaya <okaya@kernel.org>
+I agree. The current problem stems from not configuring the zonelists
+for nodes that don't have onlined cpu and memory. Lorenzo's patch fixes
+the configuration of such nodes.
 
-for the series.
+For allocation requests targeting memory-less nodes, the allocator will
+take the slow path and fall back to one of the other nodes based on the
+zonelists.
 
-P.S. please use my new email address: okaya@kernel.org moving forward.
-I'll lose access to okaya@codeaurora.org email address in a month.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+I'm not sure how common such allocations are but I'll work on enabling
+CONFIG_HAVE_MEMORYLESS_NODES on top of Lorenzo's patch. AIUI, this
+config improves the fallback mechanism by starting the search from a
+near-by node with memory.
