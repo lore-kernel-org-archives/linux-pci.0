@@ -1,125 +1,66 @@
-Return-Path: <SRS0=YknP=IT=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=YknP=IT=linux.intel.com=mika.westerberg@kernel.org>
-Date: Fri, 1 Jun 2018 17:24:04 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 4/7] ACPI/hotplug/PCI: Do not scan all bridges when
- native PCIe hotplug is used
-Message-ID: <20180601142404.GG15419@lahna.fi.intel.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
- <20180529160155.1738-1-mika.westerberg@linux.intel.com>
- <20180601141118.GC119987@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:47668 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754530AbeFVUvC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Jun 2018 16:51:02 -0400
+To: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>
+References: <20180622194315.10475-1-logang@deltatee.com>
+ <20180622194315.10475-2-logang@deltatee.com>
+ <1222da4e-864c-5e27-b735-99fc53d1e367@infradead.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <baccb879-0ddc-37e0-1d54-747beb47e6a8@deltatee.com>
+Date: Fri, 22 Jun 2018 14:50:45 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180601141118.GC119987@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1222da4e-864c-5e27-b735-99fc53d1e367@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v4 1/3] PCI: Make specifying PCI devices in kernel
+ parameters reusable
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 01, 2018 at 09:11:18AM -0500, Bjorn Helgaas wrote:
-> On Tue, May 29, 2018 at 07:01:55PM +0300, Mika Westerberg wrote:
-> > When a system is using native PCIe hotplug for Thunderbolt it will be
-> > only present in the system when there is a device connected. This pretty
-> > much follows the BIOS assisted hotplug behaviour.
-> > 
-> > Thunderbolt host router integrated PCIe switch has two additional PCIe
-> > downstream bridges that lead to NHI (Thunderbolt host controller) and xHCI
-> > (USB 3 host controller) respectively. These downstream bridges are not
-> > marked being hotplug capable. Reason for that is to preserve resources.
-> > Otherwise the OS would distribute remaining resources between all
-> > downstream bridges making these two bridges consume precious resources
-> > of the actual hotplug bridges.
-> > 
-> > Now, because these two bridges are not marked being hotplug capable the OS
-> > will not enable hotplug interrupt for them either and will not receive
-> > interrupt when devices behind them are hot-added. Solution to this is
-> > that the BIOS sends ACPI Notify() to the root port let the OS know it
-> > needs to rescan for added and/or removed devices.
-> > 
-> > Here is how the mechanism is supposed to work when a Thunderbolt
-> > endpoint is connected to one of the ports. In case of a standard USB-C
-> > device only the xHCI is hot-added otherwise steps are the same.
-> > 
-> > 1. Initially there is only the PCIe root port that is controlled by
-> >    the pciehp driver
-> > 
-> >   00:1b.0 (Hotplug+) --
-> > 
-> > 2. Then we get native PCIe hotplug interrupt and once it is handled the
-> >    topology looks as following
-> > 
-> >   00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 --
-> >                                   +- 02:01.0 (HotPlug+)
-> >                                   \- 02:02.0 --
-> 
-> Help me out here.  In PCIe terms, I assume we basically hot-added this
-> switch:
-> 
->   01:00.0 Switch Upstream port
->   02:00.0 Switch Downstream Port
->   02:01.0 Switch Downstream Port
->   02:02.0 Switch Downstream Port
-> 
-> Only 02:01.0 has PCI_EXP_SLTCAP_HPC set.  We can assign secondary bus
-> number space to all the downstream ports, but there are currently no
-> devices below any of them.  Well, duh, that's exactly what you said
-> below:
-> 
-> > 3. Bridges 02:00.0 and 02:02.0 are not marked as hotplug capable and
-> >    they don't have anything behind them currently. Bridge 02:01.0 is
-> >    hotplug capable and used for extending the topology. At this point
-> >    the required PCIe devices are enabled and ACPI Notify() is sent to
-> >    the root port. The resulting topology is expected to look like
-> > 
-> >   00:1b.0 (Hotplug+) -- 01:00.0 --+- 02:00.0 -- Thunderbolt host controller
-> >                                   +- 02:01.0 (HotPlug+)
-> >                                   \- 02:02.0 -- xHCI host controller
-> > 
-> 
-> I guess this means we should ultimately end up with these new devices:
-> 
->   03:00.0 Thunderbolt host controller
->   39:00.0 xHCI host controller
 
-That's right.
 
-> (Can you send "lspci -vv" output so I can see the names, device types,
-> etc?  I'm still trying to map the Thunderbolt "host router", NHI, etc
-> terminology into PCIe concepts.)
-
-The full lspci -vv is here:
-
-  https://bugzilla.kernel.org/attachment.cgi?id=275703
-
-Just to clarify:
-
-  Thunderbolt host router = The whole Thunderbolt add-in-card, including
-  			    PCIe switch, Thunderbolt host controller
-			    (NHI) and USB 3.0 host controller (xHCI).
-
-> > However, the current ACPI hotplug implementation scans the whole 00:1b.0
-> > hotplug slot and everything behind it regardless whether native PCIe is
-> > used or not, and it expects that the BIOS has configured bridge
-> > resources upfront. If that's not the case it assigns resources using
-> > minimal allocation (everything currently found just barely fit)
-> > preventing future extension. 
+On 22/06/18 02:05 PM, Randy Dunlap wrote:
+> Hi,
 > 
-> I assume we got a Bus Check notification to the root port.  The spec
-> says OSPM should re-enumerate starting from the root port (I'm looking
-> at ACPI 6.2, sec 5.6.6).  It would sure be nice if the spec somehow
-> indicated that this re-enumeration should skip parts of the tree.
+> On 06/22/2018 12:43 PM, Logan Gunthorpe wrote:
 > 
-> I'm not really sure how we were supposed to infer this coordination
-> requirement from the existing specs.  It does suggest that the Notify
-> should be sent as close as possible to the point where it's required,
-> which would be 02:00.0 and 02:02.0 here, but since that whole switch
-> was hot-added by pciehp, the firmware doesn't necessarily know
-> anything about it.
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 97acba712e4e..cb999b2a9530 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -191,6 +191,92 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar)
+>>  EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
+>>  #endif
+>>  
+>> +/**
+>> + * pci_dev_str_match - test if a string matches a device
+>> + * @dev:    the PCI device to test
+>> + * @p:      string to match the device against
+>> + * @endptr: pointer to the string after the match
+>> + *
+>> + * Test if a string (typically from a kernel parameter) matches a
+>> + * specified. The string may be of one of the following formats:
+> 
+> "matches a specified."  eh?
 
-Right.
+Shoot, must have been over edited. Will fix for v5.
+
+Logan
