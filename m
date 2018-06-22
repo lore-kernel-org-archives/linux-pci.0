@@ -1,82 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:51958 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754321AbeFVRTB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Jun 2018 13:19:01 -0400
+Date: Fri, 22 Jun 2018 12:18:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alan Douglas <adouglas@cadence.com>
+Cc: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org, shawn.lin@rock-chips.com
+Subject: Re: [PATCH] PCI: Update Makefile to move Endpoint library before
+ controllers
+Message-ID: <20180622171859.GE108993@bhelgaas-glaptop.roam.corp.google.com>
+References: <1529684237-10424-1-git-send-email-adouglas@cadence.com>
 MIME-Version: 1.0
-In-Reply-To: <1530214274-21139-7-git-send-email-okaya@codeaurora.org>
-References: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
- <1530214274-21139-7-git-send-email-okaya@codeaurora.org>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Sat, 30 Jun 2018 00:39:03 +0300
-Message-ID: <CAHp75VcSapu6Q-eNhbbSQ6hSV=OF0pS=mXsdHZxascst5OLxCQ@mail.gmail.com>
-Subject: Re: [PATCH V4 7/7] PCI: Handle link reset via hotplug if supported
-To: Sinan Kaya <okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, Keith Busch <keith.busch@intel.com>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1529684237-10424-1-git-send-email-adouglas@cadence.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 28, 2018 at 10:31 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> If a bridge supports hotplug and observes a PCIe fatal error, the following
-> events happen:
->
-> 1. AER driver removes the devices from PCI tree on fatal error
-> 2. AER driver brings down the link by issuing a secondary bus reset waits
-> for the link to come up.
-> 3. Hotplug driver observes a link down interrupt
-> 4. Hotplug driver tries to remove the devices waiting for the rescan lock
-> but devices are already removed by the AER driver and AER driver is waiting
-> for the link to come back up.
-> 5. AER driver tries to re-enumerate devices after polling for the link
-> state to go up.
-> 6. Hotplug driver obtains the lock and tries to remove the devices again.
->
-> If a bridge is a hotplug capable bridge, bounce the error handling to the
-> hotplug driver so that hotplug driver can mask link up/down interrupts
-> while performing a secondary bus reset.
+On Fri, Jun 22, 2018 at 05:17:17PM +0100, Alan Douglas wrote:
+> The Endpoint library must be initialized before its users, which
+> are in drivers/pci/controllers
+> 
+> This change corrects a kernel crash when loading the Cadence EP
+> driver, since it calls devm_pci_epc_create() and this is only
+> valid once the Endpoint library has been initialized.
+> 
+> Signed-off-by: Alan Douglas <adouglas@cadence.com>
 
-> +static pci_ers_result_t pciehp_reset_link(struct pci_dev *pdev)
-> +{
-> +       struct pcie_device *pciedev;
-> +       struct controller *ctrl;
-> +       struct device *devhp;
-> +       struct slot *slot;
-> +       int rc;
+Applied to for-linus for v4.18, thanks!
+
+I think this got broken by the move to drivers/pci/controllers, so I added
+this:
+
+  Fixes: 6e0832fa432e ("PCI: Collect all native drivers under drivers/pci/controller/")
+
+> ---
+>  drivers/pci/Makefile |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index 5352019..1b2cfe5 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -28,10 +28,10 @@ obj-$(CONFIG_PCI_PF_STUB)	+= pci-pf-stub.o
+>  obj-$(CONFIG_PCI_ECAM)		+= ecam.o
+>  obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+>  
+> -obj-y				+= controller/
+> -obj-y				+= switch/
+> -
+>  # Endpoint library must be initialized before its users
+>  obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
+>  
+> +obj-y				+= controller/
+> +obj-y				+= switch/
 > +
-> +       devhp = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_HP);
-> +       pciedev = to_pcie_device(devhp);
-> +       ctrl = get_service_data(pciedev);
-> +       slot = ctrl->slot;
-> +
-> +       rc = reset_slot(slot->hotplug_slot, 0);
-> +
-> +       return !rc ? PCI_ERS_RESULT_RECOVERED : PCI_ERS_RESULT_DISCONNECT;
-
-Would it be better to
-
-return rc ? ..._DISCONNECT : ..._RECOVERED; ?
-
-> +}
-
-
-
--- 
-With Best Regards,
-Andy Shevchenko
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
+> -- 
+> 1.7.1
+> 
