@@ -1,135 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41130 "EHLO mail.kernel.org"
+Received: from ale.deltatee.com ([207.54.116.67]:46814 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754526AbeFMWPL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Jun 2018 18:15:11 -0400
-Date: Wed, 13 Jun 2018 17:15:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dexuan Cui <decui@microsoft.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "'olaf@aepfle.de'" <olaf@aepfle.de>,
-        "'apw@canonical.com'" <apw@canonical.com>,
-        "'jasowang@redhat.com'" <jasowang@redhat.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'driverdev-devel@linuxdriverproject.org'"
-        <driverdev-devel@linuxdriverproject.org>,
-        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
-        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
-Subject: Re: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
- hv_compose_msi_msg()
-Message-ID: <20180613221509.GB12463@bjorn-Precision-5520>
-References: <KL1P15301MB0006EE546A7C2567B61EA783BF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <BN6PR21MB016112A4E32D76EC669818C3CA690@BN6PR21MB0161.namprd21.prod.outlook.com>
- <KL1P15301MB0006D8314C8B40A939598056BF640@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <KL1P15301MB00069C79B0C674695DDBC8AABF7E0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+        id S934096AbeFVTnX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Jun 2018 15:43:23 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 22 Jun 2018 13:43:15 -0600
+Message-Id: <20180622194315.10475-4-logang@deltatee.com>
+In-Reply-To: <20180622194315.10475-1-logang@deltatee.com>
+References: <20180622194315.10475-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <KL1P15301MB00069C79B0C674695DDBC8AABF7E0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v4 3/3] PCI: Introduce the disable_acs_redir parameter
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 13, 2018 at 08:32:13PM +0000, Dexuan Cui wrote:
-> > From: Dexuan Cui
-> > Sent: Wednesday, June 6, 2018 17:15
-> > To: Haiyang Zhang <haiyangz@microsoft.com>; Lorenzo Pieralisi
-> > <lorenzo.pieralisi@arm.com>; Bjorn Helgaas <bhelgaas@google.com>;
-> > linux-pci@vger.kernel.org; KY Srinivasan <kys@microsoft.com>; Stephen
-> > Hemminger <sthemmin@microsoft.com>; olaf@aepfle.de;
-> > apw@canonical.com; jasowang@redhat.com
-> > Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
-> > vkuznets@redhat.com; marcelo.cerri@canonical.com
-> > Subject: RE: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
-> > hv_compose_msi_msg()
-> > 
-> > > From: Haiyang Zhang
-> > > Sent: Friday, May 25, 2018 12:52
-> > > To: Dexuan Cui <decui@microsoft.com>; Lorenzo Pieralisi
-> > > <lorenzo.pieralisi@arm.com>; Bjorn Helgaas <bhelgaas@google.com>;
-> > > linux-pci@vger.kernel.org; KY Srinivasan <kys@microsoft.com>; Stephen
-> > > Hemminger <sthemmin@microsoft.com>; olaf@aepfle.de;
-> > > apw@canonical.com; jasowang@redhat.com
-> > > Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
-> > > vkuznets@redhat.com; marcelo.cerri@canonical.com
-> > > Subject: RE: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
-> > > hv_compose_msi_msg()
-> > >
-> > > > From: Dexuan Cui
-> > > > Sent: Tuesday, May 22, 2018 8:18 PM
-> > > > To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>; Bjorn Helgaas
-> > > > <bhelgaas@google.com>; linux-pci@vger.kernel.org; KY Srinivasan
-> > > > <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
-> > > > olaf@aepfle.de; apw@canonical.com; jasowang@redhat.com
-> > > > Cc: linux-kernel@vger.kernel.org; driverdev-devel@linuxdriverproject.org;
-> > > > Haiyang Zhang <haiyangz@microsoft.com>; vkuznets@redhat.com;
-> > > > marcelo.cerri@canonical.com
-> > > > Subject: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
-> > > > hv_compose_msi_msg()
-> > > >
-> > > >
-> > > > Commit de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in
-> > > hv_compose_msi_msg()")
-> > > > uses local_bh_disable()/enable(), because hv_pci_onchannelcallback() can
-> > > also
-> > > > run in tasklet context as the channel event callback.
-> > > >
-> > > > With CONFIG_PROVE_LOCKING=y in the latest mainline, or old kernels that
-> > > > don't have commit f71b74bca637 ("irq/softirqs: Use lockdep to assert IRQs
-> > > are
-> > > > disabled/enabled"), it turns out can we trigger a warning at the beginning
-> > of
-> > > > __local_bh_enable_ip(), because the upper layer irq code can call
-> > > > hv_compose_msi_msg() with local irqs disabled.
-> > > >
-> > > > Let's fix the warning by switching to local_irq_save()/restore(). This is not an
-> > > > issue because hv_pci_onchannelcallback() is not slow, and it not a hot path.
-> > > >
-> > > > Fixes: de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in
-> > hv_compose_msi_msg()")
-> > > > Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> > > > Cc: <stable@vger.kernel.org>
-> > > > Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> > > > Cc: K. Y. Srinivasan <kys@microsoft.com>
-> > > > ---
-> > >
-> > > Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
-> > >
-> > > Thanks you.
-> > 
-> > Hi Lorenzo,
-> > 
-> > Can I have your reply to this patch?
-> > 
-> > -- Dexuan
-> 
-> It looks Lorenzo's pci.git tree has not been updated for 3+ weeks.
-> I guess Lorenzo may be on vacation. 
-> 
-> @Bjorn, can this patch go through your tree?
-> Should I resubmit it?
+In order to support P2P traffic on a segment of the PCI hierarchy,
+we must be able to disable the ACS redirect bits for select
+PCI bridges. The bridges must be selected before the devices are
+discovered by the kernel and the IOMMU groups created. Therefore,
+a kernel command line parameter is created to specify devices
+which must have their ACS bits disabled.
 
-No need to resubmit it, Lorenzo has been out for a bit, but I'm sure
-he'll pick this up as he catches up.
+The new parameter takes a list of devices separated by a semicolon.
+Each device specified will have it's ACS redirect bits disabled.
+This is similar to the existing 'resource_alignment' parameter.
 
-You might, however, fix the commit log:
+The ACS Request P2P Request Redirect, P2P Completion Redirect and P2P
+Egress Control bits are disabled which is sufficient to always allow
+passing P2P traffic uninterrupted. The bits are set after the kernel
+(optionally) enables the ACS bits itself. It is also done regardless of
+whether the kernel sets the bits or not seeing some BIOS firmware is known
+to set the bits on boot.
 
-  This is not an issue because hv_pci_onchannelcallback() is not slow,
-  and it not a hot path.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Acked-by: Christian König <christian.koenig@amd.com>
+---
+ Documentation/admin-guide/kernel-parameters.txt |  9 ++++
+ drivers/pci/pci.c                               | 71 ++++++++++++++++++++++++-
+ 2 files changed, 78 insertions(+), 2 deletions(-)
 
-This has at least one typo (I think you mean "and *is* not a hot
-path").
-
-I also don't understand the sentence as a whole because the
-hv_pci_onchannelcallback() comment says it's called whenever the host
-sends a packet to this channel, and that *does* sound like a hot path.
-
-I also don't understand the "hv_pci_onchannelcallback() is not slow"
-part.  In other words, you're saying hv_pci_onchannelcallback() is
-fast and it's not a hot path.  And apparently this has something to do
-with the difference between local_bh_disable() and local_irq_save()?
-
-Bjorn
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index a69947d9e14e..02634c4ab181 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3192,6 +3192,15 @@
+ 				Adding the window is slightly risky (it may
+ 				conflict with unreported devices), so this
+ 				taints the kernel.
++		disable_acs_redir=<pci_dev>[; ...]
++				Specify one or more PCI devices (in the format
++				specified above) separated by semicolons.
++				Each device specified will have the PCI ACS
++				redirect capabilities forced off which will
++				allow P2P traffic between devices through
++				bridges without forcing it upstream. Note:
++				this removes isolation between devices and
++				will make the IOMMU groups less granular.
+ 
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 3fc823b756e3..116b0c9c4764 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2983,6 +2983,61 @@ void pci_request_acs(void)
+ 	pci_acs_enable = 1;
+ }
+ 
++static const char *disable_acs_redir_param;
++
++/**
++ * pci_disable_acs_redir - disable ACS redirect capabilities
++ * @dev: the PCI device
++ *
++ * For only devices specified in the disable_acs_redir parameter.
++ */
++static void pci_disable_acs_redir(struct pci_dev *dev)
++{
++	int ret = 0;
++	const char *p;
++	int pos;
++	u16 ctrl;
++
++	if (!disable_acs_redir_param)
++		return;
++
++	p = disable_acs_redir_param;
++	while (*p) {
++		ret = pci_dev_str_match(dev, p, &p);
++		if (ret < 0) {
++			pr_info_once("PCI: Can't parse disable_acs_redir parameter: %s\n",
++				     disable_acs_redir_param);
++
++			break;
++		} else if (ret == 1) {
++			/* Found a match */
++			break;
++		}
++
++		if (*p != ';' && *p != ',') {
++			/* End of param or invalid format */
++			break;
++		}
++		p++;
++	}
++
++	if (ret != 1)
++		return;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++	if (!pos)
++		return;
++
++	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
++
++	/* P2P Request & Completion Redirect */
++	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
++
++	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
++
++	pci_info(dev, "disabled ACS redirect\n");
++}
++
+ /**
+  * pci_std_enable_acs - enable ACS on devices using standard ACS capabilites
+  * @dev: the PCI device
+@@ -3022,12 +3077,22 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+ void pci_enable_acs(struct pci_dev *dev)
+ {
+ 	if (!pci_acs_enable)
+-		return;
++		goto disable_acs_redir;
+ 
+ 	if (!pci_dev_specific_enable_acs(dev))
+-		return;
++		goto disable_acs_redir;
+ 
+ 	pci_std_enable_acs(dev);
++
++disable_acs_redir:
++	/*
++	 * Note: pci_disable_acs_redir() must be called even if
++	 * ACS is not enabled by the kernel because the firmware
++	 * may have unexpectedly set the flags. So if we are told
++	 * to disable it, we should always disable it after setting
++	 * the kernel's default preferences.
++	 */
++	pci_disable_acs_redir(dev);
+ }
+ 
+ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+@@ -5967,6 +6032,8 @@ static int __init pci_setup(char *str)
+ 				pcie_bus_config = PCIE_BUS_PEER2PEER;
+ 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+ 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
++			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
++				disable_acs_redir_param = str + 18;
+ 			} else {
+ 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+ 						str);
+-- 
+2.11.0
