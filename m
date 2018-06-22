@@ -1,111 +1,202 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:51719 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932697AbeFMCw7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jun 2018 22:52:59 -0400
-Received: from mail-pg0-f71.google.com ([74.125.83.71])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1fSvu6-00041W-Qz
-        for linux-pci@vger.kernel.org; Wed, 13 Jun 2018 02:52:58 +0000
-Received: by mail-pg0-f71.google.com with SMTP id o19-v6so349943pgn.14
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jun 2018 19:52:58 -0700 (PDT)
-Content-Type: text/plain;
-        charset=us-ascii;
-        delsp=yes;
-        format=flowed
-Mime-Version: 1.0 (Mac OS X Mail 11.4 \(3445.8.2\))
-Subject: Re: [PATCH 1/2] r8169: Don't disable ASPM in the driver
-From: Kai Heng Feng <kai.heng.feng@canonical.com>
-In-Reply-To: <caa66d98-e5cc-8bcd-1052-cef4ff00c32d@gmail.com>
-Date: Wed, 13 Jun 2018 10:52:52 +0800
-Cc: David Miller <davem@davemloft.net>, Ryankao <ryankao@realtek.com>,
-        Hayes Wang <hayeswang@realtek.com>, Hau <hau@realtek.com>,
-        romieu@fr.zoreil.com, bhelgaas@google.com,
-        Linux Netdev List <netdev@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <E67CB62D-D400-4556-B00C-18892E1E2AC4@canonical.com>
-References: <20180612095759.6828-1-kai.heng.feng@canonical.com>
- <caa66d98-e5cc-8bcd-1052-cef4ff00c32d@gmail.com>
-To: Heiner Kallweit <hkallweit1@gmail.com>
+Received: from mga04.intel.com ([192.55.52.120]:11000 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751119AbeFVIaH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Jun 2018 04:30:07 -0400
+Message-ID: <1529683148.2729.6.camel@intel.com>
+Subject: Re: [PATCH v2] PCI: controller: Move PCI_DOMAINS selection to arch
+ Kconfig
+From: Ley Foon Tan <ley.foon.tan@intel.com>
+To: Scott Branden <scott.branden@broadcom.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jan Kiszka <jan.kiszka@siemens.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Will Deacon <will.deacon@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Guenter Roeck <linux@roeck-us.net>
+In-Reply-To: <5e9b0aa4-ded1-725d-c401-49c13b7d5f9d@broadcom.com>
+References: <20180619112105.14457-1-lorenzo.pieralisi@arm.com>
+         <30bb8a16-f829-a5a4-265f-2d1112d8d0bf@siemens.com>
+         <20180621165400.GB14519@e107981-ln.cambridge.arm.com>
+         <5e9b0aa4-ded1-725d-c401-49c13b7d5f9d@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 22 Jun 2018 23:59:08 +0800
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Heiner,
+On Thu, 2018-06-21 at 22:08 -0700, Scott Branden wrote:
+> 
+> 
+> On 18-06-21 09:54 AM, Lorenzo Pieralisi wrote:
+> > 
+> > 
+> > On Wed, Jun 20, 2018 at 10:07:33AM +0200, Jan Kiszka wrote:
+> > > 
+> > > 
+> > > On 2018-06-19 13:21, Lorenzo Pieralisi wrote:
+> > > > 
+> > > > 
+> > > > Commit 51bc085d6454 ("PCI: Improve host drivers compile test
+> > > > coverage")
+> > > > added configuration options to allow PCI host controller
+> > > > drivers to be
+> > > > compile tested on all architectures.
+> > > > 
+> > > > Some host controller drivers (eg PCIE_ALTERA) config entries
+> > > > select
+> > > > the PCI_DOMAINS config option to enable PCI domains management
+> > > > in
+> > > > the kernel. Now that host controller drivers can be compiled on
+> > > > all architectures, this triggers build regressions on arches
+> > > > that
+> > > > do not implement the PCI_DOMAINS required API (ie
+> > > > pci_domain_nr()):
+> > > > 
+> > > > drivers/ata/pata_ali.c: In function 'ali_init_chipset':
+> > > > drivers/ata/pata_ali.c:469:38: error:
+> > > >          implicit declaration of function 'pci_domain_nr';
+> > > >                                            did you mean
+> > > > 'pci_iomap_wc'?
+> > > > 
+> > > > Furthemore, some software configurations (ie Jailhouse) require
+> > > > a
+> > > > PCI_DOMAINS enabled kernel to configure multiple host
+> > > > controllers
+> > > > without having an explicit dependency on the ARM platform on
+> > > > which
+> > > > they run.
+> > > > 
+> > > > Make PCI_DOMAINS a visible configuration option on ARM so that
+> > > > software
+> > > > configurations that need it can manually select it and move the
+> > > > PCI_DOMAINS selection from PCI controllers configuration file
+> > > > to ARM
+> > > > sub-arch config entries that currently require it, fixing the
+> > > > issue.
+> > > > 
+> > > > Fixes: 51bc085d6454 ("PCI: Improve host drivers compile test
+> > > > coverage")
+> > > > Link: https://lkml.kernel.org/r/20180612170229.GA10141@roeck-us
+> > > > .net
+> > > > Reported-by: Guenter Roeck <linux@roeck-us.net>
+> > > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > > Cc: Scott Branden <scott.branden@broadcom.com>
+> > > > Cc: Will Deacon <will.deacon@arm.com>
+> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > > Cc: Rob Herring <robh@kernel.org>
+> > > > Cc: Russell King <linux@armlinux.org.uk>
+> > > > Cc: Jan Kiszka <jan.kiszka@siemens.com>
+> > > > Cc: Guenter Roeck <linux@roeck-us.net>
+> > > > Cc: Ley Foon Tan <lftan@altera.com>
+> > > > ---
+> > > > v1 -> v2
+> > > >     - Removed ARCH_VIRT PCI_DOMAINS selection
+> > > >     - Added PCI_DOMAINS visible config option
+> > > > 
+> > > > v1: https://marc.info/?l=linux-pci&m=152932092612352&w=2
+> > > > 
+> > > >   arch/arm/Kconfig               | 8 +++++++-
+> > > >   arch/arm/mach-bcm/Kconfig      | 1 +
+> > > >   arch/arm/mach-socfpga/Kconfig  | 1 +
+> > > >   drivers/pci/controller/Kconfig | 3 ---
+> > > >   4 files changed, 9 insertions(+), 4 deletions(-)
+> > > > 
+> > > > diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> > > > index 54eeb8d00bc6..843edfd000be 100644
+> > > > --- a/arch/arm/Kconfig
+> > > > +++ b/arch/arm/Kconfig
+> > > > @@ -1245,8 +1245,14 @@ config PCI
+> > > >       VESA. If you have PCI, say Y, otherwise N.
+> > > > 
+> > > >   config PCI_DOMAINS
+> > > > -   bool
+> > > > +   bool "Support for multiple PCI domains"
+> > > >     depends on PCI
+> > > > +   help
+> > > > +     Enable PCI domains kernel management. Say Y if your
+> > > > machine
+> > > > +     has a PCI bus hierarchy that requires more than one PCI
+> > > > +     domain (aka segment) to be correctly managed. Say N
+> > > > otherwise.
+> > > > +
+> > > > +     If you don't know what to do here, say N.
+> > > > 
+> > > >   config PCI_DOMAINS_GENERIC
+> > > >     def_bool PCI_DOMAINS
+> > > > diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-
+> > > > bcm/Kconfig
+> > > > index c46a728df44e..25aac6ee2ab1 100644
+> > > > --- a/arch/arm/mach-bcm/Kconfig
+> > > > +++ b/arch/arm/mach-bcm/Kconfig
+> > > > @@ -20,6 +20,7 @@ config ARCH_BCM_IPROC
+> > > >     select GPIOLIB
+> > > >     select ARM_AMBA
+> > > >     select PINCTRL
+> > > > +   select PCI_DOMAINS if PCI
+> > > >     help
+> > > >       This enables support for systems based on Broadcom IPROC
+> > > > architected SoCs.
+> > > >       The IPROC complex contains one or more ARM CPUs along
+> > > > with common
+> > > > diff --git a/arch/arm/mach-socfpga/Kconfig b/arch/arm/mach-
+> > > > socfpga/Kconfig
+> > > > index d0f62eacf59d..4adb901dd5eb 100644
+> > > > --- a/arch/arm/mach-socfpga/Kconfig
+> > > > +++ b/arch/arm/mach-socfpga/Kconfig
+> > > > @@ -10,6 +10,7 @@ menuconfig ARCH_SOCFPGA
+> > > >     select HAVE_ARM_SCU
+> > > >     select HAVE_ARM_TWD if SMP
+> > > >     select MFD_SYSCON
+> > > > +   select PCI_DOMAINS if PCI
+> > > > 
+> > > >   if ARCH_SOCFPGA
+> > > >   config SOCFPGA_SUSPEND
+> > > > diff --git a/drivers/pci/controller/Kconfig
+> > > > b/drivers/pci/controller/Kconfig
+> > > > index 18fa09b3ac8f..cc9fa02d32a0 100644
+> > > > --- a/drivers/pci/controller/Kconfig
+> > > > +++ b/drivers/pci/controller/Kconfig
+> > > > @@ -96,7 +96,6 @@ config PCI_HOST_GENERIC
+> > > >     depends on OF
+> > > >     select PCI_HOST_COMMON
+> > > >     select IRQ_DOMAIN
+> > > > -   select PCI_DOMAINS
+> > > >     help
+> > > >       Say Y here if you want to support a simple generic PCI
+> > > > host
+> > > >       controller, such as the one emulated by kvmtool.
+> > > > @@ -138,7 +137,6 @@ config PCI_VERSATILE
+> > > > 
+> > > >   config PCIE_IPROC
+> > > >     tristate
+> > > > -   select PCI_DOMAINS
+> > > >     help
+> > > >       This enables the iProc PCIe core controller support for
+> > > > Broadcom's
+> > > >       iProc family of SoCs. An appropriate bus interface driver
+> > > > needs
+> > > > @@ -176,7 +174,6 @@ config PCIE_IPROC_MSI
+> > > >   config PCIE_ALTERA
+> > > >     bool "Altera PCIe controller"
+> > > >     depends on ARM || NIOS2 || COMPILE_TEST
+> > > > -   select PCI_DOMAINS
+> > > >     help
+> > > >       Say Y here if you want to enable PCIe controller support
+> > > > on Altera
+> > > >       FPGA.
+> > > > 
+> > > Acked-by: Jan Kiszka <jan.kiszka@siemens.com>
+> > Thanks a lot. Scott, Ley Foon, does it work for you ? I would like
+> > to ask Bjorn to send it asap since the build on sparc is still
+> > broken.
+> Change will have to be made for arm64 for ARCH_BCM_IPROC as well.
+Yes, need to add it to arm64 too. Others are okay.
 
-> On Jun 13, 2018, at 3:30 AM, Heiner Kallweit <hkallweit1@gmail.com> wrote:
->
-> On 12.06.2018 11:57, Kai-Heng Feng wrote:
->> Enable or disable ASPM should be done in PCI core instead of in the
->> device driver.
->>
->> Commit ba04c7c93bbc ("r8169: disable ASPM") uses
->> pci_disable_link_state() to disable ASPM. This is incorrect, if the
->> device really needs to disable ASPM, we should use a quirk in PCI core
->> to prevent the PCI core from setting ASPM altogether.
-> I wouldn't call using pci_disable_link_state() in a driver incorrect
-> (as it works), there is just a better way which is more in line with
-> the PCI subsystem architecture.
+Acked-by: Ley Foon Tan <ley.foon.tan@intel.com>
 
-Ok, I'll amend the commit log in next version.
 
->
->> Let's remove pci_disable_link_state() for now. Use PCI core quirks if
->> any regression happens.
-> The vendor driver disables ASPM unconditionally for chip version 25
-> (there it's METHOD_9), so I think ASPM support is broken in this chip
-> version. I'll cook a PCI quirk.
-
-I actually asked Ryankao about this. He said that variant is more then a  
-decades old and he can't find why it doesn't support ASPM.
-
-Since METHOD_9 might be a platform issue instead, my intention was to  
-enable ASPM for all variants. If users hit any issue, then we can introduce  
-new PCI quirks.
-
->
->> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
->
-> Please note that netdev is closed currently. Once 4.18-RC1 is out it
-> will be re-opened. Then please re-submit properly annotating PATCH
-> with "net-next" (I've forgotten this often enough myself).
-
-Will do for next version. Thanks!
-
-Kai-Heng
-
->
->> ---
->> v2:
->> - Remove module parameter.
->> - Remove pci_disable_link_state().
->>
->>  drivers/net/ethernet/realtek/r8169.c | 5 -----
->>  1 file changed, 5 deletions(-)
->>
->> diff --git a/drivers/net/ethernet/realtek/r8169.c  
->> b/drivers/net/ethernet/realtek/r8169.c
->> index 75dfac0248f4..9b55ce513a36 100644
->> --- a/drivers/net/ethernet/realtek/r8169.c
->> +++ b/drivers/net/ethernet/realtek/r8169.c
->> @@ -25,7 +25,6 @@
->>  #include <linux/dma-mapping.h>
->>  #include <linux/pm_runtime.h>
->>  #include <linux/firmware.h>
->> -#include <linux/pci-aspm.h>
->>  #include <linux/prefetch.h>
->>  #include <linux/ipv6.h>
->>  #include <net/ip6_checksum.h>
->> @@ -7647,10 +7646,6 @@ static int rtl_init_one(struct pci_dev *pdev,  
->> const struct pci_device_id *ent)
->>  	mii->reg_num_mask = 0x1f;
->>  	mii->supports_gmii = cfg->has_gmii;
->>
->> -	/* disable ASPM completely as that cause random device stop working
->> -	 * problems as well as full system hangs for some PCIe devices users */
->> -	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
->> -				     PCIE_LINK_STATE_CLKPM);
->>
->>  	/* enable device (incl. PCI PM wakeup and hotplug setup) */
->>  	rc = pcim_enable_device(pdev);
+Regards
+Ley Foon
