@@ -1,69 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:45174 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755375AbeFRXLk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 18 Jun 2018 19:11:40 -0400
-To: Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        Linux Documentation List <linux-doc@vger.kernel.org>,
-        Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-References: <20180618193636.16210-1-logang@deltatee.com>
- <20180618193636.16210-2-logang@deltatee.com>
- <20180618154430.1af3d42f@t450s.home>
- <CAHp75VefSEvpUvsdi=W6rEiOX01zaJeMtxQMDqmSthPJP3uJFA@mail.gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <6df930b0-e0aa-67c3-357b-a366319c2f5d@deltatee.com>
-Date: Mon, 18 Jun 2018 17:11:22 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 22 Jun 2018 21:44:44 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Lukas Wunner <lukas@wunner.de>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] genirq: Synchronize only with single thread on
+ free_irq()
+In-Reply-To: <20180622080125.GA13709@wunner.de>
+Message-ID: <alpine.DEB.2.21.1806222144160.1589@nanos.tec.linutronix.de>
+References: <8f770886632640321592873e4c902218d42c436b.1527194314.git.lukas@wunner.de> <alpine.DEB.2.21.1806212217571.1591@nanos.tec.linutronix.de> <20180622080125.GA13709@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <CAHp75VefSEvpUvsdi=W6rEiOX01zaJeMtxQMDqmSthPJP3uJFA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v3 1/3] PCI: Make specifying PCI devices in kernel
- parameters reusable
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 18/06/18 05:06 PM, Andy Shevchenko wrote:
-> On Tue, Jun 19, 2018 at 12:44 AM, Alex Williamson
->> There's probably really no path to resolve these, but acknowledging the
->> difference in this comment block might be helpful in the future.
+On Fri, 22 Jun 2018, Lukas Wunner wrote:
+> On Thu, Jun 21, 2018 at 10:21:44PM +0200, Thomas Gleixner wrote:
+> > On Thu, 24 May 2018, Lukas Wunner wrote:
+> > >  static int irq_wait_for_interrupt(struct irqaction *action)
+> > >  {
+> > > -	set_current_state(TASK_INTERRUPTIBLE);
+> > > +	for (;;) {
+> > > +		set_current_state(TASK_INTERRUPTIBLE);
+> > >  
+> > > -	while (!kthread_should_stop()) {
+> > > +		if (kthread_should_stop()) {
+> > > +			/* may need to run one last time. */
+> > > +			if (test_and_clear_bit(IRQTF_RUNTHREAD,
+> > > +					       &action->thread_flags)) {
+> > > +				__set_current_state(TASK_RUNNING);
+> > > +				return 0;
+> > > +			}
+> > > +			__set_current_state(TASK_RUNNING);
+> > > +			return -1;
+> > > +		}
+> > >  
+> > >  		if (test_and_clear_bit(IRQTF_RUNTHREAD,
+> > >  				       &action->thread_flags)) {
+> > > @@ -766,10 +776,7 @@ static int irq_wait_for_interrupt(struct irqaction *action)
+> > >  			return 0;
+> > >  		}
+> > >  		schedule();
+> > > -		set_current_state(TASK_INTERRUPTIBLE);
+> > >  	}
+> > > -	__set_current_state(TASK_RUNNING);
+> > > -	return -1;
+> > >  }
+> > >  
+> > >  /*
+> > > @@ -990,7 +997,7 @@ static int irq_thread(void *data)
+> > >  	/*
+> > >  	 * This is the regular exit path. __free_irq() is stopping the
+> > >  	 * thread via kthread_stop() after calling
+> > > -	 * synchronize_irq(). So neither IRQTF_RUNTHREAD nor the
+> > > +	 * synchronize_hardirq(). So neither IRQTF_RUNTHREAD nor the
+> > >  	 * oneshot mask bit can be set. We cannot verify that as we
+> > >  	 * cannot touch the oneshot mask at this point anymore as
+> > >  	 * __setup_irq() might have given out currents thread_mask
+> > > @@ -1595,7 +1602,7 @@ static struct irqaction *__free_irq(struct irq_desc *desc, void *dev_id)
+> > >  	unregister_handler_proc(irq, action);
+> > >  
+> > >  	/* Make sure it's not being used on another CPU: */
+> > > -	synchronize_irq(irq);
+> > > +	synchronize_hardirq(irq);
+> > 
+> > So after that, action can be freed and when the thread above tries to
+> > access it. Nice Use After Free. That needs more thought.
 > 
-> ...or introduce a parser part to allow user supply "any" instead of
-> numeric value.
+> No, after that, kthread_stop() is called which blocks until the IRQ
+> thread has completed.  Only then is the action freed.
 
-I think the main difficulty is maintaining backwards compatibility. If
-anyone is already using zero as a parameter then we will break their system.
-
->>> +                     pr_info("PCI: Can't parse resource_alignment parameter: pci:%s\n",
-> 
->> The "pci:" prefix on %s doesn't make sense now, it was used above when
->> the pointer was already advanced past this token, now I believe it would
->> lead to "pci:pci:xxxx:yyyy" or "pci:xx:yy.z".  Thanks,
-> 
-> I'm just wondering if we can use pci_info() here, Or it makes no sense?
-> Also, the original loglevel was an "error".
-
-Yeah, I don't think pci_info() makes sense as it's not attached to a
-specific device.
-
-Not sure how I messed up the log level, but I'll fix it for v4.
+Missed that. Fair enough.
 
 Thanks,
 
-Logan
+	tglx
