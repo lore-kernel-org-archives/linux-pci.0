@@ -1,109 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:47269 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935745AbeFNCvX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Jun 2018 22:51:23 -0400
-Message-ID: <1528973481.21961.0.camel@intel.com>
-Subject: Re: [PATCH v4 06/10] PCI: altera: Use pci_host_alloc_intx_irqd()
- helper to get irq domain for INTx
-From: Ley Foon Tan <ley.foon.tan@intel.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org
-Date: Thu, 14 Jun 2018 18:51:21 +0800
-In-Reply-To: <1528940145-183495-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
-         <1528940145-183495-1-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from Galois.linutronix.de ([146.0.238.70]:42745 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751411AbeFVULb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2018 16:11:31 -0400
+Date: Fri, 22 Jun 2018 22:11:26 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Lukas Wunner <lukas@wunner.de>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] genirq: Synchronize only with single thread on
+ free_irq()
+In-Reply-To: <alpine.DEB.2.21.1806222144160.1589@nanos.tec.linutronix.de>
+Message-ID: <alpine.DEB.2.21.1806222155230.1589@nanos.tec.linutronix.de>
+References: <8f770886632640321592873e4c902218d42c436b.1527194314.git.lukas@wunner.de> <alpine.DEB.2.21.1806212217571.1591@nanos.tec.linutronix.de> <20180622080125.GA13709@wunner.de> <alpine.DEB.2.21.1806222144160.1589@nanos.tec.linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-06-14 at 09:35 +0800, Shawn Lin wrote:
-> Just avoid code duplication, but no functional change intended.
+On Fri, 22 Jun 2018, Thomas Gleixner wrote:
+> On Fri, 22 Jun 2018, Lukas Wunner wrote:
+> > On Thu, Jun 21, 2018 at 10:21:44PM +0200, Thomas Gleixner wrote:
+> > > On Thu, 24 May 2018, Lukas Wunner wrote:
+> > > >  static int irq_wait_for_interrupt(struct irqaction *action)
+> > > >  {
+> > > > -	set_current_state(TASK_INTERRUPTIBLE);
+> > > > +	for (;;) {
+> > > > +		set_current_state(TASK_INTERRUPTIBLE);
+> > > >  
+> > > > -	while (!kthread_should_stop()) {
+> > > > +		if (kthread_should_stop()) {
+> > > > +			/* may need to run one last time. */
+> > > > +			if (test_and_clear_bit(IRQTF_RUNTHREAD,
+> > > > +					       &action->thread_flags)) {
+> > > > +				__set_current_state(TASK_RUNNING);
+> > > > +				return 0;
+> > > > +			}
+> > > > +			__set_current_state(TASK_RUNNING);
+> > > > +			return -1;
+> > > > +		}
+> > > >  
+> > > >  		if (test_and_clear_bit(IRQTF_RUNTHREAD,
+> > > >  				       &action->thread_flags)) {
+> > > > @@ -766,10 +776,7 @@ static int irq_wait_for_interrupt(struct irqaction *action)
+> > > >  			return 0;
+> > > >  		}
+> > > >  		schedule();
+> > > > -		set_current_state(TASK_INTERRUPTIBLE);
+> > > >  	}
+> > > > -	__set_current_state(TASK_RUNNING);
+> > > > -	return -1;
+> > > >  }
+> > > >  
+> > > >  /*
+> > > > @@ -990,7 +997,7 @@ static int irq_thread(void *data)
+> > > >  	/*
+> > > >  	 * This is the regular exit path. __free_irq() is stopping the
+> > > >  	 * thread via kthread_stop() after calling
+> > > > -	 * synchronize_irq(). So neither IRQTF_RUNTHREAD nor the
+> > > > +	 * synchronize_hardirq(). So neither IRQTF_RUNTHREAD nor the
+> > > >  	 * oneshot mask bit can be set. We cannot verify that as we
+> > > >  	 * cannot touch the oneshot mask at this point anymore as
+> > > >  	 * __setup_irq() might have given out currents thread_mask
+> > > > @@ -1595,7 +1602,7 @@ static struct irqaction *__free_irq(struct irq_desc *desc, void *dev_id)
+> > > >  	unregister_handler_proc(irq, action);
+> > > >  
+> > > >  	/* Make sure it's not being used on another CPU: */
+> > > > -	synchronize_irq(irq);
+> > > > +	synchronize_hardirq(irq);
+> > > 
+> > > So after that, action can be freed and when the thread above tries to
+> > > access it. Nice Use After Free. That needs more thought.
+> > 
+> > No, after that, kthread_stop() is called which blocks until the IRQ
+> > thread has completed.  Only then is the action freed.
 > 
-> Cc: Ley Foon Tan <ley.foon.tan@intel.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Missed that. Fair enough.
 
-Reviewed-by: Ley Foon Tan <ley.foon.tan@intel.com>
-> ---
-> 
-> Changes in v4: None
-> Changes in v3: None
-> Changes in v2: None
-> 
->  drivers/pci/controller/pcie-altera.c | 38 ++++--------------------
-> ------------
->  1 file changed, 4 insertions(+), 34 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-altera.c
-> b/drivers/pci/controller/pcie-altera.c
-> index 7d05e51..0915c8b 100644
-> --- a/drivers/pci/controller/pcie-altera.c
-> +++ b/drivers/pci/controller/pcie-altera.c
-> @@ -443,19 +443,6 @@ static void altera_pcie_retrain(struct
-> altera_pcie *pcie)
->  	}
->  }
->  
-> -static int altera_pcie_intx_map(struct irq_domain *domain, unsigned
-> int irq,
-> -				irq_hw_number_t hwirq)
-> -{
-> -	irq_set_chip_and_handler(irq, &dummy_irq_chip,
-> handle_simple_irq);
-> -	irq_set_chip_data(irq, domain->host_data);
-> -	return 0;
-> -}
-> -
-> -static const struct irq_domain_ops intx_domain_ops = {
-> -	.map = altera_pcie_intx_map,
-> -	.xlate = pci_irqd_intx_xlate,
-> -};
-> -
->  static void altera_pcie_isr(struct irq_desc *desc)
->  {
->  	struct irq_chip *chip = irq_desc_get_chip(desc);
-> @@ -519,22 +506,6 @@ static int
-> altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
->  	return err;
->  }
->  
-> -static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
-> -{
-> -	struct device *dev = &pcie->pdev->dev;
-> -	struct device_node *node = dev->of_node;
-> -
-> -	/* Setup INTx */
-> -	pcie->irq_domain = irq_domain_add_linear(node, PCI_NUM_INTX,
-> -					&intx_domain_ops, pcie);
-> -	if (!pcie->irq_domain) {
-> -		dev_err(dev, "Failed to get a INTx IRQ domain\n");
-> -		return -ENOMEM;
-> -	}
-> -
-> -	return 0;
-> -}
-> -
->  static int altera_pcie_parse_dt(struct altera_pcie *pcie)
->  {
->  	struct device *dev = &pcie->pdev->dev;
-> @@ -592,11 +563,10 @@ static int altera_pcie_probe(struct
-> platform_device *pdev)
->  		return ret;
->  	}
->  
-> -	ret = altera_pcie_init_irq_domain(pcie);
-> -	if (ret) {
-> -		dev_err(dev, "Failed creating IRQ Domain\n");
-> -		return ret;
-> -	}
-> +	pcie->irq_domain = pci_host_alloc_intx_irqd(dev, pcie, true,
-> NULL,
-> +						    dev->of_node);
-> +	if (IS_ERR(pcie->irq_domain))
-> +		return PTR_ERR(pcie->irq_domain);
->  
->  	/* clear all interrupts */
->  	cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
+I just had to go back and figure out why I missed it:
+
+kthread_stop() is only half of the story. Just look at the comment above:
+
+		 * oneshot mask bit can be set.  We cannot verify that as we
+		 * cannot touch the oneshot mask at this point anymore as
+		 * __setup_irq() might have given out currents thread_mask
+
+But you got lucky. That comment is not longer accurate because at the time
+when it was written desc->request_mutex did not exist.
+
+It's there now and prevents a concurrent request_irq() coming in after
+dropping desc->lock and handing out the oneshot mask bit. It that wouldn't
+be the case, then your scheme would be very subtly busted.
+
+This really needs to be documented in the code, the comment needs to be
+fixed and the changelog needs a proper explanation of all that.
+
+Thanks,
+
+	tglx
