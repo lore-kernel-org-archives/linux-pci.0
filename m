@@ -1,57 +1,280 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 18 Jun 2018 06:49:10 +0100
-From: Lee Jones <lee.jones@linaro.org>
-To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Subject: Re: [PATCH v4 23/26] devicetree: fix a series of wrong file references
-Message-ID: <20180618054910.GB31141@dell>
-References: <cover.1529079119.git.mchehab+samsung@kernel.org>
- <266e5f874b36aa83f3327879d85921fab52d5461.1529079120.git.mchehab+samsung@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <266e5f874b36aa83f3327879d85921fab52d5461.1529079120.git.mchehab+samsung@kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, alsa-devel@alsa-project.org,
- Linux Doc Mailing List <linux-doc@vger.kernel.org>,
- Maxime Ripard <maxime.ripard@bootlin.com>, linux-pci@vger.kernel.org,
- Binghui Wang <wangbinghui@hisilicon.com>, linux-kernel@vger.kernel.org,
- Jonathan Corbet <corbet@lwn.net>, Chen-Yu Tsai <wens@csie.org>,
- linux-input@vger.kernel.org, devicetree@vger.kernel.org,
- Alexandre Torgue <alexandre.torgue@st.com>,
- Xiaowei Song <songxiaowei@hisilicon.com>,
- Mauro Carvalho Chehab <mchehab@infradead.org>, Mark Brown <broonie@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org,
- Dmitry Torokhov <dmitry.torokhov@gmail.com>,
- Liam Girdwood <lgirdwood@gmail.com>, Zhou Wang <wangzhou1@hisilicon.com>,
- Rob Herring <robh+dt@kernel.org>, Maxime Coquelin <mcoquelin.stm32@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:45298 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751347AbeFYVGW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2018 17:06:22 -0400
+Received: by mail-qt0-f194.google.com with SMTP id i18-v6so13282415qtp.12
+        for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2018 14:06:22 -0700 (PDT)
+From: Alex Deucher <alexdeucher@gmail.com>
+To: amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        airlied@gmail.com, linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: Alex Deucher <alexander.deucher@amd.com>
+Subject: [PATCH 4/5] drm/radeon: use pcie functions for link width
+Date: Mon, 25 Jun 2018 16:06:05 -0500
+Message-Id: <20180625210606.2736-5-alexander.deucher@amd.com>
+In-Reply-To: <20180625210606.2736-1-alexander.deucher@amd.com>
+References: <20180625210606.2736-1-alexander.deucher@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gRnJpLCAxNSBKdW4gMjAxOCwgTWF1cm8gQ2FydmFsaG8gQ2hlaGFiIHdyb3RlOgoKPiBBcyBm
-aWxlcyBnb3QgcmVuYW1lZCwgdGhlaXIgcmVmZXJlbmNlcyBicm9rZS4KPiAKPiBNYW51YWxseSBm
-aXggYSBzZXJpZXMgb2YgYnJva2VuIHJlZnMgYXQgdGhlIERUIGJpbmRpbmdzLgo+IAo+IFNpZ25l
-ZC1vZmYtYnk6IE1hdXJvIENhcnZhbGhvIENoZWhhYiA8bWNoZWhhYitzYW1zdW5nQGtlcm5lbC5v
-cmc+Cj4gLS0tCj4gIC4uLi9kZXZpY2V0cmVlL2JpbmRpbmdzL2lucHV0L3JtaTQvcm1pXzJkX3Nl
-bnNvci50eHQgfCAgMiArLQo+ICBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvbWZk
-L3N1bjZpLXByY20udHh0IHwgIDIgKy0KCkFja2VkLWJ5OiBMZWUgSm9uZXMgPGxlZS5qb25lc0Bs
-aW5hcm8ub3JnPgoKPiAgLi4uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2hpc2lsaWNvbi1wY2ll
-LnR4dCAgICAgICB8ICAyICstCj4gIERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9w
-Y2kva2lyaW4tcGNpZS50eHQgfCAgMiArLQo+ICAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kv
-cGNpLWtleXN0b25lLnR4dCAgICAgICAgIHwgIDQgKystLQo+ICAuLi4vZGV2aWNldHJlZS9iaW5k
-aW5ncy9zb3VuZC9zdCxzdG0zMi1pMnMudHh0ICAgICAgIHwgIDIgKy0KPiAgLi4uL2RldmljZXRy
-ZWUvYmluZGluZ3Mvc291bmQvc3Qsc3RtMzItc2FpLnR4dCAgICAgICB8ICAyICstCj4gIE1BSU5U
-QUlORVJTICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAxMiArKysr
-KystLS0tLS0KPiAgOCBmaWxlcyBjaGFuZ2VkLCAxNCBpbnNlcnRpb25zKCspLCAxNCBkZWxldGlv
-bnMoLSkKCi0tIApMZWUgSm9uZXMgW+adjueQvOaWr10KTGluYXJvIFNlcnZpY2VzIFRlY2huaWNh
-bCBMZWFkCkxpbmFyby5vcmcg4pSCIE9wZW4gc291cmNlIHNvZnR3YXJlIGZvciBBUk0gU29DcwpG
-b2xsb3cgTGluYXJvOiBGYWNlYm9vayB8IFR3aXR0ZXIgfCBCbG9nCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcg
-bGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmlu
-ZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+This is the last user of drm_pcie_get_speed_cap_mask.  Use the pci
+version so we can drop drm_pcie_get_speed_cap_mask.
+
+Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+---
+ drivers/gpu/drm/radeon/ci_dpm.c   | 20 +++++++++++++++-----
+ drivers/gpu/drm/radeon/cik.c      | 22 ++++++++++++----------
+ drivers/gpu/drm/radeon/r600_dpm.c |  4 ++--
+ drivers/gpu/drm/radeon/radeon.h   |  4 ++++
+ drivers/gpu/drm/radeon/si.c       | 22 ++++++++++++----------
+ drivers/gpu/drm/radeon/si_dpm.c   | 20 +++++++++++++++-----
+ 6 files changed, 60 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/gpu/drm/radeon/ci_dpm.c b/drivers/gpu/drm/radeon/ci_dpm.c
+index b9302c918271..d587779a80b4 100644
+--- a/drivers/gpu/drm/radeon/ci_dpm.c
++++ b/drivers/gpu/drm/radeon/ci_dpm.c
+@@ -5676,19 +5676,29 @@ int ci_dpm_init(struct radeon_device *rdev)
+ 	u16 data_offset, size;
+ 	u8 frev, crev;
+ 	struct ci_power_info *pi;
++	enum pci_bus_speed speed_cap;
++	struct pci_dev *root = rdev->pdev->bus->self;
+ 	int ret;
+-	u32 mask;
+ 
+ 	pi = kzalloc(sizeof(struct ci_power_info), GFP_KERNEL);
+ 	if (pi == NULL)
+ 		return -ENOMEM;
+ 	rdev->pm.dpm.priv = pi;
+ 
+-	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
+-	if (ret)
++	speed_cap = pcie_get_speed_cap(root);
++	if (speed_cap == PCI_SPEED_UNKNOWN) {
+ 		pi->sys_pcie_mask = 0;
+-	else
+-		pi->sys_pcie_mask = mask;
++	} else {
++		if (speed_cap == PCIE_SPEED_8_0GT)
++			pi->sys_pcie_mask = RADEON_PCIE_SPEED_25 |
++				RADEON_PCIE_SPEED_50 |
++				RADEON_PCIE_SPEED_80;
++		else if (speed_cap == PCIE_SPEED_5_0GT)
++			pi->sys_pcie_mask = RADEON_PCIE_SPEED_25 |
++				RADEON_PCIE_SPEED_50;
++		else
++			pi->sys_pcie_mask = RADEON_PCIE_SPEED_25;
++	}
+ 	pi->force_pcie_gen = RADEON_PCIE_GEN_INVALID;
+ 
+ 	pi->pcie_gen_performance.max = RADEON_PCIE_GEN1;
+diff --git a/drivers/gpu/drm/radeon/cik.c b/drivers/gpu/drm/radeon/cik.c
+index 7c73bc7e2f85..ebce4601a305 100644
+--- a/drivers/gpu/drm/radeon/cik.c
++++ b/drivers/gpu/drm/radeon/cik.c
+@@ -9499,9 +9499,10 @@ int cik_set_vce_clocks(struct radeon_device *rdev, u32 evclk, u32 ecclk)
+ static void cik_pcie_gen3_enable(struct radeon_device *rdev)
+ {
+ 	struct pci_dev *root = rdev->pdev->bus->self;
++	enum pci_bus_speed speed_cap;
+ 	int bridge_pos, gpu_pos;
+-	u32 speed_cntl, mask, current_data_rate;
+-	int ret, i;
++	u32 speed_cntl, current_data_rate;
++	int i;
+ 	u16 tmp16;
+ 
+ 	if (pci_is_root_bus(rdev->pdev->bus))
+@@ -9516,23 +9517,24 @@ static void cik_pcie_gen3_enable(struct radeon_device *rdev)
+ 	if (!(rdev->flags & RADEON_IS_PCIE))
+ 		return;
+ 
+-	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
+-	if (ret != 0)
++	speed_cap = pcie_get_speed_cap(root);
++	if (speed_cap == PCI_SPEED_UNKNOWN)
+ 		return;
+ 
+-	if (!(mask & (DRM_PCIE_SPEED_50 | DRM_PCIE_SPEED_80)))
++	if ((speed_cap != PCIE_SPEED_8_0GT) &&
++	    (speed_cap != PCIE_SPEED_5_0GT))
+ 		return;
+ 
+ 	speed_cntl = RREG32_PCIE_PORT(PCIE_LC_SPEED_CNTL);
+ 	current_data_rate = (speed_cntl & LC_CURRENT_DATA_RATE_MASK) >>
+ 		LC_CURRENT_DATA_RATE_SHIFT;
+-	if (mask & DRM_PCIE_SPEED_80) {
++	if (speed_cap == PCIE_SPEED_8_0GT) {
+ 		if (current_data_rate == 2) {
+ 			DRM_INFO("PCIE gen 3 link speeds already enabled\n");
+ 			return;
+ 		}
+ 		DRM_INFO("enabling PCIE gen 3 link speeds, disable with radeon.pcie_gen2=0\n");
+-	} else if (mask & DRM_PCIE_SPEED_50) {
++	} else if (speed_cap == PCIE_SPEED_5_0GT) {
+ 		if (current_data_rate == 1) {
+ 			DRM_INFO("PCIE gen 2 link speeds already enabled\n");
+ 			return;
+@@ -9548,7 +9550,7 @@ static void cik_pcie_gen3_enable(struct radeon_device *rdev)
+ 	if (!gpu_pos)
+ 		return;
+ 
+-	if (mask & DRM_PCIE_SPEED_80) {
++	if (speed_cap == PCIE_SPEED_8_0GT) {
+ 		/* re-try equalization if gen3 is not already enabled */
+ 		if (current_data_rate != 2) {
+ 			u16 bridge_cfg, gpu_cfg;
+@@ -9636,9 +9638,9 @@ static void cik_pcie_gen3_enable(struct radeon_device *rdev)
+ 
+ 	pci_read_config_word(rdev->pdev, gpu_pos + PCI_EXP_LNKCTL2, &tmp16);
+ 	tmp16 &= ~0xf;
+-	if (mask & DRM_PCIE_SPEED_80)
++	if (speed_cap == PCIE_SPEED_8_0GT)
+ 		tmp16 |= 3; /* gen3 */
+-	else if (mask & DRM_PCIE_SPEED_50)
++	else if (speed_cap == PCIE_SPEED_5_0GT)
+ 		tmp16 |= 2; /* gen2 */
+ 	else
+ 		tmp16 |= 1; /* gen1 */
+diff --git a/drivers/gpu/drm/radeon/r600_dpm.c b/drivers/gpu/drm/radeon/r600_dpm.c
+index 73d4c5348116..5e044c98fca2 100644
+--- a/drivers/gpu/drm/radeon/r600_dpm.c
++++ b/drivers/gpu/drm/radeon/r600_dpm.c
+@@ -1327,9 +1327,9 @@ enum radeon_pcie_gen r600_get_pcie_gen_support(struct radeon_device *rdev,
+ 	case RADEON_PCIE_GEN3:
+ 		return RADEON_PCIE_GEN3;
+ 	default:
+-		if ((sys_mask & DRM_PCIE_SPEED_80) && (default_gen == RADEON_PCIE_GEN3))
++		if ((sys_mask & RADEON_PCIE_SPEED_80) && (default_gen == RADEON_PCIE_GEN3))
+ 			return RADEON_PCIE_GEN3;
+-		else if ((sys_mask & DRM_PCIE_SPEED_50) && (default_gen == RADEON_PCIE_GEN2))
++		else if ((sys_mask & RADEON_PCIE_SPEED_50) && (default_gen == RADEON_PCIE_GEN2))
+ 			return RADEON_PCIE_GEN2;
+ 		else
+ 			return RADEON_PCIE_GEN1;
+diff --git a/drivers/gpu/drm/radeon/radeon.h b/drivers/gpu/drm/radeon/radeon.h
+index 4a2eb409aacc..1a6f6edb3515 100644
+--- a/drivers/gpu/drm/radeon/radeon.h
++++ b/drivers/gpu/drm/radeon/radeon.h
+@@ -1653,6 +1653,10 @@ struct radeon_pm {
+ 	struct radeon_dpm       dpm;
+ };
+ 
++#define RADEON_PCIE_SPEED_25 1
++#define RADEON_PCIE_SPEED_50 2
++#define RADEON_PCIE_SPEED_80 4
++
+ int radeon_pm_get_type_index(struct radeon_device *rdev,
+ 			     enum radeon_pm_state_type ps_type,
+ 			     int instance);
+diff --git a/drivers/gpu/drm/radeon/si.c b/drivers/gpu/drm/radeon/si.c
+index 1907c950d76f..85c604d29235 100644
+--- a/drivers/gpu/drm/radeon/si.c
++++ b/drivers/gpu/drm/radeon/si.c
+@@ -7082,9 +7082,10 @@ int si_set_uvd_clocks(struct radeon_device *rdev, u32 vclk, u32 dclk)
+ static void si_pcie_gen3_enable(struct radeon_device *rdev)
+ {
+ 	struct pci_dev *root = rdev->pdev->bus->self;
++	enum pci_bus_speed speed_cap;
+ 	int bridge_pos, gpu_pos;
+-	u32 speed_cntl, mask, current_data_rate;
+-	int ret, i;
++	u32 speed_cntl, current_data_rate;
++	int i;
+ 	u16 tmp16;
+ 
+ 	if (pci_is_root_bus(rdev->pdev->bus))
+@@ -7099,23 +7100,24 @@ static void si_pcie_gen3_enable(struct radeon_device *rdev)
+ 	if (!(rdev->flags & RADEON_IS_PCIE))
+ 		return;
+ 
+-	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
+-	if (ret != 0)
++	speed_cap = pcie_get_speed_cap(root);
++	if (speed_cap == PCI_SPEED_UNKNOWN)
+ 		return;
+ 
+-	if (!(mask & (DRM_PCIE_SPEED_50 | DRM_PCIE_SPEED_80)))
++	if ((speed_cap != PCIE_SPEED_8_0GT) &&
++	    (speed_cap != PCIE_SPEED_5_0GT))
+ 		return;
+ 
+ 	speed_cntl = RREG32_PCIE_PORT(PCIE_LC_SPEED_CNTL);
+ 	current_data_rate = (speed_cntl & LC_CURRENT_DATA_RATE_MASK) >>
+ 		LC_CURRENT_DATA_RATE_SHIFT;
+-	if (mask & DRM_PCIE_SPEED_80) {
++	if (speed_cap == PCIE_SPEED_8_0GT) {
+ 		if (current_data_rate == 2) {
+ 			DRM_INFO("PCIE gen 3 link speeds already enabled\n");
+ 			return;
+ 		}
+ 		DRM_INFO("enabling PCIE gen 3 link speeds, disable with radeon.pcie_gen2=0\n");
+-	} else if (mask & DRM_PCIE_SPEED_50) {
++	} else if (speed_cap == PCIE_SPEED_5_0GT) {
+ 		if (current_data_rate == 1) {
+ 			DRM_INFO("PCIE gen 2 link speeds already enabled\n");
+ 			return;
+@@ -7131,7 +7133,7 @@ static void si_pcie_gen3_enable(struct radeon_device *rdev)
+ 	if (!gpu_pos)
+ 		return;
+ 
+-	if (mask & DRM_PCIE_SPEED_80) {
++	if (speed_cap == PCIE_SPEED_8_0GT) {
+ 		/* re-try equalization if gen3 is not already enabled */
+ 		if (current_data_rate != 2) {
+ 			u16 bridge_cfg, gpu_cfg;
+@@ -7219,9 +7221,9 @@ static void si_pcie_gen3_enable(struct radeon_device *rdev)
+ 
+ 	pci_read_config_word(rdev->pdev, gpu_pos + PCI_EXP_LNKCTL2, &tmp16);
+ 	tmp16 &= ~0xf;
+-	if (mask & DRM_PCIE_SPEED_80)
++	if (speed_cap == PCIE_SPEED_8_0GT)
+ 		tmp16 |= 3; /* gen3 */
+-	else if (mask & DRM_PCIE_SPEED_50)
++	else if (speed_cap == PCIE_SPEED_5_0GT)
+ 		tmp16 |= 2; /* gen2 */
+ 	else
+ 		tmp16 |= 1; /* gen1 */
+diff --git a/drivers/gpu/drm/radeon/si_dpm.c b/drivers/gpu/drm/radeon/si_dpm.c
+index fea88078cf8e..8fb60b3af015 100644
+--- a/drivers/gpu/drm/radeon/si_dpm.c
++++ b/drivers/gpu/drm/radeon/si_dpm.c
+@@ -6899,8 +6899,9 @@ int si_dpm_init(struct radeon_device *rdev)
+ 	struct ni_power_info *ni_pi;
+ 	struct si_power_info *si_pi;
+ 	struct atom_clock_dividers dividers;
++	enum pci_bus_speed speed_cap;
++	struct pci_dev *root = rdev->pdev->bus->self;
+ 	int ret;
+-	u32 mask;
+ 
+ 	si_pi = kzalloc(sizeof(struct si_power_info), GFP_KERNEL);
+ 	if (si_pi == NULL)
+@@ -6910,11 +6911,20 @@ int si_dpm_init(struct radeon_device *rdev)
+ 	eg_pi = &ni_pi->eg;
+ 	pi = &eg_pi->rv7xx;
+ 
+-	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
+-	if (ret)
++	speed_cap = pcie_get_speed_cap(root);
++	if (speed_cap == PCI_SPEED_UNKNOWN) {
+ 		si_pi->sys_pcie_mask = 0;
+-	else
+-		si_pi->sys_pcie_mask = mask;
++	} else {
++		if (speed_cap == PCIE_SPEED_8_0GT)
++			si_pi->sys_pcie_mask = RADEON_PCIE_SPEED_25 |
++				RADEON_PCIE_SPEED_50 |
++				RADEON_PCIE_SPEED_80;
++		else if (speed_cap == PCIE_SPEED_5_0GT)
++			si_pi->sys_pcie_mask = RADEON_PCIE_SPEED_25 |
++				RADEON_PCIE_SPEED_50;
++		else
++			si_pi->sys_pcie_mask = RADEON_PCIE_SPEED_25;
++	}
+ 	si_pi->force_pcie_gen = RADEON_PCIE_GEN_INVALID;
+ 	si_pi->boot_pcie_gen = si_get_current_pcie_speed(rdev);
+ 
+-- 
+2.13.6
