@@ -1,88 +1,74 @@
-Return-Path: <SRS0=fgzy=I7=arm.com=punit.agrawal@kernel.org>
-Return-Path: <SRS0=fgzy=I7=arm.com=punit.agrawal@kernel.org>
-From: Punit Agrawal <punit.agrawal@arm.com>
-To: Xie XiuQi <xiexiuqi@huawei.com>,  Hanjun Guo <guohanjun@huawei.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,  tnowicki@caviumnetworks.com,  linux-pci@vger.kernel.org,  Catalin Marinas <catalin.marinas@arm.com>,  "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,  Will Deacon <will.deacon@arm.com>,  Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,  Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,  linux-mm@kvack.org,  wanghuiqiang@huawei.com,  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,  Bjorn Helgaas <bhelgaas@google.com>,  Andrew Morton <akpm@linux-foundation.org>,  zhongjiang <zhongjiang@huawei.com>,  linux-arm <linux-arm-kernel@lists.infradead.org>, Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
-References: <1527768879-88161-2-git-send-email-xiexiuqi@huawei.com>
-	<20180606154516.GL6631@arm.com>
-	<CAErSpo6S0qtR42tjGZrFu4aMFFyThx1hkHTSowTt6t3XerpHnA@mail.gmail.com>
-	<20180607105514.GA13139@dhcp22.suse.cz>
-	<5ed798a0-6c9c-086e-e5e8-906f593ca33e@huawei.com>
-	<20180607122152.GP32433@dhcp22.suse.cz>
-	<a880df29-b656-d98d-3037-b04761c7ed78@huawei.com>
-	<20180611085237.GI13364@dhcp22.suse.cz>
-	<16c4db2f-bc70-d0f2-fb38-341d9117ff66@huawei.com>
-	<20180611134303.GC75679@bhelgaas-glaptop.roam.corp.google.com>
-	<20180611145330.GO13364@dhcp22.suse.cz>
-	<87lgbk59gs.fsf@e105922-lin.cambridge.arm.com>
-Date: Wed, 13 Jun 2018 18:39:00 +0100
-In-Reply-To: <87lgbk59gs.fsf@e105922-lin.cambridge.arm.com> (Punit Agrawal's
-	message of "Tue, 12 Jun 2018 16:08:03 +0100")
-Message-ID: <87bmce60y3.fsf@e105922-lin.cambridge.arm.com>
+Return-Path: <SRS0=gFkO=JL=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=gFkO=JL=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [PATCH] PCI: shpchp: Fix probing logic inversion
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20180621164715.28160-1-marc.zyngier@arm.com>
+ <20180625140122.GF108993@bhelgaas-glaptop.roam.corp.google.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <62eb1a4b-2ec9-b472-a277-33ddc5952348@arm.com>
+Date: Mon, 25 Jun 2018 17:18:40 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180625140122.GF108993@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Punit Agrawal <punit.agrawal@arm.com> writes:
+Bjorn, Mika,
 
+On 25/06/18 15:01, Bjorn Helgaas wrote:
+> Hi Marc,
+> 
+> Sorry we broke this!
 
-[...]
+No worries, gave me a chance to stare at something else! ;-)
 
->
-> CONFIG_HAVE_MEMORYLESS node is not enabled on arm64 which means we end
-> up returning the original node in the fallback path.
->
-> Xie, does the below patch help? I can submit a proper patch if this
-> fixes the issue for you.
->
-> -- >8 --
-> Subject: [PATCH] arm64/numa: Enable memoryless numa nodes
->
-> Signed-off-by: Punit Agrawal <punit.agrawal@arm.com>
-> ---
->  arch/arm64/Kconfig   | 4 ++++
->  arch/arm64/mm/numa.c | 2 ++
->  2 files changed, 6 insertions(+)
->
-> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> index eb2cf4938f6d..5317e9aa93ab 100644
-> --- a/arch/arm64/Kconfig
-> +++ b/arch/arm64/Kconfig
-> @@ -756,6 +756,10 @@ config USE_PERCPU_NUMA_NODE_ID
->  	def_bool y
->  	depends on NUMA
->  
-> +config HAVE_MEMORYLESS_NODES
-> +       def_bool y
-> +       depends on NUMA
-> +
->  config HAVE_SETUP_PER_CPU_AREA
->  	def_bool y
->  	depends on NUMA
-> diff --git a/arch/arm64/mm/numa.c b/arch/arm64/mm/numa.c
-> index dad128ba98bf..c699dcfe93de 100644
-> --- a/arch/arm64/mm/numa.c
-> +++ b/arch/arm64/mm/numa.c
-> @@ -73,6 +73,8 @@ EXPORT_SYMBOL(cpumask_of_node);
->  static void map_cpu_to_node(unsigned int cpu, int nid)
->  {
->  	set_cpu_numa_node(cpu, nid);
-> +	set_numa_mem(local_memory_node(nid));
+> 
+> On Thu, Jun 21, 2018 at 05:47:15PM +0100, Marc Zyngier wrote:
+>> Until recently, shpc_probe() would bail out pretty early in the
+>> absence of the SHPC capability. A logic change in the way the
+>> driver now checks that capability makes it go and probe the
+>> firmware anyway, with ugly consequences if the system is not
+>> ACPI based (my arm64 ThunderX is DT driven, and explodes in
+>> a spectacular way after getting a NULL root bridge from the
+>> non-existent ACPI tables...).
+>>
+>> Take this opportunity to move the call to shpchp_is_native()
+>> back into shpc_probe(), making it clear that a non-ACPI system
+>> is not expected to use this driver.
+> 
+> But a non-ACPI system *should* be able to use SHPC.
 
-Argh, this should be
+Yeah, I only realized that once Mika pointed it out.
 
-        set_cpu_numa_mem(cpu, local_memory_node(nid));
+> Here's my understanding of how it should work.  On an ACPI system,
+> 
+>   - If firmware has _OSC, the OS calls it to request permission to
+>     manage the SHPC.  If _OSC grants permission, it should also
+>     configure the hardware (interrupts, etc) to give the OS.
+>     
+>   - If there's no _OSC, shpchp assumes it's allowed to manage the
+>     SHPC, and it calls OSHP to configure the hardware appropriately.
+> 
+> On a non-ACPI system, shpchp assumes there's no firmware involved at
+> all, so it can manage the SHPC without doing anything special.
+> 
+> I see Mika has already posted a patch similar to the first one
+> below; I think either of those should fix the problem you're seeing.
 
-There is not guarantee that map_cpu_to_node() will be called on the
-local cpu.
+Absolutely. With this early exit when root is NULL, my test box is back
+up and running.
 
-Hanjun, Xie - can you try with the update please?
+> The second is an attempt to clean things up so they make a
+> little more sense.
+
+I haven't tried that second patch yet, but from reading it, it
+definitely helps making sense of this driver.
 
 Thanks,
-Punit
 
-> +
->  	if (nid >= 0)
->  		cpumask_set_cpu(cpu, node_to_cpumask_map[nid]);
->  }
+	M.
+-- 
+Jazz is not dead. It just smells funny...
