@@ -1,156 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp21.cstnet.cn ([159.226.251.21]:44127 "EHLO cstnet.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753246AbeFINaV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 9 Jun 2018 09:30:21 -0400
-From: Pu Wen <puwen@hygon.cn>
-To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-        x86@kernel.org, zhangpanyong@hygon.cn
-Cc: thomas.lendacky@amd.com, peterz@infradead.org, tony.luck@intel.com,
-        bp@alien8.de, pbonzini@redhat.com, rkrcmar@redhat.com,
-        boris.ostrovsky@oracle.com, jgross@suse.com, rjw@rjwysocki.net,
-        lenb@kernel.org, viresh.kumar@linaro.org, mchehab@kernel.org,
-        trenn@suse.com, shuah@kernel.org, linux-kernel@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-x86_64@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-edac@vger.kernel.org, linux-pm@vger.kernel.org,
-        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
-        Pu Wen <puwen@hygon.cn>
-Subject: [PATCH 03/11] x86/cpu/bug: Add support for Hygon's Dhyana Family 18h processor
-Date: Sat,  9 Jun 2018 21:22:10 +0800
-Message-Id: <1528550530-28217-1-git-send-email-puwen@hygon.cn>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:38552 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751347AbeFYVGX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2018 17:06:23 -0400
+Received: by mail-qt0-f193.google.com with SMTP id c5-v6so2523000qth.5
+        for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2018 14:06:23 -0700 (PDT)
+From: Alex Deucher <alexdeucher@gmail.com>
+To: amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        airlied@gmail.com, linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: Alex Deucher <alexander.deucher@amd.com>
+Subject: [PATCH 5/5] drm: drop drm_pcie_get_speed_cap_mask and drm_pcie_get_max_link_width
+Date: Mon, 25 Jun 2018 16:06:06 -0500
+Message-Id: <20180625210606.2736-6-alexander.deucher@amd.com>
+In-Reply-To: <20180625210606.2736-1-alexander.deucher@amd.com>
+References: <20180625210606.2736-1-alexander.deucher@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch enables the x86 CPU bugs process functions support to
-Hygon Family 18h CPU:
-- Rename macro SPECTRE_V2_RETPOLINE_MINIMAL_AMD to
-  SPECTRE_V2_RETPOLINE_MINIMAL_LFENCE, and rename
-  SPECTRE_V2_CMD_RETPOLINE_AMD to SPECTRE_V2_CMD_RETPOLINE_LFENCE
-  for sharing codes with AMD and Hygon to mitigate Spectre V2 Retpoline
-  vulnerability.
-- Add Hygon's processor with no meltdown support in cpu_no_meltdown array.
+These functions duplicated functionality which was ultimately added
+to the pci core.
 
-Signed-off-by: Pu Wen <puwen@hygon.cn>
+All users of these functions have been ported to using the newly
+exposed pci functionality.  These functions are no longer used,
+so drop them.
+
+Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
 ---
- arch/x86/include/asm/nospec-branch.h |  4 ++--
- arch/x86/kernel/cpu/bugs.c           | 30 ++++++++++++++++--------------
- arch/x86/kernel/cpu/common.c         |  1 +
- 3 files changed, 19 insertions(+), 16 deletions(-)
+ drivers/gpu/drm/drm_pci.c | 58 -----------------------------------------------
+ include/drm/drm_pci.h     |  7 ------
+ 2 files changed, 65 deletions(-)
 
-diff --git a/arch/x86/include/asm/nospec-branch.h b/arch/x86/include/asm/nospec-branch.h
-index 8b38df9..771b165 100644
---- a/arch/x86/include/asm/nospec-branch.h
-+++ b/arch/x86/include/asm/nospec-branch.h
-@@ -211,9 +211,9 @@
- enum spectre_v2_mitigation {
- 	SPECTRE_V2_NONE,
- 	SPECTRE_V2_RETPOLINE_MINIMAL,
--	SPECTRE_V2_RETPOLINE_MINIMAL_AMD,
-+	SPECTRE_V2_RETPOLINE_MINIMAL_LFENCE,
- 	SPECTRE_V2_RETPOLINE_GENERIC,
--	SPECTRE_V2_RETPOLINE_AMD,
-+	SPECTRE_V2_RETPOLINE_LFENCE,
- 	SPECTRE_V2_IBRS,
- };
+diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
+index 4db9c515b74f..896e42a34895 100644
+--- a/drivers/gpu/drm/drm_pci.c
++++ b/drivers/gpu/drm/drm_pci.c
+@@ -326,64 +326,6 @@ int drm_legacy_pci_init(struct drm_driver *driver, struct pci_driver *pdriver)
+ }
+ EXPORT_SYMBOL(drm_legacy_pci_init);
  
-diff --git a/arch/x86/kernel/cpu/bugs.c b/arch/x86/kernel/cpu/bugs.c
-index 7416fc2..f179acb 100644
---- a/arch/x86/kernel/cpu/bugs.c
-+++ b/arch/x86/kernel/cpu/bugs.c
-@@ -120,15 +120,15 @@ enum spectre_v2_mitigation_cmd {
- 	SPECTRE_V2_CMD_FORCE,
- 	SPECTRE_V2_CMD_RETPOLINE,
- 	SPECTRE_V2_CMD_RETPOLINE_GENERIC,
--	SPECTRE_V2_CMD_RETPOLINE_AMD,
-+	SPECTRE_V2_CMD_RETPOLINE_LFENCE,
- };
+-int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
+-{
+-	struct pci_dev *root;
+-	u32 lnkcap, lnkcap2;
+-
+-	*mask = 0;
+-	if (!dev->pdev)
+-		return -EINVAL;
+-
+-	root = dev->pdev->bus->self;
+-
+-	/* we've been informed via and serverworks don't make the cut */
+-	if (root->vendor == PCI_VENDOR_ID_VIA ||
+-	    root->vendor == PCI_VENDOR_ID_SERVERWORKS)
+-		return -EINVAL;
+-
+-	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
+-	pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
+-
+-	if (lnkcap2) {	/* PCIe r3.0-compliant */
+-		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
+-			*mask |= DRM_PCIE_SPEED_25;
+-		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
+-			*mask |= DRM_PCIE_SPEED_50;
+-		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
+-			*mask |= DRM_PCIE_SPEED_80;
+-	} else {	/* pre-r3.0 */
+-		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
+-			*mask |= DRM_PCIE_SPEED_25;
+-		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
+-			*mask |= (DRM_PCIE_SPEED_25 | DRM_PCIE_SPEED_50);
+-	}
+-
+-	DRM_INFO("probing gen 2 caps for device %x:%x = %x/%x\n", root->vendor, root->device, lnkcap, lnkcap2);
+-	return 0;
+-}
+-EXPORT_SYMBOL(drm_pcie_get_speed_cap_mask);
+-
+-int drm_pcie_get_max_link_width(struct drm_device *dev, u32 *mlw)
+-{
+-	struct pci_dev *root;
+-	u32 lnkcap;
+-
+-	*mlw = 0;
+-	if (!dev->pdev)
+-		return -EINVAL;
+-
+-	root = dev->pdev->bus->self;
+-
+-	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
+-
+-	*mlw = (lnkcap & PCI_EXP_LNKCAP_MLW) >> 4;
+-
+-	DRM_INFO("probing mlw for device %x:%x = %x\n", root->vendor, root->device, lnkcap);
+-	return 0;
+-}
+-EXPORT_SYMBOL(drm_pcie_get_max_link_width);
+-
+ #else
  
- static const char *spectre_v2_strings[] = {
- 	[SPECTRE_V2_NONE]			= "Vulnerable",
- 	[SPECTRE_V2_RETPOLINE_MINIMAL]		= "Vulnerable: Minimal generic ASM retpoline",
--	[SPECTRE_V2_RETPOLINE_MINIMAL_AMD]	= "Vulnerable: Minimal AMD ASM retpoline",
-+	[SPECTRE_V2_RETPOLINE_MINIMAL_LFENCE]	= "Vulnerable: Minimal LFENCE ASM retpoline",
- 	[SPECTRE_V2_RETPOLINE_GENERIC]		= "Mitigation: Full generic retpoline",
--	[SPECTRE_V2_RETPOLINE_AMD]		= "Mitigation: Full AMD retpoline",
-+	[SPECTRE_V2_RETPOLINE_LFENCE]		= "Mitigation: Full LFENCE retpoline",
- };
+ void drm_pci_agp_destroy(struct drm_device *dev) {}
+diff --git a/include/drm/drm_pci.h b/include/drm/drm_pci.h
+index 674599025d7d..8181e9e7cf1d 100644
+--- a/include/drm/drm_pci.h
++++ b/include/drm/drm_pci.h
+@@ -58,11 +58,4 @@ static inline int drm_get_pci_dev(struct pci_dev *pdev,
+ }
+ #endif
  
- #undef pr_fmt
-@@ -258,7 +258,7 @@ static const struct {
- 	{ "off",               SPECTRE_V2_CMD_NONE,              false },
- 	{ "on",                SPECTRE_V2_CMD_FORCE,             true },
- 	{ "retpoline",         SPECTRE_V2_CMD_RETPOLINE,         false },
--	{ "retpoline,amd",     SPECTRE_V2_CMD_RETPOLINE_AMD,     false },
-+	{ "retpoline,lfence",  SPECTRE_V2_CMD_RETPOLINE_LFENCE,  false },
- 	{ "retpoline,generic", SPECTRE_V2_CMD_RETPOLINE_GENERIC, false },
- 	{ "auto",              SPECTRE_V2_CMD_AUTO,              false },
- };
-@@ -290,16 +290,17 @@ static enum spectre_v2_mitigation_cmd __init spectre_v2_parse_cmdline(void)
- 	}
- 
- 	if ((cmd == SPECTRE_V2_CMD_RETPOLINE ||
--	     cmd == SPECTRE_V2_CMD_RETPOLINE_AMD ||
-+	     cmd == SPECTRE_V2_CMD_RETPOLINE_LFENCE ||
- 	     cmd == SPECTRE_V2_CMD_RETPOLINE_GENERIC) &&
- 	    !IS_ENABLED(CONFIG_RETPOLINE)) {
- 		pr_err("%s selected but not compiled in. Switching to AUTO select\n", mitigation_options[i].option);
- 		return SPECTRE_V2_CMD_AUTO;
- 	}
- 
--	if (cmd == SPECTRE_V2_CMD_RETPOLINE_AMD &&
--	    boot_cpu_data.x86_vendor != X86_VENDOR_AMD) {
--		pr_err("retpoline,amd selected but CPU is not AMD. Switching to AUTO select\n");
-+	if (cmd == SPECTRE_V2_CMD_RETPOLINE_LFENCE &&
-+	   (boot_cpu_data.x86_vendor != X86_VENDOR_AMD ||
-+	    boot_cpu_data.x86_vendor != X86_VENDOR_HYGON)) {
-+		pr_err("retpoline,lfence selected but CPU is not AMD or Hygon. Switching to AUTO select\n");
- 		return SPECTRE_V2_CMD_AUTO;
- 	}
- 
-@@ -350,9 +351,9 @@ static void __init spectre_v2_select_mitigation(void)
- 		if (IS_ENABLED(CONFIG_RETPOLINE))
- 			goto retpoline_auto;
- 		break;
--	case SPECTRE_V2_CMD_RETPOLINE_AMD:
-+	case SPECTRE_V2_CMD_RETPOLINE_LFENCE:
- 		if (IS_ENABLED(CONFIG_RETPOLINE))
--			goto retpoline_amd;
-+			goto retpoline_lfence;
- 		break;
- 	case SPECTRE_V2_CMD_RETPOLINE_GENERIC:
- 		if (IS_ENABLED(CONFIG_RETPOLINE))
-@@ -367,14 +368,15 @@ static void __init spectre_v2_select_mitigation(void)
- 	return;
- 
- retpoline_auto:
--	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD) {
--	retpoline_amd:
-+	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD ||
-+	    boot_cpu_data.x86_vendor == X86_VENDOR_HYGON) {
-+	retpoline_lfence:
- 		if (!boot_cpu_has(X86_FEATURE_LFENCE_RDTSC)) {
- 			pr_err("Spectre mitigation: LFENCE not serializing, switching to generic retpoline\n");
- 			goto retpoline_generic;
- 		}
--		mode = retp_compiler() ? SPECTRE_V2_RETPOLINE_AMD :
--					 SPECTRE_V2_RETPOLINE_MINIMAL_AMD;
-+		mode = retp_compiler() ? SPECTRE_V2_RETPOLINE_LFENCE :
-+					 SPECTRE_V2_RETPOLINE_MINIMAL_LFENCE;
- 		setup_force_cpu_cap(X86_FEATURE_RETPOLINE_AMD);
- 		setup_force_cpu_cap(X86_FEATURE_RETPOLINE);
- 	} else {
-diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
-index 38276f5..88c042b 100644
---- a/arch/x86/kernel/cpu/common.c
-+++ b/arch/x86/kernel/cpu/common.c
-@@ -939,6 +939,7 @@ static const __initconst struct x86_cpu_id cpu_no_speculation[] = {
- 
- static const __initconst struct x86_cpu_id cpu_no_meltdown[] = {
- 	{ X86_VENDOR_AMD },
-+	{ X86_VENDOR_HYGON },
- 	{}
- };
- 
+-#define DRM_PCIE_SPEED_25 1
+-#define DRM_PCIE_SPEED_50 2
+-#define DRM_PCIE_SPEED_80 4
+-
+-int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *speed_mask);
+-int drm_pcie_get_max_link_width(struct drm_device *dev, u32 *mlw);
+-
+ #endif /* _DRM_PCI_H_ */
 -- 
-2.7.4
+2.13.6
