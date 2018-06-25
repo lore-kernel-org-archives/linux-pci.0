@@ -1,166 +1,203 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
-To: Michal Hocko <mhocko@kernel.org>
-References: <1527768879-88161-1-git-send-email-xiexiuqi@huawei.com>
- <1527768879-88161-2-git-send-email-xiexiuqi@huawei.com>
- <20180606154516.GL6631@arm.com>
- <CAErSpo6S0qtR42tjGZrFu4aMFFyThx1hkHTSowTt6t3XerpHnA@mail.gmail.com>
- <20180607105514.GA13139@dhcp22.suse.cz>
- <5ed798a0-6c9c-086e-e5e8-906f593ca33e@huawei.com>
- <20180607122152.GP32433@dhcp22.suse.cz>
- <a880df29-b656-d98d-3037-b04761c7ed78@huawei.com>
- <20180611085237.GI13364@dhcp22.suse.cz>
-From: Xie XiuQi <xiexiuqi@huawei.com>
-Message-ID: <16c4db2f-bc70-d0f2-fb38-341d9117ff66@huawei.com>
-Date: Mon, 11 Jun 2018 20:32:10 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:53022 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754537AbeFYJ0S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Jun 2018 05:26:18 -0400
+Date: Mon, 25 Jun 2018 10:27:58 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ley Foon Tan <ley.foon.tan@intel.com>
+Cc: Scott Branden <scott.branden@broadcom.com>,
+        Jan Kiszka <jan.kiszka@siemens.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH v2] PCI: controller: Move PCI_DOMAINS selection to arch
+ Kconfig
+Message-ID: <20180625092758.GA6412@red-moon>
+References: <20180619112105.14457-1-lorenzo.pieralisi@arm.com>
+ <30bb8a16-f829-a5a4-265f-2d1112d8d0bf@siemens.com>
+ <20180621165400.GB14519@e107981-ln.cambridge.arm.com>
+ <5e9b0aa4-ded1-725d-c401-49c13b7d5f9d@broadcom.com>
+ <1529683148.2729.6.camel@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180611085237.GI13364@dhcp22.suse.cz>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Hanjun Guo <guohanjun@huawei.com>, tnowicki@caviumnetworks.com,
- linux-pci@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
- "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- Will Deacon <will.deacon@arm.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>, linux-mm@kvack.org,
- wanghuiqiang@huawei.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Andrew Morton <akpm@linux-foundation.org>,
- zhongjiang <zhongjiang@huawei.com>,
- linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1529683148.2729.6.camel@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Michal,
+On Fri, Jun 22, 2018 at 11:59:08PM +0800, Ley Foon Tan wrote:
+> On Thu, 2018-06-21 at 22:08 -0700, Scott Branden wrote:
+> > 
+> > 
+> > On 18-06-21 09:54 AM, Lorenzo Pieralisi wrote:
+> > > 
+> > > 
+> > > On Wed, Jun 20, 2018 at 10:07:33AM +0200, Jan Kiszka wrote:
+> > > > 
+> > > > 
+> > > > On 2018-06-19 13:21, Lorenzo Pieralisi wrote:
+> > > > > 
+> > > > > 
+> > > > > Commit 51bc085d6454 ("PCI: Improve host drivers compile test
+> > > > > coverage")
+> > > > > added configuration options to allow PCI host controller
+> > > > > drivers to be
+> > > > > compile tested on all architectures.
+> > > > > 
+> > > > > Some host controller drivers (eg PCIE_ALTERA) config entries
+> > > > > select
+> > > > > the PCI_DOMAINS config option to enable PCI domains management
+> > > > > in
+> > > > > the kernel. Now that host controller drivers can be compiled on
+> > > > > all architectures, this triggers build regressions on arches
+> > > > > that
+> > > > > do not implement the PCI_DOMAINS required API (ie
+> > > > > pci_domain_nr()):
+> > > > > 
+> > > > > drivers/ata/pata_ali.c: In function 'ali_init_chipset':
+> > > > > drivers/ata/pata_ali.c:469:38: error:
+> > > > >          implicit declaration of function 'pci_domain_nr';
+> > > > >                                            did you mean
+> > > > > 'pci_iomap_wc'?
+> > > > > 
+> > > > > Furthemore, some software configurations (ie Jailhouse) require
+> > > > > a
+> > > > > PCI_DOMAINS enabled kernel to configure multiple host
+> > > > > controllers
+> > > > > without having an explicit dependency on the ARM platform on
+> > > > > which
+> > > > > they run.
+> > > > > 
+> > > > > Make PCI_DOMAINS a visible configuration option on ARM so that
+> > > > > software
+> > > > > configurations that need it can manually select it and move the
+> > > > > PCI_DOMAINS selection from PCI controllers configuration file
+> > > > > to ARM
+> > > > > sub-arch config entries that currently require it, fixing the
+> > > > > issue.
+> > > > > 
+> > > > > Fixes: 51bc085d6454 ("PCI: Improve host drivers compile test
+> > > > > coverage")
+> > > > > Link: https://lkml.kernel.org/r/20180612170229.GA10141@roeck-us
+> > > > > .net
+> > > > > Reported-by: Guenter Roeck <linux@roeck-us.net>
+> > > > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > > > Cc: Scott Branden <scott.branden@broadcom.com>
+> > > > > Cc: Will Deacon <will.deacon@arm.com>
+> > > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > > > Cc: Rob Herring <robh@kernel.org>
+> > > > > Cc: Russell King <linux@armlinux.org.uk>
+> > > > > Cc: Jan Kiszka <jan.kiszka@siemens.com>
+> > > > > Cc: Guenter Roeck <linux@roeck-us.net>
+> > > > > Cc: Ley Foon Tan <lftan@altera.com>
+> > > > > ---
+> > > > > v1 -> v2
+> > > > >     - Removed ARCH_VIRT PCI_DOMAINS selection
+> > > > >     - Added PCI_DOMAINS visible config option
+> > > > > 
+> > > > > v1: https://marc.info/?l=linux-pci&m=152932092612352&w=2
+> > > > > 
+> > > > >   arch/arm/Kconfig               | 8 +++++++-
+> > > > >   arch/arm/mach-bcm/Kconfig      | 1 +
+> > > > >   arch/arm/mach-socfpga/Kconfig  | 1 +
+> > > > >   drivers/pci/controller/Kconfig | 3 ---
+> > > > >   4 files changed, 9 insertions(+), 4 deletions(-)
+> > > > > 
+> > > > > diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> > > > > index 54eeb8d00bc6..843edfd000be 100644
+> > > > > --- a/arch/arm/Kconfig
+> > > > > +++ b/arch/arm/Kconfig
+> > > > > @@ -1245,8 +1245,14 @@ config PCI
+> > > > >       VESA. If you have PCI, say Y, otherwise N.
+> > > > > 
+> > > > >   config PCI_DOMAINS
+> > > > > -   bool
+> > > > > +   bool "Support for multiple PCI domains"
+> > > > >     depends on PCI
+> > > > > +   help
+> > > > > +     Enable PCI domains kernel management. Say Y if your
+> > > > > machine
+> > > > > +     has a PCI bus hierarchy that requires more than one PCI
+> > > > > +     domain (aka segment) to be correctly managed. Say N
+> > > > > otherwise.
+> > > > > +
+> > > > > +     If you don't know what to do here, say N.
+> > > > > 
+> > > > >   config PCI_DOMAINS_GENERIC
+> > > > >     def_bool PCI_DOMAINS
+> > > > > diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-
+> > > > > bcm/Kconfig
+> > > > > index c46a728df44e..25aac6ee2ab1 100644
+> > > > > --- a/arch/arm/mach-bcm/Kconfig
+> > > > > +++ b/arch/arm/mach-bcm/Kconfig
+> > > > > @@ -20,6 +20,7 @@ config ARCH_BCM_IPROC
+> > > > >     select GPIOLIB
+> > > > >     select ARM_AMBA
+> > > > >     select PINCTRL
+> > > > > +   select PCI_DOMAINS if PCI
+> > > > >     help
+> > > > >       This enables support for systems based on Broadcom IPROC
+> > > > > architected SoCs.
+> > > > >       The IPROC complex contains one or more ARM CPUs along
+> > > > > with common
+> > > > > diff --git a/arch/arm/mach-socfpga/Kconfig b/arch/arm/mach-
+> > > > > socfpga/Kconfig
+> > > > > index d0f62eacf59d..4adb901dd5eb 100644
+> > > > > --- a/arch/arm/mach-socfpga/Kconfig
+> > > > > +++ b/arch/arm/mach-socfpga/Kconfig
+> > > > > @@ -10,6 +10,7 @@ menuconfig ARCH_SOCFPGA
+> > > > >     select HAVE_ARM_SCU
+> > > > >     select HAVE_ARM_TWD if SMP
+> > > > >     select MFD_SYSCON
+> > > > > +   select PCI_DOMAINS if PCI
+> > > > > 
+> > > > >   if ARCH_SOCFPGA
+> > > > >   config SOCFPGA_SUSPEND
+> > > > > diff --git a/drivers/pci/controller/Kconfig
+> > > > > b/drivers/pci/controller/Kconfig
+> > > > > index 18fa09b3ac8f..cc9fa02d32a0 100644
+> > > > > --- a/drivers/pci/controller/Kconfig
+> > > > > +++ b/drivers/pci/controller/Kconfig
+> > > > > @@ -96,7 +96,6 @@ config PCI_HOST_GENERIC
+> > > > >     depends on OF
+> > > > >     select PCI_HOST_COMMON
+> > > > >     select IRQ_DOMAIN
+> > > > > -   select PCI_DOMAINS
+> > > > >     help
+> > > > >       Say Y here if you want to support a simple generic PCI
+> > > > > host
+> > > > >       controller, such as the one emulated by kvmtool.
+> > > > > @@ -138,7 +137,6 @@ config PCI_VERSATILE
+> > > > > 
+> > > > >   config PCIE_IPROC
+> > > > >     tristate
+> > > > > -   select PCI_DOMAINS
+> > > > >     help
+> > > > >       This enables the iProc PCIe core controller support for
+> > > > > Broadcom's
+> > > > >       iProc family of SoCs. An appropriate bus interface driver
+> > > > > needs
+> > > > > @@ -176,7 +174,6 @@ config PCIE_IPROC_MSI
+> > > > >   config PCIE_ALTERA
+> > > > >     bool "Altera PCIe controller"
+> > > > >     depends on ARM || NIOS2 || COMPILE_TEST
+> > > > > -   select PCI_DOMAINS
+> > > > >     help
+> > > > >       Say Y here if you want to enable PCIe controller support
+> > > > > on Altera
+> > > > >       FPGA.
+> > > > > 
+> > > > Acked-by: Jan Kiszka <jan.kiszka@siemens.com>
+> > > Thanks a lot. Scott, Ley Foon, does it work for you ? I would like
+> > > to ask Bjorn to send it asap since the build on sparc is still
+> > > broken.
+> > Change will have to be made for arm64 for ARCH_BCM_IPROC as well.
+> Yes, need to add it to arm64 too. Others are okay.
 
-On 2018/6/11 16:52, Michal Hocko wrote:
-> On Mon 11-06-18 11:23:18, Xie XiuQi wrote:
->> Hi Michal,
->>
->> On 2018/6/7 20:21, Michal Hocko wrote:
->>> On Thu 07-06-18 19:55:53, Hanjun Guo wrote:
->>>> On 2018/6/7 18:55, Michal Hocko wrote:
->>> [...]
->>>>> I am not sure I have the full context but pci_acpi_scan_root calls
->>>>> kzalloc_node(sizeof(*info), GFP_KERNEL, node)
->>>>> and that should fall back to whatever node that is online. Offline node
->>>>> shouldn't keep any pages behind. So there must be something else going
->>>>> on here and the patch is not the right way to handle it. What does
->>>>> faddr2line __alloc_pages_nodemask+0xf0 tells on this kernel?
->>>>
->>>> The whole context is:
->>>>
->>>> The system is booted with a NUMA node has no memory attaching to it
->>>> (memory-less NUMA node), also with NR_CPUS less than CPUs presented
->>>> in MADT, so CPUs on this memory-less node are not brought up, and
->>>> this NUMA node will not be online (but SRAT presents this NUMA node);
->>>>
->>>> Devices attaching to this NUMA node such as PCI host bridge still
->>>> return the valid NUMA node via _PXM, but actually that valid NUMA node
->>>> is not online which lead to this issue.
->>>
->>> But we should have other numa nodes on the zonelists so the allocator
->>> should fall back to other node. If the zonelist is not intiailized
->>> properly, though, then this can indeed show up as a problem. Knowing
->>> which exact place has blown up would help get a better picture...
->>>
->>
->> I specific a non-exist node to allocate memory using kzalloc_node,
->> and got this following error message.
->>
->> And I found out there is just a VM_WARN, but it does not prevent the memory
->> allocation continue.
->>
->> This nid would be use to access NODE_DADA(nid), so if nid is invalid,
->> it would cause oops here.
->>
->> 459 /*
->> 460  * Allocate pages, preferring the node given as nid. The node must be valid and
->> 461  * online. For more general interface, see alloc_pages_node().
->> 462  */
->> 463 static inline struct page *
->> 464 __alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
->> 465 {
->> 466         VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
->> 467         VM_WARN_ON(!node_online(nid));
->> 468
->> 469         return __alloc_pages(gfp_mask, order, nid);
->> 470 }
->> 471
->>
->> (I wrote a ko, to allocate memory on a non-exist node using kzalloc_node().)
-> 
-> OK, so this is an artificialy broken code, right. You shouldn't get a
-> non-existent node via standard APIs AFAICS. The original report was
-> about an existing node which is offline AFAIU. That would be a different
-> case. If I am missing something and there are legitimate users that try
-> to allocate from non-existing nodes then we should handle that in
-> node_zonelist.
+On arm64 CONFIG_PCI_DOMAINS defaults to CONFIG_PCI so there is no need
+to select it, if that's all you need changed there is nothing to
+change and this patch is read to be merged.
 
-I think hanjun's comments may help to understood this question:
- - NUMA node will be built if CPUs and (or) memory are valid on this NUMA node;
-
- - But if we boot the system with memory-less node and also with CONFIG_NR_CPUS
-   less than CPUs in SRAT, for example, 64 CPUs total with 4 NUMA nodes, 16 CPUs
-   on each NUMA node, if we boot with CONFIG_NR_CPUS=48, then we will not built
-   numa node for node 3, but with devices on that numa node, alloc memory will
-   be panic because NUMA node 3 is not a valid node.
-
-I triggered this BUG on arm64 platform, and I found a similar bug has been fixed
-on x86 platform. So I sent a similar patch for this bug.
-
-Or, could we consider to fix it in the mm subsystem?
-
->From b755de8dfdfef97effaa91379ffafcb81f4d62a1 Mon Sep 17 00:00:00 2001
-From: Yinghai Lu <Yinghai.Lu@Sun.COM>
-Date: Wed, 20 Feb 2008 12:41:52 -0800
-Subject: [PATCH] x86: make dev_to_node return online node
-
-a numa system (with multi HT chains) may return node without ram. Aka it
-is not online. Try to get an online node, otherwise return -1.
-
-Signed-off-by: Yinghai Lu <yinghai.lu@sun.com>
-Signed-off-by: Ingo Molnar <mingo@elte.hu>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- arch/x86/pci/acpi.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index d95de2f..ea8685f 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -172,6 +172,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_device *device, int do
- 		set_mp_bus_to_node(busnum, node);
- 	else
- 		node = get_mp_bus_to_node(busnum);
-+
-+	if (node != -1 && !node_online(node))
-+		node = -1;
- #endif
-
- 	/* Allocate per-root-bus (not per bus) arch-specific data.
--- 
-1.8.3.1
-
-
-> 
-> [...]
-> 
-
--- 
-Thanks,
-Xie XiuQi
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Lorenzo
