@@ -1,86 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:36772 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933657AbeFMH1p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 03:27:45 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3 10/10] PCI: rockchip: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Wed, 13 Jun 2018 15:27:22 +0800
-Message-Id: <1528874843-8007-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-eopbgr710076.outbound.protection.outlook.com ([40.107.71.76]:5857
+        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754682AbeFYIbX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Jun 2018 04:31:23 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <lorenzo.pieralisi@arm.com>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <robh+dt@kernel.org>, Alan Douglas <adouglas@cadence.com>
+Subject: [PATCH 5/5] PCI: cadence: Add shutdown callback to host driver
+Date: Mon, 25 Jun 2018 09:30:53 +0100
+Message-ID: <1529915453-4633-6-git-send-email-adouglas@cadence.com>
+In-Reply-To: <1529915453-4633-1-git-send-email-adouglas@cadence.com>
+References: <1529915453-4633-1-git-send-email-adouglas@cadence.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+Add shutdown callback to host driver which will disable PHY and
+PM runtime.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Signed-off-by: Alan Douglas <adouglas@cadence.com>
 ---
+ drivers/pci/controller/pcie-cadence-host.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-Changes in v3: None
-Changes in v2: None
-
- drivers/pci/controller/pcie-rockchip-host.c | 38 +++--------------------------
- 1 file changed, 3 insertions(+), 35 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
-index 1372d27..eb62ba4 100644
---- a/drivers/pci/controller/pcie-rockchip-host.c
-+++ b/drivers/pci/controller/pcie-rockchip-host.c
-@@ -699,39 +699,6 @@ static void rockchip_pcie_enable_interrupts(struct rockchip_pcie *rockchip)
- 	rockchip_pcie_enable_bw_int(rockchip);
+diff --git a/drivers/pci/controller/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
+index e3e9b7d..ec394f6 100644
+--- a/drivers/pci/controller/pcie-cadence-host.c
++++ b/drivers/pci/controller/pcie-cadence-host.c
+@@ -343,6 +343,20 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
+ 	return ret;
  }
  
--static int rockchip_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
--				  irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--static const struct irq_domain_ops intx_domain_ops = {
--	.map = rockchip_pcie_intx_map,
--};
--
--static int rockchip_pcie_init_irq_domain(struct rockchip_pcie *rockchip)
--{
--	struct device *dev = rockchip->dev;
--	struct device_node *intc = of_get_next_child(dev->of_node, NULL);
--
--	if (!intc) {
--		dev_err(dev, "missing child interrupt-controller node\n");
--		return -EINVAL;
--	}
--
--	rockchip->irq_domain = irq_domain_add_linear(intc, PCI_NUM_INTX,
--						    &intx_domain_ops, rockchip);
--	if (!rockchip->irq_domain) {
--		dev_err(dev, "failed to get a INTx IRQ domain\n");
--		return -EINVAL;
--	}
--
--	return 0;
--}
--
- static int rockchip_pcie_prog_ob_atu(struct rockchip_pcie *rockchip,
- 				     int region_no, int type, u8 num_pass_bits,
- 				     u32 lower_addr, u32 upper_addr)
-@@ -990,8 +957,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 
- 	rockchip_pcie_enable_interrupts(rockchip);
- 
--	err = rockchip_pcie_init_irq_domain(rockchip);
--	if (err < 0)
-+	rockchip->irq_domain = pci_host_alloc_intx_irqd(dev, rockchip, false,
-+							NULL, NULL);
-+	if (IS_ERR(rockchip->irq_domain))
- 		goto err_deinit_port;
- 
- 	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
++static void cdns_pcie_shutdown(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct cdns_pcie *pcie = dev_get_drvdata(dev);
++	int ret;
++
++	ret = pm_runtime_put_sync(dev);
++	if (ret < 0)
++		dev_dbg(dev, "pm_runtime_put_sync failed\n");
++
++	pm_runtime_disable(dev);
++	cdns_pcie_disable_phy(pcie);
++}
++
+ static struct platform_driver cdns_pcie_host_driver = {
+ 	.driver = {
+ 		.name = "cdns-pcie-host",
+@@ -350,5 +364,6 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
+ 		.pm	= &cdns_pcie_pm_ops,
+ 	},
+ 	.probe = cdns_pcie_host_probe,
++	.shutdown = cdns_pcie_shutdown,
+ };
+ builtin_platform_driver(cdns_pcie_host_driver);
 -- 
-1.9.1
+1.7.1
