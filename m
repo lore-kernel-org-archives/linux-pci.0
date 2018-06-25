@@ -1,107 +1,57 @@
-Return-Path: <SRS0=Cu5Y=JG=flex--rajatja.bounces.google.com=3T-YqWwcKB6YXGPGZPGMUUMRK.IUSNKRMGGYQKXTKR.UXM@kernel.org>
-Return-Path: <SRS0=Cu5Y=JG=flex--rajatja.bounces.google.com=3T-YqWwcKB6YXGPGZPGMUUMRK.IUSNKRMGGYQKXTKR.UXM@kernel.org>
-MIME-Version: 1.0
-Date: Wed, 20 Jun 2018 16:41:46 -0700
-In-Reply-To: <20180620234147.48438-1-rajatja@google.com>
-Message-Id: <20180620234147.48438-4-rajatja@google.com>
-References: <20180522222805.80314-1-rajatja@google.com> <20180620234147.48438-1-rajatja@google.com>
-Subject: [PATCH v5 4/5] PCI/AER: Add sysfs attributes for rootport cumulative stats
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
-	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
-	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
-Cc: Rajat Jain <rajatja@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
+From: Pingfan Liu <kernelfans@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Pingfan Liu <kernelfans@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH 0/3] drivers/base: bugfix for supplier<-consumer ordering in device_kset
+Date: Mon, 25 Jun 2018 13:23:04 +0800
+Message-Id: <1529904187-18673-1-git-send-email-kernelfans@gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add sysfs attributes for rootport statistics (that are cumulative
-of all the ERR_* messages seen on this PCI hierarchy).
+commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+places an assumption of supplier<-consumer order on the process of probe.
+But it turns out to break down the parent <- child order in some scene.
+E.g in pci, a bridge is enabled by pci core, and behind it, the devices
+have been probed. Then comes the bridge's module, which enables extra
+feature(such as hotplug) on this bridge.
+This will break the parent<-children order and cause failure when
+"kexec -e" in some scenario.
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
-v5: Same as v4
-v4: Make pci_rootport_aer_stats_incr() static, 1 hunk of previous patch was included by mistake, fix that.
-v3: Merge everything in aer.c
+I tried to fix this issue in pci subsystem, and it turns out to be wrong.
+Thanks to Christoph Hellwig, he enlightens me that it should be a bug in
+driver core.
 
- drivers/pci/pcie/aer.c | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+To ease the review, I organize the patch as the following
+[3/3] reflects the root cause of this bug. if [2/3] is not acceptable,
+we still need some way to fix it.
+[2/3] introduce a algorithm to reorder device
+[1/3] some trivial help routine
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index c989bb5bb6f1..d9def7fabd81 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -586,6 +586,9 @@ static DEVICE_ATTR_RO(field)
- aer_stats_aggregate_attr(dev_total_cor_errs);
- aer_stats_aggregate_attr(dev_total_fatal_errs);
- aer_stats_aggregate_attr(dev_total_nonfatal_errs);
-+aer_stats_aggregate_attr(rootport_total_cor_errs);
-+aer_stats_aggregate_attr(rootport_total_fatal_errs);
-+aer_stats_aggregate_attr(rootport_total_nonfatal_errs);
- 
- #define aer_stats_breakdown_attr(field, stats_array, strings_array)	\
- 	static ssize_t							\
-@@ -619,6 +622,9 @@ static struct attribute *aer_stats_attrs[] __ro_after_init = {
- 	&dev_attr_dev_total_nonfatal_errs.attr,
- 	&dev_attr_dev_breakdown_correctable.attr,
- 	&dev_attr_dev_breakdown_uncorrectable.attr,
-+	&dev_attr_rootport_total_cor_errs.attr,
-+	&dev_attr_rootport_total_fatal_errs.attr,
-+	&dev_attr_rootport_total_nonfatal_errs.attr,
- 	NULL
- };
- 
-@@ -631,6 +637,12 @@ static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
- 	if (!pdev->aer_stats)
- 		return 0;
- 
-+	if ((a == &dev_attr_rootport_total_cor_errs.attr ||
-+	     a == &dev_attr_rootport_total_fatal_errs.attr ||
-+	     a == &dev_attr_rootport_total_nonfatal_errs.attr) &&
-+	    pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT)
-+		return 0;
-+
- 	return a->mode;
- }
- 
-@@ -674,6 +686,25 @@ static void pci_dev_aer_stats_incr(struct pci_dev *pdev,
- 			counter[i]++;
- }
- 
-+static void pci_rootport_aer_stats_incr(struct pci_dev *pdev,
-+				 struct aer_err_source *e_src)
-+{
-+	struct aer_stats *aer_stats = pdev->aer_stats;
-+
-+	if (!aer_stats)
-+		return;
-+
-+	if (e_src->status & PCI_ERR_ROOT_COR_RCV)
-+		aer_stats->rootport_total_cor_errs++;
-+
-+	if (e_src->status & PCI_ERR_ROOT_UNCOR_RCV) {
-+		if (e_src->status & PCI_ERR_ROOT_FATAL_RCV)
-+			aer_stats->rootport_total_fatal_errs++;
-+		else
-+			aer_stats->rootport_total_nonfatal_errs++;
-+	}
-+}
-+
- static void __print_tlp_header(struct pci_dev *dev,
- 			       struct aer_header_log_regs *t)
- {
-@@ -1124,6 +1155,8 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
- 	struct pci_dev *pdev = rpc->rpd;
- 	struct aer_err_info *e_info = &rpc->e_info;
- 
-+	pci_rootport_aer_stats_incr(pdev, e_src);
-+
- 	/*
- 	 * There is a possibility that both correctable error and
- 	 * uncorrectable error being logged. Report correctable error first.
+
+Pingfan Liu (3):
+  drivers/base: introduce some help routines for reordering a group of
+    dev
+  drivers/base: reorder consumer and its children behind suppliers
+  drivers/base: only reordering consumer device when probing
+
+ drivers/base/base.h |   1 +
+ drivers/base/core.c | 135 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/base/dd.c   |   9 +---
+ 3 files changed, 138 insertions(+), 7 deletions(-)
+
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Dave Young <dyoung@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
 -- 
-2.18.0.rc1.244.gcf134e6275-goog
+2.7.4
