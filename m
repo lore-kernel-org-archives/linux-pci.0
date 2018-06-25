@@ -1,223 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:52008 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752838AbeFTOak (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jun 2018 10:30:40 -0400
-Subject: Re: [PATCH v4 09/10] pci_endpoint_test: Add 2 ioctl commands
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
- <b10530671bdcda8b9d2bb25048ad9048f814c608.1529329262.git.gustavo.pimentel@synopsys.com>
- <327bcbd0-b2a0-d1eb-5471-e6e63169fc8d@ti.com>
-From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Message-ID: <f6335b77-186e-9df9-bcc6-bbc9a31c87b9@synopsys.com>
-Date: Wed, 20 Jun 2018 15:28:33 +0100
-MIME-Version: 1.0
-In-Reply-To: <327bcbd0-b2a0-d1eb-5471-e6e63169fc8d@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
+From: Pingfan Liu <kernelfans@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Pingfan Liu <kernelfans@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH 3/3] drivers/base: only reordering consumer device when probing
+Date: Mon, 25 Jun 2018 13:23:07 +0800
+Message-Id: <1529904187-18673-4-git-send-email-kernelfans@gmail.com>
+In-Reply-To: <1529904187-18673-1-git-send-email-kernelfans@gmail.com>
+References: <1529904187-18673-1-git-send-email-kernelfans@gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+places an assumption of supplier<-consumer order on the process of probe.
+But it turns out to break down the parent <- child order in some scene.
+E.g in pci, a bridge is enabled by pci core, and behind it, the devices
+have been probed. Then comes the bridge's module, which enables extra
+feature(such as hotplug) on this bridge. This will break the
+parent<-children order and cause failure when "kexec -e" in some scenario.
 
-On 20/06/2018 08:58, Kishon Vijay Abraham I wrote:
-> Hi,
-> 
-> On Monday 18 June 2018 08:30 PM, Gustavo Pimentel wrote:
->> Add MSI-X support and update driver documentation accordingly.
->>
->> Add 2 new IOCTL commands:
->>  - Allow to reconfigure driver IRQ type in runtime.
->>  - Allow to retrieve current driver IRQ type configured.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->> Change v2->v3:
->>  - New patch file created base on the previous patch
->> "misc: pci_endpoint_test: Add MSI-X support" patch file following
->> Kishon's suggestion.
->> Change v3->v4:
->>  - Rebased to Lorenzo's master branch v4.18-rc1.
->>
->>  Documentation/misc-devices/pci-endpoint-test.txt |   3 +
->>  drivers/misc/pci_endpoint_test.c                 | 177 +++++++++++++++++------
->>  2 files changed, 132 insertions(+), 48 deletions(-)
->>
->> diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
->> index fdfa0f6..58ccca4 100644
->> --- a/Documentation/misc-devices/pci-endpoint-test.txt
->> +++ b/Documentation/misc-devices/pci-endpoint-test.txt
->> @@ -28,6 +28,9 @@ ioctl
->>  	      to be tested should be passed as argument.
->>   PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
->>  	      to be tested should be passed as argument.
->> + PCITEST_SET_IRQTYPE: Changes driver IRQ type configuration. The IRQ type
->> +	      should be passed as argument (0: Legacy, 1:MSI, 2:MSI-X).
->> + PCITEST_GET_IRQTYPE: Gets driver IRQ type configuration.
->>   PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
->>  		as argument.
->>   PCITEST_READ: Perform read tests. The size of the buffer should be passed
->> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
->> index 8d15dbe..df2017f 100644
->> --- a/drivers/misc/pci_endpoint_test.c
->> +++ b/drivers/misc/pci_endpoint_test.c
->> @@ -157,6 +157,87 @@ static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
->>  	return IRQ_HANDLED;
->>  }
->>  
->> +static void pci_endpoint_test_free_irq_vectors(struct pci_endpoint_test *test)
->> +{
->> +	int i;
->> +	struct pci_dev *pdev = test->pdev;
->> +	struct device *dev = &pdev->dev;
->> +
->> +	for (i = 0; i < test->num_irqs; i++)
->> +		devm_free_irq(dev, pci_irq_vector(pdev, i), test);
->> +
->> +	test->num_irqs = 0;
->> +}
->> +
->> +static bool pci_endpoint_test_alloc_irq_vectors(struct pci_endpoint_test *test)
->> +{
->> +	int irq = -1;
->> +	struct pci_dev *pdev = test->pdev;
->> +	struct device *dev = &pdev->dev;
->> +	bool res = true;
->> +
->> +	switch (irq_type) {
->> +	case IRQ_TYPE_LEGACY:
->> +		irq = 0;
->> +		break;
->> +	case IRQ_TYPE_MSI:
->> +		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
->> +		if (irq < 0)
->> +			dev_err(dev, "Failed to get MSI interrupts\n");
->> +		break;
->> +	case IRQ_TYPE_MSIX:
->> +		irq = pci_alloc_irq_vectors(pdev, 1, 2048, PCI_IRQ_MSIX);
->> +		if (irq < 0)
->> +			dev_err(dev, "Failed to get MSI-X interrupts\n");
->> +		break;
->> +	default:
->> +		dev_err(dev, "Invalid IRQ type selected\n");
->> +	}
->> +
->> +	if (irq < 0) {
->> +		irq = 0;
->> +		res = false;
->> +	}
->> +	test->num_irqs = irq;
->> +
->> +	return res;
->> +}
->> +
->> +static void pci_endpoint_test_release_irq(struct pci_endpoint_test *test)
->> +{
->> +	struct pci_dev *pdev = test->pdev;
->> +
->> +	pci_disable_msi(pdev);
->> +	pci_disable_msix(pdev);
->> +}
->> +
->> +static bool pci_endpoint_test_request_irq(struct pci_endpoint_test *test)
->> +{
->> +	int i;
->> +	int err;
->> +	struct pci_dev *pdev = test->pdev;
->> +	struct device *dev = &pdev->dev;
->> +
->> +	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
->> +			       IRQF_SHARED, DRV_MODULE_NAME, test);
->> +	if (err) {
->> +		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
->> +		return false;
->> +	}
->> +
->> +	for (i = 1; i < test->num_irqs; i++) {
->> +		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
->> +				       pci_endpoint_test_irqhandler,
->> +				       IRQF_SHARED, DRV_MODULE_NAME, test);
->> +		if (err)
->> +			dev_err(dev, "Failed to request IRQ %d for MSI%s %d\n",
->> +				pci_irq_vector(pdev, i),
->> +				irq_type == IRQ_TYPE_MSIX ? "-X" : "", i + 1);
->> +	}
->> +
->> +	return true;
->> +}
->> +
->>  static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
->>  				  enum pci_barno barno)
->>  {
->> @@ -440,6 +521,38 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
->>  	return ret;
->>  }
->>  
->> +static bool pci_endpoint_test_set_irq(struct pci_endpoint_test *test,
->> +				      int req_irq_type)
->> +{
->> +	struct pci_dev *pdev = test->pdev;
->> +	struct device *dev = &pdev->dev;
->> +
->> +	if (req_irq_type < IRQ_TYPE_LEGACY || req_irq_type > IRQ_TYPE_MSIX) {
->> +		dev_err(dev, "Invalid IRQ type option\n");
->> +		return false;
->> +	}
->> +
->> +	if (irq_type == req_irq_type)
->> +		return true;
->> +
->> +	irq_type = req_irq_type;
->> +
->> +	pci_endpoint_test_free_irq_vectors(test);
->> +	pci_endpoint_test_release_irq(test);
->> +
->> +	if (!pci_endpoint_test_alloc_irq_vectors(test)) {
->> +		pci_endpoint_test_release_irq(test);
->> +		return false;
->> +	}
->> +
->> +	if (!pci_endpoint_test_request_irq(test)) {
->> +		pci_endpoint_test_release_irq(test);
->> +		return false;
->> +	}
->> +
->> +	return true;
->> +}
->> +
->>  static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
->>  				    unsigned long arg)
->>  {
->> @@ -471,6 +584,12 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
->>  	case PCITEST_COPY:
->>  		ret = pci_endpoint_test_copy(test, arg);
->>  		break;
->> +	case PCITEST_SET_IRQTYPE:
->> +		ret = pci_endpoint_test_set_irq(test, arg);
->> +		break;
->> +	case PCITEST_GET_IRQTYPE:
->> +		ret = irq_type;
-> 
-> Can't the set_irq be done as part of raise irq itself?
+The detailed description of the scenario:
+An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
+match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
+to some issue. For this case, the bridge is moved after its children in
+devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
+write back buffer in flight due to the former shutdown of the bridge which
+clears the BusMaster bit.
 
-That could work for the legacy/MSI/MSI-X tests, but not for the Write/Read/Copy
-tests... From what I saw, it was possible to perform Write/Read/Copy tests with
-either legacy or MSI on the previous version. I'm assuming that you don't wanna
-to lose that functionalities, right?
+To fix this issue, only reordering a device and all of its children
+if it is a consumer.
 
-Regards,
-Gustavo
+Note, the bridge involved:
+0004:00:00.0 PCI bridge: IBM Device 04c1 (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        NUMA node: 0
+        Bus: primary=00, secondary=01, subordinate=12, sec-latency=0
+        I/O behind bridge: 00000000-00000fff
+        Memory behind bridge: 80000000-ffefffff
+        Prefetchable memory behind bridge: 0006024000000000-0006027f7fffffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity- SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [48] Express (v2) Root Port (Slot-), MSI 00
+                DevCap: MaxPayload 512 bytes, PhantFunc 0
+                        ExtTag- RBE+
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 256 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 8GT/s, Width x8, ASPM not supported, Exit Latency L0s <64ns, L1 <1us
+                        ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp-
+                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 8GT/s, Width x4, TrErr- Train- SlotClk- DLActive+ BWMgmt- ABWMgmt+
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd+
+                DevCtl2: Completion Timeout: 16ms to 55ms, TimeoutDis+, LTR-, OBFF Disabled ARIFwd+
+                LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete+, EqualizationPhase1+
+                         EqualizationPhase2+, EqualizationPhase3+, LinkEqualizationRequest-
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP+ FCP- CmpltTO+ CmpltAbrt+ UnxCmplt- RxOF- MalfTLP- ECRC+ UnsupReq- ACSViol-
+                UESvrt: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                AERCap: First Error Pointer: 00, GenCap+ CGenEn+ ChkCap+ ChkEn+
+        Capabilities: [148 v1] #19
 
-> 
-> Thanks
-> Kishon
-> 
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Dave Young <dyoung@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+---
+ drivers/base/dd.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index 1435d72..c74f23c 100644
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -434,13 +434,8 @@ static int really_probe(struct device *dev, struct device_driver *drv)
+ 			goto probe_failed;
+ 	}
+ 
+-	/*
+-	 * Ensure devices are listed in devices_kset in correct order
+-	 * It's important to move Dev to the end of devices_kset before
+-	 * calling .probe, because it could be recursive and parent Dev
+-	 * should always go first
+-	 */
+-	devices_kset_move_last(dev);
++	/* only reoder consumer and its children after suppliers.*/
++	device_reorder_consumer(dev);
+ 
+ 	if (dev->bus->probe) {
+ 		ret = dev->bus->probe(dev);
+-- 
+2.7.4
