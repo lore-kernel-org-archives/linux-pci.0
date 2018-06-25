@@ -1,154 +1,74 @@
-Return-Path: <SRS0=inYE=I6=gmail.com=marek.vasut@kernel.org>
-Return-Path: <SRS0=inYE=I6=gmail.com=marek.vasut@kernel.org>
-Subject: Re: [PATCH V2 4/5] PCI: rcar: Support runtime PM, link state L1
- handling
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
- Phil Edworthy <phil.edworthy@renesas.com>,
- Marek Vasut <marek.vasut+renesas@gmail.com>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Simon Horman <horms+renesas@verge.net.au>, Wolfram Sang <wsa@the-dreams.de>,
- linux-renesas-soc@vger.kernel.org
-References: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
- <20171110215843.432-5-marek.vasut+renesas@gmail.com>
- <20171117174906.GB22599@red-moon>
- <3e0bc374-d296-675c-f290-256cc530feb7@gmail.com>
- <20180611135912.GD75679@bhelgaas-glaptop.roam.corp.google.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <77d1eaf8-e180-f5f5-50f0-34c45e72c553@gmail.com>
-Date: Wed, 13 Jun 2018 01:54:51 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0043.outbound.protection.outlook.com ([104.47.37.43]:32547
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753076AbeFYIbm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Jun 2018 04:31:42 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <lorenzo.pieralisi@arm.com>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <robh+dt@kernel.org>, Alan Douglas <adouglas@cadence.com>
+Subject: [PATCH 3/5] dt-bindings: PCI: cadence: Add DT bindings for optional PHYs
+Date: Mon, 25 Jun 2018 09:30:51 +0100
+Message-ID: <1529915453-4633-4-git-send-email-adouglas@cadence.com>
+In-Reply-To: <1529915453-4633-1-git-send-email-adouglas@cadence.com>
+References: <1529915453-4633-1-git-send-email-adouglas@cadence.com>
 MIME-Version: 1.0
-In-Reply-To: <20180611135912.GD75679@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/11/2018 03:59 PM, Bjorn Helgaas wrote:
-> On Sun, Jun 10, 2018 at 03:57:10PM +0200, Marek Vasut wrote:
->> On 11/17/2017 06:49 PM, Lorenzo Pieralisi wrote:
->>> On Fri, Nov 10, 2017 at 10:58:42PM +0100, Marek Vasut wrote:
->>>> From: Phil Edworthy <phil.edworthy@renesas.com>
->>>>
->>>> Most PCIe host controllers support L0s and L1 power states via ASPM.
->>>> The R-Car hardware only supports L0s, so when the system suspends and
->>>> resumes we have to manually handle L1.
->>>> When the system suspends, cards can put themselves into L1 and send a
->>>
->>> I assumed L1 entry has to be negotiated depending upon the PCIe
->>> hierarchy capabilities, I would appreciate if you can explain to
->>> me what's the root cause of the issue please.
->>
->> You should probably ignore the suspend/resume part altogether. The issue
->> here is that the cards can enter L1 state, while the controller won't do
->> that automatically, it can only detect that the link went into L1 state.
->> If that happens,the driver must manually put the controller to L1 state.
->> The controller can transition out of L1 state automatically though.
-> 
-> From earlier discussion I thought the R-Car root port did not
-> advertise L1 support.
+Update DT documentation to include optional PHYs for cadence PCIe
+host and endpoint controllers.
 
-Which discussion ? This one or somewhere else ?
+Signed-off-by: Alan Douglas <adouglas@cadence.com>
+---
+ .../devicetree/bindings/pci/cdns,cdns-pcie-ep.txt  |    5 +++++
+ .../bindings/pci/cdns,cdns-pcie-host.txt           |    6 ++++++
+ 2 files changed, 11 insertions(+), 0 deletions(-)
 
-> If that's the case, we shouldn't enable L1
-> entry on a card.  Is the core ASPM code doing something wrong here?
-
-I can double-check, am I looking for some particular register in the
-PCIe space ?
-
->>>> PM_ENTER_L1 DLLP to the host controller. At this point, we can no longer
->>>> access the card's config registers.
->>>>
->>>> The R-Car host controller will handle taking cards out of L1 as long as
->>>> the host controller has also been transitioned to L1 link state.
->>>
->>> I wonder why this can't be done in a PM restore hook but that's not
->>> really where my question is.
->>
->> I suspect because the link can be in L1 during startup too?
->>
->>>> Ideally, we would detect the PM_ENTER_L1 DLLP using an interrupt and
->>>> transition the host to L1 immediately. However, this patch just ensures
->>>> that we can talk to cards after they have gone into L1.
->>>
->>>> When attempting a config access, it checks to see if the card has gone
->>>> into L1, and if so, does the same for the host controller.
->>>>
->>>> This is based on a patch by Hien Dang <hien.dang.eb@rvc.renesas.com>
->>>>
->>>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
->>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->>>> Cc: Simon Horman <horms+renesas@verge.net.au>
->>>> Cc: Wolfram Sang <wsa@the-dreams.de>
->>>> Cc: linux-renesas-soc@vger.kernel.org
->>>> ---
->>>> V2: - Drop extra parenthesis
->>>>     - Use GENMASK()
->>>>     - Fix comment "The HW will handle coming of of L1.", s/of of/out of/
->>>> ---
->>>>  drivers/pci/host/pcie-rcar.c | 24 ++++++++++++++++++++++++
->>>>  1 file changed, 24 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
->>>> index ab61829db389..068bf9067ec1 100644
->>>> --- a/drivers/pci/host/pcie-rcar.c
->>>> +++ b/drivers/pci/host/pcie-rcar.c
->>>> @@ -92,6 +92,13 @@
->>>>  #define MACCTLR			0x011058
->>>>  #define  SPEED_CHANGE		BIT(24)
->>>>  #define  SCRAMBLE_DISABLE	BIT(27)
->>>> +#define PMSR			0x01105c
->>>> +#define  L1FAEG			BIT(31)
->>>> +#define  PM_ENTER_L1RX		BIT(23)
->>>> +#define  PMSTATE		GENMASK(18, 16)
->>>> +#define  PMSTATE_L1		GENMASK(17, 16)
->>>> +#define PMCTLR			0x011060
->>>> +#define  L1_INIT		BIT(31)
->>>>  #define MACS2R			0x011078
->>>>  #define MACCGSPSETR		0x011084
->>>>  #define  SPCNGRSN		BIT(31)
->>>> @@ -191,6 +198,7 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
->>>>  		unsigned int devfn, int where, u32 *data)
->>>>  {
->>>>  	int dev, func, reg, index;
->>>> +	u32 val;
->>>>  
->>>>  	dev = PCI_SLOT(devfn);
->>>>  	func = PCI_FUNC(devfn);
->>>> @@ -232,6 +240,22 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
->>>>  	if (pcie->root_bus_nr < 0)
->>>>  		return PCIBIOS_DEVICE_NOT_FOUND;
->>>>  
->>>> +	/*
->>>> +	 * If we are not in L1 link state and we have received PM_ENTER_L1 DLLP,
->>>> +	 * transition to L1 link state. The HW will handle coming out of L1.
->>>> +	 */
->>>> +	val = rcar_pci_read_reg(pcie, PMSR);
->>>> +	if (val & PM_ENTER_L1RX && (val & PMSTATE) != PMSTATE_L1) {
->>>> +		rcar_pci_write_reg(pcie, L1_INIT, PMCTLR);
->>>> +
->>>> +		/* Wait until we are in L1 */
->>>> +		while (!(val & L1FAEG))
->>>> +			val = rcar_pci_read_reg(pcie, PMSR);
->>>> +
->>>> +		/* Clear flags indicating link has transitioned to L1 */
->>>> +		rcar_pci_write_reg(pcie, L1FAEG | PM_ENTER_L1RX, PMSR);
->>>> +	}
->>>
->>> I do not get why you need to add the DLLP check for _every_ given config
->>> access and how/why it is just related to suspend/resume and not eg cold
->>> boot (I supposed it is because devices can enter L1 upon suspend(?)), I
->>> would ask you please to provide a thorough explanation so that I can
->>> actually review this patch (the commit log must be rewritten nonetheless,
->>> I do not think it is clear, at least it is not for me).
->>
->> See above
->>
->> -- 
->> Best regards,
->> Marek Vasut
-
-
+diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+index 9a30523..4a0475e 100644
+--- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
++++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+@@ -9,6 +9,9 @@ Required properties:
+ 
+ Optional properties:
+ - max-functions: Maximum number of functions that can be configured (default 1).
++- phys: From PHY bindings: List of Generic PHY phandles. One per lane if more
++  than one in the list.  If only one PHY listed it must manage all lanes. 
++- phy-names:  List of names to identify the PHY.
+ 
+ Example:
+ 
+@@ -19,4 +22,6 @@ pcie@fc000000 {
+ 	reg-names = "reg", "mem";
+ 	cdns,max-outbound-regions = <16>;
+ 	max-functions = /bits/ 8 <8>;
++	phys = <&ep_phy0 &ep_phy1>;
++	phy-names = "pcie-lane0","pcie-lane1";
+ };
+diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+index 20a33f3..91de69c 100644
+--- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
++++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+@@ -24,6 +24,9 @@ Optional properties:
+   translations (default 32)
+ - vendor-id: The PCI vendor ID (16 bits, default is design dependent)
+ - device-id: The PCI device ID (16 bits, default is design dependent)
++- phys: From PHY bindings: List of Generic PHY phandles. One per lane if more
++  than one in the list.  If only one PHY listed it must manage all lanes. 
++- phy-names:  List of names to identify the PHY.
+ 
+ Example:
+ 
+@@ -57,4 +60,7 @@ pcie@fb000000 {
+ 	interrupt-map-mask = <0x0 0x0 0x0  0x7>;
+ 
+ 	msi-parent = <&its_pci>;
++
++	phys = <&pcie_phy0>;
++	phy-names = "pcie-phy";
+ };
 -- 
-Best regards,
-Marek Vasut
+1.7.1
