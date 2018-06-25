@@ -1,110 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:39596 "EHLO
-        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751369AbeFVJ6V (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jun 2018 05:58:21 -0400
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v2 4/6] PCI/AER: Clear device error status bits during ERR_FATAL and ERR_NONFATAL
-Date: Fri, 22 Jun 2018 05:58:12 -0400
-Message-Id: <1529661494-20936-5-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
-References: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:38536 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751641AbeFYVGQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2018 17:06:16 -0400
+Received: by mail-qt0-f194.google.com with SMTP id c5-v6so2522684qth.5
+        for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2018 14:06:15 -0700 (PDT)
+From: Alex Deucher <alexdeucher@gmail.com>
+To: amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        airlied@gmail.com, linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: Alex Deucher <alexander.deucher@amd.com>
+Subject: [PATCH 0/5] drm: use core pcie functionality for pcie gen/width
+Date: Mon, 25 Jun 2018 16:06:01 -0500
+Message-Id: <20180625210606.2736-1-alexander.deucher@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In both ERR_FATAL and ERR_NONFATA cases the device error status
-bits needs to be cleared.
+This series exports some pcie helper functions for use by drivers and
+fixes up the amdgpu and radeon drivers to use this core functionality
+rather than the duplicated functionality in the drm.  Finally we remove
+the drm helpers since the duplicate the pcie functionality of the core.
+This also adds proper pcie gen4 detection for amdgpu.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Alex Deucher (5):
+  pci: export pcie_get_speed_cap and pcie_get_width_cap
+  drm/amdgpu: update amd_pcie.h to include gen4 speeds
+  drm/amdgpu: use pcie functions for link width and speed
+  drm/radeon: use pcie functions for link width
+  drm: drop drm_pcie_get_speed_cap_mask and drm_pcie_get_max_link_width
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index e9c115d..d2d6868 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -357,6 +357,17 @@ int pci_disable_pcie_error_reporting(struct pci_dev *dev)
- }
- EXPORT_SYMBOL_GPL(pci_disable_pcie_error_reporting);
- 
-+int pci_cleanup_aer_error_device_status(struct pci_dev *dev)
-+{
-+	u16 reg16;
-+
-+	/* Clean up Root device status */
-+	pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
-+	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
-+
-+	return 0;
-+}
-+
- int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- {
- 	int pos;
-@@ -1344,11 +1355,8 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
-  */
- static void aer_error_resume(struct pci_dev *dev)
- {
--	u16 reg16;
--
- 	/* Clean up Root device status */
--	pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
--	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
-+	pci_cleanup_aer_error_device_status(dev);
- 
- 	/* Clean AER Root Error Status */
- 	pci_cleanup_aer_uncorrect_error_status(dev);
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 404bb69..410c35c 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -252,6 +252,7 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- 			dev->error_state = state;
- 		pci_walk_bus(dev->subordinate, cb, &result_data);
- 		if (cb == report_resume) {
-+			pci_cleanup_aer_error_device_status(dev);
- 			pci_cleanup_aer_uncorrect_error_status(dev);
- 			dev->error_state = pci_channel_io_normal;
- 		}
-@@ -312,6 +313,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
- 		 * do error recovery on all subordinates of the bridge instead
- 		 * of the bridge and clear the error status of the bridge.
- 		 */
-+		pci_cleanup_aer_error_device_status(dev);
- 		pci_cleanup_aer_uncorrect_error_status(dev);
- 	}
- 
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 514bffa..165a147 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -44,6 +44,7 @@ struct aer_capability_regs {
- /* PCIe port driver needs this function to enable AER */
- int pci_enable_pcie_error_reporting(struct pci_dev *dev);
- int pci_disable_pcie_error_reporting(struct pci_dev *dev);
-+int pci_cleanup_aer_error_device_status(struct pci_dev *dev);
- int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev);
- int pci_cleanup_aer_error_status_regs(struct pci_dev *dev);
- #else
-@@ -55,6 +56,10 @@ static inline int pci_disable_pcie_error_reporting(struct pci_dev *dev)
- {
- 	return -EINVAL;
- }
-+static inline int pci_cleanup_aer_error_device_status(struct pci_dev *dev)
-+{
-+	return -EINVAL;
-+}
- static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- {
- 	return -EINVAL;
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 83 +++++++++++++++++++++---------
+ drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c    |  7 ++-
+ drivers/gpu/drm/amd/amdgpu/ci_dpm.c        |  3 +-
+ drivers/gpu/drm/amd/amdgpu/si_dpm.c        |  3 +-
+ drivers/gpu/drm/amd/include/amd_pcie.h     |  2 +
+ drivers/gpu/drm/drm_pci.c                  | 58 ---------------------
+ drivers/gpu/drm/radeon/ci_dpm.c            | 20 +++++--
+ drivers/gpu/drm/radeon/cik.c               | 22 ++++----
+ drivers/gpu/drm/radeon/r600_dpm.c          |  4 +-
+ drivers/gpu/drm/radeon/radeon.h            |  4 ++
+ drivers/gpu/drm/radeon/si.c                | 22 ++++----
+ drivers/gpu/drm/radeon/si_dpm.c            | 20 +++++--
+ drivers/pci/pci.c                          |  2 +
+ include/drm/drm_pci.h                      |  7 ---
+ include/linux/pci.h                        |  3 ++
+ 15 files changed, 132 insertions(+), 128 deletions(-)
+
 -- 
-2.7.4
+2.13.6
