@@ -1,237 +1,233 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:50509 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932542AbeFPT2H (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:28:07 -0400
-Message-Id: <b65b18957cec018dec5c1f1c3de0e2e47b46b265.1529173804.git.lukas@wunner.de>
-In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 16 Jun 2018 21:25:00 +0200
-Subject: [PATCH 09/32] PCI: pciehp: Convert to threaded IRQ
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Mayurkumar Patel <mayurkumar.patel@intel.com>,
-        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:37761 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751932AbeFYVGU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2018 17:06:20 -0400
+Received: by mail-qk0-f193.google.com with SMTP id t79-v6so1613911qke.4
+        for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2018 14:06:20 -0700 (PDT)
+From: Alex Deucher <alexdeucher@gmail.com>
+To: amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        airlied@gmail.com, linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: Alex Deucher <alexander.deucher@amd.com>
+Subject: [PATCH 3/5] drm/amdgpu: use pcie functions for link width and speed
+Date: Mon, 25 Jun 2018 16:06:04 -0500
+Message-Id: <20180625210606.2736-4-alexander.deucher@amd.com>
+In-Reply-To: <20180625210606.2736-1-alexander.deucher@amd.com>
+References: <20180625210606.2736-1-alexander.deucher@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pciehp's IRQ handler queues up a work item for each event signaled by
-the hardware.  A more modern alternative is to let a long running
-kthread service the events.  The IRQ handler's sole job is then to check
-whether the IRQ originated from the device in question, acknowledge its
-receipt to the hardware to quiesce the interrupt and wake up the kthread.
+Use the newly exported pci functions to get the link width
+and speed rather than using the drm duplicated versions.
 
-One benefit is reduced latency to handle the IRQ, which is a necessity
-for realtime environments.  Another benefit is that we can make pciehp
-simpler and more robust by handling events synchronously in process
-context, rather than asynchronously by queueing up work items.  pciehp's
-usage of work items is a historic artifact, it predates the introduction
-of threaded IRQ handlers by two years.  (The former was introduced in
-2007 with commit 5d386e1ac402 ("pciehp: Event handling rework"), the
-latter in 2009 with commit 3aa551c9b4c4 ("genirq: add threaded interrupt
-handler support").)
+Also query the GPU link caps directly rather than hardcoding
+them.
 
-Convert pciehp to threaded IRQ handling by retrieving the pending events
-in pciehp_isr(), saving them for later consumption by the thread handler
-pciehp_ist() and clearing them in the Slot Status register.
-
-By clearing the Slot Status (and thereby acknowledging the events) in
-pciehp_isr(), we can avoid requesting the IRQ with IRQF_ONESHOT, which
-would have the unpleasant side effect of starving devices sharing the
-IRQ until pciehp_ist() has finished.
-
-pciehp_isr() does not count how many times each event occurred, but
-merely records the fact *that* an event occurred.  If the same event
-occurs a second time before pciehp_ist() is woken, that second event
-will not be recorded separately, which is problematic according to
-commit fad214b0aa72 ("PCI: pciehp: Process all hotplug events before
-looking for new ones") because we may miss removal of a card in-between
-two back-to-back insertions.  We're about to make pciehp_ist() resilient
-to missed events.  The present commit regresses the driver's behavior
-temporarily in order to separate the changes into reviewable chunks.
-This doesn't affect regular slow-motion hotplug, only plug-unplug-plug
-operations that happen in a timespan shorter than wakeup of the IRQ
-thread.
-
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Mayurkumar Patel <mayurkumar.patel@intel.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
 ---
- drivers/pci/hotplug/pciehp.h     |  3 ++
- drivers/pci/hotplug/pciehp_hpc.c | 70 +++++++++++++++++---------------
- 2 files changed, 41 insertions(+), 32 deletions(-)
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 83 +++++++++++++++++++++---------
+ drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c    |  7 ++-
+ drivers/gpu/drm/amd/amdgpu/ci_dpm.c        |  3 +-
+ drivers/gpu/drm/amd/amdgpu/si_dpm.c        |  3 +-
+ 4 files changed, 65 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index c3d63e5b650f..ab1d97a1822d 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -112,6 +112,8 @@ struct event_info {
-  * @notification_enabled: whether the IRQ was requested successfully
-  * @power_fault_detected: whether a power fault was detected by the hardware
-  *	that has not yet been cleared by the user
-+ * @pending_events: used by the IRQ handler to save events retrieved from the
-+ *	Slot Status register for later consumption by the IRQ thread
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+index 6e5284e6c028..b70f44022813 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+@@ -3290,8 +3290,9 @@ int amdgpu_device_gpu_recover(struct amdgpu_device *adev,
   */
- struct controller {
- 	struct mutex ctrl_lock;
-@@ -126,6 +128,7 @@ struct controller {
- 	unsigned int link_active_reporting:1;
- 	unsigned int notification_enabled:1;
- 	unsigned int power_fault_detected;
-+	atomic_t pending_events;
- };
- 
- #define INT_PRESENCE_ON			1
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 044087e2683d..5f41ba788cb2 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -31,7 +31,8 @@ static inline struct pci_dev *ctrl_dev(struct controller *ctrl)
- 	return ctrl->pcie->port;
- }
- 
--static irqreturn_t pcie_isr(int irq, void *dev_id);
-+static irqreturn_t pciehp_isr(int irq, void *dev_id);
-+static irqreturn_t pciehp_ist(int irq, void *dev_id);
- static void start_int_poll_timer(struct controller *ctrl, int sec);
- 
- /* This is the interrupt polling timeout function. */
-@@ -40,7 +41,8 @@ static void int_poll_timeout(struct timer_list *t)
- 	struct controller *ctrl = from_timer(ctrl, t, poll_timer);
- 
- 	/* Poll for interrupt events.  regs == NULL => polling */
--	pcie_isr(0, ctrl);
-+	while (pciehp_isr(IRQ_NOTCONNECTED, ctrl) == IRQ_WAKE_THREAD)
-+		pciehp_ist(IRQ_NOTCONNECTED, ctrl);
- 
- 	if (!pciehp_poll_time)
- 		pciehp_poll_time = 2; /* default polling interval is 2 sec */
-@@ -71,7 +73,8 @@ static inline int pciehp_request_irq(struct controller *ctrl)
- 	}
- 
- 	/* Installs the interrupt handler */
--	retval = request_irq(irq, pcie_isr, IRQF_SHARED, MY_NAME, ctrl);
-+	retval = request_threaded_irq(irq, pciehp_isr, pciehp_ist,
-+				      IRQF_SHARED, MY_NAME, ctrl);
- 	if (retval)
- 		ctrl_err(ctrl, "Cannot get irq %d for the hotplug controller\n",
- 			 irq);
-@@ -539,12 +542,11 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ static void amdgpu_device_get_pcie_info(struct amdgpu_device *adev)
  {
- 	struct controller *ctrl = (struct controller *)dev_id;
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
--	struct slot *slot = ctrl->slot;
- 	u16 status, events;
--	u8 present;
--	bool link;
+-	u32 mask;
+-	int ret;
++	struct pci_dev *pdev;
++	enum pci_bus_speed speed_cap;
++	enum pcie_link_width link_width;
  
--	/* Interrupts cannot originate from a controller that's asleep */
-+	/*
-+	 * Interrupts only occur in D3hot or shallower (PCIe r4.0, sec 6.7.3.4).
-+	 */
- 	if (pdev->current_state == PCI_D3cold)
- 		return IRQ_NONE;
+ 	if (amdgpu_pcie_gen_cap)
+ 		adev->pm.pcie_gen_mask = amdgpu_pcie_gen_cap;
+@@ -3309,27 +3310,61 @@ static void amdgpu_device_get_pcie_info(struct amdgpu_device *adev)
+ 	}
  
-@@ -572,18 +574,22 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 	if (!events)
- 		return IRQ_NONE;
- 
--	/* Capture link status before clearing interrupts */
--	if (events & PCI_EXP_SLTSTA_DLLSC)
--		link = pciehp_check_link_active(ctrl);
+ 	if (adev->pm.pcie_gen_mask == 0) {
+-		ret = drm_pcie_get_speed_cap_mask(adev->ddev, &mask);
+-		if (!ret) {
+-			adev->pm.pcie_gen_mask = (CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN1 |
++		/* asic caps */
++		pdev = adev->pdev;
++		speed_cap = pcie_get_speed_cap(pdev);
++		if (speed_cap == PCI_SPEED_UNKNOWN) {
++			adev->pm.pcie_gen_mask |= (CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN1 |
+ 						  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN2 |
+ 						  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN3);
 -
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, events);
- 	ctrl_dbg(ctrl, "pending interrupts %#06x from Slot Status\n", events);
- 
--	/* Check Command Complete Interrupt Pending */
-+	/*
-+	 * Command Completed notifications are not deferred to the
-+	 * IRQ thread because it may be waiting for their arrival.
-+	 */
- 	if (events & PCI_EXP_SLTSTA_CC) {
- 		ctrl->cmd_busy = 0;
- 		smp_mb();
- 		wake_up(&ctrl->queue);
+-			if (mask & DRM_PCIE_SPEED_25)
+-				adev->pm.pcie_gen_mask |= CAIL_PCIE_LINK_SPEED_SUPPORT_GEN1;
+-			if (mask & DRM_PCIE_SPEED_50)
+-				adev->pm.pcie_gen_mask |= CAIL_PCIE_LINK_SPEED_SUPPORT_GEN2;
+-			if (mask & DRM_PCIE_SPEED_80)
+-				adev->pm.pcie_gen_mask |= CAIL_PCIE_LINK_SPEED_SUPPORT_GEN3;
+ 		} else {
+-			adev->pm.pcie_gen_mask = AMDGPU_DEFAULT_PCIE_GEN_MASK;
++			if (speed_cap == PCIE_SPEED_16_0GT)
++				adev->pm.pcie_gen_mask |= (CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN1 |
++							  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN2 |
++							  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN3 |
++							  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN4);
++			else if (speed_cap == PCIE_SPEED_8_0GT)
++				adev->pm.pcie_gen_mask |= (CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN1 |
++							  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN2 |
++							  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN3);
++			else if (speed_cap == PCIE_SPEED_5_0GT)
++				adev->pm.pcie_gen_mask |= (CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN1 |
++							  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN2);
++			else
++				adev->pm.pcie_gen_mask |= CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN1;
++		}
++		/* platform caps */
++		pdev = adev->ddev->pdev->bus->self;
++		speed_cap = pcie_get_speed_cap(pdev);
++		if (speed_cap == PCI_SPEED_UNKNOWN) {
++			adev->pm.pcie_gen_mask |= (CAIL_PCIE_LINK_SPEED_SUPPORT_GEN1 |
++						   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN2);
++		} else {
++			if (speed_cap == PCIE_SPEED_16_0GT)
++				adev->pm.pcie_gen_mask |= (CAIL_PCIE_LINK_SPEED_SUPPORT_GEN1 |
++							   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN2 |
++							   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN3 |
++							   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN4);
++			else if (speed_cap == PCIE_SPEED_8_0GT)
++				adev->pm.pcie_gen_mask |= (CAIL_PCIE_LINK_SPEED_SUPPORT_GEN1 |
++							   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN2 |
++							   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN3);
++			else if (speed_cap == PCIE_SPEED_5_0GT)
++				adev->pm.pcie_gen_mask |= (CAIL_PCIE_LINK_SPEED_SUPPORT_GEN1 |
++							   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN2);
++			else
++				adev->pm.pcie_gen_mask |= CAIL_PCIE_LINK_SPEED_SUPPORT_GEN1;
 +
-+		if (events == PCI_EXP_SLTSTA_CC)
-+			return IRQ_HANDLED;
-+
-+		events &= ~PCI_EXP_SLTSTA_CC;
+ 		}
  	}
- 
- 	if (pdev->ignore_hotplug) {
-@@ -591,6 +597,24 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 		return IRQ_HANDLED;
+ 	if (adev->pm.pcie_mlw_mask == 0) {
+-		ret = drm_pcie_get_max_link_width(adev->ddev, &mask);
+-		if (!ret) {
+-			switch (mask) {
+-			case 32:
++		pdev = adev->ddev->pdev->bus->self;
++		link_width = pcie_get_width_cap(pdev);
++		if (link_width == PCIE_LNK_WIDTH_UNKNOWN) {
++			adev->pm.pcie_mlw_mask |= AMDGPU_DEFAULT_PCIE_MLW_MASK;
++		} else {
++			switch (link_width) {
++			case PCIE_LNK_X32:
+ 				adev->pm.pcie_mlw_mask = (CAIL_PCIE_LINK_WIDTH_SUPPORT_X32 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X16 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X12 |
+@@ -3338,7 +3373,7 @@ static void amdgpu_device_get_pcie_info(struct amdgpu_device *adev)
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X2 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X1);
+ 				break;
+-			case 16:
++			case PCIE_LNK_X16:
+ 				adev->pm.pcie_mlw_mask = (CAIL_PCIE_LINK_WIDTH_SUPPORT_X16 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X12 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X8 |
+@@ -3346,36 +3381,34 @@ static void amdgpu_device_get_pcie_info(struct amdgpu_device *adev)
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X2 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X1);
+ 				break;
+-			case 12:
++			case PCIE_LNK_X12:
+ 				adev->pm.pcie_mlw_mask = (CAIL_PCIE_LINK_WIDTH_SUPPORT_X12 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X8 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X4 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X2 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X1);
+ 				break;
+-			case 8:
++			case PCIE_LNK_X8:
+ 				adev->pm.pcie_mlw_mask = (CAIL_PCIE_LINK_WIDTH_SUPPORT_X8 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X4 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X2 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X1);
+ 				break;
+-			case 4:
++			case PCIE_LNK_X4:
+ 				adev->pm.pcie_mlw_mask = (CAIL_PCIE_LINK_WIDTH_SUPPORT_X4 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X2 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X1);
+ 				break;
+-			case 2:
++			case PCIE_LNK_X2:
+ 				adev->pm.pcie_mlw_mask = (CAIL_PCIE_LINK_WIDTH_SUPPORT_X2 |
+ 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X1);
+ 				break;
+-			case 1:
++			case PCIE_LNK_X1:
+ 				adev->pm.pcie_mlw_mask = CAIL_PCIE_LINK_WIDTH_SUPPORT_X1;
+ 				break;
+ 			default:
+ 				break;
+ 			}
+-		} else {
+-			adev->pm.pcie_mlw_mask = AMDGPU_DEFAULT_PCIE_MLW_MASK;
+ 		}
  	}
- 
-+	/* Save pending events for consumption by IRQ thread. */
-+	atomic_or(events, &ctrl->pending_events);
-+	return IRQ_WAKE_THREAD;
-+}
-+
-+static irqreturn_t pciehp_ist(int irq, void *dev_id)
-+{
-+	struct controller *ctrl = (struct controller *)dev_id;
-+	struct slot *slot = ctrl->slot;
-+	u32 events;
-+	u8 present;
-+	bool link;
-+
-+	synchronize_hardirq(irq);
-+	events = atomic_xchg(&ctrl->pending_events, 0);
-+	if (!events)
-+		return IRQ_NONE;
-+
- 	/* Check Attention Button Pressed */
- 	if (events & PCI_EXP_SLTSTA_ABP) {
- 		ctrl_info(ctrl, "Slot(%s): Attention button pressed\n",
-@@ -605,12 +629,13 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 	 * and cause the wrong event to queue.
- 	 */
- 	if (events & PCI_EXP_SLTSTA_DLLSC) {
-+		link = pciehp_check_link_active(ctrl);
- 		ctrl_info(ctrl, "Slot(%s): Link %s\n", slot_name(slot),
- 			  link ? "Up" : "Down");
- 		pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
- 					     INT_LINK_DOWN);
- 	} else if (events & PCI_EXP_SLTSTA_PDC) {
--		present = !!(status & PCI_EXP_SLTSTA_PDS);
-+		pciehp_get_adapter_status(slot, &present);
- 		ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
- 			  present ? "" : "not ");
- 		pciehp_queue_interrupt_event(slot, present ? INT_PRESENCE_ON :
-@@ -627,25 +652,6 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 	return IRQ_HANDLED;
  }
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c
+index 77ad59ade85c..1c4595562f8f 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c
+@@ -28,6 +28,7 @@
+ #include "amdgpu_i2c.h"
+ #include "amdgpu_dpm.h"
+ #include "atom.h"
++#include "amd_pcie.h"
  
--static irqreturn_t pcie_isr(int irq, void *dev_id)
--{
--	irqreturn_t rc, handled = IRQ_NONE;
--
--	/*
--	 * To guarantee that all interrupt events are serviced, we need to
--	 * re-inspect Slot Status register after clearing what is presumed
--	 * to be the last pending interrupt.
--	 */
--	do {
--		rc = pciehp_isr(irq, dev_id);
--		if (rc == IRQ_HANDLED)
--			handled = IRQ_HANDLED;
--	} while (rc == IRQ_HANDLED);
--
--	/* Return IRQ_HANDLED if we handled one or more events */
--	return handled;
--}
--
- static void pcie_enable_notification(struct controller *ctrl)
+ void amdgpu_dpm_print_class_info(u32 class, u32 class2)
  {
- 	u16 cmd, mask;
+@@ -936,9 +937,11 @@ enum amdgpu_pcie_gen amdgpu_get_pcie_gen_support(struct amdgpu_device *adev,
+ 	case AMDGPU_PCIE_GEN3:
+ 		return AMDGPU_PCIE_GEN3;
+ 	default:
+-		if ((sys_mask & DRM_PCIE_SPEED_80) && (default_gen == AMDGPU_PCIE_GEN3))
++		if ((sys_mask & CAIL_PCIE_LINK_SPEED_SUPPORT_GEN3) &&
++		    (default_gen == AMDGPU_PCIE_GEN3))
+ 			return AMDGPU_PCIE_GEN3;
+-		else if ((sys_mask & DRM_PCIE_SPEED_50) && (default_gen == AMDGPU_PCIE_GEN2))
++		else if ((sys_mask & CAIL_PCIE_LINK_SPEED_SUPPORT_GEN2) &&
++			 (default_gen == AMDGPU_PCIE_GEN2))
+ 			return AMDGPU_PCIE_GEN2;
+ 		else
+ 			return AMDGPU_PCIE_GEN1;
+diff --git a/drivers/gpu/drm/amd/amdgpu/ci_dpm.c b/drivers/gpu/drm/amd/amdgpu/ci_dpm.c
+index 7fbad2f5f0bd..a3641778a813 100644
+--- a/drivers/gpu/drm/amd/amdgpu/ci_dpm.c
++++ b/drivers/gpu/drm/amd/amdgpu/ci_dpm.c
+@@ -5846,8 +5846,7 @@ static int ci_dpm_init(struct amdgpu_device *adev)
+ 	adev->pm.dpm.priv = pi;
+ 
+ 	pi->sys_pcie_mask =
+-		(adev->pm.pcie_gen_mask & CAIL_PCIE_LINK_SPEED_SUPPORT_MASK) >>
+-		CAIL_PCIE_LINK_SPEED_SUPPORT_SHIFT;
++		adev->pm.pcie_gen_mask & CAIL_PCIE_LINK_SPEED_SUPPORT_MASK;
+ 
+ 	pi->force_pcie_gen = AMDGPU_PCIE_GEN_INVALID;
+ 
+diff --git a/drivers/gpu/drm/amd/amdgpu/si_dpm.c b/drivers/gpu/drm/amd/amdgpu/si_dpm.c
+index 5c97a3671726..0243899ff0d4 100644
+--- a/drivers/gpu/drm/amd/amdgpu/si_dpm.c
++++ b/drivers/gpu/drm/amd/amdgpu/si_dpm.c
+@@ -7318,8 +7318,7 @@ static int si_dpm_init(struct amdgpu_device *adev)
+ 	pi = &eg_pi->rv7xx;
+ 
+ 	si_pi->sys_pcie_mask =
+-		(adev->pm.pcie_gen_mask & CAIL_PCIE_LINK_SPEED_SUPPORT_MASK) >>
+-		CAIL_PCIE_LINK_SPEED_SUPPORT_SHIFT;
++		adev->pm.pcie_gen_mask & CAIL_PCIE_LINK_SPEED_SUPPORT_MASK;
+ 	si_pi->force_pcie_gen = AMDGPU_PCIE_GEN_INVALID;
+ 	si_pi->boot_pcie_gen = si_get_current_pcie_speed(adev);
+ 
 -- 
-2.17.1
+2.13.6
