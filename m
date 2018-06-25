@@ -1,117 +1,169 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42666 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932929AbeFTVN6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Jun 2018 17:13:58 -0400
-Date: Wed, 20 Jun 2018 16:13:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rafal <uzg@wp.pl>
-Cc: linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: Fwd: [Bug 199879] New: Very basic the Pci device is not resumed
- from suspend mode
-Message-ID: <20180620211349.GB108993@bhelgaas-glaptop.roam.corp.google.com>
-References: <bug-199879-41252@https.bugzilla.kernel.org/>
- <CAErSpo5U9D5kmYix2SbcJH_mW8urpmZcgN6Zh=FbGtLch+ACuA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5U9D5kmYix2SbcJH_mW8urpmZcgN6Zh=FbGtLch+ACuA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=T9i+=JL=gmail.com=kernelfans@kernel.org>
+From: Pingfan Liu <kernelfans@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Pingfan Liu <kernelfans@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH 2/3] drivers/base: reorder consumer and its children behind suppliers
+Date: Mon, 25 Jun 2018 13:23:06 +0800
+Message-Id: <1529904187-18673-3-git-send-email-kernelfans@gmail.com>
+In-Reply-To: <1529904187-18673-1-git-send-email-kernelfans@gmail.com>
+References: <1529904187-18673-1-git-send-email-kernelfans@gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+to Rafal]
+commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+introduces supplier<-consumer order in devices_kset. The commit tries
+to cleverly maintain both parent<-child and supplier<-consumer order by
+reordering a device when probing. This method makes things simple and
+clean, but unfortunately, breaks parent<-child order in some case,
+which is described in next patch in this series.
+Here this patch tries to resolve supplier<-consumer by only reordering a
+device when it has suppliers, and takes care of the following scenario:
+    [consumer, children] [ ... potential ... ] supplier
+                         ^                   ^
+After moving the consumer and its children after the supplier, the
+potentail section may contain consumers whose supplier is inside
+children, and this poses the requirement to dry out all consumpers in
+the section recursively.
 
-Sorry, I'm an idiot and forgot to include Rafal, the submitter, when I
-forwarded this report to the mailing lists.
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Dave Young <dyoung@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+---
+ drivers/base/base.h |  1 +
+ drivers/base/core.c | 97 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 98 insertions(+)
 
-I suspect that the config accessors used by lspci should temporarily
-wake up devices that are asleep, instead of reporting 0xff data (or if
-that's not feasible, maybe we should add a comment in the kernel and a
-note in the lspci man page).
-
-I'm not sure yet where to go beyond that.
-
-On Wed, May 30, 2018 at 07:41:35AM -0700, Bjorn Helgaas wrote:
-> [+cc linux-pci, linux-kernel, linux-pm]
-> 
-> I'm not sure I understand the problem yet, so please correct me if I'm wrong:
-> 
->   - Your system has both Nvidia and Intel graphics devices
-> 
->   - When you use Intel graphics, lspci, lshw, and /proc/bus/pci for
-> the Nvidia device show invalid data (0xff) after suspend/resume
-> 
->   - When you use Nvidia graphics, suspend/resume doesn't work (instead
-> of resuming, you just get a blank screen)
-> 
-> Can you attach the output of "sudo lspci -vv" to the bugzilla, please?
-> 
-> ---------- Forwarded message ---------
-> From: <bugzilla-daemon@bugzilla.kernel.org>
-> Date: Tue, May 29, 2018 at 1:29 PM
-> Subject: [Bug 199879] New: Very basic the Pci device is not resumed
-> from suspend mode
-> To: <bhelgaas@google.com>
-> 
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=199879
-> 
->             Bug ID: 199879
->            Summary: Very basic the Pci device is not resumed from suspend
->                     mode
->            Product: Drivers
->            Version: 2.5
->     Kernel Version: kernel-4.15.17
->           Hardware: x86-64
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: high
->           Priority: P1
->          Component: PCI
->           Assignee: drivers_pci@kernel-bugs.osdl.org
->           Reporter: uzg@wp.pl
->         Regression: No
-> 
-> Hi, I have problem with very basic device. Device pci-e not resume from
-> suspend. Only sleep.
-> 
-> I have a problem with anyone interested in it, because everyone thinks it is
-> the fault of the device drivers themselves. But this is not a problem.
-> 
-> This device is a basic device. I've already installed drivers on various
-> hardware and it has always been ok, but not this time.
-> 
-> I'm an electronics technician. After diagnosing what I managed, in my opinion
-> the device remains asleep.
-> 
-> Where does my application come from?
-> I have multiuser mode and I do not use this device. After suspend lspci and
-> lshw show normal data. Normal data is in /proc/bus/pci/...
-> Next suspend and resume, and...
-> lspci see hardware, but is error
-> lshw see hardware as undefined device
-> data in /proc/bus/pci/... is only 0xFF
-> Hardware sleep, not work, not ready. This is bug.
-> 
-> But since the problem concerns the graphics card in the configuration with the
-> second default Intel card, everyone thinks that this is another driver problem
-> as always and nobody wants to take a look at it :(
-> 
-> The problem is easy to recognize. On the internet, I've seen a lot of
-> unresolved problems in which I could see exactly what I found.
-> 
-> My hardware is Lenovo with NVidia and Intel Graphics. Problem is with NVidia. I
-> tested Z710 and Z50-70. The first symptom of the problem is lspci in multiuser
-> mode (or when is XServer with intel graphics). After suspend NVidia have e.g
-> "rev. A1", after resume is "rev. FF". Next symptom lshw and /proc/bus/pci/...
-> When system started with normal NVidia driver, system not resume and halt, only
-> black screen.
-> 
-> There are many examples on the Internet with unsolved problems e.g
-> https://www.lwks.com/index.php?option=com_kunena&func=view&catid=21&id=124374&Itemid=81
-> 
-> --
-> You are receiving this mail because:
-> You are watching the assignee of the bug.
+diff --git a/drivers/base/base.h b/drivers/base/base.h
+index a75c302..37f86ca 100644
+--- a/drivers/base/base.h
++++ b/drivers/base/base.h
+@@ -135,6 +135,7 @@ extern void device_unblock_probing(void);
+ 
+ /* /sys/devices directory */
+ extern struct kset *devices_kset;
++extern int device_reorder_consumer(struct device *dev);
+ extern void devices_kset_move_last(struct device *dev);
+ 
+ #if defined(CONFIG_MODULES) && defined(CONFIG_SYSFS)
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 8113d2c..db30e86 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -161,6 +161,103 @@ static bool is_consumer(struct device *query, struct device *supplier)
+ 	return false;
+ }
+ 
++/* recursively move the potential consumers in open section (left, right)
++ * after the barrier
++ */
++static int __device_reorder_consumer(struct device *consumer,
++	struct list_head *left, struct list_head *right,
++	struct pos_info *p)
++{
++	struct list_head *iter;
++	struct device *c_dev, *s_dev, *tail_dev;
++
++	descendants_reorder_after_pos(consumer, p);
++	tail_dev = p->tail;
++	/* (left, right) may contain consumers, hence checking if any moved
++	 * child serving as supplier. The reversing order help us to meet
++	 * the last supplier of a consumer.
++	 */
++	list_opensect_for_each_reverse(iter, left, right) {
++		struct list_head *l_iter, *moved_left, *moved_right;
++
++		moved_left = (&consumer->kobj.entry)->prev;
++		moved_right = tail_dev->kobj.entry.next;
++		/* the moved section may contain potential suppliers */
++		list_opensect_for_each_reverse(l_iter, moved_left,
++			moved_right) {
++			s_dev = list_entry(l_iter, struct device, kobj.entry);
++			c_dev = list_entry(iter, struct device, kobj.entry);
++			/* to fix: this poses extra effort for locking */
++			if (is_consumer(c_dev, s_dev)) {
++				p->tail = NULL;
++				/* to fix: lock issue */
++				p->pos =  s_dev;
++				/* reorder after the last supplier */
++				__device_reorder_consumer(c_dev,
++					l_iter, right, p);
++			}
++		}
++	}
++	return 0;
++}
++
++static int find_last_supplier(struct device *dev, struct device *supplier)
++{
++	struct device_link *link;
++
++	list_for_each_entry_reverse(link, &dev->links.suppliers, c_node) {
++		if (link->supplier == supplier)
++			return 1;
++	}
++	if (dev == supplier)
++		return -1;
++	return 0;
++}
++
++/* When reodering, take care of the range of (old_pos(dev), new_pos(dev)),
++ * there may be requirement to recursively move item.
++ */
++int device_reorder_consumer(struct device *dev)
++{
++	struct list_head *iter, *left, *right;
++	struct device *cur_dev;
++	struct pos_info info;
++	int ret, idx;
++
++	idx = device_links_read_lock();
++	if (list_empty(&dev->links.suppliers)) {
++		device_links_read_unlock(idx);
++		return 0;
++	}
++	spin_lock(&devices_kset->list_lock);
++	list_for_each_prev(iter, &devices_kset->list) {
++		cur_dev = list_entry(iter, struct device, kobj.entry);
++		ret = find_last_supplier(dev, cur_dev);
++		switch (ret) {
++		case -1:
++			goto unlock;
++		case 1:
++			break;
++		case 0:
++			continue;
++		}
++	}
++	BUG_ON(!ret);
++
++	/* record the affected open section */
++	left = dev->kobj.entry.prev;
++	right = iter;
++	info.pos = list_entry(iter, struct device, kobj.entry);
++	info.tail = NULL;
++	/* dry out the consumers in (left,right) */
++	__device_reorder_consumer(dev, left, right, &info);
++
++unlock:
++	spin_unlock(&devices_kset->list_lock);
++	device_links_read_unlock(idx);
++	return 0;
++}
++
+ static int device_reorder_to_tail(struct device *dev, void *not_used)
+ {
+ 	struct device_link *link;
+-- 
+2.7.4
