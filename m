@@ -1,33 +1,144 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 14 Jun 2018 12:20:01 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Srinath Mannam <srinath.mannam@broadcom.com>
-Subject: Re: Requirement to get BAR pci_bus_address in user space
-Message-ID: <20180614102001.GA20836@lst.de>
-References: <CABe79T41Cr0mjH_k2drzccHvObFwRcW3n+WKCj0JvFUBy0wz-A@mail.gmail.com>
+Return-Path: <SRS0=O44p=JL=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=O44p=JL=linuxfoundation.org=gregkh@kernel.org>
+Date: Mon, 25 Jun 2018 18:45:05 +0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Pingfan Liu <kernelfans@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCHv2 2/2] drivers/base: reorder consumer and its children
+ behind suppliers
+Message-ID: <20180625104505.GA3058@kroah.com>
+References: <1529912859-10475-1-git-send-email-kernelfans@gmail.com>
+ <1529912859-10475-3-git-send-email-kernelfans@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CABe79T41Cr0mjH_k2drzccHvObFwRcW3n+WKCj0JvFUBy0wz-A@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: Abhishek Shah <abhishek.shah@broadcom.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
- Vikram Prakash <vikram.prakash@broadcom.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1529912859-10475-3-git-send-email-kernelfans@gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The only safe way to use PCI(e) devices in userspace is through vfio.
-I think that is where you need to take your inquiries.
+On Mon, Jun 25, 2018 at 03:47:39PM +0800, Pingfan Liu wrote:
+> commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+> introduces supplier<-consumer order in devices_kset. The commit tries
+> to cleverly maintain both parent<-child and supplier<-consumer order by
+> reordering a device when probing. This method makes things simple and
+> clean, but unfortunately, breaks parent<-child order in some case,
+> which is described in next patch in this series.
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+There is no "next patch in this series" :(
+
+> Here this patch tries to resolve supplier<-consumer by only reordering a
+> device when it has suppliers, and takes care of the following scenario:
+>     [consumer, children] [ ... potential ... ] supplier
+>                          ^                   ^
+> After moving the consumer and its children after the supplier, the
+> potentail section may contain consumers whose supplier is inside
+> children, and this poses the requirement to dry out all consumpers in
+> the section recursively.
+> 
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Bjorn Helgaas <helgaas@kernel.org>
+> Cc: Dave Young <dyoung@redhat.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linuxppc-dev@lists.ozlabs.org
+> Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+> ---
+> note: there is lock issue in this patch, should be fixed in next version
+
+Please send patches that you know are correct, why would I want to
+review this if you know it is not correct?
+
+And if the original commit is causing problems for you, why not just
+revert that instead of adding this much-increased complexity?
+
+
+
+> 
+> ---
+>  drivers/base/core.c | 132 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 129 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> index 66f06ff..db30e86 100644
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
+> @@ -123,12 +123,138 @@ static int device_is_dependent(struct device *dev, void *target)
+>  	return ret;
+>  }
+>  
+> -/* a temporary place holder to mark out the root cause of the bug.
+> - * The proposal algorithm will come in next patch
+> +struct pos_info {
+> +	struct device *pos;
+> +	struct device *tail;
+> +};
+> +
+> +/* caller takes the devices_kset->list_lock */
+> +static int descendants_reorder_after_pos(struct device *dev,
+> +	void *data)
+
+Why are you wrapping lines that do not need to be wrapped?
+
+What does this function do?
+
+> +{
+> +	struct device *pos;
+> +	struct pos_info *p = data;
+> +
+> +	pos = p->pos;
+> +	pr_debug("devices_kset: Moving %s after %s\n",
+> +		 dev_name(dev), dev_name(pos));
+
+You have a device, use it for debugging, i.e. dev_dbg().
+
+> +	device_for_each_child(dev, p, descendants_reorder_after_pos);
+
+Recursive?
+
+> +	/* children at the tail */
+> +	list_move(&dev->kobj.entry, &pos->kobj.entry);
+> +	/* record the right boundary of the section */
+> +	if (p->tail == NULL)
+> +		p->tail = dev;
+> +	return 0;
+> +}
+
+I really do not understand what the above code is supposed to be doing :(
+
+> +
+> +/* iterate over an open section */
+> +#define list_opensect_for_each_reverse(cur, left, right)	\
+> +	for (cur = right->prev; cur == left; cur = cur->prev)
+> +
+> +static bool is_consumer(struct device *query, struct device *supplier)
+> +{
+> +	struct device_link *link;
+> +	/* todo, lock protection */
+
+Always run checkpatch.pl on patches so you do not get grumpy maintainers
+telling you to run checkpatch.pl :(
+
+> +	list_for_each_entry(link, &supplier->links.consumers, s_node)
+> +		if (link->consumer == query)
+> +			return true;
+> +	return false;
+> +}
+> +
+> +/* recursively move the potential consumers in open section (left, right)
+> + * after the barrier
+
+What barrier?
+
+I'm stopping here as I have no idea what is going on, and this needs a
+lot more work at the basic level of "it handles locking correctly"...
+
+If you are working on this for power9, I'm guessing you work for IBM?
+If so, please run this through your internal patch review process before
+sending it out again...
+
+thanks,
+
+greg k-h
