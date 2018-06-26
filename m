@@ -1,60 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp21.cstnet.cn ([159.226.251.21]:44190 "EHLO cstnet.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753260AbeFINaW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 9 Jun 2018 09:30:22 -0400
-From: Pu Wen <puwen@hygon.cn>
-To: rjw@rjwysocki.net, lenb@kernel.org, zhangpanyong@hygon.cn
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-        x86@kernel.org, thomas.lendacky@amd.com, peterz@infradead.org,
-        tony.luck@intel.com, bp@alien8.de, pbonzini@redhat.com,
-        rkrcmar@redhat.com, boris.ostrovsky@oracle.com, jgross@suse.com,
-        viresh.kumar@linaro.org, mchehab@kernel.org, trenn@suse.com,
-        shuah@kernel.org, linux-kernel@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-x86_64@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-edac@vger.kernel.org, linux-pm@vger.kernel.org,
-        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
-        Pu Wen <puwen@hygon.cn>
-Subject: [PATCH 08/11] driver/acpi: Add support for Hygon's Dhyana Family 18h processor
-Date: Sat,  9 Jun 2018 21:23:53 +0800
-Message-Id: <1528550633-28441-1-git-send-email-puwen@hygon.cn>
+Received: from mail.kernel.org ([198.145.29.99]:35650 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933719AbeFZUj2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jun 2018 16:39:28 -0400
+Date: Tue, 26 Jun 2018 15:39:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Marc Zyngier <marc.zyngier@arm.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 0/4] PCI: shpchp: NULL pointer fix and cleanups
+Message-ID: <20180626203926.GB181504@bhelgaas-glaptop.roam.corp.google.com>
+References: <152996746234.260522.11381067633352986554.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <152996746234.260522.11381067633352986554.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch enables the ACPI driver support to Hygon Family 18h CPU:
-- Add Hygon support in power_saving_mwait_init().
-- Add Hygon support in lapic_timer_state_broadcast().
+On Mon, Jun 25, 2018 at 05:59:33PM -0500, Bjorn Helgaas wrote:
+> The first patch fixes a NULL pointer dereference reported by Marc and would
+> be targeted for v4.18.
+> 
+> The others simplify the shpchp probe path and would be for v4.19.
+> 
+> ---
+> 
+> Bjorn Helgaas (4):
+>       PCI: shpchp: Manage SHPC unconditionally on non-ACPI systems
+>       PCI: shpchp: Separate existence of SHPC and permission to use it
+>       PCI: shpchp: Inline shpchp_is_native()
+>       PCI: hotplug: Implement hotplug_is_native() only when CONFIG_ACPI=y
 
-Signed-off-by: Pu Wen <puwen@hygon.cn>
----
- drivers/acpi/acpi_pad.c       | 1 +
- drivers/acpi/processor_idle.c | 1 +
- 2 files changed, 2 insertions(+)
+I applied the first (with Marc's tested-by and Mika's reviewed-by) to
+for-linus for v4.18.
 
-diff --git a/drivers/acpi/acpi_pad.c b/drivers/acpi/acpi_pad.c
-index 552c1f7..a47676a 100644
---- a/drivers/acpi/acpi_pad.c
-+++ b/drivers/acpi/acpi_pad.c
-@@ -70,6 +70,7 @@ static void power_saving_mwait_init(void)
- 
- #if defined(CONFIG_X86)
- 	switch (boot_cpu_data.x86_vendor) {
-+	case X86_VENDOR_HYGON:
- 	case X86_VENDOR_AMD:
- 	case X86_VENDOR_INTEL:
- 		/*
-diff --git a/drivers/acpi/processor_idle.c b/drivers/acpi/processor_idle.c
-index abb559c..b2131c4 100644
---- a/drivers/acpi/processor_idle.c
-+++ b/drivers/acpi/processor_idle.c
-@@ -205,6 +205,7 @@ static void lapic_timer_state_broadcast(struct acpi_processor *pr,
- static void tsc_check_state(int state)
- {
- 	switch (boot_cpu_data.x86_vendor) {
-+	case X86_VENDOR_HYGON:
- 	case X86_VENDOR_AMD:
- 	case X86_VENDOR_INTEL:
- 	case X86_VENDOR_CENTAUR:
--- 
-2.7.4
+I applied the others with Mika's reviewed-by to pci/hotplug for v4.19.
+
+>  drivers/pci/hotplug/acpi_pcihp.c  |   40 +++++++++++++++++++++++--------------
+>  drivers/pci/hotplug/shpchp_core.c |   21 +++++++++++++++++++
+>  drivers/pci/pci-acpi.c            |   29 ---------------------------
+>  include/linux/pci.h               |    1 +
+>  include/linux/pci_hotplug.h       |   20 ++++++++++---------
+>  5 files changed, 58 insertions(+), 53 deletions(-)
