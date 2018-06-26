@@ -1,129 +1,63 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V2 5/5] PCI: Unify slot and bus reset API
-Date: Wed, 20 Jun 2018 00:12:58 -0400
-Message-Id: <1529467995-28780-5-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1529467995-28780-1-git-send-email-okaya@codeaurora.org>
-References: <1529467995-28780-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=QIuN=JM=arm.com=punit.agrawal@kernel.org>
+Return-Path: <SRS0=QIuN=JM=arm.com=punit.agrawal@kernel.org>
+From: Punit Agrawal <punit.agrawal@arm.com>
+To: Jonathan Cameron <jonathan.cameron@huawei.com>
+Cc: Michal Hocko <mhocko@kernel.org>,  Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,  Catalin Marinas <catalin.marinas@arm.com>,  <tnowicki@caviumnetworks.com>,  Xie XiuQi <xiexiuqi@huawei.com>,  <linux-pci@vger.kernel.org>,  "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,  Will Deacon <will.deacon@arm.com>,  "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,  Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,  <linux-mm@kvack.org>,  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,  Bjorn Helgaas <helgaas@kernel.org>,  linux-arm <linux-arm-kernel@lists.infradead.org>,  Hanjun Guo <guohanjun@huawei.com>,  Bjorn Helgaas <bhelgaas@google.com>,  Andrew Morton <akpm@linux-foundation.org>,  zhongjiang <zhongjiang@huawei.com>,  <wanghuiqiang@huawei.com>
+Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
+In-Reply-To: <20180622184223.00007bc3@huawei.com> (Jonathan Cameron's message
+	of "Fri, 22 Jun 2018 18:42:23 +0100")
+References: <20180619120714.GE13685@dhcp22.suse.cz>
+	<874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
+	<20180619140818.GA16927@e107981-ln.cambridge.arm.com>
+	<87wouu3jz1.fsf@e105922-lin.cambridge.arm.com>
+	<20180619151425.GH13685@dhcp22.suse.cz>
+	<87r2l23i2b.fsf@e105922-lin.cambridge.arm.com>
+	<20180619163256.GA18952@e107981-ln.cambridge.arm.com>
+	<814205eb-ae86-a519-bed0-f09b8e2d3a02@huawei.com>
+	<87602d3ccl.fsf@e105922-lin.cambridge.arm.com>
+	<5c083c9c-473f-f504-848b-48506d0fd380@huawei.com>
+	<20180622091153.GU10465@dhcp22.suse.cz>
+	<87y3f7yv89.fsf@e105922-lin.cambridge.arm.com>
+	<20180622184223.00007bc3@huawei.com>
+Date: Tue, 26 Jun 2018 18:27:13 +0100
+Message-ID: <87lgb1wj9q.fsf@e105922-lin.cambridge.arm.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-Drivers are expected to call pci_reset_slot() or pci_reset_bus() by
-querying if a system supports hotplug or not. A survey showed that most
-drivers don't do this and we are leaking hotplug capability to the
-user.
+Jonathan Cameron <jonathan.cameron@huawei.com> writes:
 
-Hide pci_slot_reset() from drivers and embed into pci_bus_reset().
-Change pci_reset_bus() parameter from struct pci_bus to struct pci_dev.
+[...]
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pci.c   | 27 +++++++++++++++++++++++----
- include/linux/pci.h |  3 +--
- 2 files changed, 24 insertions(+), 6 deletions(-)
+>
+> I'll test it when back in the office, but I had a similar issue with
+> memory only nodes when I moved the SRAT listing for cpus from the 4
+> 4th mode to the 3rd node to fake some memory I could hot unplug.
+> This gave a memory only node for the last node on the system.
+>
+> When I instead moved cpus from the 3rd node to the 4th (so the node
+> with only memory was now in the middle, everything worked).
+>
+> Was odd, and I'd been meaning to chase it down but hadn't gotten to it
+> yet.  If I get time I'll put together some test firmwares as see if there
+> are any other nasty corner cases we aren't handling.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 79a1566..a44b948 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4798,7 +4798,7 @@ EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
-  *
-  * Return 0 on success, non-zero on error.
-  */
--int pci_reset_slot(struct pci_slot *slot)
-+static int __pci_reset_slot(struct pci_slot *slot)
- {
- 	int rc;
- 
-@@ -4814,7 +4814,6 @@ int pci_reset_slot(struct pci_slot *slot)
- 
- 	return rc;
- }
--EXPORT_SYMBOL_GPL(pci_reset_slot);
- 
- /**
-  * __pci_try_reset_slot - Try to reset a PCI slot
-@@ -4878,7 +4877,7 @@ int pci_probe_reset_bus(struct pci_bus *bus)
- EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
- 
- /**
-- * pci_reset_bus - reset a PCI bus
-+ * __pci_reset_bus - reset a PCI bus
-  * @bus: top level PCI bus to reset
-  *
-  * Do a bus reset on the given bus and any subordinate buses, saving
-@@ -4886,7 +4885,7 @@ EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
-  *
-  * Return 0 on success, non-zero on error.
-  */
--int pci_reset_bus(struct pci_bus *bus)
-+static int __pci_reset_bus(struct pci_bus *bus)
- {
- 	int rc;
- 
-@@ -4902,6 +4901,26 @@ int pci_reset_bus(struct pci_bus *bus)
- 
- 	return rc;
- }
-+
-+/**
-+ * pci_reset_bus - reset a PCI bus
-+ * @pdev: top level PCI device to reset via slot/bus
-+ *
-+ * Do a slot/bus reset on the given bus and any subordinate buses, saving
-+ * and restoring state of all devices.
-+ *
-+ * Return 0 on success, non-zero on error.
-+ */
-+int pci_reset_bus(struct pci_dev *pdev)
-+{
-+	bool slot = false;
-+
-+	if (!pci_probe_reset_slot(pdev->slot))
-+		slot = true;
-+
-+	return slot ? __pci_reset_slot(pdev->slot) :
-+			__pci_reset_bus(pdev->bus);
-+}
- EXPORT_SYMBOL_GPL(pci_reset_bus);
- 
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f5c85b6..e68ca2e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1095,9 +1095,8 @@ int pci_reset_function(struct pci_dev *dev);
- int pci_reset_function_locked(struct pci_dev *dev);
- int pci_try_reset_function(struct pci_dev *dev);
- int pci_probe_reset_slot(struct pci_slot *slot);
--int pci_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
--int pci_reset_bus(struct pci_bus *bus);
-+int pci_reset_bus(struct pci_dev *dev);
- int pci_try_reset_bus(struct pci_dev *dev);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
--- 
-2.7.4
+If you get a chance, it'd be really helpful to test reversing the
+ordering of entries in the SRAT and booting with a restricted
+NR_CPUS.
 
+This issue was found through code inspection.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Please make sure to use the updated patch from Lorenzo for your
+tests[0].
+
+[0] https://marc.info/?l=linux-acpi&m=152998665713983&w=2
+
+>
+> Jonathan
+>
+>> 
+>> _______________________________________________
+>> linux-arm-kernel mailing list
+>> linux-arm-kernel@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
