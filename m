@@ -1,95 +1,26 @@
-Return-Path: <SRS0=WgDl=JM=oracle.com=dan.carpenter@kernel.org>
-Return-Path: <SRS0=WgDl=JM=oracle.com=dan.carpenter@kernel.org>
-Date: Tue, 26 Jun 2018 10:44:26 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: kbuild@01.org, Pingfan Liu <kernelfans@gmail.com>
-Cc: kbuild-all@01.org, linux-kernel@vger.kernel.org,
-        Pingfan Liu <kernelfans@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Grygorii Strashko <grygorii.strashko@ti.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 2/3] drivers/base: reorder consumer and its children
- behind suppliers
-Message-ID: <20180626074426.hzunfbvwbubt3t3p@mwanda>
+Return-Path: <SRS0=GkLM=JM=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=GkLM=JM=linux.intel.com=mika.westerberg@kernel.org>
+Date: Tue, 26 Jun 2018 13:00:22 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 0/4] PCI: shpchp: NULL pointer fix and cleanups
+Message-ID: <20180626100022.GV2558@lahna.fi.intel.com>
+References: <152996746234.260522.11381067633352986554.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1529904187-18673-3-git-send-email-kernelfans@gmail.com>
+In-Reply-To: <152996746234.260522.11381067633352986554.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-[ There is a bug with kbuild where it's not showing the Smatch warnings
-  but I can probably guess...  - dan ]
+On Mon, Jun 25, 2018 at 05:59:33PM -0500, Bjorn Helgaas wrote:
+> The first patch fixes a NULL pointer dereference reported by Marc and would
+> be targeted for v4.18.
+> 
+> The others simplify the shpchp probe path and would be for v4.19.
 
-Hi Pingfan,
+Thanks for taking care of this, Bjorn!
 
-Thank you for the patch! Perhaps something to improve:
+For the whole series,
 
-url:    https://github.com/0day-ci/linux/commits/Pingfan-Liu/drivers-base-bugfix-for-supplier-consumer-ordering-in-device_kset/20180625-132702
-
-
-# https://github.com/0day-ci/linux/commit/1b2a1e63898baf80e8e830991284e1534bc54766
-git remote add linux-review https://github.com/0day-ci/linux
-git remote update linux-review
-git checkout 1b2a1e63898baf80e8e830991284e1534bc54766
-vim +/ret +245 drivers/base/core.c
-
-1b2a1e63 Pingfan Liu 2018-06-25  216  
-1b2a1e63 Pingfan Liu 2018-06-25  217  /* When reodering, take care of the range of (old_pos(dev), new_pos(dev)),
-1b2a1e63 Pingfan Liu 2018-06-25  218   * there may be requirement to recursively move item.
-1b2a1e63 Pingfan Liu 2018-06-25  219   */
-1b2a1e63 Pingfan Liu 2018-06-25  220  int device_reorder_consumer(struct device *dev)
-1b2a1e63 Pingfan Liu 2018-06-25  221  {
-1b2a1e63 Pingfan Liu 2018-06-25  222  	struct list_head *iter, *left, *right;
-1b2a1e63 Pingfan Liu 2018-06-25  223  	struct device *cur_dev;
-1b2a1e63 Pingfan Liu 2018-06-25  224  	struct pos_info info;
-1b2a1e63 Pingfan Liu 2018-06-25  225  	int ret, idx;
-1b2a1e63 Pingfan Liu 2018-06-25  226  
-1b2a1e63 Pingfan Liu 2018-06-25  227  	idx = device_links_read_lock();
-1b2a1e63 Pingfan Liu 2018-06-25  228  	if (list_empty(&dev->links.suppliers)) {
-1b2a1e63 Pingfan Liu 2018-06-25  229  		device_links_read_unlock(idx);
-1b2a1e63 Pingfan Liu 2018-06-25  230  		return 0;
-1b2a1e63 Pingfan Liu 2018-06-25  231  	}
-1b2a1e63 Pingfan Liu 2018-06-25  232  	spin_lock(&devices_kset->list_lock);
-1b2a1e63 Pingfan Liu 2018-06-25  233  	list_for_each_prev(iter, &devices_kset->list) {
-1b2a1e63 Pingfan Liu 2018-06-25  234  		cur_dev = list_entry(iter, struct device, kobj.entry);
-1b2a1e63 Pingfan Liu 2018-06-25  235  		ret = find_last_supplier(dev, cur_dev);
-1b2a1e63 Pingfan Liu 2018-06-25  236  		switch (ret) {
-1b2a1e63 Pingfan Liu 2018-06-25  237  		case -1:
-1b2a1e63 Pingfan Liu 2018-06-25  238  			goto unlock;
-1b2a1e63 Pingfan Liu 2018-06-25  239  		case 1:
-1b2a1e63 Pingfan Liu 2018-06-25  240  			break;
-1b2a1e63 Pingfan Liu 2018-06-25  241  		case 0:
-1b2a1e63 Pingfan Liu 2018-06-25  242  			continue;
-
-The break breaks from the switch and the continue continues the loop so
-they're equivalent.  Perhaps you intended to break from the loop?
-
-1b2a1e63 Pingfan Liu 2018-06-25  243  		}
-1b2a1e63 Pingfan Liu 2018-06-25  244  	}
-1b2a1e63 Pingfan Liu 2018-06-25 @245  	BUG_ON(!ret);
-
-If the list is empty then "ret" can be unitialized.  We test a different
-list "dev->links.suppliers" to see if that's empty.  I wrote a bunch of
-code to make Smatch try to understand about empty lists, but I don't
-think it works...
-
-1b2a1e63 Pingfan Liu 2018-06-25  246  
-1b2a1e63 Pingfan Liu 2018-06-25  247  	/* record the affected open section */
-1b2a1e63 Pingfan Liu 2018-06-25  248  	left = dev->kobj.entry.prev;
-1b2a1e63 Pingfan Liu 2018-06-25  249  	right = iter;
-1b2a1e63 Pingfan Liu 2018-06-25  250  	info.pos = list_entry(iter, struct device, kobj.entry);
-1b2a1e63 Pingfan Liu 2018-06-25  251  	info.tail = NULL;
-1b2a1e63 Pingfan Liu 2018-06-25  252  	/* dry out the consumers in (left,right) */
-1b2a1e63 Pingfan Liu 2018-06-25  253  	__device_reorder_consumer(dev, left, right, &info);
-1b2a1e63 Pingfan Liu 2018-06-25  254  
-1b2a1e63 Pingfan Liu 2018-06-25  255  unlock:
-1b2a1e63 Pingfan Liu 2018-06-25  256  	spin_unlock(&devices_kset->list_lock);
-1b2a1e63 Pingfan Liu 2018-06-25  257  	device_links_read_unlock(idx);
-1b2a1e63 Pingfan Liu 2018-06-25  258  	return 0;
-1b2a1e63 Pingfan Liu 2018-06-25  259  }
-1b2a1e63 Pingfan Liu 2018-06-25  260  
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
