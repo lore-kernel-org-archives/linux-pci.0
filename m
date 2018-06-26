@@ -1,245 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 26 Jun 2018 15:32:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PCI <linux-pci@vger.kernel.org>, n0000b.n000b@gmail.com,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 18 Jun 2018 13:36:35 -0600
-Message-Id: <20180618193636.16210-3-logang@deltatee.com>
-In-Reply-To: <20180618193636.16210-1-logang@deltatee.com>
-References: <20180618193636.16210-1-logang@deltatee.com>
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH] PCI / ACPI / PM: Resume bridges w/o drivers on
+ suspend-to-RAM
+Message-ID: <20180626203214.GA181504@bhelgaas-glaptop.roam.corp.google.com>
+References: <35587465.8Nave9aG7d@aspire.rjw.lan>
+ <20180626140115.GA146680@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0jc5oJzEX6QVDVjsQLmLxXHg3PSyepbh50dLXOtnHPgrA@mail.gmail.com>
+ <20180626171406.GC146680@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJZ5v0gt+4FiiBxEjdsEYLT+dQq=Q=mC7JtZPsYxps0_a1w-rg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v3 2/3] PCI: Allow specifying devices using a base bus and path of devfns
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0gt+4FiiBxEjdsEYLT+dQq=Q=mC7JtZPsYxps0_a1w-rg@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When specifying PCI devices on the kernel command line using a
-BDF, the bus numbers can change when adding or replacing a device,
-changing motherboard firmware, or applying kernel parameters like
-pci=assign-buses. When this happens, it is usually undesirable to
-apply whatever command line tweak to the wrong device.
+On Tue, Jun 26, 2018 at 07:19:29PM +0200, Rafael J. Wysocki wrote:
+> On Tue, Jun 26, 2018 at 7:14 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Jun 26, 2018 at 04:22:00PM +0200, Rafael J. Wysocki wrote:
+> >> On Tue, Jun 26, 2018 at 4:01 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >> > On Tue, Jun 26, 2018 at 12:06:01PM +0200, Rafael J. Wysocki wrote:
+> >> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> >> >> +     /*
+> >> >> +      * In some cases (eg. Samsung 305V4A) leaving a bridge in suspend
+> >> >> +      * confuses the platform firmware, so avoid doing that, unless the
+> >> >> +      * bridge has a driver that should take care of PM handling.
+> >> >> +      */
+> >> >> +     if (pci_is_bridge(dev) && !dev->driver)
+> >> >> +             return true;
+> >> >
+> >> > It sounds like the question of whether leaving a bridge in D3 confuses
+> >> > the firmware has a platform-specific answer.
+> >>
+> >> Well, it may confuse the platform firmware in general.
+> >>
+> >> > How does the driver PM handling know how to do the right thing?
+> >>
+> >> For endpoints this is not an issue as they always have been expected
+> >> to be in D3 before passing control to the platform firmware on S3
+> >> entry, but we've never done that for bridges by default, except for
+> >> PCIe ports with PM enabled (in which case the driver decides whether
+> >> or not to enable it).
+> >
+> > If there's any spec reference for the expected power states of devices
+> > when entering S3, that would be useful here.  I can't tell if there's
+> > any guidance for this or if it's just figured out experimentally.
+> 
+> It is not direct, but Section 16.1.6 of ACPI 6.2 says this in step 4
+> of the system suspend outline:
+> 
+> OSPM places all device drivers into their respective Dx state. If the
+> device is enabled for wake,
+> it enters the Dx state associated with the wake capability. If the
+> device is not enabled to wake
+> the system, it enters the D3 state.
 
-Therefore, it is useful to be able to specify devices with a base
-bus number and the path of devfns needed to get to it. (Similar to
-the "device scope" structure in the Intel VT-d spec, Section 8.3.1.)
+Thanks, that's a very useful citation!
 
-Thus, we add an option to specify devices in the following format:
-
-[<domain>:]<bus>:<slot>.<func>[/<slot>.<func>][/ ...]
-
-The path can be any segment within the PCI hierarchy of any length and
-determined through the use of 'lspci -t'. When specified this way, it is
-less likely that a renumbered bus will result in a valid device specification
-and the tweak won't be applied to the wrong device.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Acked-by: Christian König <christian.koenig@amd.com>
----
- Documentation/admin-guide/kernel-parameters.txt |   8 +-
- drivers/pci/pci.c                               | 120 ++++++++++++++++++++----
- 2 files changed, 106 insertions(+), 22 deletions(-)
-
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 760fb2b0b349..d45285e1ab6a 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3000,14 +3000,18 @@
- 				or a set of devices (<pci_dev>). These are
- 				specified in one of the following formats:
- 
--				[<domain>:]<bus>:<slot>.<func>
-+				[<domain>:]<bus>:<slot>.<func>[/<slot>.<func>][/ ...]
- 				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
- 
- 				Note: the first format specifies a PCI
- 				bus/slot/function address which may change
- 				if new hardware is inserted, if motherboard
- 				firmware changes, or due to changes caused
--				by other kernel parameters. The second format
-+				by other kernel parameters. Optionally
-+				a path from a device through multiple
-+				slot/function addresses can be specified
-+				after the base address (this is more robust
-+				against renumbering issues). The second format
- 				selects devices using IDs from the
- 				configuration space which may match multiple
- 				devices in the system.
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index bec1bef6f326..6fbad0492461 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -192,22 +192,111 @@ EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
- #endif
- 
- /**
-+ * pci_dev_str_match_path - test if a path string matches a device
-+ * @dev:    the PCI device to test
-+ * @p:      string to match the device against
-+ * @endptr: pointer to the string after the match
-+ *
-+ * Test if a string (typically from a kernel parameter) formated as a
-+ * path of slot/function addresses matches a PCI device. The string must
-+ * be of the form:
-+ *
-+ *   [<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
-+ *
-+ * A path for a device can be obtained using 'lspci -t'. Using a path
-+ * is more robust against renumbering of devices than using only
-+ * a single bus, slot and function address.
-+ *
-+ * Returns 1 if the string matches the device, 0 if it does not and
-+ * a negative error code if it fails to parse the string.
-+ */
-+static int pci_dev_str_match_path(struct pci_dev *dev, const char *path,
-+				  const char **endptr)
-+{
-+	int ret;
-+	int seg, bus, slot, func;
-+	char *wpath, *p;
-+	char end;
-+
-+	*endptr = strchrnul(path, ';');
-+
-+	wpath = kmemdup_nul(path, *endptr - path, GFP_KERNEL);
-+	if (!wpath)
-+		return -ENOMEM;
-+
-+	while (1) {
-+		p = strrchr(wpath, '/');
-+		if (!p)
-+			break;
-+		ret = sscanf(p, "/%x.%x%c", &slot, &func, &end);
-+		if (ret != 2) {
-+			ret = -EINVAL;
-+			goto free_and_exit;
-+		}
-+
-+		if (dev->devfn != PCI_DEVFN(slot, func)) {
-+			ret = 0;
-+			goto free_and_exit;
-+		}
-+
-+		/*
-+		 * Note: we don't need to get a reference to the upstream
-+		 * bridge because we hold a reference to the top level
-+		 * device which should hold a reference to the bridge,
-+		 * and so on.
-+		 */
-+		dev = pci_upstream_bridge(dev);
-+		if (!dev) {
-+			ret = 0;
-+			goto free_and_exit;
-+		}
-+
-+		*p = 0;
-+	}
-+
-+	ret = sscanf(wpath, "%x:%x:%x.%x%c", &seg, &bus, &slot,
-+		     &func, &end);
-+	if (ret != 4) {
-+		seg = 0;
-+		ret = sscanf(wpath, "%x:%x.%x%c", &bus, &slot, &func, &end);
-+		if (ret != 3) {
-+			ret = -EINVAL;
-+			goto free_and_exit;
-+		}
-+	}
-+
-+	ret = (seg == pci_domain_nr(dev->bus) &&
-+	       bus == dev->bus->number &&
-+	       dev->devfn == PCI_DEVFN(slot, func));
-+
-+free_and_exit:
-+	kfree(wpath);
-+	return ret;
-+}
-+
-+/**
-  * pci_dev_str_match - test if a string matches a device
-  * @dev:    the PCI device to test
-  * @p:      string to match the device against
-  * @endptr: pointer to the string after the match
-  *
-  * Test if a string (typically from a kernel parameter) matches a
-- * specified. The string may be of one of two forms formats:
-+ * specified. The string may be of one of three formats:
-  *
-  *   [<domain>:]<bus>:<slot>.<func>
-+ *   path:[<domain>:]<bus>:<slot>.<func>/<slot>.<func>[/ ...]
-  *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
-  *
-  * The first format specifies a PCI bus/slot/function address which
-  * may change if new hardware is inserted, if motherboard firmware changes,
-  * or due to changes caused in kernel parameters.
-  *
-- * The second format matches devices using IDs in the configuration
-+ * The second format specifies a PCI bus/slot/function root address and
-+ * a path of slot/function addresses to the specific device from the root.
-+ * The path for a device can be determined through the use of 'lspci -t'.
-+ * This format is more robust against renumbering issues than the first format.
-+
-+ * The third format matches devices using IDs in the configuration
-  * space which may match multiple devices in the system. A value of 0
-  * for any field will match all devices.
-  *
-@@ -218,7 +307,7 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
- 			     const char **endptr)
- {
- 	int ret;
--	int seg, bus, slot, func, count;
-+	int count;
- 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
- 
- 	if (strncmp(p, "pci:", 4) == 0) {
-@@ -244,25 +333,16 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
- 		    (!subsystem_device ||
- 			    subsystem_device == dev->subsystem_device))
- 			goto found;
--
- 	} else {
--		/* PCI Bus,Slot,Function ids are specified */
--		ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
--			     &func, &count);
--		if (ret != 4) {
--			seg = 0;
--			ret = sscanf(p, "%x:%x.%x%n", &bus, &slot,
--				     &func, &count);
--			if (ret != 3)
--				return -EINVAL;
--		}
--
--		p += count;
-+		/*
-+		 * PCI Bus,Slot,Function ids are specified
-+		 *  (optionally, may include a path of devfns following it)
-+		 */
- 
--		if (seg == pci_domain_nr(dev->bus) &&
--		    bus == dev->bus->number &&
--		    slot == PCI_SLOT(dev->devfn) &&
--		    func == PCI_FUNC(dev->devfn))
-+		ret = pci_dev_str_match_path(dev, p, &p);
-+		if (ret < 0)
-+			return ret;
-+		else if (ret)
- 			goto found;
- 	}
- 
--- 
-2.11.0
+Bjorn
