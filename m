@@ -1,162 +1,101 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
- <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH 3/4] PCI: mediatek: Add system pm support for MT2712 and MT7622
-Date: Wed, 27 Jun 2018 17:21:37 +0800
-Message-ID: <1530091298-28120-4-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1530091298-28120-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1530091298-28120-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <SRS0=NLCh=JM=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=NLCh=JM=linuxfoundation.org=gregkh@kernel.org>
+Date: Tue, 26 Jun 2018 19:54:02 +0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Pingfan Liu <kernelfans@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCHv2 2/2] drivers/base: reorder consumer and its children
+ behind suppliers
+Message-ID: <20180626115402.GB30256@kroah.com>
+References: <1529912859-10475-1-git-send-email-kernelfans@gmail.com>
+ <1529912859-10475-3-git-send-email-kernelfans@gmail.com>
+ <20180625104505.GA3058@kroah.com>
+ <CAFgQCTt6MTwXbbcQCcJroM3wGdx+5c7A+eVy+dXJscu1JtfA-w@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- honghui.zhang@mediatek.com, yt.shen@mediatek.com, yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFgQCTt6MTwXbbcQCcJroM3wGdx+5c7A+eVy+dXJscu1JtfA-w@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Tue, Jun 26, 2018 at 11:29:48AM +0800, Pingfan Liu wrote:
+> On Mon, Jun 25, 2018 at 6:45 PM Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> >
+> > On Mon, Jun 25, 2018 at 03:47:39PM +0800, Pingfan Liu wrote:
+> > > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+> > > introduces supplier<-consumer order in devices_kset. The commit tries
+> > > to cleverly maintain both parent<-child and supplier<-consumer order by
+> > > reordering a device when probing. This method makes things simple and
+> > > clean, but unfortunately, breaks parent<-child order in some case,
+> > > which is described in next patch in this series.
+> >
+> > There is no "next patch in this series" :(
+> >
+> Oh, re-arrange the patches, and forget the comment in log
+> 
+> > > Here this patch tries to resolve supplier<-consumer by only reordering a
+> > > device when it has suppliers, and takes care of the following scenario:
+> > >     [consumer, children] [ ... potential ... ] supplier
+> > >                          ^                   ^
+> > > After moving the consumer and its children after the supplier, the
+> > > potentail section may contain consumers whose supplier is inside
+> > > children, and this poses the requirement to dry out all consumpers in
+> > > the section recursively.
+> > >
+> > > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+> > > Cc: Christoph Hellwig <hch@infradead.org>
+> > > Cc: Bjorn Helgaas <helgaas@kernel.org>
+> > > Cc: Dave Young <dyoung@redhat.com>
+> > > Cc: linux-pci@vger.kernel.org
+> > > Cc: linuxppc-dev@lists.ozlabs.org
+> > > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+> > > ---
+> > > note: there is lock issue in this patch, should be fixed in next version
+> >
+> > Please send patches that you know are correct, why would I want to
+> > review this if you know it is not correct?
+> >
+> > And if the original commit is causing problems for you, why not just
+> > revert that instead of adding this much-increased complexity?
+> >
+> Revert the original commit, then it will expose the error  order
+> "consumer <- supplier" again.
+> This patch tries to resolve the error and fix the following scenario:
+> step0:  before the consumer device's probing,  (note child_a is a
+> supplier of consumer_a, etc)
+> [ consumer-X,  child_a, ...., child_z]     [.... consumer_a, ...,
+> consumer_z, ....]    supplier-X
+>                                                              ^^^
+> affected range during moving^^^
+> step1: When probing, moving consumer-X after supplier-X
+> [ child_a, ...., child_z]     [.... consumer_a, ...,     consumer_z,
+> ....]   supplier-X, consumer-X
+> But it breaks "parent <-child" seq now, and should be fixed like:
+> step2:
+> [.... consumer_a, ...,     consumer_z, ....]  supplier-X  [
+> consumer-X,  child_a, ...., child_z]    <---
+> descendants_reorder_after_pos() does it.
+> Again, the seq "consumer_a <- child_a" breaks the "supplier<-consumer"
+>  order, should be fixed like:
+> step3:
+> [....  consumer_z, .....]  supplier-X  [ consumer-X,  child_a,
+> consumer_a ...., child_z]   <--- __device_reorder_consumer() does it.
+> ^^ affected range^^
+> The moving of consumer_a brings us to face the same scenario of step1,
+> hence we need an external recursion.
 
-The MTCMOS of PCIe Host for MT2712 and MT7622 will be off when system
-suspend, and all the internal control register will be reset after system
-resume. The PCIe link should be re-established and the related control
-register values should be re-set after system resume.
+Something really got messed up here, and this all does not make any
+sense :(
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/pci/controller/pcie-mediatek.c | 68 ++++++++++++++++++++++++++++++++++
- 1 file changed, 68 insertions(+)
+Can you try again?
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 17bf99b..cac01ab 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -134,12 +134,14 @@ struct mtk_pcie_port;
- /**
-  * struct mtk_pcie_soc - differentiate between host generations
-  * @need_fix_class_id: whether this host's class ID needed to be fixed or not
-+ * @pm_support: whether the host's MTCMOS will be off when suspend
-  * @ops: pointer to configuration access functions
-  * @startup: pointer to controller setting functions
-  * @setup_irq: pointer to initialize IRQ functions
-  */
- struct mtk_pcie_soc {
- 	bool need_fix_class_id;
-+	bool pm_support;
- 	struct pci_ops *ops;
- 	int (*startup)(struct mtk_pcie_port *port);
- 	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
-@@ -1195,12 +1197,76 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int mtk_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-+	const struct mtk_pcie_soc *soc = pcie->soc;
-+	struct mtk_pcie_port *port;
-+
-+	if (!soc->pm_support)
-+		return 0;
-+
-+	if (list_empty(&pcie->ports))
-+		return 0;
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		clk_disable_unprepare(port->pipe_ck);
-+		clk_disable_unprepare(port->obff_ck);
-+		clk_disable_unprepare(port->axi_ck);
-+		clk_disable_unprepare(port->aux_ck);
-+		clk_disable_unprepare(port->ahb_ck);
-+		clk_disable_unprepare(port->sys_ck);
-+		phy_power_off(port->phy);
-+		phy_exit(port->phy);
-+	}
-+
-+	mtk_pcie_subsys_powerdown(pcie);
-+
-+	return 0;
-+}
-+
-+static int mtk_pcie_resume_noirq(struct device *dev)
-+{
-+	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-+	const struct mtk_pcie_soc *soc = pcie->soc;
-+	struct mtk_pcie_port *port;
-+
-+	if (!soc->pm_support)
-+		return 0;
-+
-+	if (list_empty(&pcie->ports))
-+		return 0;
-+
-+	if (dev->pm_domain) {
-+		pm_runtime_enable(dev);
-+		pm_runtime_get_sync(dev);
-+	}
-+
-+	clk_prepare_enable(pcie->free_ck);
-+
-+	list_for_each_entry(port, &pcie->ports, list)
-+		mtk_pcie_enable_port(port);
-+
-+	if (list_empty(&pcie->ports))
-+		mtk_pcie_subsys_powerdown(pcie);
-+
-+	return 0;
-+}
-+#endif
-+
-+static const struct dev_pm_ops mtk_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
-+				      mtk_pcie_resume_noirq)
-+};
-+
- static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
- 	.ops = &mtk_pcie_ops,
- 	.startup = mtk_pcie_startup_port,
- };
- 
- static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-+	.pm_support = true,
- 	.ops = &mtk_pcie_ops_v2,
- 	.startup = mtk_pcie_startup_port_v2,
- 	.setup_irq = mtk_pcie_setup_irq,
-@@ -1208,6 +1274,7 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
- 
- static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
- 	.need_fix_class_id = true,
-+	.pm_support = true,
- 	.ops = &mtk_pcie_ops_v2,
- 	.startup = mtk_pcie_startup_port_v2,
- 	.setup_irq = mtk_pcie_setup_irq,
-@@ -1227,6 +1294,7 @@ static struct platform_driver mtk_pcie_driver = {
- 		.name = "mtk-pcie",
- 		.of_match_table = mtk_pcie_ids,
- 		.suppress_bind_attrs = true,
-+		.pm = &mtk_pcie_pm_ops,
- 	},
- };
- builtin_platform_driver(mtk_pcie_driver);
--- 
-2.6.4
+Also, please cc: Rafael on all of this, as he wrote all of this
+consumer/supplier logic and I am not that familiar with it at all.
 
+thanks,
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+greg k-h
