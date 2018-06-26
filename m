@@ -1,25 +1,63 @@
-Return-Path: <SRS0=c2HZ=I2=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=c2HZ=I2=intel.com=keith.busch@kernel.org>
-Date: Fri, 8 Jun 2018 14:17:13 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Borislav Petkov <bp@alien8.de>,
-	Oza Pawandeep <poza@codeaurora.org>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 09/13] PCI/AER: Move aer_irq() declaration to portdrv.h
-Message-ID: <20180608201713.GA24554@localhost.localdomain>
-References: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152848834128.11888.12263280185471104825.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=QIuN=JM=arm.com=punit.agrawal@kernel.org>
+Return-Path: <SRS0=QIuN=JM=arm.com=punit.agrawal@kernel.org>
+From: Punit Agrawal <punit.agrawal@arm.com>
+To: Jonathan Cameron <jonathan.cameron@huawei.com>
+Cc: Michal Hocko <mhocko@kernel.org>,  Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,  Catalin Marinas <catalin.marinas@arm.com>,  <tnowicki@caviumnetworks.com>,  Xie XiuQi <xiexiuqi@huawei.com>,  <linux-pci@vger.kernel.org>,  "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,  Will Deacon <will.deacon@arm.com>,  "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,  Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,  <linux-mm@kvack.org>,  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,  Bjorn Helgaas <helgaas@kernel.org>,  linux-arm <linux-arm-kernel@lists.infradead.org>,  Hanjun Guo <guohanjun@huawei.com>,  Bjorn Helgaas <bhelgaas@google.com>,  Andrew Morton <akpm@linux-foundation.org>,  zhongjiang <zhongjiang@huawei.com>,  <wanghuiqiang@huawei.com>
+Subject: Re: [PATCH 1/2] arm64: avoid alloc memory on offline node
+References: <20180619120714.GE13685@dhcp22.suse.cz>
+	<874lhz3pmn.fsf@e105922-lin.cambridge.arm.com>
+	<20180619140818.GA16927@e107981-ln.cambridge.arm.com>
+	<87wouu3jz1.fsf@e105922-lin.cambridge.arm.com>
+	<20180619151425.GH13685@dhcp22.suse.cz>
+	<87r2l23i2b.fsf@e105922-lin.cambridge.arm.com>
+	<20180619163256.GA18952@e107981-ln.cambridge.arm.com>
+	<814205eb-ae86-a519-bed0-f09b8e2d3a02@huawei.com>
+	<87602d3ccl.fsf@e105922-lin.cambridge.arm.com>
+	<5c083c9c-473f-f504-848b-48506d0fd380@huawei.com>
+	<20180622091153.GU10465@dhcp22.suse.cz>
+	<87y3f7yv89.fsf@e105922-lin.cambridge.arm.com>
+	<20180622184223.00007bc3@huawei.com>
+Date: Tue, 26 Jun 2018 18:27:01 +0100
+In-Reply-To: <20180622184223.00007bc3@huawei.com> (Jonathan Cameron's message
+	of "Fri, 22 Jun 2018 18:42:23 +0100")
+Message-ID: <87muvhwja2.fsf@e105922-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <152848834128.11888.12263280185471104825.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 08, 2018 at 03:05:41PM -0500, Bjorn Helgaas wrote:
-> The aer_irq() declaration is the only thing needed by aer_inject.c.  Move
-> it to portdrv.h so we eventually get rid of aerdrv.h completely.  No
-> functional change intended.
+Jonathan Cameron <jonathan.cameron@huawei.com> writes:
 
-Nothing against what you're doing here, but it does seem odd that aer_irq
-is required to be exported just for the error injection to directly call
-it. I feel like aer-inject should route it through the irq subsystem,
-like with generic_handle_irq. ?
+[...]
+
+>
+> I'll test it when back in the office, but I had a similar issue with
+> memory only nodes when I moved the SRAT listing for cpus from the 4
+> 4th mode to the 3rd node to fake some memory I could hot unplug.
+> This gave a memory only node for the last node on the system.
+>
+> When I instead moved cpus from the 3rd node to the 4th (so the node
+> with only memory was now in the middle, everything worked).
+>
+> Was odd, and I'd been meaning to chase it down but hadn't gotten to it
+> yet.  If I get time I'll put together some test firmwares as see if there
+> are any other nasty corner cases we aren't handling.
+
+If you get a chance, it'd be really helpful to test reversing the
+ordering of entries in the SRAT and booting with a restricted
+NR_CPUS.
+
+This issue was found through code inspection.
+
+Please make sure to use the updated patch from Lorenzo for your
+tests[0].
+
+[0] https://marc.info/?l=linux-acpi&m=152998665713983&w=2
+
+>
+> Jonathan
+>
+>> 
+>> _______________________________________________
+>> linux-arm-kernel mailing list
+>> linux-arm-kernel@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
