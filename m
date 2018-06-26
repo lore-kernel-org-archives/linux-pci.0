@@ -1,112 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:32292 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933939AbeFYNdT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 25 Jun 2018 09:33:19 -0400
-Date: Mon, 25 Jun 2018 16:33:13 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: shpchp: Fix probing logic inversion
-Message-ID: <20180625133313.GL2558@lahna.fi.intel.com>
-References: <20180621164715.28160-1-marc.zyngier@arm.com>
- <20180625125204.GH2558@lahna.fi.intel.com>
- <8d37f32e-d62d-0e81-d478-8a7a8d7b15c0@arm.com>
+Return-Path: <SRS0=WgDl=JM=oracle.com=dan.carpenter@kernel.org>
+Return-Path: <SRS0=WgDl=JM=oracle.com=dan.carpenter@kernel.org>
+Date: Tue, 26 Jun 2018 10:44:26 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: kbuild@01.org, Pingfan Liu <kernelfans@gmail.com>
+Cc: kbuild-all@01.org, linux-kernel@vger.kernel.org,
+        Pingfan Liu <kernelfans@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Grygorii Strashko <grygorii.strashko@ti.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 2/3] drivers/base: reorder consumer and its children
+ behind suppliers
+Message-ID: <20180626074426.hzunfbvwbubt3t3p@mwanda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8d37f32e-d62d-0e81-d478-8a7a8d7b15c0@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1529904187-18673-3-git-send-email-kernelfans@gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 25, 2018 at 02:13:26PM +0100, Marc Zyngier wrote:
-> On 25/06/18 13:52, Mika Westerberg wrote:
-> > On Thu, Jun 21, 2018 at 05:47:15PM +0100, Marc Zyngier wrote:
-> >> Until recently, shpc_probe() would bail out pretty early in the
-> >> absence of the SHPC capability. A logic change in the way the
-> >> driver now checks that capability makes it go and probe the
-> >> firmware anyway, with ugly consequences if the system is not
-> >> ACPI based (my arm64 ThunderX is DT driven, and explodes in
-> >> a spectacular way after getting a NULL root bridge from the
-> >> non-existent ACPI tables...).
-> > 
-> > Could you share log from the failure? I would like to understand a bit
-> > better where it crashes and why.
-> 
-> Here you go:
-> 
-> [   12.330017] pcieport 0008:1f:00.0: enabling device (0506 -> 0507)
-> [   12.336315] Unable to handle kernel NULL pointer dereference at virtual address 0000000000000058
-> [   12.345104] Mem abort info:
-> [   12.347895]   ESR = 0x96000004
-> [   12.350945]   Exception class = DABT (current EL), IL = 32 bits
-> [   12.356860]   SET = 0, FnV = 0
-> [   12.359910]   EA = 0, S1PTW = 0
-> [   12.363046] Data abort info:
-> [   12.365922]   ISV = 0, ISS = 0x00000004
-> [   12.369748]   CM = 0, WnR = 0
-> [   12.372712] [0000000000000058] user address but active_mm is swapper
-> [   12.379063] Internal error: Oops: 96000004 [#1] PREEMPT SMP
-> [   12.384625] Modules linked in:
-> [   12.387676] CPU: 0 PID: 5 Comm: kworker/0:0 Not tainted 4.18.0-rc1-00006-ga2c5c6a64fb6 #10
-> [   12.395929] Hardware name: FOXCONN R2-1221R-A4/C2U4N_MB, BIOS G31FB18A 03/31/2017
-> [   12.403408] Workqueue: events work_for_cpu_fn
-> [   12.407758] pstate: 60000005 (nZCv daif -PAN -UAO)
-> [   12.412544] pc : acpi_get_hp_hw_control_from_firmware+0xa0/0x2b0
-> [   12.418541] lr : acpi_get_hp_hw_control_from_firmware+0xa0/0x2b0
-> [   12.424537] sp : ffff00000a613c60
-> [   12.427841] x29: ffff00000a613c60 x28: 0000000000000000 
-> [   12.433147] x27: ffff800fbeb8d0b0 x26: ffff00000982a068 
-> [   12.438453] x25: 0000000000000000 x24: ffff000009feb898 
-> [   12.443759] x23: 0000000000000000 x22: ffff000009808000 
-> [   12.449064] x21: ffff0000098dee98 x20: ffff810fa60d9000 
-> [   12.454370] x19: 0000000000000000 x18: ffffffffffffffff 
-> [   12.459675] x17: 0000000000000e00 x16: 0000000000000020 
-> [   12.464981] x15: ffff000009808648 x14: ffff000089a31b8f 
-> [   12.470286] x13: 0000000000000000 x12: 0000000000000040 
-> [   12.475591] x11: 000000000000004c x10: 0000000000000a20 
-> [   12.480897] x9 : ffff00000a613d30 x8 : 0000000000000000 
-> [   12.486202] x7 : ffff000009808648 x6 : 0000000000000057 
-> [   12.491508] x5 : 0000000000000010 x4 : 000000000000001f 
-> [   12.496813] x3 : 0000000000000000 x2 : 0d68a3f9b2251000 
-> [   12.502118] x1 : 0000000000000000 x0 : 0000000000000000 
-> [   12.507425] Process kworker/0:0 (pid: 5, stack limit = 0x(____ptrval____))
-> [   12.514289] Call trace:
-> [   12.516727]  acpi_get_hp_hw_control_from_firmware+0xa0/0x2b0
-> [   12.522377]  shpc_probe+0x48/0x3b0
-> [   12.525772]  local_pci_probe+0x44/0xb0
-> [   12.529511]  work_for_cpu_fn+0x20/0x30
-> [   12.533252]  process_one_work+0x208/0x480
-> [   12.537251]  worker_thread+0x254/0x448
-> [   12.540992]  kthread+0x104/0x130
-> [   12.544212]  ret_from_fork+0x10/0x1c
-> [   12.547779] Code: f100427f 54000040 f85f8260 94009f63 (b9405800) 
-> [   12.553866] ---[ end trace 8ee5b8cc95cd4f02 ]---
-> 
-> >> Take this opportunity to move the call to shpchp_is_native()
-> >> back into shpc_probe(), making it clear that a non-ACPI system
-> >> is not expected to use this driver.
-> > 
-> > It is fine to use SHPC in non-ACPI systems. However, in ACPI systems we
-> > should negotiate whether it is the OS or the firmware who handles it.
-> Fair enough. In which case we should at the very least make sure
-> we can handle acpi_pci_find_root() returning NULL (which is what
-> generates the crash in my case).
+[ There is a bug with kbuild where it's not showing the Smatch warnings
+  but I can probably guess...  - dan ]
 
-Agreed. Can you try if the below patch fixes the issue for you?
+Hi Pingfan,
 
-diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-index 3979f89b250a..73bc92cf0594 100644
---- a/drivers/pci/hotplug/acpi_pcihp.c
-+++ b/drivers/pci/hotplug/acpi_pcihp.c
-@@ -88,6 +88,9 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
- 
- 	/* If _OSC exists, we should not evaluate OSHP */
- 	host = pci_find_host_bridge(pdev->bus);
-+	if (!ACPI_HANDLE(&host->dev))
-+		return 0;
-+
- 	root = acpi_pci_find_root(ACPI_HANDLE(&host->dev));
- 	if (root->osc_support_set)
- 		goto no_control;
+Thank you for the patch! Perhaps something to improve:
+
+url:    https://github.com/0day-ci/linux/commits/Pingfan-Liu/drivers-base-bugfix-for-supplier-consumer-ordering-in-device_kset/20180625-132702
+
+
+# https://github.com/0day-ci/linux/commit/1b2a1e63898baf80e8e830991284e1534bc54766
+git remote add linux-review https://github.com/0day-ci/linux
+git remote update linux-review
+git checkout 1b2a1e63898baf80e8e830991284e1534bc54766
+vim +/ret +245 drivers/base/core.c
+
+1b2a1e63 Pingfan Liu 2018-06-25  216  
+1b2a1e63 Pingfan Liu 2018-06-25  217  /* When reodering, take care of the range of (old_pos(dev), new_pos(dev)),
+1b2a1e63 Pingfan Liu 2018-06-25  218   * there may be requirement to recursively move item.
+1b2a1e63 Pingfan Liu 2018-06-25  219   */
+1b2a1e63 Pingfan Liu 2018-06-25  220  int device_reorder_consumer(struct device *dev)
+1b2a1e63 Pingfan Liu 2018-06-25  221  {
+1b2a1e63 Pingfan Liu 2018-06-25  222  	struct list_head *iter, *left, *right;
+1b2a1e63 Pingfan Liu 2018-06-25  223  	struct device *cur_dev;
+1b2a1e63 Pingfan Liu 2018-06-25  224  	struct pos_info info;
+1b2a1e63 Pingfan Liu 2018-06-25  225  	int ret, idx;
+1b2a1e63 Pingfan Liu 2018-06-25  226  
+1b2a1e63 Pingfan Liu 2018-06-25  227  	idx = device_links_read_lock();
+1b2a1e63 Pingfan Liu 2018-06-25  228  	if (list_empty(&dev->links.suppliers)) {
+1b2a1e63 Pingfan Liu 2018-06-25  229  		device_links_read_unlock(idx);
+1b2a1e63 Pingfan Liu 2018-06-25  230  		return 0;
+1b2a1e63 Pingfan Liu 2018-06-25  231  	}
+1b2a1e63 Pingfan Liu 2018-06-25  232  	spin_lock(&devices_kset->list_lock);
+1b2a1e63 Pingfan Liu 2018-06-25  233  	list_for_each_prev(iter, &devices_kset->list) {
+1b2a1e63 Pingfan Liu 2018-06-25  234  		cur_dev = list_entry(iter, struct device, kobj.entry);
+1b2a1e63 Pingfan Liu 2018-06-25  235  		ret = find_last_supplier(dev, cur_dev);
+1b2a1e63 Pingfan Liu 2018-06-25  236  		switch (ret) {
+1b2a1e63 Pingfan Liu 2018-06-25  237  		case -1:
+1b2a1e63 Pingfan Liu 2018-06-25  238  			goto unlock;
+1b2a1e63 Pingfan Liu 2018-06-25  239  		case 1:
+1b2a1e63 Pingfan Liu 2018-06-25  240  			break;
+1b2a1e63 Pingfan Liu 2018-06-25  241  		case 0:
+1b2a1e63 Pingfan Liu 2018-06-25  242  			continue;
+
+The break breaks from the switch and the continue continues the loop so
+they're equivalent.  Perhaps you intended to break from the loop?
+
+1b2a1e63 Pingfan Liu 2018-06-25  243  		}
+1b2a1e63 Pingfan Liu 2018-06-25  244  	}
+1b2a1e63 Pingfan Liu 2018-06-25 @245  	BUG_ON(!ret);
+
+If the list is empty then "ret" can be unitialized.  We test a different
+list "dev->links.suppliers" to see if that's empty.  I wrote a bunch of
+code to make Smatch try to understand about empty lists, but I don't
+think it works...
+
+1b2a1e63 Pingfan Liu 2018-06-25  246  
+1b2a1e63 Pingfan Liu 2018-06-25  247  	/* record the affected open section */
+1b2a1e63 Pingfan Liu 2018-06-25  248  	left = dev->kobj.entry.prev;
+1b2a1e63 Pingfan Liu 2018-06-25  249  	right = iter;
+1b2a1e63 Pingfan Liu 2018-06-25  250  	info.pos = list_entry(iter, struct device, kobj.entry);
+1b2a1e63 Pingfan Liu 2018-06-25  251  	info.tail = NULL;
+1b2a1e63 Pingfan Liu 2018-06-25  252  	/* dry out the consumers in (left,right) */
+1b2a1e63 Pingfan Liu 2018-06-25  253  	__device_reorder_consumer(dev, left, right, &info);
+1b2a1e63 Pingfan Liu 2018-06-25  254  
+1b2a1e63 Pingfan Liu 2018-06-25  255  unlock:
+1b2a1e63 Pingfan Liu 2018-06-25  256  	spin_unlock(&devices_kset->list_lock);
+1b2a1e63 Pingfan Liu 2018-06-25  257  	device_links_read_unlock(idx);
+1b2a1e63 Pingfan Liu 2018-06-25  258  	return 0;
+1b2a1e63 Pingfan Liu 2018-06-25  259  }
+1b2a1e63 Pingfan Liu 2018-06-25  260  
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
