@@ -1,64 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:37352 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751288AbeFDVJo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jun 2018 17:09:44 -0400
-Subject: Re: [PATCH][RFC] PCI: rcar: Add bus notifier so we can limit the DMA
- range
-To: Marek Vasut <marek.vasut@gmail.com>, Arnd Bergmann <arnd@arndb.de>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Nikita Yushchenko <nikita.yoush@cogentembedded.com>
-References: <20180521220514.30256-1-marek.vasut+renesas@gmail.com>
- <CAK8P3a1PZ_MfgEcvWdUbN-eCcs5Xo38LQ54imLc4kNtSKO9Txw@mail.gmail.com>
- <c2897d82-fe33-52cd-5aa6-3bddb478cb9f@gmail.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <a40af3d8-83dc-ea5c-8a6f-f7bad9d40e58@gmail.com>
-Date: Mon, 4 Jun 2018 23:09:40 +0200
+Return-Path: <SRS0=R6/I=JM=gmail.com=mr.nuke.me@kernel.org>
+Return-Path: <SRS0=R6/I=JM=gmail.com=mr.nuke.me@kernel.org>
+Subject: Re: [PATCH] PCI: DPC: Clear AER status bits before disabling port
+ containment
+To: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, bhelgaas@google.com,
+ alex_gagniuc@dellteam.com, austin_bolen@dell.com, shyam_iyer@dell.com,
+ Dongdong Liu <liudongdong3@huawei.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20180516213306.27027-1-mr.nuke.me@gmail.com>
+ <605540c0-b6c5-89a2-9d50-12a3005d9f88@codeaurora.org>
+ <20180516231220.GA21659@localhost.localdomain>
+ <20180619215720.GE33049@bhelgaas-glaptop.roam.corp.google.com>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <bcaa5398-3306-7b25-3d1f-d2f0568fc72a@gmail.com>
+Date: Tue, 26 Jun 2018 15:51:02 -0500
 MIME-Version: 1.0
-In-Reply-To: <c2897d82-fe33-52cd-5aa6-3bddb478cb9f@gmail.com>
+In-Reply-To: <20180619215720.GE33049@bhelgaas-glaptop.roam.corp.google.com>
 Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/22/2018 11:52 AM, Marek Vasut wrote:
-> On 05/22/2018 10:10 AM, Arnd Bergmann wrote:
->> On Tue, May 22, 2018 at 12:05 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
->>> From: Phil Edworthy <phil.edworthy@renesas.com>
+
+
+On 06/19/2018 04:57 PM, Bjorn Helgaas wrote:
+> On Wed, May 16, 2018 at 05:12:21PM -0600, Keith Busch wrote:
+>> On Wed, May 16, 2018 at 06:44:22PM -0400, Sinan Kaya wrote:
+>>> On 5/16/2018 5:33 PM, Alexandru Gagniuc wrote:
+>>>> AER status bits are sticky, and they survive system resets. Downstream
+>>>> devices are usually taken care of after re-enumerating the downstream
+>>>> busses, as the AER bits are cleared during probe().
+>>>>
+>>>> However, nothing clears the bits of the port which contained the
+>>>> error. These sticky bits may leave some BIOSes to think that something
+>>>> bad happened, and print ominous messages on next boot. To prevent this,
+>>>> tidy up the AER status bits before releasing containment.
+>>>>
+>>>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+>>>> ---
+>>>>  drivers/pci/pcie/dpc.c | 4 ++++
+>>>>  1 file changed, 4 insertions(+)
+>>>>
+>>>> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+>>>> index 8c57d607e603..bf82d6936556 100644
+>>>> --- a/drivers/pci/pcie/dpc.c
+>>>> +++ b/drivers/pci/pcie/dpc.c
+>>>> @@ -112,6 +112,10 @@ static void dpc_work(struct work_struct *work)
+>>>>  		dpc->rp_pio_status = 0;
+>>>>  	}
+>>>>  
+>>>> +	/* DPC event made a mess of our AER status bits. Clean them up. */
+>>>> +	pci_cleanup_aer_error_status_regs(pdev);
+>>>> +	/* TODO: Should we also use aer_print_error to log the event? */
+>>>> +
+>>>>  	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+>>>>  		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+>>>>  
+>>>>
 >>>
->>> The PCIe DMA controller on RCar Gen2 and earlier is on 32bit bus,
->>> so limit the DMA range to 32bit.
->>>
->>> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
->>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>> Cc: Arnd Bergmann <arnd@arndb.de>
->>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->>> Cc: Simon Horman <horms+renesas@verge.net.au>
->>> Cc: Wolfram Sang <wsa@the-dreams.de>
->>> Cc: linux-renesas-soc@vger.kernel.org
->>> To: linux-pci@vger.kernel.org
->>> ---
->>> NOTE: I'm aware of https://patchwork.kernel.org/patch/9495895/ , but the
->>>       discussion seems to have gone way off, so I'm sending this as a
->>>       RFC. Any feedback on how to do this limiting properly would be nice.
+>>> I think Keith has a patch to fix this. It was under review at some point.
 >>
->> Doing it in the driver is clearly not appropriate, we must do this in
->> common code. If I remember correctly, it's specifically ARM64 that is
->> broken here, it incorrectly allows setting a DMA mask to 64 bit
->> when that is not available.
+>> Right, I do intend to following up on this, but I've had some trouble
+>> finding time the last few weeks. Sorry about that, things will clear up
+>> for me shortly.
 > 
-> Yep, that's correct. ARM64 with devices mapping tremendous amounts of
-> memory. So did anything change since that discussion references in the NOTE?
+> I'll drop this (Alexandru's) patch for now, waiting for your update, Keith.
 
-Bump ? I think it'd be nice to sort this out once and for all, since I
-doubt it's just this controller that has such a limitation.
+I wonder if clearing AER status bits is mutually exclusive with
+refactoring other parts of DPC handling?
 
--- 
-Best regards,
-Marek Vasut
+Alex
