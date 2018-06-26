@@ -1,128 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0083.outbound.protection.outlook.com ([104.47.40.83]:5760
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754021AbeFYIbW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 25 Jun 2018 04:31:22 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <lorenzo.pieralisi@arm.com>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <robh+dt@kernel.org>, Alan Douglas <adouglas@cadence.com>
-Subject: [PATCH 4/5] PCI: cadence: Add Power Management ops for host and EP
-Date: Mon, 25 Jun 2018 09:30:52 +0100
-Message-ID: <1529915453-4633-5-git-send-email-adouglas@cadence.com>
-In-Reply-To: <1529915453-4633-1-git-send-email-adouglas@cadence.com>
-References: <1529915453-4633-1-git-send-email-adouglas@cadence.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 26 Jun 2018 12:10:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Scott Branden <scott.branden@broadcom.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Jan Kiszka <jan.kiszka@siemens.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Ley Foon Tan <lftan@altera.com>
+Subject: Re: [PATCH v2] PCI: controller: Move PCI_DOMAINS selection to arch
+ Kconfig
+Message-ID: <20180626171018.GB146680@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180619112105.14457-1-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180619112105.14457-1-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These PM ops will enable/disable the optional PHYs if present.  The
-AXI link-down register in the host driver is now cleared in
-cdns_pci_map_bus since the link-down bit will be set if the PHY has
-been disabled.  It is not cleared when enabling the PHY, since the
-link will not yet be up.
+On Tue, Jun 19, 2018 at 12:21:05PM +0100, Lorenzo Pieralisi wrote:
+> Commit 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
+> added configuration options to allow PCI host controller drivers to be
+> compile tested on all architectures.
+> 
+> Some host controller drivers (eg PCIE_ALTERA) config entries select
+> the PCI_DOMAINS config option to enable PCI domains management in
+> the kernel. Now that host controller drivers can be compiled on
+> all architectures, this triggers build regressions on arches that
+> do not implement the PCI_DOMAINS required API (ie pci_domain_nr()):
+> 
+> drivers/ata/pata_ali.c: In function 'ali_init_chipset':
+> drivers/ata/pata_ali.c:469:38: error:
+>         implicit declaration of function 'pci_domain_nr';
+>                                           did you mean 'pci_iomap_wc'?
+> 
+> Furthemore, some software configurations (ie Jailhouse) require a
+> PCI_DOMAINS enabled kernel to configure multiple host controllers
+> without having an explicit dependency on the ARM platform on which
+> they run.
+> 
+> Make PCI_DOMAINS a visible configuration option on ARM so that software
+> configurations that need it can manually select it and move the
+> PCI_DOMAINS selection from PCI controllers configuration file to ARM
+> sub-arch config entries that currently require it, fixing the issue.
+> 
+> Fixes: 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
+> Link: https://lkml.kernel.org/r/20180612170229.GA10141@roeck-us.net
+> Reported-by: Guenter Roeck <linux@roeck-us.net>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Scott Branden <scott.branden@broadcom.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Russell King <linux@armlinux.org.uk>
+> Cc: Jan Kiszka <jan.kiszka@siemens.com>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Cc: Ley Foon Tan <lftan@altera.com>
 
-Signed-off-by: Alan Douglas <adouglas@cadence.com>
----
- drivers/pci/controller/pcie-cadence-ep.c   |    1 +
- drivers/pci/controller/pcie-cadence-host.c |    3 ++
- drivers/pci/controller/pcie-cadence.c      |   30 ++++++++++++++++++++++++++++
- drivers/pci/controller/pcie-cadence.h      |    4 +++
- 4 files changed, 38 insertions(+), 0 deletions(-)
+I applied this to for-linus for v4.18, with acks from Jan, Ley Foon, and
+Rob.  Thanks!
 
-diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-index c02f33d..3eabd99 100644
---- a/drivers/pci/controller/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/pcie-cadence-ep.c
-@@ -555,6 +555,7 @@ static void cdns_pcie_ep_shutdown(struct platform_device *pdev)
- 	.driver = {
- 		.name = "cdns-pcie-ep",
- 		.of_match_table = cdns_pcie_ep_of_match,
-+		.pm	= &cdns_pcie_pm_ops,
- 	},
- 	.probe = cdns_pcie_ep_probe,
- 	.shutdown = cdns_pcie_ep_shutdown,
-diff --git a/drivers/pci/controller/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
-index 36f3109..e3e9b7d 100644
---- a/drivers/pci/controller/pcie-cadence-host.c
-+++ b/drivers/pci/controller/pcie-cadence-host.c
-@@ -61,6 +61,8 @@ struct cdns_pcie_rc {
- 	/* Check that the link is up */
- 	if (!(cdns_pcie_readl(pcie, CDNS_PCIE_LM_BASE) & 0x1))
- 		return NULL;
-+	/* Clear AXI link-down status */
-+	cdns_pcie_writel(pcie, CDNS_PCIE_AT_LINKDOWN, 0x0);
- 
- 	/* Update Output registers for AXI region 0. */
- 	addr0 = CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
-@@ -345,6 +347,7 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
- 	.driver = {
- 		.name = "cdns-pcie-host",
- 		.of_match_table = cdns_pcie_host_of_match,
-+		.pm	= &cdns_pcie_pm_ops,
- 	},
- 	.probe = cdns_pcie_host_probe,
- };
-diff --git a/drivers/pci/controller/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
-index 2edc126..86f1b00 100644
---- a/drivers/pci/controller/pcie-cadence.c
-+++ b/drivers/pci/controller/pcie-cadence.c
-@@ -217,3 +217,33 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 
- 	return ret;
- }
-+
-+#ifdef CONFIG_PM_SLEEP
-+static int cdns_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct cdns_pcie *pcie = dev_get_drvdata(dev);
-+
-+	cdns_pcie_disable_phy(pcie);
-+
-+	return 0;
-+}
-+
-+static int cdns_pcie_resume_noirq(struct device *dev)
-+{
-+	struct cdns_pcie *pcie = dev_get_drvdata(dev);
-+	int ret;
-+
-+	ret = cdns_pcie_enable_phy(pcie);
-+	if (ret) {
-+		dev_err(dev, "failed to enable phy\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+#endif
-+
-+const struct dev_pm_ops cdns_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(cdns_pcie_suspend_noirq,
-+				      cdns_pcie_resume_noirq)
-+};
-diff --git a/drivers/pci/controller/pcie-cadence.h b/drivers/pci/controller/pcie-cadence.h
-index b342c80..ae6bf2a 100644
---- a/drivers/pci/controller/pcie-cadence.h
-+++ b/drivers/pci/controller/pcie-cadence.h
-@@ -166,6 +166,9 @@
- #define CDNS_PCIE_AT_IB_RP_BAR_ADDR1(bar) \
- 	(CDNS_PCIE_AT_BASE + 0x0804 + (bar) * 0x0008)
- 
-+/* AXI link down register */
-+#define CDNS_PCIE_AT_LINKDOWN (CDNS_PCIE_AT_BASE + 0x0824)
-+
- enum cdns_pcie_rp_bar {
- 	RP_BAR0,
- 	RP_BAR1,
-@@ -314,5 +317,6 @@ void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie, u8 fn,
- void cdns_pcie_disable_phy(struct cdns_pcie *pcie);
- int cdns_pcie_enable_phy(struct cdns_pcie *pcie);
- int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie);
-+extern const struct dev_pm_ops cdns_pcie_pm_ops;
- 
- #endif /* _PCIE_CADENCE_H */
--- 
-1.7.1
+> ---
+> v1 -> v2
+> 	- Removed ARCH_VIRT PCI_DOMAINS selection
+> 	- Added PCI_DOMAINS visible config option
+> 
+> v1: https://marc.info/?l=linux-pci&m=152932092612352&w=2
+> 
+>  arch/arm/Kconfig               | 8 +++++++-
+>  arch/arm/mach-bcm/Kconfig      | 1 +
+>  arch/arm/mach-socfpga/Kconfig  | 1 +
+>  drivers/pci/controller/Kconfig | 3 ---
+>  4 files changed, 9 insertions(+), 4 deletions(-)
+> 
+> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> index 54eeb8d00bc6..843edfd000be 100644
+> --- a/arch/arm/Kconfig
+> +++ b/arch/arm/Kconfig
+> @@ -1245,8 +1245,14 @@ config PCI
+>  	  VESA. If you have PCI, say Y, otherwise N.
+>  
+>  config PCI_DOMAINS
+> -	bool
+> +	bool "Support for multiple PCI domains"
+>  	depends on PCI
+> +	help
+> +	  Enable PCI domains kernel management. Say Y if your machine
+> +	  has a PCI bus hierarchy that requires more than one PCI
+> +	  domain (aka segment) to be correctly managed. Say N otherwise.
+> +
+> +	  If you don't know what to do here, say N.
+>  
+>  config PCI_DOMAINS_GENERIC
+>  	def_bool PCI_DOMAINS
+> diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
+> index c46a728df44e..25aac6ee2ab1 100644
+> --- a/arch/arm/mach-bcm/Kconfig
+> +++ b/arch/arm/mach-bcm/Kconfig
+> @@ -20,6 +20,7 @@ config ARCH_BCM_IPROC
+>  	select GPIOLIB
+>  	select ARM_AMBA
+>  	select PINCTRL
+> +	select PCI_DOMAINS if PCI
+>  	help
+>  	  This enables support for systems based on Broadcom IPROC architected SoCs.
+>  	  The IPROC complex contains one or more ARM CPUs along with common
+> diff --git a/arch/arm/mach-socfpga/Kconfig b/arch/arm/mach-socfpga/Kconfig
+> index d0f62eacf59d..4adb901dd5eb 100644
+> --- a/arch/arm/mach-socfpga/Kconfig
+> +++ b/arch/arm/mach-socfpga/Kconfig
+> @@ -10,6 +10,7 @@ menuconfig ARCH_SOCFPGA
+>  	select HAVE_ARM_SCU
+>  	select HAVE_ARM_TWD if SMP
+>  	select MFD_SYSCON
+> +	select PCI_DOMAINS if PCI
+>  
+>  if ARCH_SOCFPGA
+>  config SOCFPGA_SUSPEND
+> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> index 18fa09b3ac8f..cc9fa02d32a0 100644
+> --- a/drivers/pci/controller/Kconfig
+> +++ b/drivers/pci/controller/Kconfig
+> @@ -96,7 +96,6 @@ config PCI_HOST_GENERIC
+>  	depends on OF
+>  	select PCI_HOST_COMMON
+>  	select IRQ_DOMAIN
+> -	select PCI_DOMAINS
+>  	help
+>  	  Say Y here if you want to support a simple generic PCI host
+>  	  controller, such as the one emulated by kvmtool.
+> @@ -138,7 +137,6 @@ config PCI_VERSATILE
+>  
+>  config PCIE_IPROC
+>  	tristate
+> -	select PCI_DOMAINS
+>  	help
+>  	  This enables the iProc PCIe core controller support for Broadcom's
+>  	  iProc family of SoCs. An appropriate bus interface driver needs
+> @@ -176,7 +174,6 @@ config PCIE_IPROC_MSI
+>  config PCIE_ALTERA
+>  	bool "Altera PCIe controller"
+>  	depends on ARM || NIOS2 || COMPILE_TEST
+> -	select PCI_DOMAINS
+>  	help
+>  	  Say Y here if you want to enable PCIe controller support on Altera
+>  	  FPGA.
+> -- 
+> 2.15.0
+> 
