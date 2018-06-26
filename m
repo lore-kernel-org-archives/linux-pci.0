@@ -1,82 +1,108 @@
-Return-Path: <SRS0=qPnv=IV=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=qPnv=IV=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=sYHa=JM=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=sYHa=JM=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <152791812599.257724.10989340037255897378.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152791788214.257724.13044360353832574147.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <152791812599.257724.10989340037255897378.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Sun, 3 Jun 2018 09:58:39 +0200
-Message-ID: <CAJZ5v0jq5D06ezuOt2o18HL9bmTurbL+gujo=PynWyHuMCswag@mail.gmail.com>
-Subject: Re: [PATCH v1 1/2] PCI: shpchp: Use dev_printk() for OSHP-related messages
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>, "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario Limonciello <Mario.Limonciello@dell.com>,
-	Michael Jamet <michael.jamet@intel.com>, Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Lukas Wunner <lukas@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 26 Jun 2018 22:38:02 +0530
+From: poza@codeaurora.org
+To: Tyler Baicar <tbaicar@codeaurora.org>
+Cc: helgaas@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH] PCI/AER: Adopt lspci naming convention for AER prints
+In-Reply-To: <1530027855-19709-1-git-send-email-tbaicar@codeaurora.org>
+References: <1530027855-19709-1-git-send-email-tbaicar@codeaurora.org>
+Message-ID: <ac1a8fa22a6f9c53220fc6972c5e931b@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 2, 2018 at 7:42 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
->
-> Use dev_printk() for messages related to requesting control of SHPC hotplug
-> via the OSHP method.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
+On 2018-06-26 21:14, Tyler Baicar wrote:
+> lspci uses abbreviated naming for AER error strings. Adopt the
+> same naming convention for the AER printing so they match.
+> 
+> Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
 > ---
->  drivers/pci/hotplug/acpi_pcihp.c |   13 ++++++-------
->  1 file changed, 6 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> index 7cc50cfef9c6..597d22aeefc1 100644
-> --- a/drivers/pci/hotplug/acpi_pcihp.c
-> +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> @@ -96,7 +96,7 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
->         if (!handle) {
->                 /*
->                  * This hotplug controller was not listed in the ACPI name
-> -                * space at all. Try to get acpi handle of parent pci bus.
-> +                * space at all. Try to get ACPI handle of parent PCI bus.
->                  */
->                 struct pci_bus *pbus;
->                 for (pbus = pdev->bus; pbus; pbus = pbus->parent) {
-> @@ -108,8 +108,8 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
->
->         while (handle) {
->                 acpi_get_name(handle, ACPI_FULL_PATHNAME, &string);
-> -               dbg("Trying to get hotplug control for %s\n",
-> -                   (char *)string.pointer);
-> +               pci_info(pdev, "Requesting control of SHPC hotplug via OSHP (%s)\n",
-> +                        (char *)string.pointer);
->                 status = acpi_run_oshp(handle);
->                 if (ACPI_SUCCESS(status))
->                         goto got_one;
-> @@ -121,13 +121,12 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
->                         break;
->         }
->  no_control:
-> -       dbg("Cannot get control of hotplug hardware for pci %s\n",
-> -           pci_name(pdev));
-> +       pci_info(pdev, "Cannot get control of SHPC hotplug\n");
->         kfree(string.pointer);
->         return -ENODEV;
->  got_one:
-> -       dbg("Gained control for hotplug HW for pci %s (%s)\n",
-> -           pci_name(pdev), (char *)string.pointer);
-> +       pci_info(pdev, "Gained control of SHPC hotplug (%s)\n",
-> +                (char *)string.pointer);
->         kfree(string.pointer);
->         return 0;
->  }
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  drivers/pci/pcie/aer.c | 46 
+> +++++++++++++++++++++++-----------------------
+>  1 file changed, 23 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index a2e8838..08a5219 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -459,22 +459,22 @@ int pci_aer_init(struct pci_dev *dev)
+>  };
+> 
+>  static const char *aer_correctable_error_string[] = {
+> -	"Receiver Error",		/* Bit Position 0	*/
+> +	"RxErr",			/* Bit Position 0	*/
+>  	NULL,
+>  	NULL,
+>  	NULL,
+>  	NULL,
+>  	NULL,
+> -	"Bad TLP",			/* Bit Position 6	*/
+> -	"Bad DLLP",			/* Bit Position 7	*/
+> -	"RELAY_NUM Rollover",		/* Bit Position 8	*/
+> +	"BadTLP",			/* Bit Position 6	*/
+> +	"BadDLLP",			/* Bit Position 7	*/
+> +	"Rollover",			/* Bit Position 8	*/
+>  	NULL,
+>  	NULL,
+>  	NULL,
+> -	"Replay Timer Timeout",		/* Bit Position 12	*/
+> -	"Advisory Non-Fatal",		/* Bit Position 13	*/
+> -	"Corrected Internal Error",	/* Bit Position 14	*/
+> -	"Header Log Overflow",		/* Bit Position 15	*/
+> +	"Timeout",			/* Bit Position 12	*/
+> +	"NonFatalErr",			/* Bit Position 13	*/
+> +	"CorrIntErr",			/* Bit Position 14	*/
+> +	"HeaderOF",			/* Bit Position 15	*/
+>  };
+> 
+>  static const char *aer_uncorrectable_error_string[] = {
+> @@ -482,28 +482,28 @@ int pci_aer_init(struct pci_dev *dev)
+>  	NULL,
+>  	NULL,
+>  	NULL,
+> -	"Data Link Protocol",		/* Bit Position 4	*/
+> -	"Surprise Down Error",		/* Bit Position 5	*/
+> +	"DLP",				/* Bit Position 4	*/
+> +	"SDES",				/* Bit Position 5	*/
+>  	NULL,
+>  	NULL,
+>  	NULL,
+>  	NULL,
+>  	NULL,
+>  	NULL,
+> -	"Poisoned TLP",			/* Bit Position 12	*/
+> -	"Flow Control Protocol",	/* Bit Position 13	*/
+> -	"Completion Timeout",		/* Bit Position 14	*/
+> -	"Completer Abort",		/* Bit Position 15	*/
+> -	"Unexpected Completion",	/* Bit Position 16	*/
+> -	"Receiver Overflow",		/* Bit Position 17	*/
+> -	"Malformed TLP",		/* Bit Position 18	*/
+> +	"TLP",				/* Bit Position 12	*/
+> +	"FCP",				/* Bit Position 13	*/
+> +	"CmpltTO",			/* Bit Position 14	*/
+> +	"CmpltAbrt",			/* Bit Position 15	*/
+> +	"UnxCmplt",			/* Bit Position 16	*/
+> +	"RxOF",				/* Bit Position 17	*/
+> +	"MalfTLP",			/* Bit Position 18	*/
+>  	"ECRC",				/* Bit Position 19	*/
+> -	"Unsupported Request",		/* Bit Position 20	*/
+> -	"ACS Violation",		/* Bit Position 21	*/
+> -	"Uncorrectable Internal Error",	/* Bit Position 22	*/
+> -	"MC Blocked TLP",		/* Bit Position 23	*/
+> -	"AtomicOp Egress Blocked",	/* Bit Position 24	*/
+> -	"TLP Prefix Blocked Error",	/* Bit Position 25	*/
+> +	"UnsupReq",			/* Bit Position 20	*/
+> +	"ACSViol",			/* Bit Position 21	*/
+> +	"UncorrIntErr",			/* Bit Position 22	*/
+> +	"BlockedTLP",			/* Bit Position 23	*/
+> +	"AtomicOpBlocked",		/* Bit Position 24	*/
+> +	"TLPBlockedErr",		/* Bit Position 25	*/
+>  };
+> 
+>  static const char *aer_agent_string[] = {
+
+
+Reviewed-by: Oza Pawandeep <poza@codeaurora.org>
