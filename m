@@ -1,206 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay6.synopsys.com ([198.182.37.59]:57286 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933047AbeFUQBr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 12:01:47 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v6 02/11] PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
-Date: Thu, 21 Jun 2018 17:01:27 +0100
-Message-Id: <90e6f3255f468103d41ab7f6b438ea3a78186e00.1529595907.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
-References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+Received: from bmailout2.hostsharing.net ([83.223.90.240]:39393 "EHLO
+        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934063AbeFZLx6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jun 2018 07:53:58 -0400
+Date: Tue, 26 Jun 2018 13:53:56 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Hari Vyas <hari.vyas@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Ray Jui <ray.jui@broadcom.com>
+Subject: Re: [PATCH] PCI: Data corruption happening due to race condition
+Message-ID: <20180626115356.GA24588@wunner.de>
+References: <1529921446-20452-1-git-send-email-hari.vyas@broadcom.com>
+ <20180625103742.GA20292@wunner.de>
+ <3fa3c29e023abf67fa74d6e94a27645f@mail.gmail.com>
+ <20180625111525.GA30242@wunner.de>
+ <CAM5rFu-Bo_prR5R2w2XfM6JkUWo8URiL6i=4tWjOpDuMkcNn-w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAM5rFu-Bo_prR5R2w2XfM6JkUWo8URiL6i=4tWjOpDuMkcNn-w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change {cdns, dra7xx, artpec6, dw, rockchip}_pcie_ep_raise_irq() and
-pci_epc_raise_irq() signature, namely the interrupt_num variable type
-from u8 to u16 to accommodate 2048 maximum MSI-X interrupts.
+On Tue, Jun 26, 2018 at 03:47:43PM +0530, Hari Vyas wrote:
+> On Mon, Jun 25, 2018 at 4:45 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > On Mon, Jun 25, 2018 at 04:27:37PM +0530, Hari Vyas wrote:
+> >>       This issue is happening  with multiple times device removal and
+> >> rescan from sysfs. Card is not removed physically.
+> >>       Is_added bit is set after device attach which probe nvme driver.
+> >> NVMe driver starts one workqueue and that one is calling pci_set_master()
+> >> to set is_busmaster bit.
+> >>       With multiple times device removal and rescan from sysfs,  race
+> >> condition is observed and is_added bit is over-written to 0 from workqueue
+> >> started by NVMe driver.
+> >
+> > Could you add a dump_stack() to pci_bus_add_device() and pci_stop_dev()
+> > where the is_added bit is modified, reproduce the issue and attach the
+> > resulting dmesg output to a newly opened bug on bugzilla.kernel.org?
+> >
+> 
+> I have raised a Bug 200283 - PCI: Data corruption happening due to a
+> race condition.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Alan Douglas <adouglas@cadence.com>
-Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Move into here the pci_epc_raise_irq() signature change from patch
-file #1.
- - Move into here the {dra7xx, artpec6}_pcie_ep_raise_irq() signature
-changes from patch file #2.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Swap patch files position (#3 -> #2).
- - Moved dw_pcie_ep_raise_irq and dw_plat_pcie_ep_raise_irq functions
-signatures changes from patch file #3.
- - Changed rockchip_pcie_ep_raise_irq function signature.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
+Thanks for taking the time to open the bug and provide more detailed
+information.
 
- drivers/pci/controller/dwc/pci-dra7xx.c           | 2 +-
- drivers/pci/controller/dwc/pcie-artpec6.c         | 2 +-
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 2 +-
- drivers/pci/controller/dwc/pcie-designware-plat.c | 2 +-
- drivers/pci/controller/dwc/pcie-designware.h      | 2 +-
- drivers/pci/controller/pcie-cadence-ep.c          | 3 ++-
- drivers/pci/controller/pcie-rockchip-ep.c         | 2 +-
- drivers/pci/endpoint/pci-epc-core.c               | 8 ++++----
- include/linux/pci-epc.h                           | 6 +++---
- 9 files changed, 15 insertions(+), 14 deletions(-)
+So the upshot seems to be that is_added and is_busmaster end up in
+the same word and two CPUs perform a read-modify-write wherein one
+CPU clobbers the result of the other CPU.
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index 345aab5..ce9224a 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -370,7 +370,7 @@ static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
- }
- 
- static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
--				 enum pci_epc_irq_type type, u8 interrupt_num)
-+				 enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
-index 321b56c..9a2474b 100644
---- a/drivers/pci/controller/dwc/pcie-artpec6.c
-+++ b/drivers/pci/controller/dwc/pcie-artpec6.c
-@@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
- }
- 
- static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
--				  enum pci_epc_irq_type type, u8 interrupt_num)
-+				  enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 8650416..b86cb99 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -242,7 +242,7 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
- }
- 
- static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
--				enum pci_epc_irq_type type, u8 interrupt_num)
-+				enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 5937fed..14b6b4b 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -78,7 +78,7 @@ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
- 
- static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 				     enum pci_epc_irq_type type,
--				     u8 interrupt_num)
-+				     u16 interrupt_num)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index bee4e25..9d581c0 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -191,7 +191,7 @@ enum dw_pcie_as_type {
- struct dw_pcie_ep_ops {
- 	void	(*ep_init)(struct dw_pcie_ep *ep);
- 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
--			     enum pci_epc_irq_type type, u8 interrupt_num);
-+			     enum pci_epc_irq_type type, u16 interrupt_num);
- };
- 
- struct dw_pcie_ep {
-diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-index e3fe412..208d11f 100644
---- a/drivers/pci/controller/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/pcie-cadence-ep.c
-@@ -363,7 +363,8 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
- }
- 
- static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
--				  enum pci_epc_irq_type type, u8 interrupt_num)
-+				  enum pci_epc_irq_type type,
-+				  u16 interrupt_num)
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
- 
-diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/controller/pcie-rockchip-ep.c
-index 6beba8e..b8163c5 100644
---- a/drivers/pci/controller/pcie-rockchip-ep.c
-+++ b/drivers/pci/controller/pcie-rockchip-ep.c
-@@ -472,7 +472,7 @@ static int rockchip_pcie_ep_send_msi_irq(struct rockchip_pcie_ep *ep, u8 fn,
- 
- static int rockchip_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
- 				      enum pci_epc_irq_type type,
--				      u8 interrupt_num)
-+				      u16 interrupt_num)
- {
- 	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
- 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index 7d77bd0..c72e656 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -131,13 +131,13 @@ EXPORT_SYMBOL_GPL(pci_epc_start);
-  * pci_epc_raise_irq() - interrupt the host system
-  * @epc: the EPC device which has to interrupt the host
-  * @func_no: the endpoint function number in the EPC device
-- * @type: specify the type of interrupt; legacy or MSI
-- * @interrupt_num: the MSI interrupt number
-+ * @type: specify the type of interrupt; legacy, MSI or MSI-X
-+ * @interrupt_num: the MSI or MSI-X interrupt number
-  *
-- * Invoke to raise an MSI or legacy interrupt
-+ * Invoke to raise an legacy, MSI or MSI-X interrupt
-  */
- int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
--		      enum pci_epc_irq_type type, u8 interrupt_num)
-+		      enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	int ret;
- 	unsigned long flags;
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index 89f079f..bb2395b 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -35,7 +35,7 @@ enum pci_epc_irq_type {
-  *	     MSI-X capability register
-  * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
-  *	     from the MSI-X capability register
-- * @raise_irq: ops to raise a legacy or MSI interrupt
-+ * @raise_irq: ops to raise a legacy, MSI or MSI-X interrupt
-  * @start: ops to start the PCI link
-  * @stop: ops to stop the PCI link
-  * @owner: the module owner containing the ops
-@@ -56,7 +56,7 @@ struct pci_epc_ops {
- 	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
- 	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
- 	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
--			     enum pci_epc_irq_type type, u8 interrupt_num);
-+			     enum pci_epc_irq_type type, u16 interrupt_num);
- 	int	(*start)(struct pci_epc *epc);
- 	void	(*stop)(struct pci_epc *epc);
- 	struct module *owner;
-@@ -154,7 +154,7 @@ int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
- int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts);
- int pci_epc_get_msix(struct pci_epc *epc, u8 func_no);
- int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
--		      enum pci_epc_irq_type type, u8 interrupt_num);
-+		      enum pci_epc_irq_type type, u16 interrupt_num);
- int pci_epc_start(struct pci_epc *epc);
- void pci_epc_stop(struct pci_epc *epc);
- struct pci_epc *pci_epc_get(const char *epc_name);
--- 
-2.7.4
+While a spinlock may do the job, I think a better solution would be
+to move is_added to the priv_flags bitmap in struct pci_dev.  The
+is_added flag is internal to the PCI core and anything outside has
+no business dealing with it.
+
+(Assuming arch/powerpc/kernel/pci-common.c can also be considered
+part of the PCI core.)
+
+The flags in priv_flags are defined in drivers/pci/pci.h, so far
+there's only one for PCI_DEV_DISCONNECTED which was introduced by
+89ee9f768.  That commit also introduced accessors, personally I
+don't think that's necessary for the few places in the PCI core
+that the new PCI_DEV_ADDED flag would be used and I'd just update
+those sites to set or test the bit directly.
+
+Moving the is_added flag should already fix the race with is_busmaster.
+It may be worth making is_busmaster a bitmap flag as well, but
+priv_flags might not be suitable because the flag is also queried
+by various drivers.  I'll defer that decision to Bjorn.
+
+HTH,
+
+Lukas
