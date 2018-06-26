@@ -1,67 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay6.synopsys.com ([198.182.37.59]:42594 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750850AbeFAOZD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jun 2018 10:25:03 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v3 00/10] Add MSI-X support on pcitest tool
-Date: Fri,  1 Jun 2018 15:24:42 +0100
-Message-Id: <cover.1527862777.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=mh2v=JM=codeaurora.org=tbaicar@kernel.org>
+Return-Path: <SRS0=mh2v=JM=codeaurora.org=tbaicar@kernel.org>
+From: Tyler Baicar <tbaicar@codeaurora.org>
+To: helgaas@kernel.org,
+	bhelgaas@google.com,
+	poza@codeaurora.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Tyler Baicar <tbaicar@codeaurora.org>
+Subject: [PATCH] PCI/AER: Adopt lspci naming convention for AER prints
+Date: Tue, 26 Jun 2018 11:44:15 -0400
+Message-Id: <1530027855-19709-1-git-send-email-tbaicar@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Patch series made against Lorenzo's branches and also depends of:
- - pci/dwc
- - pci/endpoint
+lspci uses abbreviated naming for AER error strings. Adopt the
+same naming convention for the AER printing so they match.
 
-Add MSI-X support on pcitest tool.
+Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
+---
+ drivers/pci/pcie/aer.c | 46 +++++++++++++++++++++++-----------------------
+ 1 file changed, 23 insertions(+), 23 deletions(-)
 
-Add new callbacks methods and handlers to trigger the MSI-X interrupts
-on the EP DesignWare IP driver.
-
-Allow to set/get MSI-X EP maximum capability number.
-
-Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
-
-Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
-
-Update the pcitest.sh script to support MSI-X feature tests.
-
-Gustavo Pimentel (10):
-  PCI: endpoint: Add MSI-X interfaces
-  PCI: dwc: Add MSI-X callbacks handler
-  PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
-  PCI: dwc: Rework MSI callbacks handler
-  PCI: dwc: Add legacy interrupt callback handler
-  pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
-  pci-epf-test/pci_endpoint_test: Use irq_type module parameter
-  pci-epf-test/pci_endpoint_test: Add MSI-X support
-  pci_endpoint_test: Add 2 ioctl commands
-  tools: PCI: Add MSI-X support
-
- Documentation/misc-devices/pci-endpoint-test.txt |   6 +
- drivers/misc/pci_endpoint_test.c                 | 261 +++++++++++++++++------
- drivers/pci/cadence/pcie-cadence-ep.c            |   3 +-
- drivers/pci/dwc/pci-dra7xx.c                     |   2 +-
- drivers/pci/dwc/pcie-artpec6.c                   |   2 +-
- drivers/pci/dwc/pcie-designware-ep.c             | 205 ++++++++++++++++--
- drivers/pci/dwc/pcie-designware-plat.c           |   7 +-
- drivers/pci/dwc/pcie-designware.h                |  31 +--
- drivers/pci/endpoint/functions/pci-epf-test.c    |  81 +++++--
- drivers/pci/endpoint/pci-ep-cfs.c                |  24 +++
- drivers/pci/endpoint/pci-epc-core.c              |  68 +++++-
- include/linux/pci-epc.h                          |  15 +-
- include/linux/pci-epf.h                          |   1 +
- include/uapi/linux/pcitest.h                     |   3 +
- tools/pci/pcitest.c                              |  51 ++++-
- tools/pci/pcitest.sh                             |  15 ++
- 16 files changed, 643 insertions(+), 132 deletions(-)
-
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index a2e8838..08a5219 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -459,22 +459,22 @@ int pci_aer_init(struct pci_dev *dev)
+ };
+ 
+ static const char *aer_correctable_error_string[] = {
+-	"Receiver Error",		/* Bit Position 0	*/
++	"RxErr",			/* Bit Position 0	*/
+ 	NULL,
+ 	NULL,
+ 	NULL,
+ 	NULL,
+ 	NULL,
+-	"Bad TLP",			/* Bit Position 6	*/
+-	"Bad DLLP",			/* Bit Position 7	*/
+-	"RELAY_NUM Rollover",		/* Bit Position 8	*/
++	"BadTLP",			/* Bit Position 6	*/
++	"BadDLLP",			/* Bit Position 7	*/
++	"Rollover",			/* Bit Position 8	*/
+ 	NULL,
+ 	NULL,
+ 	NULL,
+-	"Replay Timer Timeout",		/* Bit Position 12	*/
+-	"Advisory Non-Fatal",		/* Bit Position 13	*/
+-	"Corrected Internal Error",	/* Bit Position 14	*/
+-	"Header Log Overflow",		/* Bit Position 15	*/
++	"Timeout",			/* Bit Position 12	*/
++	"NonFatalErr",			/* Bit Position 13	*/
++	"CorrIntErr",			/* Bit Position 14	*/
++	"HeaderOF",			/* Bit Position 15	*/
+ };
+ 
+ static const char *aer_uncorrectable_error_string[] = {
+@@ -482,28 +482,28 @@ int pci_aer_init(struct pci_dev *dev)
+ 	NULL,
+ 	NULL,
+ 	NULL,
+-	"Data Link Protocol",		/* Bit Position 4	*/
+-	"Surprise Down Error",		/* Bit Position 5	*/
++	"DLP",				/* Bit Position 4	*/
++	"SDES",				/* Bit Position 5	*/
+ 	NULL,
+ 	NULL,
+ 	NULL,
+ 	NULL,
+ 	NULL,
+ 	NULL,
+-	"Poisoned TLP",			/* Bit Position 12	*/
+-	"Flow Control Protocol",	/* Bit Position 13	*/
+-	"Completion Timeout",		/* Bit Position 14	*/
+-	"Completer Abort",		/* Bit Position 15	*/
+-	"Unexpected Completion",	/* Bit Position 16	*/
+-	"Receiver Overflow",		/* Bit Position 17	*/
+-	"Malformed TLP",		/* Bit Position 18	*/
++	"TLP",				/* Bit Position 12	*/
++	"FCP",				/* Bit Position 13	*/
++	"CmpltTO",			/* Bit Position 14	*/
++	"CmpltAbrt",			/* Bit Position 15	*/
++	"UnxCmplt",			/* Bit Position 16	*/
++	"RxOF",				/* Bit Position 17	*/
++	"MalfTLP",			/* Bit Position 18	*/
+ 	"ECRC",				/* Bit Position 19	*/
+-	"Unsupported Request",		/* Bit Position 20	*/
+-	"ACS Violation",		/* Bit Position 21	*/
+-	"Uncorrectable Internal Error",	/* Bit Position 22	*/
+-	"MC Blocked TLP",		/* Bit Position 23	*/
+-	"AtomicOp Egress Blocked",	/* Bit Position 24	*/
+-	"TLP Prefix Blocked Error",	/* Bit Position 25	*/
++	"UnsupReq",			/* Bit Position 20	*/
++	"ACSViol",			/* Bit Position 21	*/
++	"UncorrIntErr",			/* Bit Position 22	*/
++	"BlockedTLP",			/* Bit Position 23	*/
++	"AtomicOpBlocked",		/* Bit Position 24	*/
++	"TLPBlockedErr",		/* Bit Position 25	*/
+ };
+ 
+ static const char *aer_agent_string[] = {
 -- 
-2.7.4
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project.
