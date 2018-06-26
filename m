@@ -1,143 +1,158 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33084 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754586AbeFYX0f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 25 Jun 2018 19:26:35 -0400
-Date: Mon, 25 Jun 2018 18:26:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rafal <uzg@wp.pl>
-Cc: linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Huang Ying <ying.huang@intel.com>, Martin Mares <mj@ucw.cz>
-Subject: Re: Fwd: [Bug 199879] New: Very basic the Pci device is not resumed
- from suspend mode
-Message-ID: <20180625232633.GB191076@bhelgaas-glaptop.roam.corp.google.com>
-References: <bug-199879-41252@https.bugzilla.kernel.org/>
- <CAErSpo5U9D5kmYix2SbcJH_mW8urpmZcgN6Zh=FbGtLch+ACuA@mail.gmail.com>
- <20180620211349.GB108993@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 26 Jun 2018 16:59:40 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+        Scott Branden <scott.branden@broadcom.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Jan Kiszka <jan.kiszka@siemens.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Ley Foon Tan <lftan@altera.com>
+Subject: Re: [PATCH v2] PCI: controller: Move PCI_DOMAINS selection to arch
+ Kconfig
+Message-ID: <20180626155928.GA7233@red-moon>
+References: <20180619112105.14457-1-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180620211349.GB108993@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180619112105.14457-1-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, Huang, Martin]
-
-On Wed, Jun 20, 2018 at 04:13:49PM -0500, Bjorn Helgaas wrote:
-> [+to Rafal]
+On Tue, Jun 19, 2018 at 12:21:05PM +0100, Lorenzo Pieralisi wrote:
+> Commit 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
+> added configuration options to allow PCI host controller drivers to be
+> compile tested on all architectures.
 > 
-> Sorry, I'm an idiot and forgot to include Rafal, the submitter, when I
-> forwarded this report to the mailing lists.
+> Some host controller drivers (eg PCIE_ALTERA) config entries select
+> the PCI_DOMAINS config option to enable PCI domains management in
+> the kernel. Now that host controller drivers can be compiled on
+> all architectures, this triggers build regressions on arches that
+> do not implement the PCI_DOMAINS required API (ie pci_domain_nr()):
 > 
-> I suspect that the config accessors used by lspci should temporarily
-> wake up devices that are asleep, instead of reporting 0xff data (or if
-> that's not feasible, maybe we should add a comment in the kernel and a
-> note in the lspci man page).
+> drivers/ata/pata_ali.c: In function 'ali_init_chipset':
+> drivers/ata/pata_ali.c:469:38: error:
+>         implicit declaration of function 'pci_domain_nr';
+>                                           did you mean 'pci_iomap_wc'?
+> 
+> Furthemore, some software configurations (ie Jailhouse) require a
+> PCI_DOMAINS enabled kernel to configure multiple host controllers
+> without having an explicit dependency on the ARM platform on which
+> they run.
+> 
+> Make PCI_DOMAINS a visible configuration option on ARM so that software
+> configurations that need it can manually select it and move the
+> PCI_DOMAINS selection from PCI controllers configuration file to ARM
+> sub-arch config entries that currently require it, fixing the issue.
+> 
+> Fixes: 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
+> Link: https://lkml.kernel.org/r/20180612170229.GA10141@roeck-us.net
+> Reported-by: Guenter Roeck <linux@roeck-us.net>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Scott Branden <scott.branden@broadcom.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Russell King <linux@armlinux.org.uk>
+> Cc: Jan Kiszka <jan.kiszka@siemens.com>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Cc: Ley Foon Tan <lftan@altera.com>
+> ---
 
-The lspci output you attached
-(https://bugzilla.kernel.org/attachment.cgi?id=276771) shows this:
+Bjorn, Rob,
 
-  01:00.0 3D controller: NVIDIA Corporation GK107M [GeForce GT 745M] (rev ff) (prog-if ff)
-	!!! Unknown header type 7f
+if you are OK with this patch I think it is ready to go, hopefully for
+-rc3 since currently sparc allmodconfig is still broken as Guenter
+reported in the Link I embedded in the patch itself, please let me
+know, thanks.
 
-I think that means the config reads are returning ~0 data (0xff),
-probably because the device is powered off and the config reads don't
-work.
+Lorenzo
 
-But I don't understand that because both proc_bus_pci_read() (for
-reads vis /proc) and pci_read_config() (for reads via /sys) call
-pci_config_pm_runtime_get(), and I thought that would wake up the
-device so we could read config space.
-
-Is it the intended behavior that lspci will show this sort of invalid
-data sometimes?  It's pretty confusing to users.  Or is there
-something wrong with the pci_config_pm_runtime_get() path in those
-config accessors?
-
-Bjorn
-
-> On Wed, May 30, 2018 at 07:41:35AM -0700, Bjorn Helgaas wrote:
-> > [+cc linux-pci, linux-kernel, linux-pm]
-> > 
-> > I'm not sure I understand the problem yet, so please correct me if I'm wrong:
-> > 
-> >   - Your system has both Nvidia and Intel graphics devices
-> > 
-> >   - When you use Intel graphics, lspci, lshw, and /proc/bus/pci for
-> > the Nvidia device show invalid data (0xff) after suspend/resume
-> > 
-> >   - When you use Nvidia graphics, suspend/resume doesn't work (instead
-> > of resuming, you just get a blank screen)
-> > 
-> > Can you attach the output of "sudo lspci -vv" to the bugzilla, please?
-> > 
-> > ---------- Forwarded message ---------
-> > From: <bugzilla-daemon@bugzilla.kernel.org>
-> > Date: Tue, May 29, 2018 at 1:29 PM
-> > Subject: [Bug 199879] New: Very basic the Pci device is not resumed
-> > from suspend mode
-> > To: <bhelgaas@google.com>
-> > 
-> > 
-> > https://bugzilla.kernel.org/show_bug.cgi?id=199879
-> > 
-> >             Bug ID: 199879
-> >            Summary: Very basic the Pci device is not resumed from suspend
-> >                     mode
-> >            Product: Drivers
-> >            Version: 2.5
-> >     Kernel Version: kernel-4.15.17
-> >           Hardware: x86-64
-> >                 OS: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: high
-> >           Priority: P1
-> >          Component: PCI
-> >           Assignee: drivers_pci@kernel-bugs.osdl.org
-> >           Reporter: uzg@wp.pl
-> >         Regression: No
-> > 
-> > Hi, I have problem with very basic device. Device pci-e not resume from
-> > suspend. Only sleep.
-> > 
-> > I have a problem with anyone interested in it, because everyone thinks it is
-> > the fault of the device drivers themselves. But this is not a problem.
-> > 
-> > This device is a basic device. I've already installed drivers on various
-> > hardware and it has always been ok, but not this time.
-> > 
-> > I'm an electronics technician. After diagnosing what I managed, in my opinion
-> > the device remains asleep.
-> > 
-> > Where does my application come from?
-> > I have multiuser mode and I do not use this device. After suspend lspci and
-> > lshw show normal data. Normal data is in /proc/bus/pci/...
-> > Next suspend and resume, and...
-> > lspci see hardware, but is error
-> > lshw see hardware as undefined device
-> > data in /proc/bus/pci/... is only 0xFF
-> > Hardware sleep, not work, not ready. This is bug.
-> > 
-> > But since the problem concerns the graphics card in the configuration with the
-> > second default Intel card, everyone thinks that this is another driver problem
-> > as always and nobody wants to take a look at it :(
-> > 
-> > The problem is easy to recognize. On the internet, I've seen a lot of
-> > unresolved problems in which I could see exactly what I found.
-> > 
-> > My hardware is Lenovo with NVidia and Intel Graphics. Problem is with NVidia. I
-> > tested Z710 and Z50-70. The first symptom of the problem is lspci in multiuser
-> > mode (or when is XServer with intel graphics). After suspend NVidia have e.g
-> > "rev. A1", after resume is "rev. FF". Next symptom lshw and /proc/bus/pci/...
-> > When system started with normal NVidia driver, system not resume and halt, only
-> > black screen.
-> > 
-> > There are many examples on the Internet with unsolved problems e.g
-> > https://www.lwks.com/index.php?option=com_kunena&func=view&catid=21&id=124374&Itemid=81
-> > 
-> > --
-> > You are receiving this mail because:
-> > You are watching the assignee of the bug.
+> v1 -> v2
+> 	- Removed ARCH_VIRT PCI_DOMAINS selection
+> 	- Added PCI_DOMAINS visible config option
+> 
+> v1: https://marc.info/?l=linux-pci&m=152932092612352&w=2
+> 
+>  arch/arm/Kconfig               | 8 +++++++-
+>  arch/arm/mach-bcm/Kconfig      | 1 +
+>  arch/arm/mach-socfpga/Kconfig  | 1 +
+>  drivers/pci/controller/Kconfig | 3 ---
+>  4 files changed, 9 insertions(+), 4 deletions(-)
+> 
+> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> index 54eeb8d00bc6..843edfd000be 100644
+> --- a/arch/arm/Kconfig
+> +++ b/arch/arm/Kconfig
+> @@ -1245,8 +1245,14 @@ config PCI
+>  	  VESA. If you have PCI, say Y, otherwise N.
+>  
+>  config PCI_DOMAINS
+> -	bool
+> +	bool "Support for multiple PCI domains"
+>  	depends on PCI
+> +	help
+> +	  Enable PCI domains kernel management. Say Y if your machine
+> +	  has a PCI bus hierarchy that requires more than one PCI
+> +	  domain (aka segment) to be correctly managed. Say N otherwise.
+> +
+> +	  If you don't know what to do here, say N.
+>  
+>  config PCI_DOMAINS_GENERIC
+>  	def_bool PCI_DOMAINS
+> diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
+> index c46a728df44e..25aac6ee2ab1 100644
+> --- a/arch/arm/mach-bcm/Kconfig
+> +++ b/arch/arm/mach-bcm/Kconfig
+> @@ -20,6 +20,7 @@ config ARCH_BCM_IPROC
+>  	select GPIOLIB
+>  	select ARM_AMBA
+>  	select PINCTRL
+> +	select PCI_DOMAINS if PCI
+>  	help
+>  	  This enables support for systems based on Broadcom IPROC architected SoCs.
+>  	  The IPROC complex contains one or more ARM CPUs along with common
+> diff --git a/arch/arm/mach-socfpga/Kconfig b/arch/arm/mach-socfpga/Kconfig
+> index d0f62eacf59d..4adb901dd5eb 100644
+> --- a/arch/arm/mach-socfpga/Kconfig
+> +++ b/arch/arm/mach-socfpga/Kconfig
+> @@ -10,6 +10,7 @@ menuconfig ARCH_SOCFPGA
+>  	select HAVE_ARM_SCU
+>  	select HAVE_ARM_TWD if SMP
+>  	select MFD_SYSCON
+> +	select PCI_DOMAINS if PCI
+>  
+>  if ARCH_SOCFPGA
+>  config SOCFPGA_SUSPEND
+> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> index 18fa09b3ac8f..cc9fa02d32a0 100644
+> --- a/drivers/pci/controller/Kconfig
+> +++ b/drivers/pci/controller/Kconfig
+> @@ -96,7 +96,6 @@ config PCI_HOST_GENERIC
+>  	depends on OF
+>  	select PCI_HOST_COMMON
+>  	select IRQ_DOMAIN
+> -	select PCI_DOMAINS
+>  	help
+>  	  Say Y here if you want to support a simple generic PCI host
+>  	  controller, such as the one emulated by kvmtool.
+> @@ -138,7 +137,6 @@ config PCI_VERSATILE
+>  
+>  config PCIE_IPROC
+>  	tristate
+> -	select PCI_DOMAINS
+>  	help
+>  	  This enables the iProc PCIe core controller support for Broadcom's
+>  	  iProc family of SoCs. An appropriate bus interface driver needs
+> @@ -176,7 +174,6 @@ config PCIE_IPROC_MSI
+>  config PCIE_ALTERA
+>  	bool "Altera PCIe controller"
+>  	depends on ARM || NIOS2 || COMPILE_TEST
+> -	select PCI_DOMAINS
+>  	help
+>  	  Say Y here if you want to enable PCIe controller support on Altera
+>  	  FPGA.
+> -- 
+> 2.15.0
+> 
