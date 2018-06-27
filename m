@@ -1,38 +1,103 @@
-Return-Path: <SRS0=OP+v=IU=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=OP+v=IU=linux.intel.com=mika.westerberg@kernel.org>
-Date: Sat, 2 Jun 2018 21:44:43 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <YehezkelShB@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 4/7] ACPI/hotplug/PCI: Do not scan all bridges when
- native PCIe hotplug is used
-Message-ID: <20180602184443.GR15419@lahna.fi.intel.com>
-References: <20180528124756.78512-1-mika.westerberg@linux.intel.com>
- <20180529160155.1738-1-mika.westerberg@linux.intel.com>
- <20180601213505.GA199634@bhelgaas-glaptop.roam.corp.google.com>
- <20180601214818.GK15419@lahna.fi.intel.com>
- <20180602054659.GB187972@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 27 Jun 2018 17:51:24 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: Re: [PATCH v4 5/6] PCI: aardvark: Introduce an
+ advk_pcie_valid_device() helper
+Message-ID: <20180627165124.GA8243@red-moon>
+References: <20180406145536.19637-1-thomas.petazzoni@bootlin.com>
+ <20180406145536.19637-6-thomas.petazzoni@bootlin.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180602054659.GB187972@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180406145536.19637-6-thomas.petazzoni@bootlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
+ Gregory Clement <gregory.clement@bootlin.com>,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
+ =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Wilson Ding <dingwei@marvell.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 02, 2018 at 12:46:59AM -0500, Bjorn Helgaas wrote:
-> > I think here hotplug_is_native() would work as well. The idea is
-> > that we need to avoid scanning bridges that are handled by pciehp
-> > (or shpchp).
+On Fri, Apr 06, 2018 at 04:55:35PM +0200, Thomas Petazzoni wrote:
+> In other to mimic other PCIe host controller drivers, introduce an
+> advk_pcie_valid_device() helper, used in the configuration read/write
+> functions.
 > 
-> I made that change on my branch.  That way we won't have to worry
-> about the cases where we set is_hotplug_bridge based on some ACPI
-> methods.  I think those would be bugs because I think we *do* want
-> acpiphp to scan them, and if we tested "!dev->is_hotplug_bridge", we
-> would not scan them.
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+> ---
+> Changes since v4:
+>  - Move later into the series, so that it doesn't need to be pushed as
+>    a fix for stable.
+> Changes since v3:
+>  - Make the new helper return a bool instead of int
+> Changes since v2:
+>  - New patch
+> ---
+>  drivers/pci/host/pci-aardvark.c | 13 +++++++++++--
+>  1 file changed, 11 insertions(+), 2 deletions(-)
 
-I agree.
+Hi Thomas,
+
+please rebase patch 5 (this patch) and 6 and resend, I will apply them
+straight away, sorry for the delay.
+
+Thanks,
+Lorenzo
+
+> diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+> index 9abf549631b4..69c4fd50947e 100644
+> --- a/drivers/pci/host/pci-aardvark.c
+> +++ b/drivers/pci/host/pci-aardvark.c
+> @@ -431,6 +431,15 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
+>  	return -ETIMEDOUT;
+>  }
+>  
+> +static bool advk_pcie_valid_device(struct advk_pcie *pcie, struct pci_bus *bus,
+> +				  int devfn)
+> +{
+> +	if ((bus->number == pcie->root_bus_nr) && PCI_SLOT(devfn) != 0)
+> +		return false;
+> +
+> +	return true;
+> +}
+> +
+>  static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
+>  			     int where, int size, u32 *val)
+>  {
+> @@ -438,7 +447,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
+>  	u32 reg;
+>  	int ret;
+>  
+> -	if ((bus->number == pcie->root_bus_nr) && PCI_SLOT(devfn) != 0) {
+> +	if (!advk_pcie_valid_device(pcie, bus, devfn)) {
+>  		*val = 0xffffffff;
+>  		return PCIBIOS_DEVICE_NOT_FOUND;
+>  	}
+> @@ -492,7 +501,7 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+>  	int offset;
+>  	int ret;
+>  
+> -	if ((bus->number == pcie->root_bus_nr) && PCI_SLOT(devfn) != 0)
+> +	if (!advk_pcie_valid_device(pcie, bus, devfn))
+>  		return PCIBIOS_DEVICE_NOT_FOUND;
+>  
+>  	if (where % size)
+> -- 
+> 2.14.3
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
