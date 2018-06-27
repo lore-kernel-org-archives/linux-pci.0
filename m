@@ -1,112 +1,181 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 21 Jun 2018 12:58:53 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2 5/5] PCI: Unify slot and bus reset API
-Message-ID: <201806211229.kMutzrVj%fengguang.wu@intel.com>
-References: <1529467995-28780-5-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <1529467995-28780-5-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- kbuild-all@01.org, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:39849 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934058AbeF0JiV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jun 2018 05:38:21 -0400
+Received: by mail-ed1-f65.google.com with SMTP id w14-v6so2678211eds.6
+        for <linux-pci@vger.kernel.org>; Wed, 27 Jun 2018 02:38:21 -0700 (PDT)
+From: Hari Vyas <hari.vyas@broadcom.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, ray.jui@broadcom.com,
+        Hari Vyas <hari.vyas@broadcom.com>
+Subject: [PATCH v1] PCI: Data corruption happening due to race condition
+Date: Wed, 27 Jun 2018 15:08:17 +0530
+Message-Id: <1530092297-10165-1-git-send-email-hari.vyas@broadcom.com>
+In-Reply-To: <20180626115356.GA24588@wunner.de>
+References: <20180626115356.GA24588@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan,
+When a pci device is detected, a variable is_added is set to
+1 in pci device structure and proc, sys entries are created.
 
-I love your patch! Perhaps something to improve:
+When a pci device is removed, first is_added is checked for one
+and then device is detached with clearing of proc and sys
+entries and at end, is_added is set to 0.
 
-[auto build test WARNING on pci/next]
-[also build test WARNING on v4.18-rc1 next-20180620]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+is_added and is_busmaster are bit fields in pci_dev structure
+sharing same memory location.
 
-url:    https://github.com/0day-ci/linux/commits/Sinan-Kaya/PCI-handle-error-return-from-pci_reset_bridge_secondary_bus/20180620-121648
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
+A strange issue was observed with multiple times removal and
+rescan of a pcie nvme device using sysfs commands where is_added
+flag was observed as zero instead of one while removing device
+and proc,sys entries are not cleared.  This causes issue in
+later device addition with warning message "proc_dir_entry"
+already registered.
 
+Debugging revealed a race condition between pcie core driver
+enabling is_added bit(pci_bus_add_device()) and nvme driver
+reset work-queue enabling is_busmaster bit (by pci_set_master()).
+As both fields are not handled in atomic manner and that clears
+is_added bit.
 
-sparse warnings: (new ones prefixed by >>)
+Fix protects is_added and is_busmaster bits updation by a spin
+locking mechanism.
 
->> drivers/infiniband/hw/hfi1/pcie.c:908:33: sparse: incorrect type in argument 1 (different base types) @@    expected struct pci_dev *dev @@    got struct pci_dev *dev @@
-   drivers/infiniband/hw/hfi1/pcie.c:908:33:    expected struct pci_dev *dev
-   drivers/infiniband/hw/hfi1/pcie.c:908:33:    got struct pci_bus *bus
-   drivers/infiniband/hw/hfi1/pcie.c: In function 'trigger_sbr':
-   drivers/infiniband/hw/hfi1/pcie.c:908:23: error: passing argument 1 of 'pci_reset_bus' from incompatible pointer type [-Werror=incompatible-pointer-types]
-     return pci_reset_bus(dev->bus);
-                          ^~~
-   In file included from drivers/infiniband/hw/hfi1/pcie.c:48:0:
-   include/linux/pci.h:1099:5: note: expected 'struct pci_dev *' but argument is of type 'struct pci_bus *'
-    int pci_reset_bus(struct pci_dev *dev);
-        ^~~~~~~~~~~~~
-   cc1: some warnings being treated as errors
-
-vim +908 drivers/infiniband/hw/hfi1/pcie.c
-
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  873  
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  874  /*
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  875   * Trigger a secondary bus reset (SBR) on ourselves using our parent.
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  876   *
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  877   * Based on pci_parent_bus_reset() which is not exported by the
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  878   * kernel core.
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  879   */
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  880  static int trigger_sbr(struct hfi1_devdata *dd)
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  881  {
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  882  	struct pci_dev *dev = dd->pcidev;
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  883  	struct pci_dev *pdev;
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  884  
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  885  	/* need a parent */
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  886  	if (!dev->bus->self) {
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  887  		dd_dev_err(dd, "%s: no parent device\n", __func__);
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  888  		return -ENOTTY;
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  889  	}
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  890  
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  891  	/* should not be anyone else on the bus */
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  892  	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  893  		if (pdev != dev) {
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  894  			dd_dev_err(dd,
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  895  				   "%s: another device is on the same bus\n",
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  896  				   __func__);
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  897  			return -ENOTTY;
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  898  		}
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  899  
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  900  	/*
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  901  	 * A secondary bus reset (SBR) issues a hot reset to our device.
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  902  	 * The following routine does a 1s wait after the reset is dropped
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  903  	 * per PCI Trhfa (recovery time).  PCIe 3.0 section 6.6.1 -
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  904  	 * Conventional Reset, paragraph 3, line 35 also says that a 1s
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  905  	 * delay after a reset is required.  Per spec requirements,
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  906  	 * the link is either working or not after that point.
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  907  	 */
-f001109e drivers/infiniband/hw/hfi1/pcie.c Sinan Kaya       2018-06-20 @908  	return pci_reset_bus(dev->bus);
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  909  }
-77241056 drivers/staging/rdma/hfi1/pcie.c  Mike Marciniszyn 2015-07-30  910  
-
-:::::: The code at line 908 was first introduced by commit
-:::::: f001109e94b74baebb3621ce1c7ba114a858adb3 IB/hfi1: use pci_reset_bus() for initiating pci secondary bus reset
-
-:::::: TO: Sinan Kaya <okaya@codeaurora.org>
-:::::: CC: 0day robot <lkp@intel.com>
-
+Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/pci/bus.c        | 3 +++
+ drivers/pci/pci-driver.c | 2 ++
+ drivers/pci/pci.c        | 7 +++++++
+ drivers/pci/probe.c      | 1 +
+ drivers/pci/remove.c     | 5 +++++
+ include/linux/pci.h      | 1 +
+ 6 files changed, 19 insertions(+)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 35b7fc8..61d389d 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -310,6 +310,7 @@ void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
+ void pci_bus_add_device(struct pci_dev *dev)
+ {
+ 	int retval;
++	unsigned long flags;
+ 
+ 	/*
+ 	 * Can not put in pci_device_add yet because resources
+@@ -330,7 +331,9 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 		return;
+ 	}
+ 
++	spin_lock_irqsave(&dev->lock, flags);
+ 	dev->is_added = 1;
++	spin_unlock_irqrestore(&dev->lock, flags);
+ }
+ EXPORT_SYMBOL_GPL(pci_bus_add_device);
+ 
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index c125d53..547bcd7 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -123,6 +123,8 @@ static ssize_t new_id_store(struct device_driver *driver, const char *buf,
+ 		pdev->subsystem_device = subdevice;
+ 		pdev->class = class;
+ 
++		spin_lock_init(&pdev->lock);
++
+ 		if (pci_match_id(pdrv->id_table, pdev))
+ 			retval = -EEXIST;
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 97acba7..bcb1f96 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1649,6 +1649,7 @@ void pci_disable_enabled_device(struct pci_dev *dev)
+ void pci_disable_device(struct pci_dev *dev)
+ {
+ 	struct pci_devres *dr;
++	unsigned long flags;
+ 
+ 	dr = find_pci_dr(dev);
+ 	if (dr)
+@@ -1662,7 +1663,9 @@ void pci_disable_device(struct pci_dev *dev)
+ 
+ 	do_pci_disable_device(dev);
+ 
++	spin_lock_irqsave(&dev->lock, flags);
+ 	dev->is_busmaster = 0;
++	spin_unlock_irqrestore(&dev->lock, flags);
+ }
+ EXPORT_SYMBOL(pci_disable_device);
+ 
+@@ -3664,6 +3667,7 @@ void __iomem *devm_pci_remap_cfg_resource(struct device *dev,
+ static void __pci_set_master(struct pci_dev *dev, bool enable)
+ {
+ 	u16 old_cmd, cmd;
++	unsigned long flags;
+ 
+ 	pci_read_config_word(dev, PCI_COMMAND, &old_cmd);
+ 	if (enable)
+@@ -3675,7 +3679,10 @@ static void __pci_set_master(struct pci_dev *dev, bool enable)
+ 			enable ? "enabling" : "disabling");
+ 		pci_write_config_word(dev, PCI_COMMAND, cmd);
+ 	}
++
++	spin_lock_irqsave(&dev->lock, flags);
+ 	dev->is_busmaster = enable;
++	spin_unlock_irqrestore(&dev->lock, flags);
+ }
+ 
+ /**
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ac876e3..9203b88 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2102,6 +2102,7 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+ 	INIT_LIST_HEAD(&dev->bus_list);
+ 	dev->dev.type = &pci_dev_type;
+ 	dev->bus = pci_bus_get(bus);
++	spin_lock_init(&dev->lock);
+ 
+ 	return dev;
+ }
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 6f072ea..ff57bd6 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -17,13 +17,18 @@ static void pci_free_resources(struct pci_dev *dev)
+ 
+ static void pci_stop_dev(struct pci_dev *dev)
+ {
++	unsigned long flags;
++
+ 	pci_pme_active(dev, false);
+ 
+ 	if (dev->is_added) {
+ 		device_release_driver(&dev->dev);
+ 		pci_proc_detach_device(dev);
+ 		pci_remove_sysfs_dev_files(dev);
++
++		spin_lock_irqsave(&dev->lock, flags);
+ 		dev->is_added = 0;
++		spin_unlock_irqrestore(&dev->lock, flags);
+ 	}
+ 
+ 	if (dev->bus->self)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 340029b..6940825 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -365,6 +365,7 @@ struct pci_dev {
+ 
+ 	bool		match_driver;		/* Skip attaching driver */
+ 
++	spinlock_t	lock;			/* Protect is_added and is_busmaster */
+ 	unsigned int	transparent:1;		/* Subtractive decode bridge */
+ 	unsigned int	multifunction:1;	/* Multi-function device */
+ 
+-- 
+1.9.1
