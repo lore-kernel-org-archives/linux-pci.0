@@ -1,143 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39432 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750891AbeFGN70 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Jun 2018 09:59:26 -0400
-Date: Thu, 7 Jun 2018 08:59:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: poza@codeaurora.org
-Cc: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci-owner@vger.kernel.org
-Subject: Re: pci_error_handlers for pci_host_bridge ?
-Message-ID: <20180607135923.GC15137@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAFZiPx29KrKGDJiQ8huTpuVb7tMn=wjMWAvJEZaBiV7eSXYMSQ@mail.gmail.com>
- <20180606125025.GA100923@bhelgaas-glaptop.roam.corp.google.com>
- <CAFZiPx0UUB25kOgSNzUruNLom4=F5y==QbF_Q2g1uPA7csGOHA@mail.gmail.com>
- <80853b92d0f69f32f2f0e2bbcd106993@codeaurora.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 27 Jun 2018 11:46:50 -0600
+Message-Id: <20180627174650.27433-4-logang@deltatee.com>
+In-Reply-To: <20180627174650.27433-1-logang@deltatee.com>
+References: <20180627174650.27433-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <80853b92d0f69f32f2f0e2bbcd106993@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v5 3/3] PCI: Introduce the disable_acs_redir parameter
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 07, 2018 at 04:20:10PM +0530, poza@codeaurora.org wrote:
-> On 2018-06-07 15:45, Subrahmanya Lingappa wrote:
-> > Bjorn,
-> > 
-> > On Wed, Jun 6, 2018 at 6:20 PM, Bjorn Helgaas <helgaas@kernel.org>
-> > wrote:
-> > > Hi Subrahmanya,
-> > > 
-> > > On Wed, Jun 06, 2018 at 05:57:17PM +0530, Subrahmanya Lingappa wrote:
-> > > > Hi,
-> > > > according to https://github.com/torvalds/linux/blob/master/Documentation/PCI/pci-error-recovery.txt
-> > > > 
-> > > > as part of AER handling, struct pci_error_handlers{} is
-> > > > implemented by
-> > > > endpoint drivers to handle device specific recovery steps for "struct
-> > > > pci_driver".
-> > > > 
-> > > > But we have a platform_driver which implements "struct
-> > > > pci_host_bridge" which also supports AER capability how can we
-> > > > support
-> > > > pci_error_handlers() for the host bridge drivers ?
-> > > 
-> > > I assume you're referring to Mobiveil.  Can you explain more of the
-> > > topology here?  Can you also include "sudo lspci -vv" output?
-> > > 
-> > Yes, it is for Mobiveil's Host bridge driver :
-> > https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/drivers/pci/host/pcie-mobiveil.c
-> > lspci output is now is not available, I'll try to get it sooner.
-> > 
-> > we have an endpoint connected directly to Rootport as follows
-> > RC Rootport ----->BUS------> EP
-> > 
-> > > The AER capability is an optional capability of PCIe device functions.
-> > > A host bridge is not itself a PCIe function; it's a bridge between a
-> > > platform-specific host bus and the PCIe bus.
-> > > 
-> > > Sometimes there is a PCI function that corresponds to the host bridge,
-> > > but that's not required by the PCI specs and there is no generic
-> > > programming model for it.
-> > > 
-> > > If you have an PCIe function corresponding to the Mobiveil host
-> > > bridge, and it has an AER capability, what would you want the error
-> > > handlers to do?  This function would not normally be a Root Port or
-> > > other type 1 PCI-to-PCI bridge device, so it's not clear how its AER
-> > > would integrate with the PCIe hierarchy.
-> > > 
-> > Yes we do have a PCI function with AER capability, after an AER
-> > reported by EP, AER driver initiates an hot_reset on subordinate
-> > bus, which happens to be downstream port for RC. So we get a
-> > downstream port link down happens in this case RC driver needs to
-> > follow a specific register restore sequence, which is most of the
-> > HW specific initialization done in probe function of the driver
-> > to recover properly.
+In order to support P2P traffic on a segment of the PCI hierarchy,
+we must be able to disable the ACS redirect bits for select
+PCI bridges. The bridges must be selected before the devices are
+discovered by the kernel and the IOMMU groups created. Therefore,
+a kernel command line parameter is created to specify devices
+which must have their ACS bits disabled.
 
-I'm still not quite getting your point.  Let's try a concrete example.
-Assume this topology (this is what you described above):
+The new parameter takes a list of devices separated by a semicolon.
+Each device specified will have it's ACS redirect bits disabled.
+This is similar to the existing 'resource_alignment' parameter.
 
-  00:00.0 Root Port to [bus 01]
-  01:00.0 Endpoint
+The ACS Request P2P Request Redirect, P2P Completion Redirect and P2P
+Egress Control bits are disabled which is sufficient to always allow
+passing P2P traffic uninterrupted. The bits are set after the kernel
+(optionally) enables the ACS bits itself. It is also done regardless of
+whether the kernel sets the bits or not seeing some BIOS firmware is known
+to set the bits on boot.
 
-Then we have this situation:
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Acked-by: Christian König <christian.koenig@amd.com>
+---
+ Documentation/admin-guide/kernel-parameters.txt |  9 ++++
+ drivers/pci/pci.c                               | 71 ++++++++++++++++++++++++-
+ 2 files changed, 78 insertions(+), 2 deletions(-)
 
-  - AER driver binds to Root Port 00:00.0
-  - Endpoint 01:00.0 detects an error and sends ERR_* message upstream
-  - Root Port 00:00.0 receives ERR_* message
-  - Root Port 00:00.0 generates AER interrupt
-  - AER driver handles the interrupt and does a secondary bus reset on
-    Root Port 00:00.0.  This resets the Endpoint (01:00.0) but not the
-    Root Port itself.
-
-It sounds like you need to do an RC register restore sequence at this
-point, i.e., something like mobiveil_host_init()?  That sounds like a
-hardware defect.  Doing a secondary bus reset via the Root Port's
-bridge control register should have no effect on the RC itself.
-
-What am I missing?
-
-> Are you looking at something similar to pci_error_handlers to be called for
-> your RC driver ?
-> where probably you are expecting during ERR_NONFATAL recovery you would want
-> to restore some of your platform
-> specific registers. I dont think that support exists now. since
-> pci_error_handlers is of struct pci_driver
-> while yours is platform driver.
-> 
-> Although please also note that ERR_FATAL is no more handled with error and
-> recovery callbacks.
-> that are just going to be handled with removal, re-enumeration of the
-> devices.
-> 
-> but I suppose in any case you want to restore the registers in any type of
-> uncorrectable error.
-> 
-> although this is really platform specific, some sort of quirk I cna think
-> of, but again err.c has to check
-> that quirk's existence and calls platform specific callback
-> (that again I am not sure because such things do not exist with respect to
-> error/recovery callbacks)
-> 
-> Yeah just re-thinking, this is too specific, not to be addressed by generic
-> framework I think.
-> 
-> > I was wondering if this can be handled by using AER error handlers, or
-> > would suggest a better way to handle this ?
-> > 
-> > As of now plan is to handle this situation is by calling a minimal
-> > probe recovery sequence after link down interrupt within the
-> > driver interrupt service routine.
-> 
-> Well I think that is a better place,
-> I was wondering why are you loosing registers at the first point ?
-> Is because of link down even you are loosing them ? some issue with hw !
-> 
-> 
-> Lets hear from Bjorn anyway, I am curious.
-> 
-> > 
-> > > Bjorn
-> > 
-> > Thanks,
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index a69947d9e14e..02634c4ab181 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3192,6 +3192,15 @@
+ 				Adding the window is slightly risky (it may
+ 				conflict with unreported devices), so this
+ 				taints the kernel.
++		disable_acs_redir=<pci_dev>[; ...]
++				Specify one or more PCI devices (in the format
++				specified above) separated by semicolons.
++				Each device specified will have the PCI ACS
++				redirect capabilities forced off which will
++				allow P2P traffic between devices through
++				bridges without forcing it upstream. Note:
++				this removes isolation between devices and
++				will make the IOMMU groups less granular.
+ 
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 59638075b4df..079f7c911e09 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2983,6 +2983,61 @@ void pci_request_acs(void)
+ 	pci_acs_enable = 1;
+ }
+ 
++static const char *disable_acs_redir_param;
++
++/**
++ * pci_disable_acs_redir - disable ACS redirect capabilities
++ * @dev: the PCI device
++ *
++ * For only devices specified in the disable_acs_redir parameter.
++ */
++static void pci_disable_acs_redir(struct pci_dev *dev)
++{
++	int ret = 0;
++	const char *p;
++	int pos;
++	u16 ctrl;
++
++	if (!disable_acs_redir_param)
++		return;
++
++	p = disable_acs_redir_param;
++	while (*p) {
++		ret = pci_dev_str_match(dev, p, &p);
++		if (ret < 0) {
++			pr_info_once("PCI: Can't parse disable_acs_redir parameter: %s\n",
++				     disable_acs_redir_param);
++
++			break;
++		} else if (ret == 1) {
++			/* Found a match */
++			break;
++		}
++
++		if (*p != ';' && *p != ',') {
++			/* End of param or invalid format */
++			break;
++		}
++		p++;
++	}
++
++	if (ret != 1)
++		return;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++	if (!pos)
++		return;
++
++	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
++
++	/* P2P Request & Completion Redirect */
++	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
++
++	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
++
++	pci_info(dev, "disabled ACS redirect\n");
++}
++
+ /**
+  * pci_std_enable_acs - enable ACS on devices using standard ACS capabilites
+  * @dev: the PCI device
+@@ -3022,12 +3077,22 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+ void pci_enable_acs(struct pci_dev *dev)
+ {
+ 	if (!pci_acs_enable)
+-		return;
++		goto disable_acs_redir;
+ 
+ 	if (!pci_dev_specific_enable_acs(dev))
+-		return;
++		goto disable_acs_redir;
+ 
+ 	pci_std_enable_acs(dev);
++
++disable_acs_redir:
++	/*
++	 * Note: pci_disable_acs_redir() must be called even if
++	 * ACS is not enabled by the kernel because the firmware
++	 * may have unexpectedly set the flags. So if we are told
++	 * to disable it, we should always disable it after setting
++	 * the kernel's default preferences.
++	 */
++	pci_disable_acs_redir(dev);
+ }
+ 
+ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+@@ -5967,6 +6032,8 @@ static int __init pci_setup(char *str)
+ 				pcie_bus_config = PCIE_BUS_PEER2PEER;
+ 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+ 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
++			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
++				disable_acs_redir_param = str + 18;
+ 			} else {
+ 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+ 						str);
+-- 
+2.11.0
