@@ -1,54 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:60951 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750780AbeFXLeG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 24 Jun 2018 07:34:06 -0400
-Date: Sun, 24 Jun 2018 13:34:03 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] genirq: Synchronize only with single thread on
- free_irq()
-Message-ID: <20180624113403.GA22016@wunner.de>
-References: <32fc25aa35ecef4b2692f57687bb7fc2a57230e2.1529828292.git.lukas@wunner.de>
- <d72b41309f077c8d3bee6cc08ad3662d50b5d22a.1529828292.git.lukas@wunner.de>
- <alpine.DEB.2.21.1806241148030.8650@nanos.tec.linutronix.de>
+Received: from mga09.intel.com ([134.134.136.24]:33913 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965286AbeF0NfV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 27 Jun 2018 09:35:21 -0400
+From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        "Busch, Keith" <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Greg Kroah-Hartman <greg@kroah.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+        Stefan Roese <sr@denx.de>, Rajat Jain <rajatja@google.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: RE: [PATCH 00/32] Rework pciehp event handling & add runtime PM
+Date: Wed, 27 Jun 2018 13:35:15 +0000
+Message-ID: <92EBB4272BF81E4089A7126EC1E7B28478B99444@IRSMSX101.ger.corp.intel.com>
+References: <cover.1529173804.git.lukas@wunner.de>
+ <20180621121955.GZ2558@lahna.fi.intel.com>
+In-Reply-To: <20180621121955.GZ2558@lahna.fi.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.21.1806241148030.8650@nanos.tec.linutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 24, 2018 at 11:49:10AM +0200, Thomas Gleixner wrote:
-> On Sun, 24 Jun 2018, Lukas Wunner wrote:
-> > When pciehp is converted to threaded IRQ handling, removal of unplugged
-> > devices below a PCIe hotplug port happens synchronously in the IRQ
-> > thread.  Removal of devices typically entails a call to free_irq() by
-> > their drivers.
-> 
-> Is this an actual mainline problem or did you discover that in course of
-> upcoming work?
 
-It's needed for upcoming work, specifically the pciehp event handling
-rework which will hopefully appear in 4.19, so nothing urgent.
-Doesn't hurt at all to let this bake in linux-next for a few weeks.
 
-There is something else, you introduced irq_wake_thread() four years ago
-with a92444c6b222 for sdhci/sdio, but for some reason it was never used.
-Before you or anyone else deletes it for lack of callers, please be aware
-that I'm making heavy use of it now in pciehp.  I forgot to cc you on the
-relevant patch [17/32], but I'll bounce it to you in a minute in case
-you want to take a look at it.
+>-----Original Message-----
+>From: Mika Westerberg [mailto:mika.westerberg@linux.intel.com]
+>Sent: Thursday, June 21, 2018 2:20 PM
+>To: Lukas Wunner <lukas@wunner.de>
+>Cc: Bjorn Helgaas <bhelgaas@google.com>; Wysocki, Rafael J <rafael.j.wysocki@intel.com>; Raj, Ashok <ashok.raj@intel.com>; Busch,
+>Keith <keith.busch@intel.com>; Yinghai Lu <yinghai@kernel.org>; Sinan Kaya <okaya@kernel.org>; linux-pci@vger.kernel.org; Greg Kroah-
+>Hartman <greg@kroah.com>; Thomas Gleixner <tglx@linutronix.de>; Patel, Mayurkumar <mayurkumar.patel@intel.com>; Kenji Kaneshige
+><kaneshige.kenji@jp.fujitsu.com>; Stefan Roese <sr@denx.de>; Rajat Jain <rajatja@google.com>; Alex Williamson
+><alex.williamson@redhat.com>; Andreas Noever <andreas.noever@gmail.com>
+>Subject: Re: [PATCH 00/32] Rework pciehp event handling & add runtime PM
+>
+>On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
+>> Rework pciehp to use modern, threaded IRQ handling.  The slot is powered
+>> on and off synchronously in the IRQ thread, no indirection via a work
+>> queue anymore.
+>>
+>> When the slot is enabled/disabled by the user via sysfs or an Attention
+>> Button press, a request is sent to the IRQ thread.  The IRQ thread is
+>> thus the sole entity enabling/disabling the slot.
+>>
+>> The IRQ thread can cope with missed events, e.g. if a card is inserted
+>> and immediately pulled out before the IRQ thread had a chance to react.
+>> It also tolerates an initially unstable link as observed in the wild by
+>> Stefan Roese.
+>>
+>> Finally, runtime PM support is added.  This was the original motivation
+>> of the series because runtime suspending hotplug ports is needed to power
+>> down Thunderbolt controllers on idle, which saves ~1.5W per controller.
+>> Runtime resuming ports takes tenths of milliseconds during which events
+>> may be missed, this in turn necessitated the event handling rework.
+>>
+>> I've pushed the series to GitHub to ease reviewing/fetching:
+>> https://github.com/l1k/linux/commits/pciehp_runpm_v2
+>>
+>> Please review and test.
+>
+>I've tested this series on every native PCIe hotplug system I have here,
+>including one non-Thunderbolt (just hotplugging NVMes) and I did not
+>observe any issues. There are few minor comments for few patches but in
+>general this is really nice cleanup.
 
-Of course this begs the question how irq_wake_thread() is serialized
-against __free_irq(), but it seems that's safe because irq_wake_thread()
-searches the action list while holding desc->lock:  If it grabs the lock
-before __free_irq(), it'll just wake the thread normally.  If it grabs
-the lock after __free_irq(), the action will be gone from the list,
-so irq_wake_thread() essentially becomes a no-op.
 
-Thanks,
+I have not found any issues with this test series on my test setup related to PCIe hotplug.
 
-Lukas
+Intel Deutschland GmbH
+Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
+Tel: +49 89 99 8853-0, www.intel.de
+Managing Directors: Christin Eisenschmid, Christian Lamprechter
+Chairperson of the Supervisory Board: Nicole Lau
+Registered Office: Munich
+Commercial Register: Amtsgericht Muenchen HRB 186928
