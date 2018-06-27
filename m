@@ -1,61 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:42761 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932788AbeFPTd6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:33:58 -0400
-Message-Id: <d0939ab42589f950b8d606c1407c9228bf925a36.1529173804.git.lukas@wunner.de>
-In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 16 Jun 2018 21:25:00 +0200
-Subject: [PATCH 26/32] PCI: pciehp: Obey compulsory command delay after resume
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <1530091298-28120-2-git-send-email-honghui.zhang@mediatek.com>
+References: <1530091298-28120-1-git-send-email-honghui.zhang@mediatek.com>
+ <1530091298-28120-2-git-send-email-honghui.zhang@mediatek.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 27 Jun 2018 19:35:03 +0300
+Message-ID: <CAHp75Ve2N_Bt8FvX8xCx3JtQ+ozZE=isfsKp9swY+86Cg-78XQ@mail.gmail.com>
+Subject: Re: [PATCH 1/4] PCI: mediatek: fixup mtk_pcie_find_port logical
+To: Honghui Zhang <honghui.zhang@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree <devicetree@vger.kernel.org>,
+ hongkun.cao@mediatek.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ YT Shen <yt.shen@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>,
+ ryder.lee@mediatek.com,
+ "moderated list:ARM/Mediatek SoC support" <linux-mediatek@lists.infradead.org>,
+ yong.wu@mediatek.com, Bjorn Helgaas <bhelgaas@google.com>,
+ yingjoe.chen@mediatek.com, Eddie Huang <eddie.huang@mediatek.com>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Upon resume from system sleep, the Slot Control register is written via:
+On Wed, Jun 27, 2018 at 12:21 PM,  <honghui.zhang@mediatek.com> wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
+>
+> Mediatek's host controller have two slots, each have it's own control
+> registers. The host driver need to identify which slot was connected
+> in order to access the device's configuration space. There's problem
+> for current host driver to find out which slot was connected to for
+> a given EP device.
+>
+> Assuming each slot have connect with one EP device as below:
+>
+>                 host bridge
+>   bus 0 --> __________|_______
+>            |                  |
+>            |                  |
+>          slot 0             slot 1
+>   bus 1 -->|        bus 2 --> |
+>            |                  |
+>          EP 0               EP 1
+>
+> While PCI emulation, system software will scan all the PCI device
+> starting from devfn 0. So it will get the proper port for slot0 and
+> slot1 device when using PCI_SLOT(devfn) for match. But it will get
+> the wrong slot for EP1: The devfn will be start from 0 when scanning
+> EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
+> for port0's slot value. So the host driver should not using EP's devfn
+> but the slot's devfn(the slot which EP was connected to) for match.
+>
+> This patch fix the mtk_pcie_find_port's logical by using the slot's
+> devfn for match.
 
-  pci_pm_resume_noirq()
-    pci_pm_default_resume_early()
-      pci_restore_state()
-        pci_restore_pcie_state()
 
-PCIe r4.0, sec 6.7.3.2 says that after "issuing a write transaction that
-targets any portion of the Port's Slot Control register, [...] software
-must wait for [the] command to complete before issuing the next command".
+> +       list_for_each_entry(port, &pcie->ports, list) {
+> +               if (bus->number == 0 && port->slot == PCI_SLOT(devfn)) {
+>                         return port;
+> +               } else if (bus->number != 0) {
 
-pciehp currently fails to enforce that rule after the above-mentioned
-write.  Fix it.
+You can do it like (no need 'else')
 
-(Moving restoration of the Slot Control register to pciehp doesn't seem
-to make sense because the other PCIe hotplug drivers may need it as
-well.)
+if (...)
+ return ...;
+if (bus->number) {
+ ...
+}
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pciehp_core.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> +                       pbus = bus;
+> +                       do {
+> +                               dev = pbus->self;
+> +                               if (port->slot == PCI_SLOT(dev->devfn))
+> +                                       return port;
+> +
+> +                               pbus = dev->bus;
+> +                       } while (dev->bus->number != 0);
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index a5bd3b055c0e..3e73b12ed656 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -284,6 +284,10 @@ static int pciehp_resume_noirq(struct pcie_device *dev)
- 	struct controller *ctrl = get_service_data(dev);
- 	struct slot *slot = ctrl->slot;
- 
-+	/* pci_restore_state() just wrote to the Slot Control register */
-+	ctrl->cmd_started = jiffies;
-+	ctrl->cmd_busy = true;
-+
- 	/* clear spurious events from rediscovery of inserted card */
- 	if (slot->state == ON_STATE || slot->state == BLINKINGOFF_STATE)
- 		pcie_clear_hotplug_events(ctrl);
+This can be rewritten like
+
+pbus = bus;
+while (pbus->number) {
+ dev = ...;
+ ...
+ pbus = dev->bus;
+}
+
+and no need for if (bus->number) anymore.
+
+> +               }
+> +       }
+>
+>         return NULL;
+>  }
+> --
+> 2.6.4
+>
+
+
+
 -- 
-2.17.1
+With Best Regards,
+Andy Shevchenko
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
