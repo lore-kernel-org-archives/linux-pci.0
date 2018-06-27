@@ -1,65 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:44990 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935889AbeFNBgB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 21:36:01 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 05/10] PCI: faraday: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Thu, 14 Jun 2018 09:35:26 +0800
-Message-Id: <1528940126-183447-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: <honghui.zhang@mediatek.com>
+To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+ <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+ <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
+Subject: [PATCH 0/4] PCI: mediatek: fixup find_port, enable_msi and add pm,
+ module support
+Date: Wed, 27 Jun 2018 17:21:34 +0800
+Message-ID: <1530091298-28120-1-git-send-email-honghui.zhang@mediatek.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
+ honghui.zhang@mediatek.com, yt.shen@mediatek.com, yong.wu@mediatek.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+This patchset includes misc patchs:
 
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+The first patch fixup the mtk_pcie_find_port logical which will cause system
+could not touch the EP's configuration space which was connected to PCIe slot 1.
 
- drivers/pci/controller/pci-ftpci100.c | 15 +++++----------
- 1 file changed, 5 insertions(+), 10 deletions(-)
+The second patch fixup the enable msi logical, the operation to enable msi
+should be after system clock is enabled. The function of mtk_pcie_startup_port_v2's
+define location is re-arranged to avoid mtk_pcie_enable_msi's forward declaration.
+And call mtk_pcie_enable_msi in mtk_pcie_startup_port_v2 since the clock was all
+enabled at that time.
 
-diff --git a/drivers/pci/controller/pci-ftpci100.c b/drivers/pci/controller/pci-ftpci100.c
-index a1ebe9e..8ace724 100644
---- a/drivers/pci/controller/pci-ftpci100.c
-+++ b/drivers/pci/controller/pci-ftpci100.c
-@@ -346,24 +346,19 @@ static int faraday_pci_setup_cascaded_irq(struct faraday_pci *p)
- 	int irq;
- 	int i;
- 
--	if (!intc) {
--		dev_err(p->dev, "missing child interrupt-controller node\n");
--		return -EINVAL;
--	}
-+	p->irqdomain = pci_host_alloc_intx_irqd(p->dev, p, false,
-+					   &faraday_pci_irqdomain_ops, intc);
-+	if (IS_ERR(p->irqdomain))
-+		return PTR_ERR(p->irqdomain);
- 
- 	/* All PCI IRQs cascade off this one */
- 	irq = of_irq_get(intc, 0);
- 	if (irq <= 0) {
- 		dev_err(p->dev, "failed to get parent IRQ\n");
-+		irq_domain_remove(p->irqdomain);
- 		return irq ?: -EINVAL;
- 	}
- 
--	p->irqdomain = irq_domain_add_linear(intc, PCI_NUM_INTX,
--					     &faraday_pci_irqdomain_ops, p);
--	if (!p->irqdomain) {
--		dev_err(p->dev, "failed to create Gemini PCI IRQ domain\n");
--		return -EINVAL;
--	}
- 
- 	irq_set_chained_handler_and_data(irq, faraday_pci_irq_handler, p);
- 
+The third patch was rebased and refactor of the v4 patch[1], changes are:
+ -Add PM support for MT7622.
+ -Using mtk_pcie_enable_port to re-establish the link when resumed.
+ -Rebase on the previous two patches.
+
+The fourth patch add loadable kernel module support.
+
+Those patches was already reviewed-by Ryder Lee <ryder.lee@mediatek.com> so
+I just add the Reviewed-by tags in those patches.
+
+[1] https://patchwork.kernel.org/patch/10479079
+
+Honghui Zhang (4):
+  PCI: mediatek: fixup mtk_pcie_find_port logical
+  PCI: mediatek: enable msi after clock enabled
+  PCI: mediatek: Add system pm support for MT2712 and MT7622
+  PCI: mediatek: Add loadable kernel module support
+
+ drivers/pci/controller/Kconfig         |   2 +-
+ drivers/pci/controller/pcie-mediatek.c | 291 ++++++++++++++++++++++++---------
+ 2 files changed, 215 insertions(+), 78 deletions(-)
+
 -- 
-1.9.1
+2.6.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
