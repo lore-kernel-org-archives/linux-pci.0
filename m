@@ -1,93 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:36976 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935710AbeFNBfF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 21:35:05 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v4 02/10] PCI: dra7xx: Use pci_host_alloc_intx_irqd() helper to simplify the code
-Date: Thu, 14 Jun 2018 09:34:43 +0800
-Message-Id: <1528940083-183300-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mx2.suse.de ([195.135.220.15]:43507 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966066AbeF0UPx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 27 Jun 2018 16:15:53 -0400
+Date: Wed, 27 Jun 2018 22:15:50 +0200
+From: Jean Delvare <jdelvare@suse.de>
+To: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Cc: linux-i2c@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        stable@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] i2c: i801: Fix runtime PM
+Message-ID: <20180627221550.0fa5f2df@endymion>
+In-Reply-To: <20180626143913.7361-1-jarkko.nikula@linux.intel.com>
+References: <20180626143913.7361-1-jarkko.nikula@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+Hi Jarkko,
 
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+On Tue, 26 Jun 2018 17:39:12 +0300, Jarkko Nikula wrote:
+> Commit 9c8088c7988 ("i2c: i801: Don't restore config registers on
+> runtime PM") nullified the runtime PM suspend/resume callback pointers
+> while keeping the runtime PM enabled. This causes that device stays in
+> D0 power state and sysfs /sys/bus/pci/devices/.../power/runtime_status
+> shows "error" when runtime PM framework attempts to autosuspend the
+> device.
+> 
+> This is due PCI bus runtime PM which checks for driver runtime PM
+> callbacks and returns with -ENOSYS if they are not set. Fix this by
+> having a shared dummy runtime PM callback that returns with success.
+> 
+> Fixes: a9c8088c7988 ("i2c: i801: Don't restore config registers on runtime PM")
 
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+I don't want to sound like I'm trying to decline all responsibility for
+a regression I caused, but frankly, if just using SIMPLE_DEV_PM_OPS()
+breaks runtime PM, then it's the PM model which is broken, not the
+i2c-i801 driver.
 
- drivers/pci/controller/dwc/pci-dra7xx.c | 42 +++------------------------------
- 1 file changed, 3 insertions(+), 39 deletions(-)
+I will boldly claim that the PCI bus runtime code is simply wrong in
+returning -ENOSYS in the absence of runtime PM callbacks, and it should
+be changed to return 0 instead. Or whoever receives that -ENOSYS should
+not treat it as an error - whatever makes more sense.
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index cfaeef8..a281924 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -213,43 +213,6 @@ static int dra7xx_pcie_host_init(struct pcie_port *pp)
- 	.host_init = dra7xx_pcie_host_init,
- };
- 
--static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
--				irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--static const struct irq_domain_ops intx_domain_ops = {
--	.map = dra7xx_pcie_intx_map,
--	.xlate = pci_irqd_intx_xlate,
--};
--
--static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct device *dev = pci->dev;
--	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
--	struct device_node *node = dev->of_node;
--	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
--
--	if (!pcie_intc_node) {
--		dev_err(dev, "No PCIe Intc node found\n");
--		return -ENODEV;
--	}
--
--	dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--						   &intx_domain_ops, pp);
--	if (!dra7xx->irq_domain) {
--		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		return -ENODEV;
--	}
--
--	return 0;
--}
--
- static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- {
- 	struct dra7xx_pcie *dra7xx = arg;
-@@ -455,8 +418,9 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 		return ret;
- 	}
- 
--	ret = dra7xx_pcie_init_irq_domain(pp);
--	if (ret < 0)
-+	dra7xx->irq_domain = pci_host_alloc_intx_irqd(dev, dra7xx, true, NULL,
-+						      NULL);
-+	if (IS_ERR(dra7xx->irq_domain))
- 		return ret;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
+Having to add dummy functions in every PCI driver that doesn't need to
+do anything special for runtime PM sounds plain stupid. It should be
+pretty obvious that a whole lot of drivers are going to use
+SIMPLE_DEV_PM_OPS() because it exists and seems to do what they want,
+and all of them will be bugged because the PCI core is doing something
+silly and unexpected.
+
+So please let's fix it at the PCI subsystem core level. Adding Bjorn
+and the linux-pci list to Cc.
+
+Thanks,
 -- 
-1.9.1
+Jean Delvare
+SUSE L3 Support
