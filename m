@@ -1,153 +1,220 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 26 Jun 2018 12:10:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Scott Branden <scott.branden@broadcom.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Jan Kiszka <jan.kiszka@siemens.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Ley Foon Tan <lftan@altera.com>
-Subject: Re: [PATCH v2] PCI: controller: Move PCI_DOMAINS selection to arch
- Kconfig
-Message-ID: <20180626171018.GB146680@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180619112105.14457-1-lorenzo.pieralisi@arm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: <honghui.zhang@mediatek.com>
+To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+ <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+ <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
+Subject: [PATCH 2/4] PCI: mediatek: enable msi after clock enabled
+Date: Wed, 27 Jun 2018 17:21:36 +0800
+Message-ID: <1530091298-28120-3-git-send-email-honghui.zhang@mediatek.com>
+In-Reply-To: <1530091298-28120-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1530091298-28120-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180619112105.14457-1-lorenzo.pieralisi@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
+ honghui.zhang@mediatek.com, yt.shen@mediatek.com, yong.wu@mediatek.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 19, 2018 at 12:21:05PM +0100, Lorenzo Pieralisi wrote:
-> Commit 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
-> added configuration options to allow PCI host controller drivers to be
-> compile tested on all architectures.
-> 
-> Some host controller drivers (eg PCIE_ALTERA) config entries select
-> the PCI_DOMAINS config option to enable PCI domains management in
-> the kernel. Now that host controller drivers can be compiled on
-> all architectures, this triggers build regressions on arches that
-> do not implement the PCI_DOMAINS required API (ie pci_domain_nr()):
-> 
-> drivers/ata/pata_ali.c: In function 'ali_init_chipset':
-> drivers/ata/pata_ali.c:469:38: error:
->         implicit declaration of function 'pci_domain_nr';
->                                           did you mean 'pci_iomap_wc'?
-> 
-> Furthemore, some software configurations (ie Jailhouse) require a
-> PCI_DOMAINS enabled kernel to configure multiple host controllers
-> without having an explicit dependency on the ARM platform on which
-> they run.
-> 
-> Make PCI_DOMAINS a visible configuration option on ARM so that software
-> configurations that need it can manually select it and move the
-> PCI_DOMAINS selection from PCI controllers configuration file to ARM
-> sub-arch config entries that currently require it, fixing the issue.
-> 
-> Fixes: 51bc085d6454 ("PCI: Improve host drivers compile test coverage")
-> Link: https://lkml.kernel.org/r/20180612170229.GA10141@roeck-us.net
-> Reported-by: Guenter Roeck <linux@roeck-us.net>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Scott Branden <scott.branden@broadcom.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Rob Herring <robh@kernel.org>
-> Cc: Russell King <linux@armlinux.org.uk>
-> Cc: Jan Kiszka <jan.kiszka@siemens.com>
-> Cc: Guenter Roeck <linux@roeck-us.net>
-> Cc: Ley Foon Tan <lftan@altera.com>
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-I applied this to for-linus for v4.18, with acks from Jan, Ley Foon, and
-Rob.  Thanks!
+The clocks was not enabled when enable MSI. This patch fix this
+issue by calling mtk_pcie_enable_msi in mtk_pcie_startup_port_v2
+since the clock was all enabled at that time.
 
-> ---
-> v1 -> v2
-> 	- Removed ARCH_VIRT PCI_DOMAINS selection
-> 	- Added PCI_DOMAINS visible config option
-> 
-> v1: https://marc.info/?l=linux-pci&m=152932092612352&w=2
-> 
->  arch/arm/Kconfig               | 8 +++++++-
->  arch/arm/mach-bcm/Kconfig      | 1 +
->  arch/arm/mach-socfpga/Kconfig  | 1 +
->  drivers/pci/controller/Kconfig | 3 ---
->  4 files changed, 9 insertions(+), 4 deletions(-)
-> 
-> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> index 54eeb8d00bc6..843edfd000be 100644
-> --- a/arch/arm/Kconfig
-> +++ b/arch/arm/Kconfig
-> @@ -1245,8 +1245,14 @@ config PCI
->  	  VESA. If you have PCI, say Y, otherwise N.
->  
->  config PCI_DOMAINS
-> -	bool
-> +	bool "Support for multiple PCI domains"
->  	depends on PCI
-> +	help
-> +	  Enable PCI domains kernel management. Say Y if your machine
-> +	  has a PCI bus hierarchy that requires more than one PCI
-> +	  domain (aka segment) to be correctly managed. Say N otherwise.
-> +
-> +	  If you don't know what to do here, say N.
->  
->  config PCI_DOMAINS_GENERIC
->  	def_bool PCI_DOMAINS
-> diff --git a/arch/arm/mach-bcm/Kconfig b/arch/arm/mach-bcm/Kconfig
-> index c46a728df44e..25aac6ee2ab1 100644
-> --- a/arch/arm/mach-bcm/Kconfig
-> +++ b/arch/arm/mach-bcm/Kconfig
-> @@ -20,6 +20,7 @@ config ARCH_BCM_IPROC
->  	select GPIOLIB
->  	select ARM_AMBA
->  	select PINCTRL
-> +	select PCI_DOMAINS if PCI
->  	help
->  	  This enables support for systems based on Broadcom IPROC architected SoCs.
->  	  The IPROC complex contains one or more ARM CPUs along with common
-> diff --git a/arch/arm/mach-socfpga/Kconfig b/arch/arm/mach-socfpga/Kconfig
-> index d0f62eacf59d..4adb901dd5eb 100644
-> --- a/arch/arm/mach-socfpga/Kconfig
-> +++ b/arch/arm/mach-socfpga/Kconfig
-> @@ -10,6 +10,7 @@ menuconfig ARCH_SOCFPGA
->  	select HAVE_ARM_SCU
->  	select HAVE_ARM_TWD if SMP
->  	select MFD_SYSCON
-> +	select PCI_DOMAINS if PCI
->  
->  if ARCH_SOCFPGA
->  config SOCFPGA_SUSPEND
-> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-> index 18fa09b3ac8f..cc9fa02d32a0 100644
-> --- a/drivers/pci/controller/Kconfig
-> +++ b/drivers/pci/controller/Kconfig
-> @@ -96,7 +96,6 @@ config PCI_HOST_GENERIC
->  	depends on OF
->  	select PCI_HOST_COMMON
->  	select IRQ_DOMAIN
-> -	select PCI_DOMAINS
->  	help
->  	  Say Y here if you want to support a simple generic PCI host
->  	  controller, such as the one emulated by kvmtool.
-> @@ -138,7 +137,6 @@ config PCI_VERSATILE
->  
->  config PCIE_IPROC
->  	tristate
-> -	select PCI_DOMAINS
->  	help
->  	  This enables the iProc PCIe core controller support for Broadcom's
->  	  iProc family of SoCs. An appropriate bus interface driver needs
-> @@ -176,7 +174,6 @@ config PCIE_IPROC_MSI
->  config PCIE_ALTERA
->  	bool "Altera PCIe controller"
->  	depends on ARM || NIOS2 || COMPILE_TEST
-> -	select PCI_DOMAINS
->  	help
->  	  Say Y here if you want to enable PCIe controller support on Altera
->  	  FPGA.
-> -- 
-> 2.15.0
-> 
+The function of mtk_pcie_startup_port_v2's define location is
+re-arranged to avoid mtk_pcie_enable_msi's forward declaration.
+
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ drivers/pci/controller/pcie-mediatek.c | 143 +++++++++++++++++----------------
+ 1 file changed, 72 insertions(+), 71 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 9cf7ecf..17bf99b 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -396,75 +396,6 @@ static struct pci_ops mtk_pcie_ops_v2 = {
+ 	.write = mtk_pcie_config_write,
+ };
+ 
+-static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+-{
+-	struct mtk_pcie *pcie = port->pcie;
+-	struct resource *mem = &pcie->mem;
+-	const struct mtk_pcie_soc *soc = port->pcie->soc;
+-	u32 val;
+-	size_t size;
+-	int err;
+-
+-	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
+-	if (pcie->base) {
+-		val = readl(pcie->base + PCIE_SYS_CFG_V2);
+-		val |= PCIE_CSR_LTSSM_EN(port->slot) |
+-		       PCIE_CSR_ASPM_L1_EN(port->slot);
+-		writel(val, pcie->base + PCIE_SYS_CFG_V2);
+-	}
+-
+-	/* Assert all reset signals */
+-	writel(0, port->base + PCIE_RST_CTRL);
+-
+-	/*
+-	 * Enable PCIe link down reset, if link status changed from link up to
+-	 * link down, this will reset MAC control registers and configuration
+-	 * space.
+-	 */
+-	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
+-
+-	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
+-	val = readl(port->base + PCIE_RST_CTRL);
+-	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
+-	       PCIE_MAC_SRSTB | PCIE_CRSTB;
+-	writel(val, port->base + PCIE_RST_CTRL);
+-
+-	/* Set up vendor ID and class code */
+-	if (soc->need_fix_class_id) {
+-		val = PCI_VENDOR_ID_MEDIATEK;
+-		writew(val, port->base + PCIE_CONF_VEND_ID);
+-
+-		val = PCI_CLASS_BRIDGE_HOST;
+-		writew(val, port->base + PCIE_CONF_CLASS_ID);
+-	}
+-
+-	/* 100ms timeout value should be enough for Gen1/2 training */
+-	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
+-				 !!(val & PCIE_PORT_LINKUP_V2), 20,
+-				 100 * USEC_PER_MSEC);
+-	if (err)
+-		return -ETIMEDOUT;
+-
+-	/* Set INTx mask */
+-	val = readl(port->base + PCIE_INT_MASK);
+-	val &= ~INTX_MASK;
+-	writel(val, port->base + PCIE_INT_MASK);
+-
+-	/* Set AHB to PCIe translation windows */
+-	size = mem->end - mem->start;
+-	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
+-	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
+-
+-	val = upper_32_bits(mem->start);
+-	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
+-
+-	/* Set PCIe to AXI translation memory space.*/
+-	val = fls(0xffffffff) | WIN_ENABLE;
+-	writel(val, port->base + PCIE_AXI_WINDOW0);
+-
+-	return 0;
+-}
+-
+ static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+ 	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
+@@ -641,8 +572,6 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+ 		ret = mtk_pcie_allocate_msi_domains(port);
+ 		if (ret)
+ 			return ret;
+-
+-		mtk_pcie_enable_msi(port);
+ 	}
+ 
+ 	return 0;
+@@ -709,6 +638,78 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
+ 	return 0;
+ }
+ 
++static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
++{
++	struct mtk_pcie *pcie = port->pcie;
++	struct resource *mem = &pcie->mem;
++	const struct mtk_pcie_soc *soc = port->pcie->soc;
++	u32 val;
++	size_t size;
++	int err;
++
++	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
++	if (pcie->base) {
++		val = readl(pcie->base + PCIE_SYS_CFG_V2);
++		val |= PCIE_CSR_LTSSM_EN(port->slot) |
++		       PCIE_CSR_ASPM_L1_EN(port->slot);
++		writel(val, pcie->base + PCIE_SYS_CFG_V2);
++	}
++
++	/* Assert all reset signals */
++	writel(0, port->base + PCIE_RST_CTRL);
++
++	/*
++	 * Enable PCIe link down reset, if link status changed from link up to
++	 * link down, this will reset MAC control registers and configuration
++	 * space.
++	 */
++	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
++
++	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
++	val = readl(port->base + PCIE_RST_CTRL);
++	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
++	       PCIE_MAC_SRSTB | PCIE_CRSTB;
++	writel(val, port->base + PCIE_RST_CTRL);
++
++	/* Set up vendor ID and class code */
++	if (soc->need_fix_class_id) {
++		val = PCI_VENDOR_ID_MEDIATEK;
++		writew(val, port->base + PCIE_CONF_VEND_ID);
++
++		val = PCI_CLASS_BRIDGE_HOST;
++		writew(val, port->base + PCIE_CONF_CLASS_ID);
++	}
++
++	/* 100ms timeout value should be enough for Gen1/2 training */
++	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
++				 !!(val & PCIE_PORT_LINKUP_V2), 20,
++				 100 * USEC_PER_MSEC);
++	if (err)
++		return -ETIMEDOUT;
++
++	/* Set INTx mask */
++	val = readl(port->base + PCIE_INT_MASK);
++	val &= ~INTX_MASK;
++	writel(val, port->base + PCIE_INT_MASK);
++
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		mtk_pcie_enable_msi(port);
++
++	/* Set AHB to PCIe translation windows */
++	size = mem->end - mem->start;
++	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
++	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
++
++	val = upper_32_bits(mem->start);
++	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
++
++	/* Set PCIe to AXI translation memory space.*/
++	val = fls(0xffffffff) | WIN_ENABLE;
++	writel(val, port->base + PCIE_AXI_WINDOW0);
++
++	return 0;
++}
++
+ static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
+ 				      unsigned int devfn, int where)
+ {
+-- 
+2.6.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
