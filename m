@@ -1,52 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:47634 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754178AbeFVUup (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Jun 2018 16:50:45 -0400
-To: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Matthew Wilcox <willy@infradead.org>
-References: <20180622194315.10475-1-logang@deltatee.com>
- <20180622194315.10475-3-logang@deltatee.com>
- <c1278ab2-63a8-19b6-9c8d-fed0b4f94c11@infradead.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <7e5b459d-f083-286c-bd6c-87cf62cc7541@deltatee.com>
-Date: Fri, 22 Jun 2018 14:50:18 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Vignesh R <vigneshr@ti.com>
+To: Tony Lindgren <tony@atomide.com>, Rob Herring <robh+dt@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
+Subject: [PATCH v2 1/4] dt-bindings: PCI: dra7xx: Add bindings for unaligned access in host mode
+Date: Wed, 27 Jun 2018 17:59:16 +0530
+Message-ID: <20180627122919.23926-2-vigneshr@ti.com>
+In-Reply-To: <20180627122919.23926-1-vigneshr@ti.com>
+References: <20180627122919.23926-1-vigneshr@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <c1278ab2-63a8-19b6-9c8d-fed0b4f94c11@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v4 2/3] PCI: Allow specifying devices using a base bus and
- path of devfns
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Update device tree binding documentation of TI's dra7xx PCI controller
+for enabling unaligned mem access as applicable not just in EP mode but
+in host mode as well.
 
+Signed-off-by: Vignesh R <vigneshr@ti.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+ Documentation/devicetree/bindings/pci/ti-pci.txt | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-On 22/06/18 02:01 PM, Randy Dunlap wrote:
->> Thus, we add an option to specify devices in the following format:
->>
->> [<domain>:]<bus>:<slot>.<func>[/<slot>.<func>]*
-> 
-> Please explain the trailing '*'.  I looked thru the code and it doesn't
-> seem to look for it or care.
-
-This was Willy's suggestion and I liked it. It's similar to regular
-expression syntax: the '*' indicating you may have any number of the
-expression repeated in the square brackets.
-
-Logan
+diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+index 7f7af3044016..452fe48c4fdd 100644
+--- a/Documentation/devicetree/bindings/pci/ti-pci.txt
++++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+@@ -26,6 +26,11 @@ HOST MODE
+    ranges,
+    interrupt-map-mask,
+    interrupt-map : as specified in ../designware-pcie.txt
++ - ti,syscon-unaligned-access: phandle to the syscon DT node. The 1st argument
++			       should contain the register offset within syscon
++			       and the 2nd argument should contain the bit field
++			       for setting the bit to enable unaligned
++			       access.
+ 
+ DEVICE MODE
+ ===========
+-- 
+2.18.0
