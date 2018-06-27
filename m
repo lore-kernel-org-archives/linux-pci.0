@@ -1,220 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:53795 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932542AbeFPT2t (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:28:49 -0400
-Message-Id: <c78d667de7024f4ad8bcd688b93a1ebb9053f444.1529173804.git.lukas@wunner.de>
-In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 16 Jun 2018 21:25:00 +0200
-Subject: [PATCH 11/32] PCI: pciehp: Stop blinking on slot enable failure
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org
+Received: from ale.deltatee.com ([207.54.116.67]:51212 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934614AbeF0RrO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 27 Jun 2018 13:47:14 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 27 Jun 2018 11:46:47 -0600
+Message-Id: <20180627174650.27433-1-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v5 0/3] Add parameter for disabling ACS redirection for P2P
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the attention button is pressed to power on the slot AND the user
-powers on the slot via sysfs before 5 seconds have elapsed AND powering
-on the slot fails because either the slot is unoccupied OR the latch is
-open, we neglect turning off the green led so it keeps on blinking.
+Hi,
 
-That's because the error path of pciehp_sysfs_enable_slot() doesn't call
-pciehp_green_led_off(), unlike pciehp_power_thread() which does.
-The bug has been present since 2004 when the driver was introduced.
+As discussed in our PCI P2PDMA series, we'd like to add a kernel
+parameter for selectively disabling ACS redirection for select
+bridges. Seeing this turned out to be a small series in itself, we've
+decided to send this separately from the P2P work.
 
-Fix by deduplicating common code in pciehp_sysfs_enable_slot() and
-pciehp_power_thread() into a wrapper function pciehp_enable_slot() and
-renaming the existing function to __pciehp_enable_slot().  Same for
-pciehp_disable_slot().  This will also simplify the upcoming rework of
-pciehp's event handling.
+This series generalizes the code already done for the resource_alignment
+option that already exists. The first patch creates a helper function
+to match PCI devices against strings based on the code that already
+existed in pci_specified_resource_alignment().
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pciehp_core.c |  7 +--
- drivers/pci/hotplug/pciehp_ctrl.c | 73 +++++++++++++++++--------------
- 2 files changed, 42 insertions(+), 38 deletions(-)
+The second patch expands the new helper to optionally take a path of
+PCI devfns. This is to address Alex's renumbering concern when using
+simple bus-devfns. The implementation is essentially how he described it and
+similar to the Intel VT-d spec (Section 8.3.1).
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 2ba59fc94827..8a2133856dfd 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -248,11 +248,8 @@ static int pciehp_probe(struct pcie_device *dev)
- 	slot = ctrl->slot;
- 	pciehp_get_adapter_status(slot, &occupied);
- 	pciehp_get_power_status(slot, &poweron);
--	if (occupied && pciehp_force) {
--		mutex_lock(&slot->hotplug_lock);
-+	if (occupied && pciehp_force)
- 		pciehp_enable_slot(slot);
--		mutex_unlock(&slot->hotplug_lock);
--	}
- 	/* If empty slot's power status is on, turn power off */
- 	if (!occupied && poweron && POWER_CTRL(ctrl))
- 		pciehp_power_off_slot(slot);
-@@ -296,12 +293,10 @@ static int pciehp_resume(struct pcie_device *dev)
- 
- 	/* Check if slot is occupied */
- 	pciehp_get_adapter_status(slot, &status);
--	mutex_lock(&slot->hotplug_lock);
- 	if (status)
- 		pciehp_enable_slot(slot);
- 	else
- 		pciehp_disable_slot(slot);
--	mutex_unlock(&slot->hotplug_lock);
- 	return 0;
- }
- #endif /* PM */
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 76a9b8c26d2b..9d6343a35db1 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -160,26 +160,13 @@ static void pciehp_power_thread(struct work_struct *work)
- 	struct power_work_info *info =
- 		container_of(work, struct power_work_info, work);
- 	struct slot *p_slot = info->p_slot;
--	int ret;
- 
- 	switch (info->req) {
- 	case DISABLE_REQ:
--		mutex_lock(&p_slot->hotplug_lock);
- 		pciehp_disable_slot(p_slot);
--		mutex_unlock(&p_slot->hotplug_lock);
--		mutex_lock(&p_slot->lock);
--		p_slot->state = STATIC_STATE;
--		mutex_unlock(&p_slot->lock);
- 		break;
- 	case ENABLE_REQ:
--		mutex_lock(&p_slot->hotplug_lock);
--		ret = pciehp_enable_slot(p_slot);
--		mutex_unlock(&p_slot->hotplug_lock);
--		if (ret)
--			pciehp_green_led_off(p_slot);
--		mutex_lock(&p_slot->lock);
--		p_slot->state = STATIC_STATE;
--		mutex_unlock(&p_slot->lock);
-+		pciehp_enable_slot(p_slot);
- 		break;
- 	default:
- 		break;
-@@ -369,7 +356,7 @@ static void interrupt_event_handler(struct work_struct *work)
- /*
-  * Note: This function must be called with slot->hotplug_lock held
-  */
--int pciehp_enable_slot(struct slot *p_slot)
-+static int __pciehp_enable_slot(struct slot *p_slot)
- {
- 	u8 getstatus = 0;
- 	struct controller *ctrl = p_slot->ctrl;
-@@ -400,10 +387,29 @@ int pciehp_enable_slot(struct slot *p_slot)
- 	return board_added(p_slot);
- }
- 
-+int pciehp_enable_slot(struct slot *slot)
-+{
-+	struct controller *ctrl = slot->ctrl;
-+	int ret;
-+
-+	mutex_lock(&slot->hotplug_lock);
-+	ret = __pciehp_enable_slot(slot);
-+	mutex_unlock(&slot->hotplug_lock);
-+
-+	if (ret && ATTN_BUTTN(ctrl))
-+		pciehp_green_led_off(slot); /* may be blinking */
-+
-+	mutex_lock(&slot->lock);
-+	slot->state = STATIC_STATE;
-+	mutex_unlock(&slot->lock);
-+
-+	return ret;
-+}
-+
- /*
-  * Note: This function must be called with slot->hotplug_lock held
-  */
--int pciehp_disable_slot(struct slot *p_slot)
-+static int __pciehp_disable_slot(struct slot *p_slot)
- {
- 	u8 getstatus = 0;
- 	struct controller *ctrl = p_slot->ctrl;
-@@ -421,9 +427,23 @@ int pciehp_disable_slot(struct slot *p_slot)
- 	return 0;
- }
- 
-+int pciehp_disable_slot(struct slot *slot)
-+{
-+	int ret;
-+
-+	mutex_lock(&slot->hotplug_lock);
-+	ret = __pciehp_disable_slot(slot);
-+	mutex_unlock(&slot->hotplug_lock);
-+
-+	mutex_lock(&slot->lock);
-+	slot->state = STATIC_STATE;
-+	mutex_unlock(&slot->lock);
-+
-+	return ret;
-+}
-+
- int pciehp_sysfs_enable_slot(struct slot *p_slot)
- {
--	int retval = -ENODEV;
- 	struct controller *ctrl = p_slot->ctrl;
- 
- 	mutex_lock(&p_slot->lock);
-@@ -433,12 +453,7 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
- 	case STATIC_STATE:
- 		p_slot->state = POWERON_STATE;
- 		mutex_unlock(&p_slot->lock);
--		mutex_lock(&p_slot->hotplug_lock);
--		retval = pciehp_enable_slot(p_slot);
--		mutex_unlock(&p_slot->hotplug_lock);
--		mutex_lock(&p_slot->lock);
--		p_slot->state = STATIC_STATE;
--		break;
-+		return pciehp_enable_slot(p_slot);
- 	case POWERON_STATE:
- 		ctrl_info(ctrl, "Slot(%s): Already in powering on state\n",
- 			  slot_name(p_slot));
-@@ -455,12 +470,11 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
- 	}
- 	mutex_unlock(&p_slot->lock);
- 
--	return retval;
-+	return -ENODEV;
- }
- 
- int pciehp_sysfs_disable_slot(struct slot *p_slot)
- {
--	int retval = -ENODEV;
- 	struct controller *ctrl = p_slot->ctrl;
- 
- 	mutex_lock(&p_slot->lock);
-@@ -470,12 +484,7 @@ int pciehp_sysfs_disable_slot(struct slot *p_slot)
- 	case STATIC_STATE:
- 		p_slot->state = POWEROFF_STATE;
- 		mutex_unlock(&p_slot->lock);
--		mutex_lock(&p_slot->hotplug_lock);
--		retval = pciehp_disable_slot(p_slot);
--		mutex_unlock(&p_slot->hotplug_lock);
--		mutex_lock(&p_slot->lock);
--		p_slot->state = STATIC_STATE;
--		break;
-+		return pciehp_disable_slot(p_slot);
- 	case POWEROFF_STATE:
- 		ctrl_info(ctrl, "Slot(%s): Already in powering off state\n",
- 			  slot_name(p_slot));
-@@ -492,5 +501,5 @@ int pciehp_sysfs_disable_slot(struct slot *p_slot)
- 	}
- 	mutex_unlock(&p_slot->lock);
- 
--	return retval;
-+	return -ENODEV;
- }
--- 
-2.17.1
+The final patch adds the disable_acs_redir kernel parameter which takes
+a list of PCI devices and will disable the ACS P2P Request Redirect,
+ACS P2P Completion Redirect and ACS P2P Egress Control bits for the
+selected devices. This allows P2P traffic between selected bridges and
+seeing it's done at boot, before the IOMMU groups will be created, the
+groups will match the security provided by ACS.
+
+Thanks,
+
+Logan
+
+--
+
+Changes since v4:
+* Fixed a couple documentation mistakes spotted by Randy
+
+Changes since v3:
+* Removed some of the cruft that was copied from the resource_alignment
+  paramater (per Alex)
+* A number of docuemntation fixes as noticed by Alex and Willy
+
+Changes since v2:
+* Rebased onto v4.18-rc1 (no conflicts)
+* Minor tweaks to the documentation per Andy
+* Removed the "path:" prefix and use the path parsing code
+  for simple devices (as it works the same). Per a suggestion from Alex
+
+Changes since v1:
+
+* Reworked pci_dev_str_match_path using strrchr as suggested by Alex
+* Collected Christian's Acks
+
+Logan Gunthorpe (3):
+  PCI: Make specifying PCI devices in kernel parameters reusable
+  PCI: Allow specifying devices using a base bus and path of devfns
+  PCI: Introduce the disable_acs_redir parameter
+
+ Documentation/admin-guide/kernel-parameters.txt |  41 +++-
+ drivers/pci/pci.c                               | 305 +++++++++++++++++++-----
+ 2 files changed, 285 insertions(+), 61 deletions(-)
+
+--
+2.11.0
