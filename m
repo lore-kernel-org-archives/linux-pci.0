@@ -1,98 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:20584 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933422AbeFTVfX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Jun 2018 17:35:23 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 3/7] PCI/DPC: Remove rp_pio_status from dpc struct
-Date: Wed, 20 Jun 2018 15:38:29 -0600
-Message-Id: <20180620213833.25072-3-keith.busch@intel.com>
-In-Reply-To: <20180620213833.25072-1-keith.busch@intel.com>
-References: <20180620213833.25072-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Vignesh R <vigneshr@ti.com>
+To: Tony Lindgren <tony@atomide.com>, Rob Herring <robh+dt@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
+Subject: [PATCH v2 3/4] ARM: dts: dra7: Enable workaround for errata i870 in PCIe host mode
+Date: Wed, 27 Jun 2018 17:59:18 +0530
+Message-ID: <20180627122919.23926-4-vigneshr@ti.com>
+In-Reply-To: <20180627122919.23926-1-vigneshr@ti.com>
+References: <20180627122919.23926-1-vigneshr@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We don't need to save the rp pio status across multiple contexts as all
-DPC event handling occurs in a single work queue context.
+Add ti,syscon-unaligned-access property to PCIe RC nodes to set
+appropriate bits in CTRL_CORE_SMA_SW_7 register to enable workaround for
+errata i870.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Signed-off-by: Vignesh R <vigneshr@ti.com>
 ---
- drivers/pci/pcie/dpc.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+ arch/arm/boot/dts/dra7.dtsi | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index 5f5fac279c75..1b0b25ba947c 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -19,7 +19,6 @@ struct dpc_dev {
- 	struct work_struct	work;
- 	u16			cap_pos;
- 	bool			rp_extensions;
--	u32			rp_pio_status;
- 	u8			rp_log_size;
- };
- 
-@@ -96,11 +95,6 @@ static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
- 
- 	if (dpc->rp_extensions && dpc_wait_rp_inactive(dpc))
- 		return PCI_ERS_RESULT_DISCONNECT;
--	if (dpc->rp_extensions && dpc->rp_pio_status) {
--		pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS,
--				       dpc->rp_pio_status);
--		dpc->rp_pio_status = 0;
--	}
- 
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
- 			      PCI_EXP_DPC_STATUS_TRIGGER);
-@@ -122,8 +116,6 @@ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- 	dev_err(dev, "rp_pio_status: %#010x, rp_pio_mask: %#010x\n",
- 		status, mask);
- 
--	dpc->rp_pio_status = status;
--
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SEVERITY, &sev);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_SYSERROR, &syserr);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_EXCEPTION, &exc);
-@@ -134,15 +126,14 @@ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &dpc_status);
- 	first_error = (dpc_status & 0x1f00) >> 8;
- 
--	status &= ~mask;
- 	for (i = 0; i < ARRAY_SIZE(rp_pio_error_string); i++) {
--		if (status & (1 << i))
-+		if ((status & ~mask) & (1 << i))
- 			dev_err(dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
- 				first_error == i ? " (First)" : "");
- 	}
- 
- 	if (dpc->rp_log_size < 4)
--		return;
-+		goto clear_status;
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
- 			      &dw0);
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
-@@ -155,7 +146,7 @@ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- 		dw0, dw1, dw2, dw3);
- 
- 	if (dpc->rp_log_size < 5)
--		return;
-+		goto clear_status;
- 	pci_read_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG, &log);
- 	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", log);
- 
-@@ -164,6 +155,8 @@ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- 			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG, &prefix);
- 		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i, prefix);
- 	}
-+ clear_status:
-+	pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS, status);
- }
- 
- static void dpc_work(struct work_struct *work)
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index 93fc2d79d337..7bfe7f28e3bd 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -336,6 +336,7 @@
+ 						<0 0 0 2 &pcie1_intc 2>,
+ 						<0 0 0 3 &pcie1_intc 3>,
+ 						<0 0 0 4 &pcie1_intc 4>;
++				ti,syscon-unaligned-access = <&scm_conf1 0x14 1>;
+ 				status = "disabled";
+ 				pcie1_intc: interrupt-controller {
+ 					interrupt-controller;
+@@ -387,6 +388,7 @@
+ 						<0 0 0 2 &pcie2_intc 2>,
+ 						<0 0 0 3 &pcie2_intc 3>,
+ 						<0 0 0 4 &pcie2_intc 4>;
++				ti,syscon-unaligned-access = <&scm_conf1 0x14 2>;
+ 				pcie2_intc: interrupt-controller {
+ 					interrupt-controller;
+ 					#address-cells = <0>;
 -- 
-2.14.3
+2.18.0
