@@ -1,70 +1,63 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 09/13] PCI/AER: Move aer_irq() declaration to portdrv.h
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Keith Busch <keith.busch@intel.com>,
-        Borislav Petkov <bp@alien8.de>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        linux-kernel@vger.kernel.org
-Date: Fri, 08 Jun 2018 15:05:41 -0500
-Message-ID: <152848834128.11888.12263280185471104825.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152848785553.11888.12243539903985770441.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <wangbinghui@hisilicon.com>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <dimitrysh@google.com>
+CC: <chenyao11@huawei.com>, <songxiaowei@hisilicon.com>
+Subject: [PATCH v5 0/1] *** PCI: kirin: Add MSI support ***
+Date: Thu, 28 Jun 2018 20:48:02 +0800
+Message-ID: <20180628124803.110315-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Before Version Patches
+======================
+patch v4
+https://patchwork.kernel.org/patch/10402399/
+patch v3
+https://www.spinics.net/lists/linux-pci/msg72322.html
+patch v2
+https://www.spinics.net/lists/kernel/msg2797610.html
 
-The aer_irq() declaration is the only thing needed by aer_inject.c.  Move
-it to portdrv.h so we eventually get rid of aerdrv.h completely.  No
-functional change intended.
+patch v1
+https://www.spinics.net/lists/kernel/msg2796410.html
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/aer/aer_inject.c |    3 ++-
- drivers/pci/pcie/aer/aerdrv.h     |    2 --
- drivers/pci/pcie/portdrv.h        |    4 ++++
- 3 files changed, 6 insertions(+), 3 deletions(-)
+Changes between V5 and V4
+=========================
+1. rebase the patch based on Linux next-version branch.
+2. fix issues according to review comments from Andy Shevchenko and Lorenzo.
+   (1) Del MSI irq handler for DW handle it, while Kirin only read the number from DT,
+   (2) Use the function dw_pcie_msi_init directly if CONFIG_PCI_MSI is enabled.
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index a49090935303..6c5fda96778a 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -21,7 +21,8 @@
- #include <linux/uaccess.h>
- #include <linux/stddef.h>
- #include <linux/device.h>
--#include "aerdrv.h"
-+
-+#include "../portdrv.h"
- 
- /* Override the existing corrected and uncorrected error masks */
- static bool aer_mask_override;
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index b0c4aaa79d9c..9867950635df 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -76,6 +76,4 @@ struct aer_rpc {
- 					 */
- };
- 
--irqreturn_t aer_irq(int irq, void *context);
--
- #endif /* _AERDRV_H_ */
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index 6a261dc7cd4c..6ffc797a0dc1 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -121,6 +121,10 @@ static inline int pcie_aer_get_firmware_first(struct pci_dev *pci_dev)
- }
- #endif
- 
-+#ifdef CONFIG_PCIEAER
-+irqreturn_t aer_irq(int irq, void *context);
-+#endif
-+
- struct pcie_port_service_driver *pcie_port_find_service(struct pci_dev *dev,
- 							u32 service);
- struct device *pcie_port_find_device(struct pci_dev *dev, u32 service);
+Changes between V4 and V3
+=========================
+1. remove DT binding patch, for Wei Xu had applied it.
+2. fix issues according to review comments from Andy Shevchenko.
+   (1) Take the msi number get and request as a seperate function,
+   (2) Use the result of  platform_get_irq as return val.
+
+Changes between V3 and V2
+=========================
+1. fix issues according to review comments
+   (1)from Bjorn Helgaas: Check for 'pci->pp.msi_irq < 0'.
+   (2)from Bjorn Helgaas: Update the message of 'msi irq' in dev_err().
+
+Changes between V2 and V1
+=========================
+1. seperate DT binding patch.
+2. fix issues according to review comments
+   (1)from Bjorn Helgaas: Update the style of subject and changelog.
+   (2)from Bjorn Helgaas: Add msi irq number in the message.
+   (3)from Bjorn Helgaas: Delete unnecessary code 'pci->pp.root_bus_nr = -1'.
+   (4)from Dmitry Shmidt: Fix typing error. Replace 'interrupts-names' of 'interrupt-names'.
+
+Xiaowei Song (1):
+  PCI: kirin: Add MSI support
+
+ drivers/pci/dwc/pcie-kirin.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+-- 
+2.11.GIT
