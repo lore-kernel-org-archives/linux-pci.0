@@ -1,80 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:39159 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752943AbeFFUTH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jun 2018 16:19:07 -0400
-Received: by mail-pg0-f66.google.com with SMTP id w12-v6so3547651pgc.6
-        for <linux-pci@vger.kernel.org>; Wed, 06 Jun 2018 13:19:07 -0700 (PDT)
-Date: Wed, 6 Jun 2018 13:19:03 -0700
-From: Moritz Fischer <mdf@kernel.org>
-To: Muni Sekhar <munisekharrms@gmail.com>
-Cc: Moritz Fischer <moritz.fischer@ettus.com>,
-        Ludwig Petrosyan <ludwig.petrosyan@desy.de>,
-        linux-pci@vger.kernel.org, linux-fpga@vger.kernel.org
-Subject: Re: pcie: fpga: programme FPGA =?utf-8?Q?P?= =?utf-8?B?Uk9N4oCZcw==?=
-Message-ID: <20180606201903.GA1459@archbook>
-References: <CAHhAz+grcWVZAOvLL9VBHoPLiDCT3LApJTkE7GchtLA3g4U3NA@mail.gmail.com>
- <c8e47c11-e3f5-589f-3a58-4aa2466cac6d@desy.de>
- <CAHhAz+j=KBFwc10tFCT1mj1dxtR0LhU3TysPz0fFVuDnUOAm-A@mail.gmail.com>
- <CAAtXAHdrOCkv_jA_nMCMa-2dT=V0006xVNELddjV40TkU+2bhA@mail.gmail.com>
- <CAHhAz+gDvU9o2bpts=M0inJmrAxJfuspSz1QCqRZBC2_Bo5s6Q@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:60236 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965245AbeF1NmX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Jun 2018 09:42:23 -0400
+Date: Thu, 28 Jun 2018 08:42:21 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Deucher <alexdeucher@gmail.com>
+Cc: amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        airlied@gmail.com, linux-pci@vger.kernel.org, bhelgaas@google.com,
+        Alex Deucher <alexander.deucher@amd.com>
+Subject: Re: [PATCH 1/5] pci: export pcie_get_speed_cap and pcie_get_width_cap
+Message-ID: <20180628134221.GC90450@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180625210606.2736-1-alexander.deucher@amd.com>
+ <20180625210606.2736-2-alexander.deucher@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAHhAz+gDvU9o2bpts=M0inJmrAxJfuspSz1QCqRZBC2_Bo5s6Q@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180625210606.2736-2-alexander.deucher@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 06, 2018 at 10:40:47PM +0530, Muni Sekhar wrote:
-> On Wed, Jun 6, 2018 at 9:18 PM, Moritz Fischer <moritz.fischer@ettus.com> wrote:
-> > Hi Muni,
-> >
-> > On Wed, Jun 6, 2018 at 4:37 AM, Muni Sekhar <munisekharrms@gmail.com> wrote:
-> >> On Wed, Jun 6, 2018 at 4:50 PM, Ludwig Petrosyan
-> >> <ludwig.petrosyan@desy.de> wrote:
-> >>> Hi
-> >>>
-> >>> why You do not use jtagplayer from Xilinx?
-> >>
-> >> Yes, JTAG can be used. But we have a lot many of these FPGA boards,
-> >> using JTAG costs more. And also we want to automate the PROM
-> >> programming.
-> >>
-> >>
-> >>>
-> >>>
-> >>> with best regards
-> >>>
-> >>>
-> >>> Ludwig
-> >>>
-> >>>
-> >>>
-> >>> On 06/06/2018 11:08 AM, Muni Sekhar wrote:
-> >>>>
-> >>>> [ Please keep me in CC as I'm not subscribed to the list]
-> >>>>
-> >>>> Hi All,
-> >>>>
-> >>>> We have a Kintex7 FPGA board connected to Intel Atom PC running Ubuntu
-> >>>> on PCIe bus.
-> >
-> > Are you using a Tandem flow? What kind of PROM are we talking about QSPI flash?
-> I'm not sure about the Tandem flow, can you please clarify me on this?
+On Mon, Jun 25, 2018 at 04:06:02PM -0500, Alex Deucher wrote:
+> So drivers can use them.  This can be used to replace
+> duplicate code in the drm subsystem.
 > 
-> Okay, we have two onboard PROM’s (Micron’s SPI NOR Flash MT25QL128).
-> The FPGA will be loaded from one of the two onboard PROM’s, it will be
-> up and running before the PC powers up.
+> Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
 
-In which case you don't need Tandem. Tandem basically just brings up
-minmal bitstream to bring up PCIe link and does the rest via some sort
-of partial reconfiguration flow. This allows to meet the PCIe deadline.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> When the Intel Atom PC powers up the FPGA will enumerate over PCIe.
-> I'm looking for any available Linux tool(user space or kernel space)
-> to program the PROM's via PCIe interface.
+Thanks a lot for doing this!
 
-Any reason you can't drop a SPI controller in the fabric and use that
-to program the FPGA or do you intend to do the initial programing of
-the PROM also over PCIe?
+If you haven't applied these yet, please
 
-- Moritz
+  s/pci: export/PCI: Export/
+
+in the subject.
+
+> ---
+>  drivers/pci/pci.c   | 2 ++
+>  include/linux/pci.h | 3 +++
+>  2 files changed, 5 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 97acba712e4e..22adaf35b136 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5222,6 +5222,7 @@ enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
+>  
+>  	return PCI_SPEED_UNKNOWN;
+>  }
+> +EXPORT_SYMBOL(pcie_get_speed_cap);
+>  
+>  /**
+>   * pcie_get_width_cap - query for the PCI device's link width capability
+> @@ -5240,6 +5241,7 @@ enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev)
+>  
+>  	return PCIE_LNK_WIDTH_UNKNOWN;
+>  }
+> +EXPORT_SYMBOL(pcie_get_width_cap);
+>  
+>  /**
+>   * pcie_bandwidth_capable - calculate a PCI device's link bandwidth capability
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 340029b2fb38..6e0c0803b241 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -261,6 +261,9 @@ enum pci_bus_speed {
+>  	PCI_SPEED_UNKNOWN		= 0xff,
+>  };
+>  
+> +enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev);
+> +enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev);
+> +
+>  struct pci_cap_saved_data {
+>  	u16		cap_nr;
+>  	bool		cap_extended;
+> -- 
+> 2.13.6
+> 
