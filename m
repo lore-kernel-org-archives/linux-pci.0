@@ -1,156 +1,181 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:33593 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756313AbeFOR6Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jun 2018 13:58:25 -0400
-Received: by mail-qk0-f194.google.com with SMTP id c131-v6so6097540qkb.0
-        for <linux-pci@vger.kernel.org>; Fri, 15 Jun 2018 10:58:25 -0700 (PDT)
-Subject: Re: [v4] PCI: improve host drivers compile test coverage
-From: Scott Branden <scott.branden@broadcom.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Guenter Roeck <linux@roeck-us.net>
-Cc: Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, Jan Kiszka <jan.kiszka@siemens.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Russell King <linux@armlinux.org.uk>
-References: <20180405193154.27897-1-robh@kernel.org>
- <20180612170229.GA10141@roeck-us.net>
- <20180613100935.GA7707@e107981-ln.cambridge.arm.com>
- <20180613181146.GA28856@roeck-us.net>
- <20180615125847.GA7735@e107981-ln.cambridge.arm.com>
- <980b68c0-6034-b495-753f-c75c04e0f5d1@broadcom.com>
-Message-ID: <3d84b647-1bc5-3b56-bca3-7a7a72d31c21@broadcom.com>
-Date: Fri, 15 Jun 2018 10:58:19 -0700
+Received: from mail.kernel.org ([198.145.29.99]:49224 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965570AbeF1SHH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Jun 2018 14:07:07 -0400
+Date: Thu, 28 Jun 2018 13:07:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Alexander Duyck <alexander.duyck@gmail.com>,
+        oss-drivers@netronome.com, Christoph Hellwig <hch@infradead.org>,
+        Don Dutile <ddutile@redhat.com>
+Subject: Re: [PATCH] PCI: reset driver SR-IOV state after remove
+Message-ID: <20180628180705.GB120578@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180618220142.16527-1-jakub.kicinski@netronome.com>
+ <20180626094002.7bf0ca16@cakuba.netronome.com>
+ <20180628135623.GE90450@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJpBn1weH828hgog5ZeBC+tAsWC54qoTtC2eLf6iF=+Gx0kmtw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <980b68c0-6034-b495-753f-c75c04e0f5d1@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJpBn1weH828hgog5ZeBC+tAsWC54qoTtC2eLf6iF=+Gx0kmtw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Jun 28, 2018 at 09:17:09AM -0700, Jakub Kicinski wrote:
+> On Thu, Jun 28, 2018 at 6:56 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Jun 26, 2018 at 09:40:02AM -0700, Jakub Kicinski wrote:
+> >> On Mon, 18 Jun 2018 15:01:42 -0700, Jakub Kicinski wrote:
+> >> > Bjorn points out that currently core and most of the drivers don't
+> >> > clean up dev->sriov->driver_max_VFs settings on .remove().  This
+> >> > means that if a different driver is bound afterwards it will
+> >> > inherit the old setting:
+> >> >
+> >> >   - load PF driver 1
+> >> >   - driver 1 calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
+> >> >   - unload PF driver 1
+> >> >   - load PF driver 2
+> >> >   # driver 2 does not know to call pci_sriov_set_totalvfs()
+> >> >
+> >> > Some drivers (e.g. nfp) used to do the clean up by calling
+> >> > pci_sriov_set_totalvfs(dev, 0), since 0 was equivalent to no driver
+> >> > limit set.  After commit 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers
+> >> > to limit total_VFs to 0") 0 no longer has this special meaning.
+> >> >
+> >> > The need to reset driver_max_VFs comes from the fact that old FW
+> >> > builds may not expose its VF limits to the drivers, and depend on
+> >> > the ability to reject the configuration change when driver notifies
+> >> > the FW as part of struct pci_driver->sriov_configure() callback.
+> >> > Therefore if there is no information on VF count limits we should
+> >> > use the PCI capability max, and not the last value set by
+> >> > pci_sriov_set_totalvfs().
+> >> >
+> >> > Reset driver_max_VFs back to total_VFs after device remove.  If
+> >> > drivers want to reload FW/reconfigure the device while driver is
+> >> > bound we may add an explicit pci_sriov_reset_totalvfs(), but for
+> >> > now no driver is doing that.
+> >> >
+> >> > Fixes: 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers to limit total_VFs to 0")
+> >> > Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+> >>
+> >> Any comments? :(  Could this still make it into 4.18?
+> >
+> > Is this a fix for something we broke during the v4.18 merge window?
+> > Or does it fix something that's been broken for a long time?  I think
+> > the latter, but haven't looked carefully yet.
+> 
+> This is half of a fix, really.  NFP driver does
+> pci_sriov_set_totalvfs(pdev, 0) to clear the limit.  Now it will
+> disable SR-IOV completely.  If this patch gets applied I will drop
+> those pci_sriov_set_totalvfs(pdev, 0) calls from the driver and the
+> regression will be solved.
 
+Sorry, I missed the regression part.  8d85a7a4f2c9 ("PCI/IOV: Allow PF
+drivers to limit total_VFs to 0") appeared in v4.18-rc1, so I guess the
+problem is that nfp works correctly in v4.17, but is broken in v4.18-rc1?
 
-On 18-06-15 10:55 AM, Scott Branden wrote:
-> Hi Lorenzo,
->
->
-> On 18-06-15 05:58 AM, Lorenzo Pieralisi wrote:
->> On Wed, Jun 13, 2018 at 11:11:46AM -0700, Guenter Roeck wrote:
->>> On Wed, Jun 13, 2018 at 11:09:35AM +0100, Lorenzo Pieralisi wrote:
->>>> [+Jan, Ley Foon, RMK]
->>>>
->>>> On Tue, Jun 12, 2018 at 10:02:29AM -0700, Guenter Roeck wrote:
->>>>> On Thu, Apr 05, 2018 at 02:31:54PM -0500, Rob Herring wrote:
->>>>>> Add COMPILE_TEST on driver config options with it. Some ARM drivers
->>>>>> still have arch dependencies, so we have to keep those dependent 
->>>>>> on ARM.
->>>>>>
->>>>>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>>>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
->>>>>> Cc: linux-pci@vger.kernel.org
->>>>>> Signed-off-by: Rob Herring <robh@kernel.org>
->>>>> This patch has the undesirable side effect that it selects 
->>>>> PCI_DOMAINS for
->>>>> sparc32:allmodconfig, which in turn results in
->>>>>
->>>>> drivers/ata/pata_ali.c: In function 'ali_init_chipset':
->>>>> drivers/ata/pata_ali.c:469:38: error:
->>>>>     implicit declaration of function 'pci_domain_nr'; did you mean 
->>>>> 'pci_iomap_wc'?
->>>>>
->>>>> Unfortunately, 37bd62d224c82 ("PCI: Enable PCI_DOMAINS along with 
->>>>> generic
->>>>> PCI host controller") has pretty much the same result. No idea how 
->>>>> to fix
->>>>> the problem, so I won't even try.
->>>> Sorry about that.
->>>>
->>>> One option would consist in removing all PCI_DOMAINS selection from
->>>> drivers/pci/controller/Kconfig and delegate it to arches even though
->>>> this would force PCI_DOMAINS selection on all ARM platforms (it is
->>>> already selected for ARCH_MULTIPLATFORM).
->>>>
->>>> Or we add back arch dependency to the relevant host bridges.
->>>>
->>>> Everything else I have in mind seems overkill to me given that this
->>>> patch was added to improve test coverage (we could add a default
->>>> pci_domain_nr() stub - weak or #define - that returns 0 in case arches
->>>> do not provide an implementation but do we really want to do that ?).
->>>>
->>>> Thoughts appreciated.
->>>>
->>>  From the definition of PCI_DOMAINS, I suspect the original idea was 
->>> that
->>> drivers should depend on it, not select it. Especially auto-selecting
->>> it with PCI_HOST_GENERIC seems like a bad idea to me. However, that is
->>> just me. I'll leave it up to Bjorn to decide what if anything he wants
->>> to do about it.
->> Here is a patch that should reinstate the previous behaviour but
->> it will make PCI_DOMAINS a visible option on ARM 32-bit systems; whether
->> that's acceptable that's the question I need to answer, it should
->> honour old configs and it does not force PCI_DOMAINS selection on
->> non-DT arch/arm PCI host controllers (that do not need PCI_DOMAINS
->> anyway so I suspect that enabling it on all ARM 32-bit platforms
->> should not break anything but I preferred to be cautious).
-> I think this change will also require a patch enabling 
-> CONFIG_PCI_DOMAINS in multi_v7_defconfig and iproc_defconfig at the 
-> very least?
-as well as arm64/configs/defconfig?  Rather than having to change all 
-the defconfigs perhaps can to make default y in Kconfig for 
-architectures that should have it as such?
->
->>
->> If I hear no complaints I will post it for inclusion, we cannot leave
->> things as they are.
->>
->> Lorenzo
->>
->> -- >8 --
->> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
->> index 2a78bdef9a24..1d415aeb54b4 100644
->> --- a/arch/arm/Kconfig
->> +++ b/arch/arm/Kconfig
->> @@ -1244,8 +1244,14 @@ config PCI
->>         VESA. If you have PCI, say Y, otherwise N.
->>     config PCI_DOMAINS
->> -    bool
->> +    bool "Support for multiple PCI domains"
->>       depends on PCI
->> +    help
->> +      Enable PCI domains kernel management. Say Y if your machine
->> +      has a PCI bus hierarchy that requires more than one PCI
->> +      domain (aka segment) to be correctly managed. Say N otherwise.
->> +
->> +      If you don't know what to do here, say N.
->>     config PCI_DOMAINS_GENERIC
->>       def_bool PCI_DOMAINS
->> diff --git a/drivers/pci/controller/Kconfig 
->> b/drivers/pci/controller/Kconfig
->> index 18fa09b3ac8f..cc9fa02d32a0 100644
->> --- a/drivers/pci/controller/Kconfig
->> +++ b/drivers/pci/controller/Kconfig
->> @@ -96,7 +96,6 @@ config PCI_HOST_GENERIC
->>       depends on OF
->>       select PCI_HOST_COMMON
->>       select IRQ_DOMAIN
->> -    select PCI_DOMAINS
->>       help
->>         Say Y here if you want to support a simple generic PCI host
->>         controller, such as the one emulated by kvmtool.
->> @@ -138,7 +137,6 @@ config PCI_VERSATILE
->>     config PCIE_IPROC
->>       tristate
->> -    select PCI_DOMAINS
->>       help
->>         This enables the iProc PCIe core controller support for 
->> Broadcom's
->>         iProc family of SoCs. An appropriate bus interface driver needs
->> @@ -176,7 +174,6 @@ config PCIE_IPROC_MSI
->>   config PCIE_ALTERA
->>       bool "Altera PCIe controller"
->>       depends on ARM || NIOS2 || COMPILE_TEST
->> -    select PCI_DOMAINS
->>       help
->>         Say Y here if you want to enable PCIe controller support on 
->> Altera
->>         FPGA.
->
+I'd just like to understand the breakage and fix better.  In v4.17:
+
+  # nfp loaded:
+  nfp_pci_probe
+    nfp_pcie_sriov_read_nfd_limit
+      nfp_rtsym_read_le("nfd_vf_cfg_max_vfs", &err)
+      if (err)                              # FW doesn't expose limit (?)
+	pci_sriov_set_totalvfs(0)
+	  dev->sriov->driver_max_VFs = 0    # PCI_SRIOV_CTRL_VFE is clear
+
+  # userspace writes N to sysfs "sriov_numvfs":
+  sriov_numvfs_store                    # write N
+    pci_sriov_get_totalvfs
+      return dev->sriov->total_VFs	# since driver_max_VFs == 0
+    driver->sriov_configure(N)
+      nfp_pcie_sriov_configure(N)
+        nfp_pcie_sriov_enable(N)
+
+In v4.18-rc1, it's the same except pci_sriov_get_totalvfs() now returns 0:
+
+  # nfp loaded:
+  nfp_pci_probe
+    nfp_pcie_sriov_read_nfd_limit
+      nfp_rtsym_read_le("nfd_vf_cfg_max_vfs", &err)
+      if (err)                              # FW doesn't expose limit (?)
+	pci_sriov_set_totalvfs(0)
+	  dev->sriov->driver_max_VFs = 0    # PCI_SRIOV_CTRL_VFE is clear
+
+  # userspace writes N to sysfs "sriov_numvfs":
+  sriov_numvfs_store                    # write N
+    pci_sriov_get_totalvfs
+      return 0                          # (driver_max_VFs == 0)
+    return -ERANGE                      # because N > 0
+
+Am I on the right track?  Sounds like we may want to merge this patch
+and the nfp patch to remove the pci_sriov_set_totalvfs() calls together
+to make sure they get merged in the correct order.
+
+> >> >  drivers/pci/iov.c        | 16 ++++++++++++++++
+> >> >  drivers/pci/pci-driver.c |  1 +
+> >> >  drivers/pci/pci.h        |  4 ++++
+> >> >  3 files changed, 21 insertions(+)
+> >> >
+> >> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> >> > index d0d73dbbd5ca..cbbe6d8fab0c 100644
+> >> > --- a/drivers/pci/iov.c
+> >> > +++ b/drivers/pci/iov.c
+> >> > @@ -574,6 +574,22 @@ void pci_iov_release(struct pci_dev *dev)
+> >> >             sriov_release(dev);
+> >> >  }
+> >> >
+> >> > +/**
+> >> > + * pci_iov_device_removed - clean up SR-IOV state after PF driver is detached
+> >> > + * @dev: the PCI device
+> >> > + */
+> >> > +void pci_iov_device_removed(struct pci_dev *dev)
+> >> > +{
+> >> > +   struct pci_sriov *iov = dev->sriov;
+> >> > +
+> >> > +   if (!dev->is_physfn)
+> >> > +           return;
+> >> > +   iov->driver_max_VFs = iov->total_VFs;
+> >> > +   if (iov->num_VFs)
+> >> > +           dev_warn(&dev->dev,
+> >> > +                    "driver left SR-IOV enabled after remove\n");
+> >> > +}
+> >> > +
+> >> >  /**
+> >> >   * pci_iov_update_resource - update a VF BAR
+> >> >   * @dev: the PCI device
+> >> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> >> > index c125d53033c6..80a281cf5d21 100644
+> >> > --- a/drivers/pci/pci-driver.c
+> >> > +++ b/drivers/pci/pci-driver.c
+> >> > @@ -445,6 +445,7 @@ static int pci_device_remove(struct device *dev)
+> >> >             }
+> >> >             pcibios_free_irq(pci_dev);
+> >> >             pci_dev->driver = NULL;
+> >> > +           pci_iov_device_removed(pci_dev);
+> >> >     }
+> >> >
+> >> >     /* Undo the runtime PM settings in local_pci_probe() */
+> >> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> >> > index c358e7a07f3f..fc8bd4fdfb95 100644
+> >> > --- a/drivers/pci/pci.h
+> >> > +++ b/drivers/pci/pci.h
+> >> > @@ -311,6 +311,7 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
+> >> >  #ifdef CONFIG_PCI_IOV
+> >> >  int pci_iov_init(struct pci_dev *dev);
+> >> >  void pci_iov_release(struct pci_dev *dev);
+> >> > +void pci_iov_device_removed(struct pci_dev *dev);
+> >> >  void pci_iov_update_resource(struct pci_dev *dev, int resno);
+> >> >  resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
+> >> >  void pci_restore_iov_state(struct pci_dev *dev);
+> >> > @@ -323,6 +324,9 @@ static inline int pci_iov_init(struct pci_dev *dev)
+> >> >  }
+> >> >  static inline void pci_iov_release(struct pci_dev *dev)
+> >> >
+> >> > +{
+> >> > +}
+> >> > +static inline void pci_iov_device_removed(struct pci_dev *dev)
+> >> >  {
+> >> >  }
+> >> >  static inline void pci_restore_iov_state(struct pci_dev *dev)
+> >>
