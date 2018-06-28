@@ -1,75 +1,167 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:48475 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932667AbeFPTby (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:31:54 -0400
-Message-Id: <c48e201894c0bd92a9c13dc04056ed08cf4abe6d.1529173804.git.lukas@wunner.de>
-In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 16 Jun 2018 21:25:00 +0200
-Subject: [PATCH 20/32] PCI: pciehp: Tolerate initially unstable link
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org, Stefan Roese <sr@denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH V4 6/7] PCI: Rename pci_try_reset_bus() to pci_reset_bus()
+Date: Thu, 28 Jun 2018 15:31:04 -0400
+Message-Id: <1530214274-21139-6-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
+References: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>,
+ "open list:VFIO DRIVER" <kvm@vger.kernel.org>,
+ Alexey Kardashevskiy <aik@ozlabs.ru>, linux-arm-msm@vger.kernel.org,
+ Dennis Dalessandro <dennis.dalessandro@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Peter Xu <peterx@redhat.com>,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Doug Ledford <dledford@redhat.com>,
+ Zhenyu Wang <zhenyuw@linux.intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org,
+ "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a device is hotplugged, Presence Detect and Link Up events often do
-not occur simultaneously, but with a lag of a few milliseconds.  Only
-the first event received is relevant, the other one can be disregarded.
+Now that the old implementation of pci_reset_bus() is gone, replace
+pci_try_reset_bus() with pci_reset_bus().
 
-Moreover, Stefan Roese reports that on certain platforms, Link State and
-Presence Detect may flap for up to 100 ms before stabilizing, suggesting
-that such events should be disregarded for at least this long:
-https://patchwork.ozlabs.org/patch/867418/
+Compared to the old implementation, new code will fail immmediately with
+-EAGAIN if object lock cannot be obtained.
 
-On slot enablement, pciehp_check_link_status() waits for 100 ms per
-PCIe r4.0, sec 6.7.3.3, then probes the hotplugged device's vendor
-register for up to 1 second.
-
-If this succeeds, the link is definitely up, so ignore any Presence
-Detect or Link State events that occurred up to this point.
-
-pciehp_check_link_status() then checks the Link Training bit in the
-Link Status register.  This is the final opportunity to detect
-inaccessibility of the device and abort slot enablement.  Any link
-or presence change that occurs afterwards will cause the slot to be
-disabled again immediately after attempting to enable it.
-
-The astute reviewer may appreciate that achieving this behavior would be
-more complicated had pciehp not just been converted to enable/disable
-the slot exclusively from the IRQ thread:  When the slot is enabled via
-sysfs, each link or presence flap would otherwise cause the IRQ thread
-to run and it would have to sense that those events are belonging to a
-concurrent slot enablement operation and disregard them.  It would be
-much more difficult than this mere 3 line change.
-
-Cc: Stefan Roese <sr@denx.de>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/hotplug/pciehp_hpc.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/infiniband/hw/hfi1/pcie.c |  2 +-
+ drivers/pci/pci.c                 | 18 +++++++++---------
+ drivers/vfio/pci/vfio_pci.c       |  4 ++--
+ include/linux/pci.h               |  2 +-
+ 4 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index c795d32dbb73..adc6a89a3b5d 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -270,6 +270,11 @@ int pciehp_check_link_status(struct controller *ctrl)
- 	found = pci_bus_check_dev(ctrl->pcie->port->subordinate,
- 					PCI_DEVFN(0, 0));
+diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
+index df4f2d3..baf7c32 100644
+--- a/drivers/infiniband/hw/hfi1/pcie.c
++++ b/drivers/infiniband/hw/hfi1/pcie.c
+@@ -905,7 +905,7 @@ static int trigger_sbr(struct hfi1_devdata *dd)
+ 	 * delay after a reset is required.  Per spec requirements,
+ 	 * the link is either working or not after that point.
+ 	 */
+-	return pci_try_reset_bus(dev);
++	return pci_reset_bus(dev);
+ }
  
-+	/* ignore link or presence changes up to this point */
-+	if (found)
-+		atomic_and(~(PCI_EXP_SLTSTA_DLLSC | PCI_EXP_SLTSTA_PDC),
-+			   &ctrl->pending_events);
-+
- 	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
- 	ctrl_dbg(ctrl, "%s: lnk_status = %x\n", __func__, lnk_status);
- 	if ((lnk_status & PCI_EXP_LNKSTA_LT) ||
+ /*
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6cec722..28a071d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4784,7 +4784,7 @@ int pci_probe_reset_slot(struct pci_slot *slot)
+ EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
+ 
+ /**
+- * __pci_try_reset_slot - Try to reset a PCI slot
++ * __pci_reset_slot - Try to reset a PCI slot
+  * @slot: PCI slot to reset
+  *`
+  * A PCI bus may host multiple slots, each slot may support a reset mechanism
+@@ -4798,7 +4798,7 @@ EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
+  *
+  * Same as above except return -EAGAIN if the slot cannot be locked
+  */
+-static int __pci_try_reset_slot(struct pci_slot *slot)
++static int __pci_reset_slot(struct pci_slot *slot)
+ {
+ 	int rc;
+ 
+@@ -4854,12 +4854,12 @@ int pci_probe_reset_bus(struct pci_bus *bus)
+ EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
+ 
+ /**
+- * __pci_try_reset_bus - Try to reset a PCI bus
++ * __pci_reset_bus - Try to reset a PCI bus
+  * @bus: top level PCI bus to reset
+  *
+  * Same as above except return -EAGAIN if the bus cannot be locked
+  */
+-static int __pci_try_reset_bus(struct pci_bus *bus)
++static int __pci_reset_bus(struct pci_bus *bus)
+ {
+ 	int rc;
+ 
+@@ -4882,22 +4882,22 @@ static int __pci_try_reset_bus(struct pci_bus *bus)
+ }
+ 
+ /**
+- * pci_try_reset_bus - Try to reset a PCI bus
++ * pci_reset_bus - Try to reset a PCI bus
+  * @pdev: top level PCI device to reset via slot/bus
+  *
+  * Same as above except return -EAGAIN if the bus cannot be locked
+  */
+-int pci_try_reset_bus(struct pci_dev *pdev)
++int pci_reset_bus(struct pci_dev *pdev)
+ {
+ 	bool slot = false;
+ 
+ 	if (!pci_probe_reset_slot(pdev->slot))
+ 		slot = true;
+ 
+-	return slot ? __pci_try_reset_slot(pdev->slot) :
+-			__pci_try_reset_bus(pdev->bus);
++	return slot ? __pci_reset_slot(pdev->slot) :
++			__pci_reset_bus(pdev->bus);
+ }
+-EXPORT_SYMBOL_GPL(pci_try_reset_bus);
++EXPORT_SYMBOL_GPL(pci_reset_bus);
+ 
+ /**
+  * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 71018ec..345c0dc 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -1010,7 +1010,7 @@ static long vfio_pci_ioctl(void *device_data,
+ 						    &info, slot);
+ 		if (!ret)
+ 			/* User has access, do the reset */
+-			ret = pci_try_reset_bus(vdev->pdev);
++			ret = pci_reset_bus(vdev->pdev);
+ 
+ hot_reset_release:
+ 		for (i--; i >= 0; i--)
+@@ -1372,7 +1372,7 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
+ 	}
+ 
+ 	if (needs_reset)
+-		ret = pci_try_reset_bus(vdev->pdev);
++		ret = pci_reset_bus(vdev->pdev);
+ 
+ put_devs:
+ 	for (i = 0; i < devs.cur_index; i++) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ad0c89a..79a2c27 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1096,7 +1096,7 @@ int pci_reset_function_locked(struct pci_dev *dev);
+ int pci_try_reset_function(struct pci_dev *dev);
+ int pci_probe_reset_slot(struct pci_slot *slot);
+ int pci_probe_reset_bus(struct pci_bus *bus);
+-int pci_try_reset_bus(struct pci_dev *dev);
++int pci_reset_bus(struct pci_dev *dev);
+ void pci_reset_secondary_bus(struct pci_dev *dev);
+ void pcibios_reset_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
 -- 
-2.17.1
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
