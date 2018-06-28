@@ -1,75 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH NEXT 1/6] PCI/AER: Take mask into account while clearing error bits
-Date: Thu,  7 Jun 2018 02:00:29 -0400
-Message-Id: <1528351234-26914-1-git-send-email-poza@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:50136 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754385AbeF1QcS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Jun 2018 12:32:18 -0400
+Date: Thu, 28 Jun 2018 17:32:11 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: "Derrick, Jonathan" <jonathan.derrick@intel.com>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Bauer, Scott" <scott.bauer@intel.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI/VMD: White list for fast interrupt handlers
+Message-ID: <20180628163211.GA19843@e107981-ln.cambridge.arm.com>
+References: <20180508160022.30954-1-keith.busch@intel.com>
+ <20180509043828.GA9413@infradead.org>
+ <20180509152652.GA823@localhost.localdomain>
+ <1526053159.7581.15.camel@intel.com>
+ <1527275472.24363.8.camel@intel.com>
+ <20180628112208.GA8914@red-moon>
+ <20180628140240.GA12793@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180628140240.GA12793@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe ERR_NONFATAL and ERR_FATAL are uncorrectable errors, and clearing
-uncorrectable error bits should take error mask into account.
+On Thu, Jun 28, 2018 at 08:02:40AM -0600, Keith Busch wrote:
+> On Thu, Jun 28, 2018 at 12:22:17PM +0100, Lorenzo Pieralisi wrote:
+> > On Fri, May 25, 2018 at 07:11:14PM +0000, Derrick, Jonathan wrote:
+> > > We've seen this actually fix an issue with one vendor's multi-function
+> > > switch. I'd like to see it get into 4.18 if possible
+> > 
+> > Sorry for the delay in getting back to this.
+> > 
+> > It seems like Christoph is not too happy about this patch, it is your
+> > code so I would apply it unless there is a cleaner alternative so please
+> > do let me know.
+> 
+> VMD hardware really relies on the host software to bring all the logic,
+> and it was intended to prioritize PCIe attached storage. The patch just
+> captures that intention, so yes please, let's queue this up.
+> 
+> I understands Christoph's lack of enthusiasm for this, but at least this
+> isn't a PCIe HBA with proprietary interfaces and firmware. :)
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Applied to pci/vmd with a slightly updated changelog, thanks.
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 377e576..8cbc62b 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -341,8 +341,6 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
-  */
- static void aer_error_resume(struct pci_dev *dev)
- {
--	int pos;
--	u32 status, mask;
- 	u16 reg16;
- 
- 	/* Clean up Root device status */
-@@ -350,11 +348,7 @@ static void aer_error_resume(struct pci_dev *dev)
- 	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
- 
- 	/* Clean AER Root Error Status */
--	pos = dev->aer_cap;
--	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
--	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
--	status &= ~mask; /* Clear corresponding nonfatal bits */
--	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
-+	pci_cleanup_aer_uncorrect_error_status(dev);
- }
- 
- /**
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 946f3f6..309f3f5 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -50,13 +50,17 @@ EXPORT_SYMBOL_GPL(pci_disable_pcie_error_reporting);
- int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- {
- 	int pos;
--	u32 status;
-+	u32 status, mask;
- 
- 	pos = dev->aer_cap;
- 	if (!pos)
- 		return -EIO;
- 
-+	/* Clean AER Root Error Status */
-+	pos = dev->aer_cap;
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
-+	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
-+	status &= ~mask; /* Clear corresponding nonfatal bits */
- 	if (status)
- 		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
- 
--- 
-2.7.4
+Lorenzo
