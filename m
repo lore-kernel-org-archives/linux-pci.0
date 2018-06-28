@@ -1,54 +1,75 @@
-Return-Path: <SRS0=GjYO=JP=netronome.com=jakub.kicinski@kernel.org>
-Return-Path: <SRS0=GjYO=JP=netronome.com=jakub.kicinski@kernel.org>
-Date: Fri, 29 Jun 2018 13:20:04 -0700
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- alexander.duyck@gmail.com, oss-drivers@netronome.com, Christoph Hellwig
- <hch@infradead.org>, Don Dutile <ddutile@redhat.com>
-Subject: Re: [PATCH] PCI: reset driver SR-IOV state after remove
-Message-ID: <20180629132004.5cd6eef0@cakuba.netronome.com>
-In-Reply-To: <20180629200934.GB40928@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180618220142.16527-1-jakub.kicinski@netronome.com>
-	<20180629200934.GB40928@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:45368 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751958AbeF1LUi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Jun 2018 07:20:38 -0400
+Date: Thu, 28 Jun 2018 12:22:17 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Derrick, Jonathan" <jonathan.derrick@intel.com>
+Cc: "hch@infradead.org" <hch@infradead.org>,
+        "Busch, Keith" <keith.busch@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Bauer, Scott" <scott.bauer@intel.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI/VMD: White list for fast interrupt handlers
+Message-ID: <20180628112208.GA8914@red-moon>
+References: <20180508160022.30954-1-keith.busch@intel.com>
+ <20180509043828.GA9413@infradead.org>
+ <20180509152652.GA823@localhost.localdomain>
+ <1526053159.7581.15.camel@intel.com>
+ <1527275472.24363.8.camel@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1527275472.24363.8.camel@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 29 Jun 2018 15:09:34 -0500, Bjorn Helgaas wrote:
-> On Mon, Jun 18, 2018 at 03:01:42PM -0700, Jakub Kicinski wrote:
-> > Bjorn points out that currently core and most of the drivers don't
-> > clean up dev->sriov->driver_max_VFs settings on .remove().  This
-> > means that if a different driver is bound afterwards it will
-> > inherit the old setting:
-> > 
-> >   - load PF driver 1
-> >   - driver 1 calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
-> >   - unload PF driver 1
-> >   - load PF driver 2
-> >   # driver 2 does not know to call pci_sriov_set_totalvfs()
-> > 
-> > Some drivers (e.g. nfp) used to do the clean up by calling
-> > pci_sriov_set_totalvfs(dev, 0), since 0 was equivalent to no driver
-> > limit set.  After commit 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers
-> > to limit total_VFs to 0") 0 no longer has this special meaning.
-> > 
-> > The need to reset driver_max_VFs comes from the fact that old FW
-> > builds may not expose its VF limits to the drivers, and depend on
-> > the ability to reject the configuration change when driver notifies
-> > the FW as part of struct pci_driver->sriov_configure() callback.
-> > Therefore if there is no information on VF count limits we should
-> > use the PCI capability max, and not the last value set by
-> > pci_sriov_set_totalvfs().
-> > 
-> > Reset driver_max_VFs back to total_VFs after device remove.  If
-> > drivers want to reload FW/reconfigure the device while driver is
-> > bound we may add an explicit pci_sriov_reset_totalvfs(), but for
-> > now no driver is doing that.
-> > 
-> > Fixes: 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers to limit total_VFs to 0")
-> > Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>  
+On Fri, May 25, 2018 at 07:11:14PM +0000, Derrick, Jonathan wrote:
+> +Lorenzo
 > 
-> Applied to for-linus for v4.18, thanks!
+> On Fri, 2018-05-11 at 09:39 -0600, Jonathan Derrick wrote:
+> > On Wed, 2018-05-09 at 09:26 -0600, Keith Busch wrote:
+> > > On Tue, May 08, 2018 at 09:38:28PM -0700, Christoph Hellwig wrote:
+> > > > On Tue, May 08, 2018 at 10:00:22AM -0600, Keith Busch wrote:
+> > > > > Devices with slow interrupt handlers are significantly harming
+> > > > > performance
+> > > > > when their interrupt vector is shared with a fast device. This
+> > > > > patch
+> > > > > creates a class code white list for devices with known fast
+> > > > > interrupt
+> > > > > handlers, and all other devices will share a single vector so
+> > > > > they don't
+> > > > > interfere with performance.
+> > > > > 
+> > > > > At the moment, only the NVM Express class code is on the list,
+> > > > > but more
+> > > > > may be added if VMD users desire to use other low-latency
+> > > > > devices
+> > > > > in
+> > > > > these domains.
+> > > > 
+> > > > I think this is far too much of a hack.   Just don't use VMD if
+> > > > your
+> > > > care about performance.
+> > > 
+> > > I'm not aware of an easier way you can direct-assign an entire PCIe
+> > > domain
+> > > to a virtual machine. :)
+> > 
+> > It's fine with me
+> > 
+> > Acked-by: Jon Derrick: <jonathan.derrick@intel.com>
+> 
+> 
+> We've seen this actually fix an issue with one vendor's multi-function
+> switch.
+> I'd like to see it get into 4.18 if possible
 
-Awesome, thanks a lot!
+Sorry for the delay in getting back to this.
+
+It seems like Christoph is not too happy about this patch, it is your
+code so I would apply it unless there is a cleaner alternative so please
+do let me know.
+
+Thanks,
+Lorenzo
