@@ -1,57 +1,89 @@
-Return-Path: <SRS0=QWqk=JG=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=QWqk=JG=broadcom.com=ray.jui@kernel.org>
-Subject: Re: [PATCH v2 0/5] Improve Broadcom PAXC support
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
- bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
-References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <45945371-3cd7-102d-bb47-69a60435542b@broadcom.com>
-Date: Wed, 20 Jun 2018 10:26:28 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:40626 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966340AbeF1S14 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Jun 2018 14:27:56 -0400
+Date: Thu, 28 Jun 2018 13:27:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian =?iso-8859-1?Q?K=F6nig?=
+        <ckoenig.leichtzumerken@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: fix restoring resized BAR state on resume
+Message-ID: <20180628182755.GC120578@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180614122146.62118-1-christian.koenig@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20180614122146.62118-1-christian.koenig@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo/Bjorn,
-
-Could you please help to review this patch series when you have time?
-
-I believe I have addressed major comment in v1 from Bjorn and answered 
-all questions from Lorenzo.
-
-Thanks,
-
-Ray
-
-On 6/11/2018 5:21 PM, Ray Jui wrote:
-> This patch series improves the Broadcom PAXC support by 1) adding more
-> quirks for specific versions of PAXC controllers; 2) adding logic to
-> reject internally unconfigured physical functions from the embedded
-> network processor acting as endpoint; 3) reducing verbose print level
-> in the outbound/inbound mapping code
+On Thu, Jun 14, 2018 at 02:21:45PM +0200, Christian König wrote:
+> Resize BARs after resume to the expected size again.
 > 
-> This patch series is based off v4.17 and is available on GIHUB:
-> repo: https://github.com/Broadcom/arm64-linux.git
-> branch: sr-paxc-v2
+> Signed-off-by: Christian König <christian.koenig@amd.com>
+> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=199959
+> CC: stable@vger.kernel.org      # v4.15+
+
+I added 
+
+  Fixes: d6895ad39f3b ("drm/amdgpu: resize VRAM BAR for CPU access v6")
+  Fixes: 276b738deb5b ("PCI: Add resizable BAR infrastructure")
+
+Per the bugzilla, the bug was bisected to d6895ad39f3b, which appeared
+in v4.16.  But 276b738deb5b appeared in v4.15, so I'm OK with the
+v4.15+ stable tag.
+
+> ---
+>  drivers/pci/pci.c | 28 ++++++++++++++++++++++++++++
+>  1 file changed, 28 insertions(+)
 > 
-> Changes since v1:
->   - consolidate 2 PAXC related patch series into 1
->   - change the way how the capability list corruption is handled, per
-> recommendation from Bjorn. Now handle and fix up the corruption at
-> the config register read
->   - rebase to v4.17
-> 
-> Ray Jui (5):
->    PCI: iproc: Activate PAXC bridge quirk for more devices
->    PCI: iproc: Fix up corrupted PAXC root complex config registers
->    PCI: iproc: Disable MSI parsing in certain PAXC blocks
->    PCI: iproc: Reject unconfigured physical functions from PAXC
->    PCI: iproc: Reduce inbound/outbound mapping print level
-> 
->   drivers/pci/host/pcie-iproc.c | 159 +++++++++++++++++++++++++++++++++++-------
->   drivers/pci/host/pcie-iproc.h |   8 +++
->   drivers/pci/quirks.c          |   3 +
->   3 files changed, 144 insertions(+), 26 deletions(-)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index bd6f156dc3cf..d4685090378b 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1159,6 +1159,33 @@ static void pci_restore_config_space(struct pci_dev *pdev)
+>  	}
+>  }
+>  
+> +static void pci_restore_rebar_state(struct pci_dev *pdev)
+> +{
+> +	unsigned int pos, nbars, i;
+> +	u32 ctrl;
+> +
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
+> +	if (!pos)
+> +		return;
+> +
+> +	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+> +	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >>
+> +		    PCI_REBAR_CTRL_NBAR_SHIFT;
+> +
+> +	for (i = 0; i < nbars; i++, pos += 8) {
+> +		struct resource *res;
+> +		int bar_idx, size;
+> +
+> +		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+> +		bar_idx = ctrl & PCI_REBAR_CTRL_BAR_IDX;
+> +		res = pdev->resource + bar_idx;
+> +		size = order_base_2((resource_size(res) >> 20) | 1) - 1;
+> +		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE;
+> +		ctrl |= size << 8;
+> +		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
+> +	}
+> +}
+> +
+>  /**
+>   * pci_restore_state - Restore the saved state of a PCI device
+>   * @dev: - PCI device that we're dealing with
+> @@ -1174,6 +1201,7 @@ void pci_restore_state(struct pci_dev *dev)
+>  	pci_restore_pri_state(dev);
+>  	pci_restore_ats_state(dev);
+>  	pci_restore_vc_state(dev);
+> +	pci_restore_rebar_state(dev);
+>  
+>  	pci_cleanup_aer_error_status_regs(dev);
+>  
+> -- 
+> 2.14.1
 > 
