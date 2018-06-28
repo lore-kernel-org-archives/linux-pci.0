@@ -1,64 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:44883 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751487AbeFXMMy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 24 Jun 2018 08:12:54 -0400
-Date: Sun, 24 Jun 2018 14:12:49 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Lukas Wunner <lukas@wunner.de>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] genirq: Synchronize only with single thread on
- free_irq()
-In-Reply-To: <20180624113403.GA22016@wunner.de>
-Message-ID: <alpine.DEB.2.21.1806241411040.8650@nanos.tec.linutronix.de>
-References: <32fc25aa35ecef4b2692f57687bb7fc2a57230e2.1529828292.git.lukas@wunner.de> <d72b41309f077c8d3bee6cc08ad3662d50b5d22a.1529828292.git.lukas@wunner.de> <alpine.DEB.2.21.1806241148030.8650@nanos.tec.linutronix.de> <20180624113403.GA22016@wunner.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1530148652.28284.4.camel@mhfsdcap03>
+Subject: Re: [PATCH 4/4] PCI: mediatek: Add loadable kernel module support
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Thu, 28 Jun 2018 09:17:32 +0800
+In-Reply-To: <CAHp75VdsSZifb5xZ2Q8cmJV=PgAaoN=iOhMfyVX4uE4vNpo=Mg@mail.gmail.com>
+References: <1530091298-28120-1-git-send-email-honghui.zhang@mediatek.com>
+ <1530091298-28120-5-git-send-email-honghui.zhang@mediatek.com>
+ <CAHp75VdsSZifb5xZ2Q8cmJV=PgAaoN=iOhMfyVX4uE4vNpo=Mg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree <devicetree@vger.kernel.org>,
+ hongkun.cao@mediatek.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ YT Shen <yt.shen@mediatek.com>, Matthias
+ Brugger <matthias.bgg@gmail.com>, ryder.lee@mediatek.com,
+ "moderated list:ARM/Mediatek SoC
+ support" <linux-mediatek@lists.infradead.org>, yong.wu@mediatek.com,
+ Bjorn Helgaas <bhelgaas@google.com>, yingjoe.chen@mediatek.com,
+ Eddie Huang <eddie.huang@mediatek.com>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 24 Jun 2018, Lukas Wunner wrote:
-
-> On Sun, Jun 24, 2018 at 11:49:10AM +0200, Thomas Gleixner wrote:
-> > On Sun, 24 Jun 2018, Lukas Wunner wrote:
-> > > When pciehp is converted to threaded IRQ handling, removal of unplugged
-> > > devices below a PCIe hotplug port happens synchronously in the IRQ
-> > > thread.  Removal of devices typically entails a call to free_irq() by
-> > > their drivers.
-> > 
-> > Is this an actual mainline problem or did you discover that in course of
-> > upcoming work?
+On Wed, 2018-06-27 at 19:39 +0300, Andy Shevchenko wrote:
+> On Wed, Jun 27, 2018 at 12:21 PM,  <honghui.zhang@mediatek.com> wrote:
+> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> >
+> > Implement remove callback function for Mediatek PCIe driver to add
+> > loadable kernel module support.
 > 
-> It's needed for upcoming work, specifically the pciehp event handling
-> rework which will hopefully appear in 4.19, so nothing urgent.
-> Doesn't hurt at all to let this bake in linux-next for a few weeks.
+> > +static void mtk_pcie_irq_teardown(struct mtk_pcie *pcie)
+> > +{
+> > +       struct mtk_pcie_port *port, *tmp;
+> > +
+> 
+> > +       if (list_empty(&pcie->ports))
+> > +               return;
+> 
+> This is redundant.
 
-Good.
+Yeah, you are right, I will remove it.
 
-> There is something else, you introduced irq_wake_thread() four years ago
-> with a92444c6b222 for sdhci/sdio, but for some reason it was never used.
-> Before you or anyone else deletes it for lack of callers, please be aware
-> that I'm making heavy use of it now in pciehp.
+> 
+> > +
+> > +       list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+> > +               irq_set_chained_handler_and_data(port->irq, NULL, NULL);
+> > +
+> > +               if (port->irq_domain)
+> > +                       irq_domain_remove(port->irq_domain);
+> > +
+> > +               if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> > +                       if (port->msi_domain)
+> > +                               irq_domain_remove(port->msi_domain);
+> > +                       if (port->inner_domain)
+> > +                               irq_domain_remove(port->inner_domain);
+> > +               }
+> > +
+> > +               irq_dispose_mapping(port->irq);
+> > +       }
+> > +}
+> 
+> > +static void mtk_pcie_free_resources(struct mtk_pcie *pcie)
+> > +{
+> > +       struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+> > +       struct list_head *windows = &host->windows;
+> > +
+> > +       pci_unmap_iospace(&pcie->pio);
+> > +       pci_free_resource_list(windows);
+> > +}
+> > +
+> > +static int mtk_pcie_remove(struct platform_device *pdev)
+> > +{
+> > +       struct mtk_pcie *pcie = platform_get_drvdata(pdev);
+> > +       struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+> > +
+> > +       pci_stop_root_bus(host->bus);
+> > +       pci_remove_root_bus(host->bus);
+> > +       mtk_pcie_free_resources(pcie);
+> > +
+> > +       mtk_pcie_irq_teardown(pcie);
+> > +
+> 
+> > +       if (!list_empty(&pcie->ports))
+> 
+> I think this is also not needed. Do you put runtime PM by the way?
 
-Ha! I was looking at it yesterday for unrelated reasons and was wondering
-about the huge amount of users ....
+Yes, it's could be removed.
+the pm was putted in mtk_pcie_put_resources which will call
+mtk_pcie_subsys_powerdown, and the pm was putted in that function.
 
-> I forgot to cc you on the relevant patch [17/32], but I'll bounce it to
-> you in a minute in case you want to take a look at it.
+thanks.
 
-Sure
+> 
+> > +               mtk_pcie_put_resources(pcie);
+> > +
+> > +       return 0;
+> > +}
+> 
 
-> Of course this begs the question how irq_wake_thread() is serialized
-> against __free_irq(), but it seems that's safe because irq_wake_thread()
-> searches the action list while holding desc->lock:  If it grabs the lock
-> before __free_irq(), it'll just wake the thread normally.  If it grabs
-> the lock after __free_irq(), the action will be gone from the list,
-> so irq_wake_thread() essentially becomes a no-op.
 
-Exactly.
 
-Thanks,
-
-	tglx
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
