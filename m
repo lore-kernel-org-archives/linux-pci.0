@@ -1,76 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:44692 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.99]:43970 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933073AbeFRVuJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 18 Jun 2018 17:50:09 -0400
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-References: <20180618193636.16210-1-logang@deltatee.com>
- <20180618193636.16210-2-logang@deltatee.com>
- <20180618154430.1af3d42f@t450s.home>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <c2053508-0880-5b7b-fd2f-260d260f33f9@deltatee.com>
-Date: Mon, 18 Jun 2018 15:49:49 -0600
+        id S966704AbeF1WLD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Jun 2018 18:11:03 -0400
+Date: Thu, 28 Jun 2018 17:10:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Alexander Duyck <alexander.duyck@gmail.com>,
+        oss-drivers@netronome.com, Christoph Hellwig <hch@infradead.org>,
+        Don Dutile <ddutile@redhat.com>
+Subject: Re: [PATCH] PCI: reset driver SR-IOV state after remove
+Message-ID: <20180628221058.GD120578@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180618220142.16527-1-jakub.kicinski@netronome.com>
+ <20180626094002.7bf0ca16@cakuba.netronome.com>
+ <20180628135623.GE90450@bhelgaas-glaptop.roam.corp.google.com>
+ <CAJpBn1weH828hgog5ZeBC+tAsWC54qoTtC2eLf6iF=+Gx0kmtw@mail.gmail.com>
+ <20180628180705.GB120578@bhelgaas-glaptop.roam.corp.google.com>
+ <20180628111457.15436685@cakuba.netronome.com>
 MIME-Version: 1.0
-In-Reply-To: <20180618154430.1af3d42f@t450s.home>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v3 1/3] PCI: Make specifying PCI devices in kernel
- parameters reusable
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180628111457.15436685@cakuba.netronome.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/18/2018 3:44 PM, Alex Williamson wrote:
->> + *
->> + * The second format matches devices using IDs in the configuration
->> + * space which may match multiple devices in the system. A value of 0
->> + * for any field will match all devices.
+On Thu, Jun 28, 2018 at 11:14:57AM -0700, Jakub Kicinski wrote:
+> On Thu, 28 Jun 2018 13:07:05 -0500, Bjorn Helgaas wrote:
+> > On Thu, Jun 28, 2018 at 09:17:09AM -0700, Jakub Kicinski wrote:
+> > > On Thu, Jun 28, 2018 at 6:56 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > > On Tue, Jun 26, 2018 at 09:40:02AM -0700, Jakub Kicinski wrote:  
+> > > >> On Mon, 18 Jun 2018 15:01:42 -0700, Jakub Kicinski wrote:  
+> > > >> > Bjorn points out that currently core and most of the drivers don't
+> > > >> > clean up dev->sriov->driver_max_VFs settings on .remove().  This
+> > > >> > means that if a different driver is bound afterwards it will
+> > > >> > inherit the old setting:
+> > > >> >
+> > > >> >   - load PF driver 1
+> > > >> >   - driver 1 calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
+> > > >> >   - unload PF driver 1
+> > > >> >   - load PF driver 2
+> > > >> >   # driver 2 does not know to call pci_sriov_set_totalvfs()
+> > > >> >
+> > > >> > Some drivers (e.g. nfp) used to do the clean up by calling
+> > > >> > pci_sriov_set_totalvfs(dev, 0), since 0 was equivalent to no driver
+> > > >> > limit set.  After commit 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers
+> > > >> > to limit total_VFs to 0") 0 no longer has this special meaning.
+> > > >> >
+> > > >> > The need to reset driver_max_VFs comes from the fact that old FW
+> > > >> > builds may not expose its VF limits to the drivers, and depend on
+> > > >> > the ability to reject the configuration change when driver notifies
+> > > >> > the FW as part of struct pci_driver->sriov_configure() callback.
+> > > >> > Therefore if there is no information on VF count limits we should
+> > > >> > use the PCI capability max, and not the last value set by
+> > > >> > pci_sriov_set_totalvfs().
+> > > >> >
+> > > >> > Reset driver_max_VFs back to total_VFs after device remove.  If
+> > > >> > drivers want to reload FW/reconfigure the device while driver is
+> > > >> > bound we may add an explicit pci_sriov_reset_totalvfs(), but for
+> > > >> > now no driver is doing that.
+> > > >> >
+> > > >> > Fixes: 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers to limit total_VFs to 0")
+> > > >> > Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>  
+> > > >>
+> > > >> Any comments? :(  Could this still make it into 4.18?  
+> > > >
+> > > > Is this a fix for something we broke during the v4.18 merge window?
+> > > > Or does it fix something that's been broken for a long time?  I think
+> > > > the latter, but haven't looked carefully yet.  
+> > > 
+> > > This is half of a fix, really.  NFP driver does
+> > > pci_sriov_set_totalvfs(pdev, 0) to clear the limit.  Now it will
+> > > disable SR-IOV completely.  If this patch gets applied I will drop
+> > > those pci_sriov_set_totalvfs(pdev, 0) calls from the driver and the
+> > > regression will be solved.  
+> > 
+> > Sorry, I missed the regression part.  8d85a7a4f2c9 ("PCI/IOV: Allow PF
+> > drivers to limit total_VFs to 0") appeared in v4.18-rc1, so I guess the
+> > problem is that nfp works correctly in v4.17, but is broken in v4.18-rc1?
+> > 
+> > I'd just like to understand the breakage and fix better.  In v4.17:
+> > 
+> >   # nfp loaded:
+> >   nfp_pci_probe
+> >     nfp_pcie_sriov_read_nfd_limit
+> >       nfp_rtsym_read_le("nfd_vf_cfg_max_vfs", &err)
+> >       if (err)                              # FW doesn't expose limit (?)
+> >         pci_sriov_set_totalvfs(0)
+> >           dev->sriov->driver_max_VFs = 0    # PCI_SRIOV_CTRL_VFE is clear
+> > 
+> >   # userspace writes N to sysfs "sriov_numvfs":
+> >   sriov_numvfs_store                    # write N
+> >     pci_sriov_get_totalvfs
+> >       return dev->sriov->total_VFs	# since driver_max_VFs == 0
+> >     driver->sriov_configure(N)
+> >       nfp_pcie_sriov_configure(N)
+> >         nfp_pcie_sriov_enable(N)
+> > 
+> > In v4.18-rc1, it's the same except pci_sriov_get_totalvfs() now returns 0:
+> > 
+> >   # nfp loaded:
+> >   nfp_pci_probe
+> >     nfp_pcie_sriov_read_nfd_limit
+> >       nfp_rtsym_read_le("nfd_vf_cfg_max_vfs", &err)
+> >       if (err)                              # FW doesn't expose limit (?)
+> >         pci_sriov_set_totalvfs(0)
+> >           dev->sriov->driver_max_VFs = 0    # PCI_SRIOV_CTRL_VFE is clear
+> > 
+> >   # userspace writes N to sysfs "sriov_numvfs":
+> >   sriov_numvfs_store                    # write N
+> >     pci_sriov_get_totalvfs
+> >       return 0                          # (driver_max_VFs == 0)
+> >     return -ERANGE                      # because N > 0
+> > 
+> > Am I on the right track?  
 > 
-> I realize this is not a change in behavior, but since we're spelling it
-> out in a proper comment rather than burying it in the implementation,
-> using 0 as a wildcard is rather questionable behavior.  It always
-> surprises me when I read this because pci_match_one_device() uses
-> PCI_ANY_ID (~0) as a wildcard and as a result of struct pci_device_id
-> using __u32 for these fields, we actually need to specify ffffffff on
-> the commandline to get a wildcard match for dynamic ids.  The latter is
-> tedious to use, but I think it's more correct, and the use of a __u32 is
-> probably attributed to the fact that 0xffff is only reserved for vendor
-> ID, the spec doesn't seem to reserve any entries from the vendor's
-> device ID range.
-> 
-> There's probably really no path to resolve these, but acknowledging the
-> difference in this comment block might be helpful in the future.
+> That's exactly it!
 
-Ok, I'll add a note in the comment.
->> +		ret = pci_dev_str_match(dev, p, &p);
->> +		if (ret == 1) {
->> +			*resize = true;
->> +			if (align_order == -1)
->> +				align = PAGE_SIZE;
->> +			else
->> +				align = 1 << align_order;
->> +			break;
->> +		} else if (ret < 0) {
->> +			pr_info("PCI: Can't parse resource_alignment parameter: pci:%s\n",
-> 
-> 
-> The "pci:" prefix on %s doesn't make sense now, it was used above when
-> the pointer was already advanced past this token, now I believe it would
-> lead to "pci:pci:xxxx:yyyy" or "pci:xx:yy.z".  Thanks,
+OK.  This regression happens even on the first module load; it doesn't
+require an unload and reload.
 
-Yup, nice catch. I'll fix it for v4.
+If that's the case, *this* patch will not actually fix the regression,
+because it only changes things when we detach the driver.  The *nfp*
+patch that removes the pci_sriov_set_totalvfs(0) calls will fix the
+regression because driver_max_VFs will be unchanged from its initial
+setting (TotalVFs from the SR-IOV capability).
 
-Logan
+So if I'd figured this out earlier, we would have squashed the nfp
+patch into 8d85a7a4f2c9 and avoided the regression altogether.
+
+*This* patch fixes a legitimate unload/reload issue, but I'm not clear
+whether it's a regression anybody actually sees.  If you see it, what
+scenario is it?
+
+Bjorn
