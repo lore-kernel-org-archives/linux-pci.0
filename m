@@ -1,163 +1,218 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:35141 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933095AbeFUIax (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 04:30:53 -0400
-From: Kai-Heng Feng <kai.heng.feng@canonical.com>
-To: davem@davemloft.net
-Cc: ryankao@realtek.com, hayeswang@realtek.com, hau@realtek.com,
-        hkallweit1@gmail.com, romieu@fr.zoreil.com, bhelgaas@google.com,
-        acelan.kao@canonical.com, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>
-Subject: [PATCH net-next v4 2/2] r8169: Reinstate ASPM Support
-Date: Thu, 21 Jun 2018 16:30:39 +0800
-Message-Id: <20180621083039.22545-2-kai.heng.feng@canonical.com>
-In-Reply-To: <20180621083039.22545-1-kai.heng.feng@canonical.com>
-References: <20180621083039.22545-1-kai.heng.feng@canonical.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1530150265.28284.25.camel@mhfsdcap03>
+Subject: Re: [PATCH 3/4] PCI: mediatek: Add system pm support for MT2712 and
+ MT7622
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Thu, 28 Jun 2018 09:44:25 +0800
+In-Reply-To: <CAHp75VcHgJrujzqstSc4RWpUbjip1vtJu87HN3uTosoLdOiT3A@mail.gmail.com>
+References: <1530091298-28120-1-git-send-email-honghui.zhang@mediatek.com>
+ <1530091298-28120-4-git-send-email-honghui.zhang@mediatek.com>
+ <CAHp75VcHgJrujzqstSc4RWpUbjip1vtJu87HN3uTosoLdOiT3A@mail.gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree <devicetree@vger.kernel.org>,
+ hongkun.cao@mediatek.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ YT Shen <yt.shen@mediatek.com>, Matthias
+ Brugger <matthias.bgg@gmail.com>, ryder.lee@mediatek.com,
+ "moderated list:ARM/Mediatek SoC
+ support" <linux-mediatek@lists.infradead.org>, yong.wu@mediatek.com,
+ Bjorn Helgaas <bhelgaas@google.com>, yingjoe.chen@mediatek.com,
+ Eddie Huang <eddie.huang@mediatek.com>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Intel platforms (Skylake and newer), ASPM support in r8169 is the
-last missing puzzle to let CPU's Package C-State reaches PC8.  Without
-ASPM support, the CPU cannot reach beyond PC3. PC8 can save additional
-~3W in comparison with PC3 on a Coffee Lake platform, Dell G3 3779.
+On Wed, 2018-06-27 at 19:45 +0300, Andy Shevchenko wrote:
+> On Wed, Jun 27, 2018 at 12:21 PM,  <honghui.zhang@mediatek.com> wrote:
+> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> >
+> > The MTCMOS of PCIe Host for MT2712 and MT7622 will be off when system
+> > suspend, and all the internal control register will be reset after system
+> > resume. The PCIe link should be re-established and the related control
+> > register values should be re-set after system resume.
+> 
+> >  struct mtk_pcie_soc {
+> >         bool need_fix_class_id;
+> 
+> > +       bool pm_support;
+> 
+> Hmm... Do you really need this flag? Can't runtime PM API tell you this?
 
-This is based on the work from Chunhao Lin <hau@realtek.com>.
+This host driver is both for MT2712, MT7622 and MT7623, but MT7623 do
+not this this patch.
+I only add this flag to identify whether we need to do the PM operation
+for this SoC since I do not want to touch anything for MT7623.
+ 
+> 
+> >         struct pci_ops *ops;
+> >         int (*startup)(struct mtk_pcie_port *port);
+> >         int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
+> > @@ -1195,12 +1197,76 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+> >         return err;
+> >  }
+> >
+> > +#ifdef CONFIG_PM_SLEEP
+> > +static int mtk_pcie_suspend_noirq(struct device *dev)
+> 
+> Perhaps __maybe_unused?
 
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
----
-v4:
-- Improve commit message.
-- Move the empty line to where it belongs.
+Ok, I'm a bit confused about this, if there's some discussion about
+this, do you have the link of those discussion and kindly point put it
+in this thread? Or I guess I can change this back to __maybe_unused if
+there's no other comments about this.
 
-v3:
-- Change commit message wording.
-- Rename the function to rtl_hw_aspm_clkreq_enable().
+> 
+> > +{
+> > +       struct mtk_pcie *pcie = dev_get_drvdata(dev);
+> > +       const struct mtk_pcie_soc *soc = pcie->soc;
+> > +       struct mtk_pcie_port *port;
+> > +
+> > +       if (!soc->pm_support)
+> > +               return 0;
+> > +
+> 
+> > +       if (list_empty(&pcie->ports))
+> > +               return 0;
+> 
+> So, if the list is empty you are not suspending for the host?
+> 
 
-v2:
-- Remove module parameter.
-- Remove pci_disable_link_state().
+if the list was empty then it indicate that all the PCIe slot was not
+connected with any EP device, and all the resource have been release in
+probe time. So the host driver does not need to save or restore
+anything.
 
- drivers/net/ethernet/realtek/r8169.c | 39 +++++++++++++++++++---------
- 1 file changed, 27 insertions(+), 12 deletions(-)
+> 
+> > +
+> > +       list_for_each_entry(port, &pcie->ports, list) {
+> > +               clk_disable_unprepare(port->pipe_ck);
+> > +               clk_disable_unprepare(port->obff_ck);
+> > +               clk_disable_unprepare(port->axi_ck);
+> > +               clk_disable_unprepare(port->aux_ck);
+> > +               clk_disable_unprepare(port->ahb_ck);
+> > +               clk_disable_unprepare(port->sys_ck);
+> > +               phy_power_off(port->phy);
+> > +               phy_exit(port->phy);
+> > +       }
+> > +
+> > +       mtk_pcie_subsys_powerdown(pcie);
+> > +
+> > +       return 0;
+> > +}
+> > +
+> > +static int mtk_pcie_resume_noirq(struct device *dev)
+> > +{
+> > +       struct mtk_pcie *pcie = dev_get_drvdata(dev);
+> > +       const struct mtk_pcie_soc *soc = pcie->soc;
+> > +       struct mtk_pcie_port *port;
+> > +
+> > +       if (!soc->pm_support)
+> > +               return 0;
+> > +
+> 
+> > +       if (list_empty(&pcie->ports))
+> > +               return 0;
+> 
+> No runtime PM for this case?
+> (It seems now I understand why in previous patch you have a similar check)
+> 
+I guess host driver does not need to resume anything if there's no EP
+device was connected.
 
-diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
-index 2bdfd25acd58..269ac7561368 100644
---- a/drivers/net/ethernet/realtek/r8169.c
-+++ b/drivers/net/ethernet/realtek/r8169.c
-@@ -5289,6 +5289,17 @@ static void rtl_pcie_state_l2l3_enable(struct rtl8169_private *tp, bool enable)
- 	RTL_W8(tp, Config3, data);
- }
- 
-+static void rtl_hw_aspm_clkreq_enable(struct rtl8169_private *tp, bool enable)
-+{
-+	if (enable) {
-+		RTL_W8(tp, Config2, RTL_R8(tp, Config2) | ClkReqEn);
-+		RTL_W8(tp, Config5, RTL_R8(tp, Config5) | ASPM_en);
-+	} else {
-+		RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
-+		RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
-+	}
-+}
-+
- static void rtl_hw_start_8168bb(struct rtl8169_private *tp)
- {
- 	RTL_W8(tp, Config3, RTL_R8(tp, Config3) & ~Beacon_en);
-@@ -5645,9 +5656,9 @@ static void rtl_hw_start_8168g_1(struct rtl8169_private *tp)
- 	rtl_hw_start_8168g(tp);
- 
- 	/* disable aspm and clock request before access ephy */
--	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
--	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
-+	rtl_hw_aspm_clkreq_enable(tp, false);
- 	rtl_ephy_init(tp, e_info_8168g_1, ARRAY_SIZE(e_info_8168g_1));
-+	rtl_hw_aspm_clkreq_enable(tp, true);
- }
- 
- static void rtl_hw_start_8168g_2(struct rtl8169_private *tp)
-@@ -5680,9 +5691,9 @@ static void rtl_hw_start_8411_2(struct rtl8169_private *tp)
- 	rtl_hw_start_8168g(tp);
- 
- 	/* disable aspm and clock request before access ephy */
--	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
--	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
-+	rtl_hw_aspm_clkreq_enable(tp, false);
- 	rtl_ephy_init(tp, e_info_8411_2, ARRAY_SIZE(e_info_8411_2));
-+	rtl_hw_aspm_clkreq_enable(tp, true);
- }
- 
- static void rtl_hw_start_8168h_1(struct rtl8169_private *tp)
-@@ -5699,8 +5710,7 @@ static void rtl_hw_start_8168h_1(struct rtl8169_private *tp)
- 	};
- 
- 	/* disable aspm and clock request before access ephy */
--	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
--	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
-+	rtl_hw_aspm_clkreq_enable(tp, false);
- 	rtl_ephy_init(tp, e_info_8168h_1, ARRAY_SIZE(e_info_8168h_1));
- 
- 	RTL_W32(tp, TxConfig, RTL_R32(tp, TxConfig) | TXCFG_AUTO_FIFO);
-@@ -5779,6 +5789,8 @@ static void rtl_hw_start_8168h_1(struct rtl8169_private *tp)
- 	r8168_mac_ocp_write(tp, 0xe63e, 0x0000);
- 	r8168_mac_ocp_write(tp, 0xc094, 0x0000);
- 	r8168_mac_ocp_write(tp, 0xc09e, 0x0000);
-+
-+	rtl_hw_aspm_clkreq_enable(tp, true);
- }
- 
- static void rtl_hw_start_8168ep(struct rtl8169_private *tp)
-@@ -5830,11 +5842,12 @@ static void rtl_hw_start_8168ep_1(struct rtl8169_private *tp)
- 	};
- 
- 	/* disable aspm and clock request before access ephy */
--	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
--	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
-+	rtl_hw_aspm_clkreq_enable(tp, false);
- 	rtl_ephy_init(tp, e_info_8168ep_1, ARRAY_SIZE(e_info_8168ep_1));
- 
- 	rtl_hw_start_8168ep(tp);
-+
-+	rtl_hw_aspm_clkreq_enable(tp, true);
- }
- 
- static void rtl_hw_start_8168ep_2(struct rtl8169_private *tp)
-@@ -5846,14 +5859,15 @@ static void rtl_hw_start_8168ep_2(struct rtl8169_private *tp)
- 	};
- 
- 	/* disable aspm and clock request before access ephy */
--	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
--	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
-+	rtl_hw_aspm_clkreq_enable(tp, false);
- 	rtl_ephy_init(tp, e_info_8168ep_2, ARRAY_SIZE(e_info_8168ep_2));
- 
- 	rtl_hw_start_8168ep(tp);
- 
- 	RTL_W8(tp, DLLPR, RTL_R8(tp, DLLPR) & ~PFM_EN);
- 	RTL_W8(tp, MISC_1, RTL_R8(tp, MISC_1) & ~PFM_D3COLD_EN);
-+
-+	rtl_hw_aspm_clkreq_enable(tp, true);
- }
- 
- static void rtl_hw_start_8168ep_3(struct rtl8169_private *tp)
-@@ -5867,8 +5881,7 @@ static void rtl_hw_start_8168ep_3(struct rtl8169_private *tp)
- 	};
- 
- 	/* disable aspm and clock request before access ephy */
--	RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
--	RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
-+	rtl_hw_aspm_clkreq_enable(tp, false);
- 	rtl_ephy_init(tp, e_info_8168ep_3, ARRAY_SIZE(e_info_8168ep_3));
- 
- 	rtl_hw_start_8168ep(tp);
-@@ -5888,6 +5901,8 @@ static void rtl_hw_start_8168ep_3(struct rtl8169_private *tp)
- 	data = r8168_mac_ocp_read(tp, 0xe860);
- 	data |= 0x0080;
- 	r8168_mac_ocp_write(tp, 0xe860, data);
-+
-+	rtl_hw_aspm_clkreq_enable(tp, true);
- }
- 
- static void rtl_hw_start_8168(struct rtl8169_private *tp)
--- 
-2.17.0
+> > +
+> > +       if (dev->pm_domain) {
+> > +               pm_runtime_enable(dev);
+> > +               pm_runtime_get_sync(dev);
+> > +       }
+> > +
+> > +       clk_prepare_enable(pcie->free_ck);
+> > +
+> > +       list_for_each_entry(port, &pcie->ports, list)
+> > +               mtk_pcie_enable_port(port);
+> > +
+> 
+> > +       if (list_empty(&pcie->ports))
+> 
+> Hmm... How it would be true if you already bailed out above on the
+> same condition?
+
+Assuming that there's EP device connected before suspend, and the EP was
+removed from the link while system suspend. It means that when enter
+this function the list is not empty, but after the function of
+mtk_pcie_enable_port was called, host driver found there's no EP device
+was connected anymore, it will free this list and some other resources
+in mtk_pcie_enable_port,(after mtk_pcie_enable_port was called, the list
+is empty in this scenario) but leave the subsys power along, I guess we
+need to take care of this scenario.
+> 
+> > +               mtk_pcie_subsys_powerdown(pcie);
+> > +
+> > +       return 0;
+> > +}
+> > +#endif
+> > +
+> > +static const struct dev_pm_ops mtk_pcie_pm_ops = {
+> > +       SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
+> > +                                     mtk_pcie_resume_noirq)
+> > +};
+> > +
+> >  static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
+> >         .ops = &mtk_pcie_ops,
+> >         .startup = mtk_pcie_startup_port,
+> >  };
+> >
+> >  static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
+> > +       .pm_support = true,
+> >         .ops = &mtk_pcie_ops_v2,
+> >         .startup = mtk_pcie_startup_port_v2,
+> >         .setup_irq = mtk_pcie_setup_irq,
+> 
+> No update for .pm ?
+
+I'm not get your point, I update the .pm callbacks in the
+platform_driver struct, this SoC data just store the different
+information for SoCs. Did I missed something?
+
+> 
+> > @@ -1208,6 +1274,7 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
+> >
+> >  static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
+> >         .need_fix_class_id = true,
+> > +       .pm_support = true,
+> >         .ops = &mtk_pcie_ops_v2,
+> >         .startup = mtk_pcie_startup_port_v2,
+> >         .setup_irq = mtk_pcie_setup_irq,
+> > @@ -1227,6 +1294,7 @@ static struct platform_driver mtk_pcie_driver = {
+> >                 .name = "mtk-pcie",
+> >                 .of_match_table = mtk_pcie_ids,
+> >                 .suppress_bind_attrs = true,
+> > +               .pm = &mtk_pcie_pm_ops,
+> >         },
+> >  };
+> >  builtin_platform_driver(mtk_pcie_driver);
+> > --
+> > 2.6.4
+> >
+> 
+> 
+> 
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
