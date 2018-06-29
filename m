@@ -1,48 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:41258 "EHLO mga11.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:40108 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751266AbeFVOHA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Jun 2018 10:07:00 -0400
-Date: Fri, 22 Jun 2018 08:10:14 -0600
-From: Keith Busch <keith.busch@intel.com>
-To: poza@codeaurora.org
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+        id S933794AbeF2X1N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Jun 2018 19:27:13 -0400
+Date: Fri, 29 Jun 2018 18:27:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rajat Jain <rajatja@google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
         Sinan Kaya <okaya@codeaurora.org>,
-        linux-pci-owner@vger.kernel.org
-Subject: Re: [PATCH 5/7] PCI/DPC: Print AER status in DPC event handling
-Message-ID: <20180622141013.GB27589@localhost.localdomain>
-References: <20180620213833.25072-1-keith.busch@intel.com>
- <20180620213833.25072-5-keith.busch@intel.com>
- <9cc1594055f03c0e4b4d1b50384107e8@codeaurora.org>
- <20180621140525.GB26623@localhost.localdomain>
- <f25c5f839166d0f94fc8a1b6def2fe14@codeaurora.org>
+        Frederick Lawler <fred@fredlawl.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mayurkumar.patel@intel.com, rajatxjain@gmail.com
+Subject: Re: [PATCH v2] pci/aspm: Remove CONFIG_PCIEASPM_DEBUG
+Message-ID: <20180629232711.GG40928@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180508230148.121852-1-rajatja@google.com>
+ <20180510233912.96454-1-rajatja@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f25c5f839166d0f94fc8a1b6def2fe14@codeaurora.org>
+In-Reply-To: <20180510233912.96454-1-rajatja@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 22, 2018 at 03:41:50PM +0530, poza@codeaurora.org wrote:
-> was thinking that current code
-> pcie_do_fatal_recovery already does call
+On Thu, May 10, 2018 at 04:39:12PM -0700, Rajat Jain wrote:
+> Currently, the linux kernel disables ASPM when a device is
+> removed from the kernel. But it is not enabled again when
+> a new device is added on that slot even if it was originally
+> enabled (by the BIOS) when the system booted up (assuming
+> POLICY_DEFAULT).
 > 
-> if ((service == PCIE_PORT_SERVICE_AER) &&
-> 	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
-> 		/*
-> 		 * If the error is reported by a bridge, we think this error
-> 		 * is related to the downstream link of the bridge, so we
-> 		 * do error recovery on all subordinates of the bridge instead
-> 		 * of the bridge and clear the error status of the bridge.
-> 		 */
-> 		pci_cleanup_aer_uncorrect_error_status(dev);
-> 	}
+> This was earlier discussed here:
+> https://www.spinics.net/lists/linux-pci/msg60212.html
 > 
+> And some suggestions from Bjorn here:
+> https://www.spinics.net/lists/linux-pci/msg60541.html
 > 
-> instead of calling it here in dpc driver, can we make use of that existing
-> call ?
-> probably we just might need to remove
-> if ((service == PCIE_PORT_SERVICE_AER) condition
+> This patch picks up one of the suggestion, to remove the
+> CONFIG_PCIEASPM_DEBUG and thus make the code always
+> avilable. This provides control to userspace to control
+> ASPM on a per slot / device basis using sysfs interface.
+> 
+> Signed-off-by: Rajat Jain <rajatja@google.com>
 
-That's really only desirable when DPC error status is 0. It should be
-harmless, though, so your update is fine with me.
+Applied with Sinan's reviewed-by to pci/aspm for v4.19, thanks!
+
+> ---
+> v2: provide function definitions for !CONFIG_PCIEASPM case
+> 
+>  drivers/pci/pci.h        | 8 ++------
+>  drivers/pci/pcie/Kconfig | 8 --------
+>  drivers/pci/pcie/aspm.c  | 2 --
+>  3 files changed, 2 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 023f7cf25bff..b953b2349ca1 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -358,17 +358,13 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev);
+>  void pcie_aspm_exit_link_state(struct pci_dev *pdev);
+>  void pcie_aspm_pm_state_change(struct pci_dev *pdev);
+>  void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
+> +void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev);
+> +void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev);
+>  #else
+>  static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
+>  static inline void pcie_aspm_exit_link_state(struct pci_dev *pdev) { }
+>  static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev) { }
+>  static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
+> -#endif
+> -
+> -#ifdef CONFIG_PCIEASPM_DEBUG
+> -void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev);
+> -void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev);
+> -#else
+>  static inline void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev) { }
+>  static inline void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev) { }
+>  #endif
+> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+> index b12e28b3d8f9..089b9f559d88 100644
+> --- a/drivers/pci/pcie/Kconfig
+> +++ b/drivers/pci/pcie/Kconfig
+> @@ -46,14 +46,6 @@ config PCIEASPM
+>  
+>  	  When in doubt, say Y.
+>  
+> -config PCIEASPM_DEBUG
+> -	bool "Debug PCI Express ASPM"
+> -	depends on PCIEASPM
+> -	default n
+> -	help
+> -	  This enables PCI Express ASPM debug support. It will add per-device
+> -	  interface to control ASPM.
+> -
+>  choice
+>  	prompt "Default ASPM policy"
+>  	default PCIEASPM_DEFAULT
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index c687c817b47d..8ffc13d42baa 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -1161,7 +1161,6 @@ static int pcie_aspm_get_policy(char *buffer, const struct kernel_param *kp)
+>  module_param_call(policy, pcie_aspm_set_policy, pcie_aspm_get_policy,
+>  	NULL, 0644);
+>  
+> -#ifdef CONFIG_PCIEASPM_DEBUG
+>  static ssize_t link_state_show(struct device *dev,
+>  		struct device_attribute *attr,
+>  		char *buf)
+> @@ -1264,7 +1263,6 @@ void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev)
+>  		sysfs_remove_file_from_group(&pdev->dev.kobj,
+>  			&dev_attr_clk_ctl.attr, power_group);
+>  }
+> -#endif
+>  
+>  static int __init pcie_aspm_disable(char *str)
+>  {
+> -- 
+> 2.17.0.441.gb46fe60e1d-goog
+> 
