@@ -1,77 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 19 Jun 2018 16:43:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH 1/2] IB/hfi1: Try slot reset before secondary bus reset
-Message-ID: <20180619214346.GD33049@bhelgaas-glaptop.roam.corp.google.com>
-References: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 29 Jun 2018 14:44:23 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: faraday: add missing of_node_put()
+Message-ID: <20180629134423.GF9643@red-moon>
+References: <1529766899-1994-1-git-send-email-hofrat@osadl.org>
 MIME-Version: 1.0
-In-Reply-To: <1524167784-5911-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>, sulrich@codeaurora.org,
- "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
- linux-pci@vger.kernel.org, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
- Doug Ledford <dledford@redhat.com>, linux-arm-msm@vger.kernel.org,
- Dennis Dalessandro <dennis.dalessandro@intel.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1529766899-1994-1-git-send-email-hofrat@osadl.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 19, 2018 at 03:56:23PM -0400, Sinan Kaya wrote:
-> The infiniband adapter might be connected to a PCI hotplug slot. Performing
-> secondary bus reset on a hotplug slot causes PCI link up/down interrupts.
+On Sat, Jun 23, 2018 at 05:14:59PM +0200, Nicholas Mc Guire wrote:
+>  The call to of_get_next_child() returns a node pointer with refcount
+> incremented thus it must be explicitly decremented here in the error
+> path and after the last usage.
 > 
-> Hotplug driver removes the device from system when a link down interrupt
-> is observed and performs re-enumeration when link up interrupt is observed.
-> 
-> This conflicts with what this code is trying to do. Try secondary bus reset
-> only if pci_reset_slot() fails/unsupported.
-
-Hi Sinan,
-
-We had a bunch of discussion here but not sure we ever reached a
-consensus.  It did seem like we'd like to avoid putting hotplug
-knowledge in drivers, though.  What do you think the path forward is?
-
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> Fixes: commit d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
 > ---
->  drivers/infiniband/hw/hfi1/pcie.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-> index 83d66e8..75f49e3 100644
-> --- a/drivers/infiniband/hw/hfi1/pcie.c
-> +++ b/drivers/infiniband/hw/hfi1/pcie.c
-> @@ -908,7 +908,8 @@ static int trigger_sbr(struct hfi1_devdata *dd)
->  	 * delay after a reset is required.  Per spec requirements,
->  	 * the link is either working or not after that point.
->  	 */
-> -	pci_reset_bridge_secondary_bus(dev->bus->self);
-> +	if (pci_reset_slot(dev->slot))
-> +		pci_reset_bridge_secondary_bus(dev->bus->self);
->  
->  	return 0;
->  }
-> -- 
-> 2.7.4
+> Patch found my experimental coccinelle script
 > 
+> Patch was compile tested with: gemini_defconfig (implies CONFIG_PCI_FTPCI100=y)
 > 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Patch is against 4.18-rc1 (localversion-next is next-20180621)
+> 
+>  drivers/pci/controller/pci-ftpci100.c | 2 ++
+>  1 file changed, 2 insertions(+)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Applied to pci/controller-fixes to be tentatively merged for -rc4,
+thanks.
+
+Lorenzo
+
+> diff --git a/drivers/pci/controller/pci-ftpci100.c b/drivers/pci/controller/pci-ftpci100.c
+> index a1ebe9e..20bb256 100644
+> --- a/drivers/pci/controller/pci-ftpci100.c
+> +++ b/drivers/pci/controller/pci-ftpci100.c
+> @@ -355,11 +355,13 @@ static int faraday_pci_setup_cascaded_irq(struct faraday_pci *p)
+>  	irq = of_irq_get(intc, 0);
+>  	if (irq <= 0) {
+>  		dev_err(p->dev, "failed to get parent IRQ\n");
+> +		of_node_put(intc);
+>  		return irq ?: -EINVAL;
+>  	}
+>  
+>  	p->irqdomain = irq_domain_add_linear(intc, PCI_NUM_INTX,
+>  					     &faraday_pci_irqdomain_ops, p);
+> +	of_node_put(intc);
+>  	if (!p->irqdomain) {
+>  		dev_err(p->dev, "failed to create Gemini PCI IRQ domain\n");
+>  		return -EINVAL;
+> -- 
+> 2.1.4
+> 
