@@ -1,167 +1,99 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH V3 5/6] PCI: Rename pci_try_reset_bus() to pci_reset_bus()
-Date: Thu, 28 Jun 2018 14:28:25 -0400
-Message-Id: <1530210507-9287-5-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1530210507-9287-1-git-send-email-okaya@codeaurora.org>
-References: <1530210507-9287-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:41398 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932316AbeF2TTc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Jun 2018 15:19:32 -0400
+Date: Fri, 29 Jun 2018 14:19:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        n0000b.n000b@gmail.com, LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v2] PCI / ACPI / PM: Resume bridges w/o drivers on
+ suspend-to-RAM
+Message-ID: <20180629191930.GA40928@bhelgaas-glaptop.roam.corp.google.com>
+References: <35587465.8Nave9aG7d@aspire.rjw.lan>
+ <2518711.SfHWAsyaFM@aspire.rjw.lan>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>,
- "open list:VFIO DRIVER" <kvm@vger.kernel.org>,
- Alexey Kardashevskiy <aik@ozlabs.ru>, linux-arm-msm@vger.kernel.org,
- Dennis Dalessandro <dennis.dalessandro@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Peter Xu <peterx@redhat.com>,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Doug Ledford <dledford@redhat.com>,
- Zhenyu Wang <zhenyuw@linux.intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org,
- "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2518711.SfHWAsyaFM@aspire.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that the old implementation of pci_reset_bus() is gone, replace
-pci_try_reset_bus() with pci_reset_bus().
+On Fri, Jun 29, 2018 at 10:34:40AM +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> It is reported that commit c62ec4610c40 (PM / core: Fix direct_complete
+> handling for devices with no callbacks) introduced a system suspend
+> regression on Samsung 305V4A by allowing a PCI bridge (not a PCIe
+> port) to stay in D3 over suspend-to-RAM, which is a side effect of
+> setting power.direct_complete for the children of that bridge that
+> have no PM callbacks.
+> 
+> On the majority of systems PCI bridges are not allowed to be
+> runtime-suspended (the power/control sysfs attribute is set to "on"
+> for them by default), but user space can change that setting and if
+> it does so and a given bridge has no children with PM callbacks, the
+> direct_complete optimization will be applied to it and it will stay
+> in suspend over system suspend.  Apparently, that confuses the
+> platform firmware on the affected machine and that may very well
+> happen elsewhere, so avoid the direct_complete optimization for
+> PCI bridges with no drivers (if there is a driver, it should take
+> care of the PM handling) on suspend-to-RAM altogether (that should
+> not matter for suspend-to-idle as platform firmware is not involved
+> in it).
+> 
+> Fixes: c62ec4610c40 (PM / core: Fix direct_complete handling for devices with no callbacks)
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=199941
+> Reported-by: n0000b.n000b@gmail.com
+> Tested-by: n0000b.n000b@gmail.com
+> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+> 
+> -> v2: Make the patch work for PCI bridges without ACPI companion objects.
+> 
+> Since that doesn't really change the idea etc, but only makes the check
+> to be made earlier, I've added the Reviewed-by and Acked-by tags given to
+> the previous version.  If that's not right, please let me know.
 
-Compared to the old implementation, new code will fail immmediately with
--EAGAIN if object lock cannot be obtained.
+Keeping my ack is fine, and I assume you'll apply this.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/infiniband/hw/hfi1/pcie.c |  2 +-
- drivers/pci/pci.c                 | 18 +++++++++---------
- drivers/vfio/pci/vfio_pci.c       |  4 ++--
- include/linux/pci.h               |  2 +-
- 4 files changed, 13 insertions(+), 13 deletions(-)
+It would be nice to see that ACPI spec reference (the spec version and
+section number, not necessarily all the text) in the changelog or
+maybe even a comment in the code.
 
-diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-index 4570c4d..a6d695a 100644
---- a/drivers/infiniband/hw/hfi1/pcie.c
-+++ b/drivers/infiniband/hw/hfi1/pcie.c
-@@ -905,7 +905,7 @@ static int trigger_sbr(struct hfi1_devdata *dd)
- 	 * delay after a reset is required.  Per spec requirements,
- 	 * the link is either working or not after that point.
- 	 */
--	return pci_try_reset_bus(dev->bus);
-+	return pci_reset_bus(dev->bus);
- }
- 
- /*
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6cec722..28a071d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4784,7 +4784,7 @@ int pci_probe_reset_slot(struct pci_slot *slot)
- EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
- 
- /**
-- * __pci_try_reset_slot - Try to reset a PCI slot
-+ * __pci_reset_slot - Try to reset a PCI slot
-  * @slot: PCI slot to reset
-  *`
-  * A PCI bus may host multiple slots, each slot may support a reset mechanism
-@@ -4798,7 +4798,7 @@ EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
-  *
-  * Same as above except return -EAGAIN if the slot cannot be locked
-  */
--static int __pci_try_reset_slot(struct pci_slot *slot)
-+static int __pci_reset_slot(struct pci_slot *slot)
- {
- 	int rc;
- 
-@@ -4854,12 +4854,12 @@ int pci_probe_reset_bus(struct pci_bus *bus)
- EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
- 
- /**
-- * __pci_try_reset_bus - Try to reset a PCI bus
-+ * __pci_reset_bus - Try to reset a PCI bus
-  * @bus: top level PCI bus to reset
-  *
-  * Same as above except return -EAGAIN if the bus cannot be locked
-  */
--static int __pci_try_reset_bus(struct pci_bus *bus)
-+static int __pci_reset_bus(struct pci_bus *bus)
- {
- 	int rc;
- 
-@@ -4882,22 +4882,22 @@ static int __pci_try_reset_bus(struct pci_bus *bus)
- }
- 
- /**
-- * pci_try_reset_bus - Try to reset a PCI bus
-+ * pci_reset_bus - Try to reset a PCI bus
-  * @pdev: top level PCI device to reset via slot/bus
-  *
-  * Same as above except return -EAGAIN if the bus cannot be locked
-  */
--int pci_try_reset_bus(struct pci_dev *pdev)
-+int pci_reset_bus(struct pci_dev *pdev)
- {
- 	bool slot = false;
- 
- 	if (!pci_probe_reset_slot(pdev->slot))
- 		slot = true;
- 
--	return slot ? __pci_try_reset_slot(pdev->slot) :
--			__pci_try_reset_bus(pdev->bus);
-+	return slot ? __pci_reset_slot(pdev->slot) :
-+			__pci_reset_bus(pdev->bus);
- }
--EXPORT_SYMBOL_GPL(pci_try_reset_bus);
-+EXPORT_SYMBOL_GPL(pci_reset_bus);
- 
- /**
-  * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 71018ec..345c0dc 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -1010,7 +1010,7 @@ static long vfio_pci_ioctl(void *device_data,
- 						    &info, slot);
- 		if (!ret)
- 			/* User has access, do the reset */
--			ret = pci_try_reset_bus(vdev->pdev);
-+			ret = pci_reset_bus(vdev->pdev);
- 
- hot_reset_release:
- 		for (i--; i >= 0; i--)
-@@ -1372,7 +1372,7 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
- 	}
- 
- 	if (needs_reset)
--		ret = pci_try_reset_bus(vdev->pdev);
-+		ret = pci_reset_bus(vdev->pdev);
- 
- put_devs:
- 	for (i = 0; i < devs.cur_index; i++) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ad0c89a..79a2c27 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1096,7 +1096,7 @@ int pci_reset_function_locked(struct pci_dev *dev);
- int pci_try_reset_function(struct pci_dev *dev);
- int pci_probe_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
--int pci_try_reset_bus(struct pci_dev *dev);
-+int pci_reset_bus(struct pci_dev *dev);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
--- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/pci/pci-acpi.c |    9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> Index: linux-pm/drivers/pci/pci-acpi.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci-acpi.c
+> +++ linux-pm/drivers/pci/pci-acpi.c
+> @@ -629,6 +629,15 @@ static bool acpi_pci_need_resume(struct
+>  {
+>  	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
+>  
+> +	/*
+> +	 * In some cases (eg. Samsung 305V4A) leaving a bridge in suspend
+> +	 * confuses the platform firmware, so avoid doing that, unless the
+> +	 * bridge has a driver that should take care of PM handling.
+> +	 */
+> +	if (pci_is_bridge(dev) && !dev->driver &&
+> +	    acpi_target_system_state() != ACPI_STATE_S0)
+> +		return true;
+> +
+>  	if (!adev || !acpi_device_power_manageable(adev))
+>  		return false;
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
