@@ -1,62 +1,32 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:37693 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932898AbeFPTfb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jun 2018 15:35:31 -0400
-Message-Id: <b835565f9e9e234dbae1b78ab83c703f78d0710c.1529173804.git.lukas@wunner.de>
-In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
+Return-Path: <SRS0=6FHM=JP=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=6FHM=JP=h08.hostsharing.net=foo00@kernel.org>
+Date: Sat, 30 Jun 2018 00:26:06 +0200
 From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 16 Jun 2018 21:25:00 +0200
-Subject: [PATCH 01/32] PCI: hotplug: Don't leak pci_slot on registration
- failure
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org, Greg Kroah-Hartman <greg@kroah.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 1/2] PCI: Document patch submission hints
+Message-ID: <20180629222606.GA4317@wunner.de>
+References: <153030390808.57832.2200774416664543563.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <153030405971.57832.12860154795039493576.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <153030405971.57832.12860154795039493576.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-If addition of sysfs files fails on registration of a hotplug slot, the
-struct pci_slot as well as the entry in the slot_list is leaked.  The
-issue has been present since the hotplug core was introduced in 2002:
-https://git.kernel.org/tglx/history/c/a8a2069f432c
+On Fri, Jun 29, 2018 at 03:27:39PM -0500, Bjorn Helgaas wrote:
+> +  - Wrap changelogs to fit in 80 columns when shown by "git show", which
+> +    adds 4 spaces.  I use "textwidth=75" in vim.
 
-Perhaps the idea was that even though sysfs addition fails, the slot
-should still be usable.  But that's not how drivers use the interface,
-they abort probe if a non-zero value is returned.
+I guess the ideal width is subjective, I usually wrap at 72 chars because
+then you've got 4 blanks on either side when viewed with "git log", which
+I find neater than maxing out the horizontal width.
 
-Cc: stable@vger.kernel.org # v2.4.15+
-Cc: Greg Kroah-Hartman <greg@kroah.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pci_hotplug_core.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+In some cases I deliberately wrap at less than 72 chars or allow 73 chars
+if it avoids vastly unequal widths in a paragraph.  Often when I later
+doublecheck what you've committed, I find that you've rewrapped everything
+to 75 chars and the result doesn't look as neat as I wanted it to be.
+Not a big deal, but thought I'd mention it now that you're codifying this
+"rule" somewhat more formally.
 
-diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-index af92fed46ab7..fd93783a87b0 100644
---- a/drivers/pci/hotplug/pci_hotplug_core.c
-+++ b/drivers/pci/hotplug/pci_hotplug_core.c
-@@ -438,8 +438,17 @@ int __pci_hp_register(struct hotplug_slot *slot, struct pci_bus *bus,
- 	list_add(&slot->slot_list, &pci_hotplug_slot_list);
- 
- 	result = fs_add_slot(pci_slot);
-+	if (result)
-+		goto err_list_del;
-+
- 	kobject_uevent(&pci_slot->kobj, KOBJ_ADD);
- 	dbg("Added slot %s to the list\n", name);
-+	goto out;
-+
-+err_list_del:
-+	list_del(&slot->slot_list);
-+	pci_slot->hotplug = NULL;
-+	pci_destroy_slot(pci_slot);
- out:
- 	mutex_unlock(&pci_hp_mutex);
- 	return result;
--- 
-2.17.1
+Lukas
