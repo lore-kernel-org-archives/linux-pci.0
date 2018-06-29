@@ -1,233 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:37761 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751932AbeFYVGU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jun 2018 17:06:20 -0400
-Received: by mail-qk0-f193.google.com with SMTP id t79-v6so1613911qke.4
-        for <linux-pci@vger.kernel.org>; Mon, 25 Jun 2018 14:06:20 -0700 (PDT)
-From: Alex Deucher <alexdeucher@gmail.com>
-To: amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        airlied@gmail.com, linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: Alex Deucher <alexander.deucher@amd.com>
-Subject: [PATCH 3/5] drm/amdgpu: use pcie functions for link width and speed
-Date: Mon, 25 Jun 2018 16:06:04 -0500
-Message-Id: <20180625210606.2736-4-alexander.deucher@amd.com>
-In-Reply-To: <20180625210606.2736-1-alexander.deucher@amd.com>
-References: <20180625210606.2736-1-alexander.deucher@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
+Subject: [PATCH 1/3] PCI: mvebu: Remove redundant platform_set_drvdata() call
+Date: Fri, 29 Jun 2018 11:10:05 +0200
+Message-Id: <20180629091007.31069-2-thomas.petazzoni@bootlin.com>
+In-Reply-To: <20180629091007.31069-1-thomas.petazzoni@bootlin.com>
+References: <20180629091007.31069-1-thomas.petazzoni@bootlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Nadav Haklai <nadavh@marvell.com>, Russell King <linux@arm.linux.org.uk>,
+ Antoine Tenart <antoine.tenart@bootlin.com>,
+ Gregory Clement <gregory.clement@bootlin.com>,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+ =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the newly exported pci functions to get the link width
-and speed rather than using the drm duplicated versions.
+This is already done earlier in mvebu_pcie_probe().
 
-Also query the GPU link caps directly rather than hardcoding
-them.
-
-Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 ---
- drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 83 +++++++++++++++++++++---------
- drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c    |  7 ++-
- drivers/gpu/drm/amd/amdgpu/ci_dpm.c        |  3 +-
- drivers/gpu/drm/amd/amdgpu/si_dpm.c        |  3 +-
- 4 files changed, 65 insertions(+), 31 deletions(-)
+ drivers/pci/controller/pci-mvebu.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-index 6e5284e6c028..b70f44022813 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-@@ -3290,8 +3290,9 @@ int amdgpu_device_gpu_recover(struct amdgpu_device *adev,
-  */
- static void amdgpu_device_get_pcie_info(struct amdgpu_device *adev)
- {
--	u32 mask;
--	int ret;
-+	struct pci_dev *pdev;
-+	enum pci_bus_speed speed_cap;
-+	enum pcie_link_width link_width;
+diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+index 358b56ba7c37..0e729bab14c0 100644
+--- a/drivers/pci/controller/pci-mvebu.c
++++ b/drivers/pci/controller/pci-mvebu.c
+@@ -1115,8 +1115,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
  
- 	if (amdgpu_pcie_gen_cap)
- 		adev->pm.pcie_gen_mask = amdgpu_pcie_gen_cap;
-@@ -3309,27 +3310,61 @@ static void amdgpu_device_get_pcie_info(struct amdgpu_device *adev)
- 	}
+ 	mvebu_pcie_enable(pcie);
  
- 	if (adev->pm.pcie_gen_mask == 0) {
--		ret = drm_pcie_get_speed_cap_mask(adev->ddev, &mask);
--		if (!ret) {
--			adev->pm.pcie_gen_mask = (CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN1 |
-+		/* asic caps */
-+		pdev = adev->pdev;
-+		speed_cap = pcie_get_speed_cap(pdev);
-+		if (speed_cap == PCI_SPEED_UNKNOWN) {
-+			adev->pm.pcie_gen_mask |= (CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN1 |
- 						  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN2 |
- 						  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN3);
+-	platform_set_drvdata(pdev, pcie);
 -
--			if (mask & DRM_PCIE_SPEED_25)
--				adev->pm.pcie_gen_mask |= CAIL_PCIE_LINK_SPEED_SUPPORT_GEN1;
--			if (mask & DRM_PCIE_SPEED_50)
--				adev->pm.pcie_gen_mask |= CAIL_PCIE_LINK_SPEED_SUPPORT_GEN2;
--			if (mask & DRM_PCIE_SPEED_80)
--				adev->pm.pcie_gen_mask |= CAIL_PCIE_LINK_SPEED_SUPPORT_GEN3;
- 		} else {
--			adev->pm.pcie_gen_mask = AMDGPU_DEFAULT_PCIE_GEN_MASK;
-+			if (speed_cap == PCIE_SPEED_16_0GT)
-+				adev->pm.pcie_gen_mask |= (CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN1 |
-+							  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN2 |
-+							  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN3 |
-+							  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN4);
-+			else if (speed_cap == PCIE_SPEED_8_0GT)
-+				adev->pm.pcie_gen_mask |= (CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN1 |
-+							  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN2 |
-+							  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN3);
-+			else if (speed_cap == PCIE_SPEED_5_0GT)
-+				adev->pm.pcie_gen_mask |= (CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN1 |
-+							  CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN2);
-+			else
-+				adev->pm.pcie_gen_mask |= CAIL_ASIC_PCIE_LINK_SPEED_SUPPORT_GEN1;
-+		}
-+		/* platform caps */
-+		pdev = adev->ddev->pdev->bus->self;
-+		speed_cap = pcie_get_speed_cap(pdev);
-+		if (speed_cap == PCI_SPEED_UNKNOWN) {
-+			adev->pm.pcie_gen_mask |= (CAIL_PCIE_LINK_SPEED_SUPPORT_GEN1 |
-+						   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN2);
-+		} else {
-+			if (speed_cap == PCIE_SPEED_16_0GT)
-+				adev->pm.pcie_gen_mask |= (CAIL_PCIE_LINK_SPEED_SUPPORT_GEN1 |
-+							   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN2 |
-+							   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN3 |
-+							   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN4);
-+			else if (speed_cap == PCIE_SPEED_8_0GT)
-+				adev->pm.pcie_gen_mask |= (CAIL_PCIE_LINK_SPEED_SUPPORT_GEN1 |
-+							   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN2 |
-+							   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN3);
-+			else if (speed_cap == PCIE_SPEED_5_0GT)
-+				adev->pm.pcie_gen_mask |= (CAIL_PCIE_LINK_SPEED_SUPPORT_GEN1 |
-+							   CAIL_PCIE_LINK_SPEED_SUPPORT_GEN2);
-+			else
-+				adev->pm.pcie_gen_mask |= CAIL_PCIE_LINK_SPEED_SUPPORT_GEN1;
-+
- 		}
- 	}
- 	if (adev->pm.pcie_mlw_mask == 0) {
--		ret = drm_pcie_get_max_link_width(adev->ddev, &mask);
--		if (!ret) {
--			switch (mask) {
--			case 32:
-+		pdev = adev->ddev->pdev->bus->self;
-+		link_width = pcie_get_width_cap(pdev);
-+		if (link_width == PCIE_LNK_WIDTH_UNKNOWN) {
-+			adev->pm.pcie_mlw_mask |= AMDGPU_DEFAULT_PCIE_MLW_MASK;
-+		} else {
-+			switch (link_width) {
-+			case PCIE_LNK_X32:
- 				adev->pm.pcie_mlw_mask = (CAIL_PCIE_LINK_WIDTH_SUPPORT_X32 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X16 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X12 |
-@@ -3338,7 +3373,7 @@ static void amdgpu_device_get_pcie_info(struct amdgpu_device *adev)
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X2 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X1);
- 				break;
--			case 16:
-+			case PCIE_LNK_X16:
- 				adev->pm.pcie_mlw_mask = (CAIL_PCIE_LINK_WIDTH_SUPPORT_X16 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X12 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X8 |
-@@ -3346,36 +3381,34 @@ static void amdgpu_device_get_pcie_info(struct amdgpu_device *adev)
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X2 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X1);
- 				break;
--			case 12:
-+			case PCIE_LNK_X12:
- 				adev->pm.pcie_mlw_mask = (CAIL_PCIE_LINK_WIDTH_SUPPORT_X12 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X8 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X4 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X2 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X1);
- 				break;
--			case 8:
-+			case PCIE_LNK_X8:
- 				adev->pm.pcie_mlw_mask = (CAIL_PCIE_LINK_WIDTH_SUPPORT_X8 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X4 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X2 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X1);
- 				break;
--			case 4:
-+			case PCIE_LNK_X4:
- 				adev->pm.pcie_mlw_mask = (CAIL_PCIE_LINK_WIDTH_SUPPORT_X4 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X2 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X1);
- 				break;
--			case 2:
-+			case PCIE_LNK_X2:
- 				adev->pm.pcie_mlw_mask = (CAIL_PCIE_LINK_WIDTH_SUPPORT_X2 |
- 							  CAIL_PCIE_LINK_WIDTH_SUPPORT_X1);
- 				break;
--			case 1:
-+			case PCIE_LNK_X1:
- 				adev->pm.pcie_mlw_mask = CAIL_PCIE_LINK_WIDTH_SUPPORT_X1;
- 				break;
- 			default:
- 				break;
- 			}
--		} else {
--			adev->pm.pcie_mlw_mask = AMDGPU_DEFAULT_PCIE_MLW_MASK;
- 		}
- 	}
+ 	return 0;
  }
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c
-index 77ad59ade85c..1c4595562f8f 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c
-@@ -28,6 +28,7 @@
- #include "amdgpu_i2c.h"
- #include "amdgpu_dpm.h"
- #include "atom.h"
-+#include "amd_pcie.h"
- 
- void amdgpu_dpm_print_class_info(u32 class, u32 class2)
- {
-@@ -936,9 +937,11 @@ enum amdgpu_pcie_gen amdgpu_get_pcie_gen_support(struct amdgpu_device *adev,
- 	case AMDGPU_PCIE_GEN3:
- 		return AMDGPU_PCIE_GEN3;
- 	default:
--		if ((sys_mask & DRM_PCIE_SPEED_80) && (default_gen == AMDGPU_PCIE_GEN3))
-+		if ((sys_mask & CAIL_PCIE_LINK_SPEED_SUPPORT_GEN3) &&
-+		    (default_gen == AMDGPU_PCIE_GEN3))
- 			return AMDGPU_PCIE_GEN3;
--		else if ((sys_mask & DRM_PCIE_SPEED_50) && (default_gen == AMDGPU_PCIE_GEN2))
-+		else if ((sys_mask & CAIL_PCIE_LINK_SPEED_SUPPORT_GEN2) &&
-+			 (default_gen == AMDGPU_PCIE_GEN2))
- 			return AMDGPU_PCIE_GEN2;
- 		else
- 			return AMDGPU_PCIE_GEN1;
-diff --git a/drivers/gpu/drm/amd/amdgpu/ci_dpm.c b/drivers/gpu/drm/amd/amdgpu/ci_dpm.c
-index 7fbad2f5f0bd..a3641778a813 100644
---- a/drivers/gpu/drm/amd/amdgpu/ci_dpm.c
-+++ b/drivers/gpu/drm/amd/amdgpu/ci_dpm.c
-@@ -5846,8 +5846,7 @@ static int ci_dpm_init(struct amdgpu_device *adev)
- 	adev->pm.dpm.priv = pi;
- 
- 	pi->sys_pcie_mask =
--		(adev->pm.pcie_gen_mask & CAIL_PCIE_LINK_SPEED_SUPPORT_MASK) >>
--		CAIL_PCIE_LINK_SPEED_SUPPORT_SHIFT;
-+		adev->pm.pcie_gen_mask & CAIL_PCIE_LINK_SPEED_SUPPORT_MASK;
- 
- 	pi->force_pcie_gen = AMDGPU_PCIE_GEN_INVALID;
- 
-diff --git a/drivers/gpu/drm/amd/amdgpu/si_dpm.c b/drivers/gpu/drm/amd/amdgpu/si_dpm.c
-index 5c97a3671726..0243899ff0d4 100644
---- a/drivers/gpu/drm/amd/amdgpu/si_dpm.c
-+++ b/drivers/gpu/drm/amd/amdgpu/si_dpm.c
-@@ -7318,8 +7318,7 @@ static int si_dpm_init(struct amdgpu_device *adev)
- 	pi = &eg_pi->rv7xx;
- 
- 	si_pi->sys_pcie_mask =
--		(adev->pm.pcie_gen_mask & CAIL_PCIE_LINK_SPEED_SUPPORT_MASK) >>
--		CAIL_PCIE_LINK_SPEED_SUPPORT_SHIFT;
-+		adev->pm.pcie_gen_mask & CAIL_PCIE_LINK_SPEED_SUPPORT_MASK;
- 	si_pi->force_pcie_gen = AMDGPU_PCIE_GEN_INVALID;
- 	si_pi->boot_pcie_gen = si_get_current_pcie_speed(adev);
  
 -- 
-2.13.6
+2.14.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
