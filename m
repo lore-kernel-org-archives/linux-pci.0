@@ -1,77 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:37262 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754472AbeFMH0X (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 03:26:23 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3 04/10] PCI: aardvark: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Wed, 13 Jun 2018 15:26:05 +0800
-Message-Id: <1528874765-7719-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
+Subject: [PATCH 2/2] PCI: aardvark: Convert to use pci_host_probe()
+Date: Fri, 29 Jun 2018 11:16:20 +0200
+Message-Id: <20180629091620.31503-3-thomas.petazzoni@bootlin.com>
+In-Reply-To: <20180629091620.31503-1-thomas.petazzoni@bootlin.com>
+References: <20180629091620.31503-1-thomas.petazzoni@bootlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Antoine Tenart <antoine.tenart@bootlin.com>,
+ Gregory Clement <gregory.clement@bootlin.com>,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+ =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+ Zachary Zhang <zhangzg@marvell.com>, Wilson Ding <dingwei@marvell.com>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+Now that the pci_bus_size_bridges() call has been added to
+advk_pcie_probe(), the end of the function is exactly an open-coded
+version of pci_host_probe(). So instead of duplicating this code, use
+pci_host_probe() directly.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 ---
-
-Changes in v3: None
-Changes in v2: None
-
- drivers/pci/controller/pci-aardvark.c | 24 +++++-------------------
- 1 file changed, 5 insertions(+), 19 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index d3172d5..4c31582 100644
+index 8e92231214e3..cea79e5ccd5d 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -704,37 +704,23 @@ static void advk_pcie_remove_msi_irq_domain(struct advk_pcie *pcie)
- static int advk_pcie_init_irq_domain(struct advk_pcie *pcie)
- {
- 	struct device *dev = &pcie->pdev->dev;
--	struct device_node *node = dev->of_node;
--	struct device_node *pcie_intc_node;
- 	struct irq_chip *irq_chip;
+@@ -1000,7 +1000,6 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct advk_pcie *pcie;
+ 	struct resource *res;
+-	struct pci_bus *bus, *child;
+ 	struct pci_host_bridge *bridge;
+ 	int ret, irq;
  
--	pcie_intc_node =  of_get_next_child(node, NULL);
--	if (!pcie_intc_node) {
--		dev_err(dev, "No PCIe Intc node found\n");
--		return -ENODEV;
--	}
+@@ -1056,22 +1055,13 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 	bridge->map_irq = of_irq_parse_and_map_pci;
+ 	bridge->swizzle_irq = pci_common_swizzle;
+ 
+-	ret = pci_scan_root_bus_bridge(bridge);
++	ret = pci_host_probe(bridge);
+ 	if (ret < 0) {
+ 		advk_pcie_remove_msi_irq_domain(pcie);
+ 		advk_pcie_remove_irq_domain(pcie);
+ 		return ret;
+ 	}
+ 
+-	bus = bridge->bus;
 -
- 	irq_chip = &pcie->irq_chip;
- 
- 	irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-irq",
- 					dev_name(dev));
--	if (!irq_chip->name) {
--		of_node_put(pcie_intc_node);
-+	if (!irq_chip->name)
- 		return -ENOMEM;
--	}
- 
- 	irq_chip->irq_mask = advk_pcie_irq_mask;
- 	irq_chip->irq_mask_ack = advk_pcie_irq_mask;
- 	irq_chip->irq_unmask = advk_pcie_irq_unmask;
- 
--	pcie->irq_domain =
--		irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
--				      &advk_pcie_irq_domain_ops, pcie);
--	if (!pcie->irq_domain) {
--		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		of_node_put(pcie_intc_node);
--		return -ENOMEM;
--	}
-+	pcie->irq_domain = pci_host_alloc_intx_irqd(dev, pcie, false,
-+				&advk_pcie_irq_domain_ops, NULL);
-+	if (IS_ERR(pcie->irq_domain))
-+		return PTR_ERR(pcie->irq_domain);
- 
+-	pci_bus_size_bridges(bus);
+-	pci_bus_assign_resources(bus);
+-
+-	list_for_each_entry(child, &bus->children, node)
+-		pcie_bus_configure_settings(child);
+-
+-	pci_bus_add_devices(bus);
  	return 0;
  }
+ 
 -- 
-1.9.1
+2.14.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
