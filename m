@@ -1,104 +1,67 @@
-Return-Path: <SRS0=Mfjj=JM=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=Mfjj=JM=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
+Subject: [PATCH 3/3] PCI: mvebu: Drop bogus comment above
+ mvebu_pcie_map_registers()
+Date: Fri, 29 Jun 2018 11:10:07 +0200
+Message-Id: <20180629091007.31069-4-thomas.petazzoni@bootlin.com>
+In-Reply-To: <20180629091007.31069-1-thomas.petazzoni@bootlin.com>
+References: <20180629091007.31069-1-thomas.petazzoni@bootlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Nadav Haklai <nadavh@marvell.com>, Russell King <linux@arm.linux.org.uk>,
+ Antoine Tenart <antoine.tenart@bootlin.com>,
+ Gregory Clement <gregory.clement@bootlin.com>,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+ =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@bootlin.com>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20180626140115.GA146680@bhelgaas-glaptop.roam.corp.google.com>
-References: <35587465.8Nave9aG7d@aspire.rjw.lan> <20180626140115.GA146680@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 26 Jun 2018 16:22:00 +0200
-Message-ID: <CAJZ5v0jc5oJzEX6QVDVjsQLmLxXHg3PSyepbh50dLXOtnHPgrA@mail.gmail.com>
-Subject: Re: [PATCH] PCI / ACPI / PM: Resume bridges w/o drivers on suspend-to-RAM
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux PCI <linux-pci@vger.kernel.org>, n0000b.n000b@gmail.com,
-	Bjorn Helgaas <bhelgaas@google.com>, Mika Westerberg <mika.westerberg@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM <linux-pm@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 26, 2018 at 4:01 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Tue, Jun 26, 2018 at 12:06:01PM +0200, Rafael J. Wysocki wrote:
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> It is reported that commit c62ec4610c40 (PM / core: Fix direct_complete
->> handling for devices with no callbacks) introduced a system suspend
->> regression on Samsung 305V4A by allowing a PCI bridge (not a PCIe
->> port) to stay in D3 over suspend-to-RAM, which is a side effect of
->> setting power.direct_complete for the children of that bridge that
->> have no PM callbacks.
->>
->> On the majority of systems PCI bridges are not allowed to be
->> runtime-suspended (the power/control sysfs attribute is set to "on"
->> for them by default), but user space can change that setting and if
->> it does so and a given bridge has no children with PM callbacks, the
->> direct_complete optimization will be applied to it and it will stay
->> in suspend over system suspend.  Apparently, that confuses the
->
-> "stay in D3 over system suspend"? (just to be explicit about what "in
-> suspend" means)
+This comment has been there since the driver was introduced, but seems
+to be a leftover from previous iterations of the driver. Indeed, we do
+not lookup in a list to find the register ranges that matches the
+given port/lane, as the "reg" property is in each sub-node
+representing a PCI port. There is no lookup involved at all.
 
-OK
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+---
+ drivers/pci/controller/pci-mvebu.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
->> platform firmware on the affected machine and that may very well
->> happen elsewhere, so avoid the direct_complete optimization for
->> PCI bridges with no drivers (if there is a driver, it should take
->> care of the PM handling) on suspend-to-RAM altogether (that should
->> not matter for suspend-to-idle as platform firmware is not involved
->> in it).
->>
->> Fixes: c62ec4610c40 (PM / core: Fix direct_complete handling for devices with no callbacks)
->> Link: https://bugzilla.kernel.org/show_bug.cgi?id=199941
->> Reported-by: n0000b.n000b@gmail.com
->> Tested-by: n0000b.n000b@gmail.com
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> ---
->>  drivers/pci/pci-acpi.c |    8 ++++++++
->>  1 file changed, 8 insertions(+)
->>
->> Index: linux-pm/drivers/pci/pci-acpi.c
->> ===================================================================
->> --- linux-pm.orig/drivers/pci/pci-acpi.c
->> +++ linux-pm/drivers/pci/pci-acpi.c
->> @@ -638,6 +638,14 @@ static bool acpi_pci_need_resume(struct
->>       if (acpi_target_system_state() == ACPI_STATE_S0)
->>               return false;
->>
->> +     /*
->> +      * In some cases (eg. Samsung 305V4A) leaving a bridge in suspend
->> +      * confuses the platform firmware, so avoid doing that, unless the
->> +      * bridge has a driver that should take care of PM handling.
->> +      */
->> +     if (pci_is_bridge(dev) && !dev->driver)
->> +             return true;
->
-> It sounds like the question of whether leaving a bridge in D3 confuses
-> the firmware has a platform-specific answer.
+diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+index 6e801cef2c5f..e168f04565e7 100644
+--- a/drivers/pci/controller/pci-mvebu.c
++++ b/drivers/pci/controller/pci-mvebu.c
+@@ -720,11 +720,6 @@ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+ 		return start;
+ }
+ 
+-/*
+- * Looks up the list of register addresses encoded into the reg =
+- * <...> property for one that matches the given port/lane. Once
+- * found, maps it.
+- */
+ static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
+ 					      struct device_node *np,
+ 					      struct mvebu_pcie_port *port)
+-- 
+2.14.4
 
-Well, it may confuse the platform firmware in general.
 
-> How does the driver PM handling know how to do the right thing?
-
-For endpoints this is not an issue as they always have been expected
-to be in D3 before passing control to the platform firmware on S3
-entry, but we've never done that for bridges by default, except for
-PCIe ports with PM enabled (in which case the driver decides whether
-or not to enable it).
-
-> Does it need to know whether
-> it's safe to put the device in D3?  Or maybe a device is never put in
-> D3 for system suspend if it has a driver?
-
-As per the above, endpoints should be OK (or they are quirky if not),
-but bridges are sort of a gray area.  PCIe ports for which we enable
-PM should be fine, for the rest it's better to be conservative and
-resume them IMO.
-
-> But I'm just kibbitzing; since you merged c62ec4610c40, I'm happy if
-> you also merge this:
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
->>       return !!adev->power.flags.dsw_present;
->>  }
-
-Thanks!
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
