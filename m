@@ -1,134 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.37.59]:41884 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751417AbeFALHZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jun 2018 07:07:25 -0400
-Subject: Re: [PATCH v2 4/7] PCI: dwc: Rework MSI callbacks handler
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1526576613.git.gustavo.pimentel@synopsys.com>
- <9558d4fcd6f888599e3b70133f1f242c7a6664ee.1526576613.git.gustavo.pimentel@synopsys.com>
- <ba3df388-9ec1-fe87-e575-0eddc5a565b7@ti.com>
-From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Message-ID: <8e4a3cf2-51e2-58b8-3745-06dde8f8f7c1@synopsys.com>
-Date: Fri, 1 Jun 2018 12:05:35 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] PCI: qcom: Fix error handling in pm_runtime support
+To: Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20180525190934.1042-1-bjorn.andersson@linaro.org>
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <5b8b3929-c0dc-527c-b7d4-744e28808dbb@mm-sol.com>
+Date: Fri, 29 Jun 2018 14:22:06 +0300
 MIME-Version: 1.0
-In-Reply-To: <ba3df388-9ec1-fe87-e575-0eddc5a565b7@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180525190934.1042-1-bjorn.andersson@linaro.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/05/2018 11:54, Kishon Vijay Abraham I wrote:
-> Hi,
-> 
-> On Thursday 17 May 2018 10:39 PM, Gustavo Pimentel wrote:
->> Remove duplicate defines located on pcie-designware.h file already
->> available on /include/uapi/linux/pci-regs.h file.
->>
->> Add pci_epc_set_msi() maximum 32 interrupts validation.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->> Change v1->v2:
->>  - Nothing changed, just to follow the patch set version.
->>
->>  drivers/pci/dwc/pcie-designware-ep.c | 49 ++++++++++++++++++++++++------------
->>  drivers/pci/dwc/pcie-designware.h    | 11 --------
->>  drivers/pci/endpoint/pci-epc-core.c  |  3 ++-
->>  3 files changed, 35 insertions(+), 28 deletions(-)
->>
->> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
->> index e5f2377..a4baa0d 100644
->> --- a/drivers/pci/dwc/pcie-designware-ep.c
->> +++ b/drivers/pci/dwc/pcie-designware-ep.c
->> @@ -246,29 +246,38 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
->>  
->>  static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
->>  {
->> -	int val;
->>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->> +	u32 val, reg;
->> +
->> +	if (!ep->msi_cap)
-> 
-> Ah, msi_cap is used here.
->> +		return 0;
-> 
-> return -EINVAL.
+Hi Bjorn,
 
-Another copy & paste issue :)
-
->>  
->> -	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
->> -	if (!(val & MSI_CAP_MSI_EN_MASK))
->> +	reg = ep->msi_cap + PCI_MSI_FLAGS;
->> +	val = dw_pcie_readw_dbi(pci, reg);
->> +	if (!(val & PCI_MSI_FLAGS_ENABLE))
->>  		return -EINVAL;
->>  
->> -	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
->> +	val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
->> +
->>  	return val;
->>  }
->>  
->> -static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
->> +static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
->>  {
->> -	int val;
->>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->> +	u32 val, reg;
->>  
->> -	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
->> -	val &= ~MSI_CAP_MMC_MASK;
->> -	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
->> +	if (!ep->msi_cap)
->> +		return 0;
+On 05/25/2018 10:09 PM, Bjorn Andersson wrote:
+> The driver does not cope with the fact that probe can fail in a number
+> of cases after enabling pm_runtime on the device, this results in
+> warnings about "Unbalanced pm_runtime_enable". Further more if probe
+> fails after invoking host_init the power-domain will be left referenced.
 > 
-> return -EINVAL.
-
-Another copy & paste issue :)
-
->> +
->> +	reg = ep->msi_cap + PCI_MSI_FLAGS;
->> +	val = dw_pcie_readw_dbi(pci, reg);
->> +	val &= ~PCI_MSI_FLAGS_QMASK;
->> +	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
->>  	dw_pcie_dbi_ro_wr_en(pci);
->> -	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
->> +	dw_pcie_writew_dbi(pci, reg, val);
->>  	dw_pcie_dbi_ro_wr_dis(pci);
->>  
->>  	return 0;
->> @@ -367,21 +376,29 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
->>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->>  	struct pci_epc *epc = ep->epc;
->>  	u16 msg_ctrl, msg_data;
->> -	u32 msg_addr_lower, msg_addr_upper;
->> +	u32 msg_addr_lower, msg_addr_upper, reg;
->>  	u64 msg_addr;
->>  	bool has_upper;
->>  	int ret;
->>  
->> +	if (!ep->msi_cap)
->> +		return 0;
+> As it's not possible for the error handling in qcom_pcie_host_init() to
+> handle errors happening after returning from that function the
+> pm_runtime_get_sync() is moved to probe() as well.
 > 
-> return -EINVAL.
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 
-Another copy & paste issue :)
+Please add:
 
+Fixes: 854b69efbdd2903991506ac5d5624d2cfb5b4e2f PCI: qcom: add runtime
+pm support to pcie_port
+
+> ---
 > 
-> Thanks
-> Kishon
+> I'm sorry for not spotting this last week when we discussed the previous patch.
 > 
+>  drivers/pci/dwc/pcie-qcom.c | 65 ++++++++++++++++++++++++++-----------
+
+the path has been changed to drivers/pci/controller/dwc/pcie-qcom.c
+
+>  1 file changed, 46 insertions(+), 19 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+> index 3f35098b71b1..f2453196278f 100644
+> --- a/drivers/pci/dwc/pcie-qcom.c
+> +++ b/drivers/pci/dwc/pcie-qcom.c
+> @@ -1088,8 +1088,6 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
+>  	struct qcom_pcie *pcie = to_qcom_pcie(pci);
+>  	int ret;
+>  
+> -	pm_runtime_get_sync(pci->dev);
+> -
+>  	qcom_ep_reset_assert(pcie);
+>  
+>  	ret = pcie->ops->init(pcie);
+> @@ -1126,7 +1124,6 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
+>  	phy_power_off(pcie->phy);
+>  err_deinit:
+>  	pcie->ops->deinit(pcie);
+> -	pm_runtime_put_sync(pci->dev);
+>  
+>  	return ret;
+>  }
+> @@ -1207,7 +1204,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+>  	struct qcom_pcie *pcie;
+>  	int ret;
+>  
+> -
+>  	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+>  	if (!pcie)
+>  		return -ENOMEM;
+> @@ -1217,6 +1213,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+>  		return -ENOMEM;
+>  
+>  	pm_runtime_enable(dev);
+> +	pm_runtime_get_sync(dev);
+
+pm_runtime_get_sync could fail, please check for errors.
+
+With those changes addressed:
+
+Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+
+-- 
+regards,
+Stan
