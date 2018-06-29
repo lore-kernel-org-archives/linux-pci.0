@@ -1,65 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56910 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:58948 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751503AbeF3UlC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 30 Jun 2018 16:41:02 -0400
-Date: Sat, 30 Jun 2018 15:41:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rajat Jain <rajatja@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Thomas Tai <thomas.tai@oracle.com>,
-        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
-        Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com
-Subject: Re: [PATCH 0/4] Expose PCIe AER stats via sysfs
-Message-ID: <20180630204100.GF9547@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180621234829.224566-1-rajatja@google.com>
+        id S1753127AbeF2J6Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Jun 2018 05:58:16 -0400
+Date: Fri, 29 Jun 2018 11:00:03 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] PCI: endpoint: use after free in
+ pci_epf_unregister_driver()
+Message-ID: <20180629100003.GC9576@red-moon>
+References: <20180531062148.qnhcnnibz2ql6soa@kili.mountain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180621234829.224566-1-rajatja@google.com>
+In-Reply-To: <20180531062148.qnhcnnibz2ql6soa@kili.mountain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 21, 2018 at 04:48:25PM -0700, Rajat Jain wrote:
-> This is a follow up to:
-> https://lkml.org/lkml/2018/5/22/1057
+On Thu, May 31, 2018 at 09:21:48AM +0300, Dan Carpenter wrote:
+> We need to use list_for_each_entry_safe() because the
+> pci_ep_cfs_remove_epf_group() function frees "group".
 > 
-> Respinning as a new patchset because the old one has been refactored
-> to include new patches (that were not part of original), and dropping
-> some patches. The major changes are:
+> Fixes: ef1433f717a2 ("PCI: endpoint: Create configfs entry for each pci_epf_device_id table entry")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > 
-> * Provide breakdown of Fatal / non fatal errors separately
-> * Include the "total" in the same file
-> * do some PCI cleanup before the actual aer_stats stuff
-> * Include documentation in the main patch
-> * Rename variables / attributes to better match the newer reality.
-> 
-> Rajat Jain (4):
->   PCI: Move pci_aer_init() and pci_no_aer() declarations to
->     drivers/pci/pci.h
->   PCI/AER: Define and allocate aer_stats structure for AER capable
->     devices
->   PCI/AER: Add sysfs attributes to provide AER stats and breakdown
->   PCI/AER: Add sysfs attributes for rootport cumulative stats
-> 
->  .../testing/sysfs-bus-pci-devices-aer_stats   | 122 +++++++++++
->  Documentation/PCI/pcieaer-howto.txt           |   5 +
->  drivers/pci/pci-sysfs.c                       |   3 +
->  drivers/pci/pci.h                             |  11 +
->  drivers/pci/pcie/aer.c                        | 198 +++++++++++++++++-
->  drivers/pci/probe.c                           |   1 +
->  include/linux/pci.h                           |   5 +-
->  7 files changed, 337 insertions(+), 8 deletions(-)
->  create mode 100644 Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+> index 523a8cab3bfb..bf53fad636a5 100644
+> --- a/drivers/pci/endpoint/pci-epf-core.c
+> +++ b/drivers/pci/endpoint/pci-epf-core.c
+> @@ -145,10 +145,10 @@ EXPORT_SYMBOL_GPL(pci_epf_alloc_space);
+>   */
+>  void pci_epf_unregister_driver(struct pci_epf_driver *driver)
+>  {
+> -	struct config_group *group;
+> +	struct config_group *group, *tmp;
+>  
+>  	mutex_lock(&pci_epf_mutex);
+> -	list_for_each_entry(group, &driver->epf_group, group_entry)
+> +	list_for_each_entry_safe(group, tmp, &driver->epf_group, group_entry)
+>  		pci_ep_cfs_remove_epf_group(group);
+>  	list_del(&driver->epf_group);
+>  	mutex_unlock(&pci_epf_mutex);
 
-Applied to pci/aer for v4.19, thanks!
+Kishon, I need your ACK to merge this fix, thanks.
+
+Lorenzo
