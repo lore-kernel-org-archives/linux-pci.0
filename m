@@ -1,55 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:43415 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754462AbeFMH0S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jun 2018 03:26:18 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3 03/10] PCI: keystone-dw: Use pci_host_alloc_intx_irqd() helper to get irq domain for INTx
-Date: Wed, 13 Jun 2018 15:25:52 +0800
-Message-Id: <1528874752-7671-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528874696-7524-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <1530214274-21139-4-git-send-email-okaya@codeaurora.org>
+References: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
+ <1530214274-21139-4-git-send-email-okaya@codeaurora.org>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Sat, 30 Jun 2018 00:43:32 +0300
+Message-ID: <CAHp75VcYbeRTiggEiQnEV6DKR=F47RxNR0FZ+E-XKPpq8VNpqw@mail.gmail.com>
+Subject: Re: [PATCH V4 4/7] PCI: Unify try slot and bus reset API
+To: Sinan Kaya <okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>,
+ "open list:VFIO DRIVER" <kvm@vger.kernel.org>,
+ Alexey Kardashevskiy <aik@ozlabs.ru>, linux-pci@vger.kernel.org,
+ Dennis Dalessandro <dennis.dalessandro@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Peter Xu <peterx@redhat.com>,
+ open list <linux-kernel@vger.kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Doug Ledford <dledford@redhat.com>, Zhenyu Wang <zhenyuw@linux.intel.com>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+ "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just avoid code duplication, but no functional change intended.
+On Thu, Jun 28, 2018 at 10:31 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> Drivers are expected to call pci_try_reset_slot() or pci_try_reset_bus() by
+> querying if a system supports hotplug or not. A survey showed that most
+> drivers don't do this and we are leaking hotplug capability to the user.
+>
+> Hide pci_try_slot_reset() from drivers and embed into pci_try_bus_reset().
+> Change pci_try_reset_bus() parameter from struct pci_bus to struct pci_dev.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+> +/**
+> + * pci_try_reset_bus - Try to reset a PCI bus
+> + * @pdev: top level PCI device to reset via slot/bus
+> + *
+> + * Same as above except return -EAGAIN if the bus cannot be locked
+> + */
+> +int pci_try_reset_bus(struct pci_dev *pdev)
+> +{
+> +       bool slot = false;
+> +
+> +       if (!pci_probe_reset_slot(pdev->slot))
+> +               slot = true;
+> +
+> +       return slot ? __pci_try_reset_slot(pdev->slot) :
+> +                       __pci_try_reset_bus(pdev->bus);
 
-Changes in v3: None
-Changes in v2: None
+This can be as simple as
 
- drivers/pci/controller/dwc/pci-keystone-dw.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+  return pci_probe_reset_slot(pdev->slot) ?
+    __pci_try_reset_bus(pdev->slot) : __pci_try_reset_slot(pdev->bus);
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone-dw.c b/drivers/pci/controller/dwc/pci-keystone-dw.c
-index 0682213..a45809d 100644
---- a/drivers/pci/controller/dwc/pci-keystone-dw.c
-+++ b/drivers/pci/controller/dwc/pci-keystone-dw.c
-@@ -470,15 +470,12 @@ int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
- 	ks_pcie->app = *res;
- 
- 	/* Create legacy IRQ domain */
--	ks_pcie->legacy_irq_domain =
--			irq_domain_add_linear(ks_pcie->legacy_intc_np,
--					PCI_NUM_INTX,
-+	ks_pcie->legacy_irq_domain = pci_host_alloc_intx_irqd(dev, ks_pcie,
-+					false,
- 					&ks_dw_pcie_legacy_irq_domain_ops,
--					NULL);
--	if (!ks_pcie->legacy_irq_domain) {
--		dev_err(dev, "Failed to add irq domain for legacy irqs\n");
--		return -EINVAL;
--	}
-+					ks_pcie->legacy_intc_np);
-+	if (IS_ERR(ks_pcie->legacy_irq_domain))
-+		return PTR_ERR(ks_pcie->legacy_irq_domain);
- 
- 	return dw_pcie_host_init(pp);
- }
+
+> +}
+>  EXPORT_SYMBOL_GPL(pci_try_reset_bus);
+
+
 -- 
-1.9.1
+With Best Regards,
+Andy Shevchenko
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
