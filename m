@@ -1,87 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:20585 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933451AbeFTVfY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Jun 2018 17:35:24 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 6/7] PCI/DPC: Use threaded IRQ for bottom half handling
-Date: Wed, 20 Jun 2018 15:38:32 -0600
-Message-Id: <20180620213833.25072-6-keith.busch@intel.com>
-In-Reply-To: <20180620213833.25072-1-keith.busch@intel.com>
-References: <20180620213833.25072-1-keith.busch@intel.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34926 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754825AbeF2OOj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Jun 2018 10:14:39 -0400
+Date: Fri, 29 Jun 2018 15:16:26 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Shawn Guo <shawn.guo@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/9] PCI: dwc: Drop unnecessary root_bus_nr setting
+Message-ID: <20180629141626.GH9643@red-moon>
+References: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch removes the work struct that was being used to handle a DPC
-event and uses a threaded IRQ instead for the purpose.
+On Fri, May 11, 2018 at 08:20:10AM +0800, Shawn Guo wrote:
+> The designware core function dw_pcie_host_init() already initializes
+> the root_bus_nr field of 'struct pcie_port', so the -1 assignment prior
+> to calling dw_pcie_host_init() in platform specific driver is not really
+> needed.  Drop it.
+> 
+> Changes for v2:
+>  - Improve commit log a bit per Thomas' suggestion.
+>  - Collect ACK from Thomas and Stanimir on armada8k and qcom driver.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/dpc.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+Hi Shawn,
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index f6098dd171f3..348b59954961 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -17,7 +17,6 @@
- 
- struct dpc_dev {
- 	struct pcie_device	*dev;
--	struct work_struct	work;
- 	u16			cap_pos;
- 	bool			rp_extensions;
- 	u8			rp_log_size;
-@@ -160,10 +159,10 @@ static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
- 	pci_write_config_dword(pdev, cap + PCI_EXP_DPC_RP_PIO_STATUS, status);
- }
- 
--static void dpc_work(struct work_struct *work)
-+static irqreturn_t dpc_handler(int irq, void *context)
- {
- 	struct aer_err_info info;
--	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
-+	struct dpc_dev *dpc = (struct dpc_dev *)context;
- 	struct pci_dev *pdev = dpc->dev->port;
- 	struct device *dev = &dpc->dev->device;
- 	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
-@@ -194,6 +193,8 @@ static void dpc_work(struct work_struct *work)
- 
- 	/* We configure DPC so it only triggers on ERR_FATAL */
- 	pcie_do_fatal_recovery(pdev, PCIE_PORT_SERVICE_DPC);
-+
-+	return IRQ_HANDLED;
- }
- 
- static irqreturn_t dpc_irq(int irq, void *context)
-@@ -210,7 +211,7 @@ static irqreturn_t dpc_irq(int irq, void *context)
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
- 			      PCI_EXP_DPC_STATUS_INTERRUPT);
- 	if (status & PCI_EXP_DPC_STATUS_TRIGGER)
--		schedule_work(&dpc->work);
-+		return IRQ_WAKE_THREAD;
- 	return IRQ_HANDLED;
- }
- 
-@@ -232,11 +233,11 @@ static int dpc_probe(struct pcie_device *dev)
- 
- 	dpc->cap_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
- 	dpc->dev = dev;
--	INIT_WORK(&dpc->work, dpc_work);
- 	set_service_data(dev, dpc);
- 
--	status = devm_request_irq(device, dev->irq, dpc_irq, IRQF_SHARED,
--				  "pcie-dpc", dpc);
-+	status = devm_request_threaded_irq(device, dev->irq, dpc_irq,
-+					   dpc_handler, IRQF_SHARED,
-+					   "pcie-dpc", dpc);
- 	if (status) {
- 		dev_warn(device, "request IRQ%d failed: %d\n", dev->irq,
- 			 status);
--- 
-2.14.3
+would you mind please rebasing it against v4.18-rc1 and resend with
+CC all the controllers maintainers so that we can get ACKs and send it
+for v4.19 ?
+
+Thanks a lot for doing this.
+
+Lorenzo
+
+> Shawn Guo (9):
+>   PCI: exynos: Drop unnecessary root_bus_nr setting
+>   PCI: imx6: Drop unnecessary root_bus_nr setting
+>   PCI: keystone: Drop unnecessary root_bus_nr setting
+>   PCI: armada8k: Drop unnecessary root_bus_nr setting
+>   PCI: artpec6: Drop unnecessary root_bus_nr setting
+>   PCI: designware-plat: Drop unnecessary root_bus_nr setting
+>   PCI: histb: Drop unnecessary root_bus_nr setting
+>   PCI: qcom: Drop unnecessary root_bus_nr setting
+>   PCI: spear13xx: Drop unnecessary root_bus_nr setting
+> 
+>  drivers/pci/dwc/pci-exynos.c           | 1 -
+>  drivers/pci/dwc/pci-imx6.c             | 1 -
+>  drivers/pci/dwc/pci-keystone.c         | 1 -
+>  drivers/pci/dwc/pcie-armada8k.c        | 1 -
+>  drivers/pci/dwc/pcie-artpec6.c         | 1 -
+>  drivers/pci/dwc/pcie-designware-plat.c | 1 -
+>  drivers/pci/dwc/pcie-histb.c           | 1 -
+>  drivers/pci/dwc/pcie-qcom.c            | 1 -
+>  drivers/pci/dwc/pcie-spear13xx.c       | 1 -
+>  9 files changed, 9 deletions(-)
+> 
+> -- 
+> 1.9.1
+> 
