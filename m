@@ -1,28 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:34404 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754101AbeFUH1a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jun 2018 03:27:30 -0400
-Date: Thu, 21 Jun 2018 00:27:27 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Oza Pawandeep <poza@codeaurora.org>
-Subject: Re: [PATCH 2/7] PCI/DPC: Defer event handling to work queue
-Message-ID: <20180621072727.GA18738@infradead.org>
-References: <20180620213833.25072-1-keith.busch@intel.com>
- <20180620213833.25072-2-keith.busch@intel.com>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:36007 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753194AbeF2O7O (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jun 2018 10:59:14 -0400
+Received: by mail-wr0-f196.google.com with SMTP id f16-v6so9144283wrm.3
+        for <linux-pci@vger.kernel.org>; Fri, 29 Jun 2018 07:59:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180620213833.25072-2-keith.busch@intel.com>
+In-Reply-To: <20180625210606.2736-1-alexander.deucher@amd.com>
+References: <20180625210606.2736-1-alexander.deucher@amd.com>
+From: Alex Deucher <alexdeucher@gmail.com>
+Date: Fri, 29 Jun 2018 10:59:13 -0400
+Message-ID: <CADnq5_NDb0jKaKWq0H8p7eR-qGDn=nYTx8FtemTVAynrFN5xBA@mail.gmail.com>
+Subject: Re: [PATCH 0/5] drm: use core pcie functionality for pcie gen/width
+To: amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        Maling list - DRI developers
+        <dri-devel@lists.freedesktop.org>, Dave Airlie <airlied@gmail.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Deucher <alexander.deucher@amd.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 20, 2018 at 03:38:28PM -0600, Keith Busch wrote:
-> This moves all event handling to the existing work queue, which will
-> make passing event information simpler to the handler.
+Ping on the drm and amdgpu patches.
 
-I wonder if just using a threaded interrupt would be useful for
-the DPC handler?
+Alex
+
+On Mon, Jun 25, 2018 at 5:06 PM, Alex Deucher <alexdeucher@gmail.com> wrote:
+> This series exports some pcie helper functions for use by drivers and
+> fixes up the amdgpu and radeon drivers to use this core functionality
+> rather than the duplicated functionality in the drm.  Finally we remove
+> the drm helpers since the duplicate the pcie functionality of the core.
+> This also adds proper pcie gen4 detection for amdgpu.
+>
+> Alex Deucher (5):
+>   pci: export pcie_get_speed_cap and pcie_get_width_cap
+>   drm/amdgpu: update amd_pcie.h to include gen4 speeds
+>   drm/amdgpu: use pcie functions for link width and speed
+>   drm/radeon: use pcie functions for link width
+>   drm: drop drm_pcie_get_speed_cap_mask and drm_pcie_get_max_link_width
+>
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 83 +++++++++++++++++++++---------
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_dpm.c    |  7 ++-
+>  drivers/gpu/drm/amd/amdgpu/ci_dpm.c        |  3 +-
+>  drivers/gpu/drm/amd/amdgpu/si_dpm.c        |  3 +-
+>  drivers/gpu/drm/amd/include/amd_pcie.h     |  2 +
+>  drivers/gpu/drm/drm_pci.c                  | 58 ---------------------
+>  drivers/gpu/drm/radeon/ci_dpm.c            | 20 +++++--
+>  drivers/gpu/drm/radeon/cik.c               | 22 ++++----
+>  drivers/gpu/drm/radeon/r600_dpm.c          |  4 +-
+>  drivers/gpu/drm/radeon/radeon.h            |  4 ++
+>  drivers/gpu/drm/radeon/si.c                | 22 ++++----
+>  drivers/gpu/drm/radeon/si_dpm.c            | 20 +++++--
+>  drivers/pci/pci.c                          |  2 +
+>  include/drm/drm_pci.h                      |  7 ---
+>  include/linux/pci.h                        |  3 ++
+>  15 files changed, 132 insertions(+), 128 deletions(-)
+>
+> --
+> 2.13.6
+>
