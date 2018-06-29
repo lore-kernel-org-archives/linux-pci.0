@@ -1,76 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 7 Jun 2018 08:32:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Shah, Nehal-bakulchandra" <Nehal-Bakulchandra.shah@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34382 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753045AbeF2NgV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Jun 2018 09:36:21 -0400
+Date: Fri, 29 Jun 2018 14:38:05 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
         Wolfram Sang <wsa@the-dreams.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-i2c <linux-i2c@vger.kernel.org>, Sandeep.Singh@amd.com,
-        Shyam-sundar.S-k@amd.com, kai.heng.feng@canonical.com
-Subject: Re: [PATCH] i2c:amd I2C Driver based on PCI Interface for upcoming
- platform
-Message-ID: <20180607133257.GB15137@bhelgaas-glaptop.roam.corp.google.com>
-References: <1524928597-23312-1-git-send-email-Nehal-bakulchandra.Shah@amd.com>
- <SN1PR12MB257536FC4322C1D3D6F2F972A06C0@SN1PR12MB2575.namprd12.prod.outlook.com>
- <20180531214311.i6s5xginjgevkwoe@ninjato>
- <SN1PR12MB257592515E4A436078D43E68A0670@SN1PR12MB2575.namprd12.prod.outlook.com>
- <CAErSpo6SvtKL6HsPGn2KM5Tw+oadHZXWeq=aLMA+1pyrBfBA1Q@mail.gmail.com>
- <315546a5-3f3a-d921-abd6-dd500db98953@amd.com>
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH v4 6/6] PCI: rcar: Shut the PHY down in failpath
+Message-ID: <20180629133805.GA9643@red-moon>
+References: <20180524143624.26718-1-marek.vasut+renesas@gmail.com>
+ <20180524143624.26718-7-marek.vasut+renesas@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <315546a5-3f3a-d921-abd6-dd500db98953@amd.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20180524143624.26718-7-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 07, 2018 at 03:52:03PM +0530, Shah, Nehal-bakulchandra wrote:
-> On 6/4/2018 10:45 PM, Bjorn Helgaas wrote:
-> > On Mon, Jun 4, 2018 at 11:33 AM Shah, Nehal-bakulchandra
-> > <Nehal-bakulchandra.Shah@amd.com> wrote:
-> >>
-> >> Hi All,
-> >>
-> >> Please help in reviewing the patch.
-> > 
-> > If you'd like PCI review, please post the patches to linux-pci@vger.kernel.org.
+On Thu, May 24, 2018 at 04:36:24PM +0200, Marek Vasut wrote:
+> If anything fails past phy_init_fn() and the system is a Gen3 with
+> a PHY, the PHY will be left on and inited. This is caused by the
+> phy_init_fn, which is in fact a pointer to rcar_pcie_phy_init_gen3()
+> function, which starts the PHY, yet has no counterpart in the failpath.
+> Add that counterpart.
 > 
-> This patch is more onto I2C which is using PCI Interface. Is it
-> still good to send for linux-pci review? I am really confused how to
-> take it forward. Your suggestion will be well appreciated.
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> Fixes: 517ca93a7159 ("PCI: rcar: Add R-Car gen3 PHY support")
+> ---
+> V4: New patch
+> ---
+>  drivers/pci/host/pcie-rcar.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
 
-You sent this to linux-pci:
+Applied to pci/controller-fixes to be tentatively merged at -rc4,
+thanks.
 
-  To: Wolfram Sang <wsa@the-dreams.de>, "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-  ...
+Lorenzo
 
-  Hi All,
-
-  Please help in reviewing the patch.
-
-That looks like a request for PCI folks to review your patch.  My
-point is simply that if you would like PCI people to review it, you
-should send the patch to linux-pci@vger.kernel.org.
-
-> >> -----Original Message-----
-> >> From: linux-i2c-owner@vger.kernel.org [mailto:linux-i2c-owner@vger.kernel.org] On Behalf Of Wolfram Sang
-> >> Sent: Friday, June 1, 2018 3:13 AM
-> >> To: Shah, Nehal-bakulchandra <Nehal-bakulchandra.Shah@amd.com>
-> >> Cc: linux-i2c@vger.kernel.org; Singh, Sandeep <Sandeep.Singh@amd.com>; S-k, Shyam-sundar <Shyam-sundar.S-k@amd.com>; Kai Heng Feng <kai.heng.feng@canonical.com>
-> >> Subject: Re: [PATCH] i2c:amd I2C Driver based on PCI Interface for upcoming platform
-> >>
-> >> Hi,
-> >>
-> >>> I am waiting for the feedback on this patch. It has been there since
-> >>> long time. Can you please provide the feedback.
-> >>
-> >> Well, reviewing drivers is a community effort these days. While I am part of this community, I am surely not the only one. So, please ask the list for help (rather than me personally). Furthermore, I think I am not the right person here to ask for help. I don't know much about PCI & ACPI. We have dedicated I2C-ACPI maintainers, maybe they have some bandwidth for review?
-> >>
-> >> That being said: yes, it is sad that you need to wait this long; yet I simply can't fill up all the resource problems we have here.
-> >>
-> >> Thanks,
-> >>
-> >>    Wolfram
-> >>
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 636c3c5095d2..695781934f0a 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -1163,7 +1163,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>  	if (rcar_pcie_hw_init(pcie)) {
+>  		dev_info(dev, "PCIe link down\n");
+>  		err = -ENODEV;
+> -		goto err_clk_disable;
+> +		goto err_phy_shutdown;
+>  	}
+>  
+>  	data = rcar_pci_read_reg(pcie, MACSR);
+> @@ -1175,7 +1175,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>  			dev_err(dev,
+>  				"failed to enable MSI support: %d\n",
+>  				err);
+> -			goto err_clk_disable;
+> +			goto err_phy_shutdown;
+>  		}
+>  	}
+>  
+> @@ -1189,6 +1189,12 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>  	if (IS_ENABLED(CONFIG_PCI_MSI))
+>  		rcar_pcie_teardown_msi(pcie);
+>  
+> +err_phy_shutdown:
+> +	if (pcie->phy) {
+> +		phy_power_off(pcie->phy);
+> +		phy_exit(pcie->phy);
+> +	}
+> +
+>  err_clk_disable:
+>  	clk_disable_unprepare(pcie->bus_clk);
+>  
+> -- 
+> 2.16.2
 > 
-> Thanks,
-> Nehal Shah
