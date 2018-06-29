@@ -1,85 +1,126 @@
-Return-Path: <SRS0=kec7=JO=gmail.com=alexdeucher@kernel.org>
-Return-Path: <SRS0=kec7=JO=gmail.com=alexdeucher@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:35954 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932925AbeF2UJg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Jun 2018 16:09:36 -0400
+Date: Fri, 29 Jun 2018 15:09:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        alexander.duyck@gmail.com, oss-drivers@netronome.com,
+        Christoph Hellwig <hch@infradead.org>,
+        Don Dutile <ddutile@redhat.com>
+Subject: Re: [PATCH] PCI: reset driver SR-IOV state after remove
+Message-ID: <20180629200934.GB40928@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180618220142.16527-1-jakub.kicinski@netronome.com>
 MIME-Version: 1.0
-In-Reply-To: <20180628134221.GC90450@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180625210606.2736-1-alexander.deucher@amd.com>
- <20180625210606.2736-2-alexander.deucher@amd.com> <20180628134221.GC90450@bhelgaas-glaptop.roam.corp.google.com>
-From: Alex Deucher <alexdeucher@gmail.com>
-Date: Thu, 28 Jun 2018 10:19:41 -0400
-Message-ID: <CADnq5_OMmcbKsWQ3QfuMKYOxhrZZxOCs4YTN+Pyf7zuy43ypyA@mail.gmail.com>
-Subject: Re: [PATCH 1/5] pci: export pcie_get_speed_cap and pcie_get_width_cap
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: amd-gfx list <amd-gfx@lists.freedesktop.org>,
-	Maling list - DRI developers <dri-devel@lists.freedesktop.org>, Dave Airlie <airlied@gmail.com>,
-	Linux PCI <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Deucher <alexander.deucher@amd.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180618220142.16527-1-jakub.kicinski@netronome.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 28, 2018 at 9:42 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Mon, Jun 25, 2018 at 04:06:02PM -0500, Alex Deucher wrote:
->> So drivers can use them.  This can be used to replace
->> duplicate code in the drm subsystem.
->>
->> Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> Thanks a lot for doing this!
->
-> If you haven't applied these yet, please
->
->   s/pci: export/PCI: Export/
->
-> in the subject.
+On Mon, Jun 18, 2018 at 03:01:42PM -0700, Jakub Kicinski wrote:
+> Bjorn points out that currently core and most of the drivers don't
+> clean up dev->sriov->driver_max_VFs settings on .remove().  This
+> means that if a different driver is bound afterwards it will
+> inherit the old setting:
+> 
+>   - load PF driver 1
+>   - driver 1 calls pci_sriov_set_totalvfs() to reduce driver_max_VFs
+>   - unload PF driver 1
+>   - load PF driver 2
+>   # driver 2 does not know to call pci_sriov_set_totalvfs()
+> 
+> Some drivers (e.g. nfp) used to do the clean up by calling
+> pci_sriov_set_totalvfs(dev, 0), since 0 was equivalent to no driver
+> limit set.  After commit 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers
+> to limit total_VFs to 0") 0 no longer has this special meaning.
+> 
+> The need to reset driver_max_VFs comes from the fact that old FW
+> builds may not expose its VF limits to the drivers, and depend on
+> the ability to reject the configuration change when driver notifies
+> the FW as part of struct pci_driver->sriov_configure() callback.
+> Therefore if there is no information on VF count limits we should
+> use the PCI capability max, and not the last value set by
+> pci_sriov_set_totalvfs().
+> 
+> Reset driver_max_VFs back to total_VFs after device remove.  If
+> drivers want to reload FW/reconfigure the device while driver is
+> bound we may add an explicit pci_sriov_reset_totalvfs(), but for
+> now no driver is doing that.
+> 
+> Fixes: 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers to limit total_VFs to 0")
+> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
 
+Applied to for-linus for v4.18, thanks!
 
-Will fix.  Any objections to taking this via the drm tree?
-
-Thanks,
-
-Alex
-
->
->> ---
->>  drivers/pci/pci.c   | 2 ++
->>  include/linux/pci.h | 3 +++
->>  2 files changed, 5 insertions(+)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 97acba712e4e..22adaf35b136 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -5222,6 +5222,7 @@ enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
->>
->>       return PCI_SPEED_UNKNOWN;
->>  }
->> +EXPORT_SYMBOL(pcie_get_speed_cap);
->>
->>  /**
->>   * pcie_get_width_cap - query for the PCI device's link width capability
->> @@ -5240,6 +5241,7 @@ enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev)
->>
->>       return PCIE_LNK_WIDTH_UNKNOWN;
->>  }
->> +EXPORT_SYMBOL(pcie_get_width_cap);
->>
->>  /**
->>   * pcie_bandwidth_capable - calculate a PCI device's link bandwidth capability
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 340029b2fb38..6e0c0803b241 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -261,6 +261,9 @@ enum pci_bus_speed {
->>       PCI_SPEED_UNKNOWN               = 0xff,
->>  };
->>
->> +enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev);
->> +enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev);
->> +
->>  struct pci_cap_saved_data {
->>       u16             cap_nr;
->>       bool            cap_extended;
->> --
->> 2.13.6
->>
+> ---
+>  drivers/pci/iov.c        | 16 ++++++++++++++++
+>  drivers/pci/pci-driver.c |  1 +
+>  drivers/pci/pci.h        |  4 ++++
+>  3 files changed, 21 insertions(+)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index d0d73dbbd5ca..cbbe6d8fab0c 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -574,6 +574,22 @@ void pci_iov_release(struct pci_dev *dev)
+>  		sriov_release(dev);
+>  }
+>  
+> +/**
+> + * pci_iov_device_removed - clean up SR-IOV state after PF driver is detached
+> + * @dev: the PCI device
+> + */
+> +void pci_iov_device_removed(struct pci_dev *dev)
+> +{
+> +	struct pci_sriov *iov = dev->sriov;
+> +
+> +	if (!dev->is_physfn)
+> +		return;
+> +	iov->driver_max_VFs = iov->total_VFs;
+> +	if (iov->num_VFs)
+> +		dev_warn(&dev->dev,
+> +			 "driver left SR-IOV enabled after remove\n");
+> +}
+> +
+>  /**
+>   * pci_iov_update_resource - update a VF BAR
+>   * @dev: the PCI device
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index c125d53033c6..80a281cf5d21 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -445,6 +445,7 @@ static int pci_device_remove(struct device *dev)
+>  		}
+>  		pcibios_free_irq(pci_dev);
+>  		pci_dev->driver = NULL;
+> +		pci_iov_device_removed(pci_dev);
+>  	}
+>  
+>  	/* Undo the runtime PM settings in local_pci_probe() */
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index c358e7a07f3f..fc8bd4fdfb95 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -311,6 +311,7 @@ static inline void pci_restore_ats_state(struct pci_dev *dev)
+>  #ifdef CONFIG_PCI_IOV
+>  int pci_iov_init(struct pci_dev *dev);
+>  void pci_iov_release(struct pci_dev *dev);
+> +void pci_iov_device_removed(struct pci_dev *dev);
+>  void pci_iov_update_resource(struct pci_dev *dev, int resno);
+>  resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
+>  void pci_restore_iov_state(struct pci_dev *dev);
+> @@ -323,6 +324,9 @@ static inline int pci_iov_init(struct pci_dev *dev)
+>  }
+>  static inline void pci_iov_release(struct pci_dev *dev)
+>  
+> +{
+> +}
+> +static inline void pci_iov_device_removed(struct pci_dev *dev)
+>  {
+>  }
+>  static inline void pci_restore_iov_state(struct pci_dev *dev)
+> -- 
+> 2.17.1
+> 
