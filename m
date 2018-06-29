@@ -1,174 +1,168 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH V4 4/7] PCI: Unify try slot and bus reset API
-Date: Thu, 28 Jun 2018 15:31:02 -0400
-Message-Id: <1530214274-21139-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
-References: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=IbNf=JP=mediatek.com=honghui.zhang@kernel.org>
+Return-Path: <SRS0=IbNf=JP=mediatek.com=honghui.zhang@kernel.org>
+Message-ID: <1530258706.28284.50.camel@mhfsdcap03>
+Subject: Re: [PATCH 1/4] PCI: mediatek: fixup mtk_pcie_find_port logical
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+	<bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+	<eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>,
+	<youlin.pei@mediatek.com>, <hongkun.cao@mediatek.com>,
+	<sean.wang@mediatek.com>, <yt.shen@mediatek.com>, <yong.wu@mediatek.com>
+Date: Fri, 29 Jun 2018 15:51:46 +0800
+In-Reply-To: <20180628130737.GA90450@bhelgaas-glaptop.roam.corp.google.com>
+References: <1530091298-28120-1-git-send-email-honghui.zhang@mediatek.com>
+	 <1530091298-28120-2-git-send-email-honghui.zhang@mediatek.com>
+	 <20180628130737.GA90450@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>,
- "open list:VFIO DRIVER" <kvm@vger.kernel.org>,
- Alexey Kardashevskiy <aik@ozlabs.ru>, linux-arm-msm@vger.kernel.org,
- Dennis Dalessandro <dennis.dalessandro@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Peter Xu <peterx@redhat.com>,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Doug Ledford <dledford@redhat.com>,
- Zhenyu Wang <zhenyuw@linux.intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org,
- "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Drivers are expected to call pci_try_reset_slot() or pci_try_reset_bus() by
-querying if a system supports hotplug or not. A survey showed that most
-drivers don't do this and we are leaking hotplug capability to the user.
+On Thu, 2018-06-28 at 08:07 -0500, Bjorn Helgaas wrote:
+> On Wed, Jun 27, 2018 at 05:21:35PM +0800, honghui.zhang@mediatek.com wrote:
+> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > 
+> > Mediatek's host controller have two slots, each have it's own control
+> > registers. The host driver need to identify which slot was connected
+> > in order to access the device's configuration space. There's problem
+> > for current host driver to find out which slot was connected to for
+> > a given EP device.
+> 
+>   The Mediatek host controller has two slots, each with its own control
+>   registers.
 
-Hide pci_try_slot_reset() from drivers and embed into pci_try_bus_reset().
-Change pci_try_reset_bus() parameter from struct pci_bus to struct pci_dev.
+Thanks, I will update it in the next version.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/infiniband/hw/hfi1/pcie.c |  2 +-
- drivers/pci/pci.c                 | 26 +++++++++++++++++++++-----
- drivers/vfio/pci/vfio_pci.c       |  6 ++----
- include/linux/pci.h               |  3 +--
- 4 files changed, 25 insertions(+), 12 deletions(-)
+> 
+> > Assuming each slot have connect with one EP device as below:
+> > 
+> >                 host bridge
+> >   bus 0 --> __________|_______
+> >            |                  |
+> >            |                  |
+> >          slot 0             slot 1
+> >   bus 1 -->|        bus 2 --> |
+> >            |                  |
+> >          EP 0               EP 1
+> > 
+> > While PCI emulation, system software will scan all the PCI device
+> 
+> s/While PCI emulation/During PCI enumeration/
 
-diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-index 4570c4d..df4f2d3 100644
---- a/drivers/infiniband/hw/hfi1/pcie.c
-+++ b/drivers/infiniband/hw/hfi1/pcie.c
-@@ -905,7 +905,7 @@ static int trigger_sbr(struct hfi1_devdata *dd)
- 	 * delay after a reset is required.  Per spec requirements,
- 	 * the link is either working or not after that point.
- 	 */
--	return pci_try_reset_bus(dev->bus);
-+	return pci_try_reset_bus(dev);
- }
- 
- /*
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 236220c..79a1566 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4817,12 +4817,12 @@ int pci_reset_slot(struct pci_slot *slot)
- EXPORT_SYMBOL_GPL(pci_reset_slot);
- 
- /**
-- * pci_try_reset_slot - Try to reset a PCI slot
-+ * __pci_try_reset_slot - Try to reset a PCI slot
-  * @slot: PCI slot to reset
-  *
-  * Same as above except return -EAGAIN if the slot cannot be locked
-  */
--int pci_try_reset_slot(struct pci_slot *slot)
-+static int __pci_try_reset_slot(struct pci_slot *slot)
- {
- 	int rc;
- 
-@@ -4843,7 +4843,6 @@ int pci_try_reset_slot(struct pci_slot *slot)
- 
- 	return rc;
- }
--EXPORT_SYMBOL_GPL(pci_try_reset_slot);
- 
- static int pci_bus_reset(struct pci_bus *bus, int probe)
- {
-@@ -4906,12 +4905,12 @@ int pci_reset_bus(struct pci_bus *bus)
- EXPORT_SYMBOL_GPL(pci_reset_bus);
- 
- /**
-- * pci_try_reset_bus - Try to reset a PCI bus
-+ * __pci_try_reset_bus - Try to reset a PCI bus
-  * @bus: top level PCI bus to reset
-  *
-  * Same as above except return -EAGAIN if the bus cannot be locked
-  */
--int pci_try_reset_bus(struct pci_bus *bus)
-+static int __pci_try_reset_bus(struct pci_bus *bus)
- {
- 	int rc;
- 
-@@ -4932,6 +4931,23 @@ int pci_try_reset_bus(struct pci_bus *bus)
- 
- 	return rc;
- }
-+
-+/**
-+ * pci_try_reset_bus - Try to reset a PCI bus
-+ * @pdev: top level PCI device to reset via slot/bus
-+ *
-+ * Same as above except return -EAGAIN if the bus cannot be locked
-+ */
-+int pci_try_reset_bus(struct pci_dev *pdev)
-+{
-+	bool slot = false;
-+
-+	if (!pci_probe_reset_slot(pdev->slot))
-+		slot = true;
-+
-+	return slot ? __pci_try_reset_slot(pdev->slot) :
-+			__pci_try_reset_bus(pdev->bus);
-+}
- EXPORT_SYMBOL_GPL(pci_try_reset_bus);
- 
- /**
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index b423a30..71018ec 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -1010,8 +1010,7 @@ static long vfio_pci_ioctl(void *device_data,
- 						    &info, slot);
- 		if (!ret)
- 			/* User has access, do the reset */
--			ret = slot ? pci_try_reset_slot(vdev->pdev->slot) :
--				     pci_try_reset_bus(vdev->pdev->bus);
-+			ret = pci_try_reset_bus(vdev->pdev);
- 
- hot_reset_release:
- 		for (i--; i >= 0; i--)
-@@ -1373,8 +1372,7 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
- 	}
- 
- 	if (needs_reset)
--		ret = slot ? pci_try_reset_slot(vdev->pdev->slot) :
--			     pci_try_reset_bus(vdev->pdev->bus);
-+		ret = pci_try_reset_bus(vdev->pdev);
- 
- put_devs:
- 	for (i = 0; i < devs.cur_index; i++) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6b12ce2..f5c85b6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1096,10 +1096,9 @@ int pci_reset_function_locked(struct pci_dev *dev);
- int pci_try_reset_function(struct pci_dev *dev);
- int pci_probe_reset_slot(struct pci_slot *slot);
- int pci_reset_slot(struct pci_slot *slot);
--int pci_try_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
- int pci_reset_bus(struct pci_bus *bus);
--int pci_try_reset_bus(struct pci_bus *bus);
-+int pci_try_reset_bus(struct pci_dev *dev);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
--- 
-2.7.4
+Thanks, will update this.
 
+> 
+> > starting from devfn 0. So it will get the proper port for slot0 and
+> > slot1 device when using PCI_SLOT(devfn) for match. But it will get
+> > the wrong slot for EP1: The devfn will be start from 0 when scanning
+> > EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
+> > for port0's slot value. So the host driver should not using EP's devfn
+> > but the slot's devfn(the slot which EP was connected to) for match.
+> > 
+> > This patch fix the mtk_pcie_find_port's logical by using the slot's
+> > devfn for match.
+> > 
+> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
+> > ---
+> >  drivers/pci/controller/pcie-mediatek.c | 17 +++++++++++++++--
+> >  1 file changed, 15 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> > index 0baabe3..9cf7ecf 100644
+> > --- a/drivers/pci/controller/pcie-mediatek.c
+> > +++ b/drivers/pci/controller/pcie-mediatek.c
+> > @@ -337,10 +337,23 @@ static struct mtk_pcie_port *mtk_pcie_find_port(struct pci_bus *bus,
+> >  {
+> >  	struct mtk_pcie *pcie = bus->sysdata;
+> >  	struct mtk_pcie_port *port;
+> > +	struct pci_dev *dev;
+> > +	struct pci_bus *pbus;
+> >  
+> > -	list_for_each_entry(port, &pcie->ports, list)
+> > -		if (port->slot == PCI_SLOT(devfn))
+> > +	list_for_each_entry(port, &pcie->ports, list) {
+> 
+> mvebu has the identical hardware structure but uses an array instead
+> of a list:
+> 
+>   num = of_get_available_child_count(np);
+>   pcie->ports = devm_kcalloc(dev, num, sizeof(*pcie->ports), GFP_KERNEL);
+>   for_each_available_child_of_node(np, child) {
+>     struct mvebu_pcie_port *port = &pcie->ports[i];
+>     mvebu_pcie_parse_port(pcie, port, child);
+>   }
+> 
+> It would be nice if mvebu and mtk used the same strategy so the code
+> looks the same.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Seems there's different approach existing in current host controller
+driver for this, tegra PCIe is using list too.
+I guess I can change it to using array after this problem is fixed if
+you have strong opinion here.
+
+> 
+> > +		if (bus->number == 0 && port->slot == PCI_SLOT(devfn)) {
+> 
+> Is the root bus number fixed at 0 or is it programmable?  Many drivers
+> do something like this:
+
+The primary bus number is fixed at 0.(technically speaking, hardware
+will capture the very first value of primary bus number, once it's been
+captured, change the value in configuration space will not take effort. 
+
+But the hardware default value is 0, the hardware will not response to
+other values except 0 at the first time. And the only way to touch the
+value in it's configuration space is using primary bus number 0. So it
+could be taken as fixed at 0.)
+
+> 
+>   if (bus->number == pcie->root_bus_nr)
+> 
+> to handle the case of the root bus number being programmable.
+> 
+> >  			return port;
+> > +		} else if (bus->number != 0) {
+> > +			pbus = bus;
+> > +			do {
+> > +				dev = pbus->self;
+> > +				if (port->slot == PCI_SLOT(dev->devfn))
+> > +					return port;
+> > +
+> > +				pbus = dev->bus;
+> > +			} while (dev->bus->number != 0);
+> 
+> You should not need to search up the tree of dev->bus->self.
+> 
+> mvebu_pcie_find_port() checks the root port secondary and subordinate
+> bus numbers, which should work here, too.
+> 
+
+I checked mvebu's host driver, it using software bridge to abstract a
+pseudo bridge. And access to this pseudo bridge's configuration space is
+all software behavior.
+
+If I following mvebu's way, I need to touch the hardware to read back
+the secondary and subordinary bus number, I think current software
+solution is more efficient.
+
+Or I could add per port parameter to store the bus_number, and update
+the value as mvebu's driver is doing. Do you think it's better than
+current solution?
+
+> > +		}
+> > +	}
+> >  
+> >  	return NULL;
+> >  }
+> > -- 
+> > 2.6.4
+> > 
+> > 
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
