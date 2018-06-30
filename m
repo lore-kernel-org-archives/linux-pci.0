@@ -1,144 +1,68 @@
-Return-Path: <SRS0=O44p=JL=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=O44p=JL=linuxfoundation.org=gregkh@kernel.org>
-Date: Mon, 25 Jun 2018 18:45:05 +0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Pingfan Liu <kernelfans@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCHv2 2/2] drivers/base: reorder consumer and its children
- behind suppliers
-Message-ID: <20180625104505.GA3058@kroah.com>
-References: <1529912859-10475-1-git-send-email-kernelfans@gmail.com>
- <1529912859-10475-3-git-send-email-kernelfans@gmail.com>
+Return-Path: <SRS0=4zVJ=JQ=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=4zVJ=JQ=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1529912859-10475-3-git-send-email-kernelfans@gmail.com>
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20180629191930.GA40928@bhelgaas-glaptop.roam.corp.google.com>
+References: <35587465.8Nave9aG7d@aspire.rjw.lan> <2518711.SfHWAsyaFM@aspire.rjw.lan>
+ <20180629191930.GA40928@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 30 Jun 2018 23:15:33 +0200
+Message-ID: <CAJZ5v0gmfVWA51Rxk8=veA5UmFD4rCEUba7fq=SwTVY-WDjofQ@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI / ACPI / PM: Resume bridges w/o drivers on suspend-to-RAM
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Mika Westerberg <mika.westerberg@linux.intel.com>,
+	n0000b.n000b@gmail.com, LKML <linux-kernel@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM <linux-pm@vger.kernel.org>,
+	Lukas Wunner <lukas@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 25, 2018 at 03:47:39PM +0800, Pingfan Liu wrote:
-> commit 52cdbdd49853 ("driver core: correct device's shutdown order")
-> introduces supplier<-consumer order in devices_kset. The commit tries
-> to cleverly maintain both parent<-child and supplier<-consumer order by
-> reordering a device when probing. This method makes things simple and
-> clean, but unfortunately, breaks parent<-child order in some case,
-> which is described in next patch in this series.
+On Fri, Jun 29, 2018 at 9:19 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Jun 29, 2018 at 10:34:40AM +0200, Rafael J. Wysocki wrote:
+>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>
+>> It is reported that commit c62ec4610c40 (PM / core: Fix direct_complete
+>> handling for devices with no callbacks) introduced a system suspend
+>> regression on Samsung 305V4A by allowing a PCI bridge (not a PCIe
+>> port) to stay in D3 over suspend-to-RAM, which is a side effect of
+>> setting power.direct_complete for the children of that bridge that
+>> have no PM callbacks.
+>>
+>> On the majority of systems PCI bridges are not allowed to be
+>> runtime-suspended (the power/control sysfs attribute is set to "on"
+>> for them by default), but user space can change that setting and if
+>> it does so and a given bridge has no children with PM callbacks, the
+>> direct_complete optimization will be applied to it and it will stay
+>> in suspend over system suspend.  Apparently, that confuses the
+>> platform firmware on the affected machine and that may very well
+>> happen elsewhere, so avoid the direct_complete optimization for
+>> PCI bridges with no drivers (if there is a driver, it should take
+>> care of the PM handling) on suspend-to-RAM altogether (that should
+>> not matter for suspend-to-idle as platform firmware is not involved
+>> in it).
+>>
+>> Fixes: c62ec4610c40 (PM / core: Fix direct_complete handling for devices with no callbacks)
+>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=199941
+>> Reported-by: n0000b.n000b@gmail.com
+>> Tested-by: n0000b.n000b@gmail.com
+>> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> ---
+>>
+>> -> v2: Make the patch work for PCI bridges without ACPI companion objects.
+>>
+>> Since that doesn't really change the idea etc, but only makes the check
+>> to be made earlier, I've added the Reviewed-by and Acked-by tags given to
+>> the previous version.  If that's not right, please let me know.
+>
+> Keeping my ack is fine, and I assume you'll apply this.
 
-There is no "next patch in this series" :(
+I will, thanks!
 
-> Here this patch tries to resolve supplier<-consumer by only reordering a
-> device when it has suppliers, and takes care of the following scenario:
->     [consumer, children] [ ... potential ... ] supplier
->                          ^                   ^
-> After moving the consumer and its children after the supplier, the
-> potentail section may contain consumers whose supplier is inside
-> children, and this poses the requirement to dry out all consumpers in
-> the section recursively.
-> 
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Bjorn Helgaas <helgaas@kernel.org>
-> Cc: Dave Young <dyoung@redhat.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
-> ---
-> note: there is lock issue in this patch, should be fixed in next version
+> It would be nice to see that ACPI spec reference (the spec version and
+> section number, not necessarily all the text) in the changelog or
+> maybe even a comment in the code.
 
-Please send patches that you know are correct, why would I want to
-review this if you know it is not correct?
-
-And if the original commit is causing problems for you, why not just
-revert that instead of adding this much-increased complexity?
-
-
-
-> 
-> ---
->  drivers/base/core.c | 132 ++++++++++++++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 129 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 66f06ff..db30e86 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -123,12 +123,138 @@ static int device_is_dependent(struct device *dev, void *target)
->  	return ret;
->  }
->  
-> -/* a temporary place holder to mark out the root cause of the bug.
-> - * The proposal algorithm will come in next patch
-> +struct pos_info {
-> +	struct device *pos;
-> +	struct device *tail;
-> +};
-> +
-> +/* caller takes the devices_kset->list_lock */
-> +static int descendants_reorder_after_pos(struct device *dev,
-> +	void *data)
-
-Why are you wrapping lines that do not need to be wrapped?
-
-What does this function do?
-
-> +{
-> +	struct device *pos;
-> +	struct pos_info *p = data;
-> +
-> +	pos = p->pos;
-> +	pr_debug("devices_kset: Moving %s after %s\n",
-> +		 dev_name(dev), dev_name(pos));
-
-You have a device, use it for debugging, i.e. dev_dbg().
-
-> +	device_for_each_child(dev, p, descendants_reorder_after_pos);
-
-Recursive?
-
-> +	/* children at the tail */
-> +	list_move(&dev->kobj.entry, &pos->kobj.entry);
-> +	/* record the right boundary of the section */
-> +	if (p->tail == NULL)
-> +		p->tail = dev;
-> +	return 0;
-> +}
-
-I really do not understand what the above code is supposed to be doing :(
-
-> +
-> +/* iterate over an open section */
-> +#define list_opensect_for_each_reverse(cur, left, right)	\
-> +	for (cur = right->prev; cur == left; cur = cur->prev)
-> +
-> +static bool is_consumer(struct device *query, struct device *supplier)
-> +{
-> +	struct device_link *link;
-> +	/* todo, lock protection */
-
-Always run checkpatch.pl on patches so you do not get grumpy maintainers
-telling you to run checkpatch.pl :(
-
-> +	list_for_each_entry(link, &supplier->links.consumers, s_node)
-> +		if (link->consumer == query)
-> +			return true;
-> +	return false;
-> +}
-> +
-> +/* recursively move the potential consumers in open section (left, right)
-> + * after the barrier
-
-What barrier?
-
-I'm stopping here as I have no idea what is going on, and this needs a
-lot more work at the basic level of "it handles locking correctly"...
-
-If you are working on this for power9, I'm guessing you work for IBM?
-If so, please run this through your internal patch review process before
-sending it out again...
-
-thanks,
-
-greg k-h
+OK
