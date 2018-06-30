@@ -1,48 +1,29 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 19 Jun 2018 16:59:55 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH] efi/fb: Convert PCI bus address to resource if
- translated by the bridge
-Message-ID: <20180619215955.GF33049@bhelgaas-glaptop.roam.corp.google.com>
-References: <1526563343-28721-1-git-send-email-okaya@codeaurora.org>
- <36cf3f12-bfe8-1c38-4d2c-b785fc64a3f6@arm.com>
- <733101d0-9051-a5a6-ef64-162d8d1e10a1@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ed1-f44.google.com ([209.85.208.44]:42742 "EHLO
+        mail-ed1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934131AbeF3KYX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jun 2018 06:24:23 -0400
+Received: by mail-ed1-f44.google.com with SMTP id g12-v6so8617471edi.9
+        for <linux-pci@vger.kernel.org>; Sat, 30 Jun 2018 03:24:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <733101d0-9051-a5a6-ef64-162d8d1e10a1@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "open list:EFIFB FRAMEBUFFER DRIVER" <linux-fbdev@vger.kernel.org>,
- Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
- linux-pci@vger.kernel.org, timur@codeaurora.org, ard.biesheuvel@linaro.org,
- open list <linux-kernel@vger.kernel.org>,
- "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
- Peter Jones <pjones@redhat.com>, linux-arm-msm@vger.kernel.org,
- Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+References: <1525998019-28634-1-git-send-email-shawn.guo@linaro.org> <20180629141626.GH9643@red-moon>
+In-Reply-To: <20180629141626.GH9643@red-moon>
+From: Shawn Guo <shawn.guo@linaro.org>
+Date: Sat, 30 Jun 2018 18:24:10 +0800
+Message-ID: <CAAQ0ZWRdts12WKuRiNW=-FRPh_r=g=V+mnzHRiL-eSfP_0hy0w@mail.gmail.com>
+Subject: Re: [PATCH v2 0/9] PCI: dwc: Drop unnecessary root_bus_nr setting
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 18, 2018 at 10:20:29AM -0400, Sinan Kaya wrote:
-> On 5/18/2018 6:42 AM, Robin Murphy wrote:
-> > 
-> > FWIW, now that I've actually gone and looked, it appears you could simplify the whole function quite a bit by getting rid of these and just using the new local resource directly, especially since the only actual use of size is an open-coded resource_contains().
-> 
-> Posted V2 a minute ago. I did the simplification on a prior patch in order not to
-> mix the issues.
+On Fri, Jun 29, 2018 at 10:14 PM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> would you mind please rebasing it against v4.18-rc1 and resend with
+> CC all the controllers maintainers so that we can get ACKs and send it
+> for v4.19 ?
 
-I don't see the V2 on linux-pci, but it sounds like Ard would merge this
-anyway.  So I'll drop this and you can let me know if there's anything you
-need from me.
+No problem.  Will do.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Shawn
