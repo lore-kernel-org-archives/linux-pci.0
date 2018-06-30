@@ -1,105 +1,96 @@
-Return-Path: <SRS0=mh2v=JM=codeaurora.org=tbaicar@kernel.org>
-Return-Path: <SRS0=mh2v=JM=codeaurora.org=tbaicar@kernel.org>
-From: Tyler Baicar <tbaicar@codeaurora.org>
-To: helgaas@kernel.org,
-	bhelgaas@google.com,
-	poza@codeaurora.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Tyler Baicar <tbaicar@codeaurora.org>
-Subject: [PATCH] PCI/AER: Adopt lspci naming convention for AER prints
-Date: Tue, 26 Jun 2018 11:44:15 -0400
-Message-Id: <1530027855-19709-1-git-send-email-tbaicar@codeaurora.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sat, 30 Jun 2018 16:31:40 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: bhelgaas@google.com, keith.busch@intel.com,
+        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Frederick Lawler <fred@fredlawl.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+        Borislav Petkov <bp@suse.de>
+Subject: Re: [PATCH v2] PCI/AER: Fix aerdrv loading with "pcie_ports=native"
+ parameter
+Message-ID: <20180630213140.GG9547@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180619195835.5423-1-mr.nuke.me@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180619195835.5423-1-mr.nuke.me@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-lspci uses abbreviated naming for AER error strings. Adopt the
-same naming convention for the AER printing so they match.
+[+cc Borislav, linux-acpi, since this involves APEI/HEST]
 
-Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
----
- drivers/pci/pcie/aer.c | 46 +++++++++++++++++++++++-----------------------
- 1 file changed, 23 insertions(+), 23 deletions(-)
+On Tue, Jun 19, 2018 at 02:58:20PM -0500, Alexandru Gagniuc wrote:
+> According to the documentation, "pcie_ports=native", linux should use
+> native AER and DPC services. While that is true for the _OSC method
+> parsing, this is not the only place that is checked. Should the HEST
+> table list PCIe ports as firmware-first, linux will not use native
+> services.
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index a2e8838..08a5219 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -459,22 +459,22 @@ int pci_aer_init(struct pci_dev *dev)
- };
- 
- static const char *aer_correctable_error_string[] = {
--	"Receiver Error",		/* Bit Position 0	*/
-+	"RxErr",			/* Bit Position 0	*/
- 	NULL,
- 	NULL,
- 	NULL,
- 	NULL,
- 	NULL,
--	"Bad TLP",			/* Bit Position 6	*/
--	"Bad DLLP",			/* Bit Position 7	*/
--	"RELAY_NUM Rollover",		/* Bit Position 8	*/
-+	"BadTLP",			/* Bit Position 6	*/
-+	"BadDLLP",			/* Bit Position 7	*/
-+	"Rollover",			/* Bit Position 8	*/
- 	NULL,
- 	NULL,
- 	NULL,
--	"Replay Timer Timeout",		/* Bit Position 12	*/
--	"Advisory Non-Fatal",		/* Bit Position 13	*/
--	"Corrected Internal Error",	/* Bit Position 14	*/
--	"Header Log Overflow",		/* Bit Position 15	*/
-+	"Timeout",			/* Bit Position 12	*/
-+	"NonFatalErr",			/* Bit Position 13	*/
-+	"CorrIntErr",			/* Bit Position 14	*/
-+	"HeaderOF",			/* Bit Position 15	*/
- };
- 
- static const char *aer_uncorrectable_error_string[] = {
-@@ -482,28 +482,28 @@ int pci_aer_init(struct pci_dev *dev)
- 	NULL,
- 	NULL,
- 	NULL,
--	"Data Link Protocol",		/* Bit Position 4	*/
--	"Surprise Down Error",		/* Bit Position 5	*/
-+	"DLP",				/* Bit Position 4	*/
-+	"SDES",				/* Bit Position 5	*/
- 	NULL,
- 	NULL,
- 	NULL,
- 	NULL,
- 	NULL,
- 	NULL,
--	"Poisoned TLP",			/* Bit Position 12	*/
--	"Flow Control Protocol",	/* Bit Position 13	*/
--	"Completion Timeout",		/* Bit Position 14	*/
--	"Completer Abort",		/* Bit Position 15	*/
--	"Unexpected Completion",	/* Bit Position 16	*/
--	"Receiver Overflow",		/* Bit Position 17	*/
--	"Malformed TLP",		/* Bit Position 18	*/
-+	"TLP",				/* Bit Position 12	*/
-+	"FCP",				/* Bit Position 13	*/
-+	"CmpltTO",			/* Bit Position 14	*/
-+	"CmpltAbrt",			/* Bit Position 15	*/
-+	"UnxCmplt",			/* Bit Position 16	*/
-+	"RxOF",				/* Bit Position 17	*/
-+	"MalfTLP",			/* Bit Position 18	*/
- 	"ECRC",				/* Bit Position 19	*/
--	"Unsupported Request",		/* Bit Position 20	*/
--	"ACS Violation",		/* Bit Position 21	*/
--	"Uncorrectable Internal Error",	/* Bit Position 22	*/
--	"MC Blocked TLP",		/* Bit Position 23	*/
--	"AtomicOp Egress Blocked",	/* Bit Position 24	*/
--	"TLP Prefix Blocked Error",	/* Bit Position 25	*/
-+	"UnsupReq",			/* Bit Position 20	*/
-+	"ACSViol",			/* Bit Position 21	*/
-+	"UncorrIntErr",			/* Bit Position 22	*/
-+	"BlockedTLP",			/* Bit Position 23	*/
-+	"AtomicOpBlocked",		/* Bit Position 24	*/
-+	"TLPBlockedErr",		/* Bit Position 25	*/
- };
- 
- static const char *aer_agent_string[] = {
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project.
+Nothing in ACPI-land looks at pcie_ports_native.  How should ACPI
+things work in the "pcie_ports=native" case?  I guess we still have to
+expect to receive error records from the firmware, because it may
+certainly send us non-PCI errors (machine checks, etc) and maybe even
+some PCI errors (even if the Linux AER driver claims AER interrupts,
+we don't know what notification mechanisms the firmware may be using).
+
+I guess best-case, we'll get ACPI error records for all non-PCI
+things, and the Linux AER driver will see all the AER errors.
+Worst-case, I don't really know what to expect.  Duplicate reporting
+of AER errors via firmware and Linux AER driver?  Some kind of
+confusion about who acknowledges and clears them?
+
+Out of curiosity, what is your use case for "pcie_ports=native"?
+Presumably there's something that works better when using it, and
+things work even *better* with this patch?
+
+I know people do use it, because I often see it mentioned in forums
+and bug reports, but I really don't expect it to work very well
+because we're ignoring the usage model the firmware is designed
+around.  My unproven suspicion is that most uses are in the black
+magic category of "there's a bug here, and we don't know how to fix
+it, but pcie_ports=native makes it work better".
+
+Obviously I would much rather find and fix those bugs so people
+wouldn't have to stumble over the problem in the first place.
+
+> This happens because aer_acpi_firmware_first() doesn't take
+> 'pcie_ports' into account. This is wrong. DPC uses the same logic when
+> it decides whether to load or not, so fixing this also fixes DPC not
+> loading.
+> 
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> ---
+>  drivers/pci/pcie/aer.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> Changes since v1:
+>  - Re-tested with latest and greatest (v4.18-rc1) -- works great
+> 
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index a2e88386af28..98ced0f7c850 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -291,7 +291,7 @@ static void aer_set_firmware_first(struct pci_dev *pci_dev)
+>  
+>  	rc = apei_hest_parse(aer_hest_parse, &info);
+>  
+> -	if (rc)
+> +	if (rc || pcie_ports_native)
+>  		pci_dev->__aer_firmware_first = 0;
+>  	else
+>  		pci_dev->__aer_firmware_first = info.firmware_first;
+> @@ -327,6 +327,9 @@ bool aer_acpi_firmware_first(void)
+>  		apei_hest_parse(aer_hest_parse, &info);
+>  		aer_firmware_first = info.firmware_first;
+>  		parsed = true;
+> +		if (pcie_ports_native)
+> +			aer_firmware_first = 0;
+> +
+>  	}
+>  	return aer_firmware_first;
+>  }
+> -- 
+> 2.14.3
+> 
