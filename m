@@ -1,70 +1,65 @@
-Return-Path: <SRS0=ua9z=JO=netronome.com=jakub.kicinski@kernel.org>
-Return-Path: <SRS0=ua9z=JO=netronome.com=jakub.kicinski@kernel.org>
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:56910 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751503AbeF3UlC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 30 Jun 2018 16:41:02 -0400
+Date: Sat, 30 Jun 2018 15:41:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rajat Jain <rajatja@google.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>,
-	oss-drivers@netronome.com,
-	Don Dutile <ddutile@redhat.com>,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCH] nfp: align setting totalvfs to changes in PCI core
-Date: Thu, 28 Jun 2018 11:30:09 -0700
-Message-Id: <20180628183009.24837-1-jakub.kicinski@netronome.com>
-In-Reply-To: <20180628180705.GB120578@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180628180705.GB120578@bhelgaas-glaptop.roam.corp.google.com>
+        Jonathan Corbet <corbet@lwn.net>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Thomas Tai <thomas.tai@oracle.com>,
+        "Steven Rostedt (VMware)" <rostedt@goodmis.org>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jes Sorensen <jsorensen@fb.com>,
+        Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com
+Subject: Re: [PATCH 0/4] Expose PCIe AER stats via sysfs
+Message-ID: <20180630204100.GF9547@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180621234829.224566-1-rajatja@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180621234829.224566-1-rajatja@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since commit 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers to limit total_VFs
-to 0") the meaning of pci_sriov_set_totalvfs(pdev, 0) changed from
-'no limit set/can use total_VFs' to 'limit set to 0/can't use any VFs'.
-The driver was resetting the limit in case different FW or driver has
-set it to an incorrect value.  Now the PCI core will take care of
-resetting so we don't have to do that.
+On Thu, Jun 21, 2018 at 04:48:25PM -0700, Rajat Jain wrote:
+> This is a follow up to:
+> https://lkml.org/lkml/2018/5/22/1057
+> 
+> Respinning as a new patchset because the old one has been refactored
+> to include new patches (that were not part of original), and dropping
+> some patches. The major changes are:
+> 
+> * Provide breakdown of Fatal / non fatal errors separately
+> * Include the "total" in the same file
+> * do some PCI cleanup before the actual aer_stats stuff
+> * Include documentation in the main patch
+> * Rename variables / attributes to better match the newer reality.
+> 
+> Rajat Jain (4):
+>   PCI: Move pci_aer_init() and pci_no_aer() declarations to
+>     drivers/pci/pci.h
+>   PCI/AER: Define and allocate aer_stats structure for AER capable
+>     devices
+>   PCI/AER: Add sysfs attributes to provide AER stats and breakdown
+>   PCI/AER: Add sysfs attributes for rootport cumulative stats
+> 
+>  .../testing/sysfs-bus-pci-devices-aer_stats   | 122 +++++++++++
+>  Documentation/PCI/pcieaer-howto.txt           |   5 +
+>  drivers/pci/pci-sysfs.c                       |   3 +
+>  drivers/pci/pci.h                             |  11 +
+>  drivers/pci/pcie/aer.c                        | 198 +++++++++++++++++-
+>  drivers/pci/probe.c                           |   1 +
+>  include/linux/pci.h                           |   5 +-
+>  7 files changed, 337 insertions(+), 8 deletions(-)
+>  create mode 100644 Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
 
-Fixes: 8d85a7a4f2c9 ("PCI/IOV: Allow PF drivers to limit total_VFs to 0")
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
----
- drivers/net/ethernet/netronome/nfp/nfp_main.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
-
-diff --git a/drivers/net/ethernet/netronome/nfp/nfp_main.c b/drivers/net/ethernet/netronome/nfp/nfp_main.c
-index 46b76d5a726c..152283d7e59c 100644
---- a/drivers/net/ethernet/netronome/nfp/nfp_main.c
-+++ b/drivers/net/ethernet/netronome/nfp/nfp_main.c
-@@ -240,7 +240,6 @@ static int nfp_pcie_sriov_read_nfd_limit(struct nfp_pf *pf)
- 		return pci_sriov_set_totalvfs(pf->pdev, pf->limit_vfs);
- 
- 	pf->limit_vfs = ~0;
--	pci_sriov_set_totalvfs(pf->pdev, 0); /* 0 is unset */
- 	/* Allow any setting for backwards compatibility if symbol not found */
- 	if (err == -ENOENT)
- 		return 0;
-@@ -668,7 +667,7 @@ static int nfp_pci_probe(struct pci_dev *pdev,
- 
- 	err = nfp_net_pci_probe(pf);
- 	if (err)
--		goto err_sriov_unlimit;
-+		goto err_fw_unload;
- 
- 	err = nfp_hwmon_register(pf);
- 	if (err) {
-@@ -680,8 +679,6 @@ static int nfp_pci_probe(struct pci_dev *pdev,
- 
- err_net_remove:
- 	nfp_net_pci_remove(pf);
--err_sriov_unlimit:
--	pci_sriov_set_totalvfs(pf->pdev, 0);
- err_fw_unload:
- 	kfree(pf->rtbl);
- 	nfp_mip_close(pf->mip);
-@@ -715,7 +712,6 @@ static void nfp_pci_remove(struct pci_dev *pdev)
- 	nfp_hwmon_unregister(pf);
- 
- 	nfp_pcie_sriov_disable(pdev);
--	pci_sriov_set_totalvfs(pf->pdev, 0);
- 
- 	nfp_net_pci_remove(pf);
- 
--- 
-2.17.1
+Applied to pci/aer for v4.19, thanks!
