@@ -1,134 +1,151 @@
-Return-Path: <SRS0=Lg5O=JQ=cogentembedded.com=sergei.shtylyov@kernel.org>
-Return-Path: <SRS0=Lg5O=JQ=cogentembedded.com=sergei.shtylyov@kernel.org>
-Subject: Re: [PATCH] pci: fix I/O space page leak
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Linus Walleij <linus.walleij@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Rob Herring <robh@kernel.org>, Tanmay Inamdar <tinamdar@apm.com>,
- Ryder Lee <ryder.lee@mediatek.com>, Matthias Brugger
- <matthias.bgg@gmail.com>, linux-arm-kernel@lists.infradead.org,
- linux-mediatek@lists.infradead.org, linux-renesas-soc@vger.kernel.org
-References: <1ca6adde-a91e-84d0-c7dc-fd01bfd9edcc@cogentembedded.com>
- <20180628132259.GB90450@bhelgaas-glaptop.roam.corp.google.com>
- <20180628142615.GA9101@red-moon>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <ac015f99-c310-3701-35ce-846393b61235@cogentembedded.com>
-Date: Sat, 30 Jun 2018 13:37:18 +0300
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sg2apc01on0113.outbound.protection.outlook.com ([104.47.125.113]:47815
+        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751363AbeF3SNz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 30 Jun 2018 14:13:55 -0400
+From: Dexuan Cui <decui@microsoft.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "'olaf@aepfle.de'" <olaf@aepfle.de>,
+        "'apw@canonical.com'" <apw@canonical.com>,
+        "'jasowang@redhat.com'" <jasowang@redhat.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'driverdev-devel@linuxdriverproject.org'"
+        <driverdev-devel@linuxdriverproject.org>,
+        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
+        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
+Subject: RE: [PATCH] PCI: hv: Fix a __local_bh_enable_ip warning in
+ hv_compose_msi_msg()
+Date: Sat, 30 Jun 2018 18:13:39 +0000
+Message-ID: <KL1P15301MB0006780D045979A760DA4E2BBF4D0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+References: <KL1P15301MB0006EE546A7C2567B61EA783BF6B0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <BN6PR21MB016112A4E32D76EC669818C3CA690@BN6PR21MB0161.namprd21.prod.outlook.com>
+ <KL1P15301MB0006D8314C8B40A939598056BF640@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <KL1P15301MB00069C79B0C674695DDBC8AABF7E0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <20180613221509.GB12463@bjorn-Precision-5520>
+ <KL1P15301MB0006CAB372940BA3C42F1C58BF7E0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+ <20180629093927.GA9576@red-moon>
+In-Reply-To: <20180629093927.GA9576@red-moon>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20180628142615.GA9101@red-moon>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Sent: Friday, June 29, 2018 02:39
+> To: Dexuan Cui <decui@microsoft.com>
+> On Wed, Jun 13, 2018 at 10:50:05PM +0000, Dexuan Cui wrote:
+> > > From: Bjorn Helgaas <helgaas@kernel.org>
+> > > Sent: Wednesday, June 13, 2018 15:15
+> > > > ...
+> > > > It looks Lorenzo's pci.git tree has not been updated for 3+ weeks.
+> > > > I guess Lorenzo may be on vacation.
+> > > >
+> > > > @Bjorn, can this patch go through your tree?
+> > > > Should I resubmit it?
+> > >
+> > > No need to resubmit it, Lorenzo has been out for a bit, but I'm sure
+> > > he'll pick this up as he catches up.
+> > OK, I see. Thanks!
+> >
+> > > You might, however, fix the commit log:
+> > >
+> > >   This is not an issue because hv_pci_onchannelcallback() is not slow=
+,
+> > >   and it not a hot path.
+> > >
+> > > This has at least one typo (I think you mean "and *is* not a hot
+> > > path").
+> > Sorry -- yes, it's a typo. I hope Lorenzo can help to fix this, or I ca=
+n
+> > resubmit it if Lorenzo or you want me to do it.
+> >
+> > > I also don't understand the sentence as a whole because the
+> > > hv_pci_onchannelcallback() comment says it's called whenever the host
+> > > sends a packet to this channel, and that *does* sound like a hot path=
+.
+> > Sorry for not making it clear.
+> > The host only sends a packet into the channel of the guest when there
+> > is a change of device configuration (i.e. hot add or remove a device), =
+or
+> > the host is responding to the guest's request.
+> >
+> > The change of device configuration is only triggered on-demand by the
+> > administrator on the host, and the guest's requests are one-off when
+> > the device is probed.
+> >
+> > So IMO the callback is not a hot path.
+> >
+> > > I also don't understand the "hv_pci_onchannelcallback() is not slow"
+> > > part.  In other words, you're saying hv_pci_onchannelcallback() is
+> > > fast and it's not a hot path.  And apparently this has something to d=
+o
+> > > with the difference between local_bh_disable() and local_irq_save()?
+> > >
+> > > Bjorn
+> > Actually in my original internal version of the patch, I did use
+> > local_irq_save/restore().
+> >
+> > hv_pci_onchannelcallback() itself runs fast, but here since it's in a
+> > loop (i.e. the while (!try_wait_for_completion(&comp.comp_pkt.host_even=
+t)
+> > loop), IIRC I was asked if I really need local_irq_save/restore(),
+> > and I answered "not really", so later I switched to
+> local_bh_disable()/enable().
+> >
+> > However, recently I found that if we enable CONFIG_PROVE_LOCKING=3Dy,
+> > the local_bh_enable() can trigger a warning because the function
+> > hv_compose_msi_msg() can be called with local IRQs disabled (BTW,
+> > hv_compose_msi_msg() can also be called with local IRQS enabled in
+> > another code path):
+> >
+> > IRQs not enabled as expected
+> >   WARNING: CPU: 0 PID: 408 at kernel/softirq.c:162 __local_bh_enable_ip
+> >
+> > Despite the warning, the code itself can still work correctly, but IMO =
+we'd
+> > better switch back to local_irq_save/restore(), and hence I made the pa=
+tch.
+> >
+> > I hope the explanation sounds reasonable. :-)
+>=20
+> Sorry for the delay in replying. I need to understand if you are
+> preventing a spurious lockdep warning or you are fixing a kernel
+> bug. From your commit log, I assume the former option but I do
+> not think that's what you are really doing.
 
-On 6/28/2018 5:26 PM, Lorenzo Pieralisi wrote:
+Now my understanding is:
+1) When hv_compose_msi_msg() is called with local irq ENABLED by the upper
+level irq code, the current code is good and the lockdep warning is not tri=
+ggered.
 
->>> When testing the R-Car PCIe driver on the Condor board, I noticed that iff
->>> I  left the PCIe PHY driver disabled, the kernel crashed  with this BUG:
->>>
->>> [    1.225819] kernel BUG at lib/ioremap.c:72!
->>> [    1.230007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
->>> [    1.235496] Modules linked in:
->>> [    1.238561] CPU: 0 PID: 39 Comm: kworker/0:1 Not tainted 4.17.0-dirty #1092
->>> [    1.245526] Hardware name: Renesas Condor board based on r8a77980 (DT)
->>> [    1.252075] Workqueue: events deferred_probe_work_func
->>> [    1.257220] pstate: 80000005 (Nzcv daif -PAN -UAO)
->>> [    1.262024] pc : ioremap_page_range+0x370/0x3c8
->>> [    1.266558] lr : ioremap_page_range+0x40/0x3c8
->>> [    1.271002] sp : ffff000008da39e0
->>> [    1.274317] x29: ffff000008da39e0 x28: 00e8000000000f07
->>> [    1.279636] x27: ffff7dfffee00000 x26: 0140000000000000
->>> [    1.284954] x25: ffff7dfffef00000 x24: 00000000000fe100
->>> [    1.290272] x23: ffff80007b906000 x22: ffff000008ab8000
->>> [    1.295590] x21: ffff000008bb1d58 x20: ffff7dfffef00000
->>> [    1.300909] x19: ffff800009c30fb8 x18: 0000000000000001
->>> [    1.306226] x17: 00000000000152d0 x16: 00000000014012d0
->>> [    1.311544] x15: 0000000000000000 x14: 0720072007200720
->>> [    1.316862] x13: 0720072007200720 x12: 0720072007200720
->>> [    1.322180] x11: 0720072007300730 x10: 00000000000000ae
->>> [    1.327498] x9 : 0000000000000000 x8 : ffff7dffff000000
->>> [    1.332816] x7 : 0000000000000000 x6 : 0000000000000100
->>> [    1.338134] x5 : 0000000000000000 x4 : 000000007b906000
->>> [    1.343452] x3 : ffff80007c61a880 x2 : ffff7dfffeefffff
->>> [    1.348770] x1 : 0000000040000000 x0 : 00e80000fe100f07
->>> [    1.354090] Process kworker/0:1 (pid: 39, stack limit = 0x        (ptrval))
->>> [    1.361056] Call trace:
->>> [    1.363504]  ioremap_page_range+0x370/0x3c8
->>> [    1.367695]  pci_remap_iospace+0x7c/0xac
->>> [    1.371624]  pci_parse_request_of_pci_ranges+0x13c/0x190
->>> [    1.376945]  rcar_pcie_probe+0x4c/0xb04
->>> [    1.380786]  platform_drv_probe+0x50/0xbc
->>> [    1.384799]  driver_probe_device+0x21c/0x308
->>> [    1.389072]  __device_attach_driver+0x98/0xc8
->>> [    1.393431]  bus_for_each_drv+0x54/0x94
->>> [    1.397269]  __device_attach+0xc4/0x12c
->>> [    1.401107]  device_initial_probe+0x10/0x18
->>> [    1.405292]  bus_probe_device+0x90/0x98
->>> [    1.409130]  deferred_probe_work_func+0xb0/0x150
->>> [    1.413756]  process_one_work+0x12c/0x29c
->>> [    1.417768]  worker_thread+0x200/0x3fc
->>> [    1.421522]  kthread+0x108/0x134
->>> [    1.424755]  ret_from_fork+0x10/0x18
->>> [    1.428334] Code: f9004ba2 54000080 aa0003fb 17ffff48 (d4210000)
->>>
->>> It turned out that pci_remap_iospace() wasn't undone when the driver's
->>> probe failed, and since devm_phy_optional_get() returned -EPROBE_DEFER,
->>> the probe was retried,  finally causing the BUG due to trying to remap
->>> already remapped pages.
->>>
->>> The most feasible solution seems to introduce devm_pci_remap_iospace()
->>> and call it instead of pci_remap_iospace(), so that the pages get unmapped
->>> automagically on any probe failure.
->>>
->>> And  while fixing pci_parse_request_of_pci_ranges(), aslo fix the other
->>> drivers that have probably copied the bad example...
->>>
->>> Fixes: 4e64dbe226e7 ("PCI: generic: Expose pci_host_common_probe() for use by other drivers")
->>> Fixes: cbce7900598c ("PCI: designware: Make driver arch-agnostic")
->>> Fixes: 8c39d710363c ("PCI: aardvark: Add Aardvark PCI host controller driver")
->>> Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
->>> Fixes: 68a15eb7bd0c ("PCI: v3-semi: Add V3 Semiconductor PCI host driver")
->>> Fixes: b7e78170efd4 ("PCI: versatile: Add DT-based ARM Versatile PB PCIe host driver")
->>> Fixes: 5f6b6ccdbe1c ("PCI: xgene: Add APM X-Gene PCIe driver")
->>> Fixes: 637cfacae96f ("PCI: mediatek: Add MediaTek PCIe host controller support")
->>> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
->>> Cc: stable@vger.kernel.org
->>
->> Let me know if you want me to take this, Lorenzo, otherwise:
->> s/pci: fix/PCI: Fix/ and
->>
->> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Thank you Bjorn, yes it could go in as a fix but IMO it has to be split,
-> more so given the stable tag (and I think that each "Fixes" tag should
-> be self-contained),
+2) When hv_compose_msi_msg() is called with local irq DISABLED by the upper
+level irq code, the current code *is* buggg: local_bh_enable() can potentia=
+lly call
+do_softirq(), which is not supposed to run when local irq is DISABLED.=20
+I think the lockdep warning is triggered for this reason.
 
-    It cannot be self-contained because it'll depend on the initial commit 
-adding devm_pci_remap_iobase(). If you mean finding the earliest broken driver 
-and introduce the deviec managed API while fixing it and then make use of that
-API in the subsequent patches, that surely can be done.
+In summary, now I realized the warning is not spurious, and here at the fir=
+st
+place I should not use local_bh_disable()/enable(), which are not supposed =
+to
+be used when local irq can be DISABLED.
 
-> merging it as-is would give Greg (and us) a
-> headache when it comes to backporting it.
-
-    The patch interdependency would give him headache too, and I was hoping to 
-relieve those with the monilitic patch. :-)
-
-> Honestly I think it is best to split it up and send it for v4.19 but
-> I am happy to hear other options.
-
-    I disagree about 4.19. The R-Car PCIe situation is as follows: given me 
-missing to get the PHY driver merged into 4.18 (and the gen3 PCIe stuff 
-successfully merged into 4.18), the user is bound to have PCIe not working (if 
-he doesn't refer to the PHY driver in DT) or encounter a kernel BUG (if he 
-does refer to the PHY driver), thus I'd like this BUG to be fixed in 4.18 time 
-frame...
-    Note that any PCI driver having signaled a probe deferral will also hit 
-this BUG., not just R-Car one.
-
+> Apart from the commit log typos fixes I would like a log that
+> explains *why* this is not a kernel bug fix rather than a harmless
+> lockdep warning prevention.
+>=20
 > Lorenzo
 
-MBR, Sergei
+Now I realized there *is* a bug.
+I'm going to send a v2 with a new changelog, though the changed code
+will remain the same.=20
+
+Thanks,
+-- Dexuan
