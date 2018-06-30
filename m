@@ -1,59 +1,72 @@
-Return-Path: <SRS0=Mfjj=JM=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=Mfjj=JM=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:55542 "EHLO
+        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751519AbeF3WJ1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jun 2018 18:09:27 -0400
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [91.219.245.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+        by jabberwock.ucw.cz (Postfix) with ESMTPS id 8D4F11C09A6
+        for <linux-pci@vger.kernel.org>; Sat, 30 Jun 2018 23:59:42 +0200 (CEST)
+Date: Sat, 30 Jun 2018 23:59:42 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Linux-PCI Mailing List <linux-pci@vger.kernel.org>
+Subject: Released pciutils-3.6.0
+Message-ID: <mj+md-20180630.215836.98434.albireo@ucw.cz>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20180626171406.GC146680@bhelgaas-glaptop.roam.corp.google.com>
-References: <35587465.8Nave9aG7d@aspire.rjw.lan> <20180626140115.GA146680@bhelgaas-glaptop.roam.corp.google.com>
- <CAJZ5v0jc5oJzEX6QVDVjsQLmLxXHg3PSyepbh50dLXOtnHPgrA@mail.gmail.com> <20180626171406.GC146680@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 26 Jun 2018 19:19:29 +0200
-Message-ID: <CAJZ5v0gt+4FiiBxEjdsEYLT+dQq=Q=mC7JtZPsYxps0_a1w-rg@mail.gmail.com>
-Subject: Re: [PATCH] PCI / ACPI / PM: Resume bridges w/o drivers on suspend-to-RAM
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Linux PCI <linux-pci@vger.kernel.org>, n0000b.n000b@gmail.com,
-	Bjorn Helgaas <bhelgaas@google.com>, Mika Westerberg <mika.westerberg@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM <linux-pm@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 26, 2018 at 7:14 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Tue, Jun 26, 2018 at 04:22:00PM +0200, Rafael J. Wysocki wrote:
->> On Tue, Jun 26, 2018 at 4:01 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> > On Tue, Jun 26, 2018 at 12:06:01PM +0200, Rafael J. Wysocki wrote:
->> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
->> >> +     /*
->> >> +      * In some cases (eg. Samsung 305V4A) leaving a bridge in suspend
->> >> +      * confuses the platform firmware, so avoid doing that, unless the
->> >> +      * bridge has a driver that should take care of PM handling.
->> >> +      */
->> >> +     if (pci_is_bridge(dev) && !dev->driver)
->> >> +             return true;
->> >
->> > It sounds like the question of whether leaving a bridge in D3 confuses
->> > the firmware has a platform-specific answer.
->>
->> Well, it may confuse the platform firmware in general.
->>
->> > How does the driver PM handling know how to do the right thing?
->>
->> For endpoints this is not an issue as they always have been expected
->> to be in D3 before passing control to the platform firmware on S3
->> entry, but we've never done that for bridges by default, except for
->> PCIe ports with PM enabled (in which case the driver decides whether
->> or not to enable it).
->
-> If there's any spec reference for the expected power states of devices
-> when entering S3, that would be useful here.  I can't tell if there's
-> any guidance for this or if it's just figured out experimentally.
+Hello, world!\n
 
-It is not direct, but Section 16.1.6 of ACPI 6.2 says this in step 4
-of the system suspend outline:
+I just released version 3.6.0 of the pciutils with huge thanks to everybody
+who contributed.
 
-OSPM places all device drivers into their respective Dx state. If the
-device is enabled for wake,
-it enters the Dx state associated with the wake capability. If the
-device is not enabled to wake
-the system, it enters the D3 state.
+>From the changelog:
+
+	* Released as 3.6.0.
+
+	* BARs reported by the OS, but not set on the device itself are
+	  reliably marked with "[virtual]".
+
+	* Library: Introduced a generic mechanism of string properties. This
+	  avoids lots of special cases and makes ABI compatibility easier.
+
+	* On Linux systems with OpenFirmware, report corresponding device tree nodes
+	  as device properties.
+
+	* VPD decoder knows several non-standard extensions.
+
+	* When PCIe link speed is less than the maximum supported by the
+	  device, it is explicitly marked as "downgraded".
+
+	* Several new capabilities are not decoded yet, but at least their
+	  names are printed.
+
+	* The Null capability is easily decoded.
+
+	* Formatting of several capabilities was cleaned up.
+
+	* The VGA16 bit in the bridge control register is now supported.
+
+	* Added a port to SylixOS. Thanks to YuJian Gong for contribution.
+
+	* Added a port to DOS/DJGPP. Thanks to Rudolf Marek for contribution.
+
+	* The order in which back-ends are probed was decoupled from the
+	  internal back-end IDs. This helps, because new back-ends must have
+	  their ID allocated at the end to keep the ABI, but they might need
+	  to be proved earlier.
+
+	* The fbsd-device back-end should work again.
+
+	* Fixed a couple of bugs. Most notably, DeviceName was not printed.
+
+	* As usually, updated pci.ids to the current snapshot of the database.
+
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+A half-joke: What is the difference between a cat?
