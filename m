@@ -1,81 +1,179 @@
-Return-Path: <SRS0=WtrO=JG=flex--rajatja.bounces.google.com=3TOYqWwcKB6MUDMDWMDJRRJOH.FRPKHOJDDVNHUQHO.RUJ@kernel.org>
-Return-Path: <SRS0=WtrO=JG=flex--rajatja.bounces.google.com=3TOYqWwcKB6MUDMDWMDJRRJOH.FRPKHOJDDVNHUQHO.RUJ@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 29 Jun 2018 19:49:13 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V2] PCI: Enable PASID when End-to-End TLP is supported by
+ all bridges
+Message-ID: <20180630004912.GI40928@bhelgaas-glaptop.roam.corp.google.com>
+References: <1529460886-23722-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Date: Wed, 20 Jun 2018 16:41:45 -0700
-In-Reply-To: <20180620234147.48438-1-rajatja@google.com>
-Message-Id: <20180620234147.48438-3-rajatja@google.com>
-References: <20180522222805.80314-1-rajatja@google.com> <20180620234147.48438-1-rajatja@google.com>
-Subject: [PATCH v5 3/5] PCI/AER: Add sysfs attributes to provide breakdown of AERs
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
-	Philippe Ombredanne <pombredanne@nexb.com>, Kate Stewart <kstewart@linuxfoundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Frederick Lawler <fred@fredlawl.com>, Oza Pawandeep <poza@codeaurora.org>,
-	Keith Busch <keith.busch@intel.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-	Thomas Tai <thomas.tai@oracle.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jes Sorensen <jsorensen@fb.com>, Kyle McMartin <jkkm@fb.com>, rajatxjain@gmail.com, helgaas@kernel.org
-Cc: Rajat Jain <rajatja@google.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1529460886-23722-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add sysfs attributes to provide breakdown of the AERs seen,
-into different type of correctable or uncorrectable errors:
+On Tue, Jun 19, 2018 at 10:14:46PM -0400, Sinan Kaya wrote:
+> A PCIe endpoint carries the process address space identifier (PASID) in
+> the TLP prefix as part of the memory read/write transaction. The address
+> information in the TLP is relevant only for a given PASID context.
+> 
+> An IOMMU takes PASID value and the address information from the
+> TLP to look up the physical address in the system.
+> 
+> If a bridge drops the TLP prefix, the translation agent can resolve the
+> address to an incorrect location and cause data corruption. Prevent
+> this condition by requiring End-to-End TLP prefix to be supported on the
+> entire data path between the endpoint and the root port.
 
-dev_breakdown_correctable
-dev_breakdown_uncorrectable
+PASID is an End-End TLP Prefix (PCIe r4.0, sec 6.20).  Sec 2.2.10.2 says
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
-v5: Fix the signature
-v4: use "%llu" in place of "%llx"
-v3: Merge everything in aer.c
+  It is an error to receive a TLP with an End-End TLP Prefix by a
+  Receiver that does not support End-End TLP Prefixes. A TLP in
+  violation of this rule is handled as a Malformed TLP. This is a
+  reported error associated with the Receiving Port (see Section 6.2).
 
- drivers/pci/pcie/aer.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+So I agree that we shouldn't enable PASID in an endpoint unless all
+the switch ports leading to it support End-End prefixes.  But I don't
+see how a bridge can drop a prefix and cause data corruption -- if it
+doesn't support End-End prefixes, shouldn't the bridge raise a
+Malformed TLP error instead of forwarding the TLP?
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index ce0d675d7bd3..c989bb5bb6f1 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -587,10 +587,38 @@ aer_stats_aggregate_attr(dev_total_cor_errs);
- aer_stats_aggregate_attr(dev_total_fatal_errs);
- aer_stats_aggregate_attr(dev_total_nonfatal_errs);
- 
-+#define aer_stats_breakdown_attr(field, stats_array, strings_array)	\
-+	static ssize_t							\
-+	field##_show(struct device *dev, struct device_attribute *attr,	\
-+		     char *buf)						\
-+{									\
-+	unsigned int i;							\
-+	char *str = buf;						\
-+	struct pci_dev *pdev = to_pci_dev(dev);				\
-+	u64 *stats = pdev->aer_stats->stats_array;			\
-+	for (i = 0; i < ARRAY_SIZE(strings_array); i++) {		\
-+		if (strings_array[i])					\
-+			str += sprintf(str, "%s = 0x%llu\n",		\
-+				       strings_array[i], stats[i]);	\
-+		else if (stats[i])					\
-+			str += sprintf(str, #stats_array "bit[%d] = 0x%llu\n",\
-+				       i, stats[i]);			\
-+	}								\
-+	return str-buf;							\
-+}									\
-+static DEVICE_ATTR_RO(field)
-+
-+aer_stats_breakdown_attr(dev_breakdown_correctable, dev_cor_errs,
-+			 aer_correctable_error_string);
-+aer_stats_breakdown_attr(dev_breakdown_uncorrectable, dev_uncor_errs,
-+			 aer_uncorrectable_error_string);
-+
- static struct attribute *aer_stats_attrs[] __ro_after_init = {
- 	&dev_attr_dev_total_cor_errs.attr,
- 	&dev_attr_dev_total_fatal_errs.attr,
- 	&dev_attr_dev_total_nonfatal_errs.attr,
-+	&dev_attr_dev_breakdown_correctable.attr,
-+	&dev_attr_dev_breakdown_uncorrectable.attr,
- 	NULL
- };
- 
--- 
-2.18.0.rc1.244.gcf134e6275-goog
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/pci/ats.c             |  9 +++++++++
+>  drivers/pci/probe.c           | 17 +++++++++++++++++
+>  include/linux/pci.h           |  1 +
+>  include/uapi/linux/pci_regs.h |  1 +
+>  4 files changed, 28 insertions(+)
+> 
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index 4923a2a..e1b2e6d 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -268,6 +268,7 @@ EXPORT_SYMBOL_GPL(pci_reset_pri);
+>  int pci_enable_pasid(struct pci_dev *pdev, int features)
+>  {
+>  	u16 control, supported;
+> +	struct pci_dev *bridge;
+>  	int pos;
+>  
+>  	if (WARN_ON(pdev->pasid_enabled))
+> @@ -277,6 +278,14 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
+>  	if (!pos)
+>  		return -EINVAL;
+>  
+> +	bridge = pci_upstream_bridge(pdev);
+> +	while (bridge) {
+> +		if (!bridge->eetlp_prefix)
+> +			return -EINVAL;
+> +
+> +		bridge = pci_upstream_bridge(bridge);
+> +	}
+
+I was hoping to avoid even this loop by having the eetlp_prefix bit
+indicate that "End-End TLP Prefixes are supported from the Root Port
+to here".
+
+>  	pci_read_config_word(pdev, pos + PCI_PASID_CAP, &supported);
+>  	supported &= PCI_PASID_CAP_EXEC | PCI_PASID_CAP_PRIV;
+>  
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ac876e3..a7f7ac1 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2042,6 +2042,22 @@ static void pci_configure_ltr(struct pci_dev *dev)
+>  #endif
+>  }
+>  
+> +static void pci_configure_eetlp_prefix(struct pci_dev *dev)
+> +{
+> +#ifdef CONFIG_PCI_PASID
+> +	u32 cap;
+> +
+> +	if (!pci_is_pcie(dev))
+> +		return;
+> +
+> +	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
+> +	if (!(cap & PCI_EXP_DEVCAP2_E2ETLP))
+> +		return;
+> +
+> +	dev->eetlp_prefix = 1;
+
+I.e., here we would do:
+
+  if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
+    dev->eetlp_prefix_path = 1;
+  else {
+    bridge = pci_upstream_bridge(dev);
+    if (bridge && bridge->eetlp_prefix_path)
+      dev->eetlp_prefix_path = 1;
+  }
+
+> +#endif
+> +}
+> +
+>  static void pci_configure_device(struct pci_dev *dev)
+>  {
+>  	struct hotplug_params hpp;
+> @@ -2051,6 +2067,7 @@ static void pci_configure_device(struct pci_dev *dev)
+>  	pci_configure_extended_tags(dev, NULL);
+>  	pci_configure_relaxed_ordering(dev);
+>  	pci_configure_ltr(dev);
+> +	pci_configure_eetlp_prefix(dev);
+>  
+>  	memset(&hpp, 0, sizeof(hpp));
+>  	ret = pci_get_hp_params(dev, &hpp);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 340029b..cf88d47 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -350,6 +350,7 @@ struct pci_dev {
+>  	unsigned int	ltr_path:1;	/* Latency Tolerance Reporting
+>  					   supported from root to here */
+>  #endif
+> +	unsigned int	eetlp_prefix:1;	/* End-to-End TLP Prefix */
+>  
+>  	pci_channel_state_t error_state;	/* Current connectivity state */
+>  	struct device	dev;			/* Generic device interface */
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 4da87e2..a617ab2 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -636,6 +636,7 @@
+>  #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
+>  #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
+>  #define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x00080000 /* Re-use WAKE# for OBFF */
+> +#define PCI_EXP_DEVCAP2_E2ETLP		0x00200000 /* End-to-End TLP Prefix */
+
+It looks like lspci doesn't decode this bit (and several others in
+DevCap2).  Would you be interested in adding that?  The source is at
+git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git
+
+>  #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
+>  #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout Value */
+>  #define  PCI_EXP_DEVCTL2_COMP_TMOUT_DIS	0x0010	/* Completion Timeout Disable */
+> -- 
+> 2.7.4
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
