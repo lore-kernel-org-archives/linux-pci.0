@@ -1,177 +1,149 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v4 06/10] pci-epf-test/pci_endpoint_test: Cleanup
- PCI_ENDPOINT_TEST memspace
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1529329262.git.gustavo.pimentel@synopsys.com>
- <13077810f3630c01835041e41b338dd85fa91953.1529329262.git.gustavo.pimentel@synopsys.com>
- <eea616bd-a5dd-f8bb-22b3-319401c70cc6@ti.com>
-From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Message-ID: <83b41df3-22eb-e4ba-4b45-840c23051f1d@synopsys.com>
-Date: Wed, 20 Jun 2018 15:18:27 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sat, 30 Jun 2018 14:24:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V3] PCI: Enable PASID when End-to-End TLP is supported by
+ all bridges
+Message-ID: <20180630192403.GC9547@bhelgaas-glaptop.roam.corp.google.com>
+References: <1530372264-20653-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <eea616bd-a5dd-f8bb-22b3-319401c70cc6@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1530372264-20653-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On 20/06/2018 08:53, Kishon Vijay Abraham I wrote:
-> Hi,
+On Sat, Jun 30, 2018 at 11:24:24AM -0400, Sinan Kaya wrote:
+> A PCIe endpoint carries the process address space identifier (PASID) in
+> the TLP prefix as part of the memory read/write transaction. The address
+> information in the TLP is relevant only for a given PASID context.
 > 
-> On Monday 18 June 2018 08:30 PM, Gustavo Pimentel wrote:
->> Cleanup PCI_ENDPOINT_TEST memspace (by moving the interrupt number away
->> from command section).
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->> Change v2->v3:
->>  - New patch file created base on the previous patch
->> "misc: pci_endpoint_test: Add MSI-X support" patch file following
->> Kishon's suggestion.
->> Change v3->v4:
->>  - Rebased to Lorenzo's master branch v4.18-rc1.
->>
->>  drivers/misc/pci_endpoint_test.c              | 84 ++++++++++++++++-----------
->>  drivers/pci/endpoint/functions/pci-epf-test.c | 60 ++++++++++++-------
->>  2 files changed, 91 insertions(+), 53 deletions(-)
->>
->> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
->> index 7b37046..56be808 100644
->> --- a/drivers/misc/pci_endpoint_test.c
->> +++ b/drivers/misc/pci_endpoint_test.c
->> @@ -35,38 +35,42 @@
->>  
->>  #include <uapi/linux/pcitest.h>
->>  
->> -#define DRV_MODULE_NAME			"pci-endpoint-test"
->> -
->> -#define PCI_ENDPOINT_TEST_MAGIC		0x0
->> -
->> -#define PCI_ENDPOINT_TEST_COMMAND	0x4
->> -#define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
->> -#define COMMAND_RAISE_MSI_IRQ		BIT(1)
->> -#define MSI_NUMBER_SHIFT		2
->> -/* 6 bits for MSI number */
->> -#define COMMAND_READ                    BIT(8)
->> -#define COMMAND_WRITE                   BIT(9)
->> -#define COMMAND_COPY                    BIT(10)
->> -
->> -#define PCI_ENDPOINT_TEST_STATUS	0x8
->> -#define STATUS_READ_SUCCESS             BIT(0)
->> -#define STATUS_READ_FAIL                BIT(1)
->> -#define STATUS_WRITE_SUCCESS            BIT(2)
->> -#define STATUS_WRITE_FAIL               BIT(3)
->> -#define STATUS_COPY_SUCCESS             BIT(4)
->> -#define STATUS_COPY_FAIL                BIT(5)
->> -#define STATUS_IRQ_RAISED               BIT(6)
->> -#define STATUS_SRC_ADDR_INVALID         BIT(7)
->> -#define STATUS_DST_ADDR_INVALID         BIT(8)
->> -
->> -#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0xc
->> +#define DRV_MODULE_NAME				"pci-endpoint-test"
->> +
->> +#define IRQ_TYPE_LEGACY				0
->> +#define IRQ_TYPE_MSI				1
->> +
->> +#define PCI_ENDPOINT_TEST_MAGIC			0x0
->> +
->> +#define PCI_ENDPOINT_TEST_COMMAND		0x4
->> +#define COMMAND_RAISE_LEGACY_IRQ		BIT(0)
->> +#define COMMAND_RAISE_MSI_IRQ			BIT(1)
+> An IOMMU takes PASID value and the address information from the
+> TLP to look up the physical address in the system.
 > 
-> Maybe you can add a comment here that BIT(2) is reserved for MSIX support
-
-Sure.
-
->> +#define COMMAND_READ				BIT(3)
->> +#define COMMAND_WRITE				BIT(4)
->> +#define COMMAND_COPY				BIT(5)
->> +
->> +#define PCI_ENDPOINT_TEST_STATUS		0x8
->> +#define STATUS_READ_SUCCESS			BIT(0)
->> +#define STATUS_READ_FAIL			BIT(1)
->> +#define STATUS_WRITE_SUCCESS			BIT(2)
->> +#define STATUS_WRITE_FAIL			BIT(3)
->> +#define STATUS_COPY_SUCCESS			BIT(4)
->> +#define STATUS_COPY_FAIL			BIT(5)
->> +#define STATUS_IRQ_RAISED			BIT(6)
->> +#define STATUS_SRC_ADDR_INVALID			BIT(7)
->> +#define STATUS_DST_ADDR_INVALID			BIT(8)
->> +
->> +#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0x0c
->>  #define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
->>  
->>  #define PCI_ENDPOINT_TEST_LOWER_DST_ADDR	0x14
->>  #define PCI_ENDPOINT_TEST_UPPER_DST_ADDR	0x18
->>  
->> -#define PCI_ENDPOINT_TEST_SIZE		0x1c
->> -#define PCI_ENDPOINT_TEST_CHECKSUM	0x20
->> +#define PCI_ENDPOINT_TEST_SIZE			0x1c
->> +#define PCI_ENDPOINT_TEST_CHECKSUM		0x20
->> +
->> +#define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
+> PASID is an End-End TLP Prefix (PCIe r4.0, sec 6.20).  Sec 2.2.10.2 says
 > 
-> Is this not redundant? COMMAND_RAISE_LEGACY_IRQ, COMMAND_RAISE_MSI_IRQ already
-> indicates the irq type to be used.
-
-In previous implementation the distinction between interrupt types was simpler,
-basically legacy *number* always set as zero and the MSI *number* always
-non-zero. However by introducing the MSI-X this simple mechanism is no longer
-valid, because the MSI-X *number* is also always non-zero like as MSI.
-Therefore is necessary to distinguish which interrupt type was been triggered
-(MSI or MSI-X) especially for the Write/Read/Copy tests.
-
-
->> +#define PCI_ENDPOINT_TEST_IRQ_NUMBER		0x28
->>  
->>  static DEFINE_IDA(pci_endpoint_test_ida);
->>  
->> @@ -179,6 +183,9 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
->>  {
->>  	u32 val;
->>  
->> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
->> +				 IRQ_TYPE_LEGACY);
->> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 0);
+>   It is an error to receive a TLP with an End-End TLP Prefix by a
+>   Receiver that does not support End-End TLP Prefixes. A TLP in
+>   violation of this rule is handled as a Malformed TLP. This is a
+>   reported error associated with the Receiving Port (see Section 6.2).
 > 
-> Not sure if the above writes are really required.
-
-Is not required, but I added those write for keeping the code coherency between
-pci_endpoint_test_legacy_irq() and pci_endpoint_test_msi_irq(), basically both
-functions write on the same registers. I think it doesn't cause any harm.
-
->>  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
->>  				 COMMAND_RAISE_LEGACY_IRQ);
->>  	val = wait_for_completion_timeout(&test->irq_raised,
->> @@ -190,20 +197,22 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
->>  }
->>  
->>  static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
->> -				      u8 msi_num)
->> +				      u8 irq_num)
+> Prevent error condition by proactively requiring End-to-End TLP
+> prefix to be supported on the entire data path between the endpoint and
+> the root port before enabling PASID.
 > 
-> why do you want to rename this?
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-Initially this patch file contained the changes related to MSI-X support and by
-that time I had changed the name of this variable so that its name had a broader
-meaning that contemplated these two types. Now that I see this, I think the
-original name may also be valid, I will revert this name change.
+Applied to pci/virtualization for v4.19, thanks!
 
-Regards,
-Gustavo
-
+> ---
+>  drivers/pci/ats.c             |  3 +++
+>  drivers/pci/probe.c           | 24 ++++++++++++++++++++++++
+>  include/linux/pci.h           |  1 +
+>  include/uapi/linux/pci_regs.h |  1 +
+>  4 files changed, 29 insertions(+)
 > 
-> Thanks
-> Kishon
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index 4923a2a..5b78f3b 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -273,6 +273,9 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
+>  	if (WARN_ON(pdev->pasid_enabled))
+>  		return -EBUSY;
+>  
+> +	if (!pdev->eetlp_prefix_path)
+> +		return -EINVAL;
+> +
+>  	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PASID);
+>  	if (!pos)
+>  		return -EINVAL;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ac876e3..39fd3ac 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2042,6 +2042,29 @@ static void pci_configure_ltr(struct pci_dev *dev)
+>  #endif
+>  }
+>  
+> +static void pci_configure_eetlp_prefix(struct pci_dev *dev)
+> +{
+> +#ifdef CONFIG_PCI_PASID
+> +	struct pci_dev *bridge;
+> +	u32 cap;
+> +
+> +	if (!pci_is_pcie(dev))
+> +		return;
+> +
+> +	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
+> +	if (!(cap & PCI_EXP_DEVCAP2_E2ETLP))
+> +		return;
+> +
+> +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
+> +		dev->eetlp_prefix_path = 1;
+> +	else {
+> +		bridge = pci_upstream_bridge(dev);
+> +		if (bridge && bridge->eetlp_prefix_path)
+> +			dev->eetlp_prefix_path = 1;
+> +	}
+> +#endif
+> +}
+> +
+>  static void pci_configure_device(struct pci_dev *dev)
+>  {
+>  	struct hotplug_params hpp;
+> @@ -2051,6 +2074,7 @@ static void pci_configure_device(struct pci_dev *dev)
+>  	pci_configure_extended_tags(dev, NULL);
+>  	pci_configure_relaxed_ordering(dev);
+>  	pci_configure_ltr(dev);
+> +	pci_configure_eetlp_prefix(dev);
+>  
+>  	memset(&hpp, 0, sizeof(hpp));
+>  	ret = pci_get_hp_params(dev, &hpp);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 340029b..6ba8184 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -350,6 +350,7 @@ struct pci_dev {
+>  	unsigned int	ltr_path:1;	/* Latency Tolerance Reporting
+>  					   supported from root to here */
+>  #endif
+> +	unsigned int	eetlp_prefix_path:1;	/* End-to-End TLP Prefix */
+>  
+>  	pci_channel_state_t error_state;	/* Current connectivity state */
+>  	struct device	dev;			/* Generic device interface */
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 4da87e2..a617ab2 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -636,6 +636,7 @@
+>  #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
+>  #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
+>  #define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x00080000 /* Re-use WAKE# for OBFF */
+> +#define PCI_EXP_DEVCAP2_E2ETLP		0x00200000 /* End-to-End TLP Prefix */
+>  #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
+>  #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout Value */
+>  #define  PCI_EXP_DEVCTL2_COMP_TMOUT_DIS	0x0010	/* Completion Timeout Disable */
+> -- 
+> 2.7.4
 > 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
