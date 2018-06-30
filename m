@@ -1,74 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH v1 1/2] PCI: shpchp: Use dev_printk() for OSHP-related
- messages
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54802 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751409AbeF3T6a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 30 Jun 2018 15:58:30 -0400
+Date: Sat, 30 Jun 2018 14:58:27 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Mario.Limonciello@dell.com,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>
-Date: Sat, 02 Jun 2018 00:42:06 -0500
-Message-ID: <152791812599.257724.10989340037255897378.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <152791788214.257724.13044360353832574147.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <152791788214.257724.13044360353832574147.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org
+Subject: Re: [PATCH] PCI/AER: Prevent runtime power management during recovery
+Message-ID: <20180630195827.GD9547@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180611222918.1708-1-keith.busch@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180611222918.1708-1-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+[+cc Rafael, linux-pm for a PM perspective]
 
-Use dev_printk() for messages related to requesting control of SHPC hotplug
-via the OSHP method.
+On Mon, Jun 11, 2018 at 04:29:18PM -0600, Keith Busch wrote:
+> A bridge that supports D3 but not hotplug will be subject to runtime
+> power management placing it in a non-operation power state if it doesn't
+> have any devices attached. This patch will prevent this power management
+> during error recovery so that the rescan at the end may be successful.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/hotplug/acpi_pcihp.c |   13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+I assume you're seeing a problem that's fixed by this patch?
 
-diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-index 7cc50cfef9c6..597d22aeefc1 100644
---- a/drivers/pci/hotplug/acpi_pcihp.c
-+++ b/drivers/pci/hotplug/acpi_pcihp.c
-@@ -96,7 +96,7 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
- 	if (!handle) {
- 		/*
- 		 * This hotplug controller was not listed in the ACPI name
--		 * space at all. Try to get acpi handle of parent pci bus.
-+		 * space at all. Try to get ACPI handle of parent PCI bus.
- 		 */
- 		struct pci_bus *pbus;
- 		for (pbus = pdev->bus; pbus; pbus = pbus->parent) {
-@@ -108,8 +108,8 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
- 
- 	while (handle) {
- 		acpi_get_name(handle, ACPI_FULL_PATHNAME, &string);
--		dbg("Trying to get hotplug control for %s\n",
--		    (char *)string.pointer);
-+		pci_info(pdev, "Requesting control of SHPC hotplug via OSHP (%s)\n",
-+			 (char *)string.pointer);
- 		status = acpi_run_oshp(handle);
- 		if (ACPI_SUCCESS(status))
- 			goto got_one;
-@@ -121,13 +121,12 @@ int acpi_get_hp_hw_control_from_firmware(struct pci_dev *pdev)
- 			break;
- 	}
- no_control:
--	dbg("Cannot get control of hotplug hardware for pci %s\n",
--	    pci_name(pdev));
-+	pci_info(pdev, "Cannot get control of SHPC hotplug\n");
- 	kfree(string.pointer);
- 	return -ENODEV;
- got_one:
--	dbg("Gained control for hotplug HW for pci %s (%s)\n",
--	    pci_name(pdev), (char *)string.pointer);
-+	pci_info(pdev, "Gained control of SHPC hotplug (%s)\n",
-+		 (char *)string.pointer);
- 	kfree(string.pointer);
- 	return 0;
- }
+I'm not very familiar with the pm_runtime_*() interfaces.  The fact
+that drivers/pci/ only contains two calls to pm_runtime_forbid() and
+two to pm_runtime_allow() (one in a quirk) makes me wonder if this is
+the right approach.
 
+Do we need something similar in other enumeration paths, e.g.,
+boot-time enumeration, hot-add, sysfs "rescan" entry, etc?
+
+> Cc: Oza Pawandeep <poza@codeaurora.org>
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  drivers/pci/pcie/err.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index f7ce0cb0b0b7..247b6ce14f0d 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -16,6 +16,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/errno.h>
+>  #include <linux/aer.h>
+> +#include <linux/pm_runtime.h>
+>  #include "portdrv.h"
+>  #include "../pci.h"
+>  
+> @@ -294,6 +295,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+>  		udev = dev->bus->self;
+>  
+>  	parent = udev->subordinate;
+> +	pm_runtime_forbid(&udev->dev);
+>  	pci_lock_rescan_remove();
+>  	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+>  					 bus_list) {
+> @@ -329,6 +331,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+>  	}
+>  
+>  	pci_unlock_rescan_remove();
+> +	pm_runtime_allow(&udev->dev);
+>  }
+>  
+>  /**
+> -- 
+> 2.14.3
+> 
