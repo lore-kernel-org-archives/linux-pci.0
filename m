@@ -1,97 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.bootlin.com ([62.4.15.54]:40408 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752833AbeFNHJE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Jun 2018 03:09:04 -0400
-Date: Thu, 14 Jun 2018 09:09:02 +0200
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36325 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752224AbeGADzr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jun 2018 23:55:47 -0400
+Received: by mail-pf0-f196.google.com with SMTP id u16-v6so5960970pfh.3
+        for <linux-pci@vger.kernel.org>; Sat, 30 Jun 2018 20:55:47 -0700 (PDT)
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 01/10] PCI: Add pci_host_alloc_intx_irqd() for
- allocating IRQ domain
-Message-ID: <20180614090902.7b30a0d2@windsurf>
-In-Reply-To: <1528940057-183252-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
-        <1528940057-183252-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
+        Shawn Guo <shawn.guo@linaro.org>
+Subject: [PATCH v3 7/9] PCI: histb: Drop unnecessary root_bus_nr setting
+Date: Sun,  1 Jul 2018 11:54:49 +0800
+Message-Id: <1530417291-30495-8-git-send-email-shawn.guo@linaro.org>
+In-Reply-To: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
+References: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Function dw_pcie_host_init() already initializes the root_bus_nr field
+of 'struct pcie_port', so the -1 assignment prior to calling
+dw_pcie_host_init() in platform specific driver is not really needed.
+Drop it.
 
-One nit below.
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+Cc: Jianguo Sun <sunjianguo1@huawei.com>
+---
+ drivers/pci/controller/dwc/pcie-histb.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-On Thu, 14 Jun 2018 09:34:17 +0800, Shawn Lin wrote:
-
-> +	if (!intc) {
-> +		intc = of_get_next_child(dev->of_node, NULL);
-> +		if (!intc) {
-> +			dev_err(dev, "missing child interrupt-controller node\n");
-> +			goto err_out;
-> +		}
-> +		need_put = true;
-> +	}
-> +
-> +	if (!intx_domain_ops) {
-> +		irqd_ops = (struct irq_domain_ops *)devm_kmalloc(dev,
-
-The cast doesn't seem to be useful.
-
-> +				sizeof(struct irq_domain_ops), GFP_KERNEL);
-> +		if (!irqd_ops) {
-> +			err = -ENOMEM;
-> +			goto err_out;
-> +		}
-> +
-> +		irqd_ops->map = &pcie_intx_map;
-> +		if (general_xlate)
-> +			irqd_ops->xlate = &pci_irqd_intx_xlate;
-> +		intx_domain_ops = irqd_ops;
-> +	}
-> +#ifdef CONFIG_IRQ_DOMAIN
-> +	domain = irq_domain_add_linear(intc, PCI_NUM_INTX,
-> +				       intx_domain_ops, host);
-> +#endif
-
-Isn't it a bit weird to have this in the middle of this function ?
-Should you instead declare a stub pci_host_alloc_intx_irqd() function
-in the header file if CONFIG_IRQ_DOMAIN is not enabled ?
-
-I.e in pci.h:
-
-#ifdef CONFIG_IRQ_DOMAIN
-struct irq_domain *pci_host_alloc_intx_irqd(struct device *dev,
-				void *host, bool general_xlate,
-				const struct irq_domain_ops *intx_domain_ops,
-				struct device_node *local_intc);
-#else
-static inline struct irq_domain *pci_host_alloc_intx_irqd(struct device *dev,
-	void *host, bool general_xlate, const struct irq_domain_ops *intx_domain_ops,
-	struct device_node *local_intc)
-{
-	return PTR_ERR(-EINVAL);
-}
-#endif
-
-or something like that.
-
-Finally a purely subjective and personal opinion: I'm not a big fan of
-this boolean that tells whether the ->xlate hook should be populated or
-not. I'm not sure if it makes sense for this function to create the
-irqdomain_ops altogether, perhaps it should be mandatory for the
-irq_domain_ops to be provided by the caller. The problem with the
-boolean general_xlate is that it is an endless story of additional
-booleans to tweak more stuff in the irq_domain_ops structure. But of
-course that's just a personal view, and my view doesn't really count
-here :-)
-
-Best regards,
-
-Thomas
+diff --git a/drivers/pci/controller/dwc/pcie-histb.c b/drivers/pci/controller/dwc/pcie-histb.c
+index 3611d6ce9a92..7b32e619b959 100644
+--- a/drivers/pci/controller/dwc/pcie-histb.c
++++ b/drivers/pci/controller/dwc/pcie-histb.c
+@@ -420,7 +420,6 @@ static int histb_pcie_probe(struct platform_device *pdev)
+ 		phy_init(hipcie->phy);
+ 	}
+ 
+-	pp->root_bus_nr = -1;
+ 	pp->ops = &histb_pcie_host_ops;
+ 
+ 	platform_set_drvdata(pdev, hipcie);
 -- 
-Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-https://bootlin.com
+1.9.1
