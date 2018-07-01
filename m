@@ -1,89 +1,55 @@
-Return-Path: <SRS0=JrVV=JZ=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=JrVV=JZ=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bmailout2.hostsharing.net ([83.223.90.240]:43037 "EHLO
+        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752181AbeGAOGg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Jul 2018 10:06:36 -0400
+Date: Sun, 1 Jul 2018 16:06:34 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Hari Vyas <hari.vyas@broadcom.com>
+Cc: bhelgaas@google.com, benh@kernel.crashing.org,
+        linux-pci@vger.kernel.org, ray.jui@broadcom.com
+Subject: Re: [PATCH v2 1/3] PCI: Data corruption happening due to race
+ condition
+Message-ID: <20180701140634.GA22322@wunner.de>
+References: <1530268061-17324-1-git-send-email-hari.vyas@broadcom.com>
+ <1530268061-17324-2-git-send-email-hari.vyas@broadcom.com>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <CAErSpo4eaaieQiZjAejXAoCv82wddPOcRQXpiqD6X=fFW5XAHQ@mail.gmail.com>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <2108146.dv4EAOf6IP@aspire.rjw.lan> <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
- <8816662.k3KXbdkA2e@aspire.rjw.lan> <CAErSpo4eaaieQiZjAejXAoCv82wddPOcRQXpiqD6X=fFW5XAHQ@mail.gmail.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 9 Jul 2018 23:35:14 +0200
-Message-ID: <CAJZ5v0hVDo-Y2gPTxd6yHVY=vr093hai1VhLzNzzhFkKe0LoKA@mail.gmail.com>
-Subject: Re: [PATCH] driver core: Drop devices_kset_move_last() call from really_probe()
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Pingfan Liu <kernelfans@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1530268061-17324-2-git-send-email-hari.vyas@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 9, 2018 at 3:57 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Jul 6, 2018 at 5:01 AM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->>
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> The devices_kset_move_last() call in really_probe() is a mistake
->> as it may cause parents to follow children in the devices_kset list
->> which then causes system shutdown to fail.  Namely, if a device has
->> children before really_probe() is called for it (which is not
->> uncommon), that call will cause it to be reordered after the children
->> in the devices_kset list and the ordering of that list will not
->> reflect the correct device shutdown order.
->>
->> Also it causes the devices_kset list to be constantly reordered
->> until all drivers have been probed which is totally pointless
->> overhead in the majority of cases.
->>
->> For that reason, revert the really_probe() modifications made by
->> commit 52cdbdd49853.
->
-> I'm sure you've considered this, but I can't figure out whether this
-> patch will reintroduce the problem that was solved by 52cdbdd49853.
-> That patch updated two places: (1) really_probe(), the change you're
-> reverting here, and (2) device_move().
->
-> device_move() is only called from 4-5 places, none of which look
-> related to the problem fixed by 52cdbdd49853, so it seems like that
-> problem was probably resolved by the hunk you're reverting.
+On Fri, Jun 29, 2018 at 03:57:39PM +0530, Hari Vyas wrote:
+> Fix moves device addition is_added bit to separate private flag
+> variable and use different atomic functions to set, clear and
+> retrieve device addition state. As is_added shares different
+> memory location so race condition is avoided.
 
-That's right, but I don't want to revert all of it.  The other parts
-of it are kind of useful as they make the handling of the devices_kset
-list be consistent with the handling of dpm_list.
+As 0-day has already discovered, you need to squash all 3 patches
+together to avoid breaking the build.
 
-The hunk I'm reverting, however, is completely off.  It not only is
-incorrect (as per the above), but it also causes the devices_kset list
-and dpm_list to be handled differently.
 
-It had attempted to fix something, but it failed miserably at that.
+> +static inline int pci_dev_set_added(struct pci_dev *dev, void *unused)
+> +{
+> +	set_bit(PCI_DEV_ADDED, &dev->priv_flags);
+> +	return 0;
+> +}
+> +
+> +static inline int pci_dev_clear_added(struct pci_dev *dev, void *unused)
+> +{
+> +	clear_bit(PCI_DEV_ADDED, &dev->priv_flags);
+> +	return 0;
+> +}
 
->> Fixes: 52cdbdd49853 (driver core: correct device's shutdown order)
->> Link: https://lore.kernel.org/lkml/CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com/
->> Reported-by: Pingfan Liu <kernelfans@gmail.com>
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> ---
->>  drivers/base/dd.c |    8 --------
->>  1 file changed, 8 deletions(-)
->>
->> Index: linux-pm/drivers/base/dd.c
->> ===================================================================
->> --- linux-pm.orig/drivers/base/dd.c
->> +++ linux-pm/drivers/base/dd.c
->> @@ -434,14 +434,6 @@ re_probe:
->>                         goto probe_failed;
->>         }
->>
->> -       /*
->> -        * Ensure devices are listed in devices_kset in correct order
->> -        * It's important to move Dev to the end of devices_kset before
->> -        * calling .probe, because it could be recursive and parent Dev
->> -        * should always go first
->> -        */
->> -       devices_kset_move_last(dev);
->> -
->>         if (dev->bus->probe) {
->>                 ret = dev->bus->probe(dev);
->>                 if (ret)
->>
+You don't need the "unused" parameter here and you can return void.
+pci_dev_set_disconnected() has the parameter because the function is
+passed in to pci_walk_bus() in a few places, but you're not doing that
+AFAICS.
+
+What you *could* do however is collapse pci_dev_set_added() and
+pci_dev_clear_added() into a single function, pass in a bool "added",
+then use assign_bit() to set or clear it.  It would save 6 LoC.
+
+Thanks,
+
+Lukas
