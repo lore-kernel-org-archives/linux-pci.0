@@ -1,93 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:51944 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753632AbeGFJcm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2018 05:32:42 -0400
-Subject: Re: [PATCH v6 00/11] Add MSI-X support on pcitest tool
-To: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
-        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>
-References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
- <77139978-65cc-b954-bc61-bebf3bcc67ac@synopsys.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <284a6871-4687-e437-6876-3cd1e0329cbb@ti.com>
-Date: Fri, 6 Jul 2018 15:02:25 +0530
+Return-Path: <SRS0=8O55=JR=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=8O55=JR=h08.hostsharing.net=foo00@kernel.org>
+Date: Sun, 1 Jul 2018 13:51:26 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <keith.busch@intel.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Oza Pawandeep <poza@codeaurora.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org
+Subject: Re: [PATCH] PCI/AER: Prevent runtime power management during recovery
+Message-ID: <20180701115126.GA4101@wunner.de>
+References: <20180611222918.1708-1-keith.busch@intel.com>
+ <20180630195827.GD9547@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <77139978-65cc-b954-bc61-bebf3bcc67ac@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180630195827.GD9547@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Friday 06 July 2018 02:24 PM, Gustavo Pimentel wrote:
-> Hi,
+On Sat, Jun 30, 2018 at 02:58:27PM -0500, Bjorn Helgaas wrote:
+> On Mon, Jun 11, 2018 at 04:29:18PM -0600, Keith Busch wrote:
+> > A bridge that supports D3 but not hotplug will be subject to runtime
+> > power management placing it in a non-operation power state if it doesn't
+> > have any devices attached. This patch will prevent this power management
+> > during error recovery so that the rescan at the end may be successful.
 > 
-> Just a gentle reminder.
+> I assume you're seeing a problem that's fixed by this patch?
+> 
+> I'm not very familiar with the pm_runtime_*() interfaces.  The fact
+> that drivers/pci/ only contains two calls to pm_runtime_forbid() and
+> two to pm_runtime_allow() (one in a quirk) makes me wonder if this is
+> the right approach.
 
-sorry for the delay. I've now reviewed the pending patches.
+The use of pm_runtime_forbid() / pm_runtime_allow() is wrong here.
+The user may forbid and allow runtime PM on a device by writing "on"
+or "auto" to its power/control file in sysfs.  The two functions have
+the same effect, but the user may override them at any time.  If the
+intention is to ensure the bridge is runtime resumed while a rescan
+is in progess, the appropriate functions to call are pm_runtime_get_sync()
+and pm_runtime_put().
 
-Thanks
-Kishon
+
+> Do we need something similar in other enumeration paths, e.g.,
+> boot-time enumeration, hot-add, sysfs "rescan" entry, etc?
+
+Definitely not on boot-time enumeration.  PCI devices are kept in D0
+if not bound to a driver, and the PCI core first scans all devices,
+only then attaches drivers.
+
+As for hot-add, hotplug bridges are currently always kept in D0,
+but I've posted a patch series two weeks ago to add runtime PM.
+Did you get a chance to look at it?  Patch [28/32] of that series
+resumes the bridge to D0 on hot-add ("PCI: pciehp: Resume to D0 on
+enable/disable").
+
+As for sysfs "rescan", this does lack runtime PM calls currently,
+as do many other sysfs accessors.  The above-mentioned series
+adds runtime PM to sysfs "reset" in patch [30/32] ("PCI: sysfs:
+Resume to D0 on function reset").  The patch does not depend on the
+preceding patches in the series, it could be applied out of order.
+Amending all the other accessors would be another big project.
+It's not as trivial as sprinkling a few runtime PM calls, it requires
+careful thought.  E.g. if only config space is accessed, it's
+sufficient to resume the parent with pci_config_pm_runtime_get()
+instead of the device itself with pm_runtime_get_sync().  In other
+cases the information is read from config space even though it's cached,
+e.g. secondary_bus_number_show().  In those cases it might be better
+to always return the cached data instead of adding runtime PM calls.
+
+FWIW, from a quick look proc.c seems fine as far as runtime PM is
+concerned.
+
+Thanks,
+
+Lukas
 
 > 
-> Thanks.
-> 
-> On 21/06/2018 17:01, Gustavo Pimentel wrote:
->> Patch series made against Lorenzo's master branch.
->>
->> Add MSI-X support on pcitest tool.
->>
->> Add new callbacks methods and handlers to trigger the MSI-X interrupts
->> on the EP DesignWare IP driver.
->>
->> Allow to set/get MSI-X EP maximum capability number.
->>
->> Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
->>
->> Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
->>
->> Update the pcitest.sh script to support MSI-X feature tests.
->>
->> Gustavo Pimentel (11):
->>   PCI: endpoint: Add MSI-X interfaces
->>   PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
->>   PCI: dwc: Add MSI-X callbacks handler
->>   PCI: dwc: Rework MSI callbacks handler
->>   PCI: dwc: Add legacy interrupt callback handler
->>   pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
->>   pci-epf-test/pci_endpoint_test: Use irq_type module parameter
->>   pci-epf-test/pci_endpoint_test: Add MSI-X support
->>   pci_endpoint_test: Add 2 ioctl commands
->>   tools: PCI: Add MSI-X support
->>   PCI: endpoint: Add MSI set maximum restriction.
->>
->>  Documentation/ioctl/ioctl-number.txt              |   1 +
->>  Documentation/misc-devices/pci-endpoint-test.txt  |   6 +
->>  drivers/misc/pci_endpoint_test.c                  | 259 ++++++++++++++++------
->>  drivers/pci/controller/dwc/pci-dra7xx.c           |   2 +-
->>  drivers/pci/controller/dwc/pcie-artpec6.c         |   2 +-
->>  drivers/pci/controller/dwc/pcie-designware-ep.c   | 205 +++++++++++++++--
->>  drivers/pci/controller/dwc/pcie-designware-plat.c |   7 +-
->>  drivers/pci/controller/dwc/pcie-designware.h      |  31 ++-
->>  drivers/pci/controller/pcie-cadence-ep.c          |   3 +-
->>  drivers/pci/controller/pcie-rockchip-ep.c         |   2 +-
->>  drivers/pci/endpoint/functions/pci-epf-test.c     |  81 +++++--
->>  drivers/pci/endpoint/pci-ep-cfs.c                 |  24 ++
->>  drivers/pci/endpoint/pci-epc-core.c               |  68 +++++-
->>  include/linux/pci-epc.h                           |  15 +-
->>  include/linux/pci-epf.h                           |   1 +
->>  include/uapi/linux/pcitest.h                      |   3 +
->>  tools/pci/pcitest.c                               |  51 ++++-
->>  tools/pci/pcitest.sh                              |  15 ++
->>  18 files changed, 644 insertions(+), 132 deletions(-)
->>
-> 
+> > Cc: Oza Pawandeep <poza@codeaurora.org>
+> > Signed-off-by: Keith Busch <keith.busch@intel.com>
+> > ---
+> >  drivers/pci/pcie/err.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> > index f7ce0cb0b0b7..247b6ce14f0d 100644
+> > --- a/drivers/pci/pcie/err.c
+> > +++ b/drivers/pci/pcie/err.c
+> > @@ -16,6 +16,7 @@
+> >  #include <linux/kernel.h>
+> >  #include <linux/errno.h>
+> >  #include <linux/aer.h>
+> > +#include <linux/pm_runtime.h>
+> >  #include "portdrv.h"
+> >  #include "../pci.h"
+> >  
+> > @@ -294,6 +295,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+> >  		udev = dev->bus->self;
+> >  
+> >  	parent = udev->subordinate;
+> > +	pm_runtime_forbid(&udev->dev);
+> >  	pci_lock_rescan_remove();
+> >  	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
+> >  					 bus_list) {
+> > @@ -329,6 +331,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+> >  	}
+> >  
+> >  	pci_unlock_rescan_remove();
+> > +	pm_runtime_allow(&udev->dev);
+> >  }
+> >  
+> >  /**
+> > -- 
+> > 2.14.3
