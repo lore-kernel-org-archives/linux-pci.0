@@ -1,83 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56480 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754416AbeFMGzy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Jun 2018 02:55:54 -0400
-Date: Wed, 13 Jun 2018 14:55:47 +0800
-From: Baoquan He <bhe@redhat.com>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: brijesh.singh@amd.com, devicetree@vger.kernel.org,
-        airlied@linux.ie, linux-pci@vger.kernel.org,
-        richard.weiyang@gmail.com, keith.busch@intel.com,
-        jcmvbkbc@gmail.com, baiyaowei@cmss.chinamobile.com,
-        frowand.list@gmail.com, lorenzo.pieralisi@arm.com,
-        sthemmin@microsoft.com, linux-nvdimm@lists.01.org,
-        patrik.r.jakobsson@gmail.com, linux-input@vger.kernel.org,
-        gustavo@padovan.org, dyoung@redhat.com, vgoyal@redhat.com,
-        thomas.lendacky@amd.com, haiyangz@microsoft.com,
-        maarten.lankhorst@linux.intel.com, jglisse@redhat.com,
-        seanpaul@chromium.org, bhelgaas@google.com, tglx@linutronix.de,
-        yinghai@kernel.org, jonathan.derrick@intel.com, chris@zankel.net,
-        monstr@monstr.eu, linux-parisc@vger.kernel.org,
-        gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com,
-        kexec@lists.infradead.org, ebiederm@xmission.com,
-        devel@linuxdriverproject.org, linuxppc-dev@lists.ozlabs.org,
-        davem@davemloft.net, kbuild-all@01.org
-Subject: Re: [PATCH v5 2/4] resource: Use list_head to link sibling resource
-Message-ID: <20180613065547.GH1820@MiWiFi-R3L-srv>
-References: <alpine.DEB.2.20.1806121708070.3334@hadrien>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.20.1806121708070.3334@hadrien>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:40362 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752239AbeGADz6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jun 2018 23:55:58 -0400
+Received: by mail-pf0-f196.google.com with SMTP id z24-v6so5955113pfe.7
+        for <linux-pci@vger.kernel.org>; Sat, 30 Jun 2018 20:55:58 -0700 (PDT)
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
+        Shawn Guo <shawn.guo@linaro.org>
+Subject: [PATCH v3 9/9] PCI: spear13xx: Drop unnecessary root_bus_nr setting
+Date: Sun,  1 Jul 2018 11:54:51 +0800
+Message-Id: <1530417291-30495-10-git-send-email-shawn.guo@linaro.org>
+In-Reply-To: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
+References: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/12/18 at 05:10pm, Julia Lawall wrote:
-> This looks wrong.  After a list iterator, the index variable points to a
-> dummy structure.
-> 
-> julia
-> 
-> url:    https://github.com/0day-ci/linux/commits/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180612-113600
-> :::::: branch date: 7 hours ago
-> :::::: commit date: 7 hours ago
-> 
-> >> kernel/resource.c:265:17-20: ERROR: invalid reference to the index variable of the iterator on line 253
-> 
-> # https://github.com/0day-ci/linux/commit/e906f15906750a86913ba2b1f08bad99129d3dfc
-> git remote add linux-review https://github.com/0day-ci/linux
-> git remote update linux-review
-> git checkout e906f15906750a86913ba2b1f08bad99129d3dfc
-> vim +265 kernel/resource.c
-> 
-> ^1da177e4 Linus Torvalds 2005-04-16  247
-> 5eeec0ec9 Yinghai Lu     2009-12-22  248  static void __release_child_resources(struct resource *r)
-> 5eeec0ec9 Yinghai Lu     2009-12-22  249  {
-> e906f1590 Baoquan He     2018-06-12  250  	struct resource *tmp, *next;
-> 5eeec0ec9 Yinghai Lu     2009-12-22  251  	resource_size_t size;
-> 5eeec0ec9 Yinghai Lu     2009-12-22  252
-> e906f1590 Baoquan He     2018-06-12 @253  	list_for_each_entry_safe(tmp, next, &r->child, sibling) {
-> 5eeec0ec9 Yinghai Lu     2009-12-22  254  		tmp->parent = NULL;
-> e906f1590 Baoquan He     2018-06-12  255  		INIT_LIST_HEAD(&tmp->sibling);
+Function dw_pcie_host_init() already initializes the root_bus_nr field
+of 'struct pcie_port', so the -1 assignment prior to calling
+dw_pcie_host_init() in platform specific driver is not really needed.
+Drop it.
 
-							list_del_init(&tmp->sibling);
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+---
+ drivers/pci/controller/dwc/pcie-spear13xx.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Thanks, Julia. Here I should use list_del_init(&op->list) to
-replace INIT_LIST_HEAD(&tmp->sibling). 
-
-> 5eeec0ec9 Yinghai Lu     2009-12-22  256  		__release_child_resources(tmp);
-> 5eeec0ec9 Yinghai Lu     2009-12-22  257
-> 5eeec0ec9 Yinghai Lu     2009-12-22  258  		printk(KERN_DEBUG "release child resource %pR\n", tmp);
-> 5eeec0ec9 Yinghai Lu     2009-12-22  259  		/* need to restore size, and keep flags */
-> 5eeec0ec9 Yinghai Lu     2009-12-22  260  		size = resource_size(tmp);
-> 5eeec0ec9 Yinghai Lu     2009-12-22  261  		tmp->start = 0;
-> 5eeec0ec9 Yinghai Lu     2009-12-22  262  		tmp->end = size - 1;
-> 5eeec0ec9 Yinghai Lu     2009-12-22  263  	}
-> e906f1590 Baoquan He     2018-06-12  264
-> e906f1590 Baoquan He     2018-06-12 @265  	INIT_LIST_HEAD(&tmp->child);
-> 5eeec0ec9 Yinghai Lu     2009-12-22  266  }
-> 5eeec0ec9 Yinghai Lu     2009-12-22  267
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+diff --git a/drivers/pci/controller/dwc/pcie-spear13xx.c b/drivers/pci/controller/dwc/pcie-spear13xx.c
+index ecb58f7b7566..7d0cdfd8138b 100644
+--- a/drivers/pci/controller/dwc/pcie-spear13xx.c
++++ b/drivers/pci/controller/dwc/pcie-spear13xx.c
+@@ -210,7 +210,6 @@ static int spear13xx_add_pcie_port(struct spear13xx_pcie *spear13xx_pcie,
+ 		return ret;
+ 	}
+ 
+-	pp->root_bus_nr = -1;
+ 	pp->ops = &spear13xx_pcie_host_ops;
+ 
+ 	ret = dw_pcie_host_init(pp);
+-- 
+1.9.1
