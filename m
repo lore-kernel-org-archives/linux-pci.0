@@ -1,240 +1,123 @@
-Return-Path: <SRS0=8ZZk=JW=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=8ZZk=JW=gmail.com=kernelfans@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Dexuan Cui <decui@microsoft.com>
+To: 'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "'olaf@aepfle.de'" <olaf@aepfle.de>,
+        "'apw@canonical.com'" <apw@canonical.com>,
+        "'jasowang@redhat.com'" <jasowang@redhat.com>
+CC: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'driverdev-devel@linuxdriverproject.org'"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
+        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
+Subject: [PATCH v2] PCI: hv: Disable/enable irq rather than bh in
+ hv_compose_msi_msg()
+Date: Sun, 1 Jul 2018 18:22:23 +0000
+Message-ID: <KL1P15301MB0006BE5DB7C3C45386E4327FBF4C0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <1530600642-25090-3-git-send-email-kernelfans@gmail.com> <2108146.dv4EAOf6IP@aspire.rjw.lan>
-In-Reply-To: <2108146.dv4EAOf6IP@aspire.rjw.lan>
-From: Pingfan Liu <kernelfans@gmail.com>
-Date: Fri, 6 Jul 2018 11:02:15 +0800
-Message-ID: <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
-Subject: Re: [PATCHv3 2/4] drivers/base: utilize device tree info to shutdown devices
-To: rjw@rjwysocki.net
-Cc: linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 5, 2018 at 6:13 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->
-> On Tuesday, July 3, 2018 8:50:40 AM CEST Pingfan Liu wrote:
-> > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
-> > places an assumption of supplier<-consumer order on the process of probe.
-> > But it turns out to break down the parent <- child order in some scene.
-> > E.g in pci, a bridge is enabled by pci core, and behind it, the devices
-> > have been probed. Then comes the bridge's module, which enables extra
-> > feature(such as hotplug) on this bridge. This will break the
-> > parent<-children order and cause failure when "kexec -e" in some scenario.
-> >
-> > The detailed description of the scenario:
-> > An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
-> > match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
-> > to some issue. For this case, the bridge is moved after its children in
-> > devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
-> > write back buffer in flight due to the former shutdown of the bridge which
-> > clears the BusMaster bit.
-> >
-> > It is a little hard to impose both "parent<-child" and "supplier<-consumer"
-> > order on devices_kset. Take the following scene:
-> > step0: before a consumer's probing, (note child_a is supplier of consumer_a)
-> >   [ consumer-X, child_a, ...., child_z] [... consumer_a, ..., consumer_z, ...] supplier-X
-> >                                          ^^^^^^^^^^ affected range ^^^^^^^^^^
-> > step1: when probing, moving consumer-X after supplier-X
-> >   [ child_a, ...., child_z] [.... consumer_a, ..., consumer_z, ...] supplier-X, consumer-X
-> > step2: the children of consumer-X should be re-ordered to maintain the seq
-> >   [... consumer_a, ..., consumer_z, ....] supplier-X  [consumer-X, child_a, ...., child_z]
-> > step3: the consumer_a should be re-ordered to maintain the seq
-> >   [... consumer_z, ...] supplier-X [ consumer-X, child_a, consumer_a ..., child_z]
-> >
-> > It requires two nested recursion to drain out all out-of-order item in
-> > "affected range". To avoid such complicated code, this patch suggests
-> > to utilize the info in device tree, instead of using the order of
-> > devices_kset during shutdown. It iterates the device tree, and firstly
-> > shutdown a device's children and consumers. After this patch, the buggy
-> > commit is hollow and left to clean.
-> >
-> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-> > Cc: Christoph Hellwig <hch@infradead.org>
-> > Cc: Bjorn Helgaas <helgaas@kernel.org>
-> > Cc: Dave Young <dyoung@redhat.com>
-> > Cc: linux-pci@vger.kernel.org
-> > Cc: linuxppc-dev@lists.ozlabs.org
-> > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
-> > ---
-> >  drivers/base/core.c    | 48 +++++++++++++++++++++++++++++++++++++++++++-----
-> >  include/linux/device.h |  1 +
-> >  2 files changed, 44 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/base/core.c b/drivers/base/core.c
-> > index a48868f..684b994 100644
-> > --- a/drivers/base/core.c
-> > +++ b/drivers/base/core.c
-> > @@ -1446,6 +1446,7 @@ void device_initialize(struct device *dev)
-> >       INIT_LIST_HEAD(&dev->links.consumers);
-> >       INIT_LIST_HEAD(&dev->links.suppliers);
-> >       dev->links.status = DL_DEV_NO_DRIVER;
-> > +     dev->shutdown = false;
-> >  }
-> >  EXPORT_SYMBOL_GPL(device_initialize);
-> >
-> > @@ -2811,7 +2812,6 @@ static void __device_shutdown(struct device *dev)
-> >        * lock is to be held
-> >        */
-> >       parent = get_device(dev->parent);
-> > -     get_device(dev);
->
-> Why is the get_/put_device() not needed any more?
->
-They are moved upper layer into device_for_each_child_shutdown().
-Since there is lock breakage in __device_shutdown(), resorting to
-ref++ to protect the ancestor.  And I think the
-get_device(dev->parent) can be deleted either.
 
-> >       /*
-> >        * Make sure the device is off the kset list, in the
-> >        * event that dev->*->shutdown() doesn't remove it.
-> > @@ -2842,23 +2842,60 @@ static void __device_shutdown(struct device *dev)
-> >                       dev_info(dev, "shutdown\n");
-> >               dev->driver->shutdown(dev);
-> >       }
-> > -
-> > +     dev->shutdown = true;
-> >       device_unlock(dev);
-> >       if (parent)
-> >               device_unlock(parent);
-> >
-> > -     put_device(dev);
-> >       put_device(parent);
-> >       spin_lock(&devices_kset->list_lock);
-> >  }
-> >
-> > +/* shutdown dev's children and consumer firstly, then itself */
-> > +static int device_for_each_child_shutdown(struct device *dev)
->
-> Confusing name.
->
-> What about device_shutdown_subordinate()?
->
-Fine. My understanding of words is not exact.
+Commit de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in hv_compose_msi_msg()")
+uses local_bh_disable()/enable(), because hv_pci_onchannelcallback() can
+also run in tasklet context as the channel event callback, and here we
+want to avoid the race.
 
-> > +{
-> > +     struct klist_iter i;
-> > +     struct device *child;
-> > +     struct device_link *link;
-> > +
-> > +     /* already shutdown, then skip this sub tree */
-> > +     if (dev->shutdown)
-> > +             return 0;
-> > +
-> > +     if (!dev->p)
-> > +             goto check_consumers;
-> > +
-> > +     /* there is breakage of lock in __device_shutdown(), and the redundant
-> > +      * ref++ on srcu protected consumer is harmless since shutdown is not
-> > +      * hot path.
-> > +      */
-> > +     get_device(dev);
-> > +
-> > +     klist_iter_init(&dev->p->klist_children, &i);
-> > +     while ((child = next_device(&i)))
-> > +             device_for_each_child_shutdown(child);
->
-> Why don't you use device_for_each_child() here?
->
-OK, I will try use it.
+With CONFIG_PROVE_LOCKING=3Dy in the recent mainline, or old kernels that
+don't have commit f71b74bca637 ("irq/softirqs: Use lockdep to assert IRQs
+are disabled/enabled"), when the upper layer irq code calls
+hv_compose_msi_msg() with local irq DISABLED, we'll see a warning at the
+beginning of __local_bh_enable_ip():
 
-> > +     klist_iter_exit(&i);
-> > +
-> > +check_consumers:
-> > +     list_for_each_entry_rcu(link, &dev->links.consumers, s_node) {
-> > +             if (!link->consumer->shutdown)
-> > +                     device_for_each_child_shutdown(link->consumer);
-> > +     }
-> > +
-> > +     __device_shutdown(dev);
-> > +     put_device(dev);
->
-> Possible reference counter imbalance AFAICS.
->
-Yes, get_device() should be ahead of "if (!dev->p)". Is anything  else I miss?
+IRQs not enabled as expected
+  WARNING: CPU: 0 PID: 408 at kernel/softirq.c:162 __local_bh_enable_ip
 
-> > +     return 0;
-> > +}
->
-> Well, instead of doing this dance, we might as well walk dpm_list here as it
-> is in the right order.
->
-Sorry, do you mean that using the same way to manage the dpm_list?
+The warning exposes an issue in de0aa7b2f97d: local_bh_enable() can
+potentially call do_softirq(), which is not supposed to run when local
+irq is DISABLED. Let's fix this by using local_irq_save()/restore()
+instead.
 
-> Of course, that would require dpm_list to be available for CONFIG_PM unset,
-> but it may be a better approach long term.
->
-> > +
-> >  /**
-> >   * device_shutdown - call ->shutdown() on each device to shutdown.
-> >   */
-> >  void device_shutdown(void)
-> >  {
-> >       struct device *dev;
-> > +     int idx;
-> >
-> > +     idx = device_links_read_lock();
-> >       spin_lock(&devices_kset->list_lock);
-> >       /*
-> >        * Walk the devices list backward, shutting down each in turn.
-> > @@ -2866,11 +2903,12 @@ void device_shutdown(void)
-> >        * devices offline, even as the system is shutting down.
-> >        */
-> >       while (!list_empty(&devices_kset->list)) {
-> > -             dev = list_entry(devices_kset->list.prev, struct device,
-> > +             dev = list_entry(devices_kset->list.next, struct device,
-> >                               kobj.entry);
-> > -             __device_shutdown(dev);
-> > +             device_for_each_child_shutdown(dev);
-> >       }
-> >       spin_unlock(&devices_kset->list_lock);
-> > +     device_links_read_unlock(idx);
-> >  }
-> >
-> >  /*
-> > diff --git a/include/linux/device.h b/include/linux/device.h
-> > index 055a69d..8a0f784 100644
-> > --- a/include/linux/device.h
-> > +++ b/include/linux/device.h
-> > @@ -1003,6 +1003,7 @@ struct device {
-> >       bool                    offline:1;
-> >       bool                    of_node_reused:1;
-> >       bool                    dma_32bit_limit:1;
-> > +     bool                    shutdown:1; /* one direction: false->true */
-> >  };
-> >
-> >  static inline struct device *kobj_to_dev(struct kobject *kobj)
-> >
->
-> If the device_kset_move_last() in really_probe() is the only problem,
-> I'd rather try to fix that one in the first place.
->
-> Why is it needed?
->
-I had tried, but it turns out not easy to archive. The code is
-https://patchwork.kernel.org/patch/10485195/. And I make a detailed
-description of the algorithm in this patch's commit log. To be more
-detailed, we face the potential out of order issue in really_probe()
-like : 0th. [ consumer-X, child_a, ...., child_z] [... consumer_a,
-..., consumer_z, ...] supplier-X //(note child_a is supplier of
-consumer_a).  To address all the potential out of order item in the
-affected section [... consumer_a, ..., consumer_z, ...],  it will
-incur two nested recursions.  1st, moving  consumer-X and its
-descendants after supplier-X,  2nd, moving consumer_a after child_a,
-3rd. the 2nd step may pose the same situation of 0th.  Besides the two
-interleaved recursion,  the breakage of spin lock requires more effort
-to protect the item from disappearing in linked-list  (which I did not
-implement in the https://patchwork.kernel.org/patch/10485195/). Hence
-I turn to this cheap method.
+Note: hv_pci_onchannelcallback() is not a hot path because it's only
+called when the PCI device is hot added and removed, which is infrequent.
 
-Thanks,
-Pingfan
+Fixes: de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in hv_compose_msi_msg()")
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+Cc: <stable@vger.kernel.org>
+Cc: Stephen Hemminger <sthemmin@microsoft.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+---
+
+A trimmed version of the warning is:
+
+IRQs not enabled as expected
+WARNING: CPU: 0 PID: 408 at kernel/softirq.c:162 __local_bh_enable_ip+0xb0/=
+0xe0
+Call Trace:
+ hv_compose_msi_msg+0x209/0x462 [pci_hyperv]
+ irq_chip_compose_msi_msg+0x41/0x50
+ msi_domain_activate+0x1a/0x40
+ __irq_domain_activate_irq+0x59/0x90
+ irq_domain_activate_irq+0x25/0x40
+ __setup_irq+0x3ec/0x730
+request_threaded_irq+0xfa/0x1a0
+mlx4_init_eq_table+0x3c3/0x5f0 [mlx4_core]
+mlx4_setup_hca+0x1db/0x750 [mlx4_core]
+mlx4_load_one+0xad2/0x13b0 [mlx4_core]
+mlx4_init_one+0x578/0x710 [mlx4_core]
+local_pci_probe+0x1e/0x50
+work_for_cpu_fn+0x10/0x20
+process_one_work+0x1d4/0x5a0
+worker_thread+0x1cb/0x3d0
+kthread+0xf5/0x130
+
+
+Changes since v1:
+	Updated the changelog only (fixed typos and some inaccuracy)
+
+
+ drivers/pci/controller/pci-hyperv.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/p=
+ci-hyperv.c
+index ba1d4b5..eb20296 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -1073,6 +1073,7 @@ static void hv_compose_msi_msg(struct irq_data *data,=
+ struct msi_msg *msg)
+ 	struct pci_bus *pbus;
+ 	struct pci_dev *pdev;
+ 	struct cpumask *dest;
++	unsigned long flags;
+ 	struct compose_comp_ctxt comp;
+ 	struct tran_int_desc *int_desc;
+ 	struct {
+@@ -1164,14 +1165,15 @@ static void hv_compose_msi_msg(struct irq_data *dat=
+a, struct msi_msg *msg)
+ 		 * the channel callback directly when channel->target_cpu is
+ 		 * the current CPU. When the higher level interrupt code
+ 		 * calls us with interrupt enabled, let's add the
+-		 * local_bh_disable()/enable() to avoid race.
++		 * local_irq_save()/restore() to avoid race:
++		 * hv_pci_onchannelcallback() can also run in tasklet.
+ 		 */
+-		local_bh_disable();
++		local_irq_save(flags);
+=20
+ 		if (hbus->hdev->channel->target_cpu =3D=3D smp_processor_id())
+ 			hv_pci_onchannelcallback(hbus);
+=20
+-		local_bh_enable();
++		local_irq_restore(flags);
+=20
+ 		if (hpdev->state =3D=3D hv_pcichild_ejecting) {
+ 			dev_err_once(&hbus->hdev->device,
+--=20
+2.7.4
