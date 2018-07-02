@@ -1,106 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v8 05/11] PCI: dwc: Add legacy interrupt callback handler
-Date: Fri,  6 Jul 2018 16:51:28 +0100
-Message-Id: <a7e396fda2f0fdae79ecabf4ae7adee9eb40e6dc.1530891871.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
-References: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
-References: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f65.google.com ([209.85.214.65]:54219 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751931AbeGBQQU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jul 2018 12:16:20 -0400
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To: bhelgaas@google.com, keith.busch@intel.com
+Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3] PCI/AER: Fix aerdrv loading with "pcie_ports=native" parameter
+Date: Mon,  2 Jul 2018 11:16:01 -0500
+Message-Id: <20180702161611.2048-1-mr.nuke.me@gmail.com>
+In-Reply-To: <20180702131923.GB15983@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180702131923.GB15983@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a legacy interrupt callback handler. Currently DesignWare IP don't
-allow trigger legacy interrupts.
+According to the documentation, "pcie_ports=native", linux should use
+native AER and DPC services. While that is true for the _OSC method
+parsing, this is not the only place that is checked. Should the HEST
+table list PCIe ports as firmware-first, linux will not use native
+services.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+This happens because aer_acpi_firmware_first() doesn't take
+'pcie_ports' into account. This is wrong. DPC uses the same logic when
+it decides whether to load or not, so fixing this also fixes DPC not
+loading.
+
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 ---
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
+ drivers/pci/pcie/aer.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 10 ++++++++++
- drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +--
- drivers/pci/controller/dwc/pcie-designware.h      |  6 ++++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 1f98db3..70d0688 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
- 	.stop			= dw_pcie_ep_stop,
- };
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index a2e88386af28..db2c01056dc7 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -283,13 +283,14 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
  
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct device *dev = pci->dev;
-+
-+	dev_err(dev, "EP cannot trigger legacy IRQs\n");
-+
-+	return -EINVAL;
-+}
-+
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num)
+ static void aer_set_firmware_first(struct pci_dev *pci_dev)
  {
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 654dcb5..90a8c95 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -84,8 +84,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+-	int rc;
++	int rc = 0;
+ 	struct aer_hest_parse_info info = {
+ 		.pci_dev	= pci_dev,
+ 		.firmware_first	= 0,
+ 	};
  
- 	switch (type) {
- 	case PCI_EPC_IRQ_LEGACY:
--		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
--		return -EINVAL;
-+		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index a0ab12f..69e6e17 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -350,6 +350,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num);
- int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
-@@ -369,6 +370,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
+-	rc = apei_hest_parse(aer_hest_parse, &info);
++	if (!pcie_ports_native)
++		rc = apei_hest_parse(aer_hest_parse, &info);
  
-+static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	return 0;
-+}
+ 	if (rc)
+ 		pci_dev->__aer_firmware_first = 0;
+@@ -324,7 +325,9 @@ bool aer_acpi_firmware_first(void)
+ 	};
+ 
+ 	if (!parsed) {
+-		apei_hest_parse(aer_hest_parse, &info);
++		if (!pcie_ports_native)
++			apei_hest_parse(aer_hest_parse, &info);
 +
- static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 					   u8 interrupt_num)
- {
+ 		aer_firmware_first = info.firmware_first;
+ 		parsed = true;
+ 	}
 -- 
-2.7.4
+2.14.3
