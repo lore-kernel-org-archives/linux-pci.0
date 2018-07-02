@@ -1,71 +1,105 @@
-Return-Path: <SRS0=HNZp=JZ=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=HNZp=JZ=broadcom.com=ray.jui@kernel.org>
-Subject: Re: [PATCH v2 0/5] Improve Broadcom PAXC support
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org
-References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
- <20180709172251.GB16292@red-moon>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <740b4299-806d-8098-08f6-e467c7fae584@broadcom.com>
-Date: Mon, 9 Jul 2018 10:29:39 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: <honghui.zhang@mediatek.com>
+To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+ <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+ <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
+Subject: [PATCH v2 1/4] PCI: mediatek: fixup mtk_pcie_find_port logical
+Date: Mon, 2 Jul 2018 11:49:41 +0800
+Message-ID: <1530503384-1218-2-git-send-email-honghui.zhang@mediatek.com>
+In-Reply-To: <1530503384-1218-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1530503384-1218-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <20180709172251.GB16292@red-moon>
-Content-Type: text/plain; charset=utf-8; format=flowed
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
+ honghui.zhang@mediatek.com, yt.shen@mediatek.com, yong.wu@mediatek.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-On 7/9/2018 10:22 AM, Lorenzo Pieralisi wrote:
-> On Mon, Jun 11, 2018 at 05:21:02PM -0700, Ray Jui wrote:
->> This patch series improves the Broadcom PAXC support by 1) adding more
->> quirks for specific versions of PAXC controllers; 2) adding logic to
->> reject internally unconfigured physical functions from the embedded
->> network processor acting as endpoint; 3) reducing verbose print level
->> in the outbound/inbound mapping code
->>
->> This patch series is based off v4.17 and is available on GIHUB:
->> repo: https://github.com/Broadcom/arm64-linux.git
->> branch: sr-paxc-v2
->>
->> Changes since v1:
->>   - consolidate 2 PAXC related patch series into 1
->>   - change the way how the capability list corruption is handled, per
->> recommendation from Bjorn. Now handle and fix up the corruption at
->> the config register read
->>   - rebase to v4.17
->>
->> Ray Jui (5):
->>    PCI: iproc: Activate PAXC bridge quirk for more devices
->>    PCI: iproc: Fix up corrupted PAXC root complex config registers
->>    PCI: iproc: Disable MSI parsing in certain PAXC blocks
->>    PCI: iproc: Reject unconfigured physical functions from PAXC
->>    PCI: iproc: Reduce inbound/outbound mapping print level
->>
->>   drivers/pci/host/pcie-iproc.c | 159 +++++++++++++++++++++++++++++++++++-------
->>   drivers/pci/host/pcie-iproc.h |   8 +++
->>   drivers/pci/quirks.c          |   3 +
->>   3 files changed, 144 insertions(+), 26 deletions(-)
-> 
-> Hi Ray,
-> 
-> apart from patch 1, that requires Bjorn's ACK, I would take the
-> series (I will rewrite the logs), I would appreciate if the amount
-> of HW quirks would decrease since it is becoming quite unwieldy to
-> handle them, it is your code but please get the point across.
-> 
-> Lorenzo
-> 
+The Mediatek's host controller has two slots, each with it's own control
+registers. The host driver need to identify which slot was connected
+in order to access the device's configuration space. There's problem
+for current host driver to find out which slot was connected to for
+a given EP device.
 
-Okay, thanks Lorenzo. I will ping Bjorn for patch 1.
+Assuming each slot have connect with one EP device as below:
 
-And yes, the amount of HW quirks is overwhelming. We do have a process 
-internally to track each quirk and a plan to address them in the next 
-revision of the silicon based on priority, but that's largely managed by 
-our ASIC team. Bottom line is the next revision of the ASIC should 
-require much less of these quirks though.
+                host bridge
+  bus 0 --> __________|_______
+           |                  |
+           |                  |
+         slot 0             slot 1
+  bus 1 -->|        bus 2 --> |
+           |                  |
+         EP 0               EP 1
 
-Thanks,
+During PCI enumeration, system software will scan all the PCI device
+starting from devfn 0. So it will get the proper port for slot0 and
+slot1 device when using PCI_SLOT(devfn) for match. But it will get
+the wrong slot for EP1: The devfn will be start from 0 when scanning
+EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
+for port0's slot value. So the host driver should not using EP's devfn
+but the slot's devfn(the slot which EP was connected to) for match.
 
-Ray
+This patch fix the mtk_pcie_find_port's logical by using the slot's
+devfn for match.
+
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+---
+ drivers/pci/controller/pcie-mediatek.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 0baabe3..b43f41d 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -337,11 +337,26 @@ static struct mtk_pcie_port *mtk_pcie_find_port(struct pci_bus *bus,
+ {
+ 	struct mtk_pcie *pcie = bus->sysdata;
+ 	struct mtk_pcie_port *port;
++	struct pci_dev *dev;
++	struct pci_bus *pbus;
+ 
+-	list_for_each_entry(port, &pcie->ports, list)
+-		if (port->slot == PCI_SLOT(devfn))
++	list_for_each_entry(port, &pcie->ports, list) {
++		if (!bus->number && port->slot == PCI_SLOT(devfn))
+ 			return port;
+ 
++		if (bus->number) {
++			pbus = bus;
++
++			while (pbus->number) {
++				dev = pbus->self;
++				pbus = dev->bus;
++			}
++
++			if (port->slot == PCI_SLOT(dev->devfn))
++				return port;
++		}
++	}
++
+ 	return NULL;
+ }
+ 
+-- 
+2.6.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
