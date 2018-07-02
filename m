@@ -1,57 +1,170 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 11 Jul 2018 08:11:38 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org,
-        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/5] PCI: iproc: Activate PAXC bridge quirk for more
- devices
-Message-ID: <20180711131138.GE188359@bhelgaas-glaptop.roam.corp.google.com>
-References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
- <1528762867-16823-2-git-send-email-ray.jui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailgw01.mediatek.com ([210.61.82.183]:31155 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S933455AbeGBH6W (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jul 2018 03:58:22 -0400
+From: <honghui.zhang@mediatek.com>
+To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>
+CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
+        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>
+Subject: [PATCH v3 4/4] PCI: mediatek: Add loadable kernel module support
+Date: Mon, 2 Jul 2018 15:57:44 +0800
+Message-ID: <1530518264-6125-5-git-send-email-honghui.zhang@mediatek.com>
+In-Reply-To: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1528762867-16823-2-git-send-email-ray.jui@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 11, 2018 at 05:21:03PM -0700, Ray Jui wrote:
-> Activate PAXC bridge quirk for more PAXC based PCIe root complex with
-> the following PCIe device ID:
-> 0xd750, 0xd802, 0xd804
-> 
-> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Because this quirk_paxc_bridge() mechanism is already established,
+Implement remove callback function for Mediatek PCIe driver to add
+loadable kernel module support.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ drivers/pci/controller/Kconfig         |  2 +-
+ drivers/pci/controller/pcie-mediatek.c | 60 +++++++++++++++++++++++++++++++---
+ 2 files changed, 57 insertions(+), 5 deletions(-)
 
-BUT, I would push back on quirk_paxc_bridge() if it were new code.
-
-I think it would be much better to implement this in the driver's
-config accessors so lspci would show the correct things and the
-generic code that deals with pcie_mpss would work unmodified.
-
-> ---
->  drivers/pci/quirks.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 2990ad1..47dfea0 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2195,6 +2195,9 @@ static void quirk_paxc_bridge(struct pci_dev *pdev)
->  }
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16cd, quirk_paxc_bridge);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0, quirk_paxc_bridge);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd750, quirk_paxc_bridge);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802, quirk_paxc_bridge);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804, quirk_paxc_bridge);
->  #endif
->  
->  /* Originally in EDAC sources for i82875P:
-> -- 
-> 2.1.4
-> 
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 18fa09b..6c61ac65 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -234,7 +234,7 @@ config PCIE_ROCKCHIP_EP
+ 	  available to support GEN2 with 4 slots.
+ 
+ config PCIE_MEDIATEK
+-	bool "MediaTek PCIe controller"
++	tristate "MediaTek PCIe controller"
+ 	depends on ARCH_MEDIATEK || COMPILE_TEST
+ 	depends on OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 175d7b6..28730b8 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -15,6 +15,7 @@
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/msi.h>
++#include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/of_platform.h>
+@@ -184,6 +185,7 @@ struct mtk_pcie_port {
+ 	struct phy *phy;
+ 	u32 lane;
+ 	u32 slot;
++	int irq;
+ 	struct irq_domain *irq_domain;
+ 	struct irq_domain *inner_domain;
+ 	struct irq_domain *msi_domain;
+@@ -538,6 +540,27 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+ 	writel(val, port->base + PCIE_INT_MASK);
+ }
+ 
++static void mtk_pcie_irq_teardown(struct mtk_pcie *pcie)
++{
++	struct mtk_pcie_port *port, *tmp;
++
++	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
++		irq_set_chained_handler_and_data(port->irq, NULL, NULL);
++
++		if (port->irq_domain)
++			irq_domain_remove(port->irq_domain);
++
++		if (IS_ENABLED(CONFIG_PCI_MSI)) {
++			if (port->msi_domain)
++				irq_domain_remove(port->msi_domain);
++			if (port->inner_domain)
++				irq_domain_remove(port->inner_domain);
++		}
++
++		irq_dispose_mapping(port->irq);
++	}
++}
++
+ static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+ 			     irq_hw_number_t hwirq)
+ {
+@@ -628,7 +651,7 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
+ 	struct mtk_pcie *pcie = port->pcie;
+ 	struct device *dev = pcie->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+-	int err, irq;
++	int err;
+ 
+ 	err = mtk_pcie_init_irq_domain(port, node);
+ 	if (err) {
+@@ -636,8 +659,9 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
+ 		return err;
+ 	}
+ 
+-	irq = platform_get_irq(pdev, port->slot);
+-	irq_set_chained_handler_and_data(irq, mtk_pcie_intr_handler, port);
++	port->irq = platform_get_irq(pdev, port->slot);
++	irq_set_chained_handler_and_data(port->irq,
++					 mtk_pcie_intr_handler, port);
+ 
+ 	return 0;
+ }
+@@ -1199,6 +1223,32 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
++
++static void mtk_pcie_free_resources(struct mtk_pcie *pcie)
++{
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	struct list_head *windows = &host->windows;
++
++	pci_unmap_iospace(&pcie->pio);
++	pci_free_resource_list(windows);
++}
++
++static int mtk_pcie_remove(struct platform_device *pdev)
++{
++	struct mtk_pcie *pcie = platform_get_drvdata(pdev);
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++
++	pci_stop_root_bus(host->bus);
++	pci_remove_root_bus(host->bus);
++	mtk_pcie_free_resources(pcie);
++
++	mtk_pcie_irq_teardown(pcie);
++
++	mtk_pcie_put_resources(pcie);
++
++	return 0;
++}
++
+ static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct mtk_pcie *pcie = dev_get_drvdata(dev);
+@@ -1291,6 +1341,7 @@ static const struct of_device_id mtk_pcie_ids[] = {
+ 
+ static struct platform_driver mtk_pcie_driver = {
+ 	.probe = mtk_pcie_probe,
++	.remove = mtk_pcie_remove,
+ 	.driver = {
+ 		.name = "mtk-pcie",
+ 		.of_match_table = mtk_pcie_ids,
+@@ -1298,4 +1349,5 @@ static struct platform_driver mtk_pcie_driver = {
+ 		.pm = &mtk_pcie_pm_ops,
+ 	},
+ };
+-builtin_platform_driver(mtk_pcie_driver);
++module_platform_driver(mtk_pcie_driver);
++MODULE_LICENSE("GPL v2");
+-- 
+2.6.4
