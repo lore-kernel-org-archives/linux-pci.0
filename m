@@ -1,81 +1,61 @@
-Return-Path: <SRS0=2gfv=KD=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=2gfv=KD=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.org ([203.11.71.1]:49329 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932145AbeGBA71 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 1 Jul 2018 20:59:27 -0400
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Sam Bobroff <sbobroff@linux.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, bryantly@linux.vnet.ibm.com
+Subject: Re: [PATCH v2 1/1] powerpc/pseries: fix EEH recovery of some IOV devices
+In-Reply-To: <7598ffeb48c16c88a34937ad93b18f806222b8df.1527208281.git.sbobroff@linux.ibm.com>
+References: <7598ffeb48c16c88a34937ad93b18f806222b8df.1527208281.git.sbobroff@linux.ibm.com>
+Date: Mon, 02 Jul 2018 10:59:24 +1000
+Message-ID: <87in5ymp03.fsf@concordia.ellerman.id.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 19 Jul 2018 09:23:47 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Philippe Ombredanne <pombredanne@nexb.com>, Thomas Gleixner
- <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate
- Stewart <kstewart@linuxfoundation.org>, Dongdong Liu
- <liudongdong3@huawei.com>, Keith Busch <keith.busch@intel.com>, Wei Zhang
- <wzhang@fb.com>, Sinan Kaya <okaya@kernel.org>, Timur Tabi
- <timur@codeaurora.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/7] Fix issues and cleanup for ERR_FATAL and
- ERR_NONFATAL
-In-Reply-To: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <35f60c57a8e8fe9503d63a62fd4776bf@codeaurora.org>
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-07-19 01:14, Bjorn Helgaas wrote:
-> This is a v3 of Oza's patches [1].  It's available at [2] if you prefer
-> git.
-> 
-> v3 changes:
->   - Add pci_aer_clear_fatal_status() to clear ERR_FATAL bits, only 
-> called
->     from pcie_do_fatal_recovery().  Moved to first in series to avoid a
->     window where ERR_FATAL recovery only clears ERR_NONFATAL bits.  
-> Visible
->     only inside the PCI core.
->   - Instead of having pci_cleanup_aer_uncorrect_error_status() do 
-> different
->     things based on dev->error_state, use this only for ERR_NONFATAL 
-> bits.
->     I didn't change the name because it's used by many drivers.
->   - Rename pci_cleanup_aer_error_device_status() to
->     pci_aer_clear_device_status(), make it void, and make it visible 
-> only
->     inside the PCI core.
->   - Remove pcie_portdrv_err_handler.slot_reset altogether instead of 
-> making
->     it a stub function.  Possibly pcie_portdrv_err_handler could be 
-> removed
->     completely?
-> 
-> [1]
-> https://lkml.kernel.org/r/1529661494-20936-1-git-send-email-poza@codeaurora.org
-> [2]
-> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/?h=pci/06-22-oza-aer
-> 
+Sam Bobroff <sbobroff@linux.ibm.com> writes:
+
+> EEH recovery currently fails on pSeries for some IOV capable PCI
+> devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
+> certain device tree properties for the device. (Found on an IOV
+> capable device using the ipr driver.)
+>
+> Recovery fails in pci_enable_resources() at the check on r->parent,
+> because r->flags is set and r->parent is not.  This state is due to
+> sriov_init() setting the start, end and flags members of the IOV BARs
+> but the parent not being set later in
+> pseries_pci_fixup_iov_resources(), because the
+> "ibm,open-sriov-vf-bar-info" property is missing.
+>
+> Correct this by zeroing the resource flags for IOV BARs when they
+> can't be configured.
+>
+> Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
 > ---
-> 
-> Bjorn Helgaas (1):
->       PCI/AER: Clear only ERR_FATAL status bits during fatal recovery
-> 
-> Oza Pawandeep (6):
->       PCI/AER: Clear only ERR_NONFATAL bits during non-fatal recovery
->       PCI/AER: Factor out ERR_NONFATAL status bit clearing
->       PCI/AER: Remove ERR_FATAL code from ERR_NONFATAL path
->       PCI/AER: Clear device status bits during ERR_FATAL and 
-> ERR_NONFATAL
->       PCI/AER: Clear device status bits during ERR_COR handling
->       PCI/portdrv: Remove pcie_portdrv_err_handler.slot_reset
-> 
-> 
->  drivers/pci/pci.h              |    5 ++++
->  drivers/pci/pcie/aer.c         |   47 
-> +++++++++++++++++++++++++++-------------
->  drivers/pci/pcie/err.c         |   15 +++++--------
->  drivers/pci/pcie/portdrv_pci.c |   25 ---------------------
->  4 files changed, 43 insertions(+), 49 deletions(-)
+> Hi,
+>
+> This is a fix to allow EEH recovery to succeed in a specific situation,
+> which I've tried to explain in the commit message.
+>
+> As with the RFC version, the IOV BARs are disabled by setting the resource
+> flags to 0 but the other fields are now left as-is because that is what is done
+> elsewhere (see sriov_init() and __pci_read_base()).
+>
+> I've also examined the concern raised by Bjorn Helgaas, that VFs could be
+> enabled later after the BARs are disabled, and it already seems safe: enabling
+> VFs (on pseries) depends on another device tree property,
+> "ibm,number-of-configurable-vfs" as well as support for the RTAS function
+> "ibm_map_pes". Since these are all part of the hypervisor's support for IOV it
+> seems unlikely that we would ever see some of them but not all. (None are
+> currently provided by QEMU/KVM.) (Additionally, the ipr driver on which the EEH
+> recovery failure was discovered doesn't even seem to have SR-IOV support so it
+> certainly can't enable VFs.)
 
-looks good to me.
-Thanks for the corrections.
-some x86 compilation errors, you want me to to fix it and push v4 ?
+Can you fold/reword the above into the change log, it seems like useful
+detail.
 
-Regards,
-Oza.
+cheers
