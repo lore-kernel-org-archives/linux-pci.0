@@ -1,262 +1,164 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:46672 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729827AbeGPPUP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2018 11:20:15 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v11 11/12] tools: PCI: Add MSI-X support
-Date: Mon, 16 Jul 2018 16:52:23 +0200
-Message-Id: <54f46aa3181cb1a34983ba72fcda02251f93baf2.1531751641.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=4gZw=JS=cogentembedded.com=sergei.shtylyov@kernel.org>
+Return-Path: <SRS0=4gZw=JS=cogentembedded.com=sergei.shtylyov@kernel.org>
+Subject: Re: [PATCH] pci: fix I/O space page leak
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>,
+ Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Rob Herring <robh@kernel.org>, Tanmay Inamdar <tinamdar@apm.com>,
+ Ryder Lee <ryder.lee@mediatek.com>, Matthias Brugger
+ <matthias.bgg@gmail.com>, linux-arm-kernel@lists.infradead.org,
+ linux-mediatek@lists.infradead.org, linux-renesas-soc@vger.kernel.org
+References: <1ca6adde-a91e-84d0-c7dc-fd01bfd9edcc@cogentembedded.com>
+ <20180628132259.GB90450@bhelgaas-glaptop.roam.corp.google.com>
+ <20180628142615.GA9101@red-moon>
+ <ac015f99-c310-3701-35ce-846393b61235@cogentembedded.com>
+ <20180702103316.GA10784@red-moon>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <b881add9-b428-938e-947d-b44d04c34dd6@cogentembedded.com>
+Date: Mon, 2 Jul 2018 22:40:31 +0300
+MIME-Version: 1.0
+In-Reply-To: <20180702103316.GA10784@red-moon>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Add MSI-X support to pcitest tool.
+On 07/02/2018 01:33 PM, Lorenzo Pieralisi wrote:
 
-Modify pcitest.sh script to accommodate MSI-X interrupt tests.
+>>>>> When testing the R-Car PCIe driver on the Condor board, I noticed that iff
+>>>>> I  left the PCIe PHY driver disabled, the kernel crashed  with this BUG:
+>>>>>
+>>>>> [    1.225819] kernel BUG at lib/ioremap.c:72!
+>>>>> [    1.230007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+>>>>> [    1.235496] Modules linked in:
+>>>>> [    1.238561] CPU: 0 PID: 39 Comm: kworker/0:1 Not tainted 4.17.0-dirty #1092
+>>>>> [    1.245526] Hardware name: Renesas Condor board based on r8a77980 (DT)
+>>>>> [    1.252075] Workqueue: events deferred_probe_work_func
+>>>>> [    1.257220] pstate: 80000005 (Nzcv daif -PAN -UAO)
+>>>>> [    1.262024] pc : ioremap_page_range+0x370/0x3c8
+>>>>> [    1.266558] lr : ioremap_page_range+0x40/0x3c8
+>>>>> [    1.271002] sp : ffff000008da39e0
+>>>>> [    1.274317] x29: ffff000008da39e0 x28: 00e8000000000f07
+>>>>> [    1.279636] x27: ffff7dfffee00000 x26: 0140000000000000
+>>>>> [    1.284954] x25: ffff7dfffef00000 x24: 00000000000fe100
+>>>>> [    1.290272] x23: ffff80007b906000 x22: ffff000008ab8000
+>>>>> [    1.295590] x21: ffff000008bb1d58 x20: ffff7dfffef00000
+>>>>> [    1.300909] x19: ffff800009c30fb8 x18: 0000000000000001
+>>>>> [    1.306226] x17: 00000000000152d0 x16: 00000000014012d0
+>>>>> [    1.311544] x15: 0000000000000000 x14: 0720072007200720
+>>>>> [    1.316862] x13: 0720072007200720 x12: 0720072007200720
+>>>>> [    1.322180] x11: 0720072007300730 x10: 00000000000000ae
+>>>>> [    1.327498] x9 : 0000000000000000 x8 : ffff7dffff000000
+>>>>> [    1.332816] x7 : 0000000000000000 x6 : 0000000000000100
+>>>>> [    1.338134] x5 : 0000000000000000 x4 : 000000007b906000
+>>>>> [    1.343452] x3 : ffff80007c61a880 x2 : ffff7dfffeefffff
+>>>>> [    1.348770] x1 : 0000000040000000 x0 : 00e80000fe100f07
+>>>>> [    1.354090] Process kworker/0:1 (pid: 39, stack limit = 0x        (ptrval))
+>>>>> [    1.361056] Call trace:
+>>>>> [    1.363504]  ioremap_page_range+0x370/0x3c8
+>>>>> [    1.367695]  pci_remap_iospace+0x7c/0xac
+>>>>> [    1.371624]  pci_parse_request_of_pci_ranges+0x13c/0x190
+>>>>> [    1.376945]  rcar_pcie_probe+0x4c/0xb04
+>>>>> [    1.380786]  platform_drv_probe+0x50/0xbc
+>>>>> [    1.384799]  driver_probe_device+0x21c/0x308
+>>>>> [    1.389072]  __device_attach_driver+0x98/0xc8
+>>>>> [    1.393431]  bus_for_each_drv+0x54/0x94
+>>>>> [    1.397269]  __device_attach+0xc4/0x12c
+>>>>> [    1.401107]  device_initial_probe+0x10/0x18
+>>>>> [    1.405292]  bus_probe_device+0x90/0x98
+>>>>> [    1.409130]  deferred_probe_work_func+0xb0/0x150
+>>>>> [    1.413756]  process_one_work+0x12c/0x29c
+>>>>> [    1.417768]  worker_thread+0x200/0x3fc
+>>>>> [    1.421522]  kthread+0x108/0x134
+>>>>> [    1.424755]  ret_from_fork+0x10/0x18
+>>>>> [    1.428334] Code: f9004ba2 54000080 aa0003fb 17ffff48 (d4210000)
+>>>>>
+>>>>> It turned out that pci_remap_iospace() wasn't undone when the driver's
+>>>>> probe failed, and since devm_phy_optional_get() returned -EPROBE_DEFER,
+>>>>> the probe was retried,  finally causing the BUG due to trying to remap
+>>>>> already remapped pages.
+>>>>>
+>>>>> The most feasible solution seems to introduce devm_pci_remap_iospace()
+>>>>> and call it instead of pci_remap_iospace(), so that the pages get unmapped
+>>>>> automagically on any probe failure.
+>>>>>
+>>>>> And  while fixing pci_parse_request_of_pci_ranges(), aslo fix the other
+>>>>> drivers that have probably copied the bad example...
+>>>>>
+>>>>> Fixes: 4e64dbe226e7 ("PCI: generic: Expose pci_host_common_probe() for use by other drivers")
+>>>>> Fixes: cbce7900598c ("PCI: designware: Make driver arch-agnostic")
+>>>>> Fixes: 8c39d710363c ("PCI: aardvark: Add Aardvark PCI host controller driver")
+>>>>> Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
+>>>>> Fixes: 68a15eb7bd0c ("PCI: v3-semi: Add V3 Semiconductor PCI host driver")
+>>>>> Fixes: b7e78170efd4 ("PCI: versatile: Add DT-based ARM Versatile PB PCIe host driver")
+>>>>> Fixes: 5f6b6ccdbe1c ("PCI: xgene: Add APM X-Gene PCIe driver")
+>>>>> Fixes: 637cfacae96f ("PCI: mediatek: Add MediaTek PCIe host controller support")
+>>>>> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+>>>>> Cc: stable@vger.kernel.org
+>>>>
+>>>> Let me know if you want me to take this, Lorenzo, otherwise:
+>>>> s/pci: fix/PCI: Fix/ and
+>>>>
+>>>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>
+>>> Thank you Bjorn, yes it could go in as a fix but IMO it has to be split,
+>>> more so given the stable tag (and I think that each "Fixes" tag should
+>>> be self-contained),
+>>
+>>    It cannot be self-contained because it'll depend on the initial
+>> commit adding devm_pci_remap_iobase(). If you mean finding the
+>> earliest broken driver and introduce the deviec managed API while
+>> fixing it and then make use of that
+>> API in the subsequent patches, that surely can be done.
+> 
+> Yes I think that's the best course of action.
 
-Update documentation accordingly.
+   OK! :-)
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Allow IRQ type driver reconfiguring in runtime, follwing Kishon's
-suggestion.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
-Change v5->v6:
- - Moved PCITEST_MSIX ioctl entry to patch #8.
- - Moved PCITEST_SET_IRQTYPE and PCITEST_GET_IRQTYPE ioctl entries
-to patch #9.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Nothing changed, just to follow the patch set version.
-Change v9->v10:
- - Updated documentation.
-Change v10->v11:
- - Nothing changed, just to follow the patch set version.
+>>> merging it as-is would give Greg (and us) a
+>>> headache when it comes to backporting it.
+>>
+>>    The patch interdependency would give him headache too, and I was
+>> hoping to relieve those with the monilitic patch. :-)
+> 
+> The problem is that if any of the fixes has to be reverted we have
+> to revert the whole thing instead of just the problematic patch,
+> which, given that we are sending this to stable kernels may easily
+> turn out quite complicated.
+> 
+> So, I would add the new API along with the earliest broken driver
+> and mark it for stable.
+> 
+> In the same thread, add all other fixes (one per patch) without the
+> stable tag. When the first fix gets merged into the mainline (and
+> consequently goes to stable) we can send the stable backports for the
+> remainder of fixes.
+> 
+> How does that sound ?
 
- Documentation/PCI/endpoint/pci-test-howto.txt | 36 +++++++++++--------
- tools/pci/pcitest.c                           | 51 ++++++++++++++++++++++++++-
- tools/pci/pcitest.sh                          | 15 ++++++++
- 3 files changed, 87 insertions(+), 15 deletions(-)
+   I think the -stable maintainers are actively looking at the Fixes: tags
+these days, not only at stable@vger.kernel.org.  I can do thsat
 
-diff --git a/Documentation/PCI/endpoint/pci-test-howto.txt b/Documentation/PCI/endpoint/pci-test-howto.txt
-index 65f1a13..e40cf0f 100644
---- a/Documentation/PCI/endpoint/pci-test-howto.txt
-+++ b/Documentation/PCI/endpoint/pci-test-howto.txt
-@@ -121,7 +121,9 @@ following commands.
- 
- 	Interrupt tests
- 
-+	SET IRQ TYPE TO LEGACY:         OKAY
- 	LEGACY IRQ:     NOT OKAY
-+	SET IRQ TYPE TO MSI:            OKAY
- 	MSI1:           OKAY
- 	MSI2:           OKAY
- 	MSI3:           OKAY
-@@ -154,24 +156,30 @@ following commands.
- 	MSI30:          NOT OKAY
- 	MSI31:          NOT OKAY
- 	MSI32:          NOT OKAY
--	MSIX1:          OKAY
--	MSIX2:          OKAY
--	MSIX3:          OKAY
--	MSIX4:          OKAY
--	MSIX5:          OKAY
--	MSIX6:          OKAY
--	MSIX7:          OKAY
--	MSIX8:          OKAY
--	MSIX9:          NOT OKAY
--	MSIX10:         NOT OKAY
--	MSIX11:         NOT OKAY
--	MSIX12:         NOT OKAY
--	MSIX13:         NOT OKAY
-+	SET IRQ TYPE TO MSI-X:          OKAY
-+	MSI-X1:         OKAY
-+	MSI-X2:         OKAY
-+	MSI-X3:         OKAY
-+	MSI-X4:         OKAY
-+	MSI-X5:         OKAY
-+	MSI-X6:         OKAY
-+	MSI-X7:         OKAY
-+	MSI-X8:         OKAY
-+	MSI-X9:         NOT OKAY
-+	MSI-X10:        NOT OKAY
-+	MSI-X11:        NOT OKAY
-+	MSI-X12:        NOT OKAY
-+	MSI-X13:        NOT OKAY
-+	MSI-X14:        NOT OKAY
-+	MSI-X15:        NOT OKAY
-+	MSI-X16:        NOT OKAY
- 	[...]
--	MSIX2048:       NOT OKAY
-+	MSI-X2047:      NOT OKAY
-+	MSI-X2048:      NOT OKAY
- 
- 	Read Tests
- 
-+	SET IRQ TYPE TO MSI:            OKAY
- 	READ (      1 bytes):           OKAY
- 	READ (   1024 bytes):           OKAY
- 	READ (   1025 bytes):           OKAY
-diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
-index 9074b47..af146bb 100644
---- a/tools/pci/pcitest.c
-+++ b/tools/pci/pcitest.c
-@@ -31,12 +31,17 @@
- #define BILLION 1E9
- 
- static char *result[] = { "NOT OKAY", "OKAY" };
-+static char *irq[] = { "LEGACY", "MSI", "MSI-X" };
- 
- struct pci_test {
- 	char		*device;
- 	char		barnum;
- 	bool		legacyirq;
- 	unsigned int	msinum;
-+	unsigned int	msixnum;
-+	int		irqtype;
-+	bool		set_irqtype;
-+	bool		get_irqtype;
- 	bool		read;
- 	bool		write;
- 	bool		copy;
-@@ -65,6 +70,24 @@ static int run_test(struct pci_test *test)
- 			fprintf(stdout, "%s\n", result[ret]);
- 	}
- 
-+	if (test->set_irqtype) {
-+		ret = ioctl(fd, PCITEST_SET_IRQTYPE, test->irqtype);
-+		fprintf(stdout, "SET IRQ TYPE TO %s:\t\t", irq[test->irqtype]);
-+		if (ret < 0)
-+			fprintf(stdout, "FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	if (test->get_irqtype) {
-+		ret = ioctl(fd, PCITEST_GET_IRQTYPE);
-+		fprintf(stdout, "GET IRQ TYPE:\t\t");
-+		if (ret < 0)
-+			fprintf(stdout, "FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", irq[ret]);
-+	}
-+
- 	if (test->legacyirq) {
- 		ret = ioctl(fd, PCITEST_LEGACY_IRQ, 0);
- 		fprintf(stdout, "LEGACY IRQ:\t");
-@@ -83,6 +106,15 @@ static int run_test(struct pci_test *test)
- 			fprintf(stdout, "%s\n", result[ret]);
- 	}
- 
-+	if (test->msixnum > 0 && test->msixnum <= 2048) {
-+		ret = ioctl(fd, PCITEST_MSIX, test->msixnum);
-+		fprintf(stdout, "MSI-X%d:\t\t", test->msixnum);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
- 	if (test->write) {
- 		ret = ioctl(fd, PCITEST_WRITE, test->size);
- 		fprintf(stdout, "WRITE (%7ld bytes):\t\t", test->size);
-@@ -133,7 +165,7 @@ int main(int argc, char **argv)
- 	/* set default endpoint device */
- 	test->device = "/dev/pci-endpoint-test.0";
- 
--	while ((c = getopt(argc, argv, "D:b:m:lrwcs:")) != EOF)
-+	while ((c = getopt(argc, argv, "D:b:m:x:i:Ilrwcs:")) != EOF)
- 	switch (c) {
- 	case 'D':
- 		test->device = optarg;
-@@ -151,6 +183,20 @@ int main(int argc, char **argv)
- 		if (test->msinum < 1 || test->msinum > 32)
- 			goto usage;
- 		continue;
-+	case 'x':
-+		test->msixnum = atoi(optarg);
-+		if (test->msixnum < 1 || test->msixnum > 2048)
-+			goto usage;
-+		continue;
-+	case 'i':
-+		test->irqtype = atoi(optarg);
-+		if (test->irqtype < 0 || test->irqtype > 2)
-+			goto usage;
-+		test->set_irqtype = true;
-+		continue;
-+	case 'I':
-+		test->get_irqtype = true;
-+		continue;
- 	case 'r':
- 		test->read = true;
- 		continue;
-@@ -173,6 +219,9 @@ int main(int argc, char **argv)
- 			"\t-D <dev>		PCI endpoint test device {default: /dev/pci-endpoint-test.0}\n"
- 			"\t-b <bar num>		BAR test (bar number between 0..5)\n"
- 			"\t-m <msi num>		MSI test (msi number between 1..32)\n"
-+			"\t-x <msix num>	\tMSI-X test (msix number between 1..2048)\n"
-+			"\t-i <irq type>	\tSet IRQ type (0 - Legacy, 1 - MSI, 2 - MSI-X)\n"
-+			"\t-I			Get current IRQ type configured\n"
- 			"\t-l			Legacy IRQ test\n"
- 			"\t-r			Read buffer test\n"
- 			"\t-w			Write buffer test\n"
-diff --git a/tools/pci/pcitest.sh b/tools/pci/pcitest.sh
-index 77e8c85..75ed48f 100644
---- a/tools/pci/pcitest.sh
-+++ b/tools/pci/pcitest.sh
-@@ -16,7 +16,10 @@ echo
- echo "Interrupt tests"
- echo
- 
-+pcitest -i 0
- pcitest -l
-+
-+pcitest -i 1
- msi=1
- 
- while [ $msi -lt 33 ]
-@@ -26,9 +29,21 @@ do
- done
- echo
- 
-+pcitest -i 2
-+msix=1
-+
-+while [ $msix -lt 2049 ]
-+do
-+        pcitest -x $msix
-+        msix=`expr $msix + 1`
-+done
-+echo
-+
- echo "Read Tests"
- echo
- 
-+pcitest -i 1
-+
- pcitest -r -s 1
- pcitest -r -s 1024
- pcitest -r -s 1025
--- 
-2.7.4
+>>> Honestly I think it is best to split it up and send it for v4.19 but
+>>> I am happy to hear other options.
+>>
+>>    I disagree about 4.19. The R-Car PCIe situation is as follows:
+>> given me missing to get the PHY driver merged into 4.18 (and the
+>> gen3 PCIe stuff successfully merged into 4.18), the user is bound to
+>> have PCIe not working (if he doesn't refer to the PHY driver in DT)
+>> or encounter a kernel BUG (if he does refer to the PHY driver), thus
+
+   s/driver/device/, of course. :-)
+
+>> I'd like this BUG to be fixed in 4.18 time frame...
+> 
+> We shall try, please let me know if you are able to respin asap,
+> we already have a bunch of fixes queued.
+
+   I can probably try -- despite I'm on vacations and the football
+championship is still going on. :-)
+
+> Thanks for putting it together,
+> Lorenzo
+
+MBR, Sergei
