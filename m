@@ -1,40 +1,150 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH v1 0/4] PCI: Remove unnecessary includes of
- <linux/pci-aspm.h>
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
- "David S. Miller" <davem@davemloft.net>, Kalle Valo <kvalo@codeaurora.org>,
- Johannes Berg <johannes.berg@intel.com>,
- Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
- Luca Coelho <luciano.coelho@intel.com>, ath9k-devel@qca.qualcomm.com,
- linuxwifi@intel.com, intel-wired-lan@lists.osuosl.org,
- netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org
-References: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <43748afd-712a-48e5-97a9-0b6046f575b3@kernel.org>
-Date: Wed, 25 Jul 2018 13:33:23 -0700
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Alexey Kardashevskiy <aik@ozlabs.ru>,
+        Peter Xu <peterx@redhat.com>,
+        Zhenyu Wang <zhenyuw@linux.intel.com>,
+        linux-rdma@vger.kernel.org (open list:HFI1 DRIVER),
+        linux-kernel@vger.kernel.org (open list),
+        kvm@vger.kernel.org (open list:VFIO DRIVER)
+Subject: [PATCH V5 6/6] PCI: Rename pci_try_reset_bus() to pci_reset_bus()
+Date: Mon,  2 Jul 2018 18:58:55 -0400
+Message-Id: <1530572336-20296-7-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
+References: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/25/2018 12:52 PM, Bjorn Helgaas wrote:
-> emove includes of <linux/pci-aspm.h> from files that don't need
-> it.  I'll apply all these via the PCI tree unless there's objection.
-> 
-> ---
-> 
-> Bjorn Helgaas (4):
->        igb: Remove unnecessary include of <linux/pci-aspm.h>
->        ath9k: Remove unnecessary include of <linux/pci-aspm.h>
->        iwlwifi: Remove unnecessary include of <linux/pci-aspm.h>
->        PCI: Remove unnecessary include of <linux/pci-aspm.h>
+Now that the old implementation of pci_reset_bus() is gone, replace
+pci_try_reset_bus() with pci_reset_bus().
 
-Thanks.
+Compared to the old implementation, new code will fail immmediately with
+-EAGAIN if object lock cannot be obtained.
 
-Reviewed-by: Sinan Kaya <okaya@kernel.org>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/infiniband/hw/hfi1/pcie.c |  2 +-
+ drivers/pci/pci.c                 | 16 ++++++++--------
+ drivers/vfio/pci/vfio_pci.c       |  4 ++--
+ include/linux/pci.h               |  2 +-
+ 4 files changed, 12 insertions(+), 12 deletions(-)
 
-Is it possible to kill that file altogether? I haven't looked who is
-using outside of pci directory.
+diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
+index df4f2d3..baf7c32 100644
+--- a/drivers/infiniband/hw/hfi1/pcie.c
++++ b/drivers/infiniband/hw/hfi1/pcie.c
+@@ -905,7 +905,7 @@ static int trigger_sbr(struct hfi1_devdata *dd)
+ 	 * delay after a reset is required.  Per spec requirements,
+ 	 * the link is either working or not after that point.
+ 	 */
+-	return pci_try_reset_bus(dev);
++	return pci_reset_bus(dev);
+ }
+ 
+ /*
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7e3f2e9..bd19350 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4784,7 +4784,7 @@ int pci_probe_reset_slot(struct pci_slot *slot)
+ EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
+ 
+ /**
+- * __pci_try_reset_slot - Try to reset a PCI slot
++ * __pci_reset_slot - Try to reset a PCI slot
+  * @slot: PCI slot to reset
+  *`
+  * A PCI bus may host multiple slots, each slot may support a reset mechanism
+@@ -4798,7 +4798,7 @@ EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
+  *
+  * Same as above except return -EAGAIN if the slot cannot be locked
+  */
+-static int __pci_try_reset_slot(struct pci_slot *slot)
++static int __pci_reset_slot(struct pci_slot *slot)
+ {
+ 	int rc;
+ 
+@@ -4854,12 +4854,12 @@ int pci_probe_reset_bus(struct pci_bus *bus)
+ EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
+ 
+ /**
+- * __pci_try_reset_bus - Try to reset a PCI bus
++ * __pci_reset_bus - Try to reset a PCI bus
+  * @bus: top level PCI bus to reset
+  *
+  * Same as above except return -EAGAIN if the bus cannot be locked
+  */
+-static int __pci_try_reset_bus(struct pci_bus *bus)
++static int __pci_reset_bus(struct pci_bus *bus)
+ {
+ 	int rc;
+ 
+@@ -4882,17 +4882,17 @@ static int __pci_try_reset_bus(struct pci_bus *bus)
+ }
+ 
+ /**
+- * pci_try_reset_bus - Try to reset a PCI bus
++ * pci_reset_bus - Try to reset a PCI bus
+  * @pdev: top level PCI device to reset via slot/bus
+  *
+  * Same as above except return -EAGAIN if the bus cannot be locked
+  */
+-int pci_try_reset_bus(struct pci_dev *pdev)
++int pci_reset_bus(struct pci_dev *pdev)
+ {
+ 	return pci_probe_reset_slot(pdev->slot) ?
+-	    __pci_try_reset_slot(pdev->slot) : __pci_try_reset_bus(pdev->bus);
++	    __pci_reset_slot(pdev->slot) : __pci_reset_bus(pdev->bus);
+ }
+-EXPORT_SYMBOL_GPL(pci_try_reset_bus);
++EXPORT_SYMBOL_GPL(pci_reset_bus);
+ 
+ /**
+  * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 71018ec..345c0dc 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -1010,7 +1010,7 @@ static long vfio_pci_ioctl(void *device_data,
+ 						    &info, slot);
+ 		if (!ret)
+ 			/* User has access, do the reset */
+-			ret = pci_try_reset_bus(vdev->pdev);
++			ret = pci_reset_bus(vdev->pdev);
+ 
+ hot_reset_release:
+ 		for (i--; i >= 0; i--)
+@@ -1372,7 +1372,7 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
+ 	}
+ 
+ 	if (needs_reset)
+-		ret = pci_try_reset_bus(vdev->pdev);
++		ret = pci_reset_bus(vdev->pdev);
+ 
+ put_devs:
+ 	for (i = 0; i < devs.cur_index; i++) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ad0c89a..79a2c27 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1096,7 +1096,7 @@ int pci_reset_function_locked(struct pci_dev *dev);
+ int pci_try_reset_function(struct pci_dev *dev);
+ int pci_probe_reset_slot(struct pci_slot *slot);
+ int pci_probe_reset_bus(struct pci_bus *bus);
+-int pci_try_reset_bus(struct pci_dev *dev);
++int pci_reset_bus(struct pci_dev *dev);
+ void pci_reset_secondary_bus(struct pci_dev *dev);
+ void pcibios_reset_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
+-- 
+2.7.4
