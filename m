@@ -1,49 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37534 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729335AbeGYVFw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 25 Jul 2018 17:05:52 -0400
-Subject: [PATCH v1 2/4] ath9k: Remove unnecessary include of
- <linux/pci-aspm.h>
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        ath9k-devel@qca.qualcomm.com, linuxwifi@intel.com,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Wed, 25 Jul 2018 14:52:38 -0500
-Message-ID: <153254835812.92573.3566522887325831923.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 2 Jul 2018 10:36:40 -0600
+From: Keith Busch <keith.busch@linux.intel.com>
+To: Aron Griffis <aron@arongriffis.com>
+Subject: Re: PCIe unsupported request with Intel 760p
+Message-ID: <20180702163640.GB22877@localhost.localdomain>
+References: <CAKDfzeD5_AV=YtWqTPr=40vvW4oMFAs4gJs_r42PJWcb815zyQ@mail.gmail.com>
+ <20180507123035.GA20097@gmail.com>
+ <20180525232009.GV11037@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180525232009.GV11037@localhost.localdomain>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+ willy@infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Unfortunately the development team says they will not be able to provide
+a fix for this errata. When using this device in a platform that reacts
+this way to an LTR message (hopefully these are very few nowadays), the
+recommendation is either disable ASPM or set the Unsupported Request bit
+in the root port's AER Uncorrectable Error Mask register.
 
-The ath9k driver doesn't need anything provided by pci-aspm.h, so remove
-the unnecessary include of it.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/net/wireless/ath/ath9k/pci.c |    1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 645f0fbd9179..92b2dd396436 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -18,7 +18,6 @@
- 
- #include <linux/nl80211.h>
- #include <linux/pci.h>
--#include <linux/pci-aspm.h>
- #include <linux/module.h>
- #include "ath9k.h"
- 
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
