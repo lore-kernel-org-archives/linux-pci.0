@@ -1,114 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v12 06/12] PCI: dwc: Add legacy interrupt callback handler
-Date: Tue, 17 Jul 2018 11:31:26 +0200
-Message-Id: <3579a0b9b6eefcf306af4ccfd5cd3396df4d8f63.1531818979.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:41912 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751443AbeGBOUk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jul 2018 10:20:40 -0400
+Received: by mail-qt0-f196.google.com with SMTP id y20-v6so13908694qto.8
+        for <linux-pci@vger.kernel.org>; Mon, 02 Jul 2018 07:20:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20180701140634.GA22322@wunner.de>
+References: <1530268061-17324-1-git-send-email-hari.vyas@broadcom.com>
+ <1530268061-17324-2-git-send-email-hari.vyas@broadcom.com> <20180701140634.GA22322@wunner.de>
+From: Hari Vyas <hari.vyas@broadcom.com>
+Date: Mon, 2 Jul 2018 19:50:39 +0530
+Message-ID: <CAM5rFu9yysO2vX0JrjVExURjLuRPR_WVuPRG5C6MfP177H5UOA@mail.gmail.com>
+Subject: Re: [PATCH v2 1/3] PCI: Data corruption happening due to race condition
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, benh@kernel.crashing.org,
+        linux-pci@vger.kernel.org, Ray Jui <ray.jui@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a legacy interrupt callback handler. Currently DesignWare IP don't
-allow trigger legacy interrupts.
-
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Nothing changed, just to follow the patch set version.
-Change v9->v10:
- - Nothing changed, just to follow the patch set version.
-Change v10->v11:
- - Nothing changed, just to follow the patch set version.
-Change v11->v12:
- - Nothing changed, just to follow the patch set version.
-
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 10 ++++++++++
- drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +--
- drivers/pci/controller/dwc/pcie-designware.h      |  6 ++++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index dd9c366..1e7b022 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
- 	.stop			= dw_pcie_ep_stop,
- };
- 
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct device *dev = pci->dev;
-+
-+	dev_err(dev, "EP cannot trigger legacy IRQs\n");
-+
-+	return -EINVAL;
-+}
-+
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num)
- {
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 8bb2ecb..160714d 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -87,8 +87,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 
- 	switch (type) {
- 	case PCI_EPC_IRQ_LEGACY:
--		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
--		return -EINVAL;
-+		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index e8b97f5..96126fd 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -348,6 +348,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num);
- int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
-@@ -367,6 +368,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
- 
-+static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	return 0;
-+}
-+
- static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 					   u8 interrupt_num)
- {
--- 
-2.7.4
+On Sun, Jul 1, 2018 at 7:36 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> On Fri, Jun 29, 2018 at 03:57:39PM +0530, Hari Vyas wrote:
+>> Fix moves device addition is_added bit to separate private flag
+>> variable and use different atomic functions to set, clear and
+>> retrieve device addition state. As is_added shares different
+>> memory location so race condition is avoided.
+>
+> As 0-day has already discovered, you need to squash all 3 patches
+> together to avoid breaking the build.
+>
+>
+Agreed. I will squash and raise a new patch
+>> +static inline int pci_dev_set_added(struct pci_dev *dev, void *unused)
+>> +{
+>> +     set_bit(PCI_DEV_ADDED, &dev->priv_flags);
+>> +     return 0;
+>> +}
+>> +
+>> +static inline int pci_dev_clear_added(struct pci_dev *dev, void *unused)
+>> +{
+>> +     clear_bit(PCI_DEV_ADDED, &dev->priv_flags);
+>> +     return 0;
+>> +}
+>
+> You don't need the "unused" parameter here and you can return void.
+> pci_dev_set_disconnected() has the parameter because the function is
+> passed in to pci_walk_bus() in a few places, but you're not doing that
+> AFAICS.
+>
+> What you *could* do however is collapse pci_dev_set_added() and
+> pci_dev_clear_added() into a single function, pass in a bool "added",
+> then use assign_bit() to set or clear it.  It would save 6 LoC.
+>
+Agreed.  Just for symmetry I did that one. Will incorporate change.
+> Thanks,
+>
+> Lukas
