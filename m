@@ -1,60 +1,66 @@
-Return-Path: <SRS0=qQet=JZ=oracle.com=james.puthukattukaran@kernel.org>
-Return-Path: <SRS0=qQet=JZ=oracle.com=james.puthukattukaran@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:53698 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933436AbeGBIkk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jul 2018 04:40:40 -0400
+Subject: Re: [PATCH v3 6/9] PCI: designware-plat: Drop unnecessary root_bus_nr
+ setting
+To: Shawn Guo <shawn.guo@linaro.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Jingoo Han <jingoohan1@gmail.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Subject: [PATCH v14 0/1] PCI: Support to workaround bus level HW issues in IDT
- switch
-Message-ID: <4117c119-c754-bf4e-544c-19cb6e239f38@oracle.com>
-Date: Mon, 9 Jul 2018 11:28:54 -0400
+References: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
+ <1530417291-30495-7-git-send-email-shawn.guo@linaro.org>
+From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Message-ID: <0ee69537-f2d2-f59f-be3c-1027fefd67f7@synopsys.com>
+Date: Mon, 2 Jul 2018 09:38:29 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1530417291-30495-7-git-send-email-shawn.guo@linaro.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are bugs in certain PCIe switches that cause access violations when an
-endpoint device is hotplugged. In particular, there's an issue with
-certain IDT switches that trigger a ACS violation when bringing up a newly
-plugged PCIe endpoint device. This is a major issue for platforms
-designed to issue a fatal reset in the case of this event.
+Hi Shawn,
 
-This patch checks if the endpoint device lies behind this errant IDT switch
-and if so, implements the suggested workaround
+On 01/07/2018 04:54, Shawn Guo wrote:
+> Function dw_pcie_host_init() already initializes the root_bus_nr field
+> of 'struct pcie_port', so the -1 assignment prior to calling
+> dw_pcie_host_init() in platform specific driver is not really needed.
+> Drop it.
+> 
+> Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-designware-plat.c | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+> index 5937fed4c938..6e048c0b67f2 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-plat.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+> @@ -118,7 +118,6 @@ static int dw_plat_add_pcie_port(struct dw_plat_pcie *dw_plat_pcie,
+>  			return pp->msi_irq;
+>  	}
+>  
+> -	pp->root_bus_nr = -1;
+>  	pp->ops = &dw_plat_pcie_host_ops;
+>  
+>  	ret = dw_pcie_host_init(pp);
+> 
 
-James
+Looks good :)
+Thanks
 
--v2: move workaround to pci_bus_read_dev_vendor_id() from pci_bus_check_dev()
-     and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
--v3: add bus->self check for root bus and virtual bus for sriov vfs.
--v4: only do workaround for IDT switches
--v5: tweak pci_std_enable_acs_sv to deal with unimplemented SV
--v6: Added errata verbiage verbatim and resolved patch format issues
--v7: changed int to bool for found and idt_workaround declarations. Also
-     added bugzilla https://bugzilla.kernel.org/show_bug.cgi?id=196979
--v8: Rewrote the patch by adding a new acs quirk to keep the workaround
-     out of the main code path
--v9: changed function name from pci_dev_specific_fixup_acs_quirk to
-     pci_bus_acs_quirk. Also, tested for FLR and hot reset scenarios and did
-     not see issues where workaround was required. The issue seems to be
-     related only to cold reset/power on situation.
--v10: Moved the contents of pci_bus_read_vendor_id into an internal function
-      __pci_bus_read_vendor_id
--v11: Split the patch into two patches. The first a general quirk framework.
--v12: Add pci_bus_generic_read_dev_vendor_id() to carry out default behavior
-      when detecting endpoint and pci_bus_specific_read_dev_vendor_id for
-      bus quirk behavior
--v13: Fixed build errors found for non-x86 platforms via cross compiles when
-      CONFIG_QUIRKS is not defined
--v14: Remove the general quirk framework as per Bjorn; it was deemed an
-      overkill. Simplified the code requiring just one patch
+Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 
-James Puthukattukaran(1):
-  Workaround for ACS related bug in certain IDT switches
-
- drivers/pci/pci.h    |  5 ++++
- drivers/pci/probe.c  | 17 +++++++++++++-
- drivers/pci/quirks.c | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 86 insertions(+), 1 deletion(-)
-
--- 
-1.8.3.1
+Regards,
+Gustavo
