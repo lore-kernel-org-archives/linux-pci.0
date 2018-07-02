@@ -1,152 +1,157 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-Date: Tue, 03 Jul 2018 16:22:25 +0530
-From: poza@codeaurora.org
-To: Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-In-Reply-To: <20180703083447.GA2689@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60474 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932100AbeGBWxF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jul 2018 18:53:05 -0400
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Frederick Lawler <fred@fredlawl.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Markus Elfring <elfring@users.sourceforge.net>,
+        Kees Cook <keescook@chromium.org>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V5 1/3] PCI: pciehp: implement mask and unmask interrupt functions
+Date: Mon,  2 Jul 2018 18:52:45 -0400
+Message-Id: <1530571967-19099-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
 References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
- <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
- <20180703083447.GA2689@wunner.de>
-Message-ID: <324f8cf2fe6f7bdc43ca8a646eea908d@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci-owner@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-07-03 14:04, Lukas Wunner wrote:
-> On Mon, Jul 02, 2018 at 06:52:47PM -0400, Sinan Kaya wrote:
->> If a bridge supports hotplug and observes a PCIe fatal error, the 
->> following
->> events happen:
->> 
->> 1. AER driver removes the devices from PCI tree on fatal error
->> 2. AER driver brings down the link by issuing a secondary bus reset 
->> waits
->> for the link to come up.
->> 3. Hotplug driver observes a link down interrupt
->> 4. Hotplug driver tries to remove the devices waiting for the rescan 
->> lock
->> but devices are already removed by the AER driver and AER driver is 
->> waiting
->> for the link to come back up.
->> 5. AER driver tries to re-enumerate devices after polling for the link
->> state to go up.
->> 6. Hotplug driver obtains the lock and tries to remove the devices 
->> again.
->> 
->> If a bridge is a hotplug capable bridge, mask hotplug interrupts 
->> before the
->> reset and unmask afterwards.
-> 
-> Would it work for you if you just amended the AER driver to skip
-> removal and re-enumeration of devices if the port is a hotplug bridge?
-> Just check for is_hotplug_bridge in struct pci_dev.
-> 
+Adding pciehp_mask_irq() and pciehp_unmask_irq() to be called from struct
+pcie_device as mask_irq() and unmask_irq() callbacks.
 
-I tend to agree with you Lukas.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/hotplug/pciehp.h      |  2 ++
+ drivers/pci/hotplug/pciehp_core.c | 19 +++++++++++++++++++
+ drivers/pci/hotplug/pciehp_hpc.c  | 39 +++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/portdrv.h        |  2 ++
+ 4 files changed, 62 insertions(+)
 
-on this line I already have follow up patches
-although I am waiting for Bjorn to review some patch-series before that.
-[PATCH v2 0/6] Fix issues and cleanup for ERR_FATAL and ERR_NONFATAL
-
-It doesn't look to me a an entirely a race condition since its guarded 
-by pci_lock_rescan_remove())
-I observed that both hotplug and aer/dpc comes out of it in a quiet sane 
-state.
-
-My thinking is: Disabling hotplug interrupts during ERR_FATAL,
-is something little away from natural course of link_down event 
-handling, which is handled by pciehp more maturely.
-so it would be just easy not to take any action e.g. removal and 
-re-enumeration of devices from ERR_FATAL handling point of view.
-
-I leave it to Bjorn.
-
-follwing is the patch wich I am trying to set it right and under test.
-so till now I am in an opinion to handle this by checking in err.c
-
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 410c35c..607a234 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -292,15 +292,17 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, 
-u32 service)
-
-         parent = udev->subordinate;
-         pci_lock_rescan_remove();
--       list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
--                                        bus_list) {
--               pci_dev_get(pdev);
--               pci_dev_set_disconnected(pdev, NULL);
--               if (pci_has_subordinate(pdev))
--                       pci_walk_bus(pdev->subordinate,
--                                    pci_dev_set_disconnected, NULL);
--               pci_stop_and_remove_bus_device(pdev);
--               pci_dev_put(pdev);
-+       if (!udev->is_hotplug_bridge) {
-+               list_for_each_entry_safe_reverse(pdev, temp, 
-&parent->devices,
-+                                                bus_list) {
-+                       pci_dev_get(pdev);
-+                       pci_dev_set_disconnected(pdev, NULL);
-+                       if (pci_has_subordinate(pdev))
-+                               pci_walk_bus(pdev->subordinate,
-+                                            pci_dev_set_disconnected, 
-NULL);
-+                       pci_stop_and_remove_bus_device(pdev);
-+                       pci_dev_put(pdev);
-+               }
-         }
-
-         result = reset_link(udev, service);
-@@ -318,7 +320,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 
-service)
-         }
-
-         if (result == PCI_ERS_RESULT_RECOVERED) {
--               if (pcie_wait_for_link(udev, true))
-+               if (pcie_wait_for_link(udev, true) && 
-!udev->is_hotplug_bridge)
-                         pci_rescan_bus(udev->bus);
-                 pci_info(dev, "Device recovery from fatal error 
-successful\n");
-                 dev->error_state = pci_channel_io_normal;
-
-
-> That would seem like a much simpler solution, given that it is known
-> that the link will flap on reset, causing the hotplug driver to remove
-> and re-enumerate devices.  That would also cover cases where hotplug is
-> handled by a different driver than pciehp, or by the platform firmware.
-> 
-> Thanks,
-> 
-> Lukas
-
-
-
-
-
-
-
-
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 5f89206..c579d03 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -138,6 +138,8 @@ int pciehp_check_link_status(struct controller *ctrl);
+ bool pciehp_check_link_active(struct controller *ctrl);
+ void pciehp_release_ctrl(struct controller *ctrl);
+ int pciehp_reset_slot(struct slot *slot, int probe);
++void pciehp_mask_irq(struct slot *slot);
++void pciehp_unmask_irq(struct slot *slot);
+ 
+ int pciehp_set_raw_indicator_status(struct hotplug_slot *h_slot, u8 status);
+ int pciehp_get_raw_indicator_status(struct hotplug_slot *h_slot, u8 *status);
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 44a6a63..ca2faa1 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -299,6 +299,22 @@ static int pciehp_resume(struct pcie_device *dev)
+ }
+ #endif /* PM */
+ 
++static void pciehp_mask_int(struct pcie_device *dev)
++{
++	struct controller *ctrl = get_service_data(dev);
++	struct slot *slot = ctrl->slot;
++
++	pciehp_mask_irq(slot);
++}
++
++static void pciehp_unmask_int(struct pcie_device *dev)
++{
++	struct controller *ctrl = get_service_data(dev);
++	struct slot *slot = ctrl->slot;
++
++	pciehp_unmask_irq(slot);
++}
++
+ static struct pcie_port_service_driver hpdriver_portdrv = {
+ 	.name		= PCIE_MODULE_NAME,
+ 	.port_type	= PCIE_ANY_PORT,
+@@ -311,6 +327,9 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
+ 	.suspend	= pciehp_suspend,
+ 	.resume		= pciehp_resume,
+ #endif	/* PM */
++
++	.mask_irq	= pciehp_mask_int,
++	.unmask_irq	= pciehp_unmask_int,
+ };
+ 
+ static int __init pcied_init(void)
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 8dae232..d44e2c6 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -757,6 +757,45 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+ 	return rc;
+ }
+ 
++void pciehp_mask_irq(struct slot *slot)
++{
++	struct controller *ctrl = slot->ctrl;
++	u16 ctrl_mask = 0;
++
++	if (!ATTN_BUTTN(ctrl))
++		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
++
++	ctrl_mask |= PCI_EXP_SLTCTL_DLLSCE;
++
++	pcie_write_cmd(ctrl, 0, ctrl_mask);
++	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
++		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, 0);
++	if (pciehp_poll_mode)
++		del_timer_sync(&ctrl->poll_timer);
++}
++
++void pciehp_unmask_irq(struct slot *slot)
++{
++	struct controller *ctrl = slot->ctrl;
++	struct pci_dev *pdev = ctrl_dev(ctrl);
++	u16 stat_mask = 0, ctrl_mask = 0;
++
++	if (!ATTN_BUTTN(ctrl)) {
++		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
++		stat_mask |= PCI_EXP_SLTSTA_PDC;
++	}
++	ctrl_mask |= PCI_EXP_SLTCTL_DLLSCE;
++	stat_mask |= PCI_EXP_SLTSTA_DLLSC;
++
++	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
++	pcie_write_cmd_nowait(ctrl, ctrl_mask, ctrl_mask);
++	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
++		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
++	if (pciehp_poll_mode)
++		int_poll_timeout(&ctrl->poll_timer);
++}
++
++
+ int pcie_init_notification(struct controller *ctrl)
+ {
+ 	if (pciehp_request_irq(ctrl))
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index 6ffc797..40bb6f2 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -51,6 +51,8 @@ struct pcie_port_service_driver {
+ 	void (*remove) (struct pcie_device *dev);
+ 	int (*suspend) (struct pcie_device *dev);
+ 	int (*resume) (struct pcie_device *dev);
++	void (*mask_irq)(struct pcie_device *dev);
++	void (*unmask_irq)(struct pcie_device *dev);
+ 
+ 	/* Device driver may resume normal operations */
+ 	void (*error_resume)(struct pci_dev *dev);
+-- 
+2.7.4
