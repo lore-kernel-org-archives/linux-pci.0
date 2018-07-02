@@ -1,120 +1,180 @@
-Return-Path: <SRS0=TUUl=JW=linux.ee=mroos@kernel.org>
-Return-Path: <SRS0=TUUl=JW=linux.ee=mroos@kernel.org>
-Date: Fri, 6 Jul 2018 22:49:19 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-Sender: mroos@math.ut.ee
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-    sparclinux@vger.kernel.org
-Subject: Re: sparc64 PCI BAR allocation is still problematic
-In-Reply-To: <20180629134721.GA98204@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.LRH.2.21.1807062218350.21056@math.ut.ee>
-References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee> <20180620220525.GC108993@bhelgaas-glaptop.roam.corp.google.com> <alpine.LRH.2.21.1806291158320.6026@math.ut.ee> <20180629134721.GA98204@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH V5 1/6] PCI: Handle error return from
+ pci_reset_bridge_secondary_bus()
+Date: Mon,  2 Jul 2018 18:58:50 -0400
+Message-Id: <1530572336-20296-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
+References: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>, Oza Pawandeep <poza@codeaurora.org>,
+ Kees Cook <keescook@chromium.org>, Frederick Lawler <fred@fredlawl.com>,
+ linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>, Lukas Wunner <lukas@wunner.de>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Markus Elfring <elfring@users.sourceforge.net>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > Video RAM area related BAR messages are gone from all servers.
-> > 
-> > V100 OK
-> > V120 OK
-> > Netra X1 OK
-> > Netra T1-200 OK
-> > Netra T1-105 OK
-> > 
-> > T2000 still has "no compatible bridge window" about ULi ISA Bridge:
-> > 
-> > [    3.767832] pci 0001:05:02.0: can't claim BAR 0 [io  0xf010000000-0xf01000ffff]: no compatible bridge window
-> 
-> >From the dmesg log at https://bugzilla.kernel.org/show_bug.cgi?id=117191,
-> 
->   pci_sun4v f0287174: PCI host bridge to bus 0001:02
->   pci_bus 0001:02: root bus resource [io  0xf010000000-0xf01fffffff] (bus address [0x0000-0xfffffff])
->   pci 0001:05:02.0: can't claim BAR 0 [io  0xf010000000-0xf01000ffff]: no compatible bridge window
-> 
-> BAR 0 could potentially be valid, if the intermediate bridge windows
-> were set up correctly.  But from the lspci:
-> 
->   0001:02:00.0 PCI bridge: PEX 8532 Upstream Port
->     Bus: primary=02, secondary=03, subordinate=09
->     I/O behind bridge: 00000000-00002fff
->   0001:03:01.0 PCI bridge: PEX 8532 Downstream Port
->     Bus: primary=03, secondary=04, subordinate=06
->     I/O behind bridge: 00000000-00000fff
->   0001:04:00.0 PCI bridge: PCIe to PCI/PCI-X Bridge
->     Bus: primary=04, secondary=05, subordinate=05
->     I/O behind bridge: 00000000-00000fff
->   0001:05:02.0 ISA bridge: ULi M1533/M1535/M1543 PCI to ISA Bridge
->     Region 0: [virtual] I/O ports at f010000000 [size=64K]
-> 
-> (lspci normally shows the CPU addresses, but it looks like it's showing
-> bus addresses here (except for the 0001:05:02.0 I/O BAR).  That might
-> be something we should sort out at some point.  I know sparc does
-> things differently in that area.)
-> 
-> But either way, the 0001:04:00.0 I/O aperture is only 4K in size, and
-> apparently OF is telling us the ISA bridge has a 64K I/O BAR, so that
-> explains the "no compatible bridge window" message.  We can't fit a
-> 64K BAR in a 4K window.
-> 
-> Do you know if there's an ISA device behind that bridge?  If there
-> is, and it only requires I/O ports in the 0-0xfff range, it probably
-> still works in spite of the warning.
+commit 01fd61c0b9bd ("PCI: Add a return type for
+pci_reset_bridge_secondary_bus()") added a return value to the function to
+return if a device is accessible following a reset. Callers are not
+checking the value.
 
-prtconf shows from OF that a serial port is there:
+Pass error code up high in the stack if device is not accessible.
 
-                        Node 0xf02991b8
-                            ignore-cd:
-                            reg:  00000000.000003f8.00000008
-                            interrupts:  00000001
-                            compatible: 'su16550' + 'su'
-                            device_type:  'serial'
-                            name:  'serial'
+Fixes: 01fd61c0b9bd ("PCI: Add a return type for pci_reset_bridge_secondary_bus()")
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |  5 +++--
+ drivers/pci/pci.c                | 12 ++++++------
+ drivers/pci/pcie/aer.c           |  5 +++--
+ drivers/pci/pcie/err.c           |  6 ++++--
+ 4 files changed, 16 insertions(+), 12 deletions(-)
 
-
-> But if it needs anything above 0xfff, or if we decided to be "smart"
-> and not enable I/O on the bridge because we think the I/O BAR is
-> invalid, it wouldn't work.
-> 
-> > V245 still has "no compatible bridge window" about ULI ISA Bridge:
-> > 
-> > [    4.522892] pci 0000:05:1e.0: can't claim BAR 0 [io  0x7f810000000-0x7f810000fff]: no compatible bridge window
-> 
-> Again from https://bugzilla.kernel.org/show_bug.cgi?id=117191,
-> 
->   fire f0068b8c: PCI host bridge to bus 0000:02
->   pci_bus 0000:02: root bus resource [io  0x7f810000000-0x7f81fffffff] (bus address [0x0000-0xfffffff])
->   pci 0000:05:1e.0: can't claim BAR 0 [io  0x7f810000000-0x7f810000fff]: no compatible bridge window
-> 
->   0000:04:00.0 PCI bridge: ULi M5249 HTT to PCI Bridge
->     Bus: primary=04, secondary=05, subordinate=05
->     I/O behind bridge: 00001000-00001fff
->     Memory behind bridge: 00200000-03ffffff
->   0000:05:1c.0 ULi USB 1.1 Controller [OHCI]
->     Region 0: Memory at 01000000 (32-bit, non-prefetchable) [size=16M]
->   0000:05:1c.1 ULi USB 1.1 Controller [OHCI]
->     Region 0: Memory at 02000000 (32-bit, non-prefetchable) [size=16M]
->   0000:05:1c.3 ULi USB 2.0 Controller [EHCI]
->     Region 0: Memory at 00200000 (32-bit, non-prefetchable) [size=8K]
->   0000:05:1e.0 ISA bridge: ULi M1575 South Bridge
->     Region 0: [virtual] I/O ports at 7f810000000 [size=4K]
->   0000:05:1f.0 ULi M5229 IDE
->     Region 0: I/O ports at 1040 [size=64]
->     Region 1: I/O ports at 1080 [size=64]
->     Region 2: I/O ports at 10c0 [size=64]
->     Region 3: I/O ports at 1100 [size=64]
->     Region 4: I/O ports at 1000 [size=64]
-> 
-> The 0000:05:1e.0 I/O BAR (BAR 0) contains 0 (at least according to
-> OF).  This is clearly invalid because the bridge at 0000:04:00.0 will
-> never route anything to bus 05 with an I/O bus address of 0, so
-> nothing behind the 05:1e.0 ISA bridge should work.
-> 
-> If you still have the v4.18-rc1 logs from these boxes, would you mind
-> attaching them to the bugzilla?
-
-Found 4.17.0 and 4.18-rc2+git dmesgs for both T2000 and V245, attached 
-there.
-
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 718b607..bbaa211 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -728,6 +728,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+ 	struct controller *ctrl = slot->ctrl;
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 	u16 stat_mask = 0, ctrl_mask = 0;
++	int rc;
+ 
+ 	if (probe)
+ 		return 0;
+@@ -745,7 +746,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+ 	if (pciehp_poll_mode)
+ 		del_timer_sync(&ctrl->poll_timer);
+ 
+-	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
++	rc = pci_reset_bridge_secondary_bus(ctrl->pcie->port);
+ 
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
+ 	pcie_write_cmd_nowait(ctrl, ctrl_mask, ctrl_mask);
+@@ -753,7 +754,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
+ 	if (pciehp_poll_mode)
+ 		int_poll_timeout(&ctrl->poll_timer);
+-	return 0;
++	return rc;
+ }
+ 
+ int pcie_init_notification(struct controller *ctrl)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 97acba7..98d1490 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4253,9 +4253,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ 	if (probe)
+ 		return 0;
+ 
+-	pci_reset_bridge_secondary_bus(dev->bus->self);
+-
+-	return 0;
++	return pci_reset_bridge_secondary_bus(dev->bus->self);
+ }
+ 
+ static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
+@@ -4850,6 +4848,8 @@ EXPORT_SYMBOL_GPL(pci_try_reset_slot);
+ 
+ static int pci_bus_reset(struct pci_bus *bus, int probe)
+ {
++	int ret;
++
+ 	if (!bus->self || !pci_bus_resetable(bus))
+ 		return -ENOTTY;
+ 
+@@ -4860,11 +4860,11 @@ static int pci_bus_reset(struct pci_bus *bus, int probe)
+ 
+ 	might_sleep();
+ 
+-	pci_reset_bridge_secondary_bus(bus->self);
++	ret = pci_reset_bridge_secondary_bus(bus->self);
+ 
+ 	pci_bus_unlock(bus);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ /**
+@@ -4924,7 +4924,7 @@ int pci_try_reset_bus(struct pci_bus *bus)
+ 
+ 	if (pci_bus_trylock(bus)) {
+ 		might_sleep();
+-		pci_reset_bridge_secondary_bus(bus->self);
++		rc = pci_reset_bridge_secondary_bus(bus->self);
+ 		pci_bus_unlock(bus);
+ 	} else
+ 		rc = -EAGAIN;
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index a2e8838..bde723d 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1305,6 +1305,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ {
+ 	u32 reg32;
+ 	int pos;
++	int rc;
+ 
+ 	pos = dev->aer_cap;
+ 
+@@ -1313,7 +1314,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ 	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
+ 	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
+ 
+-	pci_reset_bridge_secondary_bus(dev);
++	rc = pci_reset_bridge_secondary_bus(dev);
+ 	pci_printk(KERN_DEBUG, dev, "Root Port link has been reset\n");
+ 
+ 	/* Clear Root Error Status */
+@@ -1325,7 +1326,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ 	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
+ 	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
+ 
+-	return PCI_ERS_RESULT_RECOVERED;
++	return rc ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+ /**
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index f7ce0cb..03075cf 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -175,9 +175,11 @@ static int report_resume(struct pci_dev *dev, void *data)
+  */
+ static pci_ers_result_t default_reset_link(struct pci_dev *dev)
+ {
+-	pci_reset_bridge_secondary_bus(dev);
++	int rc;
++
++	rc = pci_reset_bridge_secondary_bus(dev);
+ 	pci_printk(KERN_DEBUG, dev, "downstream link has been reset\n");
+-	return PCI_ERS_RESULT_RECOVERED;
++	return rc ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+ static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
 -- 
-Meelis Roos (mroos@linux.ee)
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
