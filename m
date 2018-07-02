@@ -1,167 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54944 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729604AbeGPNN5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 16 Jul 2018 09:13:57 -0400
-Date: Mon, 16 Jul 2018 07:46:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Lukas Wunner <lukas@wunner.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        ashok.raj@intel.com, Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, okaya@kernel.org,
-        linux-pci@vger.kernel.org, Len Brown <lenb@kernel.org>,
-        scott@spiteful.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        gwshan@linux.vnet.ibm.com,
-        Sebastian Ott <sebott@linux.vnet.ibm.com>,
-        gerald.schaefer@de.ibm.com,
-        Corentin Chary <corentin.chary@gmail.com>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        linux-s390@vger.kernel.org,
-        Platform Driver <platform-driver-x86@vger.kernel.org>,
-        acpi4asus-user <acpi4asus-user@lists.sourceforge.net>
-Subject: Re: [PATCH 14/32] PCI: hotplug: Demidlayer registration with the core
-Message-ID: <20180716124637.GK28466@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1529173804.git.lukas@wunner.de>
- <6ef59b1fd3aa05f9989d29d0988152f18e3b824e.1529173804.git.lukas@wunner.de>
- <CAHp75Vf9ZETYLuMEA0B_0qkbAWUHqEw0LVzqrjTmry7GjvE1gw@mail.gmail.com>
+Return-Path: <SRS0=YEMn=JS=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=YEMn=JS=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Mon, 2 Jul 2018 15:12:25 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Jingoo Han <jingoohan1@gmail.com>, Joao.Pinto@synopsys.com,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Rob Herring <robh@kernel.org>, Tanmay Inamdar <tinamdar@apm.com>,
+	ryder.lee@mediatek.com, Matthias Brugger <matthias.bgg@gmail.com>,
+	Linux ARM <linux-arm-kernel@lists.infradead.org>,
+	linux-mediatek@lists.infradead.org,
+	Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Subject: Re: [PATCH] pci: fix I/O space page leak
+Message-ID: <20180702141216.GA30712@e107981-ln.cambridge.arm.com>
+References: <1ca6adde-a91e-84d0-c7dc-fd01bfd9edcc@cogentembedded.com>
+ <20180628132259.GB90450@bhelgaas-glaptop.roam.corp.google.com>
+ <20180628142615.GA9101@red-moon>
+ <ac015f99-c310-3701-35ce-846393b61235@cogentembedded.com>
+ <20180702103316.GA10784@red-moon>
+ <CAMuHMdUCNPrpYx1xOBTL0F23r3H2jc+kg+T5-rqMe0V-2w-LqQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHp75Vf9ZETYLuMEA0B_0qkbAWUHqEw0LVzqrjTmry7GjvE1gw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAMuHMdUCNPrpYx1xOBTL0F23r3H2jc+kg+T5-rqMe0V-2w-LqQ@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 17, 2018 at 07:44:03PM +0300, Andy Shevchenko wrote:
-> On Sat, Jun 16, 2018 at 10:37 PM Lukas Wunner <lukas@wunner.de> wrote:
-> >
-> > When a hotplug driver calls pci_hp_register(), all steps necessary for
-> > registration are carried out in one go, including creation of a kobject
-> > and addition to sysfs.  That's a problem for pciehp once it's converted
-> > to enable/disable the slot exclusively from the IRQ thread:  The thread
-> > needs to be spawned after creation of the kobject (because it uses the
-> > kobject's name), but before addition to sysfs (because it will handle
-> > enable/disable requests submitted via sysfs).
-> >
-> > pci_hp_deregister() does offer a ->release callback that's invoked
-> > after deletion from sysfs and before destruction of the kobject.  But
-> > because pci_hp_register() doesn't offer a counterpart, hotplug drivers'
-> > ->probe and ->remove code becomes asymmetric, which is error prone
-> > as recently discovered use-after-free bugs in pciehp's ->remove hook
-> > have shown.
-> >
-> > In a sense, this appears to be a case of the midlayer antipattern:
-> >
-> >    "The core thesis of the "midlayer mistake" is that midlayers are
-> >     bad and should not exist.  That common functionality which it is
-> >     so tempting to put in a midlayer should instead be provided as
-> >     library routines which can [be] used, augmented, or ignored by
-> >     each bottom level driver independently.  Thus every subsystem
-> >     that supports multiple implementations (or drivers) should
-> >     provide a very thin top layer which calls directly into the
-> >     bottom layer drivers, and a rich library of support code that
-> >     eases the implementation of those drivers.  This library is
-> >     available to, but not forced upon, those drivers."
-> >         --  Neil Brown (2009), https://lwn.net/Articles/336262/
-> >
-> > The presence of midlayer traits in the PCI hotplug core might be ascribed
-> > to its age:  When it was introduced in February 2002, the blessings of a
-> > library approach might not have been well known:
-> > https://git.kernel.org/tglx/history/c/a8a2069f432c
-> >
-> > For comparison, the driver core does offer split functions for creating
-> > a kobject (device_initialize()) and addition to sysfs (device_add()) as
-> > an alternative to carrying out everything at once (device_register()).
-> > This was introduced in October 2002:
-> > https://git.kernel.org/tglx/history/c/8b290eb19962
-> >
-> > The odd ->release callback in the PCI hotplug core was added in 2003:
-> > https://git.kernel.org/tglx/history/c/69f8d663b595
-> >
-> > Clearly, a library approach would not force every hotplug driver to
-> > implement a ->release callback, but rather allow the driver to remove
-> > the sysfs files, release its data structures and finally destroy the
-> > kobject.  Alternatively, a driver may choose to remove everything with
-> > pci_hp_deregister(), then release its data structures.
-> >
-> > To this end, offer drivers pci_hp_initialize() and pci_hp_add() as a
-> > split-up version of pci_hp_register().  Likewise, offer pci_hp_del()
-> > and pci_hp_destroy() as a split-up version of pci_hp_deregister().
-> >
-> > Eliminate the ->release callback and move its code into each driver's
-> > teardown routine.
-> >
-> > Declare pci_hp_deregister() void, in keeping with the usual kernel
-> > pattern that enablement can fail, but disablement cannot.  It only
-> > returned an error if the caller passed in a NULL pointer or a slot which
-> > has never or is no longer registered or is sharing its name with another
-> > slot.  Those would be bugs, so WARN about them.  Few hotplug drivers
-> > actually checked the return value and those that did only printed a
-> > useless error message to dmesg.  Remove that.
-> >
-> > For most drivers the conversion was straightforward since it doesn't
-> > matter whether the code in the ->release callback is executed before or
-> > after destruction of the kobject.  But in the case of ibmphp, it was
-> > unclear to me whether setting slot_cur->ctrl and slot_cur->bus_on to
-> > NULL needs to happen before the kobject is destroyed, so I erred on
-> > the side of caution and ensured that the order stays the same.  Another
-> > nontrivial case is pnv_php, I've found the list and kref logic difficult
-> > to understand, however my impression was that it is safe to delete the
-> > list element and drop the references until after the kobject is
-> > destroyed.
-> >
-> > Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> > Cc: Len Brown <lenb@kernel.org>
-> > Cc: Scott Murray <scott@spiteful.org>
-> > Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> > Cc: Paul Mackerras <paulus@samba.org>
-> > Cc: Michael Ellerman <mpe@ellerman.id.au>
-> > Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> > Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>
-> > Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>
-> > Cc: Corentin Chary <corentin.chary@gmail.com>
-> > Cc: Darren Hart <dvhart@infradead.org>
-> > Cc: Andy Shevchenko <andy@infradead.org>
-> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > ---
-> >  drivers/pci/hotplug/acpiphp_core.c      |  22 +---
-> >  drivers/pci/hotplug/cpci_hotplug_core.c |  14 +--
-> >  drivers/pci/hotplug/cpqphp_core.c       |  16 +--
-> >  drivers/pci/hotplug/ibmphp_core.c       |  15 ++-
-> >  drivers/pci/hotplug/ibmphp_ebda.c       |  20 ----
-> >  drivers/pci/hotplug/pci_hotplug_core.c  | 139 +++++++++++++++++-------
-> >  drivers/pci/hotplug/pciehp_core.c       |  19 +---
-> >  drivers/pci/hotplug/pcihp_skeleton.c    |  16 +--
-> >  drivers/pci/hotplug/pnv_php.c           |   5 +-
-> >  drivers/pci/hotplug/rpaphp_core.c       |   2 +-
-> >  drivers/pci/hotplug/rpaphp_slot.c       |  13 +--
-> >  drivers/pci/hotplug/s390_pci_hpc.c      |  13 +--
-> >  drivers/pci/hotplug/sgi_hotplug.c       |   9 +-
-> >  drivers/pci/hotplug/shpchp_core.c       |  20 +---
+On Mon, Jul 02, 2018 at 01:08:45PM +0200, Geert Uytterhoeven wrote:
+> Hi Lorenzo,
 > 
-> >  drivers/platform/x86/asus-wmi.c         |  12 +-
-> >  drivers/platform/x86/eeepc-laptop.c     |  12 +-
+> On Mon, Jul 2, 2018 at 12:31 PM Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > On Sat, Jun 30, 2018 at 01:37:18PM +0300, Sergei Shtylyov wrote:
+> > > On 6/28/2018 5:26 PM, Lorenzo Pieralisi wrote:
+> > > >>>When testing the R-Car PCIe driver on the Condor board, I noticed that iff
+> > > >>>I  left the PCIe PHY driver disabled, the kernel crashed  with this BUG:
+> > > >>>
+> > > >>>[    1.225819] kernel BUG at lib/ioremap.c:72!
 > 
-> So, as far as I can see these are just mechanical changes due to
-> internal API change.
-> Thus,
+> > > >>>It turned out that pci_remap_iospace() wasn't undone when the driver's
+> > > >>>probe failed, and since devm_phy_optional_get() returned -EPROBE_DEFER,
+> > > >>>the probe was retried,  finally causing the BUG due to trying to remap
+> > > >>>already remapped pages.
+> > > >>>
+> > > >>>The most feasible solution seems to introduce devm_pci_remap_iospace()
+> > > >>>and call it instead of pci_remap_iospace(), so that the pages get unmapped
+> > > >>>automagically on any probe failure.
+> > > >>>
+> > > >>>And  while fixing pci_parse_request_of_pci_ranges(), aslo fix the other
+> > > >>>drivers that have probably copied the bad example...
+> > > >>>
+> > > >>>Fixes: 4e64dbe226e7 ("PCI: generic: Expose pci_host_common_probe() for use by other drivers")
+> > > >>>Fixes: cbce7900598c ("PCI: designware: Make driver arch-agnostic")
+> > > >>>Fixes: 8c39d710363c ("PCI: aardvark: Add Aardvark PCI host controller driver")
+> > > >>>Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
+> > > >>>Fixes: 68a15eb7bd0c ("PCI: v3-semi: Add V3 Semiconductor PCI host driver")
+> > > >>>Fixes: b7e78170efd4 ("PCI: versatile: Add DT-based ARM Versatile PB PCIe host driver")
+> > > >>>Fixes: 5f6b6ccdbe1c ("PCI: xgene: Add APM X-Gene PCIe driver")
+> > > >>>Fixes: 637cfacae96f ("PCI: mediatek: Add MediaTek PCIe host controller support")
+> > > >>>Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> > > >>>Cc: stable@vger.kernel.org
+> > > >>
+> > > >>Let me know if you want me to take this, Lorenzo, otherwise:
+> > > >>s/pci: fix/PCI: Fix/ and
+> > > >>
+> > > >>Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > >
+> > > >Thank you Bjorn, yes it could go in as a fix but IMO it has to be split,
+> > > >more so given the stable tag (and I think that each "Fixes" tag should
+> > > >be self-contained),
+> > >
+> > >    It cannot be self-contained because it'll depend on the initial
+> > > commit adding devm_pci_remap_iobase(). If you mean finding the
+> > > earliest broken driver and introduce the deviec managed API while
+> > > fixing it and then make use of that
+> > > API in the subsequent patches, that surely can be done.
+> >
+> > Yes I think that's the best course of action.
+> >
+> > > >merging it as-is would give Greg (and us) a
+> > > >headache when it comes to backporting it.
+> > >
+> > >    The patch interdependency would give him headache too, and I was
+> > > hoping to relieve those with the monilitic patch. :-)
+> >
+> > The problem is that if any of the fixes has to be reverted we have
+> > to revert the whole thing instead of just the problematic patch,
+> > which, given that we are sending this to stable kernels may easily
+> > turn out quite complicated.
+> >
+> > So, I would add the new API along with the earliest broken driver
+> > and mark it for stable.
+> >
+> > In the same thread, add all other fixes (one per patch) without the
+> > stable tag. When the first fix gets merged into the mainline (and
+> > consequently goes to stable) we can send the stable backports for the
+> > remainder of fixes.
+> >
+> > How does that sound ?
 > 
-> Acked-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> 
-> for PDx86 bits only.
+> If you want to be prepared for reverting, why not split off the first fix
+> from the patch that provides the new API as well?
+> Yes, it does mean a dependency for backporting, but it avoids the mess if
+> it turns out the first fix is the (only) one that needs to be reverted.
 
-Hi Andy, I'm not sure what you intend by "PDx86".  I'm happy to add a note
-so your ack looks like
+Problem is that that would give Bjorn a hard time asking to merge the
+new API as a fix as a standalone patch for an -rc, hence I suggested we
+merged it for v4.19 but Sergei is not happy with that and I understand
+his point.
 
-Acked-by: Andy Shevchenko <andy.shevchenko@gmail.com>  # drivers/platform/x86
+To be honest I'd rather start with fixing RCAR (by "fixing" the
+pci_parse_request_of_pci_ranges() call with the new devm_ API) without
+any stable tag (with commit log reporting the RCAR regression), we will
+work out how to fix and backport the rest of the drivers later.
 
-or something similar.  Is that what you have in mind?
+I am not even sure this fix per-se is stable kernel material, that's
+moot given that there exists an pci_unmap_iospace() API that could be
+used in drivers before they were converted to
+pci_parse_request_of_pci_ranges().
 
-> >  include/linux/pci_hotplug.h             |  15 ++-
-> >  17 files changed, 171 insertions(+), 191 deletions(-)
+Please let me know if that's reasonable, thanks.
+
+Lorenzo
