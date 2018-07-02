@@ -1,303 +1,80 @@
-Return-Path: <SRS0=RJu9=KD=broadcom.com=hari.vyas@kernel.org>
-Return-Path: <SRS0=RJu9=KD=broadcom.com=hari.vyas@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH V5 0/3] PCI: separate hotplug handling from fatal error
+ handling
+Date: Mon,  2 Jul 2018 18:52:44 -0400
+Message-Id: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <65dd986d0b8b2ebe5132b365dabb2dbaaed9177f.camel@kernel.crashing.org>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
- <1530608741-30664-2-git-send-email-hari.vyas@broadcom.com>
- <20180718232904.GJ128988@bhelgaas-glaptop.roam.corp.google.com> <65dd986d0b8b2ebe5132b365dabb2dbaaed9177f.camel@kernel.crashing.org>
-From: Hari Vyas <hari.vyas@broadcom.com>
-Date: Thu, 19 Jul 2018 19:34:32 +0530
-Message-ID: <CAM5rFu8b1mdim8uA15TzpJtcxH5jXN3C53rBGZcyXG2h7bRoyA@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: Data corruption happening due to race condition
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Ray Jui <ray.jui@broadcom.com>, Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, linuxppc-dev@lists.ozlabs.org
-Content-Type: text/plain; charset="UTF-8"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjonr, Ben
+This is what happens when you insert a fatal error to a hotplug slot. See
+multiple link up/down messages.
 
-On Thu, Jul 19, 2018 at 9:48 AM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Wed, 2018-07-18 at 18:29 -0500, Bjorn Helgaas wrote:
->> [+cc Paul, Michael, linuxppc-dev]
->>
->
->    ..../...
->
->> > Debugging revealed a race condition between pcie core driver
->> > enabling is_added bit(pci_bus_add_device()) and nvme driver
->> > reset work-queue enabling is_busmaster bit (by pci_set_master()).
->> > As both fields are not handled in atomic manner and that clears
->> > is_added bit.
->> >
->> > Fix moves device addition is_added bit to separate private flag
->> > variable and use different atomic functions to set and retrieve
->> > device addition state. As is_added shares different memory
->> > location so race condition is avoided.
->>
->> Really nice bit of debugging!
->
-> Indeed. However I'm not fan of the solution. Shouldn't we instead have
-> some locking for the content of pci_dev ? I've always been wary of us
-> having other similar races in there.
->
-> As for the powerpc bits, I'm probably the one who wrote them, however,
-> I'm on vacation this week and right now, no bandwidth to context switch
-> all that back in :-) So give me a few days and/or ping me next week.
->
-> The powerpc PCI code contains a lot of cruft coming from the depth of
-> history, including rather nasty assumptions. We want to progressively
-> clean it up, starting with EEH, but it will take time.
->
-> Cheers,
-> Ben.
->
-Some driver too directly using pci_dev structure flags and may cause similar
-type of issues in race condition and should be avoided.
-Probably not causing issue currently but some race scenario may affect
-and needs to be handled
-with some get(),set() api's in atomic manner.
-I will suggest to use bit position for all remaining bitfields and use
-atomic operation. In that way,
-it can be controlled and avoid direct updating fields from outside.
-Ex;
-enum pci_dev_flags {
-   IS_BUSMASTER=1,
-.  NO_MSI=2.
-}
-void assign_pci_dev_flag(struct pci_dev *dev, int flag, bool val)
-{
-   assign_bit(flag, &dev->flags, val);
-}
-Proper cleanup is required at so many places but that will certainly
-take some time
-i.e.  good effort but will be future safe.If  Bjorn agrees, we can
-work on that one.
->> > Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
->> > ---
->> >  arch/powerpc/kernel/pci-common.c          |  4 +++-
->> >  arch/powerpc/platforms/powernv/pci-ioda.c |  3 ++-
->> >  arch/powerpc/platforms/pseries/setup.c    |  3 ++-
->> >  drivers/pci/bus.c                         |  6 +++---
->> >  drivers/pci/hotplug/acpiphp_glue.c        |  2 +-
->> >  drivers/pci/pci.h                         | 11 +++++++++++
->> >  drivers/pci/probe.c                       |  4 ++--
->> >  drivers/pci/remove.c                      |  5 +++--
->> >  include/linux/pci.h                       |  1 -
->> >  9 files changed, 27 insertions(+), 12 deletions(-)
->> >
->> > diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->> > index fe9733f..471aac3 100644
->> > --- a/arch/powerpc/kernel/pci-common.c
->> > +++ b/arch/powerpc/kernel/pci-common.c
->> > @@ -42,6 +42,8 @@
->> >  #include <asm/ppc-pci.h>
->> >  #include <asm/eeh.h>
->> >
->> > +#include "../../../drivers/pci/pci.h"
->>
->> I see why you need it, but this include path is really ugly.  Outside
->> of bootloaders and tools, there are very few instances of includes
->> like this that reference a different top-level directory, and I'm not
->> very keen about adding more.
->>
->> Obviously powerpc is the only arch that needs dev->is_added.  It seems
->> to be because "We can only call pcibios_setup_device() after bus setup
->> is complete, since some of the platform specific DMA setup code
->> depends on it."
->>
->> I don't know powerpc, but it does raise the question in my mind of
->> whether powerpc could be changed to do the DMA setup more like other
->> arches do to remove this ordering dependency and the need to use
->> dev->is_added.
->>
->> That sounds like a lot of work, but it would have the benefit of
->> unifying some code that is probably needlessly arch-specific.
->>
-Yes. I also agree, including pci.h with ../ references is really bad.
-First patch
-was using spin lock for protecting is_added and is_busmaster bits but in final
-patch moved is_added to private flags.
+/_#_[__333.699731]_pcieport_0001:00:00.0:_AER:_Uncorrected_(Fatal)_error_received:_id=0000
+[  333.748116] pcieport 0001:00:00.0: PCIe Bus Error: severity=Uncorrected (Fatal), type=Transaction Layer, id
+[  333.816044] pcieport 0001:00:00.0:   device [17cb:0404] error status/mask=00040000/00400000
+[  333.871581] pcieport 0001:00:00.0:    [18] Malformed TLP (First)
+[  333.914675] pcieport 0001:00:00.0:   TLP Header: 40000001 000000ff 00000000 00000000
+[  333.968397] pciehp 0001:00:00.0:pcie004: Slot(2): Link Down
+[  334.043234] iommu: Removing device 0001:01:00.4 from group 0
+[  334.095952] iommu: Removing device 0001:01:00.3 from group 0
+[  334.144644] iommu: Removing device 0001:01:00.2 from group 0
+[  334.194653] iommu: Removing device 0001:01:00.1 from group 0
+[  334.243564] pciehp 0001:00:00.0:pcie004: Slot(2): Link Up
+[  334.282556] iommu: Removing device 0001:01:00.0 from group 0
+[  334.330994] pciehp 0001:00:00.0:pcie004: Slot(2): Link Up event queued;
+currently getting powered off
+[  334.890587] pciehp 0001:00:00.0:pcie004: Timeout on hotplug command
+0x13f1 (issued 282900 msec ago)
+[  335.070190] pciehp 0001:00:00.0:pcie004: Slot(2): Link Down
+[  335.106960] pciehp 0001:00:00.0:pcie004: Slot(2): Link Down event queued; currently getting powered on
+[  335.191119] pcieport 0001:00:00.0: AER: Device recovery failed
+[  346.590153] pciehp 0001:00:00.0:pcie004: Timeout on hotplug command 0x17f1 (issued 10250 msec ago)
 
->> >  /* hose_spinlock protects accesses to the the phb_bitmap. */
->> >  static DEFINE_SPINLOCK(hose_spinlock);
->> >  LIST_HEAD(hose_list);
->> > @@ -1014,7 +1016,7 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
->> >             /* Cardbus can call us to add new devices to a bus, so ignore
->> >              * those who are already fully discovered
->> >              */
->> > -           if (dev->is_added)
->> > +           if (pci_dev_is_added(dev))
->> >                     continue;
->> >
->> >             pcibios_setup_device(dev);
->> > diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->> > index 5bd0eb6..70b2e1e 100644
->> > --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->> > +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->> > @@ -46,6 +46,7 @@
->> >
->> >  #include "powernv.h"
->> >  #include "pci.h"
->> > +#include "../../../../drivers/pci/pci.h"
->> >
->> >  #define PNV_IODA1_M64_NUM  16      /* Number of M64 BARs   */
->> >  #define PNV_IODA1_M64_SEGS 8       /* Segments per M64 BAR */
->> > @@ -3138,7 +3139,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
->> >     struct pci_dn *pdn;
->> >     int mul, total_vfs;
->> >
->> > -   if (!pdev->is_physfn || pdev->is_added)
->> > +   if (!pdev->is_physfn || pci_dev_is_added(pdev))
->> >             return;
->> >
->> >     pdn = pci_get_pdn(pdev);
->> > diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
->> > index 139f0af..8a4868a 100644
->> > --- a/arch/powerpc/platforms/pseries/setup.c
->> > +++ b/arch/powerpc/platforms/pseries/setup.c
->> > @@ -71,6 +71,7 @@
->> >  #include <asm/security_features.h>
->> >
->> >  #include "pseries.h"
->> > +#include "../../../../drivers/pci/pci.h"
->> >
->> >  int CMO_PrPSP = -1;
->> >  int CMO_SecPSP = -1;
->> > @@ -664,7 +665,7 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
->> >     const int *indexes;
->> >     struct device_node *dn = pci_device_to_OF_node(pdev);
->> >
->> > -   if (!pdev->is_physfn || pdev->is_added)
->> > +   if (!pdev->is_physfn || pci_dev_is_added(pdev))
->> >             return;
->> >     /*Firmware must support open sriov otherwise dont configure*/
->> >     indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
->> > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->> > index 35b7fc8..5cb40b2 100644
->> > --- a/drivers/pci/bus.c
->> > +++ b/drivers/pci/bus.c
->> > @@ -330,7 +330,7 @@ void pci_bus_add_device(struct pci_dev *dev)
->> >             return;
->> >     }
->> >
->> > -   dev->is_added = 1;
->> > +   pci_dev_assign_added(dev, true);
->> >  }
->> >  EXPORT_SYMBOL_GPL(pci_bus_add_device);
->> >
->> > @@ -347,14 +347,14 @@ void pci_bus_add_devices(const struct pci_bus *bus)
->> >
->> >     list_for_each_entry(dev, &bus->devices, bus_list) {
->> >             /* Skip already-added devices */
->> > -           if (dev->is_added)
->> > +           if (pci_dev_is_added(dev))
->> >                     continue;
->> >             pci_bus_add_device(dev);
->> >     }
->> >
->> >     list_for_each_entry(dev, &bus->devices, bus_list) {
->> >             /* Skip if device attach failed */
->> > -           if (!dev->is_added)
->> > +           if (!pci_dev_is_added(dev))
->> >                     continue;
->> >             child = dev->subordinate;
->> >             if (child)
->> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> > index 3a17b29..ef0b1b6 100644
->> > --- a/drivers/pci/hotplug/acpiphp_glue.c
->> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> > @@ -509,7 +509,7 @@ static void enable_slot(struct acpiphp_slot *slot)
->> >
->> >     list_for_each_entry(dev, &bus->devices, bus_list) {
->> >             /* Assume that newly added devices are powered on already. */
->> > -           if (!dev->is_added)
->> > +           if (!pci_dev_is_added(dev))
->> >                     dev->current_state = PCI_D0;
->> >     }
->> >
->> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> > index 882f1f9..0881725 100644
->> > --- a/drivers/pci/pci.h
->> > +++ b/drivers/pci/pci.h
->> > @@ -288,6 +288,7 @@ struct pci_sriov {
->> >
->> >  /* pci_dev priv_flags */
->> >  #define PCI_DEV_DISCONNECTED 0
->> > +#define PCI_DEV_ADDED 1
->> >
->> >  static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
->> >  {
->> > @@ -300,6 +301,16 @@ static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
->> >     return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
->> >  }
->> >
->> > +static inline void pci_dev_assign_added(struct pci_dev *dev, bool added)
->> > +{
->> > +   assign_bit(PCI_DEV_ADDED, &dev->priv_flags, added);
->> > +}
->> > +
->> > +static inline bool pci_dev_is_added(const struct pci_dev *dev)
->> > +{
->> > +   return test_bit(PCI_DEV_ADDED, &dev->priv_flags);
->> > +}
->> > +
->> >  #ifdef CONFIG_PCI_ATS
->> >  void pci_restore_ats_state(struct pci_dev *dev);
->> >  #else
->> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> > index ac876e3..611adcd 100644
->> > --- a/drivers/pci/probe.c
->> > +++ b/drivers/pci/probe.c
->> > @@ -2433,13 +2433,13 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
->> >     dev = pci_scan_single_device(bus, devfn);
->> >     if (!dev)
->> >             return 0;
->> > -   if (!dev->is_added)
->> > +   if (!pci_dev_is_added(dev))
->> >             nr++;
->> >
->> >     for (fn = next_fn(bus, dev, 0); fn > 0; fn = next_fn(bus, dev, fn)) {
->> >             dev = pci_scan_single_device(bus, devfn + fn);
->> >             if (dev) {
->> > -                   if (!dev->is_added)
->> > +                   if (!pci_dev_is_added(dev))
->> >                             nr++;
->> >                     dev->multifunction = 1;
->> >             }
->> > diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
->> > index 6f072ea..5e3d0dc 100644
->> > --- a/drivers/pci/remove.c
->> > +++ b/drivers/pci/remove.c
->> > @@ -19,11 +19,12 @@ static void pci_stop_dev(struct pci_dev *dev)
->> >  {
->> >     pci_pme_active(dev, false);
->> >
->> > -   if (dev->is_added) {
->> > +   if (pci_dev_is_added(dev)) {
->> >             device_release_driver(&dev->dev);
->> >             pci_proc_detach_device(dev);
->> >             pci_remove_sysfs_dev_files(dev);
->> > -           dev->is_added = 0;
->> > +
->> > +           pci_dev_assign_added(dev, false);
->> >     }
->> >
->> >     if (dev->bus->self)
->> > diff --git a/include/linux/pci.h b/include/linux/pci.h
->> > index 340029b..506125b 100644
->> > --- a/include/linux/pci.h
->> > +++ b/include/linux/pci.h
->> > @@ -368,7 +368,6 @@ struct pci_dev {
->> >     unsigned int    transparent:1;          /* Subtractive decode bridge */
->> >     unsigned int    multifunction:1;        /* Multi-function device */
->> >
->> > -   unsigned int    is_added:1;
->> >     unsigned int    is_busmaster:1;         /* Is busmaster */
->> >     unsigned int    no_msi:1;               /* May not use MSI */
->> >     unsigned int    no_64bit_msi:1;         /* May only use 32-bit MSIs */
->> > --
->> > 1.9.1
->> >
+
+Since DPC/AER patch to refactor fatal error handling, both hotplug
+driver and AER/DPC driver will try removing devices and perform enumeration on
+link events/AER events.
+
+Perfect environment for race condition without a change.
+
+Try to mask hotplug interrupts during AER/DPC fatal error handling.
+
+Changes from v4:
+* add mask_irq() and unmask_irq() callbacks to struct pcie_driver
+* refactor reset_slot() to use pciehp_mask_irq() an pciehp_unmask_irq()
+
+Sinan Kaya (3):
+  PCI: pciehp: implement mask and unmask interrupt functions
+  PCI: pciehp: reuse pciehp_mask/unmask_irq() in reset_slot()
+  PCI: Mask and unmask hotplug interrupts during reset
+
+ drivers/pci/hotplug/pciehp.h      |  2 ++
+ drivers/pci/hotplug/pciehp_core.c | 19 +++++++++++++++++++
+ drivers/pci/hotplug/pciehp_hpc.c  | 36 ++++++++++++++++++++++++++++--------
+ drivers/pci/pcie/err.c            | 11 +++++++++++
+ drivers/pci/pcie/portdrv.h        |  2 ++
+ 5 files changed, 62 insertions(+), 8 deletions(-)
+
+-- 
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
