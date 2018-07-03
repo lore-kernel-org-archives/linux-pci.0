@@ -1,64 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33486 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729642AbeGRUXm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jul 2018 16:23:42 -0400
-Subject: [PATCH v3 0/7] Fix issues and cleanup for ERR_FATAL and ERR_NONFATAL
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Timur Tabi <timur@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 18 Jul 2018 14:44:18 -0500
-Message-ID: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:58442 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752288AbeGCLmX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2018 07:42:23 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 03 Jul 2018 07:42:22 -0400
+From: okaya@codeaurora.org
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: Coccinelle report for drivers/pci/
+In-Reply-To: <20180703080910.GB21136@wunner.de>
+References: <7db07760-49fe-e94b-62fc-556ba02c8e9e@codeaurora.org>
+ <20180703080910.GB21136@wunner.de>
+Message-ID: <770c6adfdba8c02a2eeae336217b00d2@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a v3 of Oza's patches [1].  It's available at [2] if you prefer
-git.
+On 2018-07-03 04:09, Lukas Wunner wrote:
+> On Mon, Jul 02, 2018 at 09:45:55PM -0400, Sinan Kaya wrote:
+>> drivers/pci/hotplug/pciehp_pci.c:67:5-7: Unneeded variable: "rc". 
+>> Return "0" on line 110
+> 
+> Fixed by
+> https://patchwork.ozlabs.org/patch/930379/
+> 
+> 
+>> drivers/pci/hotplug/pcihp_skeleton.c:98:5-11: Unneeded variable: 
+>> "retval". Return "0" on line 106
+>> drivers/pci/hotplug/pcihp_skeleton.c:84:5-11: Unneeded variable: 
+>> "retval". Return "0" on line 92
+>> drivers/pci/hotplug/pcihp_skeleton.c:201:5-11: Unneeded variable: 
+>> "retval". Return "0" on line 210
+>> drivers/pci/hotplug/pcihp_skeleton.c:171:5-11: Unneeded variable: 
+>> "retval". Return "0" on line 180
+>> drivers/pci/hotplug/pcihp_skeleton.c:186:5-11: Unneeded variable: 
+>> "retval". Return "0" on line 195
+>> drivers/pci/hotplug/pcihp_skeleton.c:156:5-11: Unneeded variable: 
+>> "retval". Return "0" on line 165
+>> drivers/pci/hotplug/pcihp_skeleton.c:137:5-11: Unneeded variable: 
+>> "retval". Return "0" on line 150
+>> drivers/pci/hotplug/pcihp_skeleton.c:112:5-11: Unneeded variable: 
+>> "retval". Return "0" on line 131
+> 
+> Fixed by 6c9c6bd4e2c8 ("PCI: hotplug: Delete skeleton driver"),
+> queued on Bjorn's pci/hotplug branch for 4.19.
 
-v3 changes:
-  - Add pci_aer_clear_fatal_status() to clear ERR_FATAL bits, only called
-    from pcie_do_fatal_recovery().  Moved to first in series to avoid a
-    window where ERR_FATAL recovery only clears ERR_NONFATAL bits.  Visible
-    only inside the PCI core.
-  - Instead of having pci_cleanup_aer_uncorrect_error_status() do different
-    things based on dev->error_state, use this only for ERR_NONFATAL bits.
-    I didn't change the name because it's used by many drivers.
-  - Rename pci_cleanup_aer_error_device_status() to
-    pci_aer_clear_device_status(), make it void, and make it visible only
-    inside the PCI core.
-  - Remove pcie_portdrv_err_handler.slot_reset altogether instead of making
-    it a stub function.  Possibly pcie_portdrv_err_handler could be removed
-    completely?
-
-[1] https://lkml.kernel.org/r/1529661494-20936-1-git-send-email-poza@codeaurora.org
-[2] https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/?h=pci/06-22-oza-aer
-
----
-
-Bjorn Helgaas (1):
-      PCI/AER: Clear only ERR_FATAL status bits during fatal recovery
-
-Oza Pawandeep (6):
-      PCI/AER: Clear only ERR_NONFATAL bits during non-fatal recovery
-      PCI/AER: Factor out ERR_NONFATAL status bit clearing
-      PCI/AER: Remove ERR_FATAL code from ERR_NONFATAL path
-      PCI/AER: Clear device status bits during ERR_FATAL and ERR_NONFATAL
-      PCI/AER: Clear device status bits during ERR_COR handling
-      PCI/portdrv: Remove pcie_portdrv_err_handler.slot_reset
-
-
- drivers/pci/pci.h              |    5 ++++
- drivers/pci/pcie/aer.c         |   47 +++++++++++++++++++++++++++-------------
- drivers/pci/pcie/err.c         |   15 +++++--------
- drivers/pci/pcie/portdrv_pci.c |   25 ---------------------
- 4 files changed, 43 insertions(+), 49 deletions(-)
+Thanks, glad to hear we are doing some house cleaning.
