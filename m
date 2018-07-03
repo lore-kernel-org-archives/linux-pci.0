@@ -1,111 +1,177 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53520 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752088AbeGBNt7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Jul 2018 09:49:59 -0400
-Date: Mon, 2 Jul 2018 08:49:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: christian.koenig@amd.com
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: fix restoring resized BAR state on resume
-Message-ID: <20180702134957.GA43045@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180614122146.62118-1-christian.koenig@amd.com>
- <20180630005718.GJ40928@bhelgaas-glaptop.roam.corp.google.com>
- <064ebaf7-8953-fd29-a688-26a5646111a0@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 4/7 v5] iommu: arm-smmu: Add support for the fsl-mc bus
+To: Nipun Gupta <nipun.gupta@nxp.com>, will.deacon@arm.com,
+ robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
+ catalin.marinas@arm.com, gregkh@linuxfoundation.org,
+ laurentiu.tudor@nxp.com, bhelgaas@google.com
+References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+ <1526824191-7000-5-git-send-email-nipun.gupta@nxp.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <83174f21-50f3-2ed2-bf04-6136af591567@arm.com>
+Date: Tue, 3 Jul 2018 17:01:49 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <064ebaf7-8953-fd29-a688-26a5646111a0@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1526824191-7000-5-git-send-email-nipun.gupta@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+ frowand.list@gmail.com, hch@lst.de, linux-arm-kernel@lists.infradead.org,
+ m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 02, 2018 at 03:20:59PM +0200, Christian König wrote:
-> Am 30.06.2018 um 02:57 schrieb Bjorn Helgaas:
-> > On Thu, Jun 14, 2018 at 02:21:45PM +0200, Christian König wrote:
-> > > Resize BARs after resume to the expected size again.
-> > > 
-> > > Signed-off-by: Christian König <christian.koenig@amd.com>
-> > > BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=199959
-> > > CC: stable@vger.kernel.org      # v4.15+
-> > I applied both of these to pci/resource for v4.19, thanks!  It'd be nice to
-> > have them in v4.18, but since it's not a regression and the problem has
-> > been there since v4.15, I'm not sure I could justify it.
+On 20/05/18 14:49, Nipun Gupta wrote:
+> Implement bus specific support for the fsl-mc bus including
+> registering arm_smmu_ops and bus specific device add operations.
 > 
-> Well it is a regression. The change to enable this in the upstream driver
-> was added in 4.16, but a good bunch of people also compile our backported
-> DKMS module.
+> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+> ---
+>   drivers/iommu/arm-smmu.c |  7 +++++++
+>   drivers/iommu/iommu.c    | 21 +++++++++++++++++++++
+>   include/linux/fsl/mc.h   |  8 ++++++++
+>   include/linux/iommu.h    |  2 ++
+>   4 files changed, 38 insertions(+)
 > 
-> And now those people are complaining that the driver stopped working after
-> resume in 4.15 with the DKMS module and with 4.16 with the upstream module.
+> diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+> index 69e7c60..e1d5090 100644
+> --- a/drivers/iommu/arm-smmu.c
+> +++ b/drivers/iommu/arm-smmu.c
+> @@ -52,6 +52,7 @@
+>   #include <linux/spinlock.h>
+>   
+>   #include <linux/amba/bus.h>
+> +#include <linux/fsl/mc.h>
+>   
+>   #include "io-pgtable.h"
+>   #include "arm-smmu-regs.h"
+> @@ -1459,6 +1460,8 @@ static struct iommu_group *arm_smmu_device_group(struct device *dev)
+>   
+>   	if (dev_is_pci(dev))
+>   		group = pci_device_group(dev);
+> +	else if (dev_is_fsl_mc(dev))
+> +		group = fsl_mc_device_group(dev);
+>   	else
+>   		group = generic_device_group(dev);
+>   
+> @@ -2037,6 +2040,10 @@ static void arm_smmu_bus_init(void)
+>   		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
+>   	}
+>   #endif
+> +#ifdef CONFIG_FSL_MC_BUS
+> +	if (!iommu_present(&fsl_mc_bus_type))
+> +		bus_set_iommu(&fsl_mc_bus_type, &arm_smmu_ops);
+> +#endif
+>   }
+>   
+>   static int arm_smmu_device_probe(struct platform_device *pdev)
+> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> index d2aa2320..6d4ce35 100644
+> --- a/drivers/iommu/iommu.c
+> +++ b/drivers/iommu/iommu.c
+> @@ -32,6 +32,7 @@
+>   #include <linux/pci.h>
+>   #include <linux/bitops.h>
+>   #include <linux/property.h>
+> +#include <linux/fsl/mc.h>
+>   #include <trace/events/iommu.h>
+>   
+>   static struct kset *iommu_group_kset;
+> @@ -987,6 +988,26 @@ struct iommu_group *pci_device_group(struct device *dev)
+>   	return iommu_group_alloc();
+>   }
+>   
+> +/* Get the IOMMU group for device on fsl-mc bus */
+> +struct iommu_group *fsl_mc_device_group(struct device *dev)
+> +{
+> +	struct device *cont_dev = fsl_mc_cont_dev(dev);
+> +	struct iommu_group *group;
+> +
+> +	/* Container device is responsible for creating the iommu group */
+> +	if (fsl_mc_is_cont_dev(dev)) {
+
+Why duplicate what fsl_mc_cont_dev() has already figured out?
+
+AFAICS the overall operation here boils down to something like:
+
+	cont_dev = fsl_mc_cont_dev(dev);
+	group = iommu_group_get(cont_dev);
+	if (!group)
+		group = iommu_group_alloc();
+	return group;
+
+> +		group = iommu_group_alloc();
+> +		if (IS_ERR(group))
+> +			return NULL;
+
+iommu_group_get_for_dev() expects a PTR_ERR, so I don't think munging 
+the return here is the right thing to do.
+
+> +	} else {
+> +		get_device(cont_dev);
+
+If races are a concern, isn't this a bit late? Maybe in that case you 
+want {get,put}_fsl_mc_cont_dev() routines instead of the simple macro 
+below. But on the other hand if dev already has cont_dev as its parent, 
+wouldn't the reference taken in device_add() be sufficient to prevent it 
+from vanishing unexpectedly in this timescale?
+
+Robin.
+
+> +		group = iommu_group_get(cont_dev);
+> +		put_device(cont_dev);
+> +	}
+> +
+> +	return group;
+> +}
+> +
+>   /**
+>    * iommu_group_get_for_dev - Find or create the IOMMU group for a device
+>    * @dev: target device
+> diff --git a/include/linux/fsl/mc.h b/include/linux/fsl/mc.h
+> index f27cb14..dddaca1 100644
+> --- a/include/linux/fsl/mc.h
+> +++ b/include/linux/fsl/mc.h
+> @@ -351,6 +351,14 @@ struct fsl_mc_io {
+>   #define dev_is_fsl_mc(_dev) (0)
+>   #endif
+>   
+> +/* Macro to check if a device is a container device */
+> +#define fsl_mc_is_cont_dev(_dev) (to_fsl_mc_device(_dev)->flags & \
+> +	FSL_MC_IS_DPRC)
+> +
+> +/* Macro to get the container device of a MC device */
+> +#define fsl_mc_cont_dev(_dev) (fsl_mc_is_cont_dev(_dev) ? \
+> +	(_dev) : (_dev)->parent)
+> +
+>   /*
+>    * module_fsl_mc_driver() - Helper macro for drivers that don't do
+>    * anything special in module init/exit.  This eliminates a lot of
+> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+> index 19938ee..2981200 100644
+> --- a/include/linux/iommu.h
+> +++ b/include/linux/iommu.h
+> @@ -389,6 +389,8 @@ static inline size_t iommu_map_sg(struct iommu_domain *domain,
+>   extern struct iommu_group *pci_device_group(struct device *dev);
+>   /* Generic device grouping function */
+>   extern struct iommu_group *generic_device_group(struct device *dev);
+> +/* FSL-MC device grouping function */
+> +struct iommu_group *fsl_mc_device_group(struct device *dev);
+>   
+>   /**
+>    * struct iommu_fwspec - per-device IOMMU instance data
 > 
-> Alternatively I can disable resizing from the driver from kernels older than
-> v4.19.
 
-Feel free to help justify including this in v4.18 by providing the
-details of the regression and the relevant commits.  If this is
-something that worked in v4.17, and some commit we merged for
-v4.18-rc1 broke it, it would be a slam dunk to include the fix for
-v4.18.  I took a quick look through the commits we added in v4.18-rc1
-but didn't see anything obvious.
-
-Obviously, putting a fix in v4.18 doesn't help the people running
-v4.15 or v4.16.  The stable backports *will* help with that, and we
-already have the tag for that.
-
-The current trajectory we're on is that these are headed for
-v4.19-rc1, and soon after they appear there, they will be backported
-to the v4.15-v4.18 stable kernels.
-
-Bjorn
-
-> > > ---
-> > >   drivers/pci/pci.c | 28 ++++++++++++++++++++++++++++
-> > >   1 file changed, 28 insertions(+)
-> > > 
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index bd6f156dc3cf..d4685090378b 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -1159,6 +1159,33 @@ static void pci_restore_config_space(struct pci_dev *pdev)
-> > >   	}
-> > >   }
-> > > +static void pci_restore_rebar_state(struct pci_dev *pdev)
-> > > +{
-> > > +	unsigned int pos, nbars, i;
-> > > +	u32 ctrl;
-> > > +
-> > > +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
-> > > +	if (!pos)
-> > > +		return;
-> > > +
-> > > +	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-> > > +	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >>
-> > > +		    PCI_REBAR_CTRL_NBAR_SHIFT;
-> > > +
-> > > +	for (i = 0; i < nbars; i++, pos += 8) {
-> > > +		struct resource *res;
-> > > +		int bar_idx, size;
-> > > +
-> > > +		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-> > > +		bar_idx = ctrl & PCI_REBAR_CTRL_BAR_IDX;
-> > > +		res = pdev->resource + bar_idx;
-> > > +		size = order_base_2((resource_size(res) >> 20) | 1) - 1;
-> > > +		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE;
-> > > +		ctrl |= size << 8;
-> > > +		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
-> > > +	}
-> > > +}
-> > > +
-> > >   /**
-> > >    * pci_restore_state - Restore the saved state of a PCI device
-> > >    * @dev: - PCI device that we're dealing with
-> > > @@ -1174,6 +1201,7 @@ void pci_restore_state(struct pci_dev *dev)
-> > >   	pci_restore_pri_state(dev);
-> > >   	pci_restore_ats_state(dev);
-> > >   	pci_restore_vc_state(dev);
-> > > +	pci_restore_rebar_state(dev);
-> > >   	pci_cleanup_aer_error_status_regs(dev);
-> > > -- 
-> > > 2.14.1
-> > > 
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
