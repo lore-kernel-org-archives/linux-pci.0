@@ -1,62 +1,42 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 6/7 v5] bus: fsl-mc: set coherent dma mask for devices on
- fsl-mc bus
-To: Nipun Gupta <nipun.gupta@nxp.com>, will.deacon@arm.com,
- robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
- catalin.marinas@arm.com, gregkh@linuxfoundation.org,
- laurentiu.tudor@nxp.com, bhelgaas@google.com
-References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
- <1526824191-7000-7-git-send-email-nipun.gupta@nxp.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <79ac0aab-9620-b6ed-f3ee-0553a733a044@arm.com>
-Date: Tue, 3 Jul 2018 17:15:40 +0100
+Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1526824191-7000-7-git-send-email-nipun.gupta@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
- shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
- frowand.list@gmail.com, hch@lst.de, linux-arm-kernel@lists.infradead.org,
- m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <1530600642-25090-3-git-send-email-kernelfans@gmail.com> <20180703075106.GA21136@wunner.de>
+In-Reply-To: <20180703075106.GA21136@wunner.de>
+From: Pingfan Liu <kernelfans@gmail.com>
+Date: Tue, 3 Jul 2018 17:26:27 +0800
+Message-ID: <CAFgQCTt0M=+AQKXFXcOkxppjnDK9EAyNxHN=2F+n_NvyN=rQqg@mail.gmail.com>
+Subject: Re: [PATCHv3 2/4] drivers/base: utilize device tree info to shutdown devices
+To: lukas@wunner.de
+Cc: linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/05/18 14:49, Nipun Gupta wrote:
-> of_dma_configure() API expects coherent_dma_mask to be correctly
-> set in the devices. This patch does the needful.
+On Tue, Jul 3, 2018 at 3:51 PM Lukas Wunner <lukas@wunner.de> wrote:
+>
+> On Tue, Jul 03, 2018 at 02:50:40PM +0800, Pingfan Liu wrote:
+> > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+> > places an assumption of supplier<-consumer order on the process of probe.
+> > But it turns out to break down the parent <- child order in some scene.
+> > E.g in pci, a bridge is enabled by pci core, and behind it, the devices
+> > have been probed. Then comes the bridge's module, which enables extra
+> > feature(such as hotplug) on this bridge. This will break the
+> > parent<-children order and cause failure when "kexec -e" in some scenario.
+> >
+> > The detailed description of the scenario:
+> > An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
+> > match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
+> > to some issue. For this case, the bridge is moved after its children in
+> > devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
+> > write back buffer in flight due to the former shutdown of the bridge which
+> > clears the BusMaster bit.
+>
+> If you revert commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services
+> during shutdown"), does the issue go away?
 
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-
-> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-> ---
->   drivers/bus/fsl-mc/fsl-mc-bus.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
-> index fa43c7d..624828b 100644
-> --- a/drivers/bus/fsl-mc/fsl-mc-bus.c
-> +++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
-> @@ -627,6 +627,7 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
->   		mc_dev->icid = parent_mc_dev->icid;
->   		mc_dev->dma_mask = FSL_MC_DEFAULT_DMA_MASK;
->   		mc_dev->dev.dma_mask = &mc_dev->dma_mask;
-> +		mc_dev->dev.coherent_dma_mask = mc_dev->dma_mask;
->   		dev_set_msi_domain(&mc_dev->dev,
->   				   dev_get_msi_domain(&parent_mc_dev->dev));
->   	}
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Yes, it is gone.
