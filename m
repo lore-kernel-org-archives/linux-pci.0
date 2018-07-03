@@ -1,73 +1,201 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Leonard Crestez <leonard.crestez@nxp.com>
-To: Lucas Stach <l.stach@pengutronix.de>, Richard Zhu <hongxing.zhu@nxp.com>,
- Andrey Smirnov <andrew.smirnov@gmail.com>
-Subject: [PATCH v2 1/3] Revert "ARM: dts: imx7d: Invert legacy PCI irq mapping"
-Date: Fri, 20 Jul 2018 15:47:42 +0300
-Message-Id: <221deb47d7d38ecd6e0c7636f9a87ab693a3c539.1532090446.git.leonard.crestez@nxp.com>
-In-Reply-To: <cover.1532090446.git.leonard.crestez@nxp.com>
-References: <cover.1532090446.git.leonard.crestez@nxp.com>
+Return-Path: <SRS0=+D+5=JT=oracle.com=pasha.tatashin@kernel.org>
+Return-Path: <SRS0=+D+5=JT=oracle.com=pasha.tatashin@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- linux-pm@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
- linux-kernel@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-imx@nxp.com,
- kernel@pengutronix.de, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <1530600642-25090-3-git-send-email-kernelfans@gmail.com> <CAHp75VfEVT7cMOQD71dBkwzuQhZQ8YGik+TWSnf9=pkiUxJO6A@mail.gmail.com>
+In-Reply-To: <CAHp75VfEVT7cMOQD71dBkwzuQhZQ8YGik+TWSnf9=pkiUxJO6A@mail.gmail.com>
+From: Pavel Tatashin <pasha.tatashin@oracle.com>
+Date: Tue, 3 Jul 2018 13:03:15 -0400
+Message-ID: <CAGM2reaSOKwuYbwKA9yxSHyCh3FCPpaZ-SUu8u+=DQBmDfKA2Q@mail.gmail.com>
+Subject: Re: [PATCHv3 2/4] drivers/base: utilize device tree info to shutdown devices
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: kernelfans@gmail.com, LKML <linux-kernel@vger.kernel.org>,
+        gregkh@linuxfoundation.org, rafael.j.wysocki@intel.com,
+        grygorii.strashko@ti.com, hch@infradead.org, helgaas@kernel.org,
+        dyoung@redhat.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 1c86c9dd82f859b474474a7fee0d5195da2c9c1d.
+Thank you Andy for the heads up. I might need to rebase my work
+(http://lkml.kernel.org/r/20180629182541.6735-1-pasha.tatashin@oracle.com)
+based on this change. But, it is possible it is going to be harder to
+parallelize based on device tree. I will need to think about it.
 
-That commit followed the reference manual but unfortunately the imx7d
-manual is incorrect.
+Pavel
 
-Tested with ath9k pcie card and confirmed internally.
-
-Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
----
- arch/arm/boot/dts/imx7d.dtsi | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/arch/arm/boot/dts/imx7d.dtsi b/arch/arm/boot/dts/imx7d.dtsi
-index 8d3d123d0a5c..12c5ba7e9f1e 100644
---- a/arch/arm/boot/dts/imx7d.dtsi
-+++ b/arch/arm/boot/dts/imx7d.dtsi
-@@ -123,14 +123,14 @@
- 		num-lanes = <1>;
- 		interrupts = <GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
- 		interrupt-names = "msi";
- 		#interrupt-cells = <1>;
- 		interrupt-map-mask = <0 0 0 0x7>;
--		interrupt-map = <0 0 0 1 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
--				<0 0 0 2 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
--				<0 0 0 3 &intc GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>,
--				<0 0 0 4 &intc GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupt-map = <0 0 0 1 &intc GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 2 &intc GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 3 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 4 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
- 		clocks = <&clks IMX7D_PCIE_CTRL_ROOT_CLK>,
- 			 <&clks IMX7D_PLL_ENET_MAIN_100M_CLK>,
- 			 <&clks IMX7D_PCIE_PHY_ROOT_CLK>;
- 		clock-names = "pcie", "pcie_bus", "pcie_phy";
- 		assigned-clocks = <&clks IMX7D_PCIE_CTRL_ROOT_SRC>,
--- 
-2.17.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On Tue, Jul 3, 2018 at 6:59 AM Andy Shevchenko
+<andy.shevchenko@gmail.com> wrote:
+>
+> I think Pavel would be interested to see this as well (he is doing
+> some parallel device shutdown stuff)
+>
+> On Tue, Jul 3, 2018 at 9:50 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
+> > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+> > places an assumption of supplier<-consumer order on the process of probe.
+> > But it turns out to break down the parent <- child order in some scene.
+> > E.g in pci, a bridge is enabled by pci core, and behind it, the devices
+> > have been probed. Then comes the bridge's module, which enables extra
+> > feature(such as hotplug) on this bridge. This will break the
+> > parent<-children order and cause failure when "kexec -e" in some scenario.
+> >
+> > The detailed description of the scenario:
+> > An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
+> > match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
+> > to some issue. For this case, the bridge is moved after its children in
+> > devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
+> > write back buffer in flight due to the former shutdown of the bridge which
+> > clears the BusMaster bit.
+> >
+> > It is a little hard to impose both "parent<-child" and "supplier<-consumer"
+> > order on devices_kset. Take the following scene:
+> > step0: before a consumer's probing, (note child_a is supplier of consumer_a)
+> >   [ consumer-X, child_a, ...., child_z] [... consumer_a, ..., consumer_z, ...] supplier-X
+> >                                          ^^^^^^^^^^ affected range ^^^^^^^^^^
+> > step1: when probing, moving consumer-X after supplier-X
+> >   [ child_a, ...., child_z] [.... consumer_a, ..., consumer_z, ...] supplier-X, consumer-X
+> > step2: the children of consumer-X should be re-ordered to maintain the seq
+> >   [... consumer_a, ..., consumer_z, ....] supplier-X  [consumer-X, child_a, ...., child_z]
+> > step3: the consumer_a should be re-ordered to maintain the seq
+> >   [... consumer_z, ...] supplier-X [ consumer-X, child_a, consumer_a ..., child_z]
+> >
+> > It requires two nested recursion to drain out all out-of-order item in
+> > "affected range". To avoid such complicated code, this patch suggests
+> > to utilize the info in device tree, instead of using the order of
+> > devices_kset during shutdown. It iterates the device tree, and firstly
+> > shutdown a device's children and consumers. After this patch, the buggy
+> > commit is hollow and left to clean.
+> >
+> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+> > Cc: Christoph Hellwig <hch@infradead.org>
+> > Cc: Bjorn Helgaas <helgaas@kernel.org>
+> > Cc: Dave Young <dyoung@redhat.com>
+> > Cc: linux-pci@vger.kernel.org
+> > Cc: linuxppc-dev@lists.ozlabs.org
+> > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+> > ---
+> >  drivers/base/core.c    | 48 +++++++++++++++++++++++++++++++++++++++++++-----
+> >  include/linux/device.h |  1 +
+> >  2 files changed, 44 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/base/core.c b/drivers/base/core.c
+> > index a48868f..684b994 100644
+> > --- a/drivers/base/core.c
+> > +++ b/drivers/base/core.c
+> > @@ -1446,6 +1446,7 @@ void device_initialize(struct device *dev)
+> >         INIT_LIST_HEAD(&dev->links.consumers);
+> >         INIT_LIST_HEAD(&dev->links.suppliers);
+> >         dev->links.status = DL_DEV_NO_DRIVER;
+> > +       dev->shutdown = false;
+> >  }
+> >  EXPORT_SYMBOL_GPL(device_initialize);
+> >
+> > @@ -2811,7 +2812,6 @@ static void __device_shutdown(struct device *dev)
+> >          * lock is to be held
+> >          */
+> >         parent = get_device(dev->parent);
+> > -       get_device(dev);
+> >         /*
+> >          * Make sure the device is off the kset list, in the
+> >          * event that dev->*->shutdown() doesn't remove it.
+> > @@ -2842,23 +2842,60 @@ static void __device_shutdown(struct device *dev)
+> >                         dev_info(dev, "shutdown\n");
+> >                 dev->driver->shutdown(dev);
+> >         }
+> > -
+> > +       dev->shutdown = true;
+> >         device_unlock(dev);
+> >         if (parent)
+> >                 device_unlock(parent);
+> >
+> > -       put_device(dev);
+> >         put_device(parent);
+> >         spin_lock(&devices_kset->list_lock);
+> >  }
+> >
+> > +/* shutdown dev's children and consumer firstly, then itself */
+> > +static int device_for_each_child_shutdown(struct device *dev)
+> > +{
+> > +       struct klist_iter i;
+> > +       struct device *child;
+> > +       struct device_link *link;
+> > +
+> > +       /* already shutdown, then skip this sub tree */
+> > +       if (dev->shutdown)
+> > +               return 0;
+> > +
+> > +       if (!dev->p)
+> > +               goto check_consumers;
+> > +
+> > +       /* there is breakage of lock in __device_shutdown(), and the redundant
+> > +        * ref++ on srcu protected consumer is harmless since shutdown is not
+> > +        * hot path.
+> > +        */
+> > +       get_device(dev);
+> > +
+> > +       klist_iter_init(&dev->p->klist_children, &i);
+> > +       while ((child = next_device(&i)))
+> > +               device_for_each_child_shutdown(child);
+> > +       klist_iter_exit(&i);
+> > +
+> > +check_consumers:
+> > +       list_for_each_entry_rcu(link, &dev->links.consumers, s_node) {
+> > +               if (!link->consumer->shutdown)
+> > +                       device_for_each_child_shutdown(link->consumer);
+> > +       }
+> > +
+> > +       __device_shutdown(dev);
+> > +       put_device(dev);
+> > +       return 0;
+> > +}
+> > +
+> >  /**
+> >   * device_shutdown - call ->shutdown() on each device to shutdown.
+> >   */
+> >  void device_shutdown(void)
+> >  {
+> >         struct device *dev;
+> > +       int idx;
+> >
+> > +       idx = device_links_read_lock();
+> >         spin_lock(&devices_kset->list_lock);
+> >         /*
+> >          * Walk the devices list backward, shutting down each in turn.
+> > @@ -2866,11 +2903,12 @@ void device_shutdown(void)
+> >          * devices offline, even as the system is shutting down.
+> >          */
+> >         while (!list_empty(&devices_kset->list)) {
+> > -               dev = list_entry(devices_kset->list.prev, struct device,
+> > +               dev = list_entry(devices_kset->list.next, struct device,
+> >                                 kobj.entry);
+> > -               __device_shutdown(dev);
+> > +               device_for_each_child_shutdown(dev);
+> >         }
+> >         spin_unlock(&devices_kset->list_lock);
+> > +       device_links_read_unlock(idx);
+> >  }
+> >
+> >  /*
+> > diff --git a/include/linux/device.h b/include/linux/device.h
+> > index 055a69d..8a0f784 100644
+> > --- a/include/linux/device.h
+> > +++ b/include/linux/device.h
+> > @@ -1003,6 +1003,7 @@ struct device {
+> >         bool                    offline:1;
+> >         bool                    of_node_reused:1;
+> >         bool                    dma_32bit_limit:1;
+> > +       bool                    shutdown:1; /* one direction: false->true */
+> >  };
+> >
+> >  static inline struct device *kobj_to_dev(struct kobject *kobj)
+> > --
+> > 2.7.4
+> >
+>
+>
+>
+> --
+> With Best Regards,
+> Andy Shevchenko
