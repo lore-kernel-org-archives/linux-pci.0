@@ -1,66 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:53698 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933436AbeGBIkk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jul 2018 04:40:40 -0400
-Subject: Re: [PATCH v3 6/9] PCI: designware-plat: Drop unnecessary root_bus_nr
- setting
-To: Shawn Guo <shawn.guo@linaro.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
- <1530417291-30495-7-git-send-email-shawn.guo@linaro.org>
-From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Message-ID: <0ee69537-f2d2-f59f-be3c-1027fefd67f7@synopsys.com>
-Date: Mon, 2 Jul 2018 09:38:29 +0100
-MIME-Version: 1.0
-In-Reply-To: <1530417291-30495-7-git-send-email-shawn.guo@linaro.org>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-qt0-f172.google.com ([209.85.216.172]:38372 "EHLO
+        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932388AbeGCJFq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2018 05:05:46 -0400
+Received: by mail-qt0-f172.google.com with SMTP id c5-v6so903654qth.5
+        for <linux-pci@vger.kernel.org>; Tue, 03 Jul 2018 02:05:46 -0700 (PDT)
+From: Hari Vyas <hari.vyas@broadcom.com>
+To: bhelgaas@google.com, benh@kernel.crashing.org
+Cc: linux-pci@vger.kernel.org, ray.jui@broadcom.com,
+        Hari Vyas <hari.vyas@broadcom.com>
+Subject: [PATCH v3] PCI: Data corruption happening due to race condition
+Date: Tue,  3 Jul 2018 14:35:40 +0530
+Message-Id: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
+Changes in v3:
+	As per review comments from Lukas Wunner <lukas@wunner.de>,
+	squashed 3 commits to single commit. Without this build breaks.
+	Also clubbed set and clear function for is_added bits to a
+	single assign function. This optimizes code and reduce LoC.
+	Removed one wrongly added blank line in pci.c
+	 
+Changes in v2:
+        To avoid race condition while updating is_added and is_busmaster
+        bits, is_added is moved to a private flag variable.
+        is_added updation is handled in atomic manner also.
 
-On 01/07/2018 04:54, Shawn Guo wrote:
-> Function dw_pcie_host_init() already initializes the root_bus_nr field
-> of 'struct pcie_port', so the -1 assignment prior to calling
-> dw_pcie_host_init() in platform specific driver is not really needed.
-> Drop it.
-> 
-> Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-> Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-> ---
->  drivers/pci/controller/dwc/pcie-designware-plat.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-> index 5937fed4c938..6e048c0b67f2 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-> @@ -118,7 +118,6 @@ static int dw_plat_add_pcie_port(struct dw_plat_pcie *dw_plat_pcie,
->  			return pp->msi_irq;
->  	}
->  
-> -	pp->root_bus_nr = -1;
->  	pp->ops = &dw_plat_pcie_host_ops;
->  
->  	ret = dw_pcie_host_init(pp);
-> 
+Hari Vyas (1):
+  PCI: Data corruption happening due to race condition
 
-Looks good :)
-Thanks
+ arch/powerpc/kernel/pci-common.c          |  4 +++-
+ arch/powerpc/platforms/powernv/pci-ioda.c |  3 ++-
+ arch/powerpc/platforms/pseries/setup.c    |  3 ++-
+ drivers/pci/bus.c                         |  6 +++---
+ drivers/pci/hotplug/acpiphp_glue.c        |  2 +-
+ drivers/pci/pci.h                         | 11 +++++++++++
+ drivers/pci/probe.c                       |  4 ++--
+ drivers/pci/remove.c                      |  5 +++--
+ include/linux/pci.h                       |  1 -
+ 9 files changed, 27 insertions(+), 12 deletions(-)
 
-Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-
-Regards,
-Gustavo
+-- 
+1.9.1
