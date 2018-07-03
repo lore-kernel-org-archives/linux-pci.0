@@ -1,194 +1,54 @@
-Return-Path: <SRS0=A2mq=JU=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=A2mq=JU=broadcom.com=ray.jui@kernel.org>
-Subject: Re: [PATCH INTERNAL 3/3] PCI: iproc: Disable MSI parsing in certain
- PAXC blocks
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Robin Murphy <robin.murphy@arm.com>, poza@codeaurora.org,
- Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org, linux-pci-owner@vger.kernel.org
-References: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
- <1526577692-21104-4-git-send-email-ray.jui@broadcom.com>
- <ad41ea7f16414a83a2b3d7e6192bcf79@codeaurora.org>
- <20180518135614.GA18605@e107981-ln.cambridge.arm.com>
- <e433f2cf-63c5-37c3-f7ef-15ff0aa67e4f@broadcom.com>
- <20180521133305.GB1443@e107981-ln.cambridge.arm.com>
- <073832d4-88a0-efa1-2da8-5e07479e51e0@arm.com>
- <d8988a30-f604-f00d-cc8f-db01b4def3c9@broadcom.com>
- <20180704151254.GA12996@red-moon>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <66542c4a-3f56-0f75-db80-f7c05609c177@broadcom.com>
-Date: Wed, 4 Jul 2018 08:44:06 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bmailout3.hostsharing.net ([176.9.242.62]:58415 "EHLO
+        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932219AbeGCN76 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2018 09:59:58 -0400
+Date: Tue, 3 Jul 2018 15:59:56 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: poza@codeaurora.org, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
+ reset
+Message-ID: <20180703135956.GA18639@wunner.de>
+References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
+ <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
+ <20180703083447.GA2689@wunner.de>
+ <8b6ce0f415858463d1c0588c29e30415@codeaurora.org>
+ <9e871cc3978fbdca12ccf8a91f34ad07@codeaurora.org>
+ <2640af5e-f00f-d814-425d-78ac57714f6d@codeaurora.org>
+ <bd04c9d1-6dfe-3071-69f9-beb0d649b6c0@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20180704151254.GA12996@red-moon>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bd04c9d1-6dfe-3071-69f9-beb0d649b6c0@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
-
-On 7/4/2018 8:13 AM, Lorenzo Pieralisi wrote:
-> On Tue, May 22, 2018 at 09:48:55AM -0700, Ray Jui wrote:
->> Hi Robin/Lorenzo,
->>
->> On 5/21/2018 7:26 AM, Robin Murphy wrote:
->>> On 21/05/18 14:33, Lorenzo Pieralisi wrote:
->>>> [+Robin]
->>>>
->>>> On Fri, May 18, 2018 at 12:48:28PM -0700, Ray Jui wrote:
->>>>> Hi Lorenzo,
->>>>>
->>>>> On 5/18/2018 6:56 AM, Lorenzo Pieralisi wrote:
->>>>>> On Fri, May 18, 2018 at 02:53:41PM +0530, poza@codeaurora.org wrote:
->>>>>>> On 2018-05-17 22:51, Ray Jui wrote:
->>>>>>>> The internal MSI parsing logic in certain revisions of PAXC root
->>>>>>>> complexes does not work properly and can casue corruptions on the
->>>>>>>> writes. They need to be disabled
->>>>>>>>
->>>>>>>> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
->>>>>>>> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
->>>>>>>> ---
->>>>>>>> drivers/pci/host/pcie-iproc.c | 34 ++++++++++++++++++++++++++++++++--
->>>>>>>> 1 file changed, 32 insertions(+), 2 deletions(-)
->>>>>>>>
->>>>>>>> diff --git a/drivers/pci/host/pcie-iproc.c
->>>>>>>> b/drivers/pci/host/pcie-iproc.c
->>>>>>>> index 3c76c5f..b906d80 100644
->>>>>>>> --- a/drivers/pci/host/pcie-iproc.c
->>>>>>>> +++ b/drivers/pci/host/pcie-iproc.c
->>>>>>>> @@ -1144,10 +1144,22 @@ static int
->>>>>>>> iproc_pcie_paxb_v2_msi_steer(struct
->>>>>>>> iproc_pcie *pcie, u64 msi_addr)
->>>>>>>>      return ret;
->>>>>>>> }
->>>>>>>>
->>>>>>>> -static void iproc_pcie_paxc_v2_msi_steer(struct
->>>>>>>> iproc_pcie *pcie, u64
->>>>>>>> msi_addr)
->>>>>>>> +static void iproc_pcie_paxc_v2_msi_steer(struct
->>>>>>>> iproc_pcie *pcie, u64
->>>>>>>> msi_addr,
->>>>>>>> +                     bool enable)
->>>>>>>> {
->>>>>>>>      u32 val;
->>>>>>>>
->>>>>>>> +    if (!enable) {
->>>>>>>> +        /*
->>>>>>>> +         * Disable PAXC MSI steering. All write transfers will be
->>>>>>>> +         * treated as non-MSI transfers
->>>>>>>> +         */
->>>>>>>> +        val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
->>>>>>>> +        val &= ~MSI_ENABLE_CFG;
->>>>>>>> +        iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
->>>>>>>> +        return;
->>>>>>>> +    }
->>>>>>>> +
->>>>>>>>      /*
->>>>>>>>       * Program bits [43:13] of address of
->>>>>>>> GITS_TRANSLATER register into
->>>>>>>>       * bits [30:0] of the MSI base address register.  In
->>>>>>>> fact, in all iProc
->>>>>>>> @@ -1201,7 +1213,7 @@ static int
->>>>>>>> iproc_pcie_msi_steer(struct iproc_pcie
->>>>>>>> *pcie,
->>>>>>>>              return ret;
->>>>>>>>          break;
->>>>>>>>      case IPROC_PCIE_PAXC_V2:
->>>>>>>> -        iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
->>>>>>>> +        iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr, true);
->>>>>>>
->>>>>>> Are you calling iproc_pcie_paxc_v2_msi_steer() anywhere
->>>>>>> else with 'false' ?
->>>>>>> I see its getting called only from one place in current code
->>>>>>> iproc_pcie_msi_steer().
->>>>>>
->>>>>> It is called below with the false field to disable MSIs.
->>>>>> That's probably
->>>>>> one reason more to create a function to enable/disable MSIs instead of
->>>>>> adding a parameter to iproc_pcie_paxc_v2_msi_steer().
->>>>>
->>>>> Correct. Thanks for helping to explain.
->>>>>
->>>>>>
->>>>>> Which brings me to the question: what happens to those MSIs writes
->>>>>> when MSIs are disabled according to this patch ? Are they terminated
->>>>>> at the root complex ?
->>>>>
->>>>> Note the PAXC block parses MSI writes from our internally connected
->>>>> endpoints (i.e., an embedded network processor). The PAXC block examines
->>>>> these MSI writes and modifies the memory attributes (to DEVICE) of these
->>>>> data and then send them out to the AXI bus. These MSI writes
->>>>> will then be
->>>>> forwarded to the GIC (e.g., GICv2m, GICv3-ITS from ARM) for further
->>>>> processing. This is saying, PAXC itself does not process these
->>>>> MSI writes.
->>>>> They are processed by the GIC and associated interrupt will be generated
->>>>> form the GIC. PAXC's job is to parse and tag them properly so these MSI
->>>>> writes can reach the GIC, and at the same, reach the GIC at
->>>>> the right order.
->>>>>
->>>>> On some of these problematic PAXCs, we are being forced to
->>>>> disable this PAXC
->>>>> internal parsing logic. In this case, we set up static mapping with the
->>>>> IOMMU to modify the memory attributes of these MSI writes.
->>>>> These MSI writes
->>>>> are always designated towards a specific memory address (e.g.,
->>>>> on the GICv3
->>>>> based system, it's the address of the translator register),
->>>>> and that's why
->>>>> static mapping table can be set up to work around this.
->>>>
->>>> Which means, I presume, that there must be some code that somehow
->>>> somewhere in the kernel sets-up those mappings and it has to be related
->>>> to this patch, in which case I wonder why we enable the PAXC steering at
->>>> all given that this (hack) can be done through the IOMMU (and I assume
->>>> that on all PAXC platforms that do need MSIs there is an IOMMU IP
->>>> upstream the root bridge, otherwise I have no idea what will happen to
->>>> those MSI writes).
->>>
->>> If it's only rewriting memory attributes (FWIW it sounds like this
->>> thing is comparable to the AXI translation table of the PLDA root
->>> complex we have in Juno), then if the IOMMU is controlled by Linux
->>> the PAXC shouldn't be needed anyway. In that situation the
->>> GICv2m/ITS doorbell will be already mapped for the endpoint as
->>> device memory (and usually at some arbitrary address that the PAXC
->>> won't recognise anyway) - see iommu_dma_get_msi_page().
->>>
->>> If Linux *doesn't* know about the IOMMU, then the firmware should
->>> be free to set it up with a static 1:1 mapping of the PA space and
->>> leave it that way, provided Linux can't inadvertently stomp on
->>> those page tables later.
->>
->> Right, in our case, we had our ATF bootloader set up 1:1 mapping for
->> this. In this case, PAXC internal MSI parsing is completely disabled
->> (which is what this patch does for those PAXC blocks that have this
->> issue).
+On Tue, Jul 03, 2018 at 09:31:24AM -0400, Sinan Kaya wrote:
+> Issue is observing hotplug link down event in the middle of AER recovery
+> as in my previous reply.
 > 
-> Ok so to sum it up, why does the PCI host bridge code has to deal with
-> this steering at all given the discussion above ? Why can't we disable
-> PAXC steering completely ?
+> If we mask hotplug interrupts before secondary bus reset via my patch,
+> then hotplug driver will not observe both link up and link down interrupts.
 > 
-> Lorenzo
-> 
+> If we don't mask hotplug interrupts, we have a race condition.
 
-Sorry I probably did not give enough information in our previous discussion.
+I assume that a bus reset not only causes a link and presence event but
+also clears the Presence Detect State bit in the Slot Status register
+and the Data Link Layer Link Active bit in the Link Status register
+momentarily.
 
-Per recommendation from our ASIC team, we are advised to enable MSI 
-steering in the PAXC block in the latest revision of our SoC (and 
-therefore there's this patch to enable/disable MSI steering based on the 
-root complex device ID).
+pciehp may access those two bits concurrently to the AER driver
+performing a slot reset.  So it may not be sufficient to mask
+the interrupt.
 
-Note PAXC is an highly custom, emulated root complex hard-wire connected 
-internally to our embedded network processor (that acts as EP). Some 
-special tagging in done in the firmware for the network processor to 
-distinguish between data packets, completion, and MSI packets 
-(data/completion in the perspective of our network processor), and 
-inbound packets are re-ordered within PAXC to 1) ensure that they are in 
-the correct order (e.g., completion and MSI needs to arrive after data), 
-and 2) achieve extremely high performance (i.e., pure strictly ordered 
-packets will actually result very poor performance). I don't know more 
-details but the above is the high-level summary that explains why we 
-need to enable PAXC based steering in the latest revision of our SoC.
+I've posted this patch to address the issue:
+https://patchwork.ozlabs.org/patch/930391/
 
 Thanks,
 
-Ray
+Lukas
