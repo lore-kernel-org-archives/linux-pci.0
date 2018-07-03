@@ -1,79 +1,145 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:48726 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932188AbeGDEMW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Jul 2018 00:12:22 -0400
-From: Baoquan He <bhe@redhat.com>
-To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-        robh+dt@kernel.org, dan.j.williams@intel.com,
-        nicolas.pitre@linaro.org, josh@joshtriplett.org,
-        fengguang.wu@intel.com, bp@suse.de, andy.shevchenko@gmail.com
-Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com,
-        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
-        keith.busch@intel.com, jonathan.derrick@intel.com,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
-        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
-        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
-        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
-        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
-        yinghai@kernel.org, kexec@lists.infradead.org, monstr@monstr.eu,
-        davem@davemloft.net, chris@zankel.net, jcmvbkbc@gmail.com,
-        gustavo@padovan.org, maarten.lankhorst@linux.intel.com,
-        seanpaul@chromium.org, linux-parisc@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, Baoquan He <bhe@redhat.com>
-Subject: [PATCH v6 4/4] kexec_file: Load kernel at top of system RAM if required
-Date: Wed,  4 Jul 2018 12:10:38 +0800
-Message-Id: <20180704041038.8190-5-bhe@redhat.com>
-In-Reply-To: <20180704041038.8190-1-bhe@redhat.com>
-References: <20180704041038.8190-1-bhe@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
+From: Pingfan Liu <kernelfans@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Pingfan Liu <kernelfans@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCHv3 4/4] Revert "driver core: correct device's shutdown order"
+Date: Tue,  3 Jul 2018 14:50:42 +0800
+Message-Id: <1530600642-25090-5-git-send-email-kernelfans@gmail.com>
+In-Reply-To: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-For kexec_file loading, if kexec_buf.top_down is 'true', the memory which
-is used to load kernel/initrd/purgatory is supposed to be allocated from
-top to down. This is what we have been doing all along in the old kexec
-loading interface and the kexec loading is still default setting in some
-distributions. However, the current kexec_file loading interface doesn't
-do likt this. The function arch_kexec_walk_mem() it calls ignores checking
-kexec_buf.top_down, but calls walk_system_ram_res() directly to go through
-all resources of System RAM from bottom to up, to try to find memory region
-which can contain the specific kexec buffer, then call locate_mem_hole_callback()
-to allocate memory in that found memory region from top to down. This brings
-confusion especially when KASLR is widely supported , users have to make clear
-why kexec/kdump kernel loading position is different between these two
-interfaces in order to exclude unnecessary noises. Hence these two interfaces
-need be unified on behaviour.
+This reverts commit 52cdbdd49853dfa856082edb0f4c4c0249d9df07.
+Since the device_shutdown() does not rely on the order in devices_kset any
+more, reverting that commit safely.
 
-Here add checking if kexec_buf.top_down is 'true' in arch_kexec_walk_mem(),
-if yes, call the newly added walk_system_ram_res_rev() to find memory region
-from top to down to load kernel.
-
-Signed-off-by: Baoquan He <bhe@redhat.com>
-Cc: Eric Biederman <ebiederm@xmission.com>
-Cc: Vivek Goyal <vgoyal@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
 Cc: Dave Young <dyoung@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: kexec@lists.infradead.org
+Cc: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
 ---
- kernel/kexec_file.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/base/base.h |  1 -
+ drivers/base/core.c | 49 -------------------------------------------------
+ drivers/base/dd.c   |  8 --------
+ 3 files changed, 58 deletions(-)
 
-diff --git a/kernel/kexec_file.c b/kernel/kexec_file.c
-index c6a3b6851372..75226c1d08ce 100644
---- a/kernel/kexec_file.c
-+++ b/kernel/kexec_file.c
-@@ -518,6 +518,8 @@ int __weak arch_kexec_walk_mem(struct kexec_buf *kbuf,
- 					   IORESOURCE_SYSTEM_RAM | IORESOURCE_BUSY,
- 					   crashk_res.start, crashk_res.end,
- 					   kbuf, func);
-+	else if (kbuf->top_down)
-+		return walk_system_ram_res_rev(0, ULONG_MAX, kbuf, func);
- 	else
- 		return walk_system_ram_res(0, ULONG_MAX, kbuf, func);
- }
+diff --git a/drivers/base/base.h b/drivers/base/base.h
+index a75c302..5bc9064 100644
+--- a/drivers/base/base.h
++++ b/drivers/base/base.h
+@@ -135,7 +135,6 @@ extern void device_unblock_probing(void);
+ 
+ /* /sys/devices directory */
+ extern struct kset *devices_kset;
+-extern void devices_kset_move_last(struct device *dev);
+ 
+ #if defined(CONFIG_MODULES) && defined(CONFIG_SYSFS)
+ extern void module_add_driver(struct module *mod, struct device_driver *drv);
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index db3deb8..570aeee 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -1259,52 +1259,6 @@ static DEVICE_ATTR_RO(dev);
+ struct kset *devices_kset;
+ 
+ /**
+- * devices_kset_move_before - Move device in the devices_kset's list.
+- * @deva: Device to move.
+- * @devb: Device @deva should come before.
+- */
+-static void devices_kset_move_before(struct device *deva, struct device *devb)
+-{
+-	if (!devices_kset)
+-		return;
+-	pr_debug("devices_kset: Moving %s before %s\n",
+-		 dev_name(deva), dev_name(devb));
+-	spin_lock(&devices_kset->list_lock);
+-	list_move_tail(&deva->kobj.entry, &devb->kobj.entry);
+-	spin_unlock(&devices_kset->list_lock);
+-}
+-
+-/**
+- * devices_kset_move_after - Move device in the devices_kset's list.
+- * @deva: Device to move
+- * @devb: Device @deva should come after.
+- */
+-static void devices_kset_move_after(struct device *deva, struct device *devb)
+-{
+-	if (!devices_kset)
+-		return;
+-	pr_debug("devices_kset: Moving %s after %s\n",
+-		 dev_name(deva), dev_name(devb));
+-	spin_lock(&devices_kset->list_lock);
+-	list_move(&deva->kobj.entry, &devb->kobj.entry);
+-	spin_unlock(&devices_kset->list_lock);
+-}
+-
+-/**
+- * devices_kset_move_last - move the device to the end of devices_kset's list.
+- * @dev: device to move
+- */
+-void devices_kset_move_last(struct device *dev)
+-{
+-	if (!devices_kset)
+-		return;
+-	pr_debug("devices_kset: Moving %s to end of list\n", dev_name(dev));
+-	spin_lock(&devices_kset->list_lock);
+-	list_move_tail(&dev->kobj.entry, &devices_kset->list);
+-	spin_unlock(&devices_kset->list_lock);
+-}
+-
+-/**
+  * device_create_file - create sysfs attribute file for device.
+  * @dev: device.
+  * @attr: device attribute descriptor.
+@@ -2776,15 +2730,12 @@ int device_move(struct device *dev, struct device *new_parent,
+ 		break;
+ 	case DPM_ORDER_DEV_AFTER_PARENT:
+ 		device_pm_move_after(dev, new_parent);
+-		devices_kset_move_after(dev, new_parent);
+ 		break;
+ 	case DPM_ORDER_PARENT_BEFORE_DEV:
+ 		device_pm_move_before(new_parent, dev);
+-		devices_kset_move_before(new_parent, dev);
+ 		break;
+ 	case DPM_ORDER_DEV_LAST:
+ 		device_pm_move_last(dev);
+-		devices_kset_move_last(dev);
+ 		break;
+ 	}
+ 
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index 1435d72..6ebcd65 100644
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -434,14 +434,6 @@ static int really_probe(struct device *dev, struct device_driver *drv)
+ 			goto probe_failed;
+ 	}
+ 
+-	/*
+-	 * Ensure devices are listed in devices_kset in correct order
+-	 * It's important to move Dev to the end of devices_kset before
+-	 * calling .probe, because it could be recursive and parent Dev
+-	 * should always go first
+-	 */
+-	devices_kset_move_last(dev);
+-
+ 	if (dev->bus->probe) {
+ 		ret = dev->bus->probe(dev);
+ 		if (ret)
 -- 
-2.13.6
+2.7.4
