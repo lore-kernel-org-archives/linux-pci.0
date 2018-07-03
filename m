@@ -1,106 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38586 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729273AbeGaMxI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jul 2018 08:53:08 -0400
-Date: Tue, 31 Jul 2018 06:13:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
-        MyungJoo Ham <myungjoo.ham@samsung.com>,
-        Chanwoo Choi <cw00.choi@samsung.com>,
-        Sebastian Reichel <sre@kernel.org>, Milo Kim <milo.kim@ti.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
- interrupts
-Message-ID: <20180731111317.GJ45322@bhelgaas-glaptop.roam.corp.google.com>
-References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com>
- <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
- <20180730224252.GE45322@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.DEB.2.21.1807310047320.1725@nanos.tec.linutronix.de>
- <20180731080111.GG17271@n2100.armlinux.org.uk>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
+ reset
+To: poza@codeaurora.org
+References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
+ <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
+ <20180703083447.GA2689@wunner.de>
+ <8b6ce0f415858463d1c0588c29e30415@codeaurora.org>
+ <9e871cc3978fbdca12ccf8a91f34ad07@codeaurora.org>
+ <2640af5e-f00f-d814-425d-78ac57714f6d@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <bd04c9d1-6dfe-3071-69f9-beb0d649b6c0@codeaurora.org>
+Date: Tue, 3 Jul 2018 09:31:24 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180731080111.GG17271@n2100.armlinux.org.uk>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2640af5e-f00f-d814-425d-78ac57714f6d@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Keith Busch <keith.busch@intel.com>, Lukas Wunner <lukas@wunner.de>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 31, 2018 at 09:01:12AM +0100, Russell King - ARM Linux wrote:
-> On Tue, Jul 31, 2018 at 12:50:21AM +0200, Thomas Gleixner wrote:
-> > On Mon, 30 Jul 2018, Bjorn Helgaas wrote:
-> > 
-> > > [+cc maintainers of possibly erroneous callers of request_threaded_irq()]
-> > > 
-> > > On Mon, Jul 30, 2018 at 04:30:28PM -0500, Bjorn Helgaas wrote:
-> > > > [+cc Thomas, Christoph, LKML]
-> > > > 
-> > > > On Mon, Jul 30, 2018 at 12:03:42AM +0200, Heiner Kallweit wrote:
-> > > > > If we have a threaded interrupt with the handler being NULL, then
-> > > > > request_threaded_irq() -> __setup_irq() will complain and bail out
-> > > > > if the IRQF_ONESHOT flag isn't set. Therefore check for the handler
-> > > > > being NULL and set IRQF_ONESHOT in this case.
-> > > > > 
-> > > > > This change is needed to migrate the mei_me driver to
-> > > > > pci_alloc_irq_vectors() and pci_request_irq().
-> > > > > 
-> > > > > Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
-> > > > 
-> > > > I'd like an ack from Thomas because this requirement about IRQF_ONESHOT
-> > > > usage isn't mentioned in the request_threaded_irq() function doc or
-> > > > Documentation/
-> > > 
-> > > Possibly these other request_threaded_irq() callers are similarly
-> > > broken?  I can't tell for sure about tda998x_create(), but all the
-> > > others certainly call request_threaded_irq() with "handler == NULL"
-> > > and irqflags that do not contain IRQF_ONESHOT:
-> > > 
-> > >   tda998x_create()
-> > >     request_threaded_irq(client->irq, NULL, ..., irqd_get_trigger_type(), ...)
-> > >     (I can't tell what irqd_get_trigger_type() does)
-> > 
-> > It reads the trigger type back from the irq chip (level/edge/polarity) but
-> > does not return with the ONESHOT bit set.
-> 
-> What tree are you (Bjorn) using there?  Looking in my git history,
-> request_threaded_irq() was added in January 2014, as:
-> 
-> +               irqf_trigger =
-> +                       irqd_get_trigger_type(irq_get_irq_data(client->irq));
-> +               ret = request_threaded_irq(client->irq, NULL,
-> +                                          tda998x_irq_thread,
-> +                                          irqf_trigger | IRQF_ONESHOT,
-> +                                          "tda998x", priv);
-> 
-> and updated more recently for the CEC support in ae81553c30ef
-> ("drm/i2c: tda998x: allow interrupt to be shared") to be:
-> 
-> -               irqf_trigger =
-> +               irq_flags =
->                         irqd_get_trigger_type(irq_get_irq_data(client->irq));
-> +               irq_flags |= IRQF_SHARED | IRQF_ONESHOT;
->                 ret = request_threaded_irq(client->irq, NULL,
-> -                                          tda998x_irq_thread,
-> -                                          irqf_trigger | IRQF_ONESHOT,
-> +                                          tda998x_irq_thread, irq_flags,
->                                            "tda998x", priv);
-> 
-> In all cases, IRQF_ONESHOT has been set for this threaded interrupt.
-> 
-> I've also checked drm-next, and it doesn't show anything like what
-> Bjorn quoted.
-> 
-> Confused.  Bjorn, can you double check that what you think are
-> erroneous request_threaded_irq() calls are actually as per what
-> you quoted please?
-
-I was looking at v4.18-rc1, but in the case of tda998x_create(), I
-overlooked this line:
-
-  irq_flags |= IRQF_SHARED | IRQF_ONESHOT;
-
-Sorry!
+T24gNy8zLzIwMTggOToyNSBBTSwgU2luYW4gS2F5YSB3cm90ZToKPj4gd2hhdCBpZiB3ZSBvbmx5
+IGhhdmUgY29uZGl0aW9uYWwgZW51bWVyYXRpb24gP8KgIChsZWF2aW5nIHJlbW92aW5nIGRldmlj
+ZXMgZm9sbG93ZWQgYnkgU0JSIGFzIGlzKSA/Cj4+ClNvcnJ5LCBJIHRoaW5rIEkgZGlkbid0IHF1
+aXRlIGdldCB5b3VyIHF1ZXN0aW9uLiAKCkFyZSB5b3UgYXNraW5nIGFib3V0IHRoZSBlbnVtZXJh
+dGlvbiBmb2xsb3dpbmcgbGluayB1cCB3aGlsZSBrZWVwaW5nIHRoZQpjdXJyZW50IGNvZGUgYXMg
+aXM/CgpJc3N1ZSBpcyBvYnNlcnZpbmcgaG90cGx1ZyBsaW5rIGRvd24gZXZlbnQgaW4gdGhlIG1p
+ZGRsZSBvZiBBRVIgcmVjb3ZlcnkgYXMgaW4KbXkgcHJldmlvdXMgcmVwbHkuCgpJZiB3ZSBtYXNr
+IGhvdHBsdWcgaW50ZXJydXB0cyBiZWZvcmUgc2Vjb25kYXJ5IGJ1cyByZXNldCB2aWEgbXkgcGF0
+Y2gsCnRoZW4gaG90cGx1ZyBkcml2ZXIgd2lsbCBub3Qgb2JzZXJ2ZSBib3RoIGxpbmsgdXAgYW5k
+IGxpbmsgZG93biBpbnRlcnJ1cHRzLgoKSWYgd2UgZG9uJ3QgbWFzayBob3RwbHVnIGludGVycnVw
+dHMsIHdlIGhhdmUgYSByYWNlIGNvbmRpdGlvbi4KCkkgaG9wZSBJIGFuc3dlcmVkIHlvdXIgcXVl
+c3Rpb24uCgotLSAKU2luYW4gS2F5YQpRdWFsY29tbSBEYXRhY2VudGVyIFRlY2hub2xvZ2llcywg
+SW5jLiBhcyBhbiBhZmZpbGlhdGUgb2YgUXVhbGNvbW0gVGVjaG5vbG9naWVzLCBJbmMuClF1YWxj
+b21tIFRlY2hub2xvZ2llcywgSW5jLiBpcyBhIG1lbWJlciBvZiB0aGUgQ29kZSBBdXJvcmEgRm9y
+dW0sIGEgTGludXggRm91bmRhdGlvbiBDb2xsYWJvcmF0aXZlIFByb2plY3QuCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1h
+aWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xp
+c3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
