@@ -1,65 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:52667 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729731AbeGaLIZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2018 07:08:25 -0400
-Date: Tue, 31 Jul 2018 11:28:57 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Alex_Gagniuc@Dellteam.com
-Cc: mr.nuke.me@gmail.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, Austin.Bolen@dell.com,
-        Stuart.Hayes@dell.com, Narendra.K@dell.com,
-        Christopher.Arzola@dell.com, David.Chalfant@dell.com,
-        okaya@kernel.org
-Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
-Message-ID: <20180731092857.GA13494@wunner.de>
-References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
- <20180727071813.GA6128@wunner.de>
- <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
- <20180727170543.GA5326@wunner.de>
- <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
- <20180728183130.GA21482@wunner.de>
- <c9a2b3463fd04f3eb7725f985c569b03@ausx13mps321.AMER.DELL.COM>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 6/7 v5] bus: fsl-mc: set coherent dma mask for devices on
+ fsl-mc bus
+To: Nipun Gupta <nipun.gupta@nxp.com>, will.deacon@arm.com,
+ robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
+ catalin.marinas@arm.com, gregkh@linuxfoundation.org,
+ laurentiu.tudor@nxp.com, bhelgaas@google.com
+References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+ <1526824191-7000-7-git-send-email-nipun.gupta@nxp.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <79ac0aab-9620-b6ed-f3ee-0553a733a044@arm.com>
+Date: Tue, 3 Jul 2018 17:15:40 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c9a2b3463fd04f3eb7725f985c569b03@ausx13mps321.AMER.DELL.COM>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1526824191-7000-7-git-send-email-nipun.gupta@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+ frowand.list@gmail.com, hch@lst.de, linux-arm-kernel@lists.infradead.org,
+ m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 30, 2018 at 09:38:04PM +0000, Alex_Gagniuc@Dellteam.com wrote:
-> On 07/28/2018 01:31 PM, Lukas Wunner wrote:
-> > On Fri, Jul 27, 2018 at 05:51:04PM +0000, Alex_Gagniuc@Dellteam.com wrote:
-> > > I think PCI_DEV_DISCONNECTED is a documentation issue above all else.
-> > > The history I was given is that drivers would take a very long time to
-> > > tear down a device. Config space IO to an nonexistent device took a long
-> > > while to time out. Performance was one motivation -- and was not
-> > > documented.
-> > 
-> > Often it is possible for the driver to detect surprise removal by
-> > checking if mmio reads return "all ones".  But in some cases that's
-> > a valid value to read from mmio and then this approach won't work.
-> > Also, checking every mmio read may negatively impact performance.
+On 20/05/18 14:49, Nipun Gupta wrote:
+> of_dma_configure() API expects coherent_dma_mask to be correctly
+> set in the devices. This patch does the needful.
+
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+
+> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+> ---
+>   drivers/bus/fsl-mc/fsl-mc-bus.c | 1 +
+>   1 file changed, 1 insertion(+)
 > 
-> A colleague and me beat that dead horse to the afterdeath. Consensus was 
-> that the return value is less reliable than a coin toss (of a two-heads 
-> coin).
-
-Can you elaborate why?  Because the "official" stance is that checking
-every read where "all ones" is an invalid value is the proper way to
-detect unplugged devices.  (Official as in, voiced by Greg KH and Bjorn.)
-In that sense, PCI_DEV_DISCONNECTED is sort of an unloved child.
-
-See this thread:
-https://www.spinics.net/lists/linux-acpi/msg81445.html
-
-
-> > FWIW, the below is what I had in mind (on top of Bjorn's pci/hotplug
-> > branch).  Does this work for you?
+> diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
+> index fa43c7d..624828b 100644
+> --- a/drivers/bus/fsl-mc/fsl-mc-bus.c
+> +++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
+> @@ -627,6 +627,7 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
+>   		mc_dev->icid = parent_mc_dev->icid;
+>   		mc_dev->dma_mask = FSL_MC_DEFAULT_DMA_MASK;
+>   		mc_dev->dev.dma_mask = &mc_dev->dma_mask;
+> +		mc_dev->dev.coherent_dma_mask = mc_dev->dma_mask;
+>   		dev_set_msi_domain(&mc_dev->dev,
+>   				   dev_get_msi_domain(&parent_mc_dev->dev));
+>   	}
 > 
-> This, and another patch (you have been CC'd) solve my problem of 
-> crashing during surprise removal. Thanks!
 
-Ok thanks, I submitted the patch this morning with your Tested-by.
-Unfortunately I forgot to cc all your Dell colleagues, sorry.
-
-Lukas
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
