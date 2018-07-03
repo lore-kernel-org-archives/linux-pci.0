@@ -1,100 +1,102 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 5/7 v5] bus: fsl-mc: support dma configure for devices on
- fsl-mc bus
-To: Nipun Gupta <nipun.gupta@nxp.com>, will.deacon@arm.com,
- robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
- catalin.marinas@arm.com, gregkh@linuxfoundation.org,
- laurentiu.tudor@nxp.com, bhelgaas@google.com
-References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
- <1526824191-7000-6-git-send-email-nipun.gupta@nxp.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <b4cf1e86-0297-97ed-d10e-9b430ecb0bc7@arm.com>
-Date: Tue, 3 Jul 2018 17:14:05 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 3 Jul 2018 11:38:54 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: bhelgaas@google.com, keith.busch@intel.com,
+        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI/AER: Fix aerdrv loading with "pcie_ports=native"
+ parameter
+Message-ID: <20180703163854.GA61685@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180702131923.GB15983@bhelgaas-glaptop.roam.corp.google.com>
+ <20180702161611.2048-1-mr.nuke.me@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1526824191-7000-6-git-send-email-nipun.gupta@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
- shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
- frowand.list@gmail.com, hch@lst.de, linux-arm-kernel@lists.infradead.org,
- m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180702161611.2048-1-mr.nuke.me@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/05/18 14:49, Nipun Gupta wrote:
-> This patch adds support of dma configuration for devices on fsl-mc
-> bus using 'dma_configure' callback for busses. Also, directly calling
-> arch_setup_dma_ops is removed from the fsl-mc bus.
-
-Looks like this is the final arch_setup_dma_ops offender, yay!
-
-> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-> Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
+On Mon, Jul 02, 2018 at 11:16:01AM -0500, Alexandru Gagniuc wrote:
+> According to the documentation, "pcie_ports=native", linux should use
+> native AER and DPC services. While that is true for the _OSC method
+> parsing, this is not the only place that is checked. Should the HEST
+> table list PCIe ports as firmware-first, linux will not use native
+> services.
+> 
+> This happens because aer_acpi_firmware_first() doesn't take
+> 'pcie_ports' into account. This is wrong. DPC uses the same logic when
+> it decides whether to load or not, so fixing this also fixes DPC not
+> loading.
+> 
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 > ---
->   drivers/bus/fsl-mc/fsl-mc-bus.c | 15 +++++++++++----
->   1 file changed, 11 insertions(+), 4 deletions(-)
+>  drivers/pci/pcie/aer.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
-> index 5d8266c..fa43c7d 100644
-> --- a/drivers/bus/fsl-mc/fsl-mc-bus.c
-> +++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
-> @@ -127,6 +127,16 @@ static int fsl_mc_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
->   	return 0;
->   }
->   
-> +static int fsl_mc_dma_configure(struct device *dev)
-> +{
-> +	struct device *dma_dev = dev;
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index a2e88386af28..db2c01056dc7 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -283,13 +283,14 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+>  
+>  static void aer_set_firmware_first(struct pci_dev *pci_dev)
+>  {
+> -	int rc;
+> +	int rc = 0;
+>  	struct aer_hest_parse_info info = {
+>  		.pci_dev	= pci_dev,
+>  		.firmware_first	= 0,
+>  	};
+>  
+> -	rc = apei_hest_parse(aer_hest_parse, &info);
+> +	if (!pcie_ports_native)
+> +		rc = apei_hest_parse(aer_hest_parse, &info);
+>  
+>  	if (rc)
+>  		pci_dev->__aer_firmware_first = 0;
+> @@ -324,7 +325,9 @@ bool aer_acpi_firmware_first(void)
+>  	};
+>  
+>  	if (!parsed) {
+> -		apei_hest_parse(aer_hest_parse, &info);
+> +		if (!pcie_ports_native)
+> +			apei_hest_parse(aer_hest_parse, &info);
 > +
-> +	while (dev_is_fsl_mc(dma_dev))
-> +		dma_dev = dma_dev->parent;
-> +
-> +	return of_dma_configure(dev, dma_dev->of_node, 0);
-> +}
-> +
->   static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
->   			     char *buf)
->   {
-> @@ -148,6 +158,7 @@ struct bus_type fsl_mc_bus_type = {
->   	.name = "fsl-mc",
->   	.match = fsl_mc_bus_match,
->   	.uevent = fsl_mc_bus_uevent,
-> +	.dma_configure  = fsl_mc_dma_configure,
->   	.dev_groups = fsl_mc_dev_groups,
->   };
->   EXPORT_SYMBOL_GPL(fsl_mc_bus_type);
-> @@ -633,10 +644,6 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
->   			goto error_cleanup_dev;
->   	}
->   
-> -	/* Objects are coherent, unless 'no shareability' flag set. */
-> -	if (!(obj_desc->flags & FSL_MC_OBJ_FLAG_NO_MEM_SHAREABILITY))
+>  		aer_firmware_first = info.firmware_first;
+>  		parsed = true;
+>  	}
 
-Although it seems we do end up without any handling of this 
-"non-coherent object behind coherent MC" case, and I'm not sure how 
-easily that could be accommodated by generic code... :/ How important is 
-the quirk?
+I was thinking something along the lines of the patch below, so we
+don't have to work through the settings of "rc" and "info".  But maybe
+I'm missing something subtle?
 
-Robin.
+One subtle thing that I didn't look into is the
+pcie_aer_get_firmware_first() stub for the non-CONFIG_ACPI_APEI case.
 
-> -		arch_setup_dma_ops(&mc_dev->dev, 0, 0, NULL, true);
-> -
->   	/*
->   	 * The device-specific probe callback will get invoked by device_add()
->   	 */
-> 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index b24f2d252180..5ccbd7635f33 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -342,6 +342,9 @@ int pcie_aer_get_firmware_first(struct pci_dev *dev)
+ 	if (!pci_is_pcie(dev))
+ 		return 0;
+ 
++	if (pcie_ports_native)
++		return 0;
++
+ 	if (!dev->__aer_firmware_first_valid)
+ 		aer_set_firmware_first(dev);
+ 	return dev->__aer_firmware_first;
+@@ -362,6 +365,9 @@ bool aer_acpi_firmware_first(void)
+ 		.firmware_first	= 0,
+ 	};
+ 
++	if (pcie_ports_native)
++		return false;
++
+ 	if (!parsed) {
+ 		apei_hest_parse(aer_hest_parse, &info);
+ 		aer_firmware_first = info.firmware_first;
