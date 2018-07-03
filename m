@@ -1,57 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39588 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726562AbeG3PS3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Jul 2018 11:18:29 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Subject: [PATCH 2/3] PCI: mobiveil: Add missing ../pci.h include
-Date: Mon, 30 Jul 2018 14:43:15 +0100
-Message-Id: <20180730134316.11719-3-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20180730134316.11719-1-lorenzo.pieralisi@arm.com>
-References: <20180730134316.11719-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
+From: Pingfan Liu <kernelfans@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Pingfan Liu <kernelfans@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer ordering in device_kset
+Date: Tue,  3 Jul 2018 14:50:38 +0800
+Message-Id: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI mobiveil host controller driver currently fails to compile
-with the following error:
+commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+places an assumption of supplier<-consumer order on the process of probe.
+But it turns out to break down the parent <- child order in some scene.
+E.g in pci, a bridge is enabled by pci core, and behind it, the devices
+have been probed. Then comes the bridge's module, which enables extra
+feature(such as hotplug) on this bridge.
+This will break the parent<-children order and cause failure when
+"kexec -e" in some scenario.
 
-drivers/pci/controller/pcie-mobiveil.c: In function
-'mobiveil_pcie_probe':
-drivers/pci/controller/pcie-mobiveil.c:788:8: error: implicit
-declaration of function 'devm_of_pci_get_host_bridge_resources'; did you
-mean 'pci_get_host_bridge_device'?
-[-Werror=implicit-function-declaration]
-  ret = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
-        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        pci_get_host_bridge_device
+v2 -> v3:
+It is a little hard to impose both "parent<-child" and "supplier<-consumer"
+on devices_kset. Hence v3 drops this method, postpones the issue to shutdown
+time instead of probing, and utilizes device-tree info during shutdown
+instead of the item's seq inside devices_kset.
 
-Add the missing include file to pull in the required function declaration.
+Pingfan Liu (4):
+  drivers/base: fold the routine of device's shutdown into a func
+  drivers/base: utilize device tree info to shutdown devices
+  drivers/base: clean up the usage of devices_kset_move_last()
+  Revert "driver core: correct device's shutdown order"
 
-Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
-driver")
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
----
- drivers/pci/controller/pcie-mobiveil.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/base/base.h    |   1 -
+ drivers/base/core.c    | 196 +++++++++++++++++++++++--------------------------
+ drivers/base/dd.c      |   8 --
+ include/linux/device.h |   1 +
+ 4 files changed, 92 insertions(+), 114 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
-index 8b45f77d70f9..a939e8d31735 100644
---- a/drivers/pci/controller/pcie-mobiveil.c
-+++ b/drivers/pci/controller/pcie-mobiveil.c
-@@ -23,6 +23,8 @@
- #include <linux/platform_device.h>
- #include <linux/slab.h>
- 
-+#include "../pci.h"
-+
- /* register offsets and bit positions */
- 
- /*
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Dave Young <dyoung@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+
 -- 
-2.15.0
+2.7.4
