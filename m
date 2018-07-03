@@ -1,132 +1,107 @@
-Return-Path: <SRS0=AvBC=J4=oracle.com=thomas.tai@kernel.org>
-Return-Path: <SRS0=AvBC=J4=oracle.com=thomas.tai@kernel.org>
-Subject: Re: [PATCH] PCI/AER: fix use-after-free in pcie_do_fatal_recovery
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, poza@codeaurora.org, linux-pci@vger.kernel.org
-References: <1531179952-11060-1-git-send-email-thomas.tai@oracle.com>
- <20180711224211.GA28466@bhelgaas-glaptop.roam.corp.google.com>
-From: Thomas Tai <thomas.tai@oracle.com>
-Message-ID: <675c2f93-d3a1-83ab-7688-58004e5c66eb@oracle.com>
-Date: Thu, 12 Jul 2018 09:37:07 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180711224211.GA28466@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1530607328.22468.102.camel@pengutronix.de>
+Subject: Re: [PATCH 2/2] PCI: imx: Initial imx7d pm support
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Leonard Crestez <leonard.crestez@nxp.com>, "andrew.smirnov@gmail.com"
+ <andrew.smirnov@gmail.com>, Richard Zhu <hongxing.zhu@nxp.com>
+Date: Tue, 03 Jul 2018 10:42:08 +0200
+In-Reply-To: <02207512447db4585a4e879e2a059ba223d57dbe.camel@nxp.com>
+References: <cover.1527621510.git.leonard.crestez@nxp.com>
+ <a6176c8bcfbca08ce4e93e304bdcd48c4600f8e2.1527621510.git.leonard.crestez@nxp.com>
+ <1528468422.26356.20.camel@pengutronix.de>
+ <02207512447db4585a4e879e2a059ba223d57dbe.camel@nxp.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ Abel Vesa <abel.vesa@nxp.com>, Anson Huang <anson.huang@nxp.com>,
+ "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+ "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+ "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[ ... ]
-> Hmmm.  I suppose this is probably fallout from 7e9084b36740 ("PCI/AER:
-> Handle ERR_FATAL with removal and re-enumeration of devices"), right?
-> After that commit, we remove devices for fatal errors.
-> 
-> This looks like a regression we introduced in v4.18-rc1, so we should
-> fix it for v4.18.
-
-Hi Bjorn,
-Thanks for your comment. Yes, you are right, this issue came from v4.18.
-
-[ ... ]
->> @@ -309,7 +316,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
->>   	result = reset_link(udev, service);
->>   
->>   	if ((service == PCIE_PORT_SERVICE_AER) &&
->> -	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
->> +	    (hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
->>   		/*
->>   		 * If the error is reported by a bridge, we think this error
->>   		 * is related to the downstream link of the bridge, so we
->> @@ -322,13 +329,18 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
->>   	if (result == PCI_ERS_RESULT_RECOVERED) {
->>   		if (pcie_wait_for_link(udev, true))
->>   			pci_rescan_bus(udev->bus);
->> -		pci_info(dev, "Device recovery from fatal error successful\n");
->> +		pr_info("%s %s: Device recovery from fatal error successful\n",
->> +			driver_str, name_str);
->>   	} else {
->>   		pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
->> -		pci_info(dev, "Device recovery from fatal error failed\n");
->> +		pr_info("%s %s: Device recovery from fatal error failed\n",
->> +			driver_str, name_str);
-> 
-> If the problem is that "dev" has been deallocated, the
-> pci_uevent_ers(dev) call above should also be a problem.
-
-Right! you are correct, I missed out the other functions which use dev, 
-let me follow your suggested path to dig around. Will keep you posted.
-
-Thank you,
-Thomas
-
-> 
-> The pci_cleanup_aer_uncorrect_error_status(dev) is also questionable.
-> It's too complicated to argue that "we cache hdr_type just in case dev
-> will be removed, but when dev is a bridge, we don't remove it, so it's
-> safe to use it".
-> 
-> I think you're right that after pcie_do_fatal_recovery() calls
-> pci_dev_put(pdev), the pdev may have been freed:
-> 
->    pcie_do_fatal_recovery(dev)
->      udev = dev->bus->self            # bridge leading to "dev"
->      parent = udev->subordinate       # (same as dev->bus)
->      list_for_each_entry_safe_reverse(pdev, ..., &parent->devices)
->        pci_dev_get(pdev)              # "dev" is one of the pdevs
->        pci_stop_and_remove_bus_device(pdev)
->        pci_dev_put(pdev)
-> 
-> At this point, "dev" may point to a deallocated struct pci_dev, so
-> *anything* that uses "dev" is a problem.
-> 
-> I think a better fix would be to add a pci_dev_get(dev) and
-> pci_dev_put(dev) around the code that needs "dev", i.e., most of this
-> function.
-> 
-> For completeness, I looked for issues in the callers of
-> pcie_do_fatal_recovery().  Just for posterity:
-> 
->    1)  aer_isr
-> 	aer_isr_one_error
-> 	  aer_process_err_devices
-> 	    handle_error_source(e_info->dev[i])
-> 	      pcie_do_fatal_recovery
-> 
->      I don't think this path uses e_info->dev[i] after calling
->      pcie_do_fatal_recovery(), so it should be safe.  But it's probably
->      worth clearing out that pointer so we can catch any attempts to use
->      it.
-> 
->    2)  aer_recover_queue
-> 	kfifo_put(&aer_recover_ring, entry)
-> 	schedule_work(&aer_recover_work)
->        ...
->        aer_recover_work_func
->          pdev = pci_get_domain_bus_and_slot(...)
-> 	pcie_do_fatal_recovery(pdev)
-> 	pci_dev_put(pdev)
-> 
->      This path does a "get" on pdev before calling
->      pcie_do_fatal_recovery(), so it shouldn't have the use-after-free
->      problem because the free won't happen until the pci_dev_put(), and
->      it doesn't use "pdev" after that.
-> 
->    3)  dpc_irq
-> 	schedule_work(&dpc->work)
->        ...
->        dpc_work
-> 	pcie_do_fatal_recovery(pdev)
-> 
->      I think this path is OK too because we don't use "pdev" after
->      return.  It gets removed, of course, and the rescan should
->      rediscover it and reattach the DPC driver to it.
-> 
->>   	}
->>   
->>   	pci_unlock_rescan_remove();
->> +
->> +	kfree(driver_str);
->> +	kfree(name_str);
->>   }
->>   
->>   /**
->> -- 
->> 1.8.3.1
->>
+QW0gTW9udGFnLCBkZW4gMDIuMDcuMjAxOCwgMTc6MTggKzAwMDAgc2NocmllYiBMZW9uYXJkIENy
+ZXN0ZXo6Cj4gT24gRnJpLCAyMDE4LTA2LTA4IGF0IDE2OjMzICswMjAwLCBMdWNhcyBTdGFjaCB3
+cm90ZToKPiA+IEFtIERpZW5zdGFnLCBkZW4gMjkuMDUuMjAxOCwgMjI6MzkgKzAzMDAgc2Nocmll
+YiBMZW9uYXJkIENyZXN0ZXo6Cj4gPiA+IE9uIGlteDdkIHRoZSBwaHkgaXMgdHVybmVkIG9mZiBp
+biBzdXNwZW5kIGFuZCBtdXN0IGJlIHJlc2V0IG9uIHJlc3VtZS4KPiA+ID4gUmlnaHQgbm93IGxz
+cGNpIC12IGZhaWxzIGFmdGVyIGEgc3VzcGVuZC9yZXN1bWUgY3ljbGUsIGZpeCB0aGlzIGJ5Cj4g
+PiA+IGFkZGluZyBtaW5pbWFsIHN1c3BlbmQvcmVzdW1lIGNvZGUgZnJvbSB0aGUgbnhwIHZlbmRv
+ciB0cmVlLgo+ID4gPiAKPiA+ID4gVGhpcyBpcyBjdXJyZW50bHkgb25seSBlbmFibGVkIGZvciBp
+bXg3IGJ1dCB0aGUgc2FtZSBzZXF1ZW5jZSBjYW4gYmUKPiA+ID4gYXBwbGllZCB0byBvdGhlciBp
+bXggcGNpZSB2YXJpYW50cy4KPiA+ID4gKyNpZmRlZiBDT05GSUdfUE1fU0xFRVAKPiA+ID4gK3N0
+YXRpYyBpbnQgaW14Nl9wY2llX3N1c3BlbmRfbm9pcnEoc3RydWN0IGRldmljZSAqZGV2KQo+ID4g
+PiArewo+ID4gPiA+ID4gPiArCXN0cnVjdCBpbXg2X3BjaWUgKmlteDZfcGNpZSA9IGRldl9nZXRf
+ZHJ2ZGF0YShkZXYpOwo+ID4gPiArCj4gPiA+ICsJaWYgKGlteDZfcGNpZS0+dmFyaWFudCA9PSBJ
+TVg3RCkgewo+ID4gCj4gPiBJbnN0ZWFkIG9mIHRoaXMgbGFyZ2UgaW5kZW50ZWQgYmxvY2ssIHBs
+ZWFzZSBqdXN0IGhhdmUgYW4gZWFybHkgcmV0dXJuCj4gPiBhdCB0aGUgc3RhcnQgb2YgdGhpcyBm
+dW5jdGlvbiwgbGlrZToKPiA+IAo+ID4gaWYgKGlteDZfcGNpZS0+dmFyaWFudCAhPSBJTVg3RCkK
+PiA+IAlyZXR1cm4gMDsKPiA+IAo+ID4gU2FtZSBmb3IgdGhlIHJlc3VtZSBmdW5jdGlvbi4KPiAK
+PiBPSy4gVGhlIHJlc3VtZSBzZXF1ZW5jZSBpcyBtb3N0bHkgdGhlIHNhbWUgZm9yIGFsbCBTT0Nz
+IHdoZXJlIGl0Cj4gYXBwbGllcy4KPiAKPiA+ID4gK3N0YXRpYyBpbnQgaW14Nl9wY2llX3Jlc3Vt
+ZV9ub2lycShzdHJ1Y3QgZGV2aWNlICpkZXYpCj4gPiA+ICt7Cj4gPiA+ID4gPiA+ICsJaW50IHJl
+dCA9IDA7Cj4gPiA+ID4gPiA+ICsJc3RydWN0IGlteDZfcGNpZSAqaW14Nl9wY2llID0gZGV2X2dl
+dF9kcnZkYXRhKGRldik7Cj4gPiA+ID4gPiA+ICsJc3RydWN0IHBjaWVfcG9ydCAqcHAgPSAmaW14
+Nl9wY2llLT5wY2ktPnBwOwo+ID4gPiAKPiA+ID4gKwo+ID4gPiA+ID4gPiArCWlmIChpbXg2X3Bj
+aWUtPnZhcmlhbnQgPT0gSU1YN0QpIHsKPiA+ID4gKwkJaW14Nl9wY2llX2x0c3NtX2Rpc2FibGUo
+ZGV2KTsKPiA+IAo+ID4gVGhlIExUU1NNIGRpc2FibGUgc2VlbXMgbWlzcGxhY2VkIGhlcmUuIEkg
+d291bGQgaGF2ZSBleHBlY3RlZCBpdCB0byBiZQo+ID4gaW4gdGhlIHN1c3BlbmQgZnVuY3Rpb24u
+Cj4gCj4gVGhpcyBpcyBhIHJlcXVpcmVtZW50IGZvciByZWluaXRpYWxpemluZyB0aGUgY29yZTog
+TFRTU00gbmVlZHMgdG8gYmUKPiB0dXJuZWQgb2ZmIGR1cmluZyBpbml0aWFsaXphdGlvbi4KCklm
+IHlvdSBkaXNhYmxlIExUU1NNIGR1cmluZyBzdXNwZW5kLCBpdCBzaG91bGQgYmUgb2ZmIHdoZW4g
+ZW50ZXJpbmcKdGhpcyByZXN1bWUgZnVuY3Rpb24sIG5vPwoKPiA+ID4gKwkJLyoKPiA+ID4gPiA+
+ID4gKwkJwqAqIGNvbnRyb2xsZXIgbWF5YmUgdHVybiBvZmYsIHJlLWNvbmZpZ3VyZSBhZ2Fpbgo+
+ID4gPiA+ID4gPiArCQnCoCovCj4gPiA+ID4gPiA+ICsJCWR3X3BjaWVfc2V0dXBfcmMocHApOwo+
+ID4gPiArCj4gPiA+ID4gPiA+ICsJCWlteDZfcGNpZV9sdHNzbV9lbmFibGUoZGV2KTsKPiA+ID4g
+Kwo+ID4gPiA+ID4gPiArCQlyZXQgPSBpbXg2X3BjaWVfd2FpdF9mb3JfbGluayhpbXg2X3BjaWUp
+Owo+ID4gPiA+ID4gPiArCQlpZiAocmV0IDwgMCkKPiA+ID4gKwkJCXByX2luZm8oInBjaWUgbGlu
+ayBpcyBkb3duIGFmdGVyIHJlc3VtZS5cbiIpOwo+ID4gCj4gPiBJZiB0aGUgUEhZIGhhcyBiZWVu
+IHBvd2VyZWQgZG93biBhbmQgTFRTU00gc3RvcHBlZCBJIGd1ZXNzIHdlIG5lZWQgdG8KPiA+IGRv
+IHRoZSBmdWxsIGlteDZfcGNpZV9lc3RhYmxpc2hfbGluaygpIGRhbmNlIGFnYWluIGhlcmUgdG8g
+cmVsaWFibHkgcmUtCj4gPiBlc3RhYmxpc2ggdGhlIGxpbmsuIFRoZSBhYm92ZSBzZWVtcyB1bnNh
+ZmUuCj4gCj4gV2hhdCBpbXg2X3BjaWVfZXN0YWJsaXNoX2xpbmsgZG9lcyBhZGRpdGlvbmFsbHkg
+aXMgc29tZSB3b3JrYXJvdW5kIGZvcgo+IGxpbmsgZ2VuIGRldGVjdGlvbi4gSSBhZ3JlZSB0aGF0
+IGl0IHNob3VsZCBiZSBpbmNsdWRlZC4KPiAKPiBUaGlzIHdvdWxkIG1ha2UgcmVzdW1lIG1vc3Rs
+eSB0aGUgc2FtZSBhcyBpbXhfcGNpZV9ob3N0X2luaXQgZXhjZXB0IGZvcgo+IGR3X3BjaWVfbXNp
+X2luaXQ7IHRoYXQgbmVlZHMgdG8gYmUgc2F2ZWQvcmVzdG9yZWQgc2VwYXJhdGVseS4KClJpZ2h0
+LCBzbyBtYXliZSB3ZSBjYW4gZXZlbiBjdXQgZG93biBvbiBsaW5lcyBvZiBjb2RlIGJ5IHNwbGl0
+dGluZyBhbmQKcmV1c2luZyBleGlzdGluZyBmdW5jdGlvbnMuCgo+IAo+IEFub3RoZXIgaXNzdWUg
+dGhhdCBzaG91bGQgYmUgZGlzY3Vzc2VkIGhlcmUgaXMgdGhhdCBvbiA2c3ggYW5kIDdkIHRoZQo+
+IGdwYyBQQ0lFIHBvd2VyIGRvbWFpbiBpcyBub3QgZGVmaW5lZCBjb3JyZWN0bHk6IHRoZSBQQ0lF
+IGJsb2NrIGlzIGluCj4gdGhlIERJU1BNSVggZG9tYWluIG9uIGJvdGggU09DcyBhbmQgaXQgaXMg
+b25seSBQQ0lFX1BIWSB3aGljaCBoYXMgYQo+IHNlcGFyYXRlIHBvd2VyIGRvbWFpbi4KPiAKPiBU
+aGlzIG1hdHRlcnM6IGVuYWJsaW5nIHBvd2VyLWdhdGluZyBmb3IgZGlzcGxheXMgd2lsbCBicmVh
+ayBwY2llIGlmCj4gdGhpcyByZWxhdGlvbnNoaXAgaXMgbm90IHRha2VuIGludG8gYWNjb3VudC4g
+SGVyZSBhcmUgc29tZSBvcHRpb25zOgo+IAo+IDEpIE1ha2UgJnBkX3BjaWUgYSBjaGlsZCBvZiAm
+cGRfZGlzcCBieSBoYWNraW5nIGludG8gZ3BjIHByb2JlCj4gZnVuY3Rpb25zIGFuZCBjYWxsaW5n
+IHBtX2dlbnBkX2FkZF9zdWJkb21haW4uIE5vdCB2ZXJ5IG5pY2UuCj4gCj4gMikgU3VwcG9ydCBu
+ZXN0aW5nIFBHQ3MgaW4gR1BDIGNvZGU/IExvdHMgb2YgY29kZSBhbmQgc3RpbGwgYW4KPiBpbmNv
+cnJlY3QgcmVwcmVzZW50YXRpb24gb2YgaGFyZHdhcmUuCj4gCj4gMykgU2V0IHBvd2VyLWRvbWFp
+bnMgPSA8JnBkX2Rpc3A+IGFuZCBlbmFibGUgcnVudGltZSBQTSBvbiAmcGRfcGNpZT8KPiAKPiA0
+KSBBZGQgc2VwYXJhdGUgZGV2aWNlcyBmb3IgdGhlIHBjaWUtcGh5LiBUaGVzZSB3b3VsZCBiZSBt
+b3N0bHkgZW1wdHkKPiBidXQgc3RpbGwgZGlmZmVyZW50LCBmb3IgZXhhbXBsZSBvbiBpbXg2c3gg
+dGhlIFBIWSBpcyBub3QgZXZlbgo+IGFjY2Vzc2libGUgb24gdGhlIGJ1cyBidXQgb25seSB0aG91
+Z2ggUENJRSByZWdpc3RlcnMuCgo1KSBUYWtlIGEgbG9vayBhdCB0aGUgbGludXgtcG0gbGlzdC4g
+OykgVGhlIHBvd2VyIGRvbWFpbiBmcmFtZXdvcmsgaGFzCmp1c3QgZ2FpbmVkIHN1cHBvcnQgZm9y
+IG11bHRpcGxlIHBvd2VyIGRvbWFpbnMgcGVyIGRldmljZS4gSSB0aGluayB0aGF0CiBpcyB0aGUg
+cmlnaHQgc29sdXRpb24gZm9yIHRoaXMsIGFzIGxpa2UgeW91IG1lbnRpb25lZCB0aGUgUEhZIGlz
+bid0CnJlYWxseSBhIHNlcGFyYXRlIGJsb2NrIG9uIGkuTVg2LCBidXQgcGFydCBvZiB0aGUgUENJ
+ZSBjb250cm9sbGVyCmRldmljZS4KClJlZ2FyZHMsCkx1Y2FzCgpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlz
+dApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJh
+ZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
