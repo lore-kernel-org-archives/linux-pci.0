@@ -1,14 +1,16 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH V5 1/6] PCI: Handle error return from
- pci_reset_bridge_secondary_bus()
-Date: Mon,  2 Jul 2018 18:58:50 -0400
-Message-Id: <1530572336-20296-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
-References: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
+Date: Tue, 03 Jul 2018 07:30:28 -0400
+From: okaya@codeaurora.org
+To: Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
+ reset
+In-Reply-To: <20180703083447.GA2689@wunner.de>
+References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
+ <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
+ <20180703083447.GA2689@wunner.de>
+Message-ID: <8b6ce0f415858463d1c0588c29e30415@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,163 +18,63 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>, Oza Pawandeep <poza@codeaurora.org>,
- Kees Cook <keescook@chromium.org>, Frederick Lawler <fred@fredlawl.com>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Sinan Kaya <okaya@codeaurora.org>, Lukas Wunner <lukas@wunner.de>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- Markus Elfring <elfring@users.sourceforge.net>,
+Cc: Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, Keith Busch <keith.busch@intel.com>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
  linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-commit 01fd61c0b9bd ("PCI: Add a return type for
-pci_reset_bridge_secondary_bus()") added a return value to the function to
-return if a device is accessible following a reset. Callers are not
-checking the value.
+On 2018-07-03 04:34, Lukas Wunner wrote:
+> On Mon, Jul 02, 2018 at 06:52:47PM -0400, Sinan Kaya wrote:
+>> If a bridge supports hotplug and observes a PCIe fatal error, the 
+>> following
+>> events happen:
+>> 
+>> 1. AER driver removes the devices from PCI tree on fatal error
+>> 2. AER driver brings down the link by issuing a secondary bus reset 
+>> waits
+>> for the link to come up.
+>> 3. Hotplug driver observes a link down interrupt
+>> 4. Hotplug driver tries to remove the devices waiting for the rescan 
+>> lock
+>> but devices are already removed by the AER driver and AER driver is 
+>> waiting
+>> for the link to come back up.
+>> 5. AER driver tries to re-enumerate devices after polling for the link
+>> state to go up.
+>> 6. Hotplug driver obtains the lock and tries to remove the devices 
+>> again.
+>> 
+>> If a bridge is a hotplug capable bridge, mask hotplug interrupts 
+>> before the
+>> reset and unmask afterwards.
+> 
+> Would it work for you if you just amended the AER driver to skip
+> removal and re-enumeration of devices if the port is a hotplug bridge?
+> Just check for is_hotplug_bridge in struct pci_dev.
 
-Pass error code up high in the stack if device is not accessible.
+The reason why we want to remove devices before secondary bus reset is 
+to quiesce pcie bus traffic before issuing a reset.
 
-Fixes: 01fd61c0b9bd ("PCI: Add a return type for pci_reset_bridge_secondary_bus()")
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/hotplug/pciehp_hpc.c |  5 +++--
- drivers/pci/pci.c                | 12 ++++++------
- drivers/pci/pcie/aer.c           |  5 +++--
- drivers/pci/pcie/err.c           |  6 ++++--
- 4 files changed, 16 insertions(+), 12 deletions(-)
+Skipping this step might cause transactions to be lost in the middle of 
+the reset as there will be active traffic flowing and drivers will 
+suddenly start reading ffs.
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 718b607..bbaa211 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -728,6 +728,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
- 	struct controller *ctrl = slot->ctrl;
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
- 	u16 stat_mask = 0, ctrl_mask = 0;
-+	int rc;
- 
- 	if (probe)
- 		return 0;
-@@ -745,7 +746,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
- 	if (pciehp_poll_mode)
- 		del_timer_sync(&ctrl->poll_timer);
- 
--	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
-+	rc = pci_reset_bridge_secondary_bus(ctrl->pcie->port);
- 
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
- 	pcie_write_cmd_nowait(ctrl, ctrl_mask, ctrl_mask);
-@@ -753,7 +754,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
- 	if (pciehp_poll_mode)
- 		int_poll_timeout(&ctrl->poll_timer);
--	return 0;
-+	return rc;
- }
- 
- int pcie_init_notification(struct controller *ctrl)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 97acba7..98d1490 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4253,9 +4253,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- 	if (probe)
- 		return 0;
- 
--	pci_reset_bridge_secondary_bus(dev->bus->self);
--
--	return 0;
-+	return pci_reset_bridge_secondary_bus(dev->bus->self);
- }
- 
- static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
-@@ -4850,6 +4848,8 @@ EXPORT_SYMBOL_GPL(pci_try_reset_slot);
- 
- static int pci_bus_reset(struct pci_bus *bus, int probe)
- {
-+	int ret;
-+
- 	if (!bus->self || !pci_bus_resetable(bus))
- 		return -ENOTTY;
- 
-@@ -4860,11 +4860,11 @@ static int pci_bus_reset(struct pci_bus *bus, int probe)
- 
- 	might_sleep();
- 
--	pci_reset_bridge_secondary_bus(bus->self);
-+	ret = pci_reset_bridge_secondary_bus(bus->self);
- 
- 	pci_bus_unlock(bus);
- 
--	return 0;
-+	return ret;
- }
- 
- /**
-@@ -4924,7 +4924,7 @@ int pci_try_reset_bus(struct pci_bus *bus)
- 
- 	if (pci_bus_trylock(bus)) {
- 		might_sleep();
--		pci_reset_bridge_secondary_bus(bus->self);
-+		rc = pci_reset_bridge_secondary_bus(bus->self);
- 		pci_bus_unlock(bus);
- 	} else
- 		rc = -EAGAIN;
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index a2e8838..bde723d 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1305,6 +1305,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- {
- 	u32 reg32;
- 	int pos;
-+	int rc;
- 
- 	pos = dev->aer_cap;
- 
-@@ -1313,7 +1314,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
- 	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
- 
--	pci_reset_bridge_secondary_bus(dev);
-+	rc = pci_reset_bridge_secondary_bus(dev);
- 	pci_printk(KERN_DEBUG, dev, "Root Port link has been reset\n");
- 
- 	/* Clear Root Error Status */
-@@ -1325,7 +1326,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
- 	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
- 
--	return PCI_ERS_RESULT_RECOVERED;
-+	return rc ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
- }
- 
- /**
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index f7ce0cb..03075cf 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -175,9 +175,11 @@ static int report_resume(struct pci_dev *dev, void *data)
-  */
- static pci_ers_result_t default_reset_link(struct pci_dev *dev)
- {
--	pci_reset_bridge_secondary_bus(dev);
-+	int rc;
-+
-+	rc = pci_reset_bridge_secondary_bus(dev);
- 	pci_printk(KERN_DEBUG, dev, "downstream link has been reset\n");
--	return PCI_ERS_RESULT_RECOVERED;
-+	return rc ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
- }
- 
- static pci_ers_result_t reset_link(struct pci_dev *dev, u32 service)
--- 
-2.7.4
+I don't think we can skip this step.
 
+
+> 
+> That would seem like a much simpler solution, given that it is known
+> that the link will flap on reset, causing the hotplug driver to remove
+> and re-enumerate devices.  That would also cover cases where hotplug is
+> handled by a different driver than pciehp, or by the platform firmware.
+> 
+> Thanks,
+> 
+> Lukas
 
 _______________________________________________
 linux-arm-kernel mailing list
