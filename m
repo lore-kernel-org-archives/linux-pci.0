@@ -1,100 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47732 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731597AbeG3WyH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Jul 2018 18:54:07 -0400
-Date: Mon, 30 Jul 2018 16:17:13 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linuxppc-dev@lists.ozlabs.org, x86@kernel.org,
-        linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Joerg Roedel <jroedel@suse.de>
-Subject: Re: [PATCH] PCI: call dma_debug_add_bus for pci_bus_type in common
- code
-Message-ID: <20180730211713.GA45322@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180730073842.16092-1-hch@lst.de>
+Received: from bmailout3.hostsharing.net ([176.9.242.62]:41659 "EHLO
+        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753172AbeGCORw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2018 10:17:52 -0400
+Date: Tue, 3 Jul 2018 16:17:50 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: poza@codeaurora.org
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
+ reset
+Message-ID: <20180703141750.GC18639@wunner.de>
+References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
+ <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
+ <20180703083447.GA2689@wunner.de>
+ <8b6ce0f415858463d1c0588c29e30415@codeaurora.org>
+ <9e871cc3978fbdca12ccf8a91f34ad07@codeaurora.org>
+ <2640af5e-f00f-d814-425d-78ac57714f6d@codeaurora.org>
+ <bd04c9d1-6dfe-3071-69f9-beb0d649b6c0@codeaurora.org>
+ <20180703135956.GA18639@wunner.de>
+ <1658f1759864e22fed4273a22d501a8e@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180730073842.16092-1-hch@lst.de>
+In-Reply-To: <1658f1759864e22fed4273a22d501a8e@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Joerg]
-
-On Mon, Jul 30, 2018 at 09:38:42AM +0200, Christoph Hellwig wrote:
-> There is nothing arch specific about PCI or dma-debug, so move this
-> call to common code just after registering the bus type.
-
-I assume that previously, even if the user set CONFIG_DMA_API_DEBUG=y
-we only got PCI DMA debug on powerpc, sh, and x86.  And after this
-patch, we'll get PCI DMA debug on *all* arches?
-
-If that's true, I'll add a comment to that effect to the commitlog
-since that new functionality might be of interest to other arches.
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  arch/powerpc/kernel/dma.c | 3 ---
->  arch/sh/drivers/pci/pci.c | 2 --
->  arch/x86/kernel/pci-dma.c | 3 ---
->  drivers/pci/pci-driver.c  | 2 +-
->  4 files changed, 1 insertion(+), 9 deletions(-)
+On Tue, Jul 03, 2018 at 07:40:46PM +0530, poza@codeaurora.org wrote:
+> On 2018-07-03 19:29, Lukas Wunner wrote:
+> >On Tue, Jul 03, 2018 at 09:31:24AM -0400, Sinan Kaya wrote:
+> >>Issue is observing hotplug link down event in the middle of AER recovery
+> >>as in my previous reply.
+> >>
+> >>If we mask hotplug interrupts before secondary bus reset via my patch,
+> >>then hotplug driver will not observe both link up and link down
+> >>interrupts.
+> >>
+> >>If we don't mask hotplug interrupts, we have a race condition.
+> >
+> >I assume that a bus reset not only causes a link and presence event but
+> >also clears the Presence Detect State bit in the Slot Status register
+> >and the Data Link Layer Link Active bit in the Link Status register
+> >momentarily.
+> >
+> >pciehp may access those two bits concurrently to the AER driver
+> >performing a slot reset.  So it may not be sufficient to mask
+> >the interrupt.
+> >
+> >I've posted this patch to address the issue:
+> >https://patchwork.ozlabs.org/patch/930391/
 > 
-> diff --git a/arch/powerpc/kernel/dma.c b/arch/powerpc/kernel/dma.c
-> index 155170d70324..dbfc7056d7df 100644
-> --- a/arch/powerpc/kernel/dma.c
-> +++ b/arch/powerpc/kernel/dma.c
-> @@ -357,9 +357,6 @@ EXPORT_SYMBOL_GPL(dma_get_required_mask);
->  
->  static int __init dma_init(void)
->  {
-> -#ifdef CONFIG_PCI
-> -	dma_debug_add_bus(&pci_bus_type);
-> -#endif
->  #ifdef CONFIG_IBMVIO
->  	dma_debug_add_bus(&vio_bus_type);
->  #endif
-> diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-> index e5b7437ab4af..8256626bc53c 100644
-> --- a/arch/sh/drivers/pci/pci.c
-> +++ b/arch/sh/drivers/pci/pci.c
-> @@ -160,8 +160,6 @@ static int __init pcibios_init(void)
->  	for (hose = hose_head; hose; hose = hose->next)
->  		pcibios_scanbus(hose);
->  
-> -	dma_debug_add_bus(&pci_bus_type);
-> -
->  	pci_initialized = 1;
->  
->  	return 0;
-> diff --git a/arch/x86/kernel/pci-dma.c b/arch/x86/kernel/pci-dma.c
-> index ab5d9dd668d2..43f58632f123 100644
-> --- a/arch/x86/kernel/pci-dma.c
-> +++ b/arch/x86/kernel/pci-dma.c
-> @@ -155,9 +155,6 @@ static int __init pci_iommu_init(void)
->  {
->  	struct iommu_table_entry *p;
->  
-> -#ifdef CONFIG_PCI
-> -	dma_debug_add_bus(&pci_bus_type);
-> -#endif
->  	x86_init.iommu.iommu_init();
->  
->  	for (p = __iommu_table; p < __iommu_table_end; p++) {
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 6792292b5fc7..bef17c3fca67 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -1668,7 +1668,7 @@ static int __init pci_driver_init(void)
->  	if (ret)
->  		return ret;
->  #endif
-> -
-> +	dma_debug_add_bus(&pci_bus_type);
->  	return 0;
->  }
->  postcore_initcall(pci_driver_init);
-> -- 
-> 2.18.0
-> 
+> Was just wondering that you are protecting Presence Detect State bit with
+> reset_lock, mainly in pciehp_ist
+> but with hotplug interrupt disabled, is there another way that it hotplug
+> code gets activated ?
+
+The user may turn the slot on/off via sysfs.  If an Attention Button
+is present, the user may also press that button to turn the slot on/off
+after 5 seconds.  Either way, it may cause pciehp's IRQ thread to run
+concurrently to a reset initiated by the AER driver, independently of
+any events signalled by the slot.
+
+Thanks,
+
+Lukas
