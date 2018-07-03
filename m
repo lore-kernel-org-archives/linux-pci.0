@@ -1,133 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:44650 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754382AbeGCJAZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2018 05:00:25 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH] PCI: endpoint: Fix NULL pointer dereference error when CONFIGFS is disabled
-Date: Tue, 3 Jul 2018 14:30:17 +0530
-Message-ID: <20180703090017.22734-1-kishon@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
+ reset
+To: Lukas Wunner <lukas@wunner.de>
+References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
+ <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
+ <20180703083447.GA2689@wunner.de>
+ <8b6ce0f415858463d1c0588c29e30415@codeaurora.org>
+ <9e871cc3978fbdca12ccf8a91f34ad07@codeaurora.org>
+ <2640af5e-f00f-d814-425d-78ac57714f6d@codeaurora.org>
+ <bd04c9d1-6dfe-3071-69f9-beb0d649b6c0@codeaurora.org>
+ <20180703135956.GA18639@wunner.de>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <42e72f83-3b24-f7ef-e5bc-290fae99259a@codeaurora.org>
+Date: Tue, 3 Jul 2018 11:34:45 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180703135956.GA18639@wunner.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: poza@codeaurora.org, linux-pci@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, Keith Busch <keith.busch@intel.com>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-commit ef1433f717a2c63747a519d86965d73 ("PCI: endpoint: Create configfs
-entry for each pci_epf_device_id table entry") while adding configfs
-entry for each pci_epf_device_id table entry introduced a NULL pointer
-dereference error when CONFIG_PCI_ENDPOINT_CONFIGFS is not enabled.
-Fix it here.
+On 7/3/2018 9:59 AM, Lukas Wunner wrote:
+> On Tue, Jul 03, 2018 at 09:31:24AM -0400, Sinan Kaya wrote:
+>> Issue is observing hotplug link down event in the middle of AER recovery
+>> as in my previous reply.
+>>
+>> If we mask hotplug interrupts before secondary bus reset via my patch,
+>> then hotplug driver will not observe both link up and link down interrupts.
+>>
+>> If we don't mask hotplug interrupts, we have a race condition.
+> 
+> I assume that a bus reset not only causes a link and presence event but
+> also clears the Presence Detect State bit in the Slot Status register
+> and the Data Link Layer Link Active bit in the Link Status register
+> momentarily.
+> 
+> pciehp may access those two bits concurrently to the AER driver
+> performing a slot reset.  So it may not be sufficient to mask
+> the interrupt.
+> 
+> I've posted this patch to address the issue:
+> https://patchwork.ozlabs.org/patch/930391/
 
-Fixes: ef1433f717a2c63747a519d86965d73 ("PCI: endpoint: Create configfs
-entry for each pci_epf_device_id table entry")
+Very interesting!
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/endpoint/pci-epf-core.c | 62 ++++++++++++++++++++---------
- 1 file changed, 43 insertions(+), 19 deletions(-)
+I missed this completely.
 
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index 523a8cab3bfb..7fe1930d6589 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -137,25 +137,60 @@ void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar)
- }
- EXPORT_SYMBOL_GPL(pci_epf_alloc_space);
- 
--/**
-- * pci_epf_unregister_driver() - unregister the PCI EPF driver
-- * @driver: the PCI EPF driver that has to be unregistered
-- *
-- * Invoke to unregister the PCI EPF driver.
-- */
--void pci_epf_unregister_driver(struct pci_epf_driver *driver)
-+static void pci_epf_remove_cfs(struct pci_epf_driver *driver)
- {
- 	struct config_group *group;
- 
-+	if (!IS_ENABLED(CONFIG_PCI_ENDPOINT_CONFIGFS))
-+		return;
-+
- 	mutex_lock(&pci_epf_mutex);
- 	list_for_each_entry(group, &driver->epf_group, group_entry)
- 		pci_ep_cfs_remove_epf_group(group);
- 	list_del(&driver->epf_group);
- 	mutex_unlock(&pci_epf_mutex);
-+}
-+
-+/**
-+ * pci_epf_unregister_driver() - unregister the PCI EPF driver
-+ * @driver: the PCI EPF driver that has to be unregistered
-+ *
-+ * Invoke to unregister the PCI EPF driver.
-+ */
-+void pci_epf_unregister_driver(struct pci_epf_driver *driver)
-+{
-+	pci_epf_remove_cfs(driver);
- 	driver_unregister(&driver->driver);
- }
- EXPORT_SYMBOL_GPL(pci_epf_unregister_driver);
- 
-+static int pci_epf_add_cfs(struct pci_epf_driver *driver)
-+{
-+	struct config_group *group;
-+	const struct pci_epf_device_id *id;
-+
-+	if (!IS_ENABLED(CONFIG_PCI_ENDPOINT_CONFIGFS))
-+		return 0;
-+
-+	INIT_LIST_HEAD(&driver->epf_group);
-+
-+	id = driver->id_table;
-+	while (id->name[0]) {
-+		group = pci_ep_cfs_add_epf_group(id->name);
-+		if (IS_ERR(group)) {
-+			pci_epf_remove_cfs(driver);
-+			return PTR_ERR(group);
-+		}
-+
-+		mutex_lock(&pci_epf_mutex);
-+		list_add_tail(&group->group_entry, &driver->epf_group);
-+		mutex_unlock(&pci_epf_mutex);
-+		id++;
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  * __pci_epf_register_driver() - register a new PCI EPF driver
-  * @driver: structure representing PCI EPF driver
-@@ -167,8 +202,6 @@ int __pci_epf_register_driver(struct pci_epf_driver *driver,
- 			      struct module *owner)
- {
- 	int ret;
--	struct config_group *group;
--	const struct pci_epf_device_id *id;
- 
- 	if (!driver->ops)
- 		return -EINVAL;
-@@ -183,16 +216,7 @@ int __pci_epf_register_driver(struct pci_epf_driver *driver,
- 	if (ret)
- 		return ret;
- 
--	INIT_LIST_HEAD(&driver->epf_group);
--
--	id = driver->id_table;
--	while (id->name[0]) {
--		group = pci_ep_cfs_add_epf_group(id->name);
--		mutex_lock(&pci_epf_mutex);
--		list_add_tail(&group->group_entry, &driver->epf_group);
--		mutex_unlock(&pci_epf_mutex);
--		id++;
--	}
-+	pci_epf_add_cfs(driver);
- 
- 	return 0;
- }
+I know for a fact that bus reset clears the Data Link Layer Active bit
+as soon as link goes down. It gets set again following link up.
+
+Presence detect depends on the HW implementation. 
+
+QDT root ports don't change presence detect for instance since nobody
+actually removed the card.
+
+If an implementation supports in-band presence detect, the answer is yes.
+As soon as the link goes down, presence detect bit will get cleared until
+recovery.
+
+It sounds like we need to update your lock change with my proposal.
+
+lock() in mask_irq() and unlock() in unmask_irq()
+
+> 
+> Thanks,
+> 
+> Lukas
+> 
+
+
 -- 
-2.17.1
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
