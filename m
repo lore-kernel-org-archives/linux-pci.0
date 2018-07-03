@@ -1,54 +1,59 @@
-Return-Path: <SRS0=STY/=J5=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=STY/=J5=h08.hostsharing.net=foo00@kernel.org>
-Date: Fri, 13 Jul 2018 09:21:09 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 08/32] genirq: Synchronize only with single thread on
- free_irq()
-Message-ID: <20180713072109.GA23955@wunner.de>
-References: <cover.1529173804.git.lukas@wunner.de>
- <83cfe0c826f1d793e2ead9032ef2109b5efa403a.1529173804.git.lukas@wunner.de>
- <20180712222109.GE28466@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <Okaya@kernel.org>
+Return-Path: <Okaya@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180712222109.GE28466@bhelgaas-glaptop.roam.corp.google.com>
+References: <153030390808.57832.2200774416664543563.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <153030406630.57832.11564334393458981467.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <153030406630.57832.11564334393458981467.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <Okaya@kernel.org>
+Date: Tue, 3 Jul 2018 00:56:03 -0400
+Message-ID: <CAK9iUCNk8UpzO4UeyJMRF1ZRcbzPtRk6yg9SCXusyqExtXKK3w@mail.gmail.com>
+Subject: Re: [PATCH v1 2/2] PCI: Document ACPI description of PCI host bridges
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: multipart/alternative; boundary="00000000000056b5ad0570112245"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 12, 2018 at 05:21:09PM -0500, Bjorn Helgaas wrote:
-> On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
-> > When pciehp is converted to threaded IRQ handling, removal of unplugged
-> > devices below a PCIe hotplug port happens synchronously in the IRQ
-> > thread.  Removal of devices typically entails a call to free_irq() by
-> > their drivers.
-> > 
-> > If those devices share their IRQ with the hotplug port, free_irq()
-> > deadlocks because it calls synchronize_irq() to wait for all hard IRQ
-> > handlers as well as all threads sharing the IRQ to finish.
-> > 
-> > Actually it's sufficient to wait only for the IRQ thread of the removed
-> > device, so call synchronize_hardirq() to wait for all hard IRQ handlers
-> > to finish, but no longer for any threads.  Compensate by rearranging the
-> > control flow in irq_wait_for_interrupt() such that the device's thread
-> > is allowed to run one last time after kthread_stop() has been called.
-> 
-> I assume this would need to be merged along with the rest of the
-> series, which should probably go through the PCI tree, but I'm
-> definitely not qualified to review this IRQ patch.  And it would need
-> an ack from Thomas in any case.
+--00000000000056b5ad0570112245
+Content-Type: text/plain; charset="UTF-8"
 
-A v2 of this patch has already been merged through the tip tree on June 24,
-it's in linux-next as commit 519cc8652b3a, and ISTR that I marked this patch
-either as "Obsoleted" or "Not Applicable" in pci-patchwork.  There was no
-build-dependency of the succeeding patches in the series on this patch,
-hence merging through a different tree was possible.
+On Fri, Jun 29, 2018, 16:28 Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-Thanks!
+> From: Bjorn Helgaas <bhelgaas@google.com>
+>
+> Add a writeup about how PCI host bridges should be described in ACPI
+> using PNP0A03/PNP0A08 devices, PNP0C02 devices, and the MCFG table.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+>
+>
+> Reviewed-by: Sinan Kaya <okaya@kernel.org>
 
-Lukas
+--00000000000056b5ad0570112245
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"auto"><div><br><br><div class=3D"gmail_quote"><div dir=3D"ltr">=
+On Fri, Jun 29, 2018, 16:28 Bjorn Helgaas &lt;<a href=3D"mailto:helgaas@ker=
+nel.org" target=3D"_blank" rel=3D"noreferrer">helgaas@kernel.org</a>&gt; wr=
+ote:<br></div><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;=
+border-left:1px #ccc solid;padding-left:1ex">From: Bjorn Helgaas &lt;<a hre=
+f=3D"mailto:bhelgaas@google.com" rel=3D"noreferrer noreferrer" target=3D"_b=
+lank">bhelgaas@google.com</a>&gt;<br>
+<br>
+Add a writeup about how PCI host bridges should be described in ACPI<br>
+using PNP0A03/PNP0A08 devices, PNP0C02 devices, and the MCFG table.<br>
+<br>
+Signed-off-by: Bjorn Helgaas &lt;<a href=3D"mailto:bhelgaas@google.com" rel=
+=3D"noreferrer noreferrer" target=3D"_blank">bhelgaas@google.com</a>&gt;<br=
+><br>
+</blockquote><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;b=
+order-left:1px #ccc solid;padding-left:1ex"><br></blockquote><blockquote cl=
+ass=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;p=
+adding-left:1ex"><br></blockquote><blockquote class=3D"gmail_quote" style=
+=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">Reviewed=
+-by: Sinan Kaya &lt;<a href=3D"mailto:okaya@kernel.org">okaya@kernel.org</a=
+>&gt;</blockquote></div></div></div>
+
+--00000000000056b5ad0570112245--
