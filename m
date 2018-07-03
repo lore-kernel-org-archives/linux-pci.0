@@ -1,168 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr690042.outbound.protection.outlook.com ([40.107.69.42]:33024
-        "EHLO NAM04-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933647AbeGIP4O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 9 Jul 2018 11:56:14 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>
-Subject: RE: [PATCH 4/5] PCI: cadence: Add Power Management ops for host and
- EP
-Date: Mon, 9 Jul 2018 15:56:11 +0000
-Message-ID: <MWHPR07MB350227D92EDF2A46DA6BD218D8440@MWHPR07MB3502.namprd07.prod.outlook.com>
-References: <1529915453-4633-1-git-send-email-adouglas@cadence.com>
- <1529915453-4633-5-git-send-email-adouglas@cadence.com>
- <20180709153351.GA16292@red-moon>
-In-Reply-To: <20180709153351.GA16292@red-moon>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Date: Tue, 03 Jul 2018 08:04:20 -0400
+From: okaya@codeaurora.org
+To: poza@codeaurora.org
+Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
+ reset
+In-Reply-To: <324f8cf2fe6f7bdc43ca8a646eea908d@codeaurora.org>
+References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
+ <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
+ <20180703083447.GA2689@wunner.de>
+ <324f8cf2fe6f7bdc43ca8a646eea908d@codeaurora.org>
+Message-ID: <c129b813df87a2a471e8b9101447f535@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Keith Busch <keith.busch@intel.com>, Lukas Wunner <lukas@wunner.de>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci-owner@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09 July 2018 16:34, Lorenzo Pieralisi wrote:
-> On Mon, Jun 25, 2018 at 09:30:52AM +0100, Alan Douglas wrote:
-> > These PM ops will enable/disable the optional PHYs if present.  The
-> > AXI link-down register in the host driver is now cleared in
-> > cdns_pci_map_bus since the link-down bit will be set if the PHY has
-> > been disabled.  It is not cleared when enabling the PHY, since the
-> > link will not yet be up.
->=20
-> It is not entirely clear what you mean here, can you elaborate please ?
-Thanks for taking a look at this.
-There is a "Link down indication bit" register in the cadence PCIe IP AXI
-Configuration  Registers, which will be set by the PCIe IP after each link-
-down occurrence.  This bit must be cleared before continuing, or accesses
-will hang.  When the PHY is disabled, the link will go down and this bit wi=
-ll
-be set by HW.  It will also be set after a secondary bus reset.
+On 2018-07-03 06:52, poza@codeaurora.org wrote:
+> On 2018-07-03 14:04, Lukas Wunner wrote:
+>> On Mon, Jul 02, 2018 at 06:52:47PM -0400, Sinan Kaya wrote:
+>>> If a bridge supports hotplug and observes a PCIe fatal error, the 
+>>> following
+>>> events happen:
+>>> 
+>>> 1. AER driver removes the devices from PCI tree on fatal error
+>>> 2. AER driver brings down the link by issuing a secondary bus reset 
+>>> waits
+>>> for the link to come up.
+>>> 3. Hotplug driver observes a link down interrupt
+>>> 4. Hotplug driver tries to remove the devices waiting for the rescan 
+>>> lock
+>>> but devices are already removed by the AER driver and AER driver is 
+>>> waiting
+>>> for the link to come back up.
+>>> 5. AER driver tries to re-enumerate devices after polling for the 
+>>> link
+>>> state to go up.
+>>> 6. Hotplug driver obtains the lock and tries to remove the devices 
+>>> again.
+>>> 
+>>> If a bridge is a hotplug capable bridge, mask hotplug interrupts 
+>>> before the
+>>> reset and unmask afterwards.
+>> 
+>> Would it work for you if you just amended the AER driver to skip
+>> removal and re-enumeration of devices if the port is a hotplug bridge?
+>> Just check for is_hotplug_bridge in struct pci_dev.
+>> 
+> 
+> I tend to agree with you Lukas.
+> 
+> on this line I already have follow up patches
+> although I am waiting for Bjorn to review some patch-series before 
+> that.
+> [PATCH v2 0/6] Fix issues and cleanup for ERR_FATAL and ERR_NONFATAL
+> 
+> It doesn't look to me a an entirely a race condition since its guarded
+> by pci_lock_rescan_remove())
+> I observed that both hotplug and aer/dpc comes out of it in a quiet 
+> sane state.
+> 
 
-We cannot simply clear this bit when enabling the PHY, since at this stage
-the link may not come up (e.g. because the EP PHY is disabled), and so we
-need to clear it on the first access after link-up. In order to ensure this=
-, I
-simply clear it on every config access, in cdns_pci_map_bus, I couldn't thi=
-nk
-of a good way to just do it once.
+To add more detail on when this issue happens.
 
-Regards,
-Alan
-> Thank you,
-> Lorenzo
->=20
-> > Signed-off-by: Alan Douglas <adouglas@cadence.com>
-> > ---
-> >  drivers/pci/controller/pcie-cadence-ep.c   |    1 +
-> >  drivers/pci/controller/pcie-cadence-host.c |    3 ++
-> >  drivers/pci/controller/pcie-cadence.c      |   30 ++++++++++++++++++++=
-++++++++
-> >  drivers/pci/controller/pcie-cadence.h      |    4 +++
-> >  4 files changed, 38 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/con=
-troller/pcie-cadence-ep.c
-> > index c02f33d..3eabd99 100644
-> > --- a/drivers/pci/controller/pcie-cadence-ep.c
-> > +++ b/drivers/pci/controller/pcie-cadence-ep.c
-> > @@ -555,6 +555,7 @@ static void cdns_pcie_ep_shutdown(struct platform_d=
-evice *pdev)
-> >  	.driver =3D {
-> >  		.name =3D "cdns-pcie-ep",
-> >  		.of_match_table =3D cdns_pcie_ep_of_match,
-> > +		.pm	=3D &cdns_pcie_pm_ops,
-> >  	},
-> >  	.probe =3D cdns_pcie_ep_probe,
-> >  	.shutdown =3D cdns_pcie_ep_shutdown,
-> > diff --git a/drivers/pci/controller/pcie-cadence-host.c b/drivers/pci/c=
-ontroller/pcie-cadence-host.c
-> > index 36f3109..e3e9b7d 100644
-> > --- a/drivers/pci/controller/pcie-cadence-host.c
-> > +++ b/drivers/pci/controller/pcie-cadence-host.c
-> > @@ -61,6 +61,8 @@ struct cdns_pcie_rc {
-> >  	/* Check that the link is up */
-> >  	if (!(cdns_pcie_readl(pcie, CDNS_PCIE_LM_BASE) & 0x1))
-> >  		return NULL;
-> > +	/* Clear AXI link-down status */
-> > +	cdns_pcie_writel(pcie, CDNS_PCIE_AT_LINKDOWN, 0x0);
-> >
-> >  	/* Update Output registers for AXI region 0. */
-> >  	addr0 =3D CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
-> > @@ -345,6 +347,7 @@ static int cdns_pcie_host_probe(struct platform_dev=
-ice *pdev)
-> >  	.driver =3D {
-> >  		.name =3D "cdns-pcie-host",
-> >  		.of_match_table =3D cdns_pcie_host_of_match,
-> > +		.pm	=3D &cdns_pcie_pm_ops,
-> >  	},
-> >  	.probe =3D cdns_pcie_host_probe,
-> >  };
-> > diff --git a/drivers/pci/controller/pcie-cadence.c b/drivers/pci/contro=
-ller/pcie-cadence.c
-> > index 2edc126..86f1b00 100644
-> > --- a/drivers/pci/controller/pcie-cadence.c
-> > +++ b/drivers/pci/controller/pcie-cadence.c
-> > @@ -217,3 +217,33 @@ int cdns_pcie_init_phy(struct device *dev, struct =
-cdns_pcie *pcie)
-> >
-> >  	return ret;
-> >  }
-> > +
-> > +#ifdef CONFIG_PM_SLEEP
-> > +static int cdns_pcie_suspend_noirq(struct device *dev)
-> > +{
-> > +	struct cdns_pcie *pcie =3D dev_get_drvdata(dev);
-> > +
-> > +	cdns_pcie_disable_phy(pcie);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static int cdns_pcie_resume_noirq(struct device *dev)
-> > +{
-> > +	struct cdns_pcie *pcie =3D dev_get_drvdata(dev);
-> > +	int ret;
-> > +
-> > +	ret =3D cdns_pcie_enable_phy(pcie);
-> > +	if (ret) {
-> > +		dev_err(dev, "failed to enable phy\n");
-> > +		return ret;
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +#endif
-> > +
-> > +const struct dev_pm_ops cdns_pcie_pm_ops =3D {
-> > +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(cdns_pcie_suspend_noirq,
-> > +				      cdns_pcie_resume_noirq)
-> > +};
-> > diff --git a/drivers/pci/controller/pcie-cadence.h b/drivers/pci/contro=
-ller/pcie-cadence.h
-> > index b342c80..ae6bf2a 100644
-> > --- a/drivers/pci/controller/pcie-cadence.h
-> > +++ b/drivers/pci/controller/pcie-cadence.h
-> > @@ -166,6 +166,9 @@
-> >  #define CDNS_PCIE_AT_IB_RP_BAR_ADDR1(bar) \
-> >  	(CDNS_PCIE_AT_BASE + 0x0804 + (bar) * 0x0008)
-> >
-> > +/* AXI link down register */
-> > +#define CDNS_PCIE_AT_LINKDOWN (CDNS_PCIE_AT_BASE + 0x0824)
-> > +
-> >  enum cdns_pcie_rp_bar {
-> >  	RP_BAR0,
-> >  	RP_BAR1,
-> > @@ -314,5 +317,6 @@ void cdns_pcie_set_outbound_region_for_normal_msg(s=
-truct cdns_pcie *pcie, u8 fn,
-> >  void cdns_pcie_disable_phy(struct cdns_pcie *pcie);
-> >  int cdns_pcie_enable_phy(struct cdns_pcie *pcie);
-> >  int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie);
-> > +extern const struct dev_pm_ops cdns_pcie_pm_ops;
-> >
-> >  #endif /* _PCIE_CADENCE_H */
-> > --
-> > 1.7.1
-> >
+This problem is more visible on root ports with MSI-x capability or with 
+multiple MSI interrupt numbers.
+
+AFAIK, QDT root ports are single shared MSI interrupt only. Therefore, 
+you won't see this issue.
+
+As you can see in the code, rescan lock is held for the entire fatal 
+error handling path.
+
+> My thinking is: Disabling hotplug interrupts during ERR_FATAL,
+> is something little away from natural course of link_down event
+> handling, which is handled by pciehp more maturely.
+> so it would be just easy not to take any action e.g. removal and
+> re-enumeration of devices from ERR_FATAL handling point of view.
+> 
+
+I think it is more unnatural to fragment code flow and allow two drivers 
+to do the same thing in parallel or create inter-driver dependency.
+
+I got the idea from pci_reset_slot() function which is already masking 
+hotplug interrupts when called by external entries during secondary bus 
+reset. We just didn't handle the same for fatal error cases.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
