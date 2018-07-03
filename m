@@ -1,88 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23625 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389211AbeG0WCk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Jul 2018 18:02:40 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1] PCI: Add PCI_DEVICE_DATA() macro to fully describe device ID entry
-Date: Fri, 27 Jul 2018 23:39:14 +0300
-Message-Id: <20180727203914.89704-1-andriy.shevchenko@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 3 Jul 2018 08:34:28 +0100
+From: Lee Jones <lee.jones@linaro.org>
+To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Subject: Re: [PATCH v3 24/27] devicetree: fix a series of wrong file references
+Message-ID: <20180703073428.GH20176@dell>
+References: <cover.1528990947.git.mchehab+samsung@kernel.org>
+ <bce1b59268ac2d659fd7cb37f89285ef2acc8316.1528990947.git.mchehab+samsung@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <bce1b59268ac2d659fd7cb37f89285ef2acc8316.1528990947.git.mchehab+samsung@kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, alsa-devel@alsa-project.org,
+ Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+ Maxime Ripard <maxime.ripard@bootlin.com>, linux-pci@vger.kernel.org,
+ Binghui Wang <wangbinghui@hisilicon.com>, linux-kernel@vger.kernel.org,
+ Jonathan Corbet <corbet@lwn.net>, Chen-Yu Tsai <wens@csie.org>,
+ linux-input@vger.kernel.org, devicetree@vger.kernel.org,
+ Alexandre Torgue <alexandre.torgue@st.com>,
+ Xiaowei Song <songxiaowei@hisilicon.com>,
+ Mauro Carvalho Chehab <mchehab@infradead.org>, Mark Brown <broonie@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org,
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+ Liam Girdwood <lgirdwood@gmail.com>, Zhou Wang <wangzhou1@hisilicon.com>,
+ Rob Herring <robh+dt@kernel.org>, Maxime Coquelin <mcoquelin.stm32@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are a lot of examples in the kernel where PCI_VDEVICE() is used and still
-looks not so convenient due to additional driver_data field attached.
-
-Introduce PCI_DEVICE_DATA() macro to fully describe device ID entry in shortest
-possible form. For example,
-
-  before:
-
-    { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
-      (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
-
-  after:
-
-    { PCI_VDEVICE(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties },
-
-Drivers can be converted later on in independent way.
-
-While here, remove the unused macro with the same name
-from Ralink wireless driver.
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00pci.h |  6 ------
- include/linux/pci.h                            | 15 +++++++++++++++
- 2 files changed, 15 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-index bc0ca5f58f38..283e2e607bba 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.h
-@@ -27,12 +27,6 @@
- #include <linux/io.h>
- #include <linux/pci.h>
- 
--/*
-- * This variable should be used with the
-- * pci_driver structure initialization.
-- */
--#define PCI_DEVICE_DATA(__ops)	.driver_data = (kernel_ulong_t)(__ops)
--
- /*
-  * PCI driver handlers.
-  */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d0961aefdbae..af29a32865c5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -825,6 +825,21 @@ struct pci_driver {
- 	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
- 	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
- 
-+/**
-+ * PCI_DEVICE_DATA - macro used to describe a specific PCI device in very short form
-+ * @vend: the vendor name
-+ * @dev: the device name (without PCI_DEVICE_ID_ prefix)
-+ * @data: the driver data to be filled
-+ *
-+ * This macro is used to create a struct pci_device_id that matches a
-+ * specific PCI device.  The subvendor, and subdevice fields will be set
-+ * to PCI_ANY_ID.
-+ */
-+#define PCI_DEVICE_DATA(vend, dev, data) \
-+	.vendor = PCI_VENDOR_ID_##vend, .device = PCI_DEVICE_ID_##dev, \
-+	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0 \
-+	.driver_data = (kernel_ulong_t)(data)
-+
- enum {
- 	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* Ignore firmware setup */
- 	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* Reassign all bus numbers */
--- 
-2.18.0
+T24gVGh1LCAxNCBKdW4gMjAxOCwgTWF1cm8gQ2FydmFsaG8gQ2hlaGFiIHdyb3RlOgoKPiBBcyBm
+aWxlcyBnb3QgcmVuYW1lZCwgdGhlaXIgcmVmZXJlbmNlcyBicm9rZS4KPiAKPiBNYW51YWxseSBm
+aXggYSBzZXJpZXMgb2YgYnJva2VuIHJlZnMgYXQgdGhlIERUIGJpbmRpbmdzLgo+IAo+IFNpZ25l
+ZC1vZmYtYnk6IE1hdXJvIENhcnZhbGhvIENoZWhhYiA8bWNoZWhhYitzYW1zdW5nQGtlcm5lbC5v
+cmc+Cj4gLS0tCj4gIC4uLi9kZXZpY2V0cmVlL2JpbmRpbmdzL2lucHV0L3JtaTQvcm1pXzJkX3Nl
+bnNvci50eHQgfCAgMiArLQo+ICBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvbWZk
+L3N1bjZpLXByY20udHh0IHwgIDIgKy0KCkFja2VkLWJ5OiBMZWUgSm9uZXMgPGxlZS5qb25lc0Bs
+aW5hcm8ub3JnPgoKPiAgLi4uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2hpc2lsaWNvbi1wY2ll
+LnR4dCAgICAgICB8ICAyICstCj4gIERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9w
+Y2kva2lyaW4tcGNpZS50eHQgfCAgMiArLQo+ICAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kv
+cGNpLWtleXN0b25lLnR4dCAgICAgICAgIHwgIDQgKystLQo+ICAuLi4vZGV2aWNldHJlZS9iaW5k
+aW5ncy9zb3VuZC9zdCxzdG0zMi1pMnMudHh0ICAgICAgIHwgIDIgKy0KPiAgLi4uL2RldmljZXRy
+ZWUvYmluZGluZ3Mvc291bmQvc3Qsc3RtMzItc2FpLnR4dCAgICAgICB8ICAyICstCj4gIE1BSU5U
+QUlORVJTICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAxMiArKysr
+KystLS0tLS0KPiAgOCBmaWxlcyBjaGFuZ2VkLCAxNCBpbnNlcnRpb25zKCspLCAxNCBkZWxldGlv
+bnMoLSkKCi0tIApMZWUgSm9uZXMgW+adjueQvOaWr10KTGluYXJvIFNlcnZpY2VzIFRlY2huaWNh
+bCBMZWFkCkxpbmFyby5vcmcg4pSCIE9wZW4gc291cmNlIHNvZnR3YXJlIGZvciBBUk0gU29DcwpG
+b2xsb3cgTGluYXJvOiBGYWNlYm9vayB8IFR3aXR0ZXIgfCBCbG9nCgpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcg
+bGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmlu
+ZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
