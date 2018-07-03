@@ -1,38 +1,78 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH v2] pci/aspm: Remove CONFIG_PCIEASPM_DEBUG
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Rajat Jain <rajatja@google.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Keith Busch <keith.busch@intel.com>, Vidya Sagar <vidyas@nvidia.com>,
- Philippe Ombredanne <pombredanne@nexb.com>, Kees Cook
- <keescook@chromium.org>, "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, Sinan Kaya
- <okaya@codeaurora.org>, Frederick Lawler <fred@fredlawl.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- mayurkumar.patel@intel.com, rajatxjain@gmail.com,
- Richard Hughes <rhughes@redhat.com>, Carlos Garnacho <cgarnach@redhat.com>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, Pali Rohar <pali.rohar@gmail.com>,
- Takashi Iwai <tiwai@suse.de>, Andy Whitcroft <apw@canonical.com>,
- Colin Ian King <colin.king@canonical.com>
-References: <20180508230148.121852-1-rajatja@google.com>
- <20180510233912.96454-1-rajatja@google.com>
- <20180727202619.GD173328@bhelgaas-glaptop.roam.corp.google.com>
- <5a102163-73bc-c596-8266-186e222e7ceb@kernel.org>
- <20180730141428.GK173328@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <2fbc0d1b-0d14-6bab-74c5-a9dd2ae417bb@kernel.org>
-Date: Mon, 30 Jul 2018 09:08:18 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
+ reset
+To: poza@codeaurora.org
+References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
+ <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
+ <20180703083447.GA2689@wunner.de>
+ <8b6ce0f415858463d1c0588c29e30415@codeaurora.org>
+ <9e871cc3978fbdca12ccf8a91f34ad07@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <2640af5e-f00f-d814-425d-78ac57714f6d@codeaurora.org>
+Date: Tue, 3 Jul 2018 09:25:15 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180730141428.GK173328@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <9e871cc3978fbdca12ccf8a91f34ad07@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Keith Busch <keith.busch@intel.com>, Lukas Wunner <lukas@wunner.de>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/30/2018 7:14 AM, Bjorn Helgaas wrote:
-> However, the end of sec 5.4.1 does make it clear that the functions
-> need not have the same ASPM configuration, and it gives rules for how
-> those different settings should affect the shared link.  Since it
-> mentions different ASPM Control fields for the different functions, I
-> assume the policy combining those per-function settings into the
-> single link behavior must be implemented in the hardware.
-
-Very interesting. This is news for me.
+PiAKPiB3aGF0IGlmIHdlIG9ubHkgaGF2ZSBjb25kaXRpb25hbCBlbnVtZXJhdGlvbiA/wqAgKGxl
+YXZpbmcgcmVtb3ZpbmcgZGV2aWNlcyBmb2xsb3dlZCBieSBTQlIgYXMgaXMpID8KPiAKCklmIHdl
+IGxlYXZlIGl0IGFzIGlzLCBob3RwbHVnIGRyaXZlciBvYnNlcnZlcyBhIGxpbmsgZG93biBpbnRl
+cnJ1cHQgYXMgc29vbgphcyBzZWNvbmRhcnkgYnVzIHJlc2V0IGlzIGlzc3VlZC4gSG90cGx1ZyBk
+cml2ZXIgd2lsbCB0cnkgZGV2aWNlIHJlbW92YWwgd2hpbGUKQUVSIGRyaXZlciBpcyB3b3JraW5n
+IG9uIHRoZSBjdXJyZW50bHkgb2JzZXJ2ZSBGQVRBTCBlcnJvciBjYXVzaW5nIGEgcmFjZQpjb25k
+aXRpb24uIEhvdHBsdWcgZHJpdmVyIHdhaXQgZm9yIHJlc2NhbiBsb2NrIHRvIGJlIG9idGFpbmVk
+LgoKPiBmb2xsb3dpbmcgY29kZSBpcyBkb2luZyBsaXR0bGUgbW9yZSBleHRyYSB3b3JrIHRoYW4g
+b3VyIG5vcm1hbCBFUlJfRkFUQUwgcGF0aC4KPiAKClNlZSB0aGlzIGNvbW1lbnQgYW5kIHRoZSBw
+c2V1ZG8gY29kZSBiZWxvdy4KCi8qCiAqIHBjaWVocCBoYXMgYSAxOjEgYnVzOnNsb3QgcmVsYXRp
+b25zaGlwIHNvIHdlIHVsdGltYXRlbHkgd2FudCBhIHNlY29uZGFyeQogKiBidXMgcmVzZXQgb2Yg
+dGhlIGJyaWRnZSwgYnV0IGF0IHRoZSBzYW1lIHRpbWUgd2Ugd2FudCB0byBlbnN1cmUgdGhhdCBp
+dCBpcwogKiBub3Qgc2VlbiBhcyBhIGhvdC11bnBsdWcsIGZvbGxvd2VkIGJ5IHRoZSBob3QtcGx1
+ZyBvZiB0aGUgZGV2aWNlLiBUaHVzLAogKiBkaXNhYmxlIGxpbmsgc3RhdGUgbm90aWZpY2F0aW9u
+IGFuZCBwcmVzZW5jZSBkZXRlY3Rpb24gY2hhbmdlIG5vdGlmaWNhdGlvbgogKiBtb21lbnRhcmls
+eSwgaWYgd2Ugc2VlIHRoYXQgdGhleSBjb3VsZCBpbnRlcmZlcmUuIEFsc28sIGNsZWFyIGFueSBz
+cHVyaW91cwogKiBldmVudHMgYWZ0ZXIuCiAqLwppbnQgcGNpZWhwX3Jlc2V0X3Nsb3Qoc3RydWN0
+IHNsb3QgKnNsb3QsIGludCBwcm9iZSkKewoJPG1hc2sgaG90cGx1ZyBpbnRlcnJ1cHRzPgoJPGlz
+c3VlIHNlY29uZGFyeSBidXMgcmVzZXQ+Cgk8dW5tYXNrIGhvdHBsdWcgaW50ZXJydXB0cz4KfQoK
+VGhpcyBwYXRjaCBpcyB0cnlpbmcgdG8gbWFzayB0aGUgaW50ZXJydXB0IGJlZm9yZSBzZWNvbmRh
+cnkgYnVzIHJlc2V0IGluIEFFUgpwYXRoIG5vdCBhZnRlci4KCk90aGVyd2lzZSwgaG90cGx1ZyBk
+cml2ZXIgd2lsbCByZW1vdmUgdGhlIGRldmljZXMgYXMgc29vbiBhcyBpdCBvYnRhaW5zIHRoZQpy
+ZXNjYW4gbG9jayBmb2xsb3dpbmcgQUVSIHJlY292ZXJ5IHNpbmNlIGhvdHBsdWcgaW50ZXJydXB0
+cyB3aWxsIGJlIHBlbmRpbmcuCgo+IHBjaWVocF91bmNvbmZpZ3VyZV9kZXZpY2UgZG9pbmcgbGl0
+dGxlIG1vcmUgdGhhbiBlbnVtZXJhdGlvbiB0byBxdWllc2NlbmNlIHRoZSBidXMuCj4gCj4gLyoK
+PiDCoMKgwqDCoMKgwqDCoMKgICogRW5zdXJlIHRoYXQgbm8gbmV3IFJlcXVlc3RzIHdpbGwgYmUg
+Z2VuZXJhdGVkIGZyb20KPiDCoMKgwqDCoMKgwqDCoMKgICogdGhlIGRldmljZS4KPiDCoMKgwqDC
+oMKgwqDCoMKgICovCj4gwqDCoMKgwqDCoMKgwqAgaWYgKHByZXNlbmNlKSB7Cj4gwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoCBwY2lfcmVhZF9jb25maWdfd29yZChkZXYsIFBDSV9DT01NQU5ELCAmY29t
+bWFuZCk7Cj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBjb21tYW5kICY9IH4oUENJX0NPTU1BTkRf
+TUFTVEVSIHwgUENJX0NPTU1BTkRfU0VSUik7Cj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBjb21t
+YW5kIHw9IFBDSV9DT01NQU5EX0lOVFhfRElTQUJMRTsKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+IHBjaV93cml0ZV9jb25maWdfd29yZChkZXYsIFBDSV9DT01NQU5ELCBjb21tYW5kKTsKPiDCoMKg
+wqDCoMKgwqDCoCB9Cj4gCj4gCj4gCj4+Cj4+Pgo+Pj4gVGhhdCB3b3VsZCBzZWVtIGxpa2UgYSBt
+dWNoIHNpbXBsZXIgc29sdXRpb24sIGdpdmVuIHRoYXQgaXQgaXMga25vd24KPj4+IHRoYXQgdGhl
+IGxpbmsgd2lsbCBmbGFwIG9uIHJlc2V0LCBjYXVzaW5nIHRoZSBob3RwbHVnIGRyaXZlciB0byBy
+ZW1vdmUKPj4+IGFuZCByZS1lbnVtZXJhdGUgZGV2aWNlcy7CoCBUaGF0IHdvdWxkIGFsc28gY292
+ZXIgY2FzZXMgd2hlcmUgaG90cGx1ZyBpcwo+Pj4gaGFuZGxlZCBieSBhIGRpZmZlcmVudCBkcml2
+ZXIgdGhhbiBwY2llaHAsIG9yIGJ5IHRoZSBwbGF0Zm9ybSBmaXJtd2FyZS4KPj4+Cj4+PiBUaGFu
+a3MsCj4+Pgo+Pj4gTHVrYXMKPiAKCgotLSAKU2luYW4gS2F5YQpRdWFsY29tbSBEYXRhY2VudGVy
+IFRlY2hub2xvZ2llcywgSW5jLiBhcyBhbiBhZmZpbGlhdGUgb2YgUXVhbGNvbW0gVGVjaG5vbG9n
+aWVzLCBJbmMuClF1YWxjb21tIFRlY2hub2xvZ2llcywgSW5jLiBpcyBhIG1lbWJlciBvZiB0aGUg
+Q29kZSBBdXJvcmEgRm9ydW0sIGEgTGludXggRm91bmRhdGlvbiBDb2xsYWJvcmF0aXZlIFByb2pl
+Y3QuCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51
+eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVh
+ZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1h
+cm0ta2VybmVsCg==
