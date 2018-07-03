@@ -1,91 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36831 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388283AbeGWRzS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jul 2018 13:55:18 -0400
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2] PCI/AER: Do not clear AER bits if we don't own AER
-Date: Mon, 23 Jul 2018 11:52:33 -0500
-Message-Id: <20180723165251.11424-1-mr.nuke.me@gmail.com>
-In-Reply-To: <20180717153135.25925-1-mr.nuke.me@gmail.com>
-References: <20180717153135.25925-1-mr.nuke.me@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <Okaya@kernel.org>
+Return-Path: <Okaya@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <153030406630.57832.11564334393458981467.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <153030390808.57832.2200774416664543563.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <153030406630.57832.11564334393458981467.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <Okaya@kernel.org>
+Date: Tue, 3 Jul 2018 01:15:28 -0400
+Message-ID: <CAK9iUCMff7JCzRPoMnvB56D3LDFNnUwBRRBKB2xFbWkGzVQAXA@mail.gmail.com>
+Subject: Re: [PATCH v1 2/2] PCI: Document ACPI description of PCI host bridges
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: multipart/alternative; boundary="00000000000005106b0570116746"
 List-ID: <linux-pci.vger.kernel.org>
 
-When we don't own AER, we shouldn't touch the AER error bits. Clearing
-error bits willy-nilly might cause firmware to miss some errors. In
-theory, these bits get cleared by FFS, or via ACPI _HPX method. These
-mechanisms are not subject to the problem.
+--00000000000005106b0570116746
+Content-Type: text/plain; charset="UTF-8"
 
-This race is mostly of theoretical significance, since I can't
-reasonably demonstrate this race in the lab.
+On Friday, June 29, 2018, Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-On a side-note, pcie_aer_is_kernel_first() is created to alleviate the
-need for two checks: aer_cap and get_firmware_first().
+> From: Bjorn Helgaas <bhelgaas@google.com>
+>
+> Add a writeup about how PCI host bridges should be described in ACPI
+> using PNP0A03/PNP0A08 devices, PNP0C02 devices, and the MCFG table.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
----
- drivers/pci/pcie/aer.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index a2e88386af28..85c3e173c025 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -307,6 +307,12 @@ int pcie_aer_get_firmware_first(struct pci_dev *dev)
- 		aer_set_firmware_first(dev);
- 	return dev->__aer_firmware_first;
- }
-+
-+static bool pcie_aer_is_kernel_first(struct pci_dev *dev)
-+{
-+	return !!dev->aer_cap && !pcie_aer_get_firmware_first(dev);
-+}
-+
- #define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
- 				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
- 
-@@ -337,10 +343,7 @@ bool aer_acpi_firmware_first(void)
- 
- int pci_enable_pcie_error_reporting(struct pci_dev *dev)
- {
--	if (pcie_aer_get_firmware_first(dev))
--		return -EIO;
--
--	if (!dev->aer_cap)
-+	if (!pcie_aer_is_kernel_first(dev))
- 		return -EIO;
- 
- 	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
-@@ -349,7 +352,7 @@ EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
- 
- int pci_disable_pcie_error_reporting(struct pci_dev *dev)
- {
--	if (pcie_aer_get_firmware_first(dev))
-+	if (!pcie_aer_is_kernel_first(dev))
- 		return -EIO;
- 
- 	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
-@@ -383,10 +386,10 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
- 	if (!pci_is_pcie(dev))
- 		return -ENODEV;
- 
--	pos = dev->aer_cap;
--	if (!pos)
-+	if (pcie_aer_is_kernel_first(dev))
- 		return -EIO;
- 
-+	pos = dev->aer_cap;
- 	port_type = pci_pcie_type(dev);
- 	if (port_type == PCI_EXP_TYPE_ROOT_PORT) {
- 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &status);
--- 
-2.17.1
+One more time.
+
+ Reviewed-by: Sinan Kaya <okaya@kernel.org>
+
+--00000000000005106b0570116746
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<br><br>On Friday, June 29, 2018, Bjorn Helgaas &lt;<a href=3D"mailto:helga=
+as@kernel.org">helgaas@kernel.org</a>&gt; wrote:<br><blockquote class=3D"gm=
+ail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-le=
+ft:1ex">From: Bjorn Helgaas &lt;<a href=3D"mailto:bhelgaas@google.com">bhel=
+gaas@google.com</a>&gt;<br>
+<br>
+Add a writeup about how PCI host bridges should be described in ACPI<br>
+using PNP0A03/PNP0A08 devices, PNP0C02 devices, and the MCFG table.<br>
+<br>
+Signed-off-by: Bjorn Helgaas &lt;<a href=3D"mailto:bhelgaas@google.com">bhe=
+lgaas@google.com</a>&gt;<br>
+---</blockquote><div><br></div><div>One more time.</div><div><br></div><div=
+>=C2=A0Reviewed-by: Sinan Kaya &lt;<a href=3D"mailto:okaya@kernel.org">okay=
+a@kernel.org</a>&gt;</div><div><br></div>
+
+--00000000000005106b0570116746--
