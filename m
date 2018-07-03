@@ -1,77 +1,160 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51308 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726663AbeGLMnp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jul 2018 08:43:45 -0400
-Date: Thu, 12 Jul 2018 15:33:53 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
-Subject: [bug report] PCI: rockchip: Add EP driver for Rockchip PCIe
- controller
-Message-ID: <20180712123319.nr5jowaat6h3kr2m@kili.mountain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
+From: Pingfan Liu <kernelfans@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Pingfan Liu <kernelfans@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCHv3 1/4] drivers/base: fold the routine of device's shutdown into a func
+Date: Tue,  3 Jul 2018 14:50:39 +0800
+Message-Id: <1530600642-25090-2-git-send-email-kernelfans@gmail.com>
+In-Reply-To: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Shawn Lin,
+Pack the code into a function to ease the using and reading.
 
-The patch cf590b078391: "PCI: rockchip: Add EP driver for Rockchip
-PCIe controller" from May 9, 2018, leads to the following static
-checker warning:
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Dave Young <dyoung@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+---
+ drivers/base/core.c | 100 +++++++++++++++++++++++++++-------------------------
+ 1 file changed, 52 insertions(+), 48 deletions(-)
 
-	drivers/pci/controller/pcie-rockchip-ep.c:380 rockchip_pcie_ep_assert_intx()
-	warn: '(1 << (19))' 524288 can't fit into 65535 'status'
-
-drivers/pci/controller/pcie-rockchip-ep.c
-   347  static void rockchip_pcie_ep_assert_intx(struct rockchip_pcie_ep *ep, u8 fn,
-   348                                           u8 intx, bool is_asserted)
-   349  {
-   350          struct rockchip_pcie *rockchip = &ep->rockchip;
-   351          u32 r = ep->max_regions - 1;
-   352          u32 offset;
-   353          u16 status;
-   354          u8 msg_code;
-   355  
-   356          if (unlikely(ep->irq_pci_addr != ROCKCHIP_PCIE_EP_PCI_LEGACY_IRQ_ADDR ||
-   357                       ep->irq_pci_fn != fn)) {
-   358                  rockchip_pcie_prog_ep_ob_atu(rockchip, fn, r,
-   359                                               AXI_WRAPPER_NOR_MSG,
-   360                                               ep->irq_phys_addr, 0, 0);
-   361                  ep->irq_pci_addr = ROCKCHIP_PCIE_EP_PCI_LEGACY_IRQ_ADDR;
-   362                  ep->irq_pci_fn = fn;
-   363          }
-   364  
-   365          intx &= 3;
-   366          if (is_asserted) {
-   367                  ep->irq_pending |= BIT(intx);
-   368                  msg_code = ROCKCHIP_PCIE_MSG_CODE_ASSERT_INTA + intx;
-   369          } else {
-   370                  ep->irq_pending &= ~BIT(intx);
-   371                  msg_code = ROCKCHIP_PCIE_MSG_CODE_DEASSERT_INTA + intx;
-   372          }
-   373  
-   374          status = rockchip_pcie_read(rockchip,
-   375                                      ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
-   376                                      ROCKCHIP_PCIE_EP_CMD_STATUS);
-   377          status &= ROCKCHIP_PCIE_EP_CMD_STATUS_IS;
-   378  
-   379          if ((status != 0) ^ (ep->irq_pending != 0)) {
-   380                  status ^= ROCKCHIP_PCIE_EP_CMD_STATUS_IS;
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-status is a u16 but we're twiddling BIT(19).
-
-   381                  rockchip_pcie_write(rockchip, status,
-   382                                      ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
-   383                                      ROCKCHIP_PCIE_EP_CMD_STATUS);
-   384          }
-   385  
-   386          offset =
-   387             ROCKCHIP_PCIE_MSG_ROUTING(ROCKCHIP_PCIE_MSG_ROUTING_LOCAL_INTX) |
-   388             ROCKCHIP_PCIE_MSG_CODE(msg_code) | ROCKCHIP_PCIE_MSG_NO_DATA;
-   389          writel(0, ep->irq_cpu_addr + offset);
-   390  }
-
-regards,
-dan carpenter
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index df3e1a4..a48868f 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -2802,12 +2802,62 @@ int device_move(struct device *dev, struct device *new_parent,
+ }
+ EXPORT_SYMBOL_GPL(device_move);
+ 
++static void __device_shutdown(struct device *dev)
++{
++	struct device *parent;
++	/*
++	 * hold reference count of device's parent to
++	 * prevent it from being freed because parent's
++	 * lock is to be held
++	 */
++	parent = get_device(dev->parent);
++	get_device(dev);
++	/*
++	 * Make sure the device is off the kset list, in the
++	 * event that dev->*->shutdown() doesn't remove it.
++	 */
++	list_del_init(&dev->kobj.entry);
++	spin_unlock(&devices_kset->list_lock);
++
++	/* hold lock to avoid race with probe/release */
++	if (parent)
++		device_lock(parent);
++	device_lock(dev);
++
++	/* Don't allow any more runtime suspends */
++	pm_runtime_get_noresume(dev);
++	pm_runtime_barrier(dev);
++
++	if (dev->class && dev->class->shutdown_pre) {
++		if (initcall_debug)
++			dev_info(dev, "shutdown_pre\n");
++		dev->class->shutdown_pre(dev);
++	}
++	if (dev->bus && dev->bus->shutdown) {
++		if (initcall_debug)
++			dev_info(dev, "shutdown\n");
++		dev->bus->shutdown(dev);
++	} else if (dev->driver && dev->driver->shutdown) {
++		if (initcall_debug)
++			dev_info(dev, "shutdown\n");
++		dev->driver->shutdown(dev);
++	}
++
++	device_unlock(dev);
++	if (parent)
++		device_unlock(parent);
++
++	put_device(dev);
++	put_device(parent);
++	spin_lock(&devices_kset->list_lock);
++}
++
+ /**
+  * device_shutdown - call ->shutdown() on each device to shutdown.
+  */
+ void device_shutdown(void)
+ {
+-	struct device *dev, *parent;
++	struct device *dev;
+ 
+ 	spin_lock(&devices_kset->list_lock);
+ 	/*
+@@ -2818,53 +2868,7 @@ void device_shutdown(void)
+ 	while (!list_empty(&devices_kset->list)) {
+ 		dev = list_entry(devices_kset->list.prev, struct device,
+ 				kobj.entry);
+-
+-		/*
+-		 * hold reference count of device's parent to
+-		 * prevent it from being freed because parent's
+-		 * lock is to be held
+-		 */
+-		parent = get_device(dev->parent);
+-		get_device(dev);
+-		/*
+-		 * Make sure the device is off the kset list, in the
+-		 * event that dev->*->shutdown() doesn't remove it.
+-		 */
+-		list_del_init(&dev->kobj.entry);
+-		spin_unlock(&devices_kset->list_lock);
+-
+-		/* hold lock to avoid race with probe/release */
+-		if (parent)
+-			device_lock(parent);
+-		device_lock(dev);
+-
+-		/* Don't allow any more runtime suspends */
+-		pm_runtime_get_noresume(dev);
+-		pm_runtime_barrier(dev);
+-
+-		if (dev->class && dev->class->shutdown_pre) {
+-			if (initcall_debug)
+-				dev_info(dev, "shutdown_pre\n");
+-			dev->class->shutdown_pre(dev);
+-		}
+-		if (dev->bus && dev->bus->shutdown) {
+-			if (initcall_debug)
+-				dev_info(dev, "shutdown\n");
+-			dev->bus->shutdown(dev);
+-		} else if (dev->driver && dev->driver->shutdown) {
+-			if (initcall_debug)
+-				dev_info(dev, "shutdown\n");
+-			dev->driver->shutdown(dev);
+-		}
+-
+-		device_unlock(dev);
+-		if (parent)
+-			device_unlock(parent);
+-
+-		put_device(dev);
+-		put_device(parent);
+-
+-		spin_lock(&devices_kset->list_lock);
++		__device_shutdown(dev);
+ 	}
+ 	spin_unlock(&devices_kset->list_lock);
+ }
+-- 
+2.7.4
