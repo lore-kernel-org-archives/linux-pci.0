@@ -1,81 +1,38 @@
-Return-Path: <SRS0=8ZZk=JW=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=8ZZk=JW=gmail.com=kernelfans@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:53749 "EHLO
+        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932910AbeGCIJM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2018 04:09:12 -0400
+Date: Tue, 3 Jul 2018 10:09:10 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: Coccinelle report for drivers/pci/
+Message-ID: <20180703080910.GB21136@wunner.de>
+References: <7db07760-49fe-e94b-62fc-556ba02c8e9e@codeaurora.org>
 MIME-Version: 1.0
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
- <6281446.GoJLz6Hq6C@aspire.rjw.lan> <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
- <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com> <20180706083603.GA9063@wunner.de>
-In-Reply-To: <20180706083603.GA9063@wunner.de>
-From: Pingfan Liu <kernelfans@gmail.com>
-Date: Fri, 6 Jul 2018 21:52:21 +0800
-Message-ID: <CAFgQCTsouCPy7GWGFzWbLuSUxnE2rWe5EGqsE5ivT+=ATw2MJg@mail.gmail.com>
-Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
- ordering in device_kset
-To: lukas@wunner.de
-Cc: rafael@kernel.org, linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-pm@vger.kernel.org, kishon@ti.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7db07760-49fe-e94b-62fc-556ba02c8e9e@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 6, 2018 at 4:36 PM Lukas Wunner <lukas@wunner.de> wrote:
->
-> [cc += Kishon Vijay Abraham]
->
-> On Thu, Jul 05, 2018 at 11:18:28AM +0200, Rafael J. Wysocki wrote:
-> > OK, so calling devices_kset_move_last() from really_probe() clearly is
-> > a mistake.
-> >
-> > I'm not really sure what the intention of it was as the changelog of
-> > commit 52cdbdd49853d doesn't really explain that (why would it be
-> > insufficient without that change?)
->
-> It seems 52cdbdd49853d fixed an issue with boards which have an MMC
-> whose reset pin needs to be driven high on shutdown, lest the MMC
-> won't be found on the next boot.
->
-> The boards' devicetrees use a kludge wherein the reset pin is modelled
-> as a regulator.  The regulator is enabled when the MMC probes and
-> disabled on driver unbind and shutdown.  As a result, the pin is driven
-> low on shutdown and the MMC is not found on the next boot.
->
-> To fix this, another kludge was invented wherein the GPIO expander
-> driving the reset pin unconditionally drives all its pins high on
-> shutdown, see pcf857x_shutdown() in drivers/gpio/gpio-pcf857x.c
-> (commit adc284755055, "gpio: pcf857x: restore the initial line state
-> of all pcf lines").
->
-> For this kludge to work, the GPIO expander's ->shutdown hook needs to
-> be executed after the MMC expander's ->shutdown hook.
->
-> Commit 52cdbdd49853d achieved that by reordering devices_kset according
-> to the probe order.  Apparently the MMC probes after the GPIO expander,
-> possibly because it returns -EPROBE_DEFER if the vmmc regulator isn't
-> available yet, see mmc_regulator_get_supply().
->
-> Note, I'm just piecing the information together from git history,
-> I'm not responsible for these kludges.  (I'm innocent!)
->
-Thanks for your exploration, very clearly. I had tried, but failed
-since these commits are contributed with different authors. I am not
-familiar with ARM and dts, so had thought
-really_probe()->devices_kset_move_last() is used to address a very
-popular "supplier<-consumer" order issue in smart phone, based on the
-configuration hard-coded in "bios(or counterpart in ARM).
+On Mon, Jul 02, 2018 at 09:45:55PM -0400, Sinan Kaya wrote:
+> drivers/pci/hotplug/pciehp_pci.c:67:5-7: Unneeded variable: "rc". Return "0" on line 110
 
-> @Pingfan Liu, if you just remove the call to devices_kset_move_last()
-> from really_probe(), does the issue go away?
->
-Yes, it goes away.
+Fixed by
+https://patchwork.ozlabs.org/patch/930379/
 
-> If so, it might be best to remove that call and model the dependency
-> with a call to device_link_add() in mmc_regulator_get_supply().
-> Another idea would be to automatically add a device_link in the
-> driver core if -EPROBE_DEFER is returned.
->
-Maybe the first one is better, as it is already used by other drivers.
 
-Thanks,
-Pingfan
+> drivers/pci/hotplug/pcihp_skeleton.c:98:5-11: Unneeded variable: "retval". Return "0" on line 106
+> drivers/pci/hotplug/pcihp_skeleton.c:84:5-11: Unneeded variable: "retval". Return "0" on line 92
+> drivers/pci/hotplug/pcihp_skeleton.c:201:5-11: Unneeded variable: "retval". Return "0" on line 210
+> drivers/pci/hotplug/pcihp_skeleton.c:171:5-11: Unneeded variable: "retval". Return "0" on line 180
+> drivers/pci/hotplug/pcihp_skeleton.c:186:5-11: Unneeded variable: "retval". Return "0" on line 195
+> drivers/pci/hotplug/pcihp_skeleton.c:156:5-11: Unneeded variable: "retval". Return "0" on line 165
+> drivers/pci/hotplug/pcihp_skeleton.c:137:5-11: Unneeded variable: "retval". Return "0" on line 150
+> drivers/pci/hotplug/pcihp_skeleton.c:112:5-11: Unneeded variable: "retval". Return "0" on line 131
+
+Fixed by 6c9c6bd4e2c8 ("PCI: hotplug: Delete skeleton driver"),
+queued on Bjorn's pci/hotplug branch for 4.19.
