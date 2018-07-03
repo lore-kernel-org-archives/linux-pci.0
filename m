@@ -1,78 +1,59 @@
-Return-Path: <SRS0=5A58=J2=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=5A58=J2=linuxfoundation.org=gregkh@kernel.org>
-Date: Tue, 10 Jul 2018 14:59:56 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Pingfan Liu <kernelfans@gmail.com>, linux-kernel@vger.kernel.org,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
-	Linux PM <linux-pm@vger.kernel.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v2] driver core: Partially revert "driver core: correct
- device's shutdown order"
-Message-ID: <20180710125956.GA25343@kroah.com>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <8816662.k3KXbdkA2e@aspire.rjw.lan>
- <2927655.Y1qg3UnIrE@aspire.rjw.lan>
- <5284251.Resgjlja2Q@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:56822 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753259AbeGCBp6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jul 2018 21:45:58 -0400
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: Coccinelle report for drivers/pci/
+Message-ID: <7db07760-49fe-e94b-62fc-556ba02c8e9e@codeaurora.org>
+Date: Mon, 2 Jul 2018 21:45:55 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5284251.Resgjlja2Q@aspire.rjw.lan>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2018 at 02:51:33PM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Commit 52cdbdd49853 (driver core: correct device's shutdown order)
-> introduced a regression by breaking device shutdown on some systems.
-> 
-> Namely, the devices_kset_move_last() call in really_probe() added by
-> that commit is a mistake as it may cause parents to follow children
-> in the devices_kset list which then causes shutdown to fail.  For
-> example, if a device has children before really_probe() is called
-> for it (which is not uncommon), that call will cause it to be
-> reordered after the children in the devices_kset list and the
-> ordering of that list will not reflect the correct device shutdown
-> order any more.
-> 
-> Also it causes the devices_kset list to be constantly reordered
-> until all drivers have been probed which is totally pointless
-> overhead in the majority of cases and it only covered an issue
-> with system shutdown, while system-wide suspend/resume potentially
-> had the same issue on the affected platforms (which was not covered).
-> 
-> Moreover, the shutdown issue originally addressed by the change in
-> really_probe() made by commit 52cdbdd49853 is not present in 4.18-rc
-> any more, since dra7 started to use the sdhci-omap driver which
-> doesn't disable any regulators during shutdown, so the really_probe()
-> part of commit 52cdbdd49853 can be safely reverted.  [The original
-> issue was related to the omap_hsmmc driver used by dra7 previously.]
-> 
-> For the above reasons, revert the really_probe() modifications made
-> by commit 52cdbdd49853.
-> 
-> The other code changes made by commit 52cdbdd49853 are useful and
-> they need not be reverted.
-> 
-> Fixes: 52cdbdd49853 (driver core: correct device's shutdown order)
-> Link: https://lore.kernel.org/lkml/CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com/
-> Reported-by: Pingfan Liu <kernelfans@gmail.com>
-> Tested-by: Pingfan Liu <kernelfans@gmail.com>
-> Reviewed-by: Kishon Vijay Abraham I <kishon@ti.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
-> 
-> -> v2: Added information from Kishon on the fact that it should be safe
->        to revert the really_probe() modifications added by the
->        problematic commit.  Also added the Reviewed-by tag from Kishon.
 
-Looks good to me, want me to queue it up in my tree, or are you going to
-send it on to Linus?
+I ran coccinelle on drivers/pci directory of 4.18-rc3. I think this report needs some
+attention from individual contributors to figure out which one is real which one is false
+positive. devm stuff looked real to me.
 
-And shouldn't this have a stable tag as well?
+make coccicheck MODE=report M=drivers/pci/
 
-thanks,
+Please check for false positives in the output before submitting a patch.
+When using "patch" mode, carefully review the patch before submitting it.
 
-greg k-h
+drivers/pci//endpoint/functions/pci-epf-test.c:166:7-14: WARNING opportunity for kmemdup
+drivers/pci//hotplug/pnv_php.c:278:7-14: WARNING opportunity for kmemdup
+drivers/pci//controller/dwc/pcie-qcom.c:703:1-3: WARNING: PTR_ERR_OR_ZERO can be used
+drivers/pci//controller/pci-tegra.c:1132:1-3: WARNING: PTR_ERR_OR_ZERO can be used
+drivers/pci//controller/dwc/pcie-kirin.c:141:1-3: WARNING: PTR_ERR_OR_ZERO can be used
+drivers/pci//controller/dwc/pcie-kirin.c:177:1-3: WARNING: PTR_ERR_OR_ZERO can be used
+drivers/pci//controller/dwc/pci-exynos.c:95:1-3: WARNING: PTR_ERR_OR_ZERO can be used
+drivers/pci//controller/pcie-mediatek.c:441:13-16: WARNING: Suspicious code. resource_size is maybe missing with mem
+drivers/pci//probe.c:2828:1-6: WARNING: invalid free of devm_ allocated data
+drivers/pci//probe.c:586:1-6: WARNING: invalid free of devm_ allocated data
+drivers/pci//controller/pci-hyperv.c:1687:31-33: ERROR: reference preceded by free on line 1668
+drivers/pci//hotplug/pnv_php.c:159:2-13: ERROR: probable double put.
+drivers/pci/pci.c:5316:6-12: WARNING: Comparison to bool
+drivers/pci/pci.c:5332:7-13: WARNING: Comparison to bool
+drivers/pci/hotplug/cpqphp_core.c:734:1-11: WARNING: Assignment of bool to 0/1
+drivers/pci/controller/pcie-altera.c:142:2-15: code aligned with following code on line 144
+drivers/pci/hotplug/pciehp_pci.c:67:5-7: Unneeded variable: "rc". Return "0" on line 110
+drivers/pci/hotplug/pcihp_skeleton.c:98:5-11: Unneeded variable: "retval". Return "0" on line 106
+drivers/pci/hotplug/pcihp_skeleton.c:84:5-11: Unneeded variable: "retval". Return "0" on line 92
+drivers/pci/hotplug/pcihp_skeleton.c:201:5-11: Unneeded variable: "retval". Return "0" on line 210
+drivers/pci/hotplug/pcihp_skeleton.c:171:5-11: Unneeded variable: "retval". Return "0" on line 180
+drivers/pci/hotplug/pcihp_skeleton.c:186:5-11: Unneeded variable: "retval". Return "0" on line 195
+drivers/pci/hotplug/pcihp_skeleton.c:156:5-11: Unneeded variable: "retval". Return "0" on line 165
+drivers/pci/hotplug/pcihp_skeleton.c:137:5-11: Unneeded variable: "retval". Return "0" on line 150
+drivers/pci/hotplug/pcihp_skeleton.c:112:5-11: Unneeded variable: "retval". Return "0" on line 131
+drivers/pci/hotplug/shpchp_pci.c:66:5-7: Unneeded variable: "rc". Return "0" on line 86
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
