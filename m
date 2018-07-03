@@ -1,87 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:44732 "EHLO
-        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732393AbeGaQva (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2018 12:51:30 -0400
-Subject: Re: [PATCH v5] PCI: Check for PCIe downtraining conditions
-To: Tal Gilboa <talgi@mellanox.com>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "keith.busch@intel.com" <keith.busch@intel.com>,
-        "alex_gagniuc@dellteam.com" <alex_gagniuc@dellteam.com>,
-        "austin_bolen@dell.com" <austin_bolen@dell.com>,
-        "shyam_iyer@dell.com" <shyam_iyer@dell.com>,
-        "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
-        "ariel.elior@cavium.com" <ariel.elior@cavium.com>,
-        "michael.chan@broadcom.com" <michael.chan@broadcom.com>,
-        "ganeshgr@chelsio.com" <ganeshgr@chelsio.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        "airlied@gmail.com" <airlied@gmail.com>,
-        "alexander.deucher@amd.com" <alexander.deucher@amd.com>,
-        "mike.marciniszyn@intel.com" <mike.marciniszyn@intel.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
- <20180723200339.23943-1-mr.nuke.me@gmail.com>
- <20180723140143.1a46902f@cakuba.netronome.com>
- <b9a6b3b8-56cf-8bb5-2568-071ccd8a4f28@mellanox.com>
- <fc04618a-3b3b-58bd-edd5-cbde11638d7b@mellanox.com>
-From: "Alex G." <mr.nuke.me@gmail.com>
-Message-ID: <1b914780-e342-6aee-ffb2-ef81ac3ddd29@gmail.com>
-Date: Tue, 31 Jul 2018 10:10:42 -0500
+Return-Path: <SRS0=MB38=JT=bootlin.com=thomas.petazzoni@kernel.org>
+Return-Path: <SRS0=MB38=JT=bootlin.com=thomas.petazzoni@kernel.org>
+Date: Tue, 3 Jul 2018 17:05:09 +0200
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Marek =?UTF-8?B?QmVow7pu?= <marek.behun@nic.cz>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Lorenzo
+ Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas  <helgaas@kernel.org>,
+ linux-pci@vger.kernel.org, Antoine =?UTF-8?B?VMOpbmFydA==?=
+ <antoine.tenart@free-electrons.com>, =?UTF-8?B?R3LDqWdvcnk=?=  Clement
+ <gregory.clement@free-electrons.com>, =?UTF-8?B?TWlxdcOobA==?= Raynal
+ <miquel.raynal@free-electrons.com>, Victor Gu <xigu@marvell.com>
+Subject: Re: pcie-aardvark GEN2 link speed 2.5 GT/s instead of 5.0 GT/s
+Message-ID: <20180703170509.33935a67@windsurf>
+In-Reply-To: <20180703170059.6c5f8b47@dellmb.labs.office.nic.cz>
+References: <20180703170059.6c5f8b47@dellmb.labs.office.nic.cz>
 MIME-Version: 1.0
-In-Reply-To: <fc04618a-3b3b-58bd-edd5-cbde11638d7b@mellanox.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/31/2018 01:40 AM, Tal Gilboa wrote:
-[snip]
->>>> @@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct 
->>>> pci_dev *dev)
->>>>       /* Advanced Error Reporting */
->>>>       pci_aer_init(dev);
->>>> +    /* Check link and detect downtrain errors */
->>>> +    pcie_check_upstream_link(dev);
->>
->> This is called for every PCIe device right? Won't there be a 
->> duplicated print in case a device loads with lower PCIe bandwidth than 
->> needed?
-> 
-> Alex, can you comment on this please?
+Hello,
 
-Of course I can.
++Victor Gu in Cc.
 
-There's one print at probe() time, which happens if bandwidth < max. I 
-would think that's fine. There is a way to duplicate it, and that is if 
-the driver also calls print_link_status(). A few driver maintainers who 
-call it have indicated they'd be fine with removing it from the driver, 
-and leaving it in the core PCI.
+On Tue, 3 Jul 2018 17:00:59 +0200, Marek Beh=C3=BAn wrote:
 
-Should the device come back at low speed, go away, then come back at 
-full speed we'd still only see one print from the first probe. Again, if 
-driver doesn't also call the function.
-There's the corner case where the device come up at < max, goes away, 
-then comes back faster, but still < max. There will be two prints, but 
-they won't be true duplicates -- each one will indicate different BW.
+> for our testing purposes we are trying various PCIe cards on our Armada
+> 3720 board, but for some reason we cannot link the device at 5.0 GT/s.
+> The board should support PCIe GEN 2, and when given an ASM1062 MiniPCIe
+> SATA card, lspci -vvv prints:
+>    LnkCap:	Port #1, Speed 5GT/s, Width x1, ...
+> but
+>    LnkSta:	Speed 2.5GT/s, Width x1, ...
+>=20
+> Is it possible to train the link with pcie-aardvark to 5.0GT/s?
 
-Alex
+I would need to do some research to be able to answer, but as a quick
+reply, I would like to suggest to try the following patch series:
 
->>>> +
->>>>       if (pci_probe_reset_function(dev) == 0)
->>>>           dev->reset_fn = 1;
->>>>   }
->>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>>> index abd5d5e17aee..15bfab8f7a1b 100644
->>>> --- a/include/linux/pci.h
->>>> +++ b/include/linux/pci.h
->>>> @@ -1088,6 +1088,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
->>>>   u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev 
->>>> **limiting_dev,
->>>>                    enum pci_bus_speed *speed,
->>>>                    enum pcie_link_width *width);
->>>> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
->>>>   void pcie_print_link_status(struct pci_dev *dev);
->>>>   int pcie_flr(struct pci_dev *dev);
->>>>   int __pci_reset_function_locked(struct pci_dev *dev);
->>>
+  https://patchwork.ozlabs.org/project/linux-pci/list/?series=3D52819
+
+Could you let us know if it helps or not ?
+
+Best regards,
+
+Thomas
+--=20
+Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
+Embedded Linux and Kernel engineering
+https://bootlin.com
