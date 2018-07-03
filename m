@@ -1,133 +1,100 @@
-Return-Path: <SRS0=2gfv=KD=codeaurora.org=poza@kernel.org>
-Return-Path: <SRS0=2gfv=KD=codeaurora.org=poza@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 5/7 v5] bus: fsl-mc: support dma configure for devices on
+ fsl-mc bus
+To: Nipun Gupta <nipun.gupta@nxp.com>, will.deacon@arm.com,
+ robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
+ catalin.marinas@arm.com, gregkh@linuxfoundation.org,
+ laurentiu.tudor@nxp.com, bhelgaas@google.com
+References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+ <1526824191-7000-6-git-send-email-nipun.gupta@nxp.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <b4cf1e86-0297-97ed-d10e-9b430ecb0bc7@arm.com>
+Date: Tue, 3 Jul 2018 17:14:05 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 19 Jul 2018 21:26:45 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Philippe Ombredanne <pombredanne@nexb.com>, Thomas Gleixner
- <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate
- Stewart <kstewart@linuxfoundation.org>, Dongdong Liu
- <liudongdong3@huawei.com>, Keith Busch <keith.busch@intel.com>, Wei Zhang
- <wzhang@fb.com>, Sinan Kaya <okaya@kernel.org>, Timur Tabi
- <timur@codeaurora.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/7] Fix issues and cleanup for ERR_FATAL and
- ERR_NONFATAL
-In-Reply-To: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <272934d875d2f3a1546567f8c26e5946@codeaurora.org>
+In-Reply-To: <1526824191-7000-6-git-send-email-nipun.gupta@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+ frowand.list@gmail.com, hch@lst.de, linux-arm-kernel@lists.infradead.org,
+ m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-07-19 01:14, Bjorn Helgaas wrote:
-> This is a v3 of Oza's patches [1].  It's available at [2] if you prefer
-> git.
-> 
-> v3 changes:
->   - Add pci_aer_clear_fatal_status() to clear ERR_FATAL bits, only 
-> called
->     from pcie_do_fatal_recovery().  Moved to first in series to avoid a
->     window where ERR_FATAL recovery only clears ERR_NONFATAL bits.  
-> Visible
->     only inside the PCI core.
->   - Instead of having pci_cleanup_aer_uncorrect_error_status() do 
-> different
->     things based on dev->error_state, use this only for ERR_NONFATAL 
-> bits.
->     I didn't change the name because it's used by many drivers.
->   - Rename pci_cleanup_aer_error_device_status() to
->     pci_aer_clear_device_status(), make it void, and make it visible 
-> only
->     inside the PCI core.
->   - Remove pcie_portdrv_err_handler.slot_reset altogether instead of 
-> making
->     it a stub function.  Possibly pcie_portdrv_err_handler could be 
-> removed
->     completely?
-> 
-> [1]
-> https://lkml.kernel.org/r/1529661494-20936-1-git-send-email-poza@codeaurora.org
-> [2]
-> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/?h=pci/06-22-oza-aer
-> 
+On 20/05/18 14:49, Nipun Gupta wrote:
+> This patch adds support of dma configuration for devices on fsl-mc
+> bus using 'dma_configure' callback for busses. Also, directly calling
+> arch_setup_dma_ops is removed from the fsl-mc bus.
+
+Looks like this is the final arch_setup_dma_ops offender, yay!
+
+> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+> Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
 > ---
+>   drivers/bus/fsl-mc/fsl-mc-bus.c | 15 +++++++++++----
+>   1 file changed, 11 insertions(+), 4 deletions(-)
 > 
-> Bjorn Helgaas (1):
->       PCI/AER: Clear only ERR_FATAL status bits during fatal recovery
+> diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
+> index 5d8266c..fa43c7d 100644
+> --- a/drivers/bus/fsl-mc/fsl-mc-bus.c
+> +++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
+> @@ -127,6 +127,16 @@ static int fsl_mc_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
+>   	return 0;
+>   }
+>   
+> +static int fsl_mc_dma_configure(struct device *dev)
+> +{
+> +	struct device *dma_dev = dev;
+> +
+> +	while (dev_is_fsl_mc(dma_dev))
+> +		dma_dev = dma_dev->parent;
+> +
+> +	return of_dma_configure(dev, dma_dev->of_node, 0);
+> +}
+> +
+>   static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+>   			     char *buf)
+>   {
+> @@ -148,6 +158,7 @@ struct bus_type fsl_mc_bus_type = {
+>   	.name = "fsl-mc",
+>   	.match = fsl_mc_bus_match,
+>   	.uevent = fsl_mc_bus_uevent,
+> +	.dma_configure  = fsl_mc_dma_configure,
+>   	.dev_groups = fsl_mc_dev_groups,
+>   };
+>   EXPORT_SYMBOL_GPL(fsl_mc_bus_type);
+> @@ -633,10 +644,6 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
+>   			goto error_cleanup_dev;
+>   	}
+>   
+> -	/* Objects are coherent, unless 'no shareability' flag set. */
+> -	if (!(obj_desc->flags & FSL_MC_OBJ_FLAG_NO_MEM_SHAREABILITY))
+
+Although it seems we do end up without any handling of this 
+"non-coherent object behind coherent MC" case, and I'm not sure how 
+easily that could be accommodated by generic code... :/ How important is 
+the quirk?
+
+Robin.
+
+> -		arch_setup_dma_ops(&mc_dev->dev, 0, 0, NULL, true);
+> -
+>   	/*
+>   	 * The device-specific probe callback will get invoked by device_add()
+>   	 */
 > 
-> Oza Pawandeep (6):
->       PCI/AER: Clear only ERR_NONFATAL bits during non-fatal recovery
->       PCI/AER: Factor out ERR_NONFATAL status bit clearing
->       PCI/AER: Remove ERR_FATAL code from ERR_NONFATAL path
->       PCI/AER: Clear device status bits during ERR_FATAL and 
-> ERR_NONFATAL
->       PCI/AER: Clear device status bits during ERR_COR handling
->       PCI/portdrv: Remove pcie_portdrv_err_handler.slot_reset
-> 
-> 
->  drivers/pci/pci.h              |    5 ++++
->  drivers/pci/pcie/aer.c         |   47 
-> +++++++++++++++++++++++++++-------------
->  drivers/pci/pcie/err.c         |   15 +++++--------
->  drivers/pci/pcie/portdrv_pci.c |   25 ---------------------
->  4 files changed, 43 insertions(+), 49 deletions(-)
 
-
-Hi Bjorn,
-
-I am planning on some things to do after this series.
-
-
-your text
-"
-1) I don't think the driver slot_reset callbacks should be responsible
-for clearing these AER status bits.  Can we clear them somewhere in
-the pcie_do_nonfatal_recovery() path and remove these calls from the
-drivers?
-"
-
-Oza: We can do following
-broadcast_error_message()
-       if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-                 should do
-           pci_walk_bus(dev->subordinate, 
-pci_cleanup_aer_uncorrect_error_status, NULL);
-
-and update all the drivers and remove the call 
-pci_cleanup_aer_uncorrect_error_status()
-
-
-2) In principle, we should only read PCI_ERR_UNCOR_STATUS *once* per
-device when handling an error.  We currently read it three times:
-
-   aer_isr
-     aer_isr_one_error
-       find_source_device
-         find_device_iter
-           is_error_source
-             read PCI_ERR_UNCOR_STATUS              # 1
-Oza: this is the first legitimate read
-       aer_process_err_devices
-         get_device_error_info(e_info->dev[i])
-           read PCI_ERR_UNCOR_STATUS                # 2
-Oza: I see this read used to check if link is healthy so the purpose of 
-this read looks different to me.
-         handle_error_source
-           pcie_do_nonfatal_recovery
-             ...
-               report_slot_reset
-                 driver->err_handler->slot_reset
-                   pci_cleanup_aer_uncorrect_error_status
-                     read PCI_ERR_UNCOR_STATUS      # 3
-Oza: pci_cleanup_aer_uncorrect_error_status() is generic and able to 
-clear status.
-for e.g. in point 4 as I suggested if we have to do
-pci_walk_bus(dev->subordinate, pci_cleanup_aer_uncorrect_error_status, 
-NULL); then we have to read them.
-
-
-3) we need to get rid of pci_channel_io_frozen permanently.
-
-Regards,
-Oza.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
