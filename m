@@ -1,73 +1,121 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 2 Jul 2018 08:19:23 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc: bhelgaas@google.com, keith.busch@intel.com,
-        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, Frederick Lawler <fred@fredlawl.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0087.outbound.protection.outlook.com ([104.47.36.87]:18880
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753671AbeGCHHb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Jul 2018 03:07:31 -0400
+Subject: Re: [PATCH 1/2] PCI: fix restoring resized BAR state on resume
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI/AER: Fix aerdrv loading with "pcie_ports=native"
- parameter
-Message-ID: <20180702131923.GB15983@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180619195835.5423-1-mr.nuke.me@gmail.com>
+References: <20180614122146.62118-1-christian.koenig@amd.com>
+ <20180630005718.GJ40928@bhelgaas-glaptop.roam.corp.google.com>
+ <064ebaf7-8953-fd29-a688-26a5646111a0@gmail.com>
+ <20180702134957.GA43045@bhelgaas-glaptop.roam.corp.google.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Message-ID: <91cdb8b2-ac72-f62d-2dcf-1c53d6d3a005@amd.com>
+Date: Tue, 3 Jul 2018 09:07:17 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180619195835.5423-1-mr.nuke.me@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20180702134957.GA43045@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 19, 2018 at 02:58:20PM -0500, Alexandru Gagniuc wrote:
-> According to the documentation, "pcie_ports=native", linux should use
-> native AER and DPC services. While that is true for the _OSC method
-> parsing, this is not the only place that is checked. Should the HEST
-> table list PCIe ports as firmware-first, linux will not use native
-> services.
-> 
-> This happens because aer_acpi_firmware_first() doesn't take
-> 'pcie_ports' into account. This is wrong. DPC uses the same logic when
-> it decides whether to load or not, so fixing this also fixes DPC not
-> loading.
-> 
-> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> ---
->  drivers/pci/pcie/aer.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> Changes since v1:
->  - Re-tested with latest and greatest (v4.18-rc1) -- works great
-> 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index a2e88386af28..98ced0f7c850 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -291,7 +291,7 @@ static void aer_set_firmware_first(struct pci_dev *pci_dev)
->  
->  	rc = apei_hest_parse(aer_hest_parse, &info);
->  
-> -	if (rc)
-> +	if (rc || pcie_ports_native)
->  		pci_dev->__aer_firmware_first = 0;
->  	else
->  		pci_dev->__aer_firmware_first = info.firmware_first;
-> @@ -327,6 +327,9 @@ bool aer_acpi_firmware_first(void)
->  		apei_hest_parse(aer_hest_parse, &info);
->  		aer_firmware_first = info.firmware_first;
->  		parsed = true;
-> +		if (pcie_ports_native)
-> +			aer_firmware_first = 0;
+Am 02.07.2018 um 15:49 schrieb Bjorn Helgaas:
+> On Mon, Jul 02, 2018 at 03:20:59PM +0200, Christian König wrote:
+>> Am 30.06.2018 um 02:57 schrieb Bjorn Helgaas:
+>>> On Thu, Jun 14, 2018 at 02:21:45PM +0200, Christian König wrote:
+>>>> Resize BARs after resume to the expected size again.
+>>>>
+>>>> Signed-off-by: Christian König <christian.koenig@amd.com>
+>>>> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=199959
+>>>> CC: stable@vger.kernel.org      # v4.15+
+>>> I applied both of these to pci/resource for v4.19, thanks!  It'd be nice to
+>>> have them in v4.18, but since it's not a regression and the problem has
+>>> been there since v4.15, I'm not sure I could justify it.
+>> Well it is a regression. The change to enable this in the upstream driver
+>> was added in 4.16, but a good bunch of people also compile our backported
+>> DKMS module.
+>>
+>> And now those people are complaining that the driver stopped working after
+>> resume in 4.15 with the DKMS module and with 4.16 with the upstream module.
+>>
+>> Alternatively I can disable resizing from the driver from kernels older than
+>> v4.19.
+> Feel free to help justify including this in v4.18 by providing the
+> details of the regression and the relevant commits.  If this is
+> something that worked in v4.17, and some commit we merged for
+> v4.18-rc1 broke it, it would be a slam dunk to include the fix for
+> v4.18.  I took a quick look through the commits we added in v4.18-rc1
+> but didn't see anything obvious.
+>
+> Obviously, putting a fix in v4.18 doesn't help the people running
+> v4.15 or v4.16.  The stable backports *will* help with that, and we
+> already have the tag for that.
+>
+> The current trajectory we're on is that these are headed for
+> v4.19-rc1, and soon after they appear there, they will be backported
+> to the v4.15-v4.18 stable kernels.
 
-Trivial comment for both of these hunks: if we test for
-pcie_ports_native *first*, we won't have to run apei_hest_parse().
-It's fairly obvious that we ignore the result of apei_hest_parse()
-anyway, but I think it's a courtesy to the reader if we don't run it
-at all, so we don't have to worry about side effects.
+Ah! Thanks for the explanation on how fixes flow into stable kernels and 
+you are right it's indeed not a regression in 4.18.
 
-> +
->  	}
->  	return aer_firmware_first;
->  }
-> -- 
-> 2.14.3
-> 
+In this case everything is fine and the backports to stable kernels 
+should handle that.
+
+Thanks,
+Christian.
+
+>
+> Bjorn
+>
+>>>> ---
+>>>>    drivers/pci/pci.c | 28 ++++++++++++++++++++++++++++
+>>>>    1 file changed, 28 insertions(+)
+>>>>
+>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>> index bd6f156dc3cf..d4685090378b 100644
+>>>> --- a/drivers/pci/pci.c
+>>>> +++ b/drivers/pci/pci.c
+>>>> @@ -1159,6 +1159,33 @@ static void pci_restore_config_space(struct pci_dev *pdev)
+>>>>    	}
+>>>>    }
+>>>> +static void pci_restore_rebar_state(struct pci_dev *pdev)
+>>>> +{
+>>>> +	unsigned int pos, nbars, i;
+>>>> +	u32 ctrl;
+>>>> +
+>>>> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
+>>>> +	if (!pos)
+>>>> +		return;
+>>>> +
+>>>> +	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+>>>> +	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >>
+>>>> +		    PCI_REBAR_CTRL_NBAR_SHIFT;
+>>>> +
+>>>> +	for (i = 0; i < nbars; i++, pos += 8) {
+>>>> +		struct resource *res;
+>>>> +		int bar_idx, size;
+>>>> +
+>>>> +		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+>>>> +		bar_idx = ctrl & PCI_REBAR_CTRL_BAR_IDX;
+>>>> +		res = pdev->resource + bar_idx;
+>>>> +		size = order_base_2((resource_size(res) >> 20) | 1) - 1;
+>>>> +		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE;
+>>>> +		ctrl |= size << 8;
+>>>> +		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
+>>>> +	}
+>>>> +}
+>>>> +
+>>>>    /**
+>>>>     * pci_restore_state - Restore the saved state of a PCI device
+>>>>     * @dev: - PCI device that we're dealing with
+>>>> @@ -1174,6 +1201,7 @@ void pci_restore_state(struct pci_dev *dev)
+>>>>    	pci_restore_pri_state(dev);
+>>>>    	pci_restore_ats_state(dev);
+>>>>    	pci_restore_vc_state(dev);
+>>>> +	pci_restore_rebar_state(dev);
+>>>>    	pci_cleanup_aer_error_status_regs(dev);
+>>>> -- 
+>>>> 2.14.1
+>>>>
