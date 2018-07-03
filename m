@@ -1,53 +1,102 @@
-Return-Path: <SRS0=O1ob=KB=infradead.org=willy@kernel.org>
-Return-Path: <SRS0=O1ob=KB=infradead.org=willy@kernel.org>
-Date: Tue, 17 Jul 2018 14:46:03 -0700
-From: Matthew Wilcox <willy@infradead.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Martin Mares <mj@ucw.cz>, Logan Gunthorpe <logang@deltatee.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
-	Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jonathan Corbet <corbet@lwn.net>, Ingo Molnar <mingo@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Kai-Heng Feng <kai.heng.feng@canonical.com>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	=?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
-Subject: Re: lspci: Display path to device
-Message-ID: <20180717214603.GB1771@bombadil.infradead.org>
-References: <20180717170204.30470-1-logang@deltatee.com>
- <20180717203900.GA1771@bombadil.infradead.org>
- <20180717210053.GB128988@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180717210053.GB128988@bhelgaas-glaptop.roam.corp.google.com>
+Date: Tue, 03 Jul 2018 20:42:12 +0530
+From: poza@codeaurora.org
+To: Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
+ reset
+In-Reply-To: <20180703143434.GA4086@wunner.de>
+References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
+ <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
+ <20180703143434.GA4086@wunner.de>
+Message-ID: <fda77cee8e379f2e9b7ab55fefe17cad@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 17, 2018 at 04:00:53PM -0500, Bjorn Helgaas wrote:
-> On Tue, Jul 17, 2018 at 01:39:00PM -0700, Matthew Wilcox wrote:
-> > The Nehalem system makes an interesting testcase because it exposes some
-> > registers in fake PCIe devices that aren't behind the root ports.  eg:
-> > 
-> > ff:06.3 Host bridge: Intel Corporation Xeon 5500/Core i7 Integrated Memory Controller Channel 2 Thermal Control Registers (rev 04)
+On 2018-07-03 20:04, Lukas Wunner wrote:
+> On Mon, Jul 02, 2018 at 06:52:47PM -0400, Sinan Kaya wrote:
+>> @@ -308,8 +310,17 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, 
+>> u32 service)
+>>  		pci_dev_put(pdev);
+>>  	}
+>> 
+>> +	hpsvc = pcie_port_find_service(udev, PCIE_PORT_SERVICE_HP);
+>> +	hpdev = pcie_port_find_device(udev, PCIE_PORT_SERVICE_HP);
+>> +
+>> +	if (hpdev && hpsvc)
+>> +		hpsvc->mask_irq(to_pcie_device(hpdev));
+>> +
+>>  	result = reset_link(udev, service);
+>> 
+>> +	if (hpdev && hpsvc)
+>> +		hpsvc->unmask_irq(to_pcie_device(hpdev));
+>> +
 > 
-> I think these appear as conventional PCI devices; at least the ones
-> I've seen, e.g., [1], don't have a PCIe capability, so I think it
-> makes sense that they're not behind a root port.
+> We've already got the ->reset_slot callback in struct hotplug_slot_ops,
+> I'm wondering if we really need additional ones for this use case.
 > 
-> [1] https://bugzilla5.redhat.com/attachment.cgi?id=433169
+> If you just do...
+> 
+> 	if (!pci_probe_reset_slot(dev->slot))
+> 		pci_reset_slot(dev->slot)
+> 	else {
+> 		/* regular code path */
+> 	}
+> 
+> would that not be equivalent?
+> 
 
-Oh, I don't think we're doing anything wrong with how we're displaying
-them or what we're doing with what the system presents to us.  My only
-point was that this is a good test-case for code which assumes that all
-PCI devices lie under a PCIe root port.  At one point during development,
-my code reported that device up there as
+pcie_do_fatal_recovery() calls
+           reset_link()
+              which calls dpc_reset_link() or aer_root_reset() depending 
+on the event.
 
-/06.3 Host bridge: Intel Corporation Xeon 5500/Core i7 Integrated Memory Controller Channel 2 Thermal Control Registers (rev 04)
+and dpc_reset_link() and aer_root_reset() do their own cleanup stuffs.
+infact, aer_root_reset() is the only function which actually triggers 
+pci_reset_bridge_secondary_bus().
 
-but since I had that system available to test with, I spotted that problem
-and made it present that device as ff:06.3 (both with and without -P).
+So if we try to fit in your suggestion:
+
+if (!pci_probe_reset_slot(dev->slot))
+{
+     pci_reset_slot(dev->slot)
+     result = reset_link(udev, service); >> in this case aer_root_reset 
+must not call pci_reset_bridge_secondary_bus()
+} else
+     result = reset_link(udev, service); >> in this case aer_root_reset 
+must call pci_reset_bridge_secondary_bus() [since bridge is not hotplug 
+capable)
+
+Did I get your suggestion right ?
+
+Regards,
+Oza.
+
+> (It's worth noting though that pciehp is the only hotplug driver
+> implementing the ->reset_slot callback.  If hotplug is handled by
+> a different driver or by the platform firmware, devices may still
+> be removed and re-enumerated twice.)
+> 
+
+> Thanks,
+> 
+> Lukas
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
