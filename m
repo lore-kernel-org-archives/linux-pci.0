@@ -1,60 +1,167 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:57993 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730822AbeGMQME (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2018 12:12:04 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v10 12/12] PCI: endpoint: Add MSI set maximum restriction
-Date: Fri, 13 Jul 2018 17:56:44 +0200
-Message-Id: <9dfb92025894fa5c7bc8f08ae43a58c2001319d6.1531496321.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=5pGf=JU=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=5pGf=JU=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Wed, 4 Jul 2018 16:13:05 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Robin Murphy <robin.murphy@arm.com>, poza@codeaurora.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+	linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH INTERNAL 3/3] PCI: iproc: Disable MSI parsing in certain
+ PAXC blocks
+Message-ID: <20180704151254.GA12996@red-moon>
+References: <1526577692-21104-1-git-send-email-ray.jui@broadcom.com>
+ <1526577692-21104-4-git-send-email-ray.jui@broadcom.com>
+ <ad41ea7f16414a83a2b3d7e6192bcf79@codeaurora.org>
+ <20180518135614.GA18605@e107981-ln.cambridge.arm.com>
+ <e433f2cf-63c5-37c3-f7ef-15ff0aa67e4f@broadcom.com>
+ <20180521133305.GB1443@e107981-ln.cambridge.arm.com>
+ <073832d4-88a0-efa1-2da8-5e07479e51e0@arm.com>
+ <d8988a30-f604-f00d-cc8f-db01b4def3c9@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <d8988a30-f604-f00d-cc8f-db01b4def3c9@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pci_epc_set_msi() maximum 32 interrupts validation.
+On Tue, May 22, 2018 at 09:48:55AM -0700, Ray Jui wrote:
+> Hi Robin/Lorenzo,
+> 
+> On 5/21/2018 7:26 AM, Robin Murphy wrote:
+> >On 21/05/18 14:33, Lorenzo Pieralisi wrote:
+> >>[+Robin]
+> >>
+> >>On Fri, May 18, 2018 at 12:48:28PM -0700, Ray Jui wrote:
+> >>>Hi Lorenzo,
+> >>>
+> >>>On 5/18/2018 6:56 AM, Lorenzo Pieralisi wrote:
+> >>>>On Fri, May 18, 2018 at 02:53:41PM +0530, poza@codeaurora.org wrote:
+> >>>>>On 2018-05-17 22:51, Ray Jui wrote:
+> >>>>>>The internal MSI parsing logic in certain revisions of PAXC root
+> >>>>>>complexes does not work properly and can casue corruptions on the
+> >>>>>>writes. They need to be disabled
+> >>>>>>
+> >>>>>>Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> >>>>>>Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> >>>>>>---
+> >>>>>>drivers/pci/host/pcie-iproc.c | 34 ++++++++++++++++++++++++++++++++--
+> >>>>>>1 file changed, 32 insertions(+), 2 deletions(-)
+> >>>>>>
+> >>>>>>diff --git a/drivers/pci/host/pcie-iproc.c
+> >>>>>>b/drivers/pci/host/pcie-iproc.c
+> >>>>>>index 3c76c5f..b906d80 100644
+> >>>>>>--- a/drivers/pci/host/pcie-iproc.c
+> >>>>>>+++ b/drivers/pci/host/pcie-iproc.c
+> >>>>>>@@ -1144,10 +1144,22 @@ static int
+> >>>>>>iproc_pcie_paxb_v2_msi_steer(struct
+> >>>>>>iproc_pcie *pcie, u64 msi_addr)
+> >>>>>>    return ret;
+> >>>>>>}
+> >>>>>>
+> >>>>>>-static void iproc_pcie_paxc_v2_msi_steer(struct
+> >>>>>>iproc_pcie *pcie, u64
+> >>>>>>msi_addr)
+> >>>>>>+static void iproc_pcie_paxc_v2_msi_steer(struct
+> >>>>>>iproc_pcie *pcie, u64
+> >>>>>>msi_addr,
+> >>>>>>+                     bool enable)
+> >>>>>>{
+> >>>>>>    u32 val;
+> >>>>>>
+> >>>>>>+    if (!enable) {
+> >>>>>>+        /*
+> >>>>>>+         * Disable PAXC MSI steering. All write transfers will be
+> >>>>>>+         * treated as non-MSI transfers
+> >>>>>>+         */
+> >>>>>>+        val = iproc_pcie_read_reg(pcie, IPROC_PCIE_MSI_EN_CFG);
+> >>>>>>+        val &= ~MSI_ENABLE_CFG;
+> >>>>>>+        iproc_pcie_write_reg(pcie, IPROC_PCIE_MSI_EN_CFG, val);
+> >>>>>>+        return;
+> >>>>>>+    }
+> >>>>>>+
+> >>>>>>    /*
+> >>>>>>     * Program bits [43:13] of address of
+> >>>>>>GITS_TRANSLATER register into
+> >>>>>>     * bits [30:0] of the MSI base address register.  In
+> >>>>>>fact, in all iProc
+> >>>>>>@@ -1201,7 +1213,7 @@ static int
+> >>>>>>iproc_pcie_msi_steer(struct iproc_pcie
+> >>>>>>*pcie,
+> >>>>>>            return ret;
+> >>>>>>        break;
+> >>>>>>    case IPROC_PCIE_PAXC_V2:
+> >>>>>>-        iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr);
+> >>>>>>+        iproc_pcie_paxc_v2_msi_steer(pcie, msi_addr, true);
+> >>>>>
+> >>>>>Are you calling iproc_pcie_paxc_v2_msi_steer() anywhere
+> >>>>>else with 'false' ?
+> >>>>>I see its getting called only from one place in current code
+> >>>>>iproc_pcie_msi_steer().
+> >>>>
+> >>>>It is called below with the false field to disable MSIs.
+> >>>>That's probably
+> >>>>one reason more to create a function to enable/disable MSIs instead of
+> >>>>adding a parameter to iproc_pcie_paxc_v2_msi_steer().
+> >>>
+> >>>Correct. Thanks for helping to explain.
+> >>>
+> >>>>
+> >>>>Which brings me to the question: what happens to those MSIs writes
+> >>>>when MSIs are disabled according to this patch ? Are they terminated
+> >>>>at the root complex ?
+> >>>
+> >>>Note the PAXC block parses MSI writes from our internally connected
+> >>>endpoints (i.e., an embedded network processor). The PAXC block examines
+> >>>these MSI writes and modifies the memory attributes (to DEVICE) of these
+> >>>data and then send them out to the AXI bus. These MSI writes
+> >>>will then be
+> >>>forwarded to the GIC (e.g., GICv2m, GICv3-ITS from ARM) for further
+> >>>processing. This is saying, PAXC itself does not process these
+> >>>MSI writes.
+> >>>They are processed by the GIC and associated interrupt will be generated
+> >>>form the GIC. PAXC's job is to parse and tag them properly so these MSI
+> >>>writes can reach the GIC, and at the same, reach the GIC at
+> >>>the right order.
+> >>>
+> >>>On some of these problematic PAXCs, we are being forced to
+> >>>disable this PAXC
+> >>>internal parsing logic. In this case, we set up static mapping with the
+> >>>IOMMU to modify the memory attributes of these MSI writes.
+> >>>These MSI writes
+> >>>are always designated towards a specific memory address (e.g.,
+> >>>on the GICv3
+> >>>based system, it's the address of the translator register),
+> >>>and that's why
+> >>>static mapping table can be set up to work around this.
+> >>
+> >>Which means, I presume, that there must be some code that somehow
+> >>somewhere in the kernel sets-up those mappings and it has to be related
+> >>to this patch, in which case I wonder why we enable the PAXC steering at
+> >>all given that this (hack) can be done through the IOMMU (and I assume
+> >>that on all PAXC platforms that do need MSIs there is an IOMMU IP
+> >>upstream the root bridge, otherwise I have no idea what will happen to
+> >>those MSI writes).
+> >
+> >If it's only rewriting memory attributes (FWIW it sounds like this
+> >thing is comparable to the AXI translation table of the PLDA root
+> >complex we have in Juno), then if the IOMMU is controlled by Linux
+> >the PAXC shouldn't be needed anyway. In that situation the
+> >GICv2m/ITS doorbell will be already mapped for the endpoint as
+> >device memory (and usually at some arbitrary address that the PAXC
+> >won't recognise anyway) - see iommu_dma_get_msi_page().
+> >
+> >If Linux *doesn't* know about the IOMMU, then the firmware should
+> >be free to set it up with a static 1:1 mapping of the PA space and
+> >leave it that way, provided Linux can't inadvertently stomp on
+> >those page tables later.
+> 
+> Right, in our case, we had our ATF bootloader set up 1:1 mapping for
+> this. In this case, PAXC internal MSI parsing is completely disabled
+> (which is what this patch does for those PAXC blocks that have this
+> issue).
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v4->v5:
- - New patch file.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Nothing changed, just to follow the patch set version.
-Change v9->v10:
- - Nothing changed, just to follow the patch set version.
+Ok so to sum it up, why does the PCI host bridge code has to deal with
+this steering at all given the discussion above ? Why can't we disable
+PAXC steering completely ?
 
- drivers/pci/endpoint/pci-epc-core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index c72e656..094dcc3 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -201,7 +201,8 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- 	u8 encode_int;
- 	unsigned long flags;
- 
--	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
-+	    interrupts > 32)
- 		return -EINVAL;
- 
- 	if (!epc->ops->set_msi)
--- 
-2.7.4
+Lorenzo
