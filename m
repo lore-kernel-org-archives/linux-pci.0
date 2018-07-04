@@ -1,67 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34669 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753698AbeGELb2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2018 07:31:28 -0400
+Return-Path: <SRS0=WgwQ=JU=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=WgwQ=JU=gmail.com=kernelfans@kernel.org>
 MIME-Version: 1.0
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Thu, 5 Jul 2018 13:31:27 +0200
-Message-ID: <CAJZ5v0hTE4OMOQ7wJ0S5eEwK+ZzYo4HVaGHvJiDPVA4xJc2hyQ@mail.gmail.com>
-Subject: [GIT PULL] Power management fixes for v4.18-rc4
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <1530600642-25090-3-git-send-email-kernelfans@gmail.com> <20180703075106.GA21136@wunner.de>
+ <CAFgQCTt0M=+AQKXFXcOkxppjnDK9EAyNxHN=2F+n_NvyN=rQqg@mail.gmail.com>
+In-Reply-To: <CAFgQCTt0M=+AQKXFXcOkxppjnDK9EAyNxHN=2F+n_NvyN=rQqg@mail.gmail.com>
+From: Pingfan Liu <kernelfans@gmail.com>
+Date: Wed, 4 Jul 2018 11:10:30 +0800
+Message-ID: <CAFgQCTtY3=F5O6ibzS=7B1cDbzwn=OCnooHRP4HSEtoAO-eY6w@mail.gmail.com>
+Subject: Re: [PATCHv3 2/4] drivers/base: utilize device tree info to shutdown devices
+To: lukas@wunner.de
+Cc: linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Tue, Jul 3, 2018 at 5:26 PM Pingfan Liu <kernelfans@gmail.com> wrote:
+>
+> On Tue, Jul 3, 2018 at 3:51 PM Lukas Wunner <lukas@wunner.de> wrote:
+> >
+> > On Tue, Jul 03, 2018 at 02:50:40PM +0800, Pingfan Liu wrote:
+> > > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+> > > places an assumption of supplier<-consumer order on the process of probe.
+> > > But it turns out to break down the parent <- child order in some scene.
+> > > E.g in pci, a bridge is enabled by pci core, and behind it, the devices
+> > > have been probed. Then comes the bridge's module, which enables extra
+> > > feature(such as hotplug) on this bridge. This will break the
+> > > parent<-children order and cause failure when "kexec -e" in some scenario.
+> > >
+> > > The detailed description of the scenario:
+> > > An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
+> > > match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
+> > > to some issue. For this case, the bridge is moved after its children in
+> > > devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
+> > > write back buffer in flight due to the former shutdown of the bridge which
+> > > clears the BusMaster bit.
+> >
+> > If you revert commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services
+> > during shutdown"), does the issue go away?
+>
+> Yes, it is gone.
 
-Please pull from the tag
+Have not figured out why the issue was gone. But I think it just cover
+some fault.
 
- git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
- pm-4.18-rc4
+re-fetch the boot log of mainline kernel without any patch, and filter
+out the pci domain 0004
+grep "devices_kset: Moving 0004:" newlog.txt
+[    2.114986] devices_kset: Moving 0004:00:00.0 to end of list   <---
+pcie port drive's probe, but it failed
+[    2.115192] devices_kset: Moving 0004:01:00.0 to end of list
+[    2.115591] devices_kset: Moving 0004:02:02.0 to end of list
+[    2.115923] devices_kset: Moving 0004:02:0a.0 to end of list
+[    2.116141] devices_kset: Moving 0004:02:0b.0 to end of list
+[    2.116358] devices_kset: Moving 0004:02:0c.0 to end of list
+[    3.181860] devices_kset: Moving 0004:03:00.0 to end of list  <---
+the ata disk controller which sits behind the bridge
+[   10.267081] devices_kset: Moving 0004:00:00.0 to end of list  <---
+shpc_probe() on this bridge, failed too.
 
-with top-most commit 88b96088e94ec66f6c9015eee28cb9d053be69c0
+Hence we have the bridge (parent) after the child in devices_kset.
 
- Merge branch 'pm-pci'
-
-on top of commit 021c91791a5e7e85c567452f1be3e4c2c6cb6063
-
- Linux 4.18-rc3
-
-to receive power management fixes for 4.18-rc4.
-
-These fix a PCI power management regression introduced during the
-4.17 cycle and fix up the recently added support for devices in
-multiple power domains.
-
-Specifics:
-
- - Resume parallel PCI (non-PCIe) bridges on suspend-to-RAM (ACP S3)
-   to avoid confusing the platform firmware which started to happen
-   after a core power management regression fix that went in during
-   the 4.17 cycle (Rafael Wysocki).
-
- - Fix up the recently added support for devices in multiple power
-   domains by avoiding to power up the entire domain unnecessarily
-   when attaching a device to it (Ulf Hansson).
-
-Thanks!
-
-
----------------
-
-Rafael J. Wysocki (1):
-      PCI / ACPI / PM: Resume bridges w/o drivers on suspend-to-RAM
-
-Ulf Hansson (1):
-      PM / Domains: Don't power on at attach for the multi PM domain case
-
----------------
-
- drivers/base/power/domain.c | 16 +++++++++-------
- drivers/pci/pci-acpi.c      | 12 ++++++++++++
- 2 files changed, 21 insertions(+), 7 deletions(-)
+Thanks,
+Pingfan
