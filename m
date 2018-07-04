@@ -1,107 +1,132 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 20 Jul 2018 15:01:23 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <Okaya@kernel.org>
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-Message-ID: <20180720200123.GS128988@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAK9iUCM=zWexWow9TwkRfO186Hwr5WyGy0NHZF1vtXn3wbbZGQ@mail.gmail.com>
- <12fc8de5-ff03-cb00-52cb-25a43c71d03a@codeaurora.org>
- <20180708171418.GA11476@wunner.de>
- <CAK9iUCMcic5mzGiT20KNxgwPo6AuajHFsoj7GOjSht5SwrQevg@mail.gmail.com>
- <20180709160008.GA1490@wunner.de>
- <CAK9iUCMMVR114msKiMHu7ik0VK8T5j=LAYAKsEkdnocTqkdMjQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:37954 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751761AbeGDOIJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Jul 2018 10:08:09 -0400
+Date: Wed, 4 Jul 2018 15:09:55 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Dexuan Cui <decui@microsoft.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "'olaf@aepfle.de'" <olaf@aepfle.de>,
+        "'apw@canonical.com'" <apw@canonical.com>,
+        "'jasowang@redhat.com'" <jasowang@redhat.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'driverdev-devel@linuxdriverproject.org'"
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "'vkuznets@redhat.com'" <vkuznets@redhat.com>,
+        "'marcelo.cerri@canonical.com'" <marcelo.cerri@canonical.com>
+Subject: Re: [PATCH v2] PCI: hv: Disable/enable irq rather than bh in
+ hv_compose_msi_msg()
+Message-ID: <20180704140955.GA12863@red-moon>
+References: <KL1P15301MB0006BE5DB7C3C45386E4327FBF4C0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
-In-Reply-To: <CAK9iUCMMVR114msKiMHu7ik0VK8T5j=LAYAKsEkdnocTqkdMjQ@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, Keith Busch <keith.busch@intel.com>,
- Lukas Wunner <lukas@wunner.de>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <KL1P15301MB0006BE5DB7C3C45386E4327FBF4C0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2018 at 02:30:11PM -0400, Sinan Kaya wrote:
-> On Mon, Jul 9, 2018 at 12:00 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> > On Mon, Jul 09, 2018 at 08:48:44AM -0600, Sinan Kaya wrote:
-> > > On 7/8/18, Lukas Wunner <lukas@wunner.de> wrote:
-> > > > On Tue, Jul 03, 2018 at 11:43:26AM -0400, Sinan Kaya wrote:
-> > > > > My solution doesn't help if link down interrupt is observed
-> > > > > before the AER or DPC services.
-> > > >
-> > > > If pciehp gets an interrupt quicker than dpc/aer, it will (at
-> > > > least with my patches) remove all devices, check if the
-> > > > presence bit is set, and if so, try to bring the slot up
-> > > > again.
-> > >
-> > > Hotplug driver should only observe a link down interrupt. Link
-> > > would come up in response to a secondary bus reset initiated by
-> > > the AER driver.
-> >
-> > PCIe hotplug doesn't have separate Link Down and Link Up
-> > interrupts, there is only a Link State *Changed* event.
-> >
-> > > Can you point me to the code that would bring up the link in hp
-> > > code?
-> >
-> > I was referring to the situation with my recently posted pciehp
-> > patches applied, in particular patch [21/32] ("PCI: pciehp: Become
-> > resilient to missed events"):
-> > https://patchwork.ozlabs.org/patch/930389/
-> >
-> > When I get a presence or link changed event, I turn the slot off.
-> > That includes removing all devices in the slot.  Because even if
-> > the slot is still occupied or link is up, there was definitely a
-> > change and the safe behavior is to assume that the card in the
-> > slot is now a different one than before.
+On Sun, Jul 01, 2018 at 06:22:23PM +0000, Dexuan Cui wrote:
 > 
-> We do have a bit of mess unfortunately. Error handling and hotplug
-> drivers do not play nicely with each other.
+> Commit de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in hv_compose_msi_msg()")
+> uses local_bh_disable()/enable(), because hv_pci_onchannelcallback() can
+> also run in tasklet context as the channel event callback, and here we
+> want to avoid the race.
 > 
-> When hotplug driver observes a link down, we are not checking if the
-> link down happened because user really wanted to remove a card or if
-> it was because it was originated by an error handling service such
-> as AER/DPC.
+> With CONFIG_PROVE_LOCKING=y in the recent mainline, or old kernels that
+> don't have commit f71b74bca637 ("irq/softirqs: Use lockdep to assert IRQs
+> are disabled/enabled"), when the upper layer irq code calls
+> hv_compose_msi_msg() with local irq DISABLED, we'll see a warning at the
+> beginning of __local_bh_enable_ip():
 > 
-> I'm thinking that we could potentially check if a hotplug event is
-> pending at the entrance of fatal error handling. If it is pending,
-> we could poll until the status bit clears. That should flush the
-> link down event.
+> IRQs not enabled as expected
+>   WARNING: CPU: 0 PID: 408 at kernel/softirq.c:162 __local_bh_enable_ip
 > 
-> Even then, link down indication of hotplug seem to turn off slot
-> power and LED.
+> The warning exposes an issue in de0aa7b2f97d: local_bh_enable() can
+> potentially call do_softirq(), which is not supposed to run when local
+> irq is DISABLED. Let's fix this by using local_irq_save()/restore()
+> instead.
 > 
-> If AER/DPC service runs after the hotplug driver, link won't come
-> back up as the power to the slot is turned off.
+> Note: hv_pci_onchannelcallback() is not a hot path because it's only
+> called when the PCI device is hot added and removed, which is infrequent.
 > 
-> I'd like to hear about Bjorn's opinion before we throw something
-> else into this problem.
+> Fixes: de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in hv_compose_msi_msg()")
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+> Cc: <stable@vger.kernel.org>
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
+> ---
+> 
+> A trimmed version of the warning is:
+> 
+> IRQs not enabled as expected
+> WARNING: CPU: 0 PID: 408 at kernel/softirq.c:162 __local_bh_enable_ip+0xb0/0xe0
+> Call Trace:
+>  hv_compose_msi_msg+0x209/0x462 [pci_hyperv]
+>  irq_chip_compose_msi_msg+0x41/0x50
+>  msi_domain_activate+0x1a/0x40
+>  __irq_domain_activate_irq+0x59/0x90
+>  irq_domain_activate_irq+0x25/0x40
+>  __setup_irq+0x3ec/0x730
+> request_threaded_irq+0xfa/0x1a0
+> mlx4_init_eq_table+0x3c3/0x5f0 [mlx4_core]
+> mlx4_setup_hca+0x1db/0x750 [mlx4_core]
+> mlx4_load_one+0xad2/0x13b0 [mlx4_core]
+> mlx4_init_one+0x578/0x710 [mlx4_core]
+> local_pci_probe+0x1e/0x50
+> work_for_cpu_fn+0x10/0x20
+> process_one_work+0x1d4/0x5a0
+> worker_thread+0x1cb/0x3d0
+> kthread+0xf5/0x130
+> 
+> 
+> Changes since v1:
+> 	Updated the changelog only (fixed typos and some inaccuracy)
+> 
+> 
+>  drivers/pci/controller/pci-hyperv.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
 
-You guys know way more about this than I do.
+Applied to pci/controller-fixes, to be tentatively sent for an
+upcoming -rc, thanks.
 
-I think the separation of AER/DPC/pciehp into separate drivers is
-somewhat artificial because there are many interdependencies.  The
-driver model doesn't apply very well because there's only one
-underlying piece of hardware, which forces us to use the portdrv as
-sort of a multiplexer.  The fact that portdrv claims these bridges
-also means normal drivers (e.g., for performance counters) can't use
-the usual model.
+Lorenzo
 
-All that is to say that if integrating these services more tightly
-would help solve this problem, I'd be open to that.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> index ba1d4b5..eb20296 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -1073,6 +1073,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>  	struct pci_bus *pbus;
+>  	struct pci_dev *pdev;
+>  	struct cpumask *dest;
+> +	unsigned long flags;
+>  	struct compose_comp_ctxt comp;
+>  	struct tran_int_desc *int_desc;
+>  	struct {
+> @@ -1164,14 +1165,15 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>  		 * the channel callback directly when channel->target_cpu is
+>  		 * the current CPU. When the higher level interrupt code
+>  		 * calls us with interrupt enabled, let's add the
+> -		 * local_bh_disable()/enable() to avoid race.
+> +		 * local_irq_save()/restore() to avoid race:
+> +		 * hv_pci_onchannelcallback() can also run in tasklet.
+>  		 */
+> -		local_bh_disable();
+> +		local_irq_save(flags);
+>  
+>  		if (hbus->hdev->channel->target_cpu == smp_processor_id())
+>  			hv_pci_onchannelcallback(hbus);
+>  
+> -		local_bh_enable();
+> +		local_irq_restore(flags);
+>  
+>  		if (hpdev->state == hv_pcichild_ejecting) {
+>  			dev_err_once(&hbus->hdev->device,
+> -- 
+> 2.7.4
+> 
