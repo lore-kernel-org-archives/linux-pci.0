@@ -1,72 +1,70 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH 1/2] PCI: Export pcie_has_flr()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Date: Mon, 23 Jul 2018 16:24:22 -0600
-Message-ID: <20180723222422.4371.68674.stgit@gimli.home>
-In-Reply-To: <20180723221533.4371.90064.stgit@gimli.home>
-References: <20180723221533.4371.90064.stgit@gimli.home>
+Return-Path: <SRS0=WgwQ=JU=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=WgwQ=JU=gmail.com=kernelfans@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <1530600642-25090-4-git-send-email-kernelfans@gmail.com> <3375966.ydPZj5TMVj@aspire.rjw.lan>
+In-Reply-To: <3375966.ydPZj5TMVj@aspire.rjw.lan>
+From: Pingfan Liu <kernelfans@gmail.com>
+Date: Wed, 4 Jul 2018 12:40:09 +0800
+Message-ID: <CAFgQCTtu7jaUfWV4xq8CfWb7vuS5=+HuNpNxeMm9UawoUZ2CBg@mail.gmail.com>
+Subject: Re: [PATCHv3 3/4] drivers/base: clean up the usage of devices_kset_move_last()
+To: rjw@rjwysocki.net
+Cc: Grygorii Strashko <grygorii.strashko@ti.com>, linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-pcie_flr() suggests pcie_has_flr() to ensure that PCIe FLR support is
-present prior to calling.  pcie_flr() is exported while pcie_has_flr()
-is not.  Resolve this.
+On Tue, Jul 3, 2018 at 10:28 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>
+> On Tuesday, July 3, 2018 8:50:41 AM CEST Pingfan Liu wrote:
+> > Clean up the referring to the code in commit 52cdbdd49853 ("driver core:
+> > correct device's shutdown order"). So later we can revert it safely.
+> >
+> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+> > Cc: Christoph Hellwig <hch@infradead.org>
+> > Cc: Bjorn Helgaas <helgaas@kernel.org>
+> > Cc: Dave Young <dyoung@redhat.com>
+> > Cc: linux-pci@vger.kernel.org
+> > Cc: linuxppc-dev@lists.ozlabs.org
+> > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+> > ---
+> >  drivers/base/core.c | 7 -------
+> >  1 file changed, 7 deletions(-)
+> >
+> > diff --git a/drivers/base/core.c b/drivers/base/core.c
+> > index 684b994..db3deb8 100644
+> > --- a/drivers/base/core.c
+> > +++ b/drivers/base/core.c
+> > @@ -127,13 +127,6 @@ static int device_reorder_to_tail(struct device *dev, void *not_used)
+> >  {
+> >       struct device_link *link;
+> >
+> > -     /*
+> > -      * Devices that have not been registered yet will be put to the ends
+> > -      * of the lists during the registration, so skip them here.
+> > -      */
+> > -     if (device_is_registered(dev))
+> > -             devices_kset_move_last(dev);
+> > -
+> >       if (device_pm_initialized(dev))
+> >               device_pm_move_last(dev);
+>
+> You can't do this.
+>
+> If you do it, that will break power management in some situations.
+>
+Could you shed light on it? I had a quick browsing of pm code, but it
+is a big function, and I got lost in it.
+If the above code causes failure, then does it imply that the seq in
+devices_kset should be the same as dpm_list? But in device_shutdown(),
+it only intersect with pm by
+pm_runtime_get_noresume(dev) and pm_runtime_barrier(dev). How do these
+function affect the seq in dpm_list? Need your help to see how to
+handle this issue.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c   |    3 ++-
- include/linux/pci.h |    1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2bec76c9d9a7..52fe2d72a99c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4071,7 +4071,7 @@ static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
-  * Returns true if the device advertises support for PCIe function level
-  * resets.
-  */
--static bool pcie_has_flr(struct pci_dev *dev)
-+bool pcie_has_flr(struct pci_dev *dev)
- {
- 	u32 cap;
- 
-@@ -4081,6 +4081,7 @@ static bool pcie_has_flr(struct pci_dev *dev)
- 	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
- 	return cap & PCI_EXP_DEVCAP_FLR;
- }
-+EXPORT_SYMBOL_GPL(pcie_has_flr);
- 
- /**
-  * pcie_flr - initiate a PCIe function level reset
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 04c7ea6ed67b..bbe030d7814f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1092,6 +1092,7 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
- 			     enum pci_bus_speed *speed,
- 			     enum pcie_link_width *width);
- void pcie_print_link_status(struct pci_dev *dev);
-+bool pcie_has_flr(struct pci_dev *dev);
- int pcie_flr(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
-
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+Thanks and regards,
+Pingfan
