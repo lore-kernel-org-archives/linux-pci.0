@@ -1,39 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47302 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728370AbeGWWCr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 23 Jul 2018 18:02:47 -0400
-Subject: [PATCH] vxge: Remove unnecessary include of <linux/pci_hotplug.h>
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jon Mason <jdmason@kudzu.us>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 23 Jul 2018 15:59:46 -0500
-Message-ID: <153237958637.172194.6734539971240967379.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 4 Jul 2018 17:35:29 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Leonard Crestez <leonard.crestez@nxp.com>,
+ Philipp Zabel <p.zabel@pengutronix.de>
+Subject: Re: [PATCH 1/2] reset: imx7: Fix always writing bits as 0
+Message-ID: <20180704163517.GA13155@red-moon>
+References: <cover.1527621510.git.leonard.crestez@nxp.com>
+ <c441872d7dd355ae09e945447441389e93e3b888.1527621510.git.leonard.crestez@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <c441872d7dd355ae09e945447441389e93e3b888.1527621510.git.leonard.crestez@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Richard Zhu <hongxing.zhu@nxp.com>,
+ Abel Vesa <abel.vesa@nxp.com>, Anson Huang <Anson.Huang@nxp.com>,
+ linux-pm@vger.kernel.org, Andrey Smirnov <andrew.smirnov@gmail.com>,
+ linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ linux-kernel@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org,
+ Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Tue, May 29, 2018 at 10:39:16PM +0300, Leonard Crestez wrote:
+> Right now the only user of reset-imx7 is pci-imx6 and the
+> reset_control_assert and deassert calls on pciephy_reset don't toggle
+> the PCIEPHY_BTN and PCIEPHY_G_RST bits as expected. Fix this by writing
+> 1 or 0 respectively.
+> 
+> The reference manual is not very clear regarding SRC_PCIEPHY_RCR but for
+> other registers like MIPIPHY and HSICPHY the bits are explicitly
+> documented as "1 means assert, 0 means deassert".
+> 
+> The values are still reversed for IMX7_RESET_PCIE_CTRL_APPS_EN.
+> 
+> Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
+> ---
+>  drivers/reset/reset-imx7.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-The vxge driver doesn't need anything provided by pci_hotplug.h, so remove
-the unnecessary include of it.
+I think Philipp will pick it up, so I will drop it from the PCI
+patchwork, if there is a problem please let me know.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/net/ethernet/neterion/vxge/vxge-config.c |    1 -
- 1 file changed, 1 deletion(-)
+Thanks,
+Lorenzo
 
-diff --git a/drivers/net/ethernet/neterion/vxge/vxge-config.c b/drivers/net/ethernet/neterion/vxge/vxge-config.c
-index 358ed6118881..a2c0a93ca8b6 100644
---- a/drivers/net/ethernet/neterion/vxge/vxge-config.c
-+++ b/drivers/net/ethernet/neterion/vxge/vxge-config.c
-@@ -14,7 +14,6 @@
- #include <linux/vmalloc.h>
- #include <linux/etherdevice.h>
- #include <linux/pci.h>
--#include <linux/pci_hotplug.h>
- #include <linux/slab.h>
- 
- #include "vxge-traffic.h"
+> diff --git a/drivers/reset/reset-imx7.c b/drivers/reset/reset-imx7.c
+> index 4db177bc89bc..fdeac1946429 100644
+> --- a/drivers/reset/reset-imx7.c
+> +++ b/drivers/reset/reset-imx7.c
+> @@ -78,11 +78,11 @@ static struct imx7_src *to_imx7_src(struct reset_controller_dev *rcdev)
+>  static int imx7_reset_set(struct reset_controller_dev *rcdev,
+>  			  unsigned long id, bool assert)
+>  {
+>  	struct imx7_src *imx7src = to_imx7_src(rcdev);
+>  	const struct imx7_src_signal *signal = &imx7_src_signals[id];
+> -	unsigned int value = 0;
+> +	unsigned int value = assert ? signal->bit : 0;
+>  
+>  	switch (id) {
+>  	case IMX7_RESET_PCIEPHY:
+>  		/*
+>  		 * wait for more than 10us to release phy g_rst and
+> -- 
+> 2.17.0
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
