@@ -1,105 +1,40 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
- <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH v2 1/4] PCI: mediatek: fixup mtk_pcie_find_port logical
-Date: Mon, 2 Jul 2018 11:49:41 +0800
-Message-ID: <1530503384-1218-2-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1530503384-1218-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1530503384-1218-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <SRS0=3Aug=JU=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=3Aug=JU=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Pingfan Liu <kernelfans@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>, Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, Linux PM <linux-pm@vger.kernel.org>
+Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer ordering in device_kset
+Date: Wed, 04 Jul 2018 12:21:52 +0200
+Message-ID: <6281446.GoJLz6Hq6C@aspire.rjw.lan>
+In-Reply-To: <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com> <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- honghui.zhang@mediatek.com, yt.shen@mediatek.com, yong.wu@mediatek.com
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Wednesday, July 4, 2018 4:47:07 AM CEST Pingfan Liu wrote:
+> On Tue, Jul 3, 2018 at 10:36 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >
+> > On Tuesday, July 3, 2018 8:50:38 AM CEST Pingfan Liu wrote:
+> > > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+> > > places an assumption of supplier<-consumer order on the process of probe.
+> > > But it turns out to break down the parent <- child order in some scene.
+> > > E.g in pci, a bridge is enabled by pci core, and behind it, the devices
+> > > have been probed. Then comes the bridge's module, which enables extra
+> > > feature(such as hotplug) on this bridge.
+> >
+> > So what *exactly* does happen in that case?
+> >
+> I saw the  shpc_probe() is called on the bridge, although the probing
+> failed on that bare-metal. But if it success, then it will enable the
+> hotplug feature on the bridge.
 
-The Mediatek's host controller has two slots, each with it's own control
-registers. The host driver need to identify which slot was connected
-in order to access the device's configuration space. There's problem
-for current host driver to find out which slot was connected to for
-a given EP device.
+I don't understand what you are saying here, sorry.
 
-Assuming each slot have connect with one EP device as below:
+device_reorder_to_tail() walks the entire device hierarchy below the target
+and moves all of the children in there *after* their parents.
 
-                host bridge
-  bus 0 --> __________|_______
-           |                  |
-           |                  |
-         slot 0             slot 1
-  bus 1 -->|        bus 2 --> |
-           |                  |
-         EP 0               EP 1
+How can it break "the parent <- child order" then?
 
-During PCI enumeration, system software will scan all the PCI device
-starting from devfn 0. So it will get the proper port for slot0 and
-slot1 device when using PCI_SLOT(devfn) for match. But it will get
-the wrong slot for EP1: The devfn will be start from 0 when scanning
-EP1 behind slot1, it will get port0 since the PCI_SLOT(EP1) is match
-for port0's slot value. So the host driver should not using EP's devfn
-but the slot's devfn(the slot which EP was connected to) for match.
-
-This patch fix the mtk_pcie_find_port's logical by using the slot's
-devfn for match.
-
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
----
- drivers/pci/controller/pcie-mediatek.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 0baabe3..b43f41d 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -337,11 +337,26 @@ static struct mtk_pcie_port *mtk_pcie_find_port(struct pci_bus *bus,
- {
- 	struct mtk_pcie *pcie = bus->sysdata;
- 	struct mtk_pcie_port *port;
-+	struct pci_dev *dev;
-+	struct pci_bus *pbus;
- 
--	list_for_each_entry(port, &pcie->ports, list)
--		if (port->slot == PCI_SLOT(devfn))
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		if (!bus->number && port->slot == PCI_SLOT(devfn))
- 			return port;
- 
-+		if (bus->number) {
-+			pbus = bus;
-+
-+			while (pbus->number) {
-+				dev = pbus->self;
-+				pbus = dev->bus;
-+			}
-+
-+			if (port->slot == PCI_SLOT(dev->devfn))
-+				return port;
-+		}
-+	}
-+
- 	return NULL;
- }
- 
--- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Rafael
