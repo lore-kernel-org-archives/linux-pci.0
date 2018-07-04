@@ -1,100 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Leonard Crestez <leonard.crestez@nxp.com>
-To: "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
- "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>, "andrew.smirnov@gmail.com"
- <andrew.smirnov@gmail.com>, Richard Zhu <hongxing.zhu@nxp.com>,
- "viresh.kumar@linaro.org" <viresh.kumar@linaro.org>
-Subject: Re: [PATCH 2/2] PCI: imx: Initial imx7d pm support
-Date: Mon, 9 Jul 2018 14:59:33 +0000
-Message-ID: <e36fac6f4907288c58a7dfa112541e73de957d46.camel@nxp.com>
-References: <cover.1527621510.git.leonard.crestez@nxp.com>
- <a6176c8bcfbca08ce4e93e304bdcd48c4600f8e2.1527621510.git.leonard.crestez@nxp.com>
- <1528468422.26356.20.camel@pengutronix.de>
- <02207512447db4585a4e879e2a059ba223d57dbe.camel@nxp.com>
- <1530607328.22468.102.camel@pengutronix.de>
-In-Reply-To: <1530607328.22468.102.camel@pengutronix.de>
+Return-Path: <SRS0=3Aug=JU=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=3Aug=JU=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Pingfan Liu <kernelfans@gmail.com>
+Cc: Grygorii Strashko <grygorii.strashko@ti.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, Linux PM <linux-pm@vger.kernel.org>
+Subject: Re: [PATCHv3 3/4] drivers/base: clean up the usage of devices_kset_move_last()
+Date: Wed, 04 Jul 2018 12:17:06 +0200
+Message-ID: <2842715.a5PfnD4e6X@aspire.rjw.lan>
+In-Reply-To: <CAFgQCTtu7jaUfWV4xq8CfWb7vuS5=+HuNpNxeMm9UawoUZ2CBg@mail.gmail.com>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com> <3375966.ydPZj5TMVj@aspire.rjw.lan> <CAFgQCTtu7jaUfWV4xq8CfWb7vuS5=+HuNpNxeMm9UawoUZ2CBg@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- Abel Vesa <abel.vesa@nxp.com>, Anson Huang <anson.huang@nxp.com>,
- "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
- "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
- "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2018-07-03 at 10:42 +0200, Lucas Stach wrote:
-> Am Montag, den 02.07.2018, 17:18 +0000 schrieb Leonard Crestez:
-> > On Fri, 2018-06-08 at 16:33 +0200, Lucas Stach wrote:
-> > > Am Dienstag, den 29.05.2018, 22:39 +0300 schrieb Leonard Crestez:
-> > > > On imx7d the phy is turned off in suspend and must be reset on resume.
-> > > > Right now lspci -v fails after a suspend/resume cycle, fix this by
-> > > > adding minimal suspend/resume code from the nxp vendor tree.
-> > > > 
-> > > > This is currently only enabled for imx7 but the same sequence can be
-> > > > applied to other imx pcie variants.
-> > > > +#ifdef CONFIG_PM_SLEEP
-> > 
-> > Another issue that should be discussed here is that on 6sx and 7d the
-> > gpc PCIE power domain is not defined correctly: the PCIE block is in
-> > the DISPMIX domain on both SOCs and it is only PCIE_PHY which has a
-> > separate power domain.
-> > 
-> > This matters: enabling power-gating for displays will break pcie if
-> > this relationship is not taken into account. Here are some options:
-> > 
-> > 1) Make &pd_pcie a child of &pd_disp by hacking into gpc probe
-> > functions and calling pm_genpd_add_subdomain. Not very nice.
-> > 
-> > 2) Support nesting PGCs in GPC code? Lots of code and still an
-> > incorrect representation of hardware.
-> > 
-> > 3) Set power-domains = <&pd_disp> and enable runtime PM on &pd_pcie?
-> > 
-> > 4) Add separate devices for the pcie-phy. These would be mostly empty
-> > but still different, for example on imx6sx the PHY is not even
-> > accessible on the bus but only though PCIE registers.
-> 
-> 5) Take a look at the linux-pm list. ;) The power domain framework has
-> just gained support for multiple power domains per device. I think that
->  is the right solution for this, as like you mentioned the PHY isn't
-> really a separate block on i.MX6, but part of the PCIe controller
-> device.
+On Wednesday, July 4, 2018 6:40:09 AM CEST Pingfan Liu wrote:
+> On Tue, Jul 3, 2018 at 10:28 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >
+> > On Tuesday, July 3, 2018 8:50:41 AM CEST Pingfan Liu wrote:
+> > > Clean up the referring to the code in commit 52cdbdd49853 ("driver core:
+> > > correct device's shutdown order"). So later we can revert it safely.
+> > >
+> > > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+> > > Cc: Christoph Hellwig <hch@infradead.org>
+> > > Cc: Bjorn Helgaas <helgaas@kernel.org>
+> > > Cc: Dave Young <dyoung@redhat.com>
+> > > Cc: linux-pci@vger.kernel.org
+> > > Cc: linuxppc-dev@lists.ozlabs.org
+> > > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+> > > ---
+> > >  drivers/base/core.c | 7 -------
+> > >  1 file changed, 7 deletions(-)
+> > >
+> > > diff --git a/drivers/base/core.c b/drivers/base/core.c
+> > > index 684b994..db3deb8 100644
+> > > --- a/drivers/base/core.c
+> > > +++ b/drivers/base/core.c
+> > > @@ -127,13 +127,6 @@ static int device_reorder_to_tail(struct device *dev, void *not_used)
+> > >  {
+> > >       struct device_link *link;
+> > >
+> > > -     /*
+> > > -      * Devices that have not been registered yet will be put to the ends
+> > > -      * of the lists during the registration, so skip them here.
+> > > -      */
+> > > -     if (device_is_registered(dev))
+> > > -             devices_kset_move_last(dev);
+> > > -
+> > >       if (device_pm_initialized(dev))
+> > >               device_pm_move_last(dev);
+> >
+> > You can't do this.
+> >
+> > If you do it, that will break power management in some situations.
+> >
+> Could you shed light on it? I had a quick browsing of pm code, but it
+> is a big function, and I got lost in it.
+> If the above code causes failure, then does it imply that the seq in
+> devices_kset should be the same as dpm_list?
 
-Yes, I noticed that earlier but not that it was merged recently. It is
-a better solution.
+Generally, yes it should.
 
-Unfortunately the multiple power-domain code seems to require devices
-to explicitly fetch references to the power domains and manipulate
-them. As far as I can tell this means that every device using multiple
-power domains has to be modified to do so. In this particular case it
-would be useful to just have all power domains turned on before probe,
-just like when a single power-domain is specified:
+> But in device_shutdown(), it only intersect with pm by
+> pm_runtime_get_noresume(dev) and pm_runtime_barrier(dev). How do these
+> function affect the seq in dpm_list?
 
-    power-domains = <&pd_pci>, <&pd_disp>;
+They are not related to dpm_list directly.
 
-But this issue is not strictly related to imx7d pci hanging on
-suspend/resume, it can be dealt with later.
+However, if you shut down a supplier device before its consumer and that
+involves power management, then the consumer shutdown may fail and lock up
+the system
 
---
-Regards,
-Leonard
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I asked you elsewhere to clearly describe the problem you are trying to
+address.  Please do that in the first place.
+
+Thanks,
+Rafael
