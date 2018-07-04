@@ -1,85 +1,130 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 31 Jul 2018 13:44:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V5 0/3] PCI: separate hotplug handling from fatal error
- handling
-Message-ID: <20180731184457.GN45322@bhelgaas-glaptop.roam.corp.google.com>
-References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:51486 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932188AbeGDEME (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Jul 2018 00:12:04 -0400
+From: Baoquan He <bhe@redhat.com>
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+        robh+dt@kernel.org, dan.j.williams@intel.com,
+        nicolas.pitre@linaro.org, josh@joshtriplett.org,
+        fengguang.wu@intel.com, bp@suse.de, andy.shevchenko@gmail.com
+Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com,
+        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
+        keith.busch@intel.com, jonathan.derrick@intel.com,
+        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
+        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
+        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
+        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
+        yinghai@kernel.org, kexec@lists.infradead.org, monstr@monstr.eu,
+        davem@davemloft.net, chris@zankel.net, jcmvbkbc@gmail.com,
+        gustavo@padovan.org, maarten.lankhorst@linux.intel.com,
+        seanpaul@chromium.org, linux-parisc@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, Baoquan He <bhe@redhat.com>
+Subject: [PATCH v6 3/4] resource: add walk_system_ram_res_rev()
+Date: Wed,  4 Jul 2018 12:10:37 +0800
+Message-Id: <20180704041038.8190-4-bhe@redhat.com>
+In-Reply-To: <20180704041038.8190-1-bhe@redhat.com>
+References: <20180704041038.8190-1-bhe@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 02, 2018 at 06:52:44PM -0400, Sinan Kaya wrote:
-> This is what happens when you insert a fatal error to a hotplug slot. See
-> multiple link up/down messages.
-> 
-> /_#_[__333.699731]_pcieport_0001:00:00.0:_AER:_Uncorrected_(Fatal)_error_received:_id=0000
-> [  333.748116] pcieport 0001:00:00.0: PCIe Bus Error: severity=Uncorrected (Fatal), type=Transaction Layer, id
-> [  333.816044] pcieport 0001:00:00.0:   device [17cb:0404] error status/mask=00040000/00400000
-> [  333.871581] pcieport 0001:00:00.0:    [18] Malformed TLP (First)
-> [  333.914675] pcieport 0001:00:00.0:   TLP Header: 40000001 000000ff 00000000 00000000
-> [  333.968397] pciehp 0001:00:00.0:pcie004: Slot(2): Link Down
-> [  334.043234] iommu: Removing device 0001:01:00.4 from group 0
-> [  334.095952] iommu: Removing device 0001:01:00.3 from group 0
-> [  334.144644] iommu: Removing device 0001:01:00.2 from group 0
-> [  334.194653] iommu: Removing device 0001:01:00.1 from group 0
-> [  334.243564] pciehp 0001:00:00.0:pcie004: Slot(2): Link Up
-> [  334.282556] iommu: Removing device 0001:01:00.0 from group 0
-> [  334.330994] pciehp 0001:00:00.0:pcie004: Slot(2): Link Up event queued;
-> currently getting powered off
-> [  334.890587] pciehp 0001:00:00.0:pcie004: Timeout on hotplug command
-> 0x13f1 (issued 282900 msec ago)
-> [  335.070190] pciehp 0001:00:00.0:pcie004: Slot(2): Link Down
-> [  335.106960] pciehp 0001:00:00.0:pcie004: Slot(2): Link Down event queued; currently getting powered on
-> [  335.191119] pcieport 0001:00:00.0: AER: Device recovery failed
-> [  346.590153] pciehp 0001:00:00.0:pcie004: Timeout on hotplug command 0x17f1 (issued 10250 msec ago)
-> 
-> 
-> Since DPC/AER patch to refactor fatal error handling, both hotplug
-> driver and AER/DPC driver will try removing devices and perform enumeration on
-> link events/AER events.
-> 
-> Perfect environment for race condition without a change.
-> 
-> Try to mask hotplug interrupts during AER/DPC fatal error handling.
-> 
-> Changes from v4:
-> * add mask_irq() and unmask_irq() callbacks to struct pcie_driver
-> * refactor reset_slot() to use pciehp_mask_irq() an pciehp_unmask_irq()
-> 
-> Sinan Kaya (3):
->   PCI: pciehp: implement mask and unmask interrupt functions
->   PCI: pciehp: reuse pciehp_mask/unmask_irq() in reset_slot()
->   PCI: Mask and unmask hotplug interrupts during reset
-> 
->  drivers/pci/hotplug/pciehp.h      |  2 ++
->  drivers/pci/hotplug/pciehp_core.c | 19 +++++++++++++++++++
->  drivers/pci/hotplug/pciehp_hpc.c  | 36 ++++++++++++++++++++++++++++--------
->  drivers/pci/pcie/err.c            | 11 +++++++++++
->  drivers/pci/pcie/portdrv.h        |  2 ++
->  5 files changed, 62 insertions(+), 8 deletions(-)
+This function, being a variant of walk_system_ram_res() introduced in
+commit 8c86e70acead ("resource: provide new functions to walk through
+resources"), walks through a list of all the resources of System RAM
+in reversed order, i.e., from higher to lower.
 
-There's been a ton of discussion about this, and I didn't see a clear
-consensus emerge, so I'm going to drop it for now.  If it's still
-needed, please repost it and I'll watch for reviewers.
+It will be used in kexec_file code.
 
-Bjorn
+Signed-off-by: Baoquan He <bhe@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Brijesh Singh <brijesh.singh@amd.com>
+Cc: "Jérôme Glisse" <jglisse@redhat.com>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: Tom Lendacky <thomas.lendacky@amd.com>
+Cc: Wei Yang <richard.weiyang@gmail.com>
+---
+ include/linux/ioport.h |  3 +++
+ kernel/resource.c      | 40 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 43 insertions(+)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index b7456ae889dd..066cc263e2cc 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -279,6 +279,9 @@ extern int
+ walk_system_ram_res(u64 start, u64 end, void *arg,
+ 		    int (*func)(struct resource *, void *));
+ extern int
++walk_system_ram_res_rev(u64 start, u64 end, void *arg,
++			int (*func)(struct resource *, void *));
++extern int
+ walk_iomem_res_desc(unsigned long desc, unsigned long flags, u64 start, u64 end,
+ 		    void *arg, int (*func)(struct resource *, void *));
+ 
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 6d647a3824b1..4c5fbef4ea24 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -23,6 +23,8 @@
+ #include <linux/pfn.h>
+ #include <linux/mm.h>
+ #include <linux/resource_ext.h>
++#include <linux/string.h>
++#include <linux/vmalloc.h>
+ #include <asm/io.h>
+ 
+ 
+@@ -443,6 +445,44 @@ int walk_system_ram_res(u64 start, u64 end, void *arg,
+ }
+ 
+ /*
++ * This function, being a variant of walk_system_ram_res(), calls the @func
++ * callback against all memory ranges of type System RAM which are marked as
++ * IORESOURCE_SYSTEM_RAM and IORESOUCE_BUSY in reversed order, i.e., from
++ * higher to lower.
++ */
++int walk_system_ram_res_rev(u64 start, u64 end, void *arg,
++				int (*func)(struct resource *, void *))
++{
++	unsigned long flags;
++	struct resource *res;
++	int ret = -1;
++
++	flags = IORESOURCE_SYSTEM_RAM | IORESOURCE_BUSY;
++
++	read_lock(&resource_lock);
++	list_for_each_entry_reverse(res, &iomem_resource.child, sibling) {
++		if (start >= end)
++			break;
++		if ((res->flags & flags) != flags)
++			continue;
++		if (res->desc != IORES_DESC_NONE)
++			continue;
++		if (res->end < start)
++			break;
++
++		if ((res->end >= start) && (res->start < end)) {
++			ret = (*func)(res, arg);
++			if (ret)
++				break;
++		}
++		end = res->start - 1;
++
++	}
++	read_unlock(&resource_lock);
++	return ret;
++}
++
++/*
+  * This function calls the @func callback against all memory ranges, which
+  * are ranges marked as IORESOURCE_MEM and IORESOUCE_BUSY.
+  */
+-- 
+2.13.6
