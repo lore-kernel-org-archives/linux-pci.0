@@ -1,62 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v13 12/12] PCI: endpoint: Add MSI set maximum restriction
-Date: Tue, 17 Jul 2018 12:26:27 +0200
-Message-Id: <c95cf75dedb3542b003570bc13bd5b0960c337e6.1531822532.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=A2mq=JU=broadcom.com=ray.jui@kernel.org>
+Return-Path: <SRS0=A2mq=JU=broadcom.com=ray.jui@kernel.org>
+Subject: Re: [PATCH v2 0/5] Improve Broadcom PAXC support
+From: Ray Jui <ray.jui@broadcom.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org
+References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
+ <45945371-3cd7-102d-bb47-69a60435542b@broadcom.com>
+ <20180621164821.GA14519@e107981-ln.cambridge.arm.com>
+ <e573bad0-05b1-c00f-8815-6ebe26218f05@broadcom.com>
+Message-ID: <dfc2a3d4-dbdb-5ebc-c000-b824d4d2075d@broadcom.com>
+Date: Tue, 3 Jul 2018 22:02:38 -0700
+MIME-Version: 1.0
+In-Reply-To: <e573bad0-05b1-c00f-8815-6ebe26218f05@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pci_epc_set_msi() maximum 32 interrupts validation.
+Hi Lorenzo,
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v4->v5:
- - New patch file.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Nothing changed, just to follow the patch set version.
-Change v9->v10:
- - Nothing changed, just to follow the patch set version.
-Change v10->v11:
- - Nothing changed, just to follow the patch set version.
-Change v11->v12:
- - Nothing changed, just to follow the patch set version.
-Change v12->v13:
- - Re-sending the patch series.
+A friendly reminder: Have you had a chance to help to review the patch 
+series below?
 
- drivers/pci/endpoint/pci-epc-core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Thanks,
 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index c72e656..094dcc3 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -201,7 +201,8 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- 	u8 encode_int;
- 	unsigned long flags;
- 
--	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
-+	    interrupts > 32)
- 		return -EINVAL;
- 
- 	if (!epc->ops->set_msi)
--- 
-2.7.4
+Ray
+
+On 6/21/2018 11:22 AM, Ray Jui wrote:
+> Hi Lorenzo,
+> 
+> On 6/21/2018 9:48 AM, Lorenzo Pieralisi wrote:
+>> On Wed, Jun 20, 2018 at 10:26:28AM -0700, Ray Jui wrote:
+>>> Hi Lorenzo/Bjorn,
+>>>
+>>> Could you please help to review this patch series when you have time?
+>>>
+>>> I believe I have addressed major comment in v1 from Bjorn and 
+>>> answered all
+>>> questions from Lorenzo.
+>>
+>> I will have a look next week, sorry for the delay.
+> 
+> Thanks a lot. Much appreciated!
+> 
+> Ray
+> 
+>>
+>> Thanks,
+>> Lorenzo
+>>
+>>> Thanks,
+>>>
+>>> Ray
+>>>
+>>> On 6/11/2018 5:21 PM, Ray Jui wrote:
+>>>> This patch series improves the Broadcom PAXC support by 1) adding more
+>>>> quirks for specific versions of PAXC controllers; 2) adding logic to
+>>>> reject internally unconfigured physical functions from the embedded
+>>>> network processor acting as endpoint; 3) reducing verbose print level
+>>>> in the outbound/inbound mapping code
+>>>>
+>>>> This patch series is based off v4.17 and is available on GIHUB:
+>>>> repo: https://github.com/Broadcom/arm64-linux.git
+>>>> branch: sr-paxc-v2
+>>>>
+>>>> Changes since v1:
+>>>>   - consolidate 2 PAXC related patch series into 1
+>>>>   - change the way how the capability list corruption is handled, per
+>>>> recommendation from Bjorn. Now handle and fix up the corruption at
+>>>> the config register read
+>>>>   - rebase to v4.17
+>>>>
+>>>> Ray Jui (5):
+>>>>    PCI: iproc: Activate PAXC bridge quirk for more devices
+>>>>    PCI: iproc: Fix up corrupted PAXC root complex config registers
+>>>>    PCI: iproc: Disable MSI parsing in certain PAXC blocks
+>>>>    PCI: iproc: Reject unconfigured physical functions from PAXC
+>>>>    PCI: iproc: Reduce inbound/outbound mapping print level
+>>>>
+>>>>   drivers/pci/host/pcie-iproc.c | 159 
+>>>> +++++++++++++++++++++++++++++++++++-------
+>>>>   drivers/pci/host/pcie-iproc.h |   8 +++
+>>>>   drivers/pci/quirks.c          |   3 +
+>>>>   3 files changed, 144 insertions(+), 26 deletions(-)
+>>>>
