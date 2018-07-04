@@ -1,61 +1,58 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH V5 5/6] PCI: Deprecate pci_reset_bus() and
- pci_reset_slot() functions
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
- open list <linux-kernel@vger.kernel.org>
-References: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
- <1530572336-20296-6-git-send-email-okaya@codeaurora.org>
- <20180718223027.GI128988@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <3d664a22-7362-07ec-584d-b38829a22ba2@kernel.org>
-Date: Wed, 18 Jul 2018 15:36:29 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:40256 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752381AbeGDQTZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Jul 2018 12:19:25 -0400
+Date: Wed, 4 Jul 2018 17:21:14 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Shawn Guo <shawn.guo@linaro.org>, Jingoo Han <jingoohan1@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Lucas Stach <l.stach@pengutronix.de>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/9] PCI: exynos: Drop unnecessary root_bus_nr setting
+Message-ID: <20180704162114.GC12996@red-moon>
+References: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
+ <1530417291-30495-2-git-send-email-shawn.guo@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <20180718223027.GI128988@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1530417291-30495-2-git-send-email-shawn.guo@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 7/18/2018 3:30 PM, Bjorn Helgaas wrote:
-> On Mon, Jul 02, 2018 at 06:58:54PM -0400, Sinan Kaya wrote:
->> pci_reset_bus() and pci_reset_slot() functions are not being used by
->> any code. Remove them from the kernel in favor of pci_try_reset_bus()
->> and pci_try_reset_slot() functions.
->>
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->> ---
->>   drivers/pci/pci.c   | 55 ++---------------------------------------------------
->>   include/linux/pci.h |  2 --
->>   2 files changed, 2 insertions(+), 55 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index a31e6db..7e3f2e9 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -4784,9 +4784,9 @@ int pci_probe_reset_slot(struct pci_slot *slot)
->>   EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
->>   
->>   /**
->> - * pci_reset_slot - reset a PCI slot
->> + * __pci_try_reset_slot - Try to reset a PCI slot
->>    * @slot: PCI slot to reset
->> - *
->> + *`
+On Sun, Jul 01, 2018 at 11:54:43AM +0800, Shawn Guo wrote:
+> Function dw_pcie_host_init() already initializes the root_bus_nr field
+> of 'struct pcie_port', so the -1 assignment prior to calling
+> dw_pcie_host_init() in platform specific driver is not really needed.
+> Drop it.
 > 
-> Is this "*`" intentional or a typo?  I can't find it in kernel-doc.rst
-> (but it's full of ` and maybe I missed it).
+> Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Jingoo Han <jingoohan1@gmail.com>
+> ---
+>  drivers/pci/controller/dwc/pci-exynos.c | 1 -
+>  1 file changed, 1 deletion(-)
 
-Typo.
+Jingoo we would need your ACK here, thanks.
 
-> 
-> I do see a few other occurrences in the code, although they look like
-> typos to me:
-> 
->    $ git grep "\*\`" | grep -v Documentation
->    arch/mips/cavium-octeon/octeon-usb.c:	 *`	0x1 = Big endian
->    arch/mips/cavium-octeon/octeon-usb.c:	 *`	0x1 = Big endian
->    drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c:/*`
+Lorenzo
+
+> diff --git a/drivers/pci/controller/dwc/pci-exynos.c b/drivers/pci/controller/dwc/pci-exynos.c
+> index 4cc1e5df8c79..cee5f2f590e2 100644
+> --- a/drivers/pci/controller/dwc/pci-exynos.c
+> +++ b/drivers/pci/controller/dwc/pci-exynos.c
+> @@ -421,7 +421,6 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
+>  		}
+>  	}
+>  
+> -	pp->root_bus_nr = -1;
+>  	pp->ops = &exynos_pcie_host_ops;
+>  
+>  	ret = dw_pcie_host_init(pp);
+> -- 
+> 1.9.1
 > 
