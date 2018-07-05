@@ -1,65 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:9214 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389371AbeG0WLi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Jul 2018 18:11:38 -0400
-Message-ID: <29e73810d1806b9733b2a663c4a5bda23c09b065.camel@linux.intel.com>
-Subject: Re: [PATCH v1] PCI: Add PCI_DEVICE_DATA() macro to fully describe
- device ID entry
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Randy Dunlap <rdunlap@infradead.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        linux-wireless@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Date: Fri, 27 Jul 2018 23:46:40 +0300
-In-Reply-To: <5c647729-6eab-fbe1-a110-43c7a6bc1207@infradead.org>
-References: <20180727203914.89704-1-andriy.shevchenko@linux.intel.com>
-         <d38f06dccb3bd129bec6d34a5ad3e93e2fa01bec.camel@linux.intel.com>
-         <5c647729-6eab-fbe1-a110-43c7a6bc1207@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:38721 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753752AbeGETki (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2018 15:40:38 -0400
+Received: by mail-qk0-f193.google.com with SMTP id y4-v6so5124460qka.5
+        for <linux-pci@vger.kernel.org>; Thu, 05 Jul 2018 12:40:38 -0700 (PDT)
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
+        "'Shawn Guo'" <shawn.guo@linaro.org>
+Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+        "'Pratyush Anand'" <pratyush.anand@gmail.com>,
+        "'Stanimir Varbanov'" <svarbanov@mm-sol.com>,
+        "'Jianguo Sun'" <sunjianguo1@huawei.com>,
+        "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
+        "'Jesper Nilsson'" <jesper.nilsson@axis.com>,
+        "'Thomas Petazzoni'" <thomas.petazzoni@bootlin.com>,
+        "'Murali Karicheri'" <m-karicheri2@ti.com>,
+        "'Lucas Stach'" <l.stach@pengutronix.de>,
+        <linux-pci@vger.kernel.org>
+References: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org> <1530417291-30495-2-git-send-email-shawn.guo@linaro.org> <20180704162114.GC12996@red-moon>
+In-Reply-To: <20180704162114.GC12996@red-moon>
+Subject: Re: [PATCH v3 1/9] PCI: exynos: Drop unnecessary root_bus_nr setting
+Date: Thu, 5 Jul 2018 15:40:35 -0400
+Message-ID: <000601d41498$0bdcc7f0$239657d0$@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+        charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2018-07-27 at 13:42 -0700, Randy Dunlap wrote:
-> On 07/27/2018 01:41 PM, Andy Shevchenko wrote:
-> > On Fri, 2018-07-27 at 23:39 +0300, Andy Shevchenko wrote:
-> > > There are a lot of examples in the kernel where PCI_VDEVICE() is
-> > > used
-> > > and still
-> > > looks not so convenient due to additional driver_data field
-> > > attached.
-> > > 
-> > > Introduce PCI_DEVICE_DATA() macro to fully describe device ID
-> > > entry in
-> > > shortest
-> > > possible form. For example,
-> > > 
-> > >   before:
-> > > 
-> > >     { PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_MRFLD),
-> > >       (kernel_ulong_t) &dwc3_pci_mrfld_properties, },
-> > > 
-> > >   after:
-> > > 
-> > >     { PCI_VDEVICE(INTEL, INTEL_MRFLD, &dwc3_pci_mrfld_properties
-> > > },
-> > > 
-> > > Drivers can be converted later on in independent way.
-> > > 
-> > > While here, remove the unused macro with the same name
-> > > from Ralink wireless driver.
-> > 
-> > Skip this, it missed one comma.
+On Wednesday, July 4, 2018 12:21 PM, Lorenzo Pieralisi wrote:
 > 
-> s/comma/right paren/ ??
+> On Sun, Jul 01, 2018 at 11:54:43AM +0800, Shawn Guo wrote:
+> > Function dw_pcie_host_init() already initializes the root_bus_nr field
+> > of 'struct pcie_port', so the -1 assignment prior to calling
+> > dw_pcie_host_init() in platform specific driver is not really needed.
+> > Drop it.
+> >
+> > Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+> > Cc: Jingoo Han <jingoohan1@gmail.com>
+> > ---
+> >  drivers/pci/controller/dwc/pci-exynos.c | 1 -
+> >  1 file changed, 1 deletion(-)
+> 
+> Jingoo we would need your ACK here, thanks.
 
-comma in the code and you are right about commit message. Btw, it missed
-rename as well there.
+I am not sure that this patch is good.
+Currently, this patch does not make any problem.
+However, I prefer to keep checking codes unless it makes a lot of burden.
+This is because we cannot ensure that flow of codes will not change in the
+future.
+However, if you think that it can be ensured that the problem will not
+happen
+in the future, please merge this patch.
 
-Thanks for spotting this!
+Best regards,
+Jingoo Han
 
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+> 
+> Lorenzo
+> 
+> > diff --git a/drivers/pci/controller/dwc/pci-exynos.c
+> b/drivers/pci/controller/dwc/pci-exynos.c
+> > index 4cc1e5df8c79..cee5f2f590e2 100644
+> > --- a/drivers/pci/controller/dwc/pci-exynos.c
+> > +++ b/drivers/pci/controller/dwc/pci-exynos.c
+> > @@ -421,7 +421,6 @@ static int __init exynos_add_pcie_port(struct
+> exynos_pcie *ep,
+> >  		}
+> >  	}
+> >
+> > -	pp->root_bus_nr = -1;
+> >  	pp->ops = &exynos_pcie_host_ops;
+> >
+> >  	ret = dw_pcie_host_init(pp);
+> > --
+> > 1.9.1
+> >
