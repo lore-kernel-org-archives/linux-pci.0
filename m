@@ -1,79 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga08-in.huawei.com ([45.249.212.255]:33599 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726812AbeGKJpp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jul 2018 05:45:45 -0400
-From: "Songxiaowei (Kirin_DRV)" <songxiaowei@hisilicon.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-CC: Wangbinghui <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rob Herring" <robh+dt@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Suzhuangluan <suzhuangluan@hisilicon.com>,
-        Kongfei <kongfei@hisilicon.com>,
-        "chenyao (F)" <chenyao11@huawei.com>
-Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjcgMS8xXSBQQ0k6IGtpcmluOiBBZGQgTVNJIHN1?=
- =?utf-8?Q?pport?=
-Date: Wed, 11 Jul 2018 09:42:01 +0000
-Message-ID: <99B4C6BADD9E3241B25E52B02BA737C5412D7FFB@dggema525-mbx.china.huawei.com>
-References: <20180711080946.14942-1-songxiaowei@hisilicon.com>
- <20180711080946.14942-2-songxiaowei@hisilicon.com>
- <CAHp75VccZtHqpoeWhVa=D=tc_Dj5cX8SXg=vYowWJ_RAiKdiCQ@mail.gmail.com>
-In-Reply-To: <CAHp75VccZtHqpoeWhVa=D=tc_Dj5cX8SXg=vYowWJ_RAiKdiCQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 5 Jul 2018 15:15:22 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: Re: [PATCH 1/2] PCI: aardvark: Size bridges before resources
+ allocation
+Message-ID: <20180705141522.GA13716@red-moon>
+References: <20180629091620.31503-1-thomas.petazzoni@bootlin.com>
+ <20180629091620.31503-2-thomas.petazzoni@bootlin.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180629091620.31503-2-thomas.petazzoni@bootlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
+ Gregory Clement <gregory.clement@bootlin.com>,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
+ =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Zachary Zhang <zhangzg@marvell.com>,
+ Wilson Ding <dingwei@marvell.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQW5keSwNCg0KVGhhbmsgeW91IGEgbG90Lg0KDQpCZXN0IFJlZ2FyZHMsDQpYaWFvd2VpLg0K
-DQo+IC0tLS0t6YKu5Lu25Y6f5Lu2LS0tLS0NCj4g5Y+R5Lu25Lq6OiBBbmR5IFNoZXZjaGVua28g
-W21haWx0bzphbmR5LnNoZXZjaGVua29AZ21haWwuY29tXQ0KPiDlj5HpgIHml7bpl7Q6IDIwMTjl
-ubQ35pyIMTHml6UgMTc6MzANCj4g5pS25Lu25Lq6OiBTb25neGlhb3dlaSAoS2lyaW5fRFJWKSA8
-c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4NCj4g5oqE6YCBOiBXYW5nYmluZ2h1aSA8d2FuZ2Jp
-bmdodWlAaGlzaWxpY29uLmNvbT47IEJqb3JuIEhlbGdhYXMNCj4gPGJoZWxnYWFzQGdvb2dsZS5j
-b20+OyBMb3JlbnpvIFBpZXJhbGlzaSA8bG9yZW56by5waWVyYWxpc2lAYXJtLmNvbT47DQo+IFJv
-YiBIZXJyaW5nIDxyb2JoK2R0QGtlcm5lbC5vcmc+OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3Jn
-OyBMaW51eCBLZXJuZWwNCj4gTWFpbGluZyBMaXN0IDxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwu
-b3JnPjsgU3V6aHVhbmdsdWFuDQo+IDxzdXpodWFuZ2x1YW5AaGlzaWxpY29uLmNvbT47IEtvbmdm
-ZWkgPGtvbmdmZWlAaGlzaWxpY29uLmNvbT47IGNoZW55YW8NCj4gKEYpIDxjaGVueWFvMTFAaHVh
-d2VpLmNvbT4NCj4g5Li76aKYOiBSZTogW1BBVENIIHY3IDEvMV0gUENJOiBraXJpbjogQWRkIE1T
-SSBzdXBwb3J0DQo+IA0KPiBPbiBXZWQsIEp1bCAxMSwgMjAxOCBhdCAxMTowOSBBTSwgWGlhb3dl
-aSBTb25nDQo+IDxzb25neGlhb3dlaUBoaXNpbGljb24uY29tPiB3cm90ZToNCj4gPiBBZGQgc3Vw
-cG9ydCBmb3IgTVNJDQo+ID4NCj4gDQo+IEZXSVcsDQo+IFJldmlld2VkLWJ5OiBBbmR5IFNoZXZj
-aGVua28gPGFuZHkuc2hldmNoZW5rb0BnbWFpbC5jb20+DQo+IA0KPiA+IFNpZ25lZC1vZmYtYnk6
-IFhpYW93ZWkgU29uZyA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4NCj4gPiBTaWduZWQtb2Zm
-LWJ5OiBZYW8gQ2hlbiA8Y2hlbnlhbzExQGh1YXdlaS5jb20+DQo+ID4gLS0tDQo+ID4gIGRyaXZl
-cnMvcGNpL2R3Yy9wY2llLWtpcmluLmMgfCAyOCArKysrKysrKysrKysrKysrKysrKysrKysrKysr
-DQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAyOCBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaWUta2lyaW4uYw0KPiA+IGIvZHJpdmVycy9wY2kvZHdj
-L3BjaWUta2lyaW4uYyBpbmRleCBkMjk3MGEwMDllYjUuLjUzNTJlMGMzYmU4Mg0KPiAxMDA2NDQN
-Cj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNpZS1raXJpbi5jDQo+ID4gKysrIGIvZHJpdmVy
-cy9wY2kvZHdjL3BjaWUta2lyaW4uYw0KPiA+IEBAIC00MzAsNiArNDMwLDkgQEAgc3RhdGljIGlu
-dCBraXJpbl9wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0DQo+ID4gKnBwKSAgew0KPiA+
-ICAgICAgICAga2lyaW5fcGNpZV9lc3RhYmxpc2hfbGluayhwcCk7DQo+ID4NCj4gPiArICAgICAg
-IGlmIChJU19FTkFCTEVEKENPTkZJR19QQ0lfTVNJKSkNCj4gPiArICAgICAgICAgICAgICAgZHdf
-cGNpZV9tc2lfaW5pdChwcCk7DQo+ID4gKw0KPiA+ICAgICAgICAgcmV0dXJuIDA7DQo+ID4gIH0N
-Cj4gPg0KPiA+IEBAIC00NDUsOSArNDQ4LDM0IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgZHdfcGNp
-ZV9ob3N0X29wcw0KPiBraXJpbl9wY2llX2hvc3Rfb3BzID0gew0KPiA+ICAgICAgICAgLmhvc3Rf
-aW5pdCA9IGtpcmluX3BjaWVfaG9zdF9pbml0LCAgfTsNCj4gPg0KPiA+ICtzdGF0aWMgaW50IGtp
-cmluX3BjaWVfYWRkX21zaShzdHJ1Y3QgZHdfcGNpZSAqcGNpLA0KPiA+ICsgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldikgew0KPiA+ICsg
-ICAgICAgaW50IGlycTsNCj4gPiArDQo+ID4gKyAgICAgICBpZiAoSVNfRU5BQkxFRChDT05GSUdf
-UENJX01TSSkpIHsNCj4gPiArICAgICAgICAgICAgICAgaXJxID0gcGxhdGZvcm1fZ2V0X2lycShw
-ZGV2LCAwKTsNCj4gPiArICAgICAgICAgICAgICAgaWYgKGlycSA8IDApIHsNCj4gPiArICAgICAg
-ICAgICAgICAgICAgICAgICBkZXZfZXJyKCZwZGV2LT5kZXYsDQo+ID4gKyAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAiZmFpbGVkIHRvIGdldCBNU0kgSVJRICglZClcbiIsIGlycSk7DQo+
-ID4gKyAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIGlycTsNCj4gPiArICAgICAgICAgICAg
-ICAgfQ0KPiA+ICsNCj4gPiArICAgICAgICAgICAgICAgcGNpLT5wcC5tc2lfaXJxID0gaXJxOw0K
-PiA+ICsgICAgICAgfQ0KPiA+ICsNCj4gPiArICAgICAgIHJldHVybiAwOw0KPiA+ICt9DQo+ID4g
-Kw0KPiA+ICBzdGF0aWMgaW50IF9faW5pdCBraXJpbl9hZGRfcGNpZV9wb3J0KHN0cnVjdCBkd19w
-Y2llICpwY2ksDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJ1
-Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQ0KPiB7DQo+ID4gKyAgICAgICBpbnQgcmV0Ow0KPiA+
-ICsNCj4gPiArICAgICAgIHJldCA9IGtpcmluX3BjaWVfYWRkX21zaShwY2ksIHBkZXYpOw0KPiA+
-ICsgICAgICAgaWYgKHJldCkNCj4gPiArICAgICAgICAgICAgICAgcmV0dXJuIHJldDsNCj4gPiAr
-DQo+ID4gICAgICAgICBwY2ktPnBwLm9wcyA9ICZraXJpbl9wY2llX2hvc3Rfb3BzOw0KPiA+DQo+
-ID4gICAgICAgICByZXR1cm4gZHdfcGNpZV9ob3N0X2luaXQoJnBjaS0+cHApOw0KPiA+IC0tDQo+
-ID4gMi4xMS5HSVQNCj4gPg0KPiANCj4gDQo+IA0KPiAtLQ0KPiBXaXRoIEJlc3QgUmVnYXJkcywN
-Cj4gQW5keSBTaGV2Y2hlbmtvDQo=
+On Fri, Jun 29, 2018 at 11:16:19AM +0200, Thomas Petazzoni wrote:
+> From: Zachary Zhang <zhangzg@marvell.com>
+> 
+> The PCIE I/O and MEM resource allocation mechanism is that root bus
+> goes through the following steps:
+> 
+> 1. Check PCI bridges' range and computes I/O and Mem base/limits.
+> 
+> 2. Sort all subordinate devices I/O and MEM resource requirements and
+>    allocate the resources and writes/updates subordinate devices'
+>    requirements to PCI bridges I/O and Mem MEM/limits registers.
+> 
+> Currently, PCI Aardvark driver only handles the second step and lacks
+> the first step, so there is an I/O and MEM resource allocation failure
+> when using a PCI switch. This commit fixes that by sizing bridges
+> before doing the resource allocation.
+> 
+> Signed-off-by: Zachary Zhang <zhangzg@marvell.com>
+> [Thomas: edit commit log.]
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+> ---
+>  drivers/pci/controller/pci-aardvark.c | 1 +
+>  1 file changed, 1 insertion(+)
+
+Hi Thomas,
+
+I am queueing these two patches but this one seems a serious bug,
+I reckon we should send it to stable kernels (and would be grateful
+if you provide me with a Fixes tag and a kernel log to add to the
+commit log).
+
+Thanks,
+Lorenzo
+
+> 
+> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> index 486c41721c89..8e92231214e3 100644
+> --- a/drivers/pci/controller/pci-aardvark.c
+> +++ b/drivers/pci/controller/pci-aardvark.c
+> @@ -1065,6 +1065,7 @@ static int advk_pcie_probe(struct platform_device *pdev)
+>  
+>  	bus = bridge->bus;
+>  
+> +	pci_bus_size_bridges(bus);
+>  	pci_bus_assign_resources(bus);
+>  
+>  	list_for_each_entry(child, &bus->children, node)
+> -- 
+> 2.14.4
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
