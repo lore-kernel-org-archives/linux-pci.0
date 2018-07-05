@@ -1,167 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 23 Jul 2018 14:01:43 -0700
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com,
-        jeffrey.t.kirsher@intel.com, ariel.elior@cavium.com,
-        michael.chan@broadcom.com, ganeshgr@chelsio.com,
-        tariqt@mellanox.com, airlied@gmail.com, alexander.deucher@amd.com,
-        mike.marciniszyn@intel.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5] PCI: Check for PCIe downtraining conditions
-Message-ID: <20180723140143.1a46902f@cakuba.netronome.com>
-In-Reply-To: <20180723200339.23943-1-mr.nuke.me@gmail.com>
-References: <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
-        <20180723200339.23943-1-mr.nuke.me@gmail.com>
+Return-Path: <SRS0=npwa=JV=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=npwa=JV=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: rjwysocki@gmail.com
+In-Reply-To: <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
+ <6281446.GoJLz6Hq6C@aspire.rjw.lan> <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 5 Jul 2018 11:18:28 +0200
+Message-ID: <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com>
+Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
+ ordering in device_kset
+To: Pingfan Liu <kernelfans@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+	Linux PCI <linux-pci@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Linux PM <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 23 Jul 2018 15:03:38 -0500, Alexandru Gagniuc wrote:
-> PCIe downtraining happens when both the device and PCIe port are
-> capable of a larger bus width or higher speed than negotiated.
-> Downtraining might be indicative of other problems in the system, and
-> identifying this from userspace is neither intuitive, nor
-> straightforward.
-> 
-> The easiest way to detect this is with pcie_print_link_status(),
-> since the bottleneck is usually the link that is downtrained. It's not
-> a perfect solution, but it works extremely well in most cases.
-> 
-> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> ---
-> 
-> For the sake of review, I've created a __pcie_print_link_status() which
-> takes a 'verbose' argument. If we agree want to go this route, and update
-> the users of pcie_print_link_status(), I can split this up in two patches.
-> I prefer just printing this information in the core functions, and letting
-> drivers not have to worry about this. Though there seems to be strong for
-> not going that route, so here it goes:
+On Thu, Jul 5, 2018 at 4:44 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
+> On Wed, Jul 4, 2018 at 6:23 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>>
+>> On Wednesday, July 4, 2018 4:47:07 AM CEST Pingfan Liu wrote:
+>> > On Tue, Jul 3, 2018 at 10:36 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> > >
+>> > > On Tuesday, July 3, 2018 8:50:38 AM CEST Pingfan Liu wrote:
+>> > > > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+>> > > > places an assumption of supplier<-consumer order on the process of probe.
+>> > > > But it turns out to break down the parent <- child order in some scene.
+>> > > > E.g in pci, a bridge is enabled by pci core, and behind it, the devices
+>> > > > have been probed. Then comes the bridge's module, which enables extra
+>> > > > feature(such as hotplug) on this bridge.
+>> > >
+>> > > So what *exactly* does happen in that case?
+>> > >
+>> > I saw the  shpc_probe() is called on the bridge, although the probing
+>> > failed on that bare-metal. But if it success, then it will enable the
+>> > hotplug feature on the bridge.
+>>
+>> I don't understand what you are saying here, sorry.
+>>
+> On the system, I observe the following:
+> [    2.114986] devices_kset: Moving 0004:00:00.0 to end of list
+> <---pcie port drive's probe, but it failed
+> [    2.115192] devices_kset: Moving 0004:01:00.0 to end of list
+> [    2.115591] devices_kset: Moving 0004:02:02.0 to end of list
+> [    2.115923] devices_kset: Moving 0004:02:0a.0 to end of list
+> [    2.116141] devices_kset: Moving 0004:02:0b.0 to end of list
+> [    2.116358] devices_kset: Moving 0004:02:0c.0 to end of list
+> [    3.181860] devices_kset: Moving 0004:03:00.0 to end of list
+> <---the ata disk controller which sits behind the bridge
+> [   10.267081] devices_kset: Moving 0004:00:00.0 to end of list
+>  <---shpc_probe() on this bridge, failed too.
+>
+> As you can the the parent device "0004:00:00.0" is moved twice, and
+> finally, it is after the "0004:03:00.0", this will break the
+> "parent<-child" order in devices_kset. This is caused by the code
+> really_probe()->devices_kset_move_last(). Apparently, it makes
+> assumption that child device's probing comes after its parent's. But
+> it does not stand up in the case.
+>
+>> device_reorder_to_tail() walks the entire device hierarchy below the target
+>> and moves all of the children in there *after* their parents.
+>>
+> As described, the bug is not related with device_reorder_to_tail(), it
+> is related with really_probe()->devices_kset_move_last().
 
-FWIW the networking drivers print PCIe BW because sometimes the network
-bandwidth is simply over-provisioned on multi port cards, e.g. 80Gbps
-card on a x8 link.
+OK, so calling devices_kset_move_last() from really_probe() clearly is
+a mistake.
 
-Sorry to bike shed, but currently the networking cards print the info
-during probe.  Would it make sense to move your message closer to probe
-time?  Rather than when device is added.  If driver structure is
-available, we could also consider adding a boolean to struct pci_driver
-to indicate if driver wants the verbose message?  This way we avoid
-duplicated prints.
+I'm not really sure what the intention of it was as the changelog of
+commit 52cdbdd49853d doesn't really explain that (why would it be
+insufficient without that change?) and I'm quite sure that in the
+majority of cases it is unnecessary.
 
-I have no objection to current patch, it LGTM.  Just a thought.
+I *think* that it attempted to cover a use case similar to the device
+links one, but it should have moved children along with the parent
+every time like device_link_add() does.
 
->  drivers/pci/pci.c   | 22 ++++++++++++++++++----
->  drivers/pci/probe.c | 21 +++++++++++++++++++++
->  include/linux/pci.h |  1 +
->  3 files changed, 40 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 316496e99da9..414ad7b3abdb 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5302,14 +5302,15 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
->  }
->  
->  /**
-> - * pcie_print_link_status - Report the PCI device's link speed and width
-> + * __pcie_print_link_status - Report the PCI device's link speed and width
->   * @dev: PCI device to query
-> + * @verbose: Be verbose -- print info even when enough bandwidth is available.
->   *
->   * Report the available bandwidth at the device.  If this is less than the
->   * device is capable of, report the device's maximum possible bandwidth and
->   * the upstream link that limits its performance to less than that.
->   */
-> -void pcie_print_link_status(struct pci_dev *dev)
-> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
->  {
->  	enum pcie_link_width width, width_cap;
->  	enum pci_bus_speed speed, speed_cap;
-> @@ -5319,11 +5320,11 @@ void pcie_print_link_status(struct pci_dev *dev)
->  	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
->  	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width);
->  
-> -	if (bw_avail >= bw_cap)
-> +	if (bw_avail >= bw_cap && verbose)
->  		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
->  			 bw_cap / 1000, bw_cap % 1000,
->  			 PCIE_SPEED2STR(speed_cap), width_cap);
-> -	else
-> +	else if (bw_avail < bw_cap)
->  		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
->  			 bw_avail / 1000, bw_avail % 1000,
->  			 PCIE_SPEED2STR(speed), width,
-> @@ -5331,6 +5332,19 @@ void pcie_print_link_status(struct pci_dev *dev)
->  			 bw_cap / 1000, bw_cap % 1000,
->  			 PCIE_SPEED2STR(speed_cap), width_cap);
->  }
-> +
-> +/**
-> + * pcie_print_link_status - Report the PCI device's link speed and width
-> + * @dev: PCI device to query
-> + *
-> + * Report the available bandwidth at the device.  If this is less than the
-> + * device is capable of, report the device's maximum possible bandwidth and
-> + * the upstream link that limits its performance to less than that.
-> + */
-> +void pcie_print_link_status(struct pci_dev *dev)
-> +{
-> +	__pcie_print_link_status(dev, true);
-> +}
->  EXPORT_SYMBOL(pcie_print_link_status);
->  
->  /**
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ac876e32de4b..1f7336377c3b 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2205,6 +2205,24 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
->  	return dev;
->  }
->  
-> +static void pcie_check_upstream_link(struct pci_dev *dev)
-> +{
-> +	if (!pci_is_pcie(dev))
-> +		return;
-> +
-> +	/* Look from the device up to avoid downstream ports with no devices. */
-> +	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
-> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
-> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
-> +		return;
-> +
-> +	/* Multi-function PCIe share the same link/status. */
-> +	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
-> +		return;
-> +
-> +	__pcie_print_link_status(dev, false);
-> +}
-> +
->  static void pci_init_capabilities(struct pci_dev *dev)
->  {
->  	/* Enhanced Allocation */
-> @@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  	/* Advanced Error Reporting */
->  	pci_aer_init(dev);
->  
-> +	/* Check link and detect downtrain errors */
-> +	pcie_check_upstream_link(dev);
-> +
->  	if (pci_probe_reset_function(dev) == 0)
->  		dev->reset_fn = 1;
->  }
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index abd5d5e17aee..15bfab8f7a1b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1088,6 +1088,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
->  u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
->  			     enum pci_bus_speed *speed,
->  			     enum pcie_link_width *width);
-> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
->  void pcie_print_link_status(struct pci_dev *dev);
->  int pcie_flr(struct pci_dev *dev);
->  int __pci_reset_function_locked(struct pci_dev *dev);
+> So [2/4] uses different method to achieve the "parent<-child" and
+> "supplier<-consumer" order. The [3/4] clean up some code in
+> device_reorder_to_tail(), since I need to revert the commit.
+
+OK, let me look at that one.
+
+Thanks,
+Rafael
