@@ -1,61 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:34710 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932553AbeGBIrj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jul 2018 04:47:39 -0400
-Date: Mon, 2 Jul 2018 10:47:36 +0200
-From: Jesper Nilsson <jesper.nilsson@axis.com>
-To: Shawn Guo <shawn.guo@linaro.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 5/9] PCI: artpec6: Drop unnecessary root_bus_nr setting
-Message-ID: <20180702084736.GH4333@axis.com>
-References: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
- <1530417291-30495-6-git-send-email-shawn.guo@linaro.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:42356 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753592AbeGEPMn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2018 11:12:43 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1530417291-30495-6-git-send-email-shawn.guo@linaro.org>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 05 Jul 2018 20:42:41 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v2 0/6] Fix issues and cleanup for ERR_FATAL and
+ ERR_NONFATAL
+In-Reply-To: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
+References: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
+Message-ID: <e2cdfff7ddffc3e10dc800c31bd27864@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 01, 2018 at 11:54:47AM +0800, Shawn Guo wrote:
-> Function dw_pcie_host_init() already initializes the root_bus_nr field
-> of 'struct pcie_port', so the -1 assignment prior to calling
-> dw_pcie_host_init() in platform specific driver is not really needed.
-> Drop it.
+Hi Bjorn,
+
+Could you help to review this series ?
+
+Regards,
+Oza.
+
+On 2018-06-22 15:28, Oza Pawandeep wrote:
+> These are follow up patches for the series which modifies ERR_FATAL 
+> handling.
+> although there were couple of problems existed before which, itis also 
+> fixing.
 > 
-> Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-
-Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
-
-> ---
->  drivers/pci/controller/dwc/pcie-artpec6.c | 1 -
->  1 file changed, 1 deletion(-)
+> patch-1:
+> Fixes the problem where ERR_FATAL and ERR_NONFATAL status should be 
+> cleared
+> taking severity mask into account.
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
-> index 321b56cfd5d0..128b182648b3 100644
-> --- a/drivers/pci/controller/dwc/pcie-artpec6.c
-> +++ b/drivers/pci/controller/dwc/pcie-artpec6.c
-> @@ -399,7 +399,6 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
->  		}
->  	}
->  
-> -	pp->root_bus_nr = -1;
->  	pp->ops = &artpec6_pcie_host_ops;
->  
->  	ret = dw_pcie_host_init(pp);
-> -- 
-> 1.9.1
-
-/^JN - Jesper Nilsson
--- 
-               Jesper Nilsson -- jesper.nilsson@axis.com
+> patch-2:
+> Takes care of clearing error fatal status
+> 
+> patch-3:
+> Follow up patch where no more need of handling ERR_FATAL
+> case.
+> 
+> patch-4:
+> Fixes clearing device status in case of uncorrectable errors.
+> (e.g. ERR_FATAL and ERR_NONFATAL)
+> 
+> patch-5:
+> Fixes clearing device status in case of correctable errors.
+> 
+> patch-6:
+> Follow up patch where no more need of handling pci_channel_io_frozen
+> in pcie_portdrv_slot_reset()
+> 
+> Oza Pawandeep (6):
+>   PCI/AER: Take severity mask into account while clearing error bits
+>   PCI/AER: Clear uncorrectable fatal error status bits
+>   PCI/ERR: Cleanup ERR_FATAL of error broadcast
+>   PCI/AER: Clear device error status bits during ERR_FATAL and
+>     ERR_NONFATAL
+>   PCI/AER: Fix correctable status bits clearing in device register
+>   PCI/PORTDRV: Remove ERR_FATAL handling from pcie_portdrv_slot_reset()
+> 
+>  drivers/pci/pcie/aer.c         | 35 
+> +++++++++++++++++++++++------------
+>  drivers/pci/pcie/err.c         | 15 +++++++--------
+>  drivers/pci/pcie/portdrv_pci.c | 18 ------------------
+>  include/linux/aer.h            |  5 +++++
+>  4 files changed, 35 insertions(+), 38 deletions(-)
