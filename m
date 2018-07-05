@@ -1,105 +1,95 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=1H/x=JV=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=1H/x=JV=gmail.com=kernelfans@kernel.org>
 MIME-Version: 1.0
-Date: Tue, 03 Jul 2018 19:59:21 +0530
-From: poza@codeaurora.org
-To: Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-In-Reply-To: <20180703141255.GB18639@wunner.de>
-References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
- <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
- <20180703083447.GA2689@wunner.de>
- <8b6ce0f415858463d1c0588c29e30415@codeaurora.org>
- <20180703141255.GB18639@wunner.de>
-Message-ID: <237b7dd4036d8a6156b9e1cb605c84c9@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, okaya@codeaurora.org,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <3375966.ydPZj5TMVj@aspire.rjw.lan> <CAFgQCTtu7jaUfWV4xq8CfWb7vuS5=+HuNpNxeMm9UawoUZ2CBg@mail.gmail.com>
+ <2842715.a5PfnD4e6X@aspire.rjw.lan>
+In-Reply-To: <2842715.a5PfnD4e6X@aspire.rjw.lan>
+From: Pingfan Liu <kernelfans@gmail.com>
+Date: Thu, 5 Jul 2018 10:32:23 +0800
+Message-ID: <CAFgQCTvZ8yGjrbxhYB4=Nxx+-JZC6BAUXCZ-DFz4wAh-Q8UjLw@mail.gmail.com>
+Subject: Re: [PATCHv3 3/4] drivers/base: clean up the usage of devices_kset_move_last()
+To: rjw@rjwysocki.net
+Cc: Grygorii Strashko <grygorii.strashko@ti.com>, linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-07-03 19:42, Lukas Wunner wrote:
-> On Tue, Jul 03, 2018 at 07:30:28AM -0400, okaya@codeaurora.org wrote:
->> On 2018-07-03 04:34, Lukas Wunner wrote:
->> >On Mon, Jul 02, 2018 at 06:52:47PM -0400, Sinan Kaya wrote:
->> >>If a bridge supports hotplug and observes a PCIe fatal error, the
->> >>following
->> >>events happen:
->> >>
->> >>1. AER driver removes the devices from PCI tree on fatal error
->> >>2. AER driver brings down the link by issuing a secondary bus reset
->> >>waits
->> >>for the link to come up.
->> >>3. Hotplug driver observes a link down interrupt
->> >>4. Hotplug driver tries to remove the devices waiting for the rescan
->> >>lock
->> >>but devices are already removed by the AER driver and AER driver is
->> >>waiting
->> >>for the link to come back up.
->> >>5. AER driver tries to re-enumerate devices after polling for the link
->> >>state to go up.
->> >>6. Hotplug driver obtains the lock and tries to remove the devices
->> >>again.
->> >>
->> >>If a bridge is a hotplug capable bridge, mask hotplug interrupts before
->> >>the
->> >>reset and unmask afterwards.
->> >
->> >Would it work for you if you just amended the AER driver to skip
->> >removal and re-enumeration of devices if the port is a hotplug bridge?
->> >Just check for is_hotplug_bridge in struct pci_dev.
->> 
->> The reason why we want to remove devices before secondary bus reset is 
->> to
->> quiesce pcie bus traffic before issuing a reset.
->> 
->> Skipping this step might cause transactions to be lost in the middle 
->> of the
->> reset as there will be active traffic flowing and drivers will 
->> suddenly
->> start reading ffs.
-> 
-> Interesting, I think that merits a code comment.
-> 
-> FWIW, macOS has a "PCI pause" callback to quiesce a device:
-> https://opensource.apple.com/source/IOPCIFamily/IOPCIFamily-239.1.2/pause.rtf
-> 
-> They're using it to reconfigure a device's BAR and bus number
-> at runtime (sic!), e.g. if mmio windows need to be moved around
-> on Thunderbolt hotplug if there's insufficient space:
-> 
-> 	"During pause reconfiguration, the following may be changed:
-> 	 - device BAR registers
-> 	 - the devices bus number
-> 	 - registry properties reflecting these values ("ranges",
-> 	   "assigned-addresses", "reg")
-> 	 - device MSI block values for address and value, but not the
-> 	   number of MSIs allocated"
-> 
-> Conceptually, "PCI pause" is similar to putting the device in a suspend
-> state.  I'm wondering if suspending the devices below the bridge would
-> make more sense than removing them in the AER driver.
-> 
+On Wed, Jul 4, 2018 at 6:18 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>
+> On Wednesday, July 4, 2018 6:40:09 AM CEST Pingfan Liu wrote:
+> > On Tue, Jul 3, 2018 at 10:28 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > >
+> > > On Tuesday, July 3, 2018 8:50:41 AM CEST Pingfan Liu wrote:
+> > > > Clean up the referring to the code in commit 52cdbdd49853 ("driver core:
+> > > > correct device's shutdown order"). So later we can revert it safely.
+> > > >
+> > > > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+> > > > Cc: Christoph Hellwig <hch@infradead.org>
+> > > > Cc: Bjorn Helgaas <helgaas@kernel.org>
+> > > > Cc: Dave Young <dyoung@redhat.com>
+> > > > Cc: linux-pci@vger.kernel.org
+> > > > Cc: linuxppc-dev@lists.ozlabs.org
+> > > > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+> > > > ---
+> > > >  drivers/base/core.c | 7 -------
+> > > >  1 file changed, 7 deletions(-)
+> > > >
+> > > > diff --git a/drivers/base/core.c b/drivers/base/core.c
+> > > > index 684b994..db3deb8 100644
+> > > > --- a/drivers/base/core.c
+> > > > +++ b/drivers/base/core.c
+> > > > @@ -127,13 +127,6 @@ static int device_reorder_to_tail(struct device *dev, void *not_used)
+> > > >  {
+> > > >       struct device_link *link;
+> > > >
+> > > > -     /*
+> > > > -      * Devices that have not been registered yet will be put to the ends
+> > > > -      * of the lists during the registration, so skip them here.
+> > > > -      */
+> > > > -     if (device_is_registered(dev))
+> > > > -             devices_kset_move_last(dev);
+> > > > -
+> > > >       if (device_pm_initialized(dev))
+> > > >               device_pm_move_last(dev);
+> > >
+> > > You can't do this.
+> > >
+> > > If you do it, that will break power management in some situations.
+> > >
+> > Could you shed light on it? I had a quick browsing of pm code, but it
+> > is a big function, and I got lost in it.
+> > If the above code causes failure, then does it imply that the seq in
+> > devices_kset should be the same as dpm_list?
+>
+> Generally, yes it should.
+>
+> > But in device_shutdown(), it only intersect with pm by
+> > pm_runtime_get_noresume(dev) and pm_runtime_barrier(dev). How do these
+> > function affect the seq in dpm_list?
+>
+> They are not related to dpm_list directly.
+>
+> However, if you shut down a supplier device before its consumer and that
+> involves power management, then the consumer shutdown may fail and lock up
+> the system
+>
+Ah, get your point. The patch in this series "[PATCHv3 2/4]
+drivers/base: utilize device tree info to shutdown devices" still obey
+the shutdown order "parent<-child" and "supplier<-consumer". It just
+utilizes device-tree info to achieve this, since it turns out not easy
+to maintain such order in devices_kset. As I described in the commit
+log of [2/4], it needs two nested recursion, and should consider the
+breakage of devices_kset's spinlock.
 
-the code is shared by not only AER but also DPC, where if DPC event 
-happens the devices are removed.
-also if the bridge is hotplug capable, then the devices beneath might 
-have changed and resume might break.
+> I asked you elsewhere to clearly describe the problem you are trying to
+> address.  Please do that in the first place.
+>
+OK, I will reply your question in [0/4]
 
-> Lukas
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Pingfan
