@@ -1,115 +1,204 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40144 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729759AbeGQWKj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Jul 2018 18:10:39 -0400
-Date: Tue, 17 Jul 2018 16:36:01 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v2 1/6] PCI/AER: Take severity mask into account while
- clearing error bits
-Message-ID: <20180717213601.GC128988@bhelgaas-glaptop.roam.corp.google.com>
-References: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
- <1529661494-20936-2-git-send-email-poza@codeaurora.org>
- <20180717190329.GA128988@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=clFC=JV=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=clFC=JV=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Pingfan Liu <kernelfans@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Grygorii Strashko <grygorii.strashko@ti.com>, Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCHv3 2/4] drivers/base: utilize device tree info to shutdown devices
+Date: Thu, 05 Jul 2018 12:11:49 +0200
+Message-ID: <2108146.dv4EAOf6IP@aspire.rjw.lan>
+In-Reply-To: <1530600642-25090-3-git-send-email-kernelfans@gmail.com>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com> <1530600642-25090-3-git-send-email-kernelfans@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180717190329.GA128988@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 17, 2018 at 02:03:29PM -0500, Bjorn Helgaas wrote:
-> Hi Oza,
+On Tuesday, July 3, 2018 8:50:40 AM CEST Pingfan Liu wrote:
+> commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+> places an assumption of supplier<-consumer order on the process of probe.
+> But it turns out to break down the parent <- child order in some scene.
+> E.g in pci, a bridge is enabled by pci core, and behind it, the devices
+> have been probed. Then comes the bridge's module, which enables extra
+> feature(such as hotplug) on this bridge. This will break the
+> parent<-children order and cause failure when "kexec -e" in some scenario.
 > 
-> Thanks for doing this!
+> The detailed description of the scenario:
+> An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
+> match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
+> to some issue. For this case, the bridge is moved after its children in
+> devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
+> write back buffer in flight due to the former shutdown of the bridge which
+> clears the BusMaster bit.
 > 
-> On Fri, Jun 22, 2018 at 05:58:09AM -0400, Oza Pawandeep wrote:
-> > pci_cleanup_aer_uncorrect_error_status() is called by different slot_reset
-> > callbacks in case of ERR_NONFATAL.
+> It is a little hard to impose both "parent<-child" and "supplier<-consumer"
+> order on devices_kset. Take the following scene:
+> step0: before a consumer's probing, (note child_a is supplier of consumer_a)
+>   [ consumer-X, child_a, ...., child_z] [... consumer_a, ..., consumer_z, ...] supplier-X
+>                                          ^^^^^^^^^^ affected range ^^^^^^^^^^
+> step1: when probing, moving consumer-X after supplier-X
+>   [ child_a, ...., child_z] [.... consumer_a, ..., consumer_z, ...] supplier-X, consumer-X
+> step2: the children of consumer-X should be re-ordered to maintain the seq
+>   [... consumer_a, ..., consumer_z, ....] supplier-X  [consumer-X, child_a, ...., child_z]
+> step3: the consumer_a should be re-ordered to maintain the seq
+>   [... consumer_z, ...] supplier-X [ consumer-X, child_a, consumer_a ..., child_z]
 > 
-> IIRC, the current strategy is:
+> It requires two nested recursion to drain out all out-of-order item in
+> "affected range". To avoid such complicated code, this patch suggests
+> to utilize the info in device tree, instead of using the order of
+> devices_kset during shutdown. It iterates the device tree, and firstly
+> shutdown a device's children and consumers. After this patch, the buggy
+> commit is hollow and left to clean.
 > 
->   ERR_COR: log only
->   ERR_NONFATAL: call driver callbacks (pci_error_handlers)
->   ERR_FATAL: remove device and re-enumerate
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Bjorn Helgaas <helgaas@kernel.org>
+> Cc: Dave Young <dyoung@redhat.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linuxppc-dev@lists.ozlabs.org
+> Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+> ---
+>  drivers/base/core.c    | 48 +++++++++++++++++++++++++++++++++++++++++++-----
+>  include/linux/device.h |  1 +
+>  2 files changed, 44 insertions(+), 5 deletions(-)
 > 
-> So these slot_reset callbacks are only used for ERR_NONFATAL, which
-> are all uncorrectable errors, of course.
-> 
-> This patch makes it so that when the slot_reset callbacks call
-> pci_cleanup_aer_uncorrect_error_status(), we only clear the
-> bits set by ERR_NONFATAL events (this is determined by
-> PCI_ERR_UNCOR_SEVER).
-> 
-> That makes good sense to me.  All these status bits are RW1CS, so they
-> will be preserved across a reset but will be cleared when we
-> re-enumerate, in this path:
-> 
->   pci_init_capabilities
->     pci_aer_init
->       pci_cleanup_aer_error_status_regs
->       # clear all PCI_ERR_UNCOR_STATUS and PCI_ERR_COR_STATUS bits
-> 
-> > AER uncorrectable error status should take severity into account in order
-> > to clear the bits, so that ERR_NONFATAL path does not clear the bit which
-> > are marked with severity fatal.
-> 
-> Two comments:
-> 
-> 1) Can you split this into two patches, one that changes
-> pci_cleanup_aer_uncorrect_error_status() so it looks like the error
-> clearing code in aer_error_resume(), and a second that factors out the
-> duplicate code?
-> 
-> 2) Maybe use "sev" or "sever" instead of "mask" for the local
-> variable, since there is also a separate PCI_ERR_UNCOR_MASK register,
-> which is not involved here.
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> index a48868f..684b994 100644
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
+> @@ -1446,6 +1446,7 @@ void device_initialize(struct device *dev)
+>  	INIT_LIST_HEAD(&dev->links.consumers);
+>  	INIT_LIST_HEAD(&dev->links.suppliers);
+>  	dev->links.status = DL_DEV_NO_DRIVER;
+> +	dev->shutdown = false;
+>  }
+>  EXPORT_SYMBOL_GPL(device_initialize);
+>  
+> @@ -2811,7 +2812,6 @@ static void __device_shutdown(struct device *dev)
+>  	 * lock is to be held
+>  	 */
+>  	parent = get_device(dev->parent);
+> -	get_device(dev);
 
-Let me back up a little here: I'm not asking you to do the things
-below here.  They're just possible future things, so we can think
-about them after this series.  And the things above are things I can
-easily do myself.  So no action required from you, unless you think
-I'm on the wrong track :)
+Why is the get_/put_device() not needed any more?
 
-> 3) The "pci_cleanup_aer_uncorrect_error_status()" name no longer
-> really describes what this does.  Something like
-> "pci_aer_clear_nonfatal_status()" would be more descriptive.  But I
-> see you have a subsequent patch (which I haven't looked at yet) that
-> is related to this.
+>  	/*
+>  	 * Make sure the device is off the kset list, in the
+>  	 * event that dev->*->shutdown() doesn't remove it.
+> @@ -2842,23 +2842,60 @@ static void __device_shutdown(struct device *dev)
+>  			dev_info(dev, "shutdown\n");
+>  		dev->driver->shutdown(dev);
+>  	}
+> -
+> +	dev->shutdown = true;
+>  	device_unlock(dev);
+>  	if (parent)
+>  		device_unlock(parent);
+>  
+> -	put_device(dev);
+>  	put_device(parent);
+>  	spin_lock(&devices_kset->list_lock);
+>  }
+>  
+> +/* shutdown dev's children and consumer firstly, then itself */
+> +static int device_for_each_child_shutdown(struct device *dev)
+
+Confusing name.
+
+What about device_shutdown_subordinate()?
+
+> +{
+> +	struct klist_iter i;
+> +	struct device *child;
+> +	struct device_link *link;
+> +
+> +	/* already shutdown, then skip this sub tree */
+> +	if (dev->shutdown)
+> +		return 0;
+> +
+> +	if (!dev->p)
+> +		goto check_consumers;
+> +
+> +	/* there is breakage of lock in __device_shutdown(), and the redundant
+> +	 * ref++ on srcu protected consumer is harmless since shutdown is not
+> +	 * hot path.
+> +	 */
+> +	get_device(dev);
+> +
+> +	klist_iter_init(&dev->p->klist_children, &i);
+> +	while ((child = next_device(&i)))
+> +		device_for_each_child_shutdown(child);
+
+Why don't you use device_for_each_child() here?
+
+> +	klist_iter_exit(&i);
+> +
+> +check_consumers:
+> +	list_for_each_entry_rcu(link, &dev->links.consumers, s_node) {
+> +		if (!link->consumer->shutdown)
+> +			device_for_each_child_shutdown(link->consumer);
+> +	}
+> +
+> +	__device_shutdown(dev);
+> +	put_device(dev);
+
+Possible reference counter imbalance AFAICS.
+
+> +	return 0;
+> +}
+
+Well, instead of doing this dance, we might as well walk dpm_list here as it
+is in the right order.
+
+Of course, that would require dpm_list to be available for CONFIG_PM unset,
+but it may be a better approach long term.
+
+> +
+>  /**
+>   * device_shutdown - call ->shutdown() on each device to shutdown.
+>   */
+>  void device_shutdown(void)
+>  {
+>  	struct device *dev;
+> +	int idx;
+>  
+> +	idx = device_links_read_lock();
+>  	spin_lock(&devices_kset->list_lock);
+>  	/*
+>  	 * Walk the devices list backward, shutting down each in turn.
+> @@ -2866,11 +2903,12 @@ void device_shutdown(void)
+>  	 * devices offline, even as the system is shutting down.
+>  	 */
+>  	while (!list_empty(&devices_kset->list)) {
+> -		dev = list_entry(devices_kset->list.prev, struct device,
+> +		dev = list_entry(devices_kset->list.next, struct device,
+>  				kobj.entry);
+> -		__device_shutdown(dev);
+> +		device_for_each_child_shutdown(dev);
+>  	}
+>  	spin_unlock(&devices_kset->list_lock);
+> +	device_links_read_unlock(idx);
+>  }
+>  
+>  /*
+> diff --git a/include/linux/device.h b/include/linux/device.h
+> index 055a69d..8a0f784 100644
+> --- a/include/linux/device.h
+> +++ b/include/linux/device.h
+> @@ -1003,6 +1003,7 @@ struct device {
+>  	bool			offline:1;
+>  	bool			of_node_reused:1;
+>  	bool			dma_32bit_limit:1;
+> +	bool			shutdown:1; /* one direction: false->true */
+>  };
+>  
+>  static inline struct device *kobj_to_dev(struct kobject *kobj)
 > 
-> 4) I don't think the driver slot_reset callbacks should be responsible
-> for clearing these AER status bits.  Can we clear them somewhere in
-> the pcie_do_nonfatal_recovery() path and remove these calls from the
-> drivers?
-> 
-> 5) In principle, we should only read PCI_ERR_UNCOR_STATUS *once* per
-> device when handling an error.  We currently read it three times:
-> 
->   aer_isr
->     aer_isr_one_error
->       find_source_device
->         find_device_iter
->           is_error_source
->             read PCI_ERR_UNCOR_STATUS              # 1
->       aer_process_err_devices
->         get_device_error_info(e_info->dev[i])
->           read PCI_ERR_UNCOR_STATUS                # 2
->         handle_error_source
->           pcie_do_nonfatal_recovery
->             ...
->               report_slot_reset
->                 driver->err_handler->slot_reset
->                   pci_cleanup_aer_uncorrect_error_status
->                     read PCI_ERR_UNCOR_STATUS      # 3
-> 
-> OK, that was more than two comments :)
+
+If the device_kset_move_last() in really_probe() is the only problem,
+I'd rather try to fix that one in the first place.
+
+Why is it needed?
+
+Thanks,
+Rafael
