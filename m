@@ -1,207 +1,208 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
-        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>
-Subject: [PATCH v3 2/4] PCI: mediatek: enable msi after clock enabled
-Date: Mon, 2 Jul 2018 15:57:42 +0800
-Message-ID: <1530518264-6125-3-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v8 02/11] PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
+Date: Fri,  6 Jul 2018 16:51:25 +0100
+Message-Id: <709a7aa5c97c0decef385f283a1a4b0af1e62ce1.1530891871.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
+References: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
+References: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+Change {cdns, dra7xx, artpec6, dw, rockchip}_pcie_ep_raise_irq() and
+pci_epc_raise_irq() signature, namely the interrupt_num variable type
+from u8 to u16 to accommodate 2048 maximum MSI-X interrupts.
 
-The clocks was not enabled when enable MSI. This patch fix this
-issue by calling mtk_pcie_enable_msi in mtk_pcie_startup_port_v2
-since the clock was all enabled at that time.
-
-The function of mtk_pcie_startup_port_v2's define location is
-re-arranged to avoid mtk_pcie_enable_msi's forward declaration.
-
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Alan Douglas <adouglas@cadence.com>
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
+Acked-by: Joao Pinto <jpinto@synopsys.com>
 ---
- drivers/pci/controller/pcie-mediatek.c | 143 +++++++++++++++++----------------
- 1 file changed, 72 insertions(+), 71 deletions(-)
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Move into here the pci_epc_raise_irq() signature change from patch
+file #1.
+ - Move into here the {dra7xx, artpec6}_pcie_ep_raise_irq() signature
+changes from patch file #2.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Swap patch files position (#3 -> #2).
+ - Moved dw_pcie_ep_raise_irq and dw_plat_pcie_ep_raise_irq functions
+signatures changes from patch file #3.
+ - Changed rockchip_pcie_ep_raise_irq function signature.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Change v6->v7:
+ - Nothing changed, just to follow the patch set version.
+Change v7->v8:
+ - Re-sending the patch series.
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index b43f41d..86918d4 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -398,75 +398,6 @@ static struct pci_ops mtk_pcie_ops_v2 = {
- 	.write = mtk_pcie_config_write,
- };
- 
--static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
--{
--	struct mtk_pcie *pcie = port->pcie;
--	struct resource *mem = &pcie->mem;
--	const struct mtk_pcie_soc *soc = port->pcie->soc;
--	u32 val;
--	size_t size;
--	int err;
--
--	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
--	if (pcie->base) {
--		val = readl(pcie->base + PCIE_SYS_CFG_V2);
--		val |= PCIE_CSR_LTSSM_EN(port->slot) |
--		       PCIE_CSR_ASPM_L1_EN(port->slot);
--		writel(val, pcie->base + PCIE_SYS_CFG_V2);
--	}
--
--	/* Assert all reset signals */
--	writel(0, port->base + PCIE_RST_CTRL);
--
--	/*
--	 * Enable PCIe link down reset, if link status changed from link up to
--	 * link down, this will reset MAC control registers and configuration
--	 * space.
--	 */
--	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
--
--	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
--	val = readl(port->base + PCIE_RST_CTRL);
--	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
--	       PCIE_MAC_SRSTB | PCIE_CRSTB;
--	writel(val, port->base + PCIE_RST_CTRL);
--
--	/* Set up vendor ID and class code */
--	if (soc->need_fix_class_id) {
--		val = PCI_VENDOR_ID_MEDIATEK;
--		writew(val, port->base + PCIE_CONF_VEND_ID);
--
--		val = PCI_CLASS_BRIDGE_HOST;
--		writew(val, port->base + PCIE_CONF_CLASS_ID);
--	}
--
--	/* 100ms timeout value should be enough for Gen1/2 training */
--	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
--				 !!(val & PCIE_PORT_LINKUP_V2), 20,
--				 100 * USEC_PER_MSEC);
--	if (err)
--		return -ETIMEDOUT;
--
--	/* Set INTx mask */
--	val = readl(port->base + PCIE_INT_MASK);
--	val &= ~INTX_MASK;
--	writel(val, port->base + PCIE_INT_MASK);
--
--	/* Set AHB to PCIe translation windows */
--	size = mem->end - mem->start;
--	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
--	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
--
--	val = upper_32_bits(mem->start);
--	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
--
--	/* Set PCIe to AXI translation memory space.*/
--	val = fls(0xffffffff) | WIN_ENABLE;
--	writel(val, port->base + PCIE_AXI_WINDOW0);
--
--	return 0;
--}
--
- static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- {
- 	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
-@@ -643,8 +574,6 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
- 		ret = mtk_pcie_allocate_msi_domains(port);
- 		if (ret)
- 			return ret;
--
--		mtk_pcie_enable_msi(port);
- 	}
- 
- 	return 0;
-@@ -711,6 +640,78 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
- 	return 0;
+ drivers/pci/controller/dwc/pci-dra7xx.c           | 2 +-
+ drivers/pci/controller/dwc/pcie-artpec6.c         | 2 +-
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 2 +-
+ drivers/pci/controller/dwc/pcie-designware-plat.c | 2 +-
+ drivers/pci/controller/dwc/pcie-designware.h      | 2 +-
+ drivers/pci/controller/pcie-cadence-ep.c          | 3 ++-
+ drivers/pci/controller/pcie-rockchip-ep.c         | 2 +-
+ drivers/pci/endpoint/pci-epc-core.c               | 8 ++++----
+ include/linux/pci-epc.h                           | 6 +++---
+ 9 files changed, 15 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index 345aab5..ce9224a 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -370,7 +370,7 @@ static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
  }
  
-+static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-+{
-+	struct mtk_pcie *pcie = port->pcie;
-+	struct resource *mem = &pcie->mem;
-+	const struct mtk_pcie_soc *soc = port->pcie->soc;
-+	u32 val;
-+	size_t size;
-+	int err;
-+
-+	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
-+	if (pcie->base) {
-+		val = readl(pcie->base + PCIE_SYS_CFG_V2);
-+		val |= PCIE_CSR_LTSSM_EN(port->slot) |
-+		       PCIE_CSR_ASPM_L1_EN(port->slot);
-+		writel(val, pcie->base + PCIE_SYS_CFG_V2);
-+	}
-+
-+	/* Assert all reset signals */
-+	writel(0, port->base + PCIE_RST_CTRL);
-+
-+	/*
-+	 * Enable PCIe link down reset, if link status changed from link up to
-+	 * link down, this will reset MAC control registers and configuration
-+	 * space.
-+	 */
-+	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
-+
-+	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
-+	val = readl(port->base + PCIE_RST_CTRL);
-+	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
-+	       PCIE_MAC_SRSTB | PCIE_CRSTB;
-+	writel(val, port->base + PCIE_RST_CTRL);
-+
-+	/* Set up vendor ID and class code */
-+	if (soc->need_fix_class_id) {
-+		val = PCI_VENDOR_ID_MEDIATEK;
-+		writew(val, port->base + PCIE_CONF_VEND_ID);
-+
-+		val = PCI_CLASS_BRIDGE_HOST;
-+		writew(val, port->base + PCIE_CONF_CLASS_ID);
-+	}
-+
-+	/* 100ms timeout value should be enough for Gen1/2 training */
-+	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
-+				 !!(val & PCIE_PORT_LINKUP_V2), 20,
-+				 100 * USEC_PER_MSEC);
-+	if (err)
-+		return -ETIMEDOUT;
-+
-+	/* Set INTx mask */
-+	val = readl(port->base + PCIE_INT_MASK);
-+	val &= ~INTX_MASK;
-+	writel(val, port->base + PCIE_INT_MASK);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		mtk_pcie_enable_msi(port);
-+
-+	/* Set AHB to PCIe translation windows */
-+	size = mem->end - mem->start;
-+	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
-+	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
-+
-+	val = upper_32_bits(mem->start);
-+	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
-+
-+	/* Set PCIe to AXI translation memory space.*/
-+	val = fls(0xffffffff) | WIN_ENABLE;
-+	writel(val, port->base + PCIE_AXI_WINDOW0);
-+
-+	return 0;
-+}
-+
- static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
- 				      unsigned int devfn, int where)
+ static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+-				 enum pci_epc_irq_type type, u8 interrupt_num)
++				 enum pci_epc_irq_type type, u16 interrupt_num)
  {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
+index 321b56c..9a2474b 100644
+--- a/drivers/pci/controller/dwc/pcie-artpec6.c
++++ b/drivers/pci/controller/dwc/pcie-artpec6.c
+@@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
+ }
+ 
+ static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+-				  enum pci_epc_irq_type type, u8 interrupt_num)
++				  enum pci_epc_irq_type type, u16 interrupt_num)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 8650416..b86cb99 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -242,7 +242,7 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
+ }
+ 
+ static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
+-				enum pci_epc_irq_type type, u8 interrupt_num)
++				enum pci_epc_irq_type type, u16 interrupt_num)
+ {
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 5937fed..14b6b4b 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -78,7 +78,7 @@ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+ 
+ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 				     enum pci_epc_irq_type type,
+-				     u8 interrupt_num)
++				     u16 interrupt_num)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index bee4e25..9d581c0 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -191,7 +191,7 @@ enum dw_pcie_as_type {
+ struct dw_pcie_ep_ops {
+ 	void	(*ep_init)(struct dw_pcie_ep *ep);
+ 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
+-			     enum pci_epc_irq_type type, u8 interrupt_num);
++			     enum pci_epc_irq_type type, u16 interrupt_num);
+ };
+ 
+ struct dw_pcie_ep {
+diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
+index e3fe412..208d11f 100644
+--- a/drivers/pci/controller/pcie-cadence-ep.c
++++ b/drivers/pci/controller/pcie-cadence-ep.c
+@@ -363,7 +363,8 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
+ }
+ 
+ static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
+-				  enum pci_epc_irq_type type, u8 interrupt_num)
++				  enum pci_epc_irq_type type,
++				  u16 interrupt_num)
+ {
+ 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+ 
+diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/controller/pcie-rockchip-ep.c
+index 6beba8e..b8163c5 100644
+--- a/drivers/pci/controller/pcie-rockchip-ep.c
++++ b/drivers/pci/controller/pcie-rockchip-ep.c
+@@ -472,7 +472,7 @@ static int rockchip_pcie_ep_send_msi_irq(struct rockchip_pcie_ep *ep, u8 fn,
+ 
+ static int rockchip_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
+ 				      enum pci_epc_irq_type type,
+-				      u8 interrupt_num)
++				      u16 interrupt_num)
+ {
+ 	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
+ 
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 7d77bd0..c72e656 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -131,13 +131,13 @@ EXPORT_SYMBOL_GPL(pci_epc_start);
+  * pci_epc_raise_irq() - interrupt the host system
+  * @epc: the EPC device which has to interrupt the host
+  * @func_no: the endpoint function number in the EPC device
+- * @type: specify the type of interrupt; legacy or MSI
+- * @interrupt_num: the MSI interrupt number
++ * @type: specify the type of interrupt; legacy, MSI or MSI-X
++ * @interrupt_num: the MSI or MSI-X interrupt number
+  *
+- * Invoke to raise an MSI or legacy interrupt
++ * Invoke to raise an legacy, MSI or MSI-X interrupt
+  */
+ int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
+-		      enum pci_epc_irq_type type, u8 interrupt_num)
++		      enum pci_epc_irq_type type, u16 interrupt_num)
+ {
+ 	int ret;
+ 	unsigned long flags;
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index 89f079f..bb2395b 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -35,7 +35,7 @@ enum pci_epc_irq_type {
+  *	     MSI-X capability register
+  * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
+  *	     from the MSI-X capability register
+- * @raise_irq: ops to raise a legacy or MSI interrupt
++ * @raise_irq: ops to raise a legacy, MSI or MSI-X interrupt
+  * @start: ops to start the PCI link
+  * @stop: ops to stop the PCI link
+  * @owner: the module owner containing the ops
+@@ -56,7 +56,7 @@ struct pci_epc_ops {
+ 	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
+ 	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
+ 	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
+-			     enum pci_epc_irq_type type, u8 interrupt_num);
++			     enum pci_epc_irq_type type, u16 interrupt_num);
+ 	int	(*start)(struct pci_epc *epc);
+ 	void	(*stop)(struct pci_epc *epc);
+ 	struct module *owner;
+@@ -154,7 +154,7 @@ int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
+ int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts);
+ int pci_epc_get_msix(struct pci_epc *epc, u8 func_no);
+ int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
+-		      enum pci_epc_irq_type type, u8 interrupt_num);
++		      enum pci_epc_irq_type type, u16 interrupt_num);
+ int pci_epc_start(struct pci_epc *epc);
+ void pci_epc_stop(struct pci_epc *epc);
+ struct pci_epc *pci_epc_get(const char *epc_name);
 -- 
-2.6.4
+2.7.4
