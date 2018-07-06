@@ -1,145 +1,252 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=CbA2=JW=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=CbA2=JW=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Pingfan Liu <kernelfans@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Grygorii Strashko <grygorii.strashko@ti.com>, Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCHv3 2/4] drivers/base: utilize device tree info to shutdown devices
+Date: Fri, 06 Jul 2018 11:53:15 +0200
+Message-ID: <2067910.hkxRV6zLYm@aspire.rjw.lan>
+In-Reply-To: <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com> <2108146.dv4EAOf6IP@aspire.rjw.lan> <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180708171418.GA11476@wunner.de>
-References: <CAK9iUCM=zWexWow9TwkRfO186Hwr5WyGy0NHZF1vtXn3wbbZGQ@mail.gmail.com>
- <12fc8de5-ff03-cb00-52cb-25a43c71d03a@codeaurora.org>
- <20180708171418.GA11476@wunner.de>
-From: Sinan Kaya <Okaya@kernel.org>
-Date: Mon, 9 Jul 2018 08:48:44 -0600
-Message-ID: <CAK9iUCMcic5mzGiT20KNxgwPo6AuajHFsoj7GOjSht5SwrQevg@mail.gmail.com>
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-To: Lukas Wunner <lukas@wunner.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, Keith Busch <keith.busch@intel.com>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/8/18, Lukas Wunner <lukas@wunner.de> wrote:
-> On Tue, Jul 03, 2018 at 11:43:26AM -0400, Sinan Kaya wrote:
->> On 7/3/2018 10:34 AM, Lukas Wunner wrote:
->> > We've already got the ->reset_slot callback in struct hotplug_slot_ops,
->> > I'm wondering if we really need additional ones for this use case.
->>
->> As I have informed you before on my previous reply, the pdev->slot is
->> only valid for children objects such as endpoints not for a bridge when
->> using pciehp.
->>
->> The pointer is NULL for the host bridge itself.
->
-> Right, sorry, I had misremembered how this works.  So essentially the
-> pointer is only set for the devices "in" the slot, but not for the bridge
-> "to" that slot.  If the slot isn't occupied, *no* pci_dev points the
-> struct pci_slot.  Seems counter-intuitive to be honest.
+On Friday, July 6, 2018 5:02:15 AM CEST Pingfan Liu wrote:
+> On Thu, Jul 5, 2018 at 6:13 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >
+> > On Tuesday, July 3, 2018 8:50:40 AM CEST Pingfan Liu wrote:
+> > > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+> > > places an assumption of supplier<-consumer order on the process of probe.
+> > > But it turns out to break down the parent <- child order in some scene.
+> > > E.g in pci, a bridge is enabled by pci core, and behind it, the devices
+> > > have been probed. Then comes the bridge's module, which enables extra
+> > > feature(such as hotplug) on this bridge. This will break the
+> > > parent<-children order and cause failure when "kexec -e" in some scenario.
+> > >
+> > > The detailed description of the scenario:
+> > > An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
+> > > match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
+> > > to some issue. For this case, the bridge is moved after its children in
+> > > devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
+> > > write back buffer in flight due to the former shutdown of the bridge which
+> > > clears the BusMaster bit.
+> > >
+> > > It is a little hard to impose both "parent<-child" and "supplier<-consumer"
+> > > order on devices_kset. Take the following scene:
+> > > step0: before a consumer's probing, (note child_a is supplier of consumer_a)
+> > >   [ consumer-X, child_a, ...., child_z] [... consumer_a, ..., consumer_z, ...] supplier-X
+> > >                                          ^^^^^^^^^^ affected range ^^^^^^^^^^
+> > > step1: when probing, moving consumer-X after supplier-X
+> > >   [ child_a, ...., child_z] [.... consumer_a, ..., consumer_z, ...] supplier-X, consumer-X
+> > > step2: the children of consumer-X should be re-ordered to maintain the seq
+> > >   [... consumer_a, ..., consumer_z, ....] supplier-X  [consumer-X, child_a, ...., child_z]
+> > > step3: the consumer_a should be re-ordered to maintain the seq
+> > >   [... consumer_z, ...] supplier-X [ consumer-X, child_a, consumer_a ..., child_z]
+> > >
+> > > It requires two nested recursion to drain out all out-of-order item in
+> > > "affected range". To avoid such complicated code, this patch suggests
+> > > to utilize the info in device tree, instead of using the order of
+> > > devices_kset during shutdown. It iterates the device tree, and firstly
+> > > shutdown a device's children and consumers. After this patch, the buggy
+> > > commit is hollow and left to clean.
+> > >
+> > > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+> > > Cc: Christoph Hellwig <hch@infradead.org>
+> > > Cc: Bjorn Helgaas <helgaas@kernel.org>
+> > > Cc: Dave Young <dyoung@redhat.com>
+> > > Cc: linux-pci@vger.kernel.org
+> > > Cc: linuxppc-dev@lists.ozlabs.org
+> > > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+> > > ---
+> > >  drivers/base/core.c    | 48 +++++++++++++++++++++++++++++++++++++++++++-----
+> > >  include/linux/device.h |  1 +
+> > >  2 files changed, 44 insertions(+), 5 deletions(-)
+> > >
+> > > diff --git a/drivers/base/core.c b/drivers/base/core.c
+> > > index a48868f..684b994 100644
+> > > --- a/drivers/base/core.c
+> > > +++ b/drivers/base/core.c
+> > > @@ -1446,6 +1446,7 @@ void device_initialize(struct device *dev)
+> > >       INIT_LIST_HEAD(&dev->links.consumers);
+> > >       INIT_LIST_HEAD(&dev->links.suppliers);
+> > >       dev->links.status = DL_DEV_NO_DRIVER;
+> > > +     dev->shutdown = false;
+> > >  }
+> > >  EXPORT_SYMBOL_GPL(device_initialize);
+> > >
+> > > @@ -2811,7 +2812,6 @@ static void __device_shutdown(struct device *dev)
+> > >        * lock is to be held
+> > >        */
+> > >       parent = get_device(dev->parent);
+> > > -     get_device(dev);
+> >
+> > Why is the get_/put_device() not needed any more?
+> >
+> They are moved upper layer into device_for_each_child_shutdown().
+> Since there is lock breakage in __device_shutdown(), resorting to
+> ref++ to protect the ancestor.  And I think the
+> get_device(dev->parent) can be deleted either.
 
-That is true. There is a bit of history here. Back in pci days, you
-would have each PCI device number as a hotplug slot. There would be
-multiple slots under a bridge. There is a one to many relationship.
+Wouldn't that break USB?
 
->
-> Thanks for the explanation of the various reset codepaths, I'm afraid my
-> understanding of that portion of the PCI core is limited.
->
-> Browsing through drivers/pci/pci.c, I notice pci_dev_lock() and
-> pci_dev_save_and_disable(), both are called from reset codepaths and
-> apparently seek to stop access to the device during reset.  I'm wondering
-> why DPC and AER remove devices in order to avoid accesses to them during
-> reset, instead of utilizing these two functions?
+> > >       /*
+> > >        * Make sure the device is off the kset list, in the
+> > >        * event that dev->*->shutdown() doesn't remove it.
+> > > @@ -2842,23 +2842,60 @@ static void __device_shutdown(struct device *dev)
+> > >                       dev_info(dev, "shutdown\n");
+> > >               dev->driver->shutdown(dev);
+> > >       }
+> > > -
+> > > +     dev->shutdown = true;
+> > >       device_unlock(dev);
+> > >       if (parent)
+> > >               device_unlock(parent);
+> > >
+> > > -     put_device(dev);
+> > >       put_device(parent);
+> > >       spin_lock(&devices_kset->list_lock);
+> > >  }
+> > >
+> > > +/* shutdown dev's children and consumer firstly, then itself */
+> > > +static int device_for_each_child_shutdown(struct device *dev)
+> >
+> > Confusing name.
+> >
+> > What about device_shutdown_subordinate()?
+> >
+> Fine. My understanding of words is not exact.
+> 
+> > > +{
+> > > +     struct klist_iter i;
+> > > +     struct device *child;
+> > > +     struct device_link *link;
+> > > +
+> > > +     /* already shutdown, then skip this sub tree */
+> > > +     if (dev->shutdown)
+> > > +             return 0;
+> > > +
+> > > +     if (!dev->p)
+> > > +             goto check_consumers;
+> > > +
+> > > +     /* there is breakage of lock in __device_shutdown(), and the redundant
+> > > +      * ref++ on srcu protected consumer is harmless since shutdown is not
+> > > +      * hot path.
+> > > +      */
+> > > +     get_device(dev);
+> > > +
+> > > +     klist_iter_init(&dev->p->klist_children, &i);
+> > > +     while ((child = next_device(&i)))
+> > > +             device_for_each_child_shutdown(child);
+> >
+> > Why don't you use device_for_each_child() here?
+> >
+> OK, I will try use it.
 
-This was the behavior until 4.18. Since 4.18 all devices are being
-removed and reenumerated following a fatal error condition.
+Well, hold on.
 
->
-> My guess is that a lot of the reset code is historically grown and
-> could be simplified and made more consistent, but that requires digging
-> into the code and getting a complete picture.  I've sort of done that
-> for pciehp, I think I'm now intimately familiar with 90% of it,
-> so I'll be happy to review patches for it and answer questions,
-> but I'm pretty much stumped when it comes to reset code in the PCI core.
->
-> I treated the ->reset_slot() callback as one possible entry point into
-> pciehp and asked myself if it's properly serialized with the rest of the
-> driver and whether driver ->probe and ->remove is ordered such that
-> the driver is always properly initialized when the entry point might be
-> taken.  I did not look too closely at the codepaths actually leading to
-> invocation of the ->reset_slot() callback.
->
+> > > +     klist_iter_exit(&i);
+> > > +
+> > > +check_consumers:
+> > > +     list_for_each_entry_rcu(link, &dev->links.consumers, s_node) {
+> > > +             if (!link->consumer->shutdown)
+> > > +                     device_for_each_child_shutdown(link->consumer);
+> > > +     }
+> > > +
+> > > +     __device_shutdown(dev);
+> > > +     put_device(dev);
+> >
+> > Possible reference counter imbalance AFAICS.
+> >
+> Yes, get_device() should be ahead of "if (!dev->p)". Is anything  else I miss?
 
-Sure, this path gets called from vfio today and possibly via a reset
-file in sysfs. A bunch of things need to fail before hitting slot
-reset path.
+Yes, that's it.
 
-However, vfio is a direct caller if hotplug is supported.
+> > > +     return 0;
+> > > +}
+> >
+> > Well, instead of doing this dance, we might as well walk dpm_list here as it
+> > is in the right order.
+> >
+> Sorry, do you mean that using the same way to manage the dpm_list?
 
->
->> I was curious if we could use a single work queue for all pcie portdrv
->> services. This would also eliminate the need for locks that Lukas is
->> adding.
->>
->> If hotplug starts first,  hotplug code would run to completion before AER
->> and DPC service starts recovery.
->>
->> If DPC/AER starts first, my patch would mask the hotplug interrupts.
->>
->> My solution doesn't help if link down interrupt is observed before the
->> AER
->> or DPC services.
->
-> If pciehp gets an interrupt quicker than dpc/aer, it will (at least with
-> my patches) remove all devices, check if the presence bit is set,
+No, I mean to use dpm_list instead of devices_kset for shutdown.
 
-Yup.
+They should be in the same order anyway if all is correct.
 
-> and
-> if so, try to bring the slot up again.
+> > Of course, that would require dpm_list to be available for CONFIG_PM unset,
+> > but it may be a better approach long term.
+> >
+> > > +
+> > >  /**
+> > >   * device_shutdown - call ->shutdown() on each device to shutdown.
+> > >   */
+> > >  void device_shutdown(void)
+> > >  {
+> > >       struct device *dev;
+> > > +     int idx;
+> > >
+> > > +     idx = device_links_read_lock();
+> > >       spin_lock(&devices_kset->list_lock);
+> > >       /*
+> > >        * Walk the devices list backward, shutting down each in turn.
+> > > @@ -2866,11 +2903,12 @@ void device_shutdown(void)
+> > >        * devices offline, even as the system is shutting down.
+> > >        */
+> > >       while (!list_empty(&devices_kset->list)) {
+> > > -             dev = list_entry(devices_kset->list.prev, struct device,
+> > > +             dev = list_entry(devices_kset->list.next, struct device,
+> > >                               kobj.entry);
+> > > -             __device_shutdown(dev);
+> > > +             device_for_each_child_shutdown(dev);
+> > >       }
+> > >       spin_unlock(&devices_kset->list_lock);
+> > > +     device_links_read_unlock(idx);
+> > >  }
+> > >
+> > >  /*
+> > > diff --git a/include/linux/device.h b/include/linux/device.h
+> > > index 055a69d..8a0f784 100644
+> > > --- a/include/linux/device.h
+> > > +++ b/include/linux/device.h
+> > > @@ -1003,6 +1003,7 @@ struct device {
+> > >       bool                    offline:1;
+> > >       bool                    of_node_reused:1;
+> > >       bool                    dma_32bit_limit:1;
+> > > +     bool                    shutdown:1; /* one direction: false->true */
+> > >  };
+> > >
+> > >  static inline struct device *kobj_to_dev(struct kobject *kobj)
+> > >
+> >
+> > If the device_kset_move_last() in really_probe() is the only problem,
+> > I'd rather try to fix that one in the first place.
+> >
+> > Why is it needed?
+> >
+> I had tried, but it turns out not easy to archive. The code is
+> https://patchwork.kernel.org/patch/10485195/. And I make a detailed
+> description of the algorithm in this patch's commit log. To be more
+> detailed, we face the potential out of order issue in really_probe()
+> like : 0th. [ consumer-X, child_a, ...., child_z] [... consumer_a,
+> ..., consumer_z, ...] supplier-X //(note child_a is supplier of
+> consumer_a).  To address all the potential out of order item in the
+> affected section [... consumer_a, ..., consumer_z, ...],  it will
+> incur two nested recursions.  1st, moving  consumer-X and its
+> descendants after supplier-X,  2nd, moving consumer_a after child_a,
+> 3rd. the 2nd step may pose the same situation of 0th.  Besides the two
+> interleaved recursion,  the breakage of spin lock requires more effort
+> to protect the item from disappearing in linked-list  (which I did not
+> implement in the https://patchwork.kernel.org/patch/10485195/). Hence
+> I turn to this cheap method.
 
-Hotplug driver should only observe a link down interrupt. Link would
-come up in response to a secondary bus reset initiated by the AER
-driver.
+So I think that we simply need to drop the devices_kset_move_last() call
+from really_probe() as it is plain incorrect and the use case for it is
+questionable at best.
 
-Can you point me to the code that would bring up the link in hp code?
-Maybe, I am missing something.
+And the use case it is supposed to address should be addressed differently.
 
-> My (limited) understanding is
-> that the link will stay down until dpc/aer react.
-> pciehp_check_link_status()
-> will wait 1 sec for the link, wait another 100 msec, then poll the vendor
-> register for 1 sec before giving up.  So if dpc/aer are locked out for this
-> long, they will only be able to reset the slot after 2100 msec.
->
-> I've had a brief look at the PCIe r4.0 base spec and could not find
-> anything about how pciehp and dpc/aer should coordinate.  Maybe that's
-> an oversight, or the PCISIG just leaves this to the OS.
->
->
->> Another possibility is to add synchronization logic between these threads
->> obviously.
->
-> Maybe call pci_channel_offline() in the poll loops of pcie_wait_for_link()
-> and pci_bus_check_dev() to avoid waiting for the link if an error needs to
-> be acted upon first?
-
-Let me think about this.
-
->
-> Thanks,
->
-> Lukas
->
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Rafael
