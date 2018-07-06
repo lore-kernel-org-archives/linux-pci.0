@@ -1,238 +1,240 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v10 02/12] PCI: endpoint: Add MSI-X interfaces
-Date: Fri, 13 Jul 2018 17:56:34 +0200
-Message-Id: <537a4a59907c2ede1228fd5deb74785a256a0305.1531496321.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=8ZZk=JW=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=8ZZk=JW=gmail.com=kernelfans@kernel.org>
+MIME-Version: 1.0
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <1530600642-25090-3-git-send-email-kernelfans@gmail.com> <2108146.dv4EAOf6IP@aspire.rjw.lan>
+In-Reply-To: <2108146.dv4EAOf6IP@aspire.rjw.lan>
+From: Pingfan Liu <kernelfans@gmail.com>
+Date: Fri, 6 Jul 2018 11:02:15 +0800
+Message-ID: <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
+Subject: Re: [PATCHv3 2/4] drivers/base: utilize device tree info to shutdown devices
+To: rjw@rjwysocki.net
+Cc: linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PCI_EPC_IRQ_MSIX type.
+On Thu, Jul 5, 2018 at 6:13 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>
+> On Tuesday, July 3, 2018 8:50:40 AM CEST Pingfan Liu wrote:
+> > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+> > places an assumption of supplier<-consumer order on the process of probe.
+> > But it turns out to break down the parent <- child order in some scene.
+> > E.g in pci, a bridge is enabled by pci core, and behind it, the devices
+> > have been probed. Then comes the bridge's module, which enables extra
+> > feature(such as hotplug) on this bridge. This will break the
+> > parent<-children order and cause failure when "kexec -e" in some scenario.
+> >
+> > The detailed description of the scenario:
+> > An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
+> > match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
+> > to some issue. For this case, the bridge is moved after its children in
+> > devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
+> > write back buffer in flight due to the former shutdown of the bridge which
+> > clears the BusMaster bit.
+> >
+> > It is a little hard to impose both "parent<-child" and "supplier<-consumer"
+> > order on devices_kset. Take the following scene:
+> > step0: before a consumer's probing, (note child_a is supplier of consumer_a)
+> >   [ consumer-X, child_a, ...., child_z] [... consumer_a, ..., consumer_z, ...] supplier-X
+> >                                          ^^^^^^^^^^ affected range ^^^^^^^^^^
+> > step1: when probing, moving consumer-X after supplier-X
+> >   [ child_a, ...., child_z] [.... consumer_a, ..., consumer_z, ...] supplier-X, consumer-X
+> > step2: the children of consumer-X should be re-ordered to maintain the seq
+> >   [... consumer_a, ..., consumer_z, ....] supplier-X  [consumer-X, child_a, ...., child_z]
+> > step3: the consumer_a should be re-ordered to maintain the seq
+> >   [... consumer_z, ...] supplier-X [ consumer-X, child_a, consumer_a ..., child_z]
+> >
+> > It requires two nested recursion to drain out all out-of-order item in
+> > "affected range". To avoid such complicated code, this patch suggests
+> > to utilize the info in device tree, instead of using the order of
+> > devices_kset during shutdown. It iterates the device tree, and firstly
+> > shutdown a device's children and consumers. After this patch, the buggy
+> > commit is hollow and left to clean.
+> >
+> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+> > Cc: Christoph Hellwig <hch@infradead.org>
+> > Cc: Bjorn Helgaas <helgaas@kernel.org>
+> > Cc: Dave Young <dyoung@redhat.com>
+> > Cc: linux-pci@vger.kernel.org
+> > Cc: linuxppc-dev@lists.ozlabs.org
+> > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+> > ---
+> >  drivers/base/core.c    | 48 +++++++++++++++++++++++++++++++++++++++++++-----
+> >  include/linux/device.h |  1 +
+> >  2 files changed, 44 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/base/core.c b/drivers/base/core.c
+> > index a48868f..684b994 100644
+> > --- a/drivers/base/core.c
+> > +++ b/drivers/base/core.c
+> > @@ -1446,6 +1446,7 @@ void device_initialize(struct device *dev)
+> >       INIT_LIST_HEAD(&dev->links.consumers);
+> >       INIT_LIST_HEAD(&dev->links.suppliers);
+> >       dev->links.status = DL_DEV_NO_DRIVER;
+> > +     dev->shutdown = false;
+> >  }
+> >  EXPORT_SYMBOL_GPL(device_initialize);
+> >
+> > @@ -2811,7 +2812,6 @@ static void __device_shutdown(struct device *dev)
+> >        * lock is to be held
+> >        */
+> >       parent = get_device(dev->parent);
+> > -     get_device(dev);
+>
+> Why is the get_/put_device() not needed any more?
+>
+They are moved upper layer into device_for_each_child_shutdown().
+Since there is lock breakage in __device_shutdown(), resorting to
+ref++ to protect the ancestor.  And I think the
+get_device(dev->parent) can be deleted either.
 
-Add MSI-X callbacks signatures to the ops structure.
+> >       /*
+> >        * Make sure the device is off the kset list, in the
+> >        * event that dev->*->shutdown() doesn't remove it.
+> > @@ -2842,23 +2842,60 @@ static void __device_shutdown(struct device *dev)
+> >                       dev_info(dev, "shutdown\n");
+> >               dev->driver->shutdown(dev);
+> >       }
+> > -
+> > +     dev->shutdown = true;
+> >       device_unlock(dev);
+> >       if (parent)
+> >               device_unlock(parent);
+> >
+> > -     put_device(dev);
+> >       put_device(parent);
+> >       spin_lock(&devices_kset->list_lock);
+> >  }
+> >
+> > +/* shutdown dev's children and consumer firstly, then itself */
+> > +static int device_for_each_child_shutdown(struct device *dev)
+>
+> Confusing name.
+>
+> What about device_shutdown_subordinate()?
+>
+Fine. My understanding of words is not exact.
 
-Add sysfs interface for set/get MSI-X capability maximum number.
+> > +{
+> > +     struct klist_iter i;
+> > +     struct device *child;
+> > +     struct device_link *link;
+> > +
+> > +     /* already shutdown, then skip this sub tree */
+> > +     if (dev->shutdown)
+> > +             return 0;
+> > +
+> > +     if (!dev->p)
+> > +             goto check_consumers;
+> > +
+> > +     /* there is breakage of lock in __device_shutdown(), and the redundant
+> > +      * ref++ on srcu protected consumer is harmless since shutdown is not
+> > +      * hot path.
+> > +      */
+> > +     get_device(dev);
+> > +
+> > +     klist_iter_init(&dev->p->klist_children, &i);
+> > +     while ((child = next_device(&i)))
+> > +             device_for_each_child_shutdown(child);
+>
+> Why don't you use device_for_each_child() here?
+>
+OK, I will try use it.
 
-Update documentation accordingly.
+> > +     klist_iter_exit(&i);
+> > +
+> > +check_consumers:
+> > +     list_for_each_entry_rcu(link, &dev->links.consumers, s_node) {
+> > +             if (!link->consumer->shutdown)
+> > +                     device_for_each_child_shutdown(link->consumer);
+> > +     }
+> > +
+> > +     __device_shutdown(dev);
+> > +     put_device(dev);
+>
+> Possible reference counter imbalance AFAICS.
+>
+Yes, get_device() should be ahead of "if (!dev->p)". Is anything  else I miss?
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Moved pci_epc_raise_irq() signature changes to patch file #3.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Nothing changed, just to follow the patch set version.
-Change v9->v10:
- - Updated documentation.
+> > +     return 0;
+> > +}
+>
+> Well, instead of doing this dance, we might as well walk dpm_list here as it
+> is in the right order.
+>
+Sorry, do you mean that using the same way to manage the dpm_list?
 
- .../PCI/endpoint/function/binding/pci-test.txt     |  2 +
- drivers/pci/endpoint/pci-ep-cfs.c                  | 24 +++++++++
- drivers/pci/endpoint/pci-epc-core.c                | 57 ++++++++++++++++++++++
- include/linux/pci-epc.h                            |  9 ++++
- include/linux/pci-epf.h                            |  1 +
- 5 files changed, 93 insertions(+)
+> Of course, that would require dpm_list to be available for CONFIG_PM unset,
+> but it may be a better approach long term.
+>
+> > +
+> >  /**
+> >   * device_shutdown - call ->shutdown() on each device to shutdown.
+> >   */
+> >  void device_shutdown(void)
+> >  {
+> >       struct device *dev;
+> > +     int idx;
+> >
+> > +     idx = device_links_read_lock();
+> >       spin_lock(&devices_kset->list_lock);
+> >       /*
+> >        * Walk the devices list backward, shutting down each in turn.
+> > @@ -2866,11 +2903,12 @@ void device_shutdown(void)
+> >        * devices offline, even as the system is shutting down.
+> >        */
+> >       while (!list_empty(&devices_kset->list)) {
+> > -             dev = list_entry(devices_kset->list.prev, struct device,
+> > +             dev = list_entry(devices_kset->list.next, struct device,
+> >                               kobj.entry);
+> > -             __device_shutdown(dev);
+> > +             device_for_each_child_shutdown(dev);
+> >       }
+> >       spin_unlock(&devices_kset->list_lock);
+> > +     device_links_read_unlock(idx);
+> >  }
+> >
+> >  /*
+> > diff --git a/include/linux/device.h b/include/linux/device.h
+> > index 055a69d..8a0f784 100644
+> > --- a/include/linux/device.h
+> > +++ b/include/linux/device.h
+> > @@ -1003,6 +1003,7 @@ struct device {
+> >       bool                    offline:1;
+> >       bool                    of_node_reused:1;
+> >       bool                    dma_32bit_limit:1;
+> > +     bool                    shutdown:1; /* one direction: false->true */
+> >  };
+> >
+> >  static inline struct device *kobj_to_dev(struct kobject *kobj)
+> >
+>
+> If the device_kset_move_last() in really_probe() is the only problem,
+> I'd rather try to fix that one in the first place.
+>
+> Why is it needed?
+>
+I had tried, but it turns out not easy to archive. The code is
+https://patchwork.kernel.org/patch/10485195/. And I make a detailed
+description of the algorithm in this patch's commit log. To be more
+detailed, we face the potential out of order issue in really_probe()
+like : 0th. [ consumer-X, child_a, ...., child_z] [... consumer_a,
+..., consumer_z, ...] supplier-X //(note child_a is supplier of
+consumer_a).  To address all the potential out of order item in the
+affected section [... consumer_a, ..., consumer_z, ...],  it will
+incur two nested recursions.  1st, moving  consumer-X and its
+descendants after supplier-X,  2nd, moving consumer_a after child_a,
+3rd. the 2nd step may pose the same situation of 0th.  Besides the two
+interleaved recursion,  the breakage of spin lock requires more effort
+to protect the item from disappearing in linked-list  (which I did not
+implement in the https://patchwork.kernel.org/patch/10485195/). Hence
+I turn to this cheap method.
 
-diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-index 3b68b95..cd76ba4 100644
---- a/Documentation/PCI/endpoint/function/binding/pci-test.txt
-+++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-@@ -15,3 +15,5 @@ subsys_id	 : don't care
- interrupt_pin	 : Should be 1 - INTA, 2 - INTB, 3 - INTC, 4 -INTD
- msi_interrupts	 : Should be 1 to 32 depending on the number of MSI interrupts
- 		   to test
-+msix_interrupts	 : Should be 1 to 2048 depending on the number of MSI-X
-+		   interrupts to test
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 018ea34..d1288a0 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -286,6 +286,28 @@ static ssize_t pci_epf_msi_interrupts_show(struct config_item *item,
- 		       to_pci_epf_group(item)->epf->msi_interrupts);
- }
- 
-+static ssize_t pci_epf_msix_interrupts_store(struct config_item *item,
-+					     const char *page, size_t len)
-+{
-+	u16 val;
-+	int ret;
-+
-+	ret = kstrtou16(page, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	to_pci_epf_group(item)->epf->msix_interrupts = val;
-+
-+	return len;
-+}
-+
-+static ssize_t pci_epf_msix_interrupts_show(struct config_item *item,
-+					    char *page)
-+{
-+	return sprintf(page, "%d\n",
-+		       to_pci_epf_group(item)->epf->msix_interrupts);
-+}
-+
- PCI_EPF_HEADER_R(vendorid)
- PCI_EPF_HEADER_W_u16(vendorid)
- 
-@@ -327,6 +349,7 @@ CONFIGFS_ATTR(pci_epf_, subsys_vendor_id);
- CONFIGFS_ATTR(pci_epf_, subsys_id);
- CONFIGFS_ATTR(pci_epf_, interrupt_pin);
- CONFIGFS_ATTR(pci_epf_, msi_interrupts);
-+CONFIGFS_ATTR(pci_epf_, msix_interrupts);
- 
- static struct configfs_attribute *pci_epf_attrs[] = {
- 	&pci_epf_attr_vendorid,
-@@ -340,6 +363,7 @@ static struct configfs_attribute *pci_epf_attrs[] = {
- 	&pci_epf_attr_subsys_id,
- 	&pci_epf_attr_interrupt_pin,
- 	&pci_epf_attr_msi_interrupts,
-+	&pci_epf_attr_msix_interrupts,
- 	NULL,
- };
- 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index b0ee427..7d77bd0 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -218,6 +218,63 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- EXPORT_SYMBOL_GPL(pci_epc_set_msi);
- 
- /**
-+ * pci_epc_get_msix() - get the number of MSI-X interrupt numbers allocated
-+ * @epc: the EPC device to which MSI-X interrupts was requested
-+ * @func_no: the endpoint function number in the EPC device
-+ *
-+ * Invoke to get the number of MSI-X interrupts allocated by the RC
-+ */
-+int pci_epc_get_msix(struct pci_epc *epc, u8 func_no)
-+{
-+	int interrupt;
-+	unsigned long flags;
-+
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
-+		return 0;
-+
-+	if (!epc->ops->get_msix)
-+		return 0;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	interrupt = epc->ops->get_msix(epc, func_no);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	if (interrupt < 0)
-+		return 0;
-+
-+	return interrupt + 1;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_get_msix);
-+
-+/**
-+ * pci_epc_set_msix() - set the number of MSI-X interrupt numbers required
-+ * @epc: the EPC device on which MSI-X has to be configured
-+ * @func_no: the endpoint function number in the EPC device
-+ * @interrupts: number of MSI-X interrupts required by the EPF
-+ *
-+ * Invoke to set the required number of MSI-X interrupts.
-+ */
-+int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
-+{
-+	int ret;
-+	unsigned long flags;
-+
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
-+	    interrupts < 1 || interrupts > 2048)
-+		return -EINVAL;
-+
-+	if (!epc->ops->set_msix)
-+		return 0;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	ret = epc->ops->set_msix(epc, func_no, interrupts - 1);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_set_msix);
-+
-+/**
-  * pci_epc_unmap_addr() - unmap CPU address from PCI address
-  * @epc: the EPC device on which address is allocated
-  * @func_no: the endpoint function number in the EPC device
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index 243eaa5..89f079f 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -17,6 +17,7 @@ enum pci_epc_irq_type {
- 	PCI_EPC_IRQ_UNKNOWN,
- 	PCI_EPC_IRQ_LEGACY,
- 	PCI_EPC_IRQ_MSI,
-+	PCI_EPC_IRQ_MSIX,
- };
- 
- /**
-@@ -30,6 +31,10 @@ enum pci_epc_irq_type {
-  *	     capability register
-  * @get_msi: ops to get the number of MSI interrupts allocated by the RC from
-  *	     the MSI capability register
-+ * @set_msix: ops to set the requested number of MSI-X interrupts in the
-+ *	     MSI-X capability register
-+ * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
-+ *	     from the MSI-X capability register
-  * @raise_irq: ops to raise a legacy or MSI interrupt
-  * @start: ops to start the PCI link
-  * @stop: ops to stop the PCI link
-@@ -48,6 +53,8 @@ struct pci_epc_ops {
- 			      phys_addr_t addr);
- 	int	(*set_msi)(struct pci_epc *epc, u8 func_no, u8 interrupts);
- 	int	(*get_msi)(struct pci_epc *epc, u8 func_no);
-+	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
-+	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
- 	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
- 			     enum pci_epc_irq_type type, u8 interrupt_num);
- 	int	(*start)(struct pci_epc *epc);
-@@ -144,6 +151,8 @@ void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no,
- 			phys_addr_t phys_addr);
- int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts);
- int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
-+int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts);
-+int pci_epc_get_msix(struct pci_epc *epc, u8 func_no);
- int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
- 		      enum pci_epc_irq_type type, u8 interrupt_num);
- int pci_epc_start(struct pci_epc *epc);
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index 4e77649..ec02f587 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -119,6 +119,7 @@ struct pci_epf {
- 	struct pci_epf_header	*header;
- 	struct pci_epf_bar	bar[6];
- 	u8			msi_interrupts;
-+	u16			msix_interrupts;
- 	u8			func_no;
- 
- 	struct pci_epc		*epc;
--- 
-2.7.4
+Thanks,
+Pingfan
