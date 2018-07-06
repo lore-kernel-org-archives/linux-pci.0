@@ -1,82 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 2/4] pci: dwc: pci-dra7xx: Enable errata i870 for both
- EP and RC mode
-To: Vignesh R <vigneshr@ti.com>, Tony Lindgren <tony@atomide.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20180627122919.23926-1-vigneshr@ti.com>
- <20180627122919.23926-3-vigneshr@ti.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <2096bbca-6ee9-784d-5a1e-6109472fc841@ti.com>
-Date: Tue, 17 Jul 2018 15:24:34 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:58836 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753630AbeGFI44 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2018 04:56:56 -0400
+Subject: Re: [PATCH v6 00/11] Add MSI-X support on pcitest tool
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "adouglas@cadence.com" <adouglas@cadence.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
+        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Message-ID: <77139978-65cc-b954-bc61-bebf3bcc67ac@synopsys.com>
+Date: Fri, 6 Jul 2018 09:54:42 +0100
 MIME-Version: 1.0
-In-Reply-To: <20180627122919.23926-3-vigneshr@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi,
 
+Just a gentle reminder.
 
-On Wednesday 27 June 2018 05:59 PM, Vignesh R wrote:
-> Errata i870 is applicable in both EP and RC mode. Therefore rename
-> function dra7xx_pcie_ep_unaligned_memaccess(), that implements errata
-> workaround, to dra7xx_pcie_unaligned_memaccess() and call it from a
-> common place. So, that errata workaround is applied for both modes of
-> operation.
+Thanks.
+
+On 21/06/2018 17:01, Gustavo Pimentel wrote:
+> Patch series made against Lorenzo's master branch.
 > 
-> Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
-> Signed-off-by: Vignesh R <vigneshr@ti.com>
-
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/controller/dwc/pci-dra7xx.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
+> Add MSI-X support on pcitest tool.
 > 
-> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-> index 345aab56ce8b..95d9076e3fde 100644
-> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-> @@ -542,7 +542,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
->  };
->  
->  /*
-> - * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
-> + * dra7xx_pcie_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
->   * @dra7xx: the dra7xx device where the workaround should be applied
->   *
->   * Access to the PCIe slave port that are not 32-bit aligned will result
-> @@ -552,7 +552,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
->   *
->   * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
->   */
-> -static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
-> +static int dra7xx_pcie_unaligned_memaccess(struct device *dev)
->  {
->  	int ret;
->  	struct device_node *np = dev->of_node;
-> @@ -695,6 +695,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  	if (dra7xx->link_gen < 0 || dra7xx->link_gen > 2)
->  		dra7xx->link_gen = 2;
->  
-> +	ret = dra7xx_pcie_unaligned_memaccess(dev);
-> +	if (ret)
-> +		dev_err(dev, "WA for Errata i870 not appplied. Update DT\n");
-> +
->  	switch (mode) {
->  	case DW_PCIE_RC_TYPE:
->  		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) {
-> @@ -717,10 +721,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
->  				   DEVICE_TYPE_EP);
->  
-> -		ret = dra7xx_pcie_ep_unaligned_memaccess(dev);
-> -		if (ret)
-> -			goto err_gpio;
-> -
->  		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
->  		if (ret < 0)
->  			goto err_gpio;
+> Add new callbacks methods and handlers to trigger the MSI-X interrupts
+> on the EP DesignWare IP driver.
+> 
+> Allow to set/get MSI-X EP maximum capability number.
+> 
+> Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
+> 
+> Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
+> 
+> Update the pcitest.sh script to support MSI-X feature tests.
+> 
+> Gustavo Pimentel (11):
+>   PCI: endpoint: Add MSI-X interfaces
+>   PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
+>   PCI: dwc: Add MSI-X callbacks handler
+>   PCI: dwc: Rework MSI callbacks handler
+>   PCI: dwc: Add legacy interrupt callback handler
+>   pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
+>   pci-epf-test/pci_endpoint_test: Use irq_type module parameter
+>   pci-epf-test/pci_endpoint_test: Add MSI-X support
+>   pci_endpoint_test: Add 2 ioctl commands
+>   tools: PCI: Add MSI-X support
+>   PCI: endpoint: Add MSI set maximum restriction.
+> 
+>  Documentation/ioctl/ioctl-number.txt              |   1 +
+>  Documentation/misc-devices/pci-endpoint-test.txt  |   6 +
+>  drivers/misc/pci_endpoint_test.c                  | 259 ++++++++++++++++------
+>  drivers/pci/controller/dwc/pci-dra7xx.c           |   2 +-
+>  drivers/pci/controller/dwc/pcie-artpec6.c         |   2 +-
+>  drivers/pci/controller/dwc/pcie-designware-ep.c   | 205 +++++++++++++++--
+>  drivers/pci/controller/dwc/pcie-designware-plat.c |   7 +-
+>  drivers/pci/controller/dwc/pcie-designware.h      |  31 ++-
+>  drivers/pci/controller/pcie-cadence-ep.c          |   3 +-
+>  drivers/pci/controller/pcie-rockchip-ep.c         |   2 +-
+>  drivers/pci/endpoint/functions/pci-epf-test.c     |  81 +++++--
+>  drivers/pci/endpoint/pci-ep-cfs.c                 |  24 ++
+>  drivers/pci/endpoint/pci-epc-core.c               |  68 +++++-
+>  include/linux/pci-epc.h                           |  15 +-
+>  include/linux/pci-epf.h                           |   1 +
+>  include/uapi/linux/pcitest.h                      |   3 +
+>  tools/pci/pcitest.c                               |  51 ++++-
+>  tools/pci/pcitest.sh                              |  15 ++
+>  18 files changed, 644 insertions(+), 132 deletions(-)
 > 
