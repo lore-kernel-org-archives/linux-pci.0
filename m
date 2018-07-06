@@ -1,129 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48088 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729049AbeG1RdJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 28 Jul 2018 13:33:09 -0400
-Date: Sat, 28 Jul 2018 11:06:08 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Jiri Pirko <jiri@resnulli.us>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Eran Ben Elisha <eranbe@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [net-next 10/16] net/mlx5: Support PCIe buffer congestion
- handling via Devlink
-Message-ID: <20180728160608.GI173328@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180719010107.22363-1-saeedm@mellanox.com>
- <20180719010107.22363-11-saeedm@mellanox.com>
- <20180718184947.6e472ee4@cakuba.netronome.com>
- <575e4a3a-af6f-aac4-fed6-fd4dad387105@mellanox.com>
- <20180724125135.19121f1f@cakuba.netronome.com>
- <98071d31-bf99-d713-7fd1-4b1cc156377e@mellanox.com>
- <CAKgT0UfG-4zuKArCbSLkZoCKs2-t6r9U4qQPPUvBk-e_5_3FCg@mail.gmail.com>
- <20180725174359.6952c937@cakuba.netronome.com>
- <20180726071433.GA2222@nanopsycho>
- <CAKgT0UeGOhjR756fMPx_k_o8Qq5x4waKMcdmtR3pLAT=xRHMgA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKgT0UeGOhjR756fMPx_k_o8Qq5x4waKMcdmtR3pLAT=xRHMgA@mail.gmail.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:37529 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932849AbeGFPvk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2018 11:51:40 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v8 04/11] PCI: dwc: Rework MSI callbacks handler
+Date: Fri,  6 Jul 2018 16:51:27 +0100
+Message-Id: <719ba994afe47af4f600f5fbd8070cc8ff69103a.1530891871.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
+References: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
+References: <cover.1530891871.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 26, 2018 at 07:00:20AM -0700, Alexander Duyck wrote:
-> On Thu, Jul 26, 2018 at 12:14 AM, Jiri Pirko <jiri@resnulli.us> wrote:
-> > Thu, Jul 26, 2018 at 02:43:59AM CEST, jakub.kicinski@netronome.com wrote:
-> >>On Wed, 25 Jul 2018 08:23:26 -0700, Alexander Duyck wrote:
-> >>> On Wed, Jul 25, 2018 at 5:31 AM, Eran Ben Elisha wrote:
-> >>> > On 7/24/2018 10:51 PM, Jakub Kicinski wrote:
-> >>> >>>> The devlink params haven't been upstream even for a full cycle and
-> >>> >>>> already you guys are starting to use them to configure standard
-> >>> >>>> features like queuing.
-> >>> >>>
-> >>> >>> We developed the devlink params in order to support non-standard
-> >>> >>> configuration only. And for non-standard, there are generic and vendor
-> >>> >>> specific options.
-> >>> >>
-> >>> >> I thought it was developed for performing non-standard and possibly
-> >>> >> vendor specific configuration.  Look at DEVLINK_PARAM_GENERIC_* for
-> >>> >> examples of well justified generic options for which we have no
-> >>> >> other API.  The vendor mlx4 options look fairly vendor specific if you
-> >>> >> ask me, too.
-> >>> >>
-> >>> >> Configuring queuing has an API.  The question is it acceptable to enter
-> >>> >> into the risky territory of controlling offloads via devlink parameters
-> >>> >> or would we rather make vendors take the time and effort to model
-> >>> >> things to (a subset) of existing APIs.  The HW never fits the APIs
-> >>> >> perfectly.
-> >>> >
-> >>> > I understand what you meant here, I would like to highlight that this
-> >>> > mechanism was not meant to handle SRIOV, Representors, etc.
-> >>> > The vendor specific configuration suggested here is to handle a congestion
-> >>> > state in Multi Host environment (which includes PF and multiple VFs per
-> >>> > host), where one host is not aware to the other hosts, and each is running
-> >>> > on its own pci/driver. It is a device working mode configuration.
-> >>> >
-> >>> > This  couldn't fit into any existing API, thus creating this vendor specific
-> >>> > unique API is needed.
-> >>>
-> >>> If we are just going to start creating devlink interfaces in for every
-> >>> one-off option a device wants to add why did we even bother with
-> >>> trying to prevent drivers from using sysfs? This just feels like we
-> >>> are back to the same arguments we had back in the day with it.
-> >>>
-> >>> I feel like the bigger question here is if devlink is how we are going
-> >>> to deal with all PCIe related features going forward, or should we
-> >>> start looking at creating a new interface/tool for PCI/PCIe related
-> >>> features? My concern is that we have already had features such as DMA
-> >>> Coalescing that didn't really fit into anything and now we are
-> >>> starting to see other things related to DMA and PCIe bus credits. I'm
-> >>> wondering if we shouldn't start looking at a tool/interface to
-> >>> configure all the PCIe related features such as interrupts, error
-> >>> reporting, DMA configuration, power management, etc. Maybe we could
-> >>> even look at sharing it across subsystems and include things like
-> >>> storage, graphics, and other subsystems in the conversation.
-> >>
-> >>Agreed, for actual PCIe configuration (i.e. not ECN marking) we do need
-> >>to build up an API.  Sharing it across subsystems would be very cool!
+Remove duplicate defines located on pcie-designware.h file already
+available on /include/uapi/linux/pci-regs.h file.
 
-I read the thread (starting at [1], for anybody else coming in late)
-and I see this has something to do with "configuring outbound PCIe
-buffers", but I haven't seen the connection to PCIe protocol or
-features, i.e., I can't connect this to anything in the PCIe spec.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Replaced wrong return value 0 to -EINVAL.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Moved pci_epc_set_msi maximum interrupts validation into a new patch
+file #11.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Change v6->v7:
+ - Nothing changed, just to follow the patch set version.
+Change v7->v8:
+ - Re-sending the patch series.
 
-Can somebody help me understand how the PCI core is relevant?  If
-there's some connection with a feature defined by PCIe, or if it
-affects the PCIe transaction protocol somehow, I'm definitely
-interested in this.  But if this only affects the data transferred
-over PCIe, i.e., the data payloads of PCIe TLP packets, then I'm not
-sure why the PCI core should care.
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 49 +++++++++++++++++--------
+ drivers/pci/controller/dwc/pcie-designware.h    | 11 ------
+ 2 files changed, 33 insertions(+), 27 deletions(-)
 
-> > I wonder howcome there isn't such API in place already. Or is it?
-> > If it is not, do you have any idea how should it look like? Should it be
-> > an extension of the existing PCI uapi or something completely new?
-> > It would be probably good to loop some PCI people in...
-> 
-> The closest thing I can think of in terms of answering your questions
-> as to why we haven't seen anything like that would be setpci.
-> Basically with that tool you can go through the PCI configuration
-> space and update any piece you want. The problem is it can have
-> effects on the driver and I don't recall there ever being any sort of
-> notification mechanism added to make a driver aware of configuration
-> updates.
-
-setpci is a development and debugging tool, not something we should
-use as the standard way of configuring things.  Use of setpci should
-probably taint the kernel because the PCI core configures features
-like MPS, ASPM, AER, etc., based on the assumption that nobody else is
-changing things in PCI config space.
-
-> As far as the interface I don't know if we would want to use something
-> like netlink or look at something completely new.
-> 
-> I've gone ahead and added the linux-pci mailing list to the thread.
-> 
-> - Alex
-
-[1] https://lkml.kernel.org/r/20180719010107.22363-11-saeedm@mellanox.com
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index bbe75d7..1f98db3 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -246,29 +246,38 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
+ 
+ static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
+ {
+-	int val;
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	u32 val, reg;
++
++	if (!ep->msi_cap)
++		return -EINVAL;
+ 
+-	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+-	if (!(val & MSI_CAP_MSI_EN_MASK))
++	reg = ep->msi_cap + PCI_MSI_FLAGS;
++	val = dw_pcie_readw_dbi(pci, reg);
++	if (!(val & PCI_MSI_FLAGS_ENABLE))
+ 		return -EINVAL;
+ 
+-	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
++	val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
++
+ 	return val;
+ }
+ 
+-static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
++static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
+ {
+-	int val;
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	u32 val, reg;
+ 
+-	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+-	val &= ~MSI_CAP_MMC_MASK;
+-	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
++	if (!ep->msi_cap)
++		return -EINVAL;
++
++	reg = ep->msi_cap + PCI_MSI_FLAGS;
++	val = dw_pcie_readw_dbi(pci, reg);
++	val &= ~PCI_MSI_FLAGS_QMASK;
++	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
+ 	dw_pcie_dbi_ro_wr_en(pci);
+-	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
++	dw_pcie_writew_dbi(pci, reg, val);
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	return 0;
+@@ -367,21 +376,29 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	struct pci_epc *epc = ep->epc;
+ 	u16 msg_ctrl, msg_data;
+-	u32 msg_addr_lower, msg_addr_upper;
++	u32 msg_addr_lower, msg_addr_upper, reg;
+ 	u64 msg_addr;
+ 	bool has_upper;
+ 	int ret;
+ 
++	if (!ep->msi_cap)
++		return -EINVAL;
++
+ 	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
+-	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
++	reg = ep->msi_cap + PCI_MSI_FLAGS;
++	msg_ctrl = dw_pcie_readw_dbi(pci, reg);
+ 	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
+-	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
++	reg = ep->msi_cap + PCI_MSI_ADDRESS_LO;
++	msg_addr_lower = dw_pcie_readl_dbi(pci, reg);
+ 	if (has_upper) {
+-		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
+-		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
++		reg = ep->msi_cap + PCI_MSI_ADDRESS_HI;
++		msg_addr_upper = dw_pcie_readl_dbi(pci, reg);
++		reg = ep->msi_cap + PCI_MSI_DATA_64;
++		msg_data = dw_pcie_readw_dbi(pci, reg);
+ 	} else {
+ 		msg_addr_upper = 0;
+-		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
++		reg = ep->msi_cap + PCI_MSI_DATA_32;
++		msg_data = dw_pcie_readw_dbi(pci, reg);
+ 	}
+ 	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
+ 	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index b22c5bb..a0ab12f 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -96,17 +96,6 @@
+ #define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
+ 			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
+ 
+-#define MSI_MESSAGE_CONTROL		0x52
+-#define MSI_CAP_MMC_SHIFT		1
+-#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
+-#define MSI_CAP_MME_SHIFT		4
+-#define MSI_CAP_MSI_EN_MASK		0x1
+-#define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+-#define MSI_MESSAGE_ADDR_L32		0x54
+-#define MSI_MESSAGE_ADDR_U32		0x58
+-#define MSI_MESSAGE_DATA_32		0x58
+-#define MSI_MESSAGE_DATA_64		0x5C
+-
+ #define MAX_MSI_IRQS			256
+ #define MAX_MSI_IRQS_PER_CTRL		32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
+-- 
+2.7.4
