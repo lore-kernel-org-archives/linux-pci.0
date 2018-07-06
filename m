@@ -1,115 +1,39 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
- robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
- gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com, bhelgaas@google.com,
- hch@lst.de
-Subject: [PATCH 1/7 v6] Documentation: fsl-mc: add iommu-map device-tree
- binding for fsl-mc bus
-Date: Mon,  9 Jul 2018 16:48:17 +0530
-Message-Id: <1531135103-10699-2-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
-References: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:33666 "EHLO smtp2.it.da.ut.ee"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932751AbeGFTNC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Jul 2018 15:13:02 -0400
+Date: Fri, 6 Jul 2018 22:12:59 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+To: Linux Kernel list <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: HH DL585 warm boot fail (old)
+Message-ID: <alpine.LRH.2.21.1807051515260.21817@math.ut.ee>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
- shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
- linux-pci@vger.kernel.org, frowand.list@gmail.com,
- linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The existing IOMMU bindings cannot be used to specify the relationship
-between fsl-mc devices and IOMMUs. This patch adds a generic binding for
-mapping fsl-mc devices to IOMMUs, using iommu-map property.
+I have a first gen HP Proliant DL585 ("G1" but the name was not used 
+back then) that boots up fine from poweron but usually fails bootup from 
+warm reboot, somewhere in PCI detection (will try to photographs the 
+screen some time).
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
- .../devicetree/bindings/misc/fsl,qoriq-mc.txt      | 39 ++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+I just stumbled upon an old OpenSolaris thead about the same DL585 and 
+same symptoms: 
+http://opensolaris-discuss.opensolaris.narkive.com/T0UTXYGZ/solaris-10-06-06-x86-hp-dl585-boot-hang-aftrer-reboot-help
 
-diff --git a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-index 6611a7c..01fdc33 100644
---- a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-+++ b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-@@ -9,6 +9,25 @@ blocks that can be used to create functional hardware objects/devices
- such as network interfaces, crypto accelerator instances, L2 switches,
- etc.
- 
-+For an overview of the DPAA2 architecture and fsl-mc bus see:
-+Documentation/networking/dpaa2/overview.rst
-+
-+As described in the above overview, all DPAA2 objects in a DPRC share the
-+same hardware "isolation context" and a 10-bit value called an ICID
-+(isolation context id) is expressed by the hardware to identify
-+the requester.
-+
-+The generic 'iommus' property is insufficient to describe the relationship
-+between ICIDs and IOMMUs, so an iommu-map property is used to define
-+the set of possible ICIDs under a root DPRC and how they map to
-+an IOMMU.
-+
-+For generic IOMMU bindings, see
-+Documentation/devicetree/bindings/iommu/iommu.txt.
-+
-+For arm-smmu binding, see:
-+Documentation/devicetree/bindings/iommu/arm,smmu.txt.
-+
- Required properties:
- 
-     - compatible
-@@ -88,14 +107,34 @@ Sub-nodes:
-               Value type: <phandle>
-               Definition: Specifies the phandle to the PHY device node associated
-                           with the this dpmac.
-+Optional properties:
-+
-+- iommu-map: Maps an ICID to an IOMMU and associated iommu-specifier
-+  data.
-+
-+  The property is an arbitrary number of tuples of
-+  (icid-base,iommu,iommu-base,length).
-+
-+  Any ICID i in the interval [icid-base, icid-base + length) is
-+  associated with the listed IOMMU, with the iommu-specifier
-+  (i - icid-base + iommu-base).
- 
- Example:
- 
-+        smmu: iommu@5000000 {
-+               compatible = "arm,mmu-500";
-+               #iommu-cells = <1>;
-+               stream-match-mask = <0x7C00>;
-+               ...
-+        };
-+
-         fsl_mc: fsl-mc@80c000000 {
-                 compatible = "fsl,qoriq-mc";
-                 reg = <0x00000008 0x0c000000 0 0x40>,    /* MC portal base */
-                       <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
-                 msi-parent = <&its>;
-+                /* define map for ICIDs 23-64 */
-+                iommu-map = <23 &smmu 23 41>;
-                 #address-cells = <3>;
-                 #size-cells = <1>;
- 
+Their conclusion was the wfollowing and they seem to have found a fix 
+(although I have not tested any version of Solaris on this DL585 
+myself):
+
+"The hang is caused when, during PCI enumeration, a PCI-PCI bridge is 
+partially disabled when the PCI command register bits which enable IO 
+and memory windows are cleared."
+
+Is this information useful in some way for debugging it?
+
+What else besides screenshot of the can be useful in debugging?
+
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Meelis Roos (mroos@linux.ee)
