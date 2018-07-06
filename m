@@ -1,41 +1,55 @@
-Return-Path: <SRS0=VV4o=JT=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=VV4o=JT=h08.hostsharing.net=foo00@kernel.org>
-Date: Tue, 3 Jul 2018 09:51:06 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Pingfan Liu <kernelfans@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCHv3 2/4] drivers/base: utilize device tree info to shutdown
- devices
-Message-ID: <20180703075106.GA21136@wunner.de>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <1530600642-25090-3-git-send-email-kernelfans@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:51864 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753061AbeGFJcB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2018 05:32:01 -0400
+Subject: Re: [PATCH v6 11/11] PCI: endpoint: Add MSI set maximum restriction.
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
+        <adouglas@cadence.com>, <jesper.nilsson@axis.com>,
+        <shawn.lin@rock-chips.com>
+References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+ <5bceea0ec98a7436ac5960635898ddfbec2cf6e1.1529595907.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <3a33b9b2-0afa-3639-12af-cea1083e2714@ti.com>
+Date: Fri, 6 Jul 2018 15:01:44 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1530600642-25090-3-git-send-email-kernelfans@gmail.com>
+In-Reply-To: <5bceea0ec98a7436ac5960635898ddfbec2cf6e1.1529595907.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 03, 2018 at 02:50:40PM +0800, Pingfan Liu wrote:
-> commit 52cdbdd49853 ("driver core: correct device's shutdown order")
-> places an assumption of supplier<-consumer order on the process of probe.
-> But it turns out to break down the parent <- child order in some scene.
-> E.g in pci, a bridge is enabled by pci core, and behind it, the devices
-> have been probed. Then comes the bridge's module, which enables extra
-> feature(such as hotplug) on this bridge. This will break the
-> parent<-children order and cause failure when "kexec -e" in some scenario.
-> 
-> The detailed description of the scenario:
-> An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
-> match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
-> to some issue. For this case, the bridge is moved after its children in
-> devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
-> write back buffer in flight due to the former shutdown of the bridge which
-> clears the BusMaster bit.
 
-If you revert commit cc27b735ad3a ("PCI/portdrv: Turn off PCIe services
-during shutdown"), does the issue go away?
+
+On Thursday 21 June 2018 09:31 PM, Gustavo Pimentel wrote:
+> Add pci_epc_set_msi() maximum 32 interrupts validation.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+> Change v4->v5:
+>  - New patch file.
+> Change v5->v6:
+>  - Nothing changed, just to follow the patch set version.
+> 
+>  drivers/pci/endpoint/pci-epc-core.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index c72e656..094dcc3 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -201,7 +201,8 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
+>  	u8 encode_int;
+>  	unsigned long flags;
+>  
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> +	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
+> +	    interrupts > 32)
+>  		return -EINVAL;
+>  
+>  	if (!epc->ops->set_msi)
+> 
