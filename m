@@ -1,71 +1,68 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 6 Jul 2018 13:21:46 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH 1/2] PCI: aardvark: Size bridges before resources
- allocation
-Message-ID: <20180706122146.GA14795@red-moon>
-References: <20180629091620.31503-1-thomas.petazzoni@bootlin.com>
- <20180629091620.31503-2-thomas.petazzoni@bootlin.com>
- <20180705141522.GA13716@red-moon>
- <20180705161909.2a7a6030@windsurf>
- <20180706110130.GA14439@red-moon>
- <20180706134245.3a554b27@windsurf>
+Return-Path: <SRS0=+4Ye=JW=broadcom.com=ray.jui@kernel.org>
+Return-Path: <SRS0=+4Ye=JW=broadcom.com=ray.jui@kernel.org>
+Subject: Re: [PATCH v2 0/5] Improve Broadcom PAXC support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci@vger.kernel.org
+References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
+ <20180706162034.GA14923@red-moon>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <bfc6d35e-6184-7354-14f6-fb37844cc4ee@broadcom.com>
+Date: Fri, 6 Jul 2018 15:47:07 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180706134245.3a554b27@windsurf>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Zachary Zhang <zhangzg@marvell.com>,
- Wilson Ding <dingwei@marvell.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180706162034.GA14923@red-moon>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 06, 2018 at 01:42:45PM +0200, Thomas Petazzoni wrote:
-> Hello,
-> 
-> On Fri, 6 Jul 2018 12:01:30 +0100, Lorenzo Pieralisi wrote:
-> 
-> > > It is a serious bug, but it is not a regression. I.e whatever is fixed
-> > > by this patch never worked. So if you take a conservative view on
-> > > pushing patches to stable and only want to fix regressions, this one
-> > > doesn't qualify. However, if you take a more open approach and say you
-> > > want to fix obvious bugs/issues even in older stable kernels, then
-> > > indeed this patch qualifies.
-> > > 
-> > > If you are within the kernel developers with this more open approach to
-> > > sending patches to stable, then you can add:
-> > > 
-> > > Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-> > > Cc: <stable@vger.kernel.org>
-> > > 
-> > > when applying the patch. Unless of course you want me to resend the
-> > > patch series with this added. Just let met know what you prefer.  
-> > 
-> > It is up to you, I think it qualifies for stable kernels so I would
-> > send it but it is your choice, please let me know.
-> 
-> It's OK for me to have it in stable kernels. The fix is pretty obvious,
-> so you can add the Fixes/Cc tags when applying. Unless of course you
-> want me to resend an updated version.
+Hi Lorenzo,
 
-Applied to pci/aardvark for v4.19, thanks.
+On 7/6/2018 9:20 AM, Lorenzo Pieralisi wrote:
+> On Mon, Jun 11, 2018 at 05:21:02PM -0700, Ray Jui wrote:
+>> This patch series improves the Broadcom PAXC support by 1) adding more
+>> quirks for specific versions of PAXC controllers; 2) adding logic to
+>> reject internally unconfigured physical functions from the embedded
+>> network processor acting as endpoint; 3) reducing verbose print level
+>> in the outbound/inbound mapping code
+> 
+> Nit: commit log sentences must be terminated with periods, that's valid
+> for all patches in your series inclusive of this cover letter, I can
+> change them myself but pointing this out so that you will be able
+> to do it yourself next time.
+> 
+> Lorenzo
+> 
 
-Lorenzo
+Got it. I'll make sure commit message sentences are terminated with 
+periods in the future.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks a lot!
+
+Ray
+
+>> This patch series is based off v4.17 and is available on GIHUB:
+>> repo: https://github.com/Broadcom/arm64-linux.git
+>> branch: sr-paxc-v2
+>>
+>> Changes since v1:
+>>   - consolidate 2 PAXC related patch series into 1
+>>   - change the way how the capability list corruption is handled, per
+>> recommendation from Bjorn. Now handle and fix up the corruption at
+>> the config register read
+>>   - rebase to v4.17
+>>
+>> Ray Jui (5):
+>>    PCI: iproc: Activate PAXC bridge quirk for more devices
+>>    PCI: iproc: Fix up corrupted PAXC root complex config registers
+>>    PCI: iproc: Disable MSI parsing in certain PAXC blocks
+>>    PCI: iproc: Reject unconfigured physical functions from PAXC
+>>    PCI: iproc: Reduce inbound/outbound mapping print level
+>>
+>>   drivers/pci/host/pcie-iproc.c | 159 +++++++++++++++++++++++++++++++++++-------
+>>   drivers/pci/host/pcie-iproc.h |   8 +++
+>>   drivers/pci/quirks.c          |   3 +
+>>   3 files changed, 144 insertions(+), 26 deletions(-)
+>>
+>> -- 
+>> 2.1.4
+>>
