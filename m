@@ -1,15 +1,21 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 5 Jul 2018 15:15:22 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH 1/2] PCI: aardvark: Size bridges before resources
- allocation
-Message-ID: <20180705141522.GA13716@red-moon>
-References: <20180629091620.31503-1-thomas.petazzoni@bootlin.com>
- <20180629091620.31503-2-thomas.petazzoni@bootlin.com>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: Robin Murphy <robin.murphy@arm.com>, "will.deacon@arm.com"
+ <will.deacon@arm.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "robh@kernel.org" <robh@kernel.org>, "mark.rutland@arm.com"
+ <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Laurentiu Tudor
+ <laurentiu.tudor@nxp.com>, "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: RE: [PATCH 5/7 v5] bus: fsl-mc: support dma configure for devices on
+ fsl-mc bus
+Date: Fri, 6 Jul 2018 12:17:09 +0000
+Message-ID: <HE1PR0401MB2425626DB35517BFD4FA9E15E6470@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+ <1526824191-7000-6-git-send-email-nipun.gupta@nxp.com>
+ <b4cf1e86-0297-97ed-d10e-9b430ecb0bc7@arm.com>
+In-Reply-To: <b4cf1e86-0297-97ed-d10e-9b430ecb0bc7@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20180629091620.31503-2-thomas.petazzoni@bootlin.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,69 +23,116 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Antoine Tenart <antoine.tenart@bootlin.com>, linux-pci@vger.kernel.org,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@bootlin.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Zachary Zhang <zhangzg@marvell.com>,
- Wilson Ding <dingwei@marvell.com>, linux-arm-kernel@lists.infradead.org
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "stuyoder@gmail.com" <stuyoder@gmail.com>,
+ Bharat Bhushan <bharat.bhushan@nxp.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "joro@8bytes.org" <joro@8bytes.org>,
+ "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Leo Li <leoyang.li@nxp.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "frowand.list@gmail.com" <frowand.list@gmail.com>, "hch@lst.de" <hch@lst.de>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 29, 2018 at 11:16:19AM +0200, Thomas Petazzoni wrote:
-> From: Zachary Zhang <zhangzg@marvell.com>
-> 
-> The PCIE I/O and MEM resource allocation mechanism is that root bus
-> goes through the following steps:
-> 
-> 1. Check PCI bridges' range and computes I/O and Mem base/limits.
-> 
-> 2. Sort all subordinate devices I/O and MEM resource requirements and
->    allocate the resources and writes/updates subordinate devices'
->    requirements to PCI bridges I/O and Mem MEM/limits registers.
-> 
-> Currently, PCI Aardvark driver only handles the second step and lacks
-> the first step, so there is an I/O and MEM resource allocation failure
-> when using a PCI switch. This commit fixes that by sizing bridges
-> before doing the resource allocation.
-> 
-> Signed-off-by: Zachary Zhang <zhangzg@marvell.com>
-> [Thomas: edit commit log.]
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-> ---
->  drivers/pci/controller/pci-aardvark.c | 1 +
->  1 file changed, 1 insertion(+)
 
-Hi Thomas,
 
-I am queueing these two patches but this one seems a serious bug,
-I reckon we should send it to stable kernels (and would be grateful
-if you provide me with a Fixes tag and a kernel log to add to the
-commit log).
+> -----Original Message-----
+> From: Robin Murphy [mailto:robin.murphy@arm.com]
+> Sent: Tuesday, July 3, 2018 9:44 PM
+> To: Nipun Gupta <nipun.gupta@nxp.com>; will.deacon@arm.com;
+> robh+dt@kernel.org; robh@kernel.org; mark.rutland@arm.com;
+> catalin.marinas@arm.com; gregkh@linuxfoundation.org; Laurentiu Tudor
+> <laurentiu.tudor@nxp.com>; bhelgaas@google.com
+> Cc: hch@lst.de; joro@8bytes.org; m.szyprowski@samsung.com;
+> shawnguo@kernel.org; frowand.list@gmail.com; iommu@lists.linux-
+> foundation.org; linux-kernel@vger.kernel.org; devicetree@vger.kernel.org;
+> linux-arm-kernel@lists.infradead.org; linuxppc-dev@lists.ozlabs.org; linux-
+> pci@vger.kernel.org; Bharat Bhushan <bharat.bhushan@nxp.com>;
+> stuyoder@gmail.com; Leo Li <leoyang.li@nxp.com>
+> Subject: Re: [PATCH 5/7 v5] bus: fsl-mc: support dma configure for devices
+> on fsl-mc bus
+> 
+> On 20/05/18 14:49, Nipun Gupta wrote:
+> > This patch adds support of dma configuration for devices on fsl-mc
+> > bus using 'dma_configure' callback for busses. Also, directly calling
+> > arch_setup_dma_ops is removed from the fsl-mc bus.
+> 
+> Looks like this is the final arch_setup_dma_ops offender, yay!
+> 
+> > Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+> > Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
+> > ---
+> >   drivers/bus/fsl-mc/fsl-mc-bus.c | 15 +++++++++++----
+> >   1 file changed, 11 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-
+> bus.c
+> > index 5d8266c..fa43c7d 100644
+> > --- a/drivers/bus/fsl-mc/fsl-mc-bus.c
+> > +++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
+> > @@ -127,6 +127,16 @@ static int fsl_mc_bus_uevent(struct device *dev,
+> struct kobj_uevent_env *env)
+> >   	return 0;
+> >   }
+> >
+> > +static int fsl_mc_dma_configure(struct device *dev)
+> > +{
+> > +	struct device *dma_dev = dev;
+> > +
+> > +	while (dev_is_fsl_mc(dma_dev))
+> > +		dma_dev = dma_dev->parent;
+> > +
+> > +	return of_dma_configure(dev, dma_dev->of_node, 0);
+> > +}
+> > +
+> >   static ssize_t modalias_show(struct device *dev, struct device_attribute
+> *attr,
+> >   			     char *buf)
+> >   {
+> > @@ -148,6 +158,7 @@ struct bus_type fsl_mc_bus_type = {
+> >   	.name = "fsl-mc",
+> >   	.match = fsl_mc_bus_match,
+> >   	.uevent = fsl_mc_bus_uevent,
+> > +	.dma_configure  = fsl_mc_dma_configure,
+> >   	.dev_groups = fsl_mc_dev_groups,
+> >   };
+> >   EXPORT_SYMBOL_GPL(fsl_mc_bus_type);
+> > @@ -633,10 +644,6 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc
+> *obj_desc,
+> >   			goto error_cleanup_dev;
+> >   	}
+> >
+> > -	/* Objects are coherent, unless 'no shareability' flag set. */
+> > -	if (!(obj_desc->flags &
+> FSL_MC_OBJ_FLAG_NO_MEM_SHAREABILITY))
+> 
+> Although it seems we do end up without any handling of this
+> "non-coherent object behind coherent MC" case, and I'm not sure how
+> easily that could be accommodated by generic code... :/ How important is
+> the quirk?
 
-Thanks,
-Lorenzo
+We have all the devices as coherent in our SoC's now :) So this is fine.
+We have internally discussed it.
+
+Regards,
+Nipun
 
 > 
-> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-> index 486c41721c89..8e92231214e3 100644
-> --- a/drivers/pci/controller/pci-aardvark.c
-> +++ b/drivers/pci/controller/pci-aardvark.c
-> @@ -1065,6 +1065,7 @@ static int advk_pcie_probe(struct platform_device *pdev)
->  
->  	bus = bridge->bus;
->  
-> +	pci_bus_size_bridges(bus);
->  	pci_bus_assign_resources(bus);
->  
->  	list_for_each_entry(child, &bus->children, node)
-> -- 
-> 2.14.4
+> Robin.
 > 
-
+> > -		arch_setup_dma_ops(&mc_dev->dev, 0, 0, NULL, true);
+> > -
+> >   	/*
+> >   	 * The device-specific probe callback will get invoked by device_add()
+> >   	 */
+> >
 _______________________________________________
 linux-arm-kernel mailing list
 linux-arm-kernel@lists.infradead.org
