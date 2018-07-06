@@ -1,55 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:33809 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726203AbeG2NjS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2018 09:39:18 -0400
-Date: Sun, 29 Jul 2018 14:09:01 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: Alex_Gagniuc@Dellteam.com, mr.nuke.me@gmail.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        Austin.Bolen@dell.com, Stuart.Hayes@dell.com, Narendra.K@dell.com,
-        Christopher.Arzola@dell.com, David.Chalfant@dell.com
-Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
-Message-ID: <20180729120901.GA8489@wunner.de>
-References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
- <20180727071813.GA6128@wunner.de>
- <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
- <20180727170543.GA5326@wunner.de>
- <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
- <20180728183130.GA21482@wunner.de>
- <29894244-e682-9394-c408-bd989fb4716a@kernel.org>
+Return-Path: <SRS0=QJYo=JW=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=QJYo=JW=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Fri, 6 Jul 2018 17:20:34 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/5] Improve Broadcom PAXC support
+Message-ID: <20180706162034.GA14923@red-moon>
+References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <29894244-e682-9394-c408-bd989fb4716a@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 28, 2018 at 05:26:57PM -0700, Sinan Kaya wrote:
-> On 7/28/2018 11:31 AM, Lukas Wunner wrote:
-> >The knowledge whether a surprise removal or a safe removal is at hand
-> >does exist further up in the call stack:  A surprise removal is
-> >initiated by pciehp_handle_presence_or_link_change(), a safe removal by
-> >pciehp_handle_disable_request().
+On Mon, Jun 11, 2018 at 05:21:02PM -0700, Ray Jui wrote:
+> This patch series improves the Broadcom PAXC support by 1) adding more
+> quirks for specific versions of PAXC controllers; 2) adding logic to
+> reject internally unconfigured physical functions from the embedded
+> network processor acting as endpoint; 3) reducing verbose print level
+> in the outbound/inbound mapping code
+
+Nit: commit log sentences must be terminated with periods, that's valid
+for all patches in your series inclusive of this cover letter, I can
+change them myself but pointing this out so that you will be able
+to do it yourself next time.
+
+Lorenzo
+
+> This patch series is based off v4.17 and is available on GIHUB:
+> repo: https://github.com/Broadcom/arm64-linux.git
+> branch: sr-paxc-v2
 > 
-> Can you also check if platform supports surprise link down error
-> reporting (Link Capabilities Register) and reports a surprise link
-> down event in AER Uncorrectable Error Status Register for the
-> hotplug code to make it more reliable?
-
-We read the Link Capabilities register in pcie_init() to determine if
-Data Link Layer Link Active Reporting is supported.  (That's a feature
-added in the PCIe r1.1 Base Spec.  Old devices that strictly adhere to
-PCIe r1.0 don't support it.)
-
-We could likewise cache the Surprise Down Error Reporting Capable bit
-in struct controller.  But I don't quite understand yet how and when
-you want it to be used by pciehp?  If the link goes down, pciehp doesn't
-care whether that's caused by a fatal error or removal by the user.
-It seems correct to me to also remove devices on a fatal error, after all
-they're no longer accessible until the error is cleared (IIUC).
-Do you agree or disagree?
-
-Thanks,
-
-Lukas
+> Changes since v1:
+>  - consolidate 2 PAXC related patch series into 1
+>  - change the way how the capability list corruption is handled, per
+> recommendation from Bjorn. Now handle and fix up the corruption at
+> the config register read
+>  - rebase to v4.17
+> 
+> Ray Jui (5):
+>   PCI: iproc: Activate PAXC bridge quirk for more devices
+>   PCI: iproc: Fix up corrupted PAXC root complex config registers
+>   PCI: iproc: Disable MSI parsing in certain PAXC blocks
+>   PCI: iproc: Reject unconfigured physical functions from PAXC
+>   PCI: iproc: Reduce inbound/outbound mapping print level
+> 
+>  drivers/pci/host/pcie-iproc.c | 159 +++++++++++++++++++++++++++++++++++-------
+>  drivers/pci/host/pcie-iproc.h |   8 +++
+>  drivers/pci/quirks.c          |   3 +
+>  3 files changed, 144 insertions(+), 26 deletions(-)
+> 
+> -- 
+> 2.1.4
+> 
