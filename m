@@ -1,62 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:39730 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729842AbeGPPUP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2018 11:20:15 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v11 12/12] PCI: endpoint: Add MSI set maximum restriction
-Date: Mon, 16 Jul 2018 16:52:24 +0200
-Message-Id: <7d5a9708368226edd1d461dec4b719ea5bffdf6c.1531751641.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=CbA2=JW=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=CbA2=JW=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Pingfan Liu <kernelfans@gmail.com>, linux-kernel@vger.kernel.org, Grygorii Strashko <grygorii.strashko@ti.com>, Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, Linux PM <linux-pm@vger.kernel.org>
+Subject: [PATCH] driver core: Drop devices_kset_move_last() call from really_probe()
+Date: Fri, 06 Jul 2018 12:00:06 +0200
+Message-ID: <8816662.k3KXbdkA2e@aspire.rjw.lan>
+In-Reply-To: <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com> <2108146.dv4EAOf6IP@aspire.rjw.lan> <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pci_epc_set_msi() maximum 32 interrupts validation.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+The devices_kset_move_last() call in really_probe() is a mistake
+as it may cause parents to follow children in the devices_kset list
+which then causes system shutdown to fail.  Namely, if a device has
+children before really_probe() is called for it (which is not
+uncommon), that call will cause it to be reordered after the children
+in the devices_kset list and the ordering of that list will not
+reflect the correct device shutdown order.
+
+Also it causes the devices_kset list to be constantly reordered
+until all drivers have been probed which is totally pointless
+overhead in the majority of cases.
+
+For that reason, revert the really_probe() modifications made by
+commit 52cdbdd49853.
+
+Fixes: 52cdbdd49853 (driver core: correct device's shutdown order)
+Link: https://lore.kernel.org/lkml/CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com/
+Reported-by: Pingfan Liu <kernelfans@gmail.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
-Change v4->v5:
- - New patch file.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Nothing changed, just to follow the patch set version.
-Change v9->v10:
- - Nothing changed, just to follow the patch set version.
-Change v10->v11:
- - Nothing changed, just to follow the patch set version.
+ drivers/base/dd.c |    8 --------
+ 1 file changed, 8 deletions(-)
 
- drivers/pci/endpoint/pci-epc-core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index c72e656..094dcc3 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -201,7 +201,8 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- 	u8 encode_int;
- 	unsigned long flags;
+Index: linux-pm/drivers/base/dd.c
+===================================================================
+--- linux-pm.orig/drivers/base/dd.c
++++ linux-pm/drivers/base/dd.c
+@@ -434,14 +434,6 @@ re_probe:
+ 			goto probe_failed;
+ 	}
  
--	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
-+	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
-+	    interrupts > 32)
- 		return -EINVAL;
- 
- 	if (!epc->ops->set_msi)
--- 
-2.7.4
+-	/*
+-	 * Ensure devices are listed in devices_kset in correct order
+-	 * It's important to move Dev to the end of devices_kset before
+-	 * calling .probe, because it could be recursive and parent Dev
+-	 * should always go first
+-	 */
+-	devices_kset_move_last(dev);
+-
+ 	if (dev->bus->probe) {
+ 		ret = dev->bus->probe(dev);
+ 		if (ret)
