@@ -1,108 +1,70 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1532426953.32306.5.camel@pengutronix.de>
-Subject: Re: [PATCH v2 3/3] PCI: imx: Initial imx7d pm support
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Leonard Crestez <leonard.crestez@nxp.com>, Richard Zhu
- <hongxing.zhu@nxp.com>, Fabio Estevam <fabio.estevam@nxp.com>
-Date: Tue, 24 Jul 2018 12:09:13 +0200
-In-Reply-To: <e8be199b2d5559001a93abb52ba46c283e4454a9.camel@nxp.com>
-References: <cover.1532090446.git.leonard.crestez@nxp.com>
- <e42a6bb8ff0ddd6eaa31fe381875425a3730a73f.1532090446.git.leonard.crestez@nxp.com>
- <1532338685.3163.93.camel@pengutronix.de>
- <e8be199b2d5559001a93abb52ba46c283e4454a9.camel@nxp.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
- "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
- "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
- dl-linux-imx <linux-imx@nxp.com>,
- "kernel@pengutronix.de" <kernel@pengutronix.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:34701 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753528AbeGFN0b (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2018 09:26:31 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v7 00/11] Add MSI-X support on pcitest tool
+Date: Fri,  6 Jul 2018 14:26:12 +0100
+Message-Id: <cover.1530877028.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QW0gTW9udGFnLCBkZW4gMjMuMDcuMjAxOCwgMTI6MzcgKzAwMDAgc2NocmllYiBMZW9uYXJkIENy
-ZXN0ZXo6Cj4gT24gTW9uLCAyMDE4LTA3LTIzIGF0IDExOjM4ICswMjAwLCBMdWNhcyBTdGFjaCB3
-cm90ZToKPiA+IEhpIExlb25hcmQsCj4gPiAKPiA+IEFtIEZyZWl0YWcsIGRlbiAyMC4wNy4yMDE4
-LCAxNTo0NyArMDMwMCBzY2hyaWViIExlb25hcmQgQ3Jlc3RlejoKPiA+ID4gT24gaW14N2QgdGhl
-IHBjaWUtcGh5IHBvd2VyIGRvbWFpbiBpcyB0dXJuZWQgb2ZmIGluIHN1c3BlbmQgYW5kIHRoaXMg
-Y2FuCj4gPiA+IG1ha2UgdGhlIHN5c3RlbSBoYW5nIGFmdGVyIHJlc3VtZSB3aGVuIGF0dGVtcHRp
-bmcgYW55IHJlYWQgZnJvbSBQQ0kuCj4gPiA+IAo+ID4gPiBGaXggdGhpcyBieSBhZGRpbmcgbWlu
-aW1hbCBzdXNwZW5kL3Jlc3VtZSBjb2RlIGZyb20gdGhlIG54cCBpbnRlcm5hbAo+ID4gPiB0cmVl
-LiBUaGlzIHdpbGwgcHJlcGFyZSBmb3IgcG93ZXJpbmcgZG93biBvbiBzdXNwZW5kIGFuZCByZXNl
-dCB0aGUgYmxvY2sKPiA+ID4gb24gcmVzdW1lLgo+ID4gPiAKPiA+ID4gQ29kZSBpcyBvbmx5IGZv
-ciBpbXg3ZCBidXQgYSB2ZXJ5IHNpbWlsYXIgc2VxdWVuY2UgY2FuIGJlIHVzZWQgZm9yCj4gPiA+
-IG90aGVyIHNvY3MuCj4gPiA+IAo+ID4gPiArc3RhdGljIHZvaWQgaW14Nl9wY2llX2x0c3NtX2Rp
-c2FibGUoc3RydWN0IGRldmljZSAqZGV2KQo+ID4gPiArewo+ID4gPiA+ID4gPiArCXN0cnVjdCBp
-bXg2X3BjaWUgKmlteDZfcGNpZSA9IGRldl9nZXRfZHJ2ZGF0YShkZXYpOwo+ID4gPiArCj4gPiA+
-ID4gPiA+ICsJc3dpdGNoIChpbXg2X3BjaWUtPnZhcmlhbnQpIHsKPiA+ID4gPiA+ID4gKwljYXNl
-IElNWDZROgo+ID4gPiA+ID4gPiArCWNhc2UgSU1YNlNYOgo+ID4gPiA+ID4gPiArCWNhc2UgSU1Y
-NlFQOgo+ID4gPiA+ID4gPiArCQlyZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNf
-Z3ByLCBJT01VWENfR1BSMTIsCj4gPiA+ICsJCQkJwqDCoMKgSU1YNlFfR1BSMTJfUENJRV9DVExf
-MiwgMCk7Cj4gPiAKPiA+IEhhcyB0aGlzIGJlZW4gdGVzdGVkIG9uIGkuTVg2PyBMVFNTTSBkaXNh
-YmxlIHJlcXVpcmVzIGEgbW9yZSBjb21wbGV4Cj4gPiBzZXF1ZW5jZSBvbiB0aGlzIFNvQyB0byBh
-dm9pZCBoYW5naW5nIHRoZSBzeXN0ZW0uIFNlZSBjb21taXQKPiA+IDNlM2U0MDZlMzgwNyAiUENJ
-OiBpbXg2OiBQdXQgTFRTU00gaW4gIkRldGVjdCIgc3RhdGUgYmVmb3JlIGRpc2FibGluZwo+ID4g
-aXQiLgo+IAo+IFRoaXMgcGF0Y2ggb25seSBlbmFibGVzIHN1c3BlbmQvcmVzdW1lIGZvciBpbXg3
-ZCB3aXRoIG90aGVyIFNPQ3MgdG8KPiBmb2xsb3cgbGF0ZXIuIFRoZSBsdHNzbV9kaXNhYmxlIGZ1
-bmN0aW9uIGlzIGp1c3Qgc3ltbWV0cmljIHdpdGgKPiBsdHNzbV9lbmFibGUuCj4gCj4gVGhlIDZR
-IHBhcnRzIGFyZSBhZmZlY3RlZCBieSBlcnJhdGEgIkVSUjAwNTcyMyBQQ0llOiBQQ0llIGRvZXMg
-bm90Cj4gc3VwcG9ydCBMMiBwb3dlciBkb3duIFtpLk1YIDZEdWFsLzZRdWFkIE9ubHldIi4KPiAK
-PiBUaGlzIGRlc2lnbiBlcnJvciBzZWVtcyB0byBoYXZlIHRoZSBzYW1lIHJvb3QgY2F1c2UgYXMg
-eW91ciBwcm9ibGVtIChubwo+IGRlZGljYXRlZCByZXNldCBjb250cm9sKSBzbyB0aGlzIHdvcmtz
-IG91dCBxdWl0ZSBuaWNlbHk6IHRoZSBzb2x1dGlvbgo+IGlzIHRvIG5ldmVyIHBvd2VyIGRvd24g
-cGNpIG9uIGFmZmVjdGVkIGNoaXBzLgoKSSBkb24ndCBxdWl0ZSBsaWtlIGNvZGUgdGhhdCBsb29r
-cyBsaWtlIGl0IGlzIGRvaW5nIHRoZSByaWdodCB0aGluZywKYnV0IHRoZW4gZG9lc24ndC4gQ2Fu
-IHdlIGF0IGxlYXN0IGVtaXQgYSB3YXJuaW5nIHRoYXQgdGhlcmUgbWlnaHQgYmUKZHJhZ29ucyBp
-ZiBhbnlvbmUgdHJpZXMgdG8gY2FsbCB0aGlzIG9uIGkuTVg2PwoKPiA+ID4gK3N0YXRpYyBpbnQg
-aW14Nl9wY2llX3Jlc3VtZV9ub2lycShzdHJ1Y3QgZGV2aWNlICpkZXYpCj4gPiA+ICt7Cj4gPiA+
-ID4gPiA+ICsJaW50IHJldCA9IDA7Cj4gPiA+ID4gPiA+ICsJc3RydWN0IGlteDZfcGNpZSAqaW14
-Nl9wY2llID0gZGV2X2dldF9kcnZkYXRhKGRldik7Cj4gPiA+ID4gPiA+ICsJc3RydWN0IHBjaWVf
-cG9ydCAqcHAgPSAmaW14Nl9wY2llLT5wY2ktPnBwOwo+ID4gPiArCj4gPiA+ID4gPiA+ICsJaWYg
-KGlteDZfcGNpZS0+dmFyaWFudCAhPSBJTVg3RCkKPiA+ID4gPiA+ID4gKwkJcmV0dXJuIDA7Cj4g
-PiA+ICsKPiA+ID4gPiA+ID4gKwlpbXg2X3BjaWVfYXNzZXJ0X2NvcmVfcmVzZXQoaW14Nl9wY2ll
-KTsKPiA+ID4gPiA+ID4gKwlpbXg2X3BjaWVfaW5pdF9waHkoaW14Nl9wY2llKTsKPiA+ID4gPiA+
-ID4gKwlpbXg2X3BjaWVfZGVhc3NlcnRfY29yZV9yZXNldChpbXg2X3BjaWUpOwo+ID4gPiA+ID4g
-PiArCWR3X3BjaWVfc2V0dXBfcmMocHApOwo+ID4gPiArCj4gPiA+ID4gPiA+ICsJcmV0ID0gaW14
-Nl9wY2llX2VzdGFibGlzaF9saW5rKGlteDZfcGNpZSk7Cj4gPiA+ID4gPiA+ICsJaWYgKHJldCA8
-IDApCj4gPiA+ICsJCXByX2VycigicGNpZSBsaW5rIGlzIGRvd24gYWZ0ZXIgcmVzdW1lLlxuIik7
-Cj4gPiAKPiA+IGRldl9lcnIoKSwgcGxlYXNlLgo+IAo+IFRoZSBpbXg2X3BjaWVfZXN0YWJsaXNo
-X2xpbmsgZnVuY3Rpb24gYWxyZWFkeSBzZWVtcyB0byBsaW5rIGVycm9yCj4gaW5mb3JtYXRpb24g
-c28gdGhlIG1lc3NhZ2UgY291bGQgYmUgZHJvcHBlZC4gSG93ZXZlciBpdCdzIHN0aWxsIGhlbHBm
-dWwKPiB0byBrbm93IHRoYXQgdGhvc2UgcGNpIGxpbmsgZXJyb3JzIGFyZSBzcGVjaWZpY2FsbHkg
-cmVsYXRlZCB0byByZXN1bWUuCj4gCj4gRmFiaW8gc3VnZ2VzdGVkIEkgcHJvcGFnYXRlIHRoZSBy
-ZXR1cm4gY29kZSBidXQgSSdtIG5vdCBzdXJlIHRoYXQncwo+IGhlbHBmdWwgc2luY2UgImxpbmsg
-ZG93biIgaXMgd2hhdCBoYXBwZW5zIHdoZW4gdGhlIHNsb3QgaXMgZW1wdHkgYW5kCj4gdGhpcyBp
-cyBjbGVhcmx5IG5vdCBhICJlcnJvciIgb3IgImZhaWx1cmUiLiBJdCdzIG5vdCBjbGVhciBpZiAi
-c2xvdAo+IGVtcHR5IiBjYW4gYmUgZGlzdGluZ3Vpc2hlZCBpbiBzb21lIHdheS4KCkkgZG9uJ3Qg
-dGhpbmsgd2UgaGF2ZSBhIGdlbmVyaWMgd2F5IHRvIGRpc3Rpbmd1aXNoIGJldHdlZW4gdGhlIHR3
-bwpjYXNlcy4KCj4gSSdsbCBzd2l0Y2ggdG8gZGV2X2luZm8gYW5kIGRyb3AgdGhlIGVycm9yIGNv
-ZGUsIGlzIHRoaXMgT0s/CgpZZXMsIHRoYXQncyBmaW5lIHdpdGggbWUuCgo+IAo+IE9uZSBhc3Bl
-Y3QgdGhhdCBJIHNraXBwZWQgaXMgUE1FX1R1cm5fT2ZmIHN1cHBvcnQ6IFRoZSBQQ0kgc3RhbmRh
-cmQKPiBtYW5kYXRlcyB0aGF0IHRoaXMgaXMgc2VudCBiZWZvcmUgZW50ZXJpbmcgTDIvTDMgYW5k
-IHRoZSBkZXNpZ253YXJlCj4gY29yZSBzdXBwb3J0cyB0aGlzIGJ1dCBpdCdzIG5vdCBwYXJ0IG9m
-IHRoaXMgcGF0Y2guCj4gCj4gSXMgaXQgZmluZSBpZiBJIHBvc3QgdGhpcyBzZXBhcmF0ZWx5IG9y
-IHNob3VsZCBpdCBiZSBwYXJ0IG9mIHRoZSBzYW1lCj4gc2VyaWVzPyBUaGUgdHVybm9mZiBiaXQg
-aXMgaW4gSU9NVVggZ3ByIGZvciBpbXg2IGJ1dCBTUkMgZm9yIGlteDcgc28gaXQKPiB3b3VsZCBy
-ZXF1aXJlIGFkZGl0aW9uYWwgcGF0Y2hlcyBpbiByZXNldCwgZHRzIGFuZCB0aGVuIHBjaS4KCklN
-TyBpdCBpcyBmaW5lIHRvIGhhdmUgdGhpcyBhcyBhIGZvbGxvdyBvbiBwYXRjaHNldC4KClJlZ2Fy
-ZHMsCkx1Y2FzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-XwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmlu
-ZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9s
-aW51eC1hcm0ta2VybmVsCg==
+Patch series made against Lorenzo's master branch.
+
+Add MSI-X support on pcitest tool.
+
+Add new callbacks methods and handlers to trigger the MSI-X interrupts
+on the EP DesignWare IP driver.
+
+Allow to set/get MSI-X EP maximum capability number.
+
+Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
+
+Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
+
+Update the pcitest.sh script to support MSI-X feature tests.
+
+Gustavo Pimentel (11):
+  PCI: endpoint: Add MSI-X interfaces
+  PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
+  PCI: dwc: Add MSI-X callbacks handler
+  PCI: dwc: Rework MSI callbacks handler
+  PCI: dwc: Add legacy interrupt callback handler
+  pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
+  pci-epf-test/pci_endpoint_test: Use irq_type module parameter
+  pci-epf-test/pci_endpoint_test: Add MSI-X support
+  pci_endpoint_test: Add 2 ioctl commands
+  tools: PCI: Add MSI-X support
+  PCI: endpoint: Add MSI set maximum restriction.
+
+ Documentation/PCI/endpoint/pci-test-function.txt  |   8 +-
+ Documentation/ioctl/ioctl-number.txt              |   1 +
+ Documentation/misc-devices/pci-endpoint-test.txt  |   6 +
+ drivers/misc/pci_endpoint_test.c                  | 259 ++++++++++++++++------
+ drivers/pci/controller/dwc/pci-dra7xx.c           |   2 +-
+ drivers/pci/controller/dwc/pcie-artpec6.c         |   2 +-
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 206 +++++++++++++++--
+ drivers/pci/controller/dwc/pcie-designware-plat.c |   7 +-
+ drivers/pci/controller/dwc/pcie-designware.h      |  31 ++-
+ drivers/pci/controller/pcie-cadence-ep.c          |   3 +-
+ drivers/pci/controller/pcie-rockchip-ep.c         |   2 +-
+ drivers/pci/endpoint/functions/pci-epf-test.c     |  86 +++++--
+ drivers/pci/endpoint/pci-ep-cfs.c                 |  24 ++
+ drivers/pci/endpoint/pci-epc-core.c               |  68 +++++-
+ include/linux/pci-epc.h                           |  16 +-
+ include/linux/pci-epf.h                           |   1 +
+ include/uapi/linux/pcitest.h                      |   3 +
+ tools/pci/pcitest.c                               |  51 ++++-
+ tools/pci/pcitest.sh                              |  15 ++
+ 19 files changed, 655 insertions(+), 136 deletions(-)
+
+-- 
+2.7.4
