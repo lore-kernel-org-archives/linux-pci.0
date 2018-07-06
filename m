@@ -1,191 +1,93 @@
-Return-Path: <SRS0=IK89=JT=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=IK89=JT=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:51944 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753632AbeGFJcm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2018 05:32:42 -0400
+Subject: Re: [PATCH v6 00/11] Add MSI-X support on pcitest tool
+To: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "adouglas@cadence.com" <adouglas@cadence.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
+        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>
+References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+ <77139978-65cc-b954-bc61-bebf3bcc67ac@synopsys.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <284a6871-4687-e437-6876-3cd1e0329cbb@ti.com>
+Date: Fri, 6 Jul 2018 15:02:25 +0530
 MIME-Version: 1.0
-In-Reply-To: <1530600642-25090-3-git-send-email-kernelfans@gmail.com>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com> <1530600642-25090-3-git-send-email-kernelfans@gmail.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Tue, 3 Jul 2018 13:58:58 +0300
-Message-ID: <CAHp75VfEVT7cMOQD71dBkwzuQhZQ8YGik+TWSnf9=pkiUxJO6A@mail.gmail.com>
-Subject: Re: [PATCHv3 2/4] drivers/base: utilize device tree info to shutdown devices
-To: Pingfan Liu <kernelfans@gmail.com>, Pavel Tatashin <pasha.tatashin@oracle.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org,
-	"open list:LINUX FOR POWERPC PA SEMI PWRFICIENT" <linuxppc-dev@lists.ozlabs.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <77139978-65cc-b954-bc61-bebf3bcc67ac@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I think Pavel would be interested to see this as well (he is doing
-some parallel device shutdown stuff)
-
-On Tue, Jul 3, 2018 at 9:50 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
-> commit 52cdbdd49853 ("driver core: correct device's shutdown order")
-> places an assumption of supplier<-consumer order on the process of probe.
-> But it turns out to break down the parent <- child order in some scene.
-> E.g in pci, a bridge is enabled by pci core, and behind it, the devices
-> have been probed. Then comes the bridge's module, which enables extra
-> feature(such as hotplug) on this bridge. This will break the
-> parent<-children order and cause failure when "kexec -e" in some scenario.
->
-> The detailed description of the scenario:
-> An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
-> match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
-> to some issue. For this case, the bridge is moved after its children in
-> devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
-> write back buffer in flight due to the former shutdown of the bridge which
-> clears the BusMaster bit.
->
-> It is a little hard to impose both "parent<-child" and "supplier<-consumer"
-> order on devices_kset. Take the following scene:
-> step0: before a consumer's probing, (note child_a is supplier of consumer_a)
->   [ consumer-X, child_a, ...., child_z] [... consumer_a, ..., consumer_z, ...] supplier-X
->                                          ^^^^^^^^^^ affected range ^^^^^^^^^^
-> step1: when probing, moving consumer-X after supplier-X
->   [ child_a, ...., child_z] [.... consumer_a, ..., consumer_z, ...] supplier-X, consumer-X
-> step2: the children of consumer-X should be re-ordered to maintain the seq
->   [... consumer_a, ..., consumer_z, ....] supplier-X  [consumer-X, child_a, ...., child_z]
-> step3: the consumer_a should be re-ordered to maintain the seq
->   [... consumer_z, ...] supplier-X [ consumer-X, child_a, consumer_a ..., child_z]
->
-> It requires two nested recursion to drain out all out-of-order item in
-> "affected range". To avoid such complicated code, this patch suggests
-> to utilize the info in device tree, instead of using the order of
-> devices_kset during shutdown. It iterates the device tree, and firstly
-> shutdown a device's children and consumers. After this patch, the buggy
-> commit is hollow and left to clean.
->
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Bjorn Helgaas <helgaas@kernel.org>
-> Cc: Dave Young <dyoung@redhat.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
-> ---
->  drivers/base/core.c    | 48 +++++++++++++++++++++++++++++++++++++++++++-----
->  include/linux/device.h |  1 +
->  2 files changed, 44 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index a48868f..684b994 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -1446,6 +1446,7 @@ void device_initialize(struct device *dev)
->         INIT_LIST_HEAD(&dev->links.consumers);
->         INIT_LIST_HEAD(&dev->links.suppliers);
->         dev->links.status = DL_DEV_NO_DRIVER;
-> +       dev->shutdown = false;
->  }
->  EXPORT_SYMBOL_GPL(device_initialize);
->
-> @@ -2811,7 +2812,6 @@ static void __device_shutdown(struct device *dev)
->          * lock is to be held
->          */
->         parent = get_device(dev->parent);
-> -       get_device(dev);
->         /*
->          * Make sure the device is off the kset list, in the
->          * event that dev->*->shutdown() doesn't remove it.
-> @@ -2842,23 +2842,60 @@ static void __device_shutdown(struct device *dev)
->                         dev_info(dev, "shutdown\n");
->                 dev->driver->shutdown(dev);
->         }
-> -
-> +       dev->shutdown = true;
->         device_unlock(dev);
->         if (parent)
->                 device_unlock(parent);
->
-> -       put_device(dev);
->         put_device(parent);
->         spin_lock(&devices_kset->list_lock);
->  }
->
-> +/* shutdown dev's children and consumer firstly, then itself */
-> +static int device_for_each_child_shutdown(struct device *dev)
-> +{
-> +       struct klist_iter i;
-> +       struct device *child;
-> +       struct device_link *link;
-> +
-> +       /* already shutdown, then skip this sub tree */
-> +       if (dev->shutdown)
-> +               return 0;
-> +
-> +       if (!dev->p)
-> +               goto check_consumers;
-> +
-> +       /* there is breakage of lock in __device_shutdown(), and the redundant
-> +        * ref++ on srcu protected consumer is harmless since shutdown is not
-> +        * hot path.
-> +        */
-> +       get_device(dev);
-> +
-> +       klist_iter_init(&dev->p->klist_children, &i);
-> +       while ((child = next_device(&i)))
-> +               device_for_each_child_shutdown(child);
-> +       klist_iter_exit(&i);
-> +
-> +check_consumers:
-> +       list_for_each_entry_rcu(link, &dev->links.consumers, s_node) {
-> +               if (!link->consumer->shutdown)
-> +                       device_for_each_child_shutdown(link->consumer);
-> +       }
-> +
-> +       __device_shutdown(dev);
-> +       put_device(dev);
-> +       return 0;
-> +}
-> +
->  /**
->   * device_shutdown - call ->shutdown() on each device to shutdown.
->   */
->  void device_shutdown(void)
->  {
->         struct device *dev;
-> +       int idx;
->
-> +       idx = device_links_read_lock();
->         spin_lock(&devices_kset->list_lock);
->         /*
->          * Walk the devices list backward, shutting down each in turn.
-> @@ -2866,11 +2903,12 @@ void device_shutdown(void)
->          * devices offline, even as the system is shutting down.
->          */
->         while (!list_empty(&devices_kset->list)) {
-> -               dev = list_entry(devices_kset->list.prev, struct device,
-> +               dev = list_entry(devices_kset->list.next, struct device,
->                                 kobj.entry);
-> -               __device_shutdown(dev);
-> +               device_for_each_child_shutdown(dev);
->         }
->         spin_unlock(&devices_kset->list_lock);
-> +       device_links_read_unlock(idx);
->  }
->
->  /*
-> diff --git a/include/linux/device.h b/include/linux/device.h
-> index 055a69d..8a0f784 100644
-> --- a/include/linux/device.h
-> +++ b/include/linux/device.h
-> @@ -1003,6 +1003,7 @@ struct device {
->         bool                    offline:1;
->         bool                    of_node_reused:1;
->         bool                    dma_32bit_limit:1;
-> +       bool                    shutdown:1; /* one direction: false->true */
->  };
->
->  static inline struct device *kobj_to_dev(struct kobject *kobj)
-> --
-> 2.7.4
->
 
 
+On Friday 06 July 2018 02:24 PM, Gustavo Pimentel wrote:
+> Hi,
+> 
+> Just a gentle reminder.
 
--- 
-With Best Regards,
-Andy Shevchenko
+sorry for the delay. I've now reviewed the pending patches.
+
+Thanks
+Kishon
+
+> 
+> Thanks.
+> 
+> On 21/06/2018 17:01, Gustavo Pimentel wrote:
+>> Patch series made against Lorenzo's master branch.
+>>
+>> Add MSI-X support on pcitest tool.
+>>
+>> Add new callbacks methods and handlers to trigger the MSI-X interrupts
+>> on the EP DesignWare IP driver.
+>>
+>> Allow to set/get MSI-X EP maximum capability number.
+>>
+>> Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
+>>
+>> Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
+>>
+>> Update the pcitest.sh script to support MSI-X feature tests.
+>>
+>> Gustavo Pimentel (11):
+>>   PCI: endpoint: Add MSI-X interfaces
+>>   PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
+>>   PCI: dwc: Add MSI-X callbacks handler
+>>   PCI: dwc: Rework MSI callbacks handler
+>>   PCI: dwc: Add legacy interrupt callback handler
+>>   pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
+>>   pci-epf-test/pci_endpoint_test: Use irq_type module parameter
+>>   pci-epf-test/pci_endpoint_test: Add MSI-X support
+>>   pci_endpoint_test: Add 2 ioctl commands
+>>   tools: PCI: Add MSI-X support
+>>   PCI: endpoint: Add MSI set maximum restriction.
+>>
+>>  Documentation/ioctl/ioctl-number.txt              |   1 +
+>>  Documentation/misc-devices/pci-endpoint-test.txt  |   6 +
+>>  drivers/misc/pci_endpoint_test.c                  | 259 ++++++++++++++++------
+>>  drivers/pci/controller/dwc/pci-dra7xx.c           |   2 +-
+>>  drivers/pci/controller/dwc/pcie-artpec6.c         |   2 +-
+>>  drivers/pci/controller/dwc/pcie-designware-ep.c   | 205 +++++++++++++++--
+>>  drivers/pci/controller/dwc/pcie-designware-plat.c |   7 +-
+>>  drivers/pci/controller/dwc/pcie-designware.h      |  31 ++-
+>>  drivers/pci/controller/pcie-cadence-ep.c          |   3 +-
+>>  drivers/pci/controller/pcie-rockchip-ep.c         |   2 +-
+>>  drivers/pci/endpoint/functions/pci-epf-test.c     |  81 +++++--
+>>  drivers/pci/endpoint/pci-ep-cfs.c                 |  24 ++
+>>  drivers/pci/endpoint/pci-epc-core.c               |  68 +++++-
+>>  include/linux/pci-epc.h                           |  15 +-
+>>  include/linux/pci-epf.h                           |   1 +
+>>  include/uapi/linux/pcitest.h                      |   3 +
+>>  tools/pci/pcitest.c                               |  51 ++++-
+>>  tools/pci/pcitest.sh                              |  15 ++
+>>  18 files changed, 644 insertions(+), 132 deletions(-)
+>>
+> 
