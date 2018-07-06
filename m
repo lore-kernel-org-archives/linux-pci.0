@@ -1,81 +1,131 @@
-Return-Path: <SRS0=6kc1=KO=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=6kc1=KO=linutronix.de=tglx@kernel.org>
-Date: Tue, 31 Jul 2018 00:50:21 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Heiner Kallweit <hkallweit1@gmail.com>,
-    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-    Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
-    MyungJoo Ham <myungjoo.ham@samsung.com>,
-    Chanwoo Choi <cw00.choi@samsung.com>, Russell King <linux@armlinux.org.uk>,
-    Sebastian Reichel <sre@kernel.org>, Milo Kim <milo.kim@ti.com>,
-    Krzysztof Kozlowski <krzk@kernel.org>,
-    Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-    Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
- interrupts
-In-Reply-To: <20180730224252.GE45322@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.DEB.2.21.1807310047320.1725@nanos.tec.linutronix.de>
-References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com> <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com> <20180730224252.GE45322@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v7 07/11] pci-epf-test/pci_endpoint_test: Use irq_type module parameter
+Date: Fri,  6 Jul 2018 14:26:19 +0100
+Message-Id: <1eeb7160438f9381050ed792a5712b0f73923d95.1530877028.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1530877028.git.gustavo.pimentel@synopsys.com>
+References: <cover.1530877028.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1530877028.git.gustavo.pimentel@synopsys.com>
+References: <cover.1530877028.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 30 Jul 2018, Bjorn Helgaas wrote:
+Add new driver parameter to allow interruption type selection.
 
-> [+cc maintainers of possibly erroneous callers of request_threaded_irq()]
-> 
-> On Mon, Jul 30, 2018 at 04:30:28PM -0500, Bjorn Helgaas wrote:
-> > [+cc Thomas, Christoph, LKML]
-> > 
-> > On Mon, Jul 30, 2018 at 12:03:42AM +0200, Heiner Kallweit wrote:
-> > > If we have a threaded interrupt with the handler being NULL, then
-> > > request_threaded_irq() -> __setup_irq() will complain and bail out
-> > > if the IRQF_ONESHOT flag isn't set. Therefore check for the handler
-> > > being NULL and set IRQF_ONESHOT in this case.
-> > > 
-> > > This change is needed to migrate the mei_me driver to
-> > > pci_alloc_irq_vectors() and pci_request_irq().
-> > > 
-> > > Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
-> > 
-> > I'd like an ack from Thomas because this requirement about IRQF_ONESHOT
-> > usage isn't mentioned in the request_threaded_irq() function doc or
-> > Documentation/
-> 
-> Possibly these other request_threaded_irq() callers are similarly
-> broken?  I can't tell for sure about tda998x_create(), but all the
-> others certainly call request_threaded_irq() with "handler == NULL"
-> and irqflags that do not contain IRQF_ONESHOT:
-> 
->   max8997_muic_probe()
->     request_threaded_irq(virq, NULL, ..., IRQF_NO_SUSPEND, ...)
-> 
->   tda998x_create()
->     request_threaded_irq(client->irq, NULL, ..., irqd_get_trigger_type(), ...)
->     (I can't tell what irqd_get_trigger_type() does)
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v2->v3:
+ - New patch file created base on the previous patch
+"misc: pci_endpoint_test: Add MSI-X support" patch file following
+Kishon's suggestion.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Change v6->v7:
+ - Removed unnecessary set to zero variable.
+ - Removed empty line.
 
-It reads the trigger type back from the irq chip (level/edge/polarity) but
-does not return with the ONESHOT bit set.
+ drivers/misc/pci_endpoint_test.c | 28 +++++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 9 deletions(-)
 
->   ab8500_btemp_probe()
->   ab8500_charger_probe()
->     request_threaded_irq(irq, NULL, ..., IRQF_SHARED | IRQF_NO_SUSPEND, ...)
-
-SHARED is interesting ....
-
->   lp8788_set_irqs()
->     request_threaded_irq(virq, NULL, ..., 0, ...)
-> 
->   max77686_rtc_probe()
->     request_threaded_irq(info->virq, NULL, ..., 0, ...)
-> 
->   wm8350_register_irq()
->     request_threaded_irq(irq + wm8350->irq_base, NULL, ..., flags, ...)
->     (I think all callers of wm8350_register_irq() supply 0 for "flags")
-
-Indeed. This all looks pretty much wrong. No idea why nobody ever noticed.
-
-Thanks,
-
-	tglx
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 35fbfbd..349794c 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -82,6 +82,10 @@ static bool no_msi;
+ module_param(no_msi, bool, 0444);
+ MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
+ 
++static int irq_type = IRQ_TYPE_MSI;
++module_param(irq_type, int, 0444);
++MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI)");
++
+ enum pci_barno {
+ 	BAR_0,
+ 	BAR_1,
+@@ -108,7 +112,7 @@ struct pci_endpoint_test {
+ struct pci_endpoint_test_data {
+ 	enum pci_barno test_reg_bar;
+ 	size_t alignment;
+-	bool no_msi;
++	int irq_type;
+ };
+ 
+ static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
+@@ -291,8 +295,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
+ 				 size);
+ 
+-	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+-				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ 				 COMMAND_COPY);
+@@ -361,8 +364,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
+-	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+-				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ 				 COMMAND_READ);
+@@ -419,8 +421,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
+-	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+-				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ 				 COMMAND_WRITE);
+@@ -505,11 +506,14 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	test->alignment = 0;
+ 	test->pdev = pdev;
+ 
++	if (no_msi)
++		irq_type = IRQ_TYPE_LEGACY;
++
+ 	data = (struct pci_endpoint_test_data *)ent->driver_data;
+ 	if (data) {
+ 		test_reg_bar = data->test_reg_bar;
+ 		test->alignment = data->alignment;
+-		no_msi = data->no_msi;
++		irq_type = data->irq_type;
+ 	}
+ 
+ 	init_completion(&test->irq_raised);
+@@ -529,11 +533,17 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 
+ 	pci_set_master(pdev);
+ 
+-	if (!no_msi) {
++	switch (irq_type) {
++	case IRQ_TYPE_LEGACY:
++		break;
++	case IRQ_TYPE_MSI:
+ 		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
+ 		if (irq < 0)
+ 			dev_err(dev, "Failed to get MSI interrupts\n");
+ 		test->num_irqs = irq;
++		break;
++	default:
++		dev_err(dev, "Invalid IRQ type selected\n");
+ 	}
+ 
+ 	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
+-- 
+2.7.4
