@@ -1,108 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:54774 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730253AbeGSJO1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jul 2018 05:14:27 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v14 01/12] PCI: dwc: Fix EP link notification implementation
-Date: Thu, 19 Jul 2018 10:32:11 +0200
-Message-Id: <b32976144a31b3b5b0fa043357bec80974013c1b.1531922095.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 6 Jul 2018 16:33:56 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v5 1/3] PCI: Make specifying PCI devices in kernel
+ parameters reusable
+Message-ID: <20180706163356.697f529c@t450s.home>
+In-Reply-To: <20180627174650.27433-2-logang@deltatee.com>
+References: <20180627174650.27433-1-logang@deltatee.com>
+        <20180627174650.27433-2-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move specific features settings from EP shared code
-(pcie-designware-ep.c) to the driver (pcie-designware-plat.c).
+On Wed, 27 Jun 2018 11:46:48 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-Previous implementation disables the EP link notification
-by default for all SoCs that uses EP DesignWare IP, which affects
-directly the dra7xx and artpec6 SoCs.
+> Separate out the code to match a PCI device with a string (typically
+> originating from a kernel parameter) from the
+> pci_specified_resource_alignment() function into its own helper
+> function.
+> 
+> While we are at it, this change fixes the kernel style of the function
+> (fixing a number of long lines and extra parentheses).
+> 
+> Additionally, make the analogous change to the kernel parameter
+> documentation: Separating the description of how to specify a PCI device
+> into it's own section at the head of the pci= parameter.
+> 
+> This patch should have no functional alterations.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Stephen Bates <sbates@raithlin.com>
+> Acked-by: Christian König <christian.koenig@amd.com>
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v8->v9:
- - Created patch file.
-Change v9->v10:
- - Nothing changed, just to follow the patch set version.
-Change v10->v11:
- - Missed Kishon acknowledge.
-Change v11->v12:
- - Nothing changed, just to follow the patch set version.
-Change v12->v13:
- - Re-sending the patch series.
-Change v13->v14:
- - Nothing changed, just to follow the patch set version.
-
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 14 ++++++--------
- drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +++
- 2 files changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 8650416..04092a7 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -386,15 +386,18 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		return -ENOMEM;
- 	ep->outbound_addr = addr;
- 
--	if (ep->ops->ep_init)
--		ep->ops->ep_init(ep);
--
- 	epc = devm_pci_epc_create(dev, &epc_ops);
- 	if (IS_ERR(epc)) {
- 		dev_err(dev, "Failed to create epc device\n");
- 		return PTR_ERR(epc);
- 	}
- 
-+	ep->epc = epc;
-+	epc_set_drvdata(epc, ep);
-+
-+	if (ep->ops->ep_init)
-+		ep->ops->ep_init(ep);
-+
- 	ret = of_property_read_u8(np, "max-functions", &epc->max_functions);
- 	if (ret < 0)
- 		epc->max_functions = 1;
-@@ -413,11 +416,6 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		return -ENOMEM;
- 	}
- 
--	epc->features = EPC_FEATURE_NO_LINKUP_NOTIFIER;
--	EPC_FEATURE_SET_BAR(epc->features, BAR_0);
--
--	ep->epc = epc;
--	epc_set_drvdata(epc, ep);
- 	dw_pcie_setup(pci);
- 
- 	return 0;
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 5937fed..0ce3440 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -70,10 +70,13 @@ static const struct dw_pcie_ops dw_pcie_ops = {
- static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct pci_epc *epc = ep->epc;
- 	enum pci_barno bar;
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++)
- 		dw_pcie_ep_reset_bar(pci, bar);
-+
-+	epc->features |= EPC_FEATURE_NO_LINKUP_NOTIFIER;
- }
- 
- static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
--- 
-2.7.4
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
