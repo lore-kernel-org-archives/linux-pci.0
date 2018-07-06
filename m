@@ -1,132 +1,120 @@
-Return-Path: <SRS0=0zNO=J2=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=0zNO=J2=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH] driver core: Drop devices_kset_move_last() call from
- really_probe()
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki"
-	<rafael@kernel.org>, <broonie@kernel.org>,
-        <lgirdwood@gmail.com>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <2108146.dv4EAOf6IP@aspire.rjw.lan>
- <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
- <8816662.k3KXbdkA2e@aspire.rjw.lan>
- <CAErSpo4eaaieQiZjAejXAoCv82wddPOcRQXpiqD6X=fFW5XAHQ@mail.gmail.com>
- <CAJZ5v0hVDo-Y2gPTxd6yHVY=vr093hai1VhLzNzzhFkKe0LoKA@mail.gmail.com>
- <CAErSpo4TOiBtdG0iwgeFpv76Lhs4s7PXAWv5_DG-VRyEoP5bOQ@mail.gmail.com>
-CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Greg Kroah-Hartman
-	<gregkh@linuxfoundation.org>,
-        <kernelfans@gmail.com>,
-        Linux Kernel Mailing
- List <linux-kernel@vger.kernel.org>,
-        Grygorii Strashko
-	<grygorii.strashko@ti.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Bjorn
- Helgaas <helgaas@kernel.org>, <dyoung@redhat.com>,
-        <linux-pci@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Linux PM list
-	<linux-pm@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <5b134ed3-b473-90f3-acc7-5943e1669bb5@ti.com>
-Date: Tue, 10 Jul 2018 11:49:19 +0530
+Return-Path: <SRS0=TUUl=JW=linux.ee=mroos@kernel.org>
+Return-Path: <SRS0=TUUl=JW=linux.ee=mroos@kernel.org>
+Date: Fri, 6 Jul 2018 22:49:19 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+Sender: mroos@math.ut.ee
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+    sparclinux@vger.kernel.org
+Subject: Re: sparc64 PCI BAR allocation is still problematic
+In-Reply-To: <20180629134721.GA98204@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.LRH.2.21.1807062218350.21056@math.ut.ee>
+References: <alpine.LRH.2.21.1804081219340.17185@math.ut.ee> <20180620220525.GC108993@bhelgaas-glaptop.roam.corp.google.com> <alpine.LRH.2.21.1806291158320.6026@math.ut.ee> <20180629134721.GA98204@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4TOiBtdG0iwgeFpv76Lhs4s7PXAWv5_DG-VRyEoP5bOQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-+Mark, Liam
-
-Hi,
-
-On Tuesday 10 July 2018 03:36 AM, Bjorn Helgaas wrote:
-> [+cc Kishon]
+> > Video RAM area related BAR messages are gone from all servers.
+> > 
+> > V100 OK
+> > V120 OK
+> > Netra X1 OK
+> > Netra T1-200 OK
+> > Netra T1-105 OK
+> > 
+> > T2000 still has "no compatible bridge window" about ULi ISA Bridge:
+> > 
+> > [    3.767832] pci 0001:05:02.0: can't claim BAR 0 [io  0xf010000000-0xf01000ffff]: no compatible bridge window
 > 
-> On Mon, Jul 9, 2018 at 4:35 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
->>
->> On Mon, Jul 9, 2018 at 3:57 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Fri, Jul 6, 2018 at 5:01 AM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->>>>
->>>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>>
->>>> The devices_kset_move_last() call in really_probe() is a mistake
->>>> as it may cause parents to follow children in the devices_kset list
->>>> which then causes system shutdown to fail.  Namely, if a device has
->>>> children before really_probe() is called for it (which is not
->>>> uncommon), that call will cause it to be reordered after the children
->>>> in the devices_kset list and the ordering of that list will not
->>>> reflect the correct device shutdown order.
->>>>
->>>> Also it causes the devices_kset list to be constantly reordered
->>>> until all drivers have been probed which is totally pointless
->>>> overhead in the majority of cases.
->>>>
->>>> For that reason, revert the really_probe() modifications made by
->>>> commit 52cdbdd49853.
->>>
->>> I'm sure you've considered this, but I can't figure out whether this
->>> patch will reintroduce the problem that was solved by 52cdbdd49853.
->>> That patch updated two places: (1) really_probe(), the change you're
->>> reverting here, and (2) device_move().
->>>
->>> device_move() is only called from 4-5 places, none of which look
->>> related to the problem fixed by 52cdbdd49853, so it seems like that
->>> problem was probably resolved by the hunk you're reverting.
->>
->> That's right, but I don't want to revert all of it.  The other parts
->> of it are kind of useful as they make the handling of the devices_kset
->> list be consistent with the handling of dpm_list.
->>
->> The hunk I'm reverting, however, is completely off.  It not only is
->> incorrect (as per the above), but it also causes the devices_kset list
->> and dpm_list to be handled differently.
+> >From the dmesg log at https://bugzilla.kernel.org/show_bug.cgi?id=117191,
 > 
-> If I understand correctly, you are saying:
+>   pci_sun4v f0287174: PCI host bridge to bus 0001:02
+>   pci_bus 0001:02: root bus resource [io  0xf010000000-0xf01fffffff] (bus address [0x0000-0xfffffff])
+>   pci 0001:05:02.0: can't claim BAR 0 [io  0xf010000000-0xf01000ffff]: no compatible bridge window
 > 
->   - the 52cdbdd49853 really_probe() hunk fixed a problem, but
->   - that hunk was the wrong fix for it, and
->   - this patch removes the wrong fix (and probably reintroduces the problem)
+> BAR 0 could potentially be valid, if the intermediate bridge windows
+> were set up correctly.  But from the lspci:
 > 
-> If devices_kset is supposed to be ordered so children follow parents,
-> I agree the really_probe() hunk doesn't make much sense because the
-> parent/child relation is determined by the circuit design, not by the
-> probe order.
+>   0001:02:00.0 PCI bridge: PEX 8532 Upstream Port
+>     Bus: primary=02, secondary=03, subordinate=09
+>     I/O behind bridge: 00000000-00002fff
+>   0001:03:01.0 PCI bridge: PEX 8532 Downstream Port
+>     Bus: primary=03, secondary=04, subordinate=06
+>     I/O behind bridge: 00000000-00000fff
+>   0001:04:00.0 PCI bridge: PCIe to PCI/PCI-X Bridge
+>     Bus: primary=04, secondary=05, subordinate=05
+>     I/O behind bridge: 00000000-00000fff
+>   0001:05:02.0 ISA bridge: ULi M1533/M1535/M1543 PCI to ISA Bridge
+>     Region 0: [virtual] I/O ports at f010000000 [size=64K]
 > 
-> It just seems like it's worth being clear that we're reintroducing the
-> problem fixed by 52cdbdd49853, so it needs to be solved a different
-> way.  Ideally that would be done before this patch so there's not a
-> regression, and this changelog could mention what's happening.
+> (lspci normally shows the CPU addresses, but it looks like it's showing
+> bus addresses here (except for the 0001:05:02.0 I/O BAR).  That might
+> be something we should sort out at some point.  I know sparc does
+> things differently in that area.)
 > 
->> It had attempted to fix something, but it failed miserably at that.
+> But either way, the 0001:04:00.0 I/O aperture is only 4K in size, and
+> apparently OF is telling us the ISA bridge has a 64K I/O BAR, so that
+> explains the "no compatible bridge window" message.  We can't fit a
+> 64K BAR in a 4K window.
 > 
-> If you're saying that 52cdbdd49853 *tried* to fix a DRA7XX_evm reboot
-> problem, but in fact, it did not fix that problem, then I guess there
-> should be no issue with reverting that hunk.
+> Do you know if there's an ISA device behind that bridge?  If there
+> is, and it only requires I/O ports in the 0-0xfff range, it probably
+> still works in spite of the warning.
 
-It did fix a problem making sure the regulator's shutdown is invoked after the
-mmc shutdown. And reverting 52cdbdd49853 reintroduces the problem.
+prtconf shows from OF that a serial port is there:
 
-I tried adding device_link_add in the _regulator_get, something like below and
-it seems to fix the problem again. But I guess we have to maintain a list of
-device_link's in regulator_dev since there can be many consumers for a single
-regulator and we also have to invoke device_link_del in _regulator_put. In
-general this might have to be extended to other producers like PHY, pinctrl etc..
+                        Node 0xf02991b8
+                            ignore-cd:
+                            reg:  00000000.000003f8.00000008
+                            interrupts:  00000001
+                            compatible: 'su16550' + 'su'
+                            device_type:  'serial'
+                            name:  'serial'
 
-If this looks okay, I can post a patch after adding a list and invoking
-device_link_del() in regulator core.
 
-diff --git a/drivers/regulator/core.c b/drivers/regulator/core.c
-index 6ed568b96c0e..24a25700128a 100644
---- a/drivers/regulator/core.c
-+++ b/drivers/regulator/core.c
-@@ -1740,6 +1740,7 @@ struct regulator *_regulator_get(struct device *dev,
-const char *id,
-                        rdev->use_count = 0;
-        }
+> But if it needs anything above 0xfff, or if we decided to be "smart"
+> and not enable I/O on the bridge because we think the I/O BAR is
+> invalid, it wouldn't work.
+> 
+> > V245 still has "no compatible bridge window" about ULI ISA Bridge:
+> > 
+> > [    4.522892] pci 0000:05:1e.0: can't claim BAR 0 [io  0x7f810000000-0x7f810000fff]: no compatible bridge window
+> 
+> Again from https://bugzilla.kernel.org/show_bug.cgi?id=117191,
+> 
+>   fire f0068b8c: PCI host bridge to bus 0000:02
+>   pci_bus 0000:02: root bus resource [io  0x7f810000000-0x7f81fffffff] (bus address [0x0000-0xfffffff])
+>   pci 0000:05:1e.0: can't claim BAR 0 [io  0x7f810000000-0x7f810000fff]: no compatible bridge window
+> 
+>   0000:04:00.0 PCI bridge: ULi M5249 HTT to PCI Bridge
+>     Bus: primary=04, secondary=05, subordinate=05
+>     I/O behind bridge: 00001000-00001fff
+>     Memory behind bridge: 00200000-03ffffff
+>   0000:05:1c.0 ULi USB 1.1 Controller [OHCI]
+>     Region 0: Memory at 01000000 (32-bit, non-prefetchable) [size=16M]
+>   0000:05:1c.1 ULi USB 1.1 Controller [OHCI]
+>     Region 0: Memory at 02000000 (32-bit, non-prefetchable) [size=16M]
+>   0000:05:1c.3 ULi USB 2.0 Controller [EHCI]
+>     Region 0: Memory at 00200000 (32-bit, non-prefetchable) [size=8K]
+>   0000:05:1e.0 ISA bridge: ULi M1575 South Bridge
+>     Region 0: [virtual] I/O ports at 7f810000000 [size=4K]
+>   0000:05:1f.0 ULi M5229 IDE
+>     Region 0: I/O ports at 1040 [size=64]
+>     Region 1: I/O ports at 1080 [size=64]
+>     Region 2: I/O ports at 10c0 [size=64]
+>     Region 3: I/O ports at 1100 [size=64]
+>     Region 4: I/O ports at 1000 [size=64]
+> 
+> The 0000:05:1e.0 I/O BAR (BAR 0) contains 0 (at least according to
+> OF).  This is clearly invalid because the bridge at 0000:04:00.0 will
+> never route anything to bus 05 with an I/O bus address of 0, so
+> nothing behind the 05:1e.0 ISA bridge should work.
+> 
+> If you still have the v4.18-rc1 logs from these boxes, would you mind
+> attaching them to the bugzilla?
 
-+       device_link_add(dev, &rdev->dev, DL_FLAG_STATELESS);
-        return regulator;
- }
+Found 4.17.0 and 4.18-rc2+git dmesgs for both T2000 and V245, attached 
+there.
 
-Thanks
-Kishon
+-- 
+Meelis Roos (mroos@linux.ee)
