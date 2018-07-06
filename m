@@ -1,57 +1,81 @@
-Return-Path: <SRS0=I8Rm=KE=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=I8Rm=KE=kernel.crashing.org=benh@kernel.org>
-Message-ID: <f3ff14198333daac599adb64344d66a09e88acb7.camel@kernel.crashing.org>
-Subject: Re: [PATCH v3] PCI: Data corruption happening due to race condition
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Lukas Wunner <lukas@wunner.de>, Hari Vyas <hari.vyas@broadcom.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        Ray Jui
- <ray.jui@broadcom.com>, Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman
- <mpe@ellerman.id.au>, linuxppc-dev@lists.ozlabs.org
-Date: Fri, 20 Jul 2018 14:27:41 +1000
-In-Reply-To: <20180719185538.GA7731@wunner.de>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
-	 <1530608741-30664-2-git-send-email-hari.vyas@broadcom.com>
-	 <20180718232904.GJ128988@bhelgaas-glaptop.roam.corp.google.com>
-	 <65dd986d0b8b2ebe5132b365dabb2dbaaed9177f.camel@kernel.crashing.org>
-	 <CAM5rFu8b1mdim8uA15TzpJtcxH5jXN3C53rBGZcyXG2h7bRoyA@mail.gmail.com>
-	 <20180719185538.GA7731@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: "joro@8bytes.org" <joro@8bytes.org>
+Subject: RE: [PATCH 0/7 v5] Support for fsl-mc bus and its devices in SMMU
+Date: Fri, 6 Jul 2018 11:18:55 +0000
+Message-ID: <HE1PR0401MB24256CD990DAE3A343EF3A8AE6470@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+ <HE1PR0401MB24250CEFBC0B7CC919C4388AE6760@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+ <20180706111327.7gkerhkk6udfeirr@8bytes.org>
+In-Reply-To: <20180706111327.7gkerhkk6udfeirr@8bytes.org>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Bharat Bhushan <bharat.bhushan@nxp.com>,
+ "stuyoder@gmail.com" <stuyoder@gmail.com>,
+ "frowand.list@gmail.com" <frowand.list@gmail.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Leo Li <leoyang.li@nxp.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>, "hch@lst.de" <hch@lst.de>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2018-07-19 at 20:55 +0200, Lukas Wunner wrote:
-> On Thu, Jul 19, 2018 at 9:48 AM, Benjamin Herrenschmidt <benh@kernel.crashing.org wrote:
-> > Indeed. However I'm not fan of the solution. Shouldn't we instead have
-> > some locking for the content of pci_dev? I've always been wary of us
-> > having other similar races in there.
+
+Thanks Joro,
+
+I will be sending it by mid of next week.
+
+Regards,
+Nipun
+
+> -----Original Message-----
+> From: joro@8bytes.org [mailto:joro@8bytes.org]
+> Sent: Friday, July 6, 2018 4:43 PM
+> To: Nipun Gupta <nipun.gupta@nxp.com>
+> Cc: robin.murphy@arm.com; will.deacon@arm.com;
+> gregkh@linuxfoundation.org; hch@lst.de; m.szyprowski@samsung.com;
+> shawnguo@kernel.org; frowand.list@gmail.com; iommu@lists.linux-
+> foundation.org; linux-kernel@vger.kernel.org; devicetree@vger.kernel.org;
+> linux-arm-kernel@lists.infradead.org; linuxppc-dev@lists.ozlabs.org; linux-
+> pci@vger.kernel.org; Bharat Bhushan <bharat.bhushan@nxp.com>;
+> stuyoder@gmail.com; Leo Li <leoyang.li@nxp.com>
+> Subject: Re: [PATCH 0/7 v5] Support for fsl-mc bus and its devices in SMMU
 > 
-> The solution presented is perfectly fine as it uses atomic bitops which
-> obviate the need for locking.  Why do you want to add unnecessary locking
-> on top?
-
-Atomic bitops tend to be *more* expensive than a lock.
-
-My concern is that the PCIe code historically had no locking and I
-worry we may have other fields in there with similar issues. But maybe
-I'm wrong.
-
-> Certain other parts of struct pci_dev use their own locking, e.g.
-> pci_bus_sem to protect bus_list.  Most elements can and should
-> be accessed lockless for performance.
+> Hi Nipun,
 > 
+> On Thu, Jun 21, 2018 at 03:59:27AM +0000, Nipun Gupta wrote:
+> > Will this patch-set be taken for the next kernel release (and via which tree)?
 > 
-> > > The powerpc PCI code contains a lot of cruft coming from the depth of
-> > > history, including rather nasty assumptions. We want to progressively
-> > > clean it up, starting with EEH, but it will take time.
+> I can take this through IOMMU tree if nobody objects. Please work out
+> the last remaining comment on patch 7 with Robin and then re-send with
+> all Acks and Reviewed-by: tags included.
 > 
-> Then I suggest using the #include "../../../drivers/pci/pci.h" for now
-> until the powerpc arch code has been consolidated.
+> Oh, and please use 'iommu/of:' prefix instead of 'iommu: of:' and follow
+> that sheme for the other patches/prefixes as well.
+> 
+> Thanks,
+> 
+> 	Joerg
 
-There's also the need both in powerpc and sparc to access the guts of
-pci_dev because those archs will "fabricate" as pci_dev from the
-device-tree rather than probing it under some circumstances.
 
-Cheers,
-Ben.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
