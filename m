@@ -1,177 +1,339 @@
-Return-Path: <SRS0=wylM=KK=oracle.com=thomas.tai@kernel.org>
-Return-Path: <SRS0=wylM=KK=oracle.com=thomas.tai@kernel.org>
-Subject: Re: [PATCH V3, 1/1] PCI/AER: fix use-after-free in
- pcie_do_fatal_recovery
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
-        poza@codeaurora.org
-References: <1532030555-7177-1-git-send-email-thomas.tai@oracle.com>
- <1532030555-7177-2-git-send-email-thomas.tai@oracle.com>
- <20180725202420.GA173328@bhelgaas-glaptop.roam.corp.google.com>
-From: Thomas Tai <thomas.tai@oracle.com>
-Message-ID: <90c59775-a344-c58a-89c3-511a44839365@oracle.com>
-Date: Thu, 26 Jul 2018 10:29:18 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:57552 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751480AbeGFJBG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2018 05:01:06 -0400
+Subject: Re: [PATCH v6 06/11] pci-epf-test/pci_endpoint_test: Cleanup
+ PCI_ENDPOINT_TEST memspace
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
+        <adouglas@cadence.com>, <jesper.nilsson@axis.com>,
+        <shawn.lin@rock-chips.com>
+References: <cover.1529595907.git.gustavo.pimentel@synopsys.com>
+ <85a8f5b6716249bca7311b01469193d7431dc176.1529595907.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <4ee72f38-b6b4-df06-21b3-33b71617b451@ti.com>
+Date: Fri, 6 Jul 2018 14:30:48 +0530
 MIME-Version: 1.0
-In-Reply-To: <20180725202420.GA173328@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <85a8f5b6716249bca7311b01469193d7431dc176.1529595907.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[ ... ]>
-> I know I suggested this strategy, but I think this ended up being more
-> complicated than it's worth.
-> 
-> The problem code in pcie_do_fatal_recovery() essentially looks like
-> this:
-> 
->    pcie_do_fatal_recovery(dev)
->      pci_stop_and_remove_bus_device(dev);
->      reset_link(dev);
->      pci_cleanup_aer_uncorrect_error_status(dev);
->      pcie_wait_for_link(dev, ...);
->      pci_uevent_ers(dev, ...);
->      pci_info(dev, ...);
-> 
-> Some of this depends on the device type (bridge vs. endpoint) and the
-> caller (AER vs. DPC), but given the right conditions, we can exercise
-> all the above calls.
-> 
-> I think it is just broken that we keep doing things with "dev" after
-> removing it.  IMHO this code should be restructured to avoid that.
-> 
-> I think fiddling with the refcount as in this patch adds too much
-> complexity and makes it look like the current structure of
-> pcie_do_fatal_recovery() is reasonable when it really isn't.
-> 
-> But restructuring pcie_do_fatal_recovery() is too big a project to do
-> before v4.18, and we need to fix this problem.  I propose that we
-> merge your v2 patch for now, so at least the band-aid is in the
-> function that I think is broken.
-> 
-> I *would* like to reduce the scope of the get/put as in the patch
-> below, though, so it is contained inside the rescan_remove lock.
-> Could you try it and make sure it's still enough to avoid the problem?
-> If it is, I'll add your sign-off and get this in v4.18.
+Hi Gustavo,
 
-Hi Bjorn,
-Thank you for your review and the details analysis. Sure, let's do the 
-work around for now. I retested your patch below and works fine. You are 
-welcome to add my signed-off and get this in v4.18.
+On Thursday 21 June 2018 09:31 PM, Gustavo Pimentel wrote:
+> Cleanup PCI_ENDPOINT_TEST memspace (by moving the interrupt number away
+> from command section).
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+> Change v2->v3:
+>  - New patch file created base on the previous patch
+> "misc: pci_endpoint_test: Add MSI-X support" patch file following
+> Kishon's suggestion.
+> Change v3->v4:
+>  - Rebased to Lorenzo's master branch v4.18-rc1.
+> Change v4->v5:
+>  - Reverted irq_num rename to msi_num.
+>  - Added comment about the MSI-X bit reservation for future implementation.
+> Change v5->v6:
+>  - Nothing changed, just to follow the patch set version.
+> 
+>  drivers/misc/pci_endpoint_test.c              | 81 +++++++++++++++++----------
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 61 +++++++++++++-------
 
-As far as reworking the pcie_do_fatal_recovery() goes, would you think I 
-can help out in any way? May be I can try rework the code to not use the 
-dev after it is removed.
+Please fix Documentation/PCI/endpoint/pci-test-function.txt too.
 
-Thank you,
-Thomas
-
+Thanks
+Kishon
+>  2 files changed, 91 insertions(+), 51 deletions(-)
 > 
+> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+> index 7b37046..35fbfbd 100644
+> --- a/drivers/misc/pci_endpoint_test.c
+> +++ b/drivers/misc/pci_endpoint_test.c
+> @@ -35,38 +35,43 @@
+>  
+>  #include <uapi/linux/pcitest.h>
+>  
+> -#define DRV_MODULE_NAME			"pci-endpoint-test"
+> -
+> -#define PCI_ENDPOINT_TEST_MAGIC		0x0
+> -
+> -#define PCI_ENDPOINT_TEST_COMMAND	0x4
+> -#define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+> -#define COMMAND_RAISE_MSI_IRQ		BIT(1)
+> -#define MSI_NUMBER_SHIFT		2
+> -/* 6 bits for MSI number */
+> -#define COMMAND_READ                    BIT(8)
+> -#define COMMAND_WRITE                   BIT(9)
+> -#define COMMAND_COPY                    BIT(10)
+> -
+> -#define PCI_ENDPOINT_TEST_STATUS	0x8
+> -#define STATUS_READ_SUCCESS             BIT(0)
+> -#define STATUS_READ_FAIL                BIT(1)
+> -#define STATUS_WRITE_SUCCESS            BIT(2)
+> -#define STATUS_WRITE_FAIL               BIT(3)
+> -#define STATUS_COPY_SUCCESS             BIT(4)
+> -#define STATUS_COPY_FAIL                BIT(5)
+> -#define STATUS_IRQ_RAISED               BIT(6)
+> -#define STATUS_SRC_ADDR_INVALID         BIT(7)
+> -#define STATUS_DST_ADDR_INVALID         BIT(8)
+> -
+> -#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0xc
+> +#define DRV_MODULE_NAME				"pci-endpoint-test"
+> +
+> +#define IRQ_TYPE_LEGACY				0
+> +#define IRQ_TYPE_MSI				1
+> +
+> +#define PCI_ENDPOINT_TEST_MAGIC			0x0
+> +
+> +#define PCI_ENDPOINT_TEST_COMMAND		0x4
+> +#define COMMAND_RAISE_LEGACY_IRQ		BIT(0)
+> +#define COMMAND_RAISE_MSI_IRQ			BIT(1)
+> +/* BIT(2) is reserved for raising MSI-X IRQ command */
+> +#define COMMAND_READ				BIT(3)
+> +#define COMMAND_WRITE				BIT(4)
+> +#define COMMAND_COPY				BIT(5)
+> +
+> +#define PCI_ENDPOINT_TEST_STATUS		0x8
+> +#define STATUS_READ_SUCCESS			BIT(0)
+> +#define STATUS_READ_FAIL			BIT(1)
+> +#define STATUS_WRITE_SUCCESS			BIT(2)
+> +#define STATUS_WRITE_FAIL			BIT(3)
+> +#define STATUS_COPY_SUCCESS			BIT(4)
+> +#define STATUS_COPY_FAIL			BIT(5)
+> +#define STATUS_IRQ_RAISED			BIT(6)
+> +#define STATUS_SRC_ADDR_INVALID			BIT(7)
+> +#define STATUS_DST_ADDR_INVALID			BIT(8)
+> +
+> +#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0x0c
+>  #define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
+>  
+>  #define PCI_ENDPOINT_TEST_LOWER_DST_ADDR	0x14
+>  #define PCI_ENDPOINT_TEST_UPPER_DST_ADDR	0x18
+>  
+> -#define PCI_ENDPOINT_TEST_SIZE		0x1c
+> -#define PCI_ENDPOINT_TEST_CHECKSUM	0x20
+> +#define PCI_ENDPOINT_TEST_SIZE			0x1c
+> +#define PCI_ENDPOINT_TEST_CHECKSUM		0x20
+> +
+> +#define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
+> +#define PCI_ENDPOINT_TEST_IRQ_NUMBER		0x28
+>  
+>  static DEFINE_IDA(pci_endpoint_test_ida);
+>  
+> @@ -179,6 +184,9 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
+>  {
+>  	u32 val;
+>  
+> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+> +				 IRQ_TYPE_LEGACY);
+> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 0);
+>  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+>  				 COMMAND_RAISE_LEGACY_IRQ);
+>  	val = wait_for_completion_timeout(&test->irq_raised,
+> @@ -195,8 +203,10 @@ static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
+>  	u32 val;
+>  	struct pci_dev *pdev = test->pdev;
+>  
+> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+> +				 IRQ_TYPE_MSI);
+> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, msi_num);
+>  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+> -				 msi_num << MSI_NUMBER_SHIFT |
+>  				 COMMAND_RAISE_MSI_IRQ);
+>  	val = wait_for_completion_timeout(&test->irq_raised,
+>  					  msecs_to_jiffies(1000));
+> @@ -281,8 +291,11 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+>  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
+>  				 size);
+>  
+> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+> +				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
+> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+>  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+> -				 1 << MSI_NUMBER_SHIFT | COMMAND_COPY);
+> +				 COMMAND_COPY);
+>  
+>  	wait_for_completion(&test->irq_raised);
+>  
+> @@ -348,8 +361,11 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+>  
+>  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+>  
+> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+> +				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
+> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+>  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+> -				 1 << MSI_NUMBER_SHIFT | COMMAND_READ);
+> +				 COMMAND_READ);
+>  
+>  	wait_for_completion(&test->irq_raised);
+>  
+> @@ -403,8 +419,11 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+>  
+>  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+>  
+> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+> +				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
+> +	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+>  	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+> -				 1 << MSI_NUMBER_SHIFT | COMMAND_WRITE);
+> +				 COMMAND_WRITE);
+>  
+>  	wait_for_completion(&test->irq_raised);
+>  
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 63ed706..eb9cd00 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -18,13 +18,15 @@
+>  #include <linux/pci-epf.h>
+>  #include <linux/pci_regs.h>
+>  
+> +#define IRQ_TYPE_LEGACY			0
+> +#define IRQ_TYPE_MSI			1
+> +
+>  #define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+>  #define COMMAND_RAISE_MSI_IRQ		BIT(1)
+> -#define MSI_NUMBER_SHIFT		2
+> -#define MSI_NUMBER_MASK			(0x3f << MSI_NUMBER_SHIFT)
+> -#define COMMAND_READ			BIT(8)
+> -#define COMMAND_WRITE			BIT(9)
+> -#define COMMAND_COPY			BIT(10)
+> +/* BIT(2) is reserved for raising MSI-X IRQ command */
+> +#define COMMAND_READ			BIT(3)
+> +#define COMMAND_WRITE			BIT(4)
+> +#define COMMAND_COPY			BIT(5)
+>  
+>  #define STATUS_READ_SUCCESS		BIT(0)
+>  #define STATUS_READ_FAIL		BIT(1)
+> @@ -56,6 +58,8 @@ struct pci_epf_test_reg {
+>  	u64	dst_addr;
+>  	u32	size;
+>  	u32	checksum;
+> +	u32	irq_type;
+> +	u32	irq_number;
+>  } __packed;
+>  
+>  static struct pci_epf_header test_header = {
+> @@ -244,31 +248,39 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+>  	return ret;
+>  }
+>  
+> -static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
+> +static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq_type,
+> +				   u16 irq)
+>  {
+> -	u8 msi_count;
+>  	struct pci_epf *epf = epf_test->epf;
+> +	struct device *dev = &epf->dev;
+>  	struct pci_epc *epc = epf->epc;
+>  	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
+>  	struct pci_epf_test_reg *reg = epf_test->reg[test_reg_bar];
+>  
+>  	reg->status |= STATUS_IRQ_RAISED;
+> -	msi_count = pci_epc_get_msi(epc, epf->func_no);
+> -	if (irq > msi_count || msi_count <= 0)
+> +
+> +	switch (irq_type) {
+> +	case IRQ_TYPE_LEGACY:
+>  		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_LEGACY, 0);
+> -	else
+> +		break;
+> +	case IRQ_TYPE_MSI:
+>  		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
+> +		break;
+> +	default:
+> +		dev_err(dev, "Failed to raise IRQ, unknown type\n");
+> +		break;
+> +	}
+>  }
+>  
+>  static void pci_epf_test_cmd_handler(struct work_struct *work)
+>  {
+>  	int ret;
+> -	u8 irq;
+> -	u8 msi_count;
+> +	u16 count;
+>  	u32 command;
+>  	struct pci_epf_test *epf_test = container_of(work, struct pci_epf_test,
+>  						     cmd_handler.work);
+>  	struct pci_epf *epf = epf_test->epf;
+> +	struct device *dev = &epf->dev;
+>  	struct pci_epc *epc = epf->epc;
+>  	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
+>  	struct pci_epf_test_reg *reg = epf_test->reg[test_reg_bar];
+> @@ -280,7 +292,10 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+>  	reg->command = 0;
+>  	reg->status = 0;
+>  
+> -	irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
+> +	if (reg->irq_type > IRQ_TYPE_MSI) {
+> +		dev_err(dev, "Failed to detect IRQ type\n");
+> +		goto reset_handler;
+> +	}
+>  
+>  	if (command & COMMAND_RAISE_LEGACY_IRQ) {
+>  		reg->status = STATUS_IRQ_RAISED;
+> @@ -294,7 +309,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+>  			reg->status |= STATUS_WRITE_FAIL;
+>  		else
+>  			reg->status |= STATUS_WRITE_SUCCESS;
+> -		pci_epf_test_raise_irq(epf_test, irq);
+> +		pci_epf_test_raise_irq(epf_test, reg->irq_type,
+> +				       reg->irq_number);
+>  		goto reset_handler;
+>  	}
+>  
+> @@ -304,7 +320,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+>  			reg->status |= STATUS_READ_SUCCESS;
+>  		else
+>  			reg->status |= STATUS_READ_FAIL;
+> -		pci_epf_test_raise_irq(epf_test, irq);
+> +		pci_epf_test_raise_irq(epf_test, reg->irq_type,
+> +				       reg->irq_number);
+>  		goto reset_handler;
+>  	}
+>  
+> @@ -314,16 +331,18 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+>  			reg->status |= STATUS_COPY_SUCCESS;
+>  		else
+>  			reg->status |= STATUS_COPY_FAIL;
+> -		pci_epf_test_raise_irq(epf_test, irq);
+> +		pci_epf_test_raise_irq(epf_test, reg->irq_type,
+> +				       reg->irq_number);
+>  		goto reset_handler;
+>  	}
+>  
+>  	if (command & COMMAND_RAISE_MSI_IRQ) {
+> -		msi_count = pci_epc_get_msi(epc, epf->func_no);
+> -		if (irq > msi_count || msi_count <= 0)
+> +		count = pci_epc_get_msi(epc, epf->func_no);
+> +		if (reg->irq_number > count || count <= 0)
+>  			goto reset_handler;
+>  		reg->status = STATUS_IRQ_RAISED;
+> -		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
+> +		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI,
+> +				  reg->irq_number);
+>  		goto reset_handler;
+>  	}
+>  
+> @@ -457,8 +476,10 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+>  		return ret;
+>  
+>  	ret = pci_epc_set_msi(epc, epf->func_no, epf->msi_interrupts);
+> -	if (ret)
+> +	if (ret) {
+> +		dev_err(dev, "MSI configuration failed\n");
+>  		return ret;
+> +	}
+>  
+>  	if (!epf_test->linkup_notifier)
+>  		queue_work(kpcitest_workqueue, &epf_test->cmd_handler.work);
 > 
-> commit 277ce38f2ed6a4310acf3bd541fb3aee4ec27dee
-> Author: Thomas Tai <thomas.tai@oracle.com>
-> Date:   Tue Jul 24 16:47:59 2018 -0500
-> 
->      PCI/AER: Work around use-after-free in pcie_do_fatal_recovery()
->      
->      When an fatal error is received by a non-bridge device, the device is
->      removed, and pci_stop_and_remove_bus_device() deallocates the device
->      structure.  The freed device structure is used by subsequent code to send
->      uevents and print messages.
->      
->      Hold a reference on the device until we're finished using it.  This is not
->      an ideal fix because pcie_do_fatal_recovery() should not use the device at
->      all after removing it, but that's too big a project for right now.
->      
->      #
->      [bhelgaas: changelog, reduce get/put coverage]
->      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index fdbcc555860d..674984a9277a 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-> @@ -291,6 +291,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
->   
->   	parent = udev->subordinate;
->   	pci_lock_rescan_remove();
-> +	pci_dev_get(dev);
->   	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
->   					 bus_list) {
->   		pci_dev_get(pdev);
-> @@ -325,6 +326,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
->   		pci_info(dev, "Device recovery from fatal error failed\n");
->   	}
->   
-> +	pci_dev_put(dev);
->   	pci_unlock_rescan_remove();
->   }
->   
-> 
->> Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
->> ---
->>   drivers/pci/pcie/aer.c | 27 +++++++++++++++++++++++++--
->>   1 file changed, 25 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
->> index a2e8838..6e5e6a5 100644
->> --- a/drivers/pci/pcie/aer.c
->> +++ b/drivers/pci/pcie/aer.c
->> @@ -657,6 +657,10 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
->>   static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
->>   {
->>   	if (e_info->error_dev_num < AER_MAX_MULTI_ERR_DEVICES) {
->> +		/* increment reference count to keep the dev
->> +		 * around until remove_source_device()
->> +		 */
->> +		pci_dev_get(dev);
->>   		e_info->dev[e_info->error_dev_num] = dev;
->>   		e_info->error_dev_num++;
->>   		return 0;
->> @@ -665,6 +669,21 @@ static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
->>   }
->>   
->>   /**
->> + * remove_source_device -remove error devices from the e_info
->> + * @e_info: pointer to error info
->> + */
->> +static void remove_source_device(struct aer_err_info *e_info)
->> +{
->> +	struct pci_dev *dev;
->> +
->> +	while (e_info->error_dev_num > 0) {
->> +		e_info->error_dev_num--;
->> +		dev = e_info->dev[e_info->error_dev_num];
->> +		pci_dev_put(dev);
->> +	}
->> +}
->> +
->> +/**
->>    * is_error_source - check whether the device is source of reported error
->>    * @dev: pointer to pci_dev to be checked
->>    * @e_info: pointer to reported error info
->> @@ -976,8 +995,10 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
->>   			e_info->multi_error_valid = 0;
->>   		aer_print_port_info(pdev, e_info);
->>   
->> -		if (find_source_device(pdev, e_info))
->> +		if (find_source_device(pdev, e_info)) {
->>   			aer_process_err_devices(e_info);
->> +			remove_source_device(e_info);
->> +		}
->>   	}
->>   
->>   	if (e_src->status & PCI_ERR_ROOT_UNCOR_RCV) {
->> @@ -995,8 +1016,10 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
->>   
->>   		aer_print_port_info(pdev, e_info);
->>   
->> -		if (find_source_device(pdev, e_info))
->> +		if (find_source_device(pdev, e_info)) {
->>   			aer_process_err_devices(e_info);
->> +			remove_source_device(e_info);
->> +		}
->>   	}
->>   }
->>   
->> -- 
->> 1.8.3.1
->>
