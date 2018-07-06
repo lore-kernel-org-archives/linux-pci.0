@@ -1,129 +1,132 @@
-Return-Path: <SRS0=kp2m=JS=gmail.com=mr.nuke.me@kernel.org>
-Return-Path: <SRS0=kp2m=JS=gmail.com=mr.nuke.me@kernel.org>
-Subject: Re: [PATCH v2] PCI/AER: Fix aerdrv loading with "pcie_ports=native"
- parameter
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, keith.busch@intel.com, alex_gagniuc@dellteam.com,
- austin_bolen@dell.com, shyam_iyer@dell.com,
- Frederick Lawler <fred@fredlawl.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
- Borislav Petkov <bp@suse.de>
-References: <20180619195835.5423-1-mr.nuke.me@gmail.com>
- <20180630213140.GG9547@bhelgaas-glaptop.roam.corp.google.com>
- <fdc547c3-e4f7-4967-7216-9379e6d28139@gmail.com>
- <20180702131645.GA15983@bhelgaas-glaptop.roam.corp.google.com>
-From: "Alex G." <mr.nuke.me@gmail.com>
-Message-ID: <225720dd-d1d7-ab4a-6103-ff32b88cc9c2@gmail.com>
-Date: Mon, 2 Jul 2018 09:52:41 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: Robin Murphy <robin.murphy@arm.com>, "will.deacon@arm.com"
+ <will.deacon@arm.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "robh@kernel.org" <robh@kernel.org>, "mark.rutland@arm.com"
+ <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Laurentiu Tudor
+ <laurentiu.tudor@nxp.com>, "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: RE: [PATCH 7/7 v5] arm64: dts: ls208xa: comply with the iommu map
+ binding for fsl_mc
+Date: Fri, 6 Jul 2018 12:18:49 +0000
+Message-ID: <HE1PR0401MB2425F914BA7A9DDCB3D76AEDE6470@HE1PR0401MB2425.eurprd04.prod.outlook.com>
+References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
+ <1526824191-7000-8-git-send-email-nipun.gupta@nxp.com>
+ <88626adc-6f5b-86df-88a0-620d258f8053@arm.com>
+In-Reply-To: <88626adc-6f5b-86df-88a0-620d258f8053@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20180702131645.GA15983@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "stuyoder@gmail.com" <stuyoder@gmail.com>,
+ Bharat Bhushan <bharat.bhushan@nxp.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "joro@8bytes.org" <joro@8bytes.org>,
+ "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Leo Li <leoyang.li@nxp.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "frowand.list@gmail.com" <frowand.list@gmail.com>, "hch@lst.de" <hch@lst.de>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On 07/02/2018 08:16 AM, Bjorn Helgaas wrote:
-> On Sat, Jun 30, 2018 at 11:39:00PM -0500, Alex G wrote:
->> On 06/30/2018 04:31 PM, Bjorn Helgaas wrote:
->>> [+cc Borislav, linux-acpi, since this involves APEI/HEST]
->>
->> Borislav is not the relevant maintainer here, since we're not contingent on
->> APEI handling. I think Keith has a lot more experience with this part of the
->> kernel.
+> -----Original Message-----
+> From: Robin Murphy [mailto:robin.murphy@arm.com]
+> Sent: Tuesday, July 3, 2018 10:06 PM
+> To: Nipun Gupta <nipun.gupta@nxp.com>; will.deacon@arm.com;
+> robh+dt@kernel.org; robh@kernel.org; mark.rutland@arm.com;
+> catalin.marinas@arm.com; gregkh@linuxfoundation.org; Laurentiu Tudor
+> <laurentiu.tudor@nxp.com>; bhelgaas@google.com
+> Cc: hch@lst.de; joro@8bytes.org; m.szyprowski@samsung.com;
+> shawnguo@kernel.org; frowand.list@gmail.com; iommu@lists.linux-
+> foundation.org; linux-kernel@vger.kernel.org; devicetree@vger.kernel.org;
+> linux-arm-kernel@lists.infradead.org; linuxppc-dev@lists.ozlabs.org; linux-
+> pci@vger.kernel.org; Bharat Bhushan <bharat.bhushan@nxp.com>;
+> stuyoder@gmail.com; Leo Li <leoyang.li@nxp.com>
+> Subject: Re: [PATCH 7/7 v5] arm64: dts: ls208xa: comply with the iommu map
+> binding for fsl_mc
 > 
-> Thanks for adding Keith.
+> On 20/05/18 14:49, Nipun Gupta wrote:
+> > fsl-mc bus support the new iommu-map property. Comply to this binding
+> > for fsl_mc bus.
+> >
+> > Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+> > Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
+> > ---
+> >   arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 6 +++++-
+> >   1 file changed, 5 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+> b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+> > index 137ef4d..6010505 100644
+> > --- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+> > +++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+> > @@ -184,6 +184,7 @@
+> >   		#address-cells = <2>;
+> >   		#size-cells = <2>;
+> >   		ranges;
+> > +		dma-ranges = <0x0 0x0 0x0 0x0 0x10000 0x00000000>;
+> >
+> >   		clockgen: clocking@1300000 {
+> >   			compatible = "fsl,ls2080a-clockgen";
+> > @@ -357,6 +358,8 @@
+> >   			reg = <0x00000008 0x0c000000 0 0x40>,	 /* MC portal
+> base */
+> >   			      <0x00000000 0x08340000 0 0x40000>; /* MC
+> control reg */
+> >   			msi-parent = <&its>;
+> > +			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by
+> u-boot */
+> > +			dma-coherent;
+> >   			#address-cells = <3>;
+> >   			#size-cells = <1>;
+> >
+> > @@ -460,6 +463,8 @@
+> >   			compatible = "arm,mmu-500";
+> >   			reg = <0 0x5000000 0 0x800000>;
+> >   			#global-interrupts = <12>;
+> > +			#iommu-cells = <1>;
+> > +			stream-match-mask = <0x7C00>;
+> >   			interrupts = <0 13 4>, /* global secure fault */
+> >   				     <0 14 4>, /* combined secure interrupt */
+> >   				     <0 15 4>, /* global non-secure fault */
+> > @@ -502,7 +507,6 @@
+> >   				     <0 204 4>, <0 205 4>,
+> >   				     <0 206 4>, <0 207 4>,
+> >   				     <0 208 4>, <0 209 4>;
+> > -			mmu-masters = <&fsl_mc 0x300 0>;
 > 
->>> On Tue, Jun 19, 2018 at 02:58:20PM -0500, Alexandru Gagniuc wrote:
->>>> According to the documentation, "pcie_ports=native", linux should use
->>>> native AER and DPC services. While that is true for the _OSC method
->>>> parsing, this is not the only place that is checked. Should the HEST
->>>> table list PCIe ports as firmware-first, linux will not use native
->>>> services.
->>>
->>> Nothing in ACPI-land looks at pcie_ports_native.  How should ACPI
->>> things work in the "pcie_ports=native" case?  I guess we still have to
->>> expect to receive error records from the firmware, because it may
->>> certainly send us non-PCI errors (machine checks, etc) and maybe even
->>> some PCI errors (even if the Linux AER driver claims AER interrupts,
->>> we don't know what notification mechanisms the firmware may be using).
->>
->> I think ACPI land shouldn't care about this. We care about it from the PCIe
->> stand point at the interface with ACPI. FW might see a delta in the sense
->> that we request control of some features via _OSC, which we otherwise would
->> not do without pcie_ports=native.
->>
->>> I guess best-case, we'll get ACPI error records for all non-PCI
->>> things, and the Linux AER driver will see all the AER errors.
->>
->> It might affect FW's ability to catch errors, but that's dependent on the
->> root port implementation.
->>
->>> Worst-case, I don't really know what to expect.  Duplicate reporting
->>> of AER errors via firmware and Linux AER driver?  Some kind of
->>> confusion about who acknowledges and clears them?
->>
->> Once user enters pcie_ports=native, all bets are off: you broke the contract
->> you have with the FW -- whether or not you have this patch.
->>
->>> Out of curiosity, what is your use case for "pcie_ports=native"?
->>> Presumably there's something that works better when using it, and
->>> things work even *better* with this patch?
->>
->> Corectness. It bothers me that actual behavior does not match the
->> documentation:
->>
->>  native  Use native PCIe services associated with PCIe ports
->>                         unconditionally.
->>
->>
->>> I know people do use it, because I often see it mentioned in forums
->>> and bug reports, but I really don't expect it to work very well
->>> because we're ignoring the usage model the firmware is designed
->>> around.  My unproven suspicion is that most uses are in the black
->>> magic category of "there's a bug here, and we don't know how to fix
->>> it, but pcie_ports=native makes it work better".
->>
->> There exist cases that firmware didn't consider. I would not call them
->> "firmware bugs", but there are cases where the user understands the platform
->> better than firmware.
->> Example: on certain PCIe switches, a hardware PCIe error may bring the
->> switch downstream ports into a state where they stop notifying hotplug
->> events. Depending on the platform, firmware may or may not fix this
->> condition, but "pcie_ports=native" enables DPC. DPC contains the error
->> without the switch downstream port entering the weird error state in the
->> first place.
->>
->> All bets are off at this point.
-> 
-> If a user needs "pcie_ports=native", I claim that's a user experience
-> problem, and the underlying cause is a hardware, firmware, or OS
-> defect.
-> 
-> I have no doubt the situation you describe is real, but this doesn't
-> make any progress toward resolving the user experience problem.  In
-> fact, it propagates the folklore that using "pcie_ports=native" is an
-> appropriate final solution.  It's fine as a temporary workaround while
-> we figure out a better solution, but we need some mechanism for
-> analyzing the problem and eventually removing the need to use
-> "pcie_ports=native".
+> Since we're in here, is the SMMU itself also coherent? If it is, you
+> probably want to say so and avoid the overhead of pointlessly cleaning
+> cache lines on every page table update.
 
-Speaking of user experience, I'd argue that it's a horrible experience
-for the kernel to _not_ do what it is asked.
+Yes, dma-coherent property is also required here. I missed it somehow.
+Thanks for pointing this.
 
-I'm going to go fix the little comment about the patch. I had the same
-dilemma when I wrote it, but didn't find it too noteworthy. It makes
-more sense now that you mentioned it.
+Regards,
+Nipun
 
-Alex
-
-> I have a minor comment on the patch, but I think it makes sense.  This
-> might be a good time to resurrect Prarit's "taint-on-pci-parameters"
-> patch.  If somebody uses "pcie_ports=native", I think it makes sense
-> to taint the kernel both because (1) we broke the contract with the
-> firmware and we don't really know what to expect, and (2) it's an
-> opportunity to encourage the user to raise a bug report.
 > 
-> Bjorn
+> Robin.
 > 
+> >   		};
+> >
+> >   		dspi: dspi@2100000 {
+> >
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
