@@ -1,59 +1,76 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 23 Jul 2018 17:08:12 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH 2/2] PCI: NVMe device specific reset quirk
-Message-ID: <20180723170812.177a7161@t450s.home>
-In-Reply-To: <20180723224507.GA11656@localhost.localdomain>
-References: <20180723221533.4371.90064.stgit@gimli.home>
- <20180723222431.4371.25962.stgit@gimli.home>
- <20180723224507.GA11656@localhost.localdomain>
+Return-Path: <SRS0=QR5v=JW=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=QR5v=JW=h08.hostsharing.net=foo00@kernel.org>
+Date: Fri, 6 Jul 2018 10:36:03 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Pingfan Liu <kernelfans@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
+ ordering in device_kset
+Message-ID: <20180706083603.GA9063@wunner.de>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <4685360.VNmeYLh0dQ@aspire.rjw.lan>
+ <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
+ <6281446.GoJLz6Hq6C@aspire.rjw.lan>
+ <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
+ <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 23 Jul 2018 16:45:08 -0600
-Keith Busch <keith.busch@intel.com> wrote:
+[cc += Kishon Vijay Abraham]
 
-> On Mon, Jul 23, 2018 at 04:24:31PM -0600, Alex Williamson wrote:
-> > Take advantage of NVMe devices using a standard interface to quiesce
-> > the controller prior to reset, including device specific delays before
-> > and after that reset.  This resolves several NVMe device assignment
-> > scenarios with two different vendors.  The Intel DC P3700 controller
-> > has been shown to only work as a VM boot device on the initial VM
-> > startup, failing after reset or reboot, and also fails to initialize
-> > after hot-plug into a VM.  Adding a delay after FLR resolves these
-> > cases.  The Samsung SM961/PM961 (960 EVO) sometimes fails to return
-> > from FLR with the PCI config space reading back as -1.  A reproducible
-> > instance of this behavior is resolved by clearing the enable bit in
-> > the configuration register and waiting for the ready status to clear
-> > (disabling the NVMe controller) prior to FLR.
-> > 
-> > As all NVMe devices make use of this standard interface and the NVMe
-> > specification also requires PCIe FLR support, we can apply this quirk
-> > to all devices with matching class code.  
+On Thu, Jul 05, 2018 at 11:18:28AM +0200, Rafael J. Wysocki wrote:
+> OK, so calling devices_kset_move_last() from really_probe() clearly is
+> a mistake.
 > 
-> Shouldn't this go in the nvme driver's reset_prepare/reset_done callbacks?
+> I'm not really sure what the intention of it was as the changelog of
+> commit 52cdbdd49853d doesn't really explain that (why would it be
+> insufficient without that change?)
 
-The scenario I'm trying to fix is device assignment, the nvme driver
-isn't in play there.  The device is bound to the vfio-pci driver at the
-time of these resets.  Thanks,
+It seems 52cdbdd49853d fixed an issue with boards which have an MMC
+whose reset pin needs to be driven high on shutdown, lest the MMC
+won't be found on the next boot.
 
-Alex
+The boards' devicetrees use a kludge wherein the reset pin is modelled
+as a regulator.  The regulator is enabled when the MMC probes and
+disabled on driver unbind and shutdown.  As a result, the pin is driven
+low on shutdown and the MMC is not found on the next boot.
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+To fix this, another kludge was invented wherein the GPIO expander
+driving the reset pin unconditionally drives all its pins high on
+shutdown, see pcf857x_shutdown() in drivers/gpio/gpio-pcf857x.c
+(commit adc284755055, "gpio: pcf857x: restore the initial line state
+of all pcf lines").
+
+For this kludge to work, the GPIO expander's ->shutdown hook needs to
+be executed after the MMC expander's ->shutdown hook.
+
+Commit 52cdbdd49853d achieved that by reordering devices_kset according
+to the probe order.  Apparently the MMC probes after the GPIO expander,
+possibly because it returns -EPROBE_DEFER if the vmmc regulator isn't
+available yet, see mmc_regulator_get_supply().
+
+Note, I'm just piecing the information together from git history,
+I'm not responsible for these kludges.  (I'm innocent!)
+
+@Pingfan Liu, if you just remove the call to devices_kset_move_last()
+from really_probe(), does the issue go away?
+
+If so, it might be best to remove that call and model the dependency
+with a call to device_link_add() in mmc_regulator_get_supply().
+Another idea would be to automatically add a device_link in the
+driver core if -EPROBE_DEFER is returned.
+
+Thanks,
+
+Lukas
