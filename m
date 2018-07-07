@@ -1,157 +1,269 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60474 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932100AbeGBWxF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jul 2018 18:53:05 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Markus Elfring <elfring@users.sourceforge.net>,
-        Kees Cook <keescook@chromium.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V5 1/3] PCI: pciehp: implement mask and unmask interrupt functions
-Date: Mon,  2 Jul 2018 18:52:45 -0400
-Message-Id: <1530571967-19099-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
-References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=6yPx=JX=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=6yPx=JX=gmail.com=kernelfans@kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <2108146.dv4EAOf6IP@aspire.rjw.lan> <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
+ <2067910.hkxRV6zLYm@aspire.rjw.lan>
+In-Reply-To: <2067910.hkxRV6zLYm@aspire.rjw.lan>
+From: Pingfan Liu <kernelfans@gmail.com>
+Date: Sat, 7 Jul 2018 12:02:28 +0800
+Message-ID: <CAFgQCTtJ29OZqnRnDyPF3PZTN71j8zbyGwwsGdQZRruU4W7E4w@mail.gmail.com>
+Subject: Re: [PATCHv3 2/4] drivers/base: utilize device tree info to shutdown devices
+To: rjw@rjwysocki.net
+Cc: linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding pciehp_mask_irq() and pciehp_unmask_irq() to be called from struct
-pcie_device as mask_irq() and unmask_irq() callbacks.
+On Fri, Jul 6, 2018 at 5:54 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>
+> On Friday, July 6, 2018 5:02:15 AM CEST Pingfan Liu wrote:
+> > On Thu, Jul 5, 2018 at 6:13 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > >
+> > > On Tuesday, July 3, 2018 8:50:40 AM CEST Pingfan Liu wrote:
+> > > > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
+> > > > places an assumption of supplier<-consumer order on the process of probe.
+> > > > But it turns out to break down the parent <- child order in some scene.
+> > > > E.g in pci, a bridge is enabled by pci core, and behind it, the devices
+> > > > have been probed. Then comes the bridge's module, which enables extra
+> > > > feature(such as hotplug) on this bridge. This will break the
+> > > > parent<-children order and cause failure when "kexec -e" in some scenario.
+> > > >
+> > > > The detailed description of the scenario:
+> > > > An IBM Power9 machine on which, two drivers portdrv_pci and shpchp(a mod)
+> > > > match the PCI_CLASS_BRIDGE_PCI, but neither of them success to probe due
+> > > > to some issue. For this case, the bridge is moved after its children in
+> > > > devices_kset. Then, when "kexec -e", a ata-disk behind the bridge can not
+> > > > write back buffer in flight due to the former shutdown of the bridge which
+> > > > clears the BusMaster bit.
+> > > >
+> > > > It is a little hard to impose both "parent<-child" and "supplier<-consumer"
+> > > > order on devices_kset. Take the following scene:
+> > > > step0: before a consumer's probing, (note child_a is supplier of consumer_a)
+> > > >   [ consumer-X, child_a, ...., child_z] [... consumer_a, ..., consumer_z, ...] supplier-X
+> > > >                                          ^^^^^^^^^^ affected range ^^^^^^^^^^
+> > > > step1: when probing, moving consumer-X after supplier-X
+> > > >   [ child_a, ...., child_z] [.... consumer_a, ..., consumer_z, ...] supplier-X, consumer-X
+> > > > step2: the children of consumer-X should be re-ordered to maintain the seq
+> > > >   [... consumer_a, ..., consumer_z, ....] supplier-X  [consumer-X, child_a, ...., child_z]
+> > > > step3: the consumer_a should be re-ordered to maintain the seq
+> > > >   [... consumer_z, ...] supplier-X [ consumer-X, child_a, consumer_a ..., child_z]
+> > > >
+> > > > It requires two nested recursion to drain out all out-of-order item in
+> > > > "affected range". To avoid such complicated code, this patch suggests
+> > > > to utilize the info in device tree, instead of using the order of
+> > > > devices_kset during shutdown. It iterates the device tree, and firstly
+> > > > shutdown a device's children and consumers. After this patch, the buggy
+> > > > commit is hollow and left to clean.
+> > > >
+> > > > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+> > > > Cc: Christoph Hellwig <hch@infradead.org>
+> > > > Cc: Bjorn Helgaas <helgaas@kernel.org>
+> > > > Cc: Dave Young <dyoung@redhat.com>
+> > > > Cc: linux-pci@vger.kernel.org
+> > > > Cc: linuxppc-dev@lists.ozlabs.org
+> > > > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+> > > > ---
+> > > >  drivers/base/core.c    | 48 +++++++++++++++++++++++++++++++++++++++++++-----
+> > > >  include/linux/device.h |  1 +
+> > > >  2 files changed, 44 insertions(+), 5 deletions(-)
+> > > >
+> > > > diff --git a/drivers/base/core.c b/drivers/base/core.c
+> > > > index a48868f..684b994 100644
+> > > > --- a/drivers/base/core.c
+> > > > +++ b/drivers/base/core.c
+> > > > @@ -1446,6 +1446,7 @@ void device_initialize(struct device *dev)
+> > > >       INIT_LIST_HEAD(&dev->links.consumers);
+> > > >       INIT_LIST_HEAD(&dev->links.suppliers);
+> > > >       dev->links.status = DL_DEV_NO_DRIVER;
+> > > > +     dev->shutdown = false;
+> > > >  }
+> > > >  EXPORT_SYMBOL_GPL(device_initialize);
+> > > >
+> > > > @@ -2811,7 +2812,6 @@ static void __device_shutdown(struct device *dev)
+> > > >        * lock is to be held
+> > > >        */
+> > > >       parent = get_device(dev->parent);
+> > > > -     get_device(dev);
+> > >
+> > > Why is the get_/put_device() not needed any more?
+> > >
+> > They are moved upper layer into device_for_each_child_shutdown().
+> > Since there is lock breakage in __device_shutdown(), resorting to
+> > ref++ to protect the ancestor.  And I think the
+> > get_device(dev->parent) can be deleted either.
+>
+> Wouldn't that break USB?
+>
+Sorry, I can not figure out. Is USB not modeled up-to-down? This
+recursion can handle the up-to-down ref issue automatically, due to
+the nature of device tree. Any hints? Thanks.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/hotplug/pciehp.h      |  2 ++
- drivers/pci/hotplug/pciehp_core.c | 19 +++++++++++++++++++
- drivers/pci/hotplug/pciehp_hpc.c  | 39 +++++++++++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv.h        |  2 ++
- 4 files changed, 62 insertions(+)
+> > > >       /*
+> > > >        * Make sure the device is off the kset list, in the
+> > > >        * event that dev->*->shutdown() doesn't remove it.
+> > > > @@ -2842,23 +2842,60 @@ static void __device_shutdown(struct device *dev)
+> > > >                       dev_info(dev, "shutdown\n");
+> > > >               dev->driver->shutdown(dev);
+> > > >       }
+> > > > -
+> > > > +     dev->shutdown = true;
+> > > >       device_unlock(dev);
+> > > >       if (parent)
+> > > >               device_unlock(parent);
+> > > >
+> > > > -     put_device(dev);
+> > > >       put_device(parent);
+> > > >       spin_lock(&devices_kset->list_lock);
+> > > >  }
+> > > >
+> > > > +/* shutdown dev's children and consumer firstly, then itself */
+> > > > +static int device_for_each_child_shutdown(struct device *dev)
+> > >
+> > > Confusing name.
+> > >
+> > > What about device_shutdown_subordinate()?
+> > >
+> > Fine. My understanding of words is not exact.
+> >
+> > > > +{
+> > > > +     struct klist_iter i;
+> > > > +     struct device *child;
+> > > > +     struct device_link *link;
+> > > > +
+> > > > +     /* already shutdown, then skip this sub tree */
+> > > > +     if (dev->shutdown)
+> > > > +             return 0;
+> > > > +
+> > > > +     if (!dev->p)
+> > > > +             goto check_consumers;
+> > > > +
+> > > > +     /* there is breakage of lock in __device_shutdown(), and the redundant
+> > > > +      * ref++ on srcu protected consumer is harmless since shutdown is not
+> > > > +      * hot path.
+> > > > +      */
+> > > > +     get_device(dev);
+> > > > +
+> > > > +     klist_iter_init(&dev->p->klist_children, &i);
+> > > > +     while ((child = next_device(&i)))
+> > > > +             device_for_each_child_shutdown(child);
+> > >
+> > > Why don't you use device_for_each_child() here?
+> > >
+> > OK, I will try use it.
+>
+> Well, hold on.
+>
+> > > > +     klist_iter_exit(&i);
+> > > > +
+> > > > +check_consumers:
+> > > > +     list_for_each_entry_rcu(link, &dev->links.consumers, s_node) {
+> > > > +             if (!link->consumer->shutdown)
+> > > > +                     device_for_each_child_shutdown(link->consumer);
+> > > > +     }
+> > > > +
+> > > > +     __device_shutdown(dev);
+> > > > +     put_device(dev);
+> > >
+> > > Possible reference counter imbalance AFAICS.
+> > >
+> > Yes, get_device() should be ahead of "if (!dev->p)". Is anything  else I miss?
+>
+> Yes, that's it.
+>
+> > > > +     return 0;
+> > > > +}
+> > >
+> > > Well, instead of doing this dance, we might as well walk dpm_list here as it
+> > > is in the right order.
+> > >
+> > Sorry, do you mean that using the same way to manage the dpm_list?
+>
+> No, I mean to use dpm_list instead of devices_kset for shutdown.
+>
+> They should be in the same order anyway if all is correct.
+>
+Yes, the dpm_list and devices_kset contains the same info. But can we
+make the shutdown as the first step, it is more simple and easy to
+verify on different ARCH. Then hunting for the solution of pm.
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 5f89206..c579d03 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -138,6 +138,8 @@ int pciehp_check_link_status(struct controller *ctrl);
- bool pciehp_check_link_active(struct controller *ctrl);
- void pciehp_release_ctrl(struct controller *ctrl);
- int pciehp_reset_slot(struct slot *slot, int probe);
-+void pciehp_mask_irq(struct slot *slot);
-+void pciehp_unmask_irq(struct slot *slot);
- 
- int pciehp_set_raw_indicator_status(struct hotplug_slot *h_slot, u8 status);
- int pciehp_get_raw_indicator_status(struct hotplug_slot *h_slot, u8 *status);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 44a6a63..ca2faa1 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -299,6 +299,22 @@ static int pciehp_resume(struct pcie_device *dev)
- }
- #endif /* PM */
- 
-+static void pciehp_mask_int(struct pcie_device *dev)
-+{
-+	struct controller *ctrl = get_service_data(dev);
-+	struct slot *slot = ctrl->slot;
-+
-+	pciehp_mask_irq(slot);
-+}
-+
-+static void pciehp_unmask_int(struct pcie_device *dev)
-+{
-+	struct controller *ctrl = get_service_data(dev);
-+	struct slot *slot = ctrl->slot;
-+
-+	pciehp_unmask_irq(slot);
-+}
-+
- static struct pcie_port_service_driver hpdriver_portdrv = {
- 	.name		= PCIE_MODULE_NAME,
- 	.port_type	= PCIE_ANY_PORT,
-@@ -311,6 +327,9 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
- 	.suspend	= pciehp_suspend,
- 	.resume		= pciehp_resume,
- #endif	/* PM */
-+
-+	.mask_irq	= pciehp_mask_int,
-+	.unmask_irq	= pciehp_unmask_int,
- };
- 
- static int __init pcied_init(void)
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 8dae232..d44e2c6 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -757,6 +757,45 @@ int pciehp_reset_slot(struct slot *slot, int probe)
- 	return rc;
- }
- 
-+void pciehp_mask_irq(struct slot *slot)
-+{
-+	struct controller *ctrl = slot->ctrl;
-+	u16 ctrl_mask = 0;
-+
-+	if (!ATTN_BUTTN(ctrl))
-+		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
-+
-+	ctrl_mask |= PCI_EXP_SLTCTL_DLLSCE;
-+
-+	pcie_write_cmd(ctrl, 0, ctrl_mask);
-+	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
-+		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, 0);
-+	if (pciehp_poll_mode)
-+		del_timer_sync(&ctrl->poll_timer);
-+}
-+
-+void pciehp_unmask_irq(struct slot *slot)
-+{
-+	struct controller *ctrl = slot->ctrl;
-+	struct pci_dev *pdev = ctrl_dev(ctrl);
-+	u16 stat_mask = 0, ctrl_mask = 0;
-+
-+	if (!ATTN_BUTTN(ctrl)) {
-+		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
-+		stat_mask |= PCI_EXP_SLTSTA_PDC;
-+	}
-+	ctrl_mask |= PCI_EXP_SLTCTL_DLLSCE;
-+	stat_mask |= PCI_EXP_SLTSTA_DLLSC;
-+
-+	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
-+	pcie_write_cmd_nowait(ctrl, ctrl_mask, ctrl_mask);
-+	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
-+		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
-+	if (pciehp_poll_mode)
-+		int_poll_timeout(&ctrl->poll_timer);
-+}
-+
-+
- int pcie_init_notification(struct controller *ctrl)
- {
- 	if (pciehp_request_irq(ctrl))
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index 6ffc797..40bb6f2 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -51,6 +51,8 @@ struct pcie_port_service_driver {
- 	void (*remove) (struct pcie_device *dev);
- 	int (*suspend) (struct pcie_device *dev);
- 	int (*resume) (struct pcie_device *dev);
-+	void (*mask_irq)(struct pcie_device *dev);
-+	void (*unmask_irq)(struct pcie_device *dev);
- 
- 	/* Device driver may resume normal operations */
- 	void (*error_resume)(struct pci_dev *dev);
--- 
-2.7.4
+> > > Of course, that would require dpm_list to be available for CONFIG_PM unset,
+> > > but it may be a better approach long term.
+> > >
+> > > > +
+> > > >  /**
+> > > >   * device_shutdown - call ->shutdown() on each device to shutdown.
+> > > >   */
+> > > >  void device_shutdown(void)
+> > > >  {
+> > > >       struct device *dev;
+> > > > +     int idx;
+> > > >
+> > > > +     idx = device_links_read_lock();
+> > > >       spin_lock(&devices_kset->list_lock);
+> > > >       /*
+> > > >        * Walk the devices list backward, shutting down each in turn.
+> > > > @@ -2866,11 +2903,12 @@ void device_shutdown(void)
+> > > >        * devices offline, even as the system is shutting down.
+> > > >        */
+> > > >       while (!list_empty(&devices_kset->list)) {
+> > > > -             dev = list_entry(devices_kset->list.prev, struct device,
+> > > > +             dev = list_entry(devices_kset->list.next, struct device,
+> > > >                               kobj.entry);
+> > > > -             __device_shutdown(dev);
+> > > > +             device_for_each_child_shutdown(dev);
+> > > >       }
+> > > >       spin_unlock(&devices_kset->list_lock);
+> > > > +     device_links_read_unlock(idx);
+> > > >  }
+> > > >
+> > > >  /*
+> > > > diff --git a/include/linux/device.h b/include/linux/device.h
+> > > > index 055a69d..8a0f784 100644
+> > > > --- a/include/linux/device.h
+> > > > +++ b/include/linux/device.h
+> > > > @@ -1003,6 +1003,7 @@ struct device {
+> > > >       bool                    offline:1;
+> > > >       bool                    of_node_reused:1;
+> > > >       bool                    dma_32bit_limit:1;
+> > > > +     bool                    shutdown:1; /* one direction: false->true */
+> > > >  };
+> > > >
+> > > >  static inline struct device *kobj_to_dev(struct kobject *kobj)
+> > > >
+> > >
+> > > If the device_kset_move_last() in really_probe() is the only problem,
+> > > I'd rather try to fix that one in the first place.
+> > >
+> > > Why is it needed?
+> > >
+> > I had tried, but it turns out not easy to archive. The code is
+> > https://patchwork.kernel.org/patch/10485195/. And I make a detailed
+> > description of the algorithm in this patch's commit log. To be more
+> > detailed, we face the potential out of order issue in really_probe()
+> > like : 0th. [ consumer-X, child_a, ...., child_z] [... consumer_a,
+> > ..., consumer_z, ...] supplier-X //(note child_a is supplier of
+> > consumer_a).  To address all the potential out of order item in the
+> > affected section [... consumer_a, ..., consumer_z, ...],  it will
+> > incur two nested recursions.  1st, moving  consumer-X and its
+> > descendants after supplier-X,  2nd, moving consumer_a after child_a,
+> > 3rd. the 2nd step may pose the same situation of 0th.  Besides the two
+> > interleaved recursion,  the breakage of spin lock requires more effort
+> > to protect the item from disappearing in linked-list  (which I did not
+> > implement in the https://patchwork.kernel.org/patch/10485195/). Hence
+> > I turn to this cheap method.
+>
+> So I think that we simply need to drop the devices_kset_move_last() call
+> from really_probe() as it is plain incorrect and the use case for it is
+> questionable at best.
+>
+See the reply on different mail, I think there is other issue with the
+current solution besides really_probe->devices_kset_move_last
+
+Thanks,
+Pingfan
