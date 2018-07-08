@@ -1,83 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49910 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726481AbeG3JMZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2018 05:12:25 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: linux-pci@vger.kernel.org
-Cc: iommu@lists.linux-foundation.org, linuxppc-dev@lists.ozlabs.org,
-        x86@kernel.org, linux-sh@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: call dma_debug_add_bus for pci_bus_type in common code
-Date: Mon, 30 Jul 2018 09:38:42 +0200
-Message-Id: <20180730073842.16092-1-hch@lst.de>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:59824 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754488AbeGHC75 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 7 Jul 2018 22:59:57 -0400
+Date: Sun, 8 Jul 2018 10:59:46 +0800
+From: Baoquan He <bhe@redhat.com>
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, linux-kernel@vger.kernel.org,
+        akpm@linux-foundation.org, robh+dt@kernel.org,
+        dan.j.williams@intel.com, nicolas.pitre@linaro.org,
+        josh@joshtriplett.org, fengguang.wu@intel.com, bp@suse.de,
+        andy.shevchenko@gmail.com, brijesh.singh@amd.com,
+        devicetree@vger.kernel.org, airlied@linux.ie,
+        linux-pci@vger.kernel.org, richard.weiyang@gmail.com,
+        keith.busch@intel.com, jcmvbkbc@gmail.com,
+        baiyaowei@cmss.chinamobile.com, frowand.list@gmail.com,
+        lorenzo.pieralisi@arm.com, sthemmin@microsoft.com,
+        linux-nvdimm@lists.01.org, patrik.r.jakobsson@gmail.com,
+        linux-input@vger.kernel.org, gustavo@padovan.org,
+        dyoung@redhat.com, vgoyal@redhat.com, thomas.lendacky@amd.com,
+        haiyangz@microsoft.com, maarten.lankhorst@linux.intel.com,
+        jglisse@redhat.com, seanpaul@chromium.org, bhelgaas@google.com,
+        tglx@linutronix.de, yinghai@kernel.org, jonathan.derrick@intel.com,
+        chris@zankel.net, monstr@monstr.eu, linux-parisc@vger.kernel.org,
+        gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com,
+        kexec@lists.infradead.org, ebiederm@xmission.com,
+        devel@linuxdriverproject.org, linuxppc-dev@lists.ozlabs.org,
+        davem@davemloft.net
+Subject: Re: [PATCH v6 2/4] resource: Use list_head to link sibling resource
+Message-ID: <20180708025946.GI3047@MiWiFi-R3L-srv>
+References: <20180704041038.8190-3-bhe@redhat.com>
+ <201807042347.hfDcKxmG%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201807042347.hfDcKxmG%fengguang.wu@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is nothing arch specific about PCI or dma-debug, so move this
-call to common code just after registering the bus type.
+Hi,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- arch/powerpc/kernel/dma.c | 3 ---
- arch/sh/drivers/pci/pci.c | 2 --
- arch/x86/kernel/pci-dma.c | 3 ---
- drivers/pci/pci-driver.c  | 2 +-
- 4 files changed, 1 insertion(+), 9 deletions(-)
+On 07/05/18 at 01:00am, kbuild test robot wrote:
+> Hi Baoquan,
+> 
+> I love your patch! Yet something to improve:
+> 
+> [auto build test ERROR on linus/master]
+> [also build test ERROR on v4.18-rc3 next-20180704]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-diff --git a/arch/powerpc/kernel/dma.c b/arch/powerpc/kernel/dma.c
-index 155170d70324..dbfc7056d7df 100644
---- a/arch/powerpc/kernel/dma.c
-+++ b/arch/powerpc/kernel/dma.c
-@@ -357,9 +357,6 @@ EXPORT_SYMBOL_GPL(dma_get_required_mask);
- 
- static int __init dma_init(void)
- {
--#ifdef CONFIG_PCI
--	dma_debug_add_bus(&pci_bus_type);
--#endif
- #ifdef CONFIG_IBMVIO
- 	dma_debug_add_bus(&vio_bus_type);
- #endif
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index e5b7437ab4af..8256626bc53c 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -160,8 +160,6 @@ static int __init pcibios_init(void)
- 	for (hose = hose_head; hose; hose = hose->next)
- 		pcibios_scanbus(hose);
- 
--	dma_debug_add_bus(&pci_bus_type);
--
- 	pci_initialized = 1;
- 
- 	return 0;
-diff --git a/arch/x86/kernel/pci-dma.c b/arch/x86/kernel/pci-dma.c
-index ab5d9dd668d2..43f58632f123 100644
---- a/arch/x86/kernel/pci-dma.c
-+++ b/arch/x86/kernel/pci-dma.c
-@@ -155,9 +155,6 @@ static int __init pci_iommu_init(void)
- {
- 	struct iommu_table_entry *p;
- 
--#ifdef CONFIG_PCI
--	dma_debug_add_bus(&pci_bus_type);
--#endif
- 	x86_init.iommu.iommu_init();
- 
- 	for (p = __iommu_table; p < __iommu_table_end; p++) {
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 6792292b5fc7..bef17c3fca67 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1668,7 +1668,7 @@ static int __init pci_driver_init(void)
- 	if (ret)
- 		return ret;
- #endif
--
-+	dma_debug_add_bus(&pci_bus_type);
- 	return 0;
- }
- postcore_initcall(pci_driver_init);
--- 
-2.18.0
+Thanks for telling. 
+
+I cloned 0day-ci/linut to my local pc.
+https://github.com/0day-ci/linux.git
+
+However, I didn't find below branch. And tried to open it in web
+broswer, also failed.
+
+
+> url:    https://github.com/0day-ci/linux/commits/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180704-121402
+> config: mips-rb532_defconfig (attached as .config)
+> compiler: mipsel-linux-gnu-gcc (Debian 7.2.0-11) 7.2.0
+> reproduce:
+>         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         GCC_VERSION=7.2.0 make.cross ARCH=mips 
+
+I did find a old one which is for the old version 5 post.
+
+[bhe@linux]$ git remote -v
+0day-ci	https://github.com/0day-ci/linux.git (fetch)
+0day-ci	https://github.com/0day-ci/linux.git (push)
+[bhe@dhcp-128-28 linux]$ git branch -a| grep Baoquan| grep resource
+  remotes/0day-ci/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180612-113600
+
+Could you help have a look at this?
+
+Thanks
+Baoquan
+
+> 
+> All error/warnings (new ones prefixed by >>):
+> 
+> >> arch/mips/pci/pci-rc32434.c:57:11: error: initialization from incompatible pointer type [-Werror=incompatible-pointer-types]
+>      .child = &rc32434_res_pci_mem2
+>               ^
+>    arch/mips/pci/pci-rc32434.c:57:11: note: (near initialization for 'rc32434_res_pci_mem1.child.next')
+> >> arch/mips/pci/pci-rc32434.c:51:47: warning: missing braces around initializer [-Wmissing-braces]
+>     static struct resource rc32434_res_pci_mem1 = {
+>                                                   ^
+>    arch/mips/pci/pci-rc32434.c:60:47: warning: missing braces around initializer [-Wmissing-braces]
+>     static struct resource rc32434_res_pci_mem2 = {
+>                                                   ^
+>    cc1: some warnings being treated as errors
+> 
+> vim +57 arch/mips/pci/pci-rc32434.c
+> 
+> 73b4390f Ralf Baechle 2008-07-16  50  
+> 73b4390f Ralf Baechle 2008-07-16 @51  static struct resource rc32434_res_pci_mem1 = {
+> 73b4390f Ralf Baechle 2008-07-16  52  	.name = "PCI MEM1",
+> 73b4390f Ralf Baechle 2008-07-16  53  	.start = 0x50000000,
+> 73b4390f Ralf Baechle 2008-07-16  54  	.end = 0x5FFFFFFF,
+> 73b4390f Ralf Baechle 2008-07-16  55  	.flags = IORESOURCE_MEM,
+> 73b4390f Ralf Baechle 2008-07-16  56  	.sibling = NULL,
+> 73b4390f Ralf Baechle 2008-07-16 @57  	.child = &rc32434_res_pci_mem2
+> 73b4390f Ralf Baechle 2008-07-16  58  };
+> 73b4390f Ralf Baechle 2008-07-16  59  
+> 
+> :::::: The code at line 57 was first introduced by commit
+> :::::: 73b4390fb23456964201abda79f1210fe337d01a [MIPS] Routerboard 532: Support for base system
+> 
+> :::::: TO: Ralf Baechle <ralf@linux-mips.org>
+> :::::: CC: Ralf Baechle <ralf@linux-mips.org>
+> 
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
