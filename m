@@ -1,120 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:39973 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729665AbeGQK61 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 06:58:27 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v13 06/12] PCI: dwc: Add legacy interrupt callback handler
-Date: Tue, 17 Jul 2018 12:26:21 +0200
-Message-Id: <3579a0b9b6eefcf306af4ccfd5cd3396df4d8f63.1531822532.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+Received: from bmailout2.hostsharing.net ([83.223.90.240]:33061 "EHLO
+        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753073AbeGHROW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Jul 2018 13:14:22 -0400
+Date: Sun, 8 Jul 2018 19:14:18 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Sinan Kaya <okaya@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
+ reset
+Message-ID: <20180708171418.GA11476@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAK9iUCM=zWexWow9TwkRfO186Hwr5WyGy0NHZF1vtXn3wbbZGQ@mail.gmail.com>
+ <12fc8de5-ff03-cb00-52cb-25a43c71d03a@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a legacy interrupt callback handler. Currently DesignWare IP don't
-allow trigger legacy interrupts.
+On Tue, Jul 03, 2018 at 11:43:26AM -0400, Sinan Kaya wrote:
+> On 7/3/2018 10:34 AM, Lukas Wunner wrote:
+> > We've already got the ->reset_slot callback in struct hotplug_slot_ops,
+> > I'm wondering if we really need additional ones for this use case.
+> 
+> As I have informed you before on my previous reply, the pdev->slot is
+> only valid for children objects such as endpoints not for a bridge when
+> using pciehp.
+> 
+> The pointer is NULL for the host bridge itself.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Nothing changed, just to follow the patch set version.
-Change v9->v10:
- - Nothing changed, just to follow the patch set version.
-Change v10->v11:
- - Nothing changed, just to follow the patch set version.
-Change v11->v12:
- - Nothing changed, just to follow the patch set version.
-Change v12->v13:
- - Re-sending the patch series.
+Right, sorry, I had misremembered how this works.  So essentially the
+pointer is only set for the devices "in" the slot, but not for the bridge
+"to" that slot.  If the slot isn't occupied, *no* pci_dev points the
+struct pci_slot.  Seems counter-intuitive to be honest.
 
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 10 ++++++++++
- drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +--
- drivers/pci/controller/dwc/pcie-designware.h      |  6 ++++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
+Thanks for the explanation of the various reset codepaths, I'm afraid my
+understanding of that portion of the PCI core is limited.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index dd9c366..1e7b022 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
- 	.stop			= dw_pcie_ep_stop,
- };
- 
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct device *dev = pci->dev;
-+
-+	dev_err(dev, "EP cannot trigger legacy IRQs\n");
-+
-+	return -EINVAL;
-+}
-+
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num)
- {
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 8bb2ecb..160714d 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -87,8 +87,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 
- 	switch (type) {
- 	case PCI_EPC_IRQ_LEGACY:
--		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
--		return -EINVAL;
-+		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index e8b97f5..96126fd 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -348,6 +348,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num);
- int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
-@@ -367,6 +368,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
- 
-+static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	return 0;
-+}
-+
- static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 					   u8 interrupt_num)
- {
--- 
-2.7.4
+Browsing through drivers/pci/pci.c, I notice pci_dev_lock() and
+pci_dev_save_and_disable(), both are called from reset codepaths and
+apparently seek to stop access to the device during reset.  I'm wondering
+why DPC and AER remove devices in order to avoid accesses to them during
+reset, instead of utilizing these two functions?
+
+My guess is that a lot of the reset code is historically grown and
+could be simplified and made more consistent, but that requires digging
+into the code and getting a complete picture.  I've sort of done that
+for pciehp, I think I'm now intimately familiar with 90% of it,
+so I'll be happy to review patches for it and answer questions,
+but I'm pretty much stumped when it comes to reset code in the PCI core.
+
+I treated the ->reset_slot() callback as one possible entry point into
+pciehp and asked myself if it's properly serialized with the rest of the
+driver and whether driver ->probe and ->remove is ordered such that
+the driver is always properly initialized when the entry point might be
+taken.  I did not look too closely at the codepaths actually leading to
+invocation of the ->reset_slot() callback.
+
+
+> I was curious if we could use a single work queue for all pcie portdrv
+> services. This would also eliminate the need for locks that Lukas is
+> adding.
+> 
+> If hotplug starts first,  hotplug code would run to completion before AER
+> and DPC service starts recovery.
+> 
+> If DPC/AER starts first, my patch would mask the hotplug interrupts.
+> 
+> My solution doesn't help if link down interrupt is observed before the AER
+> or DPC services.
+
+If pciehp gets an interrupt quicker than dpc/aer, it will (at least with
+my patches) remove all devices, check if the presence bit is set, and
+if so, try to bring the slot up again.  My (limited) understanding is
+that the link will stay down until dpc/aer react.  pciehp_check_link_status()
+will wait 1 sec for the link, wait another 100 msec, then poll the vendor
+register for 1 sec before giving up.  So if dpc/aer are locked out for this
+long, they will only be able to reset the slot after 2100 msec.
+
+I've had a brief look at the PCIe r4.0 base spec and could not find
+anything about how pciehp and dpc/aer should coordinate.  Maybe that's
+an oversight, or the PCISIG just leaves this to the OS.
+
+
+> Another possibility is to add synchronization logic between these threads
+> obviously.
+
+Maybe call pci_channel_offline() in the poll loops of pcie_wait_for_link()
+and pci_bus_check_dev() to avoid waiting for the link if an error needs to
+be acted upon first?
+
+Thanks,
+
+Lukas
