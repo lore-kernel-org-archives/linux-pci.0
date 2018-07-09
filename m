@@ -1,53 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35390 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730092AbeGQVfV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Jul 2018 17:35:21 -0400
-Date: Tue, 17 Jul 2018 16:00:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Martin Mares <mj@ucw.cz>, Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
-Subject: Re: lspci: Display path to device
-Message-ID: <20180717210053.GB128988@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180717170204.30470-1-logang@deltatee.com>
- <20180717203900.GA1771@bombadil.infradead.org>
+Received: from szxga08-in.huawei.com ([45.249.212.255]:49931 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754239AbeGIByT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 8 Jul 2018 21:54:19 -0400
+From: "Songxiaowei (Kirin_DRV)" <songxiaowei@hisilicon.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: "chenyao (F)" <chenyao11@huawei.com>
+Subject: =?gb2312?B?tPC4tDogW1BBVENIIHY1IDEvMV0gUENJOiBraXJpbjogQWRkIE1TSSBzdXBw?=
+ =?gb2312?Q?ort?=
+Date: Mon, 9 Jul 2018 01:54:07 +0000
+Message-ID: <99B4C6BADD9E3241B25E52B02BA737C5412D2511@dggema525-mbx.china.huawei.com>
+References: <20180628124803.110315-1-songxiaowei@hisilicon.com>
+ <20180628124803.110315-2-songxiaowei@hisilicon.com>
+In-Reply-To: <20180628124803.110315-2-songxiaowei@hisilicon.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180717203900.GA1771@bombadil.infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 17, 2018 at 01:39:00PM -0700, Matthew Wilcox wrote:
-> I don't like telling the user to grovel around lspci -t by hand.  It's
-> not many lines of code to add a new -P option to lspci to show the path
-> to each device instead of bus:dev.fn
-> 
-> Here's three examples, first without, then with -P.
-> ...
-
-> The Nehalem system makes an interesting testcase because it exposes some
-> registers in fake PCIe devices that aren't behind the root ports.  eg:
-> 
-> ff:06.3 Host bridge: Intel Corporation Xeon 5500/Core i7 Integrated Memory Controller Channel 2 Thermal Control Registers (rev 04)
-
-I think these appear as conventional PCI devices; at least the ones
-I've seen, e.g., [1], don't have a PCIe capability, so I think it
-makes sense that they're not behind a root port.
-
-[1] https://bugzilla5.redhat.com/attachment.cgi?id=433169
+SGkgQmpvcm4gSGVsZ2FhcywNCg0KV291bGQgeW91IGhlbHAgdG8gcmV2aWV3IHRoaXMgcGF0Y2g/
+DQoNCkJlc3QgcmVnYXJkcywNCg0KWGlhb3dlaS4NCg0KPiAtLS0tLdPKvP7Urbz+LS0tLS0NCj4g
+t6K8/sjLOiBTb25neGlhb3dlaSAoS2lyaW5fRFJWKQ0KPiC3osvNyrG85DogMjAxOMTqNtTCMjjI
+1SAyMDo0OA0KPiDK1bz+yMs6IFdhbmdiaW5naHVpIDx3YW5nYmluZ2h1aUBoaXNpbGljb24uY29t
+PjsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsNCj4gcm9iaCtkdEBrZXJuZWwub3JnOyBsaW51eC1wY2lA
+dmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiBkaW1pdHJ5
+c2hAZ29vZ2xlLmNvbQ0KPiCzrcvNOiBjaGVueWFvIChGKSA8Y2hlbnlhbzExQGh1YXdlaS5jb20+
+OyBTb25neGlhb3dlaSAoS2lyaW5fRFJWKQ0KPiA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4N
+Cj4g1vfM4jogW1BBVENIIHY1IDEvMV0gUENJOiBraXJpbjogQWRkIE1TSSBzdXBwb3J0DQo+IA0K
+PiBBZGQgc3VwcG9ydCBmb3IgTVNJLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogWGlhb3dlaSBTb25n
+IDxzb25neGlhb3dlaUBoaXNpbGljb24uY29tPg0KPiAtLS0NCj4gIGRyaXZlcnMvcGNpL2R3Yy9w
+Y2llLWtpcmluLmMgfCAyOCArKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ICAxIGZpbGUg
+Y2hhbmdlZCwgMjggaW5zZXJ0aW9ucygrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNp
+L2R3Yy9wY2llLWtpcmluLmMgYi9kcml2ZXJzL3BjaS9kd2MvcGNpZS1raXJpbi5jIGluZGV4DQo+
+IGQyOTcwYTAwOWViNS4uNjk5NzI3NmViNjljIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3BjaS9k
+d2MvcGNpZS1raXJpbi5jDQo+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2llLWtpcmluLmMNCj4g
+QEAgLTQzMCw2ICs0MzAsOSBAQCBzdGF0aWMgaW50IGtpcmluX3BjaWVfaG9zdF9pbml0KHN0cnVj
+dCBwY2llX3BvcnQgKnBwKQ0KPiB7DQo+ICAJa2lyaW5fcGNpZV9lc3RhYmxpc2hfbGluayhwcCk7
+DQo+IA0KPiArCWlmIChJU19FTkFCTEVEKENPTkZJR19QQ0lfTVNJKSkNCj4gKwkJZHdfcGNpZV9t
+c2lfaW5pdChwcCk7DQo+ICsNCj4gIAlyZXR1cm4gMDsNCj4gIH0NCj4gDQo+IEBAIC00NDUsOSAr
+NDQ4LDM0IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgZHdfcGNpZV9ob3N0X29wcw0KPiBraXJpbl9w
+Y2llX2hvc3Rfb3BzID0gew0KPiAgCS5ob3N0X2luaXQgPSBraXJpbl9wY2llX2hvc3RfaW5pdCwN
+Cj4gIH07DQo+IA0KPiArc3RhdGljIGludCBraXJpbl9wY2llX2FkZF9tc2koc3RydWN0IGR3X3Bj
+aWUgKnBjaSwNCj4gKwkJCQlzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQ0KPiArew0KPiAr
+CWludCByZXQgPSAwOw0KPiArDQo+ICsJaWYgKElTX0VOQUJMRUQoQ09ORklHX1BDSV9NU0kpKSB7
+DQo+ICsJCXJldCA9IHBsYXRmb3JtX2dldF9pcnEocGRldiwgMCk7DQo+ICsJCWlmIChyZXQgPCAw
+KSB7DQo+ICsJCQlkZXZfZXJyKCZwZGV2LT5kZXYsDQo+ICsJCQkJImZhaWxlZCB0byBnZXQgTVNJ
+IElSUSAoJWQpXG4iLCByZXQpOw0KPiArCQkJcmV0dXJuIHJldDsNCj4gKwkJfQ0KPiArDQo+ICsJ
+CXBjaS0+cHAubXNpX2lycSA9IHJldDsNCj4gKwl9DQo+ICsNCj4gKwlyZXR1cm4gcmV0Ow0KPiAr
+fQ0KPiArDQo+ICBzdGF0aWMgaW50IF9faW5pdCBraXJpbl9hZGRfcGNpZV9wb3J0KHN0cnVjdCBk
+d19wY2llICpwY2ksDQo+ICAJCQkJICAgICAgc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldikg
+IHsNCj4gKwlpbnQgcmV0Ow0KPiArDQo+ICsJcmV0ID0ga2lyaW5fcGNpZV9hZGRfbXNpKHBjaSwg
+cGRldik7DQo+ICsJaWYgKHJldCkNCj4gKwkJcmV0dXJuIHJldDsNCj4gKw0KPiAgCXBjaS0+cHAu
+b3BzID0gJmtpcmluX3BjaWVfaG9zdF9vcHM7DQo+IA0KPiAgCXJldHVybiBkd19wY2llX2hvc3Rf
+aW5pdCgmcGNpLT5wcCk7DQo+IC0tDQo+IDIuMTEuR0lUDQoNCg==
