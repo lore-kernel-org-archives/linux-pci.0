@@ -1,85 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36940 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754509AbeGHDqa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 7 Jul 2018 23:46:30 -0400
-Date: Sat, 7 Jul 2018 22:46:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Nicholas Mc Guire <hofrat@osadl.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Marek Vasut <marek.vasut@gmail.com>
-Subject: [GIT PULL] PCI fixes for v4.18
-Message-ID: <20180708034627.GA90792@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+ robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+ gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com, bhelgaas@google.com,
+ hch@lst.de
+Subject: [PATCH 3/7 v6] iommu/of: support iommu configuration for fsl-mc
+ devices
+Date: Mon,  9 Jul 2018 16:48:19 +0530
+Message-Id: <1531135103-10699-4-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
+References: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
+ linux-pci@vger.kernel.org, frowand.list@gmail.com,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+With of_pci_map_rid available for all the busses, use the function
+for configuration of devices on fsl-mc bus
 
-PCI fixes:
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+---
+ drivers/iommu/of_iommu.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-  - Fix a use-after-free in the endpoint code (Dan Carpenter) 
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 811e160..284474d 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -24,6 +24,7 @@
+ #include <linux/of_iommu.h>
+ #include <linux/of_pci.h>
+ #include <linux/slab.h>
++#include <linux/fsl/mc.h>
+ 
+ #define NO_IOMMU	1
+ 
+@@ -159,6 +160,23 @@ static int of_pci_iommu_init(struct pci_dev *pdev, u16 alias, void *data)
+ 	return err;
+ }
+ 
++static int of_fsl_mc_iommu_init(struct fsl_mc_device *mc_dev,
++				struct device_node *master_np)
++{
++	struct of_phandle_args iommu_spec = { .args_count = 1 };
++	int err;
++
++	err = of_map_rid(master_np, mc_dev->icid, "iommu-map",
++			 "iommu-map-mask", &iommu_spec.np,
++			 iommu_spec.args);
++	if (err)
++		return err == -ENODEV ? NO_IOMMU : err;
++
++	err = of_iommu_xlate(&mc_dev->dev, &iommu_spec);
++	of_node_put(iommu_spec.np);
++	return err;
++}
++
+ const struct iommu_ops *of_iommu_configure(struct device *dev,
+ 					   struct device_node *master_np)
+ {
+@@ -190,6 +208,8 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
+ 
+ 		err = pci_for_each_dma_alias(to_pci_dev(dev),
+ 					     of_pci_iommu_init, &info);
++	} else if (dev_is_fsl_mc(dev)) {
++		err = of_fsl_mc_iommu_init(to_fsl_mc_device(dev), master_np);
+ 	} else {
+ 		struct of_phandle_args iommu_spec;
+ 		int idx = 0;
+-- 
+1.9.1
 
-  - Stop defaulting CONFIG_PCIE_DW_PLAT_HOST to yes (Geert Uytterhoeven)
 
-  - Fix an nfp regression caused by a change in how we limit the number of
-    VFs we can enable (Jakub Kicinski)
-
-  - Fix failure path cleanup issues in the new R-Car gen3 PHY support
-    (Marek Vasut)
-
-  - Fix leaks of OF nodes in faraday, xilinx-nwl, xilinx (Nicholas
-    Mc Guire)
-
-
-The following changes since commit 925d31668d5b6c9849c50167f31f9b5cf9eec892:
-
-  PCI: controller: Move PCI_DOMAINS selection to arch Kconfig (2018-06-26 15:37:37 -0500)
-
-are available in the Git repository at:
-
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.18-fixes-2
-
-for you to fetch changes up to 83235822b8b4fe47ecbd6b6bcbcc902860ac00fc:
-
-  nfp: stop limiting VFs to 0 (2018-06-29 15:09:00 -0500)
-
-----------------------------------------------------------------
-pci-v4.18-fixes-2
-
-----------------------------------------------------------------
-Dan Carpenter (1):
-      PCI: endpoint: Use after free in pci_epf_unregister_driver()
-
-Geert Uytterhoeven (1):
-      PCI: controller: dwc: Do not let PCIE_DW_PLAT_HOST default to yes
-
-Jakub Kicinski (2):
-      PCI/IOV: Reset total_VFs limit after detaching PF driver
-      nfp: stop limiting VFs to 0
-
-Marek Vasut (2):
-      PCI: rcar: Shut the PHY down in failpath
-      PCI: rcar: Clean up PHY init on failure
-
-Nicholas Mc Guire (3):
-      PCI: xilinx: Add missing of_node_put()
-      PCI: xilinx-nwl: Add missing of_node_put()
-      PCI: faraday: Add missing of_node_put()
-
- drivers/net/ethernet/netronome/nfp/nfp_main.c |  6 +-----
- drivers/pci/controller/dwc/Kconfig            |  1 -
- drivers/pci/controller/pci-ftpci100.c         |  2 ++
- drivers/pci/controller/pcie-rcar.c            | 16 +++++++++++++---
- drivers/pci/controller/pcie-xilinx-nwl.c      |  2 +-
- drivers/pci/controller/pcie-xilinx.c          |  1 +
- drivers/pci/endpoint/pci-epf-core.c           |  4 ++--
- drivers/pci/iov.c                             | 16 ++++++++++++++++
- drivers/pci/pci-driver.c                      |  1 +
- drivers/pci/pci.h                             |  4 ++++
- 10 files changed, 41 insertions(+), 12 deletions(-)
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
