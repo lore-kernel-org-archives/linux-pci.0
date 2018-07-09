@@ -1,48 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58356 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727071AbeGaSSg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jul 2018 14:18:36 -0400
-Date: Tue, 31 Jul 2018 11:37:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hari Vyas <hari.vyas@broadcom.com>
-Cc: bhelgaas@google.com, benh@kernel.crashing.org,
-        linux-pci@vger.kernel.org, ray.jui@broadcom.com
-Subject: Re: [PATCH v3] PCI: Data corruption happening due to race condition
-Message-ID: <20180731163727.GK45322@bhelgaas-glaptop.roam.corp.google.com>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+Return-Path: <SRS0=JrVV=JZ=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=JrVV=JZ=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: rjwysocki@gmail.com
+In-Reply-To: <CAFgQCTvGJVBdGLz0R74jO3f1nY3aWprGoADUXzw4E6jxOxWHBg@mail.gmail.com>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
+ <6281446.GoJLz6Hq6C@aspire.rjw.lan> <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
+ <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com>
+ <20180706083603.GA9063@wunner.de> <CAJZ5v0j6+m8NGMneG45tF9L1s6ahtFo91wPCO=3YOTEyAOL+VQ@mail.gmail.com>
+ <CAFgQCTugu5XO06_xXb4ihkdfGJxtFX0813g2J-Jk2JeYtPP1vA@mail.gmail.com>
+ <CAFgQCTsCjkDWJsNog_sTnS-ZaZ87fMFpKq1ekVSUG4MDs6K_jw@mail.gmail.com>
+ <CAJZ5v0gxJ9LJ328WbgPrZCV-0SEiO31trsTSYYS8L95P4kfkbA@mail.gmail.com>
+ <CAFgQCTvYwjKtx+AQf-kQjTsJMPRz48vgJ__jqNpwZuayG21oQw@mail.gmail.com>
+ <CAJZ5v0gSo-jFO0h+aLkeyGGxRL+tdsRtGi0WFhhGQbZvezJmkA@mail.gmail.com> <CAFgQCTvGJVBdGLz0R74jO3f1nY3aWprGoADUXzw4E6jxOxWHBg@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Mon, 9 Jul 2018 10:58:13 +0200
+Message-ID: <CAJZ5v0hMjoEy6Fe1Rcc1Uq_wQnDCAYYkEv4R024h0iq5krSiMQ@mail.gmail.com>
+Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
+ ordering in device_kset
+To: Pingfan Liu <kernelfans@gmail.com>
+Cc: Rafael Wysocki <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+	Linux PCI <linux-pci@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Linux PM <linux-pm@vger.kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 03, 2018 at 02:35:40PM +0530, Hari Vyas wrote:
-> Changes in v3:
-> 	As per review comments from Lukas Wunner <lukas@wunner.de>,
-> 	squashed 3 commits to single commit. Without this build breaks.
-> 	Also clubbed set and clear function for is_added bits to a
-> 	single assign function. This optimizes code and reduce LoC.
-> 	Removed one wrongly added blank line in pci.c
-> 	 
-> Changes in v2:
->         To avoid race condition while updating is_added and is_busmaster
->         bits, is_added is moved to a private flag variable.
->         is_added updation is handled in atomic manner also.
-> 
-> Hari Vyas (1):
->   PCI: Data corruption happening due to race condition
-> 
->  arch/powerpc/kernel/pci-common.c          |  4 +++-
->  arch/powerpc/platforms/powernv/pci-ioda.c |  3 ++-
->  arch/powerpc/platforms/pseries/setup.c    |  3 ++-
->  drivers/pci/bus.c                         |  6 +++---
->  drivers/pci/hotplug/acpiphp_glue.c        |  2 +-
->  drivers/pci/pci.h                         | 11 +++++++++++
->  drivers/pci/probe.c                       |  4 ++--
->  drivers/pci/remove.c                      |  5 +++--
->  include/linux/pci.h                       |  1 -
->  9 files changed, 27 insertions(+), 12 deletions(-)
+On Mon, Jul 9, 2018 at 10:40 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
+> On Mon, Jul 9, 2018 at 3:48 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
+>>
+>> On Mon, Jul 9, 2018 at 8:48 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
+>> > On Sun, Jul 8, 2018 at 4:25 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
 
-Applied with Lukas' reviewed-by and Michael's ack to for-linus for v4.18,
-thanks!
+[cut]
+
+>>
+>> I simply think that there should be one way to iterate over devices
+>> for both system-wide PM and shutdown.
+>>
+>> The reason why it is not like that today is because of the development
+>> history, but if it doesn't work and we want to fix it, let's just
+>> consolidate all of that.
+>>
+>> Now, system-wide suspend resume sometimes iterates the list in the
+>> reverse order which would be hard without having a list, wouldn't it?
+>>
+> Yes, it would be hard without having a list. I just thought to use
+> device tree info to build up a shadowed list, and rebuild the list
+> until there is new device_link_add() operation. For
+> device_add/_remove(), it can modify the shadowed list directly.
+
+Right, and that's the idea of dpm_list, generally speaking: It
+represents one of the (possibly many) orders in which devices can be
+suspended (or shut down) based on the information coming from the
+device hierarchy and device links.
+
+So it appears straightforward (even though it may be complicated
+because of the build-time dependencies) to start using dpm_list for
+shutdown too - and to ensure that it is properly maintained
+everywhere.
+
+Thanks,
+Rafael
