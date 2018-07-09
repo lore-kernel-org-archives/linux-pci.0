@@ -1,115 +1,115 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 23 Jul 2018 21:16:02 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sinan Kaya <Okaya@kernel.org>
-Subject: Re: [PATCH v2 2/2] PCI: NVMe device specific reset quirk
-Message-ID: <20180723211602.2d85d28a@t450s.home>
-In-Reply-To: <CAK9iUCPG-H3vWjiEnjAgr_nWEf=0Sn+AvRt68_Sg16Zw8TobRg@mail.gmail.com>
-References: <20180724000944.7671.64284.stgit@gimli.home>
- <20180724001310.7671.41243.stgit@gimli.home>
- <abc86e6b-7df5-a84c-7e98-107c605812c6@kernel.org>
- <20180723195711.0a3c9301@t450s.home>
- <CAK9iUCPG-H3vWjiEnjAgr_nWEf=0Sn+AvRt68_Sg16Zw8TobRg@mail.gmail.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:58980 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933054AbeGIXpz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2018 19:45:55 -0400
+From: Thomas Tai <thomas.tai@oracle.com>
+To: thomas.tai@oracle.com, bhelgaas@google.com, poza@codeaurora.org
+Cc: linux-pci@vger.kernel.org
+Subject: [PATCH] PCI/AER: fix use-after-free in pcie_do_fatal_recovery
+Date: Mon,  9 Jul 2018 17:45:52 -0600
+Message-Id: <1531179952-11060-1-git-send-email-thomas.tai@oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 23 Jul 2018 19:20:41 -0700
-Sinan Kaya <Okaya@kernel.org> wrote:
+When an fatal error is recevied by a non-bridge device,
+the device is removed from the pci bus and the device structure
+is freed by pci_stop_and_remove_bus_device(). The freed device
+structure is used in the subsequence pci_info() to printout the
+message. It causes a corrupt printout. If slub_debug=FZP is used,
+it will cause following protection fault after a fatal error is
+received.
 
-> On 7/23/18, Alex Williamson <alex.williamson@redhat.com> wrote:
-> > On Mon, 23 Jul 2018 17:40:02 -0700
-> > Sinan Kaya <okaya@kernel.org> wrote:
-> >  
-> >> On 7/23/2018 5:13 PM, Alex Williamson wrote:  
-> >> > + * The NVMe specification requires that controllers support PCIe FLR,
-> >> > but
-> >> > + * but some Samsung SM961/PM961 controllers fail to recover after FLR
-> >> > (-1
-> >> > + * config space) unless the device is quiesced prior to FLR.  
-> >>
-> >> Does disabling the memory bit in PCI config space as part of the FLR
-> >> reset function help? (like the very first thing)  
-> >
-> > No, it does not.  I modified this to only clear PCI_COMMAND_MEMORY and
-> > call pcie_flr(), the Samsung controller dies just as it did previously.
-> >  
-> >> Can we do that in the pcie_flr() function to cover other endpoint types
-> >> that might be pushing traffic while code is trying to do a reset?  
-> >
-> > Do you mean PCI_COMMAND_MASTER rather than PCI_COMMAND_MEMORY?  
-> 
-> Yes
-> 
-> >  I tried
-> > that too, it doesn't work either.  I'm not really sure the theory
-> > behind clearing memory, clearing busmaster to stop DMA seems like a
-> > sane thing to do, but doesn't help here.  
-> 
-> Let me explain what I guessed. You might be able to fill in the blanks
-> where I am completely off.
-> 
-> We do vfio initiated flr reset immediately following guest machine
-> shutdown. The card could be fully enabled and pushing traffic to the
-> system at this moment.
-> 
-> I don't know if vfio does any device disable or not.
+general protection fault: 0000 [#1] SMP PTI
+CPU: 104 PID: 1077 Comm: kworker/104:1 Not tainted 4.18.0-rc1ttai #5
+Hardware name: Oracle Corporation ORACLE SERVER X5-4/ASSY,MB WITH TRAY,
+BIOS 36030500 11/16/2016
+Workqueue: events aer_isr
+ RIP: 0010:__dev_printk+0x2e/0x90
+ Code: 00 55 49 89 d1 48 89 e5 53 48 89 fb 48 83 ec 18 48 85 f6
+ 74 5f 4c 8b 46 50 4d 85 c0 74 2b 48 8b 86 88 00 00 00 48 85 c0
+ 74 25 <48> 8b 08 0f be 7b 01 48 c7 c2 83 d4 71 99 31 c0 83 ef
+ 30 e8 4a ff 
+ RSP: 0018:ffffb6b88fa57cf8 EFLAGS: 00010202
+ RAX: 6b6b6b6b6b6b6b6b RBX: ffffffff996ba720 RCX: 0000000000000000
+ RDX: ffffb6b88fa57d28 RSI: ffff8c4d7af94128 RDI: ffffffff996ba720
+ RBP: ffffb6b88fa57d18 R08: 6b6b6b6b6b6b6b6b R09: ffffb6b88fa57d28
+ R10: ffffffff99baca80 R11: 0000000000000000 R12: ffff8c4d7ae95990
+ R13: ffff8c2d7a840008 R14: ffff8c4d7af94088 R15: ffff8c4d7af90008
+ FS:  0000000000000000(0000) GS:ffff8c2d7fc00000(0000) knlGS:0000000000000000
+ CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ CR2: 00007f22c0839000 CR3: 000000136bc0a001 CR4: 00000000001606e0
+ DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+ DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+ Call Trace:
+  ? pci_bus_add_device+0x4f/0xa0
+  _dev_info+0x6c/0x90
+  pcie_do_fatal_recovery+0x1d5/0x230
+  aer_isr+0x3e5/0x950
+  ? add_timer_on+0xcc/0x160
+  process_one_work+0x168/0x370
+  worker_thread+0x4f/0x3d0
+  kthread+0x105/0x140
+  ? max_active_store+0x80/0x80
+  ? kthread_bind+0x20/0x20
+  ret_from_fork+0x35/0x40
 
-Yes, pci_clear_master() is the very first thing we do in
-vfio_pci_disable(), well before we try to reset the device.
+To fix this issue, the driver and device name is stored in a
+variable before freeing the device to avoid the use-after-free
+problem.
+
+Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
+---
+ drivers/pci/pcie/err.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index f7ce0cb..66e16de 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -287,6 +287,13 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+ 	struct pci_bus *parent;
+ 	struct pci_dev *pdev, *temp;
+ 	pci_ers_result_t result;
++	const char *driver_str;
++	const char *name_str;
++	u8 hdr_type = dev->hdr_type;
++
++	/* copy the device driver name and device name for printing purpose */
++	driver_str = kstrdup(dev_driver_string(&dev->dev), GFP_KERNEL);
++	name_str = kstrdup(dev_name(&dev->dev), GFP_KERNEL);
  
-> FLR is supposed to reset the endpoint but endpoint doesn't recover per
-> your report.
-> 
-> Having vendor specific reset routines for PCIE endpoints defeats the
-> purpose of FLR.
-> 
-> Since the adapter is fully functional, i suggested turning off bus
-> master and memory enable bits to stop endpoint from sending packets.
-> 
-> But, this is not helping either.
-> 
-> Those sleep statements looked very fragile to be honest.
-> 
-> I was curious if there is something else that we could do for other endpoints.
-> 
-> No objections otherwise.
-
-I certainly agree that it would be nice if FLR was more robust on these
-devices, but if all devices behaved within the specs we wouldn't have
-these quirks to start with ;)  Just as you're suggesting maybe we could
-disable busmaster before FLR, which is reasonable but doesn't work
-here, I'm basically moving that to a class specific action, quiesce the
-controller at the NVMe level rather than PCI level.  Essentially that's
-why I thought it reasonable to apply to all NVMe class devices rather
-than create just a quirk that delays after FLR for Intel and another
-that disables the NVMe controller just for Samsung.  Once I decide to
-apply to the whole class, then I need to bring in the device specific
-knowledge already found in the native nvme driver for the delay between
-clearing the enable bit and checking the ready status bit.  If it's
-fragile, then the bare metal nvme driver has the same frailty.  For the
-delay I added, all I can say is that it works for me and improves the
-usability of the device for this purpose.  I know that 200ms is too
-low, ISTR the issue was fixed at 210-220ms, so 250ms provides some
-headroom and I've not seen any issues there.  If we want to make it 500
-or 1000ms, that's fine by me, I expect it'd work, it's just unnecessary
-until we find devices that need longer delays.  Thanks,
-
-Alex
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+ 		udev = dev;
+@@ -309,7 +316,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+ 	result = reset_link(udev, service);
+ 
+ 	if ((service == PCIE_PORT_SERVICE_AER) &&
+-	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
++	    (hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
+ 		/*
+ 		 * If the error is reported by a bridge, we think this error
+ 		 * is related to the downstream link of the bridge, so we
+@@ -322,13 +329,18 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+ 	if (result == PCI_ERS_RESULT_RECOVERED) {
+ 		if (pcie_wait_for_link(udev, true))
+ 			pci_rescan_bus(udev->bus);
+-		pci_info(dev, "Device recovery from fatal error successful\n");
++		pr_info("%s %s: Device recovery from fatal error successful\n",
++			driver_str, name_str);
+ 	} else {
+ 		pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+-		pci_info(dev, "Device recovery from fatal error failed\n");
++		pr_info("%s %s: Device recovery from fatal error failed\n",
++			driver_str, name_str);
+ 	}
+ 
+ 	pci_unlock_rescan_remove();
++
++	kfree(driver_str);
++	kfree(name_str);
+ }
+ 
+ /**
+-- 
+1.8.3.1
