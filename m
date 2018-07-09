@@ -1,140 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45862 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754548AbeGJDLH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 9 Jul 2018 23:11:07 -0400
-Date: Tue, 10 Jul 2018 11:10:55 +0800
-From: Baoquan He <bhe@redhat.com>
-To: Ye Xiaolong <xiaolong.ye@intel.com>
-Cc: kbuild test robot <lkp@intel.com>, nicolas.pitre@linaro.org,
-        brijesh.singh@amd.com, thomas.lendacky@amd.com, airlied@linux.ie,
-        linux-pci@vger.kernel.org, richard.weiyang@gmail.com,
-        keith.busch@intel.com, jcmvbkbc@gmail.com,
-        baiyaowei@cmss.chinamobile.com, frowand.list@gmail.com,
-        tglx@linutronix.de, lorenzo.pieralisi@arm.com,
-        sthemmin@microsoft.com, linux-nvdimm@lists.01.org,
-        patrik.r.jakobsson@gmail.com, andy.shevchenko@gmail.com,
-        linux-input@vger.kernel.org, gustavo@padovan.org, bp@suse.de,
-        dyoung@redhat.com, vgoyal@redhat.com, ebiederm@xmission.com,
-        devicetree@vger.kernel.org, haiyangz@microsoft.com,
-        maarten.lankhorst@linux.intel.com, josh@joshtriplett.org,
-        jglisse@redhat.com, robh+dt@kernel.org, seanpaul@chromium.org,
-        bhelgaas@google.com, dan.j.williams@intel.com, yinghai@kernel.org,
-        jonathan.derrick@intel.com, chris@zankel.net, monstr@monstr.eu,
-        linux-parisc@vger.kernel.org, gregkh@linuxfoundation.org,
-        dmitry.torokhov@gmail.com, kexec@lists.infradead.org,
-        linux-kernel@vger.kernel.org, kbuild-all@01.org,
-        devel@linuxdriverproject.org, akpm@linux-foundation.org,
-        fengguang.wu@intel.com, linuxppc-dev@lists.ozlabs.org,
-        davem@davemloft.net
-Subject: Re: [kbuild-all] [PATCH v6 2/4] resource: Use list_head to link
- sibling resource
-Message-ID: <20180710031055.GC1969@MiWiFi-R3L-srv>
-References: <20180704041038.8190-3-bhe@redhat.com>
- <201807042347.hfDcKxmG%fengguang.wu@intel.com>
- <20180708025946.GI3047@MiWiFi-R3L-srv>
- <20180710005927.GG10005@yexl-desktop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180710005927.GG10005@yexl-desktop>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:56668 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933692AbeGIRm4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2018 13:42:56 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v9 00/12] Add MSI-X support on pcitest tool
+Date: Mon,  9 Jul 2018 18:42:38 +0100
+Message-Id: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/10/18 at 08:59am, Ye Xiaolong wrote:
-> Hi,
-> 
-> On 07/08, Baoquan He wrote:
-> >Hi,
-> >
-> >On 07/05/18 at 01:00am, kbuild test robot wrote:
-> >> Hi Baoquan,
-> >> 
-> >> I love your patch! Yet something to improve:
-> >> 
-> >> [auto build test ERROR on linus/master]
-> >> [also build test ERROR on v4.18-rc3 next-20180704]
-> >> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> >
-> >Thanks for telling. 
-> >
-> >I cloned 0day-ci/linut to my local pc.
-> >https://github.com/0day-ci/linux.git
-> >
-> >However, I didn't find below branch. And tried to open it in web
-> >broswer, also failed.
-> >
-> 
-> Sorry for the inconvenience, 0day bot didn't push the branch to github successfully,
-> Just push it manually, you can have a try again.
+Patch series made against Lorenzo's master branch.
 
-Thanks, Xiaolong, I have applied them on top of linux-next/master, and
-copy the config file attached, and run the command to reproduce as
-suggested. Now I have fixed all those issues reported, will repost.
+Fix EP link notification implementation.
 
-> 
-> >
-> >> url:    https://github.com/0day-ci/linux/commits/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180704-121402
-> >> config: mips-rb532_defconfig (attached as .config)
-> >> compiler: mipsel-linux-gnu-gcc (Debian 7.2.0-11) 7.2.0
-> >> reproduce:
-> >>         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-> >>         chmod +x ~/bin/make.cross
-> >>         # save the attached .config to linux build tree
-> >>         GCC_VERSION=7.2.0 make.cross ARCH=mips 
-> >
-> >I did find a old one which is for the old version 5 post.
-> >
-> >[bhe@linux]$ git remote -v
-> >0day-ci	https://github.com/0day-ci/linux.git (fetch)
-> >0day-ci	https://github.com/0day-ci/linux.git (push)
-> >[bhe@dhcp-128-28 linux]$ git branch -a| grep Baoquan| grep resource
-> >  remotes/0day-ci/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180612-113600
-> >
-> >Could you help have a look at this?
-> >
-> >Thanks
-> >Baoquan
-> >
-> >> 
-> >> All error/warnings (new ones prefixed by >>):
-> >> 
-> >> >> arch/mips/pci/pci-rc32434.c:57:11: error: initialization from incompatible pointer type [-Werror=incompatible-pointer-types]
-> >>      .child = &rc32434_res_pci_mem2
-> >>               ^
-> >>    arch/mips/pci/pci-rc32434.c:57:11: note: (near initialization for 'rc32434_res_pci_mem1.child.next')
-> >> >> arch/mips/pci/pci-rc32434.c:51:47: warning: missing braces around initializer [-Wmissing-braces]
-> >>     static struct resource rc32434_res_pci_mem1 = {
-> >>                                                   ^
-> >>    arch/mips/pci/pci-rc32434.c:60:47: warning: missing braces around initializer [-Wmissing-braces]
-> >>     static struct resource rc32434_res_pci_mem2 = {
-> >>                                                   ^
-> >>    cc1: some warnings being treated as errors
-> >> 
-> >> vim +57 arch/mips/pci/pci-rc32434.c
-> >> 
-> >> 73b4390f Ralf Baechle 2008-07-16  50  
-> >> 73b4390f Ralf Baechle 2008-07-16 @51  static struct resource rc32434_res_pci_mem1 = {
-> >> 73b4390f Ralf Baechle 2008-07-16  52  	.name = "PCI MEM1",
-> >> 73b4390f Ralf Baechle 2008-07-16  53  	.start = 0x50000000,
-> >> 73b4390f Ralf Baechle 2008-07-16  54  	.end = 0x5FFFFFFF,
-> >> 73b4390f Ralf Baechle 2008-07-16  55  	.flags = IORESOURCE_MEM,
-> >> 73b4390f Ralf Baechle 2008-07-16  56  	.sibling = NULL,
-> >> 73b4390f Ralf Baechle 2008-07-16 @57  	.child = &rc32434_res_pci_mem2
-> >> 73b4390f Ralf Baechle 2008-07-16  58  };
-> >> 73b4390f Ralf Baechle 2008-07-16  59  
-> >> 
-> >> :::::: The code at line 57 was first introduced by commit
-> >> :::::: 73b4390fb23456964201abda79f1210fe337d01a [MIPS] Routerboard 532: Support for base system
-> >> 
-> >> :::::: TO: Ralf Baechle <ralf@linux-mips.org>
-> >> :::::: CC: Ralf Baechle <ralf@linux-mips.org>
-> >> 
-> >> ---
-> >> 0-DAY kernel test infrastructure                Open Source Technology Center
-> >> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-> >
-> >
-> >_______________________________________________
-> >kbuild-all mailing list
-> >kbuild-all@lists.01.org
-> >https://lists.01.org/mailman/listinfo/kbuild-all
+Add MSI-X support on pcitest tool.
+
+Add new callbacks methods and handlers to trigger the MSI-X interrupts
+on the EP DesignWare IP driver.
+
+Allow to set/get MSI-X EP maximum capability number.
+
+Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
+
+Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
+
+Update the pcitest.sh script to support MSI-X feature tests.
+
+Gustavo Pimentel (12):
+  PCI: dwc: Fix EP link notification implementation
+  PCI: endpoint: Add MSI-X interfaces
+  PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
+  PCI: dwc: Add MSI-X callbacks handler
+  PCI: dwc: Rework MSI callbacks handler
+  PCI: dwc: Add legacy interrupt callback handler
+  pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
+  pci-epf-test/pci_endpoint_test: Use irq_type module parameter
+  pci-epf-test/pci_endpoint_test: Add MSI-X support
+  pci_endpoint_test: Add 2 ioctl commands
+  tools: PCI: Add MSI-X support
+  PCI: endpoint: Add MSI set maximum restriction
+
+ Documentation/PCI/endpoint/pci-test-function.txt  |   8 +-
+ Documentation/ioctl/ioctl-number.txt              |   1 +
+ Documentation/misc-devices/pci-endpoint-test.txt  |   6 +
+ drivers/misc/pci_endpoint_test.c                  | 260 ++++++++++++++++------
+ drivers/pci/controller/dwc/pci-dra7xx.c           |   2 +-
+ drivers/pci/controller/dwc/pcie-artpec6.c         |   2 +-
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 217 ++++++++++++++++--
+ drivers/pci/controller/dwc/pcie-designware-plat.c |  11 +-
+ drivers/pci/controller/dwc/pcie-designware.h      |  31 ++-
+ drivers/pci/controller/pcie-cadence-ep.c          |   3 +-
+ drivers/pci/controller/pcie-rockchip-ep.c         |   2 +-
+ drivers/pci/endpoint/functions/pci-epf-test.c     |  86 +++++--
+ drivers/pci/endpoint/pci-ep-cfs.c                 |  24 ++
+ drivers/pci/endpoint/pci-epc-core.c               |  68 +++++-
+ include/linux/pci-epc.h                           |  16 +-
+ include/linux/pci-epf.h                           |   1 +
+ include/uapi/linux/pcitest.h                      |   3 +
+ tools/pci/pcitest.c                               |  51 ++++-
+ tools/pci/pcitest.sh                              |  15 ++
+ 19 files changed, 664 insertions(+), 143 deletions(-)
+
+-- 
+2.7.4
