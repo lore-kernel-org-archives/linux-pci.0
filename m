@@ -1,236 +1,192 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34242 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725763AbeGaELi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jul 2018 00:11:38 -0400
-Date: Mon, 30 Jul 2018 21:33:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Moshe Shemesh <moshes20.il@gmail.com>,
-        Jiri Pirko <jiri@resnulli.us>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Eran Ben Elisha <eranbe@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [net-next 10/16] net/mlx5: Support PCIe buffer congestion
- handling via Devlink
-Message-ID: <20180731023339.GG45322@bhelgaas-glaptop.roam.corp.google.com>
-References: <98071d31-bf99-d713-7fd1-4b1cc156377e@mellanox.com>
- <CAKgT0UfG-4zuKArCbSLkZoCKs2-t6r9U4qQPPUvBk-e_5_3FCg@mail.gmail.com>
- <20180725174359.6952c937@cakuba.netronome.com>
- <20180726071433.GA2222@nanopsycho>
- <CAKgT0UeGOhjR756fMPx_k_o8Qq5x4waKMcdmtR3pLAT=xRHMgA@mail.gmail.com>
- <20180728160608.GI173328@bhelgaas-glaptop.roam.corp.google.com>
- <CALBF4T81ArTWR_i6SogC4qe8xPf3WYvdrSkypXt65wOf_upopg@mail.gmail.com>
- <CAKgT0UfkBQKqy87BcnQvfzrbonR5rm9cd3Q2dzsyR04vY-+FWg@mail.gmail.com>
- <20180730140727.GJ173328@bhelgaas-glaptop.roam.corp.google.com>
- <CAKgT0UcbXT6EXt=zwoOzZ-wm7uS70wvm9xMcsoSf6OzuJsLxMQ@mail.gmail.com>
+Return-Path: <SRS0=qQet=JZ=oracle.com=james.puthukattukaran@kernel.org>
+Return-Path: <SRS0=qQet=JZ=oracle.com=james.puthukattukaran@kernel.org>
+Subject: [PATCH v14 1/1] Workaround for ACS related bug in certain IDT
+ switches
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <4117c119-c754-bf4e-544c-19cb6e239f38@oracle.com>
+Message-ID: <db975ca6-8676-d68b-4c8c-e4936b5cec3c@oracle.com>
+Date: Mon, 9 Jul 2018 11:31:25 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKgT0UcbXT6EXt=zwoOzZ-wm7uS70wvm9xMcsoSf6OzuJsLxMQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <4117c119-c754-bf4e-544c-19cb6e239f38@oracle.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 30, 2018 at 08:02:48AM -0700, Alexander Duyck wrote:
-> On Mon, Jul 30, 2018 at 7:07 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Sun, Jul 29, 2018 at 03:00:28PM -0700, Alexander Duyck wrote:
-> >> On Sun, Jul 29, 2018 at 2:23 AM, Moshe Shemesh <moshes20.il@gmail.com> wrote:
-> >> > On Sat, Jul 28, 2018 at 7:06 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >> >> On Thu, Jul 26, 2018 at 07:00:20AM -0700, Alexander Duyck wrote:
-> >> >> > On Thu, Jul 26, 2018 at 12:14 AM, Jiri Pirko <jiri@resnulli.us> wrote:
-> >> >> > > Thu, Jul 26, 2018 at 02:43:59AM CEST, jakub.kicinski@netronome.com
-> >> >> > > wrote:
-> >> >> > >>On Wed, 25 Jul 2018 08:23:26 -0700, Alexander Duyck wrote:
-> >> >> > >>> On Wed, Jul 25, 2018 at 5:31 AM, Eran Ben Elisha wrote:
-> >> >> > >>> > On 7/24/2018 10:51 PM, Jakub Kicinski wrote:
-> >> >> > >>> >>>> The devlink params haven't been upstream even for a full cycle
-> >> >> > >>> >>>> and
-> >> >> > >>> >>>> already you guys are starting to use them to configure standard
-> >> >> > >>> >>>> features like queuing.
-> >> >> > >>> >>>
-> >> >> > >>> >>> We developed the devlink params in order to support non-standard
-> >> >> > >>> >>> configuration only. And for non-standard, there are generic and
-> >> >> > >>> >>> vendor
-> >> >> > >>> >>> specific options.
-> >> >> > >>> >>
-> >> >> > >>> >> I thought it was developed for performing non-standard and
-> >> >> > >>> >> possibly
-> >> >> > >>> >> vendor specific configuration.  Look at DEVLINK_PARAM_GENERIC_*
-> >> >> > >>> >> for
-> >> >> > >>> >> examples of well justified generic options for which we have no
-> >> >> > >>> >> other API.  The vendor mlx4 options look fairly vendor specific
-> >> >> > >>> >> if you
-> >> >> > >>> >> ask me, too.
-> >> >> > >>> >>
-> >> >> > >>> >> Configuring queuing has an API.  The question is it acceptable to
-> >> >> > >>> >> enter
-> >> >> > >>> >> into the risky territory of controlling offloads via devlink
-> >> >> > >>> >> parameters
-> >> >> > >>> >> or would we rather make vendors take the time and effort to model
-> >> >> > >>> >> things to (a subset) of existing APIs.  The HW never fits the
-> >> >> > >>> >> APIs
-> >> >> > >>> >> perfectly.
-> >> >> > >>> >
-> >> >> > >>> > I understand what you meant here, I would like to highlight that
-> >> >> > >>> > this
-> >> >> > >>> > mechanism was not meant to handle SRIOV, Representors, etc.
-> >> >> > >>> > The vendor specific configuration suggested here is to handle a
-> >> >> > >>> > congestion
-> >> >> > >>> > state in Multi Host environment (which includes PF and multiple
-> >> >> > >>> > VFs per
-> >> >> > >>> > host), where one host is not aware to the other hosts, and each is
-> >> >> > >>> > running
-> >> >> > >>> > on its own pci/driver. It is a device working mode configuration.
-> >> >> > >>> >
-> >> >> > >>> > This  couldn't fit into any existing API, thus creating this
-> >> >> > >>> > vendor specific
-> >> >> > >>> > unique API is needed.
-> >> >> > >>>
-> >> >> > >>> If we are just going to start creating devlink interfaces in for
-> >> >> > >>> every
-> >> >> > >>> one-off option a device wants to add why did we even bother with
-> >> >> > >>> trying to prevent drivers from using sysfs? This just feels like we
-> >> >> > >>> are back to the same arguments we had back in the day with it.
-> >> >> > >>>
-> >> >> > >>> I feel like the bigger question here is if devlink is how we are
-> >> >> > >>> going
-> >> >> > >>> to deal with all PCIe related features going forward, or should we
-> >> >> > >>> start looking at creating a new interface/tool for PCI/PCIe related
-> >> >> > >>> features? My concern is that we have already had features such as
-> >> >> > >>> DMA
-> >> >> > >>> Coalescing that didn't really fit into anything and now we are
-> >> >> > >>> starting to see other things related to DMA and PCIe bus credits.
-> >> >> > >>> I'm
-> >> >> > >>> wondering if we shouldn't start looking at a tool/interface to
-> >> >> > >>> configure all the PCIe related features such as interrupts, error
-> >> >> > >>> reporting, DMA configuration, power management, etc. Maybe we could
-> >> >> > >>> even look at sharing it across subsystems and include things like
-> >> >> > >>> storage, graphics, and other subsystems in the conversation.
-> >> >> > >>
-> >> >> > >>Agreed, for actual PCIe configuration (i.e. not ECN marking) we do
-> >> >> > >> need
-> >> >> > >>to build up an API.  Sharing it across subsystems would be very cool!
-> >> >>
-> >> >> I read the thread (starting at [1], for anybody else coming in late)
-> >> >> and I see this has something to do with "configuring outbound PCIe
-> >> >> buffers", but I haven't seen the connection to PCIe protocol or
-> >> >> features, i.e., I can't connect this to anything in the PCIe spec.
-> >> >>
-> >> >> Can somebody help me understand how the PCI core is relevant?  If
-> >> >> there's some connection with a feature defined by PCIe, or if it
-> >> >> affects the PCIe transaction protocol somehow, I'm definitely
-> >> >> interested in this.  But if this only affects the data transferred
-> >> >> over PCIe, i.e., the data payloads of PCIe TLP packets, then I'm not
-> >> >> sure why the PCI core should care.
-> >> >
-> >> > As you wrote, this is not a PCIe feature  or affects the PCIe transaction
-> >> > protocol.
-> >> >
-> >> > Actually, due to hardware limitation in current device, we have enabled a
-> >> > workaround in hardware.
-> >> >
-> >> > This mode is proprietary and not relevant to other PCIe devices, thus is set
-> >> > using driver-specific parameter in devlink
-> >>
-> >> Essentially what this feature is doing is communicating the need for
-> >> PCIe back-pressure to the network fabric. So as the buffers on the
-> >> device start to fill because the device isn't able to get back PCIe
-> >> credits fast enough it will then start to send congestion
-> >> notifications to the network stack itself if I understand this
-> >> correctly.
-> >
-> > This sounds like a hook that allows the device to tell its driver
-> > about PCIe flow control credits, and the driver can pass that on to
-> > the network stack.  IIUC, that would be a device-specific feature
-> > outside the scope of the PCI core.
-> >
-> >> For now there are no major conflicts, but when we start getting into
-> >> stuff like PCIe DMA coalescing, and on a more general basis just PCIe
-> >> active state power management that is going to start making things
-> >> more complicated going forward.
-> >
-> > We do support ASPM already in the PCI core, and we do have the
-> > pci_disable_link_state() interface, which is currently the only way
-> > drivers can influence it.  There are several drivers that do their own
-> > ASPM configuration, but this is not safe because it's not coordinated
-> > with what the PCI core does.  If/when drivers need more control, we
-> > should enhance the PCI core interfaces.
-> 
-> This is kind of what I was getting at. It would be useful to have an
-> interface of some sort so that drivers get notified when a user is
-> making changes to configuration space and I don't know if anything
-> like that exists now.
+Check if the switch (if it exists) is an IDT type switch with this bug
+before attempting to read the vendor id. If so, call pci_idt_bus_quirk().
 
-You mean something like this?
+The pci_idt_bus_quirk() implements the workaround as described below.
+The IDT switch incorrectly flags an ACS source violation on a read config
+request to an end point device on the completion (IDT 89H32H8G3-YC,
+errata #36) even though the PCI Express spec states that completions are
+never affected by ACS source violation (PCIe Spec r4.0, sec 6.12.1.1). Here's
+the specific copy of the errata text
 
-  - driver registers a callback with PCI core
-  - user runs setpci, which writes PCI config space via sysfs
-  - kernel hook in pci_write_config() notices write and calls driver
-    callback
-  - driver callback receives config address and data written
-  - driver parses PCI capability lists to identify register
+"Item #36 - Downstream port applies ACS Source Validation to Completions
+Section 6.12.1.1 of the PCI Express Base Specification 3.1 states
+that completions are never affected
+by ACS Source Validation. However, completions received by a
+downstream port of the PCIe switch from a device that has not yet
+captured a PCIe bus number are incorrectly dropped by ACS source
+validation by the switch downstream port.
 
-Nothing like that exists today, and this is not what I had in mind by
-"enhance the PCI core interfaces".  I'm not sure what the utility of
-this is (but I'm not a networking guy by any means).
+Workaround: Issue a CfgWr1 to the downstream device before issuing
+the first CfgRd1 to the device.
+This allows the downstream device to capture its bus number; ACS
+source validation no longer stops
+completions from being forwarded by the downstream port. It has been
+observed that Microsoft Windows implements this workaround already;
+however, some versions of Linux and other operating systems may not. "
 
-I think it's a bad idea for drivers to directly write config space.
-It would be much better to provide a PCI core interface so we can
-implement things once and coordinate things that need to be
-coordinated.
+The suggested workaround by IDT is to issue a configuration write to the
+downstream device before issuing the first config read. This allows the
+downstream device to capture its bus number, thus avoiding the ACS
+violation on the completion. In order to make sure that the device is ready
+for config accesses, we do what is currently done in making config reads
+till it succeeds and then do the config write as specified by the errata.
+However, to avoid hitting the errata issue when doing config reads, we
+disable ACS SV around this process.
 
-> > I don't know what PCIe DMA coalescing means, so I can't comment on
-> > that.
-> 
-> There are devices, specifically network devices, that will hold off on
-> switching between either L0s or L1 and L0 by deferring DMA operations.
-> Basically the idea is supposed to be to hold off bringing the link up
-> for as long as possible in order to maximize power savings for the
-> ASPM state. This is something that has come up in the past, and I
-> don't know if there has been any interface determined for how to
-> handle this sort of configuration. Most of it occurs through MMIO.
+The patch does the following -
 
-The device can certainly delay L0s or L1 exit if it wants to.  If
-there are knobs to control this, e.g., how long it can defer a DMA, it
-makes sense that they would be device-specific and in MMIO space.  The
-PCI core can't be involved in that because in general it knows nothing
-about the contents of MMIO BARs.  Presumably those knobs would work
-within the framework of ASPM as defined by the PCIe spec, e.g., if we
-disable ASPM, the knobs would do nothing because there is no L0s or L1
-at all.
+1. Disable ACS source violation if enabled.
+2. Wait for config space access to become available by reading vendor id
+3. Do a config write to the end point (errata workaround)
+4. Enable ACS source validation (if it was enabled to begin with)
 
-That's not to say that device designers couldn't get together and
-define a common model for such knobs that puts them at well-known
-offsets in well-known BARs.  All I'm saying is that this sounds like
-it's currently outside the realm of the PCI specs and the PCI core.
+Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.h    |  5 ++++
+ drivers/pci/probe.c  | 17 +++++++++++++-
+ drivers/pci/quirks.c | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 86 insertions(+), 1 deletion(-)
 
-> >> I assume the devices we are talking about supporting this new feature
-> >> on either don't deal with ASPM or assume a quick turnaround to get out
-> >> of the lower power states? Otherwise that would definitely cause some
-> >> back-pressure buildups that would hurt performance.
-> >
-> > Devices can communicate the ASPM exit latency they can tolerate via
-> > the Device Capabilities register (PCIe r4.0, sec 76.5.3.3).  Linux
-> > should be configuring ASPM to respect those device requirements.
-> 
-> Right. But my point was something like ASPM will add extra complexity
-> to a feature such as what has been described here. My concern is that
-> I don't want us implementing stuff on a per-driver basis that is not
-> all that unique to the device. I don't really see the feature that was
-> described above as being something that will stay specific to this one
-> device for very long, especially if it provides added value. Basically
-> all it is doing is allowing exposing PCIe congestion management to
-> upper levels in the network stack. I don't even necessarily see it as
-> being networking specific as I would imagine there might be other
-> types of devices that could make use of knowing how many transactions
-> and such they could process at the same time.
-
-It sounds to me like you need a library that can be used by all the
-drivers that need this functionality.  Unless it's something
-documented in the PCIe specs so we can rely on a standard way of
-discovering and configuring things, I don't see how the PCI core can
-really be involved.
-
-Bjorn
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index c358e7a0..f638c06 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -225,6 +225,11 @@ enum pci_bar_type {
+ int pci_configure_extended_tags(struct pci_dev *dev, void *ign);
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+ 				int crs_timeout);
++int pci_idt_bus_quirk(struct pci_bus *bus, int devfn,
++				u32 *pl, int crs_timeout);
++bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn,
++				u32 *pl, int crs_timeout);
++
+ int pci_setup_device(struct pci_dev *dev);
+ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		    struct resource *res, unsigned int reg);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ac876e3..0b00d0e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2156,7 +2156,7 @@ static bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l,
+ 	return true;
+ }
+ 
+-bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
++bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+ 				int timeout)
+ {
+ 	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
+@@ -2172,6 +2172,21 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+ 
+ 	return true;
+ }
++
++bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
++					int timeout)
++{
++	struct pci_dev *bridge = bus->self;
++
++	/* Certain IDT switches have an issue where it improperly triggers
++	 * an ACS violation
++	 */
++	if (bridge && bridge->vendor == PCI_VENDOR_ID_IDT &&
++	    bridge->device == 0x80b5)
++		return pci_idt_bus_quirk(bus, devfn, l, timeout);
++
++	return pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
++}
+ EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
+ 
+ /*
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index f439de8..8299de8 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4753,3 +4753,68 @@ static void quirk_gpu_hda(struct pci_dev *hda)
+ 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
++
++/*
++ * The IDT switch incorrectly flags an ACS source violation on a read config
++ * request to an end point device on the completion (IDT 89H32H8G3-YC,
++ * errata #36) even though the PCI Express spec states that completions are
++ * never affected by ACS source violation (PCIe Spec r4.0, sec 6.12.1.1).
++ * Here's * the specific copy of the errata text --
++ *
++ * "Item #36 - Downstream port applies ACS Source Validation to Completions
++ * Section 6.12.1.1 of the PCI Express Base Specification 3.1 states
++ * that completions are never affected
++ * by ACS Source Validation. However, completions received by a
++ * downstream port of the PCIe switch from a device that has not yet
++ * captured a PCIe bus number are incorrectly dropped by ACS source
++ * validation by the switch downstream port."
++ *
++ * The suggested workaround by IDT is to issue a configuration write to the
++ * downstream device before issuing the first config read. This allows the
++ * downstream device to capture its bus number, thus avoiding the ACS
++ * violation on the completion. In order to make sure that the device is ready
++ * for config accesses, we do what is currently done in making config reads
++ * till it succeeds and then do the config write as specified by the errata.
++ * However, to avoid hitting the errata issue when doing config reads, we
++ * disable ACS SV around this process.
++ */
++int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *l,
++			int timeout)
++{
++
++	int pos;
++	u16 ctrl = 0;
++	bool found;
++	struct pci_dev *dev = bus->self;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++
++	/* If capability exists, disable acs for the IDT switch before
++	 * attempting the initial config accesses to the endpoint device.
++	 */
++	if (pos) {
++		pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
++		if (ctrl & PCI_ACS_SV)
++			pci_write_config_word(dev, pos + PCI_ACS_CTRL,
++							ctrl & ~PCI_ACS_SV);
++	}
++
++	/* found indicates whether the endpoint device was identified
++	 * as present or not
++	 */
++	found = pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
++
++	/* Write 0 to the devfn device under the PCIE switch (bus->self)
++	 * as part of forcing the devfn number to latch with the device
++	 * below
++	 */
++	if (found)
++		pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
++
++	/* Re-enable ACS_SV if it was previously */
++	if (ctrl & PCI_ACS_SV)
++		pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
++
++	return found;
++}
++
+-- 
+1.8.3.1
