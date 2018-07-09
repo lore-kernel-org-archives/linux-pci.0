@@ -1,137 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51034 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933206AbeGJBD3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 9 Jul 2018 21:03:29 -0400
-Date: Tue, 10 Jul 2018 08:59:28 +0800
-From: Ye Xiaolong <xiaolong.ye@intel.com>
-To: Baoquan He <bhe@redhat.com>
-Cc: kbuild test robot <lkp@intel.com>, nicolas.pitre@linaro.org,
-        brijesh.singh@amd.com, thomas.lendacky@amd.com, airlied@linux.ie,
-        linux-pci@vger.kernel.org, richard.weiyang@gmail.com,
-        keith.busch@intel.com, jcmvbkbc@gmail.com,
-        baiyaowei@cmss.chinamobile.com, frowand.list@gmail.com,
-        tglx@linutronix.de, lorenzo.pieralisi@arm.com,
-        sthemmin@microsoft.com, linux-nvdimm@lists.01.org,
-        patrik.r.jakobsson@gmail.com, andy.shevchenko@gmail.com,
-        linux-input@vger.kernel.org, gustavo@padovan.org, bp@suse.de,
-        dyoung@redhat.com, vgoyal@redhat.com, ebiederm@xmission.com,
-        devicetree@vger.kernel.org, haiyangz@microsoft.com,
-        maarten.lankhorst@linux.intel.com, josh@joshtriplett.org,
-        jglisse@redhat.com, robh+dt@kernel.org, seanpaul@chromium.org,
-        bhelgaas@google.com, dan.j.williams@intel.com, yinghai@kernel.org,
-        jonathan.derrick@intel.com, chris@zankel.net, monstr@monstr.eu,
-        linux-parisc@vger.kernel.org, gregkh@linuxfoundation.org,
-        dmitry.torokhov@gmail.com, kexec@lists.infradead.org,
-        linux-kernel@vger.kernel.org, kbuild-all@01.org,
-        devel@linuxdriverproject.org, akpm@linux-foundation.org,
-        fengguang.wu@intel.com, linuxppc-dev@lists.ozlabs.org,
-        davem@davemloft.net
-Subject: Re: [kbuild-all] [PATCH v6 2/4] resource: Use list_head to link
- sibling resource
-Message-ID: <20180710005927.GG10005@yexl-desktop>
-References: <20180704041038.8190-3-bhe@redhat.com>
- <201807042347.hfDcKxmG%fengguang.wu@intel.com>
- <20180708025946.GI3047@MiWiFi-R3L-srv>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:51583 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933036AbeGIKZC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2018 06:25:02 -0400
+Received: by mail-wm0-f67.google.com with SMTP id s12-v6so20632758wmc.1
+        for <linux-pci@vger.kernel.org>; Mon, 09 Jul 2018 03:25:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180708025946.GI3047@MiWiFi-R3L-srv>
+In-Reply-To: <20180706112652.GA14650@red-moon>
+References: <20180705094539.xkmtfffbzl3kooum@kili.mountain> <20180706112652.GA14650@red-moon>
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Mon, 9 Jul 2018 15:55:00 +0530
+Message-ID: <CAFZiPx1w_st+TY+EKm6nxvJ=S_ZJzUY2No8790V2haGX+ZO+Rg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: mobiveil: integer overflow in IB_WIN_SIZE
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Hi Lorenzo,
 
-On 07/08, Baoquan He wrote:
->Hi,
->
->On 07/05/18 at 01:00am, kbuild test robot wrote:
->> Hi Baoquan,
->> 
->> I love your patch! Yet something to improve:
->> 
->> [auto build test ERROR on linus/master]
->> [also build test ERROR on v4.18-rc3 next-20180704]
->> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
->
->Thanks for telling. 
->
->I cloned 0day-ci/linut to my local pc.
->https://github.com/0day-ci/linux.git
->
->However, I didn't find below branch. And tried to open it in web
->broswer, also failed.
->
+Our reference IP's hardware registers require the to support 256GB
+inbound window size and this driver did exactly that I believe.
+May I ask, why do you think this size is questionable ?
 
-Sorry for the inconvenience, 0day bot didn't push the branch to github successfully,
-Just push it manually, you can have a try again.
-
-Thanks,
-Xiaolong
+Thanks.
 
 
->
->> url:    https://github.com/0day-ci/linux/commits/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180704-121402
->> config: mips-rb532_defconfig (attached as .config)
->> compiler: mipsel-linux-gnu-gcc (Debian 7.2.0-11) 7.2.0
->> reproduce:
->>         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->>         chmod +x ~/bin/make.cross
->>         # save the attached .config to linux build tree
->>         GCC_VERSION=7.2.0 make.cross ARCH=mips 
->
->I did find a old one which is for the old version 5 post.
->
->[bhe@linux]$ git remote -v
->0day-ci	https://github.com/0day-ci/linux.git (fetch)
->0day-ci	https://github.com/0day-ci/linux.git (push)
->[bhe@dhcp-128-28 linux]$ git branch -a| grep Baoquan| grep resource
->  remotes/0day-ci/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180612-113600
->
->Could you help have a look at this?
->
->Thanks
->Baoquan
->
->> 
->> All error/warnings (new ones prefixed by >>):
->> 
->> >> arch/mips/pci/pci-rc32434.c:57:11: error: initialization from incompatible pointer type [-Werror=incompatible-pointer-types]
->>      .child = &rc32434_res_pci_mem2
->>               ^
->>    arch/mips/pci/pci-rc32434.c:57:11: note: (near initialization for 'rc32434_res_pci_mem1.child.next')
->> >> arch/mips/pci/pci-rc32434.c:51:47: warning: missing braces around initializer [-Wmissing-braces]
->>     static struct resource rc32434_res_pci_mem1 = {
->>                                                   ^
->>    arch/mips/pci/pci-rc32434.c:60:47: warning: missing braces around initializer [-Wmissing-braces]
->>     static struct resource rc32434_res_pci_mem2 = {
->>                                                   ^
->>    cc1: some warnings being treated as errors
->> 
->> vim +57 arch/mips/pci/pci-rc32434.c
->> 
->> 73b4390f Ralf Baechle 2008-07-16  50  
->> 73b4390f Ralf Baechle 2008-07-16 @51  static struct resource rc32434_res_pci_mem1 = {
->> 73b4390f Ralf Baechle 2008-07-16  52  	.name = "PCI MEM1",
->> 73b4390f Ralf Baechle 2008-07-16  53  	.start = 0x50000000,
->> 73b4390f Ralf Baechle 2008-07-16  54  	.end = 0x5FFFFFFF,
->> 73b4390f Ralf Baechle 2008-07-16  55  	.flags = IORESOURCE_MEM,
->> 73b4390f Ralf Baechle 2008-07-16  56  	.sibling = NULL,
->> 73b4390f Ralf Baechle 2008-07-16 @57  	.child = &rc32434_res_pci_mem2
->> 73b4390f Ralf Baechle 2008-07-16  58  };
->> 73b4390f Ralf Baechle 2008-07-16  59  
->> 
->> :::::: The code at line 57 was first introduced by commit
->> :::::: 73b4390fb23456964201abda79f1210fe337d01a [MIPS] Routerboard 532: Support for base system
->> 
->> :::::: TO: Ralf Baechle <ralf@linux-mips.org>
->> :::::: CC: Ralf Baechle <ralf@linux-mips.org>
->> 
+On Fri, Jul 6, 2018 at 4:56 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Thu, Jul 05, 2018 at 12:45:39PM +0300, Dan Carpenter wrote:
+>> IB_WIN_SIZE is larger than INT_MAX so we need to cast it to u64.
+>>
+>> Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver")
+>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 >> ---
->> 0-DAY kernel test infrastructure                Open Source Technology Center
->> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+>> Untested...  Possibly the problem is that there are too many multiplies
+>> by * 1024.
 >
+> Hi Subrahmanya,
 >
->_______________________________________________
->kbuild-all mailing list
->kbuild-all@lists.01.org
->https://lists.01.org/mailman/listinfo/kbuild-all
+> I always thought that that macro value was questionable, please
+> can you comment on this ?
+>
+> Thanks,
+> Lorenzo
+>
+>> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+>> index 4d6c20e47bed..cf0aa7cee5b0 100644
+>> --- a/drivers/pci/controller/pcie-mobiveil.c
+>> +++ b/drivers/pci/controller/pcie-mobiveil.c
+>> @@ -107,7 +107,7 @@
+>>  #define CFG_WINDOW_TYPE      0
+>>  #define IO_WINDOW_TYPE               1
+>>  #define MEM_WINDOW_TYPE      2
+>> -#define IB_WIN_SIZE          (256 * 1024 * 1024 * 1024)
+>> +#define IB_WIN_SIZE          ((u64)256 * 1024 * 1024 * 1024)
+>>  #define MAX_PIO_WINDOWS      8
+>>
+>>  /* Parameters for the waiting for link up routine */
