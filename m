@@ -1,192 +1,200 @@
-Return-Path: <SRS0=qQet=JZ=oracle.com=james.puthukattukaran@kernel.org>
-Return-Path: <SRS0=qQet=JZ=oracle.com=james.puthukattukaran@kernel.org>
-Subject: [PATCH v14 1/1] Workaround for ACS related bug in certain IDT
- switches
-From: James Puthukattukaran <james.puthukattukaran@oracle.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <4117c119-c754-bf4e-544c-19cb6e239f38@oracle.com>
-Message-ID: <db975ca6-8676-d68b-4c8c-e4936b5cec3c@oracle.com>
-Date: Mon, 9 Jul 2018 11:31:25 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:47944 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754018AbeGIW2O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Jul 2018 18:28:14 -0400
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>
+References: <20180627174650.27433-1-logang@deltatee.com>
+ <20180627174650.27433-4-logang@deltatee.com>
+ <20180706165655.62306b6f@t450s.home>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <01dfc5ba-43cb-fbea-93e6-4963c411c750@deltatee.com>
+Date: Mon, 9 Jul 2018 16:27:40 -0600
 MIME-Version: 1.0
-In-Reply-To: <4117c119-c754-bf4e-544c-19cb6e239f38@oracle.com>
+In-Reply-To: <20180706165655.62306b6f@t450s.home>
 Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v5 3/3] PCI: Introduce the disable_acs_redir parameter
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Check if the switch (if it exists) is an IDT type switch with this bug
-before attempting to read the vendor id. If so, call pci_idt_bus_quirk().
+Hey Alex,
 
-The pci_idt_bus_quirk() implements the workaround as described below.
-The IDT switch incorrectly flags an ACS source violation on a read config
-request to an end point device on the completion (IDT 89H32H8G3-YC,
-errata #36) even though the PCI Express spec states that completions are
-never affected by ACS source violation (PCIe Spec r4.0, sec 6.12.1.1). Here's
-the specific copy of the errata text
+On 06/07/18 04:56 PM, Alex Williamson wrote:
+> Maybe we track if we enabled ACS via a device specific quirk and
+> minimally print an incompatibility error if it's also specified for
+> disable_acs_redir?  Thanks,
 
-"Item #36 - Downstream port applies ACS Source Validation to Completions
-Section 6.12.1.1 of the PCI Express Base Specification 3.1 states
-that completions are never affected
-by ACS Source Validation. However, completions received by a
-downstream port of the PCIe switch from a device that has not yet
-captured a PCIe bus number are incorrectly dropped by ACS source
-validation by the switch downstream port.
+Ok, I dug into this a bit and I think tracking if we enabled via a
+device specific quirk does not work. If 'pci_acs_enable' is not set, we
+wouldn't know if we used a device specific quirk and still try to
+disable a quirked device the standard way.
 
-Workaround: Issue a CfgWr1 to the downstream device before issuing
-the first CfgRd1 to the device.
-This allows the downstream device to capture its bus number; ACS
-source validation no longer stops
-completions from being forwarded by the downstream port. It has been
-observed that Microsoft Windows implements this workaround already;
-however, some versions of Linux and other operating systems may not. "
+Instead, I've looked at adding a device specific disable_acs_redir
+function next to enable_acs. In this way, the device specific quirks can
+override the operation. See the diff below.
 
-The suggested workaround by IDT is to issue a configuration write to the
-downstream device before issuing the first config read. This allows the
-downstream device to capture its bus number, thus avoiding the ACS
-violation on the completion. In order to make sure that the device is ready
-for config accesses, we do what is currently done in making config reads
-till it succeeds and then do the config write as specified by the errata.
-However, to avoid hitting the errata issue when doing config reads, we
-disable ACS SV around this process.
+Implementing the Intel SPT PCH version is pretty trivial, so I've done
+that. The Intel PCH variant I've just left as unsupported and printed a
+warning.
 
-The patch does the following -
+If this sounds good to you, I'll fold it into my patchset and resubmit a v6.
 
-1. Disable ACS source violation if enabled.
-2. Wait for config space access to become available by reading vendor id
-3. Do a config write to the end point (errata workaround)
-4. Enable ACS source validation (if it was enabled to begin with)
+Thanks,
 
-Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.h    |  5 ++++
- drivers/pci/probe.c  | 17 +++++++++++++-
- drivers/pci/quirks.c | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 86 insertions(+), 1 deletion(-)
+Logan
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c358e7a0..f638c06 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -225,6 +225,11 @@ enum pci_bar_type {
- int pci_configure_extended_tags(struct pci_dev *dev, void *ign);
- bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
- 				int crs_timeout);
-+int pci_idt_bus_quirk(struct pci_bus *bus, int devfn,
-+				u32 *pl, int crs_timeout);
-+bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn,
-+				u32 *pl, int crs_timeout);
+--
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 079f7c911e09..54001b307496 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3028,6 +3028,9 @@ static void pci_disable_acs_redir(struct pci_dev *dev)
+ 	if (!pos)
+ 		return;
+
++	if (!pci_dev_specific_disable_acs_redir(dev))
++		return;
 +
- int pci_setup_device(struct pci_dev *dev);
- int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		    struct resource *res, unsigned int reg);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ac876e3..0b00d0e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2156,7 +2156,7 @@ static bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l,
- 	return true;
- }
- 
--bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-+bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 				int timeout)
- {
- 	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-@@ -2172,6 +2172,21 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 
- 	return true;
- }
-+
-+bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-+					int timeout)
-+{
-+	struct pci_dev *bridge = bus->self;
-+
-+	/* Certain IDT switches have an issue where it improperly triggers
-+	 * an ACS violation
-+	 */
-+	if (bridge && bridge->vendor == PCI_VENDOR_ID_IDT &&
-+	    bridge->device == 0x80b5)
-+		return pci_idt_bus_quirk(bus, devfn, l, timeout);
-+
-+	return pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
-+}
- EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
- 
- /*
+ 	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
+
+ 	/* P2P Request & Completion Redirect */
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index f439de8..8299de8 100644
+index f439de848658..c976a025ae92 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -4753,3 +4753,68 @@ static void quirk_gpu_hda(struct pci_dev *hda)
- 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
- 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
-+
-+/*
-+ * The IDT switch incorrectly flags an ACS source violation on a read config
-+ * request to an end point device on the completion (IDT 89H32H8G3-YC,
-+ * errata #36) even though the PCI Express spec states that completions are
-+ * never affected by ACS source violation (PCIe Spec r4.0, sec 6.12.1.1).
-+ * Here's * the specific copy of the errata text --
-+ *
-+ * "Item #36 - Downstream port applies ACS Source Validation to Completions
-+ * Section 6.12.1.1 of the PCI Express Base Specification 3.1 states
-+ * that completions are never affected
-+ * by ACS Source Validation. However, completions received by a
-+ * downstream port of the PCIe switch from a device that has not yet
-+ * captured a PCIe bus number are incorrectly dropped by ACS source
-+ * validation by the switch downstream port."
-+ *
-+ * The suggested workaround by IDT is to issue a configuration write to the
-+ * downstream device before issuing the first config read. This allows the
-+ * downstream device to capture its bus number, thus avoiding the ACS
-+ * violation on the completion. In order to make sure that the device is ready
-+ * for config accesses, we do what is currently done in making config reads
-+ * till it succeeds and then do the config write as specified by the errata.
-+ * However, to avoid hitting the errata issue when doing config reads, we
-+ * disable ACS SV around this process.
-+ */
-+int pci_idt_bus_quirk(struct pci_bus *bus, int devfn, u32 *l,
-+			int timeout)
+@@ -4526,6 +4526,16 @@ static int pci_quirk_enable_intel_pch_acs(struct
+pci_dev *dev)
+ 	return 0;
+ }
+
++static int pci_quirk_disable_intel_pch_acs_redir(struct pci_dev *dev)
 +{
++	if (!pci_quirk_intel_pch_acs_match(dev))
++		return -ENOTTY;
 +
-+	int pos;
-+	u16 ctrl = 0;
-+	bool found;
-+	struct pci_dev *dev = bus->self;
++	pci_warn(dev, "Disabling ACS redirect on the Intel PCH root port is
+not supported\n");
 +
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+
-+	/* If capability exists, disable acs for the IDT switch before
-+	 * attempting the initial config accesses to the endpoint device.
-+	 */
-+	if (pos) {
-+		pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-+		if (ctrl & PCI_ACS_SV)
-+			pci_write_config_word(dev, pos + PCI_ACS_CTRL,
-+							ctrl & ~PCI_ACS_SV);
-+	}
-+
-+	/* found indicates whether the endpoint device was identified
-+	 * as present or not
-+	 */
-+	found = pci_bus_generic_read_dev_vendor_id(bus, devfn, l, timeout);
-+
-+	/* Write 0 to the devfn device under the PCIE switch (bus->self)
-+	 * as part of forcing the devfn number to latch with the device
-+	 * below
-+	 */
-+	if (found)
-+		pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
-+
-+	/* Re-enable ACS_SV if it was previously */
-+	if (ctrl & PCI_ACS_SV)
-+		pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
-+
-+	return found;
++	return 0;
 +}
 +
--- 
-1.8.3.1
+ static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
+ {
+ 	int pos;
+@@ -4553,22 +4563,53 @@ static int
+pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
+ 	return 0;
+ }
+
+-static const struct pci_dev_enable_acs {
++static int pci_quirk_disable_intel_spt_pch_acs_redir(struct pci_dev *dev)
++{
++	int pos;
++	u32 cap, ctrl;
++
++	if (!pci_quirk_intel_spt_pch_acs_match(dev))
++		return -ENOTTY;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++	if (!pos)
++		return -ENOTTY;
++
++	pci_read_config_dword(dev, pos + PCI_ACS_CAP, &cap);
++	pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl);
++
++	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
++
++	pci_write_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, ctrl);
++
++	pci_info(dev, "Intel SPT PCH root port workaround: disabled ACS
+redirect\n");
++
++	return 0;
++}
++
++static const struct pci_dev_acs_ops {
+ 	u16 vendor;
+ 	u16 device;
+ 	int (*enable_acs)(struct pci_dev *dev);
+-} pci_dev_enable_acs[] = {
+-	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_enable_intel_pch_acs },
+-	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_enable_intel_spt_pch_acs },
++	int (*disable_acs_redir)(struct pci_dev *dev);
++} pci_dev_acs_ops[] = {
++	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
++	  .enable_acs = pci_quirk_enable_intel_pch_acs,
++	  .disable_acs_redir = pci_quirk_disable_intel_pch_acs_redir,
++	},
++	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
++	  .enable_acs = pci_quirk_enable_intel_spt_pch_acs,
++	  .disable_acs_redir = pci_quirk_disable_intel_spt_pch_acs_redir
++	},
+ 	{ 0 }
+ };
+
+ int pci_dev_specific_enable_acs(struct pci_dev *dev)
+ {
+-	const struct pci_dev_enable_acs *i;
++	const struct pci_dev_acs_ops *i;
+ 	int ret;
+
+-	for (i = pci_dev_enable_acs; i->enable_acs; i++) {
++	for (i = pci_dev_acs_ops; i->enable_acs; i++) {
+ 		if ((i->vendor == dev->vendor ||
+ 		     i->vendor == (u16)PCI_ANY_ID) &&
+ 		    (i->device == dev->device ||
+@@ -4582,6 +4623,25 @@ int pci_dev_specific_enable_acs(struct pci_dev *dev)
+ 	return -ENOTTY;
+ }
+
++int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
++{
++	const struct pci_dev_acs_ops *i;
++	int ret;
++
++	for (i = pci_dev_acs_ops; i->enable_acs; i++) {
++		if ((i->vendor == dev->vendor ||
++		     i->vendor == (u16)PCI_ANY_ID) &&
++		    (i->device == dev->device ||
++		     i->device == (u16)PCI_ANY_ID)) {
++			ret = i->disable_acs_redir(dev);
++			if (ret >= 0)
++				return ret;
++		}
++	}
++
++	return -ENOTTY;
++}
++
+ /*
+  * The PCI capabilities list for Intel DH895xCC VFs (device ID 0x0443) with
+  * QuickAssist Technology (QAT) is prematurely terminated in hardware.  The
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 340029b2fb38..7ee208aa1a31 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1878,6 +1878,7 @@ enum pci_fixup_pass {
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+ int pci_dev_specific_enable_acs(struct pci_dev *dev);
++int pci_dev_specific_disable_acs_redir(struct pci_dev *dev);
+ #else
+ static inline void pci_fixup_device(enum pci_fixup_pass pass,
+ 				    struct pci_dev *dev) { }
