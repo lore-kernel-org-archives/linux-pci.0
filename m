@@ -1,68 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51324 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728705AbeG3XHX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Jul 2018 19:07:23 -0400
-Date: Mon, 30 Jul 2018 16:30:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Heiner Kallweit <hkallweit1@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
- interrupts
-Message-ID: <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
-References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com>
+Return-Path: <SRS0=Ds5d=JZ=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=Ds5d=JZ=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Mon, 9 Jul 2018 18:22:51 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/5] Improve Broadcom PAXC support
+Message-ID: <20180709172251.GB16292@red-moon>
+References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Thomas, Christoph, LKML]
+On Mon, Jun 11, 2018 at 05:21:02PM -0700, Ray Jui wrote:
+> This patch series improves the Broadcom PAXC support by 1) adding more
+> quirks for specific versions of PAXC controllers; 2) adding logic to
+> reject internally unconfigured physical functions from the embedded
+> network processor acting as endpoint; 3) reducing verbose print level
+> in the outbound/inbound mapping code
+> 
+> This patch series is based off v4.17 and is available on GIHUB:
+> repo: https://github.com/Broadcom/arm64-linux.git
+> branch: sr-paxc-v2
+> 
+> Changes since v1:
+>  - consolidate 2 PAXC related patch series into 1
+>  - change the way how the capability list corruption is handled, per
+> recommendation from Bjorn. Now handle and fix up the corruption at
+> the config register read
+>  - rebase to v4.17
+> 
+> Ray Jui (5):
+>   PCI: iproc: Activate PAXC bridge quirk for more devices
+>   PCI: iproc: Fix up corrupted PAXC root complex config registers
+>   PCI: iproc: Disable MSI parsing in certain PAXC blocks
+>   PCI: iproc: Reject unconfigured physical functions from PAXC
+>   PCI: iproc: Reduce inbound/outbound mapping print level
+> 
+>  drivers/pci/host/pcie-iproc.c | 159 +++++++++++++++++++++++++++++++++++-------
+>  drivers/pci/host/pcie-iproc.h |   8 +++
+>  drivers/pci/quirks.c          |   3 +
+>  3 files changed, 144 insertions(+), 26 deletions(-)
 
-On Mon, Jul 30, 2018 at 12:03:42AM +0200, Heiner Kallweit wrote:
-> If we have a threaded interrupt with the handler being NULL, then
-> request_threaded_irq() -> __setup_irq() will complain and bail out
-> if the IRQF_ONESHOT flag isn't set. Therefore check for the handler
-> being NULL and set IRQF_ONESHOT in this case.
-> 
-> This change is needed to migrate the mei_me driver to
-> pci_alloc_irq_vectors() and pci_request_irq().
-> 
-> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+Hi Ray,
 
-I'd like an ack from Thomas because this requirement about IRQF_ONESHOT
-usage isn't mentioned in the request_threaded_irq() function doc or
-Documentation/
+apart from patch 1, that requires Bjorn's ACK, I would take the
+series (I will rewrite the logs), I would appreciate if the amount
+of HW quirks would decrease since it is becoming quite unwieldy to
+handle them, it is your code but please get the point across.
 
-> ---
->  drivers/pci/irq.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
-> index 2a808e10..a1de501a 100644
-> --- a/drivers/pci/irq.c
-> +++ b/drivers/pci/irq.c
-> @@ -86,13 +86,17 @@ int pci_request_irq(struct pci_dev *dev, unsigned int nr, irq_handler_t handler,
->  	va_list ap;
->  	int ret;
->  	char *devname;
-> +	unsigned long irqflags = IRQF_SHARED;
-> +
-> +	if (!handler)
-> +		irqflags |= IRQF_ONESHOT;
->  
->  	va_start(ap, fmt);
->  	devname = kvasprintf(GFP_KERNEL, fmt, ap);
->  	va_end(ap);
->  
->  	ret = request_threaded_irq(pci_irq_vector(dev, nr), handler, thread_fn,
-> -			IRQF_SHARED, devname, dev_id);
-> +				   irqflags, devname, dev_id);
->  	if (ret)
->  		kfree(devname);
->  	return ret;
-> -- 
-> 2.18.0
-> 
+Lorenzo
