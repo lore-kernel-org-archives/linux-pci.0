@@ -1,63 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:43976 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388324AbeGXSih (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jul 2018 14:38:37 -0400
-From: Vignesh R <vigneshr@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Vignesh R <vigneshr@ti.com>
-Subject: [PATCH v3 0/4] pci-dra7xx: Enable errata i870 workaround for RC mode
-Date: Tue, 24 Jul 2018 23:01:46 +0530
-Message-ID: <20180724173150.2701-1-vigneshr@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+ robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+ gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com, bhelgaas@google.com,
+ hch@lst.de
+Subject: [PATCH 1/7 v6] Documentation: fsl-mc: add iommu-map device-tree
+ binding for fsl-mc bus
+Date: Mon,  9 Jul 2018 16:48:17 +0530
+Message-Id: <1531135103-10699-2-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
+References: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
+ linux-pci@vger.kernel.org, frowand.list@gmail.com,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make workaround for errata i870 applicable in Host mode as
-well(previously it was enabled only for EP mode) as per errata
-documentation: http://www.ti.com/lit/er/sprz450/sprz450.pdf
+The existing IOMMU bindings cannot be used to specify the relationship
+between fsl-mc devices and IOMMUs. This patch adds a generic binding for
+mapping fsl-mc devices to IOMMUs, using iommu-map property.
 
-Tested on DRA72 EVM
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+ .../devicetree/bindings/misc/fsl,qoriq-mc.txt      | 39 ++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-Tony,
-
-If you are okay with the series, could you pick this via omap tree?
-All ACKs are in place and Lorenzo is okay with PCIe bits to go along with
-rest of DTS changes.
-
-Regards
-Vignesh
-
-
-Changes since v2:
-Reorder patch 2 to appear at the last.
-Collect all the ACKs
-
-Changes since v1:
-Drop IRQ handling rework (will be sent out separately)
-
-v2: https://patchwork.ozlabs.org/cover/935454/
-v1: https://lkml.org/lkml/2017/12/1/59
-
-
-Vignesh R (4):
-  dt-bindings: PCI: dra7xx: Add bindings for unaligned access in host
-    mode
-  ARM: dts: dra7: Enable workaround for errata i870 in PCIe host mode
-  ARM: dts: dra7: Fix up unaligned access setting for PCIe EP
-  pci: dwc: pci-dra7xx: Enable errata i870 for both EP and RC mode
-
- Documentation/devicetree/bindings/pci/ti-pci.txt |  5 +++++
- arch/arm/boot/dts/dra7.dtsi                      |  4 +++-
- drivers/pci/controller/dwc/pci-dra7xx.c          | 12 ++++++------
- 3 files changed, 14 insertions(+), 7 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
+index 6611a7c..01fdc33 100644
+--- a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
++++ b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
+@@ -9,6 +9,25 @@ blocks that can be used to create functional hardware objects/devices
+ such as network interfaces, crypto accelerator instances, L2 switches,
+ etc.
+ 
++For an overview of the DPAA2 architecture and fsl-mc bus see:
++Documentation/networking/dpaa2/overview.rst
++
++As described in the above overview, all DPAA2 objects in a DPRC share the
++same hardware "isolation context" and a 10-bit value called an ICID
++(isolation context id) is expressed by the hardware to identify
++the requester.
++
++The generic 'iommus' property is insufficient to describe the relationship
++between ICIDs and IOMMUs, so an iommu-map property is used to define
++the set of possible ICIDs under a root DPRC and how they map to
++an IOMMU.
++
++For generic IOMMU bindings, see
++Documentation/devicetree/bindings/iommu/iommu.txt.
++
++For arm-smmu binding, see:
++Documentation/devicetree/bindings/iommu/arm,smmu.txt.
++
+ Required properties:
+ 
+     - compatible
+@@ -88,14 +107,34 @@ Sub-nodes:
+               Value type: <phandle>
+               Definition: Specifies the phandle to the PHY device node associated
+                           with the this dpmac.
++Optional properties:
++
++- iommu-map: Maps an ICID to an IOMMU and associated iommu-specifier
++  data.
++
++  The property is an arbitrary number of tuples of
++  (icid-base,iommu,iommu-base,length).
++
++  Any ICID i in the interval [icid-base, icid-base + length) is
++  associated with the listed IOMMU, with the iommu-specifier
++  (i - icid-base + iommu-base).
+ 
+ Example:
+ 
++        smmu: iommu@5000000 {
++               compatible = "arm,mmu-500";
++               #iommu-cells = <1>;
++               stream-match-mask = <0x7C00>;
++               ...
++        };
++
+         fsl_mc: fsl-mc@80c000000 {
+                 compatible = "fsl,qoriq-mc";
+                 reg = <0x00000008 0x0c000000 0 0x40>,    /* MC portal base */
+                       <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
+                 msi-parent = <&its>;
++                /* define map for ICIDs 23-64 */
++                iommu-map = <23 &smmu 23 41>;
+                 #address-cells = <3>;
+                 #size-cells = <1>;
+ 
 -- 
-2.18.0
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
