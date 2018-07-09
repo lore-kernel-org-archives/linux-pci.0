@@ -1,54 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout3.hostsharing.net ([176.9.242.62]:58415 "EHLO
-        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932219AbeGCN76 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2018 09:59:58 -0400
-Date: Tue, 3 Jul 2018 15:59:56 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: poza@codeaurora.org, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <keith.busch@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-Message-ID: <20180703135956.GA18639@wunner.de>
-References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
- <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
- <20180703083447.GA2689@wunner.de>
- <8b6ce0f415858463d1c0588c29e30415@codeaurora.org>
- <9e871cc3978fbdca12ccf8a91f34ad07@codeaurora.org>
- <2640af5e-f00f-d814-425d-78ac57714f6d@codeaurora.org>
- <bd04c9d1-6dfe-3071-69f9-beb0d649b6c0@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Nipun Gupta <nipun.gupta@nxp.com>
+To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+ robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+ gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com, bhelgaas@google.com,
+ hch@lst.de
+Subject: [PATCH 7/7 v6] arm64: dts: ls208xa: comply with the iommu map binding
+ for fsl_mc
+Date: Mon,  9 Jul 2018 16:48:23 +0530
+Message-Id: <1531135103-10699-8-git-send-email-nipun.gupta@nxp.com>
+In-Reply-To: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
+References: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <bd04c9d1-6dfe-3071-69f9-beb0d649b6c0@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
+ shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
+ linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
+ iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
+ linux-pci@vger.kernel.org, frowand.list@gmail.com,
+ linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 03, 2018 at 09:31:24AM -0400, Sinan Kaya wrote:
-> Issue is observing hotplug link down event in the middle of AER recovery
-> as in my previous reply.
-> 
-> If we mask hotplug interrupts before secondary bus reset via my patch,
-> then hotplug driver will not observe both link up and link down interrupts.
-> 
-> If we don't mask hotplug interrupts, we have a race condition.
+fsl-mc bus support the new iommu-map property. Comply to this binding
+for fsl_mc bus.
 
-I assume that a bus reset not only causes a link and presence event but
-also clears the Presence Detect State bit in the Slot Status register
-and the Data Link Layer Link Active bit in the Link Status register
-momentarily.
+Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
+Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
+---
+ arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-pciehp may access those two bits concurrently to the AER driver
-performing a slot reset.  So it may not be sufficient to mask
-the interrupt.
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+index 137ef4d..3d5e049 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+@@ -184,6 +184,7 @@
+ 		#address-cells = <2>;
+ 		#size-cells = <2>;
+ 		ranges;
++		dma-ranges = <0x0 0x0 0x0 0x0 0x10000 0x00000000>;
+ 
+ 		clockgen: clocking@1300000 {
+ 			compatible = "fsl,ls2080a-clockgen";
+@@ -357,6 +358,8 @@
+ 			reg = <0x00000008 0x0c000000 0 0x40>,	 /* MC portal base */
+ 			      <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
+ 			msi-parent = <&its>;
++			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by u-boot */
++			dma-coherent;
+ 			#address-cells = <3>;
+ 			#size-cells = <1>;
+ 
+@@ -460,6 +463,9 @@
+ 			compatible = "arm,mmu-500";
+ 			reg = <0 0x5000000 0 0x800000>;
+ 			#global-interrupts = <12>;
++			#iommu-cells = <1>;
++			stream-match-mask = <0x7C00>;
++			dma-coherent;
+ 			interrupts = <0 13 4>, /* global secure fault */
+ 				     <0 14 4>, /* combined secure interrupt */
+ 				     <0 15 4>, /* global non-secure fault */
+@@ -502,7 +508,6 @@
+ 				     <0 204 4>, <0 205 4>,
+ 				     <0 206 4>, <0 207 4>,
+ 				     <0 208 4>, <0 209 4>;
+-			mmu-masters = <&fsl_mc 0x300 0>;
+ 		};
+ 
+ 		dspi: dspi@2100000 {
+-- 
+1.9.1
 
-I've posted this patch to address the issue:
-https://patchwork.ozlabs.org/patch/930391/
 
-Thanks,
-
-Lukas
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
