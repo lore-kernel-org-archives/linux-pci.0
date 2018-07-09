@@ -1,62 +1,197 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V4 4/7] PCI: Unify try slot and bus reset API
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-References: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
- <1530214274-21139-4-git-send-email-okaya@codeaurora.org>
- <CAHp75VcYbeRTiggEiQnEV6DKR=F47RxNR0FZ+E-XKPpq8VNpqw@mail.gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <9674e845-765c-cc16-654e-21036038f2d5@codeaurora.org>
-Date: Mon, 2 Jul 2018 16:40:10 -0400
+Return-Path: <SRS0=JrVV=JZ=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=JrVV=JZ=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAHp75VcYbeRTiggEiQnEV6DKR=F47RxNR0FZ+E-XKPpq8VNpqw@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>,
- "open list:VFIO DRIVER" <kvm@vger.kernel.org>,
- Alexey Kardashevskiy <aik@ozlabs.ru>, linux-pci@vger.kernel.org,
- Dennis Dalessandro <dennis.dalessandro@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>, Peter Xu <peterx@redhat.com>,
- open list <linux-kernel@vger.kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
- Doug Ledford <dledford@redhat.com>, Zhenyu Wang <zhenyuw@linux.intel.com>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
- "open list:HFI1 DRIVER" <linux-rdma@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: rjwysocki@gmail.com
+In-Reply-To: <CAFgQCTvYwjKtx+AQf-kQjTsJMPRz48vgJ__jqNpwZuayG21oQw@mail.gmail.com>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
+ <6281446.GoJLz6Hq6C@aspire.rjw.lan> <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
+ <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com>
+ <20180706083603.GA9063@wunner.de> <CAJZ5v0j6+m8NGMneG45tF9L1s6ahtFo91wPCO=3YOTEyAOL+VQ@mail.gmail.com>
+ <CAFgQCTugu5XO06_xXb4ihkdfGJxtFX0813g2J-Jk2JeYtPP1vA@mail.gmail.com>
+ <CAFgQCTsCjkDWJsNog_sTnS-ZaZ87fMFpKq1ekVSUG4MDs6K_jw@mail.gmail.com>
+ <CAJZ5v0gxJ9LJ328WbgPrZCV-0SEiO31trsTSYYS8L95P4kfkbA@mail.gmail.com> <CAFgQCTvYwjKtx+AQf-kQjTsJMPRz48vgJ__jqNpwZuayG21oQw@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Mon, 9 Jul 2018 09:48:21 +0200
+Message-ID: <CAJZ5v0gSo-jFO0h+aLkeyGGxRL+tdsRtGi0WFhhGQbZvezJmkA@mail.gmail.com>
+Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
+ ordering in device_kset
+To: Pingfan Liu <kernelfans@gmail.com>
+Cc: Rafael Wysocki <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+	Linux PCI <linux-pci@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Linux PM <linux-pm@vger.kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/29/2018 5:43 PM, Andy Shevchenko wrote:
->> +int pci_try_reset_bus(struct pci_dev *pdev)
->> +{
->> +       bool slot = false;
->> +
->> +       if (!pci_probe_reset_slot(pdev->slot))
->> +               slot = true;
->> +
->> +       return slot ? __pci_try_reset_slot(pdev->slot) :
->> +                       __pci_try_reset_bus(pdev->bus);
-> This can be as simple as
-> 
->   return pci_probe_reset_slot(pdev->slot) ?
->     __pci_try_reset_bus(pdev->slot) : __pci_try_reset_slot(pdev->bus);
-> 
-> 
+On Mon, Jul 9, 2018 at 8:48 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
+> On Sun, Jul 8, 2018 at 4:25 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
+>>
+>> On Sat, Jul 7, 2018 at 6:24 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
+>> > On Fri, Jul 6, 2018 at 9:55 PM Pingfan Liu <kernelfans@gmail.com> wrote:
+>> >>
+>> >> On Fri, Jul 6, 2018 at 4:47 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
+>> >> >
+>> >> > On Fri, Jul 6, 2018 at 10:36 AM, Lukas Wunner <lukas@wunner.de> wrote:
+>> >> > > [cc += Kishon Vijay Abraham]
+>> >> > >
+>> >> > > On Thu, Jul 05, 2018 at 11:18:28AM +0200, Rafael J. Wysocki wrote:
+>> >> > >> OK, so calling devices_kset_move_last() from really_probe() clearly is
+>> >> > >> a mistake.
+>> >> > >>
+>> >> > >> I'm not really sure what the intention of it was as the changelog of
+>> >> > >> commit 52cdbdd49853d doesn't really explain that (why would it be
+>> >> > >> insufficient without that change?)
+>> >> > >
+>> >> > > It seems 52cdbdd49853d fixed an issue with boards which have an MMC
+>> >> > > whose reset pin needs to be driven high on shutdown, lest the MMC
+>> >> > > won't be found on the next boot.
+>> >> > >
+>> >> > > The boards' devicetrees use a kludge wherein the reset pin is modelled
+>> >> > > as a regulator.  The regulator is enabled when the MMC probes and
+>> >> > > disabled on driver unbind and shutdown.  As a result, the pin is driven
+>> >> > > low on shutdown and the MMC is not found on the next boot.
+>> >> > >
+>> >> > > To fix this, another kludge was invented wherein the GPIO expander
+>> >> > > driving the reset pin unconditionally drives all its pins high on
+>> >> > > shutdown, see pcf857x_shutdown() in drivers/gpio/gpio-pcf857x.c
+>> >> > > (commit adc284755055, "gpio: pcf857x: restore the initial line state
+>> >> > > of all pcf lines").
+>> >> > >
+>> >> > > For this kludge to work, the GPIO expander's ->shutdown hook needs to
+>> >> > > be executed after the MMC expander's ->shutdown hook.
+>> >> > >
+>> >> > > Commit 52cdbdd49853d achieved that by reordering devices_kset according
+>> >> > > to the probe order.  Apparently the MMC probes after the GPIO expander,
+>> >> > > possibly because it returns -EPROBE_DEFER if the vmmc regulator isn't
+>> >> > > available yet, see mmc_regulator_get_supply().
+>> >> > >
+>> >> > > Note, I'm just piecing the information together from git history,
+>> >> > > I'm not responsible for these kludges.  (I'm innocent!)
+>> >> >
+>> >> > Sure enough. :-)
+>> >> >
+>> >> > In any case, calling devices_kset_move_last() in really_probe() is
+>> >> > plain broken and if its only purpose was to address a single, arguably
+>> >> > kludgy, use case, let's just get rid of it in the first place IMO.
+>> >> >
+>> >> Yes, if it is only used for a single use case.
+>> >>
+>> > Think it again, I saw other potential issue with the current code.
+>> > device_link_add->device_reorder_to_tail() can break the
+>> > "supplier<-consumer" order. During moving children after parent's
+>> > supplier, it ignores the order of child's consumer.
+>>
+>> What do you mean?
+>>
+> The drivers use device_link_add() to build "supplier<-consumer" order
+> without knowing each other. Hence there is the following potential
+> odds: (consumerX, child_a, ...) (consumer_a,..) (supplierX), where
+> consumer_a consumes child_a.
 
-done
+Well, what's the initial state of the list?
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> When device_link_add()->device_reorder_to_tail() moves all descendant of
+> consumerX to the tail, it breaks the "supplier<-consumer" order by
+> "consumer_a <- child_a".
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+That depends on what the initial ordering of the list is and please
+note that circular dependencies are explicitly assumed to be not
+present.
+
+The assumption is that the initial ordering of the list reflects the
+correct suspend (or shutdown) order without the new link.  Therefore
+initially all children are located after their parents and all known
+consumers are located after their suppliers.
+
+If a new link is added, the new consumer goes to the end of the list
+and all of its children and all of its consumers go after it.
+device_reorder_to_tail() is recursive, so for each of the devices that
+went to the end of the list, all of its children and all of its
+consumers go after it and so on.
+
+Now, that operation doesn't change the order of any of the
+parent<-child or supplier<-consumer pairs that get moved and since all
+of the devices that depend on any device that get moved go to the end
+of list after it, the only devices that don't go to the end of list
+are guaranteed to not depend on any of them (they may be parents or
+suppliers of the devices that go to the end of the list, but not their
+children or suppliers).
+
+> And we need recrusion to resolve the item in
+> (consumer_a,..), each time when moving a consumer behind its supplier,
+> we may break "parent<-child".
+
+I don't see this as per the above.
+
+Say, device_reorder_to_tail() moves a parent after its child.  This
+means that device_reorder_to_tail() was not called for the child after
+it had been called for the parent, but that is not true, because it is
+called for all of the children of each device that gets moved *after*
+moving that device.
+
+>> > Beside this, essentially both devices_kset_move_after/_before() and
+>> > device_pm_move_after/_before() expose  the shutdown order to the
+>> > indirect caller,  and we can not expect that the caller can not handle
+>> > it correctly. It should be a job of drivers core.
+>>
+>> Arguably so, but that's how those functions were designed and the
+>> callers should be aware of the limitation.
+>>
+>> If they aren't, there is a bug in the caller.
+>>
+> If we consider device_move()-> device_pm_move_after/_before() more
+> carefully like the above description, then we can hide the detail from
+> caller. And keep the info of the pm order inside the core.
+
+Yes, we can.
+
+My point is that we have not been doing that so far and the current
+callers of those routines are expected to know that.
+
+We can do that to make the life of *future* callers easier (and maybe
+to simplify the current ones), but currently the caller is expected to
+do the right thing.
+
+>> > It is hard to extract high dimension info and pack them into one dimension
+>> > linked-list.
+>>
+>> Well, yes and no.
+>>
+> For "hard", I means that we need two interleaved recursion to make the
+> order correct. Otherwise, I think it is a bug or limitation.
+
+So the limitation is that circular dependencies may not exist, because
+if they did, there would be no suitable suspend/shutdown ordering
+between devices.
+
+>> We know it for a fact that there is a linear ordering that will work.
+>> It is inefficient to figure it out every time during system suspend
+>> and resume, for one and that's why we have dpm_list.
+>>
+> Yeah, I agree that iterating over device tree may hurt performance. I
+> guess the iterating will not cost the majority of the suspend time,
+> comparing to the device_suspend(), which causes hardware's sync. But
+> data is more persuasive. Besides the performance, do you have other
+> concern till now?
+
+I simply think that there should be one way to iterate over devices
+for both system-wide PM and shutdown.
+
+The reason why it is not like that today is because of the development
+history, but if it doesn't work and we want to fix it, let's just
+consolidate all of that.
+
+Now, system-wide suspend resume sometimes iterates the list in the
+reverse order which would be hard without having a list, wouldn't it?
+
+>> Now, if we have it for suspend and resume, it can also be used for shutdown.
+>>
+> Yes, I do think so.
+
+OK
+
+Thanks,
+Rafael
