@@ -1,78 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:54542 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731447AbeG3Ryg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Jul 2018 13:54:36 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 30 Jul 2018 10:18:36 -0600
-Message-Id: <20180730161840.13733-1-logang@deltatee.com>
+Return-Path: <SRS0=JOOt=JZ=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=JOOt=JZ=gmail.com=kernelfans@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v8 0/4] Add parameter for disabling ACS redirection for P2P
-Sender: linux-pci-owner@vger.kernel.org
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
+ <6281446.GoJLz6Hq6C@aspire.rjw.lan> <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
+ <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com>
+ <20180706083603.GA9063@wunner.de> <CAJZ5v0j6+m8NGMneG45tF9L1s6ahtFo91wPCO=3YOTEyAOL+VQ@mail.gmail.com>
+ <CAFgQCTugu5XO06_xXb4ihkdfGJxtFX0813g2J-Jk2JeYtPP1vA@mail.gmail.com>
+ <CAFgQCTsCjkDWJsNog_sTnS-ZaZ87fMFpKq1ekVSUG4MDs6K_jw@mail.gmail.com> <CAJZ5v0gxJ9LJ328WbgPrZCV-0SEiO31trsTSYYS8L95P4kfkbA@mail.gmail.com>
+In-Reply-To: <CAJZ5v0gxJ9LJ328WbgPrZCV-0SEiO31trsTSYYS8L95P4kfkbA@mail.gmail.com>
+From: Pingfan Liu <kernelfans@gmail.com>
+Date: Mon, 9 Jul 2018 14:48:33 +0800
+Message-ID: <CAFgQCTvYwjKtx+AQf-kQjTsJMPRz48vgJ__jqNpwZuayG21oQw@mail.gmail.com>
+Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
+ ordering in device_kset
+To: Rafael Wysocki <rafael@kernel.org>
+Cc: lukas@wunner.de, linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-pm@vger.kernel.org, kishon@ti.com
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes since v6:
-* Fixed order of operations for device specific disable function as
-  noticed by Alex
-* Rebased onto v4.18-rc5 (no conflicts)
+On Sun, Jul 8, 2018 at 4:25 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
+>
+> On Sat, Jul 7, 2018 at 6:24 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
+> > On Fri, Jul 6, 2018 at 9:55 PM Pingfan Liu <kernelfans@gmail.com> wrote:
+> >>
+> >> On Fri, Jul 6, 2018 at 4:47 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
+> >> >
+> >> > On Fri, Jul 6, 2018 at 10:36 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> >> > > [cc += Kishon Vijay Abraham]
+> >> > >
+> >> > > On Thu, Jul 05, 2018 at 11:18:28AM +0200, Rafael J. Wysocki wrote:
+> >> > >> OK, so calling devices_kset_move_last() from really_probe() clearly is
+> >> > >> a mistake.
+> >> > >>
+> >> > >> I'm not really sure what the intention of it was as the changelog of
+> >> > >> commit 52cdbdd49853d doesn't really explain that (why would it be
+> >> > >> insufficient without that change?)
+> >> > >
+> >> > > It seems 52cdbdd49853d fixed an issue with boards which have an MMC
+> >> > > whose reset pin needs to be driven high on shutdown, lest the MMC
+> >> > > won't be found on the next boot.
+> >> > >
+> >> > > The boards' devicetrees use a kludge wherein the reset pin is modelled
+> >> > > as a regulator.  The regulator is enabled when the MMC probes and
+> >> > > disabled on driver unbind and shutdown.  As a result, the pin is driven
+> >> > > low on shutdown and the MMC is not found on the next boot.
+> >> > >
+> >> > > To fix this, another kludge was invented wherein the GPIO expander
+> >> > > driving the reset pin unconditionally drives all its pins high on
+> >> > > shutdown, see pcf857x_shutdown() in drivers/gpio/gpio-pcf857x.c
+> >> > > (commit adc284755055, "gpio: pcf857x: restore the initial line state
+> >> > > of all pcf lines").
+> >> > >
+> >> > > For this kludge to work, the GPIO expander's ->shutdown hook needs to
+> >> > > be executed after the MMC expander's ->shutdown hook.
+> >> > >
+> >> > > Commit 52cdbdd49853d achieved that by reordering devices_kset according
+> >> > > to the probe order.  Apparently the MMC probes after the GPIO expander,
+> >> > > possibly because it returns -EPROBE_DEFER if the vmmc regulator isn't
+> >> > > available yet, see mmc_regulator_get_supply().
+> >> > >
+> >> > > Note, I'm just piecing the information together from git history,
+> >> > > I'm not responsible for these kludges.  (I'm innocent!)
+> >> >
+> >> > Sure enough. :-)
+> >> >
+> >> > In any case, calling devices_kset_move_last() in really_probe() is
+> >> > plain broken and if its only purpose was to address a single, arguably
+> >> > kludgy, use case, let's just get rid of it in the first place IMO.
+> >> >
+> >> Yes, if it is only used for a single use case.
+> >>
+> > Think it again, I saw other potential issue with the current code.
+> > device_link_add->device_reorder_to_tail() can break the
+> > "supplier<-consumer" order. During moving children after parent's
+> > supplier, it ignores the order of child's consumer.
+>
+> What do you mean?
+>
+The drivers use device_link_add() to build "supplier<-consumer" order
+without knowing each other. Hence there is the following potential
+odds: (consumerX, child_a, ...) (consumer_a,..) (supplierX), where
+consumer_a consumes child_a. When
+device_link_add()->device_reorder_to_tail() moves all descendant of
+consumerX to the tail, it breaks the "supplier<-consumer" order by
+"consumer_a <- child_a". And we need recrusion to resolve the item in
+(consumer_a,..), each time when moving a consumer behind its supplier,
+we may break "parent<-child".
 
-Changes since v5:
-* Add a quirk to handle the Intel SPT PCH case (as pointed out by Alex)
-* Warn in the case that we try to disable ACS redirect on a device
-  that doesn't have the ACS capability (also suggested by Alex)
-* Collect reviewed-by tag from Alex
-* Rebased onto v4.18-rc4 (no conflicts)
+> > Beside this, essentially both devices_kset_move_after/_before() and
+> > device_pm_move_after/_before() expose  the shutdown order to the
+> > indirect caller,  and we can not expect that the caller can not handle
+> > it correctly. It should be a job of drivers core.
+>
+> Arguably so, but that's how those functions were designed and the
+> callers should be aware of the limitation.
+>
+> If they aren't, there is a bug in the caller.
+>
+If we consider device_move()-> device_pm_move_after/_before() more
+carefully like the above description, then we can hide the detail from
+caller. And keep the info of the pm order inside the core.
 
-Changes since v4:
-* Fixed a couple documentation mistakes spotted by Randy
+> > It is hard to extract high dimension info and pack them into one dimension
+> > linked-list.
+>
+> Well, yes and no.
+>
+For "hard", I means that we need two interleaved recursion to make the
+order correct. Otherwise, I think it is a bug or limitation.
 
-Changes since v3:
-* Removed some of the cruft that was copied from the resource_alignment
-  paramater (per Alex)
-* A number of docuemntation fixes as noticed by Alex and Willy
+> We know it for a fact that there is a linear ordering that will work.
+> It is inefficient to figure it out every time during system suspend
+> and resume, for one and that's why we have dpm_list.
+>
+Yeah, I agree that iterating over device tree may hurt performance. I
+guess the iterating will not cost the majority of the suspend time,
+comparing to the device_suspend(), which causes hardware's sync. But
+data is more persuasive. Besides the performance, do you have other
+concern till now?
 
-Changes since v2:
-* Rebased onto v4.18-rc1 (no conflicts)
-* Minor tweaks to the documentation per Andy
-* Removed the "path:" prefix and use the path parsing code
-  for simple devices (as it works the same). Per a suggestion from Alex
+> Now, if we have it for suspend and resume, it can also be used for shutdown.
+>
+Yes, I do think so.
 
-Changes since v1:
-* Reworked pci_dev_str_match_path using strrchr as suggested by Alex
-* Collected Christian's Acks
-
-
-Logan Gunthorpe (4):
-  PCI: Make specifying PCI devices in kernel parameters reusable
-  PCI: Allow specifying devices using a base bus and path of devfns
-  PCI: Introduce disable_acs_redir quirk
-  PCI: Introduce the disable_acs_redir parameter
-
- Documentation/admin-guide/kernel-parameters.txt |  41 +++-
- drivers/pci/pci.c                               | 310 +++++++++++++++++++-----
- drivers/pci/quirks.c                            |  78 +++++-
- include/linux/pci.h                             |   5 +
- 4 files changed, 361 insertions(+), 73 deletions(-)
-
---
-2.11.0
+Thanks and regards,
+Pingfan
