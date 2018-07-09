@@ -1,187 +1,139 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 17 Jul 2018 11:02:04 -0600
-Message-Id: <20180717170204.30470-5-logang@deltatee.com>
-In-Reply-To: <20180717170204.30470-1-logang@deltatee.com>
-References: <20180717170204.30470-1-logang@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v7 4/4] PCI: Introduce the disable_acs_redir parameter
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:56711 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933806AbeGIRm6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2018 13:42:58 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v9 08/12] pci-epf-test/pci_endpoint_test: Use irq_type module parameter
+Date: Mon,  9 Jul 2018 18:42:46 +0100
+Message-Id: <1390280769246adf7bd7339d210cf8541b74b9ef.1531155252.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to support P2P traffic on a segment of the PCI hierarchy,
-we must be able to disable the ACS redirect bits for select
-PCI bridges. The bridges must be selected before the devices are
-discovered by the kernel and the IOMMU groups created. Therefore,
-a kernel command line parameter is created to specify devices
-which must have their ACS bits disabled.
+Add new driver parameter to allow interruption type selection.
 
-The new parameter takes a list of devices separated by a semicolon.
-Each device specified will have it's ACS redirect bits disabled.
-This is similar to the existing 'resource_alignment' parameter.
-
-The ACS Request P2P Request Redirect, P2P Completion Redirect and P2P
-Egress Control bits are disabled which is sufficient to always allow
-passing P2P traffic uninterrupted. The bits are set after the kernel
-(optionally) enables the ACS bits itself. It is also done regardless of
-whether the kernel sets the bits or not seeing some BIOS firmware is known
-to set the bits on boot.
-
-If the user tries to disable the ACS redirct for a device without the
-ACS capability, a warning is printed to dmesg.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Acked-by: Christian König <christian.koenig@amd.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- Documentation/admin-guide/kernel-parameters.txt |  9 +++
- drivers/pci/pci.c                               | 76 ++++++++++++++++++++++++-
- 2 files changed, 83 insertions(+), 2 deletions(-)
+Change v2->v3:
+ - New patch file created base on the previous patch
+"misc: pci_endpoint_test: Add MSI-X support" patch file following
+Kishon's suggestion.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Change v6->v7:
+ - Removed unnecessary set to zero variable.
+ - Removed empty line.
+Change v7->v8:
+ - Re-sending the patch series.
+Change v8->v9:
+ - Nothing changed, just to follow the patch set version.
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 1fdd1ef03984..ab19ed83f072 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3192,6 +3192,15 @@
- 				Adding the window is slightly risky (it may
- 				conflict with unreported devices), so this
- 				taints the kernel.
-+		disable_acs_redir=<pci_dev>[; ...]
-+				Specify one or more PCI devices (in the format
-+				specified above) separated by semicolons.
-+				Each device specified will have the PCI ACS
-+				redirect capabilities forced off which will
-+				allow P2P traffic between devices through
-+				bridges without forcing it upstream. Note:
-+				this removes isolation between devices and
-+				will make the IOMMU groups less granular.
+ drivers/misc/pci_endpoint_test.c | 28 +++++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 35fbfbd..349794c 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -82,6 +82,10 @@ static bool no_msi;
+ module_param(no_msi, bool, 0444);
+ MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
  
- 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
- 			Management.
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 59638075b4df..0aee076efe8b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2983,6 +2983,66 @@ void pci_request_acs(void)
- 	pci_acs_enable = 1;
- }
++static int irq_type = IRQ_TYPE_MSI;
++module_param(irq_type, int, 0444);
++MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI)");
++
+ enum pci_barno {
+ 	BAR_0,
+ 	BAR_1,
+@@ -108,7 +112,7 @@ struct pci_endpoint_test {
+ struct pci_endpoint_test_data {
+ 	enum pci_barno test_reg_bar;
+ 	size_t alignment;
+-	bool no_msi;
++	int irq_type;
+ };
  
-+static const char *disable_acs_redir_param;
-+
-+/**
-+ * pci_disable_acs_redir - disable ACS redirect capabilities
-+ * @dev: the PCI device
-+ *
-+ * For only devices specified in the disable_acs_redir parameter.
-+ */
-+static void pci_disable_acs_redir(struct pci_dev *dev)
-+{
-+	int ret = 0;
-+	const char *p;
-+	int pos;
-+	u16 ctrl;
-+
-+	if (!disable_acs_redir_param)
-+		return;
-+
-+	p = disable_acs_redir_param;
-+	while (*p) {
-+		ret = pci_dev_str_match(dev, p, &p);
-+		if (ret < 0) {
-+			pr_info_once("PCI: Can't parse disable_acs_redir parameter: %s\n",
-+				     disable_acs_redir_param);
-+
-+			break;
-+		} else if (ret == 1) {
-+			/* Found a match */
-+			break;
-+		}
-+
-+		if (*p != ';' && *p != ',') {
-+			/* End of param or invalid format */
-+			break;
-+		}
-+		p++;
-+	}
-+
-+	if (ret != 1)
-+		return;
-+
-+	if (!pci_dev_specific_disable_acs_redir(dev))
-+		return;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos) {
-+		pci_warn(dev, "cannot disable ACS redirect for this hardware as it does not have ACS capabilities\n");
-+		return;
-+	}
-+
-+	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-+
-+	/* P2P Request & Completion Redirect */
-+	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
-+
-+	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
-+
-+	pci_info(dev, "disabled ACS redirect\n");
-+}
-+
- /**
-  * pci_std_enable_acs - enable ACS on devices using standard ACS capabilites
-  * @dev: the PCI device
-@@ -3022,12 +3082,22 @@ static void pci_std_enable_acs(struct pci_dev *dev)
- void pci_enable_acs(struct pci_dev *dev)
- {
- 	if (!pci_acs_enable)
--		return;
-+		goto disable_acs_redir;
+ static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
+@@ -291,8 +295,7 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
+ 				 size);
  
- 	if (!pci_dev_specific_enable_acs(dev))
--		return;
-+		goto disable_acs_redir;
+-	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+-				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ 				 COMMAND_COPY);
+@@ -361,8 +364,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
  
- 	pci_std_enable_acs(dev);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
+-	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+-				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ 				 COMMAND_READ);
+@@ -419,8 +421,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
+-	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
+-				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE, irq_type);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ 				 COMMAND_WRITE);
+@@ -505,11 +506,14 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	test->alignment = 0;
+ 	test->pdev = pdev;
+ 
++	if (no_msi)
++		irq_type = IRQ_TYPE_LEGACY;
 +
-+disable_acs_redir:
-+	/*
-+	 * Note: pci_disable_acs_redir() must be called even if
-+	 * ACS is not enabled by the kernel because the firmware
-+	 * may have unexpectedly set the flags. So if we are told
-+	 * to disable it, we should always disable it after setting
-+	 * the kernel's default preferences.
-+	 */
-+	pci_disable_acs_redir(dev);
- }
+ 	data = (struct pci_endpoint_test_data *)ent->driver_data;
+ 	if (data) {
+ 		test_reg_bar = data->test_reg_bar;
+ 		test->alignment = data->alignment;
+-		no_msi = data->no_msi;
++		irq_type = data->irq_type;
+ 	}
  
- static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
-@@ -5967,6 +6037,8 @@ static int __init pci_setup(char *str)
- 				pcie_bus_config = PCIE_BUS_PEER2PEER;
- 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
- 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-+			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
-+				disable_acs_redir_param = str + 18;
- 			} else {
- 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
- 						str);
+ 	init_completion(&test->irq_raised);
+@@ -529,11 +533,17 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 
+ 	pci_set_master(pdev);
+ 
+-	if (!no_msi) {
++	switch (irq_type) {
++	case IRQ_TYPE_LEGACY:
++		break;
++	case IRQ_TYPE_MSI:
+ 		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
+ 		if (irq < 0)
+ 			dev_err(dev, "Failed to get MSI interrupts\n");
+ 		test->num_irqs = irq;
++		break;
++	default:
++		dev_err(dev, "Invalid IRQ type selected\n");
+ 	}
+ 
+ 	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
 -- 
-2.11.0
+2.7.4
