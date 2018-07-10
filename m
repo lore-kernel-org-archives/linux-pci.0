@@ -1,62 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:35936 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730601AbeGMO2G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Jul 2018 10:28:06 -0400
-Date: Fri, 13 Jul 2018 15:15:11 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Alan Douglas <adouglas@cadence.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: pcie-candence-ep: remove redundant variable mmc
-Message-ID: <20180713141511.GA18555@red-moon>
-References: <20180711080103.4581-1-colin.king@canonical.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180711080103.4581-1-colin.king@canonical.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <e36fac6f4907288c58a7dfa112541e73de957d46.camel@nxp.com>
+References: <cover.1527621510.git.leonard.crestez@nxp.com>
+ <a6176c8bcfbca08ce4e93e304bdcd48c4600f8e2.1527621510.git.leonard.crestez@nxp.com>
+ <1528468422.26356.20.camel@pengutronix.de>
+ <02207512447db4585a4e879e2a059ba223d57dbe.camel@nxp.com>
+ <1530607328.22468.102.camel@pengutronix.de>
+ <e36fac6f4907288c58a7dfa112541e73de957d46.camel@nxp.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Tue, 10 Jul 2018 12:26:12 +0200
+Message-ID: <CAPDyKFqdJ72ad4Ljz95TFxuNs_T1npSzBU7VCqFLExpC+2DW6Q@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: imx: Initial imx7d pm support
+To: Leonard Crestez <leonard.crestez@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>, Abel Vesa <abel.vesa@nxp.com>,
+ Anson Huang <anson.huang@nxp.com>,
+ "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+ "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
+ "viresh.kumar@linaro.org" <viresh.kumar@linaro.org>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+ "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
+ "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 11, 2018 at 09:01:03AM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Variable mmc is being assigned but is never used hence it is redundant
-> and can be removed.
-> 
-> Cleans up clang warning:
-> warning: variable 'mmc' set but not used [-Wunused-but-set-variable]
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/pci/controller/pcie-cadence-ep.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+On 9 July 2018 at 16:59, Leonard Crestez <leonard.crestez@nxp.com> wrote:
+> On Tue, 2018-07-03 at 10:42 +0200, Lucas Stach wrote:
+>> Am Montag, den 02.07.2018, 17:18 +0000 schrieb Leonard Crestez:
+>> > On Fri, 2018-06-08 at 16:33 +0200, Lucas Stach wrote:
+>> > > Am Dienstag, den 29.05.2018, 22:39 +0300 schrieb Leonard Crestez:
+>> > > > On imx7d the phy is turned off in suspend and must be reset on resume.
+>> > > > Right now lspci -v fails after a suspend/resume cycle, fix this by
+>> > > > adding minimal suspend/resume code from the nxp vendor tree.
+>> > > >
+>> > > > This is currently only enabled for imx7 but the same sequence can be
+>> > > > applied to other imx pcie variants.
+>> > > > +#ifdef CONFIG_PM_SLEEP
+>> >
+>> > Another issue that should be discussed here is that on 6sx and 7d the
+>> > gpc PCIE power domain is not defined correctly: the PCIE block is in
+>> > the DISPMIX domain on both SOCs and it is only PCIE_PHY which has a
+>> > separate power domain.
+>> >
+>> > This matters: enabling power-gating for displays will break pcie if
+>> > this relationship is not taken into account. Here are some options:
+>> >
+>> > 1) Make &pd_pcie a child of &pd_disp by hacking into gpc probe
+>> > functions and calling pm_genpd_add_subdomain. Not very nice.
+>> >
+>> > 2) Support nesting PGCs in GPC code? Lots of code and still an
+>> > incorrect representation of hardware.
+>> >
+>> > 3) Set power-domains = <&pd_disp> and enable runtime PM on &pd_pcie?
+>> >
+>> > 4) Add separate devices for the pcie-phy. These would be mostly empty
+>> > but still different, for example on imx6sx the PHY is not even
+>> > accessible on the bus but only though PCIE registers.
+>>
+>> 5) Take a look at the linux-pm list. ;) The power domain framework has
+>> just gained support for multiple power domains per device. I think that
+>>  is the right solution for this, as like you mentioned the PHY isn't
+>> really a separate block on i.MX6, but part of the PCIe controller
+>> device.
 
-Applied to pci/cadence for v4.19, thanks.
+Yep, it sounds like the PCIe controller device is partitioned across
+multiple PM domains.
 
-Lorenzo
+>
+> Yes, I noticed that earlier but not that it was merged recently. It is
+> a better solution.
+>
+> Unfortunately the multiple power-domain code seems to require devices
+> to explicitly fetch references to the power domains and manipulate
+> them.
 
-> diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-> index e3fe4124e3af..63549e03eae8 100644
-> --- a/drivers/pci/controller/pcie-cadence-ep.c
-> +++ b/drivers/pci/controller/pcie-cadence-ep.c
-> @@ -238,7 +238,7 @@ static int cdns_pcie_ep_get_msi(struct pci_epc *epc, u8 fn)
->  	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
->  	struct cdns_pcie *pcie = &ep->pcie;
->  	u32 cap = CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET;
-> -	u16 flags, mmc, mme;
-> +	u16 flags, mme;
->  
->  	/* Validate that the MSI feature is actually enabled. */
->  	flags = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSI_FLAGS);
-> @@ -249,7 +249,6 @@ static int cdns_pcie_ep_get_msi(struct pci_epc *epc, u8 fn)
->  	 * Get the Multiple Message Enable bitfield from the Message Control
->  	 * register.
->  	 */
-> -	mmc = (flags & PCI_MSI_FLAGS_QMASK) >> 1;
->  	mme = (flags & PCI_MSI_FLAGS_QSIZE) >> 4;
->  
->  	return mme;
-> -- 
-> 2.17.1
-> 
+Actually, it's the other way around.
+
+You need only one device to attach the PM domains. However, in genpd,
+one device will be created per PM domain and its that device you get
+back to operate upon.
+
+Typically the returned device(s) should be linked with the "master"
+device, device_link_add().
+
+> As far as I can tell this means that every device using multiple
+> power domains has to be modified to do so. In this particular case it
+> would be useful to just have all power domains turned on before probe,
+> just like when a single power-domain is specified:
+
+I you need them to be powered on, just use the corresponding device
+links flags when you create the link during probe.
+
+Something along the lines of this:
+
+device_link_add(dev, genpd_dev0, DL_FLAG_STATELESS |
+DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE);
+
+>
+>     power-domains = <&pd_pci>, <&pd_disp>;
+>
+> But this issue is not strictly related to imx7d pci hanging on
+> suspend/resume, it can be dealt with later.
+
+Maybe not, I don't have the complete picture.
+
+However, you do get the opportunity to use the genpd infrastructure,
+which calls the ->power_on|off() callbacks of the PM domain during
+suspend/resume. And by using the dev_link_add(), you can make sure
+that the PM domain gets powered on/off in the order as the
+corresponding supplier device.
+
+Kind regards
+Uffe
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
