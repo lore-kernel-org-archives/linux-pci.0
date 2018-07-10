@@ -1,74 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v11 00/12] Add MSI-X support on pcitest tool
-Date: Mon, 16 Jul 2018 16:52:12 +0200
-Message-Id: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=Mh2n=J2=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=Mh2n=J2=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Pingfan Liu <kernelfans@gmail.com>, linux-kernel@vger.kernel.org, Grygorii Strashko <grygorii.strashko@ti.com>, Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org, Lukas Wunner <lukas@wunner.de>, Linux PM <linux-pm@vger.kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH v2] driver core: Partially revert "driver core: correct device's shutdown order"
+Date: Tue, 10 Jul 2018 14:51:33 +0200
+Message-ID: <5284251.Resgjlja2Q@aspire.rjw.lan>
+In-Reply-To: <2927655.Y1qg3UnIrE@aspire.rjw.lan>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com> <8816662.k3KXbdkA2e@aspire.rjw.lan> <2927655.Y1qg3UnIrE@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-Patch series made against Lorenzo's master branch.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Fix EP link notification implementation.
+Commit 52cdbdd49853 (driver core: correct device's shutdown order)
+introduced a regression by breaking device shutdown on some systems.
 
-Add MSI-X support on pcitest tool.
+Namely, the devices_kset_move_last() call in really_probe() added by
+that commit is a mistake as it may cause parents to follow children
+in the devices_kset list which then causes shutdown to fail.  For
+example, if a device has children before really_probe() is called
+for it (which is not uncommon), that call will cause it to be
+reordered after the children in the devices_kset list and the
+ordering of that list will not reflect the correct device shutdown
+order any more.
 
-Add new callbacks methods and handlers to trigger the MSI-X interrupts
-on the EP DesignWare IP driver.
+Also it causes the devices_kset list to be constantly reordered
+until all drivers have been probed which is totally pointless
+overhead in the majority of cases and it only covered an issue
+with system shutdown, while system-wide suspend/resume potentially
+had the same issue on the affected platforms (which was not covered).
 
-Allow to set/get MSI-X EP maximum capability number.
+Moreover, the shutdown issue originally addressed by the change in
+really_probe() made by commit 52cdbdd49853 is not present in 4.18-rc
+any more, since dra7 started to use the sdhci-omap driver which
+doesn't disable any regulators during shutdown, so the really_probe()
+part of commit 52cdbdd49853 can be safely reverted.  [The original
+issue was related to the omap_hsmmc driver used by dra7 previously.]
 
-Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
+For the above reasons, revert the really_probe() modifications made
+by commit 52cdbdd49853.
 
-Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
+The other code changes made by commit 52cdbdd49853 are useful and
+they need not be reverted.
 
-Update the pcitest.sh script to support MSI-X feature tests.
+Fixes: 52cdbdd49853 (driver core: correct device's shutdown order)
+Link: https://lore.kernel.org/lkml/CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com/
+Reported-by: Pingfan Liu <kernelfans@gmail.com>
+Tested-by: Pingfan Liu <kernelfans@gmail.com>
+Reviewed-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
 
-Update related documentation accordingly.
+-> v2: Added information from Kishon on the fact that it should be safe
+       to revert the really_probe() modifications added by the
+       problematic commit.  Also added the Reviewed-by tag from Kishon.
 
-Gustavo Pimentel (12):
-  PCI: dwc: Fix EP link notification implementation
-  PCI: endpoint: Add MSI-X interfaces
-  PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
-  PCI: dwc: Add MSI-X callbacks handler
-  PCI: dwc: Rework MSI callbacks handler
-  PCI: dwc: Add legacy interrupt callback handler
-  pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
-  pci-epf-test/pci_endpoint_test: Use irq_type module parameter
-  pci-epf-test/pci_endpoint_test: Add MSI-X support
-  pci_endpoint_test: Add 2 ioctl commands
-  tools: PCI: Add MSI-X support
-  PCI: endpoint: Add MSI set maximum restriction
+---
+ drivers/base/dd.c |    8 --------
+ 1 file changed, 8 deletions(-)
 
- .../PCI/endpoint/function/binding/pci-test.txt     |   2 +
- Documentation/PCI/endpoint/pci-endpoint.txt        |   4 +-
- Documentation/PCI/endpoint/pci-test-function.txt   |  29 ++-
- Documentation/PCI/endpoint/pci-test-howto.txt      |  30 ++-
- Documentation/ioctl/ioctl-number.txt               |   1 +
- Documentation/misc-devices/pci-endpoint-test.txt   |   6 +
- drivers/misc/pci_endpoint_test.c                   | 276 ++++++++++++++++-----
- drivers/pci/controller/dwc/pci-dra7xx.c            |   2 +-
- drivers/pci/controller/dwc/pcie-artpec6.c          |   2 +-
- drivers/pci/controller/dwc/pcie-designware-ep.c    | 210 ++++++++++++++--
- drivers/pci/controller/dwc/pcie-designware-plat.c  |  11 +-
- drivers/pci/controller/dwc/pcie-designware.h       |  29 ++-
- drivers/pci/controller/pcie-cadence-ep.c           |   3 +-
- drivers/pci/controller/pcie-rockchip-ep.c          |   2 +-
- drivers/pci/endpoint/functions/pci-epf-test.c      |  86 +++++--
- drivers/pci/endpoint/pci-ep-cfs.c                  |  24 ++
- drivers/pci/endpoint/pci-epc-core.c                |  68 ++++-
- include/linux/pci-epc.h                            |  16 +-
- include/linux/pci-epf.h                            |   1 +
- include/uapi/linux/pcitest.h                       |   3 +
- tools/pci/pcitest.c                                |  51 +++-
- tools/pci/pcitest.sh                               |  15 ++
- 22 files changed, 722 insertions(+), 149 deletions(-)
-
--- 
-2.7.4
+Index: linux-pm/drivers/base/dd.c
+===================================================================
+--- linux-pm.orig/drivers/base/dd.c
++++ linux-pm/drivers/base/dd.c
+@@ -434,14 +434,6 @@ re_probe:
+ 			goto probe_failed;
+ 	}
+ 
+-	/*
+-	 * Ensure devices are listed in devices_kset in correct order
+-	 * It's important to move Dev to the end of devices_kset before
+-	 * calling .probe, because it could be recursive and parent Dev
+-	 * should always go first
+-	 */
+-	devices_kset_move_last(dev);
+-
+ 	if (dev->bus->probe) {
+ 		ret = dev->bus->probe(dev);
+ 		if (ret)
