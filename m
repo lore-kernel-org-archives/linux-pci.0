@@ -1,166 +1,138 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:57994 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731042AbeGMQME (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2018 12:12:04 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v10 05/12] PCI: dwc: Rework MSI callbacks handler
-Date: Fri, 13 Jul 2018 17:56:37 +0200
-Message-Id: <be1117c4969c82dbad60ce0f5e9104ba5d5e3446.1531496321.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=ve5H=J2=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=ve5H=J2=gmail.com=rjwysocki@kernel.org>
+MIME-Version: 1.0
+Sender: rjwysocki@gmail.com
+In-Reply-To: <CAErSpo4TOiBtdG0iwgeFpv76Lhs4s7PXAWv5_DG-VRyEoP5bOQ@mail.gmail.com>
+References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
+ <2108146.dv4EAOf6IP@aspire.rjw.lan> <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
+ <8816662.k3KXbdkA2e@aspire.rjw.lan> <CAErSpo4eaaieQiZjAejXAoCv82wddPOcRQXpiqD6X=fFW5XAHQ@mail.gmail.com>
+ <CAJZ5v0hVDo-Y2gPTxd6yHVY=vr093hai1VhLzNzzhFkKe0LoKA@mail.gmail.com> <CAErSpo4TOiBtdG0iwgeFpv76Lhs4s7PXAWv5_DG-VRyEoP5bOQ@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 10 Jul 2018 12:29:11 +0200
+Message-ID: <CAJZ5v0jz4wfrACU6WwUfuyzoxXqQsWVhvFf1B3K5z7FjngjOYQ@mail.gmail.com>
+Subject: Re: [PATCH] driver core: Drop devices_kset_move_last() call from really_probe()
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Pingfan Liu <kernelfans@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
+	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
+	Linux PCI <linux-pci@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>,
+	Linux PM list <linux-pm@vger.kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove duplicate defines located on pcie-designware.h file already
-available on /include/uapi/linux/pci-regs.h file.
+On Tue, Jul 10, 2018 at 12:06 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Kishon]
+>
+> On Mon, Jul 9, 2018 at 4:35 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
+>>
+>> On Mon, Jul 9, 2018 at 3:57 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> > On Fri, Jul 6, 2018 at 5:01 AM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> >>
+>> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> >>
+>> >> The devices_kset_move_last() call in really_probe() is a mistake
+>> >> as it may cause parents to follow children in the devices_kset list
+>> >> which then causes system shutdown to fail.  Namely, if a device has
+>> >> children before really_probe() is called for it (which is not
+>> >> uncommon), that call will cause it to be reordered after the children
+>> >> in the devices_kset list and the ordering of that list will not
+>> >> reflect the correct device shutdown order.
+>> >>
+>> >> Also it causes the devices_kset list to be constantly reordered
+>> >> until all drivers have been probed which is totally pointless
+>> >> overhead in the majority of cases.
+>> >>
+>> >> For that reason, revert the really_probe() modifications made by
+>> >> commit 52cdbdd49853.
+>> >
+>> > I'm sure you've considered this, but I can't figure out whether this
+>> > patch will reintroduce the problem that was solved by 52cdbdd49853.
+>> > That patch updated two places: (1) really_probe(), the change you're
+>> > reverting here, and (2) device_move().
+>> >
+>> > device_move() is only called from 4-5 places, none of which look
+>> > related to the problem fixed by 52cdbdd49853, so it seems like that
+>> > problem was probably resolved by the hunk you're reverting.
+>>
+>> That's right, but I don't want to revert all of it.  The other parts
+>> of it are kind of useful as they make the handling of the devices_kset
+>> list be consistent with the handling of dpm_list.
+>>
+>> The hunk I'm reverting, however, is completely off.  It not only is
+>> incorrect (as per the above), but it also causes the devices_kset list
+>> and dpm_list to be handled differently.
+>
+> If I understand correctly, you are saying:
+>
+>   - the 52cdbdd49853 really_probe() hunk fixed a problem, but
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Replaced wrong return value 0 to -EINVAL.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Moved pci_epc_set_msi maximum interrupts validation into a new patch
-file #11.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Nothing changed, just to follow the patch set version.
-Change v9->v10:
- - Nothing changed, just to follow the patch set version.
+It papered over a shutdown failure.  Calling it a "fix" is an overstatement IMO.
 
- drivers/pci/controller/dwc/pcie-designware-ep.c | 49 +++++++++++++++++--------
- drivers/pci/controller/dwc/pcie-designware.h    | 11 ------
- 2 files changed, 33 insertions(+), 27 deletions(-)
+>   - that hunk was the wrong fix for it, and
+>   - this patch removes the wrong fix (and probably reintroduces the problem)
+>
+> If devices_kset is supposed to be ordered so children follow parents,
+> I agree the really_probe() hunk doesn't make much sense because the
+> parent/child relation is determined by the circuit design, not by the
+> probe order.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 23be2c0..dd9c366 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -246,29 +246,38 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
- 
- static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
- {
--	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 val, reg;
-+
-+	if (!ep->msi_cap)
-+		return -EINVAL;
- 
--	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
--	if (!(val & MSI_CAP_MSI_EN_MASK))
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	val = dw_pcie_readw_dbi(pci, reg);
-+	if (!(val & PCI_MSI_FLAGS_ENABLE))
- 		return -EINVAL;
- 
--	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
-+	val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
-+
- 	return val;
- }
- 
--static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
-+static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- {
--	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 val, reg;
- 
--	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
--	val &= ~MSI_CAP_MMC_MASK;
--	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
-+	if (!ep->msi_cap)
-+		return -EINVAL;
-+
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	val = dw_pcie_readw_dbi(pci, reg);
-+	val &= ~PCI_MSI_FLAGS_QMASK;
-+	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
- 	dw_pcie_dbi_ro_wr_en(pci);
--	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
-+	dw_pcie_writew_dbi(pci, reg, val);
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	return 0;
-@@ -367,21 +376,29 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct pci_epc *epc = ep->epc;
- 	u16 msg_ctrl, msg_data;
--	u32 msg_addr_lower, msg_addr_upper;
-+	u32 msg_addr_lower, msg_addr_upper, reg;
- 	u64 msg_addr;
- 	bool has_upper;
- 	int ret;
- 
-+	if (!ep->msi_cap)
-+		return -EINVAL;
-+
- 	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
--	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	msg_ctrl = dw_pcie_readw_dbi(pci, reg);
- 	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
--	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-+	reg = ep->msi_cap + PCI_MSI_ADDRESS_LO;
-+	msg_addr_lower = dw_pcie_readl_dbi(pci, reg);
- 	if (has_upper) {
--		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
--		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
-+		reg = ep->msi_cap + PCI_MSI_ADDRESS_HI;
-+		msg_addr_upper = dw_pcie_readl_dbi(pci, reg);
-+		reg = ep->msi_cap + PCI_MSI_DATA_64;
-+		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	} else {
- 		msg_addr_upper = 0;
--		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
-+		reg = ep->msi_cap + PCI_MSI_DATA_32;
-+		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	}
- 	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
- 	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 00ac419..e8b97f5 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -96,17 +96,6 @@
- #define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
- 			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
- 
--#define MSI_MESSAGE_CONTROL		0x52
--#define MSI_CAP_MMC_SHIFT		1
--#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
--#define MSI_CAP_MME_SHIFT		4
--#define MSI_CAP_MSI_EN_MASK		0x1
--#define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
--#define MSI_MESSAGE_ADDR_L32		0x54
--#define MSI_MESSAGE_ADDR_U32		0x58
--#define MSI_MESSAGE_DATA_32		0x58
--#define MSI_MESSAGE_DATA_64		0x5C
--
- #define MAX_MSI_IRQS			256
- #define MAX_MSI_IRQS_PER_CTRL		32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
--- 
-2.7.4
+Exactly.
+
+> It just seems like it's worth being clear that we're reintroducing the
+> problem fixed by 52cdbdd49853, so it needs to be solved a different
+> way.
+
+OK
+
+> Ideally that would be done before this patch so there's not a
+> regression, and this changelog could mention what's happening.
+
+Well, commit 52cdbdd49853 introduced a regression by itself, but that
+regression has only been reported recently.
+
+I don't really want to go into a discussion on which of the two
+regressions is more painful, but then IMO going back to the state from
+before commit 52cdbdd49853 is fair enough.  Hence the patch.
+
+>> It had attempted to fix something, but it failed miserably at that.
+>
+> If you're saying that 52cdbdd49853 *tried* to fix a DRA7XX_evm reboot
+> problem, but in fact, it did not fix that problem, then I guess there
+> should be no issue with reverting that hunk.
+
+Again, it hid the reboot problem by changing the core in a way that
+led to a shutdown regression elsewhere.
+
+Also it looks like the platform(s) having that reboot issue do(es)n't
+really do system-wide suspend/resume, because that "fix" obviously
+doesn't help there.
+
+>> >> Fixes: 52cdbdd49853 (driver core: correct device's shutdown order)
+>> >> Link: https://lore.kernel.org/lkml/CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com/
+>> >> Reported-by: Pingfan Liu <kernelfans@gmail.com>
+>> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> >> ---
+>> >>  drivers/base/dd.c |    8 --------
+>> >>  1 file changed, 8 deletions(-)
+>> >>
+>> >> Index: linux-pm/drivers/base/dd.c
+>> >> ===================================================================
+>> >> --- linux-pm.orig/drivers/base/dd.c
+>> >> +++ linux-pm/drivers/base/dd.c
+>> >> @@ -434,14 +434,6 @@ re_probe:
+>> >>                         goto probe_failed;
+>> >>         }
+>> >>
+>> >> -       /*
+>> >> -        * Ensure devices are listed in devices_kset in correct order
+>> >> -        * It's important to move Dev to the end of devices_kset before
+>> >> -        * calling .probe, because it could be recursive and parent Dev
+>> >> -        * should always go first
+>> >> -        */
+>> >> -       devices_kset_move_last(dev);
+>> >> -
+>> >>         if (dev->bus->probe) {
+>> >>                 ret = dev->bus->probe(dev);
+>> >>                 if (ret)
+>> >>
