@@ -1,67 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:35010 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729628AbeGMNdF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Jul 2018 09:33:05 -0400
-Date: Fri, 13 Jul 2018 14:20:23 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Shawn Guo <shawn.guo@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 0/9] PCI: dwc: Drop unnecessary root_bus_nr setting
-Message-ID: <20180713132023.GC18515@red-moon>
-References: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45862 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754548AbeGJDLH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Jul 2018 23:11:07 -0400
+Date: Tue, 10 Jul 2018 11:10:55 +0800
+From: Baoquan He <bhe@redhat.com>
+To: Ye Xiaolong <xiaolong.ye@intel.com>
+Cc: kbuild test robot <lkp@intel.com>, nicolas.pitre@linaro.org,
+        brijesh.singh@amd.com, thomas.lendacky@amd.com, airlied@linux.ie,
+        linux-pci@vger.kernel.org, richard.weiyang@gmail.com,
+        keith.busch@intel.com, jcmvbkbc@gmail.com,
+        baiyaowei@cmss.chinamobile.com, frowand.list@gmail.com,
+        tglx@linutronix.de, lorenzo.pieralisi@arm.com,
+        sthemmin@microsoft.com, linux-nvdimm@lists.01.org,
+        patrik.r.jakobsson@gmail.com, andy.shevchenko@gmail.com,
+        linux-input@vger.kernel.org, gustavo@padovan.org, bp@suse.de,
+        dyoung@redhat.com, vgoyal@redhat.com, ebiederm@xmission.com,
+        devicetree@vger.kernel.org, haiyangz@microsoft.com,
+        maarten.lankhorst@linux.intel.com, josh@joshtriplett.org,
+        jglisse@redhat.com, robh+dt@kernel.org, seanpaul@chromium.org,
+        bhelgaas@google.com, dan.j.williams@intel.com, yinghai@kernel.org,
+        jonathan.derrick@intel.com, chris@zankel.net, monstr@monstr.eu,
+        linux-parisc@vger.kernel.org, gregkh@linuxfoundation.org,
+        dmitry.torokhov@gmail.com, kexec@lists.infradead.org,
+        linux-kernel@vger.kernel.org, kbuild-all@01.org,
+        devel@linuxdriverproject.org, akpm@linux-foundation.org,
+        fengguang.wu@intel.com, linuxppc-dev@lists.ozlabs.org,
+        davem@davemloft.net
+Subject: Re: [kbuild-all] [PATCH v6 2/4] resource: Use list_head to link
+ sibling resource
+Message-ID: <20180710031055.GC1969@MiWiFi-R3L-srv>
+References: <20180704041038.8190-3-bhe@redhat.com>
+ <201807042347.hfDcKxmG%fengguang.wu@intel.com>
+ <20180708025946.GI3047@MiWiFi-R3L-srv>
+ <20180710005927.GG10005@yexl-desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
+In-Reply-To: <20180710005927.GG10005@yexl-desktop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 01, 2018 at 11:54:42AM +0800, Shawn Guo wrote:
-> The designware core function dw_pcie_host_init() already initializes
-> the root_bus_nr field of 'struct pcie_port', so the -1 assignment prior
-> to calling dw_pcie_host_init() in platform specific driver is not really
-> needed.  Drop it.
+On 07/10/18 at 08:59am, Ye Xiaolong wrote:
+> Hi,
 > 
-> Changes for v3:
->  - Rebase to v4.18-rc1
->  - Collect ACK from Pratyush on spear13xx driver
+> On 07/08, Baoquan He wrote:
+> >Hi,
+> >
+> >On 07/05/18 at 01:00am, kbuild test robot wrote:
+> >> Hi Baoquan,
+> >> 
+> >> I love your patch! Yet something to improve:
+> >> 
+> >> [auto build test ERROR on linus/master]
+> >> [also build test ERROR on v4.18-rc3 next-20180704]
+> >> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> >
+> >Thanks for telling. 
+> >
+> >I cloned 0day-ci/linut to my local pc.
+> >https://github.com/0day-ci/linux.git
+> >
+> >However, I didn't find below branch. And tried to open it in web
+> >broswer, also failed.
+> >
 > 
-> Changes for v2:
->  - Improve commit log a bit per Thomas' suggestion.
->  - Collect ACK from Thomas and Stanimir on armada8k and qcom driver.
-> 
-> 
-> Shawn Guo (9):
->   PCI: exynos: Drop unnecessary root_bus_nr setting
->   PCI: imx6: Drop unnecessary root_bus_nr setting
->   PCI: keystone: Drop unnecessary root_bus_nr setting
->   PCI: armada8k: Drop unnecessary root_bus_nr setting
->   PCI: artpec6: Drop unnecessary root_bus_nr setting
->   PCI: designware-plat: Drop unnecessary root_bus_nr setting
->   PCI: histb: Drop unnecessary root_bus_nr setting
->   PCI: qcom: Drop unnecessary root_bus_nr setting
->   PCI: spear13xx: Drop unnecessary root_bus_nr setting
-> 
->  drivers/pci/controller/dwc/pci-exynos.c           | 1 -
->  drivers/pci/controller/dwc/pci-imx6.c             | 1 -
->  drivers/pci/controller/dwc/pci-keystone.c         | 1 -
->  drivers/pci/controller/dwc/pcie-armada8k.c        | 1 -
->  drivers/pci/controller/dwc/pcie-artpec6.c         | 1 -
->  drivers/pci/controller/dwc/pcie-designware-plat.c | 1 -
->  drivers/pci/controller/dwc/pcie-histb.c           | 1 -
->  drivers/pci/controller/dwc/pcie-qcom.c            | 1 -
->  drivers/pci/controller/dwc/pcie-spear13xx.c       | 1 -
->  9 files changed, 9 deletions(-)
+> Sorry for the inconvenience, 0day bot didn't push the branch to github successfully,
+> Just push it manually, you can have a try again.
 
-Applied to pci/dwc for v4.19, thanks.
+Thanks, Xiaolong, I have applied them on top of linux-next/master, and
+copy the config file attached, and run the command to reproduce as
+suggested. Now I have fixed all those issues reported, will repost.
 
-Lorenzo
+> 
+> >
+> >> url:    https://github.com/0day-ci/linux/commits/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180704-121402
+> >> config: mips-rb532_defconfig (attached as .config)
+> >> compiler: mipsel-linux-gnu-gcc (Debian 7.2.0-11) 7.2.0
+> >> reproduce:
+> >>         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+> >>         chmod +x ~/bin/make.cross
+> >>         # save the attached .config to linux build tree
+> >>         GCC_VERSION=7.2.0 make.cross ARCH=mips 
+> >
+> >I did find a old one which is for the old version 5 post.
+> >
+> >[bhe@linux]$ git remote -v
+> >0day-ci	https://github.com/0day-ci/linux.git (fetch)
+> >0day-ci	https://github.com/0day-ci/linux.git (push)
+> >[bhe@dhcp-128-28 linux]$ git branch -a| grep Baoquan| grep resource
+> >  remotes/0day-ci/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180612-113600
+> >
+> >Could you help have a look at this?
+> >
+> >Thanks
+> >Baoquan
+> >
+> >> 
+> >> All error/warnings (new ones prefixed by >>):
+> >> 
+> >> >> arch/mips/pci/pci-rc32434.c:57:11: error: initialization from incompatible pointer type [-Werror=incompatible-pointer-types]
+> >>      .child = &rc32434_res_pci_mem2
+> >>               ^
+> >>    arch/mips/pci/pci-rc32434.c:57:11: note: (near initialization for 'rc32434_res_pci_mem1.child.next')
+> >> >> arch/mips/pci/pci-rc32434.c:51:47: warning: missing braces around initializer [-Wmissing-braces]
+> >>     static struct resource rc32434_res_pci_mem1 = {
+> >>                                                   ^
+> >>    arch/mips/pci/pci-rc32434.c:60:47: warning: missing braces around initializer [-Wmissing-braces]
+> >>     static struct resource rc32434_res_pci_mem2 = {
+> >>                                                   ^
+> >>    cc1: some warnings being treated as errors
+> >> 
+> >> vim +57 arch/mips/pci/pci-rc32434.c
+> >> 
+> >> 73b4390f Ralf Baechle 2008-07-16  50  
+> >> 73b4390f Ralf Baechle 2008-07-16 @51  static struct resource rc32434_res_pci_mem1 = {
+> >> 73b4390f Ralf Baechle 2008-07-16  52  	.name = "PCI MEM1",
+> >> 73b4390f Ralf Baechle 2008-07-16  53  	.start = 0x50000000,
+> >> 73b4390f Ralf Baechle 2008-07-16  54  	.end = 0x5FFFFFFF,
+> >> 73b4390f Ralf Baechle 2008-07-16  55  	.flags = IORESOURCE_MEM,
+> >> 73b4390f Ralf Baechle 2008-07-16  56  	.sibling = NULL,
+> >> 73b4390f Ralf Baechle 2008-07-16 @57  	.child = &rc32434_res_pci_mem2
+> >> 73b4390f Ralf Baechle 2008-07-16  58  };
+> >> 73b4390f Ralf Baechle 2008-07-16  59  
+> >> 
+> >> :::::: The code at line 57 was first introduced by commit
+> >> :::::: 73b4390fb23456964201abda79f1210fe337d01a [MIPS] Routerboard 532: Support for base system
+> >> 
+> >> :::::: TO: Ralf Baechle <ralf@linux-mips.org>
+> >> :::::: CC: Ralf Baechle <ralf@linux-mips.org>
+> >> 
+> >> ---
+> >> 0-DAY kernel test infrastructure                Open Source Technology Center
+> >> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> >
+> >
+> >_______________________________________________
+> >kbuild-all mailing list
+> >kbuild-all@lists.01.org
+> >https://lists.01.org/mailman/listinfo/kbuild-all
