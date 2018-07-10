@@ -1,68 +1,92 @@
-Return-Path: <SRS0=+4Ye=JW=broadcom.com=ray.jui@kernel.org>
-Return-Path: <SRS0=+4Ye=JW=broadcom.com=ray.jui@kernel.org>
-Subject: Re: [PATCH v2 0/5] Improve Broadcom PAXC support
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org
-References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
- <20180706162034.GA14923@red-moon>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <bfc6d35e-6184-7354-14f6-fb37844cc4ee@broadcom.com>
-Date: Fri, 6 Jul 2018 15:47:07 -0700
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alan Douglas <adouglas@cadence.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
+        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v9 10/12] pci_endpoint_test: Add 2 ioctl commands
+Date: Tue, 10 Jul 2018 10:10:32 +0000
+Message-ID: <MWHPR07MB35020A4BD96C8B34E9A0EB83D85B0@MWHPR07MB3502.namprd07.prod.outlook.com>
+References: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
+ <185f0395d22083c04364cb81b4c2e2448fa89fb2.1531155252.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <185f0395d22083c04364cb81b4c2e2448fa89fb2.1531155252.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20180706162034.GA14923@red-moon>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
-
-On 7/6/2018 9:20 AM, Lorenzo Pieralisi wrote:
-> On Mon, Jun 11, 2018 at 05:21:02PM -0700, Ray Jui wrote:
->> This patch series improves the Broadcom PAXC support by 1) adding more
->> quirks for specific versions of PAXC controllers; 2) adding logic to
->> reject internally unconfigured physical functions from the embedded
->> network processor acting as endpoint; 3) reducing verbose print level
->> in the outbound/inbound mapping code
-> 
-> Nit: commit log sentences must be terminated with periods, that's valid
-> for all patches in your series inclusive of this cover letter, I can
-> change them myself but pointing this out so that you will be able
-> to do it yourself next time.
-> 
-> Lorenzo
-> 
-
-Got it. I'll make sure commit message sentences are terminated with 
-periods in the future.
-
-Thanks a lot!
-
-Ray
-
->> This patch series is based off v4.17 and is available on GIHUB:
->> repo: https://github.com/Broadcom/arm64-linux.git
->> branch: sr-paxc-v2
->>
->> Changes since v1:
->>   - consolidate 2 PAXC related patch series into 1
->>   - change the way how the capability list corruption is handled, per
->> recommendation from Bjorn. Now handle and fix up the corruption at
->> the config register read
->>   - rebase to v4.17
->>
->> Ray Jui (5):
->>    PCI: iproc: Activate PAXC bridge quirk for more devices
->>    PCI: iproc: Fix up corrupted PAXC root complex config registers
->>    PCI: iproc: Disable MSI parsing in certain PAXC blocks
->>    PCI: iproc: Reject unconfigured physical functions from PAXC
->>    PCI: iproc: Reduce inbound/outbound mapping print level
->>
->>   drivers/pci/host/pcie-iproc.c | 159 +++++++++++++++++++++++++++++++++++-------
->>   drivers/pci/host/pcie-iproc.h |   8 +++
->>   drivers/pci/quirks.c          |   3 +
->>   3 files changed, 144 insertions(+), 26 deletions(-)
->>
->> -- 
->> 2.1.4
->>
+On 09 July 2018 18:43 Gustavo Pimentel wrote:
+> Add MSI-X support and update driver documentation accordingly.
+>=20
+> Add 2 new IOCTL commands:
+>  - Allow to reconfigure driver IRQ type in runtime.
+>  - Allow to retrieve current driver IRQ type configured.
+>=20
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+> Change v2->v3:
+>  - New patch file created base on the previous patch
+> "misc: pci_endpoint_test: Add MSI-X support" patch file following
+> Kishon's suggestion.
+> Change v3->v4:
+>  - Rebased to Lorenzo's master branch v4.18-rc1.
+> Change v4->v5:
+>  - Nothing changed, just to follow the patch set version.
+> Change v5->v6:
+>  - Moved PCITEST_SET_IRQTYPE and PCITEST_GET_IRQTYPE ioctl entries
+> from patch #10 to here.
+>  - Increased ioctl parameters range associated to
+> drivers/misc/pci_endpoint_test.c driver.
+> Change v6->v7:
+>  - irq_type variable update just before returning the function.
+> Change v7->v8:
+>  - Re-sending the patch series.
+> Change v8->v9:
+>  - Added a extra parameter to pci_endpoint_test_alloc_irq_vectors,
+> that specifies which irq type should be allocated.
+>=20
+>  Documentation/ioctl/ioctl-number.txt             |   2 +-
+>  Documentation/misc-devices/pci-endpoint-test.txt |   3 +
+>  drivers/misc/pci_endpoint_test.c                 | 176 +++++++++++++++++=
+------
+>  include/uapi/linux/pcitest.h                     |   2 +
+>  4 files changed, 136 insertions(+), 47 deletions(-)
+>=20
+> diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/i=
+octl-number.txt
+> index 65259d4..c15c4f3 100644
+> --- a/Documentation/ioctl/ioctl-number.txt
+> +++ b/Documentation/ioctl/ioctl-number.txt
+> @@ -166,7 +166,7 @@ Code  Seq#(hex)	Include File		Comments
+>  'P'	all	linux/soundcard.h	conflict!
+>  'P'	60-6F	sound/sscape_ioctl.h	conflict!
+>  'P'	00-0F	drivers/usb/class/usblp.c	conflict!
+> -'P'	01-07	drivers/misc/pci_endpoint_test.c	conflict!
+> +'P'	01-09	drivers/misc/pci_endpoint_test.c	conflict!
+>  'Q'	all	linux/soundcard.h
+>  'R'	00-1F	linux/random.h		conflict!
+>  'R'	01	linux/rfkill.h		conflict!
+> diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documenta=
+tion/misc-devices/pci-endpoint-test.txt
+> index fdfa0f6..58ccca4 100644
+> --- a/Documentation/misc-devices/pci-endpoint-test.txt
+> +++ b/Documentation/misc-devices/pci-endpoint-test.txt
+> @@ -28,6 +28,9 @@ ioctl
+>  	      to be tested should be passed as argument.
+>   PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
+>  	      to be tested should be passed as argument.
+> + PCITEST_SET_IRQTYPE: Changes driver IRQ type configuration. The IRQ typ=
+e
+> +	      should be passed as argument (0: Legacy, 1:MSI, 2:MSI-X).
+> + PCITEST_GET_IRQTYPE: Gets driver IRQ type configuration.
+I've tested this latest set of patches with the cadence ep driver, which
+does not yet support MSI-X, and can confirm that setting, getting and using
+legacy and MSI IRQ type IRQs is working correctly.  Setting MSI-X fails, as
+expected.
