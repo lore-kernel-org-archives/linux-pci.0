@@ -1,99 +1,68 @@
-Return-Path: <SRS0=j6uk=KP=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Return-Path: <SRS0=j6uk=KP=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Date: Tue, 31 Jul 2018 09:01:12 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
-	MyungJoo Ham <myungjoo.ham@samsung.com>,
-	Chanwoo Choi <cw00.choi@samsung.com>,
-	Sebastian Reichel <sre@kernel.org>, Milo Kim <milo.kim@ti.com>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH] PCI: let pci_request_irq properly deal with threaded
- interrupts
-Message-ID: <20180731080111.GG17271@n2100.armlinux.org.uk>
-References: <d004975f-03a8-59f5-56ef-f4e1f8e12dfb@gmail.com>
- <20180730213028.GC45322@bhelgaas-glaptop.roam.corp.google.com>
- <20180730224252.GE45322@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.DEB.2.21.1807310047320.1725@nanos.tec.linutronix.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ua0-f194.google.com ([209.85.217.194]:43772 "EHLO
+        mail-ua0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726635AbeGKH0V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2018 03:26:21 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.21.1807310047320.1725@nanos.tec.linutronix.de>
-Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
+In-Reply-To: <20180711065724.128299-2-songxiaowei@hisilicon.com>
+References: <20180711065724.128299-1-songxiaowei@hisilicon.com> <20180711065724.128299-2-songxiaowei@hisilicon.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 11 Jul 2018 10:23:28 +0300
+Message-ID: <CAHp75VfqGC5KNi4mCc3Q0bD0jXb4bkkdYFSv3LDQw5E=goc2Pg@mail.gmail.com>
+Subject: Re: [PATCH v6 1/1] PCI: kirin: Add MSI support
+To: Xiaowei Song <songxiaowei@hisilicon.com>
+Cc: Wangbinghui <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>, linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Suzhuangluan <suzhuangluan@hisilicon.com>,
+        Kongfei <kongfei@hisilicon.com>, Yao Chen <chenyao11@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 31, 2018 at 12:50:21AM +0200, Thomas Gleixner wrote:
-> On Mon, 30 Jul 2018, Bjorn Helgaas wrote:
-> 
-> > [+cc maintainers of possibly erroneous callers of request_threaded_irq()]
-> > 
-> > On Mon, Jul 30, 2018 at 04:30:28PM -0500, Bjorn Helgaas wrote:
-> > > [+cc Thomas, Christoph, LKML]
-> > > 
-> > > On Mon, Jul 30, 2018 at 12:03:42AM +0200, Heiner Kallweit wrote:
-> > > > If we have a threaded interrupt with the handler being NULL, then
-> > > > request_threaded_irq() -> __setup_irq() will complain and bail out
-> > > > if the IRQF_ONESHOT flag isn't set. Therefore check for the handler
-> > > > being NULL and set IRQF_ONESHOT in this case.
-> > > > 
-> > > > This change is needed to migrate the mei_me driver to
-> > > > pci_alloc_irq_vectors() and pci_request_irq().
-> > > > 
-> > > > Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
-> > > 
-> > > I'd like an ack from Thomas because this requirement about IRQF_ONESHOT
-> > > usage isn't mentioned in the request_threaded_irq() function doc or
-> > > Documentation/
-> > 
-> > Possibly these other request_threaded_irq() callers are similarly
-> > broken?  I can't tell for sure about tda998x_create(), but all the
-> > others certainly call request_threaded_irq() with "handler == NULL"
-> > and irqflags that do not contain IRQF_ONESHOT:
-> > 
-> >   tda998x_create()
-> >     request_threaded_irq(client->irq, NULL, ..., irqd_get_trigger_type(), ...)
-> >     (I can't tell what irqd_get_trigger_type() does)
-> 
-> It reads the trigger type back from the irq chip (level/edge/polarity) but
-> does not return with the ONESHOT bit set.
+On Wed, Jul 11, 2018 at 9:57 AM, Xiaowei Song <songxiaowei@hisilicon.com> wrote:
+> Add support for MSI
 
-What tree are you (Bjorn) using there?  Looking in my git history,
-request_threaded_irq() was added in January 2014, as:
+> +static int kirin_pcie_add_msi(struct dw_pcie *pci,
+> +                               struct platform_device *pdev)
+> +{
+> +       int ret = 0;
+> +
+> +       if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +               ret = platform_get_irq(pdev, 0);
+> +               if (ret < 0) {
+> +                       dev_err(&pdev->dev,
+> +                               "failed to get MSI IRQ (%d)\n", ret);
+> +                       return ret;
+> +               }
+> +
+> +               pci->pp.msi_irq = ret;
+> +       }
+> +
+> +       return ret;
+> +}
 
-+               irqf_trigger =
-+                       irqd_get_trigger_type(irq_get_irq_data(client->irq));
-+               ret = request_threaded_irq(client->irq, NULL,
-+                                          tda998x_irq_thread,
-+                                          irqf_trigger | IRQF_ONESHOT,
-+                                          "tda998x", priv);
+Like someone already noticed, is it really IRQ number you would like to return?
 
-and updated more recently for the CEC support in ae81553c30ef
-("drm/i2c: tda998x: allow interrupt to be shared") to be:
+If you rewrite like
 
--               irqf_trigger =
-+               irq_flags =
-                        irqd_get_trigger_type(irq_get_irq_data(client->irq));
-+               irq_flags |= IRQF_SHARED | IRQF_ONESHOT;
-                ret = request_threaded_irq(client->irq, NULL,
--                                          tda998x_irq_thread,
--                                          irqf_trigger | IRQF_ONESHOT,
-+                                          tda998x_irq_thread, irq_flags,
-                                           "tda998x", priv);
+int irq;
 
-In all cases, IRQF_ONESHOT has been set for this threaded interrupt.
+if (IS_ENABLED(...)) {
+ irq = ...
+ if (irq < 0)
+   return irq;
 
-I've also checked drm-next, and it doesn't show anything like what
-Bjorn quoted.
+... = irq;
 
-Confused.  Bjorn, can you double check that what you think are
-erroneous request_threaded_irq() calls are actually as per what
-you quoted please?
+}
+
+return 0;
+
+It would be slightly more explicit what you do and what you return.
 
 -- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 13.8Mbps down 630kbps up
-According to speedtest.net: 13Mbps down 490kbps up
+With Best Regards,
+Andy Shevchenko
