@@ -1,163 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54394 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389210AbeG0Vtx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Jul 2018 17:49:53 -0400
-Date: Fri, 27 Jul 2018 15:26:19 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rajat Jain <rajatja@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <garsilva@embeddedor.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mayurkumar.patel@intel.com, rajatxjain@gmail.com,
-        Richard Hughes <rhughes@redhat.com>,
-        Carlos Garnacho <cgarnach@redhat.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Pali Rohar <pali.rohar@gmail.com>,
-        Takashi Iwai <tiwai@suse.de>,
-        Andy Whitcroft <apw@canonical.com>,
-        Colin Ian King <colin.king@canonical.com>
-Subject: Re: [PATCH v2] pci/aspm: Remove CONFIG_PCIEASPM_DEBUG
-Message-ID: <20180727202619.GD173328@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180508230148.121852-1-rajatja@google.com>
- <20180510233912.96454-1-rajatja@google.com>
+Received: from szxga07-in.huawei.com ([45.249.212.35]:38085 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726205AbeGKIM7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jul 2018 04:12:59 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <wangbinghui@hisilicon.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <robh+dt@kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <suzhuangluan@hisilicon.com>, <andy.shevchenko@gmail.com>
+CC: <kongfei@hisilicon.com>, <chenyao11@huawei.com>,
+        <songxiaowei@hisilicon.com>
+Subject: [PATCH v7 0/1] PCI: kirin: Add MSI support
+Date: Wed, 11 Jul 2018 16:09:45 +0800
+Message-ID: <20180711080946.14942-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180510233912.96454-1-rajatja@google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, Richard, Carlos, Pali, Takashi, Andy, Colin for question
-about how to expose ASPM power management in sysfs]
 
-On Thu, May 10, 2018 at 04:39:12PM -0700, Rajat Jain wrote:
-> ...
-> And some suggestions from Bjorn here:
-> https://www.spinics.net/lists/linux-pci/msg60541.html
-> 
-> This patch picks up one of the suggestion, to remove the
-> CONFIG_PCIEASPM_DEBUG and thus make the code always
-> avilable. This provides control to userspace to control
-> ASPM on a per slot / device basis using sysfs interface.
+Before Version Patches
+======================
+patch v6
+https://patchwork.kernel.org/patch/10518843/
+patch v5
+https://patchwork.kernel.org/patch/10493797/
+patch v4
+https://patchwork.kernel.org/patch/10402399/
+patch v3
+https://www.spinics.net/lists/linux-pci/msg72322.html
+patch v2
+https://www.spinics.net/lists/kernel/msg2797610.html
 
-TL;DR: When CONFIG_PCIEASPM_DEBUG=y, Linux makes ASPM control files
-       visible in sysfs, associated with the upstream end (e.g., Root
-       Port) of a link.  Should these files be associated with the
-       downstream end (e.g., NIC, GPU, etc) instead?
+patch v1
+https://www.spinics.net/lists/kernel/msg2796410.html
 
-I think we do need to make ASPM control files visible in sysfs, as
-this patch does.  But I have a question about exactly *how* we want to
-do this.  I had planned to merge this patch for v4.19, but I think
-I'll postpone it until we figure this out.
+Changes between V7 and V6
+=========================
+1. Fix the bug pointed by Lorenzo.
+	(1) Function kirin_pcie_add_msi return 0 instead of irq_num if irq_num ger from DT successfully,
+		according to the comments from Lorenzo and Andy.
+	(2) Rename the variable from 'ret' to 'irq', according to the comments from Andy.
 
-ASPM is a power management feature of a PCIe link, and it affects the
-devices on both ends of that link.  The upstream end (closest to the
-CPU) is typically a Root Port, and the downstream end is typically an
-Endpoint (e.g., a GPU, NIC, or NVMe device).  For example, my laptop
-has these devices:
+Changes between V6 and V5
+=========================
+1. Fix the bug pointed by Lorenzo.
+	(1) The bug of checking the return value of kirin_pcie_add_msi is fixed, which was pointed by Lorenzo.
+2. Test the patch based on Hikey960.
+	2. Test the patch based on Hikey960.
+   (1) the patch is tested on Hikey960 board with COLORFUL CN600 M.2 SSD connected.
+   (2) As i can not cat /proc/interrupts for "adb shell"  is not working, so some log was added to test this patch as following.
+			--- a/drivers/nvme/host/pci.c
+			+++ b/drivers/nvme/host/pci.c
+			@@ -1966,8 +1966,13 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+					pci_free_irq_vectors(pdev);
+					result = pci_alloc_irq_vectors_affinity(pdev, 1, nr_io_queues + 1,
+									PCI_IRQ_ALL_TYPES | PCI_IRQ_AFFINITY, &affd);
+			-       if (result <= 0)
+			+       if (result <= 0) {
+			+               printk(KERN_ERR "NVMe: alloc irq Fail.\n");
+							return -EIO;
+			+       }
+			+       else
+			+               printk(KERN_ERR "PCIe Device NVMe enable MSI IRQ Success.\n");
+			+
 
-  00:1c.2 Intel Root Port to [bus 04]
-  04:00.0 Intel 8260 Wireless NIC
+			--- a/drivers/pci/dwc/pcie-kirin.c
+			+++ b/drivers/pci/dwc/pcie-kirin.c
+			@@ -462,6 +462,9 @@ static int kirin_pcie_add_msi(struct dw_pcie *pci,
+							}
 
-There's a PCIe link between these two devices, and if both ends
-support it, ASPM reduces power usage when the NIC is idle.  The
-hardware reduces power usage automatically; the kernel only needs to
-configure ASPM.
+							pci->pp.msi_irq = ret;
+			+
+			+               dev_err(&pdev->dev,
+			+                               "Kirin PCIe MSI IRQ No.(%d)\n", ret);
+					}
 
-ASPM affects performance as well as power, so we have knobs to control
-the tradeoff.  Starting with the big hammers, we currently have:
+					return ret;
 
-  - Kernel build-time setting (CONFIG_PCIEASPM_PERFORMANCE, etc).
-    Requires kernel rebuild and reboot.
+    (3) The running log is shown as below:
+			...
+			[    0.567993] kirin-pcie f4000000.pcie: Kirin PCIe MSI IRQ No.(55)
+			[    0.568012] PCI: OF: host bridge /soc/pcie@f4000000 ranges:
+			[    0.568026] PCI: OF:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
+			[    0.587310] kirin-pcie f4000000.pcie: PCI host bridge to bus 0000:00
+			[    0.587319] pci_bus 0000:00: root bus resource [bus 00-ff]
+			[    0.587326] pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
+			[    0.587362] pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
+			[    0.587409] pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff 64bit]
+			[    0.587514] pci 0000:00:00.0: supports D1 D2
+			[    0.587519] pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
+			[    0.589065] pci 0000:01:00.0: [10ec:5760] type 00 class 0x010802
+			[    0.589643] pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf6003fff 64bit]
+			[    0.590142] pci 0000:01:00.0: reg 0x24: [mem 0xf6000000-0xf6001fff]
+			[    0.604141] pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff 64bit]
+			[    0.604158] pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
+			[    0.604166] pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf7003fff 64bit]
+			[    0.604344] pci 0000:01:00.0: BAR 5: assigned [mem 0xf7004000-0xf7005fff]
+			[    0.604400] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+			[    0.604409] pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
+			[    0.604750] pcieport 0000:00:00.0: Signaling PME with IRQ 62
+			[    0.604853] pcieport 0000:00:00.0: AER enabled with IRQ 62
+			...
+			[    0.623179] nvme nvme0: pci function 0000:01:00.0
+			[    0.623252] nvme 0000:01:00.0: enabling device (0000 -> 0002)
+			...
+			[    0.974765] PCIe Device NVMe enable MSI IRQ Success.
 
-  - "pcie_aspm=X" kernel boot parameter.  Can only enable/disable and
-    requires a reboot.
+			...
 
-  - /sys/module/pcie_aspm/parameters/policy file.  At any time, root
-    can set the system-wide ASPM policy to one of these settings:
+Changes between V5 and V4
+=========================
+1. rebase the patch based on Linux next-version branch.
+2. fix issues according to review comments from Andy Shevchenko and Lorenzo.
+   (1) Del MSI irq handler for DW handle it, while Kirin only read the number from DT,
+   (2) Use the function dw_pcie_msi_init directly if CONFIG_PCI_MSI is enabled.
 
-      + highest performance, highest power consumption
-      + moderate power saving at cost of some performance
-      + aggressive power saving at cost of more performance
-      + use whatever setting BIOS configured
+Changes between V4 and V3
+=========================
+1. remove DT binding patch, for Wei Xu had applied it.
+2. fix issues according to review comments from Andy Shevchenko.
+   (1) Take the msi number get and request as a seperate function,
+   (2) Use the result of  platform_get_irq as return val.
 
-  - Many /sys/devices/pci0000:00/0000:00:1c.2/power/link_state files.
-    At any time, root can set the ASPM policy to one of the above
-    settings, but for individual devices.  Currently these files are
-    only available when CONFIG_PCIEASPM_DEBUG=y (Red Hat does not
-    enable this, but Ubuntu does).
+Changes between V3 and V2
+=========================
+1. fix issues according to review comments
+   (1)from Bjorn Helgaas: Check for 'pci->pp.msi_irq < 0'.
+   (2)from Bjorn Helgaas: Update the message of 'msi irq' in dev_err().
 
-The patch below changes it so these /sys/devices/.../link_state files
-*always* exist, regardless of CONFIG_PCIEASPM_DEBUG.
+Changes between V2 and V1
+=========================
+1. seperate DT binding patch.
+2. fix issues according to review comments
+   (1)from Bjorn Helgaas: Update the style of subject and changelog.
+   (2)from Bjorn Helgaas: Add msi irq number in the message.
+   (3)from Bjorn Helgaas: Delete unnecessary code 'pci->pp.root_bus_nr = -1'.
+   (4)from Dmitry Shmidt: Fix typing error. Replace 'interrupts-names' of 'interrupt-names'.
 
-The question is where those sysfs files should be.  Currently they are
-associated with the device at the *upstream* end of the link.  In the
-example above, they're associated with the Root Port:
+Xiaowei Song (1):
+  PCI: kirin: Add MSI support
 
-  /sys/devices/pci0000:00/0000:00:1c.2/power/link_state
+ drivers/pci/dwc/pcie-kirin.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-I don't know if that's the right place, or if they should be
-associated with the device at the *downstream* end of the link, i.e.,
-04:00.0.  The downstream end might be better because:
-
-  - It's easier to associate the downstream end with a device the user
-    cares about, e.g., a NIC, GPU, etc.  This is mostly a user-
-    interface issue.
-
-  - A link can lead to a multi-function device, and the spec allows
-    those functions to have different ASPM settings (see PCIe r4.0,
-    sec 5.4.1).  With the sysfs files at the upstream end of the link,
-    we have no way to configure those functions individually.
-
-Any thoughts?
-
-> ...
-> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-> index b12e28b3d8f9..089b9f559d88 100644
-> --- a/drivers/pci/pcie/Kconfig
-> +++ b/drivers/pci/pcie/Kconfig
-> @@ -46,14 +46,6 @@ config PCIEASPM
->  
->  	  When in doubt, say Y.
->  
-> -config PCIEASPM_DEBUG
-> -	bool "Debug PCI Express ASPM"
-> -	depends on PCIEASPM
-> -	default n
-> -	help
-> -	  This enables PCI Express ASPM debug support. It will add per-device
-> -	  interface to control ASPM.
-> -
->  choice
->  	prompt "Default ASPM policy"
->  	default PCIEASPM_DEFAULT
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index c687c817b47d..8ffc13d42baa 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -1161,7 +1161,6 @@ static int pcie_aspm_get_policy(char *buffer, const struct kernel_param *kp)
->  module_param_call(policy, pcie_aspm_set_policy, pcie_aspm_get_policy,
->  	NULL, 0644);
->  
-> -#ifdef CONFIG_PCIEASPM_DEBUG
->  static ssize_t link_state_show(struct device *dev,
->  		struct device_attribute *attr,
->  		char *buf)
-> @@ -1264,7 +1263,6 @@ void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev)
->  		sysfs_remove_file_from_group(&pdev->dev.kobj,
->  			&dev_attr_clk_ctl.attr, power_group);
->  }
-> -#endif
->  
->  static int __init pcie_aspm_disable(char *str)
->  {
-> -- 
-> 2.17.0.441.gb46fe60e1d-goog
-> 
+-- 
+2.11.GIT
