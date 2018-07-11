@@ -1,99 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lj1-f195.google.com ([209.85.208.195]:46066 "EHLO
-        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726277AbeGOQ3r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jul 2018 12:29:47 -0400
-Received: by mail-lj1-f195.google.com with SMTP id q5-v6so27925555ljh.12
-        for <linux-pci@vger.kernel.org>; Sun, 15 Jul 2018 09:06:21 -0700 (PDT)
-Subject: [PATCH 2/8] PCI: of: Fix I/O space page leak
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-renesas-soc@vger.kernel.org
-References: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
-Message-ID: <181e8c62-b486-c6b1-4fce-f32cbf377cdd@cogentembedded.com>
-Date: Sun, 15 Jul 2018 19:06:19 +0300
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <wangbinghui@hisilicon.com>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <robh+dt@kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <suzhuangluan@hisilicon.com>, <andy.shevchenko@gmail.com>
+CC: <kongfei@hisilicon.com>, <chenyao11@huawei.com>,
+        <songxiaowei@hisilicon.com>
+Subject: [PATCH v7 1/1] PCI: kirin: Add MSI support
+Date: Wed, 11 Jul 2018 16:09:46 +0800
+Message-ID: <20180711080946.14942-2-songxiaowei@hisilicon.com>
+In-Reply-To: <20180711080946.14942-1-songxiaowei@hisilicon.com>
+References: <20180711080946.14942-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When testing the R-Car PCIe driver on the Condor board,  I noticed that if
-I left  the PCIe PHY driver disabled, the kernel crashed with this BUG:
+Add support for MSI
 
-[    1.225819] kernel BUG at lib/ioremap.c:72!
-[    1.230007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
-[    1.235496] Modules linked in:
-[    1.238561] CPU: 0 PID: 39 Comm: kworker/0:1 Not tainted 4.17.0-dirty #1092
-[    1.245526] Hardware name: Renesas Condor board based on r8a77980 (DT)
-[    1.252075] Workqueue: events deferred_probe_work_func
-[    1.257220] pstate: 80000005 (Nzcv daif -PAN -UAO)
-[    1.262024] pc : ioremap_page_range+0x370/0x3c8
-[    1.266558] lr : ioremap_page_range+0x40/0x3c8
-[    1.271002] sp : ffff000008da39e0
-[    1.274317] x29: ffff000008da39e0 x28: 00e8000000000f07
-[    1.279636] x27: ffff7dfffee00000 x26: 0140000000000000
-[    1.284954] x25: ffff7dfffef00000 x24: 00000000000fe100
-[    1.290272] x23: ffff80007b906000 x22: ffff000008ab8000
-[    1.295590] x21: ffff000008bb1d58 x20: ffff7dfffef00000
-[    1.300909] x19: ffff800009c30fb8 x18: 0000000000000001
-[    1.306226] x17: 00000000000152d0 x16: 00000000014012d0
-[    1.311544] x15: 0000000000000000 x14: 0720072007200720
-[    1.316862] x13: 0720072007200720 x12: 0720072007200720
-[    1.322180] x11: 0720072007300730 x10: 00000000000000ae
-[    1.327498] x9 : 0000000000000000 x8 : ffff7dffff000000                      
-[    1.332816] x7 : 0000000000000000 x6 : 0000000000000100
-[    1.338134] x5 : 0000000000000000 x4 : 000000007b906000
-[    1.343452] x3 : ffff80007c61a880 x2 : ffff7dfffeefffff
-[    1.348770] x1 : 0000000040000000 x0 : 00e80000fe100f07
-[    1.354090] Process kworker/0:1 (pid: 39, stack limit = 0x        (ptrval))  
-[    1.361056] Call trace:
-[    1.363504]  ioremap_page_range+0x370/0x3c8
-[    1.367695]  pci_remap_iospace+0x7c/0xac
-[    1.371624]  pci_parse_request_of_pci_ranges+0x13c/0x190
-[    1.376945]  rcar_pcie_probe+0x4c/0xb04
-[    1.380786]  platform_drv_probe+0x50/0xbc
-[    1.384799]  driver_probe_device+0x21c/0x308
-[    1.389072]  __device_attach_driver+0x98/0xc8
-[    1.393431]  bus_for_each_drv+0x54/0x94
-[    1.397269]  __device_attach+0xc4/0x12c
-[    1.401107]  device_initial_probe+0x10/0x18
-[    1.405292]  bus_probe_device+0x90/0x98
-[    1.409130]  deferred_probe_work_func+0xb0/0x150
-[    1.413756]  process_one_work+0x12c/0x29c
-[    1.417768]  worker_thread+0x200/0x3fc
-[    1.421522]  kthread+0x108/0x134
-[    1.424755]  ret_from_fork+0x10/0x18
-[    1.428334] Code: f9004ba2 54000080 aa0003fb 17ffff48 (d4210000)
-
-It turned out that pci_remap_iospace() wasn't undone when the driver's
-probe failed, and since devm_phy_optional_get() returned -EPROBE_DEFER,
-the probe was retried,  finally causing the BUG due to trying to remap
-already remapped pages.
-
-The  most feasible solution seemed to introduce devm_pci_remap_iospace() --
-which was done in the XGene PCIe driver patch posted earlier...
-
-Fixes: dbf9826d5797 ("PCI: generic: Convert to DT resource parsing API")
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
+Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
+Signed-off-by: Yao Chen <chenyao11@huawei.com>
 ---
- drivers/pci/of.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/dwc/pcie-kirin.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-Index: pci/drivers/pci/of.c
-===================================================================
---- pci.orig/drivers/pci/of.c
-+++ pci/drivers/pci/of.c
-@@ -612,7 +612,7 @@ int pci_parse_request_of_pci_ranges(stru
+diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
+index d2970a009eb5..5352e0c3be82 100644
+--- a/drivers/pci/dwc/pcie-kirin.c
++++ b/drivers/pci/dwc/pcie-kirin.c
+@@ -430,6 +430,9 @@ static int kirin_pcie_host_init(struct pcie_port *pp)
+ {
+ 	kirin_pcie_establish_link(pp);
  
- 		switch (resource_type(res)) {
- 		case IORESOURCE_IO:
--			err = pci_remap_iospace(res, iobase);
-+			err = devm_pci_remap_iospace(dev, res, iobase);
- 			if (err) {
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
- 					 err, res);
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		dw_pcie_msi_init(pp);
++
+ 	return 0;
+ }
+ 
+@@ -445,9 +448,34 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
+ 	.host_init = kirin_pcie_host_init,
+ };
+ 
++static int kirin_pcie_add_msi(struct dw_pcie *pci,
++				struct platform_device *pdev)
++{
++	int irq;
++
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		irq = platform_get_irq(pdev, 0);
++		if (irq < 0) {
++			dev_err(&pdev->dev,
++				"failed to get MSI IRQ (%d)\n", irq);
++			return irq;
++		}
++
++		pci->pp.msi_irq = irq;
++	}
++
++	return 0;
++}
++
+ static int __init kirin_add_pcie_port(struct dw_pcie *pci,
+ 				      struct platform_device *pdev)
+ {
++	int ret;
++
++	ret = kirin_pcie_add_msi(pci, pdev);
++	if (ret)
++		return ret;
++
+ 	pci->pp.ops = &kirin_pcie_host_ops;
+ 
+ 	return dw_pcie_host_init(&pci->pp);
+-- 
+2.11.GIT
