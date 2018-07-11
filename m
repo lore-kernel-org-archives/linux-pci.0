@@ -1,86 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55730 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727728AbeGTVXl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Jul 2018 17:23:41 -0400
-Date: Fri, 20 Jul 2018 15:33:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Lukas Wunner <lukas@wunner.de>,
+Received: from szxga08-in.huawei.com ([45.249.212.255]:33599 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726812AbeGKJpp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jul 2018 05:45:45 -0400
+From: "Songxiaowei (Kirin_DRV)" <songxiaowei@hisilicon.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+CC: Wangbinghui <wangbinghui@hisilicon.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 32/32] PCI: Whitelist Thunderbolt ports for runtime D3
-Message-ID: <20180720203345.GU128988@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1529173804.git.lukas@wunner.de>
- <10206fe7f3967aa73ade5b24dc729de0e94c3b7f.1529173804.git.lukas@wunner.de>
- <20180621111354.GW2558@lahna.fi.intel.com>
- <20180718193053.GA20124@wunner.de>
- <20180720152349.GG2534@lahna.fi.intel.com>
- <20180720160038.GM2534@lahna.fi.intel.com>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rob Herring" <robh+dt@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Suzhuangluan <suzhuangluan@hisilicon.com>,
+        Kongfei <kongfei@hisilicon.com>,
+        "chenyao (F)" <chenyao11@huawei.com>
+Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjcgMS8xXSBQQ0k6IGtpcmluOiBBZGQgTVNJIHN1?=
+ =?utf-8?Q?pport?=
+Date: Wed, 11 Jul 2018 09:42:01 +0000
+Message-ID: <99B4C6BADD9E3241B25E52B02BA737C5412D7FFB@dggema525-mbx.china.huawei.com>
+References: <20180711080946.14942-1-songxiaowei@hisilicon.com>
+ <20180711080946.14942-2-songxiaowei@hisilicon.com>
+ <CAHp75VccZtHqpoeWhVa=D=tc_Dj5cX8SXg=vYowWJ_RAiKdiCQ@mail.gmail.com>
+In-Reply-To: <CAHp75VccZtHqpoeWhVa=D=tc_Dj5cX8SXg=vYowWJ_RAiKdiCQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180720160038.GM2534@lahna.fi.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 20, 2018 at 07:00:38PM +0300, Mika Westerberg wrote:
-> On Fri, Jul 20, 2018 at 06:23:49PM +0300, Mika Westerberg wrote:
-> > On Wed, Jul 18, 2018 at 09:30:53PM +0200, Lukas Wunner wrote:
-> > > Hi Mika,
-> > > 
-> > > sorry for the delay!
-> > > 
-> > > On Thu, Jun 21, 2018 at 02:13:54PM +0300, Mika Westerberg wrote:
-> > > > On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
-> > > > > +		/* Even the oldest 2010 Thunderbolt controller supports D3. */
-> > > > > +		if (bridge->is_thunderbolt)
-> > > > > +			return true;
-> > > > 
-> > > > I have a small concern here. In PC world native PCIe hotplug used with
-> > > > Thunderbolt comes in two flavors:
-> > > > 
-> > > >   - Native PCI hotplug without runtime PM
-> > > >   - Native PCI hotplug with runtime PM
-> > > > 
-> > > > The former works so that even if it uses native PCIe hotplug, the power
-> > > > management is done so that the Thunderbolt host router is hot-removed
-> > > > when there is nothing connected (and that brings the power savings).
-> > > > With the above change we start putting all Thunderbolt PCIe hotplug
-> > > > ports to D3 runtime. While this probably works (and I tested it on the
-> > > > same Dell) I don't think Windows does it and it may lead to a path that
-> > > > has not been tested very thoroughly by OEMs.
-> > > > 
-> > > > So I wonder if it makes sense to restrict this particular check to Apple
-> > > > hardware at this point?
-> > > 
-> > > I'm not familiar at all with Windows, so this your call.  Normally I'd say,
-> > > if there's no known case which forces us to constrain this to Apple, we
-> > > probably shouldn't be overzealous.  OTOH I imagine you have to deal with
-> > > Windows and broken BIOSes on a daily basis and can anticipate if problems
-> > > are to be expected.
-> > > 
-> > > The "host router" is the NHI, right?  So IIUC all downstream ports and
-> > > the upstream port of the TB PCIe switch may go to D3hot, same for the
-> > > root port.  And your concern is that hotplug addition or removal of the
-> > > NHI might not work if those ports are in D3hot?
-> > 
-> > Host router is the PCIe switch + NHI + xHCI. My concern is that now we
-> > start putting the downstream hotplug ports of the host router (the ports
-> > where TBT PCIe daisy chain is to be extented) to D3hot even when the
-> > whole power management of the "Native PCI hotplug without runtime PM" is
-> > done pretty much by hot-removing the whole host router if there is
-> > nothing connected.
-> 
-> I see Bjorn already merged these so please ignore the above. We can
-> add the Apple check later if this turns out causing problems.
-
-I merged these just to try to make forward progress and dig out from
-my backlog.  If you want to tweak this before the merge window, I'd be
-glad to update the branch.
-
-Bjorn
+SGkgQW5keSwNCg0KVGhhbmsgeW91IGEgbG90Lg0KDQpCZXN0IFJlZ2FyZHMsDQpYaWFvd2VpLg0K
+DQo+IC0tLS0t6YKu5Lu25Y6f5Lu2LS0tLS0NCj4g5Y+R5Lu25Lq6OiBBbmR5IFNoZXZjaGVua28g
+W21haWx0bzphbmR5LnNoZXZjaGVua29AZ21haWwuY29tXQ0KPiDlj5HpgIHml7bpl7Q6IDIwMTjl
+ubQ35pyIMTHml6UgMTc6MzANCj4g5pS25Lu25Lq6OiBTb25neGlhb3dlaSAoS2lyaW5fRFJWKSA8
+c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4NCj4g5oqE6YCBOiBXYW5nYmluZ2h1aSA8d2FuZ2Jp
+bmdodWlAaGlzaWxpY29uLmNvbT47IEJqb3JuIEhlbGdhYXMNCj4gPGJoZWxnYWFzQGdvb2dsZS5j
+b20+OyBMb3JlbnpvIFBpZXJhbGlzaSA8bG9yZW56by5waWVyYWxpc2lAYXJtLmNvbT47DQo+IFJv
+YiBIZXJyaW5nIDxyb2JoK2R0QGtlcm5lbC5vcmc+OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3Jn
+OyBMaW51eCBLZXJuZWwNCj4gTWFpbGluZyBMaXN0IDxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwu
+b3JnPjsgU3V6aHVhbmdsdWFuDQo+IDxzdXpodWFuZ2x1YW5AaGlzaWxpY29uLmNvbT47IEtvbmdm
+ZWkgPGtvbmdmZWlAaGlzaWxpY29uLmNvbT47IGNoZW55YW8NCj4gKEYpIDxjaGVueWFvMTFAaHVh
+d2VpLmNvbT4NCj4g5Li76aKYOiBSZTogW1BBVENIIHY3IDEvMV0gUENJOiBraXJpbjogQWRkIE1T
+SSBzdXBwb3J0DQo+IA0KPiBPbiBXZWQsIEp1bCAxMSwgMjAxOCBhdCAxMTowOSBBTSwgWGlhb3dl
+aSBTb25nDQo+IDxzb25neGlhb3dlaUBoaXNpbGljb24uY29tPiB3cm90ZToNCj4gPiBBZGQgc3Vw
+cG9ydCBmb3IgTVNJDQo+ID4NCj4gDQo+IEZXSVcsDQo+IFJldmlld2VkLWJ5OiBBbmR5IFNoZXZj
+aGVua28gPGFuZHkuc2hldmNoZW5rb0BnbWFpbC5jb20+DQo+IA0KPiA+IFNpZ25lZC1vZmYtYnk6
+IFhpYW93ZWkgU29uZyA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4NCj4gPiBTaWduZWQtb2Zm
+LWJ5OiBZYW8gQ2hlbiA8Y2hlbnlhbzExQGh1YXdlaS5jb20+DQo+ID4gLS0tDQo+ID4gIGRyaXZl
+cnMvcGNpL2R3Yy9wY2llLWtpcmluLmMgfCAyOCArKysrKysrKysrKysrKysrKysrKysrKysrKysr
+DQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAyOCBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaWUta2lyaW4uYw0KPiA+IGIvZHJpdmVycy9wY2kvZHdj
+L3BjaWUta2lyaW4uYyBpbmRleCBkMjk3MGEwMDllYjUuLjUzNTJlMGMzYmU4Mg0KPiAxMDA2NDQN
+Cj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNpZS1raXJpbi5jDQo+ID4gKysrIGIvZHJpdmVy
+cy9wY2kvZHdjL3BjaWUta2lyaW4uYw0KPiA+IEBAIC00MzAsNiArNDMwLDkgQEAgc3RhdGljIGlu
+dCBraXJpbl9wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0DQo+ID4gKnBwKSAgew0KPiA+
+ICAgICAgICAga2lyaW5fcGNpZV9lc3RhYmxpc2hfbGluayhwcCk7DQo+ID4NCj4gPiArICAgICAg
+IGlmIChJU19FTkFCTEVEKENPTkZJR19QQ0lfTVNJKSkNCj4gPiArICAgICAgICAgICAgICAgZHdf
+cGNpZV9tc2lfaW5pdChwcCk7DQo+ID4gKw0KPiA+ICAgICAgICAgcmV0dXJuIDA7DQo+ID4gIH0N
+Cj4gPg0KPiA+IEBAIC00NDUsOSArNDQ4LDM0IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgZHdfcGNp
+ZV9ob3N0X29wcw0KPiBraXJpbl9wY2llX2hvc3Rfb3BzID0gew0KPiA+ICAgICAgICAgLmhvc3Rf
+aW5pdCA9IGtpcmluX3BjaWVfaG9zdF9pbml0LCAgfTsNCj4gPg0KPiA+ICtzdGF0aWMgaW50IGtp
+cmluX3BjaWVfYWRkX21zaShzdHJ1Y3QgZHdfcGNpZSAqcGNpLA0KPiA+ICsgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldikgew0KPiA+ICsg
+ICAgICAgaW50IGlycTsNCj4gPiArDQo+ID4gKyAgICAgICBpZiAoSVNfRU5BQkxFRChDT05GSUdf
+UENJX01TSSkpIHsNCj4gPiArICAgICAgICAgICAgICAgaXJxID0gcGxhdGZvcm1fZ2V0X2lycShw
+ZGV2LCAwKTsNCj4gPiArICAgICAgICAgICAgICAgaWYgKGlycSA8IDApIHsNCj4gPiArICAgICAg
+ICAgICAgICAgICAgICAgICBkZXZfZXJyKCZwZGV2LT5kZXYsDQo+ID4gKyAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAiZmFpbGVkIHRvIGdldCBNU0kgSVJRICglZClcbiIsIGlycSk7DQo+
+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIGlycTsNCj4gPiArICAgICAgICAgICAg
+ICAgfQ0KPiA+ICsNCj4gPiArICAgICAgICAgICAgICAgcGNpLT5wcC5tc2lfaXJxID0gaXJxOw0K
+PiA+ICsgICAgICAgfQ0KPiA+ICsNCj4gPiArICAgICAgIHJldHVybiAwOw0KPiA+ICt9DQo+ID4g
+Kw0KPiA+ICBzdGF0aWMgaW50IF9faW5pdCBraXJpbl9hZGRfcGNpZV9wb3J0KHN0cnVjdCBkd19w
+Y2llICpwY2ksDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJ1
+Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQ0KPiB7DQo+ID4gKyAgICAgICBpbnQgcmV0Ow0KPiA+
+ICsNCj4gPiArICAgICAgIHJldCA9IGtpcmluX3BjaWVfYWRkX21zaShwY2ksIHBkZXYpOw0KPiA+
+ICsgICAgICAgaWYgKHJldCkNCj4gPiArICAgICAgICAgICAgICAgcmV0dXJuIHJldDsNCj4gPiAr
+DQo+ID4gICAgICAgICBwY2ktPnBwLm9wcyA9ICZraXJpbl9wY2llX2hvc3Rfb3BzOw0KPiA+DQo+
+ID4gICAgICAgICByZXR1cm4gZHdfcGNpZV9ob3N0X2luaXQoJnBjaS0+cHApOw0KPiA+IC0tDQo+
+ID4gMi4xMS5HSVQNCj4gPg0KPiANCj4gDQo+IA0KPiAtLQ0KPiBXaXRoIEJlc3QgUmVnYXJkcywN
+Cj4gQW5keSBTaGV2Y2hlbmtvDQo=
