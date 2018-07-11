@@ -1,66 +1,172 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39582 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.99]:57862 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726562AbeG3PS2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Jul 2018 11:18:28 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Subject: [PATCH 1/3] PCI: mobiveil: Fix struct mobiveil_pcie.pcie_reg_base address type
-Date: Mon, 30 Jul 2018 14:43:14 +0100
-Message-Id: <20180730134316.11719-2-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20180730134316.11719-1-lorenzo.pieralisi@arm.com>
-References: <20180730134316.11719-1-lorenzo.pieralisi@arm.com>
+        id S2387759AbeGKNxh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jul 2018 09:53:37 -0400
+Date: Wed, 11 Jul 2018 08:49:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Stephen Hemminger <stephen@networkplumber.org>,
+        bhelgaas@google.com, kys@microsoft.com, linux-pci@vger.kernel.org,
+        Stephen Hemminger <sthemmin@microsoft.com>
+Subject: Re: [PATCH] PCI: hv: support reporting serial number as slot
+ information
+Message-ID: <20180711134908.GF188359@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180612164037.10672-1-sthemmin@microsoft.com>
+ <20180704160834.GB12996@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180704160834.GB12996@red-moon>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The field pcie_reg_base in struct mobiveil_pcie represents a physical
-address so it should be of phys_addr_t type rather than void __iomem*;
-this results in the following compilation  warnings:
+On Wed, Jul 04, 2018 at 05:08:34PM +0100, Lorenzo Pieralisi wrote:
+> On Tue, Jun 12, 2018 at 09:40:37AM -0700, Stephen Hemminger wrote:
+> > The Hyper-V host API for PCI provides a unique "serial number" which
+> > can be used as the basis for sysfs PCI slot table. This can be useful
+> > for cases where userspace wants to find the PCI device based on
+> > serial number.
+> > 
+> > When an SR-IOV NIC is added, the host sends an attach message
+> > with a serial number. The kernel doesn't use the serial number, but
+> > it is useful when doing the same thing in a userspace driver such
+> > as the DPDK. By having /sys/bus/pci/slots/N it provides a direct
+> > way to find the matching PCI device.
 
-drivers/pci/controller/pcie-mobiveil.c: In function
-'mobiveil_pcie_parse_dt':
-drivers/pci/controller/pcie-mobiveil.c:326:22: warning: assignment makes
-pointer from integer without a cast [-Wint-conversion]
-  pcie->pcie_reg_base = res->start;
-                      ^
-drivers/pci/controller/pcie-mobiveil.c: In function
-'mobiveil_pcie_enable_msi':
-drivers/pci/controller/pcie-mobiveil.c:485:25: warning: initialization
-makes integer from pointer without a cast [-Wint-conversion]
-  phys_addr_t msg_addr = pcie->pcie_reg_base;
-                         ^~~~
-drivers/pci/controller/pcie-mobiveil.c: In function
-'mobiveil_compose_msi_msg':
-drivers/pci/controller/pcie-mobiveil.c:640:21: warning: initialization
-makes integer from pointer without a cast [-Wint-conversion]
-  phys_addr_t addr = pcie->pcie_reg_base + (data->hwirq * sizeof(int));
+Is this essentially a way to expose the serial number to userspace?
 
-Fix the type and with it the compilation warnings.
+I confess I'm not super familiar with what the slot infrastructure
+gives us, and I'm trying to figure out if it's the right way to do
+this.  Would a file directly in the device directory, e.g.,
 
-Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
-driver")
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
----
- drivers/pci/controller/pcie-mobiveil.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+  /sys/devices/pci0000:00/0000:00:00.0/serial
 
-diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
-index cf0aa7cee5b0..8b45f77d70f9 100644
---- a/drivers/pci/controller/pcie-mobiveil.c
-+++ b/drivers/pci/controller/pcie-mobiveil.c
-@@ -130,7 +130,7 @@ struct mobiveil_pcie {
- 	void __iomem *config_axi_slave_base;	/* endpoint config base */
- 	void __iomem *csr_axi_slave_base;	/* root port config base */
- 	void __iomem *apb_csr_base;	/* MSI register base */
--	void __iomem *pcie_reg_base;	/* Physical PCIe Controller Base */
-+	phys_addr_t pcie_reg_base;	/* Physical PCIe Controller Base */
- 	struct irq_domain *intx_domain;
- 	raw_spinlock_t intx_mask_lock;
- 	int irq;
--- 
-2.15.0
+be a possibility?  There is an optional PCIe Device Serial Number
+capability and also an optional serial number item in the VPD.  We
+don't support either in the core yet, but maybe they could all be
+exposed similarly?
+
+Or is there something you need from the slot infrastructure in
+addition to the serial number exposure?
+
+You mentioned that this patch is along the lines of what KVM does.
+Can you connect the dots a little bit for me as far as how this is
+implemented for KVM?  I don't see KVM-related calls to
+pci_create_slot() or pci_hp_register().
+
+> > There may be some cases where the serial number is not unique such
+> > as when using GPU's. But the PCI slot infrastructure will handle
+> > that.
+> > 
+> > This also shortens the network device names generated by
+> > systemd/udev. The new names use slot (ens2) rather than
+> > PCI address (enP2p0s2).
+
+I don't recognize "enP2p0s2" as a PCI address.  Is that related to a
+domain/bus/device/function address somehow, or is this some sort of
+Windows-specific address?
+
+> Hi Stephen,
+> 
+> I wanted to apply this patch but wanted to make sure all HV
+> maintainers are in agreement first since this looks like
+> a significant user-space ABI change.
+> 
+> I would also ask Bjorn's opinion on this since he has more
+> insights into the slot interface history.
+> 
+> Thanks,
+> Lorenzo
+> 
+> > Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+> > ---
+> > v2
+> >   - retarget for current filenames in PCI next
+> >   - remove debug log message
+> > 
+> >  drivers/pci/controller/pci-hyperv.c | 30 +++++++++++++++++++++++++++++
+> >  1 file changed, 30 insertions(+)
+> > 
+> > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> > index 6cc5036ac83c..4e3575716ced 100644
+> > --- a/drivers/pci/controller/pci-hyperv.c
+> > +++ b/drivers/pci/controller/pci-hyperv.c
+> > @@ -88,6 +88,8 @@ static enum pci_protocol_version_t pci_protocol_version;
+> >  
+> >  #define STATUS_REVISION_MISMATCH 0xC0000059
+> >  
+> > +#define SLOT_NAME_SIZE 21
+> > +
+> >  /*
+> >   * Message Types
+> >   */
+> > @@ -493,6 +495,7 @@ struct hv_pci_dev {
+> >  	struct list_head list_entry;
+> >  	refcount_t refs;
+> >  	enum hv_pcichild_state state;
+> > +	struct pci_slot *pci_slot;
+> >  	struct pci_function_description desc;
+> >  	bool reported_missing;
+> >  	struct hv_pcibus_device *hbus;
+> > @@ -1454,6 +1457,28 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
+> >  	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+> >  }
+> >  
+> > +static void hv_pci_assign_slots(struct hv_pcibus_device *hbus)
+> > +{
+> > +	struct hv_pci_dev *hpdev;
+> > +	char name[SLOT_NAME_SIZE];
+> > +	unsigned long flags;
+> > +	int slot_nr;
+> > +
+> > +	spin_lock_irqsave(&hbus->device_list_lock, flags);
+> > +	list_for_each_entry(hpdev, &hbus->children, list_entry) {
+> > +		if (hpdev->pci_slot)
+> > +			continue;
+> > +
+> > +		slot_nr = PCI_SLOT(wslot_to_devfn(hpdev->desc.win_slot.slot));
+> > +		snprintf(name, SLOT_NAME_SIZE, "%u", hpdev->desc.ser);
+> > +		hpdev->pci_slot = pci_create_slot(hbus->pci_bus, slot_nr,
+> > +					  name, NULL);
+> > +		if (!hpdev->pci_slot)
+> > +			pr_warn("pci_create slot %s failed\n", name);
+
+Is there any way this could be a dev_warn() so it's connected with
+something?  Does hpdev->hbus->hdev->device make sense?
+
+> > +	}
+> > +	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+> > +}
+> > +
+> >  /**
+> >   * create_root_hv_pci_bus() - Expose a new root PCI bus
+> >   * @hbus:	Root PCI bus, as understood by this driver
+> > @@ -1477,6 +1502,7 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
+> >  	pci_lock_rescan_remove();
+> >  	pci_scan_child_bus(hbus->pci_bus);
+> >  	pci_bus_assign_resources(hbus->pci_bus);
+> > +	hv_pci_assign_slots(hbus);
+> >  	pci_bus_add_devices(hbus->pci_bus);
+> >  	pci_unlock_rescan_remove();
+> >  	hbus->state = hv_pcibus_installed;
+> > @@ -1739,6 +1765,7 @@ static void pci_devices_present_work(struct work_struct *work)
+> >  		 */
+> >  		pci_lock_rescan_remove();
+> >  		pci_scan_child_bus(hbus->pci_bus);
+> > +		hv_pci_assign_slots(hbus);
+> >  		pci_unlock_rescan_remove();
+> >  		break;
+> >  
+> > @@ -1855,6 +1882,9 @@ static void hv_eject_device_work(struct work_struct *work)
+> >  	list_del(&hpdev->list_entry);
+> >  	spin_unlock_irqrestore(&hpdev->hbus->device_list_lock, flags);
+> >  
+> > +	if (hpdev->pci_slot)
+> > +		pci_destroy_slot(hpdev->pci_slot);
+> > +
+> >  	memset(&ctxt, 0, sizeof(ctxt));
+> >  	ejct_pkt = (struct pci_eject_response *)&ctxt.pkt.message;
+> >  	ejct_pkt->message_type.type = PCI_EJECTION_COMPLETE;
+> > -- 
+> > 2.17.1
+> > 
