@@ -1,130 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:59920 "EHLO mx1.redhat.com"
+Received: from szxga02-in.huawei.com ([45.249.212.188]:5997 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730731AbeGRD2e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Jul 2018 23:28:34 -0400
-From: Baoquan He <bhe@redhat.com>
-To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-        robh+dt@kernel.org, dan.j.williams@intel.com,
-        nicolas.pitre@linaro.org, josh@joshtriplett.org,
-        fengguang.wu@intel.com, bp@suse.de, andy.shevchenko@gmail.com
-Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com,
-        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
-        keith.busch@intel.com, jonathan.derrick@intel.com,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
-        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
-        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
-        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
-        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
-        yinghai@kernel.org, monstr@monstr.eu, davem@davemloft.net,
-        chris@zankel.net, jcmvbkbc@gmail.com, gustavo@padovan.org,
-        maarten.lankhorst@linux.intel.com, seanpaul@chromium.org,
-        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        Baoquan He <bhe@redhat.com>
-Subject: [PATCH v7 3/4] resource: add walk_system_ram_res_rev()
-Date: Wed, 18 Jul 2018 10:49:43 +0800
-Message-Id: <20180718024944.577-4-bhe@redhat.com>
-In-Reply-To: <20180718024944.577-1-bhe@redhat.com>
-References: <20180718024944.577-1-bhe@redhat.com>
+        id S1725808AbeGKHjg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jul 2018 03:39:36 -0400
+From: "Songxiaowei (Kirin_DRV)" <songxiaowei@hisilicon.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+CC: Wangbinghui <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rob Herring" <robh+dt@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Suzhuangluan <suzhuangluan@hisilicon.com>,
+        Kongfei <kongfei@hisilicon.com>,
+        "chenyao (F)" <chenyao11@huawei.com>
+Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjYgMS8xXSBQQ0k6IGtpcmluOiBBZGQgTVNJIHN1?=
+ =?utf-8?Q?pport?=
+Date: Wed, 11 Jul 2018 07:36:26 +0000
+Message-ID: <99B4C6BADD9E3241B25E52B02BA737C5412D7DD8@dggema525-mbx.china.huawei.com>
+References: <20180711065724.128299-1-songxiaowei@hisilicon.com>
+ <20180711065724.128299-2-songxiaowei@hisilicon.com>
+ <CAHp75VfqGC5KNi4mCc3Q0bD0jXb4bkkdYFSv3LDQw5E=goc2Pg@mail.gmail.com>
+In-Reply-To: <CAHp75VfqGC5KNi4mCc3Q0bD0jXb4bkkdYFSv3LDQw5E=goc2Pg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This function, being a variant of walk_system_ram_res() introduced in
-commit 8c86e70acead ("resource: provide new functions to walk through
-resources"), walks through a list of all the resources of System RAM
-in reversed order, i.e., from higher to lower.
-
-It will be used in kexec_file code.
-
-Signed-off-by: Baoquan He <bhe@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Brijesh Singh <brijesh.singh@amd.com>
-Cc: "Jérôme Glisse" <jglisse@redhat.com>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Tom Lendacky <thomas.lendacky@amd.com>
-Cc: Wei Yang <richard.weiyang@gmail.com>
----
- include/linux/ioport.h |  3 +++
- kernel/resource.c      | 40 ++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 43 insertions(+)
-
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index b7456ae889dd..066cc263e2cc 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -279,6 +279,9 @@ extern int
- walk_system_ram_res(u64 start, u64 end, void *arg,
- 		    int (*func)(struct resource *, void *));
- extern int
-+walk_system_ram_res_rev(u64 start, u64 end, void *arg,
-+			int (*func)(struct resource *, void *));
-+extern int
- walk_iomem_res_desc(unsigned long desc, unsigned long flags, u64 start, u64 end,
- 		    void *arg, int (*func)(struct resource *, void *));
- 
-diff --git a/kernel/resource.c b/kernel/resource.c
-index c96e58d3d2f8..3e18f24b90c4 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -23,6 +23,8 @@
- #include <linux/pfn.h>
- #include <linux/mm.h>
- #include <linux/resource_ext.h>
-+#include <linux/string.h>
-+#include <linux/vmalloc.h>
- #include <asm/io.h>
- 
- 
-@@ -443,6 +445,44 @@ int walk_system_ram_res(u64 start, u64 end, void *arg,
- }
- 
- /*
-+ * This function, being a variant of walk_system_ram_res(), calls the @func
-+ * callback against all memory ranges of type System RAM which are marked as
-+ * IORESOURCE_SYSTEM_RAM and IORESOUCE_BUSY in reversed order, i.e., from
-+ * higher to lower.
-+ */
-+int walk_system_ram_res_rev(u64 start, u64 end, void *arg,
-+				int (*func)(struct resource *, void *))
-+{
-+	unsigned long flags;
-+	struct resource *res;
-+	int ret = -1;
-+
-+	flags = IORESOURCE_SYSTEM_RAM | IORESOURCE_BUSY;
-+
-+	read_lock(&resource_lock);
-+	list_for_each_entry_reverse(res, &iomem_resource.child, sibling) {
-+		if (start >= end)
-+			break;
-+		if ((res->flags & flags) != flags)
-+			continue;
-+		if (res->desc != IORES_DESC_NONE)
-+			continue;
-+		if (res->end < start)
-+			break;
-+
-+		if ((res->end >= start) && (res->start < end)) {
-+			ret = (*func)(res, arg);
-+			if (ret)
-+				break;
-+		}
-+		end = res->start - 1;
-+
-+	}
-+	read_unlock(&resource_lock);
-+	return ret;
-+}
-+
-+/*
-  * This function calls the @func callback against all memory ranges, which
-  * are ranges marked as IORESOURCE_MEM and IORESOUCE_BUSY.
-  */
--- 
-2.13.6
+DQoNCj4gLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0KPiDlj5Hku7bkuro6IEFuZHkgU2hldmNoZW5r
+byBbbWFpbHRvOmFuZHkuc2hldmNoZW5rb0BnbWFpbC5jb21dDQo+IOWPkemAgeaXtumXtDogMjAx
+OOW5tDfmnIgxMeaXpSAxNToyMw0KPiDmlLbku7bkuro6IFNvbmd4aWFvd2VpIChLaXJpbl9EUlYp
+IDxzb25neGlhb3dlaUBoaXNpbGljb24uY29tPg0KPiDmioTpgIE6IFdhbmdiaW5naHVpIDx3YW5n
+YmluZ2h1aUBoaXNpbGljb24uY29tPjsgQmpvcm4gSGVsZ2Fhcw0KPiA8YmhlbGdhYXNAZ29vZ2xl
+LmNvbT47IExvcmVuem8gUGllcmFsaXNpIDxsb3JlbnpvLnBpZXJhbGlzaUBhcm0uY29tPjsNCj4g
+Um9iIEhlcnJpbmcgPHJvYmgrZHRAa2VybmVsLm9yZz47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5v
+cmc7IExpbnV4IEtlcm5lbA0KPiBNYWlsaW5nIExpc3QgPGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5l
+bC5vcmc+OyBTdXpodWFuZ2x1YW4NCj4gPHN1emh1YW5nbHVhbkBoaXNpbGljb24uY29tPjsgS29u
+Z2ZlaSA8a29uZ2ZlaUBoaXNpbGljb24uY29tPjsgY2hlbnlhbw0KPiAoRikgPGNoZW55YW8xMUBo
+dWF3ZWkuY29tPg0KPiDkuLvpopg6IFJlOiBbUEFUQ0ggdjYgMS8xXSBQQ0k6IGtpcmluOiBBZGQg
+TVNJIHN1cHBvcnQNCj4gDQo+IE9uIFdlZCwgSnVsIDExLCAyMDE4IGF0IDk6NTcgQU0sIFhpYW93
+ZWkgU29uZyA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4NCj4gd3JvdGU6DQo+ID4gQWRkIHN1
+cHBvcnQgZm9yIE1TSQ0KPiANCj4gPiArc3RhdGljIGludCBraXJpbl9wY2llX2FkZF9tc2koc3Ry
+dWN0IGR3X3BjaWUgKnBjaSwNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0
+cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKnBkZXYpIHsNCj4gPiArICAgICAgIGludCByZXQgPSAwOw0K
+PiA+ICsNCj4gPiArICAgICAgIGlmIChJU19FTkFCTEVEKENPTkZJR19QQ0lfTVNJKSkgew0KPiA+
+ICsgICAgICAgICAgICAgICByZXQgPSBwbGF0Zm9ybV9nZXRfaXJxKHBkZXYsIDApOw0KPiA+ICsg
+ICAgICAgICAgICAgICBpZiAocmV0IDwgMCkgew0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAg
+IGRldl9lcnIoJnBkZXYtPmRldiwNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICJmYWlsZWQgdG8gZ2V0IE1TSSBJUlEgKCVkKVxuIiwgcmV0KTsNCj4gPiArICAgICAgICAgICAg
+ICAgICAgICAgICByZXR1cm4gcmV0Ow0KPiA+ICsgICAgICAgICAgICAgICB9DQo+ID4gKw0KPiA+
+ICsgICAgICAgICAgICAgICBwY2ktPnBwLm1zaV9pcnEgPSByZXQ7DQo+ID4gKyAgICAgICB9DQo+
+ID4gKw0KPiA+ICsgICAgICAgcmV0dXJuIHJldDsNCj4gPiArfQ0KPiANCj4gTGlrZSBzb21lb25l
+IGFscmVhZHkgbm90aWNlZCwgaXMgaXQgcmVhbGx5IElSUSBudW1iZXIgeW91IHdvdWxkIGxpa2Ug
+dG8NCj4gcmV0dXJuPw0KPiANCj4gSWYgeW91IHJld3JpdGUgbGlrZQ0KPiANCj4gaW50IGlycTsN
+Cj4gDQo+IGlmIChJU19FTkFCTEVEKC4uLikpIHsNCj4gIGlycSA9IC4uLg0KPiAgaWYgKGlycSA8
+IDApDQo+ICAgIHJldHVybiBpcnE7DQo+IA0KPiAuLi4gPSBpcnE7DQo+IA0KPiB9DQo+IA0KPiBy
+ZXR1cm4gMDsNCj4gDQo+IEl0IHdvdWxkIGJlIHNsaWdodGx5IG1vcmUgZXhwbGljaXQgd2hhdCB5
+b3UgZG8gYW5kIHdoYXQgeW91IHJldHVybi4NCj4NCg0KSGkgQW5keQ0KSSB0aGluayBkaWQgbm90
+IGdldCBMb3JlbnpvJ3MgbWVhbmluZyBiZWZvcmUsIHRoYW5rIHlvdSBzbyBtdWNoLCBhbmQgSSds
+bCBtb2RpZnkgdGhlIHBhdGNoIGFzIHNvb24gYXMgcG9zc2libGUuDQpCZXN0IFJlZ2FyZHMsDQpY
+aWFvd2VpIFNvbmcuDQo+IC0tDQo+IFdpdGggQmVzdCBSZWdhcmRzLA0KPiBBbmR5IFNoZXZjaGVu
+a28NCg==
