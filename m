@@ -1,416 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:57992 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730730AbeGMQME (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2018 12:12:04 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v10 09/12] pci-epf-test/pci_endpoint_test: Add MSI-X support
-Date: Fri, 13 Jul 2018 17:56:41 +0200
-Message-Id: <bd3b668b280c5a665a20a71cc5dfe8bbfec0de46.1531496321.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
+Received: from foss.arm.com ([217.140.101.70]:33246 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732376AbeGKK75 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jul 2018 06:59:57 -0400
+Date: Wed, 11 Jul 2018 11:58:05 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Alan Douglas <adouglas@cadence.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "kishon@ti.com" <kishon@ti.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>
+Subject: Re: [PATCH 4/5] PCI: cadence: Add Power Management ops for host and
+ EP
+Message-ID: <20180711105805.GA17376@red-moon>
+References: <1529915453-4633-1-git-send-email-adouglas@cadence.com>
+ <1529915453-4633-5-git-send-email-adouglas@cadence.com>
+ <20180709153351.GA16292@red-moon>
+ <MWHPR07MB350227D92EDF2A46DA6BD218D8440@MWHPR07MB3502.namprd07.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <MWHPR07MB350227D92EDF2A46DA6BD218D8440@MWHPR07MB3502.namprd07.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add MSI-X support and update driver documentation accordingly.
+On Mon, Jul 09, 2018 at 03:56:11PM +0000, Alan Douglas wrote:
+> On 09 July 2018 16:34, Lorenzo Pieralisi wrote:
+> > On Mon, Jun 25, 2018 at 09:30:52AM +0100, Alan Douglas wrote:
+> > > These PM ops will enable/disable the optional PHYs if present.  The
+> > > AXI link-down register in the host driver is now cleared in
+> > > cdns_pci_map_bus since the link-down bit will be set if the PHY has
+> > > been disabled.  It is not cleared when enabling the PHY, since the
+> > > link will not yet be up.
+> > 
+> > It is not entirely clear what you mean here, can you elaborate please ?
+> Thanks for taking a look at this.
+> There is a "Link down indication bit" register in the cadence PCIe IP
+> AXI Configuration  Registers, which will be set by the PCIe IP after
+> each link- down occurrence.  This bit must be cleared before
+> continuing, or accesses will hang.  When the PHY is disabled, the link
+> will go down and this bit will be set by HW.  It will also be set
+> after a secondary bus reset.
+> 
+> We cannot simply clear this bit when enabling the PHY, since at this
+> stage the link may not come up (e.g. because the EP PHY is disabled),
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v2->v3:
- - New patch file created base on the previous patch
-"misc: pci_endpoint_test: Add MSI-X support" patch file following
-Kishon's suggestion.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
-Change v5->v6:
- - Moved PCITEST_MSIX ioctl entry from patch #10 to here.
- - Documented ioctl parameter type associated to
-drivers/misc/pci_endpoint_test.c driver.
-Change v6->v7:
- - Updated documentation.
- - Added flag that enables or not the MSI-X on the EP features. 
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Moving the EPC_FEATURE_MSIX_AVAILABLE feature set from the
-dw_pcie_ep_init() to dw_plat_pcie_ep_init().
-Change v9->v10:
- - Update documentation.
+I understand the approach and the reasoning, I still would like to
+understand the use case that explains "because the EP PHY is disabled"
+above and, related to the same question, why isn't this needed in
+current driver version given that the host controller is probed out
+of reset, I will apply the series then and update the commit log.
 
- Documentation/PCI/endpoint/pci-test-function.txt  |  2 +-
- Documentation/PCI/endpoint/pci-endpoint.txt       |  4 ++--
- Documentation/PCI/endpoint/pci-test-function.txt  |  4 +++-
- Documentation/PCI/endpoint/pci-test-howto.txt     | 22 ++++++++++++++---
- Documentation/ioctl/ioctl-number.txt              |  1 +
- Documentation/misc-devices/pci-endpoint-test.txt  |  3 +++
- drivers/misc/pci_endpoint_test.c                  | 29 ++++++++++++++++-------
- drivers/pci/controller/dwc/pcie-designware-plat.c |  1 +
- drivers/pci/endpoint/functions/pci-epf-test.c     | 29 +++++++++++++++++++++--
- include/linux/pci-epc.h                           |  1 +
- include/uapi/linux/pcitest.h                      |  1 +
- 10 files changed, 79 insertions(+), 16 deletions(-)
+Lorenzo
 
-diff --git a/Documentation/PCI/endpoint/pci-endpoint.txt b/Documentation/PCI/endpoint/pci-endpoint.txt
-index 9b1d668..e86a96b 100644
---- a/Documentation/PCI/endpoint/pci-endpoint.txt
-+++ b/Documentation/PCI/endpoint/pci-endpoint.txt
-@@ -44,7 +44,7 @@ by the PCI controller driver.
- 	 * clear_bar: ops to reset the BAR
- 	 * alloc_addr_space: ops to allocate in PCI controller address space
- 	 * free_addr_space: ops to free the allocated address space
--	 * raise_irq: ops to raise a legacy or MSI interrupt
-+	 * raise_irq: ops to raise a legacy, MSI or MSI-X interrupt
- 	 * start: ops to start the PCI link
- 	 * stop: ops to stop the PCI link
- 
-@@ -96,7 +96,7 @@ by the PCI endpoint function driver.
- *) pci_epc_raise_irq()
- 
-    The PCI endpoint function driver should use pci_epc_raise_irq() to raise
--   Legacy Interrupt or MSI Interrupt.
-+   Legacy Interrupt, MSI or MSI-X Interrupt.
- 
- *) pci_epc_mem_alloc_addr()
- 
-diff --git a/Documentation/PCI/endpoint/pci-test-function.txt b/Documentation/PCI/endpoint/pci-test-function.txt
-index bf4b5cf..5916f1f 100644
---- a/Documentation/PCI/endpoint/pci-test-function.txt
-+++ b/Documentation/PCI/endpoint/pci-test-function.txt
-@@ -36,7 +36,7 @@ that the endpoint device must perform.
- Bitfield Description:
-   Bit 0		: raise legacy IRQ
-   Bit 1		: raise MSI IRQ
--  Bit 2		: raise MSI-X IRQ (reserved for future implementation)
-+  Bit 2		: raise MSI-X IRQ
-   Bit 3		: read command (read data from RC buffer)
-   Bit 4		: write command (write data to RC buffer)
-   Bit 5		: copy command (copy data from one RC buffer to another
-@@ -75,6 +75,7 @@ for the READ/WRITE/COPY and raise IRQ (Legacy/MSI) commands.
- Possible types:
-  - Legacy	: 0
-  - MSI		: 1
-+ - MSI-X	: 2
- 
- *) PCI_ENDPOINT_TEST_IRQ_NUMBER
- 
-@@ -83,3 +84,4 @@ This register contains the triggered ID interrupt.
- Admissible values:
-  - Legacy	: 0
-  - MSI		: [1 .. 32]
-+ - MSI-X	: [1 .. 2048]
-diff --git a/Documentation/PCI/endpoint/pci-test-howto.txt b/Documentation/PCI/endpoint/pci-test-howto.txt
-index 75f48c3..65f1a13 100644
---- a/Documentation/PCI/endpoint/pci-test-howto.txt
-+++ b/Documentation/PCI/endpoint/pci-test-howto.txt
-@@ -45,9 +45,9 @@ The PCI endpoint framework populates the directory with the following
- configurable fields.
- 
- 	# ls functions/pci_epf_test/func1
--	  baseclass_code	interrupt_pin	revid		subsys_vendor_id
--	  cache_line_size	msi_interrupts	subclass_code	vendorid
--	  deviceid          	progif_code	subsys_id
-+	  baseclass_code	interrupt_pin	progif_code	subsys_id
-+	  cache_line_size	msi_interrupts	revid		subsys_vendorid
-+	  deviceid          	msix_interrupts	subclass_code	vendorid
- 
- The PCI endpoint function driver populates these entries with default values
- when the device is bound to the driver. The pci-epf-test driver populates
-@@ -67,6 +67,7 @@ device, the following commands can be used.
- 	# echo 0x104c > functions/pci_epf_test/func1/vendorid
- 	# echo 0xb500 > functions/pci_epf_test/func1/deviceid
- 	# echo 16 > functions/pci_epf_test/func1/msi_interrupts
-+	# echo 8 > functions/pci_epf_test/func1/msix_interrupts
- 
- 1.5 Binding pci-epf-test Device to EP Controller
- 
-@@ -153,6 +154,21 @@ following commands.
- 	MSI30:          NOT OKAY
- 	MSI31:          NOT OKAY
- 	MSI32:          NOT OKAY
-+	MSIX1:          OKAY
-+	MSIX2:          OKAY
-+	MSIX3:          OKAY
-+	MSIX4:          OKAY
-+	MSIX5:          OKAY
-+	MSIX6:          OKAY
-+	MSIX7:          OKAY
-+	MSIX8:          OKAY
-+	MSIX9:          NOT OKAY
-+	MSIX10:         NOT OKAY
-+	MSIX11:         NOT OKAY
-+	MSIX12:         NOT OKAY
-+	MSIX13:         NOT OKAY
-+	[...]
-+	MSIX2048:       NOT OKAY
- 
- 	Read Tests
- 
-diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
-index 480c860..65259d4 100644
---- a/Documentation/ioctl/ioctl-number.txt
-+++ b/Documentation/ioctl/ioctl-number.txt
-@@ -166,6 +166,7 @@ Code  Seq#(hex)	Include File		Comments
- 'P'	all	linux/soundcard.h	conflict!
- 'P'	60-6F	sound/sscape_ioctl.h	conflict!
- 'P'	00-0F	drivers/usb/class/usblp.c	conflict!
-+'P'	01-07	drivers/misc/pci_endpoint_test.c	conflict!
- 'Q'	all	linux/soundcard.h
- 'R'	00-1F	linux/random.h		conflict!
- 'R'	01	linux/rfkill.h		conflict!
-diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
-index 4ebc359..fdfa0f6 100644
---- a/Documentation/misc-devices/pci-endpoint-test.txt
-+++ b/Documentation/misc-devices/pci-endpoint-test.txt
-@@ -10,6 +10,7 @@ The PCI driver for the test device performs the following tests
- 	*) verifying addresses programmed in BAR
- 	*) raise legacy IRQ
- 	*) raise MSI IRQ
-+	*) raise MSI-X IRQ
- 	*) read data
- 	*) write data
- 	*) copy data
-@@ -25,6 +26,8 @@ ioctl
-  PCITEST_LEGACY_IRQ: Tests legacy IRQ
-  PCITEST_MSI: Tests message signalled interrupts. The MSI number
- 	      to be tested should be passed as argument.
-+ PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
-+	      to be tested should be passed as argument.
-  PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
- 		as argument.
-  PCITEST_READ: Perform read tests. The size of the buffer should be passed
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 349794c..f4fef10 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -39,13 +39,14 @@
- 
- #define IRQ_TYPE_LEGACY				0
- #define IRQ_TYPE_MSI				1
-+#define IRQ_TYPE_MSIX				2
- 
- #define PCI_ENDPOINT_TEST_MAGIC			0x0
- 
- #define PCI_ENDPOINT_TEST_COMMAND		0x4
- #define COMMAND_RAISE_LEGACY_IRQ		BIT(0)
- #define COMMAND_RAISE_MSI_IRQ			BIT(1)
--/* BIT(2) is reserved for raising MSI-X IRQ command */
-+#define COMMAND_RAISE_MSIX_IRQ			BIT(2)
- #define COMMAND_READ				BIT(3)
- #define COMMAND_WRITE				BIT(4)
- #define COMMAND_COPY				BIT(5)
-@@ -84,7 +85,7 @@ MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
- 
- static int irq_type = IRQ_TYPE_MSI;
- module_param(irq_type, int, 0444);
--MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI)");
-+MODULE_PARM_DESC(irq_type, "IRQ mode selection in pci_endpoint_test (0 - Legacy, 1 - MSI, 2 - MSI-X)");
- 
- enum pci_barno {
- 	BAR_0,
-@@ -202,16 +203,18 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
- }
- 
- static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
--				      u8 msi_num)
-+				       u16 msi_num, bool msix)
- {
- 	u32 val;
- 	struct pci_dev *pdev = test->pdev;
- 
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
--				 IRQ_TYPE_MSI);
-+				 msix == false ? IRQ_TYPE_MSI :
-+				 IRQ_TYPE_MSIX);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, msi_num);
- 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
--				 COMMAND_RAISE_MSI_IRQ);
-+				 msix == false ? COMMAND_RAISE_MSI_IRQ :
-+				 COMMAND_RAISE_MSIX_IRQ);
- 	val = wait_for_completion_timeout(&test->irq_raised,
- 					  msecs_to_jiffies(1000));
- 	if (!val)
-@@ -456,7 +459,8 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
- 		ret = pci_endpoint_test_legacy_irq(test);
- 		break;
- 	case PCITEST_MSI:
--		ret = pci_endpoint_test_msi_irq(test, arg);
-+	case PCITEST_MSIX:
-+		ret = pci_endpoint_test_msi_irq(test, arg, cmd == PCITEST_MSIX);
- 		break;
- 	case PCITEST_WRITE:
- 		ret = pci_endpoint_test_write(test, arg);
-@@ -542,6 +546,12 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 			dev_err(dev, "Failed to get MSI interrupts\n");
- 		test->num_irqs = irq;
- 		break;
-+	case IRQ_TYPE_MSIX:
-+		irq = pci_alloc_irq_vectors(pdev, 1, 2048, PCI_IRQ_MSIX);
-+		if (irq < 0)
-+			dev_err(dev, "Failed to get MSI-X interrupts\n");
-+		test->num_irqs = irq;
-+		break;
- 	default:
- 		dev_err(dev, "Invalid IRQ type selected\n");
- 	}
-@@ -558,8 +568,9 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 				       pci_endpoint_test_irqhandler,
- 				       IRQF_SHARED, DRV_MODULE_NAME, test);
- 		if (err)
--			dev_err(dev, "failed to request IRQ %d for MSI %d\n",
--				pci_irq_vector(pdev, i), i + 1);
-+			dev_err(dev, "Failed to request IRQ %d for MSI%s %d\n",
-+				pci_irq_vector(pdev, i),
-+				irq_type == IRQ_TYPE_MSIX ? "-X" : "", i + 1);
- 	}
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++) {
-@@ -625,6 +636,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 
- err_disable_msi:
- 	pci_disable_msi(pdev);
-+	pci_disable_msix(pdev);
- 	pci_release_regions(pdev);
- 
- err_disable_pdev:
-@@ -656,6 +668,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
- 	for (i = 0; i < test->num_irqs; i++)
- 		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, i), test);
- 	pci_disable_msi(pdev);
-+	pci_disable_msix(pdev);
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
- }
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 160714d..d2dd0c7 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -77,6 +77,7 @@ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
- 		dw_pcie_ep_reset_bar(pci, bar);
- 
- 	epc->features |= EPC_FEATURE_NO_LINKUP_NOTIFIER;
-+	epc->features |= EPC_FEATURE_MSIX_AVAILABLE;
- }
- 
- static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index eb9cd00..123f58c 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -20,10 +20,11 @@
- 
- #define IRQ_TYPE_LEGACY			0
- #define IRQ_TYPE_MSI			1
-+#define IRQ_TYPE_MSIX			2
- 
- #define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
- #define COMMAND_RAISE_MSI_IRQ		BIT(1)
--/* BIT(2) is reserved for raising MSI-X IRQ command */
-+#define COMMAND_RAISE_MSIX_IRQ		BIT(2)
- #define COMMAND_READ			BIT(3)
- #define COMMAND_WRITE			BIT(4)
- #define COMMAND_COPY			BIT(5)
-@@ -47,6 +48,7 @@ struct pci_epf_test {
- 	struct pci_epf		*epf;
- 	enum pci_barno		test_reg_bar;
- 	bool			linkup_notifier;
-+	bool			msix_available;
- 	struct delayed_work	cmd_handler;
- };
- 
-@@ -266,6 +268,9 @@ static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq_type,
- 	case IRQ_TYPE_MSI:
- 		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
- 		break;
-+	case IRQ_TYPE_MSIX:
-+		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSIX, irq);
-+		break;
- 	default:
- 		dev_err(dev, "Failed to raise IRQ, unknown type\n");
- 		break;
-@@ -292,7 +297,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 	reg->command = 0;
- 	reg->status = 0;
- 
--	if (reg->irq_type > IRQ_TYPE_MSI) {
-+	if (reg->irq_type > IRQ_TYPE_MSIX) {
- 		dev_err(dev, "Failed to detect IRQ type\n");
- 		goto reset_handler;
- 	}
-@@ -346,6 +351,16 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 		goto reset_handler;
- 	}
- 
-+	if (command & COMMAND_RAISE_MSIX_IRQ) {
-+		count = pci_epc_get_msix(epc, epf->func_no);
-+		if (reg->irq_number > count || count <= 0)
-+			goto reset_handler;
-+		reg->status = STATUS_IRQ_RAISED;
-+		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSIX,
-+				  reg->irq_number);
-+		goto reset_handler;
-+	}
-+
- reset_handler:
- 	queue_delayed_work(kpcitest_workqueue, &epf_test->cmd_handler,
- 			   msecs_to_jiffies(1));
-@@ -459,6 +474,8 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 	else
- 		epf_test->linkup_notifier = true;
- 
-+	epf_test->msix_available = epc->features & EPC_FEATURE_MSIX_AVAILABLE;
-+
- 	epf_test->test_reg_bar = EPC_FEATURE_GET_BAR(epc->features);
- 
- 	ret = pci_epc_write_header(epc, epf->func_no, header);
-@@ -481,6 +498,14 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 		return ret;
- 	}
- 
-+	if (epf_test->msix_available) {
-+		ret = pci_epc_set_msix(epc, epf->func_no, epf->msix_interrupts);
-+		if (ret) {
-+			dev_err(dev, "MSI-X configuration failed\n");
-+			return ret;
-+		}
-+	}
-+
- 	if (!epf_test->linkup_notifier)
- 		queue_work(kpcitest_workqueue, &epf_test->cmd_handler.work);
- 
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index bb2395b..37dab81 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -102,6 +102,7 @@ struct pci_epc {
- 
- #define EPC_FEATURE_NO_LINKUP_NOTIFIER		BIT(0)
- #define EPC_FEATURE_BAR_MASK			(BIT(1) | BIT(2) | BIT(3))
-+#define EPC_FEATURE_MSIX_AVAILABLE		BIT(4)
- #define EPC_FEATURE_SET_BAR(features, bar)	\
- 		(features |= (EPC_FEATURE_BAR_MASK & (bar << 1)))
- #define EPC_FEATURE_GET_BAR(features)		\
-diff --git a/include/uapi/linux/pcitest.h b/include/uapi/linux/pcitest.h
-index 953cf03..d746fb1 100644
---- a/include/uapi/linux/pcitest.h
-+++ b/include/uapi/linux/pcitest.h
-@@ -16,5 +16,6 @@
- #define PCITEST_WRITE		_IOW('P', 0x4, unsigned long)
- #define PCITEST_READ		_IOW('P', 0x5, unsigned long)
- #define PCITEST_COPY		_IOW('P', 0x6, unsigned long)
-+#define PCITEST_MSIX		_IOW('P', 0x7, int)
- 
- #endif /* __UAPI_LINUX_PCITEST_H */
--- 
-2.7.4
+> and so we need to clear it on the first access after link-up. In order
+> to ensure this, I simply clear it on every config access, in
+> cdns_pci_map_bus, I couldn't think of a good way to just do it once.
+> 
+> Regards,
+> Alan
+> > Thank you,
+> > Lorenzo
+> > 
+> > > Signed-off-by: Alan Douglas <adouglas@cadence.com>
+> > > ---
+> > >  drivers/pci/controller/pcie-cadence-ep.c   |    1 +
+> > >  drivers/pci/controller/pcie-cadence-host.c |    3 ++
+> > >  drivers/pci/controller/pcie-cadence.c      |   30 ++++++++++++++++++++++++++++
+> > >  drivers/pci/controller/pcie-cadence.h      |    4 +++
+> > >  4 files changed, 38 insertions(+), 0 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
+> > > index c02f33d..3eabd99 100644
+> > > --- a/drivers/pci/controller/pcie-cadence-ep.c
+> > > +++ b/drivers/pci/controller/pcie-cadence-ep.c
+> > > @@ -555,6 +555,7 @@ static void cdns_pcie_ep_shutdown(struct platform_device *pdev)
+> > >  	.driver = {
+> > >  		.name = "cdns-pcie-ep",
+> > >  		.of_match_table = cdns_pcie_ep_of_match,
+> > > +		.pm	= &cdns_pcie_pm_ops,
+> > >  	},
+> > >  	.probe = cdns_pcie_ep_probe,
+> > >  	.shutdown = cdns_pcie_ep_shutdown,
+> > > diff --git a/drivers/pci/controller/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
+> > > index 36f3109..e3e9b7d 100644
+> > > --- a/drivers/pci/controller/pcie-cadence-host.c
+> > > +++ b/drivers/pci/controller/pcie-cadence-host.c
+> > > @@ -61,6 +61,8 @@ struct cdns_pcie_rc {
+> > >  	/* Check that the link is up */
+> > >  	if (!(cdns_pcie_readl(pcie, CDNS_PCIE_LM_BASE) & 0x1))
+> > >  		return NULL;
+> > > +	/* Clear AXI link-down status */
+> > > +	cdns_pcie_writel(pcie, CDNS_PCIE_AT_LINKDOWN, 0x0);
+> > >
+> > >  	/* Update Output registers for AXI region 0. */
+> > >  	addr0 = CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
+> > > @@ -345,6 +347,7 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
+> > >  	.driver = {
+> > >  		.name = "cdns-pcie-host",
+> > >  		.of_match_table = cdns_pcie_host_of_match,
+> > > +		.pm	= &cdns_pcie_pm_ops,
+> > >  	},
+> > >  	.probe = cdns_pcie_host_probe,
+> > >  };
+> > > diff --git a/drivers/pci/controller/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
+> > > index 2edc126..86f1b00 100644
+> > > --- a/drivers/pci/controller/pcie-cadence.c
+> > > +++ b/drivers/pci/controller/pcie-cadence.c
+> > > @@ -217,3 +217,33 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
+> > >
+> > >  	return ret;
+> > >  }
+> > > +
+> > > +#ifdef CONFIG_PM_SLEEP
+> > > +static int cdns_pcie_suspend_noirq(struct device *dev)
+> > > +{
+> > > +	struct cdns_pcie *pcie = dev_get_drvdata(dev);
+> > > +
+> > > +	cdns_pcie_disable_phy(pcie);
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +
+> > > +static int cdns_pcie_resume_noirq(struct device *dev)
+> > > +{
+> > > +	struct cdns_pcie *pcie = dev_get_drvdata(dev);
+> > > +	int ret;
+> > > +
+> > > +	ret = cdns_pcie_enable_phy(pcie);
+> > > +	if (ret) {
+> > > +		dev_err(dev, "failed to enable phy\n");
+> > > +		return ret;
+> > > +	}
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +#endif
+> > > +
+> > > +const struct dev_pm_ops cdns_pcie_pm_ops = {
+> > > +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(cdns_pcie_suspend_noirq,
+> > > +				      cdns_pcie_resume_noirq)
+> > > +};
+> > > diff --git a/drivers/pci/controller/pcie-cadence.h b/drivers/pci/controller/pcie-cadence.h
+> > > index b342c80..ae6bf2a 100644
+> > > --- a/drivers/pci/controller/pcie-cadence.h
+> > > +++ b/drivers/pci/controller/pcie-cadence.h
+> > > @@ -166,6 +166,9 @@
+> > >  #define CDNS_PCIE_AT_IB_RP_BAR_ADDR1(bar) \
+> > >  	(CDNS_PCIE_AT_BASE + 0x0804 + (bar) * 0x0008)
+> > >
+> > > +/* AXI link down register */
+> > > +#define CDNS_PCIE_AT_LINKDOWN (CDNS_PCIE_AT_BASE + 0x0824)
+> > > +
+> > >  enum cdns_pcie_rp_bar {
+> > >  	RP_BAR0,
+> > >  	RP_BAR1,
+> > > @@ -314,5 +317,6 @@ void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie, u8 fn,
+> > >  void cdns_pcie_disable_phy(struct cdns_pcie *pcie);
+> > >  int cdns_pcie_enable_phy(struct cdns_pcie *pcie);
+> > >  int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie);
+> > > +extern const struct dev_pm_ops cdns_pcie_pm_ops;
+> > >
+> > >  #endif /* _PCIE_CADENCE_H */
+> > > --
+> > > 1.7.1
+> > >
