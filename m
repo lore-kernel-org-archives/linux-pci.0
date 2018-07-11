@@ -1,99 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:37540 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726485AbeGOQvt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jul 2018 12:51:49 -0400
-Received: by mail-lf0-f67.google.com with SMTP id j8-v6so30550312lfb.4
-        for <linux-pci@vger.kernel.org>; Sun, 15 Jul 2018 09:28:19 -0700 (PDT)
-Subject: [PATCH 6/8] PCI: faraday: Fix I/O space page leak
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
-Message-ID: <40e93796-2d35-a560-929c-0ab392872735@cogentembedded.com>
-Date: Sun, 15 Jul 2018 19:28:17 +0300
+Received: from szxga02-in.huawei.com ([45.249.212.188]:5996 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1732357AbeGKCYX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Jul 2018 22:24:23 -0400
+From: "Songxiaowei (Kirin_DRV)" <songxiaowei@hisilicon.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "chenyao (F)" <chenyao11@huawei.com>
+Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRDSCB2NSAxLzFdIFBDSToga2lyaW46IEFk?=
+ =?utf-8?Q?d_MSI_support?=
+Date: Wed, 11 Jul 2018 02:22:16 +0000
+Message-ID: <99B4C6BADD9E3241B25E52B02BA737C5412D7B26@dggema525-mbx.china.huawei.com>
+References: <20180628124803.110315-1-songxiaowei@hisilicon.com>
+ <20180628124803.110315-2-songxiaowei@hisilicon.com>
+ <99B4C6BADD9E3241B25E52B02BA737C5412D2511@dggema525-mbx.china.huawei.com>
+ <20180710154017.GA16825@red-moon>
+In-Reply-To: <20180710154017.GA16825@red-moon>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When testing the R-Car PCIe driver on the Condor board, I noticed that iff
-I left  the PCIe PHY driver disabled, the kernel crashed with this BUG:
-
-[    1.225819] kernel BUG at lib/ioremap.c:72!
-[    1.230007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
-[    1.235496] Modules linked in:
-[    1.238561] CPU: 0 PID: 39 Comm: kworker/0:1 Not tainted 4.17.0-dirty #1092
-[    1.245526] Hardware name: Renesas Condor board based on r8a77980 (DT)
-[    1.252075] Workqueue: events deferred_probe_work_func
-[    1.257220] pstate: 80000005 (Nzcv daif -PAN -UAO)
-[    1.262024] pc : ioremap_page_range+0x370/0x3c8
-[    1.266558] lr : ioremap_page_range+0x40/0x3c8
-[    1.271002] sp : ffff000008da39e0
-[    1.274317] x29: ffff000008da39e0 x28: 00e8000000000f07
-[    1.279636] x27: ffff7dfffee00000 x26: 0140000000000000
-[    1.284954] x25: ffff7dfffef00000 x24: 00000000000fe100
-[    1.290272] x23: ffff80007b906000 x22: ffff000008ab8000
-[    1.295590] x21: ffff000008bb1d58 x20: ffff7dfffef00000
-[    1.300909] x19: ffff800009c30fb8 x18: 0000000000000001
-[    1.306226] x17: 00000000000152d0 x16: 00000000014012d0
-[    1.311544] x15: 0000000000000000 x14: 0720072007200720
-[    1.316862] x13: 0720072007200720 x12: 0720072007200720
-[    1.322180] x11: 0720072007300730 x10: 00000000000000ae
-[    1.327498] x9 : 0000000000000000 x8 : ffff7dffff000000                      
-[    1.332816] x7 : 0000000000000000 x6 : 0000000000000100
-[    1.338134] x5 : 0000000000000000 x4 : 000000007b906000
-[    1.343452] x3 : ffff80007c61a880 x2 : ffff7dfffeefffff
-[    1.348770] x1 : 0000000040000000 x0 : 00e80000fe100f07
-[    1.354090] Process kworker/0:1 (pid: 39, stack limit = 0x        (ptrval))  
-[    1.361056] Call trace:
-[    1.363504]  ioremap_page_range+0x370/0x3c8
-[    1.367695]  pci_remap_iospace+0x7c/0xac
-[    1.371624]  pci_parse_request_of_pci_ranges+0x13c/0x190
-[    1.376945]  rcar_pcie_probe+0x4c/0xb04
-[    1.380786]  platform_drv_probe+0x50/0xbc
-[    1.384799]  driver_probe_device+0x21c/0x308
-[    1.389072]  __device_attach_driver+0x98/0xc8
-[    1.393431]  bus_for_each_drv+0x54/0x94
-[    1.397269]  __device_attach+0xc4/0x12c
-[    1.401107]  device_initial_probe+0x10/0x18
-[    1.405292]  bus_probe_device+0x90/0x98
-[    1.409130]  deferred_probe_work_func+0xb0/0x150
-[    1.413756]  process_one_work+0x12c/0x29c
-[    1.417768]  worker_thread+0x200/0x3fc
-[    1.421522]  kthread+0x108/0x134
-[    1.424755]  ret_from_fork+0x10/0x18
-[    1.428334] Code: f9004ba2 54000080 aa0003fb 17ffff48 (d4210000)
-
-It turned out that pci_remap_iospace() wasn't undone when the driver's
-probe failed, and since devm_phy_optional_get() returned -EPROBE_DEFER,
-the probe was retried,  finally causing the BUG due to trying to remap
-already remapped pages.
-
-The Faraday PCI driver has the same issue.  The most feasible solution
-seemed to introduce devm_pci_remap_iospace() -- which was done in the
-XGene  PCIe  driver patch posted earlier...
-
-Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
----
- drivers/pci/controller/pci-ftpci100.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: pci/drivers/pci/controller/pci-ftpci100.c
-===================================================================
---- pci.orig/drivers/pci/controller/pci-ftpci100.c
-+++ pci/drivers/pci/controller/pci-ftpci100.c
-@@ -503,7 +503,7 @@ static int faraday_pci_probe(struct plat
- 				dev_err(dev, "illegal IO mem size\n");
- 				return -EINVAL;
- 			}
--			ret = pci_remap_iospace(io, io_base);
-+			ret = devm_pci_remap_iospace(dev, io, io_base);
- 			if (ret) {
- 				dev_warn(dev, "error %d: failed to map resource %pR\n",
- 					 ret, io);
+DQoNCj4gLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0KPiDlj5Hku7bkuro6IExvcmVuem8gUGllcmFs
+aXNpIFttYWlsdG86bG9yZW56by5waWVyYWxpc2lAYXJtLmNvbV0NCj4g5Y+R6YCB5pe26Ze0OiAy
+MDE45bm0N+aciDEw5pelIDIzOjQwDQo+IOaUtuS7tuS6ujogU29uZ3hpYW93ZWkgKEtpcmluX0RS
+VikgPHNvbmd4aWFvd2VpQGhpc2lsaWNvbi5jb20+DQo+IOaKhOmAgTogYmhlbGdhYXNAZ29vZ2xl
+LmNvbTsgcm9iaCtkdEBrZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOw0KPiBs
+aW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBjaGVueWFvIChGKSA8Y2hlbnlhbzExQGh1YXdl
+aS5jb20+DQo+IOS4u+mimDogUmU6IOetlOWkjTogW1BBVENIIHY1IDEvMV0gUENJOiBraXJpbjog
+QWRkIE1TSSBzdXBwb3J0DQo+IA0KPiBPbiBNb24sIEp1bCAwOSwgMjAxOCBhdCAwMTo1NDowN0FN
+ICswMDAwLCBTb25neGlhb3dlaSAoS2lyaW5fRFJWKSB3cm90ZToNCj4gPiBIaSBCam9ybiBIZWxn
+YWFzLA0KPiA+DQo+ID4gV291bGQgeW91IGhlbHAgdG8gcmV2aWV3IHRoaXMgcGF0Y2g/DQo+ID4N
+Cj4gPiBCZXN0IHJlZ2FyZHMsDQo+ID4NCj4gPiBYaWFvd2VpLg0KPiA+DQo+ID4gPiAtLS0tLemC
+ruS7tuWOn+S7ti0tLS0tDQo+ID4gPiDlj5Hku7bkuro6IFNvbmd4aWFvd2VpIChLaXJpbl9EUlYp
+DQo+ID4gPiDlj5HpgIHml7bpl7Q6IDIwMTjlubQ25pyIMjjml6UgMjA6NDgNCj4gPiA+IOaUtuS7
+tuS6ujogV2FuZ2JpbmdodWkgPHdhbmdiaW5naHVpQGhpc2lsaWNvbi5jb20+Ow0KPiBiaGVsZ2Fh
+c0Bnb29nbGUuY29tOw0KPiA+ID4gcm9iaCtkdEBrZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5r
+ZXJuZWwub3JnOw0KPiA+ID4gcm9iaCtsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiA+
+ID4gZGltaXRyeXNoQGdvb2dsZS5jb20NCj4gPiA+IOaKhOmAgTogY2hlbnlhbyAoRikgPGNoZW55
+YW8xMUBodWF3ZWkuY29tPjsgU29uZ3hpYW93ZWkgKEtpcmluX0RSVikNCj4gPiA+IDxzb25neGlh
+b3dlaUBoaXNpbGljb24uY29tPg0KPiA+ID4g5Li76aKYOiBbUEFUQ0ggdjUgMS8xXSBQQ0k6IGtp
+cmluOiBBZGQgTVNJIHN1cHBvcnQNCj4gPiA+DQo+ID4gPiBBZGQgc3VwcG9ydCBmb3IgTVNJLg0K
+PiA+ID4NCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFhpYW93ZWkgU29uZyA8c29uZ3hpYW93ZWlAaGlz
+aWxpY29uLmNvbT4NCj4gPiA+IC0tLQ0KPiA+ID4gIGRyaXZlcnMvcGNpL2R3Yy9wY2llLWtpcmlu
+LmMgfCAyOCArKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ID4gPiAgMSBmaWxlIGNoYW5n
+ZWQsIDI4IGluc2VydGlvbnMoKykNCj4gPiA+DQo+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9w
+Y2kvZHdjL3BjaWUta2lyaW4uYw0KPiA+ID4gYi9kcml2ZXJzL3BjaS9kd2MvcGNpZS1raXJpbi5j
+IGluZGV4IGQyOTcwYTAwOWViNS4uNjk5NzI3NmViNjljDQo+ID4gPiAxMDA2NDQNCj4gPiA+IC0t
+LSBhL2RyaXZlcnMvcGNpL2R3Yy9wY2llLWtpcmluLmMNCj4gPiA+ICsrKyBiL2RyaXZlcnMvcGNp
+L2R3Yy9wY2llLWtpcmluLmMNCj4gPiA+IEBAIC00MzAsNiArNDMwLDkgQEAgc3RhdGljIGludCBr
+aXJpbl9wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0DQo+ID4gPiAqcHApIHsNCj4gPiA+
+ICAJa2lyaW5fcGNpZV9lc3RhYmxpc2hfbGluayhwcCk7DQo+ID4gPg0KPiA+ID4gKwlpZiAoSVNf
+RU5BQkxFRChDT05GSUdfUENJX01TSSkpDQo+ID4gPiArCQlkd19wY2llX21zaV9pbml0KHBwKTsN
+Cj4gPiA+ICsNCj4gPiA+ICAJcmV0dXJuIDA7DQo+ID4gPiAgfQ0KPiA+ID4NCj4gPiA+IEBAIC00
+NDUsOSArNDQ4LDM0IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgZHdfcGNpZV9ob3N0X29wcw0KPiA+
+ID4ga2lyaW5fcGNpZV9ob3N0X29wcyA9IHsNCj4gPiA+ICAJLmhvc3RfaW5pdCA9IGtpcmluX3Bj
+aWVfaG9zdF9pbml0LCAgfTsNCj4gPiA+DQo+ID4gPiArc3RhdGljIGludCBraXJpbl9wY2llX2Fk
+ZF9tc2koc3RydWN0IGR3X3BjaWUgKnBjaSwNCj4gPiA+ICsJCQkJc3RydWN0IHBsYXRmb3JtX2Rl
+dmljZSAqcGRldikNCj4gPiA+ICt7DQo+ID4gPiArCWludCByZXQgPSAwOw0KPiA+ID4gKw0KPiA+
+ID4gKwlpZiAoSVNfRU5BQkxFRChDT05GSUdfUENJX01TSSkpIHsNCj4gPiA+ICsJCXJldCA9IHBs
+YXRmb3JtX2dldF9pcnEocGRldiwgMCk7DQo+ID4gPiArCQlpZiAocmV0IDwgMCkgew0KPiA+ID4g
+KwkJCWRldl9lcnIoJnBkZXYtPmRldiwNCj4gPiA+ICsJCQkJImZhaWxlZCB0byBnZXQgTVNJIElS
+USAoJWQpXG4iLCByZXQpOw0KPiA+ID4gKwkJCXJldHVybiByZXQ7DQo+ID4gPiArCQl9DQo+ID4g
+PiArDQo+ID4gPiArCQlwY2ktPnBwLm1zaV9pcnEgPSByZXQ7DQo+ID4gPiArCX0NCj4gPiA+ICsN
+Cj4gPiA+ICsJcmV0dXJuIHJldDsNCj4gPiA+ICt9DQo+ID4gPiArDQo+ID4gPiAgc3RhdGljIGlu
+dCBfX2luaXQga2lyaW5fYWRkX3BjaWVfcG9ydChzdHJ1Y3QgZHdfcGNpZSAqcGNpLA0KPiA+ID4g
+IAkJCQkgICAgICBzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KSAgew0KPiA+ID4gKwlpbnQg
+cmV0Ow0KPiA+ID4gKw0KPiA+ID4gKwlyZXQgPSBraXJpbl9wY2llX2FkZF9tc2kocGNpLCBwZGV2
+KTsNCj4gPiA+ICsJaWYgKHJldCkNCj4gPiA+ICsJCXJldHVybiByZXQ7DQo+IA0KPiBJZiBraXJp
+bl9wY2llX2FkZF9tc2koKSByZXR1cm5zIGFuIElSUSBudW1iZXIgd2UgcmV0dXJuIGZyb20gdGhp
+cyBmdW5jdGlvbg0KPiBoZXJlLCBpcyB0aGF0IHdoYXQgeW91IHJlYWxseSB3YW50ID8NCltzb25n
+eGlhb3dlaV0gIFNvcnJ5IGFib3V0IHRoaXMgaXNzdWUsIEknbGwgY2hlY2sgdGhlIHBhdGNoIGNh
+cmVmdWxseSBhbmQgdGVzdCBpdCBvbiBIaWtleTk2MCBCb2FyZC4NCgkJCSBUaGFua3MgYSBsb3Qg
+Zm9yIHlvdXIgdGltZS4NCg0KQmVzdCByZWdhcmRzLA0KWGlhb3dlaS4NCj4gDQo+IExvcmVuem8N
+Cj4gDQo+ID4gPiArDQo+ID4gPiAgCXBjaS0+cHAub3BzID0gJmtpcmluX3BjaWVfaG9zdF9vcHM7
+DQo+ID4gPg0KPiA+ID4gIAlyZXR1cm4gZHdfcGNpZV9ob3N0X2luaXQoJnBjaS0+cHApOw0KPiA+
+ID4gLS0NCj4gPiA+IDIuMTEuR0lUDQo+ID4NCg==
