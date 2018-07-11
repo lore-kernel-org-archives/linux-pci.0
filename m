@@ -1,90 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:33388 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728081AbeGPHGi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2018 03:06:38 -0400
-Received: by mail-wr1-f68.google.com with SMTP id g6-v6so21721257wrp.0
-        for <linux-pci@vger.kernel.org>; Sun, 15 Jul 2018 23:40:48 -0700 (PDT)
+Return-Path: <SRS0=xxzS=J3=broadcom.com=ray.jui@kernel.org>
+Return-Path: <SRS0=xxzS=J3=broadcom.com=ray.jui@kernel.org>
+Subject: Re: [PATCH v2 1/5] PCI: iproc: Activate PAXC bridge quirk for more
+ devices
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
+References: <1528762867-16823-1-git-send-email-ray.jui@broadcom.com>
+ <1528762867-16823-2-git-send-email-ray.jui@broadcom.com>
+ <20180711131138.GE188359@bhelgaas-glaptop.roam.corp.google.com>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <6a931918-f5ba-1b80-658d-1f7ed1e8c84e@broadcom.com>
+Date: Wed, 11 Jul 2018 09:52:31 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180709114241.GA1798@e107981-ln.cambridge.arm.com>
-References: <20180705094539.xkmtfffbzl3kooum@kili.mountain>
- <20180706112652.GA14650@red-moon> <CAFZiPx1w_st+TY+EKm6nxvJ=S_ZJzUY2No8790V2haGX+ZO+Rg@mail.gmail.com>
- <20180709114241.GA1798@e107981-ln.cambridge.arm.com>
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date: Mon, 16 Jul 2018 12:10:46 +0530
-Message-ID: <CAFZiPx3AoBJk5pN0sKDQnyA_DF8R9tiuBhRfCwiGpy62EmPEhQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: mobiveil: integer overflow in IB_WIN_SIZE
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180711131138.GE188359@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Lorenzo,
+Hi Bjorn,
 
-looks like I missed it during the review process;
-I'll submit the Kconfig and makefile as soon as possible.
+On 7/11/2018 6:11 AM, Bjorn Helgaas wrote:
+> On Mon, Jun 11, 2018 at 05:21:03PM -0700, Ray Jui wrote:
+>> Activate PAXC bridge quirk for more PAXC based PCIe root complex with
+>> the following PCIe device ID:
+>> 0xd750, 0xd802, 0xd804
+>>
+>> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> 
+> Because this quirk_paxc_bridge() mechanism is already established,
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
 
-Thanks,
+Thanks!
 
-On Mon, Jul 9, 2018 at 5:12 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Mon, Jul 09, 2018 at 03:55:00PM +0530, Subrahmanya Lingappa wrote:
->> Hi Lorenzo,
+> BUT, I would push back on quirk_paxc_bridge() if it were new code.
+> 
+> I think it would be much better to implement this in the driver's
+> config accessors so lspci would show the correct things and the
+> generic code that deals with pcie_mpss would work unmodified.
+>
+
+Noted.
+
+I agree with you. I'll find time to improve this by moving them into the 
+driver's config accessors in the future, after v4.19.
+
+>> ---
+>>   drivers/pci/quirks.c | 3 +++
+>>   1 file changed, 3 insertions(+)
 >>
->> Our reference IP's hardware registers require the to support 256GB
->> inbound window size and this driver did exactly that I believe.
->
-> No it does not, please check what this patch does, the window size
-> is not currently configured as you wish.
->
-> More importantly, nobody can even test it given that this driver lacks a
-> Kconfig and a Makefile entry unless I am missing something, I presume
-> they were lost in patch reviews but you ought to fix this as soon as
-> possible please since this was something I should not have missed.
->
->> May I ask, why do you think this size is questionable ?
->
-> The macro is not questionable, it is buggy, the size is what you
-> tell me it should be, I agree.
->
-> Lorenzo
->
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 2990ad1..47dfea0 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -2195,6 +2195,9 @@ static void quirk_paxc_bridge(struct pci_dev *pdev)
+>>   }
+>>   DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16cd, quirk_paxc_bridge);
+>>   DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x16f0, quirk_paxc_bridge);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd750, quirk_paxc_bridge);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd802, quirk_paxc_bridge);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0xd804, quirk_paxc_bridge);
+>>   #endif
+>>   
+>>   /* Originally in EDAC sources for i82875P:
+>> -- 
+>> 2.1.4
 >>
->> Thanks.
->>
->>
->> On Fri, Jul 6, 2018 at 4:56 PM, Lorenzo Pieralisi
->> <lorenzo.pieralisi@arm.com> wrote:
->> > On Thu, Jul 05, 2018 at 12:45:39PM +0300, Dan Carpenter wrote:
->> >> IB_WIN_SIZE is larger than INT_MAX so we need to cast it to u64.
->> >>
->> >> Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver")
->> >> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->> >> ---
->> >> Untested...  Possibly the problem is that there are too many multiplies
->> >> by * 1024.
->> >
->> > Hi Subrahmanya,
->> >
->> > I always thought that that macro value was questionable, please
->> > can you comment on this ?
->> >
->> > Thanks,
->> > Lorenzo
->> >
->> >> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
->> >> index 4d6c20e47bed..cf0aa7cee5b0 100644
->> >> --- a/drivers/pci/controller/pcie-mobiveil.c
->> >> +++ b/drivers/pci/controller/pcie-mobiveil.c
->> >> @@ -107,7 +107,7 @@
->> >>  #define CFG_WINDOW_TYPE      0
->> >>  #define IO_WINDOW_TYPE               1
->> >>  #define MEM_WINDOW_TYPE      2
->> >> -#define IB_WIN_SIZE          (256 * 1024 * 1024 * 1024)
->> >> +#define IB_WIN_SIZE          ((u64)256 * 1024 * 1024 * 1024)
->> >>  #define MAX_PIO_WINDOWS      8
->> >>
->> >>  /* Parameters for the waiting for link up routine */
