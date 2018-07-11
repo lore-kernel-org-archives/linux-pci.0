@@ -1,54 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yb0-f169.google.com ([209.85.213.169]:42732 "EHLO
-        mail-yb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731757AbeG0AT6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jul 2018 20:19:58 -0400
-Received: by mail-yb0-f169.google.com with SMTP id c10-v6so1312236ybf.9
-        for <linux-pci@vger.kernel.org>; Thu, 26 Jul 2018 16:01:01 -0700 (PDT)
+Received: from mail-by2nam01on0054.outbound.protection.outlook.com ([104.47.34.54]:11072
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726335AbeGKITZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Jul 2018 04:19:25 -0400
+From: Alan Douglas <adouglas@cadence.com>
+To: Colin King <colin.king@canonical.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] PCI: pcie-candence-ep: remove redundant variable mmc
+Date: Wed, 11 Jul 2018 08:16:17 +0000
+Message-ID: <MWHPR07MB350280DBA03402F078C80ACCD85A0@MWHPR07MB3502.namprd07.prod.outlook.com>
+References: <20180711080103.4581-1-colin.king@canonical.com>
+In-Reply-To: <20180711080103.4581-1-colin.king@canonical.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
-In-Reply-To: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
-From: Rajat Jain <rajatja@google.com>
-Date: Thu, 26 Jul 2018 16:00:24 -0700
-Message-ID: <CACK8Z6GsOkhTgPA1HRtgdRgKta7d=vVP_1t0EhcyJMJCj+aV+A@mail.gmail.com>
-Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
-To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc: "Busch, Keith" <keith.busch@intel.com>,
-        linux-pci <linux-pci@vger.kernel.org>, austin_bolen@dell.com,
-        Alex_Gagniuc@dellteam.com
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 26, 2018 at 3:38 PM Alex G. <mr.nuke.me@gmail.com> wrote:
->
-> Hi,
->
-> I was under the impression that a DLLSC or PDSC would trigger the
-> PCI_DEV_DISCONNECTED bit to be set, blocking any further config access.
-
-This sounds like an good idea to me. Caveat below.
-
->
-> Although I'm not seeing that happen after a  "Slot(xxx): Link Down"
-> event.
-
-It should eventually happen when the pciehp takes a note and finally
-processes the event in pciehp_unconfigure_device(). I suspect that the
-reason this was put towards the end of the event processing was to be
-absolutely be sure that the device removal won't be cancelled (Since
-the bit is not being cleared anywhere, if somehow the device removal
-is not processed, it may result in ghost devices that are permanently
-"unreadable").
-
-Thanks,
-
-Rajat
-
-> I suspect my understanding is then wrong. Or maybe
-> PCI_DEV_DISCONNECTED means something else.
->
-> In the latter case, does it not make sense to have a separate bit to say
-> "Don't touch this device"?
->
-> Alex
+T24gMTEgSnVseSAyMDE4IDA5OjAxLCBDb2xpbiBLaW5nIHdyb3RlOg0KPiBGcm9tOiBDb2xpbiBJ
+YW4gS2luZyA8Y29saW4ua2luZ0BjYW5vbmljYWwuY29tPg0KPiANCj4gVmFyaWFibGUgbW1jIGlz
+IGJlaW5nIGFzc2lnbmVkIGJ1dCBpcyBuZXZlciB1c2VkIGhlbmNlIGl0IGlzIHJlZHVuZGFudA0K
+PiBhbmQgY2FuIGJlIHJlbW92ZWQuDQo+IA0KPiBDbGVhbnMgdXAgY2xhbmcgd2FybmluZzoNCj4g
+d2FybmluZzogdmFyaWFibGUgJ21tYycgc2V0IGJ1dCBub3QgdXNlZCBbLVd1bnVzZWQtYnV0LXNl
+dC12YXJpYWJsZV0NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IENvbGluIElhbiBLaW5nIDxjb2xpbi5r
+aW5nQGNhbm9uaWNhbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2ll
+LWNhZGVuY2UtZXAuYyB8IDMgKy0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyks
+IDIgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvY29udHJvbGxl
+ci9wY2llLWNhZGVuY2UtZXAuYyBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1jYWRlbmNl
+LWVwLmMNCj4gaW5kZXggZTNmZTQxMjRlM2FmLi42MzU0OWUwM2VhZTggMTAwNjQ0DQo+IC0tLSBh
+L2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1jYWRlbmNlLWVwLmMNCj4gKysrIGIvZHJpdmVy
+cy9wY2kvY29udHJvbGxlci9wY2llLWNhZGVuY2UtZXAuYw0KPiBAQCAtMjM4LDcgKzIzOCw3IEBA
+IHN0YXRpYyBpbnQgY2Ruc19wY2llX2VwX2dldF9tc2koc3RydWN0IHBjaV9lcGMgKmVwYywgdTgg
+Zm4pDQo+ICAJc3RydWN0IGNkbnNfcGNpZV9lcCAqZXAgPSBlcGNfZ2V0X2RydmRhdGEoZXBjKTsN
+Cj4gIAlzdHJ1Y3QgY2Ruc19wY2llICpwY2llID0gJmVwLT5wY2llOw0KPiAgCXUzMiBjYXAgPSBD
+RE5TX1BDSUVfRVBfRlVOQ19NU0lfQ0FQX09GRlNFVDsNCj4gLQl1MTYgZmxhZ3MsIG1tYywgbW1l
+Ow0KPiArCXUxNiBmbGFncywgbW1lOw0KPiANCj4gIAkvKiBWYWxpZGF0ZSB0aGF0IHRoZSBNU0kg
+ZmVhdHVyZSBpcyBhY3R1YWxseSBlbmFibGVkLiAqLw0KPiAgCWZsYWdzID0gY2Ruc19wY2llX2Vw
+X2ZuX3JlYWR3KHBjaWUsIGZuLCBjYXAgKyBQQ0lfTVNJX0ZMQUdTKTsNCj4gQEAgLTI0OSw3ICsy
+NDksNiBAQCBzdGF0aWMgaW50IGNkbnNfcGNpZV9lcF9nZXRfbXNpKHN0cnVjdCBwY2lfZXBjICpl
+cGMsIHU4IGZuKQ0KPiAgCSAqIEdldCB0aGUgTXVsdGlwbGUgTWVzc2FnZSBFbmFibGUgYml0Zmll
+bGQgZnJvbSB0aGUgTWVzc2FnZSBDb250cm9sDQo+ICAJICogcmVnaXN0ZXIuDQo+ICAJICovDQo+
+IC0JbW1jID0gKGZsYWdzICYgUENJX01TSV9GTEFHU19RTUFTSykgPj4gMTsNCj4gIAltbWUgPSAo
+ZmxhZ3MgJiBQQ0lfTVNJX0ZMQUdTX1FTSVpFKSA+PiA0Ow0KPiANCj4gIAlyZXR1cm4gbW1lOw0K
+PiAtLQ0KPiAyLjE3LjENClRoYW5rcyBmb3Igc3BvdHRpbmcgdGhpcywgbW1jIGlzIG5vdCBuZWVk
+ZWQgaGVyZSwganVzdCBpbnRlcmVzdGVkIGluIG1tZS4NCkFja2VkLWJ5OiBBbGFuIERvdWdsYXMg
+PGFkb3VnbGFzQGNhZGVuY2UuY29tPg0KDQo=
