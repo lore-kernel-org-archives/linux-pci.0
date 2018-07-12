@@ -1,102 +1,44 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=B3Fm=J4=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=B3Fm=J4=intel.com=keith.busch@kernel.org>
+Date: Thu, 12 Jul 2018 15:57:01 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
+	poza@codeaurora.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V2, 0/1] PCI/AER: fix use-after-free in
+ pcie_do_fatal_recovery
+Message-ID: <20180712215700.GA17092@localhost.localdomain>
+References: <1531416823-17841-1-git-send-email-thomas.tai@oracle.com>
+ <20180712215151.GD28466@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Date: Tue, 03 Jul 2018 20:42:12 +0530
-From: poza@codeaurora.org
-To: Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-In-Reply-To: <20180703143434.GA4086@wunner.de>
-References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
- <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
- <20180703143434.GA4086@wunner.de>
-Message-ID: <fda77cee8e379f2e9b7ab55fefe17cad@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180712215151.GD28466@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-07-03 20:04, Lukas Wunner wrote:
-> On Mon, Jul 02, 2018 at 06:52:47PM -0400, Sinan Kaya wrote:
->> @@ -308,8 +310,17 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, 
->> u32 service)
->>  		pci_dev_put(pdev);
->>  	}
->> 
->> +	hpsvc = pcie_port_find_service(udev, PCIE_PORT_SERVICE_HP);
->> +	hpdev = pcie_port_find_device(udev, PCIE_PORT_SERVICE_HP);
->> +
->> +	if (hpdev && hpsvc)
->> +		hpsvc->mask_irq(to_pcie_device(hpdev));
->> +
->>  	result = reset_link(udev, service);
->> 
->> +	if (hpdev && hpsvc)
->> +		hpsvc->unmask_irq(to_pcie_device(hpdev));
->> +
+On Thu, Jul 12, 2018 at 04:51:51PM -0500, Bjorn Helgaas wrote:
+> However, I think we're also slightly exposed in dpc_work(), in basically
+> the same (possibly harmless) way.
 > 
-> We've already got the ->reset_slot callback in struct hotplug_slot_ops,
-> I'm wondering if we really need additional ones for this use case.
+>   dpc_irq
+>     schedule_work(&dpc->work)
+>   ...
+>   dpc_work
+>     pdev = dpc->dev->port
+>     pcie_do_fatal_recovery(pdev)
 > 
-> If you just do...
+> pdev may be removed by pcie_do_fatal_recovery(), but dpc_work() is still
+> holding onto a pointer (which it never uses again).
 > 
-> 	if (!pci_probe_reset_slot(dev->slot))
-> 		pci_reset_slot(dev->slot)
-> 	else {
-> 		/* regular code path */
-> 	}
+> The DPC driver should be holding a reference to pdev (through some black
+> magic I don't understand), but that would be released when pdev is removed,
+> and I don't know what ensures that dpc_work() runs before that release.
 > 
-> would that not be equivalent?
-> 
+> Bjorn
 
-pcie_do_fatal_recovery() calls
-           reset_link()
-              which calls dpc_reset_link() or aer_root_reset() depending 
-on the event.
+Yep, you're right on that point. There's different ways we can fix
+that. The most recent one I proposed was to replace the scheduled work
+with the threaded irq[1]. That should make it safe since the lifetime of
+when bottom half can be executed is tied to the lifetime of the device
+that registered it.
 
-and dpc_reset_link() and aer_root_reset() do their own cleanup stuffs.
-infact, aer_root_reset() is the only function which actually triggers 
-pci_reset_bridge_secondary_bus().
-
-So if we try to fit in your suggestion:
-
-if (!pci_probe_reset_slot(dev->slot))
-{
-     pci_reset_slot(dev->slot)
-     result = reset_link(udev, service); >> in this case aer_root_reset 
-must not call pci_reset_bridge_secondary_bus()
-} else
-     result = reset_link(udev, service); >> in this case aer_root_reset 
-must call pci_reset_bridge_secondary_bus() [since bridge is not hotplug 
-capable)
-
-Did I get your suggestion right ?
-
-Regards,
-Oza.
-
-> (It's worth noting though that pciehp is the only hotplug driver
-> implementing the ->reset_slot callback.  If hotplug is handled by
-> a different driver or by the platform firmware, devices may still
-> be removed and re-enumerated twice.)
-> 
-
-> Thanks,
-> 
-> Lukas
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ 1. https://patchwork.kernel.org/patch/10478755/
