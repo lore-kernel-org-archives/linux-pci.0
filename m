@@ -1,106 +1,144 @@
-Return-Path: <SRS0=ve5H=J2=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=ve5H=J2=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:51174 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1733114AbeGLWcv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Jul 2018 18:32:51 -0400
+Date: Thu, 12 Jul 2018 17:21:09 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>,
+        Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 08/32] genirq: Synchronize only with single thread on
+ free_irq()
+Message-ID: <20180712222109.GE28466@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1529173804.git.lukas@wunner.de>
+ <83cfe0c826f1d793e2ead9032ef2109b5efa403a.1529173804.git.lukas@wunner.de>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <5b134ed3-b473-90f3-acc7-5943e1669bb5@ti.com>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <2108146.dv4EAOf6IP@aspire.rjw.lan> <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
- <8816662.k3KXbdkA2e@aspire.rjw.lan> <CAErSpo4eaaieQiZjAejXAoCv82wddPOcRQXpiqD6X=fFW5XAHQ@mail.gmail.com>
- <CAJZ5v0hVDo-Y2gPTxd6yHVY=vr093hai1VhLzNzzhFkKe0LoKA@mail.gmail.com>
- <CAErSpo4TOiBtdG0iwgeFpv76Lhs4s7PXAWv5_DG-VRyEoP5bOQ@mail.gmail.com> <5b134ed3-b473-90f3-acc7-5943e1669bb5@ti.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 10 Jul 2018 12:32:28 +0200
-Message-ID: <CAJZ5v0j3Ss5Sa++ZjudMN0Jo2mu5YY6qJ4yEA5TG-zn=qYw2jg@mail.gmail.com>
-Subject: Re: [PATCH] driver core: Drop devices_kset_move_last() call from really_probe()
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
-	Mark Brown <broonie@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Pingfan Liu <kernelfans@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <83cfe0c826f1d793e2ead9032ef2109b5efa403a.1529173804.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2018 at 8:19 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> +Mark, Liam
->
-> Hi,
->
-> On Tuesday 10 July 2018 03:36 AM, Bjorn Helgaas wrote:
->> [+cc Kishon]
->>
->> On Mon, Jul 9, 2018 at 4:35 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
->>>
->>> On Mon, Jul 9, 2018 at 3:57 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> On Fri, Jul 6, 2018 at 5:01 AM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->>>>>
->>>>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>>>
->>>>> The devices_kset_move_last() call in really_probe() is a mistake
->>>>> as it may cause parents to follow children in the devices_kset list
->>>>> which then causes system shutdown to fail.  Namely, if a device has
->>>>> children before really_probe() is called for it (which is not
->>>>> uncommon), that call will cause it to be reordered after the children
->>>>> in the devices_kset list and the ordering of that list will not
->>>>> reflect the correct device shutdown order.
->>>>>
->>>>> Also it causes the devices_kset list to be constantly reordered
->>>>> until all drivers have been probed which is totally pointless
->>>>> overhead in the majority of cases.
->>>>>
->>>>> For that reason, revert the really_probe() modifications made by
->>>>> commit 52cdbdd49853.
->>>>
->>>> I'm sure you've considered this, but I can't figure out whether this
->>>> patch will reintroduce the problem that was solved by 52cdbdd49853.
->>>> That patch updated two places: (1) really_probe(), the change you're
->>>> reverting here, and (2) device_move().
->>>>
->>>> device_move() is only called from 4-5 places, none of which look
->>>> related to the problem fixed by 52cdbdd49853, so it seems like that
->>>> problem was probably resolved by the hunk you're reverting.
->>>
->>> That's right, but I don't want to revert all of it.  The other parts
->>> of it are kind of useful as they make the handling of the devices_kset
->>> list be consistent with the handling of dpm_list.
->>>
->>> The hunk I'm reverting, however, is completely off.  It not only is
->>> incorrect (as per the above), but it also causes the devices_kset list
->>> and dpm_list to be handled differently.
->>
->> If I understand correctly, you are saying:
->>
->>   - the 52cdbdd49853 really_probe() hunk fixed a problem, but
->>   - that hunk was the wrong fix for it, and
->>   - this patch removes the wrong fix (and probably reintroduces the problem)
->>
->> If devices_kset is supposed to be ordered so children follow parents,
->> I agree the really_probe() hunk doesn't make much sense because the
->> parent/child relation is determined by the circuit design, not by the
->> probe order.
->>
->> It just seems like it's worth being clear that we're reintroducing the
->> problem fixed by 52cdbdd49853, so it needs to be solved a different
->> way.  Ideally that would be done before this patch so there's not a
->> regression, and this changelog could mention what's happening.
->>
->>> It had attempted to fix something, but it failed miserably at that.
->>
->> If you're saying that 52cdbdd49853 *tried* to fix a DRA7XX_evm reboot
->> problem, but in fact, it did not fix that problem, then I guess there
->> should be no issue with reverting that hunk.
->
-> It did fix a problem making sure the regulator's shutdown is invoked after the
-> mmc shutdown. And reverting 52cdbdd49853 reintroduces the problem.
+[+cc linux-kernel]
 
-But, of course, it didn't prevent regulator suspend from being run
-before mmc suspend, so it really addressed part of the problem only
-and while doing that it introduced a regression.
+I assume this would need to be merged along with the rest of the
+series, which should probably go through the PCI tree, but I'm
+definitely not qualified to review this IRQ patch.  And it would need
+an ack from Thomas in any case.
 
-This piece of really_probe() is incorrect and it has to go away.
-
-Thanks,
-Rafael
+On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
+> When pciehp is converted to threaded IRQ handling, removal of unplugged
+> devices below a PCIe hotplug port happens synchronously in the IRQ
+> thread.  Removal of devices typically entails a call to free_irq() by
+> their drivers.
+> 
+> If those devices share their IRQ with the hotplug port, free_irq()
+> deadlocks because it calls synchronize_irq() to wait for all hard IRQ
+> handlers as well as all threads sharing the IRQ to finish.
+> 
+> Actually it's sufficient to wait only for the IRQ thread of the removed
+> device, so call synchronize_hardirq() to wait for all hard IRQ handlers
+> to finish, but no longer for any threads.  Compensate by rearranging the
+> control flow in irq_wait_for_interrupt() such that the device's thread
+> is allowed to run one last time after kthread_stop() has been called.
+> 
+> Stack trace for posterity:
+>     INFO: task irq/17-pciehp:94 blocked for more than 120 seconds.
+>     schedule+0x28/0x80
+>     synchronize_irq+0x6e/0xa0
+>     __free_irq+0x15a/0x2b0
+>     free_irq+0x33/0x70
+>     pciehp_release_ctrl+0x98/0xb0
+>     pcie_port_remove_service+0x2f/0x40
+>     device_release_driver_internal+0x157/0x220
+>     bus_remove_device+0xe2/0x150
+>     device_del+0x124/0x340
+>     device_unregister+0x16/0x60
+>     remove_iter+0x1a/0x20
+>     device_for_each_child+0x4b/0x90
+>     pcie_port_device_remove+0x1e/0x30
+>     pci_device_remove+0x36/0xb0
+>     device_release_driver_internal+0x157/0x220
+>     pci_stop_bus_device+0x7d/0xa0
+>     pci_stop_bus_device+0x3d/0xa0
+>     pci_stop_and_remove_bus_device+0xe/0x20
+>     pciehp_unconfigure_device+0xb8/0x160
+>     pciehp_disable_slot+0x84/0x130
+>     pciehp_ist+0x158/0x190
+>     irq_thread_fn+0x1b/0x50
+>     irq_thread+0x143/0x1a0
+>     kthread+0x111/0x130
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> ---
+>  kernel/irq/manage.c | 21 ++++++++++++++-------
+>  1 file changed, 14 insertions(+), 7 deletions(-)
+> 
+> diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+> index daeabd791d58..0531f645bfea 100644
+> --- a/kernel/irq/manage.c
+> +++ b/kernel/irq/manage.c
+> @@ -790,9 +790,19 @@ static irqreturn_t irq_forced_secondary_handler(int irq, void *dev_id)
+>  
+>  static int irq_wait_for_interrupt(struct irqaction *action)
+>  {
+> -	set_current_state(TASK_INTERRUPTIBLE);
+> +	for (;;) {
+> +		set_current_state(TASK_INTERRUPTIBLE);
+>  
+> -	while (!kthread_should_stop()) {
+> +		if (kthread_should_stop()) {
+> +			/* may need to run one last time. */
+> +			if (test_and_clear_bit(IRQTF_RUNTHREAD,
+> +					       &action->thread_flags)) {
+> +				__set_current_state(TASK_RUNNING);
+> +				return 0;
+> +			}
+> +			__set_current_state(TASK_RUNNING);
+> +			return -1;
+> +		}
+>  
+>  		if (test_and_clear_bit(IRQTF_RUNTHREAD,
+>  				       &action->thread_flags)) {
+> @@ -800,10 +810,7 @@ static int irq_wait_for_interrupt(struct irqaction *action)
+>  			return 0;
+>  		}
+>  		schedule();
+> -		set_current_state(TASK_INTERRUPTIBLE);
+>  	}
+> -	__set_current_state(TASK_RUNNING);
+> -	return -1;
+>  }
+>  
+>  /*
+> @@ -1024,7 +1031,7 @@ static int irq_thread(void *data)
+>  	/*
+>  	 * This is the regular exit path. __free_irq() is stopping the
+>  	 * thread via kthread_stop() after calling
+> -	 * synchronize_irq(). So neither IRQTF_RUNTHREAD nor the
+> +	 * synchronize_hardirq(). So neither IRQTF_RUNTHREAD nor the
+>  	 * oneshot mask bit can be set. We cannot verify that as we
+>  	 * cannot touch the oneshot mask at this point anymore as
+>  	 * __setup_irq() might have given out currents thread_mask
+> @@ -1629,7 +1636,7 @@ static struct irqaction *__free_irq(struct irq_desc *desc, void *dev_id)
+>  	unregister_handler_proc(irq, action);
+>  
+>  	/* Make sure it's not being used on another CPU: */
+> -	synchronize_irq(irq);
+> +	synchronize_hardirq(irq);
+>  
+>  #ifdef CONFIG_DEBUG_SHIRQ
+>  	/*
+> -- 
+> 2.17.1
+> 
