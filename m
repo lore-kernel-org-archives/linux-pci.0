@@ -1,260 +1,132 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v12 11/12] tools: PCI: Add MSI-X support
-Date: Tue, 17 Jul 2018 11:31:31 +0200
-Message-Id: <54f46aa3181cb1a34983ba72fcda02251f93baf2.1531818979.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=AvBC=J4=oracle.com=thomas.tai@kernel.org>
+Return-Path: <SRS0=AvBC=J4=oracle.com=thomas.tai@kernel.org>
+Subject: Re: [PATCH] PCI/AER: fix use-after-free in pcie_do_fatal_recovery
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, poza@codeaurora.org, linux-pci@vger.kernel.org
+References: <1531179952-11060-1-git-send-email-thomas.tai@oracle.com>
+ <20180711224211.GA28466@bhelgaas-glaptop.roam.corp.google.com>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <675c2f93-d3a1-83ab-7688-58004e5c66eb@oracle.com>
+Date: Thu, 12 Jul 2018 09:37:07 -0400
+MIME-Version: 1.0
+In-Reply-To: <20180711224211.GA28466@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Add MSI-X support to pcitest tool.
+[ ... ]
+> Hmmm.  I suppose this is probably fallout from 7e9084b36740 ("PCI/AER:
+> Handle ERR_FATAL with removal and re-enumeration of devices"), right?
+> After that commit, we remove devices for fatal errors.
+> 
+> This looks like a regression we introduced in v4.18-rc1, so we should
+> fix it for v4.18.
 
-Modify pcitest.sh script to accommodate MSI-X interrupt tests.
+Hi Bjorn,
+Thanks for your comment. Yes, you are right, this issue came from v4.18.
 
-Update documentation accordingly.
+[ ... ]
+>> @@ -309,7 +316,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+>>   	result = reset_link(udev, service);
+>>   
+>>   	if ((service == PCIE_PORT_SERVICE_AER) &&
+>> -	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
+>> +	    (hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
+>>   		/*
+>>   		 * If the error is reported by a bridge, we think this error
+>>   		 * is related to the downstream link of the bridge, so we
+>> @@ -322,13 +329,18 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
+>>   	if (result == PCI_ERS_RESULT_RECOVERED) {
+>>   		if (pcie_wait_for_link(udev, true))
+>>   			pci_rescan_bus(udev->bus);
+>> -		pci_info(dev, "Device recovery from fatal error successful\n");
+>> +		pr_info("%s %s: Device recovery from fatal error successful\n",
+>> +			driver_str, name_str);
+>>   	} else {
+>>   		pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+>> -		pci_info(dev, "Device recovery from fatal error failed\n");
+>> +		pr_info("%s %s: Device recovery from fatal error failed\n",
+>> +			driver_str, name_str);
+> 
+> If the problem is that "dev" has been deallocated, the
+> pci_uevent_ers(dev) call above should also be a problem.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Allow IRQ type driver reconfiguring in runtime, follwing Kishon's
-suggestion.
-Change v2->v3:
- - Nothing changed, just to follow the patch set version.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
-Change v5->v6:
- - Moved PCITEST_MSIX ioctl entry to patch #8.
- - Moved PCITEST_SET_IRQTYPE and PCITEST_GET_IRQTYPE ioctl entries
-to patch #9.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Nothing changed, just to follow the patch set version.
-Change v9->v10:
- - Updated documentation.
-Change v10->v11:
- - Nothing changed, just to follow the patch set version.
-Change v11->v12:
- - Nothing changed, just to follow the patch set version.
+Right! you are correct, I missed out the other functions which use dev, 
+let me follow your suggested path to dig around. Will keep you posted.
 
- Documentation/PCI/endpoint/pci-test-howto.txt | 36 +++++++++++--------
- tools/pci/pcitest.c                           | 51 ++++++++++++++++++++++++++-
- tools/pci/pcitest.sh                          | 15 ++++++++
- 3 files changed, 87 insertions(+), 15 deletions(-)
+Thank you,
+Thomas
 
-diff --git a/Documentation/PCI/endpoint/pci-test-howto.txt b/Documentation/PCI/endpoint/pci-test-howto.txt
-index 65f1a13..e40cf0f 100644
---- a/Documentation/PCI/endpoint/pci-test-howto.txt
-+++ b/Documentation/PCI/endpoint/pci-test-howto.txt
-@@ -121,7 +121,9 @@ following commands.
- 
- 	Interrupt tests
- 
-+	SET IRQ TYPE TO LEGACY:         OKAY
- 	LEGACY IRQ:     NOT OKAY
-+	SET IRQ TYPE TO MSI:            OKAY
- 	MSI1:           OKAY
- 	MSI2:           OKAY
- 	MSI3:           OKAY
-@@ -154,24 +156,30 @@ following commands.
- 	MSI30:          NOT OKAY
- 	MSI31:          NOT OKAY
- 	MSI32:          NOT OKAY
--	MSIX1:          OKAY
--	MSIX2:          OKAY
--	MSIX3:          OKAY
--	MSIX4:          OKAY
--	MSIX5:          OKAY
--	MSIX6:          OKAY
--	MSIX7:          OKAY
--	MSIX8:          OKAY
--	MSIX9:          NOT OKAY
--	MSIX10:         NOT OKAY
--	MSIX11:         NOT OKAY
--	MSIX12:         NOT OKAY
--	MSIX13:         NOT OKAY
-+	SET IRQ TYPE TO MSI-X:          OKAY
-+	MSI-X1:         OKAY
-+	MSI-X2:         OKAY
-+	MSI-X3:         OKAY
-+	MSI-X4:         OKAY
-+	MSI-X5:         OKAY
-+	MSI-X6:         OKAY
-+	MSI-X7:         OKAY
-+	MSI-X8:         OKAY
-+	MSI-X9:         NOT OKAY
-+	MSI-X10:        NOT OKAY
-+	MSI-X11:        NOT OKAY
-+	MSI-X12:        NOT OKAY
-+	MSI-X13:        NOT OKAY
-+	MSI-X14:        NOT OKAY
-+	MSI-X15:        NOT OKAY
-+	MSI-X16:        NOT OKAY
- 	[...]
--	MSIX2048:       NOT OKAY
-+	MSI-X2047:      NOT OKAY
-+	MSI-X2048:      NOT OKAY
- 
- 	Read Tests
- 
-+	SET IRQ TYPE TO MSI:            OKAY
- 	READ (      1 bytes):           OKAY
- 	READ (   1024 bytes):           OKAY
- 	READ (   1025 bytes):           OKAY
-diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
-index 9074b47..af146bb 100644
---- a/tools/pci/pcitest.c
-+++ b/tools/pci/pcitest.c
-@@ -31,12 +31,17 @@
- #define BILLION 1E9
- 
- static char *result[] = { "NOT OKAY", "OKAY" };
-+static char *irq[] = { "LEGACY", "MSI", "MSI-X" };
- 
- struct pci_test {
- 	char		*device;
- 	char		barnum;
- 	bool		legacyirq;
- 	unsigned int	msinum;
-+	unsigned int	msixnum;
-+	int		irqtype;
-+	bool		set_irqtype;
-+	bool		get_irqtype;
- 	bool		read;
- 	bool		write;
- 	bool		copy;
-@@ -65,6 +70,24 @@ static int run_test(struct pci_test *test)
- 			fprintf(stdout, "%s\n", result[ret]);
- 	}
- 
-+	if (test->set_irqtype) {
-+		ret = ioctl(fd, PCITEST_SET_IRQTYPE, test->irqtype);
-+		fprintf(stdout, "SET IRQ TYPE TO %s:\t\t", irq[test->irqtype]);
-+		if (ret < 0)
-+			fprintf(stdout, "FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	if (test->get_irqtype) {
-+		ret = ioctl(fd, PCITEST_GET_IRQTYPE);
-+		fprintf(stdout, "GET IRQ TYPE:\t\t");
-+		if (ret < 0)
-+			fprintf(stdout, "FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", irq[ret]);
-+	}
-+
- 	if (test->legacyirq) {
- 		ret = ioctl(fd, PCITEST_LEGACY_IRQ, 0);
- 		fprintf(stdout, "LEGACY IRQ:\t");
-@@ -83,6 +106,15 @@ static int run_test(struct pci_test *test)
- 			fprintf(stdout, "%s\n", result[ret]);
- 	}
- 
-+	if (test->msixnum > 0 && test->msixnum <= 2048) {
-+		ret = ioctl(fd, PCITEST_MSIX, test->msixnum);
-+		fprintf(stdout, "MSI-X%d:\t\t", test->msixnum);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
- 	if (test->write) {
- 		ret = ioctl(fd, PCITEST_WRITE, test->size);
- 		fprintf(stdout, "WRITE (%7ld bytes):\t\t", test->size);
-@@ -133,7 +165,7 @@ int main(int argc, char **argv)
- 	/* set default endpoint device */
- 	test->device = "/dev/pci-endpoint-test.0";
- 
--	while ((c = getopt(argc, argv, "D:b:m:lrwcs:")) != EOF)
-+	while ((c = getopt(argc, argv, "D:b:m:x:i:Ilrwcs:")) != EOF)
- 	switch (c) {
- 	case 'D':
- 		test->device = optarg;
-@@ -151,6 +183,20 @@ int main(int argc, char **argv)
- 		if (test->msinum < 1 || test->msinum > 32)
- 			goto usage;
- 		continue;
-+	case 'x':
-+		test->msixnum = atoi(optarg);
-+		if (test->msixnum < 1 || test->msixnum > 2048)
-+			goto usage;
-+		continue;
-+	case 'i':
-+		test->irqtype = atoi(optarg);
-+		if (test->irqtype < 0 || test->irqtype > 2)
-+			goto usage;
-+		test->set_irqtype = true;
-+		continue;
-+	case 'I':
-+		test->get_irqtype = true;
-+		continue;
- 	case 'r':
- 		test->read = true;
- 		continue;
-@@ -173,6 +219,9 @@ int main(int argc, char **argv)
- 			"\t-D <dev>		PCI endpoint test device {default: /dev/pci-endpoint-test.0}\n"
- 			"\t-b <bar num>		BAR test (bar number between 0..5)\n"
- 			"\t-m <msi num>		MSI test (msi number between 1..32)\n"
-+			"\t-x <msix num>	\tMSI-X test (msix number between 1..2048)\n"
-+			"\t-i <irq type>	\tSet IRQ type (0 - Legacy, 1 - MSI, 2 - MSI-X)\n"
-+			"\t-I			Get current IRQ type configured\n"
- 			"\t-l			Legacy IRQ test\n"
- 			"\t-r			Read buffer test\n"
- 			"\t-w			Write buffer test\n"
-diff --git a/tools/pci/pcitest.sh b/tools/pci/pcitest.sh
-index 77e8c85..75ed48f 100644
---- a/tools/pci/pcitest.sh
-+++ b/tools/pci/pcitest.sh
-@@ -16,7 +16,10 @@ echo
- echo "Interrupt tests"
- echo
- 
-+pcitest -i 0
- pcitest -l
-+
-+pcitest -i 1
- msi=1
- 
- while [ $msi -lt 33 ]
-@@ -26,9 +29,21 @@ do
- done
- echo
- 
-+pcitest -i 2
-+msix=1
-+
-+while [ $msix -lt 2049 ]
-+do
-+        pcitest -x $msix
-+        msix=`expr $msix + 1`
-+done
-+echo
-+
- echo "Read Tests"
- echo
- 
-+pcitest -i 1
-+
- pcitest -r -s 1
- pcitest -r -s 1024
- pcitest -r -s 1025
--- 
-2.7.4
+> 
+> The pci_cleanup_aer_uncorrect_error_status(dev) is also questionable.
+> It's too complicated to argue that "we cache hdr_type just in case dev
+> will be removed, but when dev is a bridge, we don't remove it, so it's
+> safe to use it".
+> 
+> I think you're right that after pcie_do_fatal_recovery() calls
+> pci_dev_put(pdev), the pdev may have been freed:
+> 
+>    pcie_do_fatal_recovery(dev)
+>      udev = dev->bus->self            # bridge leading to "dev"
+>      parent = udev->subordinate       # (same as dev->bus)
+>      list_for_each_entry_safe_reverse(pdev, ..., &parent->devices)
+>        pci_dev_get(pdev)              # "dev" is one of the pdevs
+>        pci_stop_and_remove_bus_device(pdev)
+>        pci_dev_put(pdev)
+> 
+> At this point, "dev" may point to a deallocated struct pci_dev, so
+> *anything* that uses "dev" is a problem.
+> 
+> I think a better fix would be to add a pci_dev_get(dev) and
+> pci_dev_put(dev) around the code that needs "dev", i.e., most of this
+> function.
+> 
+> For completeness, I looked for issues in the callers of
+> pcie_do_fatal_recovery().  Just for posterity:
+> 
+>    1)  aer_isr
+> 	aer_isr_one_error
+> 	  aer_process_err_devices
+> 	    handle_error_source(e_info->dev[i])
+> 	      pcie_do_fatal_recovery
+> 
+>      I don't think this path uses e_info->dev[i] after calling
+>      pcie_do_fatal_recovery(), so it should be safe.  But it's probably
+>      worth clearing out that pointer so we can catch any attempts to use
+>      it.
+> 
+>    2)  aer_recover_queue
+> 	kfifo_put(&aer_recover_ring, entry)
+> 	schedule_work(&aer_recover_work)
+>        ...
+>        aer_recover_work_func
+>          pdev = pci_get_domain_bus_and_slot(...)
+> 	pcie_do_fatal_recovery(pdev)
+> 	pci_dev_put(pdev)
+> 
+>      This path does a "get" on pdev before calling
+>      pcie_do_fatal_recovery(), so it shouldn't have the use-after-free
+>      problem because the free won't happen until the pci_dev_put(), and
+>      it doesn't use "pdev" after that.
+> 
+>    3)  dpc_irq
+> 	schedule_work(&dpc->work)
+>        ...
+>        dpc_work
+> 	pcie_do_fatal_recovery(pdev)
+> 
+>      I think this path is OK too because we don't use "pdev" after
+>      return.  It gets removed, of course, and the rescan should
+>      rediscover it and reattach the DPC driver to it.
+> 
+>>   	}
+>>   
+>>   	pci_unlock_rescan_remove();
+>> +
+>> +	kfree(driver_str);
+>> +	kfree(name_str);
+>>   }
+>>   
+>>   /**
+>> -- 
+>> 1.8.3.1
+>>
