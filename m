@@ -1,16 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: [PATCH 0/8] Fix PCI I/O space page leaks
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Linus Walleij <linus.walleij@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Rob Herring <robh@kernel.org>, Tanmay Inamdar <tinamdar@apm.com>,
- Ryder Lee <ryder.lee@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>
-Message-ID: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
-Date: Sun, 15 Jul 2018 19:00:21 +0300
+Date: Thu, 12 Jul 2018 11:24:46 +0200
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi
+ <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/3] PCI: emulated PCI bridge common logic
+Message-ID: <20180712112446.74998bd9@windsurf>
+In-Reply-To: <20180629092231.32207-1-thomas.petazzoni@bootlin.com>
+References: <20180629092231.32207-1-thomas.petazzoni@bootlin.com>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -19,33 +16,51 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-renesas-soc@vger.kernel.org, linux-mediatek@lists.infradead.org,
+Cc: Russell King <linux@arm.linux.org.uk>,
+ Antoine Tenart <antoine.tenart@bootlin.com>,
+ Gregory Clement <gregory.clement@bootlin.com>,
+ Maxime Chevallier <maxime.chevallier@bootlin.com>,
+ Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
+ =?UTF-8?B?TWlxdcOobA==?= Raynal <miquel.raynal@bootlin.com>,
+ Zachary Zhang <zhangzg@marvell.com>, Wilson Ding <dingwei@marvell.com>,
  linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+Bjorn, Lorenzo,
 
-Here's a set of 8 patches against the 'pci/controller-fixes' branch of Lorenzo
-Pieralisi's 'pci.git' repo. They are the fixes for the PCI I/O space page leaks
-(and the kernel BUG caused by them on deferred probe); those were 1st found
-testing the R-Car PCIe driver. The patches are in the chronological order
-(considering the date/time of the commits specified in the Fixes: tag), patches
-#2..#8 depend on the patch #1 in order to build/work as it introduces the managed
-device API that they all use...
+On Fri, 29 Jun 2018 11:22:28 +0200, Thomas Petazzoni wrote:
 
-[1/8] PCI: xgene: Fix I/O space page leak
-[2/8] PCI: of: Fix I/O space page leak
-[3/8] PCI: versatile: Fix I/O space page leak
-[4/8] PCI: designware: Fix I/O space page leak
-[5/8] PCI: aardvark: Fix I/O space page leak
-[6/8] PCI: faraday: Fix I/O space page leak
-[7/8] PCI: mediatek: Fix I/O space page leak
-[8/8] PCI: v3-semi: Fix I/O space page leak
+> The pci-mvebu driver already contains some logic to emulate a root
+> port PCI bridge. It turns out that we have a similar need for the
+> pci-aardvark driver. Instead of duplicating the same logic in two
+> drivers, this patch series starts by adding a small common
+> infrastructure that helps emulate a root port PCI bridge, converts
+> pci-mvebu to use it, and finally extends pci-aardvark to use it as
+> well.
+> 
+> Thanks to this, Marvell Armada 3720 based systems, which use the
+> Aarkvark PCI controller, will have better PCI support, by having a
+> root port PCI bridge exposed.
+> 
+> The emulated PCI bridge common logic is a proposal, I very much
+> welcome comments and suggestions. Also, if you feel that adding a
+> common logic for only two drivers is too early, I'm fine with
+> duplicating a bit of code betwen pci-mvebu and pci-aardvark.
 
-MBR, Sergei
+I was wondering if you had any feedback on this patch series. Not
+necessarily a detailed review, but at least some general
+feeling/feedback on the overall approach would be very nice.
+
+Thanks a lot,
+
+Thomas Petazzoni
+-- 
+Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
+Embedded Linux and Kernel engineering
+https://bootlin.com
 
 _______________________________________________
 linux-arm-kernel mailing list
