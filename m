@@ -1,378 +1,272 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 2/7 v5] iommu: of: make of_pci_map_rid() available for
- other devices too
-To: Nipun Gupta <nipun.gupta@nxp.com>, will.deacon@arm.com,
- robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
- catalin.marinas@arm.com, gregkh@linuxfoundation.org,
- laurentiu.tudor@nxp.com, bhelgaas@google.com
-References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
- <1526824191-7000-3-git-send-email-nipun.gupta@nxp.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <ba5b3055-da3f-0efc-efe9-44270dcf1420@arm.com>
-Date: Tue, 3 Jul 2018 15:41:49 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v9 04/12] PCI: dwc: Add MSI-X callbacks handler
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "adouglas@cadence.com" <adouglas@cadence.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
+        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
+ <5e4ca8380a65da72cf5d3ab46588948e3537aeae.1531155252.git.gustavo.pimentel@synopsys.com>
+ <b1db283e-b9db-a8c4-409c-d9dc64805c94@ti.com>
+From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Message-ID: <e4e1c9b7-bc10-6500-7924-7e5c9551076b@synopsys.com>
+Date: Fri, 13 Jul 2018 16:55:21 +0100
 MIME-Version: 1.0
-In-Reply-To: <1526824191-7000-3-git-send-email-nipun.gupta@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
- shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
- frowand.list@gmail.com, hch@lst.de, linux-arm-kernel@lists.infradead.org,
- m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <b1db283e-b9db-a8c4-409c-d9dc64805c94@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/05/18 14:49, Nipun Gupta wrote:
-> iommu-map property is also used by devices with fsl-mc. This
-> patch moves the of_pci_map_rid to generic location, so that it
-> can be used by other busses too.
-> 
-> 'of_pci_map_rid' is renamed here to 'of_map_rid' and there is no
-> functional change done in the API.
+Hi Kishon,
 
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-> Reviewed-by: Rob Herring <robh@kernel.org>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->   drivers/iommu/of_iommu.c |   5 +--
->   drivers/of/base.c        | 102 +++++++++++++++++++++++++++++++++++++++++++++++
->   drivers/of/irq.c         |   5 +--
->   drivers/pci/of.c         | 101 ----------------------------------------------
->   include/linux/of.h       |  11 +++++
->   include/linux/of_pci.h   |  10 -----
->   6 files changed, 117 insertions(+), 117 deletions(-)
+On 13/07/2018 08:55, Kishon Vijay Abraham I wrote:
+> Hi,
 > 
-> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> index 5c36a8b..811e160 100644
-> --- a/drivers/iommu/of_iommu.c
-> +++ b/drivers/iommu/of_iommu.c
-> @@ -149,9 +149,8 @@ static int of_pci_iommu_init(struct pci_dev *pdev, u16 alias, void *data)
->   	struct of_phandle_args iommu_spec = { .args_count = 1 };
->   	int err;
->   
-> -	err = of_pci_map_rid(info->np, alias, "iommu-map",
-> -			     "iommu-map-mask", &iommu_spec.np,
-> -			     iommu_spec.args);
-> +	err = of_map_rid(info->np, alias, "iommu-map", "iommu-map-mask",
-> +			 &iommu_spec.np, iommu_spec.args);
->   	if (err)
->   		return err == -ENODEV ? NO_IOMMU : err;
->   
-> diff --git a/drivers/of/base.c b/drivers/of/base.c
-> index 848f549..c7aac81 100644
-> --- a/drivers/of/base.c
-> +++ b/drivers/of/base.c
-> @@ -1995,3 +1995,105 @@ int of_find_last_cache_level(unsigned int cpu)
->   
->   	return cache_level;
->   }
-> +
-> +/**
-> + * of_map_rid - Translate a requester ID through a downstream mapping.
-> + * @np: root complex device node.
-> + * @rid: device requester ID to map.
-> + * @map_name: property name of the map to use.
-> + * @map_mask_name: optional property name of the mask to use.
-> + * @target: optional pointer to a target device node.
-> + * @id_out: optional pointer to receive the translated ID.
-> + *
-> + * Given a device requester ID, look up the appropriate implementation-defined
-> + * platform ID and/or the target device which receives transactions on that
-> + * ID, as per the "iommu-map" and "msi-map" bindings. Either of @target or
-> + * @id_out may be NULL if only the other is required. If @target points to
-> + * a non-NULL device node pointer, only entries targeting that node will be
-> + * matched; if it points to a NULL value, it will receive the device node of
-> + * the first matching target phandle, with a reference held.
-> + *
-> + * Return: 0 on success or a standard error code on failure.
-> + */
-> +int of_map_rid(struct device_node *np, u32 rid,
-> +	       const char *map_name, const char *map_mask_name,
-> +	       struct device_node **target, u32 *id_out)
-> +{
-> +	u32 map_mask, masked_rid;
-> +	int map_len;
-> +	const __be32 *map = NULL;
-> +
-> +	if (!np || !map_name || (!target && !id_out))
-> +		return -EINVAL;
-> +
-> +	map = of_get_property(np, map_name, &map_len);
-> +	if (!map) {
-> +		if (target)
-> +			return -ENODEV;
-> +		/* Otherwise, no map implies no translation */
-> +		*id_out = rid;
-> +		return 0;
-> +	}
-> +
-> +	if (!map_len || map_len % (4 * sizeof(*map))) {
-> +		pr_err("%pOF: Error: Bad %s length: %d\n", np,
-> +			map_name, map_len);
-> +		return -EINVAL;
-> +	}
-> +
-> +	/* The default is to select all bits. */
-> +	map_mask = 0xffffffff;
-> +
-> +	/*
-> +	 * Can be overridden by "{iommu,msi}-map-mask" property.
-> +	 * If of_property_read_u32() fails, the default is used.
-> +	 */
-> +	if (map_mask_name)
-> +		of_property_read_u32(np, map_mask_name, &map_mask);
-> +
-> +	masked_rid = map_mask & rid;
-> +	for ( ; map_len > 0; map_len -= 4 * sizeof(*map), map += 4) {
-> +		struct device_node *phandle_node;
-> +		u32 rid_base = be32_to_cpup(map + 0);
-> +		u32 phandle = be32_to_cpup(map + 1);
-> +		u32 out_base = be32_to_cpup(map + 2);
-> +		u32 rid_len = be32_to_cpup(map + 3);
-> +
-> +		if (rid_base & ~map_mask) {
-> +			pr_err("%pOF: Invalid %s translation - %s-mask (0x%x) ignores rid-base (0x%x)\n",
-> +				np, map_name, map_name,
-> +				map_mask, rid_base);
-> +			return -EFAULT;
-> +		}
-> +
-> +		if (masked_rid < rid_base || masked_rid >= rid_base + rid_len)
-> +			continue;
-> +
-> +		phandle_node = of_find_node_by_phandle(phandle);
-> +		if (!phandle_node)
-> +			return -ENODEV;
-> +
-> +		if (target) {
-> +			if (*target)
-> +				of_node_put(phandle_node);
-> +			else
-> +				*target = phandle_node;
-> +
-> +			if (*target != phandle_node)
-> +				continue;
-> +		}
-> +
-> +		if (id_out)
-> +			*id_out = masked_rid - rid_base + out_base;
-> +
-> +		pr_debug("%pOF: %s, using mask %08x, rid-base: %08x, out-base: %08x, length: %08x, rid: %08x -> %08x\n",
-> +			np, map_name, map_mask, rid_base, out_base,
-> +			rid_len, rid, masked_rid - rid_base + out_base);
-> +		return 0;
-> +	}
-> +
-> +	pr_err("%pOF: Invalid %s translation - no match for rid 0x%x on %pOF\n",
-> +		np, map_name, rid, target && *target ? *target : NULL);
-> +	return -EFAULT;
-> +}
-> +EXPORT_SYMBOL_GPL(of_map_rid);
-> diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-> index 02ad93a..e1f6f39 100644
-> --- a/drivers/of/irq.c
-> +++ b/drivers/of/irq.c
-> @@ -22,7 +22,6 @@
->   #include <linux/module.h>
->   #include <linux/of.h>
->   #include <linux/of_irq.h>
-> -#include <linux/of_pci.h>
->   #include <linux/string.h>
->   #include <linux/slab.h>
->   
-> @@ -588,8 +587,8 @@ static u32 __of_msi_map_rid(struct device *dev, struct device_node **np,
->   	 * "msi-map" property.
->   	 */
->   	for (parent_dev = dev; parent_dev; parent_dev = parent_dev->parent)
-> -		if (!of_pci_map_rid(parent_dev->of_node, rid_in, "msi-map",
-> -				    "msi-map-mask", np, &rid_out))
-> +		if (!of_map_rid(parent_dev->of_node, rid_in, "msi-map",
-> +				"msi-map-mask", np, &rid_out))
->   			break;
->   	return rid_out;
->   }
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index a28355c..d2cebbe 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -362,107 +362,6 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->   EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
->   #endif /* CONFIG_OF_ADDRESS */
->   
-> -/**
-> - * of_pci_map_rid - Translate a requester ID through a downstream mapping.
-> - * @np: root complex device node.
-> - * @rid: PCI requester ID to map.
-> - * @map_name: property name of the map to use.
-> - * @map_mask_name: optional property name of the mask to use.
-> - * @target: optional pointer to a target device node.
-> - * @id_out: optional pointer to receive the translated ID.
-> - *
-> - * Given a PCI requester ID, look up the appropriate implementation-defined
-> - * platform ID and/or the target device which receives transactions on that
-> - * ID, as per the "iommu-map" and "msi-map" bindings. Either of @target or
-> - * @id_out may be NULL if only the other is required. If @target points to
-> - * a non-NULL device node pointer, only entries targeting that node will be
-> - * matched; if it points to a NULL value, it will receive the device node of
-> - * the first matching target phandle, with a reference held.
-> - *
-> - * Return: 0 on success or a standard error code on failure.
-> - */
-> -int of_pci_map_rid(struct device_node *np, u32 rid,
-> -		   const char *map_name, const char *map_mask_name,
-> -		   struct device_node **target, u32 *id_out)
-> -{
-> -	u32 map_mask, masked_rid;
-> -	int map_len;
-> -	const __be32 *map = NULL;
-> -
-> -	if (!np || !map_name || (!target && !id_out))
-> -		return -EINVAL;
-> -
-> -	map = of_get_property(np, map_name, &map_len);
-> -	if (!map) {
-> -		if (target)
-> -			return -ENODEV;
-> -		/* Otherwise, no map implies no translation */
-> -		*id_out = rid;
-> -		return 0;
-> -	}
-> -
-> -	if (!map_len || map_len % (4 * sizeof(*map))) {
-> -		pr_err("%pOF: Error: Bad %s length: %d\n", np,
-> -			map_name, map_len);
-> -		return -EINVAL;
-> -	}
-> -
-> -	/* The default is to select all bits. */
-> -	map_mask = 0xffffffff;
-> -
-> -	/*
-> -	 * Can be overridden by "{iommu,msi}-map-mask" property.
-> -	 * If of_property_read_u32() fails, the default is used.
-> -	 */
-> -	if (map_mask_name)
-> -		of_property_read_u32(np, map_mask_name, &map_mask);
-> -
-> -	masked_rid = map_mask & rid;
-> -	for ( ; map_len > 0; map_len -= 4 * sizeof(*map), map += 4) {
-> -		struct device_node *phandle_node;
-> -		u32 rid_base = be32_to_cpup(map + 0);
-> -		u32 phandle = be32_to_cpup(map + 1);
-> -		u32 out_base = be32_to_cpup(map + 2);
-> -		u32 rid_len = be32_to_cpup(map + 3);
-> -
-> -		if (rid_base & ~map_mask) {
-> -			pr_err("%pOF: Invalid %s translation - %s-mask (0x%x) ignores rid-base (0x%x)\n",
-> -				np, map_name, map_name,
-> -				map_mask, rid_base);
-> -			return -EFAULT;
-> -		}
-> -
-> -		if (masked_rid < rid_base || masked_rid >= rid_base + rid_len)
-> -			continue;
-> -
-> -		phandle_node = of_find_node_by_phandle(phandle);
-> -		if (!phandle_node)
-> -			return -ENODEV;
-> -
-> -		if (target) {
-> -			if (*target)
-> -				of_node_put(phandle_node);
-> -			else
-> -				*target = phandle_node;
-> -
-> -			if (*target != phandle_node)
-> -				continue;
-> -		}
-> -
-> -		if (id_out)
-> -			*id_out = masked_rid - rid_base + out_base;
-> -
-> -		pr_debug("%pOF: %s, using mask %08x, rid-base: %08x, out-base: %08x, length: %08x, rid: %08x -> %08x\n",
-> -			np, map_name, map_mask, rid_base, out_base,
-> -			rid_len, rid, masked_rid - rid_base + out_base);
-> -		return 0;
-> -	}
-> -
-> -	pr_err("%pOF: Invalid %s translation - no match for rid 0x%x on %pOF\n",
-> -		np, map_name, rid, target && *target ? *target : NULL);
-> -	return -EFAULT;
-> -}
-> -
->   #if IS_ENABLED(CONFIG_OF_IRQ)
->   /**
->    * of_irq_parse_pci - Resolve the interrupt for a PCI device
-> diff --git a/include/linux/of.h b/include/linux/of.h
-> index 4d25e4f..f4251c3 100644
-> --- a/include/linux/of.h
-> +++ b/include/linux/of.h
-> @@ -545,6 +545,10 @@ const __be32 *of_prop_next_u32(struct property *prop, const __be32 *cur,
->   
->   extern int of_cpu_node_to_id(struct device_node *np);
->   
-> +int of_map_rid(struct device_node *np, u32 rid,
-> +	       const char *map_name, const char *map_mask_name,
-> +	       struct device_node **target, u32 *id_out);
-> +
->   #else /* CONFIG_OF */
->   
->   static inline void of_core_init(void)
-> @@ -931,6 +935,13 @@ static inline int of_cpu_node_to_id(struct device_node *np)
->   	return -ENODEV;
->   }
->   
-> +static inline int of_map_rid(struct device_node *np, u32 rid,
-> +			     const char *map_name, const char *map_mask_name,
-> +			     struct device_node **target, u32 *id_out)
-> +{
-> +	return -EINVAL;
-> +}
-> +
->   #define of_match_ptr(_ptr)	NULL
->   #define of_match_node(_matches, _node)	NULL
->   #endif /* CONFIG_OF */
-> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> index 091033a..a23b44a 100644
-> --- a/include/linux/of_pci.h
-> +++ b/include/linux/of_pci.h
-> @@ -17,9 +17,6 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
->   int of_get_pci_domain_nr(struct device_node *node);
->   int of_pci_get_max_link_speed(struct device_node *node);
->   void of_pci_check_probe_only(void);
-> -int of_pci_map_rid(struct device_node *np, u32 rid,
-> -		   const char *map_name, const char *map_mask_name,
-> -		   struct device_node **target, u32 *id_out);
->   #else
->   static inline struct device_node *of_pci_find_child_device(struct device_node *parent,
->   					     unsigned int devfn)
-> @@ -44,13 +41,6 @@ static inline int of_pci_get_devfn(struct device_node *np)
->   	return -1;
->   }
->   
-> -static inline int of_pci_map_rid(struct device_node *np, u32 rid,
-> -			const char *map_name, const char *map_mask_name,
-> -			struct device_node **target, u32 *id_out)
-> -{
-> -	return -EINVAL;
-> -}
-> -
->   static inline int
->   of_pci_get_max_link_speed(struct device_node *node)
->   {
+> On Monday 09 July 2018 11:12 PM, Gustavo Pimentel wrote:
+>> Add PCIe config space capability search function.
+>>
+>> Add sysfs set/get interface to allow the change of EP MSI-X maximum number.
+>>
+>> Add EP MSI-X callback for triggering interruptions.
+>>
+>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>> ---
+>> Change v1->v2:
+>>  - Nothing changed, just to follow the patch set version.
+>> Change v2->v3:
+>>  - Moved dra7xx_pcie_raise_irq() signature change to patch file #3.
+>>  - Moved artpec6_pcie_raise_irq() signature change to patch file #3.
+>>  - Replaced wrong return value 0 to -EINVAL.
+>>  - Removed an else if by code refactoring.
+>>  - Reduced the size of ioremap_nocache mapping from ep->addr_size to
+>> PCI_MSIX_ENTRY_SIZE.
+>>  - Fixed a small bug. If the MSI-X vector bit has been set, the function
+>> would return without executing the proper unmap.
+>> Change v3->v4:
+>>  - Rebased to Lorenzo's master branch v4.18-rc1.
+>>  - Added static prefix to __dw_pcie_ep_find_next_cap function.
+>> Change v4->v5:
+>>  - Added static prefix to dw_pcie_ep_find_capability function.
+>>  - Swap patch files position (#2 <-> #3).
+>>  - Moved dw_pcie_ep_raise_irq and dw_plat_pcie_ep_raise_irq functions
+>> signatures change to patch file #2.
+>> Change v5->v6:
+>>  - Nothing changed, just to follow the patch set version.
+>> Change v6->v7:
+>>  - Nothing changed, just to follow the patch set version.
+>> Change v7->v8:
+>>  - Re-sending the patch series.
+>> Change v8->v9:
+>>  - Nothing changed, just to follow the patch set version.
+>>
+>>  drivers/pci/controller/dwc/pcie-designware-ep.c   | 144 ++++++++++++++++++++++
+>>  drivers/pci/controller/dwc/pcie-designware-plat.c |   2 +
+>>  drivers/pci/controller/dwc/pcie-designware.h      |  12 ++
+>>  3 files changed, 158 insertions(+)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> index 69d039d..72c4188 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> @@ -40,6 +40,39 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+>>  	__dw_pcie_ep_reset_bar(pci, bar, 0);
+>>  }
+>>  
+>> +static u8 __dw_pcie_ep_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
+>> +			      u8 cap)
+>> +{
+>> +	u8 cap_id, next_cap_ptr;
+>> +	u16 reg;
+>> +
+>> +	reg = dw_pcie_readw_dbi(pci, cap_ptr);
+>> +	next_cap_ptr = (reg & 0xff00) >> 8;
+>> +	cap_id = (reg & 0x00ff);
+>> +
+>> +	if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
+>> +		return 0;
+>> +
+>> +	if (cap_id == cap)
+>> +		return cap_ptr;
+>> +
+>> +	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+>> +}
+>> +
+>> +static u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
+>> +{
+>> +	u8 next_cap_ptr;
+>> +	u16 reg;
+>> +
+>> +	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
+>> +	next_cap_ptr = (reg & 0x00ff);
+>> +
+>> +	if (!next_cap_ptr)
+>> +		return 0;
+>> +
+>> +	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+>> +}
+>> +
+>>  static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
+>>  				   struct pci_epf_header *hdr)
+>>  {
+>> @@ -241,6 +274,45 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
+>>  	return 0;
+>>  }
+>>  
+>> +static int dw_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
+>> +{
+>> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +	u32 val, reg;
+>> +
+>> +	if (!ep->msix_cap)
+>> +		return -EINVAL;
+>> +
+>> +	reg = ep->msix_cap + PCI_MSIX_FLAGS;
+>> +	val = dw_pcie_readw_dbi(pci, reg);
+>> +	if (!(val & PCI_MSIX_FLAGS_ENABLE))
+>> +		return -EINVAL;
+>> +
+>> +	val &= PCI_MSIX_FLAGS_QSIZE;
+>> +
+>> +	return val;
+>> +}
+>> +
+>> +static int dw_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts)
+>> +{
+>> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +	u32 val, reg;
+>> +
+>> +	if (!ep->msix_cap)
+>> +		return -EINVAL;
+>> +
+>> +	reg = ep->msix_cap + PCI_MSIX_FLAGS;
+>> +	val = dw_pcie_readw_dbi(pci, reg);
+>> +	val &= ~PCI_MSIX_FLAGS_QSIZE;
+>> +	val |= interrupts;
+>> +	dw_pcie_dbi_ro_wr_en(pci);
+>> +	dw_pcie_writew_dbi(pci, reg, val);
+>> +	dw_pcie_dbi_ro_wr_dis(pci);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>  static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
+>>  				enum pci_epc_irq_type type, u16 interrupt_num)
+>>  {
+>> @@ -282,6 +354,8 @@ static const struct pci_epc_ops epc_ops = {
+>>  	.unmap_addr		= dw_pcie_ep_unmap_addr,
+>>  	.set_msi		= dw_pcie_ep_set_msi,
+>>  	.get_msi		= dw_pcie_ep_get_msi,
+>> +	.set_msix		= dw_pcie_ep_set_msix,
+>> +	.get_msix		= dw_pcie_ep_get_msix,
+>>  	.raise_irq		= dw_pcie_ep_raise_irq,
+>>  	.start			= dw_pcie_ep_start,
+>>  	.stop			= dw_pcie_ep_stop,
+>> @@ -322,6 +396,64 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+>>  	return 0;
+>>  }
+>>  
+>> +int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+>> +			     u16 interrupt_num)
+>> +{
+>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>> +	struct pci_epc *epc = ep->epc;
+>> +	u16 tbl_offset, bir;
+>> +	u32 bar_addr_upper, bar_addr_lower;
+>> +	u32 msg_addr_upper, msg_addr_lower;
+>> +	u32 reg, msg_data, vec_ctrl;
+>> +	u64 tbl_addr, msg_addr, reg_u64;
+>> +	void __iomem *msix_tbl;
+>> +	int ret;
+>> +
+>> +	reg = ep->msix_cap + PCI_MSIX_TABLE;
+>> +	tbl_offset = dw_pcie_readl_dbi(pci, reg);
+>> +	bir = (tbl_offset & PCI_MSIX_TABLE_BIR);
+>> +	tbl_offset &= PCI_MSIX_TABLE_OFFSET;
+>> +	tbl_offset >>= 3;
+>> +
+>> +	reg = PCI_BASE_ADDRESS_0 + (4 * bir);
+>> +	bar_addr_upper = 0;
+>> +	bar_addr_lower = dw_pcie_readl_dbi(pci, reg);
+>> +	reg_u64 = (bar_addr_lower & PCI_BASE_ADDRESS_MEM_TYPE_MASK);
+>> +	if (reg_u64 == PCI_BASE_ADDRESS_MEM_TYPE_64)
+>> +		bar_addr_upper = dw_pcie_readl_dbi(pci, reg + 4);
+>> +
+>> +	tbl_addr = ((u64) bar_addr_upper) << 32 | bar_addr_lower;
+>> +	tbl_addr += (tbl_offset + ((interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE));
+>> +	tbl_addr &= PCI_BASE_ADDRESS_MEM_MASK;
+>> +
+>> +	msix_tbl = ioremap_nocache(ep->phys_base + tbl_addr,
+>> +				   PCI_MSIX_ENTRY_SIZE);
+>> +	if (!msix_tbl)
+>> +		return -EINVAL;
+>> +
+>> +	msg_addr_lower = readl(msix_tbl + PCI_MSIX_ENTRY_LOWER_ADDR);
+>> +	msg_addr_upper = readl(msix_tbl + PCI_MSIX_ENTRY_UPPER_ADDR);
+>> +	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
+>> +	msg_data = readl(msix_tbl + PCI_MSIX_ENTRY_DATA);
+>> +	vec_ctrl = readl(msix_tbl + PCI_MSIX_ENTRY_VECTOR_CTRL);
+>> +
+>> +	iounmap(msix_tbl);
+>> +
+>> +	if (vec_ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT)
+>> +		return -EPERM;
+>> +
+>> +	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msix_mem_phys, msg_addr,
+>> +				  epc->mem->page_size);
+>> +	if (ret)
+>> +		return ret;
+>> +
+>> +	writel(msg_data, ep->msix_mem);
+>> +
+>> +	dw_pcie_ep_unmap_addr(epc, func_no, ep->msix_mem_phys);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>  void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+>>  {
+>>  	struct pci_epc *epc = ep->epc;
+>> @@ -329,6 +461,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+>>  	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
+>>  			      epc->mem->page_size);
+>>  
+>> +	pci_epc_mem_free_addr(epc, ep->msix_mem_phys, ep->msix_mem,
+>> +			      epc->mem->page_size);
+>> +
+>>  	pci_epc_mem_exit(epc);
+>>  }
+>>  
+>> @@ -415,6 +550,15 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>>  		dev_err(dev, "Failed to reserve memory for MSI\n");
+>>  		return -ENOMEM;
+>>  	}
+>> +	ep->msi_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSI);
+>> +
+>> +	ep->msix_mem = pci_epc_mem_alloc_addr(epc, &ep->msix_mem_phys,
+>> +					     epc->mem->page_size);
+>> +	if (!ep->msix_mem) {
+>> +		dev_err(dev, "Failed to reserve memory for MSI-X\n");
+>> +		return -ENOMEM;
+> 
+> Do we have to allocate memory for MSIX memory separately? I think we can reuse
+> msi_mem. That's also because we shouldn't fail if a platform doesn't support
+> MSIX and fails to allocate msix_mem.
+
+Ok.
+
+> 
+> Thanks
+> Kishon
 > 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+Gustavo
