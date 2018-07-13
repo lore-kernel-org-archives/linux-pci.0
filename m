@@ -1,300 +1,394 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lj1-f194.google.com ([209.85.208.194]:46427 "EHLO
-        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731988AbeGaOW2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2018 10:22:28 -0400
-Received: by mail-lj1-f194.google.com with SMTP id 203-v6so13548831ljj.13
-        for <linux-pci@vger.kernel.org>; Tue, 31 Jul 2018 05:42:17 -0700 (PDT)
-MIME-Version: 1.0
-From: gokul cg <gokuljnpr@gmail.com>
-Date: Tue, 31 Jul 2018 18:12:15 +0530
-Message-ID: <CAFP4jM9xmXHVnBPObNxTtr1kDo2kbW9G4N5q=BLU5gf5=+M0xg@mail.gmail.com>
-Subject: Possible race condition in the kernel between PCI driver and AER handling
-To: linux-pci@vger.kernel.org
-Content-Type: multipart/alternative; boundary="0000000000006ab6a905724ae861"
+Received: from smtprelay.synopsys.com ([198.182.47.9]:57991 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730644AbeGMQME (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2018 12:12:04 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v10 07/12] pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
+Date: Fri, 13 Jul 2018 17:56:39 +0200
+Message-Id: <39856616807ce6c3c76028ec0b39f77d44f0c202.1531496321.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---0000000000006ab6a905724ae861
-Content-Type: text/plain; charset="UTF-8"
+Cleanup PCI_ENDPOINT_TEST memspace (by moving the interrupt number away
+from command section).
 
-Hi All,
+Add IRQ_TYPE register to identify the triggered ID interrupt required
+for the READ/WRITE/COPY tests and raise IRQ test commands.
 
+Update documentation accordingly.
 
-I am suspecting a possible race condition in the kernel between PCI driver
-and AER handling.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v2->v3:
+ - New patch file created base on the previous patch
+"misc: pci_endpoint_test: Add MSI-X support" patch file following
+Kishon's suggestion.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Reverted irq_num rename to msi_num.
+ - Added comment about the MSI-X bit reservation for future implementation.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Change v6->v7:
+ - Updated documentation.
+Change v7->v8:
+ - Re-sending the patch series.
+Change v8->v9:
+ - Nothing changed, just to follow the patch set version.
+Change v9->v10:
+ - Update documentation and patch description.
 
-Because of the same kernel panic happens from worker thread which handles
-bottom half of aer irq.
+ Documentation/PCI/endpoint/pci-test-function.txt |  8 +--
+ Documentation/PCI/endpoint/pci-test-function.txt | 27 ++++++--
+ drivers/misc/pci_endpoint_test.c                 | 81 +++++++++++++++---------
+ drivers/pci/endpoint/functions/pci-epf-test.c    | 61 ++++++++++++------
+ 3 files changed, 114 insertions(+), 55 deletions(-)
 
-
-I am seeing this issue when I suddenly power off PCI card which
-supports/enabled PCIE AER error reporting.
-
-While powering off PCI device, AER driver will get AER IRQ for the device,
-from AER IRQ handler, it will cache AER error code and schedule worker
-thread to handle error.
-
-The PCIe device will get removed from PCI tree before worker thread
-completes its task and kernel panic is  happening when worker thread tries
-to access PCI device's config space.
-
-
-
-Issue:
-
-crash>
-
-crash> bt
-
-PID: 2727   TASK: ffff880272adc530  CPU: 0   COMMAND: "kworker/0:2"
-
-#0 [ffff88027469fac8] machine_kexec at ffffffff8102cf18
-
-#1 [ffff88027469fb28] crash_kexec at ffffffff810a6b05
-
-#2 [ffff88027469fbf0] oops_end at ffffffff8176d960
-
-#3 [ffff88027469fc18] die at ffffffff810060db
-
-#4 [ffff88027469fc48] do_general_protection at ffffffff8176d452
-
-#5 [ffff88027469fc70] general_protection at ffffffff8176cdf2
-
-    [exception RIP: pci_bus_read_config_dword+100]
-
-    RIP: ffffffff813405f4  RSP: ffff88027469fd20  RFLAGS: 00010046
-
-    RAX: 435f494350006963  RBX: ffff880274892000  RCX: 0000000000000004
-
-    RDX: 0000000000000100  RSI: 0000000000000060  RDI: ffff880274892000
-
-    RBP: ffff88027469fd48   R8: ffff88027469fd2c   R9: 00000000000012c0
-
-    R10: 0000000000000006  R11: 00000000000012bf  R12: ffff88027469fd5c
-
-    R13: 0000000000000246  R14: 0000000000000000  R15: ffff8802741a4000
-
-    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0000
-
-#6 [ffff88027469fd50] pci_find_next_ext_capability at ffffffff81345d7b
-
-#7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225
-
-#8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d
-
-#9 [ffff88027469fdd0] aer_isr at ffffffff81357a38
-
-#10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0
-
-#11 [ffff88027469fe70] worker_thread at ffffffff8105e251
-
-#12 [ffff88027469fed0] kthread at ffffffff81064260
-
-#13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38
-
-
-crash>
-
-
-I have tested it on kernel 3.10 . But from source i could see that this
-case is still relevant for latest Linux source .
-
-
-Can anybody tell me if this is an issue with AER driver in linux ?
-
-
-
-
-Regards
-
-Gokul CG
-
---0000000000006ab6a905724ae861
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">
-
-
-
-
-<span></span>
-
-
-
-
-
-<p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal;font-=
-variant-east-asian:normal;font-stretch:normal;line-height:normal"><font fac=
-e=3D"Helvetica"><span style=3D"font-size:12px">Hi All,</span></font></p><p =
-class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal;font-var=
-iant-east-asian:normal;font-stretch:normal;line-height:normal"><font face=
-=3D"Helvetica"><span style=3D"font-size:12px"><br></span></font></p><p clas=
-s=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal;font-variant=
--east-asian:normal;font-stretch:normal;line-height:normal"><span style=3D"f=
-ont-size:12px;font-family:Helvetica">I am suspecting a possible race condit=
-ion in the kernel between PCI driver and AER handling.</span><br></p><p cla=
-ss=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal;font-varian=
-t-east-asian:normal;font-stretch:normal;line-height:normal"><font face=3D"H=
-elvetica"><span style=3D"font-size:12px">Because of the same kernel panic h=
-appens from worker thread which handles bottom half of aer irq.</span></fon=
-t></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal=
-;font-variant-east-asian:normal;font-stretch:normal;line-height:normal"><fo=
-nt face=3D"Helvetica"><span style=3D"font-size:12px"><br></span></font></p>=
-<p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal;font-=
-variant-east-asian:normal;font-stretch:normal;line-height:normal"><font fac=
-e=3D"Helvetica"><span style=3D"font-size:12px">I am seeing this issue when =
-I suddenly power off PCI card which supports/enabled PCIE AER error reporti=
-ng.</span></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant=
--numeric:normal;font-variant-east-asian:normal;font-stretch:normal;line-hei=
-ght:normal"><font face=3D"Helvetica"><span style=3D"font-size:12px">While p=
-owering off PCI device, AER driver will get AER IRQ for the device, from AE=
-R IRQ handler, it will cache AER error code and schedule worker thread to h=
-andle error.</span></font></p><p class=3D"gmail-p1" style=3D"margin:0px;fon=
-t-variant-numeric:normal;font-variant-east-asian:normal;font-stretch:normal=
-;line-height:normal"><font face=3D"Helvetica"><span style=3D"font-size:12px=
-">The PCIe device will get removed from PCI tree before worker thread compl=
-etes its task and kernel panic is=C2=A0 happening when worker thread tries =
-to access PCI device&#39;s config space.</span></font></p><p class=3D"gmail=
--p1" style=3D"margin:0px;font-variant-numeric:normal;font-variant-east-asia=
-n:normal;font-stretch:normal;line-height:normal"><font face=3D"Helvetica"><=
-span style=3D"font-size:12px"><br></span></font></p><p class=3D"gmail-p1" s=
-tyle=3D"margin:0px;font-variant-numeric:normal;font-variant-east-asian:norm=
-al;font-stretch:normal;line-height:normal"><font face=3D"Helvetica"><span s=
-tyle=3D"font-size:12px"><br></span></font></p><p class=3D"gmail-p1" style=
-=3D"font-variant-numeric:normal;font-variant-east-asian:normal;font-stretch=
-:normal;font-size:small;line-height:normal;text-decoration-style:initial;te=
-xt-decoration-color:initial;margin:0px"><font face=3D"Helvetica"><span styl=
-e=3D"font-size:12px">Issue:</span></font></p><br class=3D"gmail-Apple-inter=
-change-newline"><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-nume=
-ric:normal;font-variant-east-asian:normal;font-stretch:normal;line-height:n=
-ormal"><font face=3D"Helvetica"><span style=3D"font-size:12px">crash&gt;</s=
-pan></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numer=
-ic:normal;font-variant-east-asian:normal;font-stretch:normal;line-height:no=
-rmal"><font face=3D"Helvetica"><span style=3D"font-size:12px">crash&gt; bt<=
-/span></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-num=
-eric:normal;font-variant-east-asian:normal;font-stretch:normal;line-height:=
-normal"><font face=3D"Helvetica"><span style=3D"font-size:12px">PID: 2727=
-=C2=A0 =C2=A0TASK: ffff880272adc530=C2=A0 CPU: 0=C2=A0 =C2=A0COMMAND: &quot=
-;kworker/0:2&quot;</span></font></p><p class=3D"gmail-p1" style=3D"margin:0=
-px;font-variant-numeric:normal;font-variant-east-asian:normal;font-stretch:=
-normal;line-height:normal"><font face=3D"Helvetica"><span style=3D"font-siz=
-e:12px">#0 [ffff88027469fac8] machine_kexec at ffffffff8102cf18</span></fon=
-t></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal=
-;font-variant-east-asian:normal;font-stretch:normal;line-height:normal"><fo=
-nt face=3D"Helvetica"><span style=3D"font-size:12px">#1 [ffff88027469fb28] =
-crash_kexec at ffffffff810a6b05</span></font></p><p class=3D"gmail-p1" styl=
-e=3D"margin:0px;font-variant-numeric:normal;font-variant-east-asian:normal;=
-font-stretch:normal;line-height:normal"><font face=3D"Helvetica"><span styl=
-e=3D"font-size:12px">#2 [ffff88027469fbf0] oops_end at ffffffff8176d960</sp=
-an></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeri=
-c:normal;font-variant-east-asian:normal;font-stretch:normal;line-height:nor=
-mal"><font face=3D"Helvetica"><span style=3D"font-size:12px">#3 [ffff880274=
-69fc18] die at ffffffff810060db</span></font></p><p class=3D"gmail-p1" styl=
-e=3D"margin:0px;font-variant-numeric:normal;font-variant-east-asian:normal;=
-font-stretch:normal;line-height:normal"><font face=3D"Helvetica"><span styl=
-e=3D"font-size:12px">#4 [ffff88027469fc48] do_general_protection at fffffff=
-f8176d452</span></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-v=
-ariant-numeric:normal;font-variant-east-asian:normal;font-stretch:normal;li=
-ne-height:normal"><font face=3D"Helvetica"><span style=3D"font-size:12px">#=
-5 [ffff88027469fc70] general_protection at ffffffff8176cdf2</span></font></=
-p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal;fon=
-t-variant-east-asian:normal;font-stretch:normal;line-height:normal"><font f=
-ace=3D"Helvetica"><span style=3D"font-size:12px">=C2=A0 =C2=A0 [exception R=
-IP: pci_bus_read_config_dword+100]</span></font></p><p class=3D"gmail-p1" s=
-tyle=3D"margin:0px;font-variant-numeric:normal;font-variant-east-asian:norm=
-al;font-stretch:normal;line-height:normal"><font face=3D"Helvetica"><span s=
-tyle=3D"font-size:12px">=C2=A0 =C2=A0 RIP: ffffffff813405f4=C2=A0 RSP: ffff=
-88027469fd20=C2=A0 RFLAGS: 00010046</span></font></p><p class=3D"gmail-p1" =
-style=3D"margin:0px;font-variant-numeric:normal;font-variant-east-asian:nor=
-mal;font-stretch:normal;line-height:normal"><font face=3D"Helvetica"><span =
-style=3D"font-size:12px">=C2=A0 =C2=A0 RAX: 435f494350006963=C2=A0 RBX: fff=
-f880274892000=C2=A0 RCX: 0000000000000004</span></font></p><p class=3D"gmai=
-l-p1" style=3D"margin:0px;font-variant-numeric:normal;font-variant-east-asi=
-an:normal;font-stretch:normal;line-height:normal"><font face=3D"Helvetica">=
-<span style=3D"font-size:12px">=C2=A0 =C2=A0 RDX: 0000000000000100=C2=A0 RS=
-I: 0000000000000060=C2=A0 RDI: ffff880274892000</span></font></p><p class=
-=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal;font-variant-=
-east-asian:normal;font-stretch:normal;line-height:normal"><font face=3D"Hel=
-vetica"><span style=3D"font-size:12px">=C2=A0 =C2=A0 RBP: ffff88027469fd48=
-=C2=A0 =C2=A0R8: ffff88027469fd2c=C2=A0 =C2=A0R9: 00000000000012c0</span></=
-font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:nor=
-mal;font-variant-east-asian:normal;font-stretch:normal;line-height:normal">=
-<font face=3D"Helvetica"><span style=3D"font-size:12px">=C2=A0 =C2=A0 R10: =
-0000000000000006=C2=A0 R11: 00000000000012bf=C2=A0 R12: ffff88027469fd5c</s=
-pan></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numer=
-ic:normal;font-variant-east-asian:normal;font-stretch:normal;line-height:no=
-rmal"><font face=3D"Helvetica"><span style=3D"font-size:12px">=C2=A0 =C2=A0=
- R13: 0000000000000246=C2=A0 R14: 0000000000000000=C2=A0 R15: ffff8802741a4=
-000</span></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant=
--numeric:normal;font-variant-east-asian:normal;font-stretch:normal;line-hei=
-ght:normal"><font face=3D"Helvetica"><span style=3D"font-size:12px">=C2=A0 =
-=C2=A0 ORIG_RAX: ffffffffffffffff=C2=A0 CS: 0010=C2=A0 SS: 0000</span></fon=
-t></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal=
-;font-variant-east-asian:normal;font-stretch:normal;line-height:normal"><fo=
-nt face=3D"Helvetica"><span style=3D"font-size:12px">#6 [ffff88027469fd50] =
-pci_find_next_ext_capability at ffffffff81345d7b</span></font></p><p class=
-=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal;font-variant-=
-east-asian:normal;font-stretch:normal;line-height:normal"><font face=3D"Hel=
-vetica"><span style=3D"font-size:12px">#7 [ffff88027469fd90] pci_find_ext_c=
-apability at ffffffff81347225</span></font></p><p class=3D"gmail-p1" style=
-=3D"margin:0px;font-variant-numeric:normal;font-variant-east-asian:normal;f=
-ont-stretch:normal;line-height:normal"><font face=3D"Helvetica"><span style=
-=3D"font-size:12px">#8 [ffff88027469fda0] get_device_error_info at ffffffff=
-81356c4d</span></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-va=
-riant-numeric:normal;font-variant-east-asian:normal;font-stretch:normal;lin=
-e-height:normal"><font face=3D"Helvetica"><span style=3D"font-size:12px">#9=
- [ffff88027469fdd0] aer_isr at ffffffff81357a38</span></font></p><p class=
-=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal;font-variant-=
-east-asian:normal;font-stretch:normal;line-height:normal"><font face=3D"Hel=
-vetica"><span style=3D"font-size:12px">#10 [ffff88027469fe28] process_one_w=
-ork at ffffffff8105d4c0</span></font></p><p class=3D"gmail-p1" style=3D"mar=
-gin:0px;font-variant-numeric:normal;font-variant-east-asian:normal;font-str=
-etch:normal;line-height:normal"><font face=3D"Helvetica"><span style=3D"fon=
-t-size:12px">#11 [ffff88027469fe70] worker_thread at ffffffff8105e251</span=
-></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:=
-normal;font-variant-east-asian:normal;font-stretch:normal;line-height:norma=
-l"><font face=3D"Helvetica"><span style=3D"font-size:12px">#12 [ffff8802746=
-9fed0] kthread at ffffffff81064260</span></font></p><p class=3D"gmail-p1" s=
-tyle=3D"margin:0px;font-variant-numeric:normal;font-variant-east-asian:norm=
-al;font-stretch:normal;line-height:normal"><font face=3D"Helvetica"><span s=
-tyle=3D"font-size:12px">#13 [ffff88027469ff50] ret_from_fork at ffffffff817=
-73a38</span></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-varia=
-nt-numeric:normal;font-variant-east-asian:normal;font-stretch:normal;line-h=
-eight:normal"><font face=3D"Helvetica"><span style=3D"font-size:12px"><br><=
-/span></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-num=
-eric:normal;font-variant-east-asian:normal;font-stretch:normal;line-height:=
-normal"><font face=3D"Helvetica"><span style=3D"font-size:12px">crash&gt;</=
-span></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-nume=
-ric:normal;font-variant-east-asian:normal;font-stretch:normal;line-height:n=
-ormal"><font face=3D"Helvetica"><span style=3D"font-size:12px"><br></span><=
-/font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:no=
-rmal;font-variant-east-asian:normal;font-stretch:normal;line-height:normal"=
-><font face=3D"Helvetica"><span style=3D"font-size:12px">I have tested it o=
-n kernel 3.10 . But from source i could see that this case is still relevan=
-t for latest Linux source .</span></font></p><p class=3D"gmail-p1" style=3D=
-"margin:0px;font-variant-numeric:normal;font-variant-east-asian:normal;font=
--stretch:normal;line-height:normal"><font face=3D"Helvetica"><span style=3D=
-"font-size:12px"><br></span></font></p><p class=3D"gmail-p1" style=3D"margi=
-n:0px;font-variant-numeric:normal;font-variant-east-asian:normal;font-stret=
-ch:normal;line-height:normal"><font face=3D"Helvetica"><span style=3D"font-=
-size:12px">Can anybody tell me if this is an issue with AER driver in linux=
- ?</span></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-=
-numeric:normal;font-variant-east-asian:normal;font-stretch:normal;line-heig=
-ht:normal"><font face=3D"Helvetica"><span style=3D"font-size:12px"><br></sp=
-an></font></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeri=
-c:normal;font-variant-east-asian:normal;font-stretch:normal;line-height:nor=
-mal"><font face=3D"Helvetica"><span style=3D"font-size:12px"><br></span></f=
-ont></p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:norm=
-al;font-variant-east-asian:normal;font-stretch:normal;line-height:normal"><=
-font face=3D"Helvetica"><span style=3D"font-size:12px"><br></span></font></=
-p><p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal;fon=
-t-variant-east-asian:normal;font-stretch:normal;line-height:normal"><font f=
-ace=3D"Helvetica"><span style=3D"font-size:12px">Regards</span></font></p><=
-p class=3D"gmail-p1" style=3D"margin:0px;font-variant-numeric:normal;font-v=
-ariant-east-asian:normal;font-stretch:normal;line-height:normal"><font face=
-=3D"Helvetica"><span style=3D"font-size:12px">Gokul CG=C2=A0</span></font><=
-/p></div>
-
---0000000000006ab6a905724ae861--
+diff --git a/Documentation/PCI/endpoint/pci-test-function.txt b/Documentation/PCI/endpoint/pci-test-function.txt
+index 0c519c9..bf4b5cf 100644
+--- a/Documentation/PCI/endpoint/pci-test-function.txt
++++ b/Documentation/PCI/endpoint/pci-test-function.txt
+@@ -20,6 +20,8 @@ The PCI endpoint test device has the following registers:
+ 	5) PCI_ENDPOINT_TEST_DST_ADDR
+ 	6) PCI_ENDPOINT_TEST_SIZE
+ 	7) PCI_ENDPOINT_TEST_CHECKSUM
++	8) PCI_ENDPOINT_TEST_IRQ_TYPE
++	9) PCI_ENDPOINT_TEST_IRQ_NUMBER
+ 
+ *) PCI_ENDPOINT_TEST_MAGIC
+ 
+@@ -34,10 +36,10 @@ that the endpoint device must perform.
+ Bitfield Description:
+   Bit 0		: raise legacy IRQ
+   Bit 1		: raise MSI IRQ
+-  Bit 2 - 7	: MSI interrupt number
+-  Bit 8		: read command (read data from RC buffer)
+-  Bit 9		: write command (write data to RC buffer)
+-  Bit 10	: copy command (copy data from one RC buffer to another
++  Bit 2		: raise MSI-X IRQ (reserved for future implementation)
++  Bit 3		: read command (read data from RC buffer)
++  Bit 4		: write command (write data to RC buffer)
++  Bit 5		: copy command (copy data from one RC buffer to another
+ 		  RC buffer)
+ 
+ *) PCI_ENDPOINT_TEST_STATUS
+@@ -64,3 +66,20 @@ COPY/READ command.
+ 
+ This register contains the destination address (RC buffer address) for
+ the COPY/WRITE command.
++
++*) PCI_ENDPOINT_TEST_IRQ_TYPE
++
++This register contains the interrupt type (Legacy/MSI) triggered
++for the READ/WRITE/COPY and raise IRQ (Legacy/MSI) commands.
++
++Possible types:
++ - Legacy	: 0
++ - MSI		: 1
++
++*) PCI_ENDPOINT_TEST_IRQ_NUMBER
++
++This register contains the triggered ID interrupt.
++
++Admissible values:
++ - Legacy	: 0
++ - MSI		: [1 .. 32]
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 7b37046..35fbfbd 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -35,38 +35,43 @@
+ 
+ #include <uapi/linux/pcitest.h>
+ 
+-#define DRV_MODULE_NAME			"pci-endpoint-test"
+-
+-#define PCI_ENDPOINT_TEST_MAGIC		0x0
+-
+-#define PCI_ENDPOINT_TEST_COMMAND	0x4
+-#define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+-#define COMMAND_RAISE_MSI_IRQ		BIT(1)
+-#define MSI_NUMBER_SHIFT		2
+-/* 6 bits for MSI number */
+-#define COMMAND_READ                    BIT(8)
+-#define COMMAND_WRITE                   BIT(9)
+-#define COMMAND_COPY                    BIT(10)
+-
+-#define PCI_ENDPOINT_TEST_STATUS	0x8
+-#define STATUS_READ_SUCCESS             BIT(0)
+-#define STATUS_READ_FAIL                BIT(1)
+-#define STATUS_WRITE_SUCCESS            BIT(2)
+-#define STATUS_WRITE_FAIL               BIT(3)
+-#define STATUS_COPY_SUCCESS             BIT(4)
+-#define STATUS_COPY_FAIL                BIT(5)
+-#define STATUS_IRQ_RAISED               BIT(6)
+-#define STATUS_SRC_ADDR_INVALID         BIT(7)
+-#define STATUS_DST_ADDR_INVALID         BIT(8)
+-
+-#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0xc
++#define DRV_MODULE_NAME				"pci-endpoint-test"
++
++#define IRQ_TYPE_LEGACY				0
++#define IRQ_TYPE_MSI				1
++
++#define PCI_ENDPOINT_TEST_MAGIC			0x0
++
++#define PCI_ENDPOINT_TEST_COMMAND		0x4
++#define COMMAND_RAISE_LEGACY_IRQ		BIT(0)
++#define COMMAND_RAISE_MSI_IRQ			BIT(1)
++/* BIT(2) is reserved for raising MSI-X IRQ command */
++#define COMMAND_READ				BIT(3)
++#define COMMAND_WRITE				BIT(4)
++#define COMMAND_COPY				BIT(5)
++
++#define PCI_ENDPOINT_TEST_STATUS		0x8
++#define STATUS_READ_SUCCESS			BIT(0)
++#define STATUS_READ_FAIL			BIT(1)
++#define STATUS_WRITE_SUCCESS			BIT(2)
++#define STATUS_WRITE_FAIL			BIT(3)
++#define STATUS_COPY_SUCCESS			BIT(4)
++#define STATUS_COPY_FAIL			BIT(5)
++#define STATUS_IRQ_RAISED			BIT(6)
++#define STATUS_SRC_ADDR_INVALID			BIT(7)
++#define STATUS_DST_ADDR_INVALID			BIT(8)
++
++#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0x0c
+ #define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
+ 
+ #define PCI_ENDPOINT_TEST_LOWER_DST_ADDR	0x14
+ #define PCI_ENDPOINT_TEST_UPPER_DST_ADDR	0x18
+ 
+-#define PCI_ENDPOINT_TEST_SIZE		0x1c
+-#define PCI_ENDPOINT_TEST_CHECKSUM	0x20
++#define PCI_ENDPOINT_TEST_SIZE			0x1c
++#define PCI_ENDPOINT_TEST_CHECKSUM		0x20
++
++#define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
++#define PCI_ENDPOINT_TEST_IRQ_NUMBER		0x28
+ 
+ static DEFINE_IDA(pci_endpoint_test_ida);
+ 
+@@ -179,6 +184,9 @@ static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
+ {
+ 	u32 val;
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
++				 IRQ_TYPE_LEGACY);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 0);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+ 				 COMMAND_RAISE_LEGACY_IRQ);
+ 	val = wait_for_completion_timeout(&test->irq_raised,
+@@ -195,8 +203,10 @@ static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
+ 	u32 val;
+ 	struct pci_dev *pdev = test->pdev;
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
++				 IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, msi_num);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 msi_num << MSI_NUMBER_SHIFT |
+ 				 COMMAND_RAISE_MSI_IRQ);
+ 	val = wait_for_completion_timeout(&test->irq_raised,
+ 					  msecs_to_jiffies(1000));
+@@ -281,8 +291,11 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
+ 				 size);
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
++				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 1 << MSI_NUMBER_SHIFT | COMMAND_COPY);
++				 COMMAND_COPY);
+ 
+ 	wait_for_completion(&test->irq_raised);
+ 
+@@ -348,8 +361,11 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
++				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 1 << MSI_NUMBER_SHIFT | COMMAND_READ);
++				 COMMAND_READ);
+ 
+ 	wait_for_completion(&test->irq_raised);
+ 
+@@ -403,8 +419,11 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
+ 
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_TYPE,
++				 no_msi ? IRQ_TYPE_LEGACY : IRQ_TYPE_MSI);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_IRQ_NUMBER, 1);
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
+-				 1 << MSI_NUMBER_SHIFT | COMMAND_WRITE);
++				 COMMAND_WRITE);
+ 
+ 	wait_for_completion(&test->irq_raised);
+ 
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 63ed706..eb9cd00 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -18,13 +18,15 @@
+ #include <linux/pci-epf.h>
+ #include <linux/pci_regs.h>
+ 
++#define IRQ_TYPE_LEGACY			0
++#define IRQ_TYPE_MSI			1
++
+ #define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
+ #define COMMAND_RAISE_MSI_IRQ		BIT(1)
+-#define MSI_NUMBER_SHIFT		2
+-#define MSI_NUMBER_MASK			(0x3f << MSI_NUMBER_SHIFT)
+-#define COMMAND_READ			BIT(8)
+-#define COMMAND_WRITE			BIT(9)
+-#define COMMAND_COPY			BIT(10)
++/* BIT(2) is reserved for raising MSI-X IRQ command */
++#define COMMAND_READ			BIT(3)
++#define COMMAND_WRITE			BIT(4)
++#define COMMAND_COPY			BIT(5)
+ 
+ #define STATUS_READ_SUCCESS		BIT(0)
+ #define STATUS_READ_FAIL		BIT(1)
+@@ -56,6 +58,8 @@ struct pci_epf_test_reg {
+ 	u64	dst_addr;
+ 	u32	size;
+ 	u32	checksum;
++	u32	irq_type;
++	u32	irq_number;
+ } __packed;
+ 
+ static struct pci_epf_header test_header = {
+@@ -244,31 +248,39 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+ 	return ret;
+ }
+ 
+-static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
++static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq_type,
++				   u16 irq)
+ {
+-	u8 msi_count;
+ 	struct pci_epf *epf = epf_test->epf;
++	struct device *dev = &epf->dev;
+ 	struct pci_epc *epc = epf->epc;
+ 	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
+ 	struct pci_epf_test_reg *reg = epf_test->reg[test_reg_bar];
+ 
+ 	reg->status |= STATUS_IRQ_RAISED;
+-	msi_count = pci_epc_get_msi(epc, epf->func_no);
+-	if (irq > msi_count || msi_count <= 0)
++
++	switch (irq_type) {
++	case IRQ_TYPE_LEGACY:
+ 		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_LEGACY, 0);
+-	else
++		break;
++	case IRQ_TYPE_MSI:
+ 		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
++		break;
++	default:
++		dev_err(dev, "Failed to raise IRQ, unknown type\n");
++		break;
++	}
+ }
+ 
+ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ {
+ 	int ret;
+-	u8 irq;
+-	u8 msi_count;
++	u16 count;
+ 	u32 command;
+ 	struct pci_epf_test *epf_test = container_of(work, struct pci_epf_test,
+ 						     cmd_handler.work);
+ 	struct pci_epf *epf = epf_test->epf;
++	struct device *dev = &epf->dev;
+ 	struct pci_epc *epc = epf->epc;
+ 	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
+ 	struct pci_epf_test_reg *reg = epf_test->reg[test_reg_bar];
+@@ -280,7 +292,10 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 	reg->command = 0;
+ 	reg->status = 0;
+ 
+-	irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
++	if (reg->irq_type > IRQ_TYPE_MSI) {
++		dev_err(dev, "Failed to detect IRQ type\n");
++		goto reset_handler;
++	}
+ 
+ 	if (command & COMMAND_RAISE_LEGACY_IRQ) {
+ 		reg->status = STATUS_IRQ_RAISED;
+@@ -294,7 +309,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 			reg->status |= STATUS_WRITE_FAIL;
+ 		else
+ 			reg->status |= STATUS_WRITE_SUCCESS;
+-		pci_epf_test_raise_irq(epf_test, irq);
++		pci_epf_test_raise_irq(epf_test, reg->irq_type,
++				       reg->irq_number);
+ 		goto reset_handler;
+ 	}
+ 
+@@ -304,7 +320,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 			reg->status |= STATUS_READ_SUCCESS;
+ 		else
+ 			reg->status |= STATUS_READ_FAIL;
+-		pci_epf_test_raise_irq(epf_test, irq);
++		pci_epf_test_raise_irq(epf_test, reg->irq_type,
++				       reg->irq_number);
+ 		goto reset_handler;
+ 	}
+ 
+@@ -314,16 +331,18 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 			reg->status |= STATUS_COPY_SUCCESS;
+ 		else
+ 			reg->status |= STATUS_COPY_FAIL;
+-		pci_epf_test_raise_irq(epf_test, irq);
++		pci_epf_test_raise_irq(epf_test, reg->irq_type,
++				       reg->irq_number);
+ 		goto reset_handler;
+ 	}
+ 
+ 	if (command & COMMAND_RAISE_MSI_IRQ) {
+-		msi_count = pci_epc_get_msi(epc, epf->func_no);
+-		if (irq > msi_count || msi_count <= 0)
++		count = pci_epc_get_msi(epc, epf->func_no);
++		if (reg->irq_number > count || count <= 0)
+ 			goto reset_handler;
+ 		reg->status = STATUS_IRQ_RAISED;
+-		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
++		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI,
++				  reg->irq_number);
+ 		goto reset_handler;
+ 	}
+ 
+@@ -457,8 +476,10 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+ 		return ret;
+ 
+ 	ret = pci_epc_set_msi(epc, epf->func_no, epf->msi_interrupts);
+-	if (ret)
++	if (ret) {
++		dev_err(dev, "MSI configuration failed\n");
+ 		return ret;
++	}
+ 
+ 	if (!epf_test->linkup_notifier)
+ 		queue_work(kpcitest_workqueue, &epf_test->cmd_handler.work);
+-- 
+2.7.4
