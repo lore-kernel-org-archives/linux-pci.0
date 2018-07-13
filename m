@@ -1,216 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:59822 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731295AbeGRD0C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Jul 2018 23:26:02 -0400
-From: Baoquan He <bhe@redhat.com>
-To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-        robh+dt@kernel.org, dan.j.williams@intel.com,
-        nicolas.pitre@linaro.org, josh@joshtriplett.org,
-        fengguang.wu@intel.com, bp@suse.de, andy.shevchenko@gmail.com
-Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com,
-        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
-        keith.busch@intel.com, jonathan.derrick@intel.com,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
-        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
-        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
-        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
-        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
-        yinghai@kernel.org, monstr@monstr.eu, davem@davemloft.net,
-        chris@zankel.net, jcmvbkbc@gmail.com, gustavo@padovan.org,
-        maarten.lankhorst@linux.intel.com, seanpaul@chromium.org,
-        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        Baoquan He <bhe@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>
-Subject: [PATCH v7 1/4] resource: Move reparent_resources() to kernel/resource.c and make it public
-Date: Wed, 18 Jul 2018 10:49:41 +0800
-Message-Id: <20180718024944.577-2-bhe@redhat.com>
-In-Reply-To: <20180718024944.577-1-bhe@redhat.com>
-References: <20180718024944.577-1-bhe@redhat.com>
+Received: from foss.arm.com ([217.140.101.70]:35010 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729628AbeGMNdF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 13 Jul 2018 09:33:05 -0400
+Date: Fri, 13 Jul 2018 14:20:23 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Shawn Guo <shawn.guo@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 0/9] PCI: dwc: Drop unnecessary root_bus_nr setting
+Message-ID: <20180713132023.GC18515@red-moon>
+References: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1530417291-30495-1-git-send-email-shawn.guo@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-reparent_resources() is duplicated in arch/microblaze/pci/pci-common.c
-and arch/powerpc/kernel/pci-common.c, so move it to kernel/resource.c
-so that it's shared.
+On Sun, Jul 01, 2018 at 11:54:42AM +0800, Shawn Guo wrote:
+> The designware core function dw_pcie_host_init() already initializes
+> the root_bus_nr field of 'struct pcie_port', so the -1 assignment prior
+> to calling dw_pcie_host_init() in platform specific driver is not really
+> needed.  Drop it.
+> 
+> Changes for v3:
+>  - Rebase to v4.18-rc1
+>  - Collect ACK from Pratyush on spear13xx driver
+> 
+> Changes for v2:
+>  - Improve commit log a bit per Thomas' suggestion.
+>  - Collect ACK from Thomas and Stanimir on armada8k and qcom driver.
+> 
+> 
+> Shawn Guo (9):
+>   PCI: exynos: Drop unnecessary root_bus_nr setting
+>   PCI: imx6: Drop unnecessary root_bus_nr setting
+>   PCI: keystone: Drop unnecessary root_bus_nr setting
+>   PCI: armada8k: Drop unnecessary root_bus_nr setting
+>   PCI: artpec6: Drop unnecessary root_bus_nr setting
+>   PCI: designware-plat: Drop unnecessary root_bus_nr setting
+>   PCI: histb: Drop unnecessary root_bus_nr setting
+>   PCI: qcom: Drop unnecessary root_bus_nr setting
+>   PCI: spear13xx: Drop unnecessary root_bus_nr setting
+> 
+>  drivers/pci/controller/dwc/pci-exynos.c           | 1 -
+>  drivers/pci/controller/dwc/pci-imx6.c             | 1 -
+>  drivers/pci/controller/dwc/pci-keystone.c         | 1 -
+>  drivers/pci/controller/dwc/pcie-armada8k.c        | 1 -
+>  drivers/pci/controller/dwc/pcie-artpec6.c         | 1 -
+>  drivers/pci/controller/dwc/pcie-designware-plat.c | 1 -
+>  drivers/pci/controller/dwc/pcie-histb.c           | 1 -
+>  drivers/pci/controller/dwc/pcie-qcom.c            | 1 -
+>  drivers/pci/controller/dwc/pcie-spear13xx.c       | 1 -
+>  9 files changed, 9 deletions(-)
 
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-Signed-off-by: Baoquan He <bhe@redhat.com>
-Cc: Michal Simek <monstr@monstr.eu>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/microblaze/pci/pci-common.c | 37 -----------------------------------
- arch/powerpc/kernel/pci-common.c | 35 ---------------------------------
- include/linux/ioport.h           |  1 +
- kernel/resource.c                | 42 ++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 43 insertions(+), 72 deletions(-)
+Applied to pci/dwc for v4.19, thanks.
 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index f34346d56095..7899bafab064 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -619,43 +619,6 @@ int pcibios_add_device(struct pci_dev *dev)
- EXPORT_SYMBOL(pcibios_add_device);
- 
- /*
-- * Reparent resource children of pr that conflict with res
-- * under res, and make res replace those children.
-- */
--static int __init reparent_resources(struct resource *parent,
--				     struct resource *res)
--{
--	struct resource *p, **pp;
--	struct resource **firstpp = NULL;
--
--	for (pp = &parent->child; (p = *pp) != NULL; pp = &p->sibling) {
--		if (p->end < res->start)
--			continue;
--		if (res->end < p->start)
--			break;
--		if (p->start < res->start || p->end > res->end)
--			return -1;	/* not completely contained */
--		if (firstpp == NULL)
--			firstpp = pp;
--	}
--	if (firstpp == NULL)
--		return -1;	/* didn't find any conflicting entries? */
--	res->parent = parent;
--	res->child = *firstpp;
--	res->sibling = *pp;
--	*firstpp = res;
--	*pp = NULL;
--	for (p = res->child; p != NULL; p = p->sibling) {
--		p->parent = res;
--		pr_debug("PCI: Reparented %s [%llx..%llx] under %s\n",
--			 p->name,
--			 (unsigned long long)p->start,
--			 (unsigned long long)p->end, res->name);
--	}
--	return 0;
--}
--
--/*
-  *  Handle resources of PCI devices.  If the world were perfect, we could
-  *  just allocate all the resource regions and do nothing more.  It isn't.
-  *  On the other hand, we cannot just re-allocate all devices, as it would
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index fe9733ffffaa..926035bb378d 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1088,41 +1088,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- EXPORT_SYMBOL(pcibios_align_resource);
- 
- /*
-- * Reparent resource children of pr that conflict with res
-- * under res, and make res replace those children.
-- */
--static int reparent_resources(struct resource *parent,
--				     struct resource *res)
--{
--	struct resource *p, **pp;
--	struct resource **firstpp = NULL;
--
--	for (pp = &parent->child; (p = *pp) != NULL; pp = &p->sibling) {
--		if (p->end < res->start)
--			continue;
--		if (res->end < p->start)
--			break;
--		if (p->start < res->start || p->end > res->end)
--			return -1;	/* not completely contained */
--		if (firstpp == NULL)
--			firstpp = pp;
--	}
--	if (firstpp == NULL)
--		return -1;	/* didn't find any conflicting entries? */
--	res->parent = parent;
--	res->child = *firstpp;
--	res->sibling = *pp;
--	*firstpp = res;
--	*pp = NULL;
--	for (p = res->child; p != NULL; p = p->sibling) {
--		p->parent = res;
--		pr_debug("PCI: Reparented %s %pR under %s\n",
--			 p->name, p, res->name);
--	}
--	return 0;
--}
--
--/*
-  *  Handle resources of PCI devices.  If the world were perfect, we could
-  *  just allocate all the resource regions and do nothing more.  It isn't.
-  *  On the other hand, we cannot just re-allocate all devices, as it would
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index da0ebaec25f0..dfdcd0bfe54e 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -192,6 +192,7 @@ extern int allocate_resource(struct resource *root, struct resource *new,
- struct resource *lookup_resource(struct resource *root, resource_size_t start);
- int adjust_resource(struct resource *res, resource_size_t start,
- 		    resource_size_t size);
-+int reparent_resources(struct resource *parent, struct resource *res);
- resource_size_t resource_alignment(struct resource *res);
- static inline resource_size_t resource_size(const struct resource *res)
- {
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 30e1bc68503b..81ccd19c1d9f 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -983,6 +983,48 @@ int adjust_resource(struct resource *res, resource_size_t start,
- }
- EXPORT_SYMBOL(adjust_resource);
- 
-+/**
-+ * reparent_resources - reparent resource children of parent that res covers
-+ * @parent: parent resource descriptor
-+ * @res: resource descriptor desired by caller
-+ *
-+ * Returns 0 on success, -ENOTSUPP if child resource is not completely
-+ * contained by 'res', -ECANCELED if no any conflicting entry found.
-+ *
-+ * Reparent resource children of 'parent' that conflict with 'res'
-+ * under 'res', and make 'res' replace those children.
-+ */
-+int reparent_resources(struct resource *parent, struct resource *res)
-+{
-+	struct resource *p, **pp;
-+	struct resource **firstpp = NULL;
-+
-+	for (pp = &parent->child; (p = *pp) != NULL; pp = &p->sibling) {
-+		if (p->end < res->start)
-+			continue;
-+		if (res->end < p->start)
-+			break;
-+		if (p->start < res->start || p->end > res->end)
-+			return -ENOTSUPP;	/* not completely contained */
-+		if (firstpp == NULL)
-+			firstpp = pp;
-+	}
-+	if (firstpp == NULL)
-+		return -ECANCELED; /* didn't find any conflicting entries? */
-+	res->parent = parent;
-+	res->child = *firstpp;
-+	res->sibling = *pp;
-+	*firstpp = res;
-+	*pp = NULL;
-+	for (p = res->child; p != NULL; p = p->sibling) {
-+		p->parent = res;
-+		pr_debug("PCI: Reparented %s %pR under %s\n",
-+			 p->name, p, res->name);
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL(reparent_resources);
-+
- static void __init __reserve_region_with_split(struct resource *root,
- 		resource_size_t start, resource_size_t end,
- 		const char *name)
--- 
-2.13.6
+Lorenzo
