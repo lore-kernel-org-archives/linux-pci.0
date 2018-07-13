@@ -1,58 +1,220 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga08-in.huawei.com ([45.249.212.255]:49931 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754239AbeGIByT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 8 Jul 2018 21:54:19 -0400
-From: "Songxiaowei (Kirin_DRV)" <songxiaowei@hisilicon.com>
-To: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "chenyao (F)" <chenyao11@huawei.com>
-Subject: =?gb2312?B?tPC4tDogW1BBVENIIHY1IDEvMV0gUENJOiBraXJpbjogQWRkIE1TSSBzdXBw?=
- =?gb2312?Q?ort?=
-Date: Mon, 9 Jul 2018 01:54:07 +0000
-Message-ID: <99B4C6BADD9E3241B25E52B02BA737C5412D2511@dggema525-mbx.china.huawei.com>
-References: <20180628124803.110315-1-songxiaowei@hisilicon.com>
- <20180628124803.110315-2-songxiaowei@hisilicon.com>
-In-Reply-To: <20180628124803.110315-2-songxiaowei@hisilicon.com>
-Content-Type: text/plain; charset="gb2312"
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:45206 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729691AbeGMIDM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2018 04:03:12 -0400
+Subject: Re: [PATCH v9 03/12] PCI: Update xxx_pcie_ep_raise_irq() and
+ pci_epc_raise_irq() signatures
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <Joao.Pinto@synopsys.com>, <jingoohan1@gmail.com>,
+        <adouglas@cadence.com>, <jesper.nilsson@axis.com>,
+        <shawn.lin@rock-chips.com>
+References: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
+ <4e5e896ab6e1015340d8dba6b797d9070defbb73.1531155252.git.gustavo.pimentel@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <3647c24e-02ec-9e75-2cd5-7a77107711bd@ti.com>
+Date: Fri, 13 Jul 2018 13:19:28 +0530
 MIME-Version: 1.0
+In-Reply-To: <4e5e896ab6e1015340d8dba6b797d9070defbb73.1531155252.git.gustavo.pimentel@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4gSGVsZ2FhcywNCg0KV291bGQgeW91IGhlbHAgdG8gcmV2aWV3IHRoaXMgcGF0Y2g/
-DQoNCkJlc3QgcmVnYXJkcywNCg0KWGlhb3dlaS4NCg0KPiAtLS0tLdPKvP7Urbz+LS0tLS0NCj4g
-t6K8/sjLOiBTb25neGlhb3dlaSAoS2lyaW5fRFJWKQ0KPiC3osvNyrG85DogMjAxOMTqNtTCMjjI
-1SAyMDo0OA0KPiDK1bz+yMs6IFdhbmdiaW5naHVpIDx3YW5nYmluZ2h1aUBoaXNpbGljb24uY29t
-PjsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsNCj4gcm9iaCtkdEBrZXJuZWwub3JnOyBsaW51eC1wY2lA
-dmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiBkaW1pdHJ5
-c2hAZ29vZ2xlLmNvbQ0KPiCzrcvNOiBjaGVueWFvIChGKSA8Y2hlbnlhbzExQGh1YXdlaS5jb20+
-OyBTb25neGlhb3dlaSAoS2lyaW5fRFJWKQ0KPiA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4N
-Cj4g1vfM4jogW1BBVENIIHY1IDEvMV0gUENJOiBraXJpbjogQWRkIE1TSSBzdXBwb3J0DQo+IA0K
-PiBBZGQgc3VwcG9ydCBmb3IgTVNJLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogWGlhb3dlaSBTb25n
-IDxzb25neGlhb3dlaUBoaXNpbGljb24uY29tPg0KPiAtLS0NCj4gIGRyaXZlcnMvcGNpL2R3Yy9w
-Y2llLWtpcmluLmMgfCAyOCArKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ICAxIGZpbGUg
-Y2hhbmdlZCwgMjggaW5zZXJ0aW9ucygrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNp
-L2R3Yy9wY2llLWtpcmluLmMgYi9kcml2ZXJzL3BjaS9kd2MvcGNpZS1raXJpbi5jIGluZGV4DQo+
-IGQyOTcwYTAwOWViNS4uNjk5NzI3NmViNjljIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3BjaS9k
-d2MvcGNpZS1raXJpbi5jDQo+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2llLWtpcmluLmMNCj4g
-QEAgLTQzMCw2ICs0MzAsOSBAQCBzdGF0aWMgaW50IGtpcmluX3BjaWVfaG9zdF9pbml0KHN0cnVj
-dCBwY2llX3BvcnQgKnBwKQ0KPiB7DQo+ICAJa2lyaW5fcGNpZV9lc3RhYmxpc2hfbGluayhwcCk7
-DQo+IA0KPiArCWlmIChJU19FTkFCTEVEKENPTkZJR19QQ0lfTVNJKSkNCj4gKwkJZHdfcGNpZV9t
-c2lfaW5pdChwcCk7DQo+ICsNCj4gIAlyZXR1cm4gMDsNCj4gIH0NCj4gDQo+IEBAIC00NDUsOSAr
-NDQ4LDM0IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgZHdfcGNpZV9ob3N0X29wcw0KPiBraXJpbl9w
-Y2llX2hvc3Rfb3BzID0gew0KPiAgCS5ob3N0X2luaXQgPSBraXJpbl9wY2llX2hvc3RfaW5pdCwN
-Cj4gIH07DQo+IA0KPiArc3RhdGljIGludCBraXJpbl9wY2llX2FkZF9tc2koc3RydWN0IGR3X3Bj
-aWUgKnBjaSwNCj4gKwkJCQlzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQ0KPiArew0KPiAr
-CWludCByZXQgPSAwOw0KPiArDQo+ICsJaWYgKElTX0VOQUJMRUQoQ09ORklHX1BDSV9NU0kpKSB7
-DQo+ICsJCXJldCA9IHBsYXRmb3JtX2dldF9pcnEocGRldiwgMCk7DQo+ICsJCWlmIChyZXQgPCAw
-KSB7DQo+ICsJCQlkZXZfZXJyKCZwZGV2LT5kZXYsDQo+ICsJCQkJImZhaWxlZCB0byBnZXQgTVNJ
-IElSUSAoJWQpXG4iLCByZXQpOw0KPiArCQkJcmV0dXJuIHJldDsNCj4gKwkJfQ0KPiArDQo+ICsJ
-CXBjaS0+cHAubXNpX2lycSA9IHJldDsNCj4gKwl9DQo+ICsNCj4gKwlyZXR1cm4gcmV0Ow0KPiAr
-fQ0KPiArDQo+ICBzdGF0aWMgaW50IF9faW5pdCBraXJpbl9hZGRfcGNpZV9wb3J0KHN0cnVjdCBk
-d19wY2llICpwY2ksDQo+ICAJCQkJICAgICAgc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldikg
-IHsNCj4gKwlpbnQgcmV0Ow0KPiArDQo+ICsJcmV0ID0ga2lyaW5fcGNpZV9hZGRfbXNpKHBjaSwg
-cGRldik7DQo+ICsJaWYgKHJldCkNCj4gKwkJcmV0dXJuIHJldDsNCj4gKw0KPiAgCXBjaS0+cHAu
-b3BzID0gJmtpcmluX3BjaWVfaG9zdF9vcHM7DQo+IA0KPiAgCXJldHVybiBkd19wY2llX2hvc3Rf
-aW5pdCgmcGNpLT5wcCk7DQo+IC0tDQo+IDIuMTEuR0lUDQoNCg==
+
+
+On Monday 09 July 2018 11:12 PM, Gustavo Pimentel wrote:
+> Change {cdns, dra7xx, artpec6, dw, rockchip}_pcie_ep_raise_irq() and
+> pci_epc_raise_irq() signature, namely the interrupt_num variable type
+> from u8 to u16 to accommodate 2048 maximum MSI-X interrupts.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> Acked-by: Alan Douglas <adouglas@cadence.com>
+> Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
+> Acked-by: Joao Pinto <jpinto@synopsys.com>
+
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+> Change v1->v2:
+>  - Nothing changed, just to follow the patch set version.
+> Change v2->v3:
+>  - Move into here the pci_epc_raise_irq() signature change from patch
+> file #1.
+>  - Move into here the {dra7xx, artpec6}_pcie_ep_raise_irq() signature
+> changes from patch file #2.
+> Change v3->v4:
+>  - Rebased to Lorenzo's master branch v4.18-rc1.
+> Change v4->v5:
+>  - Swap patch files position (#3 -> #2).
+>  - Moved dw_pcie_ep_raise_irq and dw_plat_pcie_ep_raise_irq functions
+> signatures changes from patch file #3.
+>  - Changed rockchip_pcie_ep_raise_irq function signature.
+> Change v5->v6:
+>  - Nothing changed, just to follow the patch set version.
+> Change v6->v7:
+>  - Nothing changed, just to follow the patch set version.
+> Change v7->v8:
+>  - Re-sending the patch series.
+> Change v8->v9:
+>  - Nothing changed, just to follow the patch set version.
+> 
+>  drivers/pci/controller/dwc/pci-dra7xx.c           | 2 +-
+>  drivers/pci/controller/dwc/pcie-artpec6.c         | 2 +-
+>  drivers/pci/controller/dwc/pcie-designware-ep.c   | 2 +-
+>  drivers/pci/controller/dwc/pcie-designware-plat.c | 2 +-
+>  drivers/pci/controller/dwc/pcie-designware.h      | 2 +-
+>  drivers/pci/controller/pcie-cadence-ep.c          | 3 ++-
+>  drivers/pci/controller/pcie-rockchip-ep.c         | 2 +-
+>  drivers/pci/endpoint/pci-epc-core.c               | 8 ++++----
+>  include/linux/pci-epc.h                           | 6 +++---
+>  9 files changed, 15 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+> index 345aab5..ce9224a 100644
+> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+> @@ -370,7 +370,7 @@ static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
+>  }
+>  
+>  static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+> -				 enum pci_epc_irq_type type, u8 interrupt_num)
+> +				 enum pci_epc_irq_type type, u16 interrupt_num)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+> diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
+> index 321b56c..9a2474b 100644
+> --- a/drivers/pci/controller/dwc/pcie-artpec6.c
+> +++ b/drivers/pci/controller/dwc/pcie-artpec6.c
+> @@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
+>  }
+>  
+>  static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+> -				  enum pci_epc_irq_type type, u8 interrupt_num)
+> +				  enum pci_epc_irq_type type, u16 interrupt_num)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index 04092a7..69d039d 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -242,7 +242,7 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
+>  }
+>  
+>  static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
+> -				enum pci_epc_irq_type type, u8 interrupt_num)
+> +				enum pci_epc_irq_type type, u16 interrupt_num)
+>  {
+>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>  
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+> index 0ce3440..0efb318 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-plat.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+> @@ -81,7 +81,7 @@ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+>  
+>  static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+>  				     enum pci_epc_irq_type type,
+> -				     u8 interrupt_num)
+> +				     u16 interrupt_num)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index bee4e25..9d581c0 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -191,7 +191,7 @@ enum dw_pcie_as_type {
+>  struct dw_pcie_ep_ops {
+>  	void	(*ep_init)(struct dw_pcie_ep *ep);
+>  	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
+> -			     enum pci_epc_irq_type type, u8 interrupt_num);
+> +			     enum pci_epc_irq_type type, u16 interrupt_num);
+>  };
+>  
+>  struct dw_pcie_ep {
+> diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
+> index e3fe412..208d11f 100644
+> --- a/drivers/pci/controller/pcie-cadence-ep.c
+> +++ b/drivers/pci/controller/pcie-cadence-ep.c
+> @@ -363,7 +363,8 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
+>  }
+>  
+>  static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
+> -				  enum pci_epc_irq_type type, u8 interrupt_num)
+> +				  enum pci_epc_irq_type type,
+> +				  u16 interrupt_num)
+>  {
+>  	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+>  
+> diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/controller/pcie-rockchip-ep.c
+> index 6beba8e..b8163c5 100644
+> --- a/drivers/pci/controller/pcie-rockchip-ep.c
+> +++ b/drivers/pci/controller/pcie-rockchip-ep.c
+> @@ -472,7 +472,7 @@ static int rockchip_pcie_ep_send_msi_irq(struct rockchip_pcie_ep *ep, u8 fn,
+>  
+>  static int rockchip_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
+>  				      enum pci_epc_irq_type type,
+> -				      u8 interrupt_num)
+> +				      u16 interrupt_num)
+>  {
+>  	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
+>  
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index 7d77bd0..c72e656 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -131,13 +131,13 @@ EXPORT_SYMBOL_GPL(pci_epc_start);
+>   * pci_epc_raise_irq() - interrupt the host system
+>   * @epc: the EPC device which has to interrupt the host
+>   * @func_no: the endpoint function number in the EPC device
+> - * @type: specify the type of interrupt; legacy or MSI
+> - * @interrupt_num: the MSI interrupt number
+> + * @type: specify the type of interrupt; legacy, MSI or MSI-X
+> + * @interrupt_num: the MSI or MSI-X interrupt number
+>   *
+> - * Invoke to raise an MSI or legacy interrupt
+> + * Invoke to raise an legacy, MSI or MSI-X interrupt
+>   */
+>  int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
+> -		      enum pci_epc_irq_type type, u8 interrupt_num)
+> +		      enum pci_epc_irq_type type, u16 interrupt_num)
+>  {
+>  	int ret;
+>  	unsigned long flags;
+> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+> index 89f079f..bb2395b 100644
+> --- a/include/linux/pci-epc.h
+> +++ b/include/linux/pci-epc.h
+> @@ -35,7 +35,7 @@ enum pci_epc_irq_type {
+>   *	     MSI-X capability register
+>   * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
+>   *	     from the MSI-X capability register
+> - * @raise_irq: ops to raise a legacy or MSI interrupt
+> + * @raise_irq: ops to raise a legacy, MSI or MSI-X interrupt
+>   * @start: ops to start the PCI link
+>   * @stop: ops to stop the PCI link
+>   * @owner: the module owner containing the ops
+> @@ -56,7 +56,7 @@ struct pci_epc_ops {
+>  	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
+>  	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
+>  	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
+> -			     enum pci_epc_irq_type type, u8 interrupt_num);
+> +			     enum pci_epc_irq_type type, u16 interrupt_num);
+>  	int	(*start)(struct pci_epc *epc);
+>  	void	(*stop)(struct pci_epc *epc);
+>  	struct module *owner;
+> @@ -154,7 +154,7 @@ int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
+>  int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts);
+>  int pci_epc_get_msix(struct pci_epc *epc, u8 func_no);
+>  int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
+> -		      enum pci_epc_irq_type type, u8 interrupt_num);
+> +		      enum pci_epc_irq_type type, u16 interrupt_num);
+>  int pci_epc_start(struct pci_epc *epc);
+>  void pci_epc_stop(struct pci_epc *epc);
+>  struct pci_epc *pci_epc_get(const char *epc_name);
+> 
