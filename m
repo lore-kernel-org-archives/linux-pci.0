@@ -1,79 +1,287 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42356 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753592AbeGEPMn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2018 11:12:43 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 05 Jul 2018 20:42:41 +0530
-From: poza@codeaurora.org
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
         Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v2 0/6] Fix issues and cleanup for ERR_FATAL and
- ERR_NONFATAL
-In-Reply-To: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
-References: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
-Message-ID: <e2cdfff7ddffc3e10dc800c31bd27864@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 13 Jul 2018 17:31:55 -0600
+Message-Id: <20180713233158.19528-2-logang@deltatee.com>
+In-Reply-To: <20180713233158.19528-1-logang@deltatee.com>
+References: <20180713233158.19528-1-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v6 1/4] PCI: Make specifying PCI devices in kernel parameters reusable
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Separate out the code to match a PCI device with a string (typically
+originating from a kernel parameter) from the
+pci_specified_resource_alignment() function into its own helper
+function.
 
-Could you help to review this series ?
+While we are at it, this change fixes the kernel style of the function
+(fixing a number of long lines and extra parentheses).
 
-Regards,
-Oza.
+Additionally, make the analogous change to the kernel parameter
+documentation: Separating the description of how to specify a PCI device
+into it's own section at the head of the pci= parameter.
 
-On 2018-06-22 15:28, Oza Pawandeep wrote:
-> These are follow up patches for the series which modifies ERR_FATAL 
-> handling.
-> although there were couple of problems existed before which, itis also 
-> fixing.
-> 
-> patch-1:
-> Fixes the problem where ERR_FATAL and ERR_NONFATAL status should be 
-> cleared
-> taking severity mask into account.
-> 
-> patch-2:
-> Takes care of clearing error fatal status
-> 
-> patch-3:
-> Follow up patch where no more need of handling ERR_FATAL
-> case.
-> 
-> patch-4:
-> Fixes clearing device status in case of uncorrectable errors.
-> (e.g. ERR_FATAL and ERR_NONFATAL)
-> 
-> patch-5:
-> Fixes clearing device status in case of correctable errors.
-> 
-> patch-6:
-> Follow up patch where no more need of handling pci_channel_io_frozen
-> in pcie_portdrv_slot_reset()
-> 
-> Oza Pawandeep (6):
->   PCI/AER: Take severity mask into account while clearing error bits
->   PCI/AER: Clear uncorrectable fatal error status bits
->   PCI/ERR: Cleanup ERR_FATAL of error broadcast
->   PCI/AER: Clear device error status bits during ERR_FATAL and
->     ERR_NONFATAL
->   PCI/AER: Fix correctable status bits clearing in device register
->   PCI/PORTDRV: Remove ERR_FATAL handling from pcie_portdrv_slot_reset()
-> 
->  drivers/pci/pcie/aer.c         | 35 
-> +++++++++++++++++++++++------------
->  drivers/pci/pcie/err.c         | 15 +++++++--------
->  drivers/pci/pcie/portdrv_pci.c | 18 ------------------
->  include/linux/aer.h            |  5 +++++
->  4 files changed, 35 insertions(+), 38 deletions(-)
+This patch should have no functional alterations.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Acked-by: Christian König <christian.koenig@amd.com>
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ Documentation/admin-guide/kernel-parameters.txt |  28 ++++-
+ drivers/pci/pci.c                               | 157 ++++++++++++++++--------
+ 2 files changed, 126 insertions(+), 59 deletions(-)
+
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index efc7aa7a0670..e783bcefadac 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -2994,7 +2994,26 @@
+ 			See header of drivers/block/paride/pcd.c.
+ 			See also Documentation/blockdev/paride.txt.
+ 
+-	pci=option[,option...]	[PCI] various PCI subsystem options:
++	pci=option[,option...]	[PCI] various PCI subsystem options.
++
++				Some options herein operate on a specific device
++				or a set of devices (<pci_dev>). These are
++				specified in one of the following formats:
++
++				[<domain>:]<bus>:<slot>.<func>
++				pci:<vendor>:<device>[:<subvendor>:<subdevice>]
++
++				Note: the first format specifies a PCI
++				bus/slot/function address which may change
++				if new hardware is inserted, if motherboard
++				firmware changes, or due to changes caused
++				by other kernel parameters. If the
++				domain is left unspecified, it is
++				taken to be zero. The second format
++				selects devices using IDs from the
++				configuration space which may match multiple
++				devices in the system.
++
+ 		earlydump	[X86] dump PCI config space before the kernel
+ 				changes anything
+ 		off		[X86] don't probe for the PCI bus
+@@ -3123,11 +3142,10 @@
+ 				window. The default value is 64 megabytes.
+ 		resource_alignment=
+ 				Format:
+-				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
+-				[<order of align>@]pci:<vendor>:<device>\
+-						[:<subvendor>:<subdevice>][; ...]
++				[<order of align>@]<pci_dev>[; ...]
+ 				Specifies alignment and device to reassign
+-				aligned memory resources.
++				aligned memory resources. How to
++				specify the device is described above.
+ 				If <order of align> is not specified,
+ 				PAGE_SIZE is used as alignment.
+ 				PCI-PCI bridge can be specified, if resource
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 97acba712e4e..6127155d4170 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -191,6 +191,92 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar)
+ EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
+ #endif
+ 
++/**
++ * pci_dev_str_match - test if a string matches a device
++ * @dev:    the PCI device to test
++ * @p:      string to match the device against
++ * @endptr: pointer to the string after the match
++ *
++ * Test if a string (typically from a kernel parameter) matches a specified
++ * PCI device. The string may be of one of the following formats:
++ *
++ *   [<domain>:]<bus>:<slot>.<func>
++ *   pci:<vendor>:<device>[:<subvendor>:<subdevice>]
++ *
++ * The first format specifies a PCI bus/slot/function address which
++ * may change if new hardware is inserted, if motherboard firmware changes,
++ * or due to changes caused in kernel parameters. If the domain is
++ * left unspecified, it is taken to be 0.
++ *
++ * The second format matches devices using IDs in the configuration
++ * space which may match multiple devices in the system. A value of 0
++ * for any field will match all devices. (Note: this differs from
++ * in-kernel code that uses PCI_ANY_ID which is ~0; this is for
++ * legacy reasons and convenience so users don't have to specify
++ * FFFFFFFFs on the command line.)
++ *
++ * Returns 1 if the string matches the device, 0 if it does not and
++ * a negative error code if the string cannot be parsed.
++ */
++static int pci_dev_str_match(struct pci_dev *dev, const char *p,
++			     const char **endptr)
++{
++	int ret;
++	int seg, bus, slot, func, count;
++	unsigned short vendor, device, subsystem_vendor, subsystem_device;
++
++	if (strncmp(p, "pci:", 4) == 0) {
++		/* PCI vendor/device (subvendor/subdevice) ids are specified */
++		p += 4;
++		ret = sscanf(p, "%hx:%hx:%hx:%hx%n", &vendor, &device,
++			     &subsystem_vendor, &subsystem_device, &count);
++		if (ret != 4) {
++			ret = sscanf(p, "%hx:%hx%n", &vendor, &device, &count);
++			if (ret != 2)
++				return -EINVAL;
++
++			subsystem_vendor = 0;
++			subsystem_device = 0;
++		}
++
++		p += count;
++
++		if ((!vendor || vendor == dev->vendor) &&
++		    (!device || device == dev->device) &&
++		    (!subsystem_vendor ||
++			    subsystem_vendor == dev->subsystem_vendor) &&
++		    (!subsystem_device ||
++			    subsystem_device == dev->subsystem_device))
++			goto found;
++
++	} else {
++		/* PCI Bus,Slot,Function ids are specified */
++		ret = sscanf(p, "%x:%x:%x.%x%n", &seg, &bus, &slot,
++			     &func, &count);
++		if (ret != 4) {
++			seg = 0;
++			ret = sscanf(p, "%x:%x.%x%n", &bus, &slot,
++				     &func, &count);
++			if (ret != 3)
++				return -EINVAL;
++		}
++
++		p += count;
++
++		if (seg == pci_domain_nr(dev->bus) &&
++		    bus == dev->bus->number &&
++		    slot == PCI_SLOT(dev->devfn) &&
++		    func == PCI_FUNC(dev->devfn))
++			goto found;
++	}
++
++	*endptr = p;
++	return 0;
++
++found:
++	*endptr = p;
++	return 1;
++}
+ 
+ static int __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
+ 				   u8 pos, int cap, int *ttl)
+@@ -5454,10 +5540,10 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
+ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 							bool *resize)
+ {
+-	int seg, bus, slot, func, align_order, count;
+-	unsigned short vendor, device, subsystem_vendor, subsystem_device;
++	int align_order, count;
+ 	resource_size_t align = pcibios_default_alignment();
+-	char *p;
++	const char *p;
++	int ret;
+ 
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+@@ -5477,58 +5563,21 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 		} else {
+ 			align_order = -1;
+ 		}
+-		if (strncmp(p, "pci:", 4) == 0) {
+-			/* PCI vendor/device (subvendor/subdevice) ids are specified */
+-			p += 4;
+-			if (sscanf(p, "%hx:%hx:%hx:%hx%n",
+-				&vendor, &device, &subsystem_vendor, &subsystem_device, &count) != 4) {
+-				if (sscanf(p, "%hx:%hx%n", &vendor, &device, &count) != 2) {
+-					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: pci:%s\n",
+-						p);
+-					break;
+-				}
+-				subsystem_vendor = subsystem_device = 0;
+-			}
+-			p += count;
+-			if ((!vendor || (vendor == dev->vendor)) &&
+-				(!device || (device == dev->device)) &&
+-				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
+-				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
+-				*resize = true;
+-				if (align_order == -1)
+-					align = PAGE_SIZE;
+-				else
+-					align = 1 << align_order;
+-				/* Found */
+-				break;
+-			}
+-		}
+-		else {
+-			if (sscanf(p, "%x:%x:%x.%x%n",
+-				&seg, &bus, &slot, &func, &count) != 4) {
+-				seg = 0;
+-				if (sscanf(p, "%x:%x.%x%n",
+-						&bus, &slot, &func, &count) != 3) {
+-					/* Invalid format */
+-					printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
+-						p);
+-					break;
+-				}
+-			}
+-			p += count;
+-			if (seg == pci_domain_nr(dev->bus) &&
+-				bus == dev->bus->number &&
+-				slot == PCI_SLOT(dev->devfn) &&
+-				func == PCI_FUNC(dev->devfn)) {
+-				*resize = true;
+-				if (align_order == -1)
+-					align = PAGE_SIZE;
+-				else
+-					align = 1 << align_order;
+-				/* Found */
+-				break;
+-			}
++
++		ret = pci_dev_str_match(dev, p, &p);
++		if (ret == 1) {
++			*resize = true;
++			if (align_order == -1)
++				align = PAGE_SIZE;
++			else
++				align = 1 << align_order;
++			break;
++		} else if (ret < 0) {
++			pr_err("PCI: Can't parse resource_alignment parameter: %s\n",
++			       p);
++			break;
+ 		}
++
+ 		if (*p != ';' && *p != ',') {
+ 			/* End of param or invalid format */
+ 			break;
+-- 
+2.11.0
