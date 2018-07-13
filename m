@@ -1,206 +1,169 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        Joao.Pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v7 02/11] PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
-Date: Fri,  6 Jul 2018 14:26:14 +0100
-Message-Id: <6344320a50764f1177febaa0d218cabcd8e43cbf.1530877028.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1530877028.git.gustavo.pimentel@synopsys.com>
-References: <cover.1530877028.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1530877028.git.gustavo.pimentel@synopsys.com>
-References: <cover.1530877028.git.gustavo.pimentel@synopsys.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 13 Jul 2018 17:31:57 -0600
+Message-Id: <20180713233158.19528-4-logang@deltatee.com>
+In-Reply-To: <20180713233158.19528-1-logang@deltatee.com>
+References: <20180713233158.19528-1-logang@deltatee.com>
+Subject: [PATCH v6 3/4] PCI: Introduce disable_acs_redir quirk
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change {cdns, dra7xx, artpec6, dw, rockchip}_pcie_ep_raise_irq() and
-pci_epc_raise_irq() signature, namely the interrupt_num variable type
-from u8 to u16 to accommodate 2048 maximum MSI-X interrupts.
+Intel SPT PCH hardware has an implementation of the ACS bits that
+does not comply with the PCI express standard. To deal with this
+the existing code has an enable_acs() quirk for the hardware.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Alan Douglas <adouglas@cadence.com>
-Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
-Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
-Acked-by: Joao Pinto <jpinto@synopsys.com>
+In order to be able to correctly disable the ACS redirect bits for
+all hardware we need an analagous quirk to disable those bits.
+
+This adds the function pci_dev_specific_disable_acs_redir() which
+behaves similarly to pci_dev_specific_enable_acs() but uses a new
+function pointer for quirks which disables the ACS redirect bits.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Move into here the pci_epc_raise_irq() signature change from patch
-file #1.
- - Move into here the {dra7xx, artpec6}_pcie_ep_raise_irq() signature
-changes from patch file #2.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Swap patch files position (#3 -> #2).
- - Moved dw_pcie_ep_raise_irq and dw_plat_pcie_ep_raise_irq functions
-signatures changes from patch file #3.
- - Changed rockchip_pcie_ep_raise_irq function signature.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
+ drivers/pci/quirks.c | 78 ++++++++++++++++++++++++++++++++++++++++++++--------
+ include/linux/pci.h  |  5 ++++
+ 2 files changed, 71 insertions(+), 12 deletions(-)
 
- drivers/pci/controller/dwc/pci-dra7xx.c           | 2 +-
- drivers/pci/controller/dwc/pcie-artpec6.c         | 2 +-
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 2 +-
- drivers/pci/controller/dwc/pcie-designware-plat.c | 2 +-
- drivers/pci/controller/dwc/pcie-designware.h      | 2 +-
- drivers/pci/controller/pcie-cadence-ep.c          | 3 ++-
- drivers/pci/controller/pcie-rockchip-ep.c         | 2 +-
- drivers/pci/endpoint/pci-epc-core.c               | 8 ++++----
- include/linux/pci-epc.h                           | 6 +++---
- 9 files changed, 15 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index 345aab5..ce9224a 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -370,7 +370,7 @@ static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index f439de848658..414b22dc06b8 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4553,27 +4553,81 @@ static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
+ 	return 0;
  }
  
- static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
--				 enum pci_epc_irq_type type, u8 interrupt_num)
-+				 enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
-index 321b56c..9a2474b 100644
---- a/drivers/pci/controller/dwc/pcie-artpec6.c
-+++ b/drivers/pci/controller/dwc/pcie-artpec6.c
-@@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
- }
- 
- static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
--				  enum pci_epc_irq_type type, u8 interrupt_num)
-+				  enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 8650416..b86cb99 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -242,7 +242,7 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
- }
- 
- static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
--				enum pci_epc_irq_type type, u8 interrupt_num)
-+				enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 5937fed..14b6b4b 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -78,7 +78,7 @@ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
- 
- static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 				     enum pci_epc_irq_type type,
--				     u8 interrupt_num)
-+				     u16 interrupt_num)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index bee4e25..9d581c0 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -191,7 +191,7 @@ enum dw_pcie_as_type {
- struct dw_pcie_ep_ops {
- 	void	(*ep_init)(struct dw_pcie_ep *ep);
- 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
--			     enum pci_epc_irq_type type, u8 interrupt_num);
-+			     enum pci_epc_irq_type type, u16 interrupt_num);
+-static const struct pci_dev_enable_acs {
++static int pci_quirk_disable_intel_spt_pch_acs_redir(struct pci_dev *dev)
++{
++	int pos;
++	u32 cap, ctrl;
++
++	if (!pci_quirk_intel_spt_pch_acs_match(dev))
++		return -ENOTTY;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++	if (!pos)
++		return -ENOTTY;
++
++	pci_read_config_dword(dev, pos + PCI_ACS_CAP, &cap);
++	pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl);
++
++	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
++
++	pci_write_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, ctrl);
++
++	pci_info(dev, "Intel SPT PCH root port workaround: disabled ACS redirect\n");
++
++	return 0;
++}
++
++static const struct pci_dev_acs_ops {
+ 	u16 vendor;
+ 	u16 device;
+ 	int (*enable_acs)(struct pci_dev *dev);
+-} pci_dev_enable_acs[] = {
+-	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_enable_intel_pch_acs },
+-	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_enable_intel_spt_pch_acs },
+-	{ 0 }
++	int (*disable_acs_redir)(struct pci_dev *dev);
++} pci_dev_acs_ops[] = {
++	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
++	  .enable_acs = pci_quirk_enable_intel_pch_acs,
++	},
++	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
++	  .enable_acs = pci_quirk_enable_intel_spt_pch_acs,
++	  .disable_acs_redir = pci_quirk_disable_intel_spt_pch_acs_redir
++	},
  };
  
- struct dw_pcie_ep {
-diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-index e3fe412..208d11f 100644
---- a/drivers/pci/controller/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/pcie-cadence-ep.c
-@@ -363,7 +363,8 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
- }
- 
- static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
--				  enum pci_epc_irq_type type, u8 interrupt_num)
-+				  enum pci_epc_irq_type type,
-+				  u16 interrupt_num)
+ int pci_dev_specific_enable_acs(struct pci_dev *dev)
  {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
- 
-diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/controller/pcie-rockchip-ep.c
-index 6beba8e..b8163c5 100644
---- a/drivers/pci/controller/pcie-rockchip-ep.c
-+++ b/drivers/pci/controller/pcie-rockchip-ep.c
-@@ -472,7 +472,7 @@ static int rockchip_pcie_ep_send_msi_irq(struct rockchip_pcie_ep *ep, u8 fn,
- 
- static int rockchip_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
- 				      enum pci_epc_irq_type type,
--				      u8 interrupt_num)
-+				      u16 interrupt_num)
- {
- 	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
- 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index 7d77bd0..c72e656 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -131,13 +131,13 @@ EXPORT_SYMBOL_GPL(pci_epc_start);
-  * pci_epc_raise_irq() - interrupt the host system
-  * @epc: the EPC device which has to interrupt the host
-  * @func_no: the endpoint function number in the EPC device
-- * @type: specify the type of interrupt; legacy or MSI
-- * @interrupt_num: the MSI interrupt number
-+ * @type: specify the type of interrupt; legacy, MSI or MSI-X
-+ * @interrupt_num: the MSI or MSI-X interrupt number
-  *
-- * Invoke to raise an MSI or legacy interrupt
-+ * Invoke to raise an legacy, MSI or MSI-X interrupt
-  */
- int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
--		      enum pci_epc_irq_type type, u8 interrupt_num)
-+		      enum pci_epc_irq_type type, u16 interrupt_num)
- {
+-	const struct pci_dev_enable_acs *i;
++	const struct pci_dev_acs_ops *p;
++	int i;
  	int ret;
- 	unsigned long flags;
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index 89f079f..bb2395b 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -35,7 +35,7 @@ enum pci_epc_irq_type {
-  *	     MSI-X capability register
-  * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
-  *	     from the MSI-X capability register
-- * @raise_irq: ops to raise a legacy or MSI interrupt
-+ * @raise_irq: ops to raise a legacy, MSI or MSI-X interrupt
-  * @start: ops to start the PCI link
-  * @stop: ops to stop the PCI link
-  * @owner: the module owner containing the ops
-@@ -56,7 +56,7 @@ struct pci_epc_ops {
- 	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
- 	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
- 	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
--			     enum pci_epc_irq_type type, u8 interrupt_num);
-+			     enum pci_epc_irq_type type, u16 interrupt_num);
- 	int	(*start)(struct pci_epc *epc);
- 	void	(*stop)(struct pci_epc *epc);
- 	struct module *owner;
-@@ -154,7 +154,7 @@ int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
- int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts);
- int pci_epc_get_msix(struct pci_epc *epc, u8 func_no);
- int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
--		      enum pci_epc_irq_type type, u8 interrupt_num);
-+		      enum pci_epc_irq_type type, u16 interrupt_num);
- int pci_epc_start(struct pci_epc *epc);
- void pci_epc_stop(struct pci_epc *epc);
- struct pci_epc *pci_epc_get(const char *epc_name);
+ 
+-	for (i = pci_dev_enable_acs; i->enable_acs; i++) {
+-		if ((i->vendor == dev->vendor ||
+-		     i->vendor == (u16)PCI_ANY_ID) &&
+-		    (i->device == dev->device ||
+-		     i->device == (u16)PCI_ANY_ID)) {
+-			ret = i->enable_acs(dev);
++	for (i = 0; i < ARRAY_SIZE(pci_dev_acs_ops); i++) {
++		p = &pci_dev_acs_ops[i];
++		if ((p->vendor == dev->vendor ||
++		     p->vendor == (u16)PCI_ANY_ID) &&
++		    (p->device == dev->device ||
++		     p->device == (u16)PCI_ANY_ID) &&
++		    p->enable_acs) {
++			ret = p->enable_acs(dev);
++			if (ret >= 0)
++				return ret;
++		}
++	}
++
++	return -ENOTTY;
++}
++
++int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
++{
++	const struct pci_dev_acs_ops *p;
++	int i;
++	int ret;
++
++	for (i = 0; i < ARRAY_SIZE(pci_dev_acs_ops); i++) {
++		p = &pci_dev_acs_ops[i];
++		if ((p->vendor == dev->vendor ||
++		     p->vendor == (u16)PCI_ANY_ID) &&
++		    (p->device == dev->device ||
++		     p->device == (u16)PCI_ANY_ID) &&
++		    p->disable_acs_redir) {
++			ret = p->disable_acs_redir(dev);
+ 			if (ret >= 0)
+ 				return ret;
+ 		}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 340029b2fb38..3b61068dc7d1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1878,6 +1878,7 @@ enum pci_fixup_pass {
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+ int pci_dev_specific_enable_acs(struct pci_dev *dev);
++int pci_dev_specific_disable_acs_redir(struct pci_dev *dev);
+ #else
+ static inline void pci_fixup_device(enum pci_fixup_pass pass,
+ 				    struct pci_dev *dev) { }
+@@ -1890,6 +1891,10 @@ static inline int pci_dev_specific_enable_acs(struct pci_dev *dev)
+ {
+ 	return -ENOTTY;
+ }
++static inline int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
++{
++	return -ENOTTY;
++}
+ #endif
+ 
+ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
 -- 
-2.7.4
+2.11.0
