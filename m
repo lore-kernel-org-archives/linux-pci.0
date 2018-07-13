@@ -1,127 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:38637 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726552AbeGPF1D (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2018 01:27:03 -0400
-Received: by mail-pf0-f195.google.com with SMTP id v15-v6so5691581pff.5
-        for <linux-pci@vger.kernel.org>; Sun, 15 Jul 2018 22:01:31 -0700 (PDT)
-Subject: Re: [PATCH v6 0/4] Add parameter for disabling ACS redirection for
- P2P
-To: Logan Gunthorpe <logang@deltatee.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Matthew Wilcox <willy@infradead.org>
-References: <20180713233158.19528-1-logang@deltatee.com>
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <710e15b2-89f8-a658-656f-84492ef78898@ozlabs.ru>
-Date: Mon, 16 Jul 2018 15:01:21 +1000
+Received: from mail.kernel.org ([198.145.29.99]:42968 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727283AbeGML6c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 13 Jul 2018 07:58:32 -0400
+Date: Fri, 13 Jul 2018 06:44:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 08/32] genirq: Synchronize only with single thread on
+ free_irq()
+Message-ID: <20180713114411.GI28466@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1529173804.git.lukas@wunner.de>
+ <83cfe0c826f1d793e2ead9032ef2109b5efa403a.1529173804.git.lukas@wunner.de>
+ <20180712222109.GE28466@bhelgaas-glaptop.roam.corp.google.com>
+ <20180713072109.GA23955@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <20180713233158.19528-1-logang@deltatee.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180713072109.GA23955@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/7/18 9:31 am, Logan Gunthorpe wrote:
-> Changes since v5:
-> * Add a quirk to handle the Intel SPT PCH case (as pointed out by Alex)
-> * Warn in the case that we try to disable ACS redirect on a device
->   that doesn't have the ACS capability (also suggested by Alex)
-> * Collect reviewed-by tag from Alex
-> * Rebased onto v4.18-rc4 (no conflicts)
+On Fri, Jul 13, 2018 at 09:21:09AM +0200, Lukas Wunner wrote:
+> On Thu, Jul 12, 2018 at 05:21:09PM -0500, Bjorn Helgaas wrote:
+> > On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
+> > > When pciehp is converted to threaded IRQ handling, removal of unplugged
+> > > devices below a PCIe hotplug port happens synchronously in the IRQ
+> > > thread.  Removal of devices typically entails a call to free_irq() by
+> > > their drivers.
+> > > 
+> > > If those devices share their IRQ with the hotplug port, free_irq()
+> > > deadlocks because it calls synchronize_irq() to wait for all hard IRQ
+> > > handlers as well as all threads sharing the IRQ to finish.
+> > > 
+> > > Actually it's sufficient to wait only for the IRQ thread of the removed
+> > > device, so call synchronize_hardirq() to wait for all hard IRQ handlers
+> > > to finish, but no longer for any threads.  Compensate by rearranging the
+> > > control flow in irq_wait_for_interrupt() such that the device's thread
+> > > is allowed to run one last time after kthread_stop() has been called.
+> > 
+> > I assume this would need to be merged along with the rest of the
+> > series, which should probably go through the PCI tree, but I'm
+> > definitely not qualified to review this IRQ patch.  And it would need
+> > an ack from Thomas in any case.
 > 
-> Changes since v4:
-> * Fixed a couple documentation mistakes spotted by Randy
-> 
-> Changes since v3:
-> * Removed some of the cruft that was copied from the resource_alignment
->   paramater (per Alex)
-> * A number of docuemntation fixes as noticed by Alex and Willy
-> 
-> Changes since v2:
-> * Rebased onto v4.18-rc1 (no conflicts)
-> * Minor tweaks to the documentation per Andy
-> * Removed the "path:" prefix and use the path parsing code
->   for simple devices (as it works the same). Per a suggestion from Alex
-> 
-> Changes since v1:
-> * Reworked pci_dev_str_match_path using strrchr as suggested by Alex
-> * Collected Christian's Acks
-> 
-> --
-> 
-> Hi,
-> 
-> As discussed in our PCI P2PDMA series, we'd like to add a kernel
-> parameter for selectively disabling ACS redirection for select
-> bridges. Seeing this turned out to be a small series in itself, we've
-> decided to send this separately from the P2P work.
-> 
-> This series generalizes the code already done for the resource_alignment
-> option that already exists. The first patch creates a helper function
-> to match PCI devices against strings based on the code that already
-> existed in pci_specified_resource_alignment().
-> 
-> The second patch expands the new helper to optionally take a path of
-> PCI devfns. This is to address Alex's renumbering concern when using
-> simple bus-devfns. The implementation is essentially how he described it and
-> similar to the Intel VT-d spec (Section 8.3.1).
-> 
-> The final patch adds the disable_acs_redir kernel parameter which takes
-> a list of PCI devices and will disable the ACS P2P Request Redirect,
-> ACS P2P Completion Redirect and ACS P2P Egress Control bits for the
-> selected devices. This allows P2P traffic between selected bridges and
-> seeing it's done at boot, before the IOMMU groups will be created, the
-> groups will match the security provided by ACS.
+> A v2 of this patch has already been merged through the tip tree on June 24,
+> it's in linux-next as commit 519cc8652b3a, and ISTR that I marked this patch
+> either as "Obsoleted" or "Not Applicable" in pci-patchwork.  There was no
+> build-dependency of the succeeding patches in the series on this patch,
+> hence merging through a different tree was possible.
 
-
-I am pretty sure it's been discussed but just to make sure I understand the
-whole picture - why exactly does ACS have to be disabled at the boot time?
-We could enable it, for example, for 2 devices in the same VFIO container
-if there are in isolatable part of the PCI tree, or we just do not want to
-make VFIO containers or QEMU aware of PCI hierarchy (I can see why, just
-double checking)? Thanks.
-
-
-
-
-> 
-> Thanks,
-> 
-> Logan
-> 
-> --
-> 
-> Logan Gunthorpe (4):
->   PCI: Make specifying PCI devices in kernel parameters reusable
->   PCI: Allow specifying devices using a base bus and path of devfns
->   PCI: Introduce disable_acs_redir quirk
->   PCI: Introduce the disable_acs_redir parameter
-> 
->  Documentation/admin-guide/kernel-parameters.txt |  41 +++-
->  drivers/pci/pci.c                               | 310 +++++++++++++++++++-----
->  drivers/pci/quirks.c                            |  78 +++++-
->  include/linux/pci.h                             |   5 +
->  4 files changed, 361 insertions(+), 73 deletions(-)
-> 
-> --
-> 2.11.0
-> 
-
-
--- 
-Alexey
+Perfect, thanks!
