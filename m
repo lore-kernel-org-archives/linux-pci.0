@@ -1,100 +1,191 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v12 01/12] PCI: dwc: Fix EP link notification implementation
-Date: Tue, 17 Jul 2018 11:31:21 +0200
-Message-Id: <3cefa89ce2e496e7627bd3c7ade93348230adc14.1531818979.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:48368 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729214AbeGMXtB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 13 Jul 2018 19:49:01 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 13 Jul 2018 17:31:58 -0600
+Message-Id: <20180713233158.19528-5-logang@deltatee.com>
+In-Reply-To: <20180713233158.19528-1-logang@deltatee.com>
+References: <20180713233158.19528-1-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v6 4/4] PCI: Introduce the disable_acs_redir parameter
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move specific features settings from EP shared code
-(pcie-designware-ep.c) to the driver (pcie-designware-plat.c).
+In order to support P2P traffic on a segment of the PCI hierarchy,
+we must be able to disable the ACS redirect bits for select
+PCI bridges. The bridges must be selected before the devices are
+discovered by the kernel and the IOMMU groups created. Therefore,
+a kernel command line parameter is created to specify devices
+which must have their ACS bits disabled.
 
-Previous implementation disables the EP link notification
-by default for all SoCs that uses EP DesignWare IP, which affects
-directly the dra7xx and artpec6 SoCs.
+The new parameter takes a list of devices separated by a semicolon.
+Each device specified will have it's ACS redirect bits disabled.
+This is similar to the existing 'resource_alignment' parameter.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+The ACS Request P2P Request Redirect, P2P Completion Redirect and P2P
+Egress Control bits are disabled which is sufficient to always allow
+passing P2P traffic uninterrupted. The bits are set after the kernel
+(optionally) enables the ACS bits itself. It is also done regardless of
+whether the kernel sets the bits or not seeing some BIOS firmware is known
+to set the bits on boot.
+
+If the user tries to disable the ACS redirct for a device without the
+ACS capability, a warning is printed to dmesg.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Acked-by: Christian König <christian.koenig@amd.com>
 ---
-Change v8->v9:
- - Created patch file.
-Change v9->v10:
- - Nothing changed, just to follow the patch set version.
-Change v10->v11:
- - Missed Kishon acknowledge.
-Change v11->v12:
- - Nothing changed, just to follow the patch set version.
+ Documentation/admin-guide/kernel-parameters.txt |  9 +++
+ drivers/pci/pci.c                               | 76 ++++++++++++++++++++++++-
+ 2 files changed, 83 insertions(+), 2 deletions(-)
 
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 14 ++++++--------
- drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +++
- 2 files changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 8650416..04092a7 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -386,15 +386,18 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		return -ENOMEM;
- 	ep->outbound_addr = addr;
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index a69947d9e14e..02634c4ab181 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3192,6 +3192,15 @@
+ 				Adding the window is slightly risky (it may
+ 				conflict with unreported devices), so this
+ 				taints the kernel.
++		disable_acs_redir=<pci_dev>[; ...]
++				Specify one or more PCI devices (in the format
++				specified above) separated by semicolons.
++				Each device specified will have the PCI ACS
++				redirect capabilities forced off which will
++				allow P2P traffic between devices through
++				bridges without forcing it upstream. Note:
++				this removes isolation between devices and
++				will make the IOMMU groups less granular.
  
--	if (ep->ops->ep_init)
--		ep->ops->ep_init(ep);
--
- 	epc = devm_pci_epc_create(dev, &epc_ops);
- 	if (IS_ERR(epc)) {
- 		dev_err(dev, "Failed to create epc device\n");
- 		return PTR_ERR(epc);
- 	}
- 
-+	ep->epc = epc;
-+	epc_set_drvdata(epc, ep);
-+
-+	if (ep->ops->ep_init)
-+		ep->ops->ep_init(ep);
-+
- 	ret = of_property_read_u8(np, "max-functions", &epc->max_functions);
- 	if (ret < 0)
- 		epc->max_functions = 1;
-@@ -413,11 +416,6 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		return -ENOMEM;
- 	}
- 
--	epc->features = EPC_FEATURE_NO_LINKUP_NOTIFIER;
--	EPC_FEATURE_SET_BAR(epc->features, BAR_0);
--
--	ep->epc = epc;
--	epc_set_drvdata(epc, ep);
- 	dw_pcie_setup(pci);
- 
- 	return 0;
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 5937fed..0ce3440 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -70,10 +70,13 @@ static const struct dw_pcie_ops dw_pcie_ops = {
- static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct pci_epc *epc = ep->epc;
- 	enum pci_barno bar;
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++)
- 		dw_pcie_ep_reset_bar(pci, bar);
-+
-+	epc->features |= EPC_FEATURE_NO_LINKUP_NOTIFIER;
+ 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+ 			Management.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 59638075b4df..195b93824e6c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2983,6 +2983,66 @@ void pci_request_acs(void)
+ 	pci_acs_enable = 1;
  }
  
- static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
++static const char *disable_acs_redir_param;
++
++/**
++ * pci_disable_acs_redir - disable ACS redirect capabilities
++ * @dev: the PCI device
++ *
++ * For only devices specified in the disable_acs_redir parameter.
++ */
++static void pci_disable_acs_redir(struct pci_dev *dev)
++{
++	int ret = 0;
++	const char *p;
++	int pos;
++	u16 ctrl;
++
++	if (!disable_acs_redir_param)
++		return;
++
++	p = disable_acs_redir_param;
++	while (*p) {
++		ret = pci_dev_str_match(dev, p, &p);
++		if (ret < 0) {
++			pr_info_once("PCI: Can't parse disable_acs_redir parameter: %s\n",
++				     disable_acs_redir_param);
++
++			break;
++		} else if (ret == 1) {
++			/* Found a match */
++			break;
++		}
++
++		if (*p != ';' && *p != ',') {
++			/* End of param or invalid format */
++			break;
++		}
++		p++;
++	}
++
++	if (ret != 1)
++		return;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++	if (!pos) {
++		pci_warn(dev, "cannot disable ACS redirect for this hardware as it does not have ACS capabilities\n");
++		return;
++	}
++
++	if (!pci_dev_specific_disable_acs_redir(dev))
++		return;
++
++	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
++
++	/* P2P Request & Completion Redirect */
++	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
++
++	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
++
++	pci_info(dev, "disabled ACS redirect\n");
++}
++
+ /**
+  * pci_std_enable_acs - enable ACS on devices using standard ACS capabilites
+  * @dev: the PCI device
+@@ -3022,12 +3082,22 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+ void pci_enable_acs(struct pci_dev *dev)
+ {
+ 	if (!pci_acs_enable)
+-		return;
++		goto disable_acs_redir;
+ 
+ 	if (!pci_dev_specific_enable_acs(dev))
+-		return;
++		goto disable_acs_redir;
+ 
+ 	pci_std_enable_acs(dev);
++
++disable_acs_redir:
++	/*
++	 * Note: pci_disable_acs_redir() must be called even if
++	 * ACS is not enabled by the kernel because the firmware
++	 * may have unexpectedly set the flags. So if we are told
++	 * to disable it, we should always disable it after setting
++	 * the kernel's default preferences.
++	 */
++	pci_disable_acs_redir(dev);
+ }
+ 
+ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+@@ -5967,6 +6037,8 @@ static int __init pci_setup(char *str)
+ 				pcie_bus_config = PCIE_BUS_PEER2PEER;
+ 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+ 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
++			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
++				disable_acs_redir_param = str + 18;
+ 			} else {
+ 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+ 						str);
 -- 
-2.7.4
+2.11.0
