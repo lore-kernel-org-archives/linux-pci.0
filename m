@@ -1,97 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yb0-f195.google.com ([209.85.213.195]:34576 "EHLO
-        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388321AbeGXQy5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jul 2018 12:54:57 -0400
-Received: by mail-yb0-f195.google.com with SMTP id e9-v6so1801765ybq.1
-        for <linux-pci@vger.kernel.org>; Tue, 24 Jul 2018 08:47:52 -0700 (PDT)
-Date: Tue, 24 Jul 2018 11:47:50 -0400
-From: Jon Mason <jdmason@kudzu.us>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        keith.busch@intel.com
-Subject: Re: [PATCH] PCI: Match Root Port's MPS to endpoint's MPSS when
- necessary
-Message-ID: <20180724154749.GC5871@kudzu.us>
-References: <20180718185158.149373.77902.stgit@tak.stowe>
+Received: from smtp.codeaurora.org ([198.145.29.96]:52030 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725900AbeGMF1f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2018 01:27:35 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180718185158.149373.77902.stgit@tak.stowe>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 13 Jul 2018 10:44:38 +0530
+From: poza@codeaurora.org
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
+In-Reply-To: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+References: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+Message-ID: <b5ba83a0fd8694905528f740a186b891@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 18, 2018 at 12:51:58PM -0600, Myron Stowe wrote:
-> In commit 27d868b5e6cf ("PCI: Set MPS to match upstream bridge"), we made
-> sure every device's MPS setting matches its upstream bridge, making it more
-> likely that a hot-added device will work in a system with an optimized MPS
-> configuration.
+On 2018-07-12 20:15, Bharat Kumar Gogada wrote:
+> Currently PCI_BRIDGE_CTL_SERR is being enabled only in
+> ACPI flow.
+> This bit is required for forwarding errors reported
+> by EP devices to upstream device.
+> This patch enables SERR# for Type-1 PCI device.
 > 
-> Recently I've started encountering systems where the endpoint device's MPSS
-> capability is less than its root port's current MPS value, thus the
-> endpoint is not capable of matching its upstream bridge's MPS setting (see:
-> bugzilla via "Link:" below).  This leaves the system vunerable - the
-> upstream root port could respond with larger sized TLPs than the endpoint
-> can handle, and the endpoint will consider them to be 'Malformed'.
-> 
-> One could use the "pci=pcie_bus_safe" kernel parameter to resolve the
-> issue, but, it both forces a user to have to supply a kernel parameter to
-> get the system to function reliable, and may end up limiting MPS settings
-> of other, non-related, sub-topologies which could benefit from maintaining
-> their larger values.
-> 
-> This patch augments Keith's approach to include tuning down a root port's
-> MPS setting when its hot-added endpoint device is not capable of matching
-> it.  The tuning down, so that both the root port and endpoint match, is
-> limited to root ports with downstream endpoint device sub-topologies.
-> 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=200527
-> Cc: Keith Busch <keith.busch@intel.com>
-> Cc: Jon Mason <jdmason@kudzu.us>
-
-Looks good to me
-Acked-by: Jon Mason <jdmason@kudzu.us>
-
-> Cc: Sinan Kaya <okaya@kernel.org>
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
 > ---
->  drivers/pci/probe.c |   12 ++++++++++--
->  1 file changed, 10 insertions(+), 2 deletions(-)
+>  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
+>  1 files changed, 23 insertions(+), 0 deletions(-)
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ac91b6f..2987bd9 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1670,7 +1670,7 @@ int pci_setup_device(struct pci_dev *dev)
->  static void pci_configure_mps(struct pci_dev *dev)
->  {
->  	struct pci_dev *bridge = pci_upstream_bridge(dev);
-> -	int mps, p_mps, rc;
-> +	int mps, mpss, p_mps, rc;
->  
->  	if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
->  		return;
-> @@ -1694,6 +1694,14 @@ static void pci_configure_mps(struct pci_dev *dev)
->  	if (pcie_bus_config != PCIE_BUS_DEFAULT)
->  		return;
->  
-> +	mpss = 128 << dev->pcie_mpss;
-> +	if (mpss < p_mps && pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT) {
-> +		pcie_set_mps(bridge, mpss);
-> +		pci_info(dev, "Upstream bridge's Max Payload Size set to %d (was %d, max %d)\n",
-> +			 mpss, p_mps, 128 << bridge->pcie_mpss);
-> +		p_mps = pcie_get_mps(bridge);
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index a2e8838..943e084 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -343,6 +343,19 @@ int pci_enable_pcie_error_reporting(struct pci_dev 
+> *dev)
+>  	if (!dev->aer_cap)
+>  		return -EIO;
+> 
+> +	if (!IS_ENABLED(CONFIG_ACPI) &&
+> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		u16 control;
+> +
+> +		/*
+> +		 * A Type-1 PCI bridge will not forward ERR_ messages coming
+> +		 * from an endpoint if SERR# forwarding is not enabled.
+> +		 */
+> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+> +		control |= PCI_BRIDGE_CTL_SERR;
+> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
 > +	}
 > +
->  	rc = pcie_set_mps(dev, p_mps);
->  	if (rc) {
->  		pci_warn(dev, "can't set Max Payload Size to %d; if necessary, use \"pci=pcie_bus_safe\" and report a bug\n",
-> @@ -1702,7 +1710,7 @@ static void pci_configure_mps(struct pci_dev *dev)
->  	}
->  
->  	pci_info(dev, "Max Payload Size set to %d (was %d, max %d)\n",
-> -		 p_mps, mps, 128 << dev->pcie_mpss);
-> +		 p_mps, mps, mpss);
+>  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, 
+> PCI_EXP_AER_FLAGS);
 >  }
->  
->  static struct hpp_type0 pci_default_type0 = {
+>  EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+> @@ -352,6 +365,16 @@ int pci_disable_pcie_error_reporting(struct 
+> pci_dev *dev)
+>  	if (pcie_aer_get_firmware_first(dev))
+>  		return -EIO;
 > 
+> +	if (!IS_ENABLED(CONFIG_ACPI) &&
+> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		u16 control;
+> +
+> +		/* Clear SERR Forwarding */
+> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+> +		control &= ~PCI_BRIDGE_CTL_SERR;
+> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+> +	}
+> +
+>  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+>  					  PCI_EXP_AER_FLAGS);
+>  }
+
+
+Should this configuration no be set by Firmware ? why should Linux 
+dictate it ?
+
+Regards,
+Oza.
