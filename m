@@ -1,108 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35592 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933267AbeGJRJE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Jul 2018 13:09:04 -0400
-Date: Tue, 10 Jul 2018 12:09:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Mark expected switch fall-throughs
-Message-ID: <20180710170902.GC188359@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180705145600.GA22099@embeddedor.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:35936 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730601AbeGMO2G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 13 Jul 2018 10:28:06 -0400
+Date: Fri, 13 Jul 2018 15:15:11 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Colin King <colin.king@canonical.com>
+Cc: Alan Douglas <adouglas@cadence.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: pcie-candence-ep: remove redundant variable mmc
+Message-ID: <20180713141511.GA18555@red-moon>
+References: <20180711080103.4581-1-colin.king@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180705145600.GA22099@embeddedor.com>
+In-Reply-To: <20180711080103.4581-1-colin.king@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 05, 2018 at 09:56:00AM -0500, Gustavo A. R. Silva wrote:
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
+On Wed, Jul 11, 2018 at 09:01:03AM +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Warning level 2 was used: -Wimplicit-fallthrough=2
+> Variable mmc is being assigned but is never used hence it is redundant
+> and can be removed.
 > 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-
-Applied to pci/misc for v4.19, thanks!
-
-If you'd like to apply this elsewhere as part of a larger series, feel
-free to do that.  Just add my ack and let me know to drop it.
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
+> Cleans up clang warning:
+> warning: variable 'mmc' set but not used [-Wunused-but-set-variable]
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 > ---
->  drivers/pci/hotplug/pciehp_ctrl.c | 2 ++
->  drivers/pci/hotplug/shpchp_ctrl.c | 2 ++
->  drivers/pci/pci.c                 | 1 +
->  drivers/pci/quirks.c              | 1 +
->  4 files changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index c684faa..cfc46e8 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -436,6 +436,7 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
->  	switch (p_slot->state) {
->  	case BLINKINGON_STATE:
->  		cancel_delayed_work(&p_slot->work);
-> +		/* fall through */
->  	case STATIC_STATE:
->  		p_slot->state = POWERON_STATE;
->  		mutex_unlock(&p_slot->lock);
-> @@ -473,6 +474,7 @@ int pciehp_sysfs_disable_slot(struct slot *p_slot)
->  	switch (p_slot->state) {
->  	case BLINKINGOFF_STATE:
->  		cancel_delayed_work(&p_slot->work);
-> +		/* fall through */
->  	case STATIC_STATE:
->  		p_slot->state = POWEROFF_STATE;
->  		mutex_unlock(&p_slot->lock);
-> diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
-> index 1047b56..1267dcc 100644
-> --- a/drivers/pci/hotplug/shpchp_ctrl.c
-> +++ b/drivers/pci/hotplug/shpchp_ctrl.c
-> @@ -654,6 +654,7 @@ int shpchp_sysfs_enable_slot(struct slot *p_slot)
->  	switch (p_slot->state) {
->  	case BLINKINGON_STATE:
->  		cancel_delayed_work(&p_slot->work);
-> +		/* fall through */
->  	case STATIC_STATE:
->  		p_slot->state = POWERON_STATE;
->  		mutex_unlock(&p_slot->lock);
-> @@ -689,6 +690,7 @@ int shpchp_sysfs_disable_slot(struct slot *p_slot)
->  	switch (p_slot->state) {
->  	case BLINKINGOFF_STATE:
->  		cancel_delayed_work(&p_slot->work);
-> +		/* fall through */
->  	case STATIC_STATE:
->  		p_slot->state = POWEROFF_STATE;
->  		mutex_unlock(&p_slot->lock);
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 97acba7..f5c6ab1 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2045,6 +2045,7 @@ static pci_power_t pci_target_state(struct pci_dev *dev, bool wakeup)
->  		case PCI_D2:
->  			if (pci_no_d1d2(dev))
->  				break;
-> +			/* else: fall through */
->  		default:
->  			target_state = state;
->  		}
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index f439de8..502275c 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2105,6 +2105,7 @@ static void quirk_netmos(struct pci_dev *dev)
->  		if (dev->subsystem_vendor == PCI_VENDOR_ID_IBM &&
->  				dev->subsystem_device == 0x0299)
->  			return;
-> +		/* else: fall through */
->  	case PCI_DEVICE_ID_NETMOS_9735:
->  	case PCI_DEVICE_ID_NETMOS_9745:
->  	case PCI_DEVICE_ID_NETMOS_9845:
+>  drivers/pci/controller/pcie-cadence-ep.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+
+Applied to pci/cadence for v4.19, thanks.
+
+Lorenzo
+
+> diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
+> index e3fe4124e3af..63549e03eae8 100644
+> --- a/drivers/pci/controller/pcie-cadence-ep.c
+> +++ b/drivers/pci/controller/pcie-cadence-ep.c
+> @@ -238,7 +238,7 @@ static int cdns_pcie_ep_get_msi(struct pci_epc *epc, u8 fn)
+>  	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+>  	struct cdns_pcie *pcie = &ep->pcie;
+>  	u32 cap = CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET;
+> -	u16 flags, mmc, mme;
+> +	u16 flags, mme;
+>  
+>  	/* Validate that the MSI feature is actually enabled. */
+>  	flags = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSI_FLAGS);
+> @@ -249,7 +249,6 @@ static int cdns_pcie_ep_get_msi(struct pci_epc *epc, u8 fn)
+>  	 * Get the Multiple Message Enable bitfield from the Message Control
+>  	 * register.
+>  	 */
+> -	mmc = (flags & PCI_MSI_FLAGS_QMASK) >> 1;
+>  	mme = (flags & PCI_MSI_FLAGS_QSIZE) >> 4;
+>  
+>  	return mme;
 > -- 
-> 2.7.4
+> 2.17.1
 > 
