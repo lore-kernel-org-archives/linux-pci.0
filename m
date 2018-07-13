@@ -1,150 +1,100 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Alex Williamson <alex.williamson@redhat.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Peter Xu <peterx@redhat.com>,
-        Zhenyu Wang <zhenyuw@linux.intel.com>,
-        linux-rdma@vger.kernel.org (open list:HFI1 DRIVER),
-        linux-kernel@vger.kernel.org (open list),
-        kvm@vger.kernel.org (open list:VFIO DRIVER)
-Subject: [PATCH V5 6/6] PCI: Rename pci_try_reset_bus() to pci_reset_bus()
-Date: Mon,  2 Jul 2018 18:58:55 -0400
-Message-Id: <1530572336-20296-7-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
-References: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 13 Jul 2018 17:31:54 -0600
+Message-Id: <20180713233158.19528-1-logang@deltatee.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v6 0/4] Add parameter for disabling ACS redirection for P2P
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that the old implementation of pci_reset_bus() is gone, replace
-pci_try_reset_bus() with pci_reset_bus().
+Changes since v5:
+* Add a quirk to handle the Intel SPT PCH case (as pointed out by Alex)
+* Warn in the case that we try to disable ACS redirect on a device
+  that doesn't have the ACS capability (also suggested by Alex)
+* Collect reviewed-by tag from Alex
+* Rebased onto v4.18-rc4 (no conflicts)
 
-Compared to the old implementation, new code will fail immmediately with
--EAGAIN if object lock cannot be obtained.
+Changes since v4:
+* Fixed a couple documentation mistakes spotted by Randy
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/infiniband/hw/hfi1/pcie.c |  2 +-
- drivers/pci/pci.c                 | 16 ++++++++--------
- drivers/vfio/pci/vfio_pci.c       |  4 ++--
- include/linux/pci.h               |  2 +-
- 4 files changed, 12 insertions(+), 12 deletions(-)
+Changes since v3:
+* Removed some of the cruft that was copied from the resource_alignment
+  paramater (per Alex)
+* A number of docuemntation fixes as noticed by Alex and Willy
 
-diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-index df4f2d3..baf7c32 100644
---- a/drivers/infiniband/hw/hfi1/pcie.c
-+++ b/drivers/infiniband/hw/hfi1/pcie.c
-@@ -905,7 +905,7 @@ static int trigger_sbr(struct hfi1_devdata *dd)
- 	 * delay after a reset is required.  Per spec requirements,
- 	 * the link is either working or not after that point.
- 	 */
--	return pci_try_reset_bus(dev);
-+	return pci_reset_bus(dev);
- }
- 
- /*
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7e3f2e9..bd19350 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4784,7 +4784,7 @@ int pci_probe_reset_slot(struct pci_slot *slot)
- EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
- 
- /**
-- * __pci_try_reset_slot - Try to reset a PCI slot
-+ * __pci_reset_slot - Try to reset a PCI slot
-  * @slot: PCI slot to reset
-  *`
-  * A PCI bus may host multiple slots, each slot may support a reset mechanism
-@@ -4798,7 +4798,7 @@ EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
-  *
-  * Same as above except return -EAGAIN if the slot cannot be locked
-  */
--static int __pci_try_reset_slot(struct pci_slot *slot)
-+static int __pci_reset_slot(struct pci_slot *slot)
- {
- 	int rc;
- 
-@@ -4854,12 +4854,12 @@ int pci_probe_reset_bus(struct pci_bus *bus)
- EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
- 
- /**
-- * __pci_try_reset_bus - Try to reset a PCI bus
-+ * __pci_reset_bus - Try to reset a PCI bus
-  * @bus: top level PCI bus to reset
-  *
-  * Same as above except return -EAGAIN if the bus cannot be locked
-  */
--static int __pci_try_reset_bus(struct pci_bus *bus)
-+static int __pci_reset_bus(struct pci_bus *bus)
- {
- 	int rc;
- 
-@@ -4882,17 +4882,17 @@ static int __pci_try_reset_bus(struct pci_bus *bus)
- }
- 
- /**
-- * pci_try_reset_bus - Try to reset a PCI bus
-+ * pci_reset_bus - Try to reset a PCI bus
-  * @pdev: top level PCI device to reset via slot/bus
-  *
-  * Same as above except return -EAGAIN if the bus cannot be locked
-  */
--int pci_try_reset_bus(struct pci_dev *pdev)
-+int pci_reset_bus(struct pci_dev *pdev)
- {
- 	return pci_probe_reset_slot(pdev->slot) ?
--	    __pci_try_reset_slot(pdev->slot) : __pci_try_reset_bus(pdev->bus);
-+	    __pci_reset_slot(pdev->slot) : __pci_reset_bus(pdev->bus);
- }
--EXPORT_SYMBOL_GPL(pci_try_reset_bus);
-+EXPORT_SYMBOL_GPL(pci_reset_bus);
- 
- /**
-  * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 71018ec..345c0dc 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -1010,7 +1010,7 @@ static long vfio_pci_ioctl(void *device_data,
- 						    &info, slot);
- 		if (!ret)
- 			/* User has access, do the reset */
--			ret = pci_try_reset_bus(vdev->pdev);
-+			ret = pci_reset_bus(vdev->pdev);
- 
- hot_reset_release:
- 		for (i--; i >= 0; i--)
-@@ -1372,7 +1372,7 @@ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev)
- 	}
- 
- 	if (needs_reset)
--		ret = pci_try_reset_bus(vdev->pdev);
-+		ret = pci_reset_bus(vdev->pdev);
- 
- put_devs:
- 	for (i = 0; i < devs.cur_index; i++) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ad0c89a..79a2c27 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1096,7 +1096,7 @@ int pci_reset_function_locked(struct pci_dev *dev);
- int pci_try_reset_function(struct pci_dev *dev);
- int pci_probe_reset_slot(struct pci_slot *slot);
- int pci_probe_reset_bus(struct pci_bus *bus);
--int pci_try_reset_bus(struct pci_dev *dev);
-+int pci_reset_bus(struct pci_dev *dev);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
--- 
-2.7.4
+Changes since v2:
+* Rebased onto v4.18-rc1 (no conflicts)
+* Minor tweaks to the documentation per Andy
+* Removed the "path:" prefix and use the path parsing code
+  for simple devices (as it works the same). Per a suggestion from Alex
+
+Changes since v1:
+* Reworked pci_dev_str_match_path using strrchr as suggested by Alex
+* Collected Christian's Acks
+
+--
+
+Hi,
+
+As discussed in our PCI P2PDMA series, we'd like to add a kernel
+parameter for selectively disabling ACS redirection for select
+bridges. Seeing this turned out to be a small series in itself, we've
+decided to send this separately from the P2P work.
+
+This series generalizes the code already done for the resource_alignment
+option that already exists. The first patch creates a helper function
+to match PCI devices against strings based on the code that already
+existed in pci_specified_resource_alignment().
+
+The second patch expands the new helper to optionally take a path of
+PCI devfns. This is to address Alex's renumbering concern when using
+simple bus-devfns. The implementation is essentially how he described it and
+similar to the Intel VT-d spec (Section 8.3.1).
+
+The final patch adds the disable_acs_redir kernel parameter which takes
+a list of PCI devices and will disable the ACS P2P Request Redirect,
+ACS P2P Completion Redirect and ACS P2P Egress Control bits for the
+selected devices. This allows P2P traffic between selected bridges and
+seeing it's done at boot, before the IOMMU groups will be created, the
+groups will match the security provided by ACS.
+
+Thanks,
+
+Logan
+
+--
+
+Logan Gunthorpe (4):
+  PCI: Make specifying PCI devices in kernel parameters reusable
+  PCI: Allow specifying devices using a base bus and path of devfns
+  PCI: Introduce disable_acs_redir quirk
+  PCI: Introduce the disable_acs_redir parameter
+
+ Documentation/admin-guide/kernel-parameters.txt |  41 +++-
+ drivers/pci/pci.c                               | 310 +++++++++++++++++++-----
+ drivers/pci/quirks.c                            |  78 +++++-
+ include/linux/pci.h                             |   5 +
+ 4 files changed, 361 insertions(+), 73 deletions(-)
+
+--
+2.11.0
