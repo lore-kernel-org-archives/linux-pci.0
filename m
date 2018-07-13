@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:39010 "EHLO
+Received: from smtprelay.synopsys.com ([198.182.47.9]:57993 "EHLO
         smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730281AbeGQKDS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 06:03:18 -0400
+        with ESMTP id S1730822AbeGMQME (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2018 12:12:04 -0400
 From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
         joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
@@ -11,13 +11,13 @@ To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
 Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v12 12/12] PCI: endpoint: Add MSI set maximum restriction
-Date: Tue, 17 Jul 2018 11:31:32 +0200
-Message-Id: <7d5a9708368226edd1d461dec4b719ea5bffdf6c.1531818979.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v10 12/12] PCI: endpoint: Add MSI set maximum restriction
+Date: Fri, 13 Jul 2018 17:56:44 +0200
+Message-Id: <9dfb92025894fa5c7bc8f08ae43a58c2001319d6.1531496321.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
@@ -37,10 +37,6 @@ Change v7->v8:
 Change v8->v9:
  - Nothing changed, just to follow the patch set version.
 Change v9->v10:
- - Nothing changed, just to follow the patch set version.
-Change v10->v11:
- - Nothing changed, just to follow the patch set version.
-Change v11->v12:
  - Nothing changed, just to follow the patch set version.
 
  drivers/pci/endpoint/pci-epc-core.c | 3 ++-
