@@ -1,100 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Fri, 13 Jul 2018 17:31:54 -0600
-Message-Id: <20180713233158.19528-1-logang@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:46140 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725913AbeGNHdm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 14 Jul 2018 03:33:42 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH v6 0/4] Add parameter for disabling ACS redirection for P2P
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Sat, 14 Jul 2018 12:45:38 +0530
+From: poza@codeaurora.org
+To: Bharat Kumar Gogada <bharatku@xilinx.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com, linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
+In-Reply-To: <BL0PR02MB4849D9F256912CC9B869A20EA5580@BL0PR02MB4849.namprd02.prod.outlook.com>
+References: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+ <b5ba83a0fd8694905528f740a186b891@codeaurora.org>
+ <BL0PR02MB4849D9F256912CC9B869A20EA5580@BL0PR02MB4849.namprd02.prod.outlook.com>
+Message-ID: <3bd31b729f9f335fcd906a8164c0a4cb@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes since v5:
-* Add a quirk to handle the Intel SPT PCH case (as pointed out by Alex)
-* Warn in the case that we try to disable ACS redirect on a device
-  that doesn't have the ACS capability (also suggested by Alex)
-* Collect reviewed-by tag from Alex
-* Rebased onto v4.18-rc4 (no conflicts)
+On 2018-07-13 19:25, Bharat Kumar Gogada wrote:
+>> > Currently PCI_BRIDGE_CTL_SERR is being enabled only in ACPI flow.
+>> > This bit is required for forwarding errors reported by EP devices to
+>> > upstream device.
+>> > This patch enables SERR# for Type-1 PCI device.
+>> >
+>> > Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+>> > ---
+>> >  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
+>> >  1 files changed, 23 insertions(+), 0 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c index
+>> > a2e8838..943e084 100644
+>> > --- a/drivers/pci/pcie/aer.c
+>> > +++ b/drivers/pci/pcie/aer.c
+>> > @@ -343,6 +343,19 @@ int pci_enable_pcie_error_reporting(struct
+>> > pci_dev
+>> > *dev)
+>> >  	if (!dev->aer_cap)
+>> >  		return -EIO;
+>> >
+>> > +	if (!IS_ENABLED(CONFIG_ACPI) &&
+>> > +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+>> > +		u16 control;
+>> > +
+>> > +		/*
+>> > +		 * A Type-1 PCI bridge will not forward ERR_ messages
+>> coming
+>> > +		 * from an endpoint if SERR# forwarding is not enabled.
+>> > +		 */
+>> > +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL,
+>> &control);
+>> > +		control |= PCI_BRIDGE_CTL_SERR;
+>> > +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+>> > +	}
+>> > +
+>> >  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
+>> > PCI_EXP_AER_FLAGS);  }
+>> > EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+>> > @@ -352,6 +365,16 @@ int pci_disable_pcie_error_reporting(struct
+>> > pci_dev *dev)
+>> >  	if (pcie_aer_get_firmware_first(dev))
+>> >  		return -EIO;
+>> >
+>> > +	if (!IS_ENABLED(CONFIG_ACPI) &&
+>> > +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+>> > +		u16 control;
+>> > +
+>> > +		/* Clear SERR Forwarding */
+>> > +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL,
+>> &control);
+>> > +		control &= ~PCI_BRIDGE_CTL_SERR;
+>> > +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+>> > +	}
+>> > +
+>> >  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+>> >  					  PCI_EXP_AER_FLAGS);
+>> >  }
+>> 
+>> 
+>> Should this configuration no be set by Firmware ? why should Linux 
+>> dictate it
+>> ?
+> Hi Oza, Can you please let us know why this should be set by firmware ?
+> Spec clearly states ERR_CORR,ERR_FATAL/NON FATAL will be forwarded
+> only if this bit is set.
+> If linux AER service is being enabled without checking/setting this
+> bit, then AER service will
+> not do anything even ERR_* is seen on link.
+> 
+> Regards,
+> Bharat
 
-Changes since v4:
-* Fixed a couple documentation mistakes spotted by Randy
 
-Changes since v3:
-* Removed some of the cruft that was copied from the resource_alignment
-  paramater (per Alex)
-* A number of docuemntation fixes as noticed by Alex and Willy
+The ERR_* to be forwarded or not to be forwarded could be decision of 
+the platform.
+hence I think it is best left to firmware to decide if it want to enable 
+this for particular platform.
 
-Changes since v2:
-* Rebased onto v4.18-rc1 (no conflicts)
-* Minor tweaks to the documentation per Andy
-* Removed the "path:" prefix and use the path parsing code
-  for simple devices (as it works the same). Per a suggestion from Alex
+although,
+There are 2 cases
+Hotplug capable bridge and otherwise.
 
-Changes since v1:
-* Reworked pci_dev_str_match_path using strrchr as suggested by Alex
-* Collected Christian's Acks
+1) If Firmware sets them, I do not think during enumeraion linux will 
+loose those settings.
 
---
+2) I do not see any integration of hotplug with AER currently, so if the 
+PCIe switch is plugged into Hotplug
+capable RP, I am not very sure if this functions get called.
 
-Hi,
+Keith, Lukas and Bjorn any comments ?
 
-As discussed in our PCI P2PDMA series, we'd like to add a kernel
-parameter for selectively disabling ACS redirection for select
-bridges. Seeing this turned out to be a small series in itself, we've
-decided to send this separately from the P2P work.
-
-This series generalizes the code already done for the resource_alignment
-option that already exists. The first patch creates a helper function
-to match PCI devices against strings based on the code that already
-existed in pci_specified_resource_alignment().
-
-The second patch expands the new helper to optionally take a path of
-PCI devfns. This is to address Alex's renumbering concern when using
-simple bus-devfns. The implementation is essentially how he described it and
-similar to the Intel VT-d spec (Section 8.3.1).
-
-The final patch adds the disable_acs_redir kernel parameter which takes
-a list of PCI devices and will disable the ACS P2P Request Redirect,
-ACS P2P Completion Redirect and ACS P2P Egress Control bits for the
-selected devices. This allows P2P traffic between selected bridges and
-seeing it's done at boot, before the IOMMU groups will be created, the
-groups will match the security provided by ACS.
-
-Thanks,
-
-Logan
-
---
-
-Logan Gunthorpe (4):
-  PCI: Make specifying PCI devices in kernel parameters reusable
-  PCI: Allow specifying devices using a base bus and path of devfns
-  PCI: Introduce disable_acs_redir quirk
-  PCI: Introduce the disable_acs_redir parameter
-
- Documentation/admin-guide/kernel-parameters.txt |  41 +++-
- drivers/pci/pci.c                               | 310 +++++++++++++++++++-----
- drivers/pci/quirks.c                            |  78 +++++-
- include/linux/pci.h                             |   5 +
- 4 files changed, 361 insertions(+), 73 deletions(-)
-
---
-2.11.0
+Regards,
+Oza.
