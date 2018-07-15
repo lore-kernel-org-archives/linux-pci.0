@@ -1,113 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39474 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731637AbeHAA3l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jul 2018 20:29:41 -0400
-Date: Tue, 31 Jul 2018 17:47:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bhelgaas@google.com
-Subject: Re: [PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
-Message-ID: <20180731224706.GO45322@bhelgaas-glaptop.roam.corp.google.com>
-References: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:46066 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726277AbeGOQ3r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jul 2018 12:29:47 -0400
+Received: by mail-lj1-f195.google.com with SMTP id q5-v6so27925555ljh.12
+        for <linux-pci@vger.kernel.org>; Sun, 15 Jul 2018 09:06:21 -0700 (PDT)
+Subject: [PATCH 2/8] PCI: of: Fix I/O space page leak
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-renesas-soc@vger.kernel.org
+References: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
+Message-ID: <181e8c62-b486-c6b1-4fce-f32cbf377cdd@cogentembedded.com>
+Date: Sun, 15 Jul 2018 19:06:19 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+In-Reply-To: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 12, 2018 at 08:15:19PM +0530, Bharat Kumar Gogada wrote:
-> Currently PCI_BRIDGE_CTL_SERR is being enabled only in
-> ACPI flow.
-> This bit is required for forwarding errors reported
-> by EP devices to upstream device.
-> This patch enables SERR# for Type-1 PCI device.
+When testing the R-Car PCIe driver on the Condor board,  I noticed that if
+I left  the PCIe PHY driver disabled, the kernel crashed with this BUG:
 
-This does seem broken.
+[    1.225819] kernel BUG at lib/ioremap.c:72!
+[    1.230007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+[    1.235496] Modules linked in:
+[    1.238561] CPU: 0 PID: 39 Comm: kworker/0:1 Not tainted 4.17.0-dirty #1092
+[    1.245526] Hardware name: Renesas Condor board based on r8a77980 (DT)
+[    1.252075] Workqueue: events deferred_probe_work_func
+[    1.257220] pstate: 80000005 (Nzcv daif -PAN -UAO)
+[    1.262024] pc : ioremap_page_range+0x370/0x3c8
+[    1.266558] lr : ioremap_page_range+0x40/0x3c8
+[    1.271002] sp : ffff000008da39e0
+[    1.274317] x29: ffff000008da39e0 x28: 00e8000000000f07
+[    1.279636] x27: ffff7dfffee00000 x26: 0140000000000000
+[    1.284954] x25: ffff7dfffef00000 x24: 00000000000fe100
+[    1.290272] x23: ffff80007b906000 x22: ffff000008ab8000
+[    1.295590] x21: ffff000008bb1d58 x20: ffff7dfffef00000
+[    1.300909] x19: ffff800009c30fb8 x18: 0000000000000001
+[    1.306226] x17: 00000000000152d0 x16: 00000000014012d0
+[    1.311544] x15: 0000000000000000 x14: 0720072007200720
+[    1.316862] x13: 0720072007200720 x12: 0720072007200720
+[    1.322180] x11: 0720072007300730 x10: 00000000000000ae
+[    1.327498] x9 : 0000000000000000 x8 : ffff7dffff000000                      
+[    1.332816] x7 : 0000000000000000 x6 : 0000000000000100
+[    1.338134] x5 : 0000000000000000 x4 : 000000007b906000
+[    1.343452] x3 : ffff80007c61a880 x2 : ffff7dfffeefffff
+[    1.348770] x1 : 0000000040000000 x0 : 00e80000fe100f07
+[    1.354090] Process kworker/0:1 (pid: 39, stack limit = 0x        (ptrval))  
+[    1.361056] Call trace:
+[    1.363504]  ioremap_page_range+0x370/0x3c8
+[    1.367695]  pci_remap_iospace+0x7c/0xac
+[    1.371624]  pci_parse_request_of_pci_ranges+0x13c/0x190
+[    1.376945]  rcar_pcie_probe+0x4c/0xb04
+[    1.380786]  platform_drv_probe+0x50/0xbc
+[    1.384799]  driver_probe_device+0x21c/0x308
+[    1.389072]  __device_attach_driver+0x98/0xc8
+[    1.393431]  bus_for_each_drv+0x54/0x94
+[    1.397269]  __device_attach+0xc4/0x12c
+[    1.401107]  device_initial_probe+0x10/0x18
+[    1.405292]  bus_probe_device+0x90/0x98
+[    1.409130]  deferred_probe_work_func+0xb0/0x150
+[    1.413756]  process_one_work+0x12c/0x29c
+[    1.417768]  worker_thread+0x200/0x3fc
+[    1.421522]  kthread+0x108/0x134
+[    1.424755]  ret_from_fork+0x10/0x18
+[    1.428334] Code: f9004ba2 54000080 aa0003fb 17ffff48 (d4210000)
 
-Figure 6-3 in PCIe r4.0, sec 6.2.6, would be a helpful reference to
-include in the commit log.
+It turned out that pci_remap_iospace() wasn't undone when the driver's
+probe failed, and since devm_phy_optional_get() returned -EPROBE_DEFER,
+the probe was retried,  finally causing the BUG due to trying to remap
+already remapped pages.
 
-Semi-related question: there are about 40 drivers that call
-pci_enable_pcie_error_reporting() and
-pci_disable_pcie_error_reporting().  I see that the PCI core
-calls pci_enable_pcie_error_reporting() for Root Ports and Switch
-Ports in this path:
+The  most feasible solution seemed to introduce devm_pci_remap_iospace() --
+which was done in the XGene PCIe driver patch posted earlier...
 
-  aer_probe                     # for root ports only
-    aer_enable_rootport
-      set_downstream_devices_error_reporting
-        set_device_error_reporting
-          if (ROOT_PORT || UPSTREAM || DOWNSTREAM)
-            pci_enable_pcie_error_reporting
-        pci_walk_bus(..., set_device_error_reporting)
+Fixes: dbf9826d5797 ("PCI: generic: Convert to DT resource parsing API")
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-But the core doesn't call pci_enable_pcie_error_reporting() for
-endpoints.  I wonder why not.  Could we?  And then remove the calls
-from those drivers?  If PCI_EXP_AER_FLAGS should only be set if the
-driver is prepared, the pci_driver.err_handler would be a good hint.
-But I suspect we could do something sensible and at least report
-errors even if the driver doesn't have err_handler callbacks.
+---
+ drivers/pci/of.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On MIPS Octeon, it looks like pcibios_plat_dev_init() does already set
-PCI_EXP_AER_FLAGS for every device.
-
-But this question is obviously far beyond the scope of this current
-patch.
-
-> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> ---
->  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
->  1 files changed, 23 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index a2e8838..943e084 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -343,6 +343,19 @@ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
->  	if (!dev->aer_cap)
->  		return -EIO;
->  
-> +	if (!IS_ENABLED(CONFIG_ACPI) &&
-> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-
-I think this test needs to be refined a little bit.  If the kernel
-happens to be built with CONFIG_ACPI=y but the current platform
-doesn't support ACPI, we still want to set PCI_BRIDGE_CTL_SERR,
-don't we?
-
-> +		u16 control;
-> +
-> +		/*
-> +		 * A Type-1 PCI bridge will not forward ERR_ messages coming
-> +		 * from an endpoint if SERR# forwarding is not enabled.
-> +		 */
-> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
-> +		control |= PCI_BRIDGE_CTL_SERR;
-> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
-> +	}
-> +
->  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
->  }
->  EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
-> @@ -352,6 +365,16 @@ int pci_disable_pcie_error_reporting(struct pci_dev *dev)
->  	if (pcie_aer_get_firmware_first(dev))
->  		return -EIO;
->  
-> +	if (!IS_ENABLED(CONFIG_ACPI) &&
-> +	    dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-> +		u16 control;
-> +
-> +		/* Clear SERR Forwarding */
-> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
-> +		control &= ~PCI_BRIDGE_CTL_SERR;
-> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
-> +	}
-> +
->  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
->  					  PCI_EXP_AER_FLAGS);
->  }
-> -- 
-> 1.7.1
-> 
+Index: pci/drivers/pci/of.c
+===================================================================
+--- pci.orig/drivers/pci/of.c
++++ pci/drivers/pci/of.c
+@@ -612,7 +612,7 @@ int pci_parse_request_of_pci_ranges(stru
+ 
+ 		switch (resource_type(res)) {
+ 		case IORESOURCE_IO:
+-			err = pci_remap_iospace(res, iobase);
++			err = devm_pci_remap_iospace(dev, res, iobase);
+ 			if (err) {
+ 				dev_warn(dev, "error %d: failed to map resource %pR\n",
+ 					 err, res);
