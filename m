@@ -1,61 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.11.71.1]:49329 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932145AbeGBA71 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 1 Jul 2018 20:59:27 -0400
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Sam Bobroff <sbobroff@linux.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, bryantly@linux.vnet.ibm.com
-Subject: Re: [PATCH v2 1/1] powerpc/pseries: fix EEH recovery of some IOV devices
-In-Reply-To: <7598ffeb48c16c88a34937ad93b18f806222b8df.1527208281.git.sbobroff@linux.ibm.com>
-References: <7598ffeb48c16c88a34937ad93b18f806222b8df.1527208281.git.sbobroff@linux.ibm.com>
-Date: Mon, 02 Jul 2018 10:59:24 +1000
-Message-ID: <87in5ymp03.fsf@concordia.ellerman.id.au>
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:37540 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726485AbeGOQvt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jul 2018 12:51:49 -0400
+Received: by mail-lf0-f67.google.com with SMTP id j8-v6so30550312lfb.4
+        for <linux-pci@vger.kernel.org>; Sun, 15 Jul 2018 09:28:19 -0700 (PDT)
+Subject: [PATCH 6/8] PCI: faraday: Fix I/O space page leak
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
+Message-ID: <40e93796-2d35-a560-929c-0ab392872735@cogentembedded.com>
+Date: Sun, 15 Jul 2018 19:28:17 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sam Bobroff <sbobroff@linux.ibm.com> writes:
+When testing the R-Car PCIe driver on the Condor board, I noticed that iff
+I left  the PCIe PHY driver disabled, the kernel crashed with this BUG:
 
-> EEH recovery currently fails on pSeries for some IOV capable PCI
-> devices, if CONFIG_PCI_IOV is on and the hypervisor doesn't provide
-> certain device tree properties for the device. (Found on an IOV
-> capable device using the ipr driver.)
->
-> Recovery fails in pci_enable_resources() at the check on r->parent,
-> because r->flags is set and r->parent is not.  This state is due to
-> sriov_init() setting the start, end and flags members of the IOV BARs
-> but the parent not being set later in
-> pseries_pci_fixup_iov_resources(), because the
-> "ibm,open-sriov-vf-bar-info" property is missing.
->
-> Correct this by zeroing the resource flags for IOV BARs when they
-> can't be configured.
->
-> Signed-off-by: Sam Bobroff <sbobroff@linux.ibm.com>
-> ---
-> Hi,
->
-> This is a fix to allow EEH recovery to succeed in a specific situation,
-> which I've tried to explain in the commit message.
->
-> As with the RFC version, the IOV BARs are disabled by setting the resource
-> flags to 0 but the other fields are now left as-is because that is what is done
-> elsewhere (see sriov_init() and __pci_read_base()).
->
-> I've also examined the concern raised by Bjorn Helgaas, that VFs could be
-> enabled later after the BARs are disabled, and it already seems safe: enabling
-> VFs (on pseries) depends on another device tree property,
-> "ibm,number-of-configurable-vfs" as well as support for the RTAS function
-> "ibm_map_pes". Since these are all part of the hypervisor's support for IOV it
-> seems unlikely that we would ever see some of them but not all. (None are
-> currently provided by QEMU/KVM.) (Additionally, the ipr driver on which the EEH
-> recovery failure was discovered doesn't even seem to have SR-IOV support so it
-> certainly can't enable VFs.)
+[    1.225819] kernel BUG at lib/ioremap.c:72!
+[    1.230007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+[    1.235496] Modules linked in:
+[    1.238561] CPU: 0 PID: 39 Comm: kworker/0:1 Not tainted 4.17.0-dirty #1092
+[    1.245526] Hardware name: Renesas Condor board based on r8a77980 (DT)
+[    1.252075] Workqueue: events deferred_probe_work_func
+[    1.257220] pstate: 80000005 (Nzcv daif -PAN -UAO)
+[    1.262024] pc : ioremap_page_range+0x370/0x3c8
+[    1.266558] lr : ioremap_page_range+0x40/0x3c8
+[    1.271002] sp : ffff000008da39e0
+[    1.274317] x29: ffff000008da39e0 x28: 00e8000000000f07
+[    1.279636] x27: ffff7dfffee00000 x26: 0140000000000000
+[    1.284954] x25: ffff7dfffef00000 x24: 00000000000fe100
+[    1.290272] x23: ffff80007b906000 x22: ffff000008ab8000
+[    1.295590] x21: ffff000008bb1d58 x20: ffff7dfffef00000
+[    1.300909] x19: ffff800009c30fb8 x18: 0000000000000001
+[    1.306226] x17: 00000000000152d0 x16: 00000000014012d0
+[    1.311544] x15: 0000000000000000 x14: 0720072007200720
+[    1.316862] x13: 0720072007200720 x12: 0720072007200720
+[    1.322180] x11: 0720072007300730 x10: 00000000000000ae
+[    1.327498] x9 : 0000000000000000 x8 : ffff7dffff000000                      
+[    1.332816] x7 : 0000000000000000 x6 : 0000000000000100
+[    1.338134] x5 : 0000000000000000 x4 : 000000007b906000
+[    1.343452] x3 : ffff80007c61a880 x2 : ffff7dfffeefffff
+[    1.348770] x1 : 0000000040000000 x0 : 00e80000fe100f07
+[    1.354090] Process kworker/0:1 (pid: 39, stack limit = 0x        (ptrval))  
+[    1.361056] Call trace:
+[    1.363504]  ioremap_page_range+0x370/0x3c8
+[    1.367695]  pci_remap_iospace+0x7c/0xac
+[    1.371624]  pci_parse_request_of_pci_ranges+0x13c/0x190
+[    1.376945]  rcar_pcie_probe+0x4c/0xb04
+[    1.380786]  platform_drv_probe+0x50/0xbc
+[    1.384799]  driver_probe_device+0x21c/0x308
+[    1.389072]  __device_attach_driver+0x98/0xc8
+[    1.393431]  bus_for_each_drv+0x54/0x94
+[    1.397269]  __device_attach+0xc4/0x12c
+[    1.401107]  device_initial_probe+0x10/0x18
+[    1.405292]  bus_probe_device+0x90/0x98
+[    1.409130]  deferred_probe_work_func+0xb0/0x150
+[    1.413756]  process_one_work+0x12c/0x29c
+[    1.417768]  worker_thread+0x200/0x3fc
+[    1.421522]  kthread+0x108/0x134
+[    1.424755]  ret_from_fork+0x10/0x18
+[    1.428334] Code: f9004ba2 54000080 aa0003fb 17ffff48 (d4210000)
 
-Can you fold/reword the above into the change log, it seems like useful
-detail.
+It turned out that pci_remap_iospace() wasn't undone when the driver's
+probe failed, and since devm_phy_optional_get() returned -EPROBE_DEFER,
+the probe was retried,  finally causing the BUG due to trying to remap
+already remapped pages.
 
-cheers
+The Faraday PCI driver has the same issue.  The most feasible solution
+seemed to introduce devm_pci_remap_iospace() -- which was done in the
+XGene  PCIe  driver patch posted earlier...
+
+Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+---
+ drivers/pci/controller/pci-ftpci100.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: pci/drivers/pci/controller/pci-ftpci100.c
+===================================================================
+--- pci.orig/drivers/pci/controller/pci-ftpci100.c
++++ pci/drivers/pci/controller/pci-ftpci100.c
+@@ -503,7 +503,7 @@ static int faraday_pci_probe(struct plat
+ 				dev_err(dev, "illegal IO mem size\n");
+ 				return -EINVAL;
+ 			}
+-			ret = pci_remap_iospace(io, io_base);
++			ret = devm_pci_remap_iospace(dev, io, io_base);
+ 			if (ret) {
+ 				dev_warn(dev, "error %d: failed to map resource %pR\n",
+ 					 ret, io);
