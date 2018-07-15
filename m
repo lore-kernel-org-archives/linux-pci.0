@@ -1,110 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40012 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932254AbeGCPna (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2018 11:43:30 -0400
-Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
- reset
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
- <1530571967-19099-4-git-send-email-okaya@codeaurora.org>
- <20180703143434.GA4086@wunner.de>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <12fc8de5-ff03-cb00-52cb-25a43c71d03a@codeaurora.org>
-Date: Tue, 3 Jul 2018 11:43:26 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH 3/8] PCI: versatile: Fix I/O space page leak
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Rob Herring <robh@kernel.org>
+References: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
+Message-ID: <6e75e0be-eee4-9a92-4d33-994ae393d2db@cogentembedded.com>
+Date: Sun, 15 Jul 2018 19:08:14 +0300
 MIME-Version: 1.0
-In-Reply-To: <20180703143434.GA4086@wunner.de>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/3/2018 10:34 AM, Lukas Wunner wrote:
-> On Mon, Jul 02, 2018 at 06:52:47PM -0400, Sinan Kaya wrote:
->> @@ -308,8 +310,17 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
->>  		pci_dev_put(pdev);
->>  	}
->>  
->> +	hpsvc = pcie_port_find_service(udev, PCIE_PORT_SERVICE_HP);
->> +	hpdev = pcie_port_find_device(udev, PCIE_PORT_SERVICE_HP);
->> +
->> +	if (hpdev && hpsvc)
->> +		hpsvc->mask_irq(to_pcie_device(hpdev));
->> +
->>  	result = reset_link(udev, service);
->>  
->> +	if (hpdev && hpsvc)
->> +		hpsvc->unmask_irq(to_pcie_device(hpdev));
->> +
-> 
-> We've already got the ->reset_slot callback in struct hotplug_slot_ops,
-> I'm wondering if we really need additional ones for this use case.
-> 
-> If you just do...
-> 
-> 	if (!pci_probe_reset_slot(dev->slot))
-> 		pci_reset_slot(dev->slot)
-> 	else {
-> 		/* regular code path */
-> 	}
-> 
-> would that not be equivalent?
+When testing the R-Car PCIe driver on the Condor board, I noticed that iff
+I left  the PCIe PHY driver disabled, the kernel crashed with this BUG:
 
-As I have informed you before on my previous reply, the pdev->slot is
-only valid for children objects such as endpoints not for a bridge when
-using pciehp.
+[    1.225819] kernel BUG at lib/ioremap.c:72!
+[    1.230007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+[    1.235496] Modules linked in:
+[    1.238561] CPU: 0 PID: 39 Comm: kworker/0:1 Not tainted 4.17.0-dirty #1092
+[    1.245526] Hardware name: Renesas Condor board based on r8a77980 (DT)
+[    1.252075] Workqueue: events deferred_probe_work_func
+[    1.257220] pstate: 80000005 (Nzcv daif -PAN -UAO)
+[    1.262024] pc : ioremap_page_range+0x370/0x3c8
+[    1.266558] lr : ioremap_page_range+0x40/0x3c8
+[    1.271002] sp : ffff000008da39e0
+[    1.274317] x29: ffff000008da39e0 x28: 00e8000000000f07
+[    1.279636] x27: ffff7dfffee00000 x26: 0140000000000000
+[    1.284954] x25: ffff7dfffef00000 x24: 00000000000fe100
+[    1.290272] x23: ffff80007b906000 x22: ffff000008ab8000
+[    1.295590] x21: ffff000008bb1d58 x20: ffff7dfffef00000
+[    1.300909] x19: ffff800009c30fb8 x18: 0000000000000001
+[    1.306226] x17: 00000000000152d0 x16: 00000000014012d0
+[    1.311544] x15: 0000000000000000 x14: 0720072007200720
+[    1.316862] x13: 0720072007200720 x12: 0720072007200720
+[    1.322180] x11: 0720072007300730 x10: 00000000000000ae
+[    1.327498] x9 : 0000000000000000 x8 : ffff7dffff000000                      
+[    1.332816] x7 : 0000000000000000 x6 : 0000000000000100
+[    1.338134] x5 : 0000000000000000 x4 : 000000007b906000
+[    1.343452] x3 : ffff80007c61a880 x2 : ffff7dfffeefffff
+[    1.348770] x1 : 0000000040000000 x0 : 00e80000fe100f07
+[    1.354090] Process kworker/0:1 (pid: 39, stack limit = 0x        (ptrval))  
+[    1.361056] Call trace:
+[    1.363504]  ioremap_page_range+0x370/0x3c8
+[    1.367695]  pci_remap_iospace+0x7c/0xac
+[    1.371624]  pci_parse_request_of_pci_ranges+0x13c/0x190
+[    1.376945]  rcar_pcie_probe+0x4c/0xb04
+[    1.380786]  platform_drv_probe+0x50/0xbc
+[    1.384799]  driver_probe_device+0x21c/0x308
+[    1.389072]  __device_attach_driver+0x98/0xc8
+[    1.393431]  bus_for_each_drv+0x54/0x94
+[    1.397269]  __device_attach+0xc4/0x12c
+[    1.401107]  device_initial_probe+0x10/0x18
+[    1.405292]  bus_probe_device+0x90/0x98
+[    1.409130]  deferred_probe_work_func+0xb0/0x150
+[    1.413756]  process_one_work+0x12c/0x29c
+[    1.417768]  worker_thread+0x200/0x3fc
+[    1.421522]  kthread+0x108/0x134
+[    1.424755]  ret_from_fork+0x10/0x18
+[    1.428334] Code: f9004ba2 54000080 aa0003fb 17ffff48 (d4210000)
 
-The pointer is NULL for the host bridge itself.
+It turned out that pci_remap_iospace() wasn't undone when the driver's
+probe failed, and since devm_phy_optional_get() returned -EPROBE_DEFER,
+the probe was retried,  finally causing the BUG due to trying to remap
+already remapped pages.
 
-I reached out to reset_slot() callback in v4 of this implementation.
+The Versatile PCIe driver has the same issue. The most feasible solution
+seemed to introduce devm_pci_remap_iospace() -- which was done in the XGene
+PCIe driver patch posted earlier...
 
-https://patchwork.kernel.org/patch/10494971/
+Fixes: b7e78170efd4 ("PCI: versatile: Add DT-based ARM Versatile PB PCIe host driver")
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-However, as Oza explained FATAL error handling gets called from two different
-paths as AER and DPC.
+---
+ drivers/pci/controller/pci-versatile.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-If the link goes down due to DPC, calling pci_reset_slot() would be a mistake
-as DPC has its own recovery mechanism by programming the DPC capabilities.
-pci_reset_slot() performs a secondary bus reset following hotplug interrupt
-mask.
+Index: pci/drivers/pci/controller/pci-versatile.c
+===================================================================
+--- pci.orig/drivers/pci/controller/pci-versatile.c
++++ pci/drivers/pci/controller/pci-versatile.c
+@@ -82,7 +82,7 @@ static int versatile_pci_parse_request_o
+ 
+ 		switch (resource_type(res)) {
+ 		case IORESOURCE_IO:
+-			err = pci_remap_iospace(res, iobase);
++			err = devm_pci_remap_iospace(dev, res, iobase);
+ 			if (err) {
+ 				dev_warn(dev, "error %d: failed to map resource %pR\n",
+ 					 err, res);
 
-Issuing a secondary bus reset to a DPC event would be a mistake for recovery.
-
-That's why, I extracted the hotplug mask and unmask IRQ calls into service
-layer so that I can mask hotplug interrupts regardless of the source of the
-FATAL error whether it is DPC or AER.
-
-If error source is DPC, it still goes to DPC driver's reset_link() callback
-for DPC specific clean up.
-
-If error source is AER, it still goes to AER driver's reset_link() callback
-for secondary bus reset.
-
-Remember that AER driver completely bypasses pci_reset_slot() today. The lock
-mechanism you are putting will not be useful for FATAL error case where
-pci_secondary_bus_reset() is called directly.
-
-pci_reset_slot() only gets called from external drivers such as VFIO to initiate
-a reset to the slot if hotplug is supported.
-
-> 
-> (It's worth noting though that pciehp is the only hotplug driver
-> implementing the ->reset_slot callback.  If hotplug is handled by
-> a different driver or by the platform firmware, devices may still
-> be removed and re-enumerated twice.)
-> 
-> Thanks,
-> 
-> Lukas
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
