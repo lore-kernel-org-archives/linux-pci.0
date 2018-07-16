@@ -1,66 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46172 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388133AbeGWV5D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 23 Jul 2018 17:57:03 -0400
-Date: Mon, 23 Jul 2018 15:54:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Honghui Zhang <honghui.zhang@mediatek.com>,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: Fwd: New Defects reported by Coverity Scan for Linux
-Message-ID: <20180723205403.GA167818@bhelgaas-glaptop.roam.corp.google.com>
-References: <5b5555e19b5af_5e922b08291e2f60744cb@node1.mail>
- <CAErSpo7wy1CZvozUX+vnj0W_-m85M=TBUYp3N=W1wB57=_8kXw@mail.gmail.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:39696 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727385AbeGPPTs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2018 11:19:48 -0400
+Subject: Re: [PATCH v9 00/12] Add MSI-X support on pcitest tool
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "adouglas@cadence.com" <adouglas@cadence.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
+        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
+ <20180713132513.GD18515@red-moon>
+ <aabf72f0-e325-b5d2-0d2e-048acb6c1721@synopsys.com>
+ <cf97fd13-568b-cd45-fcfb-f91d52a907bf@ti.com>
+From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Message-ID: <77bb1aa0-da1f-be70-b0fe-beeceb544e8e@synopsys.com>
+Date: Mon, 16 Jul 2018 15:49:45 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7wy1CZvozUX+vnj0W_-m85M=TBUYp3N=W1wB57=_8kXw@mail.gmail.com>
+In-Reply-To: <cf97fd13-568b-cd45-fcfb-f91d52a907bf@ti.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Gustavo]
+Hi Kishon,
 
-On Mon, Jul 23, 2018 at 02:12:49PM -0500, Bjorn Helgaas wrote:
-> Hi Honghui,
+On 16/07/2018 05:07, Kishon Vijay Abraham I wrote:
+> Hi,
 > 
-> Would you consider doing a minor patch to fix the issue Coverity
-> reported below (not checking the return value from
-> devm_pci_remap_iospace())?
-
-Never mind, I see Gustavo has already posted such a patch:
-
-https://lkml.kernel.org/r/20180720150158.GA10922@embeddedor.com
-
-Thanks, Gustavo!
-
-> ---------- Forwarded message ---------
-> From: <scan-admin@coverity.com>
-> Date: Sun, Jul 22, 2018 at 11:13 PM
-> Subject: New Defects reported by Coverity Scan for Linux
-> To: <bhelgaas@google.com>
+> On Friday 13 July 2018 09:29 PM, Gustavo Pimentel wrote:
+>> Hi Lorenzo,
+>>
+>> On 13/07/2018 14:25, Lorenzo Pieralisi wrote:
+>>> On Mon, Jul 09, 2018 at 06:42:38PM +0100, Gustavo Pimentel wrote:
+>>>> Patch series made against Lorenzo's master branch.
+>>>>
+>>>> Fix EP link notification implementation.
+>>>>
+>>>> Add MSI-X support on pcitest tool.
+>>>>
+>>>> Add new callbacks methods and handlers to trigger the MSI-X interrupts
+>>>> on the EP DesignWare IP driver.
+>>>>
+>>>> Allow to set/get MSI-X EP maximum capability number.
+>>>>
+>>>> Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
+>>>>
+>>>> Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
+>>>>
+>>>> Update the pcitest.sh script to support MSI-X feature tests.
+>>>>
+>>>> Gustavo Pimentel (12):
+>>>>   PCI: dwc: Fix EP link notification implementation
+>>>>   PCI: endpoint: Add MSI-X interfaces
+>>>>   PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
+>>>>   PCI: dwc: Add MSI-X callbacks handler
+>>>>   PCI: dwc: Rework MSI callbacks handler
+>>>>   PCI: dwc: Add legacy interrupt callback handler
+>>>>   pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
+>>>>   pci-epf-test/pci_endpoint_test: Use irq_type module parameter
+>>>>   pci-epf-test/pci_endpoint_test: Add MSI-X support
+>>>>   pci_endpoint_test: Add 2 ioctl commands
+>>>>   tools: PCI: Add MSI-X support
+>>>>   PCI: endpoint: Add MSI set maximum restriction
+>>>>
+>>>>  Documentation/PCI/endpoint/pci-test-function.txt  |   8 +-
+>>>>  Documentation/ioctl/ioctl-number.txt              |   1 +
+>>>>  Documentation/misc-devices/pci-endpoint-test.txt  |   6 +
+>>>>  drivers/misc/pci_endpoint_test.c                  | 260 ++++++++++++++++------
+>>>>  drivers/pci/controller/dwc/pci-dra7xx.c           |   2 +-
+>>>>  drivers/pci/controller/dwc/pcie-artpec6.c         |   2 +-
+>>>>  drivers/pci/controller/dwc/pcie-designware-ep.c   | 217 ++++++++++++++++--
+>>>>  drivers/pci/controller/dwc/pcie-designware-plat.c |  11 +-
+>>>>  drivers/pci/controller/dwc/pcie-designware.h      |  31 ++-
+>>>>  drivers/pci/controller/pcie-cadence-ep.c          |   3 +-
+>>>>  drivers/pci/controller/pcie-rockchip-ep.c         |   2 +-
+>>>>  drivers/pci/endpoint/functions/pci-epf-test.c     |  86 +++++--
+>>>>  drivers/pci/endpoint/pci-ep-cfs.c                 |  24 ++
+>>>>  drivers/pci/endpoint/pci-epc-core.c               |  68 +++++-
+>>>>  include/linux/pci-epc.h                           |  16 +-
+>>>>  include/linux/pci-epf.h                           |   1 +
+>>>>  include/uapi/linux/pcitest.h                      |   3 +
+>>>>  tools/pci/pcitest.c                               |  51 ++++-
+>>>>  tools/pci/pcitest.sh                              |  15 ++
+>>>>  19 files changed, 664 insertions(+), 143 deletions(-)
+>>>
+>>> Gustavo, Kishon,
+>>>
+>>> it seems like this series has been thoroughly reviewed and it is
+>>> ready to go, please let me know if there is any pending change.
+>>
+>> I just sent the patch # 10 based on Kishon's latest review.
+>> For me it's nearly perfect. :)
 > 
-> ...
-> ** CID 1438089:  Error handling issues  (CHECKED_RETURN)
-> /drivers/pci/controller/pcie-mediatek.c: 1112 in mtk_pcie_request_resources()
+> I got to test this series today and I found one issue.
 > 
+> use this sequence:
+> 1) pcitest -i 2 /* change to MSIX irq type */
+>    For platforms that doesn't support MSIX, get the following message
+>    pci-endpoint-test 0000:01:00.0: Failed to get MSI-X interrupts
+>    SET IRQ TYPE TO MSI-X:          NOT OKAY
 > 
-> ________________________________________________________________________________________________________
-> *** CID 1438089:  Error handling issues  (CHECKED_RETURN)
-> /drivers/pci/controller/pcie-mediatek.c: 1112 in mtk_pcie_request_resources()
-> 1106            pci_add_resource(windows, &pcie->busn);
-> 1107
-> 1108            err = devm_request_pci_bus_resources(dev, windows);
-> 1109            if (err < 0)
-> 1110                    return err;
-> 1111
-> >>>     CID 1438089:  Error handling issues  (CHECKED_RETURN)
-> >>>     Calling "devm_pci_remap_iospace" without checking return value (as is done elsewhere 5 out of 6 times).
-> 1112            devm_pci_remap_iospace(dev, &pcie->pio, pcie->io.start);
-> 1113
-> 1114            return 0;
-> 1115     }
-> 1116
-> 1117     static int mtk_pcie_register_host(struct pci_host_bridge *host)
+>    However after this, pci_endpoint_test_set_irq() will invoke
+>    pci_endpoint_test_free_irq_vectors() and pci_endpoint_test_release_irq().
+>    This will free previously allocated MSI irq vectors.
+> 
+> 2) pcitest -i 1 /* change to MSI irq type */
+> 
+>    This will not invoke pci_endpoint_test_alloc_irq_vectors() and
+>    pci_endpoint_test_request_irq() since now "if (irq_type == req_irq_type)"
+>    will return true.
+> 
+>    After this MSI tests will fail.
+> 
+> Other than this failing sequence, the series looks good to me.
+
+It's fixed on the patch series v11 (see patch
+#10-pci_endpoint_test-Add-2-ioctl-commands.patch file).
+Thanks!
+
+> 
+> Thanks
+> Kishon
+> 
+
+Regards,
+Gustavo
