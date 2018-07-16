@@ -1,79 +1,133 @@
-Return-Path: <SRS0=8ZZk=JW=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=8ZZk=JW=gmail.com=kernelfans@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:43832 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728413AbeGPVqW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 16 Jul 2018 17:46:22 -0400
+Date: Mon, 16 Jul 2018 16:17:06 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: bhelgaas@google.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Tal Gilboa <talgi@mellanox.com>,
+        Dave Airlie <airlied@gmail.com>,
+        Alex Deucher <alexander.deucher@amd.com>
+Subject: Re: [PATCH v3] PCI: Check for PCIe downtraining conditions
+Message-ID: <20180716211706.GB12391@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180604155523.14906-1-mr.nuke.me@gmail.com>
 MIME-Version: 1.0
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
- <6281446.GoJLz6Hq6C@aspire.rjw.lan> <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
- <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com>
- <20180706083603.GA9063@wunner.de> <CAJZ5v0j6+m8NGMneG45tF9L1s6ahtFo91wPCO=3YOTEyAOL+VQ@mail.gmail.com>
-In-Reply-To: <CAJZ5v0j6+m8NGMneG45tF9L1s6ahtFo91wPCO=3YOTEyAOL+VQ@mail.gmail.com>
-From: Pingfan Liu <kernelfans@gmail.com>
-Date: Fri, 6 Jul 2018 21:55:57 +0800
-Message-ID: <CAFgQCTugu5XO06_xXb4ihkdfGJxtFX0813g2J-Jk2JeYtPP1vA@mail.gmail.com>
-Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
- ordering in device_kset
-To: rafael@kernel.org
-Cc: lukas@wunner.de, linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-pm@vger.kernel.org, kishon@ti.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180604155523.14906-1-mr.nuke.me@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 6, 2018 at 4:47 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
->
-> On Fri, Jul 6, 2018 at 10:36 AM, Lukas Wunner <lukas@wunner.de> wrote:
-> > [cc += Kishon Vijay Abraham]
-> >
-> > On Thu, Jul 05, 2018 at 11:18:28AM +0200, Rafael J. Wysocki wrote:
-> >> OK, so calling devices_kset_move_last() from really_probe() clearly is
-> >> a mistake.
-> >>
-> >> I'm not really sure what the intention of it was as the changelog of
-> >> commit 52cdbdd49853d doesn't really explain that (why would it be
-> >> insufficient without that change?)
-> >
-> > It seems 52cdbdd49853d fixed an issue with boards which have an MMC
-> > whose reset pin needs to be driven high on shutdown, lest the MMC
-> > won't be found on the next boot.
-> >
-> > The boards' devicetrees use a kludge wherein the reset pin is modelled
-> > as a regulator.  The regulator is enabled when the MMC probes and
-> > disabled on driver unbind and shutdown.  As a result, the pin is driven
-> > low on shutdown and the MMC is not found on the next boot.
-> >
-> > To fix this, another kludge was invented wherein the GPIO expander
-> > driving the reset pin unconditionally drives all its pins high on
-> > shutdown, see pcf857x_shutdown() in drivers/gpio/gpio-pcf857x.c
-> > (commit adc284755055, "gpio: pcf857x: restore the initial line state
-> > of all pcf lines").
-> >
-> > For this kludge to work, the GPIO expander's ->shutdown hook needs to
-> > be executed after the MMC expander's ->shutdown hook.
-> >
-> > Commit 52cdbdd49853d achieved that by reordering devices_kset according
-> > to the probe order.  Apparently the MMC probes after the GPIO expander,
-> > possibly because it returns -EPROBE_DEFER if the vmmc regulator isn't
-> > available yet, see mmc_regulator_get_supply().
-> >
-> > Note, I'm just piecing the information together from git history,
-> > I'm not responsible for these kludges.  (I'm innocent!)
->
-> Sure enough. :-)
->
-> In any case, calling devices_kset_move_last() in really_probe() is
-> plain broken and if its only purpose was to address a single, arguably
-> kludgy, use case, let's just get rid of it in the first place IMO.
->
-Yes, if it is only used for a single use case.
+[+cc maintainers of drivers that already use pcie_print_link_status()
+and GPU folks]
 
-> > @Pingfan Liu, if you just remove the call to devices_kset_move_last()
-> > from really_probe(), does the issue go away?
->
-> I would think so from the description of the problem (elsewhere in this thread).
->
-Yes.
+On Mon, Jun 04, 2018 at 10:55:21AM -0500, Alexandru Gagniuc wrote:
+> PCIe downtraining happens when both the device and PCIe port are
+> capable of a larger bus width or higher speed than negotiated.
+> Downtraining might be indicative of other problems in the system, and
+> identifying this from userspace is neither intuitive, nor straigh
+> forward.
 
-Thanks,
-Pingfan
+s/straigh/straight/
+In this context, I think "straightforward" should be closed up
+(without the space).
+
+> The easiest way to detect this is with pcie_print_link_status(),
+> since the bottleneck is usually the link that is downtrained. It's not
+> a perfect solution, but it works extremely well in most cases.
+
+This is an interesting idea.  I have two concerns:
+
+Some drivers already do this on their own, and we probably don't want
+duplicate output for those devices.  In most cases (ixgbe and mlx* are
+exceptions), the drivers do this unconditionally so we *could* remove
+it from the driver if we add it to the core.  The dmesg order would
+change, and the message wouldn't be associated with the driver as it
+now is.
+
+Also, I think some of the GPU devices might come up at a lower speed,
+then download firmware, then reset the device so it comes up at a
+higher speed.  I think this patch will make us complain about about
+the low initial speed, which might confuse users.
+
+So I'm not sure whether it's better to do this in the core for all
+devices, or if we should just add it to the high-performance drivers
+that really care.
+
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> ---
+> 
+> Changes since v2:
+>  - Check dev->is_virtfn flag
+> 
+> Changes since v1:
+>  - Use pcie_print_link_status() instead of reimplementing logic
+>  
+>  drivers/pci/probe.c | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ac91b6fd0bcd..a88ec8c25dd5 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2146,6 +2146,25 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>  	return dev;
+>  }
+>  
+> +static void pcie_check_upstream_link(struct pci_dev *dev)
+> +{
+> +
+> +	if (!pci_is_pcie(dev))
+> +		return;
+> +
+> +	/* Look from the device up to avoid downstream ports with no devices. */
+> +	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
+> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
+> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
+> +		return;
+
+Do we care about Upstream Ports here?  I suspect that ultimately we
+only care about the bandwidth to Endpoints, and if an Endpoint is
+constrained by a slow link farther up the tree,
+pcie_print_link_status() is supposed to identify that slow link.
+
+I would find this test easier to read as
+
+  if (!(type == PCI_EXP_TYPE_ENDPOINT || type == PCI_EXP_TYPE_LEG_END))
+    return;
+
+But maybe I'm the only one that finds the conjunction of inequalities
+hard to read.  No big deal either way.
+
+> +	/* Multi-function PCIe share the same link/status. */
+> +	if ((PCI_FUNC(dev->devfn) != 0) || dev->is_virtfn)
+> +		return;
+> +
+> +	pcie_print_link_status(dev);
+> +}
+> +
+>  static void pci_init_capabilities(struct pci_dev *dev)
+>  {
+>  	/* Enhanced Allocation */
+> @@ -2181,6 +2200,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>  	/* Advanced Error Reporting */
+>  	pci_aer_init(dev);
+>  
+> +	/* Check link and detect downtrain errors */
+> +	pcie_check_upstream_link(dev);
+> +
+>  	if (pci_probe_reset_function(dev) == 0)
+>  		dev->reset_fn = 1;
+>  }
+> -- 
+> 2.14.4
+> 
