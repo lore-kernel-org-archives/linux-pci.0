@@ -1,39 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56752 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730688AbeGPWhA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 16 Jul 2018 18:37:00 -0400
-Date: Mon, 16 Jul 2018 17:07:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Oza Pawandeep <poza@codeaurora.org>
-Subject: Re: [PATCH 1/7] PCI/DPC: Leave interrupts enabled while handling
- event
-Message-ID: <20180716220735.GC12391@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180620213833.25072-1-keith.busch@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 16 Jul 2018 16:06:06 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 0/8] Fix PCI I/O space page leaks
+Message-ID: <20180716150606.GA19945@red-moon>
+References: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180620213833.25072-1-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3e862a05-084a-d732-3060-6e2b234e9718@cogentembedded.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Rob Herring <robh@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ linux-pci@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>,
+ linux-renesas-soc@vger.kernel.org, Matthias Brugger <matthias.bgg@gmail.com>,
+ Ryder Lee <ryder.lee@mediatek.com>, linux-mediatek@lists.infradead.org,
+ Tanmay Inamdar <tinamdar@apm.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 20, 2018 at 03:38:27PM -0600, Keith Busch wrote:
-> Now that the DPC driver clears the interrupt status before exiting the
-> irq handler, we don't need to abuse the DPC control register to know if
-> a shared interrupt is for a new DPC event: a DPC port can not trigger
-> a second interrupt until the host clears the trigger status later in the
-> work queue handler.
+On Sun, Jul 15, 2018 at 07:00:21PM +0300, Sergei Shtylyov wrote:
+> Hello!
 > 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Here's a set of 8 patches against the 'pci/controller-fixes' branch of Lorenzo
+> Pieralisi's 'pci.git' repo. They are the fixes for the PCI I/O space page leaks
+> (and the kernel BUG caused by them on deferred probe); those were 1st found
+> testing the R-Car PCIe driver. The patches are in the chronological order
+> (considering the date/time of the commits specified in the Fixes: tag), patches
+> #2..#8 depend on the patch #1 in order to build/work as it introduces the managed
+> device API that they all use...
+> 
+> [1/8] PCI: xgene: Fix I/O space page leak
+> [2/8] PCI: of: Fix I/O space page leak
+> [3/8] PCI: versatile: Fix I/O space page leak
+> [4/8] PCI: designware: Fix I/O space page leak
+> [5/8] PCI: aardvark: Fix I/O space page leak
+> [6/8] PCI: faraday: Fix I/O space page leak
+> [7/8] PCI: mediatek: Fix I/O space page leak
+> [8/8] PCI: v3-semi: Fix I/O space page leak
+> 
+> MBR, Sergei
 
-I applied all of these with Sinan and Oza's reviewed-by to pci/dpc for
-v4.19, thanks!
+Hi Sergei,
 
-I moved the AER API stuff from include/linux/aer.h to
-drivers/pci/pci.h.  Let me know if that's a problem.  I didn't see a
-reason to expose those details outside the PCI core.
+I reshuffled the series, rewrote commit logs and move the devm_
+API to commit 2 which is the one you tested AFAIK.
 
-Bjorn
+I pushed them out to my pci/controller-fixes branch which I hope
+we can still aim for an -rc, please do have a look and let me know
+what you think, I have not asked Bjorn to pull it yet.
+
+Thanks,
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
