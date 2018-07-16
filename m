@@ -1,211 +1,102 @@
-Return-Path: <SRS0=Wshg=KI=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=Wshg=KI=redhat.com=alex.williamson@kernel.org>
-Date: Mon, 23 Jul 2018 18:11:12 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 2/2] PCI: NVMe device specific reset quirk
-Message-ID: <20180723181112.054b2c19@t450s.home>
-In-Reply-To: <20180723224533.GX128988@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180723221533.4371.90064.stgit@gimli.home>
-	<20180723222431.4371.25962.stgit@gimli.home>
-	<20180723224533.GX128988@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:46657 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729593AbeGPPUP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2018 11:20:15 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v11 01/12] PCI: dwc: Fix EP link notification implementation
+Date: Mon, 16 Jul 2018 16:52:13 +0200
+Message-Id: <3cefa89ce2e496e7627bd3c7ade93348230adc14.1531751641.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 23 Jul 2018 17:45:33 -0500
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+Move specific features settings from EP shared code
+(pcie-designware-ep.c) to the driver (pcie-designware-plat.c).
 
-> On Mon, Jul 23, 2018 at 04:24:31PM -0600, Alex Williamson wrote:
-> > Take advantage of NVMe devices using a standard interface to quiesce
-> > the controller prior to reset, including device specific delays before
-> > and after that reset.  This resolves several NVMe device assignment
-> > scenarios with two different vendors.  The Intel DC P3700 controller
-> > has been shown to only work as a VM boot device on the initial VM
-> > startup, failing after reset or reboot, and also fails to initialize
-> > after hot-plug into a VM.  Adding a delay after FLR resolves these
-> > cases.  The Samsung SM961/PM961 (960 EVO) sometimes fails to return
-> > from FLR with the PCI config space reading back as -1.  A reproducible
-> > instance of this behavior is resolved by clearing the enable bit in
-> > the configuration register and waiting for the ready status to clear
-> > (disabling the NVMe controller) prior to FLR.
-> > 
-> > As all NVMe devices make use of this standard interface and the NVMe
-> > specification also requires PCIe FLR support, we can apply this quirk
-> > to all devices with matching class code.  
-> 
-> Do you have any pointers to problem reports or bugzilla entries that
-> we could include here?
+Previous implementation disables the EP link notification
+by default for all SoCs that uses EP DesignWare IP, which affects
+directly the dra7xx and artpec6 SoCs.
 
-Yes, https://bugzilla.redhat.com/show_bug.cgi?id=1592654
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Change v8->v9:
+ - Created patch file.
+Change v9->v10:
+ - Nothing changed, just to follow the patch set version.
+Change v10->v11:
+ - Missed Kishon acknowledge.
 
-This only covers the Intel P3700 issue.  The Samsung issue has been
-reported via a couple bugs, but was not reproducible until recently.
-Those bugs were previously closed due to lack of information.  I'll add
-the above link.
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 14 ++++++--------
+ drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +++
+ 2 files changed, 9 insertions(+), 8 deletions(-)
 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> >  drivers/pci/quirks.c |  112 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 112 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index e72c8742aafa..83853562f220 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -28,6 +28,7 @@
-> >  #include <linux/platform_data/x86/apple.h>
-> >  #include <linux/pm_runtime.h>
-> >  #include <linux/switchtec.h>
-> > +#include <linux/nvme.h>
-> >  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
-> >  #include "pci.h"
-> >  
-> > @@ -3669,6 +3670,116 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
-> >  #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
-> >  #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
-> >  
-> > +/* NVMe controller needs delay before testing ready status */
-> > +#define NVME_QUIRK_CHK_RDY_DELAY	(1 << 0)
-> > +/* NVMe controller needs post-FLR delay */
-> > +#define NVME_QUIRK_POST_FLR_DELAY	(1 << 1)
-> > +
-> > +static const struct pci_device_id nvme_reset_tbl[] = {
-> > +	{ PCI_DEVICE(0x1bb1, 0x0100),   /* Seagate Nytro Flash Storage */
-> > +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
-> > +	{ PCI_DEVICE(0x1c58, 0x0003),   /* HGST adapter */
-> > +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
-> > +	{ PCI_DEVICE(0x1c58, 0x0023),   /* WDC SN200 adapter */
-> > +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
-> > +	{ PCI_DEVICE(0x1c5f, 0x0540),   /* Memblaze Pblaze4 adapter */
-> > +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
-> > +	{ PCI_DEVICE(0x144d, 0xa821),   /* Samsung PM1725 */  
-> 
-> We do have PCI_VENDOR_ID_SAMSUNG if you want to use it here.  I
-> don't see Seagate, HGST, etc.
-
-Oops, cut and pasted those from the nvme driver, I'll use the Samsung
-macro.
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 8650416..04092a7 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -386,15 +386,18 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		return -ENOMEM;
+ 	ep->outbound_addr = addr;
  
-> > +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
-> > +	{ PCI_DEVICE(0x144d, 0xa822),   /* Samsung PM1725a */
-> > +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
-> > +	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x0953),   /* Intel DC P3700 */
-> > +		.driver_data = NVME_QUIRK_POST_FLR_DELAY, },
-> > +	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_EXPRESS, 0xffffff) },
-> > +	{ 0 }
-> > +};
-> > +
-> > +/*
-> > + * The NVMe specification requires that controllers support PCIe FLR, but
-> > + * but some Samsung SM961/PM961 controllers fail to recover after FLR (-1
-> > + * config space) unless the device is quiesced prior to FLR.  Do this for
-> > + * all NVMe devices by disabling the controller before reset.  Some Intel
-> > + * controllers also require an additional post-FLR delay or else attempts
-> > + * to re-enable will timeout, do that here as well with heuristically
-> > + * determined delay value.  Also maintain the delay between disabling and
-> > + * checking ready status as used by the native NVMe driver.
-> > + */
-> > +static int reset_nvme(struct pci_dev *dev, int probe)
-> > +{
-> > +	const struct pci_device_id *id;
-> > +	void __iomem *bar;
-> > +	u16 cmd;
-> > +	u32 cfg;
-> > +
-> > +	id = pci_match_id(nvme_reset_tbl, dev);
-> > +	if (!id || !pcie_has_flr(dev) || !pci_resource_start(dev, 0))
-> > +		return -ENOTTY;
-> > +
-> > +	if (probe)
-> > +		return 0;
-> > +
-> > +	bar = pci_iomap(dev, 0, NVME_REG_CC + sizeof(cfg));
-> > +	if (!bar)
-> > +		return -ENOTTY;
-> > +
-> > +	pci_read_config_word(dev, PCI_COMMAND, &cmd);
-> > +	pci_write_config_word(dev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-> > +
-> > +	cfg = readl(bar + NVME_REG_CC);  
-> 
-> Apparently this is part of some NVMe spec and all controllers support
-> this?  Is there a public reference you could cite for the details?
-
-Yep, I'll add a link in the comments, it's all public.  Thanks,
-
-Alex
-
-> > +
-> > +	/* Disable controller if enabled */
-> > +	if (cfg & NVME_CC_ENABLE) {
-> > +		u64 cap = readq(bar + NVME_REG_CAP);
-> > +		unsigned long timeout;
-> > +
-> > +		/*
-> > +		 * Per nvme_disable_ctrl() skip shutdown notification as it
-> > +		 * could complete commands to the admin queue.  We only intend
-> > +		 * to quiesce the device before reset.
-> > +		 */
-> > +		cfg &= ~(NVME_CC_SHN_MASK | NVME_CC_ENABLE);
-> > +
-> > +		writel(cfg, bar + NVME_REG_CC);
-> > +
-> > +		/* A heuristic value, matches NVME_QUIRK_DELAY_AMOUNT */
-> > +		if (id->driver_data & NVME_QUIRK_CHK_RDY_DELAY)
-> > +			msleep(2300);
-> > +
-> > +		/* Cap register provides max timeout in 500ms increments */
-> > +		timeout = ((NVME_CAP_TIMEOUT(cap) + 1) * HZ / 2) + jiffies;
-> > +
-> > +		for (;;) {
-> > +			u32 status = readl(bar + NVME_REG_CSTS);
-> > +
-> > +			/* Ready status becomes zero on disable complete */
-> > +			if (!(status & NVME_CSTS_RDY))
-> > +				break;
-> > +
-> > +			msleep(100);
-> > +
-> > +			if (time_after(jiffies, timeout)) {
-> > +				pci_warn(dev, "Timeout waiting for NVMe ready status to clear after disable\n");
-> > +				break;
-> > +			}
-> > +		}
-> > +	}
-> > +
-> > +	pci_iounmap(dev, bar);
-> > +
-> > +	/*
-> > +	 * We could use the optional NVM Subsystem Reset here, hardware
-> > +	 * supporting this is simply unavailable at the time of this code
-> > +	 * to validate in comparison to PCIe FLR.  NVMe spec dictates that
-> > +	 * NVMe devices shall implement PCIe FLR.
-> > +	 */
-> > +	pcie_flr(dev);
-> > +
-> > +	if (id->driver_data & NVME_QUIRK_POST_FLR_DELAY)
-> > +		msleep(250); /* Heuristic based on Intel DC P3700 */
-> > +
-> > +	return 0;
-> > +}
-> > +
-> >  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
-> >  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
-> >  		 reset_intel_82599_sfp_virtfn },
-> > @@ -3678,6 +3789,7 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
-> >  		reset_ivb_igd },
-> >  	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
-> >  		reset_chelsio_generic_dev },
-> > +	{ PCI_ANY_ID, PCI_ANY_ID, reset_nvme },
-> >  	{ 0 }
-> >  };
-> >  
-> > 
-> > 
-> > _______________________________________________
-> > Linux-nvme mailing list
-> > Linux-nvme@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-nvme  
+-	if (ep->ops->ep_init)
+-		ep->ops->ep_init(ep);
+-
+ 	epc = devm_pci_epc_create(dev, &epc_ops);
+ 	if (IS_ERR(epc)) {
+ 		dev_err(dev, "Failed to create epc device\n");
+ 		return PTR_ERR(epc);
+ 	}
+ 
++	ep->epc = epc;
++	epc_set_drvdata(epc, ep);
++
++	if (ep->ops->ep_init)
++		ep->ops->ep_init(ep);
++
+ 	ret = of_property_read_u8(np, "max-functions", &epc->max_functions);
+ 	if (ret < 0)
+ 		epc->max_functions = 1;
+@@ -413,11 +416,6 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		return -ENOMEM;
+ 	}
+ 
+-	epc->features = EPC_FEATURE_NO_LINKUP_NOTIFIER;
+-	EPC_FEATURE_SET_BAR(epc->features, BAR_0);
+-
+-	ep->epc = epc;
+-	epc_set_drvdata(epc, ep);
+ 	dw_pcie_setup(pci);
+ 
+ 	return 0;
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 5937fed..0ce3440 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -70,10 +70,13 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct pci_epc *epc = ep->epc;
+ 	enum pci_barno bar;
+ 
+ 	for (bar = BAR_0; bar <= BAR_5; bar++)
+ 		dw_pcie_ep_reset_bar(pci, bar);
++
++	epc->features |= EPC_FEATURE_NO_LINKUP_NOTIFIER;
+ }
+ 
+ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+-- 
+2.7.4
