@@ -1,36 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50492 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:42810 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731481AbeG2BzT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 28 Jul 2018 21:55:19 -0400
-Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
-To: Lukas Wunner <lukas@wunner.de>, Alex_Gagniuc@Dellteam.com
-Cc: mr.nuke.me@gmail.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, Austin.Bolen@dell.com,
-        Stuart.Hayes@dell.com, Narendra.K@dell.com,
-        Christopher.Arzola@dell.com, David.Chalfant@dell.com
-References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
- <20180727071813.GA6128@wunner.de>
- <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
- <20180727170543.GA5326@wunner.de>
- <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
- <20180728183130.GA21482@wunner.de>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <29894244-e682-9394-c408-bd989fb4716a@kernel.org>
-Date: Sat, 28 Jul 2018 17:26:57 -0700
+        id S1727514AbeGPRoI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 16 Jul 2018 13:44:08 -0400
+Date: Mon, 16 Jul 2018 11:15:43 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v6 4/4] PCI: Introduce the disable_acs_redir parameter
+Message-ID: <20180716111543.6ddf584c@t450s.home>
+In-Reply-To: <20180713233158.19528-5-logang@deltatee.com>
+References: <20180713233158.19528-1-logang@deltatee.com>
+        <20180713233158.19528-5-logang@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <20180728183130.GA21482@wunner.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/28/2018 11:31 AM, Lukas Wunner wrote:
-> The knowledge whether a surprise removal or a safe removal is at hand
-> does exist further up in the call stack:  A surprise removal is
-> initiated by pciehp_handle_presence_or_link_change(), a safe removal by
-> pciehp_handle_disable_request().
+On Fri, 13 Jul 2018 17:31:58 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-Can you also check if platform supports surprise link down error
-reporting (Link Capabilities Register) and reports a surprise link
-down event in AER Uncorrectable Error Status Register for the
-hotplug code to make it more reliable?
+> In order to support P2P traffic on a segment of the PCI hierarchy,
+> we must be able to disable the ACS redirect bits for select
+> PCI bridges. The bridges must be selected before the devices are
+> discovered by the kernel and the IOMMU groups created. Therefore,
+> a kernel command line parameter is created to specify devices
+> which must have their ACS bits disabled.
+> 
+> The new parameter takes a list of devices separated by a semicolon.
+> Each device specified will have it's ACS redirect bits disabled.
+> This is similar to the existing 'resource_alignment' parameter.
+> 
+> The ACS Request P2P Request Redirect, P2P Completion Redirect and P2P
+> Egress Control bits are disabled which is sufficient to always allow
+> passing P2P traffic uninterrupted. The bits are set after the kernel
+> (optionally) enables the ACS bits itself. It is also done regardless of
+> whether the kernel sets the bits or not seeing some BIOS firmware is known
+> to set the bits on boot.
+> 
+> If the user tries to disable the ACS redirct for a device without the
+> ACS capability, a warning is printed to dmesg.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Stephen Bates <sbates@raithlin.com>
+> Acked-by: Christian König <christian.koenig@amd.com>
+> ---
+>  Documentation/admin-guide/kernel-parameters.txt |  9 +++
+>  drivers/pci/pci.c                               | 76 ++++++++++++++++++++++++-
+>  2 files changed, 83 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index a69947d9e14e..02634c4ab181 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -3192,6 +3192,15 @@
+>  				Adding the window is slightly risky (it may
+>  				conflict with unreported devices), so this
+>  				taints the kernel.
+> +		disable_acs_redir=<pci_dev>[; ...]
+> +				Specify one or more PCI devices (in the format
+> +				specified above) separated by semicolons.
+> +				Each device specified will have the PCI ACS
+> +				redirect capabilities forced off which will
+> +				allow P2P traffic between devices through
+> +				bridges without forcing it upstream. Note:
+> +				this removes isolation between devices and
+> +				will make the IOMMU groups less granular.
+>  
+>  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+>  			Management.
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 59638075b4df..195b93824e6c 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2983,6 +2983,66 @@ void pci_request_acs(void)
+>  	pci_acs_enable = 1;
+>  }
+>  
+> +static const char *disable_acs_redir_param;
+> +
+> +/**
+> + * pci_disable_acs_redir - disable ACS redirect capabilities
+> + * @dev: the PCI device
+> + *
+> + * For only devices specified in the disable_acs_redir parameter.
+> + */
+> +static void pci_disable_acs_redir(struct pci_dev *dev)
+> +{
+> +	int ret = 0;
+> +	const char *p;
+> +	int pos;
+> +	u16 ctrl;
+> +
+> +	if (!disable_acs_redir_param)
+> +		return;
+> +
+> +	p = disable_acs_redir_param;
+> +	while (*p) {
+> +		ret = pci_dev_str_match(dev, p, &p);
+> +		if (ret < 0) {
+> +			pr_info_once("PCI: Can't parse disable_acs_redir parameter: %s\n",
+> +				     disable_acs_redir_param);
+> +
+> +			break;
+> +		} else if (ret == 1) {
+> +			/* Found a match */
+> +			break;
+> +		}
+> +
+> +		if (*p != ';' && *p != ',') {
+> +			/* End of param or invalid format */
+> +			break;
+> +		}
+> +		p++;
+> +	}
+> +
+> +	if (ret != 1)
+> +		return;
+> +
+> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
+> +	if (!pos) {
+> +		pci_warn(dev, "cannot disable ACS redirect for this hardware as it does not have ACS capabilities\n");
+> +		return;
+> +	}
+> +
+> +	if (!pci_dev_specific_disable_acs_redir(dev))
+> +		return;
+
+Shouldn't this come before the above ACS capability test?  The PCH
+quirk without a disable_acs_redir callback will fall out with the
+pci_warn() above either way, but this ordering precludes that a quirk
+could be written for that device since it doesn't have an ACS
+capability.  Otherwise the series looks ok to me.  Thanks,
+
+Alex
+
+> +
+> +	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
+> +
+> +	/* P2P Request & Completion Redirect */
+> +	ctrl &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC);
+> +
+> +	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
+> +
+> +	pci_info(dev, "disabled ACS redirect\n");
+> +}
+> +
+>  /**
+>   * pci_std_enable_acs - enable ACS on devices using standard ACS capabilites
+>   * @dev: the PCI device
+> @@ -3022,12 +3082,22 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+>  void pci_enable_acs(struct pci_dev *dev)
+>  {
+>  	if (!pci_acs_enable)
+> -		return;
+> +		goto disable_acs_redir;
+>  
+>  	if (!pci_dev_specific_enable_acs(dev))
+> -		return;
+> +		goto disable_acs_redir;
+>  
+>  	pci_std_enable_acs(dev);
+> +
+> +disable_acs_redir:
+> +	/*
+> +	 * Note: pci_disable_acs_redir() must be called even if
+> +	 * ACS is not enabled by the kernel because the firmware
+> +	 * may have unexpectedly set the flags. So if we are told
+> +	 * to disable it, we should always disable it after setting
+> +	 * the kernel's default preferences.
+> +	 */
+> +	pci_disable_acs_redir(dev);
+>  }
+>  
+>  static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+> @@ -5967,6 +6037,8 @@ static int __init pci_setup(char *str)
+>  				pcie_bus_config = PCIE_BUS_PEER2PEER;
+>  			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+>  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+> +			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
+> +				disable_acs_redir_param = str + 18;
+>  			} else {
+>  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+>  						str);
