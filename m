@@ -1,120 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:37892 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726612AbeGPEdT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2018 00:33:19 -0400
-Subject: Re: [PATCH v9 00/12] Add MSI-X support on pcitest tool
-To: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
- <20180713132513.GD18515@red-moon>
- <aabf72f0-e325-b5d2-0d2e-048acb6c1721@synopsys.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
-        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <cf97fd13-568b-cd45-fcfb-f91d52a907bf@ti.com>
-Date: Mon, 16 Jul 2018 09:37:34 +0530
-MIME-Version: 1.0
-In-Reply-To: <aabf72f0-e325-b5d2-0d2e-048acb6c1721@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:46670 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729825AbeGPPUP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2018 11:20:15 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v11 06/12] PCI: dwc: Add legacy interrupt callback handler
+Date: Mon, 16 Jul 2018 16:52:18 +0200
+Message-Id: <3579a0b9b6eefcf306af4ccfd5cd3396df4d8f63.1531751641.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531751641.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Add a legacy interrupt callback handler. Currently DesignWare IP don't
+allow trigger legacy interrupts.
 
-On Friday 13 July 2018 09:29 PM, Gustavo Pimentel wrote:
-> Hi Lorenzo,
-> 
-> On 13/07/2018 14:25, Lorenzo Pieralisi wrote:
->> On Mon, Jul 09, 2018 at 06:42:38PM +0100, Gustavo Pimentel wrote:
->>> Patch series made against Lorenzo's master branch.
->>>
->>> Fix EP link notification implementation.
->>>
->>> Add MSI-X support on pcitest tool.
->>>
->>> Add new callbacks methods and handlers to trigger the MSI-X interrupts
->>> on the EP DesignWare IP driver.
->>>
->>> Allow to set/get MSI-X EP maximum capability number.
->>>
->>> Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
->>>
->>> Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
->>>
->>> Update the pcitest.sh script to support MSI-X feature tests.
->>>
->>> Gustavo Pimentel (12):
->>>   PCI: dwc: Fix EP link notification implementation
->>>   PCI: endpoint: Add MSI-X interfaces
->>>   PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
->>>   PCI: dwc: Add MSI-X callbacks handler
->>>   PCI: dwc: Rework MSI callbacks handler
->>>   PCI: dwc: Add legacy interrupt callback handler
->>>   pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
->>>   pci-epf-test/pci_endpoint_test: Use irq_type module parameter
->>>   pci-epf-test/pci_endpoint_test: Add MSI-X support
->>>   pci_endpoint_test: Add 2 ioctl commands
->>>   tools: PCI: Add MSI-X support
->>>   PCI: endpoint: Add MSI set maximum restriction
->>>
->>>  Documentation/PCI/endpoint/pci-test-function.txt  |   8 +-
->>>  Documentation/ioctl/ioctl-number.txt              |   1 +
->>>  Documentation/misc-devices/pci-endpoint-test.txt  |   6 +
->>>  drivers/misc/pci_endpoint_test.c                  | 260 ++++++++++++++++------
->>>  drivers/pci/controller/dwc/pci-dra7xx.c           |   2 +-
->>>  drivers/pci/controller/dwc/pcie-artpec6.c         |   2 +-
->>>  drivers/pci/controller/dwc/pcie-designware-ep.c   | 217 ++++++++++++++++--
->>>  drivers/pci/controller/dwc/pcie-designware-plat.c |  11 +-
->>>  drivers/pci/controller/dwc/pcie-designware.h      |  31 ++-
->>>  drivers/pci/controller/pcie-cadence-ep.c          |   3 +-
->>>  drivers/pci/controller/pcie-rockchip-ep.c         |   2 +-
->>>  drivers/pci/endpoint/functions/pci-epf-test.c     |  86 +++++--
->>>  drivers/pci/endpoint/pci-ep-cfs.c                 |  24 ++
->>>  drivers/pci/endpoint/pci-epc-core.c               |  68 +++++-
->>>  include/linux/pci-epc.h                           |  16 +-
->>>  include/linux/pci-epf.h                           |   1 +
->>>  include/uapi/linux/pcitest.h                      |   3 +
->>>  tools/pci/pcitest.c                               |  51 ++++-
->>>  tools/pci/pcitest.sh                              |  15 ++
->>>  19 files changed, 664 insertions(+), 143 deletions(-)
->>
->> Gustavo, Kishon,
->>
->> it seems like this series has been thoroughly reviewed and it is
->> ready to go, please let me know if there is any pending change.
-> 
-> I just sent the patch # 10 based on Kishon's latest review.
-> For me it's nearly perfect. :)
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Change v6->v7:
+ - Nothing changed, just to follow the patch set version.
+Change v7->v8:
+ - Re-sending the patch series.
+Change v8->v9:
+ - Nothing changed, just to follow the patch set version.
+Change v9->v10:
+ - Nothing changed, just to follow the patch set version.
+Change v10->v11:
+ - Nothing changed, just to follow the patch set version.
 
-I got to test this series today and I found one issue.
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 10 ++++++++++
+ drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +--
+ drivers/pci/controller/dwc/pcie-designware.h      |  6 ++++++
+ 3 files changed, 17 insertions(+), 2 deletions(-)
 
-use this sequence:
-1) pcitest -i 2 /* change to MSIX irq type */
-   For platforms that doesn't support MSIX, get the following message
-   pci-endpoint-test 0000:01:00.0: Failed to get MSI-X interrupts
-   SET IRQ TYPE TO MSI-X:          NOT OKAY
-
-   However after this, pci_endpoint_test_set_irq() will invoke
-   pci_endpoint_test_free_irq_vectors() and pci_endpoint_test_release_irq().
-   This will free previously allocated MSI irq vectors.
-
-2) pcitest -i 1 /* change to MSI irq type */
-
-   This will not invoke pci_endpoint_test_alloc_irq_vectors() and
-   pci_endpoint_test_request_irq() since now "if (irq_type == req_irq_type)"
-   will return true.
-
-   After this MSI tests will fail.
-
-Other than this failing sequence, the series looks good to me.
-
-Thanks
-Kishon
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index dd9c366..1e7b022 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
+ 	.stop			= dw_pcie_ep_stop,
+ };
+ 
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct device *dev = pci->dev;
++
++	dev_err(dev, "EP cannot trigger legacy IRQs\n");
++
++	return -EINVAL;
++}
++
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num)
+ {
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 8bb2ecb..160714d 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -87,8 +87,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 
+ 	switch (type) {
+ 	case PCI_EPC_IRQ_LEGACY:
+-		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
+-		return -EINVAL;
++		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
+ 	case PCI_EPC_IRQ_MSI:
+ 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
+ 	case PCI_EPC_IRQ_MSIX:
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index e8b97f5..96126fd 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -348,6 +348,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num);
+ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+@@ -367,6 +368,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
+ 
++static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	return 0;
++}
++
+ static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 					   u8 interrupt_num)
+ {
+-- 
+2.7.4
