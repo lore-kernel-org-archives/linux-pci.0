@@ -1,95 +1,146 @@
-Return-Path: <SRS0=1H/x=JV=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=1H/x=JV=gmail.com=kernelfans@kernel.org>
+Return-Path: <SRS0=b4Ma=KA=oracle.com=thomas.tai@kernel.org>
+Return-Path: <SRS0=b4Ma=KA=oracle.com=thomas.tai@kernel.org>
+Subject: Re: [PATCH V2, 0/1] PCI/AER: fix use-after-free in
+ pcie_do_fatal_recovery
+To: poza@codeaurora.org, Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>
+References: <1531416823-17841-1-git-send-email-thomas.tai@oracle.com>
+ <20180712215151.GD28466@bhelgaas-glaptop.roam.corp.google.com>
+ <a7eccede32492b13f9ba84404fbb997a@codeaurora.org>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <fc4c4069-ced9-3198-f30c-3c419f69156d@oracle.com>
+Date: Mon, 16 Jul 2018 10:17:14 -0400
 MIME-Version: 1.0
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <3375966.ydPZj5TMVj@aspire.rjw.lan> <CAFgQCTtu7jaUfWV4xq8CfWb7vuS5=+HuNpNxeMm9UawoUZ2CBg@mail.gmail.com>
- <2842715.a5PfnD4e6X@aspire.rjw.lan>
-In-Reply-To: <2842715.a5PfnD4e6X@aspire.rjw.lan>
-From: Pingfan Liu <kernelfans@gmail.com>
-Date: Thu, 5 Jul 2018 10:32:23 +0800
-Message-ID: <CAFgQCTvZ8yGjrbxhYB4=Nxx+-JZC6BAUXCZ-DFz4wAh-Q8UjLw@mail.gmail.com>
-Subject: Re: [PATCHv3 3/4] drivers/base: clean up the usage of devices_kset_move_last()
-To: rjw@rjwysocki.net
-Cc: Grygorii Strashko <grygorii.strashko@ti.com>, linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <a7eccede32492b13f9ba84404fbb997a@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 4, 2018 at 6:18 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->
-> On Wednesday, July 4, 2018 6:40:09 AM CEST Pingfan Liu wrote:
-> > On Tue, Jul 3, 2018 at 10:28 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > >
-> > > On Tuesday, July 3, 2018 8:50:41 AM CEST Pingfan Liu wrote:
-> > > > Clean up the referring to the code in commit 52cdbdd49853 ("driver core:
-> > > > correct device's shutdown order"). So later we can revert it safely.
-> > > >
-> > > > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > > > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-> > > > Cc: Christoph Hellwig <hch@infradead.org>
-> > > > Cc: Bjorn Helgaas <helgaas@kernel.org>
-> > > > Cc: Dave Young <dyoung@redhat.com>
-> > > > Cc: linux-pci@vger.kernel.org
-> > > > Cc: linuxppc-dev@lists.ozlabs.org
-> > > > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
-> > > > ---
-> > > >  drivers/base/core.c | 7 -------
-> > > >  1 file changed, 7 deletions(-)
-> > > >
-> > > > diff --git a/drivers/base/core.c b/drivers/base/core.c
-> > > > index 684b994..db3deb8 100644
-> > > > --- a/drivers/base/core.c
-> > > > +++ b/drivers/base/core.c
-> > > > @@ -127,13 +127,6 @@ static int device_reorder_to_tail(struct device *dev, void *not_used)
-> > > >  {
-> > > >       struct device_link *link;
-> > > >
-> > > > -     /*
-> > > > -      * Devices that have not been registered yet will be put to the ends
-> > > > -      * of the lists during the registration, so skip them here.
-> > > > -      */
-> > > > -     if (device_is_registered(dev))
-> > > > -             devices_kset_move_last(dev);
-> > > > -
-> > > >       if (device_pm_initialized(dev))
-> > > >               device_pm_move_last(dev);
-> > >
-> > > You can't do this.
-> > >
-> > > If you do it, that will break power management in some situations.
-> > >
-> > Could you shed light on it? I had a quick browsing of pm code, but it
-> > is a big function, and I got lost in it.
-> > If the above code causes failure, then does it imply that the seq in
-> > devices_kset should be the same as dpm_list?
->
-> Generally, yes it should.
->
-> > But in device_shutdown(), it only intersect with pm by
-> > pm_runtime_get_noresume(dev) and pm_runtime_barrier(dev). How do these
-> > function affect the seq in dpm_list?
->
-> They are not related to dpm_list directly.
->
-> However, if you shut down a supplier device before its consumer and that
-> involves power management, then the consumer shutdown may fail and lock up
-> the system
->
-Ah, get your point. The patch in this series "[PATCHv3 2/4]
-drivers/base: utilize device tree info to shutdown devices" still obey
-the shutdown order "parent<-child" and "supplier<-consumer". It just
-utilizes device-tree info to achieve this, since it turns out not easy
-to maintain such order in devices_kset. As I described in the commit
-log of [2/4], it needs two nested recursion, and should consider the
-breakage of devices_kset's spinlock.
 
-> I asked you elsewhere to clearly describe the problem you are trying to
-> address.  Please do that in the first place.
->
-OK, I will reply your question in [0/4]
 
-Thanks,
-Pingfan
+On 07/15/2018 02:55 PM, poza@codeaurora.org wrote:
+> On 2018-07-13 03:21, Bjorn Helgaas wrote:
+>> [+cc Keith for DPC question]
+>>
+>> On Thu, Jul 12, 2018 at 11:33:42AM -0600, Thomas Tai wrote:
+>>> Hi Bjorn,
+>>> Thank you very much to review the V1 patch. I reworked the patch as
+>>> you have suggested. Your suggestion is indeed better and cleaner.
+>>> Would you please have a look for me?
+>>>
+>>> FYI, I did not clear the device structure in aer_isr_one_error()
+>>> just to avoid over complicated the fix.
+>>
+>> I think that was a bad idea anyway.  I think the problem there is that
+>> add_error_device() copies the pci_dev pointer without taking a
+>> reference on it:
+>>
+>>   aer_isr
+>>     get_e_source              # dequeue from rpc->e_sources[]
+>>       *e_src = rpc->e_sources[x]
+>>     aer_isr_one_error
+>>       pdev = rpc->rpd         # pdev = Root Port pci_dev
+>>       find_source_device(pdev)
+>>     find_device_iter
+>>       add_error_device
+>>         e_info->dev[i] = dev   # <-- save pci_dev pointer
+>>       aer_process_err_devices
+>>     handle_error_source(e_info->dev[i])
+>>       pcie_do_fatal_recovery
+>>
+>> At this point, we have pci_dev pointers in e_info->dev[] that are
+>> potentially stale.  Right now nobody uses them, but I think it's
+>> sloppy that we still have them at all.
+>>
+>> I think a better way to fix this would be to call pci_dev_get() in
+>> add_error_device() when we save the pointer, and then do the
+>> corresponding pci_dev_put() in aer_isr_one_error(), after we return
+>> from aer_process_err_devices().
+>>
+>> This could be done with a little helper function that iterates through
+>> e_info->dev[i], calls pci_dev_put() for each, and clears
+>> e_info->error_dev_num (which could then be removed from
+>> find_source_device()).
+>>
+>> I think this would fix the problem you're seeing, so we wouldn't need
+>> the change in pcie_do_fatal_recovery().
+>>
+>> However, I think we're also slightly exposed in dpc_work(), in basically
+>> the same (possibly harmless) way.
+>>
+>>   dpc_irq
+>>     schedule_work(&dpc->work)
+>>   ...
+>>   dpc_work
+>>     pdev = dpc->dev->port
+>>     pcie_do_fatal_recovery(pdev)
+>>
+>> pdev may be removed by pcie_do_fatal_recovery(), but dpc_work() is still
+>> holding onto a pointer (which it never uses again).
+>>
+>> The DPC driver should be holding a reference to pdev (through some black
+>> magic I don't understand), but that would be released when pdev is 
+>> removed,
+>> and I don't know what ensures that dpc_work() runs before that release.
+>>
+> 
+> Is not that dpc_work() is calling pcie_do_fatal_recovery() which in-turn 
+> is removing pdev.
+> I do not see DPC is using any more reference beyond that.
+
+Agree.
+
+> So, isnt it safe to assume that no matter when the dpc_work() run, the 
+> pdev it reference is always intact.
+> this is with the fact, that both AER and DPC can not trigger 
+> simultaneously, and and hence no race for removal.
+> who else would remove that pdev other than AER and DPC ?
+
+Looks like no one is removing it other than the pcie_do_fatal_recovery(pdev)
+
+> 
+> With Keith's patch, are not we just improving the latency with threaded 
+> irq instead of workqueue ?
+
+I think the most important is that the threaded_irq hold the device 
+until it finished the bottom half. Although I can't see where in the 
+threaded_irq code increase the device reference count. I may be missing 
+some info here, either way I am trying out the threaded_irq to see if it 
+fixed the issue or not.
+
+> 
+> the potential problem is another interrupt arriving while we have 
+> acknowledged it in dpc_reset_link() and we are about to remove the devices.
+> The acknowledgement of DPC status trigger and re-enabling interrupt can 
+> be done in
+> dpc_work() or threaded_handler() after we are done with 
+> pcie_do_fatal_recovery()
+
+Good point. the pcie_do_fatal_recovery() use 
+pci_stop_and_remove_bus_device() to remove the device, isn't it will 
+stop the device from sending out anymore interrupts? Once we remove the 
+device, we probably no need to reset the device.
+
+-Thomas
+
+> 
+> dpc_reset_link()
+> {
+>          following can be moved after pcie_do_fatal_recovery() ??
+>      pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+>                    PCI_EXP_DPC_STATUS_TRIGGER);
+> 
+>      pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
+>      pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
+>                    ctl | PCI_EXP_DPC_CTL_INT_EN);
+> }
+> 
+> and probably following also one also can be done after recovery.
+> 
+> pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+>                    PCI_EXP_DPC_STATUS_INTERRUPT);
+> 
+> I am not sure if this was the concern or I did talk about something else 
+> all together !
+> 
+>> Bjorn
