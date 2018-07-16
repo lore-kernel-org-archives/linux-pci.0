@@ -1,98 +1,167 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1532435314.32306.7.camel@pengutronix.de>
-Subject: Re: [PATCH v2 3/3] PCI: imx: Initial imx7d pm support
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Leonard Crestez <leonard.crestez@nxp.com>, Richard Zhu
- <hongxing.zhu@nxp.com>, Fabio Estevam <fabio.estevam@nxp.com>
-Date: Tue, 24 Jul 2018 14:28:34 +0200
-In-Reply-To: <24ba42f6028a90836c73317af1f9e9be2d27ba03.camel@nxp.com>
-References: <cover.1532090446.git.leonard.crestez@nxp.com>
- <e42a6bb8ff0ddd6eaa31fe381875425a3730a73f.1532090446.git.leonard.crestez@nxp.com>
- <1532338685.3163.93.camel@pengutronix.de>
- <e8be199b2d5559001a93abb52ba46c283e4454a9.camel@nxp.com>
- <1532426953.32306.5.camel@pengutronix.de>
- <24ba42f6028a90836c73317af1f9e9be2d27ba03.camel@nxp.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
- "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
- "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
- dl-linux-imx <linux-imx@nxp.com>,
- "kernel@pengutronix.de" <kernel@pengutronix.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54944 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729604AbeGPNN5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 16 Jul 2018 09:13:57 -0400
+Date: Mon, 16 Jul 2018 07:46:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        ashok.raj@intel.com, Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, okaya@kernel.org,
+        linux-pci@vger.kernel.org, Len Brown <lenb@kernel.org>,
+        scott@spiteful.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        gwshan@linux.vnet.ibm.com,
+        Sebastian Ott <sebott@linux.vnet.ibm.com>,
+        gerald.schaefer@de.ibm.com,
+        Corentin Chary <corentin.chary@gmail.com>,
+        Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        linux-s390@vger.kernel.org,
+        Platform Driver <platform-driver-x86@vger.kernel.org>,
+        acpi4asus-user <acpi4asus-user@lists.sourceforge.net>
+Subject: Re: [PATCH 14/32] PCI: hotplug: Demidlayer registration with the core
+Message-ID: <20180716124637.GK28466@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1529173804.git.lukas@wunner.de>
+ <6ef59b1fd3aa05f9989d29d0988152f18e3b824e.1529173804.git.lukas@wunner.de>
+ <CAHp75Vf9ZETYLuMEA0B_0qkbAWUHqEw0LVzqrjTmry7GjvE1gw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAHp75Vf9ZETYLuMEA0B_0qkbAWUHqEw0LVzqrjTmry7GjvE1gw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QW0gRGllbnN0YWcsIGRlbiAyNC4wNy4yMDE4LCAxMjowNCArMDAwMCBzY2hyaWViIExlb25hcmQg
-Q3Jlc3RlejoKPiBPbiBUdWUsIDIwMTgtMDctMjQgYXQgMTI6MDkgKzAyMDAsIEx1Y2FzIFN0YWNo
-IHdyb3RlOgo+ID4gQW0gTW9udGFnLCBkZW4gMjMuMDcuMjAxOCwgMTI6MzcgKzAwMDAgc2Nocmll
-YiBMZW9uYXJkIENyZXN0ZXo6Cj4gPiA+IE9uIE1vbiwgMjAxOC0wNy0yMyBhdCAxMTozOCArMDIw
-MCwgTHVjYXMgU3RhY2ggd3JvdGU6Cj4gPiA+ID4gQW0gRnJlaXRhZywgZGVuIDIwLjA3LjIwMTgs
-IDE1OjQ3ICswMzAwIHNjaHJpZWIgTGVvbmFyZCBDcmVzdGV6Ogo+ID4gPiA+ID4gT24gaW14N2Qg
-dGhlIHBjaWUtcGh5IHBvd2VyIGRvbWFpbiBpcyB0dXJuZWQgb2ZmIGluIHN1c3BlbmQgYW5kIHRo
-aXMgY2FuCj4gPiA+ID4gPiBtYWtlIHRoZSBzeXN0ZW0gaGFuZyBhZnRlciByZXN1bWUgd2hlbiBh
-dHRlbXB0aW5nIGFueSByZWFkIGZyb20gUENJLgo+ID4gPiA+ID4gCj4gPiA+ID4gPiBGaXggdGhp
-cyBieSBhZGRpbmcgbWluaW1hbCBzdXNwZW5kL3Jlc3VtZSBjb2RlIGZyb20gdGhlIG54cCBpbnRl
-cm5hbAo+ID4gPiA+ID4gdHJlZS4gVGhpcyB3aWxsIHByZXBhcmUgZm9yIHBvd2VyaW5nIGRvd24g
-b24gc3VzcGVuZCBhbmQgcmVzZXQgdGhlIGJsb2NrCj4gPiA+ID4gPiBvbiByZXN1bWUuCj4gPiA+
-ID4gPiAKPiA+ID4gPiA+IENvZGUgaXMgb25seSBmb3IgaW14N2QgYnV0IGEgdmVyeSBzaW1pbGFy
-IHNlcXVlbmNlIGNhbiBiZSB1c2VkIGZvcgo+ID4gPiA+ID4gb3RoZXIgc29jcy4KPiA+ID4gPiA+
-IAo+ID4gPiA+ID4gK3N0YXRpYyB2b2lkIGlteDZfcGNpZV9sdHNzbV9kaXNhYmxlKHN0cnVjdCBk
-ZXZpY2UgKmRldikKPiA+ID4gPiA+ICt7Cj4gPiA+ID4gPiA+ID4gPiA+ID4gKwlzdHJ1Y3QgaW14
-Nl9wY2llICppbXg2X3BjaWUgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsKPiA+ID4gPiA+ICsKPiA+
-ID4gPiA+ID4gPiA+ID4gPiArCXN3aXRjaCAoaW14Nl9wY2llLT52YXJpYW50KSB7Cj4gPiA+ID4g
-PiA+ID4gPiA+ID4gKwljYXNlIElNWDZROgo+ID4gPiA+ID4gPiA+ID4gPiA+ICsJY2FzZSBJTVg2
-U1g6Cj4gPiA+ID4gPiA+ID4gPiA+ID4gKwljYXNlIElNWDZRUDoKPiA+ID4gPiA+ID4gPiA+ID4g
-PiArCQlyZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BS
-MTIsCj4gPiA+ID4gPiArCQkJCcKgwqDCoElNWDZRX0dQUjEyX1BDSUVfQ1RMXzIsIDApOwo+ID4g
-PiA+IAo+ID4gPiA+IEhhcyB0aGlzIGJlZW4gdGVzdGVkIG9uIGkuTVg2PyBMVFNTTSBkaXNhYmxl
-IHJlcXVpcmVzIGEgbW9yZSBjb21wbGV4Cj4gPiA+ID4gc2VxdWVuY2Ugb24gdGhpcyBTb0MgdG8g
-YXZvaWQgaGFuZ2luZyB0aGUgc3lzdGVtLiBTZWUgY29tbWl0Cj4gPiA+ID4gM2UzZTQwNmUzODA3
-ICJQQ0k6IGlteDY6IFB1dCBMVFNTTSBpbiAiRGV0ZWN0IiBzdGF0ZSBiZWZvcmUgZGlzYWJsaW5n
-Cj4gPiA+ID4gaXQiLgo+ID4gPiAKPiA+ID4gVGhpcyBwYXRjaCBvbmx5IGVuYWJsZXMgc3VzcGVu
-ZC9yZXN1bWUgZm9yIGlteDdkIHdpdGggb3RoZXIgU09DcyB0bwo+ID4gPiBmb2xsb3cgbGF0ZXIu
-IFRoZSBsdHNzbV9kaXNhYmxlIGZ1bmN0aW9uIGlzIGp1c3Qgc3ltbWV0cmljIHdpdGgKPiA+ID4g
-bHRzc21fZW5hYmxlLgo+ID4gPiAKPiA+ID4gVGhlIDZRIHBhcnRzIGFyZSBhZmZlY3RlZCBieSBl
-cnJhdGEgIkVSUjAwNTcyMyBQQ0llOiBQQ0llIGRvZXMgbm90Cj4gPiA+IHN1cHBvcnQgTDIgcG93
-ZXIgZG93biBbaS5NWCA2RHVhbC82UXVhZCBPbmx5XSIuCj4gPiA+IAo+ID4gPiBUaGlzIGRlc2ln
-biBlcnJvciBzZWVtcyB0byBoYXZlIHRoZSBzYW1lIHJvb3QgY2F1c2UgYXMgeW91ciBwcm9ibGVt
-IChubwo+ID4gPiBkZWRpY2F0ZWQgcmVzZXQgY29udHJvbCkgc28gdGhpcyB3b3JrcyBvdXQgcXVp
-dGUgbmljZWx5OiB0aGUgc29sdXRpb24KPiA+ID4gaXMgdG8gbmV2ZXIgcG93ZXIgZG93biBwY2kg
-b24gYWZmZWN0ZWQgY2hpcHMuCj4gPiAKPiA+IEkgZG9uJ3QgcXVpdGUgbGlrZSBjb2RlIHRoYXQg
-bG9va3MgbGlrZSBpdCBpcyBkb2luZyB0aGUgcmlnaHQgdGhpbmcsCj4gPiBidXQgdGhlbiBkb2Vz
-bid0LiBDYW4gd2UgYXQgbGVhc3QgZW1pdCBhIHdhcm5pbmcgdGhhdCB0aGVyZSBtaWdodCBiZQo+
-ID4gZHJhZ29ucyBpZiBhbnlvbmUgdHJpZXMgdG8gY2FsbCB0aGlzIG9uIGkuTVg2Pwo+IAo+IEJ1
-dCB0aGUgZnVuY3Rpb24gd2lsbCBpbmRlZWQgdG9nZ2xlIHRoZSByaWdodCBiaXRzIHRvIGluaXRp
-YXRlIGx0c3NtCj4gZGlzYWJsaW5nLiBJZiB0aGlzIGlzIG5vdCB1c2VmdWwgb3IgY2FuJ3QgYmUg
-dXNlZCByaWdodCB0aGVuIGl0J3MgdGhlCj4gY2FsbGVyJ3MgcHJvYmxlbSA6KQoKSSBkb24ndCBh
-Z3JlZSB3aXRoIHRoYXQuIEkgd291bGQgZXhwZWN0IGEgZnVuY3Rpb24gdGhhdCBpcyBjYWxsZWQK
-bHRzc21fZGlzYWJsZSB0byBkbyBzbyBpbiBhIHdheSB0aGF0IGlzIHNhZmUgb24gdGhlIGhhcmR3
-YXJlIHRoYXQgaXQKY2xhaW1zIHRvIGhhbmRsZSwgd2hpY2ggaW4gY2FzZSBvZiBpLk1YNiBtZWFu
-cyBiYXNoaW5nIHRoZSBMVFNTTSBpbnRvCmRldGVjdCBzdGF0ZSBiZWZvcmUgdG9nZ2xpbmcgdGhl
-IEdQUiBiaXQuCgo+IEkgY2FuIGFkZCBhIGRlZmF1bHQ6IGNsYXVzZSB0byB0aGUgc3dpdGNoIHdo
-aWNoIHJldHVybnMgLUVOT1NZUyBhbmQgbGV0Cj4gSU1YNlEgZmFsbCB0aGF0IHdheSwgd291bGQg
-dGhhdCBiZSBPSz8gVGhpcyB3b3VsZCBhbHNvIGhlbHAgd2hlbiBhZGRpbmcKPiBuZXcgdmFyaWFu
-dHMuCgpZZXMsIGdpdmVuIHRoYXQgdGhlcmUgaXMgY3VycmVudGx5IG5vIHdheSB0byB0ZXN0IHRo
-aXMgb24gaS5NWDYsCnJldHVybmluZyAtRU5PU1lTIHNvdW5kIG11Y2ggYmV0dGVyLiBUaGlzIGF0
-IGxlYXN0IHRlbGxzIGFueW9uZSB3aG8KaW50ZW5kcyB0byB1c2UgdGhpcyBmdW5jdGlvbiB0aGF0
-IHRoZXJlIGlzIGluZGVlZCBtaXNzaW5nIGZ1bmN0aW9uYWxpdHkKdGhlcmUuCgpSZWdhcmRzLApM
-dWNhcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGlu
-dXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRl
-YWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgt
-YXJtLWtlcm5lbAo=
+On Sun, Jun 17, 2018 at 07:44:03PM +0300, Andy Shevchenko wrote:
+> On Sat, Jun 16, 2018 at 10:37 PM Lukas Wunner <lukas@wunner.de> wrote:
+> >
+> > When a hotplug driver calls pci_hp_register(), all steps necessary for
+> > registration are carried out in one go, including creation of a kobject
+> > and addition to sysfs.  That's a problem for pciehp once it's converted
+> > to enable/disable the slot exclusively from the IRQ thread:  The thread
+> > needs to be spawned after creation of the kobject (because it uses the
+> > kobject's name), but before addition to sysfs (because it will handle
+> > enable/disable requests submitted via sysfs).
+> >
+> > pci_hp_deregister() does offer a ->release callback that's invoked
+> > after deletion from sysfs and before destruction of the kobject.  But
+> > because pci_hp_register() doesn't offer a counterpart, hotplug drivers'
+> > ->probe and ->remove code becomes asymmetric, which is error prone
+> > as recently discovered use-after-free bugs in pciehp's ->remove hook
+> > have shown.
+> >
+> > In a sense, this appears to be a case of the midlayer antipattern:
+> >
+> >    "The core thesis of the "midlayer mistake" is that midlayers are
+> >     bad and should not exist.  That common functionality which it is
+> >     so tempting to put in a midlayer should instead be provided as
+> >     library routines which can [be] used, augmented, or ignored by
+> >     each bottom level driver independently.  Thus every subsystem
+> >     that supports multiple implementations (or drivers) should
+> >     provide a very thin top layer which calls directly into the
+> >     bottom layer drivers, and a rich library of support code that
+> >     eases the implementation of those drivers.  This library is
+> >     available to, but not forced upon, those drivers."
+> >         --  Neil Brown (2009), https://lwn.net/Articles/336262/
+> >
+> > The presence of midlayer traits in the PCI hotplug core might be ascribed
+> > to its age:  When it was introduced in February 2002, the blessings of a
+> > library approach might not have been well known:
+> > https://git.kernel.org/tglx/history/c/a8a2069f432c
+> >
+> > For comparison, the driver core does offer split functions for creating
+> > a kobject (device_initialize()) and addition to sysfs (device_add()) as
+> > an alternative to carrying out everything at once (device_register()).
+> > This was introduced in October 2002:
+> > https://git.kernel.org/tglx/history/c/8b290eb19962
+> >
+> > The odd ->release callback in the PCI hotplug core was added in 2003:
+> > https://git.kernel.org/tglx/history/c/69f8d663b595
+> >
+> > Clearly, a library approach would not force every hotplug driver to
+> > implement a ->release callback, but rather allow the driver to remove
+> > the sysfs files, release its data structures and finally destroy the
+> > kobject.  Alternatively, a driver may choose to remove everything with
+> > pci_hp_deregister(), then release its data structures.
+> >
+> > To this end, offer drivers pci_hp_initialize() and pci_hp_add() as a
+> > split-up version of pci_hp_register().  Likewise, offer pci_hp_del()
+> > and pci_hp_destroy() as a split-up version of pci_hp_deregister().
+> >
+> > Eliminate the ->release callback and move its code into each driver's
+> > teardown routine.
+> >
+> > Declare pci_hp_deregister() void, in keeping with the usual kernel
+> > pattern that enablement can fail, but disablement cannot.  It only
+> > returned an error if the caller passed in a NULL pointer or a slot which
+> > has never or is no longer registered or is sharing its name with another
+> > slot.  Those would be bugs, so WARN about them.  Few hotplug drivers
+> > actually checked the return value and those that did only printed a
+> > useless error message to dmesg.  Remove that.
+> >
+> > For most drivers the conversion was straightforward since it doesn't
+> > matter whether the code in the ->release callback is executed before or
+> > after destruction of the kobject.  But in the case of ibmphp, it was
+> > unclear to me whether setting slot_cur->ctrl and slot_cur->bus_on to
+> > NULL needs to happen before the kobject is destroyed, so I erred on
+> > the side of caution and ensured that the order stays the same.  Another
+> > nontrivial case is pnv_php, I've found the list and kref logic difficult
+> > to understand, however my impression was that it is safe to delete the
+> > list element and drop the references until after the kobject is
+> > destroyed.
+> >
+> > Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> > Cc: Len Brown <lenb@kernel.org>
+> > Cc: Scott Murray <scott@spiteful.org>
+> > Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> > Cc: Paul Mackerras <paulus@samba.org>
+> > Cc: Michael Ellerman <mpe@ellerman.id.au>
+> > Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> > Cc: Sebastian Ott <sebott@linux.vnet.ibm.com>
+> > Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>
+> > Cc: Corentin Chary <corentin.chary@gmail.com>
+> > Cc: Darren Hart <dvhart@infradead.org>
+> > Cc: Andy Shevchenko <andy@infradead.org>
+> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> > ---
+> >  drivers/pci/hotplug/acpiphp_core.c      |  22 +---
+> >  drivers/pci/hotplug/cpci_hotplug_core.c |  14 +--
+> >  drivers/pci/hotplug/cpqphp_core.c       |  16 +--
+> >  drivers/pci/hotplug/ibmphp_core.c       |  15 ++-
+> >  drivers/pci/hotplug/ibmphp_ebda.c       |  20 ----
+> >  drivers/pci/hotplug/pci_hotplug_core.c  | 139 +++++++++++++++++-------
+> >  drivers/pci/hotplug/pciehp_core.c       |  19 +---
+> >  drivers/pci/hotplug/pcihp_skeleton.c    |  16 +--
+> >  drivers/pci/hotplug/pnv_php.c           |   5 +-
+> >  drivers/pci/hotplug/rpaphp_core.c       |   2 +-
+> >  drivers/pci/hotplug/rpaphp_slot.c       |  13 +--
+> >  drivers/pci/hotplug/s390_pci_hpc.c      |  13 +--
+> >  drivers/pci/hotplug/sgi_hotplug.c       |   9 +-
+> >  drivers/pci/hotplug/shpchp_core.c       |  20 +---
+> 
+> >  drivers/platform/x86/asus-wmi.c         |  12 +-
+> >  drivers/platform/x86/eeepc-laptop.c     |  12 +-
+> 
+> So, as far as I can see these are just mechanical changes due to
+> internal API change.
+> Thus,
+> 
+> Acked-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+> 
+> for PDx86 bits only.
+
+Hi Andy, I'm not sure what you intend by "PDx86".  I'm happy to add a note
+so your ack looks like
+
+Acked-by: Andy Shevchenko <andy.shevchenko@gmail.com>  # drivers/platform/x86
+
+or something similar.  Is that what you have in mind?
+
+> >  include/linux/pci_hotplug.h             |  15 ++-
+> >  17 files changed, 171 insertions(+), 191 deletions(-)
