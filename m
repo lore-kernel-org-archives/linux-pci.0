@@ -1,84 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:48166 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726475AbeGSMUD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 19 Jul 2018 08:20:03 -0400
-Date: Thu, 19 Jul 2018 12:37:14 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 01/10] PCI: Add pci_host_alloc_intx_irqd() for
- allocating IRQ domain
-Message-ID: <20180719113714.GC9213@e107981-ln.cambridge.arm.com>
-References: <1528939995-183203-1-git-send-email-shawn.lin@rock-chips.com>
- <1528940057-183252-1-git-send-email-shawn.lin@rock-chips.com>
- <20180614090902.7b30a0d2@windsurf>
+Return-Path: <SRS0=b4Ma=KA=oracle.com=thomas.tai@kernel.org>
+Return-Path: <SRS0=b4Ma=KA=oracle.com=thomas.tai@kernel.org>
+Subject: Re: [PATCH V2, 0/1] PCI/AER: fix use-after-free in
+ pcie_do_fatal_recovery
+To: Keith Busch <keith.busch@intel.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, poza@codeaurora.org, linux-pci@vger.kernel.org
+References: <1531416823-17841-1-git-send-email-thomas.tai@oracle.com>
+ <20180712215151.GD28466@bhelgaas-glaptop.roam.corp.google.com>
+ <20180712215700.GA17092@localhost.localdomain>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <dbc4ae62-4e96-db73-9b47-7bff8343c8dd@oracle.com>
+Date: Mon, 16 Jul 2018 10:06:31 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180614090902.7b30a0d2@windsurf>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180712215700.GA17092@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 14, 2018 at 09:09:02AM +0200, Thomas Petazzoni wrote:
 
-[...]
 
-> > +				sizeof(struct irq_domain_ops), GFP_KERNEL);
-> > +		if (!irqd_ops) {
-> > +			err = -ENOMEM;
-> > +			goto err_out;
-> > +		}
-> > +
-> > +		irqd_ops->map = &pcie_intx_map;
-> > +		if (general_xlate)
-> > +			irqd_ops->xlate = &pci_irqd_intx_xlate;
-> > +		intx_domain_ops = irqd_ops;
-> > +	}
-> > +#ifdef CONFIG_IRQ_DOMAIN
-> > +	domain = irq_domain_add_linear(intc, PCI_NUM_INTX,
-> > +				       intx_domain_ops, host);
-> > +#endif
+On 07/12/2018 05:57 PM, Keith Busch wrote:
+> On Thu, Jul 12, 2018 at 04:51:51PM -0500, Bjorn Helgaas wrote:
+>> However, I think we're also slightly exposed in dpc_work(), in basically
+>> the same (possibly harmless) way.
+>>
+>>    dpc_irq
+>>      schedule_work(&dpc->work)
+>>    ...
+>>    dpc_work
+>>      pdev = dpc->dev->port
+>>      pcie_do_fatal_recovery(pdev)
+>>
+>> pdev may be removed by pcie_do_fatal_recovery(), but dpc_work() is still
+>> holding onto a pointer (which it never uses again).
+>>
+>> The DPC driver should be holding a reference to pdev (through some black
+>> magic I don't understand), but that would be released when pdev is removed,
+>> and I don't know what ensures that dpc_work() runs before that release.
+>>
+>> Bjorn
 > 
-> Isn't it a bit weird to have this in the middle of this function ?
-> Should you instead declare a stub pci_host_alloc_intx_irqd() function
-> in the header file if CONFIG_IRQ_DOMAIN is not enabled ?
+> Yep, you're right on that point. There's different ways we can fix
+> that. The most recent one I proposed was to replace the scheduled work
+> with the threaded irq[1]. That should make it safe since the lifetime of
+> when bottom half can be executed is tied to the lifetime of the device
+> that registered it.
 > 
-> I.e in pci.h:
+>   1. https://patchwork.kernel.org/patch/10478755/
+
+Hi Bjorn, Keith and Poza,
+I like the idea of using threaded irq if it can hold the device until 
+the bottom half finished. It makes the AER and DPC driver codes more 
+consistent. One problem I hit when changing the AER to threaded irq is 
+that the error injection module aer_inject won't work anymore because it 
+call the aer_irq directly and didn't go thru the threaded_irq path. I 
+would have to fix that also. Will keep you posted.
+
+Cheers,
+Thomas
+
 > 
-> #ifdef CONFIG_IRQ_DOMAIN
-> struct irq_domain *pci_host_alloc_intx_irqd(struct device *dev,
-> 				void *host, bool general_xlate,
-> 				const struct irq_domain_ops *intx_domain_ops,
-> 				struct device_node *local_intc);
-> #else
-> static inline struct irq_domain *pci_host_alloc_intx_irqd(struct device *dev,
-> 	void *host, bool general_xlate, const struct irq_domain_ops *intx_domain_ops,
-> 	struct device_node *local_intc)
-> {
-> 	return PTR_ERR(-EINVAL);
-> }
-> #endif
-> 
-> or something like that.
-
-Yes, he should.
-
-> Finally a purely subjective and personal opinion: I'm not a big fan of
-> this boolean that tells whether the ->xlate hook should be populated or
-> not. I'm not sure if it makes sense for this function to create the
-> irqdomain_ops altogether, perhaps it should be mandatory for the
-> irq_domain_ops to be provided by the caller. The problem with the
-> boolean general_xlate is that it is an endless story of additional
-> booleans to tweak more stuff in the irq_domain_ops structure. But of
-> course that's just a personal view, and my view doesn't really count
-> here :-)
-
-Your view does count here and I 100% agree with you. I do not like the
-->xlate hack (that is just there to make things work on systems with
-broken DTS files and bindings for legacy IRQ mappings) and this patch
-would just institutionalize it at PCI API level. So, if we *do* want to
-consolidate code, the domain ops should be passed in, as you mentioned.
-
-Thanks,
-Lorenzo
