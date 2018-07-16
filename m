@@ -1,130 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0072.outbound.protection.outlook.com ([104.47.36.72]:20544
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726990AbeGROMW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jul 2018 10:12:22 -0400
-From: Bharat Kumar Gogada <bharatku@xilinx.com>
-To: "poza@codeaurora.org" <poza@codeaurora.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>
-Subject: RE: [PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
-Date: Wed, 18 Jul 2018 13:34:20 +0000
-Message-ID: <BL0PR02MB4849C990B8C0822ECA45746AA5530@BL0PR02MB4849.namprd02.prod.outlook.com>
-References: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
- <b5ba83a0fd8694905528f740a186b891@codeaurora.org>
- <BL0PR02MB4849D9F256912CC9B869A20EA5580@BL0PR02MB4849.namprd02.prod.outlook.com>
- <3bd31b729f9f335fcd906a8164c0a4cb@codeaurora.org>
-In-Reply-To: <3bd31b729f9f335fcd906a8164c0a4cb@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1531712134.31406.1.camel@mhfsdcap03>
+Subject: Re: [PATCH v3 0/4] PCI: mediatek: fixup find_port, enable_msi and
+ add pm, module support
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: <lorenzo.pieralisi@arm.com>
+Date: Mon, 16 Jul 2018 11:35:34 +0800
+In-Reply-To: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com, marc.zyngier@arm.com,
+ linux-pci@vger.kernel.org, sean.wang@mediatek.com,
+ linux-kernel@vger.kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
+ linux-mediatek@lists.infradead.org, yong.wu@mediatek.com, bhelgaas@google.com,
+ yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 2018-07-13 19:25, Bharat Kumar Gogada wrote:
-> >> > Currently PCI_BRIDGE_CTL_SERR is being enabled only in ACPI flow.
-> >> > This bit is required for forwarding errors reported by EP devices
-> >> > to upstream device.
-> >> > This patch enables SERR# for Type-1 PCI device.
-> >> >
-> >> > Signed-off-by: Bharat Kumar Gogada
-> <bharat.kumar.gogada@xilinx.com>
-> >> > ---
-> >> >  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
-> >> >  1 files changed, 23 insertions(+), 0 deletions(-)
-> >> >
-> >> > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c index
-> >> > a2e8838..943e084 100644
-> >> > --- a/drivers/pci/pcie/aer.c
-> >> > +++ b/drivers/pci/pcie/aer.c
-> >> > @@ -343,6 +343,19 @@ int pci_enable_pcie_error_reporting(struct
-> >> > pci_dev
-> >> > *dev)
-> >> >  	if (!dev->aer_cap)
-> >> >  		return -EIO;
-> >> >
-> >> > +	if (!IS_ENABLED(CONFIG_ACPI) &&
-> >> > +	    dev->hdr_type =3D=3D PCI_HEADER_TYPE_BRIDGE) {
-> >> > +		u16 control;
-> >> > +
-> >> > +		/*
-> >> > +		 * A Type-1 PCI bridge will not forward ERR_ messages
-> >> coming
-> >> > +		 * from an endpoint if SERR# forwarding is not enabled.
-> >> > +		 */
-> >> > +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL,
-> >> &control);
-> >> > +		control |=3D PCI_BRIDGE_CTL_SERR;
-> >> > +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
-> >> > +	}
-> >> > +
-> >> >  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
-> >> > PCI_EXP_AER_FLAGS);  }
-> >> > EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
-> >> > @@ -352,6 +365,16 @@ int pci_disable_pcie_error_reporting(struct
-> >> > pci_dev *dev)
-> >> >  	if (pcie_aer_get_firmware_first(dev))
-> >> >  		return -EIO;
-> >> >
-> >> > +	if (!IS_ENABLED(CONFIG_ACPI) &&
-> >> > +	    dev->hdr_type =3D=3D PCI_HEADER_TYPE_BRIDGE) {
-> >> > +		u16 control;
-> >> > +
-> >> > +		/* Clear SERR Forwarding */
-> >> > +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL,
-> >> &control);
-> >> > +		control &=3D ~PCI_BRIDGE_CTL_SERR;
-> >> > +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
-> >> > +	}
-> >> > +
-> >> >  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
-> >> >  					  PCI_EXP_AER_FLAGS);
-> >> >  }
-> >>
-> >>
-> >> Should this configuration no be set by Firmware ? why should Linux
-> >> dictate it ?
-> > Hi Oza, Can you please let us know why this should be set by firmware ?
-> > Spec clearly states ERR_CORR,ERR_FATAL/NON FATAL will be forwarded
-> > only if this bit is set.
-> > If linux AER service is being enabled without checking/setting this
-> > bit, then AER service will not do anything even ERR_* is seen on link.
-> >
-> > Regards,
-> > Bharat
->=20
->=20
-> The ERR_* to be forwarded or not to be forwarded could be decision of the
-> platform.
-> hence I think it is best left to firmware to decide if it want to enable =
-this for
-> particular platform.
->=20
-I'm not aware of other platforms, can you please give an example of a platf=
-orm=20
-how it decides to set this in firmware ?
+Hi, Bjorn, Lorenzo,
 
-> although,
-> There are 2 cases
-> Hotplug capable bridge and otherwise.
+could you kindly take a look at this serial?
 
-Yes, what about an RP which supports only AER but doesn't support Hotplug ?
-If we have this patch we can set this bit without firmware also.
->=20
-> 1) If Firmware sets them, I do not think during enumeraion linux will loo=
-se
-> those settings.=20
+thanks.
 
-> 2) I do not see any integration of hotplug with AER currently, so if the =
-PCIe
-> switch is plugged into Hotplug capable RP, I am not very sure if this fun=
-ctions
-> get called.
->=20
-> Keith, Lukas and Bjorn any comments ?
-Hi all, do you have any inputs on this ?
+On Mon, 2018-07-02 at 15:57 +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
+> 
+> This patchset includes misc patchs:
+> 
+> The first patch fixup the mtk_pcie_find_port logical which will cause system
+> could not touch the EP's configuration space which was connected to PCIe slot 1.
+> 
+> The second patch fixup the enable msi logical, the operation to enable msi
+> should be after system clock is enabled. The function of mtk_pcie_startup_port_v2's
+> define location is re-arranged to avoid mtk_pcie_enable_msi's forward declaration.
+> And call mtk_pcie_enable_msi in mtk_pcie_startup_port_v2 since the clock was all
+> enabled at that time.
+> 
+> The third patch was rebased and refactor of the v4 patch[1], changes are:
+>  -Add PM support for MT7622.
+>  -Using mtk_pcie_enable_port to re-establish the link when resumed.
+>  -Rebase on the previous two patches.
+> 
+> The fourth patch add loadable kernel module support.
+> 
+> Some of those patches was already reviewed-by Ryder Lee <ryder.lee@mediatek.com>,
+> so I just add the Reviewed-by tags in those patches.
+> 
+> [1] https://patchwork.kernel.org/patch/10479079
+> 
+> Change since v2:
+>  - Fix the list_for_each_entry_safe parameter error.
+>  - Add Ryder's Acked-by flag.
+> 
+> Change since v1:
+>  - A bit of code refact of the first patch suggested by Andy Shevchenko, and
+>    commit message updated.
+>  - Using __maybe_unused.
+>  - Remove the redundant list_empty check of the fourth patch.
+> 
+> Honghui Zhang (4):
+>   PCI: mediatek: fixup mtk_pcie_find_port logical
+>   PCI: mediatek: enable msi after clock enabled
+>   PCI: mediatek: Add system pm support for MT2712 and MT7622
+>   PCI: mediatek: Add loadable kernel module support
+> 
+>  drivers/pci/controller/Kconfig         |   2 +-
+>  drivers/pci/controller/pcie-mediatek.c | 289 ++++++++++++++++++++++++---------
+>  2 files changed, 213 insertions(+), 78 deletions(-)
+> 
 
-Regards,
-Bharat
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
