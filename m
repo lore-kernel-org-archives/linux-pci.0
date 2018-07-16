@@ -1,84 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59160 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:64084 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732493AbeGLXPH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Jul 2018 19:15:07 -0400
-Date: Thu, 12 Jul 2018 18:03:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH 27/32] PCI: pciehp: Support interrupts sent from D3hot
-Message-ID: <20180712230317.GG28466@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1529173804.git.lukas@wunner.de>
- <652bd88bab4d7aadf0145172479bd8b67bc8eba9.1529173804.git.lukas@wunner.de>
+        id S1727342AbeGPPeO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 16 Jul 2018 11:34:14 -0400
+Date: Mon, 16 Jul 2018 09:06:20 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v6 0/4] Add parameter for disabling ACS redirection for
+ P2P
+Message-ID: <20180716090620.0caa3d79@t450s.home>
+In-Reply-To: <710e15b2-89f8-a658-656f-84492ef78898@ozlabs.ru>
+References: <20180713233158.19528-1-logang@deltatee.com>
+        <710e15b2-89f8-a658-656f-84492ef78898@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <652bd88bab4d7aadf0145172479bd8b67bc8eba9.1529173804.git.lukas@wunner.de>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
-> If a hotplug port is able to send an interrupt, one would naively assume
-> that it is accessible at that moment.  After all, if its parent is in
-> D3hot and the link to the hotplug port is thus down, how should an
-> interrupt come through?
-> 
-> It turns out that assumption is wrong at least for Thunderbolt:  Even
-> though its parents are in D3hot, a Thunderbolt hotplug port is able to
-> signal interrupts.  Because the port's config space is inaccessible and
-> resuming the parents may sleep, the hard IRQ handler has to defer
-> runtime resuming the parents and reading the Slot Status register to the
-> IRQ thread.
-> 
-> If the hotplug port uses a level-triggered INTx interrupt, it needs to
-> be masked until the IRQ thread has cleared the signaled events.  For
-> simplicity, this commit also masks edge-triggered MSI/MSI-X interrupts.
-> Note that if the interrupt is shared (which can only happen for INTx),
-> other devices are starved from receiving interrupts until the IRQ thread
-> is scheduled, has runtime resumed the hotplug port's parents and has
-> read and cleared the Slot Status register.
-> 
-> That delay is dominated by the 10 ms D3hot->D0 transition time of each
-> parent port.  The worst case is a Thunderbolt downstream port at the
-> end of a daisy chain:  There may be up to six Thunderbolt controllers
-> in-between it and the root port, each comprising an upstream and
-> downstream port, plus its own upstream port.  That's 13 x 10 = 130 ms.
-> Possible mitigations are polling the interrupt while it's disabled or
-> reducing the d3_delay of Thunderbolt ports if possible.
-> 
-> Open code masking of the interrupt instead of requesting it with the
-> IRQF_ONESHOT flag to minimize the period during which it is masked.
-> (IRQF_ONESHOT unmasks the IRQ only after the IRQ thread has finished.)
-> 
-> PCIe r4.0 sec 6.7.3.4 states that "If wake generation is required by the
-> associated form factor specification, a hotplug capable Downstream Port
-> must support generation of a wakeup event (using the PME mechanism) on
-> hotplug events that occur when the system is in a sleep state or the
-> Port is in device state D1, D2, or D3Hot."
-> 
-> This would seem to imply that PME needs to be enabled on the hotplug
-> port when it is runtime suspended.  pci_enable_wake() currently doesn't
-> enable PME on bridges, it may be necessary to add an exemption for
-> hotplug bridges there.  On "Light Ridge" Thunderbolt controllers, the
-> PME_Status bit is not set when an interrupt occurs while the hotplug
-> port is in D3hot, even if PME is enabled.  (I've tested this on a Mac
-> and we hardcode the OSC_PCI_EXPRESS_PME_CONTROL bit to 0 on Macs in
-> negotiate_os_control(), modifying it to 1 didn't change the behavior.)
-> 
-> (Confusingly, section 6.7.3.4 also states that "PME and Hot-Plug Event
-> interrupts (when both are implemented) always share the same MSI or
-> MSI-X vector".  That would only seem to apply to Root Ports, however
-> the section never mentions Root Ports, only Downstream Ports.)
+On Mon, 16 Jul 2018 15:01:21 +1000
+Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
 
-FWIW, based on the "Downstream" entry in the "Terms and Acronyms"
-section, I think the "Downstream Port" term would include both Root
-Ports and Switch Downstream Ports:
+> On 14/7/18 9:31 am, Logan Gunthorpe wrote:
+> > Changes since v5:
+> > * Add a quirk to handle the Intel SPT PCH case (as pointed out by Alex)
+> > * Warn in the case that we try to disable ACS redirect on a device
+> >   that doesn't have the ACS capability (also suggested by Alex)
+> > * Collect reviewed-by tag from Alex
+> > * Rebased onto v4.18-rc4 (no conflicts)
+> > 
+> > Changes since v4:
+> > * Fixed a couple documentation mistakes spotted by Randy
+> > 
+> > Changes since v3:
+> > * Removed some of the cruft that was copied from the resource_alignment
+> >   paramater (per Alex)
+> > * A number of docuemntation fixes as noticed by Alex and Willy
+> > 
+> > Changes since v2:
+> > * Rebased onto v4.18-rc1 (no conflicts)
+> > * Minor tweaks to the documentation per Andy
+> > * Removed the "path:" prefix and use the path parsing code
+> >   for simple devices (as it works the same). Per a suggestion from Alex
+> > 
+> > Changes since v1:
+> > * Reworked pci_dev_str_match_path using strrchr as suggested by Alex
+> > * Collected Christian's Acks
+> > 
+> > --
+> > 
+> > Hi,
+> > 
+> > As discussed in our PCI P2PDMA series, we'd like to add a kernel
+> > parameter for selectively disabling ACS redirection for select
+> > bridges. Seeing this turned out to be a small series in itself, we've
+> > decided to send this separately from the P2P work.
+> > 
+> > This series generalizes the code already done for the resource_alignment
+> > option that already exists. The first patch creates a helper function
+> > to match PCI devices against strings based on the code that already
+> > existed in pci_specified_resource_alignment().
+> > 
+> > The second patch expands the new helper to optionally take a path of
+> > PCI devfns. This is to address Alex's renumbering concern when using
+> > simple bus-devfns. The implementation is essentially how he described it and
+> > similar to the Intel VT-d spec (Section 8.3.1).
+> > 
+> > The final patch adds the disable_acs_redir kernel parameter which takes
+> > a list of PCI devices and will disable the ACS P2P Request Redirect,
+> > ACS P2P Completion Redirect and ACS P2P Egress Control bits for the
+> > selected devices. This allows P2P traffic between selected bridges and
+> > seeing it's done at boot, before the IOMMU groups will be created, the
+> > groups will match the security provided by ACS.  
+> 
+> 
+> I am pretty sure it's been discussed but just to make sure I understand the
+> whole picture - why exactly does ACS have to be disabled at the boot time?
+> We could enable it, for example, for 2 devices in the same VFIO container
+> if there are in isolatable part of the PCI tree, or we just do not want to
+> make VFIO containers or QEMU aware of PCI hierarchy (I can see why, just
+> double checking)? Thanks.
 
-  ... The Ports on a Switch that are not the Upstream Port are
-  Downstream Ports. All Ports on a Root Complex are Downstream Ports.
+AIUI, vfio is not necessarily a primary use case here, native bare
+metal drivers might also want to perform direct p2p.  In the vfio case,
+any time we're allowing p2p via ACS, we're poking holes into the IOVA
+space presented to the user.  We don't have a good way for the user to
+handle that, or even learn about it, so there are quite a few issues if
+vfio were a use case here.  Currently the intersection with vfio is
+that when ACS is disabled, it introduces p2p channels which breaks
+device isolation.  These need to be reflected in the IOMMU groups so
+it's done at boot time, before the groups are created.  If we wanted to
+allow dynamic manipulation, we'd effectively need to soft unplug entire
+sub-hierarchies around the point where ACS is modified and re-add the
+devices in order to get the grouping correct.  Thanks,
+
+Alex
