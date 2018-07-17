@@ -1,80 +1,106 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH V5 0/3] PCI: separate hotplug handling from fatal error
- handling
-Date: Mon,  2 Jul 2018 18:52:44 -0400
-Message-Id: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:39952 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729665AbeGQK60 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 06:58:26 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v13 01/12] PCI: dwc: Fix EP link notification implementation
+Date: Tue, 17 Jul 2018 12:26:16 +0200
+Message-Id: <3cefa89ce2e496e7627bd3c7ade93348230adc14.1531822532.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is what happens when you insert a fatal error to a hotplug slot. See
-multiple link up/down messages.
+Move specific features settings from EP shared code
+(pcie-designware-ep.c) to the driver (pcie-designware-plat.c).
 
-/_#_[__333.699731]_pcieport_0001:00:00.0:_AER:_Uncorrected_(Fatal)_error_received:_id=0000
-[  333.748116] pcieport 0001:00:00.0: PCIe Bus Error: severity=Uncorrected (Fatal), type=Transaction Layer, id
-[  333.816044] pcieport 0001:00:00.0:   device [17cb:0404] error status/mask=00040000/00400000
-[  333.871581] pcieport 0001:00:00.0:    [18] Malformed TLP (First)
-[  333.914675] pcieport 0001:00:00.0:   TLP Header: 40000001 000000ff 00000000 00000000
-[  333.968397] pciehp 0001:00:00.0:pcie004: Slot(2): Link Down
-[  334.043234] iommu: Removing device 0001:01:00.4 from group 0
-[  334.095952] iommu: Removing device 0001:01:00.3 from group 0
-[  334.144644] iommu: Removing device 0001:01:00.2 from group 0
-[  334.194653] iommu: Removing device 0001:01:00.1 from group 0
-[  334.243564] pciehp 0001:00:00.0:pcie004: Slot(2): Link Up
-[  334.282556] iommu: Removing device 0001:01:00.0 from group 0
-[  334.330994] pciehp 0001:00:00.0:pcie004: Slot(2): Link Up event queued;
-currently getting powered off
-[  334.890587] pciehp 0001:00:00.0:pcie004: Timeout on hotplug command
-0x13f1 (issued 282900 msec ago)
-[  335.070190] pciehp 0001:00:00.0:pcie004: Slot(2): Link Down
-[  335.106960] pciehp 0001:00:00.0:pcie004: Slot(2): Link Down event queued; currently getting powered on
-[  335.191119] pcieport 0001:00:00.0: AER: Device recovery failed
-[  346.590153] pciehp 0001:00:00.0:pcie004: Timeout on hotplug command 0x17f1 (issued 10250 msec ago)
+Previous implementation disables the EP link notification
+by default for all SoCs that uses EP DesignWare IP, which affects
+directly the dra7xx and artpec6 SoCs.
 
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Change v8->v9:
+ - Created patch file.
+Change v9->v10:
+ - Nothing changed, just to follow the patch set version.
+Change v10->v11:
+ - Missed Kishon acknowledge.
+Change v11->v12:
+ - Nothing changed, just to follow the patch set version.
+Change v12->v13:
+ - Re-sending the patch series.
 
-Since DPC/AER patch to refactor fatal error handling, both hotplug
-driver and AER/DPC driver will try removing devices and perform enumeration on
-link events/AER events.
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 14 ++++++--------
+ drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +++
+ 2 files changed, 9 insertions(+), 8 deletions(-)
 
-Perfect environment for race condition without a change.
-
-Try to mask hotplug interrupts during AER/DPC fatal error handling.
-
-Changes from v4:
-* add mask_irq() and unmask_irq() callbacks to struct pcie_driver
-* refactor reset_slot() to use pciehp_mask_irq() an pciehp_unmask_irq()
-
-Sinan Kaya (3):
-  PCI: pciehp: implement mask and unmask interrupt functions
-  PCI: pciehp: reuse pciehp_mask/unmask_irq() in reset_slot()
-  PCI: Mask and unmask hotplug interrupts during reset
-
- drivers/pci/hotplug/pciehp.h      |  2 ++
- drivers/pci/hotplug/pciehp_core.c | 19 +++++++++++++++++++
- drivers/pci/hotplug/pciehp_hpc.c  | 36 ++++++++++++++++++++++++++++--------
- drivers/pci/pcie/err.c            | 11 +++++++++++
- drivers/pci/pcie/portdrv.h        |  2 ++
- 5 files changed, 62 insertions(+), 8 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 8650416..04092a7 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -386,15 +386,18 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		return -ENOMEM;
+ 	ep->outbound_addr = addr;
+ 
+-	if (ep->ops->ep_init)
+-		ep->ops->ep_init(ep);
+-
+ 	epc = devm_pci_epc_create(dev, &epc_ops);
+ 	if (IS_ERR(epc)) {
+ 		dev_err(dev, "Failed to create epc device\n");
+ 		return PTR_ERR(epc);
+ 	}
+ 
++	ep->epc = epc;
++	epc_set_drvdata(epc, ep);
++
++	if (ep->ops->ep_init)
++		ep->ops->ep_init(ep);
++
+ 	ret = of_property_read_u8(np, "max-functions", &epc->max_functions);
+ 	if (ret < 0)
+ 		epc->max_functions = 1;
+@@ -413,11 +416,6 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		return -ENOMEM;
+ 	}
+ 
+-	epc->features = EPC_FEATURE_NO_LINKUP_NOTIFIER;
+-	EPC_FEATURE_SET_BAR(epc->features, BAR_0);
+-
+-	ep->epc = epc;
+-	epc_set_drvdata(epc, ep);
+ 	dw_pcie_setup(pci);
+ 
+ 	return 0;
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 5937fed..0ce3440 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -70,10 +70,13 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct pci_epc *epc = ep->epc;
+ 	enum pci_barno bar;
+ 
+ 	for (bar = BAR_0; bar <= BAR_5; bar++)
+ 		dw_pcie_ep_reset_bar(pci, bar);
++
++	epc->features |= EPC_FEATURE_NO_LINKUP_NOTIFIER;
+ }
+ 
+ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
 -- 
 2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
