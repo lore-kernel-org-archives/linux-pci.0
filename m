@@ -1,60 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu-smtp-delivery-211.mimecast.com ([146.101.78.211]:35418 "EHLO
-        eu-smtp-delivery-211.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729283AbeG3PIF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2018 11:08:05 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Lukas Wunner' <lukas@wunner.de>,
-        "Alex_Gagniuc@Dellteam.com" <Alex_Gagniuc@Dellteam.com>
-CC: "mr.nuke.me@gmail.com" <mr.nuke.me@gmail.com>,
-        "keith.busch@intel.com" <keith.busch@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Austin.Bolen@dell.com" <Austin.Bolen@dell.com>,
-        "Stuart.Hayes@dell.com" <Stuart.Hayes@dell.com>,
-        "Narendra.K@dell.com" <Narendra.K@dell.com>,
-        "Christopher.Arzola@dell.com" <Christopher.Arzola@dell.com>,
-        "David.Chalfant@dell.com" <David.Chalfant@dell.com>,
-        Sinan Kaya <okaya@kernel.org>
-Subject: RE: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
-Date: Mon, 30 Jul 2018 13:28:14 +0000
-Message-ID: <11e48a8d8e144259b4d0fb073c6899c7@AcuMS.aculab.com>
-References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
- <20180727071813.GA6128@wunner.de>
- <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
- <20180727170543.GA5326@wunner.de>
- <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
- <20180728183130.GA21482@wunner.de>
-In-Reply-To: <20180728183130.GA21482@wunner.de>
+Received: from foss.arm.com ([217.140.101.70]:50344 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729717AbeGQRrY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Jul 2018 13:47:24 -0400
+Date: Tue, 17 Jul 2018 18:15:43 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: honghui.zhang@mediatek.com
+Cc: marc.zyngier@arm.com, bhelgaas@google.com, matthias.bgg@gmail.com,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+        ryder.lee@mediatek.com, hongkun.cao@mediatek.com,
+        youlin.pei@mediatek.com, yong.wu@mediatek.com,
+        yt.shen@mediatek.com, sean.wang@mediatek.com, rjw@rjwysocki.net,
+        khilman@kernel.org, ulf.hansson@linaro.org
+Subject: Re: [PATCH v3 3/4] PCI: mediatek: Add system pm support for MT2712
+ and MT7622
+Message-ID: <20180717171543.GA20991@red-moon>
+References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
+ <1530518264-6125-4-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1530518264-6125-4-git-send-email-honghui.zhang@mediatek.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lukas Wunner
-> Sent: 28 July 2018 19:32
-...
-> Finally, if the card was quickly swapped and the link to the new
-> card is already up, you may be accessing that new card.  (mmio
-> accesses may then still return all ones if the BARs are blank,
-> but at least config space accesses should work.)
+[+Rafael, Kevin, Ulf]
 
-On my i7-7700 system that no longer works (at least with some cards).
-If I take the PCIe link down completely (reset the FPGA on the card)
-it doesn't recover (loops through detect active/quiet and a third
-state I can't quite remember).
+On Mon, Jul 02, 2018 at 03:57:43PM +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
+> 
+> The MTCMOS of PCIe Host for MT2712 and MT7622 will be off when system
+> suspend, and all the internal control register will be reset after system
+> resume. The PCIe link should be re-established and the related control
+> register values should be re-set after system resume.
+> 
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+> ---
+>  drivers/pci/controller/pcie-mediatek.c | 67 ++++++++++++++++++++++++++++++++++
+>  1 file changed, 67 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> index 86918d4..175d7b6 100644
+> --- a/drivers/pci/controller/pcie-mediatek.c
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -134,12 +134,14 @@ struct mtk_pcie_port;
+>  /**
+>   * struct mtk_pcie_soc - differentiate between host generations
+>   * @need_fix_class_id: whether this host's class ID needed to be fixed or not
+> + * @pm_support: whether the host's MTCMOS will be off when suspend
+>   * @ops: pointer to configuration access functions
+>   * @startup: pointer to controller setting functions
+>   * @setup_irq: pointer to initialize IRQ functions
+>   */
+>  struct mtk_pcie_soc {
+>  	bool need_fix_class_id;
+> +	bool pm_support;
+>  	struct pci_ops *ops;
+>  	int (*startup)(struct mtk_pcie_port *port);
+>  	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
+> @@ -1197,12 +1199,75 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+>  	return err;
+>  }
+>  
+> +static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
+> +{
+> +	struct mtk_pcie *pcie = dev_get_drvdata(dev);
+> +	const struct mtk_pcie_soc *soc = pcie->soc;
+> +	struct mtk_pcie_port *port;
+> +
+> +	if (!soc->pm_support)
+> +		return 0;
+> +
+> +	if (list_empty(&pcie->ports))
+> +		return 0;
+> +
+> +	list_for_each_entry(port, &pcie->ports, list) {
+> +		clk_disable_unprepare(port->pipe_ck);
+> +		clk_disable_unprepare(port->obff_ck);
+> +		clk_disable_unprepare(port->axi_ck);
+> +		clk_disable_unprepare(port->aux_ck);
+> +		clk_disable_unprepare(port->ahb_ck);
+> +		clk_disable_unprepare(port->sys_ck);
+> +		phy_power_off(port->phy);
+> +		phy_exit(port->phy);
+> +	}
+> +
+> +	mtk_pcie_subsys_powerdown(pcie);
+> +
+> +	return 0;
+> +}
+> +
+> +static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
+> +{
+> +	struct mtk_pcie *pcie = dev_get_drvdata(dev);
+> +	const struct mtk_pcie_soc *soc = pcie->soc;
+> +	struct mtk_pcie_port *port, *tmp;
+> +
+> +	if (!soc->pm_support)
+> +		return 0;
+> +
+> +	if (list_empty(&pcie->ports))
+> +		return 0;
+> +
+> +	if (dev->pm_domain) {
+> +		pm_runtime_enable(dev);
+> +		pm_runtime_get_sync(dev);
+> +	}
 
-ISTR that it recovers from the link going down when I short out
-the PCIe data lines.
+Are these runtime PM calls needed/abused here ?
 
-It worked fine on a XEON E5-2609 system - I did it a lot when
-updating the fpga image.
+Mind explaining the logic ?
 
-Can anyone else verify whether this works on other systems?
-Or whether the kernel (or BIOS) needs to (re-)initialise
-some register to make link recovery work.
+There is certainly an asymmetry with the suspend callback which made me
+suspicious, I am pretty certain Rafael/Kevin/Ulf can help me clarify so
+that we can make progress with this patch.
 
-	David
+Lorenzo
 
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+> +
+> +	clk_prepare_enable(pcie->free_ck);
+> +
+> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
+> +		mtk_pcie_enable_port(port);
+> +
+> +	/* In case of EP was removed while system suspend. */
+> +	if (list_empty(&pcie->ports))
+> +		mtk_pcie_subsys_powerdown(pcie);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct dev_pm_ops mtk_pcie_pm_ops = {
+> +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
+> +				      mtk_pcie_resume_noirq)
+> +};
+> +
+>  static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
+>  	.ops = &mtk_pcie_ops,
+>  	.startup = mtk_pcie_startup_port,
+>  };
+>  
+>  static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
+> +	.pm_support = true,
+>  	.ops = &mtk_pcie_ops_v2,
+>  	.startup = mtk_pcie_startup_port_v2,
+>  	.setup_irq = mtk_pcie_setup_irq,
+> @@ -1210,6 +1275,7 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
+>  
+>  static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
+>  	.need_fix_class_id = true,
+> +	.pm_support = true,
+>  	.ops = &mtk_pcie_ops_v2,
+>  	.startup = mtk_pcie_startup_port_v2,
+>  	.setup_irq = mtk_pcie_setup_irq,
+> @@ -1229,6 +1295,7 @@ static struct platform_driver mtk_pcie_driver = {
+>  		.name = "mtk-pcie",
+>  		.of_match_table = mtk_pcie_ids,
+>  		.suppress_bind_attrs = true,
+> +		.pm = &mtk_pcie_pm_ops,
+>  	},
+>  };
+>  builtin_platform_driver(mtk_pcie_driver);
+> -- 
+> 2.6.4
+> 
