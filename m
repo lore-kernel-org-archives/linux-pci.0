@@ -1,172 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39518 "EHLO mail.kernel.org"
+Received: from ale.deltatee.com ([207.54.116.67]:44588 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730085AbeGZSgl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 26 Jul 2018 14:36:41 -0400
-Date: Thu, 26 Jul 2018 12:18:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Tai <thomas.tai@oracle.com>
-Cc: bhelgaas@google.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, poza@codeaurora.org
-Subject: Re: [PATCH V3, 1/1] PCI/AER: fix use-after-free in
- pcie_do_fatal_recovery
-Message-ID: <20180726171853.GC173328@bhelgaas-glaptop.roam.corp.google.com>
-References: <1532030555-7177-1-git-send-email-thomas.tai@oracle.com>
- <1532030555-7177-2-git-send-email-thomas.tai@oracle.com>
- <20180725202420.GA173328@bhelgaas-glaptop.roam.corp.google.com>
- <90c59775-a344-c58a-89c3-511a44839365@oracle.com>
+        id S1729689AbeGQRf4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Jul 2018 13:35:56 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org
+Cc: Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 17 Jul 2018 11:02:00 -0600
+Message-Id: <20180717170204.30470-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <90c59775-a344-c58a-89c3-511a44839365@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v7 0/4] Add parameter for disabling ACS redirection for P2P
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 26, 2018 at 10:29:18AM -0400, Thomas Tai wrote:
-> [ ... ]>
-> > I know I suggested this strategy, but I think this ended up being more
-> > complicated than it's worth.
-> > 
-> > The problem code in pcie_do_fatal_recovery() essentially looks like
-> > this:
-> > 
-> >    pcie_do_fatal_recovery(dev)
-> >      pci_stop_and_remove_bus_device(dev);
-> >      reset_link(dev);
-> >      pci_cleanup_aer_uncorrect_error_status(dev);
-> >      pcie_wait_for_link(dev, ...);
-> >      pci_uevent_ers(dev, ...);
-> >      pci_info(dev, ...);
-> > 
-> > Some of this depends on the device type (bridge vs. endpoint) and the
-> > caller (AER vs. DPC), but given the right conditions, we can exercise
-> > all the above calls.
-> > 
-> > I think it is just broken that we keep doing things with "dev" after
-> > removing it.  IMHO this code should be restructured to avoid that.
-> > 
-> > I think fiddling with the refcount as in this patch adds too much
-> > complexity and makes it look like the current structure of
-> > pcie_do_fatal_recovery() is reasonable when it really isn't.
-> > 
-> > But restructuring pcie_do_fatal_recovery() is too big a project to do
-> > before v4.18, and we need to fix this problem.  I propose that we
-> > merge your v2 patch for now, so at least the band-aid is in the
-> > function that I think is broken.
-> > 
-> > I *would* like to reduce the scope of the get/put as in the patch
-> > below, though, so it is contained inside the rescan_remove lock.
-> > Could you try it and make sure it's still enough to avoid the problem?
-> > If it is, I'll add your sign-off and get this in v4.18.
-> 
-> Hi Bjorn,
-> Thank you for your review and the details analysis. Sure, let's do the work
-> around for now. I retested your patch below and works fine. You are welcome
-> to add my signed-off and get this in v4.18.
+Changes since v6:
+* Fixed order of operations for device specific disable function as
+  noticed by Alex
+* Rebased onto v4.18-rc5 (no conflicts)
 
-OK, I added your signed-off-by and put the patch below on my for-linus
-branch for v4.18.
 
-> As far as reworking the pcie_do_fatal_recovery() goes, would you think I can
-> help out in any way? May be I can try rework the code to not use the dev
-> after it is removed.
+Changes since v5:
+* Add a quirk to handle the Intel SPT PCH case (as pointed out by Alex)
+* Warn in the case that we try to disable ACS redirect on a device
+  that doesn't have the ACS capability (also suggested by Alex)
+* Collect reviewed-by tag from Alex
+* Rebased onto v4.18-rc4 (no conflicts)
 
-That'd be great!  I expect Oza and Keith will have useful insight
-there, too, so keep them in the loop.
+Changes since v4:
+* Fixed a couple documentation mistakes spotted by Randy
 
-> > commit 277ce38f2ed6a4310acf3bd541fb3aee4ec27dee
-> > Author: Thomas Tai <thomas.tai@oracle.com>
-> > Date:   Tue Jul 24 16:47:59 2018 -0500
-> > 
-> >      PCI/AER: Work around use-after-free in pcie_do_fatal_recovery()
-> >      When an fatal error is received by a non-bridge device, the device is
-> >      removed, and pci_stop_and_remove_bus_device() deallocates the device
-> >      structure.  The freed device structure is used by subsequent code to send
-> >      uevents and print messages.
-> >      Hold a reference on the device until we're finished using it.  This is not
-> >      an ideal fix because pcie_do_fatal_recovery() should not use the device at
-> >      all after removing it, but that's too big a project for right now.
-> >      #
-> >      [bhelgaas: changelog, reduce get/put coverage]
-> >      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> > index fdbcc555860d..674984a9277a 100644
-> > --- a/drivers/pci/pcie/err.c
-> > +++ b/drivers/pci/pcie/err.c
-> > @@ -291,6 +291,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
-> >   	parent = udev->subordinate;
-> >   	pci_lock_rescan_remove();
-> > +	pci_dev_get(dev);
-> >   	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
-> >   					 bus_list) {
-> >   		pci_dev_get(pdev);
-> > @@ -325,6 +326,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
-> >   		pci_info(dev, "Device recovery from fatal error failed\n");
-> >   	}
-> > +	pci_dev_put(dev);
-> >   	pci_unlock_rescan_remove();
-> >   }
-> > 
-> > > Signed-off-by: Thomas Tai <thomas.tai@oracle.com>
-> > > ---
-> > >   drivers/pci/pcie/aer.c | 27 +++++++++++++++++++++++++--
-> > >   1 file changed, 25 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> > > index a2e8838..6e5e6a5 100644
-> > > --- a/drivers/pci/pcie/aer.c
-> > > +++ b/drivers/pci/pcie/aer.c
-> > > @@ -657,6 +657,10 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
-> > >   static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
-> > >   {
-> > >   	if (e_info->error_dev_num < AER_MAX_MULTI_ERR_DEVICES) {
-> > > +		/* increment reference count to keep the dev
-> > > +		 * around until remove_source_device()
-> > > +		 */
-> > > +		pci_dev_get(dev);
-> > >   		e_info->dev[e_info->error_dev_num] = dev;
-> > >   		e_info->error_dev_num++;
-> > >   		return 0;
-> > > @@ -665,6 +669,21 @@ static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
-> > >   }
-> > >   /**
-> > > + * remove_source_device -remove error devices from the e_info
-> > > + * @e_info: pointer to error info
-> > > + */
-> > > +static void remove_source_device(struct aer_err_info *e_info)
-> > > +{
-> > > +	struct pci_dev *dev;
-> > > +
-> > > +	while (e_info->error_dev_num > 0) {
-> > > +		e_info->error_dev_num--;
-> > > +		dev = e_info->dev[e_info->error_dev_num];
-> > > +		pci_dev_put(dev);
-> > > +	}
-> > > +}
-> > > +
-> > > +/**
-> > >    * is_error_source - check whether the device is source of reported error
-> > >    * @dev: pointer to pci_dev to be checked
-> > >    * @e_info: pointer to reported error info
-> > > @@ -976,8 +995,10 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
-> > >   			e_info->multi_error_valid = 0;
-> > >   		aer_print_port_info(pdev, e_info);
-> > > -		if (find_source_device(pdev, e_info))
-> > > +		if (find_source_device(pdev, e_info)) {
-> > >   			aer_process_err_devices(e_info);
-> > > +			remove_source_device(e_info);
-> > > +		}
-> > >   	}
-> > >   	if (e_src->status & PCI_ERR_ROOT_UNCOR_RCV) {
-> > > @@ -995,8 +1016,10 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
-> > >   		aer_print_port_info(pdev, e_info);
-> > > -		if (find_source_device(pdev, e_info))
-> > > +		if (find_source_device(pdev, e_info)) {
-> > >   			aer_process_err_devices(e_info);
-> > > +			remove_source_device(e_info);
-> > > +		}
-> > >   	}
-> > >   }
-> > > -- 
-> > > 1.8.3.1
-> > > 
+Changes since v3:
+* Removed some of the cruft that was copied from the resource_alignment
+  paramater (per Alex)
+* A number of docuemntation fixes as noticed by Alex and Willy
+
+Changes since v2:
+* Rebased onto v4.18-rc1 (no conflicts)
+* Minor tweaks to the documentation per Andy
+* Removed the "path:" prefix and use the path parsing code
+  for simple devices (as it works the same). Per a suggestion from Alex
+
+Changes since v1:
+* Reworked pci_dev_str_match_path using strrchr as suggested by Alex
+* Collected Christian's Acks
+
+--
+
+Hi,
+
+As discussed in our PCI P2PDMA series, we'd like to add a kernel
+parameter for selectively disabling ACS redirection for select
+bridges. Seeing this turned out to be a small series in itself, we've
+decided to send this separately from the P2P work.
+
+This series generalizes the code already done for the resource_alignment
+option that already exists. The first patch creates a helper function
+to match PCI devices against strings based on the code that already
+existed in pci_specified_resource_alignment().
+
+The second patch expands the new helper to optionally take a path of
+PCI devfns. This is to address Alex's renumbering concern when using
+simple bus-devfns. The implementation is essentially how he described it and
+similar to the Intel VT-d spec (Section 8.3.1).
+
+The final patch adds the disable_acs_redir kernel parameter which takes
+a list of PCI devices and will disable the ACS P2P Request Redirect,
+ACS P2P Completion Redirect and ACS P2P Egress Control bits for the
+selected devices. This allows P2P traffic between selected bridges and
+seeing it's done at boot, before the IOMMU groups will be created, the
+groups will match the security provided by ACS.
+
+Thanks,
+
+Logan
+
+--
+
+Logan Gunthorpe (4):
+  PCI: Make specifying PCI devices in kernel parameters reusable
+  PCI: Allow specifying devices using a base bus and path of devfns
+  PCI: Introduce disable_acs_redir quirk
+  PCI: Introduce the disable_acs_redir parameter
+
+ Documentation/admin-guide/kernel-parameters.txt |  41 +++-
+ drivers/pci/pci.c                               | 310 +++++++++++++++++++-----
+ drivers/pci/quirks.c                            |  78 +++++-
+ include/linux/pci.h                             |   5 +
+ 4 files changed, 361 insertions(+), 73 deletions(-)
+
+--
+2.11.0
