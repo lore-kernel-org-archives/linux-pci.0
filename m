@@ -1,40 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr710065.outbound.protection.outlook.com ([40.107.71.65]:42108
-        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726782AbeG3S5l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Jul 2018 14:57:41 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: <bhelgaas@google.com>
-CC: <kishon@ti.com>, <lorenzo.pieralisi@arm.com>,
-        <linux-pci@vger.kernel.org>, <gustavo.pimentel@synopsys.com>,
-        <cyrille.pitchen@bootlin.com>, <stelford@cadence.com>,
-        Alan Douglas <adouglas@cadence.com>
-Subject: [PATCH 0/5] Add MSI-X support for cadence EP driver
-Date: Mon, 30 Jul 2018 18:21:00 +0100
-Message-ID: <1532971260-5269-1-git-send-email-adouglas@cadence.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v13 00/12] Add MSI-X support on pcitest tool
+Date: Tue, 17 Jul 2018 12:26:15 +0200
+Message-Id: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Patch series made against Bjorn Helgaas's pci next branch.
-It relies on Gustavo Pimentel's patch series adding MSI-X
-support in the PCIe EP driver framework, and implements
-MSI-X support for the cadence endpoint driver.
- - Use AXI region 0 for interrupt signalling
- - Write MSI and MSI-X with 32bit value rather than 16bit
- - Check for masking before sending MSI or MSI-X
- - Check link is up before sending IRQ
- - Use BAR5 for MSI-X vectors
+Patch series made against Lorenzo's master branch.
 
-Alan Douglas (5):
-  PCI: cadence: Use AXI region 0 to signal interrupts from EP
-  PCI: cadence: Write MSI data with 32bits
-  PCI: cadence: Check whether MSI is masked before sending it
-  PCI: cadence: Check link is up before sending IRQ from EP
-  PCI: cadence: Add MSI-X capability to EP driver
+Fix EP link notification implementation.
 
- drivers/pci/controller/pcie-cadence-ep.c |  129 ++++++++++++++++++++++++++++--
- drivers/pci/controller/pcie-cadence.h    |    1 +
- 2 files changed, 124 insertions(+), 6 deletions(-)
+Add MSI-X support on pcitest tool.
+
+Add new callbacks methods and handlers to trigger the MSI-X interrupts
+on the EP DesignWare IP driver.
+
+Allow to set/get MSI-X EP maximum capability number.
+
+Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
+
+Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
+
+Update the pcitest.sh script to support MSI-X feature tests.
+
+Update related documentation accordingly.
+
+Gustavo Pimentel (12):
+  PCI: dwc: Fix EP link notification implementation
+  PCI: endpoint: Add MSI-X interfaces
+  PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
+  PCI: dwc: Add MSI-X callbacks handler
+  PCI: dwc: Rework MSI callbacks handler
+  PCI: dwc: Add legacy interrupt callback handler
+  pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
+  pci-epf-test/pci_endpoint_test: Use irq_type module parameter
+  pci-epf-test/pci_endpoint_test: Add MSI-X support
+  pci_endpoint_test: Add 2 ioctl commands
+  tools: PCI: Add MSI-X support
+  PCI: endpoint: Add MSI set maximum restriction
+
+ .../PCI/endpoint/function/binding/pci-test.txt     |   2 +
+ Documentation/PCI/endpoint/pci-endpoint.txt        |   4 +-
+ Documentation/PCI/endpoint/pci-test-function.txt   |  29 ++-
+ Documentation/PCI/endpoint/pci-test-howto.txt      |  30 ++-
+ Documentation/ioctl/ioctl-number.txt               |   1 +
+ Documentation/misc-devices/pci-endpoint-test.txt   |   6 +
+ drivers/misc/pci_endpoint_test.c                   | 277 ++++++++++++++++-----
+ drivers/pci/controller/dwc/pci-dra7xx.c            |   2 +-
+ drivers/pci/controller/dwc/pcie-artpec6.c          |   2 +-
+ drivers/pci/controller/dwc/pcie-designware-ep.c    | 210 ++++++++++++++--
+ drivers/pci/controller/dwc/pcie-designware-plat.c  |  11 +-
+ drivers/pci/controller/dwc/pcie-designware.h       |  29 ++-
+ drivers/pci/controller/pcie-cadence-ep.c           |   3 +-
+ drivers/pci/controller/pcie-rockchip-ep.c          |   2 +-
+ drivers/pci/endpoint/functions/pci-epf-test.c      |  86 +++++--
+ drivers/pci/endpoint/pci-ep-cfs.c                  |  24 ++
+ drivers/pci/endpoint/pci-epc-core.c                |  68 ++++-
+ include/linux/pci-epc.h                            |  16 +-
+ include/linux/pci-epf.h                            |   1 +
+ include/uapi/linux/pcitest.h                       |   3 +
+ tools/pci/pcitest.c                                |  51 +++-
+ tools/pci/pcitest.sh                               |  15 ++
+ 22 files changed, 722 insertions(+), 150 deletions(-)
+
+-- 
+2.7.4
