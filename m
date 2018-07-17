@@ -1,74 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v14 00/12] Add MSI-X support on pcitest tool
-Date: Thu, 19 Jul 2018 10:32:10 +0200
-Message-Id: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:35390 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730092AbeGQVfV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Jul 2018 17:35:21 -0400
+Date: Tue, 17 Jul 2018 16:00:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Martin Mares <mj@ucw.cz>, Logan Gunthorpe <logang@deltatee.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Subject: Re: lspci: Display path to device
+Message-ID: <20180717210053.GB128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180717170204.30470-1-logang@deltatee.com>
+ <20180717203900.GA1771@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180717203900.GA1771@bombadil.infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Patch series made against Lorenzo's master branch.
+On Tue, Jul 17, 2018 at 01:39:00PM -0700, Matthew Wilcox wrote:
+> I don't like telling the user to grovel around lspci -t by hand.  It's
+> not many lines of code to add a new -P option to lspci to show the path
+> to each device instead of bus:dev.fn
+> 
+> Here's three examples, first without, then with -P.
+> ...
 
-Fix EP link notification implementation.
+> The Nehalem system makes an interesting testcase because it exposes some
+> registers in fake PCIe devices that aren't behind the root ports.  eg:
+> 
+> ff:06.3 Host bridge: Intel Corporation Xeon 5500/Core i7 Integrated Memory Controller Channel 2 Thermal Control Registers (rev 04)
 
-Add MSI-X support on pcitest tool.
+I think these appear as conventional PCI devices; at least the ones
+I've seen, e.g., [1], don't have a PCIe capability, so I think it
+makes sense that they're not behind a root port.
 
-Add new callbacks methods and handlers to trigger the MSI-X interrupts
-on the EP DesignWare IP driver.
-
-Allow to set/get MSI-X EP maximum capability number.
-
-Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
-
-Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
-
-Update the pcitest.sh script to support MSI-X feature tests.
-
-Update related documentation accordingly.
-
-Gustavo Pimentel (12):
-  PCI: dwc: Fix EP link notification implementation
-  PCI: endpoint: Add MSI-X interfaces
-  PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
-  PCI: dwc: Add MSI-X callbacks handler
-  PCI: dwc: Rework MSI callbacks handler
-  PCI: dwc: Add legacy interrupt callback handler
-  pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
-  pci-epf-test/pci_endpoint_test: Use irq_type module parameter
-  pci-epf-test/pci_endpoint_test: Add MSI-X support
-  pci_endpoint_test: Add 2 ioctl commands
-  tools: PCI: Add MSI-X support
-  PCI: endpoint: Add MSI set maximum restriction
-
- .../PCI/endpoint/function/binding/pci-test.txt     |   2 +
- Documentation/PCI/endpoint/pci-endpoint.txt        |   4 +-
- Documentation/PCI/endpoint/pci-test-function.txt   |  29 ++-
- Documentation/PCI/endpoint/pci-test-howto.txt      |  30 ++-
- Documentation/ioctl/ioctl-number.txt               |   1 +
- Documentation/misc-devices/pci-endpoint-test.txt   |   6 +
- drivers/misc/pci_endpoint_test.c                   | 290 ++++++++++++++++-----
- drivers/pci/controller/dwc/pci-dra7xx.c            |   2 +-
- drivers/pci/controller/dwc/pcie-artpec6.c          |   2 +-
- drivers/pci/controller/dwc/pcie-designware-ep.c    | 210 +++++++++++++--
- drivers/pci/controller/dwc/pcie-designware-plat.c  |  11 +-
- drivers/pci/controller/dwc/pcie-designware.h       |  29 ++-
- drivers/pci/controller/pcie-cadence-ep.c           |   3 +-
- drivers/pci/controller/pcie-rockchip-ep.c          |   2 +-
- drivers/pci/endpoint/functions/pci-epf-test.c      |  86 ++++--
- drivers/pci/endpoint/pci-ep-cfs.c                  |  24 ++
- drivers/pci/endpoint/pci-epc-core.c                |  68 ++++-
- include/linux/pci-epc.h                            |  16 +-
- include/linux/pci-epf.h                            |   1 +
- include/uapi/linux/pcitest.h                       |   3 +
- tools/pci/pcitest.c                                |  51 +++-
- tools/pci/pcitest.sh                               |  15 ++
- 22 files changed, 735 insertions(+), 150 deletions(-)
-
--- 
-2.7.4
+[1] https://bugzilla5.redhat.com/attachment.cgi?id=433169
