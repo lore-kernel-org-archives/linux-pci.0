@@ -1,173 +1,388 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 4 Jul 2018 17:37:23 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH 2/2] PCI: imx: Initial imx7d pm support
-Message-ID: <20180704163723.GB13155@red-moon>
-References: <cover.1527621510.git.leonard.crestez@nxp.com>
- <a6176c8bcfbca08ce4e93e304bdcd48c4600f8e2.1527621510.git.leonard.crestez@nxp.com>
- <1528468422.26356.20.camel@pengutronix.de>
- <02207512447db4585a4e879e2a059ba223d57dbe.camel@nxp.com>
- <1530607328.22468.102.camel@pengutronix.de>
-MIME-Version: 1.0
-In-Reply-To: <1530607328.22468.102.camel@pengutronix.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
- Richard Zhu <hongxing.zhu@nxp.com>, Abel Vesa <abel.vesa@nxp.com>,
- Anson Huang <anson.huang@nxp.com>,
- "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
- "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
- "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- Leonard Crestez <leonard.crestez@nxp.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v12 10/12] pci_endpoint_test: Add 2 ioctl commands
+Date: Tue, 17 Jul 2018 11:31:30 +0200
+Message-Id: <0dc487515e28a6cd790888cb98f84fb7ea3a412e.1531818979.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 03, 2018 at 10:42:08AM +0200, Lucas Stach wrote:
-> Am Montag, den 02.07.2018, 17:18 +0000 schrieb Leonard Crestez:
-> > On Fri, 2018-06-08 at 16:33 +0200, Lucas Stach wrote:
-> > > Am Dienstag, den 29.05.2018, 22:39 +0300 schrieb Leonard Crestez:
-> > > > On imx7d the phy is turned off in suspend and must be reset on resu=
-me.
-> > > > Right now lspci -v fails after a suspend/resume cycle, fix this by
-> > > > adding minimal suspend/resume code from the nxp vendor tree.
-> > > > =
+Add MSI-X support and update driver documentation accordingly.
 
-> > > > This is currently only enabled for imx7 but the same sequence can be
-> > > > applied to other imx pcie variants.
-> > > > +#ifdef CONFIG_PM_SLEEP
-> > > > +static int imx6_pcie_suspend_noirq(struct device *dev)
-> > > > +{
-> > > > > > > +	struct imx6_pcie *imx6_pcie =3D dev_get_drvdata(dev);
-> > > > +
-> > > > +	if (imx6_pcie->variant =3D=3D IMX7D) {
-> > > =
+Add 2 new IOCTL commands:
+ - Allow to reconfigure driver IRQ type in runtime.
+ - Allow to retrieve current driver IRQ type configured.
 
-> > > Instead of this large indented block, please just have an early return
-> > > at the start of this function, like:
-> > > =
+Add IRQ type validation before executing the READ/WRITE/COPY tests.
 
-> > > if (imx6_pcie->variant !=3D IMX7D)
-> > > 	return 0;
-> > > =
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Change v2->v3:
+ - New patch file created base on the previous patch
+"misc: pci_endpoint_test: Add MSI-X support" patch file following
+Kishon's suggestion.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Change v5->v6:
+ - Moved PCITEST_SET_IRQTYPE and PCITEST_GET_IRQTYPE ioctl entries
+from patch #10 to here.
+ - Increased ioctl parameters range associated to
+drivers/misc/pci_endpoint_test.c driver.
+Change v6->v7:
+ - irq_type variable update just before returning the function.
+Change v7->v8:
+ - Re-sending the patch series.
+Change v8->v9:
+ - Added a extra parameter to pci_endpoint_test_alloc_irq_vectors,
+that specifies which irq type should be allocated.
+Change v9->v10:
+ - Fixed bug, report available: https://lkml.org/lkml/2018/7/16/11
+ - Added IRQ type validation before executing the READ/WRITE/COPY
+tests.
+Change v11->v12:
+ - Exchange pci_endpoint_test_release_irq() and
+pci_endpoint_test_free_irq_vectors() content.
+ - Refactor all previous calls to those functions.
 
-> > > Same for the resume function.
-> > =
+ Documentation/ioctl/ioctl-number.txt             |   2 +-
+ Documentation/misc-devices/pci-endpoint-test.txt |   3 +
+ drivers/misc/pci_endpoint_test.c                 | 192 +++++++++++++++++------
+ include/uapi/linux/pcitest.h                     |   2 +
+ 4 files changed, 152 insertions(+), 47 deletions(-)
 
-> > OK. The resume sequence is mostly the same for all SOCs where it
-> > applies.
-> > =
-
-> > > > +static int imx6_pcie_resume_noirq(struct device *dev)
-> > > > +{
-> > > > > > > +	int ret =3D 0;
-> > > > > > > +	struct imx6_pcie *imx6_pcie =3D dev_get_drvdata(dev);
-> > > > > > > +	struct pcie_port *pp =3D &imx6_pcie->pci->pp;
-> > > > =
-
-> > > > +
-> > > > > > > +	if (imx6_pcie->variant =3D=3D IMX7D) {
-> > > > +		imx6_pcie_ltssm_disable(dev);
-> > > =
-
-> > > The LTSSM disable seems misplaced here. I would have expected it to be
-> > > in the suspend function.
-> > =
-
-> > This is a requirement for reinitializing the core: LTSSM needs to be
-> > turned off during initialization.
-> =
-
-> If you disable LTSSM during suspend, it should be off when entering
-> this resume function, no?
-> =
-
-> > > > +		/*
-> > > > > > > +		=A0* controller maybe turn off, re-configure again
-> > > > > > > +		=A0*/
-> > > > > > > +		dw_pcie_setup_rc(pp);
-> > > > +
-> > > > > > > +		imx6_pcie_ltssm_enable(dev);
-> > > > +
-> > > > > > > +		ret =3D imx6_pcie_wait_for_link(imx6_pcie);
-> > > > > > > +		if (ret < 0)
-> > > > +			pr_info("pcie link is down after resume.\n");
-> > > =
-
-> > > If the PHY has been powered down and LTSSM stopped I guess we need to
-> > > do the full imx6_pcie_establish_link() dance again here to reliably r=
-e-
-> > > establish the link. The above seems unsafe.
-> > =
-
-> > What imx6_pcie_establish_link does additionally is some workaround for
-> > link gen detection. I agree that it should be included.
-> > =
-
-> > This would make resume mostly the same as imx_pcie_host_init except for
-> > dw_pcie_msi_init; that needs to be saved/restored separately.
-> =
-
-> Right, so maybe we can even cut down on lines of code by splitting and
-> reusing existing functions.
-> =
-
-> > =
-
-> > Another issue that should be discussed here is that on 6sx and 7d the
-> > gpc PCIE power domain is not defined correctly: the PCIE block is in
-> > the DISPMIX domain on both SOCs and it is only PCIE_PHY which has a
-> > separate power domain.
-> > =
-
-> > This matters: enabling power-gating for displays will break pcie if
-> > this relationship is not taken into account. Here are some options:
-> > =
-
-> > 1) Make &pd_pcie a child of &pd_disp by hacking into gpc probe
-> > functions and calling pm_genpd_add_subdomain. Not very nice.
-> > =
-
-> > 2) Support nesting PGCs in GPC code? Lots of code and still an
-> > incorrect representation of hardware.
-> > =
-
-> > 3) Set power-domains =3D <&pd_disp> and enable runtime PM on &pd_pcie?
-> > =
-
-> > 4) Add separate devices for the pcie-phy. These would be mostly empty
-> > but still different, for example on imx6sx the PHY is not even
-> > accessible on the bus but only though PCIE registers.
-> =
-
-> 5) Take a look at the linux-pm list. ;) The power domain framework has
-> just gained support for multiple power domains per device. I think that
->  is the right solution for this, as like you mentioned the PHY isn't
-> really a separate block on i.MX6, but part of the PCIe controller
-> device.
-
->From the discussion I take this as there is going to be a v2 so
-I will mark this as Changes Requested, please let me know if that's
-a problem.
-
-Thanks,
-Lorenzo
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
+index 65259d4..c15c4f3 100644
+--- a/Documentation/ioctl/ioctl-number.txt
++++ b/Documentation/ioctl/ioctl-number.txt
+@@ -166,7 +166,7 @@ Code  Seq#(hex)	Include File		Comments
+ 'P'	all	linux/soundcard.h	conflict!
+ 'P'	60-6F	sound/sscape_ioctl.h	conflict!
+ 'P'	00-0F	drivers/usb/class/usblp.c	conflict!
+-'P'	01-07	drivers/misc/pci_endpoint_test.c	conflict!
++'P'	01-09	drivers/misc/pci_endpoint_test.c	conflict!
+ 'Q'	all	linux/soundcard.h
+ 'R'	00-1F	linux/random.h		conflict!
+ 'R'	01	linux/rfkill.h		conflict!
+diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
+index fdfa0f6..58ccca4 100644
+--- a/Documentation/misc-devices/pci-endpoint-test.txt
++++ b/Documentation/misc-devices/pci-endpoint-test.txt
+@@ -28,6 +28,9 @@ ioctl
+ 	      to be tested should be passed as argument.
+  PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
+ 	      to be tested should be passed as argument.
++ PCITEST_SET_IRQTYPE: Changes driver IRQ type configuration. The IRQ type
++	      should be passed as argument (0: Legacy, 1:MSI, 2:MSI-X).
++ PCITEST_GET_IRQTYPE: Gets driver IRQ type configuration.
+  PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
+ 		as argument.
+  PCITEST_READ: Perform read tests. The size of the buffer should be passed
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index f4fef10..d909ca5 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -37,6 +37,7 @@
+ 
+ #define DRV_MODULE_NAME				"pci-endpoint-test"
+ 
++#define IRQ_TYPE_UNDEFINED			-1
+ #define IRQ_TYPE_LEGACY				0
+ #define IRQ_TYPE_MSI				1
+ #define IRQ_TYPE_MSIX				2
+@@ -157,6 +158,88 @@ static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
+ 	return IRQ_HANDLED;
+ }
+ 
++static void pci_endpoint_test_free_irq_vectors(struct pci_endpoint_test *test)
++{
++	int i;
++	struct pci_dev *pdev = test->pdev;
++	struct device *dev = &pdev->dev;
++
++	for (i = 0; i < test->num_irqs; i++)
++		devm_free_irq(dev, pci_irq_vector(pdev, i), test);
++
++	test->num_irqs = 0;
++}
++
++static bool pci_endpoint_test_alloc_irq_vectors(struct pci_endpoint_test *test,
++						int type)
++{
++	int irq = -1;
++	struct pci_dev *pdev = test->pdev;
++	struct device *dev = &pdev->dev;
++	bool res = true;
++
++	switch (type) {
++	case IRQ_TYPE_LEGACY:
++		irq = 0;
++		break;
++	case IRQ_TYPE_MSI:
++		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
++		if (irq < 0)
++			dev_err(dev, "Failed to get MSI interrupts\n");
++		break;
++	case IRQ_TYPE_MSIX:
++		irq = pci_alloc_irq_vectors(pdev, 1, 2048, PCI_IRQ_MSIX);
++		if (irq < 0)
++			dev_err(dev, "Failed to get MSI-X interrupts\n");
++		break;
++	default:
++		dev_err(dev, "Invalid IRQ type selected\n");
++	}
++
++	if (irq < 0) {
++		irq = 0;
++		res = false;
++	}
++	test->num_irqs = irq;
++
++	return res;
++}
++
++static void pci_endpoint_test_release_irq(struct pci_endpoint_test *test)
++{
++	struct pci_dev *pdev = test->pdev;
++
++	pci_disable_msi(pdev);
++	pci_disable_msix(pdev);
++}
++
++static bool pci_endpoint_test_request_irq(struct pci_endpoint_test *test)
++{
++	int i;
++	int err;
++	struct pci_dev *pdev = test->pdev;
++	struct device *dev = &pdev->dev;
++
++	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
++			       IRQF_SHARED, DRV_MODULE_NAME, test);
++	if (err) {
++		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
++		return false;
++	}
++
++	for (i = 1; i < test->num_irqs; i++) {
++		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
++				       pci_endpoint_test_irqhandler,
++				       IRQF_SHARED, DRV_MODULE_NAME, test);
++		if (err)
++			dev_err(dev, "Failed to request IRQ %d for MSI%s %d\n",
++				pci_irq_vector(pdev, i),
++				irq_type == IRQ_TYPE_MSIX ? "-X" : "", i + 1);
++	}
++
++	return true;
++}
++
+ static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
+ 				  enum pci_barno barno)
+ {
+@@ -247,6 +330,11 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	if (size > SIZE_MAX - alignment)
+ 		goto err;
+ 
++	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
++		dev_err(dev, "Invalid IRQ type option\n");
++		goto err;
++	}
++
+ 	orig_src_addr = dma_alloc_coherent(dev, size + alignment,
+ 					   &orig_src_phys_addr, GFP_KERNEL);
+ 	if (!orig_src_addr) {
+@@ -337,6 +425,11 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 	if (size > SIZE_MAX - alignment)
+ 		goto err;
+ 
++	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
++		dev_err(dev, "Invalid IRQ type option\n");
++		goto err;
++	}
++
+ 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
+ 				       GFP_KERNEL);
+ 	if (!orig_addr) {
+@@ -400,6 +493,11 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 	if (size > SIZE_MAX - alignment)
+ 		goto err;
+ 
++	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
++		dev_err(dev, "Invalid IRQ type option\n");
++		goto err;
++	}
++
+ 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
+ 				       GFP_KERNEL);
+ 	if (!orig_addr) {
+@@ -440,6 +538,38 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 	return ret;
+ }
+ 
++static bool pci_endpoint_test_set_irq(struct pci_endpoint_test *test,
++				      int req_irq_type)
++{
++	struct pci_dev *pdev = test->pdev;
++	struct device *dev = &pdev->dev;
++
++	if (req_irq_type < IRQ_TYPE_LEGACY || req_irq_type > IRQ_TYPE_MSIX) {
++		dev_err(dev, "Invalid IRQ type option\n");
++		return false;
++	}
++
++	if (irq_type == req_irq_type)
++		return true;
++
++	pci_endpoint_test_free_irq_vectors(test);
++	pci_endpoint_test_release_irq(test);
++
++	if (!pci_endpoint_test_alloc_irq_vectors(test, req_irq_type))
++		goto err;
++
++	if (!pci_endpoint_test_request_irq(test))
++		goto err;
++
++	irq_type = req_irq_type;
++	return true;
++
++err:
++	pci_endpoint_test_release_irq(test);
++	irq_type = IRQ_TYPE_UNDEFINED;
++	return false;
++}
++
+ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
+ 				    unsigned long arg)
+ {
+@@ -471,6 +601,12 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
+ 	case PCITEST_COPY:
+ 		ret = pci_endpoint_test_copy(test, arg);
+ 		break;
++	case PCITEST_SET_IRQTYPE:
++		ret = pci_endpoint_test_set_irq(test, arg);
++		break;
++	case PCITEST_GET_IRQTYPE:
++		ret = irq_type;
++		break;
+ 	}
+ 
+ ret:
+@@ -486,9 +622,7 @@ static const struct file_operations pci_endpoint_test_fops = {
+ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 				   const struct pci_device_id *ent)
+ {
+-	int i;
+ 	int err;
+-	int irq = 0;
+ 	int id;
+ 	char name[20];
+ 	enum pci_barno bar;
+@@ -537,41 +671,11 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 
+ 	pci_set_master(pdev);
+ 
+-	switch (irq_type) {
+-	case IRQ_TYPE_LEGACY:
+-		break;
+-	case IRQ_TYPE_MSI:
+-		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
+-		if (irq < 0)
+-			dev_err(dev, "Failed to get MSI interrupts\n");
+-		test->num_irqs = irq;
+-		break;
+-	case IRQ_TYPE_MSIX:
+-		irq = pci_alloc_irq_vectors(pdev, 1, 2048, PCI_IRQ_MSIX);
+-		if (irq < 0)
+-			dev_err(dev, "Failed to get MSI-X interrupts\n");
+-		test->num_irqs = irq;
+-		break;
+-	default:
+-		dev_err(dev, "Invalid IRQ type selected\n");
+-	}
+-
+-	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
+-			       IRQF_SHARED, DRV_MODULE_NAME, test);
+-	if (err) {
+-		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
+-		goto err_disable_msi;
+-	}
++	if (!pci_endpoint_test_alloc_irq_vectors(test, irq_type))
++		goto err_disable_irq;
+ 
+-	for (i = 1; i < irq; i++) {
+-		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
+-				       pci_endpoint_test_irqhandler,
+-				       IRQF_SHARED, DRV_MODULE_NAME, test);
+-		if (err)
+-			dev_err(dev, "Failed to request IRQ %d for MSI%s %d\n",
+-				pci_irq_vector(pdev, i),
+-				irq_type == IRQ_TYPE_MSIX ? "-X" : "", i + 1);
+-	}
++	if (!pci_endpoint_test_request_irq(test))
++		goto err_disable_irq;
+ 
+ 	for (bar = BAR_0; bar <= BAR_5; bar++) {
+ 		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
+@@ -631,12 +735,10 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 			pci_iounmap(pdev, test->bar[bar]);
+ 	}
+ 
+-	for (i = 0; i < irq; i++)
+-		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, i), test);
++	pci_endpoint_test_free_irq_vectors(test);
+ 
+-err_disable_msi:
+-	pci_disable_msi(pdev);
+-	pci_disable_msix(pdev);
++err_disable_irq:
++	pci_endpoint_test_release_irq(test);
+ 	pci_release_regions(pdev);
+ 
+ err_disable_pdev:
+@@ -648,7 +750,6 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ {
+ 	int id;
+-	int i;
+ 	enum pci_barno bar;
+ 	struct pci_endpoint_test *test = pci_get_drvdata(pdev);
+ 	struct miscdevice *misc_device = &test->miscdev;
+@@ -665,10 +766,9 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ 		if (test->bar[bar])
+ 			pci_iounmap(pdev, test->bar[bar]);
+ 	}
+-	for (i = 0; i < test->num_irqs; i++)
+-		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, i), test);
+-	pci_disable_msi(pdev);
+-	pci_disable_msix(pdev);
++	pci_endpoint_test_free_irq_vectors(test);
++
++	pci_endpoint_test_release_irq(test);
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+ }
+diff --git a/include/uapi/linux/pcitest.h b/include/uapi/linux/pcitest.h
+index d746fb1..cbf422e 100644
+--- a/include/uapi/linux/pcitest.h
++++ b/include/uapi/linux/pcitest.h
+@@ -17,5 +17,7 @@
+ #define PCITEST_READ		_IOW('P', 0x5, unsigned long)
+ #define PCITEST_COPY		_IOW('P', 0x6, unsigned long)
+ #define PCITEST_MSIX		_IOW('P', 0x7, int)
++#define PCITEST_SET_IRQTYPE	_IOW('P', 0x8, int)
++#define PCITEST_GET_IRQTYPE	_IO('P', 0x9)
+ 
+ #endif /* __UAPI_LINUX_PCITEST_H */
+-- 
+2.7.4
