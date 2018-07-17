@@ -1,81 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([45.249.212.188]:5996 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732357AbeGKCYX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Jul 2018 22:24:23 -0400
-From: "Songxiaowei (Kirin_DRV)" <songxiaowei@hisilicon.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "chenyao (F)" <chenyao11@huawei.com>
-Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRDSCB2NSAxLzFdIFBDSToga2lyaW46IEFk?=
- =?utf-8?Q?d_MSI_support?=
-Date: Wed, 11 Jul 2018 02:22:16 +0000
-Message-ID: <99B4C6BADD9E3241B25E52B02BA737C5412D7B26@dggema525-mbx.china.huawei.com>
-References: <20180628124803.110315-1-songxiaowei@hisilicon.com>
- <20180628124803.110315-2-songxiaowei@hisilicon.com>
- <99B4C6BADD9E3241B25E52B02BA737C5412D2511@dggema525-mbx.china.huawei.com>
- <20180710154017.GA16825@red-moon>
-In-Reply-To: <20180710154017.GA16825@red-moon>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:39973 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729665AbeGQK61 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 06:58:27 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v13 06/12] PCI: dwc: Add legacy interrupt callback handler
+Date: Tue, 17 Jul 2018 12:26:21 +0200
+Message-Id: <3579a0b9b6eefcf306af4ccfd5cd3396df4d8f63.1531822532.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS3pgq7ku7bljp/ku7YtLS0tLQ0KPiDlj5Hku7bkuro6IExvcmVuem8gUGllcmFs
-aXNpIFttYWlsdG86bG9yZW56by5waWVyYWxpc2lAYXJtLmNvbV0NCj4g5Y+R6YCB5pe26Ze0OiAy
-MDE45bm0N+aciDEw5pelIDIzOjQwDQo+IOaUtuS7tuS6ujogU29uZ3hpYW93ZWkgKEtpcmluX0RS
-VikgPHNvbmd4aWFvd2VpQGhpc2lsaWNvbi5jb20+DQo+IOaKhOmAgTogYmhlbGdhYXNAZ29vZ2xl
-LmNvbTsgcm9iaCtkdEBrZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOw0KPiBs
-aW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBjaGVueWFvIChGKSA8Y2hlbnlhbzExQGh1YXdl
-aS5jb20+DQo+IOS4u+mimDogUmU6IOetlOWkjTogW1BBVENIIHY1IDEvMV0gUENJOiBraXJpbjog
-QWRkIE1TSSBzdXBwb3J0DQo+IA0KPiBPbiBNb24sIEp1bCAwOSwgMjAxOCBhdCAwMTo1NDowN0FN
-ICswMDAwLCBTb25neGlhb3dlaSAoS2lyaW5fRFJWKSB3cm90ZToNCj4gPiBIaSBCam9ybiBIZWxn
-YWFzLA0KPiA+DQo+ID4gV291bGQgeW91IGhlbHAgdG8gcmV2aWV3IHRoaXMgcGF0Y2g/DQo+ID4N
-Cj4gPiBCZXN0IHJlZ2FyZHMsDQo+ID4NCj4gPiBYaWFvd2VpLg0KPiA+DQo+ID4gPiAtLS0tLemC
-ruS7tuWOn+S7ti0tLS0tDQo+ID4gPiDlj5Hku7bkuro6IFNvbmd4aWFvd2VpIChLaXJpbl9EUlYp
-DQo+ID4gPiDlj5HpgIHml7bpl7Q6IDIwMTjlubQ25pyIMjjml6UgMjA6NDgNCj4gPiA+IOaUtuS7
-tuS6ujogV2FuZ2JpbmdodWkgPHdhbmdiaW5naHVpQGhpc2lsaWNvbi5jb20+Ow0KPiBiaGVsZ2Fh
-c0Bnb29nbGUuY29tOw0KPiA+ID4gcm9iaCtkdEBrZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5r
-ZXJuZWwub3JnOw0KPiA+ID4gcm9iaCtsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiA+
-ID4gZGltaXRyeXNoQGdvb2dsZS5jb20NCj4gPiA+IOaKhOmAgTogY2hlbnlhbyAoRikgPGNoZW55
-YW8xMUBodWF3ZWkuY29tPjsgU29uZ3hpYW93ZWkgKEtpcmluX0RSVikNCj4gPiA+IDxzb25neGlh
-b3dlaUBoaXNpbGljb24uY29tPg0KPiA+ID4g5Li76aKYOiBbUEFUQ0ggdjUgMS8xXSBQQ0k6IGtp
-cmluOiBBZGQgTVNJIHN1cHBvcnQNCj4gPiA+DQo+ID4gPiBBZGQgc3VwcG9ydCBmb3IgTVNJLg0K
-PiA+ID4NCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFhpYW93ZWkgU29uZyA8c29uZ3hpYW93ZWlAaGlz
-aWxpY29uLmNvbT4NCj4gPiA+IC0tLQ0KPiA+ID4gIGRyaXZlcnMvcGNpL2R3Yy9wY2llLWtpcmlu
-LmMgfCAyOCArKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ID4gPiAgMSBmaWxlIGNoYW5n
-ZWQsIDI4IGluc2VydGlvbnMoKykNCj4gPiA+DQo+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9w
-Y2kvZHdjL3BjaWUta2lyaW4uYw0KPiA+ID4gYi9kcml2ZXJzL3BjaS9kd2MvcGNpZS1raXJpbi5j
-IGluZGV4IGQyOTcwYTAwOWViNS4uNjk5NzI3NmViNjljDQo+ID4gPiAxMDA2NDQNCj4gPiA+IC0t
-LSBhL2RyaXZlcnMvcGNpL2R3Yy9wY2llLWtpcmluLmMNCj4gPiA+ICsrKyBiL2RyaXZlcnMvcGNp
-L2R3Yy9wY2llLWtpcmluLmMNCj4gPiA+IEBAIC00MzAsNiArNDMwLDkgQEAgc3RhdGljIGludCBr
-aXJpbl9wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0DQo+ID4gPiAqcHApIHsNCj4gPiA+
-ICAJa2lyaW5fcGNpZV9lc3RhYmxpc2hfbGluayhwcCk7DQo+ID4gPg0KPiA+ID4gKwlpZiAoSVNf
-RU5BQkxFRChDT05GSUdfUENJX01TSSkpDQo+ID4gPiArCQlkd19wY2llX21zaV9pbml0KHBwKTsN
-Cj4gPiA+ICsNCj4gPiA+ICAJcmV0dXJuIDA7DQo+ID4gPiAgfQ0KPiA+ID4NCj4gPiA+IEBAIC00
-NDUsOSArNDQ4LDM0IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgZHdfcGNpZV9ob3N0X29wcw0KPiA+
-ID4ga2lyaW5fcGNpZV9ob3N0X29wcyA9IHsNCj4gPiA+ICAJLmhvc3RfaW5pdCA9IGtpcmluX3Bj
-aWVfaG9zdF9pbml0LCAgfTsNCj4gPiA+DQo+ID4gPiArc3RhdGljIGludCBraXJpbl9wY2llX2Fk
-ZF9tc2koc3RydWN0IGR3X3BjaWUgKnBjaSwNCj4gPiA+ICsJCQkJc3RydWN0IHBsYXRmb3JtX2Rl
-dmljZSAqcGRldikNCj4gPiA+ICt7DQo+ID4gPiArCWludCByZXQgPSAwOw0KPiA+ID4gKw0KPiA+
-ID4gKwlpZiAoSVNfRU5BQkxFRChDT05GSUdfUENJX01TSSkpIHsNCj4gPiA+ICsJCXJldCA9IHBs
-YXRmb3JtX2dldF9pcnEocGRldiwgMCk7DQo+ID4gPiArCQlpZiAocmV0IDwgMCkgew0KPiA+ID4g
-KwkJCWRldl9lcnIoJnBkZXYtPmRldiwNCj4gPiA+ICsJCQkJImZhaWxlZCB0byBnZXQgTVNJIElS
-USAoJWQpXG4iLCByZXQpOw0KPiA+ID4gKwkJCXJldHVybiByZXQ7DQo+ID4gPiArCQl9DQo+ID4g
-PiArDQo+ID4gPiArCQlwY2ktPnBwLm1zaV9pcnEgPSByZXQ7DQo+ID4gPiArCX0NCj4gPiA+ICsN
-Cj4gPiA+ICsJcmV0dXJuIHJldDsNCj4gPiA+ICt9DQo+ID4gPiArDQo+ID4gPiAgc3RhdGljIGlu
-dCBfX2luaXQga2lyaW5fYWRkX3BjaWVfcG9ydChzdHJ1Y3QgZHdfcGNpZSAqcGNpLA0KPiA+ID4g
-IAkJCQkgICAgICBzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KSAgew0KPiA+ID4gKwlpbnQg
-cmV0Ow0KPiA+ID4gKw0KPiA+ID4gKwlyZXQgPSBraXJpbl9wY2llX2FkZF9tc2kocGNpLCBwZGV2
-KTsNCj4gPiA+ICsJaWYgKHJldCkNCj4gPiA+ICsJCXJldHVybiByZXQ7DQo+IA0KPiBJZiBraXJp
-bl9wY2llX2FkZF9tc2koKSByZXR1cm5zIGFuIElSUSBudW1iZXIgd2UgcmV0dXJuIGZyb20gdGhp
-cyBmdW5jdGlvbg0KPiBoZXJlLCBpcyB0aGF0IHdoYXQgeW91IHJlYWxseSB3YW50ID8NCltzb25n
-eGlhb3dlaV0gIFNvcnJ5IGFib3V0IHRoaXMgaXNzdWUsIEknbGwgY2hlY2sgdGhlIHBhdGNoIGNh
-cmVmdWxseSBhbmQgdGVzdCBpdCBvbiBIaWtleTk2MCBCb2FyZC4NCgkJCSBUaGFua3MgYSBsb3Qg
-Zm9yIHlvdXIgdGltZS4NCg0KQmVzdCByZWdhcmRzLA0KWGlhb3dlaS4NCj4gDQo+IExvcmVuem8N
-Cj4gDQo+ID4gPiArDQo+ID4gPiAgCXBjaS0+cHAub3BzID0gJmtpcmluX3BjaWVfaG9zdF9vcHM7
-DQo+ID4gPg0KPiA+ID4gIAlyZXR1cm4gZHdfcGNpZV9ob3N0X2luaXQoJnBjaS0+cHApOw0KPiA+
-ID4gLS0NCj4gPiA+IDIuMTEuR0lUDQo+ID4NCg==
+Add a legacy interrupt callback handler. Currently DesignWare IP don't
+allow trigger legacy interrupts.
+
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Change v6->v7:
+ - Nothing changed, just to follow the patch set version.
+Change v7->v8:
+ - Re-sending the patch series.
+Change v8->v9:
+ - Nothing changed, just to follow the patch set version.
+Change v9->v10:
+ - Nothing changed, just to follow the patch set version.
+Change v10->v11:
+ - Nothing changed, just to follow the patch set version.
+Change v11->v12:
+ - Nothing changed, just to follow the patch set version.
+Change v12->v13:
+ - Re-sending the patch series.
+
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 10 ++++++++++
+ drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +--
+ drivers/pci/controller/dwc/pcie-designware.h      |  6 ++++++
+ 3 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index dd9c366..1e7b022 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
+ 	.stop			= dw_pcie_ep_stop,
+ };
+ 
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct device *dev = pci->dev;
++
++	dev_err(dev, "EP cannot trigger legacy IRQs\n");
++
++	return -EINVAL;
++}
++
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num)
+ {
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 8bb2ecb..160714d 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -87,8 +87,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 
+ 	switch (type) {
+ 	case PCI_EPC_IRQ_LEGACY:
+-		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
+-		return -EINVAL;
++		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
+ 	case PCI_EPC_IRQ_MSI:
+ 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
+ 	case PCI_EPC_IRQ_MSIX:
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index e8b97f5..96126fd 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -348,6 +348,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num);
+ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+@@ -367,6 +368,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
+ 
++static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	return 0;
++}
++
+ static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 					   u8 interrupt_num)
+ {
+-- 
+2.7.4
