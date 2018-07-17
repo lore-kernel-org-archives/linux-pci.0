@@ -1,53 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx01.hxt-semitech.com.96.203.223.in-addr.arpa ([223.203.96.7]:34906
-        "EHLO barracuda.hxt-semitech.com" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1731193AbeGRBVI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 21:21:08 -0400
-From: "Yang, Shunyong" <shunyong.yang@hxt-semitech.com>
-To: "hch@infradead.org" <hch@infradead.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Zheng, Joey" <yu.zheng@hxt-semitech.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: Unify pci and normal dma direction definition
-Date: Wed, 18 Jul 2018 00:45:24 +0000
-Message-ID: <1531874719.3330.2.camel@hxt-semitech.com>
-References: <1531463840-34651-1-git-send-email-shunyong.yang@hxt-semitech.com>
-         <20180717140335.GA23500@infradead.org>
-In-Reply-To: <20180717140335.GA23500@infradead.org>
-Content-Type: text/plain; charset="iso-8859-15"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 17 Jul 2018 11:48:47 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v7 3/4] PCI: Introduce disable_acs_redir quirk
+Message-ID: <20180717114847.5c407c59@t450s.home>
+In-Reply-To: <20180717170204.30470-4-logang@deltatee.com>
+References: <20180717170204.30470-1-logang@deltatee.com>
+        <20180717170204.30470-4-logang@deltatee.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Christoph,
+On Tue, 17 Jul 2018 11:02:03 -0600
+Logan Gunthorpe <logang@deltatee.com> wrote:
 
-  I will send a v2 according to your comments.
-
-Thanks.
-Shunyong.
-
-On Tue, 2018-07-17 at 07:03 -0700, Christoph Hellwig wrote:
-> > 
-> > diff --git a/include/linux/dma-direction.h b/include/linux/dma-
-> > direction.h
-> > index 3649a031893a..9d52716e9218 100644
-> > --- a/include/linux/dma-direction.h
-> > +++ b/include/linux/dma-direction.h
-> > @@ -2,7 +2,7 @@
-> >  #ifndef _LINUX_DMA_DIRECTION_H
-> >  #define _LINUX_DMA_DIRECTION_H
-> >  /*
-> > - * These definitions mirror those in pci.h, so they can be used
-> > + * These definitions mirror those in pci-dma-compat.h, so they can
-> > be used
-> >   * interchangeably with their PCI_ counterparts.
-> >   */
-> I think we can just drop this comment anymore.
+> Intel SPT PCH hardware has an implementation of the ACS bits that
+> does not comply with the PCI express standard. To deal with this
+> the existing code has an enable_acs() quirk for the hardware.
 > 
-> > 
-> > +#define PCI_DMA_BIDIRECTIONAL	(DMA_BIDIRECTIONAL)
-> > +#define PCI_DMA_TODEVICE	(DMA_TO_DEVICE)
-> > +#define PCI_DMA_FROMDEVICE	(DMA_FROM_DEVICE)
-> > +#define PCI_DMA_NONE		(DMA_NONE)
-> No need for the braces.
+> In order to be able to correctly disable the ACS redirect bits for
+> all hardware we need an analagous quirk to disable those bits.
+> 
+> This adds the function pci_dev_specific_disable_acs_redir() which
+> behaves similarly to pci_dev_specific_enable_acs() but uses a new
+> function pointer for quirks which disables the ACS redirect bits.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> ---
+>  drivers/pci/quirks.c | 78 ++++++++++++++++++++++++++++++++++++++++++++--------
+>  include/linux/pci.h  |  5 ++++
+>  2 files changed, 71 insertions(+), 12 deletions(-)
+
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
