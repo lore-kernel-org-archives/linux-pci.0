@@ -1,94 +1,170 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 24 Jul 2018 10:18:48 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 3/3] PCI: Intel DC P3700 NVMe delay after FLR quirk
-Message-ID: <20180724101849.36f635eb@t450s.home>
-In-Reply-To: <20180724161446.2729.78211.stgit@gimli.home>
-References: <20180724160440.2729.75178.stgit@gimli.home>
- <20180724161446.2729.78211.stgit@gimli.home>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:38989 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729794AbeGQKDS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 06:03:18 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v12 05/12] PCI: dwc: Rework MSI callbacks handler
+Date: Tue, 17 Jul 2018 11:31:25 +0200
+Message-Id: <278a41c07a3339e82867962b36cae81e4928f2b0.1531818979.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 24 Jul 2018 10:14:46 -0600
-Alex Williamson <alex.williamson@redhat.com> wrote:
+Remove duplicate defines located on pcie-designware.h file already
+available on /include/uapi/linux/pci-regs.h file.
 
-> Add a device specific reset for Intel DC P3700 NVMe device which
-> exhibits a timeout failure in drivers waiting for the ready status to
-> update after NVMe enable if the driver interacts with the device too
-> quickly after FLR.  As this has been observed in device assignment
-> scenarios, resolve this with a device specific reset quirk to add an
-> additional, heuristically determined, delay after the FLR completes.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/pci/quirks.c |   22 ++++++++++++++++++++++
->  1 file changed, 22 insertions(+)
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Replaced wrong return value 0 to -EINVAL.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Moved pci_epc_set_msi maximum interrupts validation into a new patch
+file #11.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Change v6->v7:
+ - Nothing changed, just to follow the patch set version.
+Change v7->v8:
+ - Re-sending the patch series.
+Change v8->v9:
+ - Nothing changed, just to follow the patch set version.
+Change v9->v10:
+ - Nothing changed, just to follow the patch set version.
+Change v10->v11:
+ - Nothing changed, just to follow the patch set version.
+Change v11->v12:
+ - Nothing changed, just to follow the patch set version.
 
-I forgot to link the bz in this one, if this somehow becomes the final
-version, please add:
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 49 +++++++++++++++++--------
+ drivers/pci/controller/dwc/pcie-designware.h    | 11 ------
+ 2 files changed, 33 insertions(+), 27 deletions(-)
 
-Link: https://bugzilla.redhat.com/show_bug.cgi?id=159265
-
-Thanks,
-Alex
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 23be2c0..dd9c366 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -246,29 +246,38 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
  
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 3899cdd2514b..08fafd804588 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3751,6 +3751,27 @@ static int nvme_disable_and_flr(struct pci_dev *dev, int probe)
->  	return 0;
->  }
->  
-> +/*
-> + * Intel DC P3700 NVMe controller will timeout waiting for ready status
-> + * to change after NVMe enable if the driver starts interacting with the
-> + * device too quickly after FLR.  A 250ms delay after FLR has heuristically
-> + * proven to produce reliably working results for device assignment cases.
-> + */
-> +static int delay_250ms_after_flr(struct pci_dev *dev, int probe)
-> +{
-> +	if (!pcie_has_flr(dev))
-> +		return -ENOTTY;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	pcie_flr(dev);
-> +
-> +	msleep(250);
-> +
-> +	return 0;
-> +}
-> +
->  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
->  		 reset_intel_82599_sfp_virtfn },
-> @@ -3759,6 +3780,7 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
->  		reset_ivb_igd },
->  	{ PCI_VENDOR_ID_SAMSUNG, 0xa804, nvme_disable_and_flr },
-> +	{ PCI_VENDOR_ID_INTEL, 0x0953, delay_250ms_after_flr },
->  	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
->  		reset_chelsio_generic_dev },
->  	{ 0 }
-> 
-
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+ static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
+ {
+-	int val;
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	u32 val, reg;
++
++	if (!ep->msi_cap)
++		return -EINVAL;
+ 
+-	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+-	if (!(val & MSI_CAP_MSI_EN_MASK))
++	reg = ep->msi_cap + PCI_MSI_FLAGS;
++	val = dw_pcie_readw_dbi(pci, reg);
++	if (!(val & PCI_MSI_FLAGS_ENABLE))
+ 		return -EINVAL;
+ 
+-	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
++	val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
++
+ 	return val;
+ }
+ 
+-static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
++static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
+ {
+-	int val;
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	u32 val, reg;
+ 
+-	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+-	val &= ~MSI_CAP_MMC_MASK;
+-	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
++	if (!ep->msi_cap)
++		return -EINVAL;
++
++	reg = ep->msi_cap + PCI_MSI_FLAGS;
++	val = dw_pcie_readw_dbi(pci, reg);
++	val &= ~PCI_MSI_FLAGS_QMASK;
++	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
+ 	dw_pcie_dbi_ro_wr_en(pci);
+-	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
++	dw_pcie_writew_dbi(pci, reg, val);
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	return 0;
+@@ -367,21 +376,29 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	struct pci_epc *epc = ep->epc;
+ 	u16 msg_ctrl, msg_data;
+-	u32 msg_addr_lower, msg_addr_upper;
++	u32 msg_addr_lower, msg_addr_upper, reg;
+ 	u64 msg_addr;
+ 	bool has_upper;
+ 	int ret;
+ 
++	if (!ep->msi_cap)
++		return -EINVAL;
++
+ 	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
+-	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
++	reg = ep->msi_cap + PCI_MSI_FLAGS;
++	msg_ctrl = dw_pcie_readw_dbi(pci, reg);
+ 	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
+-	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
++	reg = ep->msi_cap + PCI_MSI_ADDRESS_LO;
++	msg_addr_lower = dw_pcie_readl_dbi(pci, reg);
+ 	if (has_upper) {
+-		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
+-		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
++		reg = ep->msi_cap + PCI_MSI_ADDRESS_HI;
++		msg_addr_upper = dw_pcie_readl_dbi(pci, reg);
++		reg = ep->msi_cap + PCI_MSI_DATA_64;
++		msg_data = dw_pcie_readw_dbi(pci, reg);
+ 	} else {
+ 		msg_addr_upper = 0;
+-		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
++		reg = ep->msi_cap + PCI_MSI_DATA_32;
++		msg_data = dw_pcie_readw_dbi(pci, reg);
+ 	}
+ 	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
+ 	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 00ac419..e8b97f5 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -96,17 +96,6 @@
+ #define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
+ 			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
+ 
+-#define MSI_MESSAGE_CONTROL		0x52
+-#define MSI_CAP_MMC_SHIFT		1
+-#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
+-#define MSI_CAP_MME_SHIFT		4
+-#define MSI_CAP_MSI_EN_MASK		0x1
+-#define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+-#define MSI_MESSAGE_ADDR_L32		0x54
+-#define MSI_MESSAGE_ADDR_U32		0x58
+-#define MSI_MESSAGE_DATA_32		0x58
+-#define MSI_MESSAGE_DATA_64		0x5C
+-
+ #define MAX_MSI_IRQS			256
+ #define MAX_MSI_IRQS_PER_CTRL		32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
+-- 
+2.7.4
