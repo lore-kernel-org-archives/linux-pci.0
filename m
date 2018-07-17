@@ -1,99 +1,161 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 3/7 v5] iommu: support iommu configuration for fsl-mc
- devices
-To: Nipun Gupta <nipun.gupta@nxp.com>, will.deacon@arm.com,
- robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
- catalin.marinas@arm.com, gregkh@linuxfoundation.org,
- laurentiu.tudor@nxp.com, bhelgaas@google.com
-References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
- <1526824191-7000-4-git-send-email-nipun.gupta@nxp.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <947a6e16-98ff-9389-b15c-d3025b7be4be@arm.com>
-Date: Tue, 3 Jul 2018 16:30:35 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39156 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729720AbeGQThb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Jul 2018 15:37:31 -0400
+Date: Tue, 17 Jul 2018 14:03:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v2 1/6] PCI/AER: Take severity mask into account while
+ clearing error bits
+Message-ID: <20180717190329.GA128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
+ <1529661494-20936-2-git-send-email-poza@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <1526824191-7000-4-git-send-email-nipun.gupta@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
- shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
- frowand.list@gmail.com, hch@lst.de, linux-arm-kernel@lists.infradead.org,
- m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1529661494-20936-2-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/05/18 14:49, Nipun Gupta wrote:
-> With of_pci_map_rid available for all the busses, use the function
-> for configuration of devices on fsl-mc bus
+Hi Oza,
 
-FWIW I had a quick hack at factoring out the commonality with 
-of_pci_iommu_init(), at which point I reckon this change is easier to 
-follow as-is for the moment, so:
+Thanks for doing this!
 
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+On Fri, Jun 22, 2018 at 05:58:09AM -0400, Oza Pawandeep wrote:
+> pci_cleanup_aer_uncorrect_error_status() is called by different slot_reset
+> callbacks in case of ERR_NONFATAL.
 
-> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-> ---
->   drivers/iommu/of_iommu.c | 20 ++++++++++++++++++++
->   1 file changed, 20 insertions(+)
+IIRC, the current strategy is:
+
+  ERR_COR: log only
+  ERR_NONFATAL: call driver callbacks (pci_error_handlers)
+  ERR_FATAL: remove device and re-enumerate
+
+So these slot_reset callbacks are only used for ERR_NONFATAL, which
+are all uncorrectable errors, of course.
+
+This patch makes it so that when the slot_reset callbacks call
+pci_cleanup_aer_uncorrect_error_status(), we only clear the
+bits set by ERR_NONFATAL events (this is determined by
+PCI_ERR_UNCOR_SEVER).
+
+That makes good sense to me.  All these status bits are RW1CS, so they
+will be preserved across a reset but will be cleared when we
+re-enumerate, in this path:
+
+  pci_init_capabilities
+    pci_aer_init
+      pci_cleanup_aer_error_status_regs
+      # clear all PCI_ERR_UNCOR_STATUS and PCI_ERR_COR_STATUS bits
+
+> AER uncorrectable error status should take severity into account in order
+> to clear the bits, so that ERR_NONFATAL path does not clear the bit which
+> are marked with severity fatal.
+
+Two comments:
+
+1) Can you split this into two patches, one that changes
+pci_cleanup_aer_uncorrect_error_status() so it looks like the error
+clearing code in aer_error_resume(), and a second that factors out the
+duplicate code?
+
+2) Maybe use "sev" or "sever" instead of "mask" for the local
+variable, since there is also a separate PCI_ERR_UNCOR_MASK register,
+which is not involved here.
+
+3) The "pci_cleanup_aer_uncorrect_error_status()" name no longer
+really describes what this does.  Something like
+"pci_aer_clear_nonfatal_status()" would be more descriptive.  But I
+see you have a subsequent patch (which I haven't looked at yet) that
+is related to this.
+
+4) I don't think the driver slot_reset callbacks should be responsible
+for clearing these AER status bits.  Can we clear them somewhere in
+the pcie_do_nonfatal_recovery() path and remove these calls from the
+drivers?
+
+5) In principle, we should only read PCI_ERR_UNCOR_STATUS *once* per
+device when handling an error.  We currently read it three times:
+
+  aer_isr
+    aer_isr_one_error
+      find_source_device
+        find_device_iter
+          is_error_source
+            read PCI_ERR_UNCOR_STATUS              # 1
+      aer_process_err_devices
+        get_device_error_info(e_info->dev[i])
+          read PCI_ERR_UNCOR_STATUS                # 2
+        handle_error_source
+          pcie_do_nonfatal_recovery
+            ...
+              report_slot_reset
+                driver->err_handler->slot_reset
+                  pci_cleanup_aer_uncorrect_error_status
+                    read PCI_ERR_UNCOR_STATUS      # 3
+
+OK, that was more than two comments :)
+
+> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
 > 
-> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> index 811e160..284474d 100644
-> --- a/drivers/iommu/of_iommu.c
-> +++ b/drivers/iommu/of_iommu.c
-> @@ -24,6 +24,7 @@
->   #include <linux/of_iommu.h>
->   #include <linux/of_pci.h>
->   #include <linux/slab.h>
-> +#include <linux/fsl/mc.h>
->   
->   #define NO_IOMMU	1
->   
-> @@ -159,6 +160,23 @@ static int of_pci_iommu_init(struct pci_dev *pdev, u16 alias, void *data)
->   	return err;
->   }
->   
-> +static int of_fsl_mc_iommu_init(struct fsl_mc_device *mc_dev,
-> +				struct device_node *master_np)
-> +{
-> +	struct of_phandle_args iommu_spec = { .args_count = 1 };
-> +	int err;
-> +
-> +	err = of_map_rid(master_np, mc_dev->icid, "iommu-map",
-> +			 "iommu-map-mask", &iommu_spec.np,
-> +			 iommu_spec.args);
-> +	if (err)
-> +		return err == -ENODEV ? NO_IOMMU : err;
-> +
-> +	err = of_iommu_xlate(&mc_dev->dev, &iommu_spec);
-> +	of_node_put(iommu_spec.np);
-> +	return err;
-> +}
-> +
->   const struct iommu_ops *of_iommu_configure(struct device *dev,
->   					   struct device_node *master_np)
->   {
-> @@ -190,6 +208,8 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
->   
->   		err = pci_for_each_dma_alias(to_pci_dev(dev),
->   					     of_pci_iommu_init, &info);
-> +	} else if (dev_is_fsl_mc(dev)) {
-> +		err = of_fsl_mc_iommu_init(to_fsl_mc_device(dev), master_np);
->   	} else {
->   		struct of_phandle_args iommu_spec;
->   		int idx = 0;
-> 
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index a2e8838..d6cb1f0 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -360,13 +360,16 @@ EXPORT_SYMBOL_GPL(pci_disable_pcie_error_reporting);
+>  int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+>  {
+>  	int pos;
+> -	u32 status;
+> +	u32 status, mask;
+>  
+>  	pos = dev->aer_cap;
+>  	if (!pos)
+>  		return -EIO;
+>  
+> +	/* Clean AER Root Error Status */
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+s/Clean/Clear/ (I see you copied this from aer_error_resume(), and maybe
+the second patch could remove or update that comment, too)
+
+>  	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
+> +	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
+> +	status &= ~mask; /* Clear corresponding nonfatal bits */
+>  	if (status)
+>  		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
+>  
+> @@ -1336,8 +1339,6 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+>   */
+>  static void aer_error_resume(struct pci_dev *dev)
+>  {
+> -	int pos;
+> -	u32 status, mask;
+>  	u16 reg16;
+>  
+>  	/* Clean up Root device status */
+> @@ -1345,11 +1346,7 @@ static void aer_error_resume(struct pci_dev *dev)
+>  	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
+>  
+>  	/* Clean AER Root Error Status */
+> -	pos = dev->aer_cap;
+> -	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
+> -	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
+> -	status &= ~mask; /* Clear corresponding nonfatal bits */
+> -	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
+> +	pci_cleanup_aer_uncorrect_error_status(dev);
+>  }
+>  
+>  static struct pcie_port_service_driver aerdriver = {
+> -- 
+> 2.7.4
+> 
