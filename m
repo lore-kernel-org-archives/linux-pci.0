@@ -1,85 +1,115 @@
-Return-Path: <SRS0=ve5H=J2=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=ve5H=J2=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:40144 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729759AbeGQWKj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Jul 2018 18:10:39 -0400
+Date: Tue, 17 Jul 2018 16:36:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v2 1/6] PCI/AER: Take severity mask into account while
+ clearing error bits
+Message-ID: <20180717213601.GC128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
+ <1529661494-20936-2-git-send-email-poza@codeaurora.org>
+ <20180717190329.GA128988@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20180710125956.GA25343@kroah.com>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <8816662.k3KXbdkA2e@aspire.rjw.lan> <2927655.Y1qg3UnIrE@aspire.rjw.lan>
- <5284251.Resgjlja2Q@aspire.rjw.lan> <20180710125956.GA25343@kroah.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 10 Jul 2018 17:40:21 +0200
-Message-ID: <CAJZ5v0iV0ZaCbhoVOrGx08f6Y7Ei2q+qazxEMQRYD4LAq9LUbA@mail.gmail.com>
-Subject: Re: [PATCH v2] driver core: Partially revert "driver core: correct
- device's shutdown order"
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Pingfan Liu <kernelfans@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>,
-	Linux PM <linux-pm@vger.kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180717190329.GA128988@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2018 at 2:59 PM, Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
-> On Tue, Jul 10, 2018 at 02:51:33PM +0200, Rafael J. Wysocki wrote:
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> Commit 52cdbdd49853 (driver core: correct device's shutdown order)
->> introduced a regression by breaking device shutdown on some systems.
->>
->> Namely, the devices_kset_move_last() call in really_probe() added by
->> that commit is a mistake as it may cause parents to follow children
->> in the devices_kset list which then causes shutdown to fail.  For
->> example, if a device has children before really_probe() is called
->> for it (which is not uncommon), that call will cause it to be
->> reordered after the children in the devices_kset list and the
->> ordering of that list will not reflect the correct device shutdown
->> order any more.
->>
->> Also it causes the devices_kset list to be constantly reordered
->> until all drivers have been probed which is totally pointless
->> overhead in the majority of cases and it only covered an issue
->> with system shutdown, while system-wide suspend/resume potentially
->> had the same issue on the affected platforms (which was not covered).
->>
->> Moreover, the shutdown issue originally addressed by the change in
->> really_probe() made by commit 52cdbdd49853 is not present in 4.18-rc
->> any more, since dra7 started to use the sdhci-omap driver which
->> doesn't disable any regulators during shutdown, so the really_probe()
->> part of commit 52cdbdd49853 can be safely reverted.  [The original
->> issue was related to the omap_hsmmc driver used by dra7 previously.]
->>
->> For the above reasons, revert the really_probe() modifications made
->> by commit 52cdbdd49853.
->>
->> The other code changes made by commit 52cdbdd49853 are useful and
->> they need not be reverted.
->>
->> Fixes: 52cdbdd49853 (driver core: correct device's shutdown order)
->> Link: https://lore.kernel.org/lkml/CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com/
->> Reported-by: Pingfan Liu <kernelfans@gmail.com>
->> Tested-by: Pingfan Liu <kernelfans@gmail.com>
->> Reviewed-by: Kishon Vijay Abraham I <kishon@ti.com>
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> ---
->>
->> -> v2: Added information from Kishon on the fact that it should be safe
->>        to revert the really_probe() modifications added by the
->>        problematic commit.  Also added the Reviewed-by tag from Kishon.
->
-> Looks good to me, want me to queue it up in my tree, or are you going to
-> send it on to Linus?
+On Tue, Jul 17, 2018 at 02:03:29PM -0500, Bjorn Helgaas wrote:
+> Hi Oza,
+> 
+> Thanks for doing this!
+> 
+> On Fri, Jun 22, 2018 at 05:58:09AM -0400, Oza Pawandeep wrote:
+> > pci_cleanup_aer_uncorrect_error_status() is called by different slot_reset
+> > callbacks in case of ERR_NONFATAL.
+> 
+> IIRC, the current strategy is:
+> 
+>   ERR_COR: log only
+>   ERR_NONFATAL: call driver callbacks (pci_error_handlers)
+>   ERR_FATAL: remove device and re-enumerate
+> 
+> So these slot_reset callbacks are only used for ERR_NONFATAL, which
+> are all uncorrectable errors, of course.
+> 
+> This patch makes it so that when the slot_reset callbacks call
+> pci_cleanup_aer_uncorrect_error_status(), we only clear the
+> bits set by ERR_NONFATAL events (this is determined by
+> PCI_ERR_UNCOR_SEVER).
+> 
+> That makes good sense to me.  All these status bits are RW1CS, so they
+> will be preserved across a reset but will be cleared when we
+> re-enumerate, in this path:
+> 
+>   pci_init_capabilities
+>     pci_aer_init
+>       pci_cleanup_aer_error_status_regs
+>       # clear all PCI_ERR_UNCOR_STATUS and PCI_ERR_COR_STATUS bits
+> 
+> > AER uncorrectable error status should take severity into account in order
+> > to clear the bits, so that ERR_NONFATAL path does not clear the bit which
+> > are marked with severity fatal.
+> 
+> Two comments:
+> 
+> 1) Can you split this into two patches, one that changes
+> pci_cleanup_aer_uncorrect_error_status() so it looks like the error
+> clearing code in aer_error_resume(), and a second that factors out the
+> duplicate code?
+> 
+> 2) Maybe use "sev" or "sever" instead of "mask" for the local
+> variable, since there is also a separate PCI_ERR_UNCOR_MASK register,
+> which is not involved here.
 
-Please queue it up.
+Let me back up a little here: I'm not asking you to do the things
+below here.  They're just possible future things, so we can think
+about them after this series.  And the things above are things I can
+easily do myself.  So no action required from you, unless you think
+I'm on the wrong track :)
 
-> And shouldn't this have a stable tag as well?
-
-That is sort of a gray area, because I think it may expose the
-shutdown issue on dra7 in -stable, but technically it still fixes a
-regression in the driver core.  So your call I suppose. :-)
-
-FWIW, commit 52cdbdd49853 went in during the 4.3 cycle AFAICS.
-
-Cheers,
-Rafael
+> 3) The "pci_cleanup_aer_uncorrect_error_status()" name no longer
+> really describes what this does.  Something like
+> "pci_aer_clear_nonfatal_status()" would be more descriptive.  But I
+> see you have a subsequent patch (which I haven't looked at yet) that
+> is related to this.
+> 
+> 4) I don't think the driver slot_reset callbacks should be responsible
+> for clearing these AER status bits.  Can we clear them somewhere in
+> the pcie_do_nonfatal_recovery() path and remove these calls from the
+> drivers?
+> 
+> 5) In principle, we should only read PCI_ERR_UNCOR_STATUS *once* per
+> device when handling an error.  We currently read it three times:
+> 
+>   aer_isr
+>     aer_isr_one_error
+>       find_source_device
+>         find_device_iter
+>           is_error_source
+>             read PCI_ERR_UNCOR_STATUS              # 1
+>       aer_process_err_devices
+>         get_device_error_info(e_info->dev[i])
+>           read PCI_ERR_UNCOR_STATUS                # 2
+>         handle_error_source
+>           pcie_do_nonfatal_recovery
+>             ...
+>               report_slot_reset
+>                 driver->err_handler->slot_reset
+>                   pci_cleanup_aer_uncorrect_error_status
+>                     read PCI_ERR_UNCOR_STATUS      # 3
+> 
+> OK, that was more than two comments :)
