@@ -1,220 +1,100 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
- <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH v2 2/4] PCI: mediatek: enable msi after clock enabled
-Date: Mon, 2 Jul 2018 11:49:42 +0800
-Message-ID: <1530503384-1218-3-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1530503384-1218-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1530503384-1218-1-git-send-email-honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- honghui.zhang@mediatek.com, yt.shen@mediatek.com, yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v12 01/12] PCI: dwc: Fix EP link notification implementation
+Date: Tue, 17 Jul 2018 11:31:21 +0200
+Message-Id: <3cefa89ce2e496e7627bd3c7ade93348230adc14.1531818979.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+Move specific features settings from EP shared code
+(pcie-designware-ep.c) to the driver (pcie-designware-plat.c).
 
-The clocks was not enabled when enable MSI. This patch fix this
-issue by calling mtk_pcie_enable_msi in mtk_pcie_startup_port_v2
-since the clock was all enabled at that time.
+Previous implementation disables the EP link notification
+by default for all SoCs that uses EP DesignWare IP, which affects
+directly the dra7xx and artpec6 SoCs.
 
-The function of mtk_pcie_startup_port_v2's define location is
-re-arranged to avoid mtk_pcie_enable_msi's forward declaration.
-
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/pcie-mediatek.c | 143 +++++++++++++++++----------------
- 1 file changed, 72 insertions(+), 71 deletions(-)
+Change v8->v9:
+ - Created patch file.
+Change v9->v10:
+ - Nothing changed, just to follow the patch set version.
+Change v10->v11:
+ - Missed Kishon acknowledge.
+Change v11->v12:
+ - Nothing changed, just to follow the patch set version.
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index b43f41d..86918d4 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -398,75 +398,6 @@ static struct pci_ops mtk_pcie_ops_v2 = {
- 	.write = mtk_pcie_config_write,
- };
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 14 ++++++--------
+ drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +++
+ 2 files changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 8650416..04092a7 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -386,15 +386,18 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		return -ENOMEM;
+ 	ep->outbound_addr = addr;
  
--static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
--{
--	struct mtk_pcie *pcie = port->pcie;
--	struct resource *mem = &pcie->mem;
--	const struct mtk_pcie_soc *soc = port->pcie->soc;
--	u32 val;
--	size_t size;
--	int err;
+-	if (ep->ops->ep_init)
+-		ep->ops->ep_init(ep);
 -
--	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
--	if (pcie->base) {
--		val = readl(pcie->base + PCIE_SYS_CFG_V2);
--		val |= PCIE_CSR_LTSSM_EN(port->slot) |
--		       PCIE_CSR_ASPM_L1_EN(port->slot);
--		writel(val, pcie->base + PCIE_SYS_CFG_V2);
--	}
--
--	/* Assert all reset signals */
--	writel(0, port->base + PCIE_RST_CTRL);
--
--	/*
--	 * Enable PCIe link down reset, if link status changed from link up to
--	 * link down, this will reset MAC control registers and configuration
--	 * space.
--	 */
--	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
--
--	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
--	val = readl(port->base + PCIE_RST_CTRL);
--	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
--	       PCIE_MAC_SRSTB | PCIE_CRSTB;
--	writel(val, port->base + PCIE_RST_CTRL);
--
--	/* Set up vendor ID and class code */
--	if (soc->need_fix_class_id) {
--		val = PCI_VENDOR_ID_MEDIATEK;
--		writew(val, port->base + PCIE_CONF_VEND_ID);
--
--		val = PCI_CLASS_BRIDGE_HOST;
--		writew(val, port->base + PCIE_CONF_CLASS_ID);
--	}
--
--	/* 100ms timeout value should be enough for Gen1/2 training */
--	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
--				 !!(val & PCIE_PORT_LINKUP_V2), 20,
--				 100 * USEC_PER_MSEC);
--	if (err)
--		return -ETIMEDOUT;
--
--	/* Set INTx mask */
--	val = readl(port->base + PCIE_INT_MASK);
--	val &= ~INTX_MASK;
--	writel(val, port->base + PCIE_INT_MASK);
--
--	/* Set AHB to PCIe translation windows */
--	size = mem->end - mem->start;
--	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
--	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
--
--	val = upper_32_bits(mem->start);
--	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
--
--	/* Set PCIe to AXI translation memory space.*/
--	val = fls(0xffffffff) | WIN_ENABLE;
--	writel(val, port->base + PCIE_AXI_WINDOW0);
--
--	return 0;
--}
--
- static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- {
- 	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
-@@ -643,8 +574,6 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
- 		ret = mtk_pcie_allocate_msi_domains(port);
- 		if (ret)
- 			return ret;
--
--		mtk_pcie_enable_msi(port);
+ 	epc = devm_pci_epc_create(dev, &epc_ops);
+ 	if (IS_ERR(epc)) {
+ 		dev_err(dev, "Failed to create epc device\n");
+ 		return PTR_ERR(epc);
  	}
  
++	ep->epc = epc;
++	epc_set_drvdata(epc, ep);
++
++	if (ep->ops->ep_init)
++		ep->ops->ep_init(ep);
++
+ 	ret = of_property_read_u8(np, "max-functions", &epc->max_functions);
+ 	if (ret < 0)
+ 		epc->max_functions = 1;
+@@ -413,11 +416,6 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		return -ENOMEM;
+ 	}
+ 
+-	epc->features = EPC_FEATURE_NO_LINKUP_NOTIFIER;
+-	EPC_FEATURE_SET_BAR(epc->features, BAR_0);
+-
+-	ep->epc = epc;
+-	epc_set_drvdata(epc, ep);
+ 	dw_pcie_setup(pci);
+ 
  	return 0;
-@@ -711,6 +640,78 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
- 	return 0;
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 5937fed..0ce3440 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -70,10 +70,13 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct pci_epc *epc = ep->epc;
+ 	enum pci_barno bar;
+ 
+ 	for (bar = BAR_0; bar <= BAR_5; bar++)
+ 		dw_pcie_ep_reset_bar(pci, bar);
++
++	epc->features |= EPC_FEATURE_NO_LINKUP_NOTIFIER;
  }
  
-+static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-+{
-+	struct mtk_pcie *pcie = port->pcie;
-+	struct resource *mem = &pcie->mem;
-+	const struct mtk_pcie_soc *soc = port->pcie->soc;
-+	u32 val;
-+	size_t size;
-+	int err;
-+
-+	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
-+	if (pcie->base) {
-+		val = readl(pcie->base + PCIE_SYS_CFG_V2);
-+		val |= PCIE_CSR_LTSSM_EN(port->slot) |
-+		       PCIE_CSR_ASPM_L1_EN(port->slot);
-+		writel(val, pcie->base + PCIE_SYS_CFG_V2);
-+	}
-+
-+	/* Assert all reset signals */
-+	writel(0, port->base + PCIE_RST_CTRL);
-+
-+	/*
-+	 * Enable PCIe link down reset, if link status changed from link up to
-+	 * link down, this will reset MAC control registers and configuration
-+	 * space.
-+	 */
-+	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
-+
-+	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
-+	val = readl(port->base + PCIE_RST_CTRL);
-+	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
-+	       PCIE_MAC_SRSTB | PCIE_CRSTB;
-+	writel(val, port->base + PCIE_RST_CTRL);
-+
-+	/* Set up vendor ID and class code */
-+	if (soc->need_fix_class_id) {
-+		val = PCI_VENDOR_ID_MEDIATEK;
-+		writew(val, port->base + PCIE_CONF_VEND_ID);
-+
-+		val = PCI_CLASS_BRIDGE_HOST;
-+		writew(val, port->base + PCIE_CONF_CLASS_ID);
-+	}
-+
-+	/* 100ms timeout value should be enough for Gen1/2 training */
-+	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
-+				 !!(val & PCIE_PORT_LINKUP_V2), 20,
-+				 100 * USEC_PER_MSEC);
-+	if (err)
-+		return -ETIMEDOUT;
-+
-+	/* Set INTx mask */
-+	val = readl(port->base + PCIE_INT_MASK);
-+	val &= ~INTX_MASK;
-+	writel(val, port->base + PCIE_INT_MASK);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		mtk_pcie_enable_msi(port);
-+
-+	/* Set AHB to PCIe translation windows */
-+	size = mem->end - mem->start;
-+	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
-+	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
-+
-+	val = upper_32_bits(mem->start);
-+	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
-+
-+	/* Set PCIe to AXI translation memory space.*/
-+	val = fls(0xffffffff) | WIN_ENABLE;
-+	writel(val, port->base + PCIE_AXI_WINDOW0);
-+
-+	return 0;
-+}
-+
- static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
- 				      unsigned int devfn, int where)
- {
+ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
 -- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.7.4
