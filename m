@@ -1,82 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:47783 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732122AbeG0S2d (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jul 2018 14:28:33 -0400
-Date: Fri, 27 Jul 2018 19:05:43 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Alex_Gagniuc@Dellteam.com
-Cc: mr.nuke.me@gmail.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, Austin.Bolen@dell.com,
-        Stuart.Hayes@dell.com, Narendra.K@dell.com,
-        Christopher.Arzola@dell.com, David.Chalfant@dell.com
-Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
-Message-ID: <20180727170543.GA5326@wunner.de>
-References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
- <20180727071813.GA6128@wunner.de>
- <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
+Received: from bombadil.infradead.org ([198.137.202.133]:52530 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729714AbeGQVNZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 17:13:25 -0400
+Date: Tue, 17 Jul 2018 13:39:00 -0700
+From: Matthew Wilcox <willy@infradead.org>
+To: Martin Mares <mj@ucw.cz>, Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Subject: lspci: Display path to device
+Message-ID: <20180717203900.GA1771@bombadil.infradead.org>
+References: <20180717170204.30470-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
+In-Reply-To: <20180717170204.30470-1-logang@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 27, 2018 at 03:52:04PM +0000, Alex_Gagniuc@Dellteam.com wrote:
-> On 07/27/2018 02:18 AM, Lukas Wunner wrote:
-> > On Thu, Jul 26, 2018 at 05:38:50PM -0500, Alex G. wrote:
-> >> I was under the impression that a DLLSC or PDSC would trigger the
-> >> PCI_DEV_DISCONNECTED bit to be set, blocking any further config access.
-> > 
-> > Only if the Presence Detect State bit in the Slot Status register is
-> > not set.
-> > 
-> > I think the idea was that if the card is still in the slot, its driver can
-> > be unbound orderly because the device is still accessible.  So there's no
-> > need to set PCI_DEV_DISCONNECTED.
-> 
-> This sounds counter to what I had intuited. I mentally associate 
-> DISCONNECTED with "the link is down". I don't understand the idea of a 
-> driver doing an orderly removal when the link is down. Device registers 
-> wouldn't be accessible in that case.
+On Tue, Jul 17, 2018 at 11:02:00AM -0600, Logan Gunthorpe wrote:
+> The second patch expands the new helper to optionally take a path of
+> PCI devfns. This is to address Alex's renumbering concern when using
+> simple bus-devfns. The implementation is essentially how he described it and
+> similar to the Intel VT-d spec (Section 8.3.1).
 
-That's basically what I meant, sorry for not being clear.
+I don't like telling the user to grovel around lspci -t by hand.  It's
+not many lines of code to add a new -P option to lspci to show the path
+to each device instead of bus:dev.fn
 
-> > However if there is a already a new card in the slot, PCI_DEV_DISCONNECTED
-> > will erroneously not be set.  Also, if card removal was triggered by the
-> > link going down but the card is still in the slot, PCI_DEV_DISCONNECTED
-> > will also erroneously not be set even though it's inaccessible.
-> > 
-> > The only situations when PCI_DEV_DISCONNECTED should not be set is if the
-> > card is being removed by sysfs or by the user pressing the Attention Button.
-> > Anything else is a surprise removal.  What we need to do is pass down a
-> > flag to pciehp_unconfigure_device() to indicate whether one of those two
-> > situations is at hand or not, and PCI_DEV_DISCONNECTED should be set
-> > depending on that flag.
-> 
-> That makes a little more sense. Is someone working on this?
+Here's three examples, first without, then with -P.
 
-Me, but not for 4.19, we're too late in the cycle, I'm going to post
-a small number of fixup patches for Bjorn's pci/hotplug branch shortly,
-to be included in 4.19, and that's it.
+(my laptop):
+6d:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller SM961/PM961
+00:1d.0/00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller SM961/PM961
 
-I posted a patch as part of the series that's now on Bjorn's pci/hotplug
-branch which touched PCI_DEV_DISCONNECTED code in pciehp_pci.c, but had
-to withdraw that particular patch:
-https://patchwork.ozlabs.org/patch/930403/
+(tests/PCI-X-bridges-and-domains):
+0002:42:00.0 Ethernet controller: Trident Microsystems 4DWave DX (rev 26)
+0002:00:02.4/01.0/00.0 Ethernet controller: Trident Microsystems 4DWave DX (rev 26)
 
-The first problem with that patch was that I hadn't fully understood
-yet when to set PCI_DEV_DISCONNECTED and when not to set it.
+(my Nehalem system):
+04:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] (rev 02)
+00:03.0/00.0/00.0/00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] (rev 02)
 
-The second problem was that it fixed a deadlock on unplug in a way
-that wasn't generic enough.  The same deadlock can occur in other
-situations.  The real fix is to unbind the driver lockless in
-pci_stop_dev().  That's non-trivial to achieve, but doable.
-I don't think there's a way around that to fix the problem:
-https://www.spinics.net/lists/linux-pci/msg73652.html
+The Nehalem system makes an interesting testcase because it exposes some
+registers in fake PCIe devices that aren't behind the root ports.  eg:
 
-There's (still) a lot that can be improved in pciehp, I hope to
-keep working on that as time permits.
+ff:06.3 Host bridge: Intel Corporation Xeon 5500/Core i7 Integrated Memory Controller Channel 2 Thermal Control Registers (rev 04)
 
-Thanks,
+Martin, what do you think to this patch?  Also, I'm happy to send you
+the lspci -xxxx from the Nehalem system to add to tests/
 
-Lukas
+diff --git a/lspci.c b/lspci.c
+index 3bf1925..ae0fdd2 100644
+--- a/lspci.c
++++ b/lspci.c
+@@ -19,6 +19,7 @@ int verbose;				/* Show detailed information */
+ static int opt_hex;			/* Show contents of config space as hexadecimal numbers */
+ struct pci_filter filter;		/* Device filter */
+ static int opt_tree;			/* Show bus tree */
++static int opt_path;			/* Show bridge path */
+ static int opt_machine;			/* Generate machine-readable output */
+ static int opt_map_mode;		/* Bus mapping mode enabled */
+ static int opt_domains;			/* Show domain numbers (0=disabled, 1=auto-detected, 2=requested) */
+@@ -29,7 +30,7 @@ char *opt_pcimap;			/* Override path to Linux modules.pcimap */
+ 
+ const char program_name[] = "lspci";
+ 
+-static char options[] = "nvbxs:d:ti:mgp:qkMDQ" GENERIC_OPTIONS ;
++static char options[] = "nvbxs:d:tPi:mgp:qkMDQ" GENERIC_OPTIONS ;
+ 
+ static char help_msg[] =
+ "Usage: lspci [<switches>]\n"
+@@ -247,6 +248,34 @@ sort_them(void)
+ 
+ /*** Normal output ***/
+ 
++static void
++show_slot_path(struct pci_dev *p)
++{
++  struct pci_dev *d = NULL;
++
++  if (opt_path && p->bus)
++    {
++      for (d = p->access->devices; d; d = d->next) {
++	if (d->hdrtype == -1)
++	  d->hdrtype = pci_read_byte(d, PCI_HEADER_TYPE) & 0x7f;
++	if (d->hdrtype != PCI_HEADER_TYPE_BRIDGE &&
++	    d->hdrtype != PCI_HEADER_TYPE_CARDBUS)
++	  continue;
++	if (pci_read_byte(d, PCI_SECONDARY_BUS) > p->bus)
++	  continue;
++	if (pci_read_byte(d, PCI_SUBORDINATE_BUS) < p->bus)
++	  continue;
++	show_slot_path(d);
++	break;
++      }
++    }
++
++  if (d)
++    printf("/%02x.%d", p->dev, p->func);
++  else
++    printf("%02x:%02x.%d", p->bus, p->dev, p->func);
++}
++
+ static void
+ show_slot_name(struct device *d)
+ {
+@@ -254,7 +283,7 @@ show_slot_name(struct device *d)
+ 
+   if (!opt_machine ? opt_domains : (p->domain || opt_domains >= 2))
+     printf("%04x:", p->domain);
+-  printf("%02x:%02x.%d", p->bus, p->dev, p->func);
++  show_slot_path(p);
+ }
+ 
+ void
+@@ -989,6 +1018,9 @@ main(int argc, char **argv)
+       case 'x':
+ 	opt_hex++;
+ 	break;
++      case 'P':
++	opt_path++;
++	break;
+       case 't':
+ 	opt_tree++;
+ 	break;
+diff --git a/lspci.man b/lspci.man
+index 35b3620..565dd5b 100644
+--- a/lspci.man
++++ b/lspci.man
+@@ -95,6 +95,9 @@ PCI bus instead of as seen by the kernel.
+ .B -D
+ Always show PCI domain numbers. By default, lspci suppresses them on machines which
+ have only domain 0.
++.TP
++.B -P
++Name PCI devices by path through each bridge, instead of by bus number.
+ 
+ .SS Options to control resolving ID's to names
+ .TP
