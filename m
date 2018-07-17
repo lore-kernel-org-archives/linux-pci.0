@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:54806 "EHLO
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:39988 "EHLO
         smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730304AbeGSJO3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jul 2018 05:14:29 -0400
+        with ESMTP id S1730567AbeGQK61 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 06:58:27 -0400
 From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
         joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
@@ -11,13 +11,13 @@ To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
 Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v14 08/12] pci-epf-test/pci_endpoint_test: Use irq_type module parameter
-Date: Thu, 19 Jul 2018 10:32:18 +0200
-Message-Id: <0981ead6b2b3479bb5a5ed69f1afa4d54634244c.1531922095.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v13 08/12] pci-epf-test/pci_endpoint_test: Use irq_type module parameter
+Date: Tue, 17 Jul 2018 12:26:23 +0200
+Message-Id: <1833d44cc5dfe268aa664053add81f66c07e1f9f.1531822532.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
@@ -51,8 +51,6 @@ Change v11->v12:
  - Nothing changed, just to follow the patch set version.
 Change v12->v13:
  - Re-sending the patch series.
-Change v13->v14:
- - Nothing changed, just to follow the patch set version.
 
  drivers/misc/pci_endpoint_test.c | 28 +++++++++++++++++++---------
  1 file changed, 19 insertions(+), 9 deletions(-)
