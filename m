@@ -1,161 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39156 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729720AbeGQThb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Jul 2018 15:37:31 -0400
-Date: Tue, 17 Jul 2018 14:03:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v2 1/6] PCI/AER: Take severity mask into account while
- clearing error bits
-Message-ID: <20180717190329.GA128988@bhelgaas-glaptop.roam.corp.google.com>
-References: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
- <1529661494-20936-2-git-send-email-poza@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1529661494-20936-2-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v12 06/12] PCI: dwc: Add legacy interrupt callback handler
+Date: Tue, 17 Jul 2018 11:31:26 +0200
+Message-Id: <3579a0b9b6eefcf306af4ccfd5cd3396df4d8f63.1531818979.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Oza,
+Add a legacy interrupt callback handler. Currently DesignWare IP don't
+allow trigger legacy interrupts.
 
-Thanks for doing this!
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Change v6->v7:
+ - Nothing changed, just to follow the patch set version.
+Change v7->v8:
+ - Re-sending the patch series.
+Change v8->v9:
+ - Nothing changed, just to follow the patch set version.
+Change v9->v10:
+ - Nothing changed, just to follow the patch set version.
+Change v10->v11:
+ - Nothing changed, just to follow the patch set version.
+Change v11->v12:
+ - Nothing changed, just to follow the patch set version.
 
-On Fri, Jun 22, 2018 at 05:58:09AM -0400, Oza Pawandeep wrote:
-> pci_cleanup_aer_uncorrect_error_status() is called by different slot_reset
-> callbacks in case of ERR_NONFATAL.
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 10 ++++++++++
+ drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +--
+ drivers/pci/controller/dwc/pcie-designware.h      |  6 ++++++
+ 3 files changed, 17 insertions(+), 2 deletions(-)
 
-IIRC, the current strategy is:
-
-  ERR_COR: log only
-  ERR_NONFATAL: call driver callbacks (pci_error_handlers)
-  ERR_FATAL: remove device and re-enumerate
-
-So these slot_reset callbacks are only used for ERR_NONFATAL, which
-are all uncorrectable errors, of course.
-
-This patch makes it so that when the slot_reset callbacks call
-pci_cleanup_aer_uncorrect_error_status(), we only clear the
-bits set by ERR_NONFATAL events (this is determined by
-PCI_ERR_UNCOR_SEVER).
-
-That makes good sense to me.  All these status bits are RW1CS, so they
-will be preserved across a reset but will be cleared when we
-re-enumerate, in this path:
-
-  pci_init_capabilities
-    pci_aer_init
-      pci_cleanup_aer_error_status_regs
-      # clear all PCI_ERR_UNCOR_STATUS and PCI_ERR_COR_STATUS bits
-
-> AER uncorrectable error status should take severity into account in order
-> to clear the bits, so that ERR_NONFATAL path does not clear the bit which
-> are marked with severity fatal.
-
-Two comments:
-
-1) Can you split this into two patches, one that changes
-pci_cleanup_aer_uncorrect_error_status() so it looks like the error
-clearing code in aer_error_resume(), and a second that factors out the
-duplicate code?
-
-2) Maybe use "sev" or "sever" instead of "mask" for the local
-variable, since there is also a separate PCI_ERR_UNCOR_MASK register,
-which is not involved here.
-
-3) The "pci_cleanup_aer_uncorrect_error_status()" name no longer
-really describes what this does.  Something like
-"pci_aer_clear_nonfatal_status()" would be more descriptive.  But I
-see you have a subsequent patch (which I haven't looked at yet) that
-is related to this.
-
-4) I don't think the driver slot_reset callbacks should be responsible
-for clearing these AER status bits.  Can we clear them somewhere in
-the pcie_do_nonfatal_recovery() path and remove these calls from the
-drivers?
-
-5) In principle, we should only read PCI_ERR_UNCOR_STATUS *once* per
-device when handling an error.  We currently read it three times:
-
-  aer_isr
-    aer_isr_one_error
-      find_source_device
-        find_device_iter
-          is_error_source
-            read PCI_ERR_UNCOR_STATUS              # 1
-      aer_process_err_devices
-        get_device_error_info(e_info->dev[i])
-          read PCI_ERR_UNCOR_STATUS                # 2
-        handle_error_source
-          pcie_do_nonfatal_recovery
-            ...
-              report_slot_reset
-                driver->err_handler->slot_reset
-                  pci_cleanup_aer_uncorrect_error_status
-                    read PCI_ERR_UNCOR_STATUS      # 3
-
-OK, that was more than two comments :)
-
-> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-> 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index a2e8838..d6cb1f0 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -360,13 +360,16 @@ EXPORT_SYMBOL_GPL(pci_disable_pcie_error_reporting);
->  int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
->  {
->  	int pos;
-> -	u32 status;
-> +	u32 status, mask;
->  
->  	pos = dev->aer_cap;
->  	if (!pos)
->  		return -EIO;
->  
-> +	/* Clean AER Root Error Status */
-
-s/Clean/Clear/ (I see you copied this from aer_error_resume(), and maybe
-the second patch could remove or update that comment, too)
-
->  	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
-> +	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
-> +	status &= ~mask; /* Clear corresponding nonfatal bits */
->  	if (status)
->  		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
->  
-> @@ -1336,8 +1339,6 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
->   */
->  static void aer_error_resume(struct pci_dev *dev)
->  {
-> -	int pos;
-> -	u32 status, mask;
->  	u16 reg16;
->  
->  	/* Clean up Root device status */
-> @@ -1345,11 +1346,7 @@ static void aer_error_resume(struct pci_dev *dev)
->  	pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
->  
->  	/* Clean AER Root Error Status */
-> -	pos = dev->aer_cap;
-> -	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
-> -	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &mask);
-> -	status &= ~mask; /* Clear corresponding nonfatal bits */
-> -	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
-> +	pci_cleanup_aer_uncorrect_error_status(dev);
->  }
->  
->  static struct pcie_port_service_driver aerdriver = {
-> -- 
-> 2.7.4
-> 
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index dd9c366..1e7b022 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
+ 	.stop			= dw_pcie_ep_stop,
+ };
+ 
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct device *dev = pci->dev;
++
++	dev_err(dev, "EP cannot trigger legacy IRQs\n");
++
++	return -EINVAL;
++}
++
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num)
+ {
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 8bb2ecb..160714d 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -87,8 +87,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 
+ 	switch (type) {
+ 	case PCI_EPC_IRQ_LEGACY:
+-		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
+-		return -EINVAL;
++		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
+ 	case PCI_EPC_IRQ_MSI:
+ 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
+ 	case PCI_EPC_IRQ_MSIX:
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index e8b97f5..96126fd 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -348,6 +348,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num);
+ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+@@ -367,6 +368,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
+ 
++static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	return 0;
++}
++
+ static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 					   u8 interrupt_num)
+ {
+-- 
+2.7.4
