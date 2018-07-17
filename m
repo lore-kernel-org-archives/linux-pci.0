@@ -1,65 +1,53 @@
-Return-Path: <SRS0=CE1T=KE=google.com=bhelgaas@kernel.org>
-Return-Path: <SRS0=CE1T=KE=google.com=bhelgaas@kernel.org>
+Return-Path: <SRS0=O1ob=KB=infradead.org=willy@kernel.org>
+Return-Path: <SRS0=O1ob=KB=infradead.org=willy@kernel.org>
+Date: Tue, 17 Jul 2018 14:46:03 -0700
+From: Matthew Wilcox <willy@infradead.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Martin Mares <mj@ucw.cz>, Logan Gunthorpe <logang@deltatee.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, Stephen Bates <sbates@raithlin.com>,
+	Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Jonathan Corbet <corbet@lwn.net>, Ingo Molnar <mingo@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	=?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Subject: Re: lspci: Display path to device
+Message-ID: <20180717214603.GB1771@bombadil.infradead.org>
+References: <20180717170204.30470-1-logang@deltatee.com>
+ <20180717203900.GA1771@bombadil.infradead.org>
+ <20180717210053.GB128988@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
- <1530608741-30664-2-git-send-email-hari.vyas@broadcom.com>
- <20180719174118.GM128988@bhelgaas-glaptop.roam.corp.google.com> <CAM5rFu9ZKpeKGhS+8cn3p0wKP0+GQrtexboxtwgGfDms3oBX0w@mail.gmail.com>
-In-Reply-To: <CAM5rFu9ZKpeKGhS+8cn3p0wKP0+GQrtexboxtwgGfDms3oBX0w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 20 Jul 2018 07:20:40 -0500
-Message-ID: <CAErSpo4FfjHUMMLT_=fvX=cVkoUF0ApdEimZbxswen+Z8TqvSA@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: Data corruption happening due to race condition
-To: hari.vyas@broadcom.com
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linux-pci@vger.kernel.org, Ray Jui <ray.jui@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180717210053.GB128988@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 20, 2018 at 4:16 AM Hari Vyas <hari.vyas@broadcom.com> wrote:
->
-> On Thu, Jul 19, 2018 at 11:11 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Tue, Jul 03, 2018 at 02:35:41PM +0530, Hari Vyas wrote:
-> >> When a pci device is detected, a variable is_added is set to
-> >> 1 in pci device structure and proc, sys entries are created.
-> >>
-> >> When a pci device is removed, first is_added is checked for one
-> >> and then device is detached with clearing of proc and sys
-> >> entries and at end, is_added is set to 0.
-> >>
-> >> is_added and is_busmaster are bit fields in pci_dev structure
-> >> sharing same memory location.
-> >>
-> >> A strange issue was observed with multiple times removal and
-> >> rescan of a pcie nvme device using sysfs commands where is_added
-> >> flag was observed as zero instead of one while removing device
-> >> and proc,sys entries are not cleared.  This causes issue in
-> >> later device addition with warning message "proc_dir_entry"
-> >> already registered.
-> >>
-> >> Debugging revealed a race condition between pcie core driver
-> >> enabling is_added bit(pci_bus_add_device()) and nvme driver
-> >> reset work-queue enabling is_busmaster bit (by pci_set_master()).
-> >> As both fields are not handled in atomic manner and that clears
-> >> is_added bit.
-> >>
-> >> Fix moves device addition is_added bit to separate private flag
-> >> variable and use different atomic functions to set and retrieve
-> >> device addition state. As is_added shares different memory
-> >> location so race condition is avoided.
-> >
-> > If/when you post a v4 of this, can you include the bugzilla URL
-> > right here, i.e.,
-> >
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=200283
-> >> Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
-> >
-> > That way we can connect the commit with the bugzilla, which contains
-> > more information that may be useful in the future.
+On Tue, Jul 17, 2018 at 04:00:53PM -0500, Bjorn Helgaas wrote:
+> On Tue, Jul 17, 2018 at 01:39:00PM -0700, Matthew Wilcox wrote:
+> > The Nehalem system makes an interesting testcase because it exposes some
+> > registers in fake PCIe devices that aren't behind the root ports.  eg:
+> > 
+> > ff:06.3 Host bridge: Intel Corporation Xeon 5500/Core i7 Integrated Memory Controller Channel 2 Thermal Control Registers (rev 04)
+> 
+> I think these appear as conventional PCI devices; at least the ones
+> I've seen, e.g., [1], don't have a PCIe capability, so I think it
+> makes sense that they're not behind a root port.
+> 
+> [1] https://bugzilla5.redhat.com/attachment.cgi?id=433169
 
-> Bit confused.  Do I  need  to change commit message for including bugzila link ?
-> Believe v3 should be Okay from code perspective time-being. Please confirm
+Oh, I don't think we're doing anything wrong with how we're displaying
+them or what we're doing with what the system presents to us.  My only
+point was that this is a good test-case for code which assumes that all
+PCI devices lie under a PCIe root port.  At one point during development,
+my code reported that device up there as
 
-You don't need to repost it just to update the commit message (I'll
-try to remember to add the link when I apply it).  But if you do
-repost it for some other reason, it helps me out if you include the
-link.
+/06.3 Host bridge: Intel Corporation Xeon 5500/Core i7 Integrated Memory Controller Channel 2 Thermal Control Registers (rev 04)
+
+but since I had that system available to test with, I spotted that problem
+and made it present that device as ff:06.3 (both with and without -P).
