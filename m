@@ -1,65 +1,56 @@
-Return-Path: <SRS0=I4wA=KH=gmail.com=mr.nuke.me@kernel.org>
-Return-Path: <SRS0=I4wA=KH=gmail.com=mr.nuke.me@kernel.org>
-Subject: Re: [PATCH v3] PCI: Check for PCIe downtraining conditions
-To: Tal Gilboa <talgi@mellanox.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, alex_gagniuc@dellteam.com, austin_bolen@dell.com,
- shyam_iyer@dell.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
- Ariel Elior <ariel.elior@cavium.com>,
- Michael Chan <michael.chan@broadcom.com>,
- Ganesh Goudar <ganeshgr@chelsio.com>, Tariq Toukan <tariqt@mellanox.com>,
- Jakub Kicinski <jakub.kicinski@netronome.com>,
- Dave Airlie <airlied@gmail.com>, Alex Deucher <alexander.deucher@amd.com>
-References: <20180604155523.14906-1-mr.nuke.me@gmail.com>
- <20180716211706.GB12391@bhelgaas-glaptop.roam.corp.google.com>
- <628346bc-b455-05f2-2051-35a807076ea0@mellanox.com>
- <25e4f647-f830-e1cc-bffc-0cc894885667@gmail.com>
- <9d752b75-eab2-6fd1-f9da-09985966436c@mellanox.com>
-From: "Alex G." <mr.nuke.me@gmail.com>
-Message-ID: <757729fb-1eb5-e1fa-899b-5cef0cc3106c@gmail.com>
-Date: Mon, 23 Jul 2018 12:01:48 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:55812 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728610AbeGQK1t (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 06:27:49 -0400
+Subject: Re: [PATCH v2 4/4] ARM: dts: dra7: Fix up unaligned access setting
+ for PCIe EP
+To: Vignesh R <vigneshr@ti.com>, Tony Lindgren <tony@atomide.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20180627122919.23926-1-vigneshr@ti.com>
+ <20180627122919.23926-5-vigneshr@ti.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <92691b59-1952-b00f-da5b-f308f94aa2b7@ti.com>
+Date: Tue, 17 Jul 2018 15:25:50 +0530
 MIME-Version: 1.0
-In-Reply-To: <9d752b75-eab2-6fd1-f9da-09985966436c@mellanox.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20180627122919.23926-5-vigneshr@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/23/2018 12:21 AM, Tal Gilboa wrote:
-> On 7/19/2018 6:49 PM, Alex G. wrote:
->>
->>
->> On 07/18/2018 08:38 AM, Tal Gilboa wrote:
->>> On 7/16/2018 5:17 PM, Bjorn Helgaas wrote:
->>>> [+cc maintainers of drivers that already use pcie_print_link_status()
->>>> and GPU folks]
->> [snip]
->>>>
->>>>> +    /* Multi-function PCIe share the same link/status. */
->>>>> +    if ((PCI_FUNC(dev->devfn) != 0) || dev->is_virtfn)
->>>>> +        return;
->>>>> +
->>>>> +    pcie_print_link_status(dev);
->>>>> +}
->>>
->>> Is this function called by default for every PCIe device? What about 
->>> VFs? We make an exception for them on our driver since a VF doesn't 
->>> have access to the needed information in order to provide a 
->>> meaningful message.
->>
->> I'm assuming VF means virtual function. pcie_print_link_status() 
->> doesn't care if it's passed a virtual function. It will try to do its 
->> job. That's why I bail out three lines above, with 'dev->is_virtfn' 
->> check.
->>
->> Alex
+
+
+On Wednesday 27 June 2018 05:59 PM, Vignesh R wrote:
+> Bit positions of PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE and
+> PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE in CTRL_CORE_SMA_SW_7 are
+> incorrectly documented in the TRM. In fact, the bit positions are
+> swapped. Update the DT bindings for PCIe EP to reflect the same.
 > 
-> That's the point - we don't want to call pcie_print_link_status() for 
-> virtual functions. We make the distinction in our driver. If you want to 
-> change the code to call this function by default it shouldn't affect the 
-> current usage.
+> Signed-off-by: Vignesh R <vigneshr@ti.com>
 
-I'm not understanding very well what you're asking. I understand you 
-want to avoid printing this message on virtual functions, and that's 
-already taken care of. I'm also not changing current behavior.  Let's 
-get v2 out and start the discussion again based on that.
+Shouldn't this be sent to stable fixes?
 
-Alex
+Thanks
+Kishon
+> ---
+>  arch/arm/boot/dts/dra7.dtsi | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+> index 7bfe7f28e3bd..27ad193e1a87 100644
+> --- a/arch/arm/boot/dts/dra7.dtsi
+> +++ b/arch/arm/boot/dts/dra7.dtsi
+> @@ -355,7 +355,7 @@
+>  				ti,hwmods = "pcie1";
+>  				phys = <&pcie1_phy>;
+>  				phy-names = "pcie-phy0";
+> -				ti,syscon-unaligned-access = <&scm_conf1 0x14 2>;
+> +				ti,syscon-unaligned-access = <&scm_conf1 0x14 1>;
+>  				status = "disabled";
+>  			};
+>  		};
+> 
