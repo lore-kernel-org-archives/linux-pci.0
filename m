@@ -1,103 +1,266 @@
-Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=N9qo=JT=gmail.com=kernelfans@kernel.org>
-MIME-Version: 1.0
-References: <1529912859-10475-1-git-send-email-kernelfans@gmail.com>
- <1529912859-10475-3-git-send-email-kernelfans@gmail.com> <20180625104505.GA3058@kroah.com>
- <CAFgQCTt6MTwXbbcQCcJroM3wGdx+5c7A+eVy+dXJscu1JtfA-w@mail.gmail.com> <20180626115402.GB30256@kroah.com>
-In-Reply-To: <20180626115402.GB30256@kroah.com>
-From: Pingfan Liu <kernelfans@gmail.com>
-Date: Tue, 3 Jul 2018 14:48:00 +0800
-Message-ID: <CAFgQCTuztrZbFJF3_NgZrq2r0ngSmcnkXMB=CgvMNgzQkwe+4w@mail.gmail.com>
-Subject: Re: [PATCHv2 2/2] drivers/base: reorder consumer and its children
- behind suppliers
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	rafael.j.wysocki@intel.com
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:60788 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730702AbeGQK62 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 06:58:28 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v13 11/12] tools: PCI: Add MSI-X support
+Date: Tue, 17 Jul 2018 12:26:26 +0200
+Message-Id: <66559d05af96aa3a0af1c8eb9d3e7f0ab3b1bcd8.1531822532.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 26, 2018 at 7:54 PM Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
->
-> On Tue, Jun 26, 2018 at 11:29:48AM +0800, Pingfan Liu wrote:
-> > On Mon, Jun 25, 2018 at 6:45 PM Greg Kroah-Hartman
-> > <gregkh@linuxfoundation.org> wrote:
-> > >
-> > > On Mon, Jun 25, 2018 at 03:47:39PM +0800, Pingfan Liu wrote:
-> > > > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
-> > > > introduces supplier<-consumer order in devices_kset. The commit tries
-> > > > to cleverly maintain both parent<-child and supplier<-consumer order by
-> > > > reordering a device when probing. This method makes things simple and
-> > > > clean, but unfortunately, breaks parent<-child order in some case,
-> > > > which is described in next patch in this series.
-> > >
-> > > There is no "next patch in this series" :(
-> > >
-> > Oh, re-arrange the patches, and forget the comment in log
-> >
-> > > > Here this patch tries to resolve supplier<-consumer by only reordering a
-> > > > device when it has suppliers, and takes care of the following scenario:
-> > > >     [consumer, children] [ ... potential ... ] supplier
-> > > >                          ^                   ^
-> > > > After moving the consumer and its children after the supplier, the
-> > > > potentail section may contain consumers whose supplier is inside
-> > > > children, and this poses the requirement to dry out all consumpers in
-> > > > the section recursively.
-> > > >
-> > > > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > > > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-> > > > Cc: Christoph Hellwig <hch@infradead.org>
-> > > > Cc: Bjorn Helgaas <helgaas@kernel.org>
-> > > > Cc: Dave Young <dyoung@redhat.com>
-> > > > Cc: linux-pci@vger.kernel.org
-> > > > Cc: linuxppc-dev@lists.ozlabs.org
-> > > > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
-> > > > ---
-> > > > note: there is lock issue in this patch, should be fixed in next version
-> > >
-> > > Please send patches that you know are correct, why would I want to
-> > > review this if you know it is not correct?
-> > >
-> > > And if the original commit is causing problems for you, why not just
-> > > revert that instead of adding this much-increased complexity?
-> > >
-> > Revert the original commit, then it will expose the error  order
-> > "consumer <- supplier" again.
-> > This patch tries to resolve the error and fix the following scenario:
-> > step0:  before the consumer device's probing,  (note child_a is a
-> > supplier of consumer_a, etc)
-> > [ consumer-X,  child_a, ...., child_z]     [.... consumer_a, ...,
-> > consumer_z, ....]    supplier-X
-> >                                                              ^^^
-> > affected range during moving^^^
-> > step1: When probing, moving consumer-X after supplier-X
-> > [ child_a, ...., child_z]     [.... consumer_a, ...,     consumer_z,
-> > ....]   supplier-X, consumer-X
-> > But it breaks "parent <-child" seq now, and should be fixed like:
-> > step2:
-> > [.... consumer_a, ...,     consumer_z, ....]  supplier-X  [
-> > consumer-X,  child_a, ...., child_z]    <---
-> > descendants_reorder_after_pos() does it.
-> > Again, the seq "consumer_a <- child_a" breaks the "supplier<-consumer"
-> >  order, should be fixed like:
-> > step3:
-> > [....  consumer_z, .....]  supplier-X  [ consumer-X,  child_a,
-> > consumer_a ...., child_z]   <--- __device_reorder_consumer() does it.
-> > ^^ affected range^^
-> > The moving of consumer_a brings us to face the same scenario of step1,
-> > hence we need an external recursion.
->
-> Something really got messed up here, and this all does not make any
-> sense :(
->
-> Can you try again?
->
-> Also, please cc: Rafael on all of this, as he wrote all of this
-> consumer/supplier logic and I am not that familiar with it at all.
->
-Cc Rafael J. Wysocki for the context.  I will send out V3 soon.
+Add MSI-X support to pcitest tool.
 
-Regards,
-Pingfan
+Modify pcitest.sh script to accommodate MSI-X interrupt tests.
+
+Update documentation accordingly.
+
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Change v1->v2:
+ - Allow IRQ type driver reconfiguring in runtime, follwing Kishon's
+suggestion.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Change v5->v6:
+ - Moved PCITEST_MSIX ioctl entry to patch #8.
+ - Moved PCITEST_SET_IRQTYPE and PCITEST_GET_IRQTYPE ioctl entries
+to patch #9.
+Change v6->v7:
+ - Nothing changed, just to follow the patch set version.
+Change v7->v8:
+ - Re-sending the patch series.
+Change v8->v9:
+ - Nothing changed, just to follow the patch set version.
+Change v9->v10:
+ - Updated documentation.
+Change v10->v11:
+ - Nothing changed, just to follow the patch set version.
+Change v11->v12:
+ - Nothing changed, just to follow the patch set version.
+Change v12->v13:
+ - Re-sending the patch series.
+
+ Documentation/PCI/endpoint/pci-test-howto.txt | 36 +++++++++++--------
+ tools/pci/pcitest.c                           | 51 ++++++++++++++++++++++++++-
+ tools/pci/pcitest.sh                          | 15 ++++++++
+ 3 files changed, 87 insertions(+), 15 deletions(-)
+
+diff --git a/Documentation/PCI/endpoint/pci-test-howto.txt b/Documentation/PCI/endpoint/pci-test-howto.txt
+index 65f1a13..e40cf0f 100644
+--- a/Documentation/PCI/endpoint/pci-test-howto.txt
++++ b/Documentation/PCI/endpoint/pci-test-howto.txt
+@@ -121,7 +121,9 @@ following commands.
+ 
+ 	Interrupt tests
+ 
++	SET IRQ TYPE TO LEGACY:         OKAY
+ 	LEGACY IRQ:     NOT OKAY
++	SET IRQ TYPE TO MSI:            OKAY
+ 	MSI1:           OKAY
+ 	MSI2:           OKAY
+ 	MSI3:           OKAY
+@@ -154,24 +156,30 @@ following commands.
+ 	MSI30:          NOT OKAY
+ 	MSI31:          NOT OKAY
+ 	MSI32:          NOT OKAY
+-	MSIX1:          OKAY
+-	MSIX2:          OKAY
+-	MSIX3:          OKAY
+-	MSIX4:          OKAY
+-	MSIX5:          OKAY
+-	MSIX6:          OKAY
+-	MSIX7:          OKAY
+-	MSIX8:          OKAY
+-	MSIX9:          NOT OKAY
+-	MSIX10:         NOT OKAY
+-	MSIX11:         NOT OKAY
+-	MSIX12:         NOT OKAY
+-	MSIX13:         NOT OKAY
++	SET IRQ TYPE TO MSI-X:          OKAY
++	MSI-X1:         OKAY
++	MSI-X2:         OKAY
++	MSI-X3:         OKAY
++	MSI-X4:         OKAY
++	MSI-X5:         OKAY
++	MSI-X6:         OKAY
++	MSI-X7:         OKAY
++	MSI-X8:         OKAY
++	MSI-X9:         NOT OKAY
++	MSI-X10:        NOT OKAY
++	MSI-X11:        NOT OKAY
++	MSI-X12:        NOT OKAY
++	MSI-X13:        NOT OKAY
++	MSI-X14:        NOT OKAY
++	MSI-X15:        NOT OKAY
++	MSI-X16:        NOT OKAY
+ 	[...]
+-	MSIX2048:       NOT OKAY
++	MSI-X2047:      NOT OKAY
++	MSI-X2048:      NOT OKAY
+ 
+ 	Read Tests
+ 
++	SET IRQ TYPE TO MSI:            OKAY
+ 	READ (      1 bytes):           OKAY
+ 	READ (   1024 bytes):           OKAY
+ 	READ (   1025 bytes):           OKAY
+diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
+index 9074b47..af146bb 100644
+--- a/tools/pci/pcitest.c
++++ b/tools/pci/pcitest.c
+@@ -31,12 +31,17 @@
+ #define BILLION 1E9
+ 
+ static char *result[] = { "NOT OKAY", "OKAY" };
++static char *irq[] = { "LEGACY", "MSI", "MSI-X" };
+ 
+ struct pci_test {
+ 	char		*device;
+ 	char		barnum;
+ 	bool		legacyirq;
+ 	unsigned int	msinum;
++	unsigned int	msixnum;
++	int		irqtype;
++	bool		set_irqtype;
++	bool		get_irqtype;
+ 	bool		read;
+ 	bool		write;
+ 	bool		copy;
+@@ -65,6 +70,24 @@ static int run_test(struct pci_test *test)
+ 			fprintf(stdout, "%s\n", result[ret]);
+ 	}
+ 
++	if (test->set_irqtype) {
++		ret = ioctl(fd, PCITEST_SET_IRQTYPE, test->irqtype);
++		fprintf(stdout, "SET IRQ TYPE TO %s:\t\t", irq[test->irqtype]);
++		if (ret < 0)
++			fprintf(stdout, "FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	if (test->get_irqtype) {
++		ret = ioctl(fd, PCITEST_GET_IRQTYPE);
++		fprintf(stdout, "GET IRQ TYPE:\t\t");
++		if (ret < 0)
++			fprintf(stdout, "FAILED\n");
++		else
++			fprintf(stdout, "%s\n", irq[ret]);
++	}
++
+ 	if (test->legacyirq) {
+ 		ret = ioctl(fd, PCITEST_LEGACY_IRQ, 0);
+ 		fprintf(stdout, "LEGACY IRQ:\t");
+@@ -83,6 +106,15 @@ static int run_test(struct pci_test *test)
+ 			fprintf(stdout, "%s\n", result[ret]);
+ 	}
+ 
++	if (test->msixnum > 0 && test->msixnum <= 2048) {
++		ret = ioctl(fd, PCITEST_MSIX, test->msixnum);
++		fprintf(stdout, "MSI-X%d:\t\t", test->msixnum);
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
+ 	if (test->write) {
+ 		ret = ioctl(fd, PCITEST_WRITE, test->size);
+ 		fprintf(stdout, "WRITE (%7ld bytes):\t\t", test->size);
+@@ -133,7 +165,7 @@ int main(int argc, char **argv)
+ 	/* set default endpoint device */
+ 	test->device = "/dev/pci-endpoint-test.0";
+ 
+-	while ((c = getopt(argc, argv, "D:b:m:lrwcs:")) != EOF)
++	while ((c = getopt(argc, argv, "D:b:m:x:i:Ilrwcs:")) != EOF)
+ 	switch (c) {
+ 	case 'D':
+ 		test->device = optarg;
+@@ -151,6 +183,20 @@ int main(int argc, char **argv)
+ 		if (test->msinum < 1 || test->msinum > 32)
+ 			goto usage;
+ 		continue;
++	case 'x':
++		test->msixnum = atoi(optarg);
++		if (test->msixnum < 1 || test->msixnum > 2048)
++			goto usage;
++		continue;
++	case 'i':
++		test->irqtype = atoi(optarg);
++		if (test->irqtype < 0 || test->irqtype > 2)
++			goto usage;
++		test->set_irqtype = true;
++		continue;
++	case 'I':
++		test->get_irqtype = true;
++		continue;
+ 	case 'r':
+ 		test->read = true;
+ 		continue;
+@@ -173,6 +219,9 @@ int main(int argc, char **argv)
+ 			"\t-D <dev>		PCI endpoint test device {default: /dev/pci-endpoint-test.0}\n"
+ 			"\t-b <bar num>		BAR test (bar number between 0..5)\n"
+ 			"\t-m <msi num>		MSI test (msi number between 1..32)\n"
++			"\t-x <msix num>	\tMSI-X test (msix number between 1..2048)\n"
++			"\t-i <irq type>	\tSet IRQ type (0 - Legacy, 1 - MSI, 2 - MSI-X)\n"
++			"\t-I			Get current IRQ type configured\n"
+ 			"\t-l			Legacy IRQ test\n"
+ 			"\t-r			Read buffer test\n"
+ 			"\t-w			Write buffer test\n"
+diff --git a/tools/pci/pcitest.sh b/tools/pci/pcitest.sh
+index 77e8c85..75ed48f 100644
+--- a/tools/pci/pcitest.sh
++++ b/tools/pci/pcitest.sh
+@@ -16,7 +16,10 @@ echo
+ echo "Interrupt tests"
+ echo
+ 
++pcitest -i 0
+ pcitest -l
++
++pcitest -i 1
+ msi=1
+ 
+ while [ $msi -lt 33 ]
+@@ -26,9 +29,21 @@ do
+ done
+ echo
+ 
++pcitest -i 2
++msix=1
++
++while [ $msix -lt 2049 ]
++do
++        pcitest -x $msix
++        msix=`expr $msix + 1`
++done
++echo
++
+ echo "Read Tests"
+ echo
+ 
++pcitest -i 1
++
+ pcitest -r -s 1
+ pcitest -r -s 1024
+ pcitest -r -s 1025
+-- 
+2.7.4
