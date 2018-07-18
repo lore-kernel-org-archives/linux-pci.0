@@ -1,85 +1,106 @@
-Return-Path: <SRS0=tr2T=KP=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=tr2T=KP=linux.intel.com=mika.westerberg@kernel.org>
-Date: Tue, 31 Jul 2018 11:03:42 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: pciehp: Deduplicate presence check on probe &
- resume
-Message-ID: <20180731080342.GA2534@lahna.fi.intel.com>
-References: <92c3c456edb461494d5c44e1ff6bab2711228ff1.1532754355.git.lukas@wunner.de>
- <f9c36223a126c86ecc7dc921f8f943d29926edc3.1532754355.git.lukas@wunner.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Trent Piepho <tpiepho@impinj.com>
+To: linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 1/2] ARM: dts: imx7d: Add node for PCIe PHY
+Date: Wed, 18 Jul 2018 12:44:23 -0700
+Message-Id: <20180718194424.8844-2-tpiepho@impinj.com>
+In-Reply-To: <20180718194424.8844-1-tpiepho@impinj.com>
+References: <20180718194424.8844-1-tpiepho@impinj.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f9c36223a126c86ecc7dc921f8f943d29926edc3.1532754355.git.lukas@wunner.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>, Sascha Hauer <kernel@pengutronix.de>,
+ Fabio Estevam <fabio.estevam@nxp.com>, Trent Piepho <tpiepho@impinj.com>,
+ Shawn Guo <shawnguo@kernel.org>, Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 28, 2018 at 07:22:00AM +0200, Lukas Wunner wrote:
-> On driver probe and on resume from system sleep, pciehp checks the
-> Presence Detect State bit in the Slot Status register to bring up an
-> occupied slot or bring down an unoccupied slot.  Both code paths are
-> identical, so deduplicate them per Mika's request.
-> 
-> On probe, an additional check is performed to disable power of an
-> unoccupied slot.  This can e.g. happen if power was enabled by BIOS.
-> It cannot happen once pciehp has taken control, hence is not necessary
-> on resume:  The Slot Control register is set to the same value that it
-> had on suspend by pci_restore_state(), so if the slot was occupied,
-> power is enabled and if it wasn't, power is disabled.  Should occupancy
-> have changed during the system sleep transition, power is adjusted by
-> bringing up or down the slot per the paragraph above.
-> 
-> To allow for deduplication of the presence check, move the power check
-> to pcie_init().  This seems safer anyway, because right now it is
-> performed while interrupts are already enabled, and although I can't
-> think of a scenario where pciehp_power_off_slot() and the IRQ thread
-> collide, it does feel brittle.
-> 
-> However this means that pcie_init() may now write to the Slot Control
-> register before the IRQ is requested.  If both the CCIE and HPIE bits
-> happen to be set, pcie_wait_cmd() will wait for an interrupt (instead
-> of polling the Command Completed bit) and eventually emit a timeout
-> message.  Additionally, if a level-triggered INTx interrupt is used,
-> the user may see a spurious interrupt splat.  Avoid by disabling
-> interrupts before disabling power.  (Normally the HPIE and CCIE bits
-> should be clear on probe, but conceivably they may already have been
-> set e.g. by BIOS.)
-> 
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+There isn't yet any code in the kernel that uses this device's register,
+but there will be some for a PCIe PLL erratum wortkaround.
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+This adds the PHY as a new node.  The PCI-e controller node gains a
+phandle property that points to it.  There is no driver for the PHY at
+this point and all the existing code that relates to the PHY is part of
+the PCI-e controller driver (and does not need register access, yet).
 
-One small nit, see below:
+Cc: Shawn Guo <shawnguo@kernel.org>
+Cc: Sascha Hauer <kernel@pengutronix.de>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Trent Piepho <tpiepho@impinj.com>
+---
+ Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 11 +++++++++++
+ arch/arm/boot/dts/imx7d.dtsi                             |  9 +++++++++
+ 2 files changed, 20 insertions(+)
 
-> ---
->  drivers/pci/hotplug/pciehp_core.c | 63 ++++++++++++++++---------------
->  drivers/pci/hotplug/pciehp_hpc.c  | 14 +++++++
->  2 files changed, 46 insertions(+), 31 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 01fcf1fa0f66..ec48c9433ae5 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -200,12 +200,40 @@ static int reset_slot(struct hotplug_slot *hotplug_slot, int probe)
->  	return pciehp_reset_slot(slot, probe);
->  }
->  
-> +/**
-> + * pciehp_check_presence() - synthesize event if presence has changed
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index cb33421184a0..c7aeda6878ff 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -50,6 +50,7 @@ Additional required properties for imx7d-pcie:
+ - reset-names: Must contain the following entires:
+ 	       - "pciephy"
+ 	       - "apps"
++- fsl,pcie-phy: A phandle to an fsl,imx-pcie-phy node.
+ 
+ Example:
+ 
+@@ -76,3 +77,13 @@ Example:
+ 		clocks = <&clks 144>, <&clks 206>, <&clks 189>;
+ 		clock-names = "pcie", "pcie_bus", "pcie_phy";
+ 	};
++
++* Freescale i.MX7d PCIe PHY
++
++This is the PHY associated with the IMX7d PCIe controller.  It's used by the
++PCI-e controller via the fsl,pcie-phy phandle.
++
++Required properties:
++- compatible:
++	- "fsl,imx-pcie-phy"
++- reg: base address and length of the PCIe PHY controller
+diff --git a/arch/arm/boot/dts/imx7d.dtsi b/arch/arm/boot/dts/imx7d.dtsi
+index 200714e3feea..31f5c8576251 100644
+--- a/arch/arm/boot/dts/imx7d.dtsi
++++ b/arch/arm/boot/dts/imx7d.dtsi
+@@ -94,6 +94,14 @@
+ 	};
+ };
+ 
++&aips2 {
++	pcie_phy: pcie-phy@306d0000 {
++		  compatible = "fsl,imx-pcie-phy";
++		  reg = <0x306d0000 0x10000>;
++		  status = "disabled";
++	};
++};
++
+ &aips3 {
+ 	usbotg2: usb@30b20000 {
+ 		compatible = "fsl,imx7d-usb", "fsl,imx27-usb";
+@@ -167,6 +175,7 @@
+ 			 <&src IMX7_RESET_PCIE_CTRL_APPS_EN>;
+ 		reset-names = "pciephy", "apps";
+ 		status = "disabled";
++		fsl,pcie-phy = <&pcie_phy>;
+ 	};
+ };
+ 
+-- 
+2.14.4
 
-You should document the argument as well so that the tool that is used
-to process these knows about it:
 
-  @ctrl: ....
-
-> + *
-> + * On probe and resume, an explicit presence check is necessary to bring up an
-> + * occupied slot or bring down an unoccupied slot.  This can't be triggered by
-> + * events in the Slot Status register, they may be stale and are therefore
-> + * cleared.  Secondly, sending an interrupt for "events that occur while
-> + * interrupt generation is disabled [when] interrupt generation is subsequently
-> + * enabled" is optional per PCIe r4.0, sec 6.7.3.4.
-> + */
-> +static void pciehp_check_presence(struct controller *ctrl)
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
