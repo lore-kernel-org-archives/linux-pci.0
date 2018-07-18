@@ -1,94 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v3 1/7] PCI/AER: Clear only ERR_FATAL status bits during
- fatal recovery
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Timur Tabi <timur@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 18 Jul 2018 14:44:25 -0500
-Message-ID: <153194306515.191586.15135574361122079715.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx01.hxt-semitech.com.96.203.223.in-addr.arpa ([223.203.96.7]:34906
+        "EHLO barracuda.hxt-semitech.com" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1731193AbeGRBVI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 21:21:08 -0400
+From: "Yang, Shunyong" <shunyong.yang@hxt-semitech.com>
+To: "hch@infradead.org" <hch@infradead.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Zheng, Joey" <yu.zheng@hxt-semitech.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: Unify pci and normal dma direction definition
+Date: Wed, 18 Jul 2018 00:45:24 +0000
+Message-ID: <1531874719.3330.2.camel@hxt-semitech.com>
+References: <1531463840-34651-1-git-send-email-shunyong.yang@hxt-semitech.com>
+         <20180717140335.GA23500@infradead.org>
+In-Reply-To: <20180717140335.GA23500@infradead.org>
+Content-Type: text/plain; charset="iso-8859-15"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Hi, Christoph,
 
-During recovery from fatal errors, we previously called
-pci_cleanup_aer_uncorrect_error_status(), which cleared *all* uncorrectable
-error status bits (both ERR_FATAL and ERR_NONFATAL).
+  I will send a v2 according to your comments.
 
-Instead, call a new pci_aer_clear_fatal_status() that clears only the
-ERR_FATAL bits (as indicated by the PCI_ERR_UNCOR_SEVER register).
+Thanks.
+Shunyong.
 
-Based-on-patch-by: Oza Pawandeep <poza@codeaurora.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.h      |    4 ++++
- drivers/pci/pcie/aer.c |   17 +++++++++++++++++
- drivers/pci/pcie/err.c |    2 +-
- 3 files changed, 22 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c358e7a07f3f..12fd2ac95843 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -452,4 +452,8 @@ static inline int devm_of_pci_get_host_bridge_resources(struct device *dev,
- }
- #endif
- 
-+#ifdef CONFIG_PCIEAER
-+void pci_aer_clear_fatal_status(struct pci_dev *dev);
-+#endif
-+
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index a2e88386af28..5b4a84e3d360 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -374,6 +374,23 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- }
- EXPORT_SYMBOL_GPL(pci_cleanup_aer_uncorrect_error_status);
- 
-+void pci_aer_clear_fatal_status(struct pci_dev *dev)
-+{
-+	int pos;
-+	u32 status, sev;
-+
-+	pos = dev->aer_cap;
-+	if (!pos)
-+		return;
-+
-+	/* Clear status bits for ERR_FATAL errors only */
-+	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
-+	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &sev);
-+	status &= sev;
-+	if (status)
-+		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
-+}
-+
- int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
- {
- 	int pos;
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index f7ce0cb0b0b7..0539518f9861 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -316,7 +316,7 @@ void pcie_do_fatal_recovery(struct pci_dev *dev, u32 service)
- 		 * do error recovery on all subordinates of the bridge instead
- 		 * of the bridge and clear the error status of the bridge.
- 		 */
--		pci_cleanup_aer_uncorrect_error_status(dev);
-+		pci_aer_clear_fatal_status(dev);
- 	}
- 
- 	if (result == PCI_ERS_RESULT_RECOVERED) {
+On Tue, 2018-07-17 at 07:03 -0700, Christoph Hellwig wrote:
+> > 
+> > diff --git a/include/linux/dma-direction.h b/include/linux/dma-
+> > direction.h
+> > index 3649a031893a..9d52716e9218 100644
+> > --- a/include/linux/dma-direction.h
+> > +++ b/include/linux/dma-direction.h
+> > @@ -2,7 +2,7 @@
+> >  #ifndef _LINUX_DMA_DIRECTION_H
+> >  #define _LINUX_DMA_DIRECTION_H
+> >  /*
+> > - * These definitions mirror those in pci.h, so they can be used
+> > + * These definitions mirror those in pci-dma-compat.h, so they can
+> > be used
+> >   * interchangeably with their PCI_ counterparts.
+> >   */
+> I think we can just drop this comment anymore.
+> 
+> > 
+> > +#define PCI_DMA_BIDIRECTIONAL	(DMA_BIDIRECTIONAL)
+> > +#define PCI_DMA_TODEVICE	(DMA_TO_DEVICE)
+> > +#define PCI_DMA_FROMDEVICE	(DMA_FROM_DEVICE)
+> > +#define PCI_DMA_NONE		(DMA_NONE)
+> No need for the braces.
