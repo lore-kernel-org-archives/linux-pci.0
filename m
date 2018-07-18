@@ -1,115 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:39670 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388241AbeGXMH7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jul 2018 08:07:59 -0400
-From: "Lee, Chun-Yi" <joeyli.kernel@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>
-Cc: x86@kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, "Lee, Chun-Yi" <jlee@suse.com>
-Subject: [PATCH] x86/PCI: Claim the resources of firmware enabled IOAPIC before children bus
-Date: Tue, 24 Jul 2018 19:01:44 +0800
-Message-Id: <20180724110144.16442-1-jlee@suse.com>
+Received: from mail-sn1nam02on0072.outbound.protection.outlook.com ([104.47.36.72]:20544
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726990AbeGROMW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Jul 2018 10:12:22 -0400
+From: Bharat Kumar Gogada <bharatku@xilinx.com>
+To: "poza@codeaurora.org" <poza@codeaurora.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci-owner@vger.kernel.org" <linux-pci-owner@vger.kernel.org>
+Subject: RE: [PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
+Date: Wed, 18 Jul 2018 13:34:20 +0000
+Message-ID: <BL0PR02MB4849C990B8C0822ECA45746AA5530@BL0PR02MB4849.namprd02.prod.outlook.com>
+References: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+ <b5ba83a0fd8694905528f740a186b891@codeaurora.org>
+ <BL0PR02MB4849D9F256912CC9B869A20EA5580@BL0PR02MB4849.namprd02.prod.outlook.com>
+ <3bd31b729f9f335fcd906a8164c0a4cb@codeaurora.org>
+In-Reply-To: <3bd31b729f9f335fcd906a8164c0a4cb@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I got a machine that the resource of firmware enabled IOAPIC conflicts
-with the resource of a children bus when the PCI host bus be hotplug.
+> On 2018-07-13 19:25, Bharat Kumar Gogada wrote:
+> >> > Currently PCI_BRIDGE_CTL_SERR is being enabled only in ACPI flow.
+> >> > This bit is required for forwarding errors reported by EP devices
+> >> > to upstream device.
+> >> > This patch enables SERR# for Type-1 PCI device.
+> >> >
+> >> > Signed-off-by: Bharat Kumar Gogada
+> <bharat.kumar.gogada@xilinx.com>
+> >> > ---
+> >> >  drivers/pci/pcie/aer.c |   23 +++++++++++++++++++++++
+> >> >  1 files changed, 23 insertions(+), 0 deletions(-)
+> >> >
+> >> > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c index
+> >> > a2e8838..943e084 100644
+> >> > --- a/drivers/pci/pcie/aer.c
+> >> > +++ b/drivers/pci/pcie/aer.c
+> >> > @@ -343,6 +343,19 @@ int pci_enable_pcie_error_reporting(struct
+> >> > pci_dev
+> >> > *dev)
+> >> >  	if (!dev->aer_cap)
+> >> >  		return -EIO;
+> >> >
+> >> > +	if (!IS_ENABLED(CONFIG_ACPI) &&
+> >> > +	    dev->hdr_type =3D=3D PCI_HEADER_TYPE_BRIDGE) {
+> >> > +		u16 control;
+> >> > +
+> >> > +		/*
+> >> > +		 * A Type-1 PCI bridge will not forward ERR_ messages
+> >> coming
+> >> > +		 * from an endpoint if SERR# forwarding is not enabled.
+> >> > +		 */
+> >> > +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL,
+> >> &control);
+> >> > +		control |=3D PCI_BRIDGE_CTL_SERR;
+> >> > +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+> >> > +	}
+> >> > +
+> >> >  	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
+> >> > PCI_EXP_AER_FLAGS);  }
+> >> > EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+> >> > @@ -352,6 +365,16 @@ int pci_disable_pcie_error_reporting(struct
+> >> > pci_dev *dev)
+> >> >  	if (pcie_aer_get_firmware_first(dev))
+> >> >  		return -EIO;
+> >> >
+> >> > +	if (!IS_ENABLED(CONFIG_ACPI) &&
+> >> > +	    dev->hdr_type =3D=3D PCI_HEADER_TYPE_BRIDGE) {
+> >> > +		u16 control;
+> >> > +
+> >> > +		/* Clear SERR Forwarding */
+> >> > +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL,
+> >> &control);
+> >> > +		control &=3D ~PCI_BRIDGE_CTL_SERR;
+> >> > +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+> >> > +	}
+> >> > +
+> >> >  	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+> >> >  					  PCI_EXP_AER_FLAGS);
+> >> >  }
+> >>
+> >>
+> >> Should this configuration no be set by Firmware ? why should Linux
+> >> dictate it ?
+> > Hi Oza, Can you please let us know why this should be set by firmware ?
+> > Spec clearly states ERR_CORR,ERR_FATAL/NON FATAL will be forwarded
+> > only if this bit is set.
+> > If linux AER service is being enabled without checking/setting this
+> > bit, then AER service will not do anything even ERR_* is seen on link.
+> >
+> > Regards,
+> > Bharat
+>=20
+>=20
+> The ERR_* to be forwarded or not to be forwarded could be decision of the
+> platform.
+> hence I think it is best left to firmware to decide if it want to enable =
+this for
+> particular platform.
+>=20
+I'm not aware of other platforms, can you please give an example of a platf=
+orm=20
+how it decides to set this in firmware ?
 
-[ 3182.243325] PCI host bridge to bus 0001:40
-[ 3182.243328] pci_bus 0001:40: root bus resource [io  0xc000-0xdfff window]
-[ 3182.243330] pci_bus 0001:40: root bus resource [mem 0xdc000000-0xebffffff window]
-[ 3182.243331] pci_bus 0001:40: root bus resource [mem 0x212400000000-0x2125ffffffff window]
-[ 3182.243334] pci_bus 0001:40: root bus resource [bus 40-7e]
-...
-[ 3182.244737] pci 0001:40:05.4: [8086:6f2c] type 00 class 0x080020
-[ 3182.244746] pci 0001:40:05.4: reg 0x10: [mem 0xdc000000-0xdc000fff]
-...
-[ 3182.246697] pci 0001:40:02.0: PCI bridge to [bus 41]
-[ 3182.246702] pci 0001:40:02.0:   bridge window [mem 0xdc000000-0xdc7fffff]
-...
-pci 0001:40:05.4: can't claim BAR 0 [mem 0xdc000000-0xdc000fff]: address conflict with PCI Bus 0001:41 [mem 0xdc000000-0xdc7fffff]
+> although,
+> There are 2 cases
+> Hotplug capable bridge and otherwise.
 
-The bus topology:
+Yes, what about an RP which supports only AER but doesn't support Hotplug ?
+If we have this patch we can set this bit without firmware also.
+>=20
+> 1) If Firmware sets them, I do not think during enumeraion linux will loo=
+se
+> those settings.=20
 
- +-[0001:40]-+-02.0-[41]--
- |           +-03.0-[41]--
- |           +-03.2-[41]--+-00.0  Intel Corporation I350 Gigabit Network Connection
- |           |            +-00.1  Intel Corporation I350 Gigabit Network Connection
- |           |            +-00.2  Intel Corporation I350 Gigabit Network Connection
- |           |            \-00.3  Intel Corporation I350 Gigabit Network Connection
- |           +-05.0  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D Map/VTd_Misc/System Management
- |           +-05.1  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D IIO Hot Plug
- |           +-05.2  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D IIO RAS/Control Status/Global Errors
- |           \-05.4  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D I/O APIC
+> 2) I do not see any integration of hotplug with AER currently, so if the =
+PCIe
+> switch is plugged into Hotplug capable RP, I am not very sure if this fun=
+ctions
+> get called.
+>=20
+> Keith, Lukas and Bjorn any comments ?
+Hi all, do you have any inputs on this ?
 
-This problem causes that the NIC behine the child bus was not available
-after PCI host bridge hotpluged.
-
-Kernel does not want to change resource of firmware enabled IOAPIC, but
-the priority of children bus's resources are higher than any other devices.
-So this conflict can not be handled by the reassigning logic of kernel.
-
-This patch claims the resources of firmware enabled IOAPIC before
-children bus. Then kernel gets a chance to reassign the resources of
-children bus to avoid the conflict.
-
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Signed-off-by: "Lee, Chun-Yi" <jlee@suse.com>
----
- arch/x86/pci/i386.c | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
-
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index ed4ac215305d..6413eda87c72 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -230,13 +230,40 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 	}
- }
- 
-+static bool ioapic_firmware_enabled(struct pci_dev *dev)
-+{
-+	u16 class = dev->class >> 8;
-+
-+	if (class == PCI_CLASS_SYSTEM_PIC) {
-+		u16 command;
-+
-+		pci_read_config_word(dev, PCI_COMMAND, &command);
-+		if (command & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY))
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass);
-+
- static void pcibios_allocate_bus_resources(struct pci_bus *bus)
- {
- 	struct pci_bus *child;
-+	struct pci_dev *dev;
- 
- 	/* Depth-First Search on bus tree */
- 	if (bus->self)
- 		pcibios_allocate_bridge_resources(bus->self);
-+
-+	/* allocate firmware enabled APIC before children bus */
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		if (ioapic_firmware_enabled(dev)) {
-+			pcibios_allocate_dev_resources(dev, 0);
-+			pcibios_allocate_dev_resources(dev, 1);
-+		}
-+	}
-+
- 	list_for_each_entry(child, &bus->children, node)
- 		pcibios_allocate_bus_resources(child);
- }
--- 
-2.13.6
+Regards,
+Bharat
