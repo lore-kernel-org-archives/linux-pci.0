@@ -1,47 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0042.outbound.protection.outlook.com ([104.47.40.42]:55299
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726782AbeG3TDx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Jul 2018 15:03:53 -0400
-From: Alan Douglas <adouglas@cadence.com>
-To: <bhelgaas@google.com>
-CC: <kishon@ti.com>, <lorenzo.pieralisi@arm.com>,
-        <linux-pci@vger.kernel.org>, <gustavo.pimentel@synopsys.com>,
-        <cyrille.pitchen@bootlin.com>, <stelford@cadence.com>,
-        Alan Douglas <adouglas@cadence.com>
-Subject: [PATCH 4/5] PCI: cadence: Check link is up before sending IRQ from EP
-Date: Mon, 30 Jul 2018 18:23:24 +0100
-Message-ID: <1532971404-9444-1-git-send-email-adouglas@cadence.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49978 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729209AbeGRXNa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jul 2018 19:13:30 -0400
+Date: Wed, 18 Jul 2018 15:33:26 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Baoquan He <bhe@redhat.com>
+Cc: linux-kernel@vger.kernel.org, robh+dt@kernel.org,
+        dan.j.williams@intel.com, nicolas.pitre@linaro.org,
+        josh@joshtriplett.org, fengguang.wu@intel.com, bp@suse.de,
+        andy.shevchenko@gmail.com, patrik.r.jakobsson@gmail.com,
+        airlied@linux.ie, kys@microsoft.com, haiyangz@microsoft.com,
+        sthemmin@microsoft.com, dmitry.torokhov@gmail.com,
+        frowand.list@gmail.com, keith.busch@intel.com,
+        jonathan.derrick@intel.com, lorenzo.pieralisi@arm.com,
+        bhelgaas@google.com, tglx@linutronix.de, brijesh.singh@amd.com,
+        jglisse@redhat.com, thomas.lendacky@amd.com,
+        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
+        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
+        yinghai@kernel.org, monstr@monstr.eu, davem@davemloft.net,
+        chris@zankel.net, jcmvbkbc@gmail.com, gustavo@padovan.org,
+        maarten.lankhorst@linux.intel.com, seanpaul@chromium.org,
+        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        kexec@lists.infradead.org
+Subject: Re: [PATCH v7 4/4] kexec_file: Load kernel at top of system RAM if
+ required
+Message-Id: <20180718153326.b795e9ea7835432a56cd7011@linux-foundation.org>
+In-Reply-To: <20180718024944.577-5-bhe@redhat.com>
+References: <20180718024944.577-1-bhe@redhat.com>
+        <20180718024944.577-5-bhe@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If EP attempts to send an IRQ (legacy, MSI or MSI-X) while the
-link is not up, return -EINVAL
+On Wed, 18 Jul 2018 10:49:44 +0800 Baoquan He <bhe@redhat.com> wrote:
 
-Signed-off-by: Alan Douglas <adouglas@cadence.com>
----
- drivers/pci/controller/pcie-cadence-ep.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+> For kexec_file loading, if kexec_buf.top_down is 'true', the memory which
+> is used to load kernel/initrd/purgatory is supposed to be allocated from
+> top to down. This is what we have been doing all along in the old kexec
+> loading interface and the kexec loading is still default setting in some
+> distributions. However, the current kexec_file loading interface doesn't
+> do like this. The function arch_kexec_walk_mem() it calls ignores checking
+> kexec_buf.top_down, but calls walk_system_ram_res() directly to go through
+> all resources of System RAM from bottom to up, to try to find memory region
+> which can contain the specific kexec buffer, then call locate_mem_hole_callback()
+> to allocate memory in that found memory region from top to down. This brings
+> confusion especially when KASLR is widely supported , users have to make clear
+> why kexec/kdump kernel loading position is different between these two
+> interfaces in order to exclude unnecessary noises. Hence these two interfaces
+> need be unified on behaviour.
 
-diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-index db75280..33e30dd 100644
---- a/drivers/pci/controller/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/pcie-cadence-ep.c
-@@ -370,6 +370,12 @@ static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
- 				  u16 interrupt_num)
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
-+	u32 link_status;
-+
-+	/* Can't send an IRQ if the link is down. */
-+	link_status = cdns_pcie_readl(&ep->pcie, CDNS_PCIE_LM_BASE);
-+	if (!(link_status & 0x1))
-+		return -EINVAL;
- 
- 	switch (type) {
- 	case PCI_EPC_IRQ_LEGACY:
--- 
-1.7.1
+As far as I can tell, the above is the whole reason for the patchset,
+yes?  To avoid confusing users.
+
+Is that sufficient?  Can we instead simplify their lives by providing
+better documentation or informative printks or better Kconfig text,
+etc?
+
+And who *are* the people who are performing this configuration?  Random
+system administrators?  Linux distro engineers?  If the latter then
+they presumably aren't easily confused!
+
+In other words, I'm trying to understand how much benefit this patchset
+will provide to our users as a whole.
