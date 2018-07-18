@@ -1,58 +1,205 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42968 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727283AbeGML6c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Jul 2018 07:58:32 -0400
-Date: Fri, 13 Jul 2018 06:44:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 08/32] genirq: Synchronize only with single thread on
- free_irq()
-Message-ID: <20180713114411.GI28466@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1529173804.git.lukas@wunner.de>
- <83cfe0c826f1d793e2ead9032ef2109b5efa403a.1529173804.git.lukas@wunner.de>
- <20180712222109.GE28466@bhelgaas-glaptop.roam.corp.google.com>
- <20180713072109.GA23955@wunner.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1531893761.31406.15.camel@mhfsdcap03>
+Subject: Re: [PATCH v3 3/4] PCI: mediatek: Add system pm support for MT2712
+ and MT7622
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Date: Wed, 18 Jul 2018 14:02:41 +0800
+In-Reply-To: <20180717171543.GA20991@red-moon>
+References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
+ <1530518264-6125-4-git-send-email-honghui.zhang@mediatek.com>
+ <20180717171543.GA20991@red-moon>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180713072109.GA23955@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com, khilman@kernel.org,
+ marc.zyngier@arm.com, linux-pci@vger.kernel.org, sean.wang@mediatek.com,
+ rjw@rjwysocki.net, linux-kernel@vger.kernel.org, yt.shen@mediatek.com,
+ matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
+ yong.wu@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
+ ulf.hansson@linaro.org, eddie.huang@mediatek.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 13, 2018 at 09:21:09AM +0200, Lukas Wunner wrote:
-> On Thu, Jul 12, 2018 at 05:21:09PM -0500, Bjorn Helgaas wrote:
-> > On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
-> > > When pciehp is converted to threaded IRQ handling, removal of unplugged
-> > > devices below a PCIe hotplug port happens synchronously in the IRQ
-> > > thread.  Removal of devices typically entails a call to free_irq() by
-> > > their drivers.
-> > > 
-> > > If those devices share their IRQ with the hotplug port, free_irq()
-> > > deadlocks because it calls synchronize_irq() to wait for all hard IRQ
-> > > handlers as well as all threads sharing the IRQ to finish.
-> > > 
-> > > Actually it's sufficient to wait only for the IRQ thread of the removed
-> > > device, so call synchronize_hardirq() to wait for all hard IRQ handlers
-> > > to finish, but no longer for any threads.  Compensate by rearranging the
-> > > control flow in irq_wait_for_interrupt() such that the device's thread
-> > > is allowed to run one last time after kthread_stop() has been called.
-> > 
-> > I assume this would need to be merged along with the rest of the
-> > series, which should probably go through the PCI tree, but I'm
-> > definitely not qualified to review this IRQ patch.  And it would need
-> > an ack from Thomas in any case.
+On Tue, 2018-07-17 at 18:15 +0100, Lorenzo Pieralisi wrote:
+> [+Rafael, Kevin, Ulf]
 > 
-> A v2 of this patch has already been merged through the tip tree on June 24,
-> it's in linux-next as commit 519cc8652b3a, and ISTR that I marked this patch
-> either as "Obsoleted" or "Not Applicable" in pci-patchwork.  There was no
-> build-dependency of the succeeding patches in the series on this patch,
-> hence merging through a different tree was possible.
+> On Mon, Jul 02, 2018 at 03:57:43PM +0800, honghui.zhang@mediatek.com wrote:
+> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > 
+> > The MTCMOS of PCIe Host for MT2712 and MT7622 will be off when system
+> > suspend, and all the internal control register will be reset after system
+> > resume. The PCIe link should be re-established and the related control
+> > register values should be re-set after system resume.
+> > 
+> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+> > ---
+> >  drivers/pci/controller/pcie-mediatek.c | 67 ++++++++++++++++++++++++++++++++++
+> >  1 file changed, 67 insertions(+)
+> > 
+> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> > index 86918d4..175d7b6 100644
+> > --- a/drivers/pci/controller/pcie-mediatek.c
+> > +++ b/drivers/pci/controller/pcie-mediatek.c
+> > @@ -134,12 +134,14 @@ struct mtk_pcie_port;
+> >  /**
+> >   * struct mtk_pcie_soc - differentiate between host generations
+> >   * @need_fix_class_id: whether this host's class ID needed to be fixed or not
+> > + * @pm_support: whether the host's MTCMOS will be off when suspend
+> >   * @ops: pointer to configuration access functions
+> >   * @startup: pointer to controller setting functions
+> >   * @setup_irq: pointer to initialize IRQ functions
+> >   */
+> >  struct mtk_pcie_soc {
+> >  	bool need_fix_class_id;
+> > +	bool pm_support;
+> >  	struct pci_ops *ops;
+> >  	int (*startup)(struct mtk_pcie_port *port);
+> >  	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
+> > @@ -1197,12 +1199,75 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+> >  	return err;
+> >  }
+> >  
+> > +static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
+> > +{
+> > +	struct mtk_pcie *pcie = dev_get_drvdata(dev);
+> > +	const struct mtk_pcie_soc *soc = pcie->soc;
+> > +	struct mtk_pcie_port *port;
+> > +
+> > +	if (!soc->pm_support)
+> > +		return 0;
+> > +
+> > +	if (list_empty(&pcie->ports))
+> > +		return 0;
+> > +
+> > +	list_for_each_entry(port, &pcie->ports, list) {
+> > +		clk_disable_unprepare(port->pipe_ck);
+> > +		clk_disable_unprepare(port->obff_ck);
+> > +		clk_disable_unprepare(port->axi_ck);
+> > +		clk_disable_unprepare(port->aux_ck);
+> > +		clk_disable_unprepare(port->ahb_ck);
+> > +		clk_disable_unprepare(port->sys_ck);
+> > +		phy_power_off(port->phy);
+> > +		phy_exit(port->phy);
+> > +	}
+> > +
+> > +	mtk_pcie_subsys_powerdown(pcie);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
+> > +{
+> > +	struct mtk_pcie *pcie = dev_get_drvdata(dev);
+> > +	const struct mtk_pcie_soc *soc = pcie->soc;
+> > +	struct mtk_pcie_port *port, *tmp;
+> > +
+> > +	if (!soc->pm_support)
+> > +		return 0;
+> > +
+> > +	if (list_empty(&pcie->ports))
+> > +		return 0;
+> > +
+> > +	if (dev->pm_domain) {
+> > +		pm_runtime_enable(dev);
+> > +		pm_runtime_get_sync(dev);
+> > +	}
+> 
+> Are these runtime PM calls needed/abused here ?
+> 
+> Mind explaining the logic ?
+> 
+> There is certainly an asymmetry with the suspend callback which made me
+> suspicious, I am pretty certain Rafael/Kevin/Ulf can help me clarify so
+> that we can make progress with this patch.
+> 
+> Lorenzo
+> 
+Hi Lorenzo, thanks for your comments.
+Sorry I don't get you.
+I believe that in suspend callbacks the pm_runtime_put_sync and
+pm_runtime_disable should be called to gated the CMOS for this module,
+while the pm_rumtime_enable and pm_rumtime_get_sync should be called in
+resume callback.
 
-Perfect, thanks!
+That's exactly this patch doing.
+But the pm_rumtime_put_sync and pm_runtime_disable functions was wrapped
+in the mtk_pcie_subsys_powerdown.
+
+I did not call mtk_pcie_subsys_powerup since it does not just wrapped
+pm_rumtime related functions but also do the platform_resource_get,
+devm_ioremap, and free_ck clock get which I do not needed in resume
+callback.
+
+Do you think it will be much clear if I abstract the
+platform_resource_get, devm_ioremap functions from
+mtk_pcie_subsys_powerup and put it to a new functions like
+mtk_pcie_subsys_resource_get, and then we may call the
+mtk_pcie_subsys_powerup in the resume function?
+
+thanks
+> > +
+> > +	clk_prepare_enable(pcie->free_ck);
+> > +
+> > +	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
+> > +		mtk_pcie_enable_port(port);
+> > +
+> > +	/* In case of EP was removed while system suspend. */
+> > +	if (list_empty(&pcie->ports))
+> > +		mtk_pcie_subsys_powerdown(pcie);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static const struct dev_pm_ops mtk_pcie_pm_ops = {
+> > +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
+> > +				      mtk_pcie_resume_noirq)
+> > +};
+> > +
+> >  static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
+> >  	.ops = &mtk_pcie_ops,
+> >  	.startup = mtk_pcie_startup_port,
+> >  };
+> >  
+> >  static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
+> > +	.pm_support = true,
+> >  	.ops = &mtk_pcie_ops_v2,
+> >  	.startup = mtk_pcie_startup_port_v2,
+> >  	.setup_irq = mtk_pcie_setup_irq,
+> > @@ -1210,6 +1275,7 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
+> >  
+> >  static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
+> >  	.need_fix_class_id = true,
+> > +	.pm_support = true,
+> >  	.ops = &mtk_pcie_ops_v2,
+> >  	.startup = mtk_pcie_startup_port_v2,
+> >  	.setup_irq = mtk_pcie_setup_irq,
+> > @@ -1229,6 +1295,7 @@ static struct platform_driver mtk_pcie_driver = {
+> >  		.name = "mtk-pcie",
+> >  		.of_match_table = mtk_pcie_ids,
+> >  		.suppress_bind_attrs = true,
+> > +		.pm = &mtk_pcie_pm_ops,
+> >  	},
+> >  };
+> >  builtin_platform_driver(mtk_pcie_driver);
+> > -- 
+> > 2.6.4
+> > 
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
