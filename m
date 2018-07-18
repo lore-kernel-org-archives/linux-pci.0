@@ -1,213 +1,142 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v10 03/12] PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
-Date: Fri, 13 Jul 2018 17:56:35 +0200
-Message-Id: <47061e861164313d79037f53f415050a5d852c99.1531496321.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531496321.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=u+xi=KC=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=u+xi=KC=codeaurora.org=poza@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 18 Jul 2018 14:43:46 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Philippe Ombredanne
+ <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart
+ <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Dongdong Liu <liudongdong3@huawei.com>, Keith
+ Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>, Sinan Kaya
+ <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>
+Subject: Re: [PATCH v2 1/6] PCI/AER: Take severity mask into account while
+ clearing error bits
+In-Reply-To: <20180717213601.GC128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
+ <1529661494-20936-2-git-send-email-poza@codeaurora.org>
+ <20180717190329.GA128988@bhelgaas-glaptop.roam.corp.google.com>
+ <20180717213601.GC128988@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <e0296f79855257d6960a63471c53fbf1@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-Change {cdns, dra7xx, artpec6, dw, rockchip}_pcie_ep_raise_irq() and
-pci_epc_raise_irq() signature, namely the interrupt_num variable type
-from u8 to u16 to accommodate 2048 maximum MSI-X interrupts.
+On 2018-07-18 03:06, Bjorn Helgaas wrote:
+> On Tue, Jul 17, 2018 at 02:03:29PM -0500, Bjorn Helgaas wrote:
+>> Hi Oza,
+>> 
+>> Thanks for doing this!
+>> 
+>> On Fri, Jun 22, 2018 at 05:58:09AM -0400, Oza Pawandeep wrote:
+>> > pci_cleanup_aer_uncorrect_error_status() is called by different slot_reset
+>> > callbacks in case of ERR_NONFATAL.
+>> 
+>> IIRC, the current strategy is:
+>> 
+>>   ERR_COR: log only
+>>   ERR_NONFATAL: call driver callbacks (pci_error_handlers)
+>>   ERR_FATAL: remove device and re-enumerate
+>> 
+>> So these slot_reset callbacks are only used for ERR_NONFATAL, which
+>> are all uncorrectable errors, of course.
+>> 
+>> This patch makes it so that when the slot_reset callbacks call
+>> pci_cleanup_aer_uncorrect_error_status(), we only clear the
+>> bits set by ERR_NONFATAL events (this is determined by
+>> PCI_ERR_UNCOR_SEVER).
+>> 
+>> That makes good sense to me.  All these status bits are RW1CS, so they
+>> will be preserved across a reset but will be cleared when we
+>> re-enumerate, in this path:
+>> 
+>>   pci_init_capabilities
+>>     pci_aer_init
+>>       pci_cleanup_aer_error_status_regs
+>>       # clear all PCI_ERR_UNCOR_STATUS and PCI_ERR_COR_STATUS bits
+>> 
+>> > AER uncorrectable error status should take severity into account in order
+>> > to clear the bits, so that ERR_NONFATAL path does not clear the bit which
+>> > are marked with severity fatal.
+>> 
+>> Two comments:
+>> 
+>> 1) Can you split this into two patches, one that changes
+>> pci_cleanup_aer_uncorrect_error_status() so it looks like the error
+>> clearing code in aer_error_resume(), and a second that factors out the
+>> duplicate code?
+>> 
+>> 2) Maybe use "sev" or "sever" instead of "mask" for the local
+>> variable, since there is also a separate PCI_ERR_UNCOR_MASK register,
+>> which is not involved here.
+> 
+> Let me back up a little here: I'm not asking you to do the things
+> below here.  They're just possible future things, so we can think
+> about them after this series.  And the things above are things I can
+> easily do myself.  So no action required from you, unless you think
+> I'm on the wrong track :)
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Alan Douglas <adouglas@cadence.com>
-Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
-Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
-Acked-by: Joao Pinto <jpinto@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Move into here the pci_epc_raise_irq() signature change from patch
-file #1.
- - Move into here the {dra7xx, artpec6}_pcie_ep_raise_irq() signature
-changes from patch file #2.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Swap patch files position (#3 -> #2).
- - Moved dw_pcie_ep_raise_irq and dw_plat_pcie_ep_raise_irq functions
-signatures changes from patch file #3.
- - Changed rockchip_pcie_ep_raise_irq function signature.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Nothing changed, just to follow the patch set version.
-Change v9->v10:
- - Nothing changed, just to follow the patch set version.
+I agree with your points, and have taken them into account for future 
+series reference as well.
 
- drivers/pci/controller/dwc/pci-dra7xx.c           | 2 +-
- drivers/pci/controller/dwc/pcie-artpec6.c         | 2 +-
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 2 +-
- drivers/pci/controller/dwc/pcie-designware-plat.c | 2 +-
- drivers/pci/controller/dwc/pcie-designware.h      | 2 +-
- drivers/pci/controller/pcie-cadence-ep.c          | 3 ++-
- drivers/pci/controller/pcie-rockchip-ep.c         | 2 +-
- drivers/pci/endpoint/pci-epc-core.c               | 8 ++++----
- include/linux/pci-epc.h                           | 6 +++---
- 9 files changed, 15 insertions(+), 14 deletions(-)
+what about PATCH-2 of this series ?
+that clears ERR_FATAL bits, but as you said, during re-enumeration
+pci_init_capabilities
+      pci_aer_init
+        pci_cleanup_aer_error_status_regs
+        # clear all PCI_ERR_UNCOR_STATUS and PCI_ERR_COR_STATUS bits
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index 345aab5..ce9224a 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -370,7 +370,7 @@ static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
- }
- 
- static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
--				 enum pci_epc_irq_type type, u8 interrupt_num)
-+				 enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
-index 321b56c..9a2474b 100644
---- a/drivers/pci/controller/dwc/pcie-artpec6.c
-+++ b/drivers/pci/controller/dwc/pcie-artpec6.c
-@@ -428,7 +428,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
- }
- 
- static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
--				  enum pci_epc_irq_type type, u8 interrupt_num)
-+				  enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 04092a7..69d039d 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -242,7 +242,7 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
- }
- 
- static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
--				enum pci_epc_irq_type type, u8 interrupt_num)
-+				enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index 0ce3440..0efb318 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -81,7 +81,7 @@ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
- 
- static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 				     enum pci_epc_irq_type type,
--				     u8 interrupt_num)
-+				     u16 interrupt_num)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index bee4e25..9d581c0 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -191,7 +191,7 @@ enum dw_pcie_as_type {
- struct dw_pcie_ep_ops {
- 	void	(*ep_init)(struct dw_pcie_ep *ep);
- 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
--			     enum pci_epc_irq_type type, u8 interrupt_num);
-+			     enum pci_epc_irq_type type, u16 interrupt_num);
- };
- 
- struct dw_pcie_ep {
-diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-index e3fe412..208d11f 100644
---- a/drivers/pci/controller/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/pcie-cadence-ep.c
-@@ -363,7 +363,8 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
- }
- 
- static int cdns_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
--				  enum pci_epc_irq_type type, u8 interrupt_num)
-+				  enum pci_epc_irq_type type,
-+				  u16 interrupt_num)
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
- 
-diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/controller/pcie-rockchip-ep.c
-index 6beba8e..b8163c5 100644
---- a/drivers/pci/controller/pcie-rockchip-ep.c
-+++ b/drivers/pci/controller/pcie-rockchip-ep.c
-@@ -472,7 +472,7 @@ static int rockchip_pcie_ep_send_msi_irq(struct rockchip_pcie_ep *ep, u8 fn,
- 
- static int rockchip_pcie_ep_raise_irq(struct pci_epc *epc, u8 fn,
- 				      enum pci_epc_irq_type type,
--				      u8 interrupt_num)
-+				      u16 interrupt_num)
- {
- 	struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
- 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index 7d77bd0..c72e656 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -131,13 +131,13 @@ EXPORT_SYMBOL_GPL(pci_epc_start);
-  * pci_epc_raise_irq() - interrupt the host system
-  * @epc: the EPC device which has to interrupt the host
-  * @func_no: the endpoint function number in the EPC device
-- * @type: specify the type of interrupt; legacy or MSI
-- * @interrupt_num: the MSI interrupt number
-+ * @type: specify the type of interrupt; legacy, MSI or MSI-X
-+ * @interrupt_num: the MSI or MSI-X interrupt number
-  *
-- * Invoke to raise an MSI or legacy interrupt
-+ * Invoke to raise an legacy, MSI or MSI-X interrupt
-  */
- int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
--		      enum pci_epc_irq_type type, u8 interrupt_num)
-+		      enum pci_epc_irq_type type, u16 interrupt_num)
- {
- 	int ret;
- 	unsigned long flags;
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index 89f079f..bb2395b 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -35,7 +35,7 @@ enum pci_epc_irq_type {
-  *	     MSI-X capability register
-  * @get_msix: ops to get the number of MSI-X interrupts allocated by the RC
-  *	     from the MSI-X capability register
-- * @raise_irq: ops to raise a legacy or MSI interrupt
-+ * @raise_irq: ops to raise a legacy, MSI or MSI-X interrupt
-  * @start: ops to start the PCI link
-  * @stop: ops to stop the PCI link
-  * @owner: the module owner containing the ops
-@@ -56,7 +56,7 @@ struct pci_epc_ops {
- 	int	(*set_msix)(struct pci_epc *epc, u8 func_no, u16 interrupts);
- 	int	(*get_msix)(struct pci_epc *epc, u8 func_no);
- 	int	(*raise_irq)(struct pci_epc *epc, u8 func_no,
--			     enum pci_epc_irq_type type, u8 interrupt_num);
-+			     enum pci_epc_irq_type type, u16 interrupt_num);
- 	int	(*start)(struct pci_epc *epc);
- 	void	(*stop)(struct pci_epc *epc);
- 	struct module *owner;
-@@ -154,7 +154,7 @@ int pci_epc_get_msi(struct pci_epc *epc, u8 func_no);
- int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u16 interrupts);
- int pci_epc_get_msix(struct pci_epc *epc, u8 func_no);
- int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
--		      enum pci_epc_irq_type type, u8 interrupt_num);
-+		      enum pci_epc_irq_type type, u16 interrupt_num);
- int pci_epc_start(struct pci_epc *epc);
- void pci_epc_stop(struct pci_epc *epc);
- struct pci_epc *pci_epc_get(const char *epc_name);
--- 
-2.7.4
+but that should clear the ERR_FATAL of the devices beneath.
+
+PATCH2: we are doing it for BRIDGE where we think where ERR_FATAL was 
+reported by bridge and the problem is with downstream link.
+if ((service == PCIE_PORT_SERVICE_AER) &&
+	    (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)) {
+		/*
+		 * If the error is reported by a bridge, we think this error
+		 * is related to the downstream link of the bridge, so we
+		 * do error recovery on all subordinates of the bridge instead
+		 * of the bridge and clear the error status of the bridge.
+		 */
+		pci_cleanup_aer_uncorrect_error_status(dev);
+	}
+
+
+so overall, I think all the patches are required, if you have comments 
+please let me know.
+so far I see that, no action is required from me.
+
+> 
+>> 3) The "pci_cleanup_aer_uncorrect_error_status()" name no longer
+>> really describes what this does.  Something like
+>> "pci_aer_clear_nonfatal_status()" would be more descriptive.  But I
+>> see you have a subsequent patch (which I haven't looked at yet) that
+>> is related to this.
+>> 
+>> 4) I don't think the driver slot_reset callbacks should be responsible
+>> for clearing these AER status bits.  Can we clear them somewhere in
+>> the pcie_do_nonfatal_recovery() path and remove these calls from the
+>> drivers?
+>> 
+>> 5) In principle, we should only read PCI_ERR_UNCOR_STATUS *once* per
+>> device when handling an error.  We currently read it three times:
+>> 
+>>   aer_isr
+>>     aer_isr_one_error
+>>       find_source_device
+>>         find_device_iter
+>>           is_error_source
+>>             read PCI_ERR_UNCOR_STATUS              # 1
+>>       aer_process_err_devices
+>>         get_device_error_info(e_info->dev[i])
+>>           read PCI_ERR_UNCOR_STATUS                # 2
+>>         handle_error_source
+>>           pcie_do_nonfatal_recovery
+>>             ...
+>>               report_slot_reset
+>>                 driver->err_handler->slot_reset
+>>                   pci_cleanup_aer_uncorrect_error_status
+>>                     read PCI_ERR_UNCOR_STATUS      # 3
+>> 
+>> OK, that was more than two comments :)
