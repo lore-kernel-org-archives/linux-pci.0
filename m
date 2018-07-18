@@ -1,58 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59088 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732340AbeGLWop (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Jul 2018 18:44:45 -0400
-Subject: [PATCH] vfio-pci: Disable binding to PFs with SR-IOV enabled
-From: Alex Williamson <alex.williamson@redhat.com>
-To: alex.williamson@redhat.com
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, david@gibson.dropbear.id.au
-Date: Thu, 12 Jul 2018 16:33:04 -0600
-Message-ID: <20180712223243.9593.24855.stgit@gimli.home>
+Return-Path: <SRS0=jtRJ=KC=oracle.com=thomas.tai@kernel.org>
+Return-Path: <SRS0=jtRJ=KC=oracle.com=thomas.tai@kernel.org>
+Subject: Re: [PATCH V2, 0/1] PCI/AER: fix use-after-free in
+ pcie_do_fatal_recovery
+To: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>
+Cc: bhelgaas@google.com, poza@codeaurora.org, linux-pci@vger.kernel.org
+References: <1531416823-17841-1-git-send-email-thomas.tai@oracle.com>
+ <20180712215151.GD28466@bhelgaas-glaptop.roam.corp.google.com>
+ <20180712215700.GA17092@localhost.localdomain>
+ <20180718211645.GF128988@bhelgaas-glaptop.roam.corp.google.com>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <0efd8f6b-1d90-712f-0535-92bb230f7436@oracle.com>
+Date: Wed, 18 Jul 2018 17:43:03 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180718211645.GF128988@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-We expect to receive PFs with SR-IOV disabled, however some host
-drivers leave SR-IOV enabled at unbind.  This puts us in a state where
-we can potentially assign both the PF and the VF, leading to both
-functionality as well as security concerns due to lack of managing the
-SR-IOV state as well as vendor dependent isolation from the PF to VF.
-If we were to attempt to actively disable SR-IOV on driver probe, we
-risk VF bound drivers blocking, potentially risking live lock
-scenarios.  Therefore simply refuse to bind to PFs with SR-IOV enabled
-with a warning message indicating the issue.  Users can resolve this
-by re-binding to the host driver and disabling SR-IOV before
-attempting to use the device with vfio-pci.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/vfio/pci/vfio_pci.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+On 07/18/2018 05:16 PM, Bjorn Helgaas wrote:
+> On Thu, Jul 12, 2018 at 03:57:01PM -0600, Keith Busch wrote:
+>> On Thu, Jul 12, 2018 at 04:51:51PM -0500, Bjorn Helgaas wrote:
+>>> However, I think we're also slightly exposed in dpc_work(), in basically
+>>> the same (possibly harmless) way.
+>>>
+>>>    dpc_irq
+>>>      schedule_work(&dpc->work)
+>>>    ...
+>>>    dpc_work
+>>>      pdev = dpc->dev->port
+>>>      pcie_do_fatal_recovery(pdev)
+>>>
+>>> pdev may be removed by pcie_do_fatal_recovery(), but dpc_work() is still
+>>> holding onto a pointer (which it never uses again).
+>>>
+>>> The DPC driver should be holding a reference to pdev (through some black
+>>> magic I don't understand), but that would be released when pdev is removed,
+>>> and I don't know what ensures that dpc_work() runs before that release.
+>>>
+>>> Bjorn
+>>
+>> Yep, you're right on that point. There's different ways we can fix
+>> that. The most recent one I proposed was to replace the scheduled work
+>> with the threaded irq[1]. That should make it safe since the lifetime of
+>> when bottom half can be executed is tied to the lifetime of the device
+>> that registered it.
+>>
+>>   1. https://patchwork.kernel.org/patch/10478755/
+> 
+> This one is headed for v4.19 (it's on pci/dpc right now).  I don't
+> think anybody will trip over this with DPC, so I don't think we need
+> to get this in v4.18 (let me know if you think otherwise).
+> 
+> But of course it doesn't fix the crash Thomas is seeing, because
+> that's in the AER path, not the DPC path.  I think you're working on
+> an AER fix involving threaded IRQs, right, Thomas?  Just want to make
+> sure I haven't missed something.
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index b423a309a6e0..f372f209c5c2 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -1189,6 +1189,19 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (pdev->hdr_type != PCI_HEADER_TYPE_NORMAL)
- 		return -EINVAL;
- 
-+	/*
-+	 * Prevent binding to PFs with VFs enabled, this too easily allows
-+	 * userspace instance with VFs and PFs from the same device, which
-+	 * cannot work.  Disabling SR-IOV here would initiate removing the
-+	 * VFs, which would unbind the driver, which is prone to blocking
-+	 * if that VF is also in use by vfio-pci.  Just reject these PFs
-+	 * and let the user sort it out.
-+	 */
-+	if (pci_num_vf(pdev)) {
-+		pci_warn(pdev, "Cannot bind to PF with SR-IOV enabled\n");
-+		return -EBUSY;
-+	}
-+
- 	group = vfio_iommu_group_get(&pdev->dev);
- 	if (!group)
- 		return -EINVAL;
+Yes, Bjorn. I am working on the aer path. I followed Keith's patch and 
+use threaded_irq in the aer. Even with the threaded_irq, the device got 
+freed in the pcie_do_fatal_receovery(). So I am suggesting to use your 
+idea, that is, have a helper functions to get/put the device.
+
+
+> 
+> Bjorn
+> 
