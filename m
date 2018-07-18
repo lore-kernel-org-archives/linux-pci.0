@@ -1,317 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf1-f43.google.com ([209.85.167.43]:35060 "EHLO
-        mail-lf1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733124AbeHAHhP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2018 03:37:15 -0400
-Received: by mail-lf1-f43.google.com with SMTP id f18-v6so12443868lfc.2
-        for <linux-pci@vger.kernel.org>; Tue, 31 Jul 2018 22:53:20 -0700 (PDT)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:51148 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730614AbeGRDZn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Jul 2018 23:25:43 -0400
+From: Baoquan He <bhe@redhat.com>
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+        robh+dt@kernel.org, dan.j.williams@intel.com,
+        nicolas.pitre@linaro.org, josh@joshtriplett.org,
+        fengguang.wu@intel.com, bp@suse.de, andy.shevchenko@gmail.com
+Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com,
+        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
+        keith.busch@intel.com, jonathan.derrick@intel.com,
+        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
+        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
+        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
+        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
+        yinghai@kernel.org, monstr@monstr.eu, davem@davemloft.net,
+        chris@zankel.net, jcmvbkbc@gmail.com, gustavo@padovan.org,
+        maarten.lankhorst@linux.intel.com, seanpaul@chromium.org,
+        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        Baoquan He <bhe@redhat.com>
+Subject: [PATCH v7 0/4] resource: Use list_head to link sibling resource
+Date: Wed, 18 Jul 2018 10:49:40 +0800
+Message-Id: <20180718024944.577-1-bhe@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <c5fb4a6a-136f-99f1-104e-32c923f00a22@oracle.com>
-References: <CAFP4jM9xmXHVnBPObNxTtr1kDo2kbW9G4N5q=BLU5gf5=+M0xg@mail.gmail.com>
- <c5fb4a6a-136f-99f1-104e-32c923f00a22@oracle.com>
-From: gokul cg <gokuljnpr@gmail.com>
-Date: Wed, 1 Aug 2018 11:23:18 +0530
-Message-ID: <CAFP4jM9VP0jQ77rQt2KzfhuFZdXQRiS54TqxcKBLy39+sR3uMw@mail.gmail.com>
-Subject: Re: Possible race condition in the kernel between PCI driver and AER handling
-To: Thomas Tai <thomas.tai@oracle.com>
-Cc: linux-pci@vger.kernel.org
-Content-Type: multipart/alternative; boundary="000000000000c1c63d0572594f49"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---000000000000c1c63d0572594f49
-Content-Type: text/plain; charset="UTF-8"
+This patchset is doing:
+1) Move reparent_resources() to kernel/resource.c to clean up duplicated
+   code in arch/microblaze/pci/pci-common.c and
+   arch/powerpc/kernel/pci-common.c .
+2) Replace struct resource's sibling list from singly linked list to
+   list_head. Clearing out those pointer operation within singly linked
+   list for better code readability.
+2) Based on list_head replacement, add a new function
+   walk_system_ram_res_rev() which can does reversed iteration on
+   iomem_resource's siblings.
+3) Change kexec_file loading to search system RAM top down for kernel
+   loadin, using walk_system_ram_res_rev().
 
-Hi,
+Note:
+This patchset only passed testing on  x86_64 arch with network
+enabling. The thing we need pay attetion to is that a root resource's
+child member need be initialized specifically with LIST_HEAD_INIT() if
+statically defined or INIT_LIST_HEAD() for dynamically definition. Here
+Just like we do for iomem_resource/ioport_resource, or the change in
+get_pci_domain_busn_res().
 
-I see there is a basic design flow. As AER and PCI drivers are independent
-modules ,
-locally storing pointer to any data structure from pci linked list in AER
-driver will create problem as there is no synchronization between the same .
+v6:
+http://lkml.kernel.org/r/20180704041038.8190-1-bhe@redhat.com
 
+v5:
+http://lkml.kernel.org/r/20180612032831.29747-1-bhe@redhat.com
 
-https://elixir.bootlin.com/linux/v3.10.99/source/drivers/pci/pcie/aer/aerdrv_core.c#L701
-Here 'struct aer_err_info
-<https://elixir.bootlin.com/linux/v3.10.99/ident/aer_err_info> *e_info
-<https://elixir.bootlin.com/linux/v3.10.99/ident/e_info>' has pointer to
-pci dev , which can be removed from pci tree at any time .
-I think this is the basic issue.
+v4:
+http://lkml.kernel.org/r/20180507063224.24229-1-bhe@redhat.com
 
+v3:
+http://lkml.kernel.org/r/20180419001848.3041-1-bhe@redhat.com
 
-Regards
-Gokul
+v2:
+http://lkml.kernel.org/r/20180408024724.16812-1-bhe@redhat.com
 
-On Tue, Jul 31, 2018 at 6:45 PM, Thomas Tai <thomas.tai@oracle.com> wrote:
+v1:
+http://lkml.kernel.org/r/20180322033722.9279-1-bhe@redhat.com
 
->
->
-> On 07/31/2018 08:42 AM, gokul cg wrote:
->
->> Hi All,
->>
->>
->> I am suspecting a possible race condition in the kernel between PCI
->> driver and AER handling.
->>
->> Because of the same kernel panic happens from worker thread which handles
->> bottom half of aer irq.
->>
->>
->> I am seeing this issue when I suddenly power off PCI card which
->> supports/enabled PCIE AER error reporting.
->>
->> While powering off PCI device, AER driver will get AER IRQ for the
->> device, from AER IRQ handler, it will cache AER error code and schedule
->> worker thread to handle error.
->>
->
-> Hi Gokul,
->
-> It may be an issue in the AER driver. How do you power off your device?
-> I've never seen this issue with normal shutdown nor "echo 0 >
-> /sys/bus/pci/slots/xx/power"
->
-> Cheers,
-> Thomas
->
->
->
->> The PCIe device will get removed from PCI tree before worker thread
->> completes its task and kernel panic is  happening when worker thread tries
->> to access PCI device's config space.
->>
->>
->>
->> Issue:
->>
->>
->> crash>
->>
->> crash> bt
->>
->> PID: 2727   TASK: ffff880272adc530  CPU: 0   COMMAND: "kworker/0:2"
->>
->> #0 [ffff88027469fac8] machine_kexec at ffffffff8102cf18
->>
->> #1 [ffff88027469fb28] crash_kexec at ffffffff810a6b05
->>
->> #2 [ffff88027469fbf0] oops_end at ffffffff8176d960
->>
->> #3 [ffff88027469fc18] die at ffffffff810060db
->>
->> #4 [ffff88027469fc48] do_general_protection at ffffffff8176d452
->>
->> #5 [ffff88027469fc70] general_protection at ffffffff8176cdf2
->>
->>      [exception RIP: pci_bus_read_config_dword+100]
->>
->>      RIP: ffffffff813405f4  RSP: ffff88027469fd20  RFLAGS: 00010046
->>
->>      RAX: 435f494350006963  RBX: ffff880274892000  RCX: 0000000000000004
->>
->>      RDX: 0000000000000100  RSI: 0000000000000060  RDI: ffff880274892000
->>
->>      RBP: ffff88027469fd48   R8: ffff88027469fd2c   R9: 00000000000012c0
->>
->>      R10: 0000000000000006  R11: 00000000000012bf  R12: ffff88027469fd5c
->>
->>      R13: 0000000000000246  R14: 0000000000000000  R15: ffff8802741a4000
->>
->>      ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0000
->>
->> #6 [ffff88027469fd50] pci_find_next_ext_capability at ffffffff81345d7b
->>
->> #7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225
->>
->> #8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d
->>
->> #9 [ffff88027469fdd0] aer_isr at ffffffff81357a38
->>
->> #10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0
->>
->> #11 [ffff88027469fe70] worker_thread at ffffffff8105e251
->>
->> #12 [ffff88027469fed0] kthread at ffffffff81064260
->>
->> #13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38
->>
->>
->> crash>
->>
->>
->> I have tested it on kernel 3.10 . But from source i could see that this
->> case is still relevant for latest Linux source .
->>
->>
->> Can anybody tell me if this is an issue with AER driver in linux ?
->>
->>
->>
->>
->> Regards
->>
->> Gokul CG
->>
->>
+Changelog:
+v6->v7:
+  Fix code bugs that test robot reported on mips and ia64.
 
---000000000000c1c63d0572594f49
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+  Add error code description in reparent_resources() according to
+  Andy's comment, and fix minor log typo.
+v5->v6:
+  Fix code style problems in reparent_resources() and use existing
+  error codes, according to Andy's suggestion.
 
-<div dir=3D"ltr">Hi,<div><br></div><div>I see there is a basic design flow.=
- As AER and PCI drivers are independent modules ,</div><div>locally storing=
- pointer to any data structure from pci linked list in AER driver will crea=
-te problem as there is no synchronization between the same .</div><div><br>=
-</div><div><br></div><div><a href=3D"https://elixir.bootlin.com/linux/v3.10=
-.99/source/drivers/pci/pcie/aer/aerdrv_core.c#L701">https://elixir.bootlin.=
-com/linux/v3.10.99/source/drivers/pci/pcie/aer/aerdrv_core.c#L701</a></div>=
-<div><span class=3D"gmail-k" style=3D"font-family:&quot;Ubuntu Mono&quot;,m=
-onospace;font-size:0.9em;white-space:pre;box-sizing:inherit;color:rgb(0,136=
-,0)">Here &#39;struct</span><span style=3D"color:rgb(0,0,0);font-family:&qu=
-ot;Ubuntu Mono&quot;,monospace;font-size:0.9em;white-space:pre"> </span><sp=
-an class=3D"gmail-n" style=3D"color:rgb(0,0,0);font-family:&quot;Ubuntu Mon=
-o&quot;,monospace;font-size:0.9em;white-space:pre;box-sizing:inherit"><a hr=
-ef=3D"https://elixir.bootlin.com/linux/v3.10.99/ident/aer_err_info" style=
-=3D"box-sizing:inherit;background-color:rgb(244,246,255);color:inherit;text=
--decoration-line:none;font-weight:700;border-radius:0.2em">aer_err_info</a>=
-</span><span style=3D"color:rgb(0,0,0);font-family:&quot;Ubuntu Mono&quot;,=
-monospace;font-size:0.9em;white-space:pre"> </span><span class=3D"gmail-o" =
-style=3D"font-family:&quot;Ubuntu Mono&quot;,monospace;font-size:0.9em;whit=
-e-space:pre;box-sizing:inherit;color:rgb(102,102,102)">*</span><span class=
-=3D"gmail-n" style=3D"font-family:&quot;Ubuntu Mono&quot;,monospace;font-si=
-ze:0.9em;white-space:pre;box-sizing:inherit"><a href=3D"https://elixir.boot=
-lin.com/linux/v3.10.99/ident/e_info" style=3D"color:inherit;box-sizing:inhe=
-rit;background-color:rgb(244,246,255);text-decoration-line:none;font-weight=
-:700;border-radius:0.2em">e_info</a><font color=3D"#666666">&#39; has point=
-er to pci dev , which can be removed from pci tree at any time .</font></sp=
-an></div><div><span class=3D"gmail-n" style=3D"font-family:&quot;Ubuntu Mon=
-o&quot;,monospace;font-size:0.9em;white-space:pre;box-sizing:inherit"><font=
- color=3D"#666666">I think this is the basic issue.</font></span></div><div=
-><br></div><div><br></div><div>Regards</div><div>Gokul=C2=A0</div></div><di=
-v class=3D"gmail_extra"><br><div class=3D"gmail_quote">On Tue, Jul 31, 2018=
- at 6:45 PM, Thomas Tai <span dir=3D"ltr">&lt;<a href=3D"mailto:thomas.tai@=
-oracle.com" target=3D"_blank">thomas.tai@oracle.com</a>&gt;</span> wrote:<b=
-r><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:=
-1px #ccc solid;padding-left:1ex"><span class=3D""><br>
-<br>
-On 07/31/2018 08:42 AM, gokul cg wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex">
-Hi All,<br>
-<br>
-<br>
-I am suspecting a possible race condition in the kernel between PCI driver =
-and AER handling.<br>
-<br>
-Because of the same kernel panic happens from worker thread which handles b=
-ottom half of aer irq.<br>
-<br>
-<br>
-I am seeing this issue when I suddenly power off PCI card which supports/en=
-abled PCIE AER error reporting.<br>
-<br>
-While powering off PCI device, AER driver will get AER IRQ for the device, =
-from AER IRQ handler, it will cache AER error code and schedule worker thre=
-ad to handle error.<br>
-</blockquote>
-<br></span>
-Hi Gokul,<br>
-<br>
-It may be an issue in the AER driver. How do you power off your device? I&#=
-39;ve never seen this issue with normal shutdown nor &quot;echo 0 &gt; /sys=
-/bus/pci/slots/xx/power&quot;<br>
-<br>
-Cheers,<br>
-Thomas<div class=3D"HOEnZb"><div class=3D"h5"><br>
-<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex">
-<br>
-The PCIe device will get removed from PCI tree before worker thread complet=
-es its task and kernel panic is=C2=A0 happening when worker thread tries to=
- access PCI device&#39;s config space.<br>
-<br>
-<br>
-<br>
-Issue:<br>
-<br>
-<br>
-crash&gt;<br>
-<br>
-crash&gt; bt<br>
-<br>
-PID: 2727=C2=A0 =C2=A0TASK: ffff880272adc530=C2=A0 CPU: 0=C2=A0 =C2=A0COMMA=
-ND: &quot;kworker/0:2&quot;<br>
-<br>
-#0 [ffff88027469fac8] machine_kexec at ffffffff8102cf18<br>
-<br>
-#1 [ffff88027469fb28] crash_kexec at ffffffff810a6b05<br>
-<br>
-#2 [ffff88027469fbf0] oops_end at ffffffff8176d960<br>
-<br>
-#3 [ffff88027469fc18] die at ffffffff810060db<br>
-<br>
-#4 [ffff88027469fc48] do_general_protection at ffffffff8176d452<br>
-<br>
-#5 [ffff88027469fc70] general_protection at ffffffff8176cdf2<br>
-<br>
-=C2=A0=C2=A0 =C2=A0 [exception RIP: pci_bus_read_config_dword+100]<br>
-<br>
-=C2=A0=C2=A0 =C2=A0 RIP: ffffffff813405f4=C2=A0 RSP: ffff88027469fd20=C2=A0=
- RFLAGS: 00010046<br>
-<br>
-=C2=A0=C2=A0 =C2=A0 RAX: 435f494350006963=C2=A0 RBX: ffff880274892000=C2=A0=
- RCX: 0000000000000004<br>
-<br>
-=C2=A0=C2=A0 =C2=A0 RDX: 0000000000000100=C2=A0 RSI: 0000000000000060=C2=A0=
- RDI: ffff880274892000<br>
-<br>
-=C2=A0=C2=A0 =C2=A0 RBP: ffff88027469fd48=C2=A0 =C2=A0R8: ffff88027469fd2c=
-=C2=A0 =C2=A0R9: 00000000000012c0<br>
-<br>
-=C2=A0=C2=A0 =C2=A0 R10: 0000000000000006=C2=A0 R11: 00000000000012bf=C2=A0=
- R12: ffff88027469fd5c<br>
-<br>
-=C2=A0=C2=A0 =C2=A0 R13: 0000000000000246=C2=A0 R14: 0000000000000000=C2=A0=
- R15: ffff8802741a4000<br>
-<br>
-=C2=A0=C2=A0 =C2=A0 ORIG_RAX: ffffffffffffffff=C2=A0 CS: 0010=C2=A0 SS: 000=
-0<br>
-<br>
-#6 [ffff88027469fd50] pci_find_next_ext_capability at ffffffff81345d7b<br>
-<br>
-#7 [ffff88027469fd90] pci_find_ext_capability at ffffffff81347225<br>
-<br>
-#8 [ffff88027469fda0] get_device_error_info at ffffffff81356c4d<br>
-<br>
-#9 [ffff88027469fdd0] aer_isr at ffffffff81357a38<br>
-<br>
-#10 [ffff88027469fe28] process_one_work at ffffffff8105d4c0<br>
-<br>
-#11 [ffff88027469fe70] worker_thread at ffffffff8105e251<br>
-<br>
-#12 [ffff88027469fed0] kthread at ffffffff81064260<br>
-<br>
-#13 [ffff88027469ff50] ret_from_fork at ffffffff81773a38<br>
-<br>
-<br>
-crash&gt;<br>
-<br>
-<br>
-I have tested it on kernel 3.10 . But from source i could see that this cas=
-e is still relevant for latest Linux source .<br>
-<br>
-<br>
-Can anybody tell me if this is an issue with AER driver in linux ?<br>
-<br>
-<br>
-<br>
-<br>
-Regards<br>
-<br>
-Gokul CG<br>
-<br>
-</blockquote>
-</div></div></blockquote></div><br></div>
+  Fix bugs test robot reported.
 
---000000000000c1c63d0572594f49--
+v4->v5:
+  Add new patch 0001 to move duplicated reparent_resources() to
+  kernel/resource.c to make it be shared by different ARCH-es.
+
+  Fix several code bugs reported by test robot on ARCH powerpc and
+  microblaze.
+v3->v4:
+  Fix several bugs test robot reported. Rewrite cover letter and patch
+  log according to reviewer's comment.
+
+v2->v3:
+  Rename resource functions first_child() and sibling() to
+  resource_first_chils() and resource_sibling(). Dan suggested this.
+
+  Move resource_first_chils() and resource_sibling() to linux/ioport.h
+  and make them as inline function. Rob suggested this. Accordingly add
+  linux/list.h including in linux/ioport.h, please help review if this
+  bring efficiency degradation or code redundancy.
+
+  The change on struct resource {} bring two pointers of size increase,
+  mention this in git log to make it more specifically, Rob suggested
+  this.
+
+v1->v2:
+  Use list_head instead to link resource siblings. This is suggested by
+  Andrew.
+
+  Rewrite walk_system_ram_res_rev() after list_head is taken to link
+  resouce siblings.
+
+Baoquan He (4):
+  resource: Move reparent_resources() to kernel/resource.c and make it
+    public
+  resource: Use list_head to link sibling resource
+  resource: add walk_system_ram_res_rev()
+  kexec_file: Load kernel at top of system RAM if required
+
+ arch/arm/plat-samsung/pm-check.c            |   6 +-
+ arch/ia64/sn/kernel/io_init.c               |   2 +-
+ arch/microblaze/pci/pci-common.c            |  41 +----
+ arch/mips/pci/pci-rc32434.c                 |  12 +-
+ arch/powerpc/kernel/pci-common.c            |  39 +---
+ arch/sparc/kernel/ioport.c                  |   2 +-
+ arch/xtensa/include/asm/pci-bridge.h        |   4 +-
+ drivers/eisa/eisa-bus.c                     |   2 +
+ drivers/gpu/drm/drm_memory.c                |   3 +-
+ drivers/gpu/drm/gma500/gtt.c                |   5 +-
+ drivers/hv/vmbus_drv.c                      |  52 +++---
+ drivers/input/joystick/iforce/iforce-main.c |   4 +-
+ drivers/nvdimm/namespace_devs.c             |   6 +-
+ drivers/nvdimm/nd.h                         |   5 +-
+ drivers/of/address.c                        |   4 +-
+ drivers/parisc/lba_pci.c                    |   4 +-
+ drivers/pci/controller/vmd.c                |   8 +-
+ drivers/pci/probe.c                         |   2 +
+ drivers/pci/setup-bus.c                     |   2 +-
+ include/linux/ioport.h                      |  21 ++-
+ kernel/kexec_file.c                         |   2 +
+ kernel/resource.c                           | 266 ++++++++++++++++++----------
+ 22 files changed, 260 insertions(+), 232 deletions(-)
+
+-- 
+2.13.6
