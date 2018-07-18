@@ -1,87 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:33966 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733028AbeGKLfY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Jul 2018 07:35:24 -0400
-Date: Wed, 11 Jul 2018 12:33:23 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Xiaowei Song <songxiaowei@hisilicon.com>
-Cc: wangbinghui@hisilicon.com, bhelgaas@google.com, robh+dt@kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        suzhuangluan@hisilicon.com, andy.shevchenko@gmail.com,
-        kongfei@hisilicon.com, chenyao11@huawei.com
-Subject: Re: [PATCH v7 1/1] PCI: kirin: Add MSI support
-Message-ID: <20180711113323.GA17546@red-moon>
-References: <20180711080946.14942-1-songxiaowei@hisilicon.com>
- <20180711080946.14942-2-songxiaowei@hisilicon.com>
+Return-Path: <SRS0=jtRJ=KC=oracle.com=thomas.tai@kernel.org>
+Return-Path: <SRS0=jtRJ=KC=oracle.com=thomas.tai@kernel.org>
+Subject: Re: [PATCH V2, 0/1] PCI/AER: fix use-after-free in
+ pcie_do_fatal_recovery
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, poza@codeaurora.org, linux-pci@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>
+References: <1531416823-17841-1-git-send-email-thomas.tai@oracle.com>
+ <20180712215151.GD28466@bhelgaas-glaptop.roam.corp.google.com>
+From: Thomas Tai <thomas.tai@oracle.com>
+Message-ID: <14a59c5c-8821-c326-e2ca-e822169c6a5c@oracle.com>
+Date: Wed, 18 Jul 2018 17:32:53 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180711080946.14942-2-songxiaowei@hisilicon.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180712215151.GD28466@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 11, 2018 at 04:09:46PM +0800, Xiaowei Song wrote:
-> Add support for MSI
+Hi Bjorn, Keith,
+Please have a look at the below inline comment.
+
+On 07/12/2018 05:51 PM, Bjorn Helgaas wrote:
+> [+cc Keith for DPC question]
 > 
-> Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
-> Signed-off-by: Yao Chen <chenyao11@huawei.com>
-> ---
->  drivers/pci/dwc/pcie-kirin.c | 28 ++++++++++++++++++++++++++++
->  1 file changed, 28 insertions(+)
+> On Thu, Jul 12, 2018 at 11:33:42AM -0600, Thomas Tai wrote:
+>> Hi Bjorn,
+>> Thank you very much to review the V1 patch. I reworked the patch as
+>> you have suggested. Your suggestion is indeed better and cleaner.
+>> Would you please have a look for me?
+>>
+>> FYI, I did not clear the device structure in aer_isr_one_error()
+>> just to avoid over complicated the fix.
+> 
+> I think that was a bad idea anyway.  I think the problem there is that
+> add_error_device() copies the pci_dev pointer without taking a
+> reference on it:
+> 
+>    aer_isr
+>      get_e_source              # dequeue from rpc->e_sources[]
+>        *e_src = rpc->e_sources[x]
+>      aer_isr_one_error
+>        pdev = rpc->rpd         # pdev = Root Port pci_dev
+>        find_source_device(pdev)
+> 	find_device_iter
+> 	  add_error_device
+> 	    e_info->dev[i] = dev   # <-- save pci_dev pointer
+>        aer_process_err_devices
+> 	handle_error_source(e_info->dev[i])
+> 	  pcie_do_fatal_recovery
+> 
+> At this point, we have pci_dev pointers in e_info->dev[] that are
+> potentially stale.  Right now nobody uses them, but I think it's
+> sloppy that we still have them at all.
+> 
+> I think a better way to fix this would be to call pci_dev_get() in
+> add_error_device() when we save the pointer, and then do the
+> corresponding pci_dev_put() in aer_isr_one_error(), after we return
+> from aer_process_err_devices().
+> 
+> This could be done with a little helper function that iterates through
+> e_info->dev[i], calls pci_dev_put() for each, and clears
+> e_info->error_dev_num (which could then be removed from
+> find_source_device()).
 
-Applied to pci/dwc for v4.19, thanks.
+I tried the request_threaded_irq() method, hoping that it will hold on 
+to the device, unfortunately I am still seeing the use-after-free issue. 
+I guess the next step is to implement Bjorn's suggestion. If we fix the 
+issue in the add_error_device(), that would require DPC to hold on to 
+the device. Would Keith has any concern about it?
 
-Lorenzo
+Thank you,
+Thomas
 
-> diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
-> index d2970a009eb5..5352e0c3be82 100644
-> --- a/drivers/pci/dwc/pcie-kirin.c
-> +++ b/drivers/pci/dwc/pcie-kirin.c
-> @@ -430,6 +430,9 @@ static int kirin_pcie_host_init(struct pcie_port *pp)
->  {
->  	kirin_pcie_establish_link(pp);
->  
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		dw_pcie_msi_init(pp);
-> +
->  	return 0;
->  }
->  
-> @@ -445,9 +448,34 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
->  	.host_init = kirin_pcie_host_init,
->  };
->  
-> +static int kirin_pcie_add_msi(struct dw_pcie *pci,
-> +				struct platform_device *pdev)
-> +{
-> +	int irq;
-> +
-> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> +		irq = platform_get_irq(pdev, 0);
-> +		if (irq < 0) {
-> +			dev_err(&pdev->dev,
-> +				"failed to get MSI IRQ (%d)\n", irq);
-> +			return irq;
-> +		}
-> +
-> +		pci->pp.msi_irq = irq;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int __init kirin_add_pcie_port(struct dw_pcie *pci,
->  				      struct platform_device *pdev)
->  {
-> +	int ret;
-> +
-> +	ret = kirin_pcie_add_msi(pci, pdev);
-> +	if (ret)
-> +		return ret;
-> +
->  	pci->pp.ops = &kirin_pcie_host_ops;
->  
->  	return dw_pcie_host_init(&pci->pp);
-> -- 
-> 2.11.GIT
+> 
+> I think this would fix the problem you're seeing, so we wouldn't need
+> the change in pcie_do_fatal_recovery().
+> 
+> However, I think we're also slightly exposed in dpc_work(), in basically
+> the same (possibly harmless) way.
+> 
+>    dpc_irq
+>      schedule_work(&dpc->work)
+>    ...
+>    dpc_work
+>      pdev = dpc->dev->port
+>      pcie_do_fatal_recovery(pdev)
+> 
+> pdev may be removed by pcie_do_fatal_recovery(), but dpc_work() is still
+> holding onto a pointer (which it never uses again).
+> 
+> The DPC driver should be holding a reference to pdev (through some black
+> magic I don't understand), but that would be released when pdev is removed,
+> and I don't know what ensures that dpc_work() runs before that release.
+> 
+> Bjorn
 > 
