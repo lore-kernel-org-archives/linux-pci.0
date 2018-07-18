@@ -1,60 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34135 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726378AbeG3W6z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2018 18:58:55 -0400
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: keith.busch@intel.com, alex_gagniuc@dellteam.com,
-        austin_bolen@dell.com, shyam_iyer@dell.com, Narendra_K@Dell.com,
-        Stuart_Hayes@Dell.com, lukas@wunner.de,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+Received: from mail.kernel.org ([198.145.29.99]:33486 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729642AbeGRUXm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Jul 2018 16:23:42 -0400
+Subject: [PATCH v3 0/7] Fix issues and cleanup for ERR_FATAL and ERR_NONFATAL
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@kernel.org>,
+        Timur Tabi <timur@codeaurora.org>, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI/MSI: Don't touch MSI bits when the PCI device is disconnected
-Date: Mon, 30 Jul 2018 16:21:44 -0500
-Message-Id: <20180730212146.31909-1-mr.nuke.me@gmail.com>
+Date: Wed, 18 Jul 2018 14:44:18 -0500
+Message-ID: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a PCI device is gone, we don't want to send IO to it if we can
-avoid it. We expose functionality via the irq_chip structure. As
-users of that structure may not know about the underlying PCI device,
-it's our responsibility to guard against removed devices.
+This is a v3 of Oza's patches [1].  It's available at [2] if you prefer
+git.
 
-irq_write_msi_msg is already guarded. pci_msi_(un)mask_irq are not.
-Guard them for completeness.
+v3 changes:
+  - Add pci_aer_clear_fatal_status() to clear ERR_FATAL bits, only called
+    from pcie_do_fatal_recovery().  Moved to first in series to avoid a
+    window where ERR_FATAL recovery only clears ERR_NONFATAL bits.  Visible
+    only inside the PCI core.
+  - Instead of having pci_cleanup_aer_uncorrect_error_status() do different
+    things based on dev->error_state, use this only for ERR_NONFATAL bits.
+    I didn't change the name because it's used by many drivers.
+  - Rename pci_cleanup_aer_error_device_status() to
+    pci_aer_clear_device_status(), make it void, and make it visible only
+    inside the PCI core.
+  - Remove pcie_portdrv_err_handler.slot_reset altogether instead of making
+    it a stub function.  Possibly pcie_portdrv_err_handler could be removed
+    completely?
 
-For example, surprise removal of a PCIe device triggers teardown. This
-touches the irq_chips ops some point to disable the interrupts. I/O
-generated here can crash the system on machines with buggy firmware.
-Not triggering the IO in the first place eliminates the problem.
+[1] https://lkml.kernel.org/r/1529661494-20936-1-git-send-email-poza@codeaurora.org
+[2] https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/?h=pci/06-22-oza-aer
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 ---
 
-There's another patch by Lukas Wunner that is needed (not yet published)
-in order to fully block IO on SURPRISE!!! removal. The existing code only
-sets the PCI_DEV_DISCONNECTED bit in an unreasonably narrow set of
-circumstances. Lukas' patch fixes that.
+Bjorn Helgaas (1):
+      PCI/AER: Clear only ERR_FATAL status bits during fatal recovery
 
-However, this change is otherwise fully independent, and enjoy!
+Oza Pawandeep (6):
+      PCI/AER: Clear only ERR_NONFATAL bits during non-fatal recovery
+      PCI/AER: Factor out ERR_NONFATAL status bit clearing
+      PCI/AER: Remove ERR_FATAL code from ERR_NONFATAL path
+      PCI/AER: Clear device status bits during ERR_FATAL and ERR_NONFATAL
+      PCI/AER: Clear device status bits during ERR_COR handling
+      PCI/portdrv: Remove pcie_portdrv_err_handler.slot_reset
 
- drivers/pci/msi.c | 3 +++
- 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 4d88afdfc843..5f47b5cb0401 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -227,6 +227,9 @@ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
- {
- 	struct msi_desc *desc = irq_data_get_msi_desc(data);
- 
-+	if (pci_dev_is_disconnected(msi_desc_to_pci_dev(desc)))
-+		return;
-+
- 	if (desc->msi_attrib.is_msix) {
- 		msix_mask_irq(desc, flag);
- 		readl(desc->mask_base);		/* Flush write to device */
--- 
-2.17.1
+ drivers/pci/pci.h              |    5 ++++
+ drivers/pci/pcie/aer.c         |   47 +++++++++++++++++++++++++++-------------
+ drivers/pci/pcie/err.c         |   15 +++++--------
+ drivers/pci/pcie/portdrv_pci.c |   25 ---------------------
+ 4 files changed, 43 insertions(+), 49 deletions(-)
