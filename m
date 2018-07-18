@@ -1,139 +1,50 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 24 Jul 2018 14:09:31 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Minwoo Im <minwoo.im.dev@gmail.com>
-Subject: Re: [PATCH v3 2/3] PCI: Samsung SM961/PM961 NVMe disable before FLR
- quirk
-Message-ID: <20180724140931.040a2d97@t450s.home>
-In-Reply-To: <1532461998.20066.5.camel@gmail.com>
-References: <20180724160440.2729.75178.stgit@gimli.home>
- <20180724161440.2729.89835.stgit@gimli.home>
- <1532461998.20066.5.camel@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:34030 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728912AbeGRUYV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Jul 2018 16:24:21 -0400
+Subject: [PATCH v3 6/7] PCI/AER: Clear device status bits during ERR_COR
+ handling
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@kernel.org>,
+        Timur Tabi <timur@codeaurora.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 18 Jul 2018 14:44:57 -0500
+Message-ID: <153194309786.191586.2771045363400479470.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org
 Content-Type: text/plain; charset="utf-8"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gV2VkLCAyNSBKdWwgMjAxOCAwNDo1MzoxOCArMDkwMApNaW53b28gSW0gPG1pbndvby5pbS5k
-ZXZAZ21haWwuY29tPiB3cm90ZToKCj4gSGkgQWxleCwKPiAKPiBPbiBUdWUsIDIwMTgtMDctMjQg
-YXQgMTA6MTQgLTA2MDAsIEFsZXggV2lsbGlhbXNvbiB3cm90ZToKPiA+IFRoZSBTYW1zdW5nIFNN
-OTYxL1BNOTYxICg5NjAgRVZPKSBzb21ldGltZXMgZmFpbHMgdG8gcmV0dXJuIGZyb20gRkxSCj4g
-PiB3aXRoIHRoZSBQQ0kgY29uZmlnIHNwYWNlIHJlYWRpbmcgYmFjayBhcyAtMS7CoMKgQSByZXBy
-b2R1Y2libGUgaW5zdGFuY2UKPiA+IG9mIHRoaXMgYmVoYXZpb3IgaXMgcmVzb2x2ZWQgYnkgY2xl
-YXJpbmcgdGhlIGVuYWJsZSBiaXQgaW4gdGhlIE5WTWUKPiA+IGNvbmZpZ3VyYXRpb24gcmVnaXN0
-ZXIgYW5kIHdhaXRpbmcgZm9yIHRoZSByZWFkeSBzdGF0dXMgdG8gY2xlYXIKPiA+IChkaXNhYmxp
-bmcgdGhlIE5WTWUgY29udHJvbGxlcikgcHJpb3IgdG8gRkxSLgo+ID4gCj4gPiBTaWduZWQtb2Zm
-LWJ5OiBBbGV4IFdpbGxpYW1zb24gPGFsZXgud2lsbGlhbXNvbkByZWRoYXQuY29tPgo+ID4gLS0t
-Cj4gPiDCoGRyaXZlcnMvcGNpL3F1aXJrcy5jIHzCoMKgwqA4Mwo+ID4gKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKPiA+IMKgMSBmaWxlIGNoYW5nZWQs
-IDgzIGluc2VydGlvbnMoKykKPiA+IAo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3F1aXJr
-cy5jIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMKPiA+IGluZGV4IGU3MmM4NzQyYWFmYS4uMzg5OWNk
-ZDI1MTRiIDEwMDY0NAo+ID4gLS0tIGEvZHJpdmVycy9wY2kvcXVpcmtzLmMKPiA+ICsrKyBiL2Ry
-aXZlcnMvcGNpL3F1aXJrcy5jCj4gPiBAQCAtMjgsNiArMjgsNyBAQAo+ID4gwqAjaW5jbHVkZSA8
-bGludXgvcGxhdGZvcm1fZGF0YS94ODYvYXBwbGUuaD4KPiA+IMKgI2luY2x1ZGUgPGxpbnV4L3Bt
-X3J1bnRpbWUuaD4KPiA+IMKgI2luY2x1ZGUgPGxpbnV4L3N3aXRjaHRlYy5oPgo+ID4gKyNpbmNs
-dWRlIDxsaW51eC9udm1lLmg+Cj4gPiDCoCNpbmNsdWRlIDxhc20vZG1hLmg+CS8qIGlzYV9kbWFf
-YnJpZGdlX2J1Z2d5ICovCj4gPiDCoCNpbmNsdWRlICJwY2kuaCIKPiA+IMKgCj4gPiBAQCAtMzY2
-OSw2ICszNjcwLDg3IEBAIHN0YXRpYyBpbnQgcmVzZXRfY2hlbHNpb19nZW5lcmljX2RldihzdHJ1
-Y3QgcGNpX2Rldgo+ID4gKmRldiwgaW50IHByb2JlKQo+ID4gwqAjZGVmaW5lIFBDSV9ERVZJQ0Vf
-SURfSU5URUxfSVZCX01fVkdBwqDCoMKgwqDCoMKgMHgwMTU2Cj4gPiDCoCNkZWZpbmUgUENJX0RF
-VklDRV9JRF9JTlRFTF9JVkJfTTJfVkdBwqDCoMKgwqDCoDB4MDE2Ngo+ID4gwqAKPiA+ICsvKgo+
-ID4gKyAqIFRoZSBTYW1zdW5nIFNNOTYxL1BNOTYxIGNvbnRyb2xsZXIgY2FuIHNvbWV0aW1lcyBl
-bnRlciBhIGZhdGFsIHN0YXRlIGFmdGVyCj4gPiArICogRkxSIHdoZXJlIGNvbmZpZyBzcGFjZSBy
-ZWFkcyBmcm9tIHRoZSBkZXZpY2UgcmV0dXJuIC0xLsKgwqBXZSBzZWVtIHRvIGJlCj4gPiArICog
-YWJsZSB0byBhdm9pZCB0aGlzIGNvbmRpdGlvbiBpZiB3ZSBkaXNhYmxlIHRoZSBOVk1lIGNvbnRy
-b2xsZXIgcHJpb3IgdG8KPiA+ICsgKiBGTFIuwqDCoFRoaXMgcXVpcmsgaXMgZ2VuZXJpYyBmb3Ig
-YW55IE5WTWUgY2xhc3MgZGV2aWNlIHJlcXVpcmluZyBzaW1pbGFyCj4gPiArICogYXNzaXN0YW5j
-ZSB0byBxdWllc2NlIHRoZSBkZXZpY2UgcHJpb3IgdG8gRkxSLgo+ID4gKyAqCj4gPiArICogTlZN
-ZSBzcGVjaWZpY2F0aW9uOiBodHRwczovL252bWV4cHJlc3Mub3JnL3Jlc291cmNlcy9zcGVjaWZp
-Y2F0aW9ucy8KPiA+ICsgKiBSZXZpc2lvbiAxLjBlOiAgCj4gCj4gSXQgc2VlbXMgdG9vIG9sZCB2
-ZXJzaW9uIG9mIE5WTWUgc3BlY2lmaWNhdGlvbi4gwqBEbyB5b3UgaGF2ZSBhbnkgc3BlY2lhbCBy
-ZWFzb24KPiB0byBjb21tZW50IHRoZSBzcGVjaWZpZWQgMS4wIHZlcnNpb24gaW5zdGVhZCBvZiAx
-LjMgb3Igc29tZXRoaW5nIG5ld2VyPwoKSSB3YW50ZWQgdG8gc2hvdyB0aGF0IEknbSB1c2luZyBO
-Vk1lIGZlYXR1cmVzIHRoYXQgaGF2ZSBiZWVuIGF2YWlsYWJsZQpzaW5jZSB0aGUgaW5pdGlhbCBy
-ZWxlYXNlIGFuZCB0aGVyZSdzIG5vIHJlYXNvbiB0byBjaGVjayB0aGUgdmVyc2lvbgpmaWVsZCBm
-b3IgdGhlaXIgc3VwcG9ydC4KCj4gPiArICrCoMKgwqDCoENoYXB0ZXIgMjogUmVxdWlyZWQgYW5k
-IG9wdGlvbmFsIFBDSSBjb25maWcgcmVnaXN0ZXJzCj4gPiArICrCoMKgwqDCoENoYXB0ZXIgMzog
-TlZNZSBjb250cm9sIHJlZ2lzdGVycwo+ID4gKyAqwqDCoMKgwqBDaGFwdGVyIDcuMzogUmVzZXQg
-YmVoYXZpb3IKPiA+ICsgKi8KPiA+ICtzdGF0aWMgaW50IG52bWVfZGlzYWJsZV9hbmRfZmxyKHN0
-cnVjdCBwY2lfZGV2ICpkZXYsIGludCBwcm9iZSkgIAo+IAo+IFRoZSBuYW1lIG9mIHRoaXMgZnVu
-Y3Rpb24gc2VlbXMgYWJsZSB0byBiZSBzdGFydGVkIHdpdGggJ3Jlc2V0XycgcHJlZml4IGp1c3QK
-PiBsaWtlIG90aGVyIHF1aXJrcyBmb3IgcmVzZXQuCj4gV2hhdCBhYm91dCByZXNldF9zYW1zdW5n
-X3BtOTYxIG9yIHNvbWV0aGluZz8KCkknbSBmaW5lIHdpdGggYW55IGdlbmVyaWMgcHJlZml4LCBi
-dXQgSSdtIG5vdCBmaW5lIHdpdGggb2JmdXNjYXRpbmcgdGhlCnB1cnBvc2Ugb2YgdGhlIGZ1bmN0
-aW9uIGJlaGluZCBhIHZlbmRvci9kZXZpY2Ugc3BlY2lmaWMgbmFtZS4gIElmCnNvbWVvbmUgZWxz
-ZSBjb21lcyBhbG9uZyBuZWVkaW5nIHRoaXMgc2FtZSBmdW5jdGlvbmFsaXR5LCB0aGV5J2xsCnBy
-b2JhYmx5IGJlIHJlbHVjdGFudCB0byBldmVuIGxvb2sgYXQgd2hhdCBhICJyZXNldF9zYW1zdW5n
-X3NtOTYxIgpmdW5jdGlvbiBkb2VzLiAgSWYgdGhleSBkbywgdGhleSBtaWdodCBzdGlsbCBiZSBy
-ZWx1Y3RhbnQgdG8gcmV1c2UKc29tZXRoaW5nIHNvIG9idmlvdXNseSBtYWRlIGZvciBhIHNwZWNp
-ZmljIGRldmljZS4gIEkgdGhvdWdodCB0aGlzIHdhcwpwcmV0dHkgZGVzY3JpcHRpdmUgb2Ygd2hh
-dCBpdCdzIGRvaW5nLiAgUHJlZml4aW5nIHdpdGggJ3Jlc2V0XycgaXMgYQp0YWQgcmVkdW5kYW50
-LgoKPiA+ICt7Cj4gPiArCXZvaWQgX19pb21lbSAqYmFyOwo+ID4gKwl1MTYgY21kOwo+ID4gKwl1
-MzIgY2ZnOwo+ID4gKwo+ID4gKwlpZiAoZGV2LT5jbGFzcyAhPSBQQ0lfQ0xBU1NfU1RPUkFHRV9F
-WFBSRVNTIHx8Cj4gPiArCcKgwqDCoMKgIXBjaWVfaGFzX2ZscihkZXYpIHx8ICFwY2lfcmVzb3Vy
-Y2Vfc3RhcnQoZGV2LCAwKSkKPiA+ICsJCXJldHVybiAtRU5PVFRZOwo+ID4gKwo+ID4gKwlpZiAo
-cHJvYmUpCj4gPiArCQlyZXR1cm4gMDsKPiA+ICsKPiA+ICsJYmFyID0gcGNpX2lvbWFwKGRldiwg
-MCwgTlZNRV9SRUdfQ0MgKyBzaXplb2YoY2ZnKSk7Cj4gPiArCWlmICghYmFyKQo+ID4gKwkJcmV0
-dXJuIC1FTk9UVFk7Cj4gPiArCj4gPiArCXBjaV9yZWFkX2NvbmZpZ193b3JkKGRldiwgUENJX0NP
-TU1BTkQsICZjbWQpOwo+ID4gKwlwY2lfd3JpdGVfY29uZmlnX3dvcmQoZGV2LCBQQ0lfQ09NTUFO
-RCwgY21kIHwgUENJX0NPTU1BTkRfTUVNT1JZKTsKPiA+ICsKPiA+ICsJY2ZnID0gcmVhZGwoYmFy
-ICsgTlZNRV9SRUdfQ0MpOwo+ID4gKwo+ID4gKwkvKiBEaXNhYmxlIGNvbnRyb2xsZXIgaWYgZW5h
-YmxlZCAqLwo+ID4gKwlpZiAoY2ZnICYgTlZNRV9DQ19FTkFCTEUpIHsKPiA+ICsJCXU2NCBjYXAg
-PSByZWFkcShiYXIgKyBOVk1FX1JFR19DQVApOwo+ID4gKwkJdW5zaWduZWQgbG9uZyB0aW1lb3V0
-Owo+ID4gKwo+ID4gKwkJLyoKPiA+ICsJCcKgKiBQZXIgbnZtZV9kaXNhYmxlX2N0cmwoKSBza2lw
-IHNodXRkb3duIG5vdGlmaWNhdGlvbiBhcyBpdAo+ID4gKwkJwqAqIGNvdWxkIGNvbXBsZXRlIGNv
-bW1hbmRzIHRvIHRoZSBhZG1pbiBxdWV1ZS7CoMKgV2Ugb25seQo+ID4gaW50ZW5kCj4gPiArCQnC
-oCogdG8gcXVpZXNjZSB0aGUgZGV2aWNlIGJlZm9yZSByZXNldC4KPiA+ICsJCcKgKi8KPiA+ICsJ
-CWNmZyAmPSB+KE5WTUVfQ0NfU0hOX01BU0sgfCBOVk1FX0NDX0VOQUJMRSk7Cj4gPiArCj4gPiAr
-CQl3cml0ZWwoY2ZnLCBiYXIgKyBOVk1FX1JFR19DQyk7Cj4gPiArCj4gPiArCQkvKgo+ID4gKwkJ
-wqAqIFNvbWUgY29udHJvbGxlcnMgcmVxdWlyZSBhbiBhZGRpdGlvbmFsIGRlbGF5IGhlcmUsIHNl
-ZQo+ID4gKwkJwqAqIE5WTUVfUVVJUktfREVMQVlfQkVGT1JFX0NIS19SRFkuwqDCoE5vbmUgb2Yg
-dGhvc2UgYXJlIHlldAo+ID4gKwkJwqAqIHN1cHBvcnRlZCBieSB0aGlzIHF1aXJrLgo+ID4gKwkJ
-wqAqLwo+ID4gKwo+ID4gKwkJLyogQ2FwIHJlZ2lzdGVyIHByb3ZpZGVzIG1heCB0aW1lb3V0IGlu
-IDUwMG1zIGluY3JlbWVudHMgKi8KPiA+ICsJCXRpbWVvdXQgPSAoKE5WTUVfQ0FQX1RJTUVPVVQo
-Y2FwKSArIDEpICogSFogLyAyKSArIGppZmZpZXM7Cj4gPiArCj4gPiArCQlmb3IgKDs7KSB7Cj4g
-PiArCQkJdTMyIHN0YXR1cyA9IHJlYWRsKGJhciArIE5WTUVfUkVHX0NTVFMpOwo+ID4gKwo+ID4g
-KwkJCS8qIFJlYWR5IHN0YXR1cyBiZWNvbWVzIHplcm8gb24gZGlzYWJsZSBjb21wbGV0ZSAqLwo+
-ID4gKwkJCWlmICghKHN0YXR1cyAmIE5WTUVfQ1NUU19SRFkpKQo+ID4gKwkJCQlicmVhazsKPiA+
-ICsKPiA+ICsJCQltc2xlZXAoMTAwKTsKPiA+ICsKPiA+ICsJCQlpZiAodGltZV9hZnRlcihqaWZm
-aWVzLCB0aW1lb3V0KSkgewo+ID4gKwkJCQlwY2lfd2FybihkZXYsICJUaW1lb3V0IHdhaXRpbmcg
-Zm9yIE5WTWUgcmVhZHkKPiA+IHN0YXR1cyB0byBjbGVhciBhZnRlciBkaXNhYmxlXG4iKTsKPiA+
-ICsJCQkJYnJlYWs7Cj4gPiArCQkJfQo+ID4gKwkJfQo+ID4gKwl9Cj4gPiArCj4gPiArCXBjaV9p
-b3VubWFwKGRldiwgYmFyKTsKPiA+ICsKPiA+ICsJcGNpZV9mbHIoZGV2KTsKPiA+ICsKPiA+ICsJ
-cmV0dXJuIDA7Cj4gPiArfQo+ID4gKwo+ID4gwqBzdGF0aWMgY29uc3Qgc3RydWN0IHBjaV9kZXZf
-cmVzZXRfbWV0aG9kcyBwY2lfZGV2X3Jlc2V0X21ldGhvZHNbXSA9IHsKPiA+IMKgCXsgUENJX1ZF
-TkRPUl9JRF9JTlRFTCwgUENJX0RFVklDRV9JRF9JTlRFTF84MjU5OV9TRlBfVkYsCj4gPiDCoAkJ
-wqByZXNldF9pbnRlbF84MjU5OV9zZnBfdmlydGZuIH0sCj4gPiBAQCAtMzY3Niw2ICszNzU4LDcg
-QEAgc3RhdGljIGNvbnN0IHN0cnVjdCBwY2lfZGV2X3Jlc2V0X21ldGhvZHMKPiA+IHBjaV9kZXZf
-cmVzZXRfbWV0aG9kc1tdID0gewo+ID4gwqAJCXJlc2V0X2l2Yl9pZ2QgfSwKPiA+IMKgCXsgUENJ
-X1ZFTkRPUl9JRF9JTlRFTCwgUENJX0RFVklDRV9JRF9JTlRFTF9JVkJfTTJfVkdBLAo+ID4gwqAJ
-CXJlc2V0X2l2Yl9pZ2QgfSwKPiA+ICsJeyBQQ0lfVkVORE9SX0lEX1NBTVNVTkcsIDB4YTgwNCwg
-bnZtZV9kaXNhYmxlX2FuZF9mbHIgfSwgIAo+IAo+IFdoeSBkb24ndCB3ZSBqdXN0IGRlZmluZSBh
-IG1hY3JvIGp1c3QgbGlrZSBvdGhlciBERVZJQ0VfSURzLiAoZS5nLgo+IFBDSUVfREVWSUNFX0lE
-X0lOVEVMXzgyNTk5X1NGUF9WRikuCj4gCj4gI2RlZmluZSBQQ0lfREVWSUNFX0lEX1NBTVNVTkdf
-UE05NjEgwqAweGE4MDQKCmluY2x1ZGUvbGludXgvcGNpX2lkcy5oIgovKgogKiAgICAgIFBDSSBD
-bGFzcywgVmVuZG9yIGFuZCBEZXZpY2UgSURzCiAqCiAqICAgICAgUGxlYXNlIGtlZXAgc29ydGVk
-LgogKgogKiAgICAgIERvIG5vdCBhZGQgbmV3IGVudHJpZXMgdG8gdGhpcyBmaWxlIHVubGVzcyB0
-aGUgZGVmaW5pdGlvbnMKICogICAgICBhcmUgc2hhcmVkIGJldHdlZW4gbXVsdGlwbGUgZHJpdmVy
-cy4KICovCgpUaG9zZSBvdGhlciBkZXZpY2VzIGFyZSByZWxhdGl2ZWx5IG9sZCwgdGhleSB3ZXJl
-IHByb2JhYmx5ICNkZWZpbmUnZApiZWZvcmUgd2Ugc3RhcnRlZCB0aGUgcG9saWN5IGluIHRoZSBo
-ZWFkZXIuICBUaGFua3MsCgpBbGV4Cgo+ID4gwqAJeyBQQ0lfVkVORE9SX0lEX0NIRUxTSU8sIFBD
-SV9BTllfSUQsCj4gPiDCoAkJcmVzZXRfY2hlbHNpb19nZW5lcmljX2RldiB9LAo+ID4gwqAJeyAw
-IH0KPiA+IAo+ID4gCj4gPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fXwo+ID4gTGludXgtbnZtZSBtYWlsaW5nIGxpc3QKPiA+IExpbnV4LW52bWVAbGlzdHMu
-aW5mcmFkZWFkLm9yZwo+ID4gaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0
-aW5mby9saW51eC1udm1lICAKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwpMaW51eC1udm1lIG1haWxpbmcgbGlzdApMaW51eC1udm1lQGxpc3RzLmluZnJh
-ZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51
-eC1udm1lCg==
+From: Oza Pawandeep <poza@codeaurora.org>
+
+In case of correctable error, the Correctable Error Detected bit in the
+Device Status register is set.  Clear it after handling the error.
+
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/aer.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index dc67f52b002f..2accfd7a4c9d 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -827,6 +827,7 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
+ 		if (pos)
+ 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
+ 					info->status);
++		pci_aer_clear_device_status(dev);
+ 	} else if (info->severity == AER_NONFATAL)
+ 		pcie_do_nonfatal_recovery(dev);
+ 	else if (info->severity == AER_FATAL)
