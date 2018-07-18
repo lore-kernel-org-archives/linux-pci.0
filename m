@@ -1,80 +1,65 @@
-Return-Path: <SRS0=0zNO=J2=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=0zNO=J2=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH] driver core: Partially revert "driver core: correct
- device's shutdown order"
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Greg Kroah-Hartman
-	<gregkh@linuxfoundation.org>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <CAFgQCTsGC8NH+5kXYD7vykJeUsaAzCAjgxSP-R0EqA3YvgsY0w@mail.gmail.com>
- <8816662.k3KXbdkA2e@aspire.rjw.lan> <2927655.Y1qg3UnIrE@aspire.rjw.lan>
-CC: Pingfan Liu <kernelfans@gmail.com>, <linux-kernel@vger.kernel.org>,
-        Grygorii Strashko <grygorii.strashko@ti.com>,
-        Christoph Hellwig
-	<hch@infradead.org>,
-        Bjorn Helgaas <helgaas@kernel.org>, Dave Young
-	<dyoung@redhat.com>,
-        <linux-pci@vger.kernel.org>, Lukas Wunner
-	<lukas@wunner.de>,
-        Linux PM <linux-pm@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <aa41cfa9-dedb-5f19-0d85-0d4c19d26ea8@ti.com>
-Date: Tue, 10 Jul 2018 17:52:28 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:33704 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729642AbeGRUXz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Jul 2018 16:23:55 -0400
+Subject: [PATCH v3 2/7] PCI/AER: Clear only ERR_NONFATAL bits during
+ non-fatal recovery
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <poza@codeaurora.org>
+Cc: Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
+        Sinan Kaya <okaya@kernel.org>,
+        Timur Tabi <timur@codeaurora.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 18 Jul 2018 14:44:31 -0500
+Message-ID: <153194307163.191586.14136554437248317995.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <2927655.Y1qg3UnIrE@aspire.rjw.lan>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: Oza Pawandeep <poza@codeaurora.org>
 
-On Tuesday 10 July 2018 05:05 PM, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Commit 52cdbdd49853 (driver core: correct device's shutdown order)
-> introduced a regression by breaking device shutdown on some systems.
-> 
-> Namely, the devices_kset_move_last() call in really_probe() added by
-> that commit is a mistake as it may cause parents to follow children
-> in the devices_kset list which then causes shutdown to fail.  For
-> example, if a device has children before really_probe() is called
-> for it (which is not uncommon), that call will cause it to be
-> reordered after the children in the devices_kset list and the
-> ordering of that list will not reflect the correct device shutdown
-> order any more.
-> 
-> Also it causes the devices_kset list to be constantly reordered
-> until all drivers have been probed which is totally pointless
-> overhead in the majority of cases and it only covers an issue
-> with system shutdown, while system-wide suspend/resume potentially
-> has the same issue on the affected platforms (which is not covered).
-> 
-> For that reason, revert the really_probe() modifications made by
-> commit 52cdbdd49853 which unfortunately will expose the shutdown
-> issue the problematic commit attempted to fix (and which will have
-> to be addressed differently and correctly in the future).
-> 
-> The other code changes made by commit 52cdbdd49853 are useful and
-> they need not be reverted.
-> 
-> Fixes: 52cdbdd49853 (driver core: correct device's shutdown order)
-> Link: https://lore.kernel.org/lkml/CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com/
-> Reported-by: Pingfan Liu <kernelfans@gmail.com>
-> Tested-by: Pingfan Liu <kernelfans@gmail.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
+pci_cleanup_aer_uncorrect_error_status() is called by driver .slot_reset()
+methods when handling ERR_NONFATAL errors.  Previously this cleared *all*
+the bits, including ERR_FATAL bits.
 
-This issue because of which 52cdbdd49853 (driver core: correct device's
-shutdown order) was added is not present from 4.18, since dra7 started using
-sdhci-omap.c driver which doesn't disable regulator during shutdown. (The
-original issue was present in omap_hsmmc driver).
+Since we're only handling ERR_NONFATAL errors, clear only the ERR_NONFATAL
+error status bits.
 
-When sdhci-omap driver is modified to disable regulator during shutdown,
-something like device_link_add() can be added in _regulator_get().
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+[bhelgaas: split to separate patch]
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/aer.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Since this doesn't reintroduce the problem that was solved by 52cdbdd49853,
-this can be safely merged.
-
-Reviewed-by: Kishon Vijay Abraham I <kishon@ti.com>
-
-Thanks
-Kishon
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 5b4a84e3d360..6f0f131b5e6a 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -360,13 +360,16 @@ EXPORT_SYMBOL_GPL(pci_disable_pcie_error_reporting);
+ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+ {
+ 	int pos;
+-	u32 status;
++	u32 status, sev;
+ 
+ 	pos = dev->aer_cap;
+ 	if (!pos)
+ 		return -EIO;
+ 
++	/* Clear status bits for ERR_NONFATAL errors only */
+ 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
++	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &sev);
++	status &= ~sev;
+ 	if (status)
+ 		pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
+ 
