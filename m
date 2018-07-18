@@ -1,308 +1,149 @@
-Return-Path: <SRS0=VDRM=JU=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=VDRM=JU=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:60402 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729134AbeGRWdx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Jul 2018 18:33:53 -0400
+Date: Wed, 18 Jul 2018 16:53:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex_Gagniuc@Dellteam.com
+Cc: mr.nuke.me@gmail.com, bhelgaas@google.com, Austin.Bolen@dell.com,
+        Shyam.Iyer@dell.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        jeffrey.t.kirsher@intel.com, ariel.elior@cavium.com,
+        michael.chan@broadcom.com, ganeshgr@chelsio.com,
+        tariqt@mellanox.com, jakub.kicinski@netronome.com,
+        talgi@mellanox.com, airlied@gmail.com, alexander.deucher@amd.com,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>
+Subject: Re: [PATCH v3] PCI: Check for PCIe downtraining conditions
+Message-ID: <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180604155523.14906-1-mr.nuke.me@gmail.com>
+ <20180716211706.GB12391@bhelgaas-glaptop.roam.corp.google.com>
+ <97a70a71e1034bafbcabc6c4e23577c0@ausx13mps321.AMER.DELL.COM>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <153030406630.57832.11564334393458981467.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <153030390808.57832.2200774416664543563.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <153030406630.57832.11564334393458981467.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 4 Jul 2018 11:40:52 +0200
-Message-ID: <CAJZ5v0iBZRJuh8Yu03p-k_rR_oxr9rJiOvRmvXpOxPjScM+w1Q@mail.gmail.com>
-Subject: Re: [PATCH v1 2/2] PCI: Document ACPI description of PCI host bridges
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <97a70a71e1034bafbcabc6c4e23577c0@ausx13mps321.AMER.DELL.COM>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 29, 2018 at 10:27 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
->
-> Add a writeup about how PCI host bridges should be described in ACPI
-> using PNP0A03/PNP0A08 devices, PNP0C02 devices, and the MCFG table.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  Documentation/PCI/00-INDEX      |    2
->  Documentation/PCI/acpi-info.txt |  183 +++++++++++++++++++++++++++++++++=
-++++++
->  2 files changed, 185 insertions(+)
->  create mode 100644 Documentation/PCI/acpi-info.txt
->
-> diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-> index 0f1d1de087f1..fc6af2957e55 100644
-> --- a/Documentation/PCI/00-INDEX
-> +++ b/Documentation/PCI/00-INDEX
-> @@ -1,5 +1,7 @@
->  00-INDEX
->         - this file
-> +acpi-info.txt
-> +       - info on how PCI host bridges are represented in ACPI
->  MSI-HOWTO.txt
->         - the Message Signaled Interrupts (MSI) Driver Guide HOWTO and FA=
-Q.
->  PCIEBUS-HOWTO.txt
-> diff --git a/Documentation/PCI/acpi-info.txt b/Documentation/PCI/acpi-inf=
-o.txt
-> new file mode 100644
-> index 000000000000..9b8e7b560b50
-> --- /dev/null
-> +++ b/Documentation/PCI/acpi-info.txt
-> @@ -0,0 +1,183 @@
-> +           ACPI considerations for PCI host bridges
-> +
-> +The general rule is that the ACPI namespace should describe everything t=
-he
-> +OS might use unless there's another way for the OS to find it [1, 2].
-> +
-> +For example, there's no standard hardware mechanism for enumerating PCI
-> +host bridges, so ACPI must describe each host bridge, the method for
-> +accessing PCI config space below it, the address space windows the bridg=
-e
-> +forwards to PCI, and the routing of legacy INTx interrupts.
-> +
-> +PCI devices *below* the host bridge generally do not need to be describe=
-d
-> +via ACPI because the OS can discover them via the standard PCI enumerati=
-on
-> +mechanism, which uses config accesses to discover and identify the devic=
-e
-> +and read and size its BARs.
+[+cc Mike (hfi1)]
 
-While they can be discovered without ACPI, power management or hotplug
-may depend on it.
+On Mon, Jul 16, 2018 at 10:28:35PM +0000, Alex_Gagniuc@Dellteam.com wrote:
+> On 7/16/2018 4:17 PM, Bjorn Helgaas wrote:
+> >> ...
+> >> The easiest way to detect this is with pcie_print_link_status(),
+> >> since the bottleneck is usually the link that is downtrained. It's not
+> >> a perfect solution, but it works extremely well in most cases.
+> > 
+> > This is an interesting idea.  I have two concerns:
+> > 
+> > Some drivers already do this on their own, and we probably don't want
+> > duplicate output for those devices.  In most cases (ixgbe and mlx* are
+> > exceptions), the drivers do this unconditionally so we *could* remove
+> > it from the driver if we add it to the core.  The dmesg order would
+> > change, and the message wouldn't be associated with the driver as it
+> > now is.
+> 
+> Oh, there are only 8 users of that. Even I could patch up the drivers to 
+> remove the call, assuming we reach agreement about this change.
+> 
+> > Also, I think some of the GPU devices might come up at a lower speed,
+> > then download firmware, then reset the device so it comes up at a
+> > higher speed.  I think this patch will make us complain about about
+> > the low initial speed, which might confuse users.
+> 
+> I spoke to one of the PCIe spec writers. It's allowable for a device to 
+> downtrain speed or width. It would also be extremely dumb to downtrain 
+> with the intent to re-train at a higher speed later, but it's possible 
+> devices do dumb stuff like that. That's why it's an informational 
+> message, instead of a warning.
 
-Also things like _PRT come to mind here.
+FWIW, here's some of the discussion related to hfi1 from [1]:
 
-> +
-> +ACPI resource description is done via _CRS objects of devices in the ACP=
-I
-> +namespace [2].   The _CRS is like a generalized PCI BAR: the OS can read
-> +_CRS and figure out what resource is being consumed even if it doesn't h=
-ave
-> +a driver for the device [3].  That's important because it means an old O=
-S
-> +can work correctly even on a system with new devices unknown to the OS.
-> +The new devices might not do anything, but the OS can at least make sure=
- no
-> +resources conflict with them.
-> +
-> +Static tables like MCFG, HPET, ECDT, etc., are *not* mechanisms for
-> +reserving address space!  The static tables are for things the OS needs =
-to
-> +know early in boot, before it can parse the ACPI namespace.  If a new ta=
-ble
-> +is defined, an old OS needs to operate correctly even though it ignores =
-the
-> +table.  _CRS allows that because it is generic and understood by the old
-> +OS; a static table does not.
-> +
-> +If the OS is expected to manage a non-discoverable device described via
-> +ACPI, that device will have a specific _HID/_CID that tells the OS what
-> +driver to bind to it, and the _CRS tells the OS and the driver where the
-> +device's registers are.
-> +
-> +PCI host bridges are PNP0A03 or PNP0A08 devices.  Their _CRS should
-> +describe all the address space they consume.  This includes all the wind=
-ows
-> +they forward down to the PCI bus, as well as bridge registers that are n=
-ot
+  > Btw, why is the driver configuring the PCIe link speed?  Isn't
+  > this something we should be handling in the PCI core?
 
-I believe you mean registers of the host bridge itself here, but it is
-somewhat unclear if that applies to bridges below it too.
+  The device comes out of reset at the 5GT/s speed. The driver
+  downloads device firmware, programs PCIe registers, and co-ordinates
+  the transition to 8GT/s.
 
-> +forwarded to PCI.  The bridge registers include things like secondary/
-> +subordinate bus registers that determine the bus range below the bridge,
-> +window registers that describe the apertures, etc.  These are all
-> +device-specific, non-architected things, so the only way a PNP0A03/PNP0A=
-08
-> +driver can manage them is via _PRS/_CRS/_SRS, which contain the
-> +device-specific details.  The bridge registers also include ECAM space,
-> +since it is consumed by the bridge.
-> +
-> +ACPI defines a Consumer/Producer bit to distinguish the bridge registers
-> +("Consumer") from the bridge apertures ("Producer") [4, 5], but early
-> +BIOSes didn't use that bit correctly.  The result is that the current AC=
-PI
-> +spec defines Consumer/Producer only for the Extended Address Space
-> +descriptors; the bit should be ignored in the older QWord/DWord/Word
-> +Address Space descriptors.  Consequently, OSes have to assume all
-> +QWord/DWord/Word descriptors are windows.
-> +
-> +Prior to the addition of Extended Address Space descriptors, the failure=
- of
-> +Consumer/Producer meant there was no way to describe bridge registers in
-> +the PNP0A03/PNP0A08 device itself.  The workaround was to describe the
-> +bridge registers (including ECAM space) in PNP0C02 catch-all devices [6]=
-.
-> +With the exception of ECAM, the bridge register space is device-specific
-> +anyway, so the generic PNP0A03/PNP0A08 driver (pci_root.c) has no need t=
-o
-> +know about it.
-> +
-> +New architectures should be able to use "Consumer" Extended Address Spac=
-e
-> +descriptors in the PNP0A03 device for bridge registers, including ECAM,
-> +although a strict interpretation of [6] might prohibit this.  Old x86 an=
-d
-> +ia64 kernels assume all address space descriptors, including "Consumer"
-> +Extended Address Space ones, are windows, so it would not be safe to
-> +describe bridge registers this way on those architectures.
-> +
-> +PNP0C02 "motherboard" devices are basically a catch-all.  There's no
-> +programming model for them other than "don't use these resources for
-> +anything else."  So a PNP0C02 _CRS should claim any address space that i=
-s
-> +(1) not claimed by _CRS under any other device object in the ACPI namesp=
-ace
-> +and (2) should not be assigned by the OS to something else.
-> +
-> +The PCIe spec requires the Enhanced Configuration Access Method (ECAM)
-> +unless there's a standard firmware interface for config access, e.g., th=
-e
-> +ia64 SAL interface [7].  A host bridge consumes ECAM memory address spac=
-e
-> +and converts memory accesses into PCI configuration accesses.  The spec
-> +defines the ECAM address space layout and functionality; only the base o=
-f
-> +the address space is device-specific.  An ACPI OS learns the base addres=
-s
-> +from either the static MCFG table or a _CBA method in the PNP0A03 device=
-.
-> +
-> +The MCFG table must describe the ECAM space of non-hot pluggable host
-> +bridges [8].  Since MCFG is a static table and can't be updated by hotpl=
-ug,
-> +a _CBA method in the PNP0A03 device describes the ECAM space of a
-> +hot-pluggable host bridge [9].  Note that for both MCFG and _CBA, the ba=
-se
-> +address always corresponds to bus 0, even if the bus range below the bri=
-dge
-> +(which is reported via _CRS) doesn't start at 0.
-> +
-> +
-> +[1] ACPI 6.2, sec 6.1:
-> +    For any device that is on a non-enumerable type of bus (for example,=
- an
-> +    ISA bus), OSPM enumerates the devices' identifier(s) and the ACPI
-> +    system firmware must supply an _HID object ... for each device to
-> +    enable OSPM to do that.
-> +
-> +[2] ACPI 6.2, sec 3.7:
-> +    The OS enumerates motherboard devices simply by reading through the
-> +    ACPI Namespace looking for devices with hardware IDs.
-> +
-> +    Each device enumerated by ACPI includes ACPI-defined objects in the
-> +    ACPI Namespace that report the hardware resources the device could
-> +    occupy [_PRS], an object that reports the resources that are current=
-ly
-> +    used by the device [_CRS], and objects for configuring those resourc=
-es
-> +    [_SRS].  The information is used by the Plug and Play OS (OSPM) to
-> +    configure the devices.
-> +
-> +[3] ACPI 6.2, sec 6.2:
-> +    OSPM uses device configuration objects to configure hardware resourc=
-es
-> +    for devices enumerated via ACPI.  Device configuration objects provi=
-de
-> +    information about current and possible resource requirements, the
-> +    relationship between shared resources, and methods for configuring
-> +    hardware resources.
-> +
-> +    When OSPM enumerates a device, it calls _PRS to determine the resour=
-ce
-> +    requirements of the device.  It may also call _CRS to find the curre=
-nt
-> +    resource settings for the device.  Using this information, the Plug =
-and
-> +    Play system determines what resources the device should consume and
-> +    sets those resources by calling the device=E2=80=99s _SRS control me=
-thod.
-> +
-> +    In ACPI, devices can consume resources (for example, legacy keyboard=
-s),
-> +    provide resources (for example, a proprietary PCI bridge), or do bot=
-h.
-> +    Unless otherwise specified, resources for a device are assumed to be
-> +    taken from the nearest matching resource above the device in the dev=
-ice
-> +    hierarchy.
-> +
-> +[4] ACPI 6.2, sec 6.4.3.5.1, 2, 3, 4:
-> +    QWord/DWord/Word Address Space Descriptor (.1, .2, .3)
-> +    General Flags: Bit [0] Ignored
-> +
-> +    Extended Address Space Descriptor (.4)
-> +    General Flags: Bit [0] Consumer/Producer:
-> +       1=E2=80=93This device consumes this resource
-> +       0=E2=80=93This device produces and consumes this resource
-> +
-> +[5] ACPI 6.2, sec 19.6.43:
-> +    ResourceUsage specifies whether the Memory range is consumed by
-> +    this device (ResourceConsumer) or passed on to child devices
-> +    (ResourceProducer).  If nothing is specified, then
-> +    ResourceConsumer is assumed.
-> +
-> +[6] PCI Firmware 3.2, sec 4.1.2:
-> +    If the operating system does not natively comprehend reserving the
-> +    MMCFG region, the MMCFG region must be reserved by firmware.  The
-> +    address range reported in the MCFG table or by _CBA method (see Sect=
-ion
-> +    4.1.3) must be reserved by declaring a motherboard resource.  For mo=
-st
-> +    systems, the motherboard resource would appear at the root of the AC=
-PI
-> +    namespace (under \_SB) in a node with a _HID of EISAID (PNP0C02), an=
-d
-> +    the resources in this case should not be claimed in the root PCI bus=
-=E2=80=99s
-> +    _CRS.  The resources can optionally be returned in Int15 E820 or
-> +    EFIGetMemoryMap as reserved memory but must always be reported throu=
-gh
-> +    ACPI as a motherboard resource.
-> +
-> +[7] PCI Express 4.0, sec 7.2.2:
-> +    For systems that are PC-compatible, or that do not implement a
-> +    processor-architecture-specific firmware interface standard that all=
-ows
-> +    access to the Configuration Space, the ECAM is required as defined i=
-n
-> +    this section.
-> +
-> +[8] PCI Firmware 3.2, sec 4.1.2:
-> +    The MCFG table is an ACPI table that is used to communicate the base
-> +    addresses corresponding to the non-hot removable PCI Segment Groups
-> +    range within a PCI Segment Group available to the operating system a=
-t
-> +    boot. This is required for the PC-compatible systems.
-> +
-> +    The MCFG table is only used to communicate the base addresses
-> +    corresponding to the PCI Segment Groups available to the system at
-> +    boot.
-> +
-> +[9] PCI Firmware 3.2, sec 4.1.3:
-> +    The _CBA (Memory mapped Configuration Base Address) control method i=
-s
-> +    an optional ACPI object that returns the 64-bit memory mapped
-> +    configuration base address for the hot plug capable host bridge. The
-> +    base address returned by _CBA is processor-relative address. The _CB=
-A
-> +    control method evaluates to an Integer.
-> +
-> +    This control method appears under a host bridge object. When the _CB=
-A
-> +    method appears under an active host bridge object, the operating sys=
-tem
-> +    evaluates this structure to identify the memory mapped configuration
-> +    base address corresponding to the PCI Segment Group for the bus numb=
-er
-> +    range specified in _CRS method. An ACPI name space object that conta=
-ins
-> +    the _CBA method must also contain a corresponding _SEG method.
+  This recipe is device specific and is therefore implemented in the
+  hfi1 driver built on top of PCI core functions and macros.
 
-Apart from the minor comments above, it looks all good.  Thanks for
-taking care of documenting this!
+Also several DRM drivers seem to do this (see cik_pcie_gen3_enable(),
+si_pcie_gen3_enable()); from [2]:
 
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+  My understanding was that some platfoms only bring up the link in gen 1
+  mode for compatibility reasons. 
+
+[1] https://lkml.kernel.org/r/32E1700B9017364D9B60AED9960492BC627FF54C@fmsmsx120.amr.corp.intel.com
+[2] https://lkml.kernel.org/r/BN6PR12MB1809BD30AA5B890C054F9832F7B50@BN6PR12MB1809.namprd12.prod.outlook.com
+
+> Another case: Some devices (lower-end GPUs) use silicon (and marketing) 
+> that advertises x16, but they're only routed for x8. I'm okay with 
+> seeing an informational message in this case. In fact, I didn't know 
+> that my Quadro card for three years is only wired for x8 until I was 
+> testing this patch.
+
+Yeah, it's probably OK.  I don't want bug reports from people who
+think something's broken when it's really just a hardware limitation
+of their system.  But hopefully the message is not alarming.
+
+> > So I'm not sure whether it's better to do this in the core for all
+> > devices, or if we should just add it to the high-performance drivers
+> > that really care.
+> 
+> You're thinking "do I really need that bandwidth" because I'm using a 
+> function called "_bandwidth_". The point of the change is very far from 
+> that: it is to help in system troubleshooting by detecting downtraining 
+> conditions.
+
+I'm not sure what you think I'm thinking :)  My question is whether
+it's worthwhile to print this extra information for *every* PCIe
+device, given that your use case is the tiny percentage of broken
+systems.
+
+If we only printed the info in the "bw_avail < bw_cap" case, i.e.,
+when the device is capable of more than it's getting, that would make
+a lot of sense to me.  The normal case line is more questionable.  I
+think the reason that's there is because the network drivers are very
+performance sensitive and like to see that info all the time.
+
+Maybe we need something like this:
+
+  pcie_print_link_status(struct pci_dev *dev, int verbose)
+  {
+    ...
+    if (bw_avail >= bw_cap) {
+      if (verbose)
+        pci_info(dev, "... available PCIe bandwidth ...");
+    } else
+      pci_info(dev, "... available PCIe bandwidth, limited by ...");
+  }
+
+So the core could print only the potential problems with:
+
+  pcie_print_link_status(dev, 0);
+
+and drivers that really care even if there's no problem could do:
+
+  pcie_print_link_status(dev, 1);
+
+> >> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+> [snip]
+> >> +	/* Look from the device up to avoid downstream ports with no devices. */
+> >> +	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
+> >> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
+> >> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
+> >> +		return;
+> > 
+> > Do we care about Upstream Ports here?  
+> 
+> YES! Switches. e.g. an x16 switch with 4x downstream ports could 
+> downtrain at 8x and 4x, and we'd never catch it.
+
+OK, I think I see your point: if the upstream port *could* do 16x but
+only trains to 4x, and two endpoints below it are both capable of 4x,
+the endpoints *think* they're happy but in fact they have to share 4x
+when they could use more.
+
+Bjorn
