@@ -1,90 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34122 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727009AbeGRUY2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jul 2018 16:24:28 -0400
-Subject: [PATCH v3 7/7] PCI/portdrv: Remove
- pcie_portdrv_err_handler.slot_reset
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Timur Tabi <timur@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 18 Jul 2018 14:45:04 -0500
-Message-ID: <153194310441.191586.1465977925038330272.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Trent Piepho <tpiepho@impinj.com>
+To: linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 0/2] Workaround for IMX7d PCI-e PLL lock failure
+Date: Wed, 18 Jul 2018 12:44:22 -0700
+Message-Id: <20180718194424.8844-1-tpiepho@impinj.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>, Sascha Hauer <kernel@pengutronix.de>,
+ Fabio Estevam <fabio.estevam@nxp.com>, Trent Piepho <tpiepho@impinj.com>,
+ Shawn Guo <shawnguo@kernel.org>, Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Oza Pawandeep <poza@codeaurora.org>
+This is the workaround for the IMX7d Erratum e10728, failure of
+initialize PCIe PLL VCO oscillation resulting in PLL lock failure and
+failure of the PCI-e link to come up.
 
-The pci_error_handlers.slot_reset() callback is only used for non-bridge
-devices (see broadcast_error_message()).  Since portdrv only binds to
-bridges, we don't need pcie_portdrv_slot_reset(), so remove it.
+The registers used in the workaround are based on the latest patch in
+the NXP kernel, but many things around that have been changed.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-[bhelgaas: changelog, remove pcie_portdrv_slot_reset() completely]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/portdrv_pci.c |   25 -------------------------
- 1 file changed, 25 deletions(-)
+This uses a new node of type fsl,imx-pcie-phy to get the PHY's
+registers.  The node is found via a phandle added to the PCI-e
+controller's node, rather than the incorrect way done in the NXP kernel.
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 973f1b80a038..b78840f54a9b 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -42,17 +42,6 @@ __setup("pcie_ports=", pcie_port_setup);
- 
- /* global data */
- 
--static int pcie_portdrv_restore_config(struct pci_dev *dev)
--{
--	int retval;
--
--	retval = pci_enable_device(dev);
--	if (retval)
--		return retval;
--	pci_set_master(dev);
--	return 0;
--}
--
- #ifdef CONFIG_PM
- static int pcie_port_runtime_suspend(struct device *dev)
- {
-@@ -160,19 +149,6 @@ static pci_ers_result_t pcie_portdrv_mmio_enabled(struct pci_dev *dev)
- 	return PCI_ERS_RESULT_RECOVERED;
- }
- 
--static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
--{
--	/* If fatal, restore cfg space for possible link reset at upstream */
--	if (dev->error_state == pci_channel_io_frozen) {
--		dev->state_saved = true;
--		pci_restore_state(dev);
--		pcie_portdrv_restore_config(dev);
--		pci_enable_pcie_error_reporting(dev);
--	}
--
--	return PCI_ERS_RESULT_RECOVERED;
--}
--
- static int resume_iter(struct device *device, void *data)
- {
- 	struct pcie_device *pcie_device;
-@@ -208,7 +184,6 @@ static const struct pci_device_id port_pci_ids[] = { {
- static const struct pci_error_handlers pcie_portdrv_err_handler = {
- 	.error_detected = pcie_portdrv_error_detected,
- 	.mmio_enabled = pcie_portdrv_mmio_enabled,
--	.slot_reset = pcie_portdrv_slot_reset,
- 	.resume = pcie_portdrv_err_resume,
- };
- 
+There is no error if the phandle is not preset (since it's needed except
+for the imx7d workaround and no existing dtses have it), but if preset
+it is an error if something relating to it does not work.
+
+** Should the node be fsl,imx7d-pcie-phy?  snps,dw-pcie-phy?  
+
+There is little to no documenation from NXP and Synopsis about this, so I'm
+unsure of the PHY's lineage.
+
+The imx6 PCI-e driver does not use the generic phy layer to interact
+with the PHY.  It appears PHY related hardware, like clocks, regulators,
+and resets, are part of the fsl,imx6q-pcie node.  But again, the
+topology of this hardware is not documented very well.
+
+Another approach would be to add the PHY registers as another bank in
+the PCI-e node.  This would match how the PHY reset, clock, etc.  are
+done.  However, the PHY is attached to a different AXI master than the
+PCI-e controller, so the register range really does not belong there.
+
+Trent Piepho (2):
+  ARM: dts: imx7d: Add node for PCIe PHY
+  PCI: imx: Add workaround for e10728, IMX7d PCIe PLL failure
+
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     | 11 ++++
+ arch/arm/boot/dts/imx7d.dtsi                       |  9 ++++
+ drivers/pci/dwc/pci-imx6.c                         | 59 ++++++++++++++++++++++
+ 3 files changed, 79 insertions(+)
+
+Cc: Shawn Guo <shawnguo@kernel.org>
+Cc: Sascha Hauer <kernel@pengutronix.de>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>
+
+-- 
+2.14.4
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
