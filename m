@@ -1,104 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:45929 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751194AbeGJKiD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2018 06:38:03 -0400
-Subject: Re: [PATCH v9 10/12] pci_endpoint_test: Add 2 ioctl commands
-To: Alan Douglas <adouglas@cadence.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
-        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
- <185f0395d22083c04364cb81b4c2e2448fa89fb2.1531155252.git.gustavo.pimentel@synopsys.com>
- <MWHPR07MB35020A4BD96C8B34E9A0EB83D85B0@MWHPR07MB3502.namprd07.prod.outlook.com>
-From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Message-ID: <afe07c2b-331e-3c08-fe0d-95bddf9d4e54@synopsys.com>
-Date: Tue, 10 Jul 2018 11:35:44 +0100
+Received: from mail.kernel.org ([198.145.29.99]:33568 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726680AbeGRWhC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Jul 2018 18:37:02 -0400
+Date: Wed, 18 Jul 2018 16:57:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Tai <thomas.tai@oracle.com>
+Cc: Keith Busch <keith.busch@intel.com>, bhelgaas@google.com,
+        poza@codeaurora.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V2, 0/1] PCI/AER: fix use-after-free in
+ pcie_do_fatal_recovery
+Message-ID: <20180718215707.GH128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <1531416823-17841-1-git-send-email-thomas.tai@oracle.com>
+ <20180712215151.GD28466@bhelgaas-glaptop.roam.corp.google.com>
+ <20180712215700.GA17092@localhost.localdomain>
+ <20180718211645.GF128988@bhelgaas-glaptop.roam.corp.google.com>
+ <0efd8f6b-1d90-712f-0535-92bb230f7436@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <MWHPR07MB35020A4BD96C8B34E9A0EB83D85B0@MWHPR07MB3502.namprd07.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0efd8f6b-1d90-712f-0535-92bb230f7436@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alan,
-
-On 10/07/2018 11:10, Alan Douglas wrote:
-> On 09 July 2018 18:43 Gustavo Pimentel wrote:
->> Add MSI-X support and update driver documentation accordingly.
->>
->> Add 2 new IOCTL commands:
->>  - Allow to reconfigure driver IRQ type in runtime.
->>  - Allow to retrieve current driver IRQ type configured.
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> ---
->> Change v2->v3:
->>  - New patch file created base on the previous patch
->> "misc: pci_endpoint_test: Add MSI-X support" patch file following
->> Kishon's suggestion.
->> Change v3->v4:
->>  - Rebased to Lorenzo's master branch v4.18-rc1.
->> Change v4->v5:
->>  - Nothing changed, just to follow the patch set version.
->> Change v5->v6:
->>  - Moved PCITEST_SET_IRQTYPE and PCITEST_GET_IRQTYPE ioctl entries
->> from patch #10 to here.
->>  - Increased ioctl parameters range associated to
->> drivers/misc/pci_endpoint_test.c driver.
->> Change v6->v7:
->>  - irq_type variable update just before returning the function.
->> Change v7->v8:
->>  - Re-sending the patch series.
->> Change v8->v9:
->>  - Added a extra parameter to pci_endpoint_test_alloc_irq_vectors,
->> that specifies which irq type should be allocated.
->>
->>  Documentation/ioctl/ioctl-number.txt             |   2 +-
->>  Documentation/misc-devices/pci-endpoint-test.txt |   3 +
->>  drivers/misc/pci_endpoint_test.c                 | 176 +++++++++++++++++------
->>  include/uapi/linux/pcitest.h                     |   2 +
->>  4 files changed, 136 insertions(+), 47 deletions(-)
->>
->> diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
->> index 65259d4..c15c4f3 100644
->> --- a/Documentation/ioctl/ioctl-number.txt
->> +++ b/Documentation/ioctl/ioctl-number.txt
->> @@ -166,7 +166,7 @@ Code  Seq#(hex)	Include File		Comments
->>  'P'	all	linux/soundcard.h	conflict!
->>  'P'	60-6F	sound/sscape_ioctl.h	conflict!
->>  'P'	00-0F	drivers/usb/class/usblp.c	conflict!
->> -'P'	01-07	drivers/misc/pci_endpoint_test.c	conflict!
->> +'P'	01-09	drivers/misc/pci_endpoint_test.c	conflict!
->>  'Q'	all	linux/soundcard.h
->>  'R'	00-1F	linux/random.h		conflict!
->>  'R'	01	linux/rfkill.h		conflict!
->> diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
->> index fdfa0f6..58ccca4 100644
->> --- a/Documentation/misc-devices/pci-endpoint-test.txt
->> +++ b/Documentation/misc-devices/pci-endpoint-test.txt
->> @@ -28,6 +28,9 @@ ioctl
->>  	      to be tested should be passed as argument.
->>   PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
->>  	      to be tested should be passed as argument.
->> + PCITEST_SET_IRQTYPE: Changes driver IRQ type configuration. The IRQ type
->> +	      should be passed as argument (0: Legacy, 1:MSI, 2:MSI-X).
->> + PCITEST_GET_IRQTYPE: Gets driver IRQ type configuration.
-> I've tested this latest set of patches with the cadence ep driver, which
-> does not yet support MSI-X, and can confirm that setting, getting and using
-> legacy and MSI IRQ type IRQs is working correctly.  Setting MSI-X fails, as
-> expected.
-
-Great, thanks for testing!
-
-Regards,
-Gustavo
-
+On Wed, Jul 18, 2018 at 05:43:03PM -0400, Thomas Tai wrote:
+> On 07/18/2018 05:16 PM, Bjorn Helgaas wrote:
+> > On Thu, Jul 12, 2018 at 03:57:01PM -0600, Keith Busch wrote:
+> > > On Thu, Jul 12, 2018 at 04:51:51PM -0500, Bjorn Helgaas wrote:
+> > > > However, I think we're also slightly exposed in dpc_work(), in basically
+> > > > the same (possibly harmless) way.
+> > > > 
+> > > >    dpc_irq
+> > > >      schedule_work(&dpc->work)
+> > > >    ...
+> > > >    dpc_work
+> > > >      pdev = dpc->dev->port
+> > > >      pcie_do_fatal_recovery(pdev)
+> > > > 
+> > > > pdev may be removed by pcie_do_fatal_recovery(), but dpc_work() is still
+> > > > holding onto a pointer (which it never uses again).
+> > > > 
+> > > > The DPC driver should be holding a reference to pdev (through some black
+> > > > magic I don't understand), but that would be released when pdev is removed,
+> > > > and I don't know what ensures that dpc_work() runs before that release.
+> > > > 
+> > > > Bjorn
+> > > 
+> > > Yep, you're right on that point. There's different ways we can fix
+> > > that. The most recent one I proposed was to replace the scheduled work
+> > > with the threaded irq[1]. That should make it safe since the lifetime of
+> > > when bottom half can be executed is tied to the lifetime of the device
+> > > that registered it.
+> > > 
+> > >   1. https://patchwork.kernel.org/patch/10478755/
+> > 
+> > This one is headed for v4.19 (it's on pci/dpc right now).  I don't
+> > think anybody will trip over this with DPC, so I don't think we need
+> > to get this in v4.18 (let me know if you think otherwise).
+> > 
+> > But of course it doesn't fix the crash Thomas is seeing, because
+> > that's in the AER path, not the DPC path.  I think you're working on
+> > an AER fix involving threaded IRQs, right, Thomas?  Just want to make
+> > sure I haven't missed something.
 > 
+> Yes, Bjorn. I am working on the aer path. I followed Keith's patch and use
+> threaded_irq in the aer. Even with the threaded_irq, the device got freed in
+> the pcie_do_fatal_receovery(). So I am suggesting to use your idea, that is,
+> have a helper functions to get/put the device.
+
+Hmmm, the fact that it happens even with threaded IRQs is concerning
+because it suggests that we don't understand the threaded IRQ
+synchronization completely (I know for sure *I* don't!), and Keith's patch
+above may not solve the problem even for DPC.
