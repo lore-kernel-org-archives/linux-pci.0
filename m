@@ -1,77 +1,102 @@
-Return-Path: <SRS0=1H/x=JV=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=1H/x=JV=gmail.com=kernelfans@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 18 Jul 2018 10:49:24 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Honghui Zhang <honghui.zhang@mediatek.com>
+Subject: Re: [PATCH v3 3/4] PCI: mediatek: Add system pm support for MT2712
+ and MT7622
+Message-ID: <20180718094924.GA21463@red-moon>
+References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
+ <1530518264-6125-4-git-send-email-honghui.zhang@mediatek.com>
+ <20180717171543.GA20991@red-moon>
+ <1531893761.31406.15.camel@mhfsdcap03>
 MIME-Version: 1.0
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
- <6281446.GoJLz6Hq6C@aspire.rjw.lan>
-In-Reply-To: <6281446.GoJLz6Hq6C@aspire.rjw.lan>
-From: Pingfan Liu <kernelfans@gmail.com>
-Date: Thu, 5 Jul 2018 10:44:57 +0800
-Message-ID: <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
-Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
- ordering in device_kset
-To: rjw@rjwysocki.net
-Cc: linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-pm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1531893761.31406.15.camel@mhfsdcap03>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com, khilman@kernel.org,
+ marc.zyngier@arm.com, linux-pci@vger.kernel.org, sean.wang@mediatek.com,
+ rjw@rjwysocki.net, linux-kernel@vger.kernel.org, yt.shen@mediatek.com,
+ matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
+ yong.wu@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
+ ulf.hansson@linaro.org, eddie.huang@mediatek.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 4, 2018 at 6:23 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->
-> On Wednesday, July 4, 2018 4:47:07 AM CEST Pingfan Liu wrote:
-> > On Tue, Jul 3, 2018 at 10:36 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > >
-> > > On Tuesday, July 3, 2018 8:50:38 AM CEST Pingfan Liu wrote:
-> > > > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
-> > > > places an assumption of supplier<-consumer order on the process of probe.
-> > > > But it turns out to break down the parent <- child order in some scene.
-> > > > E.g in pci, a bridge is enabled by pci core, and behind it, the devices
-> > > > have been probed. Then comes the bridge's module, which enables extra
-> > > > feature(such as hotplug) on this bridge.
-> > >
-> > > So what *exactly* does happen in that case?
-> > >
-> > I saw the  shpc_probe() is called on the bridge, although the probing
-> > failed on that bare-metal. But if it success, then it will enable the
-> > hotplug feature on the bridge.
->
-> I don't understand what you are saying here, sorry.
->
-On the system, I observe the following:
-[    2.114986] devices_kset: Moving 0004:00:00.0 to end of list
-<---pcie port drive's probe, but it failed
-[    2.115192] devices_kset: Moving 0004:01:00.0 to end of list
-[    2.115591] devices_kset: Moving 0004:02:02.0 to end of list
-[    2.115923] devices_kset: Moving 0004:02:0a.0 to end of list
-[    2.116141] devices_kset: Moving 0004:02:0b.0 to end of list
-[    2.116358] devices_kset: Moving 0004:02:0c.0 to end of list
-[    3.181860] devices_kset: Moving 0004:03:00.0 to end of list
-<---the ata disk controller which sits behind the bridge
-[   10.267081] devices_kset: Moving 0004:00:00.0 to end of list
- <---shpc_probe() on this bridge, failed too.
+On Wed, Jul 18, 2018 at 02:02:41PM +0800, Honghui Zhang wrote:
 
-As you can the the parent device "0004:00:00.0" is moved twice, and
-finally, it is after the "0004:03:00.0", this will break the
-"parent<-child" order in devices_kset. This is caused by the code
-really_probe()->devices_kset_move_last(). Apparently, it makes
-assumption that child device's probing comes after its parent's. But
-it does not stand up in the case.
+<snip>
 
-> device_reorder_to_tail() walks the entire device hierarchy below the target
-> and moves all of the children in there *after* their parents.
->
-As described, the bug is not related with device_reorder_to_tail(), it
-is related with really_probe()->devices_kset_move_last(). So [2/4]
-uses different method to achieve the "parent<-child" and
-"supplier<-consumer" order. The [3/4] clean up some code in
-device_reorder_to_tail(), since I need to revert the commit.
+> > > +static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
+> > > +{
+> > > +	struct mtk_pcie *pcie = dev_get_drvdata(dev);
+> > > +	const struct mtk_pcie_soc *soc = pcie->soc;
+> > > +	struct mtk_pcie_port *port, *tmp;
+> > > +
+> > > +	if (!soc->pm_support)
+> > > +		return 0;
+> > > +
+> > > +	if (list_empty(&pcie->ports))
+> > > +		return 0;
+> > > +
+> > > +	if (dev->pm_domain) {
+> > > +		pm_runtime_enable(dev);
+> > > +		pm_runtime_get_sync(dev);
+> > > +	}
+> > 
+> > Are these runtime PM calls needed/abused here ?
+> > 
+> > Mind explaining the logic ?
+> > 
+> > There is certainly an asymmetry with the suspend callback which made me
+> > suspicious, I am pretty certain Rafael/Kevin/Ulf can help me clarify so
+> > that we can make progress with this patch.
+> > 
+> > Lorenzo
+> > 
+> Hi Lorenzo, thanks for your comments.
+> Sorry I don't get you.
+> I believe that in suspend callbacks the pm_runtime_put_sync and
+> pm_runtime_disable should be called to gated the CMOS for this module,
+> while the pm_rumtime_enable and pm_rumtime_get_sync should be called
+> in resume callback.
 
-> How can it break "the parent <- child order" then?
->
-As described, it does not, just not be in use any longer.
+That's why I CC'ed Rafael, Kevin and Ulf, to answer this question
+thoroughly, I am not sure it is needed and that's the right way
+of doing it in system suspend callbacks.
 
-Thanks and regards,
-Pingfan
+> That's exactly this patch doing.
+> But the pm_rumtime_put_sync and pm_runtime_disable functions was wrapped
+> in the mtk_pcie_subsys_powerdown.
+
+Ah, sorry, I missed that.
+
+> I did not call mtk_pcie_subsys_powerup since it does not just wrapped
+> pm_rumtime related functions but also do the platform_resource_get,
+> devm_ioremap, and free_ck clock get which I do not needed in resume
+> callback.
+> 
+> Do you think it will be much clear if I abstract the
+> platform_resource_get, devm_ioremap functions from
+> mtk_pcie_subsys_powerup and put it to a new functions like
+> mtk_pcie_subsys_resource_get, and then we may call the
+> mtk_pcie_subsys_powerup in the resume function?
+
+I think so but let's wait first for feedback on whether those
+runtime PM calls are needed in the first place.
+
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
