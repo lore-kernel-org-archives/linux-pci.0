@@ -1,118 +1,217 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:59824 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754488AbeGHC75 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 7 Jul 2018 22:59:57 -0400
-Date: Sun, 8 Jul 2018 10:59:46 +0800
-From: Baoquan He <bhe@redhat.com>
-To: kbuild test robot <lkp@intel.com>
-Cc: kbuild-all@01.org, linux-kernel@vger.kernel.org,
-        akpm@linux-foundation.org, robh+dt@kernel.org,
-        dan.j.williams@intel.com, nicolas.pitre@linaro.org,
-        josh@joshtriplett.org, fengguang.wu@intel.com, bp@suse.de,
-        andy.shevchenko@gmail.com, brijesh.singh@amd.com,
-        devicetree@vger.kernel.org, airlied@linux.ie,
-        linux-pci@vger.kernel.org, richard.weiyang@gmail.com,
-        keith.busch@intel.com, jcmvbkbc@gmail.com,
-        baiyaowei@cmss.chinamobile.com, frowand.list@gmail.com,
-        lorenzo.pieralisi@arm.com, sthemmin@microsoft.com,
-        linux-nvdimm@lists.01.org, patrik.r.jakobsson@gmail.com,
-        linux-input@vger.kernel.org, gustavo@padovan.org,
-        dyoung@redhat.com, vgoyal@redhat.com, thomas.lendacky@amd.com,
-        haiyangz@microsoft.com, maarten.lankhorst@linux.intel.com,
-        jglisse@redhat.com, seanpaul@chromium.org, bhelgaas@google.com,
-        tglx@linutronix.de, yinghai@kernel.org, jonathan.derrick@intel.com,
-        chris@zankel.net, monstr@monstr.eu, linux-parisc@vger.kernel.org,
-        gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com,
-        kexec@lists.infradead.org, ebiederm@xmission.com,
-        devel@linuxdriverproject.org, linuxppc-dev@lists.ozlabs.org,
-        davem@davemloft.net
-Subject: Re: [PATCH v6 2/4] resource: Use list_head to link sibling resource
-Message-ID: <20180708025946.GI3047@MiWiFi-R3L-srv>
-References: <20180704041038.8190-3-bhe@redhat.com>
- <201807042347.hfDcKxmG%fengguang.wu@intel.com>
+Return-Path: <SRS0=oBiH=KC=molgen.mpg.de=pmenzel@kernel.org>
+Return-Path: <SRS0=oBiH=KC=molgen.mpg.de=pmenzel@kernel.org>
+Subject: Re: NULL pointer dereference in msi_set_mask_bit
+To: Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>,
+ Hiraku Toyooka <hiraku.toyooka@cybertrust.co.jp>,
+ Zou Cao <cao.zou@windriver.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <b9bd8405-64b6-2bea-f5ce-d3ab4d82452a@molgen.mpg.de>
+ <20180718140636.GD128988@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.21.1807181646280.1568@nanos.tec.linutronix.de>
+From: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+Message-ID: <6339fdef-a335-b833-4022-23725fd86d9e@molgen.mpg.de>
+Date: Wed, 18 Jul 2018 17:12:09 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201807042347.hfDcKxmG%fengguang.wu@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <alpine.DEB.2.21.1807181646280.1568@nanos.tec.linutronix.de>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256; boundary="------------ms030003000901010503020802"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+This is a cryptographically signed message in MIME format.
 
-On 07/05/18 at 01:00am, kbuild test robot wrote:
-> Hi Baoquan,
-> 
-> I love your patch! Yet something to improve:
-> 
-> [auto build test ERROR on linus/master]
-> [also build test ERROR on v4.18-rc3 next-20180704]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+--------------ms030003000901010503020802
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for telling. 
-
-I cloned 0day-ci/linut to my local pc.
-https://github.com/0day-ci/linux.git
-
-However, I didn't find below branch. And tried to open it in web
-broswer, also failed.
+Dear Thomas, dear Bjorn,
 
 
-> url:    https://github.com/0day-ci/linux/commits/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180704-121402
-> config: mips-rb532_defconfig (attached as .config)
-> compiler: mipsel-linux-gnu-gcc (Debian 7.2.0-11) 7.2.0
-> reproduce:
->         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         GCC_VERSION=7.2.0 make.cross ARCH=mips 
+Thank you for your quick responses.
 
-I did find a old one which is for the old version 5 post.
 
-[bhe@linux]$ git remote -v
-0day-ci	https://github.com/0day-ci/linux.git (fetch)
-0day-ci	https://github.com/0day-ci/linux.git (push)
-[bhe@dhcp-128-28 linux]$ git branch -a| grep Baoquan| grep resource
-  remotes/0day-ci/Baoquan-He/resource-Use-list_head-to-link-sibling-resource/20180612-113600
+On 07/18/18 17:02, Thomas Gleixner wrote:
+> On Wed, 18 Jul 2018, Bjorn Helgaas wrote:
+>> [+cc Marc, Thomas]
+>=20
+> Uurgh. That's definitely what I need right now ... :)
+>=20
+>> On Wed, Jul 18, 2018 at 03:28:15PM +0200, Paul Menzel wrote:
+>>>
+>>> 93.885: [   23.020572] BUG: unable to handle kernel NULL pointer dere=
+ference at 000000000000003c
+>>> 93.885: [   23.029011] PGD 0 P4D 0=20
+>>> 93.885: [   23.031670] Oops: 0000 [#1] SMP NOPTI
+>>> 93.885: [   23.035455] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.18=
+=2E0-rc5+ #1
+>>> 93.885: [   23.042079] Hardware name: MSI MS-7A37/B350M MORTAR (MS-7A=
+37), BIOS 1.G1 05/17/2018
+>>> 93.886: [   23.049868] RIP: 0010:msi_set_mask_bit+0xe/0x70
+>=20
+>>> 93.913: [   23.049868] Code: 00 53 48 89 fb e8 12 f8 ff ff 48 89 df 5=
+b e9 c9 fe ff ff 66 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 53 48 8b 47 10=
+ 48 8b 58 10 <f6> 43 3c 01 74 3c 8b 15 2e 85 21 01 31 c0 85 d2 75 25 8b 4=
+3 38 48
+>=20
+>   f6 43 3c 01          	testb  $0x1,0x3c(%rbx)
+>=20
+> That's:
+>=20
+> 	if (desc->msi_attrib.is_msix)
 
-Could you help have a look at this?
+Is there a tool to translate that?
 
-Thanks
-Baoquan
+>>> 93.957: [   23.049880] RSP: 0018:ffff9e8e5e803f78 EFLAGS: 00010046
+>>> 93.957: [   23.049881] RAX: ffff9e8e45919000 RBX: 0000000000000000 RC=
+X: 0000000000000000
+>>> 93.958: [   23.049882] RDX: ffff9e8e45919000 RSI: 0000000000000001 RD=
+I: ffff9e8e45919098
+>>> 93.958: [   23.049882] RBP: ffff9e8e45919098 R08: 0000000000000000 R0=
+9: 0000000000000000
+>>> 93.958: [   23.049882] R10: 0000000000000000 R11: 0000000000000000 R1=
+2: ffff9e8e45919000
+>>> 93.958: [   23.049883] R13: 0000000000000027 R14: 0000000000000000 R1=
+5: 0000000000000000
+>>> 93.959: [   23.049884] FS:  0000000000000000(0000) GS:ffff9e8e5e80000=
+0(0000) knlGS:0000000000000000
+>>> 93.959: [   23.049884] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050=
+033
+>>> 93.959: [   23.049885] CR2: 000000000000003c CR3: 00000003fc5a4000 CR=
+4: 00000000003406f0
+>>> 93.959: [   23.049885] Call Trace:
+>>> 93.959: [   23.049887]  <IRQ>
+>>> 93.960: [   23.049889]  __irq_move_irq+0x3c/0x70
+>>> 93.960: [   23.049892]  apic_ack_irq+0x2b/0x30
+>>> 93.960: [   23.049893]  handle_edge_irq+0x7d/0x1d0
+>>> 93.960: [   23.049895]  handle_irq+0x1f/0x30
+>>> 93.960: [   23.049898]  do_IRQ+0x41/0xc0
+>>> 93.960: [   23.049899]  common_interrupt+0xf/0xf
+>>> 93.961: [   23.049900]  </IRQ>
+>=20
+> and desc comes from irq_data->common->msi_desc
+>=20
+> I have no idea how that can happen for an MSI interrupt.
+>=20
+> Paul, is this reproducible?
 
-> 
-> All error/warnings (new ones prefixed by >>):
-> 
-> >> arch/mips/pci/pci-rc32434.c:57:11: error: initialization from incompatible pointer type [-Werror=incompatible-pointer-types]
->      .child = &rc32434_res_pci_mem2
->               ^
->    arch/mips/pci/pci-rc32434.c:57:11: note: (near initialization for 'rc32434_res_pci_mem1.child.next')
-> >> arch/mips/pci/pci-rc32434.c:51:47: warning: missing braces around initializer [-Wmissing-braces]
->     static struct resource rc32434_res_pci_mem1 = {
->                                                   ^
->    arch/mips/pci/pci-rc32434.c:60:47: warning: missing braces around initializer [-Wmissing-braces]
->     static struct resource rc32434_res_pci_mem2 = {
->                                                   ^
->    cc1: some warnings being treated as errors
-> 
-> vim +57 arch/mips/pci/pci-rc32434.c
-> 
-> 73b4390f Ralf Baechle 2008-07-16  50  
-> 73b4390f Ralf Baechle 2008-07-16 @51  static struct resource rc32434_res_pci_mem1 = {
-> 73b4390f Ralf Baechle 2008-07-16  52  	.name = "PCI MEM1",
-> 73b4390f Ralf Baechle 2008-07-16  53  	.start = 0x50000000,
-> 73b4390f Ralf Baechle 2008-07-16  54  	.end = 0x5FFFFFFF,
-> 73b4390f Ralf Baechle 2008-07-16  55  	.flags = IORESOURCE_MEM,
-> 73b4390f Ralf Baechle 2008-07-16  56  	.sibling = NULL,
-> 73b4390f Ralf Baechle 2008-07-16 @57  	.child = &rc32434_res_pci_mem2
-> 73b4390f Ralf Baechle 2008-07-16  58  };
-> 73b4390f Ralf Baechle 2008-07-16  59  
-> 
-> :::::: The code at line 57 was first introduced by commit
-> :::::: 73b4390fb23456964201abda79f1210fe337d01a [MIPS] Routerboard 532: Support for base system
-> 
-> :::::: TO: Ralf Baechle <ralf@linux-mips.org>
-> :::::: CC: Ralf Baechle <ralf@linux-mips.org>
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+No, unfortunately not. I only hit this once, since I attached the serial
+console.
+
+But I found others having the same(?) problem [1][2].
+
+
+Kind regards,
+
+Paul
+
+
+[1]: https://lkml.org/lkml/2018/1/16/122
+     "[PATCH 0/1] PCI/MSI: add NULL check before use of msi_desc"
+[2]: https://marc.info/?l=3Dlinux-kernel&m=3D151321815226439&w=3D2
+     "[PATCH] PCI: designware: add a check of msi_desc in irqchip"
+
+
+--------------ms030003000901010503020802
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCC
+EFowggUSMIID+qADAgECAgkA4wvV+K8l2YEwDQYJKoZIhvcNAQELBQAwgYIxCzAJBgNVBAYT
+AkRFMSswKQYDVQQKDCJULVN5c3RlbXMgRW50ZXJwcmlzZSBTZXJ2aWNlcyBHbWJIMR8wHQYD
+VQQLDBZULVN5c3RlbXMgVHJ1c3QgQ2VudGVyMSUwIwYDVQQDDBxULVRlbGVTZWMgR2xvYmFs
+Um9vdCBDbGFzcyAyMB4XDTE2MDIyMjEzMzgyMloXDTMxMDIyMjIzNTk1OVowgZUxCzAJBgNV
+BAYTAkRFMUUwQwYDVQQKEzxWZXJlaW4genVyIEZvZXJkZXJ1bmcgZWluZXMgRGV1dHNjaGVu
+IEZvcnNjaHVuZ3NuZXR6ZXMgZS4gVi4xEDAOBgNVBAsTB0RGTi1QS0kxLTArBgNVBAMTJERG
+Ti1WZXJlaW4gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgMjCCASIwDQYJKoZIhvcNAQEBBQAD
+ggEPADCCAQoCggEBAMtg1/9moUHN0vqHl4pzq5lN6mc5WqFggEcVToyVsuXPztNXS43O+FZs
+FVV2B+pG/cgDRWM+cNSrVICxI5y+NyipCf8FXRgPxJiZN7Mg9mZ4F4fCnQ7MSjLnFp2uDo0p
+eQcAIFTcFV9Kltd4tjTTwXS1nem/wHdN6r1ZB+BaL2w8pQDcNb1lDY9/Mm3yWmpLYgHurDg0
+WUU2SQXaeMpqbVvAgWsRzNI8qIv4cRrKO+KA3Ra0Z3qLNupOkSk9s1FcragMvp0049ENF4N1
+xDkesJQLEvHVaY4l9Lg9K7/AjsMeO6W/VRCrKq4Xl14zzsjz9AkH4wKGMUZrAcUQDBHHWekC
+AwEAAaOCAXQwggFwMA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUk+PYMiba1fFKpZFK4OpL
+4qIMz+EwHwYDVR0jBBgwFoAUv1kgNgB5oKAia4zV8mHSuCzLgkowEgYDVR0TAQH/BAgwBgEB
+/wIBAjAzBgNVHSAELDAqMA8GDSsGAQQBga0hgiwBAQQwDQYLKwYBBAGBrSGCLB4wCAYGZ4EM
+AQICMEwGA1UdHwRFMEMwQaA/oD2GO2h0dHA6Ly9wa2kwMzM2LnRlbGVzZWMuZGUvcmwvVGVs
+ZVNlY19HbG9iYWxSb290X0NsYXNzXzIuY3JsMIGGBggrBgEFBQcBAQR6MHgwLAYIKwYBBQUH
+MAGGIGh0dHA6Ly9vY3NwMDMzNi50ZWxlc2VjLmRlL29jc3ByMEgGCCsGAQUFBzAChjxodHRw
+Oi8vcGtpMDMzNi50ZWxlc2VjLmRlL2NydC9UZWxlU2VjX0dsb2JhbFJvb3RfQ2xhc3NfMi5j
+ZXIwDQYJKoZIhvcNAQELBQADggEBAIcL/z4Cm2XIVi3WO5qYi3FP2ropqiH5Ri71sqQPrhE4
+eTizDnS6dl2e6BiClmLbTDPo3flq3zK9LExHYFV/53RrtCyD2HlrtrdNUAtmB7Xts5et6u5/
+MOaZ/SLick0+hFvu+c+Z6n/XUjkurJgARH5pO7917tALOxrN5fcPImxHhPalR6D90Bo0fa3S
+PXez7vTXTf/D6OWST1k+kEcQSrCFWMBvf/iu7QhCnh7U3xQuTY+8npTD5+32GPg8SecmqKc2
+2CzeIs2LgtjZeOJVEqM7h0S2EQvVDFKvaYwPBt/QolOLV5h7z/0HJPT8vcP9SpIClxvyt7bP
+ZYoaorVyGTkwggWNMIIEdaADAgECAgwcOtRQhH7u81j4jncwDQYJKoZIhvcNAQELBQAwgZUx
+CzAJBgNVBAYTAkRFMUUwQwYDVQQKEzxWZXJlaW4genVyIEZvZXJkZXJ1bmcgZWluZXMgRGV1
+dHNjaGVuIEZvcnNjaHVuZ3NuZXR6ZXMgZS4gVi4xEDAOBgNVBAsTB0RGTi1QS0kxLTArBgNV
+BAMTJERGTi1WZXJlaW4gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgMjAeFw0xNjExMDMxNTI0
+NDhaFw0zMTAyMjIyMzU5NTlaMGoxCzAJBgNVBAYTAkRFMQ8wDQYDVQQIDAZCYXllcm4xETAP
+BgNVBAcMCE11ZW5jaGVuMSAwHgYDVQQKDBdNYXgtUGxhbmNrLUdlc2VsbHNjaGFmdDEVMBMG
+A1UEAwwMTVBHIENBIC0gRzAyMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnhx4
+59Lh4WqgOs/Md04XxU2yFtfM15ZuJV0PZP7BmqSJKLLPyqmOrADfNdJ5PIGBto2JBhtRRBHd
+G0GROOvTRHjzOga95WOTeura79T21FWwwAwa29OFnD3ZplQs6HgdwQrZWNi1WHNJxn/4mA19
+rNEBUc5urSIpZPvZi5XmlF3v3JHOlx3KWV7mUteB4pwEEfGTg4npPAJbp2o7arxQdoIq+Pu2
+OsvqhD7Rk4QeaX+EM1QS4lqd1otW4hE70h/ODPy1xffgbZiuotWQLC6nIwa65Qv6byqlIX0q
+Zuu99Vsu+r3sWYsL5SBkgecNI7fMJ5tfHrjoxfrKl/ErTAt8GQIDAQABo4ICBTCCAgEwEgYD
+VR0TAQH/BAgwBgEB/wIBATAOBgNVHQ8BAf8EBAMCAQYwKQYDVR0gBCIwIDANBgsrBgEEAYGt
+IYIsHjAPBg0rBgEEAYGtIYIsAQEEMB0GA1UdDgQWBBTEiKUH7rh7qgwTv9opdGNSG0lwFjAf
+BgNVHSMEGDAWgBST49gyJtrV8UqlkUrg6kviogzP4TCBjwYDVR0fBIGHMIGEMECgPqA8hjpo
+dHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1Yi9jcmwvY2Fjcmwu
+Y3JsMECgPqA8hjpodHRwOi8vY2RwMi5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1
+Yi9jcmwvY2FjcmwuY3JsMIHdBggrBgEFBQcBAQSB0DCBzTAzBggrBgEFBQcwAYYnaHR0cDov
+L29jc3AucGNhLmRmbi5kZS9PQ1NQLVNlcnZlci9PQ1NQMEoGCCsGAQUFBzAChj5odHRwOi8v
+Y2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1Yi9jYWNlcnQvY2FjZXJ0LmNy
+dDBKBggrBgEFBQcwAoY+aHR0cDovL2NkcDIucGNhLmRmbi5kZS9nbG9iYWwtcm9vdC1nMi1j
+YS9wdWIvY2FjZXJ0L2NhY2VydC5jcnQwDQYJKoZIhvcNAQELBQADggEBABLpeD5FygzqOjj+
+/lAOy20UQOGWlx0RMuPcI4nuyFT8SGmK9lD7QCg/HoaJlfU/r78ex+SEide326evlFAoJXIF
+jVyzNltDhpMKrPIDuh2N12zyn1EtagqPL6hu4pVRzcBpl/F2HCvtmMx5K4WN1L1fmHWLcSap
+dhXLvAZ9RG/B3rqyULLSNN8xHXYXpmtvG0VGJAndZ+lj+BH7uvd3nHWnXEHC2q7iQlDUqg0a
+wIqWJgdLlx1Q8Dg/sodv0m+LN0kOzGvVDRCmowBdWGhhusD+duKV66pBl+qhC+4LipariWaM
+qK5ppMQROATjYeNRvwI+nDcEXr2vDaKmdbxgDVwwggWvMIIEl6ADAgECAgweKlJIhfynPMVG
+/KIwDQYJKoZIhvcNAQELBQAwajELMAkGA1UEBhMCREUxDzANBgNVBAgMBkJheWVybjERMA8G
+A1UEBwwITXVlbmNoZW4xIDAeBgNVBAoMF01heC1QbGFuY2stR2VzZWxsc2NoYWZ0MRUwEwYD
+VQQDDAxNUEcgQ0EgLSBHMDIwHhcNMTcxMTE0MTEzNDE2WhcNMjAxMTEzMTEzNDE2WjCBizEL
+MAkGA1UEBhMCREUxIDAeBgNVBAoMF01heC1QbGFuY2stR2VzZWxsc2NoYWZ0MTQwMgYDVQQL
+DCtNYXgtUGxhbmNrLUluc3RpdHV0IGZ1ZXIgbW9sZWt1bGFyZSBHZW5ldGlrMQ4wDAYDVQQL
+DAVNUElNRzEUMBIGA1UEAwwLUGF1bCBNZW56ZWwwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
+ggEKAoIBAQDIh/UR/AX/YQ48VWWDMLTYtXjYJyhRHMc81ZHMMoaoG66lWB9MtKRTnB5lovLZ
+enTIUyPsCrMhTqV9CWzDf6v9gOTWVxHEYqrUwK5H1gx4XoK81nfV8oGV4EKuVmmikTXiztGz
+peyDmOY8o/EFNWP7YuRkY/lPQJQBeBHYq9AYIgX4StuXu83nusq4MDydygVOeZC15ts0tv3/
+6WmibmZd1OZRqxDOkoBbY3Djx6lERohs3IKS6RKiI7e90rCSy9rtidJBOvaQS9wvtOSKPx0a
++2pAgJEVzZFjOAfBcXydXtqXhcpOi2VCyl+7+LnnTz016JJLsCBuWEcB3kP9nJYNAgMBAAGj
+ggIxMIICLTAJBgNVHRMEAjAAMA4GA1UdDwEB/wQEAwIF4DAdBgNVHSUEFjAUBggrBgEFBQcD
+AgYIKwYBBQUHAwQwHQYDVR0OBBYEFHM0Mc3XjMLlhWpp4JufRELL4A/qMB8GA1UdIwQYMBaA
+FMSIpQfuuHuqDBO/2il0Y1IbSXAWMCAGA1UdEQQZMBeBFXBtZW56ZWxAbW9sZ2VuLm1wZy5k
+ZTB9BgNVHR8EdjB0MDigNqA0hjJodHRwOi8vY2RwMS5wY2EuZGZuLmRlL21wZy1nMi1jYS9w
+dWIvY3JsL2NhY3JsLmNybDA4oDagNIYyaHR0cDovL2NkcDIucGNhLmRmbi5kZS9tcGctZzIt
+Y2EvcHViL2NybC9jYWNybC5jcmwwgc0GCCsGAQUFBwEBBIHAMIG9MDMGCCsGAQUFBzABhido
+dHRwOi8vb2NzcC5wY2EuZGZuLmRlL09DU1AtU2VydmVyL09DU1AwQgYIKwYBBQUHMAKGNmh0
+dHA6Ly9jZHAxLnBjYS5kZm4uZGUvbXBnLWcyLWNhL3B1Yi9jYWNlcnQvY2FjZXJ0LmNydDBC
+BggrBgEFBQcwAoY2aHR0cDovL2NkcDIucGNhLmRmbi5kZS9tcGctZzItY2EvcHViL2NhY2Vy
+dC9jYWNlcnQuY3J0MEAGA1UdIAQ5MDcwDwYNKwYBBAGBrSGCLAEBBDARBg8rBgEEAYGtIYIs
+AQEEAwYwEQYPKwYBBAGBrSGCLAIBBAMGMA0GCSqGSIb3DQEBCwUAA4IBAQCQs6bUDROpFO2F
+Qz2FMgrdb39VEo8P3DhmpqkaIMC5ZurGbbAL/tAR6lpe4af682nEOJ7VW86ilsIJgm1j0ueY
+aOuL8jrN4X7IF/8KdZnnNnImW3QVni6TCcc+7+ggci9JHtt0IDCj5vPJBpP/dKXLCN4M+exl
+GXYpfHgxh8gclJPY1rquhQrihCzHfKB01w9h9tWZDVMtSoy9EUJFhCXw7mYUsvBeJwZesN2B
+fndPkrXx6XWDdU3S1LyKgHlLIFtarLFm2Hb5zAUR33h+26cN6ohcGqGEEzgIG8tXS8gztEaj
+1s2RyzmKd4SXTkKR3GhkZNVWy+gM68J7jP6zzN+cMYIDmjCCA5YCAQEwejBqMQswCQYDVQQG
+EwJERTEPMA0GA1UECAwGQmF5ZXJuMREwDwYDVQQHDAhNdWVuY2hlbjEgMB4GA1UECgwXTWF4
+LVBsYW5jay1HZXNlbGxzY2hhZnQxFTATBgNVBAMMDE1QRyBDQSAtIEcwMgIMHipSSIX8pzzF
+RvyiMA0GCWCGSAFlAwQCAQUAoIIB8TAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqG
+SIb3DQEJBTEPFw0xODA3MTgxNTEyMDlaMC8GCSqGSIb3DQEJBDEiBCA1Lu1L2QV54YYUnyUk
+CphlONOjcNiu38Yuh6tFKYb2KjBsBgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjALBglg
+hkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcG
+BSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGJBgkrBgEEAYI3EAQxfDB6MGoxCzAJBgNVBAYTAkRF
+MQ8wDQYDVQQIDAZCYXllcm4xETAPBgNVBAcMCE11ZW5jaGVuMSAwHgYDVQQKDBdNYXgtUGxh
+bmNrLUdlc2VsbHNjaGFmdDEVMBMGA1UEAwwMTVBHIENBIC0gRzAyAgweKlJIhfynPMVG/KIw
+gYsGCyqGSIb3DQEJEAILMXygejBqMQswCQYDVQQGEwJERTEPMA0GA1UECAwGQmF5ZXJuMREw
+DwYDVQQHDAhNdWVuY2hlbjEgMB4GA1UECgwXTWF4LVBsYW5jay1HZXNlbGxzY2hhZnQxFTAT
+BgNVBAMMDE1QRyBDQSAtIEcwMgIMHipSSIX8pzzFRvyiMA0GCSqGSIb3DQEBAQUABIIBAFrW
+UqVinmQY3rdLw61yjmuTNaYw7OPDZO7OqyK63MvB1mzRWliBb7yl287hqFRo8IYKkuWhAFvC
+PVx3kmRDVtefuJNdjRx62Hk10b3fad/tRhaz7PkJUsteI/iuhR6YNTkqDSYfNoAz2LYNLZpL
+NkxzsT+tF9+XPSOpXmVwEjCfKRY8cZFJTK+hAk0/k7/ZPdqtxtxvbw3d+XNwBwc/bx3iHqXZ
+4tF3nS1uFdQkNJ7cLywiXO1Jmo2uzuRaLursQEsvUYuxpFGJFzXbBcJzP2LeMMBWGbeinCVx
+pmhBVhO/8yF1eHkH/ESrafHyHtg7OPnjZBSSSPkG4AdrThthdEgAAAAAAAA=
+--------------ms030003000901010503020802--
