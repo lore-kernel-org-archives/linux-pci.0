@@ -1,32 +1,66 @@
-Return-Path: <SRS0=Thfy=KP=lst.de=hch@kernel.org>
-Return-Path: <SRS0=Thfy=KP=lst.de=hch@kernel.org>
-Date: Tue, 31 Jul 2018 10:07:23 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org, linuxppc-dev@lists.ozlabs.org,
-	x86@kernel.org, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Joerg Roedel <jroedel@suse.de>
-Subject: Re: [PATCH] PCI: call dma_debug_add_bus for pci_bus_type in common
-	code
-Message-ID: <20180731080723.GA23303@lst.de>
-References: <20180730073842.16092-1-hch@lst.de> <20180730211713.GA45322@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 18 Jul 2018 18:29:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@kernel.org>
+Subject: Re: [PATCH V5 5/6] PCI: Deprecate pci_reset_bus() and
+ pci_reset_slot() functions
+Message-ID: <20180718232934.GK128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
+ <1530572336-20296-6-git-send-email-okaya@codeaurora.org>
+ <20180718223027.GI128988@bhelgaas-glaptop.roam.corp.google.com>
+ <3d664a22-7362-07ec-584d-b38829a22ba2@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180730211713.GA45322@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <3d664a22-7362-07ec-584d-b38829a22ba2@kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 30, 2018 at 04:17:13PM -0500, Bjorn Helgaas wrote:
-> [+cc Joerg]
+On Wed, Jul 18, 2018 at 03:36:29PM -0700, Sinan Kaya wrote:
+> On 7/18/2018 3:30 PM, Bjorn Helgaas wrote:
+> > On Mon, Jul 02, 2018 at 06:58:54PM -0400, Sinan Kaya wrote:
+> > > pci_reset_bus() and pci_reset_slot() functions are not being used by
+> > > any code. Remove them from the kernel in favor of pci_try_reset_bus()
+> > > and pci_try_reset_slot() functions.
+> > > 
+> > > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> > > ---
+> > >   drivers/pci/pci.c   | 55 ++---------------------------------------------------
+> > >   include/linux/pci.h |  2 --
+> > >   2 files changed, 2 insertions(+), 55 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index a31e6db..7e3f2e9 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -4784,9 +4784,9 @@ int pci_probe_reset_slot(struct pci_slot *slot)
+> > >   EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
+> > >   /**
+> > > - * pci_reset_slot - reset a PCI slot
+> > > + * __pci_try_reset_slot - Try to reset a PCI slot
+> > >    * @slot: PCI slot to reset
+> > > - *
+> > > + *`
+> > 
+> > Is this "*`" intentional or a typo?  I can't find it in kernel-doc.rst
+> > (but it's full of ` and maybe I missed it).
 > 
-> On Mon, Jul 30, 2018 at 09:38:42AM +0200, Christoph Hellwig wrote:
-> > There is nothing arch specific about PCI or dma-debug, so move this
-> > call to common code just after registering the bus type.
-> 
-> I assume that previously, even if the user set CONFIG_DMA_API_DEBUG=y
-> we only got PCI DMA debug on powerpc, sh, and x86.  And after this
-> patch, we'll get PCI DMA debug on *all* arches?
+> Typo.
 
-Yes.  Note that this only covers the actual bus related part, that
-is warning about outstanding dma mappings on unload.  The rest of the
-dma api debugging already is entirely generic.
+Great, I fixed it.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
