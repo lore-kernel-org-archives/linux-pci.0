@@ -1,67 +1,278 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39214 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:48036 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731774AbeGSTuQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 19 Jul 2018 15:50:16 -0400
-Date: Thu, 19 Jul 2018 14:05:45 -0500
+        id S1728304AbeGSAJX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Jul 2018 20:09:23 -0400
+Date: Wed, 18 Jul 2018 18:29:07 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org, Greg Kroah-Hartman <greg@kroah.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mayurkumar Patel <mayurkumar.patel@intel.com>,
-        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-        Stefan Roese <sr@denx.de>, Rajat Jain <rajatja@google.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 00/32] Rework pciehp event handling & add runtime PM
-Message-ID: <20180719190545.GN128988@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1529173804.git.lukas@wunner.de>
- <20180716142053.GA12391@bhelgaas-glaptop.roam.corp.google.com>
- <20180719094315.GA19033@wunner.de>
+To: Hari Vyas <hari.vyas@broadcom.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        ray.jui@broadcom.com,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v3] PCI: Data corruption happening due to race condition
+Message-ID: <20180718232904.GJ128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+ <1530608741-30664-2-git-send-email-hari.vyas@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180719094315.GA19033@wunner.de>
+In-Reply-To: <1530608741-30664-2-git-send-email-hari.vyas@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 19, 2018 at 11:43:15AM +0200, Lukas Wunner wrote:
-> On Mon, Jul 16, 2018 at 09:20:54AM -0500, Bjorn Helgaas wrote:
+[+cc Paul, Michael, linuxppc-dev]
 
-> >   - You mentioned withdrawing "03/32 PCI: pciehp: Fix deadlock on
-> >     unplug".  I tried simply dropping that, but that caused a conflict
-> >     that I didn't try to resolve.
+On Tue, Jul 03, 2018 at 02:35:41PM +0530, Hari Vyas wrote:
+> When a pci device is detected, a variable is_added is set to
+> 1 in pci device structure and proc, sys entries are created.
 > 
-> Yes, a single patch succeeding it won't apply cleanly if patch 03/32 is
-> omitted, namely "06/32 PCI: pciehp: Declare pciehp_unconfigure_device()
-> void".  However resolving the conflict is straightforward, I'm including
-> a replacement patch below.
-
-Thanks, I'll pull that in shortly.
-
-> >   - Mika had a few questions/comments that are still dangling.
+> When a pci device is removed, first is_added is checked for one
+> and then device is detached with clearing of proc and sys
+> entries and at end, is_added is set to 0.
 > 
-> I could resolve those with two further replacement patches:
+> is_added and is_busmaster are bit fields in pci_dev structure
+> sharing same memory location.
 > 
-> - "17/32 PCI: pciehp: Enable/disable exclusively from IRQ thread"
->   => Deduplicate code to detect a change in slot occupancy
->      by introducing a small helper.
+> A strange issue was observed with multiple times removal and
+> rescan of a pcie nvme device using sysfs commands where is_added
+> flag was observed as zero instead of one while removing device
+> and proc,sys entries are not cleared.  This causes issue in
+> later device addition with warning message "proc_dir_entry"
+> already registered.
 > 
-> - "23/32 PCI: pciehp: Avoid slot access during reset"
->   => Amend commit message to justify usage of rw_semaphore.
+> Debugging revealed a race condition between pcie core driver
+> enabling is_added bit(pci_bus_add_device()) and nvme driver
+> reset work-queue enabling is_busmaster bit (by pci_set_master()).
+> As both fields are not handled in atomic manner and that clears
+> is_added bit.
 > 
-> However ISTR that you dislike replacement patches because they're
-> more complicated for you to handle.  Would you prefer me to repost
-> the full series instead?
+> Fix moves device addition is_added bit to separate private flag
+> variable and use different atomic functions to set and retrieve
+> device addition state. As is_added shares different memory
+> location so race condition is avoided.
 
-No need, if you want to post updates for those, I can incorporate
-those, too.
+Really nice bit of debugging!
 
-This is an extremely well-done series; thanks for all the work you've
-done on it!
+> Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
+> ---
+>  arch/powerpc/kernel/pci-common.c          |  4 +++-
+>  arch/powerpc/platforms/powernv/pci-ioda.c |  3 ++-
+>  arch/powerpc/platforms/pseries/setup.c    |  3 ++-
+>  drivers/pci/bus.c                         |  6 +++---
+>  drivers/pci/hotplug/acpiphp_glue.c        |  2 +-
+>  drivers/pci/pci.h                         | 11 +++++++++++
+>  drivers/pci/probe.c                       |  4 ++--
+>  drivers/pci/remove.c                      |  5 +++--
+>  include/linux/pci.h                       |  1 -
+>  9 files changed, 27 insertions(+), 12 deletions(-)
+> 
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index fe9733f..471aac3 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -42,6 +42,8 @@
+>  #include <asm/ppc-pci.h>
+>  #include <asm/eeh.h>
+>  
+> +#include "../../../drivers/pci/pci.h"
 
-Bjorn
+I see why you need it, but this include path is really ugly.  Outside
+of bootloaders and tools, there are very few instances of includes
+like this that reference a different top-level directory, and I'm not
+very keen about adding more.
+
+Obviously powerpc is the only arch that needs dev->is_added.  It seems
+to be because "We can only call pcibios_setup_device() after bus setup
+is complete, since some of the platform specific DMA setup code
+depends on it."
+
+I don't know powerpc, but it does raise the question in my mind of
+whether powerpc could be changed to do the DMA setup more like other
+arches do to remove this ordering dependency and the need to use
+dev->is_added.
+
+That sounds like a lot of work, but it would have the benefit of
+unifying some code that is probably needlessly arch-specific.
+
+>  /* hose_spinlock protects accesses to the the phb_bitmap. */
+>  static DEFINE_SPINLOCK(hose_spinlock);
+>  LIST_HEAD(hose_list);
+> @@ -1014,7 +1016,7 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
+>  		/* Cardbus can call us to add new devices to a bus, so ignore
+>  		 * those who are already fully discovered
+>  		 */
+> -		if (dev->is_added)
+> +		if (pci_dev_is_added(dev))
+>  			continue;
+>  
+>  		pcibios_setup_device(dev);
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 5bd0eb6..70b2e1e 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -46,6 +46,7 @@
+>  
+>  #include "powernv.h"
+>  #include "pci.h"
+> +#include "../../../../drivers/pci/pci.h"
+>  
+>  #define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs	*/
+>  #define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR	*/
+> @@ -3138,7 +3139,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>  	struct pci_dn *pdn;
+>  	int mul, total_vfs;
+>  
+> -	if (!pdev->is_physfn || pdev->is_added)
+> +	if (!pdev->is_physfn || pci_dev_is_added(pdev))
+>  		return;
+>  
+>  	pdn = pci_get_pdn(pdev);
+> diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+> index 139f0af..8a4868a 100644
+> --- a/arch/powerpc/platforms/pseries/setup.c
+> +++ b/arch/powerpc/platforms/pseries/setup.c
+> @@ -71,6 +71,7 @@
+>  #include <asm/security_features.h>
+>  
+>  #include "pseries.h"
+> +#include "../../../../drivers/pci/pci.h"
+>  
+>  int CMO_PrPSP = -1;
+>  int CMO_SecPSP = -1;
+> @@ -664,7 +665,7 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
+>  	const int *indexes;
+>  	struct device_node *dn = pci_device_to_OF_node(pdev);
+>  
+> -	if (!pdev->is_physfn || pdev->is_added)
+> +	if (!pdev->is_physfn || pci_dev_is_added(pdev))
+>  		return;
+>  	/*Firmware must support open sriov otherwise dont configure*/
+>  	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 35b7fc8..5cb40b2 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -330,7 +330,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+>  		return;
+>  	}
+>  
+> -	dev->is_added = 1;
+> +	pci_dev_assign_added(dev, true);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_bus_add_device);
+>  
+> @@ -347,14 +347,14 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+>  
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+>  		/* Skip already-added devices */
+> -		if (dev->is_added)
+> +		if (pci_dev_is_added(dev))
+>  			continue;
+>  		pci_bus_add_device(dev);
+>  	}
+>  
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+>  		/* Skip if device attach failed */
+> -		if (!dev->is_added)
+> +		if (!pci_dev_is_added(dev))
+>  			continue;
+>  		child = dev->subordinate;
+>  		if (child)
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 3a17b29..ef0b1b6 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -509,7 +509,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+>  
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+>  		/* Assume that newly added devices are powered on already. */
+> -		if (!dev->is_added)
+> +		if (!pci_dev_is_added(dev))
+>  			dev->current_state = PCI_D0;
+>  	}
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 882f1f9..0881725 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -288,6 +288,7 @@ struct pci_sriov {
+>  
+>  /* pci_dev priv_flags */
+>  #define PCI_DEV_DISCONNECTED 0
+> +#define PCI_DEV_ADDED 1
+>  
+>  static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
+>  {
+> @@ -300,6 +301,16 @@ static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
+>  	return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
+>  }
+>  
+> +static inline void pci_dev_assign_added(struct pci_dev *dev, bool added)
+> +{
+> +	assign_bit(PCI_DEV_ADDED, &dev->priv_flags, added);
+> +}
+> +
+> +static inline bool pci_dev_is_added(const struct pci_dev *dev)
+> +{
+> +	return test_bit(PCI_DEV_ADDED, &dev->priv_flags);
+> +}
+> +
+>  #ifdef CONFIG_PCI_ATS
+>  void pci_restore_ats_state(struct pci_dev *dev);
+>  #else
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ac876e3..611adcd 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2433,13 +2433,13 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
+>  	dev = pci_scan_single_device(bus, devfn);
+>  	if (!dev)
+>  		return 0;
+> -	if (!dev->is_added)
+> +	if (!pci_dev_is_added(dev))
+>  		nr++;
+>  
+>  	for (fn = next_fn(bus, dev, 0); fn > 0; fn = next_fn(bus, dev, fn)) {
+>  		dev = pci_scan_single_device(bus, devfn + fn);
+>  		if (dev) {
+> -			if (!dev->is_added)
+> +			if (!pci_dev_is_added(dev))
+>  				nr++;
+>  			dev->multifunction = 1;
+>  		}
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 6f072ea..5e3d0dc 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -19,11 +19,12 @@ static void pci_stop_dev(struct pci_dev *dev)
+>  {
+>  	pci_pme_active(dev, false);
+>  
+> -	if (dev->is_added) {
+> +	if (pci_dev_is_added(dev)) {
+>  		device_release_driver(&dev->dev);
+>  		pci_proc_detach_device(dev);
+>  		pci_remove_sysfs_dev_files(dev);
+> -		dev->is_added = 0;
+> +
+> +		pci_dev_assign_added(dev, false);
+>  	}
+>  
+>  	if (dev->bus->self)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 340029b..506125b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -368,7 +368,6 @@ struct pci_dev {
+>  	unsigned int	transparent:1;		/* Subtractive decode bridge */
+>  	unsigned int	multifunction:1;	/* Multi-function device */
+>  
+> -	unsigned int	is_added:1;
+>  	unsigned int	is_busmaster:1;		/* Is busmaster */
+>  	unsigned int	no_msi:1;		/* May not use MSI */
+>  	unsigned int	no_64bit_msi:1; 	/* May only use 32-bit MSIs */
+> -- 
+> 1.9.1
+> 
