@@ -1,18 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
- <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH v3 3/4] PCI: mediatek: Add system pm support for MT2712 and
- MT7622
-Date: Mon, 2 Jul 2018 15:57:43 +0800
-Message-ID: <1530518264-6125-4-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
+From: Trent Piepho <tpiepho@impinj.com>
+To: linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 2/2] PCI: imx: Add workaround for e10728,
+ IMX7d PCIe PLL failure
+Date: Wed, 18 Jul 2018 12:44:24 -0700
+Message-Id: <20180718194424.8844-3-tpiepho@impinj.com>
+In-Reply-To: <20180718194424.8844-1-tpiepho@impinj.com>
+References: <20180718194424.8844-1-tpiepho@impinj.com>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -21,139 +17,145 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- honghui.zhang@mediatek.com, yt.shen@mediatek.com, yong.wu@mediatek.com
+Cc: Richard Zhu <hongxing.zhu@nxp.com>, Sascha Hauer <kernel@pengutronix.de>,
+ Fabio Estevam <fabio.estevam@nxp.com>, Trent Piepho <tpiepho@impinj.com>,
+ Shawn Guo <shawnguo@kernel.org>, Lucas Stach <l.stach@pengutronix.de>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+This implements the workound described in the NXP IMX7d erratum e10728.
 
-The MTCMOS of PCIe Host for MT2712 and MT7622 will be off when system
-suspend, and all the internal control register will be reset after system
-resume. The PCIe link should be re-established and the related control
-register values should be re-set after system resume.
+Initial VCO oscillation may fail under corner conditions such as cold
+temperature.  It causes PCIe PLL to fail to lock in the initialization
+phase, which results in the PCIe link failing to come up.
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+The workaround is to disable Duty-cycle Corrector (DCC) calibration
+after G_RST.
+
+To do this it is necessary to gain access to the undocumented and
+currently unused PCIe PHY register bank.  A new device tree node of type
+"fsl,imx-pcie-phy" is created for the PHY block and the existing PCIe
+device uses a phandle named "fsl,pcie-phy" to point to it.
+
+Cc: Shawn Guo <shawnguo@kernel.org>
+Cc: Sascha Hauer <kernel@pengutronix.de>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Trent Piepho <tpiepho@impinj.com>
 ---
- drivers/pci/controller/pcie-mediatek.c | 67 ++++++++++++++++++++++++++++++++++
- 1 file changed, 67 insertions(+)
+ drivers/pci/dwc/pci-imx6.c | 59 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 86918d4..175d7b6 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -134,12 +134,14 @@ struct mtk_pcie_port;
- /**
-  * struct mtk_pcie_soc - differentiate between host generations
-  * @need_fix_class_id: whether this host's class ID needed to be fixed or not
-+ * @pm_support: whether the host's MTCMOS will be off when suspend
-  * @ops: pointer to configuration access functions
-  * @startup: pointer to controller setting functions
-  * @setup_irq: pointer to initialize IRQ functions
-  */
- struct mtk_pcie_soc {
- 	bool need_fix_class_id;
-+	bool pm_support;
- 	struct pci_ops *ops;
- 	int (*startup)(struct mtk_pcie_port *port);
- 	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
-@@ -1197,12 +1199,75 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-+	const struct mtk_pcie_soc *soc = pcie->soc;
-+	struct mtk_pcie_port *port;
-+
-+	if (!soc->pm_support)
-+		return 0;
-+
-+	if (list_empty(&pcie->ports))
-+		return 0;
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		clk_disable_unprepare(port->pipe_ck);
-+		clk_disable_unprepare(port->obff_ck);
-+		clk_disable_unprepare(port->axi_ck);
-+		clk_disable_unprepare(port->aux_ck);
-+		clk_disable_unprepare(port->ahb_ck);
-+		clk_disable_unprepare(port->sys_ck);
-+		phy_power_off(port->phy);
-+		phy_exit(port->phy);
-+	}
-+
-+	mtk_pcie_subsys_powerdown(pcie);
-+
-+	return 0;
-+}
-+
-+static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
-+{
-+	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-+	const struct mtk_pcie_soc *soc = pcie->soc;
-+	struct mtk_pcie_port *port, *tmp;
-+
-+	if (!soc->pm_support)
-+		return 0;
-+
-+	if (list_empty(&pcie->ports))
-+		return 0;
-+
-+	if (dev->pm_domain) {
-+		pm_runtime_enable(dev);
-+		pm_runtime_get_sync(dev);
-+	}
-+
-+	clk_prepare_enable(pcie->free_ck);
-+
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-+		mtk_pcie_enable_port(port);
-+
-+	/* In case of EP was removed while system suspend. */
-+	if (list_empty(&pcie->ports))
-+		mtk_pcie_subsys_powerdown(pcie);
-+
-+	return 0;
-+}
-+
-+static const struct dev_pm_ops mtk_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
-+				      mtk_pcie_resume_noirq)
-+};
-+
- static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
- 	.ops = &mtk_pcie_ops,
- 	.startup = mtk_pcie_startup_port,
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+index dcf389b62944..32429afc9380 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -18,6 +18,7 @@
+ #include <linux/module.h>
+ #include <linux/of_gpio.h>
+ #include <linux/of_device.h>
++#include <linux/of_address.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/regmap.h>
+@@ -58,6 +59,7 @@ struct imx6_pcie {
+ 	u32			tx_swing_low;
+ 	int			link_gen;
+ 	struct regulator	*vpcie;
++	void __iomem		*phy_base;
  };
  
- static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-+	.pm_support = true,
- 	.ops = &mtk_pcie_ops_v2,
- 	.startup = mtk_pcie_startup_port_v2,
- 	.setup_irq = mtk_pcie_setup_irq,
-@@ -1210,6 +1275,7 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
+ /* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */
+@@ -98,6 +100,23 @@ struct imx6_pcie {
+ #define PCIE_PHY_RX_ASIC_OUT 0x100D
+ #define PCIE_PHY_RX_ASIC_OUT_VALID	(1 << 0)
  
- static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
- 	.need_fix_class_id = true,
-+	.pm_support = true,
- 	.ops = &mtk_pcie_ops_v2,
- 	.startup = mtk_pcie_startup_port_v2,
- 	.setup_irq = mtk_pcie_setup_irq,
-@@ -1229,6 +1295,7 @@ static struct platform_driver mtk_pcie_driver = {
- 		.name = "mtk-pcie",
- 		.of_match_table = mtk_pcie_ids,
- 		.suppress_bind_attrs = true,
-+		.pm = &mtk_pcie_pm_ops,
- 	},
- };
- builtin_platform_driver(mtk_pcie_driver);
++/* iMX7 PCIe PHY registers */
++#define PCIE_PHY_CMN_REG4		0x14
++/* These are probably the bits that *aren't* DCC_FB_EN */
++#define PCIE_PHY_CMN_REG4_DCC_FB_EN	0x29
++
++#define PCIE_PHY_CMN_REG15	        0x54
++#define PCIE_PHY_CMN_REG15_DLY_4	BIT(2)
++#define PCIE_PHY_CMN_REG15_PLL_PD	BIT(5)
++#define PCIE_PHY_CMN_REG15_OVRD_PLL_PD	BIT(7)
++
++#define PCIE_PHY_CMN_REG24		0x90
++#define PCIE_PHY_CMN_REG24_RX_EQ	BIT(6)
++#define PCIE_PHY_CMN_REG24_RX_EQ_SEL	BIT(3)
++
++#define PCIE_PHY_CMN_REG26		0x98
++#define PCIE_PHY_CMN_REG26_ATT_MODE	0xBC
++
+ #define PHY_RX_OVRD_IN_LO 0x1005
+ #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
+ #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
+@@ -431,6 +450,26 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 	switch (imx6_pcie->variant) {
+ 	case IMX7D:
+ 		reset_control_deassert(imx6_pcie->pciephy_reset);
++
++		/* Workaround for ERR010728, failure of PCI-e PLL VCO to
++		 * oscillate, especially when cold.  This turns off "Duty-cycle
++		 * Corrector" and other mysterious undocumented things.
++		 */
++		if (likely(imx6_pcie->phy_base)) {
++			/* De-assert DCC_FB_EN */
++			writel(PCIE_PHY_CMN_REG4_DCC_FB_EN,
++			       imx6_pcie->phy_base + PCIE_PHY_CMN_REG4);
++			/* Assert RX_EQS and RX_EQS_SEL */
++			writel(PCIE_PHY_CMN_REG24_RX_EQ_SEL
++				| PCIE_PHY_CMN_REG24_RX_EQ,
++			       imx6_pcie->phy_base + PCIE_PHY_CMN_REG24);
++			/* Assert ATT_MODE */
++			writel(PCIE_PHY_CMN_REG26_ATT_MODE,
++			       imx6_pcie->phy_base + PCIE_PHY_CMN_REG26);
++		} else {
++			dev_err(dev, "PHY base address not set\n");
++		}
++
+ 		imx7d_pcie_wait_for_phy_pll_lock(imx6_pcie);
+ 		break;
+ 	case IMX6SX:
+@@ -698,6 +737,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct dw_pcie *pci;
+ 	struct imx6_pcie *imx6_pcie;
++	struct device_node *np;
+ 	struct resource *dbi_base;
+ 	struct device_node *node = dev->of_node;
+ 	int ret;
+@@ -717,6 +757,25 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 	imx6_pcie->variant =
+ 		(enum imx6_pcie_variants)of_device_get_match_data(dev);
+ 
++	/* Find the PHY if one is defined, only imx7d uses it */
++	np = of_parse_phandle(node, "fsl,pcie-phy", 0);
++	if (np) {
++		struct resource res;
++
++		ret = of_address_to_resource(np, 0, &res);
++		if (ret) {
++			dev_err(dev, "Unable to map PCIe PHY\n");
++			return ret;
++		}
++		imx6_pcie->phy_base = devm_ioremap_resource(dev, &res);
++		if (IS_ERR(imx6_pcie->phy_base)) {
++			dev_err(dev, "Unable to map PCIe PHY\n");
++			return PTR_ERR(imx6_pcie->phy_base);
++		}
++	} else {
++		imx6_pcie->phy_base = NULL;
++	}
++
+ 	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
+ 	if (IS_ERR(pci->dbi_base))
 -- 
-2.6.4
+2.14.4
 
 
 _______________________________________________
