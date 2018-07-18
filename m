@@ -1,44 +1,61 @@
-Return-Path: <SRS0=B3Fm=J4=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=B3Fm=J4=intel.com=keith.busch@kernel.org>
-Date: Thu, 12 Jul 2018 15:57:01 -0600
-From: Keith Busch <keith.busch@intel.com>
+Return-Path: <okaya@kernel.org>
+Return-Path: <okaya@kernel.org>
+Subject: Re: [PATCH V5 5/6] PCI: Deprecate pci_reset_bus() and
+ pci_reset_slot() functions
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Thomas Tai <thomas.tai@oracle.com>, bhelgaas@google.com,
-	poza@codeaurora.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V2, 0/1] PCI/AER: fix use-after-free in
- pcie_do_fatal_recovery
-Message-ID: <20180712215700.GA17092@localhost.localdomain>
-References: <1531416823-17841-1-git-send-email-thomas.tai@oracle.com>
- <20180712215151.GD28466@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
+ open list <linux-kernel@vger.kernel.org>
+References: <1530572336-20296-1-git-send-email-okaya@codeaurora.org>
+ <1530572336-20296-6-git-send-email-okaya@codeaurora.org>
+ <20180718223027.GI128988@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <3d664a22-7362-07ec-584d-b38829a22ba2@kernel.org>
+Date: Wed, 18 Jul 2018 15:36:29 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180712215151.GD28466@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20180718223027.GI128988@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 12, 2018 at 04:51:51PM -0500, Bjorn Helgaas wrote:
-> However, I think we're also slightly exposed in dpc_work(), in basically
-> the same (possibly harmless) way.
-> 
->   dpc_irq
->     schedule_work(&dpc->work)
->   ...
->   dpc_work
->     pdev = dpc->dev->port
->     pcie_do_fatal_recovery(pdev)
-> 
-> pdev may be removed by pcie_do_fatal_recovery(), but dpc_work() is still
-> holding onto a pointer (which it never uses again).
-> 
-> The DPC driver should be holding a reference to pdev (through some black
-> magic I don't understand), but that would be released when pdev is removed,
-> and I don't know what ensures that dpc_work() runs before that release.
-> 
-> Bjorn
 
-Yep, you're right on that point. There's different ways we can fix
-that. The most recent one I proposed was to replace the scheduled work
-with the threaded irq[1]. That should make it safe since the lifetime of
-when bottom half can be executed is tied to the lifetime of the device
-that registered it.
 
- 1. https://patchwork.kernel.org/patch/10478755/
+On 7/18/2018 3:30 PM, Bjorn Helgaas wrote:
+> On Mon, Jul 02, 2018 at 06:58:54PM -0400, Sinan Kaya wrote:
+>> pci_reset_bus() and pci_reset_slot() functions are not being used by
+>> any code. Remove them from the kernel in favor of pci_try_reset_bus()
+>> and pci_try_reset_slot() functions.
+>>
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>> ---
+>>   drivers/pci/pci.c   | 55 ++---------------------------------------------------
+>>   include/linux/pci.h |  2 --
+>>   2 files changed, 2 insertions(+), 55 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index a31e6db..7e3f2e9 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -4784,9 +4784,9 @@ int pci_probe_reset_slot(struct pci_slot *slot)
+>>   EXPORT_SYMBOL_GPL(pci_probe_reset_slot);
+>>   
+>>   /**
+>> - * pci_reset_slot - reset a PCI slot
+>> + * __pci_try_reset_slot - Try to reset a PCI slot
+>>    * @slot: PCI slot to reset
+>> - *
+>> + *`
+> 
+> Is this "*`" intentional or a typo?  I can't find it in kernel-doc.rst
+> (but it's full of ` and maybe I missed it).
+
+Typo.
+
+> 
+> I do see a few other occurrences in the code, although they look like
+> typos to me:
+> 
+>    $ git grep "\*\`" | grep -v Documentation
+>    arch/mips/cavium-octeon/octeon-usb.c:	 *`	0x1 = Big endian
+>    arch/mips/cavium-octeon/octeon-usb.c:	 *`	0x1 = Big endian
+>    drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c:/*`
+> 
