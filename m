@@ -1,73 +1,79 @@
-Return-Path: <SRS0=8O55=JR=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=8O55=JR=h08.hostsharing.net=foo00@kernel.org>
-Date: Sun, 1 Jul 2018 19:45:08 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 1/2] PCI: Document patch submission hints
-Message-ID: <20180701174508.GB28249@wunner.de>
-References: <153030390808.57832.2200774416664543563.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <153030405971.57832.12860154795039493576.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <153030405971.57832.12860154795039493576.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:59972 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730571AbeGRD2y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Jul 2018 23:28:54 -0400
+From: Baoquan He <bhe@redhat.com>
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+        robh+dt@kernel.org, dan.j.williams@intel.com,
+        nicolas.pitre@linaro.org, josh@joshtriplett.org,
+        fengguang.wu@intel.com, bp@suse.de, andy.shevchenko@gmail.com
+Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com,
+        dmitry.torokhov@gmail.com, frowand.list@gmail.com,
+        keith.busch@intel.com, jonathan.derrick@intel.com,
+        lorenzo.pieralisi@arm.com, bhelgaas@google.com, tglx@linutronix.de,
+        brijesh.singh@amd.com, jglisse@redhat.com, thomas.lendacky@amd.com,
+        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
+        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
+        yinghai@kernel.org, monstr@monstr.eu, davem@davemloft.net,
+        chris@zankel.net, jcmvbkbc@gmail.com, gustavo@padovan.org,
+        maarten.lankhorst@linux.intel.com, seanpaul@chromium.org,
+        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        Baoquan He <bhe@redhat.com>, kexec@lists.infradead.org
+Subject: [PATCH v7 4/4] kexec_file: Load kernel at top of system RAM if required
+Date: Wed, 18 Jul 2018 10:49:44 +0800
+Message-Id: <20180718024944.577-5-bhe@redhat.com>
+In-Reply-To: <20180718024944.577-1-bhe@redhat.com>
+References: <20180718024944.577-1-bhe@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 29, 2018 at 03:27:39PM -0500, Bjorn Helgaas wrote:
-> --- /dev/null
-> +++ b/Documentation/PCI/submitting-patches.txt
-> @@ -0,0 +1,153 @@
-> +Start with Documentation/process/submitting-patches.rst for general
-> +guidance.
-> +
-> +These are things I look at when reviewing patches.
+For kexec_file loading, if kexec_buf.top_down is 'true', the memory which
+is used to load kernel/initrd/purgatory is supposed to be allocated from
+top to down. This is what we have been doing all along in the old kexec
+loading interface and the kexec loading is still default setting in some
+distributions. However, the current kexec_file loading interface doesn't
+do like this. The function arch_kexec_walk_mem() it calls ignores checking
+kexec_buf.top_down, but calls walk_system_ram_res() directly to go through
+all resources of System RAM from bottom to up, to try to find memory region
+which can contain the specific kexec buffer, then call locate_mem_hole_callback()
+to allocate memory in that found memory region from top to down. This brings
+confusion especially when KASLR is widely supported , users have to make clear
+why kexec/kdump kernel loading position is different between these two
+interfaces in order to exclude unnecessary noises. Hence these two interfaces
+need be unified on behaviour.
 
-For an uninitiated reader who doesn't know that you're currently the
-(sole) maintainer of the PCI subsystem, this sentence might look odd.
-Who's "I"?  What happens if you onboard co-maintainers, are you
-going to change this to "we"?
+Here add checking if kexec_buf.top_down is 'true' in arch_kexec_walk_mem(),
+if yes, call the newly added walk_system_ram_res_rev() to find memory region
+from top to down to load kernel.
 
+Signed-off-by: Baoquan He <bhe@redhat.com>
+Cc: Eric Biederman <ebiederm@xmission.com>
+Cc: Vivek Goyal <vgoyal@redhat.com>
+Cc: Dave Young <dyoung@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: kexec@lists.infradead.org
+---
+ kernel/kexec_file.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> +  - Wrap code and comments to fit in 80 columns.  Exception: I prefer
-> +    printk strings to be in one piece for searchability, so don't split
-> +    quoted strings to make them fit in 80 columns.
-
-This is a duplication of Documentation/process/coding-style.rst, section 2.
-
-
-> +  - Follow the existing convention  Run "git log --oneline <file>" and make
-> +    your subject line match previous changes in format, capitalization, and
-> +    sentence structure.  For example, native host bridge driver patch
-> +    titles look like this:
-> +
-> +      PCI: vmd: Remove IRQ affinity so we can allocate more IRQs
-> +      PCI: mediatek: Add MSI support for MT2712 and MT7622
-> +      PCI: rockchip: Remove IRQ domain if probe fails
-
-A quick "git log --oneline --no-merges drivers/pci" shows that the prefixes
-in use aren't consistent at all:  Sometimes a slash is used to separate
-"PCI" from the subpart touched by the patch, sometimes a colon, e.g.
-"PCI/AER: " versus "PCI: shpchp: ".  Your own patches aren't consistent
-in that respect.  Sometimes, only "PCI: " is given as prefix, even though
-the commit only touches a subpart such as "sysfs", so could easily specify
-more precisely what it's touching.
-
-If you value consistency, it would be good to codify the preferred form
-right here.
-
-
-> +  - Include specific details, e.g., write "Add XYZ controller support"
-> +    instead of "add support for new generation controller".
-
-Why not simply "Support XYZ controller"?  One word less, more succinct.
-
-
-> +  - Always copy linux-pci@vger.kernel.org and linux-kernel@vger.kernel.org.
-
-I'd drop linux-kernel here.  The volume on that list is already like
-drinking from a firehose, I doubt it adds much value to cc it.
-
-Thanks,
-
-Lukas
+diff --git a/kernel/kexec_file.c b/kernel/kexec_file.c
+index c6a3b6851372..75226c1d08ce 100644
+--- a/kernel/kexec_file.c
++++ b/kernel/kexec_file.c
+@@ -518,6 +518,8 @@ int __weak arch_kexec_walk_mem(struct kexec_buf *kbuf,
+ 					   IORESOURCE_SYSTEM_RAM | IORESOURCE_BUSY,
+ 					   crashk_res.start, crashk_res.end,
+ 					   kbuf, func);
++	else if (kbuf->top_down)
++		return walk_system_ram_res_rev(0, ULONG_MAX, kbuf, func);
+ 	else
+ 		return walk_system_ram_res(0, ULONG_MAX, kbuf, func);
+ }
+-- 
+2.13.6
