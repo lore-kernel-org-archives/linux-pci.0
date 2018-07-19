@@ -1,132 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34590 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726524AbeG2UB3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 29 Jul 2018 16:01:29 -0400
-Subject: Re: [PATCH v6 1/1] PCI: pciehp: Ignore link events when there is a
- fatal error pending
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Oza Pawandeep <poza@codeaurora.org>
-References: <20180728091324.154795-1-okaya@kernel.org>
- <20180728091324.154795-2-okaya@kernel.org> <20180729115703.GA2781@wunner.de>
- <CAK9iUCNfu8pKd1bHiQWVSYg+dppTSPV-Qa7YWBtaNLU_cwL8AA@mail.gmail.com>
- <20180729173907.GA27216@wunner.de>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <bab51f0c-378b-5f2c-679d-4fd4390c0ac6@kernel.org>
-Date: Sun, 29 Jul 2018 11:30:09 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180729173907.GA27216@wunner.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:54803 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730974AbeGSJO2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jul 2018 05:14:28 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v14 06/12] PCI: dwc: Add legacy interrupt callback handler
+Date: Thu, 19 Jul 2018 10:32:16 +0200
+Message-Id: <3bea82c7b0ce1f2fd190f36781562651bb1b7035.1531922095.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/29/2018 10:39 AM, Lukas Wunner wrote:
->> ere is the issue with mixing pciehp link handler and fatal error
->> recovery paths.
->>
+Add a legacy interrupt callback handler. Currently DesignWare IP don't
+allow trigger legacy interrupts.
 
-Let me put all use cases to the table:
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Nothing changed, just to follow the patch set version.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Nothing changed, just to follow the patch set version.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Change v6->v7:
+ - Nothing changed, just to follow the patch set version.
+Change v7->v8:
+ - Re-sending the patch series.
+Change v8->v9:
+ - Nothing changed, just to follow the patch set version.
+Change v9->v10:
+ - Nothing changed, just to follow the patch set version.
+Change v10->v11:
+ - Nothing changed, just to follow the patch set version.
+Change v11->v12:
+ - Nothing changed, just to follow the patch set version.
+Change v12->v13:
+ - Re-sending the patch series.
+Change v13->v14:
+ - Nothing changed, just to follow the patch set version.
 
-use case A
+ drivers/pci/controller/dwc/pcie-designware-ep.c   | 10 ++++++++++
+ drivers/pci/controller/dwc/pcie-designware-plat.c |  3 +--
+ drivers/pci/controller/dwc/pcie-designware.h      |  6 ++++++
+ 3 files changed, 17 insertions(+), 2 deletions(-)
 
-1. DPC fatal error happens. Link goes down in HW by the DPC.
-2. Pciehp ISR executes first and turns off slot power
-3. DPC Fatal error recovery executes dpc
-     status trigger via reset_link() function to recover the link.
-4. Link doesn't recover because power is off.
-
-use case B
-1. AER fatal error happens. Link is up.
-2. AER ISR executes first.
-3. AER Fatal error recovery executes secondary bus reset aka warm
-reset via AER error recovery in reset_link() to recovery the link
-4. Link goes down.
-5. Pciehp ISR executes and turns off slot power
-6. AER link recovery fails because power is off.
-
-use case C
-1. AER fatal error happens. Link goes down after observing a fatal
-error before observing ISR.
-2. Pciehp ISR executes and turns off slot power
-3. AER ISR executes.
-4. AER Fatal error recovery executes secondary bus reset aka warm
-reset via AER error recovery in reset_link() to recovery the link
-5. AER link recovery fails because power is off.
-
- > With the new code on the pci/hotplug branch, the expected behavior is:
- >
-> 4. Having brought the slot down after the DLLSC event,
->     pciehp_handle_presence_or_link_change() notices that the slot is
->     occupied ("Slot(...): Card present") and immediately tries to
->     bring the slot up again:
->     Slot power is re-enabled, green LED is set to blinking.
->     pciehp_check_link_status() then waits 1 second for the link to
->     go up.  If the link does not come up within 1 second, an error
->     message is logged but the procedure does not abort yet.  We then
->     wait for 100 ms and poll for 1 second whether the vendor ID of
->     slot 0 function 0 becomes readable.  Only if the link has not come
->     up at this point is the procedure aborted.
-
-Thanks for the heads up. I didn't realize HP was trying to recover the
-link as well.
-
-This is the situation that I'm trying to avoid. AER and DPC resets are 
-known as warm-resets.
-
-HP link recovery is known as cold-reset via power-off and power-on command.
-
-In the middle of a warm-reset operation(AER/DPC), we are:
-1. turning off the slow power
-2. performing a cold reset
-causing Fatal Error recovery to fail.
-
-> 
-> So the question is:
-> 
-> a. Is DPC/AER able to recover from the error if slot power is disabled?
->     Or do we need to synchronize with pciehp to keep slot power enabled
->     so that the error can be handled?
-
-Yes, slot power needs to be kept on.
-
-> 
-> b. How fast is DPC/AER able to recover from a fatal error?
->     If it's more than 2.1 seconds, pciehp will not bring the slot up
->     automatically and the user is required to bring it up manually via
->     sysfs.  If we know that DPC/AER need a specific amount of time that
->     is longer than 2.1 seconds, we can amend board_added() to poll until
->     recovery from the fatal error (or use a waitqueue which is woken on
->     recovery), with a sufficient timeout.
-
-pciehp shouldn't attempt recovery.
-
-If link goes down due to a DPC event, it should be recovered by DPC 
-status trigger. Injecting a cold reset in the middle can cause a HW
-lockup as it is an undefined behavior.
-
-Similarly, If link goes down due to an AER secondary bus reset issue, it 
-should be recovered by HW. Injecting a cold reset in the middle of a
-secondary bus reset can cause a HW lockup as it is an undefined behavior.
-
-> .
-> Does this work for you?
-
-Not much, but along the lines of your thinking, I can propose this
-as an alternative.
-
-Maybe, this helps:
-
-1. HP ISR observes link down interrupt.
-2. HP ISR checks that there is a fatal error pending, it doesn't touch
-the link.
-3. HP ISR waits until link recovery happens.
-4. HP ISR calls the read vendor id function.
-
-DPC link recovery is very quick (100ms at most). Secondary bus reset
-recovery should be contained within 1 seconds for most cases but
-spec allows a device to extend vendor id read as much as it wants via
-CRS response. We poll up to an additional 60 seconds in read vendor
-id function.
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index dd9c366..1e7b022 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -370,6 +370,16 @@ static const struct pci_epc_ops epc_ops = {
+ 	.stop			= dw_pcie_ep_stop,
+ };
+ 
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct device *dev = pci->dev;
++
++	dev_err(dev, "EP cannot trigger legacy IRQs\n");
++
++	return -EINVAL;
++}
++
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num)
+ {
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 8bb2ecb..160714d 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -87,8 +87,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 
+ 	switch (type) {
+ 	case PCI_EPC_IRQ_LEGACY:
+-		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
+-		return -EINVAL;
++		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
+ 	case PCI_EPC_IRQ_MSI:
+ 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
+ 	case PCI_EPC_IRQ_MSIX:
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index e8b97f5..96126fd 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -348,6 +348,7 @@ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
+ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num);
+ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+@@ -367,6 +368,11 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
+ 
++static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
++{
++	return 0;
++}
++
+ static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 					   u8 interrupt_num)
+ {
+-- 
+2.7.4
