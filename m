@@ -1,92 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alan Douglas <adouglas@cadence.com>
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
-        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v9 10/12] pci_endpoint_test: Add 2 ioctl commands
-Date: Tue, 10 Jul 2018 10:10:32 +0000
-Message-ID: <MWHPR07MB35020A4BD96C8B34E9A0EB83D85B0@MWHPR07MB3502.namprd07.prod.outlook.com>
-References: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
- <185f0395d22083c04364cb81b4c2e2448fa89fb2.1531155252.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <185f0395d22083c04364cb81b4c2e2448fa89fb2.1531155252.git.gustavo.pimentel@synopsys.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:39336 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727309AbeGSLgY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jul 2018 07:36:24 -0400
+Subject: Re: [PATCH v2 4/4] ARM: dts: dra7: Fix up unaligned access setting
+ for PCIe EP
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Tony Lindgren <tony@atomide.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>
+References: <20180627122919.23926-1-vigneshr@ti.com>
+ <20180627122919.23926-5-vigneshr@ti.com>
+ <92691b59-1952-b00f-da5b-f308f94aa2b7@ti.com>
+From: Vignesh R <vigneshr@ti.com>
+Message-ID: <9bdf39d4-d9db-b80f-e3f4-88c3e068c306@ti.com>
+Date: Thu, 19 Jul 2018 16:24:26 +0530
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <92691b59-1952-b00f-da5b-f308f94aa2b7@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09 July 2018 18:43 Gustavo Pimentel wrote:
-> Add MSI-X support and update driver documentation accordingly.
->=20
-> Add 2 new IOCTL commands:
->  - Allow to reconfigure driver IRQ type in runtime.
->  - Allow to retrieve current driver IRQ type configured.
->=20
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
-> Change v2->v3:
->  - New patch file created base on the previous patch
-> "misc: pci_endpoint_test: Add MSI-X support" patch file following
-> Kishon's suggestion.
-> Change v3->v4:
->  - Rebased to Lorenzo's master branch v4.18-rc1.
-> Change v4->v5:
->  - Nothing changed, just to follow the patch set version.
-> Change v5->v6:
->  - Moved PCITEST_SET_IRQTYPE and PCITEST_GET_IRQTYPE ioctl entries
-> from patch #10 to here.
->  - Increased ioctl parameters range associated to
-> drivers/misc/pci_endpoint_test.c driver.
-> Change v6->v7:
->  - irq_type variable update just before returning the function.
-> Change v7->v8:
->  - Re-sending the patch series.
-> Change v8->v9:
->  - Added a extra parameter to pci_endpoint_test_alloc_irq_vectors,
-> that specifies which irq type should be allocated.
->=20
->  Documentation/ioctl/ioctl-number.txt             |   2 +-
->  Documentation/misc-devices/pci-endpoint-test.txt |   3 +
->  drivers/misc/pci_endpoint_test.c                 | 176 +++++++++++++++++=
-------
->  include/uapi/linux/pcitest.h                     |   2 +
->  4 files changed, 136 insertions(+), 47 deletions(-)
->=20
-> diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/i=
-octl-number.txt
-> index 65259d4..c15c4f3 100644
-> --- a/Documentation/ioctl/ioctl-number.txt
-> +++ b/Documentation/ioctl/ioctl-number.txt
-> @@ -166,7 +166,7 @@ Code  Seq#(hex)	Include File		Comments
->  'P'	all	linux/soundcard.h	conflict!
->  'P'	60-6F	sound/sscape_ioctl.h	conflict!
->  'P'	00-0F	drivers/usb/class/usblp.c	conflict!
-> -'P'	01-07	drivers/misc/pci_endpoint_test.c	conflict!
-> +'P'	01-09	drivers/misc/pci_endpoint_test.c	conflict!
->  'Q'	all	linux/soundcard.h
->  'R'	00-1F	linux/random.h		conflict!
->  'R'	01	linux/rfkill.h		conflict!
-> diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documenta=
-tion/misc-devices/pci-endpoint-test.txt
-> index fdfa0f6..58ccca4 100644
-> --- a/Documentation/misc-devices/pci-endpoint-test.txt
-> +++ b/Documentation/misc-devices/pci-endpoint-test.txt
-> @@ -28,6 +28,9 @@ ioctl
->  	      to be tested should be passed as argument.
->   PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
->  	      to be tested should be passed as argument.
-> + PCITEST_SET_IRQTYPE: Changes driver IRQ type configuration. The IRQ typ=
-e
-> +	      should be passed as argument (0: Legacy, 1:MSI, 2:MSI-X).
-> + PCITEST_GET_IRQTYPE: Gets driver IRQ type configuration.
-I've tested this latest set of patches with the cadence ep driver, which
-does not yet support MSI-X, and can confirm that setting, getting and using
-legacy and MSI IRQ type IRQs is working correctly.  Setting MSI-X fails, as
-expected.
+Hi Tony,
+
+On Tuesday 17 July 2018 03:25 PM, Kishon Vijay Abraham I wrote:
+> 
+> 
+> On Wednesday 27 June 2018 05:59 PM, Vignesh R wrote:
+>> Bit positions of PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE and
+>> PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE in CTRL_CORE_SMA_SW_7 are
+>> incorrectly documented in the TRM. In fact, the bit positions are
+>> swapped. Update the DT bindings for PCIe EP to reflect the same.
+>>
+>> Signed-off-by: Vignesh R <vigneshr@ti.com>
+> 
+> Shouldn't this be sent to stable fixes?
+
+This patch fixes:
+
+Fixes: d23f3839fe97 ("ARM: dts: DRA7: Add pcie1 dt node for EP mode")
+Cc: stable@vger.kernel.org
+
+let me know if this needs to be resent with Fixes tag.
+
+Regards
+Vignesh
+
+> 
+> Thanks
+> Kishon
+>> ---
+>>  arch/arm/boot/dts/dra7.dtsi | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+>> index 7bfe7f28e3bd..27ad193e1a87 100644
+>> --- a/arch/arm/boot/dts/dra7.dtsi
+>> +++ b/arch/arm/boot/dts/dra7.dtsi
+>> @@ -355,7 +355,7 @@
+>>  				ti,hwmods = "pcie1";
+>>  				phys = <&pcie1_phy>;
+>>  				phy-names = "pcie-phy0";
+>> -				ti,syscon-unaligned-access = <&scm_conf1 0x14 2>;
+>> +				ti,syscon-unaligned-access = <&scm_conf1 0x14 1>;
+>>  				status = "disabled";
+>>  			};
+>>  		};
+>>
