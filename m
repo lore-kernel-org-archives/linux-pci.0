@@ -1,98 +1,43 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54654 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732030AbeGSRm1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 19 Jul 2018 13:42:27 -0400
+Subject: Re: [PATCH] PCI/AER: Do not clear AER bits if we don't own AER
+To: "Alex G." <mr.nuke.me@gmail.com>, bhelgaas@google.com,
+        keith.busch@intel.com
+Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20180717153135.25925-1-mr.nuke.me@gmail.com>
+ <494a5df8-0987-3a6c-30a4-a3c9ef4ed1f3@kernel.org>
+ <37509c44-64fe-4140-c776-53c3346cbfe5@gmail.com>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <da6335db-1e6b-c19b-4bbd-0f5523484e0e@kernel.org>
+Date: Thu, 19 Jul 2018 09:58:24 -0700
 MIME-Version: 1.0
-In-Reply-To: <8018069bc772376caef29e76280e4d0facffdb68.1532455922.git.leonard.crestez@nxp.com>
-References: <8018069bc772376caef29e76280e4d0facffdb68.1532455922.git.leonard.crestez@nxp.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Tue, 31 Jul 2018 10:32:31 +0200
-Message-ID: <CAPDyKFpN99iDYf1mcG-G1=AAkiw8OjoynvK+5cBV8GvCs6WtKg@mail.gmail.com>
-Subject: Re: [RFC] PCI: imx: Add multi-pd support
-To: Leonard Crestez <leonard.crestez@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>, Anson Huang <Anson.Huang@nxp.com>,
- Linux PM <linux-pm@vger.kernel.org>, Andrey Smirnov <andrew.smirnov@gmail.com>,
- Linux PCI <linux-pci@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Jon Hunter <jonathanh@nvidia.com>, dl-linux-imx <linux-imx@nxp.com>,
- Sascha Hauer <kernel@pengutronix.de>, Fabio Estevam <fabio.estevam@nxp.com>,
- Shawn Guo <shawnguo@kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <37509c44-64fe-4140-c776-53c3346cbfe5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24 July 2018 at 20:17, Leonard Crestez <leonard.crestez@nxp.com> wrote:
-> On some chips the PCIE and PCIE_PHY blocks are in separate power domains
-> which can be power-gated independently. The driver needs to handle this
-> by keeping both domain active.
->
-> This is intended for imx6sx where PCIE is in DISPMIX and PCIE_PHY in
-> it's own domain. Defining the DISPMIX domain requires a way for pcie to
-> keep it active or it will break when displays are off.
->
-> The power-domains on imx6sx are meant to look like this:
->         power-domains = <&pd_disp>, <&pd_pci>;
->         power-domain-names = "pcie", "pcie_phy";
->
-> Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
 
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+On 7/19/2018 8:55 AM, Alex G. wrote:
+> I find the intent clearer if we check it here rather than having to do 
+> the mental parsing of the state of aer_cap.
 
-See some comments below...
+I don't feel too strong about my comment to be honest. This was a
+style/maintenance comment.
 
-> ---
->
-> Right now if a device has a single power domain it will be activated
-> before probe but if it has multiple domains they need to be explicitly
-> "attached" to and controlled. Supporting both is a bit awkward, this
-> patch makes the distinction based on (dev->pm_domain != NULL).
->
-> Maybe the PM core should make this distinction based on a flag in struct
-> device_driver instead of number of power-domains? So by default when a
-> device has multiple power domains they would would be activated
-> together and this patch would be unnecessary.
+It feels like we are putting pcie_aer_get_firmware_first() into core
+functions unnecessarily after your change. I understand the need for
+your change. I'm asking if it is the right place or not.
 
-Activation is deliberately left to be manged by each user, as the PM
-core/genpd can't know when powering on the PM domains make sense.
+pcie_aer_get_firmware_first() should be called from either the init or
+probe function so that the rest of the AER functions do not get called
+from any other context.
 
-The main reason to why genpd powers on the PM domain for the single PM
-domain case, is because of legacy behaviors in drivers. Some drivers
-don't call pm_runtime_get_sync() during ->probe(), but instead use
-pm_runtime_set_active(), to synchronize the state with the HW. This
-means the ->runtime_resume() callback doesn't get invoked for genpd,
-hence genpd must power on the PM domain already at attache to cover
-this case.
-
->
-> This is marked as "RFC" mostly because I believe it should be handled
-> inside PM core, without driver code. Does this make sense to anyone else?
->
-> This is independent of recent patches adding suspend/resume support to
-> imx pci, but supporting suspend with multi-pd requires adding device
-> links, not just activating pds at probe time.
->
-> The device_link is marked as "STATELESS" because otherwise a warning is
-> triggered in device_links_driver_bound. This seems to happen because the
-> pd devices are always marked as "DL_DEV_NO_DRIVER". Maybe they should be
-> instead always be marked as DL_DEV_DRIVER_BOUND?
-
-Using STATELESS is correct, because the supplier devices, which are
-managed by genpd don't have any driver attached to them.
-
-[...]
-
-Kind regards
-Uffe
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+If someone adds another AER function, we might need to add another
+pcie_aer_get_firmware_first() check there. So, we have unnecessary code
+duplication.
