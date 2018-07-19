@@ -1,77 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:8136 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728409AbeGTQth (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Jul 2018 12:49:37 -0400
-Date: Fri, 20 Jul 2018 19:00:38 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 32/32] PCI: Whitelist Thunderbolt ports for runtime D3
-Message-ID: <20180720160038.GM2534@lahna.fi.intel.com>
-References: <cover.1529173804.git.lukas@wunner.de>
- <10206fe7f3967aa73ade5b24dc729de0e94c3b7f.1529173804.git.lukas@wunner.de>
- <20180621111354.GW2558@lahna.fi.intel.com>
- <20180718193053.GA20124@wunner.de>
- <20180720152349.GG2534@lahna.fi.intel.com>
+Return-Path: <SRS0=yV40=KD=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=yV40=KD=linutronix.de=tglx@kernel.org>
+Date: Thu, 19 Jul 2018 15:48:31 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Paul Menzel <pmenzel+linux-pci@molgen.mpg.de>
+cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+    linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+    Marc Zyngier <marc.zyngier@arm.com>
+Subject: Re: NULL pointer dereference in msi_set_mask_bit
+In-Reply-To: <ed32c159-1629-68e5-26e2-b1770a43acc3@molgen.mpg.de>
+Message-ID: <alpine.DEB.2.21.1807191541130.1602@nanos.tec.linutronix.de>
+References: <b9bd8405-64b6-2bea-f5ce-d3ab4d82452a@molgen.mpg.de> <20180718140636.GD128988@bhelgaas-glaptop.roam.corp.google.com> <alpine.DEB.2.21.1807181646280.1568@nanos.tec.linutronix.de> <6339fdef-a335-b833-4022-23725fd86d9e@molgen.mpg.de>
+ <alpine.DEB.2.21.1807181722020.1568@nanos.tec.linutronix.de> <178bb701-56af-06cf-4836-1a26e74f2b07@molgen.mpg.de> <alpine.DEB.2.21.1807182058110.1689@nanos.tec.linutronix.de> <7660f2f2-0c37-a617-ecdc-949cd4ecc060@molgen.mpg.de>
+ <ed32c159-1629-68e5-26e2-b1770a43acc3@molgen.mpg.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180720152349.GG2534@lahna.fi.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 20, 2018 at 06:23:49PM +0300, Mika Westerberg wrote:
-> On Wed, Jul 18, 2018 at 09:30:53PM +0200, Lukas Wunner wrote:
-> > Hi Mika,
-> > 
-> > sorry for the delay!
-> > 
-> > On Thu, Jun 21, 2018 at 02:13:54PM +0300, Mika Westerberg wrote:
-> > > On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
-> > > > +		/* Even the oldest 2010 Thunderbolt controller supports D3. */
-> > > > +		if (bridge->is_thunderbolt)
-> > > > +			return true;
-> > > 
-> > > I have a small concern here. In PC world native PCIe hotplug used with
-> > > Thunderbolt comes in two flavors:
-> > > 
-> > >   - Native PCI hotplug without runtime PM
-> > >   - Native PCI hotplug with runtime PM
-> > > 
-> > > The former works so that even if it uses native PCIe hotplug, the power
-> > > management is done so that the Thunderbolt host router is hot-removed
-> > > when there is nothing connected (and that brings the power savings).
-> > > With the above change we start putting all Thunderbolt PCIe hotplug
-> > > ports to D3 runtime. While this probably works (and I tested it on the
-> > > same Dell) I don't think Windows does it and it may lead to a path that
-> > > has not been tested very thoroughly by OEMs.
-> > > 
-> > > So I wonder if it makes sense to restrict this particular check to Apple
-> > > hardware at this point?
-> > 
-> > I'm not familiar at all with Windows, so this your call.  Normally I'd say,
-> > if there's no known case which forces us to constrain this to Apple, we
-> > probably shouldn't be overzealous.  OTOH I imagine you have to deal with
-> > Windows and broken BIOSes on a daily basis and can anticipate if problems
-> > are to be expected.
-> > 
-> > The "host router" is the NHI, right?  So IIUC all downstream ports and
-> > the upstream port of the TB PCIe switch may go to D3hot, same for the
-> > root port.  And your concern is that hotplug addition or removal of the
-> > NHI might not work if those ports are in D3hot?
-> 
-> Host router is the PCIe switch + NHI + xHCI. My concern is that now we
-> start putting the downstream hotplug ports of the host router (the ports
-> where TBT PCIe daisy chain is to be extented) to D3hot even when the
-> whole power management of the "Native PCI hotplug without runtime PM" is
-> done pretty much by hot-removing the whole host router if there is
-> nothing connected.
+Paul,
 
-I see Bjorn already merged these so please ignore the above. We can
-add the Apple check later if this turns out causing problems.
+On Thu, 19 Jul 2018, Paul Menzel wrote:
+
+> I had to copy the files, and then was able to create an archive with
+> non-zero files. Please find the tar archive attached.
+
+Thanks for providing the data. All looks normal there.
+
+Just for clarification. Did this happen exactly once, or did it just not
+happen again after you plugged in a serial cable?
+
+One thing you might try is to disable irqbalanced when the machine is up
+and then stress the affinity setter mechanism with scripting.
+
+Something like
+
+while true; do
+ for I in {0..3}; do echo $I > /proc/irq/$IRQ/smp_affinity_list; done
+done
+
+might be able to trigger it. But don't ask me which interrupt was involved,
+so you have to iterate through the ones which are MSI based.
+
+'cat /proc/interrupt | grep MSI' will tell you.
+
+Thanks,
+
+	tglx
