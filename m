@@ -1,97 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Matthew Wilcox <willy@infradead.org>
-References: <20180730161840.13733-1-logang@deltatee.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <1b911d4b-d8e4-d44d-af1b-8ec1a39983e6@deltatee.com>
-Date: Mon, 30 Jul 2018 10:41:43 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f68.google.com ([209.85.214.68]:37106 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731813AbeGSQi4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jul 2018 12:38:56 -0400
+Subject: Re: [PATCH] PCI/AER: Do not clear AER bits if we don't own AER
+To: Sinan Kaya <okaya@kernel.org>, bhelgaas@google.com,
+        keith.busch@intel.com
+Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+        shyam_iyer@dell.com, Frederick Lawler <fred@fredlawl.com>,
+        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20180717153135.25925-1-mr.nuke.me@gmail.com>
+ <494a5df8-0987-3a6c-30a4-a3c9ef4ed1f3@kernel.org>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <37509c44-64fe-4140-c776-53c3346cbfe5@gmail.com>
+Date: Thu, 19 Jul 2018 10:55:06 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180730161840.13733-1-logang@deltatee.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v8 0/4] Add parameter for disabling ACS redirection for
- P2P
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <494a5df8-0987-3a6c-30a4-a3c9ef4ed1f3@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey,
-
-Oops, I missed finishing this up before sending it sorry:
-
-This is mostly a resend with Alex's tags collected. Bjorn, can you
-please consider merging this? All patches have been reviewed and
-accepted by Alex.
-
-Thanks,
-
-Logan
-
---
-
-Changes since v7:
-* Collected Alex's Reviewed-by Tags
-* Rebased onto v4.18-rc7 (no conflicts)
 
 
-On 30/07/18 10:18 AM, Logan Gunthorpe wrote:
-> Changes since v6:
-> * Fixed order of operations for device specific disable function as
->   noticed by Alex
-> * Rebased onto v4.18-rc5 (no conflicts)
+On 07/17/2018 10:41 AM, Sinan Kaya wrote:
 > 
-> Changes since v5:
-> * Add a quirk to handle the Intel SPT PCH case (as pointed out by Alex)
-> * Warn in the case that we try to disable ACS redirect on a device
->   that doesn't have the ACS capability (also suggested by Alex)
-> * Collect reviewed-by tag from Alex
-> * Rebased onto v4.18-rc4 (no conflicts)
+> On 7/17/2018 8:31 AM, Alexandru Gagniuc wrote:
+>> +    if (pcie_aer_get_firmware_first(dev))
+>> +        return -EIO;
 > 
-> Changes since v4:
-> * Fixed a couple documentation mistakes spotted by Randy
-> 
-> Changes since v3:
-> * Removed some of the cruft that was copied from the resource_alignment
->   paramater (per Alex)
-> * A number of docuemntation fixes as noticed by Alex and Willy
-> 
-> Changes since v2:
-> * Rebased onto v4.18-rc1 (no conflicts)
-> * Minor tweaks to the documentation per Andy
-> * Removed the "path:" prefix and use the path parsing code
->   for simple devices (as it works the same). Per a suggestion from Alex
-> 
-> Changes since v1:
-> * Reworked pci_dev_str_match_path using strrchr as suggested by Alex
-> * Collected Christian's Acks
-> 
-> 
-> Logan Gunthorpe (4):
->   PCI: Make specifying PCI devices in kernel parameters reusable
->   PCI: Allow specifying devices using a base bus and path of devfns
->   PCI: Introduce disable_acs_redir quirk
->   PCI: Introduce the disable_acs_redir parameter
-> 
->  Documentation/admin-guide/kernel-parameters.txt |  41 +++-
->  drivers/pci/pci.c                               | 310 +++++++++++++++++++-----
->  drivers/pci/quirks.c                            |  78 +++++-
->  include/linux/pci.h                             |   5 +
->  4 files changed, 361 insertions(+), 73 deletions(-)
-> 
-> --
-> 2.11.0
-> 
+> Can you move this to closer to the caller pci_aer_init()?
+
+I could move it there. although pci_cleanup_aer_error_status_regs() is 
+called directly from pci_restore_state.  Of course, aer_cap should be 
+zero in this case, and we'd still bail out.
+I find the intent clearer if we check it here rather than having to do 
+the mental parsing of the state of aer_cap.
+
+Alex
