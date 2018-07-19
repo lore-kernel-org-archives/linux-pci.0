@@ -1,157 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: Robin Murphy <robin.murphy@arm.com>, "will.deacon@arm.com"
- <will.deacon@arm.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "robh@kernel.org" <robh@kernel.org>, "mark.rutland@arm.com"
- <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Laurentiu Tudor
- <laurentiu.tudor@nxp.com>, "bhelgaas@google.com" <bhelgaas@google.com>
-Subject: RE: [PATCH 1/7 v5] Docs: dt: add fsl-mc iommu-map device-tree binding
-Date: Fri, 6 Jul 2018 12:10:53 +0000
-Message-ID: <HE1PR0401MB2425F74655E5DFE4DDE38EE3E6470@HE1PR0401MB2425.eurprd04.prod.outlook.com>
-References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
- <1526824191-7000-2-git-send-email-nipun.gupta@nxp.com>
- <cd70dc56-ce6a-f6ef-1362-143d9c31bb46@arm.com>
-In-Reply-To: <cd70dc56-ce6a-f6ef-1362-143d9c31bb46@arm.com>
+Return-Path: <SRS0=2gfv=KD=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=2gfv=KD=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "stuyoder@gmail.com" <stuyoder@gmail.com>,
- Bharat Bhushan <bharat.bhushan@nxp.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- "joro@8bytes.org" <joro@8bytes.org>,
- "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Leo Li <leoyang.li@nxp.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>, "hch@lst.de" <hch@lst.de>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 19 Jul 2018 09:23:47 +0530
+From: poza@codeaurora.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Philippe Ombredanne <pombredanne@nexb.com>, Thomas Gleixner
+ <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate
+ Stewart <kstewart@linuxfoundation.org>, Dongdong Liu
+ <liudongdong3@huawei.com>, Keith Busch <keith.busch@intel.com>, Wei Zhang
+ <wzhang@fb.com>, Sinan Kaya <okaya@kernel.org>, Timur Tabi
+ <timur@codeaurora.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 0/7] Fix issues and cleanup for ERR_FATAL and
+ ERR_NONFATAL
+In-Reply-To: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <35f60c57a8e8fe9503d63a62fd4776bf@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
+On 2018-07-19 01:14, Bjorn Helgaas wrote:
+> This is a v3 of Oza's patches [1].  It's available at [2] if you prefer
+> git.
+> 
+> v3 changes:
+>   - Add pci_aer_clear_fatal_status() to clear ERR_FATAL bits, only 
+> called
+>     from pcie_do_fatal_recovery().  Moved to first in series to avoid a
+>     window where ERR_FATAL recovery only clears ERR_NONFATAL bits.  
+> Visible
+>     only inside the PCI core.
+>   - Instead of having pci_cleanup_aer_uncorrect_error_status() do 
+> different
+>     things based on dev->error_state, use this only for ERR_NONFATAL 
+> bits.
+>     I didn't change the name because it's used by many drivers.
+>   - Rename pci_cleanup_aer_error_device_status() to
+>     pci_aer_clear_device_status(), make it void, and make it visible 
+> only
+>     inside the PCI core.
+>   - Remove pcie_portdrv_err_handler.slot_reset altogether instead of 
+> making
+>     it a stub function.  Possibly pcie_portdrv_err_handler could be 
+> removed
+>     completely?
+> 
+> [1]
+> https://lkml.kernel.org/r/1529661494-20936-1-git-send-email-poza@codeaurora.org
+> [2]
+> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/?h=pci/06-22-oza-aer
+> 
+> ---
+> 
+> Bjorn Helgaas (1):
+>       PCI/AER: Clear only ERR_FATAL status bits during fatal recovery
+> 
+> Oza Pawandeep (6):
+>       PCI/AER: Clear only ERR_NONFATAL bits during non-fatal recovery
+>       PCI/AER: Factor out ERR_NONFATAL status bit clearing
+>       PCI/AER: Remove ERR_FATAL code from ERR_NONFATAL path
+>       PCI/AER: Clear device status bits during ERR_FATAL and 
+> ERR_NONFATAL
+>       PCI/AER: Clear device status bits during ERR_COR handling
+>       PCI/portdrv: Remove pcie_portdrv_err_handler.slot_reset
+> 
+> 
+>  drivers/pci/pci.h              |    5 ++++
+>  drivers/pci/pcie/aer.c         |   47 
+> +++++++++++++++++++++++++++-------------
+>  drivers/pci/pcie/err.c         |   15 +++++--------
+>  drivers/pci/pcie/portdrv_pci.c |   25 ---------------------
+>  4 files changed, 43 insertions(+), 49 deletions(-)
 
+looks good to me.
+Thanks for the corrections.
+some x86 compilation errors, you want me to to fix it and push v4 ?
 
-> -----Original Message-----
-> From: Robin Murphy [mailto:robin.murphy@arm.com]
-> Sent: Tuesday, July 3, 2018 8:10 PM
-> To: Nipun Gupta <nipun.gupta@nxp.com>; will.deacon@arm.com;
-> robh+dt@kernel.org; robh@kernel.org; mark.rutland@arm.com;
-> catalin.marinas@arm.com; gregkh@linuxfoundation.org; Laurentiu Tudor
-> <laurentiu.tudor@nxp.com>; bhelgaas@google.com
-> Cc: hch@lst.de; joro@8bytes.org; m.szyprowski@samsung.com;
-> shawnguo@kernel.org; frowand.list@gmail.com; iommu@lists.linux-
-> foundation.org; linux-kernel@vger.kernel.org; devicetree@vger.kernel.org;
-> linux-arm-kernel@lists.infradead.org; linuxppc-dev@lists.ozlabs.org; linux-
-> pci@vger.kernel.org; Bharat Bhushan <bharat.bhushan@nxp.com>;
-> stuyoder@gmail.com; Leo Li <leoyang.li@nxp.com>
-> Subject: Re: [PATCH 1/7 v5] Docs: dt: add fsl-mc iommu-map device-tree
-> binding
-> 
-> On 20/05/18 14:49, Nipun Gupta wrote:
-> > The existing IOMMU bindings cannot be used to specify the relationship
-> > between fsl-mc devices and IOMMUs. This patch adds a generic binding for
-> > mapping fsl-mc devices to IOMMUs, using iommu-map property.
-> >
-> > Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-> > Reviewed-by: Rob Herring <robh@kernel.org>
-> > ---
-> >   .../devicetree/bindings/misc/fsl,qoriq-mc.txt      | 39
-> ++++++++++++++++++++++
-> >   1 file changed, 39 insertions(+)
-> >
-> > diff --git a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-> b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-> > index 6611a7c..8cbed4f 100644
-> > --- a/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-> > +++ b/Documentation/devicetree/bindings/misc/fsl,qoriq-mc.txt
-> > @@ -9,6 +9,25 @@ blocks that can be used to create functional hardware
-> objects/devices
-> >   such as network interfaces, crypto accelerator instances, L2 switches,
-> >   etc.
-> >
-> > +For an overview of the DPAA2 architecture and fsl-mc bus see:
-> > +drivers/staging/fsl-mc/README.txt
-> 
-> Nit: Looks like that's Documentation/networking/dpaa2/overview.rst now.
-> 
-> > +
-> > +As described in the above overview, all DPAA2 objects in a DPRC share the
-> > +same hardware "isolation context" and a 10-bit value called an ICID
-> > +(isolation context id) is expressed by the hardware to identify
-> > +the requester.
-> > +
-> > +The generic 'iommus' property is insufficient to describe the relationship
-> > +between ICIDs and IOMMUs, so an iommu-map property is used to
-> define
-> > +the set of possible ICIDs under a root DPRC and how they map to
-> > +an IOMMU.
-> > +
-> > +For generic IOMMU bindings, see
-> > +Documentation/devicetree/bindings/iommu/iommu.txt.
-> > +
-> > +For arm-smmu binding, see:
-> > +Documentation/devicetree/bindings/iommu/arm,smmu.txt.
-> > +
-> >   Required properties:
-> >
-> >       - compatible
-> > @@ -88,14 +107,34 @@ Sub-nodes:
-> >                 Value type: <phandle>
-> >                 Definition: Specifies the phandle to the PHY device node associated
-> >                             with the this dpmac.
-> > +Optional properties:
-> > +
-> > +- iommu-map: Maps an ICID to an IOMMU and associated iommu-
-> specifier
-> > +  data.
-> > +
-> > +  The property is an arbitrary number of tuples of
-> > +  (icid-base,iommu,iommu-base,length).
-> > +
-> > +  Any ICID i in the interval [icid-base, icid-base + length) is
-> > +  associated with the listed IOMMU, with the iommu-specifier
-> > +  (i - icid-base + iommu-base).
-> >
-> >   Example:
-> >
-> > +        smmu: iommu@5000000 {
-> > +               compatible = "arm,mmu-500";
-> > +               #iommu-cells = <2>;
-> 
-> This should be 1 if stream-match-mask is present. Bad example is bad :)
-
-Agree :). Ill update it.
-
-> 
-> Robin.
-> 
-> > +               stream-match-mask = <0x7C00>;
-> > +               ...
-> > +        };
-> > +
-> >           fsl_mc: fsl-mc@80c000000 {
-> >                   compatible = "fsl,qoriq-mc";
-> >                   reg = <0x00000008 0x0c000000 0 0x40>,    /* MC portal base */
-> >                         <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
-> >                   msi-parent = <&its>;
-> > +                /* define map for ICIDs 23-64 */
-> > +                iommu-map = <23 &smmu 23 41>;
-> >                   #address-cells = <3>;
-> >                   #size-cells = <1>;
-> >
-> >
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+Oza.
