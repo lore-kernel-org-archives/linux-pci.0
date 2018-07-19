@@ -1,94 +1,42 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 7/7 v5] arm64: dts: ls208xa: comply with the iommu map
- binding for fsl_mc
-To: Nipun Gupta <nipun.gupta@nxp.com>, will.deacon@arm.com,
- robh+dt@kernel.org, robh@kernel.org, mark.rutland@arm.com,
- catalin.marinas@arm.com, gregkh@linuxfoundation.org,
- laurentiu.tudor@nxp.com, bhelgaas@google.com
-References: <1526824191-7000-1-git-send-email-nipun.gupta@nxp.com>
- <1526824191-7000-8-git-send-email-nipun.gupta@nxp.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <88626adc-6f5b-86df-88a0-620d258f8053@arm.com>
-Date: Tue, 3 Jul 2018 17:35:42 +0100
+Return-Path: <SRS0=lVmX=KD=networkplumber.org=stephen@kernel.org>
+Return-Path: <SRS0=lVmX=KD=networkplumber.org=stephen@kernel.org>
+Date: Thu, 19 Jul 2018 10:36:02 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com,
+ kys@microsoft.com, linux-pci@vger.kernel.org, Stephen Hemminger
+ <sthemmin@microsoft.com>
+Subject: Re: [PATCH] PCI: hv: support reporting serial number as slot
+ information
+Message-ID: <20180719103602.61ec8727@xeon-e3>
+In-Reply-To: <20180719165858.GA22716@red-moon>
+References: <20180612164037.10672-1-sthemmin@microsoft.com>
+	<20180704160834.GB12996@red-moon>
+	<20180711134908.GF188359@bhelgaas-glaptop.roam.corp.google.com>
+	<20180713143819.14da12b1@xeon-e3>
+	<20180719165858.GA22716@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <1526824191-7000-8-git-send-email-nipun.gupta@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
- shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
- frowand.list@gmail.com, hch@lst.de, linux-arm-kernel@lists.infradead.org,
- m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/05/18 14:49, Nipun Gupta wrote:
-> fsl-mc bus support the new iommu-map property. Comply to this binding
-> for fsl_mc bus.
+On Thu, 19 Jul 2018 17:58:59 +0100
+Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+
+> > Thanks,
+> > Stephen
+> > 
+> > 
+> > 
+> > PS: it is  nuisance that when the PCI support was moved to
+> > drivers/pci/controllers it was not done in a way  that git correctly
+> > tracked the rename. Therefore all the commit history was broken :-(  
 > 
-> Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-> Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
-> ---
->   arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 6 +++++-
->   1 file changed, 5 insertions(+), 1 deletion(-)
+> Sorry about that.
 > 
-> diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-> index 137ef4d..6010505 100644
-> --- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-> +++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
-> @@ -184,6 +184,7 @@
->   		#address-cells = <2>;
->   		#size-cells = <2>;
->   		ranges;
-> +		dma-ranges = <0x0 0x0 0x0 0x0 0x10000 0x00000000>;
->   
->   		clockgen: clocking@1300000 {
->   			compatible = "fsl,ls2080a-clockgen";
-> @@ -357,6 +358,8 @@
->   			reg = <0x00000008 0x0c000000 0 0x40>,	 /* MC portal base */
->   			      <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
->   			msi-parent = <&its>;
-> +			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by u-boot */
-> +			dma-coherent;
->   			#address-cells = <3>;
->   			#size-cells = <1>;
->   
-> @@ -460,6 +463,8 @@
->   			compatible = "arm,mmu-500";
->   			reg = <0 0x5000000 0 0x800000>;
->   			#global-interrupts = <12>;
-> +			#iommu-cells = <1>;
-> +			stream-match-mask = <0x7C00>;
->   			interrupts = <0 13 4>, /* global secure fault */
->   				     <0 14 4>, /* combined secure interrupt */
->   				     <0 15 4>, /* global non-secure fault */
-> @@ -502,7 +507,6 @@
->   				     <0 204 4>, <0 205 4>,
->   				     <0 206 4>, <0 207 4>,
->   				     <0 208 4>, <0 209 4>;
-> -			mmu-masters = <&fsl_mc 0x300 0>;
-
-Since we're in here, is the SMMU itself also coherent? If it is, you 
-probably want to say so and avoid the overhead of pointlessly cleaning 
-cache lines on every page table update.
-
-Robin.
-
->   		};
->   
->   		dspi: dspi@2100000 {
+> Isn't "git log --follow" enough for this purpose ?
 > 
+> Thanks,
+> Lorenzo
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Your right --follow works, I will figure out how to make that
+the default in .gitconfig
