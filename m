@@ -1,149 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60402 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:47992 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729134AbeGRWdx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jul 2018 18:33:53 -0400
-Date: Wed, 18 Jul 2018 16:53:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alex_Gagniuc@Dellteam.com
-Cc: mr.nuke.me@gmail.com, bhelgaas@google.com, Austin.Bolen@dell.com,
-        Shyam.Iyer@dell.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        jeffrey.t.kirsher@intel.com, ariel.elior@cavium.com,
-        michael.chan@broadcom.com, ganeshgr@chelsio.com,
-        tariqt@mellanox.com, jakub.kicinski@netronome.com,
-        talgi@mellanox.com, airlied@gmail.com, alexander.deucher@amd.com,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>
-Subject: Re: [PATCH v3] PCI: Check for PCIe downtraining conditions
-Message-ID: <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180604155523.14906-1-mr.nuke.me@gmail.com>
- <20180716211706.GB12391@bhelgaas-glaptop.roam.corp.google.com>
- <97a70a71e1034bafbcabc6c4e23577c0@ausx13mps321.AMER.DELL.COM>
+        id S1726930AbeGSL6m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 19 Jul 2018 07:58:42 -0400
+Date: Thu, 19 Jul 2018 12:15:56 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Vignesh R <vigneshr@ti.com>
+Cc: Tony Lindgren <tony@atomide.com>, Rob Herring <robh+dt@kernel.org>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 2/4] pci: dwc: pci-dra7xx: Enable errata i870 for both
+ EP and RC mode
+Message-ID: <20180719111556.GB9213@e107981-ln.cambridge.arm.com>
+References: <20180627122919.23926-1-vigneshr@ti.com>
+ <20180627122919.23926-3-vigneshr@ti.com>
+ <20180718110250.GA21589@red-moon>
+ <b7f1cef7-b0d8-733a-c450-163299d281d0@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <97a70a71e1034bafbcabc6c4e23577c0@ausx13mps321.AMER.DELL.COM>
+In-Reply-To: <b7f1cef7-b0d8-733a-c450-163299d281d0@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Mike (hfi1)]
-
-On Mon, Jul 16, 2018 at 10:28:35PM +0000, Alex_Gagniuc@Dellteam.com wrote:
-> On 7/16/2018 4:17 PM, Bjorn Helgaas wrote:
-> >> ...
-> >> The easiest way to detect this is with pcie_print_link_status(),
-> >> since the bottleneck is usually the link that is downtrained. It's not
-> >> a perfect solution, but it works extremely well in most cases.
+On Thu, Jul 19, 2018 at 04:04:34PM +0530, Vignesh R wrote:
+> Hi Lorenzo,
+> 
+> On Wednesday 18 July 2018 04:32 PM, Lorenzo Pieralisi wrote:
+> > On Wed, Jun 27, 2018 at 05:59:17PM +0530, Vignesh R wrote:
+> >> Errata i870 is applicable in both EP and RC mode. Therefore rename
+> >> function dra7xx_pcie_ep_unaligned_memaccess(), that implements errata
+> >> workaround, to dra7xx_pcie_unaligned_memaccess() and call it from a
+> >> common place. So, that errata workaround is applied for both modes of
+> >> operation.
+> >>
+> >> Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
+> >> Signed-off-by: Vignesh R <vigneshr@ti.com>
+> >> ---
+> >>  drivers/pci/controller/dwc/pci-dra7xx.c | 12 ++++++------
+> >>  1 file changed, 6 insertions(+), 6 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+> >> index 345aab56ce8b..95d9076e3fde 100644
+> >> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
+> >> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+> >> @@ -542,7 +542,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+> >>  };
+> >>  
+> >>  /*
+> >> - * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
+> >> + * dra7xx_pcie_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
+> >>   * @dra7xx: the dra7xx device where the workaround should be applied
+> >>   *
+> >>   * Access to the PCIe slave port that are not 32-bit aligned will result
+> >> @@ -552,7 +552,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+> >>   *
+> >>   * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
+> >>   */
+> >> -static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
+> >> +static int dra7xx_pcie_unaligned_memaccess(struct device *dev)
+> >>  {
+> >>  	int ret;
+> >>  	struct device_node *np = dev->of_node;
+> >> @@ -695,6 +695,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+> >>  	if (dra7xx->link_gen < 0 || dra7xx->link_gen > 2)
+> >>  		dra7xx->link_gen = 2;
+> >>  
+> >> +	ret = dra7xx_pcie_unaligned_memaccess(dev);
+> >> +	if (ret)
+> >> +		dev_err(dev, "WA for Errata i870 not appplied. Update DT\n");
 > > 
-> > This is an interesting idea.  I have two concerns:
+> > Hi Vignesh,
 > > 
-> > Some drivers already do this on their own, and we probably don't want
-> > duplicate output for those devices.  In most cases (ixgbe and mlx* are
-> > exceptions), the drivers do this unconditionally so we *could* remove
-> > it from the driver if we add it to the core.  The dmesg order would
-> > change, and the message wouldn't be associated with the driver as it
-> > now is.
-> 
-> Oh, there are only 8 users of that. Even I could patch up the drivers to 
-> remove the call, assuming we reach agreement about this change.
-> 
-> > Also, I think some of the GPU devices might come up at a lower speed,
-> > then download firmware, then reset the device so it comes up at a
-> > higher speed.  I think this patch will make us complain about about
-> > the low initial speed, which might confuse users.
-> 
-> I spoke to one of the PCIe spec writers. It's allowable for a device to 
-> downtrain speed or width. It would also be extremely dumb to downtrain 
-> with the intent to re-train at a higher speed later, but it's possible 
-> devices do dumb stuff like that. That's why it's an informational 
-> message, instead of a warning.
-
-FWIW, here's some of the discussion related to hfi1 from [1]:
-
-  > Btw, why is the driver configuring the PCIe link speed?  Isn't
-  > this something we should be handling in the PCI core?
-
-  The device comes out of reset at the 5GT/s speed. The driver
-  downloads device firmware, programs PCIe registers, and co-ordinates
-  the transition to 8GT/s.
-
-  This recipe is device specific and is therefore implemented in the
-  hfi1 driver built on top of PCI core functions and macros.
-
-Also several DRM drivers seem to do this (see cik_pcie_gen3_enable(),
-si_pcie_gen3_enable()); from [2]:
-
-  My understanding was that some platfoms only bring up the link in gen 1
-  mode for compatibility reasons. 
-
-[1] https://lkml.kernel.org/r/32E1700B9017364D9B60AED9960492BC627FF54C@fmsmsx120.amr.corp.intel.com
-[2] https://lkml.kernel.org/r/BN6PR12MB1809BD30AA5B890C054F9832F7B50@BN6PR12MB1809.namprd12.prod.outlook.com
-
-> Another case: Some devices (lower-end GPUs) use silicon (and marketing) 
-> that advertises x16, but they're only routed for x8. I'm okay with 
-> seeing an informational message in this case. In fact, I didn't know 
-> that my Quadro card for three years is only wired for x8 until I was 
-> testing this patch.
-
-Yeah, it's probably OK.  I don't want bug reports from people who
-think something's broken when it's really just a hardware limitation
-of their system.  But hopefully the message is not alarming.
-
-> > So I'm not sure whether it's better to do this in the core for all
-> > devices, or if we should just add it to the high-performance drivers
-> > that really care.
-> 
-> You're thinking "do I really need that bandwidth" because I'm using a 
-> function called "_bandwidth_". The point of the change is very far from 
-> that: it is to help in system troubleshooting by detecting downtraining 
-> conditions.
-
-I'm not sure what you think I'm thinking :)  My question is whether
-it's worthwhile to print this extra information for *every* PCIe
-device, given that your use case is the tiny percentage of broken
-systems.
-
-If we only printed the info in the "bw_avail < bw_cap" case, i.e.,
-when the device is capable of more than it's getting, that would make
-a lot of sense to me.  The normal case line is more questionable.  I
-think the reason that's there is because the network drivers are very
-performance sensitive and like to see that info all the time.
-
-Maybe we need something like this:
-
-  pcie_print_link_status(struct pci_dev *dev, int verbose)
-  {
-    ...
-    if (bw_avail >= bw_cap) {
-      if (verbose)
-        pci_info(dev, "... available PCIe bandwidth ...");
-    } else
-      pci_info(dev, "... available PCIe bandwidth, limited by ...");
-  }
-
-So the core could print only the potential problems with:
-
-  pcie_print_link_status(dev, 0);
-
-and drivers that really care even if there's no problem could do:
-
-  pcie_print_link_status(dev, 1);
-
-> >> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> [snip]
-> >> +	/* Look from the device up to avoid downstream ports with no devices. */
-> >> +	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
-> >> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
-> >> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
-> >> +		return;
+> > Nit: s/appplied/applied
 > > 
-> > Do we care about Upstream Ports here?  
 > 
-> YES! Switches. e.g. an x16 switch with 4x downstream ports could 
-> downtrain at 8x and 4x, and we'd never catch it.
+> Oops, let me know if you want me to resend with this fixed.
 
-OK, I think I see your point: if the upstream port *could* do 16x but
-only trains to 4x, and two endpoints below it are both capable of 4x,
-the endpoints *think* they're happy but in fact they have to share 4x
-when they could use more.
+I can fix it, no problem but see below.
 
-Bjorn
+> > Two questions:
+> > 
+> > - Current code applies the unaligned_memaccess() workaround for all
+> >   compatible variants. This is fine for current controllers (since
+> >   they are all affected), the code path above will have to be
+> >   reworked if there is any other compatible IP re-using the driver
+> >   that does not require the workaround.
+> 
+> There are no compatible IPs that don't require this workaround. Also, I
+> don't see this IP being re-used in future. If you insist, I can add a
+> errata flag
+
+I do not insist, I just pointed this out ;-)
+
+> > - How do you want this series to go upstream ? If it goes via arm-soc,
+> >   which I think it should, here is my ACK on this patch:
+> > 
+> Patch 1 and 2(dt bindings update and driver patch) can go in via PCI
+> tree. And DT changes(patch 3 and 4) can be picked up by Tony via
+> omap/arm-soc tree. They are mostly independent and should not cause any
+> problems. Does that sound good?
+
+It should be fine but technically as soon as patch (2) is applied we
+would have a regression if patches (3) and (4) are applied separately.
+
+You could re-order the series and send everything via arm-soc.
+
+It is not such a big deal, your choice, please let me know.
+
+Thanks,
+Lorenzo
+
+> > Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > 
+> 
+> Thanks!
+> 
+> > Please let me know if I can drop this series from the PCI patchwork.
+> > 
+> > Thanks,
+> > Lorenzo
+> > 
+> >> +
+> >>  	switch (mode) {
+> >>  	case DW_PCIE_RC_TYPE:
+> >>  		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) {
+> >> @@ -717,10 +721,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+> >>  		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+> >>  				   DEVICE_TYPE_EP);
+> >>  
+> >> -		ret = dra7xx_pcie_ep_unaligned_memaccess(dev);
+> >> -		if (ret)
+> >> -			goto err_gpio;
+> >> -
+> >>  		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
+> >>  		if (ret < 0)
+> >>  			goto err_gpio;
+> >> -- 
+> >> 2.18.0
+> >>
+> 
+> -- 
+> Regards
+> Vignesh
