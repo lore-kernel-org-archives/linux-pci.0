@@ -1,205 +1,174 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1531893761.31406.15.camel@mhfsdcap03>
-Subject: Re: [PATCH v3 3/4] PCI: mediatek: Add system pm support for MT2712
- and MT7622
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Date: Wed, 18 Jul 2018 14:02:41 +0800
-In-Reply-To: <20180717171543.GA20991@red-moon>
-References: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
- <1530518264-6125-4-git-send-email-honghui.zhang@mediatek.com>
- <20180717171543.GA20991@red-moon>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, khilman@kernel.org,
- marc.zyngier@arm.com, linux-pci@vger.kernel.org, sean.wang@mediatek.com,
- rjw@rjwysocki.net, linux-kernel@vger.kernel.org, yt.shen@mediatek.com,
- matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
- yong.wu@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
- ulf.hansson@linaro.org, eddie.huang@mediatek.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:57232 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730505AbeGSJO2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jul 2018 05:14:28 -0400
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
+        adouglas@cadence.com, jesper.nilsson@axis.com,
+        shawn.lin@rock-chips.com
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Subject: [PATCH v14 05/12] PCI: dwc: Rework MSI callbacks handler
+Date: Thu, 19 Jul 2018 10:32:15 +0200
+Message-Id: <110c8e4ff341c66cac244e7448840006e3aeee29.1531922095.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
+References: <cover.1531922095.git.gustavo.pimentel@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2018-07-17 at 18:15 +0100, Lorenzo Pieralisi wrote:
-> [+Rafael, Kevin, Ulf]
-> 
-> On Mon, Jul 02, 2018 at 03:57:43PM +0800, honghui.zhang@mediatek.com wrote:
-> > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> > 
-> > The MTCMOS of PCIe Host for MT2712 and MT7622 will be off when system
-> > suspend, and all the internal control register will be reset after system
-> > resume. The PCIe link should be re-established and the related control
-> > register values should be re-set after system resume.
-> > 
-> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> > Acked-by: Ryder Lee <ryder.lee@mediatek.com>
-> > ---
-> >  drivers/pci/controller/pcie-mediatek.c | 67 ++++++++++++++++++++++++++++++++++
-> >  1 file changed, 67 insertions(+)
-> > 
-> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > index 86918d4..175d7b6 100644
-> > --- a/drivers/pci/controller/pcie-mediatek.c
-> > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > @@ -134,12 +134,14 @@ struct mtk_pcie_port;
-> >  /**
-> >   * struct mtk_pcie_soc - differentiate between host generations
-> >   * @need_fix_class_id: whether this host's class ID needed to be fixed or not
-> > + * @pm_support: whether the host's MTCMOS will be off when suspend
-> >   * @ops: pointer to configuration access functions
-> >   * @startup: pointer to controller setting functions
-> >   * @setup_irq: pointer to initialize IRQ functions
-> >   */
-> >  struct mtk_pcie_soc {
-> >  	bool need_fix_class_id;
-> > +	bool pm_support;
-> >  	struct pci_ops *ops;
-> >  	int (*startup)(struct mtk_pcie_port *port);
-> >  	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
-> > @@ -1197,12 +1199,75 @@ static int mtk_pcie_probe(struct platform_device *pdev)
-> >  	return err;
-> >  }
-> >  
-> > +static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
-> > +{
-> > +	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-> > +	const struct mtk_pcie_soc *soc = pcie->soc;
-> > +	struct mtk_pcie_port *port;
-> > +
-> > +	if (!soc->pm_support)
-> > +		return 0;
-> > +
-> > +	if (list_empty(&pcie->ports))
-> > +		return 0;
-> > +
-> > +	list_for_each_entry(port, &pcie->ports, list) {
-> > +		clk_disable_unprepare(port->pipe_ck);
-> > +		clk_disable_unprepare(port->obff_ck);
-> > +		clk_disable_unprepare(port->axi_ck);
-> > +		clk_disable_unprepare(port->aux_ck);
-> > +		clk_disable_unprepare(port->ahb_ck);
-> > +		clk_disable_unprepare(port->sys_ck);
-> > +		phy_power_off(port->phy);
-> > +		phy_exit(port->phy);
-> > +	}
-> > +
-> > +	mtk_pcie_subsys_powerdown(pcie);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
-> > +{
-> > +	struct mtk_pcie *pcie = dev_get_drvdata(dev);
-> > +	const struct mtk_pcie_soc *soc = pcie->soc;
-> > +	struct mtk_pcie_port *port, *tmp;
-> > +
-> > +	if (!soc->pm_support)
-> > +		return 0;
-> > +
-> > +	if (list_empty(&pcie->ports))
-> > +		return 0;
-> > +
-> > +	if (dev->pm_domain) {
-> > +		pm_runtime_enable(dev);
-> > +		pm_runtime_get_sync(dev);
-> > +	}
-> 
-> Are these runtime PM calls needed/abused here ?
-> 
-> Mind explaining the logic ?
-> 
-> There is certainly an asymmetry with the suspend callback which made me
-> suspicious, I am pretty certain Rafael/Kevin/Ulf can help me clarify so
-> that we can make progress with this patch.
-> 
-> Lorenzo
-> 
-Hi Lorenzo, thanks for your comments.
-Sorry I don't get you.
-I believe that in suspend callbacks the pm_runtime_put_sync and
-pm_runtime_disable should be called to gated the CMOS for this module,
-while the pm_rumtime_enable and pm_rumtime_get_sync should be called in
-resume callback.
+Remove duplicate defines located on pcie-designware.h file already
+available on /include/uapi/linux/pci-regs.h file.
 
-That's exactly this patch doing.
-But the pm_rumtime_put_sync and pm_runtime_disable functions was wrapped
-in the mtk_pcie_subsys_powerdown.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Change v1->v2:
+ - Nothing changed, just to follow the patch set version.
+Change v2->v3:
+ - Replaced wrong return value 0 to -EINVAL.
+Change v3->v4:
+ - Rebased to Lorenzo's master branch v4.18-rc1.
+Change v4->v5:
+ - Moved pci_epc_set_msi maximum interrupts validation into a new patch
+file #11.
+Change v5->v6:
+ - Nothing changed, just to follow the patch set version.
+Change v6->v7:
+ - Nothing changed, just to follow the patch set version.
+Change v7->v8:
+ - Re-sending the patch series.
+Change v8->v9:
+ - Nothing changed, just to follow the patch set version.
+Change v9->v10:
+ - Nothing changed, just to follow the patch set version.
+Change v10->v11:
+ - Nothing changed, just to follow the patch set version.
+Change v11->v12:
+ - Nothing changed, just to follow the patch set version.
+Change v12->v13:
+ - Re-sending the patch series.
+Change v13->v14:
+ - Nothing changed, just to follow the patch set version.
 
-I did not call mtk_pcie_subsys_powerup since it does not just wrapped
-pm_rumtime related functions but also do the platform_resource_get,
-devm_ioremap, and free_ck clock get which I do not needed in resume
-callback.
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 49 +++++++++++++++++--------
+ drivers/pci/controller/dwc/pcie-designware.h    | 11 ------
+ 2 files changed, 33 insertions(+), 27 deletions(-)
 
-Do you think it will be much clear if I abstract the
-platform_resource_get, devm_ioremap functions from
-mtk_pcie_subsys_powerup and put it to a new functions like
-mtk_pcie_subsys_resource_get, and then we may call the
-mtk_pcie_subsys_powerup in the resume function?
-
-thanks
-> > +
-> > +	clk_prepare_enable(pcie->free_ck);
-> > +
-> > +	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-> > +		mtk_pcie_enable_port(port);
-> > +
-> > +	/* In case of EP was removed while system suspend. */
-> > +	if (list_empty(&pcie->ports))
-> > +		mtk_pcie_subsys_powerdown(pcie);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static const struct dev_pm_ops mtk_pcie_pm_ops = {
-> > +	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
-> > +				      mtk_pcie_resume_noirq)
-> > +};
-> > +
-> >  static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
-> >  	.ops = &mtk_pcie_ops,
-> >  	.startup = mtk_pcie_startup_port,
-> >  };
-> >  
-> >  static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-> > +	.pm_support = true,
-> >  	.ops = &mtk_pcie_ops_v2,
-> >  	.startup = mtk_pcie_startup_port_v2,
-> >  	.setup_irq = mtk_pcie_setup_irq,
-> > @@ -1210,6 +1275,7 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt2712 = {
-> >  
-> >  static const struct mtk_pcie_soc mtk_pcie_soc_mt7622 = {
-> >  	.need_fix_class_id = true,
-> > +	.pm_support = true,
-> >  	.ops = &mtk_pcie_ops_v2,
-> >  	.startup = mtk_pcie_startup_port_v2,
-> >  	.setup_irq = mtk_pcie_setup_irq,
-> > @@ -1229,6 +1295,7 @@ static struct platform_driver mtk_pcie_driver = {
-> >  		.name = "mtk-pcie",
-> >  		.of_match_table = mtk_pcie_ids,
-> >  		.suppress_bind_attrs = true,
-> > +		.pm = &mtk_pcie_pm_ops,
-> >  	},
-> >  };
-> >  builtin_platform_driver(mtk_pcie_driver);
-> > -- 
-> > 2.6.4
-> > 
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 23be2c0..dd9c366 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -246,29 +246,38 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
+ 
+ static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
+ {
+-	int val;
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	u32 val, reg;
++
++	if (!ep->msi_cap)
++		return -EINVAL;
+ 
+-	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+-	if (!(val & MSI_CAP_MSI_EN_MASK))
++	reg = ep->msi_cap + PCI_MSI_FLAGS;
++	val = dw_pcie_readw_dbi(pci, reg);
++	if (!(val & PCI_MSI_FLAGS_ENABLE))
+ 		return -EINVAL;
+ 
+-	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
++	val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
++
+ 	return val;
+ }
+ 
+-static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
++static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
+ {
+-	int val;
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	u32 val, reg;
+ 
+-	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+-	val &= ~MSI_CAP_MMC_MASK;
+-	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
++	if (!ep->msi_cap)
++		return -EINVAL;
++
++	reg = ep->msi_cap + PCI_MSI_FLAGS;
++	val = dw_pcie_readw_dbi(pci, reg);
++	val &= ~PCI_MSI_FLAGS_QMASK;
++	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
+ 	dw_pcie_dbi_ro_wr_en(pci);
+-	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
++	dw_pcie_writew_dbi(pci, reg, val);
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	return 0;
+@@ -367,21 +376,29 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	struct pci_epc *epc = ep->epc;
+ 	u16 msg_ctrl, msg_data;
+-	u32 msg_addr_lower, msg_addr_upper;
++	u32 msg_addr_lower, msg_addr_upper, reg;
+ 	u64 msg_addr;
+ 	bool has_upper;
+ 	int ret;
+ 
++	if (!ep->msi_cap)
++		return -EINVAL;
++
+ 	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
+-	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
++	reg = ep->msi_cap + PCI_MSI_FLAGS;
++	msg_ctrl = dw_pcie_readw_dbi(pci, reg);
+ 	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
+-	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
++	reg = ep->msi_cap + PCI_MSI_ADDRESS_LO;
++	msg_addr_lower = dw_pcie_readl_dbi(pci, reg);
+ 	if (has_upper) {
+-		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
+-		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
++		reg = ep->msi_cap + PCI_MSI_ADDRESS_HI;
++		msg_addr_upper = dw_pcie_readl_dbi(pci, reg);
++		reg = ep->msi_cap + PCI_MSI_DATA_64;
++		msg_data = dw_pcie_readw_dbi(pci, reg);
+ 	} else {
+ 		msg_addr_upper = 0;
+-		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
++		reg = ep->msi_cap + PCI_MSI_DATA_32;
++		msg_data = dw_pcie_readw_dbi(pci, reg);
+ 	}
+ 	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
+ 	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 00ac419..e8b97f5 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -96,17 +96,6 @@
+ #define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
+ 			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
+ 
+-#define MSI_MESSAGE_CONTROL		0x52
+-#define MSI_CAP_MMC_SHIFT		1
+-#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
+-#define MSI_CAP_MME_SHIFT		4
+-#define MSI_CAP_MSI_EN_MASK		0x1
+-#define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+-#define MSI_MESSAGE_ADDR_L32		0x54
+-#define MSI_MESSAGE_ADDR_U32		0x58
+-#define MSI_MESSAGE_DATA_32		0x58
+-#define MSI_MESSAGE_DATA_64		0x5C
+-
+ #define MAX_MSI_IRQS			256
+ #define MAX_MSI_IRQS_PER_CTRL		32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
+-- 
+2.7.4
