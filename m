@@ -1,170 +1,168 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:38989 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729794AbeGQKDS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2018 06:03:18 -0400
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v12 05/12] PCI: dwc: Rework MSI callbacks handler
-Date: Tue, 17 Jul 2018 11:31:25 +0200
-Message-Id: <278a41c07a3339e82867962b36cae81e4928f2b0.1531818979.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531818979.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=uwJQ=KD=gmail.com=mr.nuke.me@kernel.org>
+Return-Path: <SRS0=uwJQ=KD=gmail.com=mr.nuke.me@kernel.org>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Subject: Re: [PATCH v3] PCI: Check for PCIe downtraining conditions
+To: Bjorn Helgaas <helgaas@kernel.org>, Alex_Gagniuc@Dellteam.com
+Cc: bhelgaas@google.com, Austin.Bolen@dell.com, Shyam.Iyer@dell.com,
+ keith.busch@intel.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, jeffrey.t.kirsher@intel.com,
+ ariel.elior@cavium.com, michael.chan@broadcom.com, ganeshgr@chelsio.com,
+ tariqt@mellanox.com, jakub.kicinski@netronome.com, talgi@mellanox.com,
+ airlied@gmail.com, alexander.deucher@amd.com,
+ Mike Marciniszyn <mike.marciniszyn@intel.com>
+References: <20180604155523.14906-1-mr.nuke.me@gmail.com>
+ <20180716211706.GB12391@bhelgaas-glaptop.roam.corp.google.com>
+ <97a70a71e1034bafbcabc6c4e23577c0@ausx13mps321.AMER.DELL.COM>
+ <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <8baf16fb-7e7c-ec59-19ef-a709e164dc94@gmail.com>
+Date: Thu, 19 Jul 2018 10:46:43 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove duplicate defines located on pcie-designware.h file already
-available on /include/uapi/linux/pci-regs.h file.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Change v1->v2:
- - Nothing changed, just to follow the patch set version.
-Change v2->v3:
- - Replaced wrong return value 0 to -EINVAL.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Moved pci_epc_set_msi maximum interrupts validation into a new patch
-file #11.
-Change v5->v6:
- - Nothing changed, just to follow the patch set version.
-Change v6->v7:
- - Nothing changed, just to follow the patch set version.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Nothing changed, just to follow the patch set version.
-Change v9->v10:
- - Nothing changed, just to follow the patch set version.
-Change v10->v11:
- - Nothing changed, just to follow the patch set version.
-Change v11->v12:
- - Nothing changed, just to follow the patch set version.
 
- drivers/pci/controller/dwc/pcie-designware-ep.c | 49 +++++++++++++++++--------
- drivers/pci/controller/dwc/pcie-designware.h    | 11 ------
- 2 files changed, 33 insertions(+), 27 deletions(-)
+On 07/18/2018 04:53 PM, Bjorn Helgaas wrote:
+> [+cc Mike (hfi1)]
+> 
+> On Mon, Jul 16, 2018 at 10:28:35PM +0000, Alex_Gagniuc@Dellteam.com wrote:
+>> On 7/16/2018 4:17 PM, Bjorn Helgaas wrote:
+>>>> ...
+>>>> The easiest way to detect this is with pcie_print_link_status(),
+>>>> since the bottleneck is usually the link that is downtrained. It's not
+>>>> a perfect solution, but it works extremely well in most cases.
+>>>
+>>> This is an interesting idea.  I have two concerns:
+>>>
+>>> Some drivers already do this on their own, and we probably don't want
+>>> duplicate output for those devices.  In most cases (ixgbe and mlx* are
+>>> exceptions), the drivers do this unconditionally so we *could* remove
+>>> it from the driver if we add it to the core.  The dmesg order would
+>>> change, and the message wouldn't be associated with the driver as it
+>>> now is.
+>>
+>> Oh, there are only 8 users of that. Even I could patch up the drivers to
+>> remove the call, assuming we reach agreement about this change.
+>>
+>>> Also, I think some of the GPU devices might come up at a lower speed,
+>>> then download firmware, then reset the device so it comes up at a
+>>> higher speed.  I think this patch will make us complain about about
+>>> the low initial speed, which might confuse users.
+>>
+>> I spoke to one of the PCIe spec writers. It's allowable for a device to
+>> downtrain speed or width. It would also be extremely dumb to downtrain
+>> with the intent to re-train at a higher speed later, but it's possible
+>> devices do dumb stuff like that. That's why it's an informational
+>> message, instead of a warning.
+> 
+> FWIW, here's some of the discussion related to hfi1 from [1]:
+> 
+>    > Btw, why is the driver configuring the PCIe link speed?  Isn't
+>    > this something we should be handling in the PCI core?
+> 
+>    The device comes out of reset at the 5GT/s speed. The driver
+>    downloads device firmware, programs PCIe registers, and co-ordinates
+>    the transition to 8GT/s.
+> 
+>    This recipe is device specific and is therefore implemented in the
+>    hfi1 driver built on top of PCI core functions and macros.
+> 
+> Also several DRM drivers seem to do this (see ),
+> si_pcie_gen3_enable()); from [2]:
+> 
+>    My understanding was that some platfoms only bring up the link in gen 1
+>    mode for compatibility reasons.
+> 
+> [1] https://lkml.kernel.org/r/32E1700B9017364D9B60AED9960492BC627FF54C@fmsmsx120.amr.corp.intel.com
+> [2] https://lkml.kernel.org/r/BN6PR12MB1809BD30AA5B890C054F9832F7B50@BN6PR12MB1809.namprd12.prod.outlook.com
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 23be2c0..dd9c366 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -246,29 +246,38 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
- 
- static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
- {
--	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 val, reg;
-+
-+	if (!ep->msi_cap)
-+		return -EINVAL;
- 
--	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
--	if (!(val & MSI_CAP_MSI_EN_MASK))
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	val = dw_pcie_readw_dbi(pci, reg);
-+	if (!(val & PCI_MSI_FLAGS_ENABLE))
- 		return -EINVAL;
- 
--	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
-+	val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
-+
- 	return val;
- }
- 
--static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
-+static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 interrupts)
- {
--	int val;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 val, reg;
- 
--	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
--	val &= ~MSI_CAP_MMC_MASK;
--	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
-+	if (!ep->msi_cap)
-+		return -EINVAL;
-+
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	val = dw_pcie_readw_dbi(pci, reg);
-+	val &= ~PCI_MSI_FLAGS_QMASK;
-+	val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
- 	dw_pcie_dbi_ro_wr_en(pci);
--	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
-+	dw_pcie_writew_dbi(pci, reg, val);
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	return 0;
-@@ -367,21 +376,29 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct pci_epc *epc = ep->epc;
- 	u16 msg_ctrl, msg_data;
--	u32 msg_addr_lower, msg_addr_upper;
-+	u32 msg_addr_lower, msg_addr_upper, reg;
- 	u64 msg_addr;
- 	bool has_upper;
- 	int ret;
- 
-+	if (!ep->msi_cap)
-+		return -EINVAL;
-+
- 	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
--	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-+	reg = ep->msi_cap + PCI_MSI_FLAGS;
-+	msg_ctrl = dw_pcie_readw_dbi(pci, reg);
- 	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
--	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-+	reg = ep->msi_cap + PCI_MSI_ADDRESS_LO;
-+	msg_addr_lower = dw_pcie_readl_dbi(pci, reg);
- 	if (has_upper) {
--		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
--		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
-+		reg = ep->msi_cap + PCI_MSI_ADDRESS_HI;
-+		msg_addr_upper = dw_pcie_readl_dbi(pci, reg);
-+		reg = ep->msi_cap + PCI_MSI_DATA_64;
-+		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	} else {
- 		msg_addr_upper = 0;
--		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
-+		reg = ep->msi_cap + PCI_MSI_DATA_32;
-+		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	}
- 	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
- 	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 00ac419..e8b97f5 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -96,17 +96,6 @@
- #define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
- 			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
- 
--#define MSI_MESSAGE_CONTROL		0x52
--#define MSI_CAP_MMC_SHIFT		1
--#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
--#define MSI_CAP_MME_SHIFT		4
--#define MSI_CAP_MSI_EN_MASK		0x1
--#define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
--#define MSI_MESSAGE_ADDR_L32		0x54
--#define MSI_MESSAGE_ADDR_U32		0x58
--#define MSI_MESSAGE_DATA_32		0x58
--#define MSI_MESSAGE_DATA_64		0x5C
--
- #define MAX_MSI_IRQS			256
- #define MAX_MSI_IRQS_PER_CTRL		32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
--- 
-2.7.4
+Downtraining a link "for compatibility reasons" is one of those dumb 
+things that devices do. I'm SURPRISED AMD HW does it, although it is 
+perfectly permissible by PCIe spec.
+
+>> Another case: Some devices (lower-end GPUs) use silicon (and marketing)
+>> that advertises x16, but they're only routed for x8. I'm okay with
+>> seeing an informational message in this case. In fact, I didn't know
+>> that my Quadro card for three years is only wired for x8 until I was
+>> testing this patch.
+> 
+> Yeah, it's probably OK.  I don't want bug reports from people who
+> think something's broken when it's really just a hardware limitation
+> of their system.  But hopefully the message is not alarming.
+
+It looks fairly innocent:
+
+[    0.749415] pci 0000:18:00.0: 4.000 Gb/s available PCIe bandwidth, 
+limited by 5 GT/s x1 link at 0000:17:03.0 (capable of 15.752 Gb/s with 8 
+GT/s x2 link)
+
+>>> So I'm not sure whether it's better to do this in the core for all
+>>> devices, or if we should just add it to the high-performance drivers
+>>> that really care.
+>>
+>> You're thinking "do I really need that bandwidth" because I'm using a
+>> function called "_bandwidth_". The point of the change is very far from
+>> that: it is to help in system troubleshooting by detecting downtraining
+>> conditions.
+> 
+> I'm not sure what you think I'm thinking :)  My question is whether
+> it's worthwhile to print this extra information for *every* PCIe
+> device, given that your use case is the tiny percentage of broken
+> systems.
+
+I think this information is a lot more useful than a bunch of other info 
+that's printed. Is "type 00 class 0x088000" more valuable? What about 
+"reg 0x20: [mem 0x9d950000-0x9d95ffff 64bit pref]", which is also 
+available under /proc/iomem for those curious?
+
+> If we only printed the info in the "bw_avail < bw_cap" case, i.e.,
+> when the device is capable of more than it's getting, that would make
+> a lot of sense to me.  The normal case line is more questionable.  I
+> think the reason that's there is because the network drivers are very
+> performance sensitive and like to see that info all the time.
+
+I agree that can be an acceptable compromise.
+
+> Maybe we need something like this:
+> 
+>    pcie_print_link_status(struct pci_dev *dev, int verbose)
+>    {
+>      ...
+>      if (bw_avail >= bw_cap) {
+>        if (verbose)
+>          pci_info(dev, "... available PCIe bandwidth ...");
+>      } else
+>        pci_info(dev, "... available PCIe bandwidth, limited by ...");
+>    }
+> 
+> So the core could print only the potential problems with:
+> 
+>    pcie_print_link_status(dev, 0);
+> 
+> and drivers that really care even if there's no problem could do:
+> 
+>    pcie_print_link_status(dev, 1);
+
+Sounds good. I'll try to push out updated PATCH early next week.
+
+>>>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+>> [snip]
+>>>> +	/* Look from the device up to avoid downstream ports with no devices. */
+>>>> +	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
+>>>> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
+>>>> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
+>>>> +		return;
+>>>
+>>> Do we care about Upstream Ports here?
+>>
+>> YES! Switches. e.g. an x16 switch with 4x downstream ports could
+>> downtrain at 8x and 4x, and we'd never catch it.
+> 
+> OK, I think I see your point: if the upstream port *could* do 16x but
+> only trains to 4x, and two endpoints below it are both capable of 4x,
+> the endpoints *think* they're happy but in fact they have to share 4x
+> when they could use more.
+> 
+> Bjorn
+> 
