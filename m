@@ -1,45 +1,47 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [PATCH V5 0/3] PCI: separate hotplug handling from fatal error
- handling
-To: Bjorn Helgaas <helgaas@kernel.org>, Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-References: <1530571967-19099-1-git-send-email-okaya@codeaurora.org>
- <20180731184457.GN45322@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <4dd903ec-3e4c-d2fb-8216-95d60bba4e55@kernel.org>
-Date: Tue, 31 Jul 2018 11:54:58 -0700
+Return-Path: <SRS0=uwJQ=KD=gmail.com=mr.nuke.me@kernel.org>
+Return-Path: <SRS0=uwJQ=KD=gmail.com=mr.nuke.me@kernel.org>
+Subject: Re: [PATCH v3] PCI: Check for PCIe downtraining conditions
+To: Tal Gilboa <talgi@mellanox.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+ shyam_iyer@dell.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+ Ariel Elior <ariel.elior@cavium.com>,
+ Michael Chan <michael.chan@broadcom.com>,
+ Ganesh Goudar <ganeshgr@chelsio.com>, Tariq Toukan <tariqt@mellanox.com>,
+ Jakub Kicinski <jakub.kicinski@netronome.com>,
+ Dave Airlie <airlied@gmail.com>, Alex Deucher <alexander.deucher@amd.com>
+References: <20180604155523.14906-1-mr.nuke.me@gmail.com>
+ <20180716211706.GB12391@bhelgaas-glaptop.roam.corp.google.com>
+ <628346bc-b455-05f2-2051-35a807076ea0@mellanox.com>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <25e4f647-f830-e1cc-bffc-0cc894885667@gmail.com>
+Date: Thu, 19 Jul 2018 10:49:55 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180731184457.GN45322@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <628346bc-b455-05f2-2051-35a807076ea0@mellanox.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 7/31/2018 11:44 AM, Bjorn Helgaas wrote:
-> There's been a ton of discussion about this, and I didn't see a clear
-> consensus emerge, so I'm going to drop it for now.  If it's still
-> needed, please repost it and I'll watch for reviewers.
-
-I apologize, let me summarize the conversation for you.
-I proposed this [1]. Oza seems to be onboard [2].
-
-Later, I posted v6 with this change last weekend.
-
-[patch v6 1/1] pci: pciehp: ignore link events when there is a fatal 
-error pending
-
-Lukas and I discussed the patch last weekend under this v6 thread.
-AFAIK, we agreed on the direction.
-
-I'll post V7 with Lukas' comments and capture the detail from email
-into the commit message.
-
-Let us know what you think about it.
-
-Sinan
 
 
-[1] https://lkml.org/lkml/2018/7/21/13.
-[2] https://lkml.org/lkml/2018/7/25/183
+On 07/18/2018 08:38 AM, Tal Gilboa wrote:
+> On 7/16/2018 5:17 PM, Bjorn Helgaas wrote:
+>> [+cc maintainers of drivers that already use pcie_print_link_status()
+>> and GPU folks]
+[snip]
+>>
+>>> +    /* Multi-function PCIe share the same link/status. */
+>>> +    if ((PCI_FUNC(dev->devfn) != 0) || dev->is_virtfn)
+>>> +        return;
+>>> +
+>>> +    pcie_print_link_status(dev);
+>>> +}
+> 
+> Is this function called by default for every PCIe device? What about 
+> VFs? We make an exception for them on our driver since a VF doesn't have 
+> access to the needed information in order to provide a meaningful message.
+
+I'm assuming VF means virtual function. pcie_print_link_status() doesn't 
+care if it's passed a virtual function. It will try to do its job. 
+That's why I bail out three lines above, with 'dev->is_virtfn' check.
+
+Alex
