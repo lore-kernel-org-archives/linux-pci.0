@@ -1,39 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34550 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731848AbeGaShM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jul 2018 14:37:12 -0400
-Date: Tue, 31 Jul 2018 11:56:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org,
-        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
+Received: from gateway32.websitewelcome.com ([192.185.145.171]:30916 "EHLO
+        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731612AbeGTPul (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jul 2018 11:50:41 -0400
+Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
+        by gateway32.websitewelcome.com (Postfix) with ESMTP id 4CE7EB81EF8
+        for <linux-pci@vger.kernel.org>; Fri, 20 Jul 2018 10:02:00 -0500 (CDT)
+Date: Fri, 20 Jul 2018 10:01:58 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Ryder Lee <ryder.lee@mediatek.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 0/3] PCI: mobiveil: Misc fixes
-Message-ID: <20180731165600.GL45322@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180730134316.11719-1-lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] PCI: mediatek: Fix unchecked return value
+Message-ID: <20180720150158.GA10922@embeddedor.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180730134316.11719-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 30, 2018 at 02:43:13PM +0100, Lorenzo Pieralisi wrote:
-> Subrahmanya,
-> 
-> I put together this series so that the Mobiveil controller driver
-> can compile (successfully). Please review and ack as soon as possible
-> since the current situation is a bit embarassing to be honest, we
-> should be sending these patches as fixes this week so that they
-> can make it for v4.18, currently the driver is in the kernel for
-> nothing.
+Check return value of devm_pci_remap_iospace.
 
-There doesn't seem to be much interest in the Mobiveil driver (the
-last patch I see was on May 10), and as you say, it's not even in the
-Makefile, so it has gotten zero testing or even building.
+Notice that, currently, all instances of devm_pci_remap_iospace
+are being checked.
 
-Should we just drop the driver and see if anybody wants to try again
-next cycle?  I'm a little hesitant about flipping the switch to enable
-a brand-new driver this late in the cycle.
+Addresses-Coverity-ID: 1471965 ("Unchecked return value")
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/pci/controller/pcie-mediatek.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Bjorn
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 861dda6..1477939 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -1109,7 +1109,9 @@ static int mtk_pcie_request_resources(struct mtk_pcie *pcie)
+ 	if (err < 0)
+ 		return err;
+ 
+-	devm_pci_remap_iospace(dev, &pcie->pio, pcie->io.start);
++	err = devm_pci_remap_iospace(dev, &pcie->pio, pcie->io.start);
++	if (err)
++		return err;
+ 
+ 	return 0;
+ }
+-- 
+2.7.4
