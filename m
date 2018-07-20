@@ -1,56 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Leonard Crestez <leonard.crestez@nxp.com>
+To: Lucas Stach <l.stach@pengutronix.de>, Richard Zhu <hongxing.zhu@nxp.com>,
+ Andrey Smirnov <andrew.smirnov@gmail.com>
+Subject: [PATCH v2 0/3] PCI: imx: Initial imx7d pm support
+Date: Fri, 20 Jul 2018 15:47:41 +0300
+Message-Id: <cover.1532090446.git.leonard.crestez@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Sun, 01 Jul 2018 13:24:28 -0400
-From: okaya@codeaurora.org
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V4 7/7] PCI: Handle link reset via hotplug if supported
-In-Reply-To: <20180701171443.GA28249@wunner.de>
-References: <1530214274-21139-1-git-send-email-okaya@codeaurora.org>
- <1530214274-21139-7-git-send-email-okaya@codeaurora.org>
- <20180701171443.GA28249@wunner.de>
-Message-ID: <7d0180b065e4a06a644ee754fb34b702@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ linux-pm@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
+ linux-kernel@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-imx@nxp.com,
+ kernel@pengutronix.de, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2018-07-01 13:14, Lukas Wunner wrote:
-> On Thu, Jun 28, 2018 at 03:31:05PM -0400, Sinan Kaya wrote:
->> +static pci_ers_result_t pciehp_reset_link(struct pci_dev *pdev)
->> +{
->> +	struct pcie_device *pciedev;
->> +	struct controller *ctrl;
->> +	struct device *devhp;
->> +	struct slot *slot;
->> +	int rc;
->> +
->> +	devhp = pcie_port_find_device(pdev, PCIE_PORT_SERVICE_HP);
->> +	pciedev = to_pcie_device(devhp);
->> +	ctrl = get_service_data(pciedev);
->> +	slot = ctrl->slot;
->> +
->> +	rc = reset_slot(slot->hotplug_slot, 0);
->> +
->> +	return !rc ? PCI_ERS_RESULT_RECOVERED : PCI_ERS_RESULT_DISCONNECT;
->> +}
-> 
-> This looks like a bit of a detour.  There's a "struct pci_slot *slot"
-> pointer in struct pci_dev.  Any reason not to simply call:
-> 
-> 	rc = reset_slot(pdev->slot->hotplug_slot)
+Changes since v1:
+ * Indentation fixes
+ * Use imx6_pcie_establish_link instead of imx6_pcie_wait_for_link
+ * Move imx6_pcie_ltssm_disable to suspend
+ * Make imx6_pcie_clk_disable a separate function
+ * Revert PCI irq mapping (also useful separately)
 
-pdev here is the bridge. Slot pointers are only valid for children 
-objects.
+Link to v1: https://lkml.org/lkml/2018/5/29/1042
+
+Leonard Crestez (3):
+  Revert "ARM: dts: imx7d: Invert legacy PCI irq mapping"
+  reset: imx7: Fix always writing bits as 0
+  PCI: imx: Initial imx7d pm support
+
+ arch/arm/boot/dts/imx7d.dtsi          |  8 +--
+ drivers/pci/controller/dwc/pci-imx6.c | 95 +++++++++++++++++++++++++--
+ drivers/reset/reset-imx7.c            |  2 +-
+ 3 files changed, 95 insertions(+), 10 deletions(-)
+
+-- 
+2.17.1
 
 
-> 
-> Lukas
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
