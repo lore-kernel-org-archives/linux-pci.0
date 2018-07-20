@@ -1,50 +1,65 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v2 0/2] PCI: NVMe reset quirk
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Date: Mon, 23 Jul 2018 18:12:54 -0600
-Message-ID: <20180724000944.7671.64284.stgit@gimli.home>
+Return-Path: <SRS0=CE1T=KE=google.com=bhelgaas@kernel.org>
+Return-Path: <SRS0=CE1T=KE=google.com=bhelgaas@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
+ <1530608741-30664-2-git-send-email-hari.vyas@broadcom.com>
+ <20180719174118.GM128988@bhelgaas-glaptop.roam.corp.google.com> <CAM5rFu9ZKpeKGhS+8cn3p0wKP0+GQrtexboxtwgGfDms3oBX0w@mail.gmail.com>
+In-Reply-To: <CAM5rFu9ZKpeKGhS+8cn3p0wKP0+GQrtexboxtwgGfDms3oBX0w@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 20 Jul 2018 07:20:40 -0500
+Message-ID: <CAErSpo4FfjHUMMLT_=fvX=cVkoUF0ApdEimZbxswen+Z8TqvSA@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: Data corruption happening due to race condition
+To: hari.vyas@broadcom.com
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linux-pci@vger.kernel.org, Ray Jui <ray.jui@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-v2: Add bug link, use Samsung vendor ID, add spec references
+On Fri, Jul 20, 2018 at 4:16 AM Hari Vyas <hari.vyas@broadcom.com> wrote:
+>
+> On Thu, Jul 19, 2018 at 11:11 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Jul 03, 2018 at 02:35:41PM +0530, Hari Vyas wrote:
+> >> When a pci device is detected, a variable is_added is set to
+> >> 1 in pci device structure and proc, sys entries are created.
+> >>
+> >> When a pci device is removed, first is_added is checked for one
+> >> and then device is detached with clearing of proc and sys
+> >> entries and at end, is_added is set to 0.
+> >>
+> >> is_added and is_busmaster are bit fields in pci_dev structure
+> >> sharing same memory location.
+> >>
+> >> A strange issue was observed with multiple times removal and
+> >> rescan of a pcie nvme device using sysfs commands where is_added
+> >> flag was observed as zero instead of one while removing device
+> >> and proc,sys entries are not cleared.  This causes issue in
+> >> later device addition with warning message "proc_dir_entry"
+> >> already registered.
+> >>
+> >> Debugging revealed a race condition between pcie core driver
+> >> enabling is_added bit(pci_bus_add_device()) and nvme driver
+> >> reset work-queue enabling is_busmaster bit (by pci_set_master()).
+> >> As both fields are not handled in atomic manner and that clears
+> >> is_added bit.
+> >>
+> >> Fix moves device addition is_added bit to separate private flag
+> >> variable and use different atomic functions to set and retrieve
+> >> device addition state. As is_added shares different memory
+> >> location so race condition is avoided.
+> >
+> > If/when you post a v4 of this, can you include the bugzilla URL
+> > right here, i.e.,
+> >
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=200283
+> >> Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
+> >
+> > That way we can connect the commit with the bugzilla, which contains
+> > more information that may be useful in the future.
 
-As discussed in the 2nd patch, at least one NVMe controller sometimes
-doesn't like being reset while enabled and another will timeout during
-a subsequent re-enable if it happens too quickly after reset.
-Introduce a device specific reset quirk for all NVMe class devices so
-that we can try to get reliable behavior from them for device
-assignment and any other users of the PCI subsystem reset interface.
+> Bit confused.  Do I  need  to change commit message for including bugzila link ?
+> Believe v3 should be Okay from code perspective time-being. Please confirm
 
-Patches against current PCI next branch.  Thanks,
-
-Alex
-
----
-
-Alex Williamson (2):
-      PCI: Export pcie_has_flr()
-      PCI: NVMe device specific reset quirk
-
-
- drivers/pci/pci.c    |    3 +
- drivers/pci/quirks.c |  118 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |    1 
- 3 files changed, 121 insertions(+), 1 deletion(-)
-
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+You don't need to repost it just to update the commit message (I'll
+try to remember to add the link when I apply it).  But if you do
+repost it for some other reason, it helps me out if you include the
+link.
