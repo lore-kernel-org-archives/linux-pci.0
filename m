@@ -1,43 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54654 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732030AbeGSRm1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 19 Jul 2018 13:42:27 -0400
-Subject: Re: [PATCH] PCI/AER: Do not clear AER bits if we don't own AER
-To: "Alex G." <mr.nuke.me@gmail.com>, bhelgaas@google.com,
-        keith.busch@intel.com
-Cc: alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, Frederick Lawler <fred@fredlawl.com>,
-        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20180717153135.25925-1-mr.nuke.me@gmail.com>
- <494a5df8-0987-3a6c-30a4-a3c9ef4ed1f3@kernel.org>
- <37509c44-64fe-4140-c776-53c3346cbfe5@gmail.com>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <da6335db-1e6b-c19b-4bbd-0f5523484e0e@kernel.org>
-Date: Thu, 19 Jul 2018 09:58:24 -0700
+Return-Path: <SRS0=DcJx=KE=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=DcJx=KE=h08.hostsharing.net=foo00@kernel.org>
+Date: Fri, 20 Jul 2018 10:18:41 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [pci:pci/hotplug 34/35] drivers/pci/pci.c:2311:37: error:
+ implicit declaration of function 'pciehp_is_native'; did you mean
+ 'pcie_ports_native'?
+Message-ID: <20180720081841.GA9952@wunner.de>
+References: <201807200731.O8W2VHW6%fengguang.wu@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <37509c44-64fe-4140-c776-53c3346cbfe5@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201807200731.O8W2VHW6%fengguang.wu@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Jul 20, 2018 at 07:53:33AM +0800, kbuild test robot wrote:
+> commit: 50b623f07b02fc48e4d7d3e8b5a302abf40b3a7a [34/35] PCI: Whitelist native hotplug ports for runtime D3
+> 
+>    drivers/pci/pci.c: In function 'pci_bridge_d3_possible':
+> >> drivers/pci/pci.c:2311:37: error: implicit declaration of function 'pciehp_is_native'; did you mean 'pcie_ports_native'? [-Werror=implicit-function-declaration]
+>       if (bridge->is_hotplug_bridge && !pciehp_is_native(bridge))
+>                                         ^~~~~~~~~~~~~~~~
+>                                         pcie_ports_native
+>    cc1: some warnings being treated as errors
 
-On 7/19/2018 8:55 AM, Alex G. wrote:
-> I find the intent clearer if we check it here rather than having to do 
-> the mental parsing of the state of aer_cap.
+Hm, there is a conflict on the pci/hotplug branch wherein commit
+"PCI: hotplug: Implement hotplug_is_native() only when CONFIG_ACPI=y"
+removes the pciehp_is_native() declaration for the CONFIG_ACPI=n
+case (because there was previously only one caller of that function
+and that caller depended on CONFIG_ACPI=y), but the succeeding commit
+"PCI: Whitelist native hotplug ports for runtime D3" now adds another
+caller of that function which also exists in the CONFIG_ACPI=n case.
 
-I don't feel too strong about my comment to be honest. This was a
-style/maintenance comment.
+Can the former commit be amended to leave the pciehp_is_native()
+declaration in place for CONFIG_ACPI=n?
 
-It feels like we are putting pcie_aer_get_firmware_first() into core
-functions unnecessarily after your change. I understand the need for
-your change. I'm asking if it is the right place or not.
+I'm wondering if we should be checking hotplug_is_native() instead of
+pciehp_is_native() in pci_bridge_d3_possible().  There appears to be
+an ordering issue if we do that because shpchp_is_native() checks
+bridge->shpc_managed, but that is only set to true by shpc_probe().
+Now the problem is, the shpc pci_driver is registered with module_init().
+If shpc is built-in, that becomes a device_initcall().
 
-pcie_aer_get_firmware_first() should be called from either the init or
-probe function so that the rest of the AER functions do not get called
-from any other context.
+And pci_bridge_d3_possible() is called from pcie_portdrv_probe(),
+and portdrv is also registered with a device_initcall().
 
-If someone adds another AER function, we might need to add another
-pcie_aer_get_firmware_first() check there. So, we have unnecessary code
-duplication.
+Thus, if hotplug_is_native() is called from pci_bridge_d3_possible(),
+it's result in the shpc case depends on the link order if shpc is
+built-in.  If shpc is a module, it will always return false for the
+shpc case.
+
+I'm sorry, I'm pretty clueless about shpc and whether or not portdrv
+should activate runtime PM whether an shpc port is controlled by
+the firmware.
+
+Thanks,
+
+Lukas
