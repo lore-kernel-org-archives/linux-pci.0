@@ -1,64 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yb0-f196.google.com ([209.85.213.196]:42567 "EHLO
-        mail-yb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388302AbeGXMiB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jul 2018 08:38:01 -0400
-Received: by mail-yb0-f196.google.com with SMTP id c10-v6so1475328ybf.9
-        for <linux-pci@vger.kernel.org>; Tue, 24 Jul 2018 04:32:00 -0700 (PDT)
-MIME-Version: 1.0
-References: <20180724093924.1752416-1-arnd@arndb.de>
-In-Reply-To: <20180724093924.1752416-1-arnd@arndb.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 24 Jul 2018 06:31:47 -0500
-Message-ID: <CAErSpo4wWZGgxWwjLjds7qh9UmMpas4G7jR8UK8AdL8gbfz-rA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: fix unused variable warning
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        james.puthukattukaran@oracle.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
+Received: from mail.kernel.org ([198.145.29.99]:55730 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727728AbeGTVXl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Jul 2018 17:23:41 -0400
+Date: Fri, 20 Jul 2018 15:33:45 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
         linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Anders Roxell <anders.roxell@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH 32/32] PCI: Whitelist Thunderbolt ports for runtime D3
+Message-ID: <20180720203345.GU128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1529173804.git.lukas@wunner.de>
+ <10206fe7f3967aa73ade5b24dc729de0e94c3b7f.1529173804.git.lukas@wunner.de>
+ <20180621111354.GW2558@lahna.fi.intel.com>
+ <20180718193053.GA20124@wunner.de>
+ <20180720152349.GG2534@lahna.fi.intel.com>
+ <20180720160038.GM2534@lahna.fi.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180720160038.GM2534@lahna.fi.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Anders]
+On Fri, Jul 20, 2018 at 07:00:38PM +0300, Mika Westerberg wrote:
+> On Fri, Jul 20, 2018 at 06:23:49PM +0300, Mika Westerberg wrote:
+> > On Wed, Jul 18, 2018 at 09:30:53PM +0200, Lukas Wunner wrote:
+> > > Hi Mika,
+> > > 
+> > > sorry for the delay!
+> > > 
+> > > On Thu, Jun 21, 2018 at 02:13:54PM +0300, Mika Westerberg wrote:
+> > > > On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
+> > > > > +		/* Even the oldest 2010 Thunderbolt controller supports D3. */
+> > > > > +		if (bridge->is_thunderbolt)
+> > > > > +			return true;
+> > > > 
+> > > > I have a small concern here. In PC world native PCIe hotplug used with
+> > > > Thunderbolt comes in two flavors:
+> > > > 
+> > > >   - Native PCI hotplug without runtime PM
+> > > >   - Native PCI hotplug with runtime PM
+> > > > 
+> > > > The former works so that even if it uses native PCIe hotplug, the power
+> > > > management is done so that the Thunderbolt host router is hot-removed
+> > > > when there is nothing connected (and that brings the power savings).
+> > > > With the above change we start putting all Thunderbolt PCIe hotplug
+> > > > ports to D3 runtime. While this probably works (and I tested it on the
+> > > > same Dell) I don't think Windows does it and it may lead to a path that
+> > > > has not been tested very thoroughly by OEMs.
+> > > > 
+> > > > So I wonder if it makes sense to restrict this particular check to Apple
+> > > > hardware at this point?
+> > > 
+> > > I'm not familiar at all with Windows, so this your call.  Normally I'd say,
+> > > if there's no known case which forces us to constrain this to Apple, we
+> > > probably shouldn't be overzealous.  OTOH I imagine you have to deal with
+> > > Windows and broken BIOSes on a daily basis and can anticipate if problems
+> > > are to be expected.
+> > > 
+> > > The "host router" is the NHI, right?  So IIUC all downstream ports and
+> > > the upstream port of the TB PCIe switch may go to D3hot, same for the
+> > > root port.  And your concern is that hotplug addition or removal of the
+> > > NHI might not work if those ports are in D3hot?
+> > 
+> > Host router is the PCIe switch + NHI + xHCI. My concern is that now we
+> > start putting the downstream hotplug ports of the host router (the ports
+> > where TBT PCIe daisy chain is to be extented) to D3hot even when the
+> > whole power management of the "Native PCI hotplug without runtime PM" is
+> > done pretty much by hot-removing the whole host router if there is
+> > nothing connected.
+> 
+> I see Bjorn already merged these so please ignore the above. We can
+> add the Apple check later if this turns out causing problems.
 
-On Tue, Jul 24, 2018 at 4:39 AM Arnd Bergmann <arnd@arndb.de> wrote:
->
-> The newly introduced function produces a warning without CONFIG_PCI_QUIRKS:
->
-> drivers/pci/probe.c: In function 'pci_bus_read_dev_vendor_id':
-> drivers/pci/probe.c:2221:18: error: unused variable 'bridge' [-Werror=unused-variable]
->
-> Move the variable declaration into that #ifdef to avoid the warning.
->
-> Fixes: ac5ea104a279 ("PCI: Workaround IDT switch ACS Source Validation erratum")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+I merged these just to try to make forward progress and dig out from
+my backlog.  If you want to tweak this before the merge window, I'd be
+glad to update the branch.
 
-Fixed already with a patch from Anders Roxell
-<anders.roxell@linaro.org>, thanks!
-
-> ---
->  drivers/pci/probe.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 1c581346c5b9..7a5323798312 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2218,9 +2218,9 @@ bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
->  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
->                                 int timeout)
->  {
-> +#ifdef CONFIG_PCI_QUIRKS
->         struct pci_dev *bridge = bus->self;
->
-> -#ifdef CONFIG_PCI_QUIRKS
->         /*
->          * Certain IDT switches have an issue where they improperly trigger
->          * ACS Source Validation errors on completions for config reads.
-> --
-> 2.18.0
->
+Bjorn
