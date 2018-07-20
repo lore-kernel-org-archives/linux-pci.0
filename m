@@ -1,43 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51000 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730636AbeG0T6B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Jul 2018 15:58:01 -0400
-Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
-To: Alex_Gagniuc@Dellteam.com, lukas@wunner.de
-Cc: mr.nuke.me@gmail.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, Austin.Bolen@dell.com,
-        Stuart.Hayes@dell.com, Narendra.K@dell.com,
-        Christopher.Arzola@dell.com, David.Chalfant@dell.com
-References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
- <20180727071813.GA6128@wunner.de>
- <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
- <20180727170543.GA5326@wunner.de>
- <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
- <a7c024d3-4111-bbd2-68e9-2122be083cf7@kernel.org>
- <37ee3fa4e6334b5c8139a8d148fcf26a@ausx13mps321.AMER.DELL.COM>
-From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <7182b371-320c-6578-cc70-7c32220ac827@kernel.org>
-Date: Fri, 27 Jul 2018 11:34:53 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Leonard Crestez <leonard.crestez@nxp.com>
+To: Lucas Stach <l.stach@pengutronix.de>, Richard Zhu <hongxing.zhu@nxp.com>,
+ Andrey Smirnov <andrew.smirnov@gmail.com>
+Subject: [PATCH v2 1/3] Revert "ARM: dts: imx7d: Invert legacy PCI irq mapping"
+Date: Fri, 20 Jul 2018 15:47:42 +0300
+Message-Id: <221deb47d7d38ecd6e0c7636f9a87ab693a3c539.1532090446.git.leonard.crestez@nxp.com>
+In-Reply-To: <cover.1532090446.git.leonard.crestez@nxp.com>
+References: <cover.1532090446.git.leonard.crestez@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <37ee3fa4e6334b5c8139a8d148fcf26a@ausx13mps321.AMER.DELL.COM>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ linux-pm@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
+ linux-kernel@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-imx@nxp.com,
+ kernel@pengutronix.de, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/27/2018 11:23 AM, Alex_Gagniuc@Dellteam.com wrote:
->> Completion timeouts are typically in the orders of 50ms. If you have a
->> lot of outstanding non-posted requests, it will take time for SW to
->> flush all requests.
-> That's why we check pci_dev_is_disconnected() in pci/access.c
-> But if the DISCONNECTED bit doesn't get set, it makes me wonder how
-> solid things currently are.
+This reverts commit 1c86c9dd82f859b474474a7fee0d5195da2c9c1d.
 
-I don't see any problem by setting this bit as long as the link is
-down regardless of the drive presence state and clearing it on link 
-recovery.
+That commit followed the reference manual but unfortunately the imx7d
+manual is incorrect.
 
-Is there a problem with this approach? I'm catching up with this
-thread.
+Tested with ath9k pcie card and confirmed internally.
 
-pcie_do_fatal_recovery() doesn't query presence as an example.
+Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
+---
+ arch/arm/boot/dts/imx7d.dtsi | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/boot/dts/imx7d.dtsi b/arch/arm/boot/dts/imx7d.dtsi
+index 8d3d123d0a5c..12c5ba7e9f1e 100644
+--- a/arch/arm/boot/dts/imx7d.dtsi
++++ b/arch/arm/boot/dts/imx7d.dtsi
+@@ -123,14 +123,14 @@
+ 		num-lanes = <1>;
+ 		interrupts = <GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
+ 		interrupt-names = "msi";
+ 		#interrupt-cells = <1>;
+ 		interrupt-map-mask = <0 0 0 0x7>;
+-		interrupt-map = <0 0 0 1 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
+-				<0 0 0 2 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
+-				<0 0 0 3 &intc GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>,
+-				<0 0 0 4 &intc GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-map = <0 0 0 1 &intc GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>,
++				<0 0 0 2 &intc GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>,
++				<0 0 0 3 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
++				<0 0 0 4 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&clks IMX7D_PCIE_CTRL_ROOT_CLK>,
+ 			 <&clks IMX7D_PLL_ENET_MAIN_100M_CLK>,
+ 			 <&clks IMX7D_PCIE_PHY_ROOT_CLK>;
+ 		clock-names = "pcie", "pcie_bus", "pcie_phy";
+ 		assigned-clocks = <&clks IMX7D_PCIE_CTRL_ROOT_SRC>,
+-- 
+2.17.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
