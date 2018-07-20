@@ -1,66 +1,57 @@
-Return-Path: <SRS0=JrVV=JZ=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=JrVV=JZ=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <CAFgQCTvGJVBdGLz0R74jO3f1nY3aWprGoADUXzw4E6jxOxWHBg@mail.gmail.com>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
- <6281446.GoJLz6Hq6C@aspire.rjw.lan> <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
- <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com>
- <20180706083603.GA9063@wunner.de> <CAJZ5v0j6+m8NGMneG45tF9L1s6ahtFo91wPCO=3YOTEyAOL+VQ@mail.gmail.com>
- <CAFgQCTugu5XO06_xXb4ihkdfGJxtFX0813g2J-Jk2JeYtPP1vA@mail.gmail.com>
- <CAFgQCTsCjkDWJsNog_sTnS-ZaZ87fMFpKq1ekVSUG4MDs6K_jw@mail.gmail.com>
- <CAJZ5v0gxJ9LJ328WbgPrZCV-0SEiO31trsTSYYS8L95P4kfkbA@mail.gmail.com>
- <CAFgQCTvYwjKtx+AQf-kQjTsJMPRz48vgJ__jqNpwZuayG21oQw@mail.gmail.com>
- <CAJZ5v0gSo-jFO0h+aLkeyGGxRL+tdsRtGi0WFhhGQbZvezJmkA@mail.gmail.com> <CAFgQCTvGJVBdGLz0R74jO3f1nY3aWprGoADUXzw4E6jxOxWHBg@mail.gmail.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 9 Jul 2018 10:58:13 +0200
-Message-ID: <CAJZ5v0hMjoEy6Fe1Rcc1Uq_wQnDCAYYkEv4R024h0iq5krSiMQ@mail.gmail.com>
-Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
- ordering in device_kset
-To: Pingfan Liu <kernelfans@gmail.com>
-Cc: Rafael Wysocki <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux PM <linux-pm@vger.kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="UTF-8"
+References: <cover.1532090446.git.leonard.crestez@nxp.com>
+ <221deb47d7d38ecd6e0c7636f9a87ab693a3c539.1532090446.git.leonard.crestez@nxp.com>
+In-Reply-To: <221deb47d7d38ecd6e0c7636f9a87ab693a3c539.1532090446.git.leonard.crestez@nxp.com>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+Date: Fri, 20 Jul 2018 08:33:58 -0700
+Message-ID: <CAHQ1cqF6TphuN8Ls54YA6bjty-bJF8twYboaG-RM=jox8CeQPA@mail.gmail.com>
+Subject: Re: [PATCH v2 1/3] Revert "ARM: dts: imx7d: Invert legacy PCI irq
+ mapping"
+To: Leonard Crestez <leonard.crestez@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao.Pinto@synopsys.com,
+ Richard Zhu <hongxing.zhu@nxp.com>, linux-pm@vger.kernel.org,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>,
+ Fabio Estevam <fabio.estevam@nxp.com>, lorenzo.pieralisi@arm.com,
+ linux-imx@nxp.com, Sascha Hauer <kernel@pengutronix.de>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Shawn Guo <shawnguo@kernel.org>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+ Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 9, 2018 at 10:40 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
-> On Mon, Jul 9, 2018 at 3:48 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
->>
->> On Mon, Jul 9, 2018 at 8:48 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
->> > On Sun, Jul 8, 2018 at 4:25 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
+On Fri, Jul 20, 2018 at 5:48 AM Leonard Crestez <leonard.crestez@nxp.com> wrote:
+>
+> This reverts commit 1c86c9dd82f859b474474a7fee0d5195da2c9c1d.
+>
+> That commit followed the reference manual but unfortunately the imx7d
+> manual is incorrect.
+>
 
-[cut]
+I'd also add similar comment to DT file to prevent people from trying
+to "fix" this in the future.
 
->>
->> I simply think that there should be one way to iterate over devices
->> for both system-wide PM and shutdown.
->>
->> The reason why it is not like that today is because of the development
->> history, but if it doesn't work and we want to fix it, let's just
->> consolidate all of that.
->>
->> Now, system-wide suspend resume sometimes iterates the list in the
->> reverse order which would be hard without having a list, wouldn't it?
->>
-> Yes, it would be hard without having a list. I just thought to use
-> device tree info to build up a shadowed list, and rebuild the list
-> until there is new device_link_add() operation. For
-> device_add/_remove(), it can modify the shadowed list directly.
+Also, this change is going to break QEMU's mapping found here:
 
-Right, and that's the idea of dpm_list, generally speaking: It
-represents one of the (possibly many) orders in which devices can be
-suspended (or shut down) based on the information coming from the
-device hierarchy and device links.
+https://git.qemu.org/?p=qemu.git;a=blob;f=hw/arm/fsl-imx7.c;h=d5e26855a552e2d52b91f0435a607fae2f88456b;hb=HEAD#l464
 
-So it appears straightforward (even though it may be complicated
-because of the build-time dependencies) to start using dpm_list for
-shutdown too - and to ensure that it is properly maintained
-everywhere.
+any change you are planning to make the change there as well?
 
 Thanks,
-Rafael
+Andrey Smirnov
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
