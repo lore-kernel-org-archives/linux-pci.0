@@ -1,78 +1,36 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Leonard Crestez <leonard.crestez@nxp.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
- Andrey Smirnov <andrew.smirnov@gmail.com>,
- Richard Zhu <hongxing.zhu@nxp.com>, Shawn Guo <shawnguo@kernel.org>
-Subject: [PATCH v3 1/2] Revert "ARM: dts: imx7d: Invert legacy PCI irq mapping"
-Date: Tue, 24 Jul 2018 19:14:19 +0300
-Message-Id: <ed0ceaa10da805bc79e85ec7d60fcce9d4327066.1532448745.git.leonard.crestez@nxp.com>
-In-Reply-To: <cover.1532448745.git.leonard.crestez@nxp.com>
-References: <cover.1532448745.git.leonard.crestez@nxp.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- kernel@pengutronix.de, Anson Huang <Anson.Huang@nxp.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Fabio Estevam <fabio.estevam@nxp.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-imx@nxp.com,
- Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org,
+Return-Path: <okaya@kernel.org>
+Return-Path: <okaya@kernel.org>
+Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
+ reset
+From: Sinan Kaya <okaya@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, Oza Pawandeep <poza@codeaurora.org>,
+ linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Keith Busch <keith.busch@intel.com>, linux-arm-msm@vger.kernel.org,
  Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+References: <CAK9iUCM=zWexWow9TwkRfO186Hwr5WyGy0NHZF1vtXn3wbbZGQ@mail.gmail.com>
+ <12fc8de5-ff03-cb00-52cb-25a43c71d03a@codeaurora.org>
+ <20180708171418.GA11476@wunner.de>
+ <CAK9iUCMcic5mzGiT20KNxgwPo6AuajHFsoj7GOjSht5SwrQevg@mail.gmail.com>
+ <20180709160008.GA1490@wunner.de>
+ <CAK9iUCMMVR114msKiMHu7ik0VK8T5j=LAYAKsEkdnocTqkdMjQ@mail.gmail.com>
+ <20180720200123.GS128988@bhelgaas-glaptop.roam.corp.google.com>
+ <2febe688-f973-5ff5-f61d-0451ad7d36ae@kernel.org>
+Message-ID: <d34eb5da-0ae1-d455-93e2-2432ec7931ea@kernel.org>
+Date: Fri, 20 Jul 2018 23:07:20 -0700
+MIME-Version: 1.0
+In-Reply-To: <2febe688-f973-5ff5-f61d-0451ad7d36ae@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 1c86c9dd82f859b474474a7fee0d5195da2c9c1d.
+On 7/20/2018 7:58 PM, Sinan Kaya wrote:
+> We need to figure out how to gracefully return inside hotplug driver
+> if link down happened and there is an error pending.
 
-That commit followed the reference manual but unfortunately the imx7d
-manual is incorrect.
+How about adding the following into the hotplug ISR?
 
-Tested with ath9k pcie card and confirmed internally.
-
-Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
----
- arch/arm/boot/dts/imx7d.dtsi | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
-
-diff --git a/arch/arm/boot/dts/imx7d.dtsi b/arch/arm/boot/dts/imx7d.dtsi
-index 7cbc2ffa4b3a..7234e8330a57 100644
---- a/arch/arm/boot/dts/imx7d.dtsi
-+++ b/arch/arm/boot/dts/imx7d.dtsi
-@@ -124,14 +124,18 @@
- 		num-lanes = <1>;
- 		interrupts = <GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
- 		interrupt-names = "msi";
- 		#interrupt-cells = <1>;
- 		interrupt-map-mask = <0 0 0 0x7>;
--		interrupt-map = <0 0 0 1 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
--				<0 0 0 2 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
--				<0 0 0 3 &intc GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>,
--				<0 0 0 4 &intc GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>;
-+		/*
-+		 * Reference manual lists pci irqs incorrectly
-+		 * Real hardware ordering is same as imx6: D+MSI, C, B, A
-+		 */
-+		interrupt-map = <0 0 0 1 &intc GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 2 &intc GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 3 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 4 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
- 		clocks = <&clks IMX7D_PCIE_CTRL_ROOT_CLK>,
- 			 <&clks IMX7D_PLL_ENET_MAIN_100M_CLK>,
- 			 <&clks IMX7D_PCIE_PHY_ROOT_CLK>;
- 		clock-names = "pcie", "pcie_bus", "pcie_phy";
- 		assigned-clocks = <&clks IMX7D_PCIE_CTRL_ROOT_SRC>,
--- 
-2.17.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1. check if firmware first is disabled
+2. check if there is a fatal error pending in the device_status register
+of the PCI Express capability on the root port.
+3. bail out from hotplug routine if this is the case.
+4. otherwise, existing behavior.
