@@ -1,54 +1,117 @@
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 23 Jul 2018 19:57:11 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sinan Kaya <okaya@kernel.org>
-Subject: Re: [PATCH v2 2/2] PCI: NVMe device specific reset quirk
-Message-ID: <20180723195711.0a3c9301@t450s.home>
-In-Reply-To: <abc86e6b-7df5-a84c-7e98-107c605812c6@kernel.org>
-References: <20180724000944.7671.64284.stgit@gimli.home>
- <20180724001310.7671.41243.stgit@gimli.home>
- <abc86e6b-7df5-a84c-7e98-107c605812c6@kernel.org>
+Return-Path: <okaya@kernel.org>
+Return-Path: <okaya@kernel.org>
+Subject: Re: [PATCH V5 3/3] PCI: Mask and unmask hotplug interrupts during
+ reset
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, Oza Pawandeep <poza@codeaurora.org>,
+ linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Keith Busch <keith.busch@intel.com>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+References: <CAK9iUCM=zWexWow9TwkRfO186Hwr5WyGy0NHZF1vtXn3wbbZGQ@mail.gmail.com>
+ <12fc8de5-ff03-cb00-52cb-25a43c71d03a@codeaurora.org>
+ <20180708171418.GA11476@wunner.de>
+ <CAK9iUCMcic5mzGiT20KNxgwPo6AuajHFsoj7GOjSht5SwrQevg@mail.gmail.com>
+ <20180709160008.GA1490@wunner.de>
+ <CAK9iUCMMVR114msKiMHu7ik0VK8T5j=LAYAKsEkdnocTqkdMjQ@mail.gmail.com>
+ <20180720200123.GS128988@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@kernel.org>
+Message-ID: <2febe688-f973-5ff5-f61d-0451ad7d36ae@kernel.org>
+Date: Fri, 20 Jul 2018 19:58:20 -0700
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
-List-Post: <mailto:linux-nvme@lists.infradead.org>
-List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
- <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
-Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20180720200123.GS128988@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 23 Jul 2018 17:40:02 -0700
-Sinan Kaya <okaya@kernel.org> wrote:
-
-> On 7/23/2018 5:13 PM, Alex Williamson wrote:
-> > + * The NVMe specification requires that controllers support PCIe FLR, but
-> > + * but some Samsung SM961/PM961 controllers fail to recover after FLR (-1
-> > + * config space) unless the device is quiesced prior to FLR.  
+On 7/20/2018 1:01 PM, Bjorn Helgaas wrote:
+> On Tue, Jul 10, 2018 at 02:30:11PM -0400, Sinan Kaya wrote:
+>> On Mon, Jul 9, 2018 at 12:00 PM, Lukas Wunner <lukas@wunner.de> wrote:
+>>> On Mon, Jul 09, 2018 at 08:48:44AM -0600, Sinan Kaya wrote:
+>>>> On 7/8/18, Lukas Wunner <lukas@wunner.de> wrote:
+>>>>> On Tue, Jul 03, 2018 at 11:43:26AM -0400, Sinan Kaya wrote:
+>>>>>> My solution doesn't help if link down interrupt is observed
+>>>>>> before the AER or DPC services.
+>>>>>
+>>>>> If pciehp gets an interrupt quicker than dpc/aer, it will (at
+>>>>> least with my patches) remove all devices, check if the
+>>>>> presence bit is set, and if so, try to bring the slot up
+>>>>> again.
+>>>>
+>>>> Hotplug driver should only observe a link down interrupt. Link
+>>>> would come up in response to a secondary bus reset initiated by
+>>>> the AER driver.
+>>>
+>>> PCIe hotplug doesn't have separate Link Down and Link Up
+>>> interrupts, there is only a Link State *Changed* event.
+>>>
+>>>> Can you point me to the code that would bring up the link in hp
+>>>> code?
+>>>
+>>> I was referring to the situation with my recently posted pciehp
+>>> patches applied, in particular patch [21/32] ("PCI: pciehp: Become
+>>> resilient to missed events"):
+>>> https://patchwork.ozlabs.org/patch/930389/
+>>>
+>>> When I get a presence or link changed event, I turn the slot off.
+>>> That includes removing all devices in the slot.  Because even if
+>>> the slot is still occupied or link is up, there was definitely a
+>>> change and the safe behavior is to assume that the card in the
+>>> slot is now a different one than before.
+>>
+>> We do have a bit of mess unfortunately. Error handling and hotplug
+>> drivers do not play nicely with each other.
+>>
+>> When hotplug driver observes a link down, we are not checking if the
+>> link down happened because user really wanted to remove a card or if
+>> it was because it was originated by an error handling service such
+>> as AER/DPC.
+>>
+>> I'm thinking that we could potentially check if a hotplug event is
+>> pending at the entrance of fatal error handling. If it is pending,
+>> we could poll until the status bit clears. That should flush the
+>> link down event.
+>>
+>> Even then, link down indication of hotplug seem to turn off slot
+>> power and LED.
+>>
+>> If AER/DPC service runs after the hotplug driver, link won't come
+>> back up as the power to the slot is turned off.
+>>
+>> I'd like to hear about Bjorn's opinion before we throw something
+>> else into this problem.
 > 
-> Does disabling the memory bit in PCI config space as part of the FLR 
-> reset function help? (like the very first thing)
+> You guys know way more about this than I do.
+> 
+> I think the separation of AER/DPC/pciehp into separate drivers is
+> somewhat artificial because there are many interdependencies.  The
+> driver model doesn't apply very well because there's only one
+> underlying piece of hardware, which forces us to use the portdrv as
+> sort of a multiplexer.  The fact that portdrv claims these bridges
+> also means normal drivers (e.g., for performance counters) can't use
+> the usual model.
+> 
+> All that is to say that if integrating these services more tightly
+> would help solve this problem, I'd be open to that.
 
-No, it does not.  I modified this to only clear PCI_COMMAND_MEMORY and
-call pcie_flr(), the Samsung controller dies just as it did previously.
- 
-> Can we do that in the pcie_flr() function to cover other endpoint types
-> that might be pushing traffic while code is trying to do a reset?
+I was looking at how to destroy the portdrv for a while. It looks like
+a much more bigger task to be honest. There are multiple levels of
+abstractions in the code as you highlighted.
 
-Do you mean PCI_COMMAND_MASTER rather than PCI_COMMAND_MEMORY?  I tried
-that too, it doesn't work either.  I'm not really sure the theory
-behind clearing memory, clearing busmaster to stop DMA seems like a
-sane thing to do, but doesn't help here.  Thanks,
+My patch solves the problem if AER interrupt happens before the hotplug
+interrupt. We are masking the data link layer active interrupt. So,
+AER/DPC can perform their link operations without hotplug driver race.
 
-Alex
+We need to figure out how to gracefully return inside hotplug driver
+if link down happened and there is an error pending.
 
-_______________________________________________
-Linux-nvme mailing list
-Linux-nvme@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-nvme
+My first question is why hotplug driver is reacting to the link event
+if there was not an actual device insertion/removal.
+
+Would it help to keep track of presence changed interrupts since last
+link event?
+
+IF counter is 0 and device is present, hotplug driver bails out
+silently as an example.
+
+> 
+> Bjorn
+> 
