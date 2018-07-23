@@ -1,93 +1,167 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54488 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731428AbeGaMes (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jul 2018 08:34:48 -0400
-Date: Tue, 31 Jul 2018 05:54:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linuxppc-dev@lists.ozlabs.org, x86@kernel.org,
-        linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: call dma_debug_add_bus for pci_bus_type in common
- code
-Message-ID: <20180731105459.GH45322@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180730073842.16092-1-hch@lst.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 23 Jul 2018 14:01:43 -0700
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        keith.busch@intel.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com,
+        jeffrey.t.kirsher@intel.com, ariel.elior@cavium.com,
+        michael.chan@broadcom.com, ganeshgr@chelsio.com,
+        tariqt@mellanox.com, airlied@gmail.com, alexander.deucher@amd.com,
+        mike.marciniszyn@intel.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5] PCI: Check for PCIe downtraining conditions
+Message-ID: <20180723140143.1a46902f@cakuba.netronome.com>
+In-Reply-To: <20180723200339.23943-1-mr.nuke.me@gmail.com>
+References: <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
+        <20180723200339.23943-1-mr.nuke.me@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180730073842.16092-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 30, 2018 at 09:38:42AM +0200, Christoph Hellwig wrote:
-> There is nothing arch specific about PCI or dma-debug, so move this
-> call to common code just after registering the bus type.
+On Mon, 23 Jul 2018 15:03:38 -0500, Alexandru Gagniuc wrote:
+> PCIe downtraining happens when both the device and PCIe port are
+> capable of a larger bus width or higher speed than negotiated.
+> Downtraining might be indicative of other problems in the system, and
+> identifying this from userspace is neither intuitive, nor
+> straightforward.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Applied with acks from Thomas and Michael to pci/misc for v4.19, thanks!
-
+> The easiest way to detect this is with pcie_print_link_status(),
+> since the bottleneck is usually the link that is downtrained. It's not
+> a perfect solution, but it works extremely well in most cases.
+> 
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 > ---
->  arch/powerpc/kernel/dma.c | 3 ---
->  arch/sh/drivers/pci/pci.c | 2 --
->  arch/x86/kernel/pci-dma.c | 3 ---
->  drivers/pci/pci-driver.c  | 2 +-
->  4 files changed, 1 insertion(+), 9 deletions(-)
 > 
-> diff --git a/arch/powerpc/kernel/dma.c b/arch/powerpc/kernel/dma.c
-> index 155170d70324..dbfc7056d7df 100644
-> --- a/arch/powerpc/kernel/dma.c
-> +++ b/arch/powerpc/kernel/dma.c
-> @@ -357,9 +357,6 @@ EXPORT_SYMBOL_GPL(dma_get_required_mask);
->  
->  static int __init dma_init(void)
->  {
-> -#ifdef CONFIG_PCI
-> -	dma_debug_add_bus(&pci_bus_type);
-> -#endif
->  #ifdef CONFIG_IBMVIO
->  	dma_debug_add_bus(&vio_bus_type);
->  #endif
-> diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-> index e5b7437ab4af..8256626bc53c 100644
-> --- a/arch/sh/drivers/pci/pci.c
-> +++ b/arch/sh/drivers/pci/pci.c
-> @@ -160,8 +160,6 @@ static int __init pcibios_init(void)
->  	for (hose = hose_head; hose; hose = hose->next)
->  		pcibios_scanbus(hose);
->  
-> -	dma_debug_add_bus(&pci_bus_type);
-> -
->  	pci_initialized = 1;
->  
->  	return 0;
-> diff --git a/arch/x86/kernel/pci-dma.c b/arch/x86/kernel/pci-dma.c
-> index ab5d9dd668d2..43f58632f123 100644
-> --- a/arch/x86/kernel/pci-dma.c
-> +++ b/arch/x86/kernel/pci-dma.c
-> @@ -155,9 +155,6 @@ static int __init pci_iommu_init(void)
->  {
->  	struct iommu_table_entry *p;
->  
-> -#ifdef CONFIG_PCI
-> -	dma_debug_add_bus(&pci_bus_type);
-> -#endif
->  	x86_init.iommu.iommu_init();
->  
->  	for (p = __iommu_table; p < __iommu_table_end; p++) {
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 6792292b5fc7..bef17c3fca67 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -1668,7 +1668,7 @@ static int __init pci_driver_init(void)
->  	if (ret)
->  		return ret;
->  #endif
-> -
-> +	dma_debug_add_bus(&pci_bus_type);
->  	return 0;
+> For the sake of review, I've created a __pcie_print_link_status() which
+> takes a 'verbose' argument. If we agree want to go this route, and update
+> the users of pcie_print_link_status(), I can split this up in two patches.
+> I prefer just printing this information in the core functions, and letting
+> drivers not have to worry about this. Though there seems to be strong for
+> not going that route, so here it goes:
+
+FWIW the networking drivers print PCIe BW because sometimes the network
+bandwidth is simply over-provisioned on multi port cards, e.g. 80Gbps
+card on a x8 link.
+
+Sorry to bike shed, but currently the networking cards print the info
+during probe.  Would it make sense to move your message closer to probe
+time?  Rather than when device is added.  If driver structure is
+available, we could also consider adding a boolean to struct pci_driver
+to indicate if driver wants the verbose message?  This way we avoid
+duplicated prints.
+
+I have no objection to current patch, it LGTM.  Just a thought.
+
+>  drivers/pci/pci.c   | 22 ++++++++++++++++++----
+>  drivers/pci/probe.c | 21 +++++++++++++++++++++
+>  include/linux/pci.h |  1 +
+>  3 files changed, 40 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 316496e99da9..414ad7b3abdb 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5302,14 +5302,15 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
 >  }
->  postcore_initcall(pci_driver_init);
-> -- 
-> 2.18.0
-> 
+>  
+>  /**
+> - * pcie_print_link_status - Report the PCI device's link speed and width
+> + * __pcie_print_link_status - Report the PCI device's link speed and width
+>   * @dev: PCI device to query
+> + * @verbose: Be verbose -- print info even when enough bandwidth is available.
+>   *
+>   * Report the available bandwidth at the device.  If this is less than the
+>   * device is capable of, report the device's maximum possible bandwidth and
+>   * the upstream link that limits its performance to less than that.
+>   */
+> -void pcie_print_link_status(struct pci_dev *dev)
+> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
+>  {
+>  	enum pcie_link_width width, width_cap;
+>  	enum pci_bus_speed speed, speed_cap;
+> @@ -5319,11 +5320,11 @@ void pcie_print_link_status(struct pci_dev *dev)
+>  	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
+>  	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width);
+>  
+> -	if (bw_avail >= bw_cap)
+> +	if (bw_avail >= bw_cap && verbose)
+>  		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
+>  			 bw_cap / 1000, bw_cap % 1000,
+>  			 PCIE_SPEED2STR(speed_cap), width_cap);
+> -	else
+> +	else if (bw_avail < bw_cap)
+>  		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
+>  			 bw_avail / 1000, bw_avail % 1000,
+>  			 PCIE_SPEED2STR(speed), width,
+> @@ -5331,6 +5332,19 @@ void pcie_print_link_status(struct pci_dev *dev)
+>  			 bw_cap / 1000, bw_cap % 1000,
+>  			 PCIE_SPEED2STR(speed_cap), width_cap);
+>  }
+> +
+> +/**
+> + * pcie_print_link_status - Report the PCI device's link speed and width
+> + * @dev: PCI device to query
+> + *
+> + * Report the available bandwidth at the device.  If this is less than the
+> + * device is capable of, report the device's maximum possible bandwidth and
+> + * the upstream link that limits its performance to less than that.
+> + */
+> +void pcie_print_link_status(struct pci_dev *dev)
+> +{
+> +	__pcie_print_link_status(dev, true);
+> +}
+>  EXPORT_SYMBOL(pcie_print_link_status);
+>  
+>  /**
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ac876e32de4b..1f7336377c3b 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2205,6 +2205,24 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>  	return dev;
+>  }
+>  
+> +static void pcie_check_upstream_link(struct pci_dev *dev)
+> +{
+> +	if (!pci_is_pcie(dev))
+> +		return;
+> +
+> +	/* Look from the device up to avoid downstream ports with no devices. */
+> +	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
+> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
+> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
+> +		return;
+> +
+> +	/* Multi-function PCIe share the same link/status. */
+> +	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
+> +		return;
+> +
+> +	__pcie_print_link_status(dev, false);
+> +}
+> +
+>  static void pci_init_capabilities(struct pci_dev *dev)
+>  {
+>  	/* Enhanced Allocation */
+> @@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>  	/* Advanced Error Reporting */
+>  	pci_aer_init(dev);
+>  
+> +	/* Check link and detect downtrain errors */
+> +	pcie_check_upstream_link(dev);
+> +
+>  	if (pci_probe_reset_function(dev) == 0)
+>  		dev->reset_fn = 1;
+>  }
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index abd5d5e17aee..15bfab8f7a1b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1088,6 +1088,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+>  u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+>  			     enum pci_bus_speed *speed,
+>  			     enum pcie_link_width *width);
+> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
+>  void pcie_print_link_status(struct pci_dev *dev);
+>  int pcie_flr(struct pci_dev *dev);
+>  int __pci_reset_function_locked(struct pci_dev *dev);
