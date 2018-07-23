@@ -1,90 +1,136 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
- robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
- gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com, bhelgaas@google.com,
- hch@lst.de
-Subject: [PATCH 5/7 v6] bus/fsl-mc: support dma configure for devices on
- fsl-mc bus
-Date: Mon,  9 Jul 2018 16:48:21 +0530
-Message-Id: <1531135103-10699-6-git-send-email-nipun.gupta@nxp.com>
-In-Reply-To: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
-References: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
+Return-Path: <SRS0=O/vh=KH=codeaurora.org=poza@kernel.org>
+Return-Path: <SRS0=O/vh=KH=codeaurora.org=poza@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
- shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
- linux-pci@vger.kernel.org, frowand.list@gmail.com,
- linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 23 Jul 2018 14:19:54 +0530
+From: poza@codeaurora.org
+To: helgaas@kernel.org, keith.busch@intel.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ bhelgaas@google.com, linux-pci-owner@vger.kernel.org, Bharat Kumar Gogada
+ <bharatku@xilinx.com>
+Subject: [RFC] SERR# handling by Linux
+In-Reply-To: <cba588cfb69aaa933adf2e8a31be6041@codeaurora.org>
+References: <1531406719-18606-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+ <b5ba83a0fd8694905528f740a186b891@codeaurora.org>
+ <BL0PR02MB4849D9F256912CC9B869A20EA5580@BL0PR02MB4849.namprd02.prod.outlook.com>
+ <3bd31b729f9f335fcd906a8164c0a4cb@codeaurora.org>
+ <BL0PR02MB4849C990B8C0822ECA45746AA5530@BL0PR02MB4849.namprd02.prod.outlook.com>
+ <cba588cfb69aaa933adf2e8a31be6041@codeaurora.org>
+Message-ID: <cea1d9ab0561ea5d2db288f7624283e8@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds support of dma configuration for devices on fsl-mc
-bus using 'dma_configure' callback for busses. Also, directly calling
-arch_setup_dma_ops is removed from the fsl-mc bus.
+Hi Bjorn and Keith,
 
-Signed-off-by: Nipun Gupta <nipun.gupta@nxp.com>
-Reviewed-by: Laurentiu Tudor <laurentiu.tudor@nxp.com>
----
- drivers/bus/fsl-mc/fsl-mc-bus.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+This discussion is to extend the idea of follwing patch.
+[PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
 
-diff --git a/drivers/bus/fsl-mc/fsl-mc-bus.c b/drivers/bus/fsl-mc/fsl-mc-bus.c
-index 5d8266c..fa43c7d 100644
---- a/drivers/bus/fsl-mc/fsl-mc-bus.c
-+++ b/drivers/bus/fsl-mc/fsl-mc-bus.c
-@@ -127,6 +127,16 @@ static int fsl_mc_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
- 	return 0;
- }
- 
-+static int fsl_mc_dma_configure(struct device *dev)
-+{
-+	struct device *dma_dev = dev;
-+
-+	while (dev_is_fsl_mc(dma_dev))
-+		dma_dev = dma_dev->parent;
-+
-+	return of_dma_configure(dev, dma_dev->of_node, 0);
-+}
-+
- static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
- 			     char *buf)
- {
-@@ -148,6 +158,7 @@ struct bus_type fsl_mc_bus_type = {
- 	.name = "fsl-mc",
- 	.match = fsl_mc_bus_match,
- 	.uevent = fsl_mc_bus_uevent,
-+	.dma_configure  = fsl_mc_dma_configure,
- 	.dev_groups = fsl_mc_dev_groups,
- };
- EXPORT_SYMBOL_GPL(fsl_mc_bus_type);
-@@ -633,10 +644,6 @@ int fsl_mc_device_add(struct fsl_mc_obj_desc *obj_desc,
- 			goto error_cleanup_dev;
- 	}
- 
--	/* Objects are coherent, unless 'no shareability' flag set. */
--	if (!(obj_desc->flags & FSL_MC_OBJ_FLAG_NO_MEM_SHAREABILITY))
--		arch_setup_dma_ops(&mc_dev->dev, 0, 0, NULL, true);
--
- 	/*
- 	 * The device-specific probe callback will get invoked by device_add()
- 	 */
--- 
-1.9.1
+PCIe Spec
+7.6.2.1.3 Command Register (Offset 04h)
+
+SERR# Enable – See Section 7.6.2.1.14.
+When Set, this bit enables reporting upstream of Non-fatal and Fatal 
+errors detected by the Function to the Root Complex. Note that errors 
+are reported if enabled either through this bit or through the PCI 
+Express specific bits in the Device Control register (see Section 
+7.6.3.4).
+In addition, for Functions with Type 1 Configuration Space headers, this 
+bit controls transmission by the primary interface of ERR_NONFATAL and 
+ERR_FATAL error Messages forwarded from the secondary interface. This 
+bit does not affect the transmission of forwarded ERR_COR messages.
+A Root Complex Integrated Endpoint that is not associated with a Root 
+Complex Event Collector is permitted to hardwire this bit to 0b.
+Default value of this bit is 0b.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+7.6.2.3.13 Bridge Control Register
+SERR# Enable – See Section 7.6.2.1.147.5.1.8.
+This bit controls forwarding of ERR_COR, ERR_NONFATAL and ERR_FATAL from 
+secondary to primary.
+
+6.2.3.2.2
+The transmission of these error Messages by class (correctable, 
+non-fatal, fatal) is enabled using the Reporting Enable bits of the 
+Device Control register (see Section 7.6.3.4) or the SERR# Enable bit in 
+the PCI Command register (see Section 7.6.2.1.3).
+
+
+AER driver touches device control (and choose not to touch PCI_COMMAND)
+On the hand SERR# of Bridge Control Register is not set either.
+
+The meaning of both the SERR# for type-1 configuration space seems to me 
+the same.
+both essentially says that ERR_NONFATAL and ERR_FATAL from secondary to 
+primary.
+except that bridge control setting, also forwards ERR_COR messages while 
+Command Register settings affect only ERR_NONFATAL and ERR_FATAL.
+
+there are 2 cases,
+1)hotplug Enabled slot is inserted with type-1 configuration space 
+(bridge) and
+2) hot plug disabled, where on our platform we typically set #SERR by 
+firmware
+
+So yes it makes sense to set #SERR bit by AER driver if it fins bridge.
+but we not only have do
+[PATCH] PCI/AER: Enable SERR# forwarding in non ACPI flow
+
+but also we have to cover hotplug case and hence
+pci_aer_init() should call
+      pci_enable_pcie_error_reporting(dev);
+
+
+something like below.
+
+int pci_aer_init(struct pci_dev *dev)
+{
+         int rc;
+
+	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+
+         pci_enable_pcie_error_reporting(dev);
+	return pci_cleanup_aer_error_status_regs(dev);
+}
+
+
+int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+{
+         int ret;
+
+	if (pcie_aer_get_firmware_first(dev))
+		return -EIO;
+
+	if (!dev->aer_cap)
+		return -EIO;
+
+         if (!IS_ENABLED(CONFIG_ACPI) &&
+             dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+         u16 control;
+
+         /*
+          * A Type-1 PCI bridge will not forward ERR_ messages coming
+          * from an endpoint if SERR# forwarding is not enabled.
+          */
+         pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+         control |= PCI_BRIDGE_CTL_SERR;
+         pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+     }
+
+     return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, 
+PCI_EXP_AER_FLAGS);
+}
+EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+
+also we have to remove pci_enable_pcie_error_reporting() call from the 
+drivers.
+because aer_init will do it for all the devices.
+
+although I am not very sure is it safe to detect enable error reporting 
+by default for all the error devices ?
+e.g. setting PCI_EXP_DEVCTL.
+
+probably drivers might want to call pci_disable_pcie_error_reporting() 
+who doesnt want to participate in error reporting.
+
+Regards,
+Oza.
