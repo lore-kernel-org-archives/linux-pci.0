@@ -1,81 +1,48 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
- <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH v3 0/4] PCI: mediatek: fixup find_port, enable_msi and add pm,
- module support
-Date: Mon, 2 Jul 2018 15:57:40 +0800
-Message-ID: <1530518264-6125-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:55872 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388052AbeGWXKq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 23 Jul 2018 19:10:46 -0400
+Date: Mon, 23 Jul 2018 17:07:28 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [pci:pci/hotplug 34/35] drivers/pci/pci.c:2311:37: error:
+ implicit declaration of function 'pciehp_is_native'; did you mean
+ 'pcie_ports_native'?
+Message-ID: <20180723220728.GV128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <201807200731.O8W2VHW6%fengguang.wu@intel.com>
+ <20180720081841.GA9952@wunner.de>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- honghui.zhang@mediatek.com, yt.shen@mediatek.com, yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20180720081841.GA9952@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Fri, Jul 20, 2018 at 10:18:41AM +0200, Lukas Wunner wrote:
+> On Fri, Jul 20, 2018 at 07:53:33AM +0800, kbuild test robot wrote:
+> > commit: 50b623f07b02fc48e4d7d3e8b5a302abf40b3a7a [34/35] PCI: Whitelist native hotplug ports for runtime D3
+> > 
+> >    drivers/pci/pci.c: In function 'pci_bridge_d3_possible':
+> > >> drivers/pci/pci.c:2311:37: error: implicit declaration of function 'pciehp_is_native'; did you mean 'pcie_ports_native'? [-Werror=implicit-function-declaration]
+> >       if (bridge->is_hotplug_bridge && !pciehp_is_native(bridge))
+> >                                         ^~~~~~~~~~~~~~~~
+> >                                         pcie_ports_native
+> >    cc1: some warnings being treated as errors
+> 
+> Hm, there is a conflict on the pci/hotplug branch wherein commit
+> "PCI: hotplug: Implement hotplug_is_native() only when CONFIG_ACPI=y"
+> removes the pciehp_is_native() declaration for the CONFIG_ACPI=n
+> case (because there was previously only one caller of that function
+> and that caller depended on CONFIG_ACPI=y), but the succeeding commit
+> "PCI: Whitelist native hotplug ports for runtime D3" now adds another
+> caller of that function which also exists in the CONFIG_ACPI=n case.
+> 
+> Can the former commit be amended to leave the pciehp_is_native()
+> declaration in place for CONFIG_ACPI=n?
 
-This patchset includes misc patchs:
+I dropped the following commits for now:
 
-The first patch fixup the mtk_pcie_find_port logical which will cause system
-could not touch the EP's configuration space which was connected to PCIe slot 1.
-
-The second patch fixup the enable msi logical, the operation to enable msi
-should be after system clock is enabled. The function of mtk_pcie_startup_port_v2's
-define location is re-arranged to avoid mtk_pcie_enable_msi's forward declaration.
-And call mtk_pcie_enable_msi in mtk_pcie_startup_port_v2 since the clock was all
-enabled at that time.
-
-The third patch was rebased and refactor of the v4 patch[1], changes are:
- -Add PM support for MT7622.
- -Using mtk_pcie_enable_port to re-establish the link when resumed.
- -Rebase on the previous two patches.
-
-The fourth patch add loadable kernel module support.
-
-Some of those patches was already reviewed-by Ryder Lee <ryder.lee@mediatek.com>,
-so I just add the Reviewed-by tags in those patches.
-
-[1] https://patchwork.kernel.org/patch/10479079
-
-Change since v2:
- - Fix the list_for_each_entry_safe parameter error.
- - Add Ryder's Acked-by flag.
-
-Change since v1:
- - A bit of code refact of the first patch suggested by Andy Shevchenko, and
-   commit message updated.
- - Using __maybe_unused.
- - Remove the redundant list_empty check of the fourth patch.
-
-Honghui Zhang (4):
-  PCI: mediatek: fixup mtk_pcie_find_port logical
-  PCI: mediatek: enable msi after clock enabled
-  PCI: mediatek: Add system pm support for MT2712 and MT7622
-  PCI: mediatek: Add loadable kernel module support
-
- drivers/pci/controller/Kconfig         |   2 +-
- drivers/pci/controller/pcie-mediatek.c | 289 ++++++++++++++++++++++++---------
- 2 files changed, 213 insertions(+), 78 deletions(-)
-
--- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+  PCI: shpchp: Inline shpchp_is_native()
+  PCI: hotplug: Implement hotplug_is_native() only when CONFIG_ACPI=y
