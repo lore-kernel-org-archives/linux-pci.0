@@ -1,126 +1,64 @@
-Return-Path: <SRS0=YEMn=JS=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=YEMn=JS=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Mon, 2 Jul 2018 15:12:25 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Jingoo Han <jingoohan1@gmail.com>, Joao.Pinto@synopsys.com,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Rob Herring <robh@kernel.org>, Tanmay Inamdar <tinamdar@apm.com>,
-	ryder.lee@mediatek.com, Matthias Brugger <matthias.bgg@gmail.com>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>,
-	linux-mediatek@lists.infradead.org,
-	Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Subject: Re: [PATCH] pci: fix I/O space page leak
-Message-ID: <20180702141216.GA30712@e107981-ln.cambridge.arm.com>
-References: <1ca6adde-a91e-84d0-c7dc-fd01bfd9edcc@cogentembedded.com>
- <20180628132259.GB90450@bhelgaas-glaptop.roam.corp.google.com>
- <20180628142615.GA9101@red-moon>
- <ac015f99-c310-3701-35ce-846393b61235@cogentembedded.com>
- <20180702103316.GA10784@red-moon>
- <CAMuHMdUCNPrpYx1xOBTL0F23r3H2jc+kg+T5-rqMe0V-2w-LqQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr30075.outbound.protection.outlook.com ([40.107.3.75]:63482
+        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727765AbeGWGVM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 23 Jul 2018 02:21:12 -0400
+Subject: Re: [PATCH v3] PCI: Check for PCIe downtraining conditions
+To: "Alex G." <mr.nuke.me@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Dave Airlie <airlied@gmail.com>,
+        Alex Deucher <alexander.deucher@amd.com>
+References: <20180604155523.14906-1-mr.nuke.me@gmail.com>
+ <20180716211706.GB12391@bhelgaas-glaptop.roam.corp.google.com>
+ <628346bc-b455-05f2-2051-35a807076ea0@mellanox.com>
+ <25e4f647-f830-e1cc-bffc-0cc894885667@gmail.com>
+From: Tal Gilboa <talgi@mellanox.com>
+Message-ID: <9d752b75-eab2-6fd1-f9da-09985966436c@mellanox.com>
+Date: Mon, 23 Jul 2018 08:21:32 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdUCNPrpYx1xOBTL0F23r3H2jc+kg+T5-rqMe0V-2w-LqQ@mail.gmail.com>
+In-Reply-To: <25e4f647-f830-e1cc-bffc-0cc894885667@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 02, 2018 at 01:08:45PM +0200, Geert Uytterhoeven wrote:
-> Hi Lorenzo,
+On 7/19/2018 6:49 PM, Alex G. wrote:
 > 
-> On Mon, Jul 2, 2018 at 12:31 PM Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > On Sat, Jun 30, 2018 at 01:37:18PM +0300, Sergei Shtylyov wrote:
-> > > On 6/28/2018 5:26 PM, Lorenzo Pieralisi wrote:
-> > > >>>When testing the R-Car PCIe driver on the Condor board, I noticed that iff
-> > > >>>I  left the PCIe PHY driver disabled, the kernel crashed  with this BUG:
-> > > >>>
-> > > >>>[    1.225819] kernel BUG at lib/ioremap.c:72!
 > 
-> > > >>>It turned out that pci_remap_iospace() wasn't undone when the driver's
-> > > >>>probe failed, and since devm_phy_optional_get() returned -EPROBE_DEFER,
-> > > >>>the probe was retried,  finally causing the BUG due to trying to remap
-> > > >>>already remapped pages.
-> > > >>>
-> > > >>>The most feasible solution seems to introduce devm_pci_remap_iospace()
-> > > >>>and call it instead of pci_remap_iospace(), so that the pages get unmapped
-> > > >>>automagically on any probe failure.
-> > > >>>
-> > > >>>And  while fixing pci_parse_request_of_pci_ranges(), aslo fix the other
-> > > >>>drivers that have probably copied the bad example...
-> > > >>>
-> > > >>>Fixes: 4e64dbe226e7 ("PCI: generic: Expose pci_host_common_probe() for use by other drivers")
-> > > >>>Fixes: cbce7900598c ("PCI: designware: Make driver arch-agnostic")
-> > > >>>Fixes: 8c39d710363c ("PCI: aardvark: Add Aardvark PCI host controller driver")
-> > > >>>Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
-> > > >>>Fixes: 68a15eb7bd0c ("PCI: v3-semi: Add V3 Semiconductor PCI host driver")
-> > > >>>Fixes: b7e78170efd4 ("PCI: versatile: Add DT-based ARM Versatile PB PCIe host driver")
-> > > >>>Fixes: 5f6b6ccdbe1c ("PCI: xgene: Add APM X-Gene PCIe driver")
-> > > >>>Fixes: 637cfacae96f ("PCI: mediatek: Add MediaTek PCIe host controller support")
-> > > >>>Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-> > > >>>Cc: stable@vger.kernel.org
-> > > >>
-> > > >>Let me know if you want me to take this, Lorenzo, otherwise:
-> > > >>s/pci: fix/PCI: Fix/ and
-> > > >>
-> > > >>Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > >
-> > > >Thank you Bjorn, yes it could go in as a fix but IMO it has to be split,
-> > > >more so given the stable tag (and I think that each "Fixes" tag should
-> > > >be self-contained),
-> > >
-> > >    It cannot be self-contained because it'll depend on the initial
-> > > commit adding devm_pci_remap_iobase(). If you mean finding the
-> > > earliest broken driver and introduce the deviec managed API while
-> > > fixing it and then make use of that
-> > > API in the subsequent patches, that surely can be done.
-> >
-> > Yes I think that's the best course of action.
-> >
-> > > >merging it as-is would give Greg (and us) a
-> > > >headache when it comes to backporting it.
-> > >
-> > >    The patch interdependency would give him headache too, and I was
-> > > hoping to relieve those with the monilitic patch. :-)
-> >
-> > The problem is that if any of the fixes has to be reverted we have
-> > to revert the whole thing instead of just the problematic patch,
-> > which, given that we are sending this to stable kernels may easily
-> > turn out quite complicated.
-> >
-> > So, I would add the new API along with the earliest broken driver
-> > and mark it for stable.
-> >
-> > In the same thread, add all other fixes (one per patch) without the
-> > stable tag. When the first fix gets merged into the mainline (and
-> > consequently goes to stable) we can send the stable backports for the
-> > remainder of fixes.
-> >
-> > How does that sound ?
+> On 07/18/2018 08:38 AM, Tal Gilboa wrote:
+>> On 7/16/2018 5:17 PM, Bjorn Helgaas wrote:
+>>> [+cc maintainers of drivers that already use pcie_print_link_status()
+>>> and GPU folks]
+> [snip]
+>>>
+>>>> +    /* Multi-function PCIe share the same link/status. */
+>>>> +    if ((PCI_FUNC(dev->devfn) != 0) || dev->is_virtfn)
+>>>> +        return;
+>>>> +
+>>>> +    pcie_print_link_status(dev);
+>>>> +}
+>>
+>> Is this function called by default for every PCIe device? What about 
+>> VFs? We make an exception for them on our driver since a VF doesn't 
+>> have access to the needed information in order to provide a meaningful 
+>> message.
 > 
-> If you want to be prepared for reverting, why not split off the first fix
-> from the patch that provides the new API as well?
-> Yes, it does mean a dependency for backporting, but it avoids the mess if
-> it turns out the first fix is the (only) one that needs to be reverted.
+> I'm assuming VF means virtual function. pcie_print_link_status() doesn't 
+> care if it's passed a virtual function. It will try to do its job. 
+> That's why I bail out three lines above, with 'dev->is_virtfn' check.
+> 
+> Alex
 
-Problem is that that would give Bjorn a hard time asking to merge the
-new API as a fix as a standalone patch for an -rc, hence I suggested we
-merged it for v4.19 but Sergei is not happy with that and I understand
-his point.
-
-To be honest I'd rather start with fixing RCAR (by "fixing" the
-pci_parse_request_of_pci_ranges() call with the new devm_ API) without
-any stable tag (with commit log reporting the RCAR regression), we will
-work out how to fix and backport the rest of the drivers later.
-
-I am not even sure this fix per-se is stable kernel material, that's
-moot given that there exists an pci_unmap_iospace() API that could be
-used in drivers before they were converted to
-pci_parse_request_of_pci_ranges().
-
-Please let me know if that's reasonable, thanks.
-
-Lorenzo
+That's the point - we don't want to call pcie_print_link_status() for 
+virtual functions. We make the distinction in our driver. If you want to 
+change the code to call this function by default it shouldn't affect the 
+current usage.
