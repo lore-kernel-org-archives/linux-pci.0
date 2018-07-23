@@ -1,96 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52902 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729126AbeGRTtp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jul 2018 15:49:45 -0400
-Date: Wed, 18 Jul 2018 14:10:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v2 6/6] PCI/PORTDRV: Remove ERR_FATAL handling from
- pcie_portdrv_slot_reset()
-Message-ID: <20180718191024.GE128988@bhelgaas-glaptop.roam.corp.google.com>
-References: <1529661494-20936-1-git-send-email-poza@codeaurora.org>
- <1529661494-20936-7-git-send-email-poza@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1529661494-20936-7-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1532343774.3501.8.camel@pengutronix.de>
+Subject: Re: [PATCH v2 2/3] reset: imx7: Fix always writing bits as 0
+From: Philipp Zabel <p.zabel@pengutronix.de>
+To: Lucas Stach <l.stach@pengutronix.de>, Leonard Crestez
+ <leonard.crestez@nxp.com>, Richard Zhu <hongxing.zhu@nxp.com>, Andrey
+ Smirnov <andrew.smirnov@gmail.com>
+Date: Mon, 23 Jul 2018 13:02:54 +0200
+In-Reply-To: <1532338865.3163.95.camel@pengutronix.de>
+References: <cover.1532090446.git.leonard.crestez@nxp.com>
+ <54f436a1d2a11a379af642a3327312367ef95343.1532090446.git.leonard.crestez@nxp.com>
+ <1532338865.3163.95.camel@pengutronix.de>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ linux-pm@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
+ linux-kernel@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-imx@nxp.com,
+ kernel@pengutronix.de, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 22, 2018 at 05:58:14AM -0400, Oza Pawandeep wrote:
-> We are handling ERR_FATAL by resetting the Link in software,skipping the
-> driver pci_error_handlers callbacks, removing the devices from the PCI
-> subsystem, and re-enumerating, because of, no need to handle
-> pci_channel_io_frozen case anymore.
-> 
-> Besides the walk on the bus is happening on subordinates, inside
-> broadcast_error_message(), which means that pcie_portdrv_slot_reset()
-> is never called for RP, and now since the all the devices are removed under
-> this downstream link, we can safely get rid of ERR_FATAL handling code
-> in pcie_portdrv_slot_reset().
-
-portdrv only binds to bridges, and it looks like
-broadcast_error_message() only calls the pci_error_handlers callbacks
-for subordinate devices, never for the bridge itself:
-
-  broadcast_error_message
-    if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-      pci_walk_bus(dev->subordinate, ...)
-
-If that's the case, why do we need pcie_portdrv_err_handler at all?
-We should remove it completely if we don't need it.
-
-ISTR some arcane call path for pcie_portdrv_err_resume(), but I don't
-remember the details.
-
-> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-> 
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index 973f1b8..b970a6d 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -42,17 +42,6 @@ __setup("pcie_ports=", pcie_port_setup);
->  
->  /* global data */
->  
-> -static int pcie_portdrv_restore_config(struct pci_dev *dev)
-> -{
-> -	int retval;
-> -
-> -	retval = pci_enable_device(dev);
-> -	if (retval)
-> -		return retval;
-> -	pci_set_master(dev);
-> -	return 0;
-> -}
-> -
->  #ifdef CONFIG_PM
->  static int pcie_port_runtime_suspend(struct device *dev)
->  {
-> @@ -163,13 +152,6 @@ static pci_ers_result_t pcie_portdrv_mmio_enabled(struct pci_dev *dev)
->  static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
->  {
->  	/* If fatal, restore cfg space for possible link reset at upstream */
-> -	if (dev->error_state == pci_channel_io_frozen) {
-> -		dev->state_saved = true;
-> -		pci_restore_state(dev);
-> -		pcie_portdrv_restore_config(dev);
-> -		pci_enable_pcie_error_reporting(dev);
-> -	}
-> -
->  	return PCI_ERS_RESULT_RECOVERED;
->  }
->  
-> -- 
-> 2.7.4
-> 
+T24gTW9uLCAyMDE4LTA3LTIzIGF0IDExOjQxICswMjAwLCBMdWNhcyBTdGFjaCB3cm90ZToKPiBB
+cyB0aGlzIGRvZXNuJ3QgZGVwZW5kIG9uIGFueSBvdGhlciBwYXRjaCBpbiB0aGlzIHNlcmllcywg
+SSB0aGluayBpdAo+IHdvdWxkIGJlIGZpbmUgaWYgUGhpbGlwcMKgdGFrZXMgdGhpcyBwYXRjaCB0
+aHJvdWdoIHRoZSByZXNldCB0cmVlLgo+IAo+IFJlZ2FyZHMsCj4gTHVjYXMKPiAKPiBBbSBGcmVp
+dGFnLCBkZW4gMjAuMDcuMjAxOCwgMTU6NDcgKzAzMDAgc2NocmllYiBMZW9uYXJkIENyZXN0ZXo6
+Cj4gPiBSaWdodCBub3cgdGhlIG9ubHkgdXNlciBvZiByZXNldC1pbXg3IGlzIHBjaS1pbXg2IGFu
+ZCB0aGUKPiA+IHJlc2V0X2NvbnRyb2xfYXNzZXJ0IGFuZCBkZWFzc2VydCBjYWxscyBvbiBwY2ll
+cGh5X3Jlc2V0IGRvbid0IHRvZ2dsZQo+ID4gdGhlIFBDSUVQSFlfQlROIGFuZCBQQ0lFUEhZX0df
+UlNUIGJpdHMgYXMgZXhwZWN0ZWQuIEZpeCB0aGlzIGJ5IHdyaXRpbmcKPiA+IDEgb3IgMCByZXNw
+ZWN0aXZlbHkuCj4gPiAKPiA+IFRoZSByZWZlcmVuY2UgbWFudWFsIGlzIG5vdCB2ZXJ5IGNsZWFy
+IHJlZ2FyZGluZyBTUkNfUENJRVBIWV9SQ1IgYnV0IGZvcgo+ID4gb3RoZXIgcmVnaXN0ZXJzIGxp
+a2UgTUlQSVBIWSBhbmQgSFNJQ1BIWSB0aGUgYml0cyBhcmUgZXhwbGljaXRseQo+ID4gZG9jdW1l
+bnRlZCBhcyAiMSBtZWFucyBhc3NlcnQsIDAgbWVhbnMgZGVhc3NlcnQiLgo+ID4gCj4gPiBUaGUg
+dmFsdWVzIGFyZSBzdGlsbCByZXZlcnNlZCBmb3IgSU1YN19SRVNFVF9QQ0lFX0NUUkxfQVBQU19F
+Ti4KPiA+IAo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBMZW9uYXJkIENyZXN0ZXogPGxlb25hcmQuY3Jl
+c3RlekBueHAuY29tPgo+ID4gPiBSZXZpZXdlZC1ieTogTHVjYXMgU3RhY2ggPGwuc3RhY2hAcGVu
+Z3V0cm9uaXguZGU+CgpUaGFuayB5b3UsIGFwcGxpZWQgdG8gcmVzZXQvZml4ZXMuCgpyZWdhcmRz
+ClBoaWxpcHAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+CmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5m
+cmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xp
+bnV4LWFybS1rZXJuZWwK
