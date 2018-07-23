@@ -1,78 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55696 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727171AbeGPOse (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 16 Jul 2018 10:48:34 -0400
-Date: Mon, 16 Jul 2018 09:20:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org, Greg Kroah-Hartman <greg@kroah.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mayurkumar Patel <mayurkumar.patel@intel.com>,
-        Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-        Stefan Roese <sr@denx.de>, Rajat Jain <rajatja@google.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH 00/32] Rework pciehp event handling & add runtime PM
-Message-ID: <20180716142053.GA12391@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1529173804.git.lukas@wunner.de>
+Received: from mail-yb0-f180.google.com ([209.85.213.180]:44203 "EHLO
+        mail-yb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728257AbeGWUPj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jul 2018 16:15:39 -0400
+Received: by mail-yb0-f180.google.com with SMTP id l16-v6so680656ybk.11
+        for <linux-pci@vger.kernel.org>; Mon, 23 Jul 2018 12:13:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1529173804.git.lukas@wunner.de>
+References: <5b5555e19b5af_5e922b08291e2f60744cb@node1.mail>
+In-Reply-To: <5b5555e19b5af_5e922b08291e2f60744cb@node1.mail>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 23 Jul 2018 14:12:49 -0500
+Message-ID: <CAErSpo7wy1CZvozUX+vnj0W_-m85M=TBUYp3N=W1wB57=_8kXw@mail.gmail.com>
+Subject: Fwd: New Defects reported by Coverity Scan for Linux
+To: Honghui Zhang <honghui.zhang@mediatek.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 16, 2018 at 09:25:00PM +0200, Lukas Wunner wrote:
-> Rework pciehp to use modern, threaded IRQ handling.  The slot is powered
-> on and off synchronously in the IRQ thread, no indirection via a work
-> queue anymore.
-> 
-> When the slot is enabled/disabled by the user via sysfs or an Attention
-> Button press, a request is sent to the IRQ thread.  The IRQ thread is
-> thus the sole entity enabling/disabling the slot.
-> 
-> The IRQ thread can cope with missed events, e.g. if a card is inserted
-> and immediately pulled out before the IRQ thread had a chance to react.
-> It also tolerates an initially unstable link as observed in the wild by
-> Stefan Roese.
-> 
-> Finally, runtime PM support is added.  This was the original motivation
-> of the series because runtime suspending hotplug ports is needed to power
-> down Thunderbolt controllers on idle, which saves ~1.5W per controller.
-> Runtime resuming ports takes tenths of milliseconds during which events
-> may be missed, this in turn necessitated the event handling rework.
-> 
-> I've pushed the series to GitHub to ease reviewing/fetching:
-> https://github.com/l1k/linux/commits/pciehp_runpm_v2
+Hi Honghui,
 
-My current test branch:
+Would you consider doing a minor patch to fix the issue Coverity
+reported below (not checking the return value from
+devm_pci_remap_iospace())?
 
-  https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/06-16-lukas-pciehp
+Thanks,
+  Bjorn
 
-has this series with these changes:
+---------- Forwarded message ---------
+From: <scan-admin@coverity.com>
+Date: Sun, Jul 22, 2018 at 11:13 PM
+Subject: New Defects reported by Coverity Scan for Linux
+To: <bhelgaas@google.com>
 
-  - Drop the genirq patch (already merged via tip)
+...
+** CID 1438089:  Error handling issues  (CHECKED_RETURN)
+/drivers/pci/controller/pcie-mediatek.c: 1112 in mtk_pcie_request_resources()
 
-  - Add one blank line (pcie_cleanup_slot())
 
-  - A few trivial changelog updates (mostly to use lkml.kernel.org
-    links to reduce dependency on 3rd party archives)
-
-Do you plan any other updates?  The open questions I see are:
-
-  - You mentioned withdrawing "03/32 PCI: pciehp: Fix deadlock on
-    unplug".  I tried simply dropping that, but that caused a conflict
-    that I didn't try to resolve.
-
-  - Mika had a few questions/comments that are still dangling.
-
-  - Whether to include "02/32 PCI: pciehp: Fix UAF on unplug" in the
-    v4.19 merge window or in v4.18.
-
-Bjorn
+________________________________________________________________________________________________________
+*** CID 1438089:  Error handling issues  (CHECKED_RETURN)
+/drivers/pci/controller/pcie-mediatek.c: 1112 in mtk_pcie_request_resources()
+1106            pci_add_resource(windows, &pcie->busn);
+1107
+1108            err = devm_request_pci_bus_resources(dev, windows);
+1109            if (err < 0)
+1110                    return err;
+1111
+>>>     CID 1438089:  Error handling issues  (CHECKED_RETURN)
+>>>     Calling "devm_pci_remap_iospace" without checking return value (as is done elsewhere 5 out of 6 times).
+1112            devm_pci_remap_iospace(dev, &pcie->pio, pcie->io.start);
+1113
+1114            return 0;
+1115     }
+1116
+1117     static int mtk_pcie_register_host(struct pci_host_bridge *host)
