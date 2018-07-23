@@ -1,205 +1,186 @@
-Return-Path: <SRS0=JOOt=JZ=gmail.com=kernelfans@kernel.org>
-Return-Path: <SRS0=JOOt=JZ=gmail.com=kernelfans@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v5] PCI: Check for PCIe downtraining conditions
+To: Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "keith.busch@intel.com" <keith.busch@intel.com>,
+        "alex_gagniuc@dellteam.com" <alex_gagniuc@dellteam.com>,
+        "austin_bolen@dell.com" <austin_bolen@dell.com>,
+        "shyam_iyer@dell.com" <shyam_iyer@dell.com>,
+        "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+        "ariel.elior@cavium.com" <ariel.elior@cavium.com>,
+        "michael.chan@broadcom.com" <michael.chan@broadcom.com>,
+        "ganeshgr@chelsio.com" <ganeshgr@chelsio.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        "airlied@gmail.com" <airlied@gmail.com>,
+        "alexander.deucher@amd.com" <alexander.deucher@amd.com>,
+        "mike.marciniszyn@intel.com" <mike.marciniszyn@intel.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
+ <20180723200339.23943-1-mr.nuke.me@gmail.com>
+ <20180723140143.1a46902f@cakuba.netronome.com>
+From: Tal Gilboa <talgi@mellanox.com>
+Message-ID: <b9a6b3b8-56cf-8bb5-2568-071ccd8a4f28@mellanox.com>
+Date: Tue, 24 Jul 2018 00:52:22 +0300
 MIME-Version: 1.0
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
- <6281446.GoJLz6Hq6C@aspire.rjw.lan> <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
- <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com>
- <20180706083603.GA9063@wunner.de> <CAJZ5v0j6+m8NGMneG45tF9L1s6ahtFo91wPCO=3YOTEyAOL+VQ@mail.gmail.com>
- <CAFgQCTugu5XO06_xXb4ihkdfGJxtFX0813g2J-Jk2JeYtPP1vA@mail.gmail.com>
- <CAFgQCTsCjkDWJsNog_sTnS-ZaZ87fMFpKq1ekVSUG4MDs6K_jw@mail.gmail.com>
- <CAJZ5v0gxJ9LJ328WbgPrZCV-0SEiO31trsTSYYS8L95P4kfkbA@mail.gmail.com>
- <CAFgQCTvYwjKtx+AQf-kQjTsJMPRz48vgJ__jqNpwZuayG21oQw@mail.gmail.com> <CAJZ5v0gSo-jFO0h+aLkeyGGxRL+tdsRtGi0WFhhGQbZvezJmkA@mail.gmail.com>
-In-Reply-To: <CAJZ5v0gSo-jFO0h+aLkeyGGxRL+tdsRtGi0WFhhGQbZvezJmkA@mail.gmail.com>
-From: Pingfan Liu <kernelfans@gmail.com>
-Date: Mon, 9 Jul 2018 16:40:52 +0800
-Message-ID: <CAFgQCTvGJVBdGLz0R74jO3f1nY3aWprGoADUXzw4E6jxOxWHBg@mail.gmail.com>
-Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
- ordering in device_kset
-To: Rafael Wysocki <rafael@kernel.org>
-Cc: lukas@wunner.de, linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-pm@vger.kernel.org, kishon@ti.com
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180723140143.1a46902f@cakuba.netronome.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 9, 2018 at 3:48 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
->
-> On Mon, Jul 9, 2018 at 8:48 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
-> > On Sun, Jul 8, 2018 at 4:25 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
-> >>
-> >> On Sat, Jul 7, 2018 at 6:24 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
-> >> > On Fri, Jul 6, 2018 at 9:55 PM Pingfan Liu <kernelfans@gmail.com> wrote:
-> >> >>
-> >> >> On Fri, Jul 6, 2018 at 4:47 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
-> >> >> >
-> >> >> > On Fri, Jul 6, 2018 at 10:36 AM, Lukas Wunner <lukas@wunner.de> wrote:
-> >> >> > > [cc += Kishon Vijay Abraham]
-> >> >> > >
-> >> >> > > On Thu, Jul 05, 2018 at 11:18:28AM +0200, Rafael J. Wysocki wrote:
-> >> >> > >> OK, so calling devices_kset_move_last() from really_probe() clearly is
-> >> >> > >> a mistake.
-> >> >> > >>
-> >> >> > >> I'm not really sure what the intention of it was as the changelog of
-> >> >> > >> commit 52cdbdd49853d doesn't really explain that (why would it be
-> >> >> > >> insufficient without that change?)
-> >> >> > >
-> >> >> > > It seems 52cdbdd49853d fixed an issue with boards which have an MMC
-> >> >> > > whose reset pin needs to be driven high on shutdown, lest the MMC
-> >> >> > > won't be found on the next boot.
-> >> >> > >
-> >> >> > > The boards' devicetrees use a kludge wherein the reset pin is modelled
-> >> >> > > as a regulator.  The regulator is enabled when the MMC probes and
-> >> >> > > disabled on driver unbind and shutdown.  As a result, the pin is driven
-> >> >> > > low on shutdown and the MMC is not found on the next boot.
-> >> >> > >
-> >> >> > > To fix this, another kludge was invented wherein the GPIO expander
-> >> >> > > driving the reset pin unconditionally drives all its pins high on
-> >> >> > > shutdown, see pcf857x_shutdown() in drivers/gpio/gpio-pcf857x.c
-> >> >> > > (commit adc284755055, "gpio: pcf857x: restore the initial line state
-> >> >> > > of all pcf lines").
-> >> >> > >
-> >> >> > > For this kludge to work, the GPIO expander's ->shutdown hook needs to
-> >> >> > > be executed after the MMC expander's ->shutdown hook.
-> >> >> > >
-> >> >> > > Commit 52cdbdd49853d achieved that by reordering devices_kset according
-> >> >> > > to the probe order.  Apparently the MMC probes after the GPIO expander,
-> >> >> > > possibly because it returns -EPROBE_DEFER if the vmmc regulator isn't
-> >> >> > > available yet, see mmc_regulator_get_supply().
-> >> >> > >
-> >> >> > > Note, I'm just piecing the information together from git history,
-> >> >> > > I'm not responsible for these kludges.  (I'm innocent!)
-> >> >> >
-> >> >> > Sure enough. :-)
-> >> >> >
-> >> >> > In any case, calling devices_kset_move_last() in really_probe() is
-> >> >> > plain broken and if its only purpose was to address a single, arguably
-> >> >> > kludgy, use case, let's just get rid of it in the first place IMO.
-> >> >> >
-> >> >> Yes, if it is only used for a single use case.
-> >> >>
-> >> > Think it again, I saw other potential issue with the current code.
-> >> > device_link_add->device_reorder_to_tail() can break the
-> >> > "supplier<-consumer" order. During moving children after parent's
-> >> > supplier, it ignores the order of child's consumer.
-> >>
-> >> What do you mean?
-> >>
-> > The drivers use device_link_add() to build "supplier<-consumer" order
-> > without knowing each other. Hence there is the following potential
-> > odds: (consumerX, child_a, ...) (consumer_a,..) (supplierX), where
-> > consumer_a consumes child_a.
->
-> Well, what's the initial state of the list?
->
-> > When device_link_add()->device_reorder_to_tail() moves all descendant of
-> > consumerX to the tail, it breaks the "supplier<-consumer" order by
-> > "consumer_a <- child_a".
->
-> That depends on what the initial ordering of the list is and please
-> note that circular dependencies are explicitly assumed to be not
-> present.
->
-> The assumption is that the initial ordering of the list reflects the
-> correct suspend (or shutdown) order without the new link.  Therefore
-> initially all children are located after their parents and all known
-> consumers are located after their suppliers.
->
-> If a new link is added, the new consumer goes to the end of the list
-> and all of its children and all of its consumers go after it.
-> device_reorder_to_tail() is recursive, so for each of the devices that
-> went to the end of the list, all of its children and all of its
-> consumers go after it and so on.
->
-> Now, that operation doesn't change the order of any of the
-> parent<-child or supplier<-consumer pairs that get moved and since all
-> of the devices that depend on any device that get moved go to the end
-> of list after it, the only devices that don't go to the end of list
-> are guaranteed to not depend on any of them (they may be parents or
-> suppliers of the devices that go to the end of the list, but not their
-> children or suppliers).
->
-Thanks for the detailed explain. It is clear now, and you are right.
+On 7/24/2018 12:01 AM, Jakub Kicinski wrote:
+> On Mon, 23 Jul 2018 15:03:38 -0500, Alexandru Gagniuc wrote:
+>> PCIe downtraining happens when both the device and PCIe port are
+>> capable of a larger bus width or higher speed than negotiated.
+>> Downtraining might be indicative of other problems in the system, and
+>> identifying this from userspace is neither intuitive, nor
+>> straightforward.
+>>
+>> The easiest way to detect this is with pcie_print_link_status(),
+>> since the bottleneck is usually the link that is downtrained. It's not
+>> a perfect solution, but it works extremely well in most cases.
+>>
+>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+>> ---
+>>
+>> For the sake of review, I've created a __pcie_print_link_status() which
+>> takes a 'verbose' argument. If we agree want to go this route, and update
+>> the users of pcie_print_link_status(), I can split this up in two patches.
+>> I prefer just printing this information in the core functions, and letting
+>> drivers not have to worry about this. Though there seems to be strong for
+>> not going that route, so here it goes:
+> 
+> FWIW the networking drivers print PCIe BW because sometimes the network
+> bandwidth is simply over-provisioned on multi port cards, e.g. 80Gbps
+> card on a x8 link.
+> 
+> Sorry to bike shed, but currently the networking cards print the info
+> during probe.  Would it make sense to move your message closer to probe
+> time?  Rather than when device is added.  If driver structure is
+> available, we could also consider adding a boolean to struct pci_driver
+> to indicate if driver wants the verbose message?  This way we avoid
+> duplicated prints.
+> 
+> I have no objection to current patch, it LGTM.  Just a thought.
 
-> > And we need recrusion to resolve the item in
-> > (consumer_a,..), each time when moving a consumer behind its supplier,
-> > we may break "parent<-child".
->
-> I don't see this as per the above.
->
-> Say, device_reorder_to_tail() moves a parent after its child.  This
-> means that device_reorder_to_tail() was not called for the child after
-> it had been called for the parent, but that is not true, because it is
-> called for all of the children of each device that gets moved *after*
-> moving that device.
->
-Yes, you are right.
+I don't see the reason for having two functions. What's the problem with 
+adding the verbose argument to the original function?
 
-> >> > Beside this, essentially both devices_kset_move_after/_before() and
-> >> > device_pm_move_after/_before() expose  the shutdown order to the
-> >> > indirect caller,  and we can not expect that the caller can not handle
-> >> > it correctly. It should be a job of drivers core.
-> >>
-> >> Arguably so, but that's how those functions were designed and the
-> >> callers should be aware of the limitation.
-> >>
-> >> If they aren't, there is a bug in the caller.
-> >>
-> > If we consider device_move()-> device_pm_move_after/_before() more
-> > carefully like the above description, then we can hide the detail from
-> > caller. And keep the info of the pm order inside the core.
->
-> Yes, we can.
->
-> My point is that we have not been doing that so far and the current
-> callers of those routines are expected to know that.
->
-> We can do that to make the life of *future* callers easier (and maybe
-> to simplify the current ones), but currently the caller is expected to
-> do the right thing.
->
-OK, I get your point.
+> 
+>>   drivers/pci/pci.c   | 22 ++++++++++++++++++----
+>>   drivers/pci/probe.c | 21 +++++++++++++++++++++
+>>   include/linux/pci.h |  1 +
+>>   3 files changed, 40 insertions(+), 4 deletions(-) >>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 316496e99da9..414ad7b3abdb 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -5302,14 +5302,15 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
+>>   }
+>>   
+>>   /**
+>> - * pcie_print_link_status - Report the PCI device's link speed and width
+>> + * __pcie_print_link_status - Report the PCI device's link speed and width
+>>    * @dev: PCI device to query
+>> + * @verbose: Be verbose -- print info even when enough bandwidth is available.
+>>    *
+>>    * Report the available bandwidth at the device.  If this is less than the
+>>    * device is capable of, report the device's maximum possible bandwidth and
+>>    * the upstream link that limits its performance to less than that.
+>>    */
+>> -void pcie_print_link_status(struct pci_dev *dev)
+>> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose)
+>>   {
+>>   	enum pcie_link_width width, width_cap;
+>>   	enum pci_bus_speed speed, speed_cap;
+>> @@ -5319,11 +5320,11 @@ void pcie_print_link_status(struct pci_dev *dev)
+>>   	bw_cap = pcie_bandwidth_capable(dev, &speed_cap, &width_cap);
+>>   	bw_avail = pcie_bandwidth_available(dev, &limiting_dev, &speed, &width);
+>>   
+>> -	if (bw_avail >= bw_cap)
+>> +	if (bw_avail >= bw_cap && verbose)
+>>   		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth (%s x%d link)\n",
+>>   			 bw_cap / 1000, bw_cap % 1000,
+>>   			 PCIE_SPEED2STR(speed_cap), width_cap);
+>> -	else
+>> +	else if (bw_avail < bw_cap)
+>>   		pci_info(dev, "%u.%03u Gb/s available PCIe bandwidth, limited by %s x%d link at %s (capable of %u.%03u Gb/s with %s x%d link)\n",
+>>   			 bw_avail / 1000, bw_avail % 1000,
+>>   			 PCIE_SPEED2STR(speed), width,
+>> @@ -5331,6 +5332,19 @@ void pcie_print_link_status(struct pci_dev *dev)
+>>   			 bw_cap / 1000, bw_cap % 1000,
+>>   			 PCIE_SPEED2STR(speed_cap), width_cap);
+>>   }
+>> +
+>> +/**
+>> + * pcie_print_link_status - Report the PCI device's link speed and width
+>> + * @dev: PCI device to query
+>> + *
+>> + * Report the available bandwidth at the device.  If this is less than the
+>> + * device is capable of, report the device's maximum possible bandwidth and
+>> + * the upstream link that limits its performance to less than that.
+>> + */
+>> +void pcie_print_link_status(struct pci_dev *dev)
+>> +{
+>> +	__pcie_print_link_status(dev, true);
+>> +}
+>>   EXPORT_SYMBOL(pcie_print_link_status);
+>>   
+>>   /**
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index ac876e32de4b..1f7336377c3b 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -2205,6 +2205,24 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>>   	return dev;
+>>   }
+>>   
+>> +static void pcie_check_upstream_link(struct pci_dev *dev)
+>> +{
+>> +	if (!pci_is_pcie(dev))
+>> +		return;
+>> +
+>> +	/* Look from the device up to avoid downstream ports with no devices. */
+>> +	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT) &&
+>> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END) &&
+>> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM))
+>> +		return;
+>> +
+>> +	/* Multi-function PCIe share the same link/status. */
+>> +	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
+>> +		return;
+>> +
+>> +	__pcie_print_link_status(dev, false);
+>> +}
+>> +
+>>   static void pci_init_capabilities(struct pci_dev *dev)
+>>   {
+>>   	/* Enhanced Allocation */
+>> @@ -2240,6 +2258,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>>   	/* Advanced Error Reporting */
+>>   	pci_aer_init(dev);
+>>   
+>> +	/* Check link and detect downtrain errors */
+>> +	pcie_check_upstream_link(dev);
 
-> >> > It is hard to extract high dimension info and pack them into one dimension
-> >> > linked-list.
-> >>
-> >> Well, yes and no.
-> >>
-> > For "hard", I means that we need two interleaved recursion to make the
-> > order correct. Otherwise, I think it is a bug or limitation.
->
-> So the limitation is that circular dependencies may not exist, because
-> if they did, there would be no suitable suspend/shutdown ordering
-> between devices.
->
-Yes.
+This is called for every PCIe device right? Won't there be a duplicated 
+print in case a device loads with lower PCIe bandwidth than needed?
 
-> >> We know it for a fact that there is a linear ordering that will work.
-> >> It is inefficient to figure it out every time during system suspend
-> >> and resume, for one and that's why we have dpm_list.
-> >>
-> > Yeah, I agree that iterating over device tree may hurt performance. I
-> > guess the iterating will not cost the majority of the suspend time,
-> > comparing to the device_suspend(), which causes hardware's sync. But
-> > data is more persuasive. Besides the performance, do you have other
-> > concern till now?
->
-> I simply think that there should be one way to iterate over devices
-> for both system-wide PM and shutdown.
->
-> The reason why it is not like that today is because of the development
-> history, but if it doesn't work and we want to fix it, let's just
-> consolidate all of that.
->
-> Now, system-wide suspend resume sometimes iterates the list in the
-> reverse order which would be hard without having a list, wouldn't it?
->
-Yes, it would be hard without having a list. I just thought to use
-device tree info to build up a shadowed list, and rebuild the list
-until there is new device_link_add() operation. For
-device_add/_remove(), it can modify the shadowed list directly.
-
-Thanks,
-Pingfan
+>> +
+>>   	if (pci_probe_reset_function(dev) == 0)
+>>   		dev->reset_fn = 1;
+>>   }
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index abd5d5e17aee..15bfab8f7a1b 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1088,6 +1088,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+>>   u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+>>   			     enum pci_bus_speed *speed,
+>>   			     enum pcie_link_width *width);
+>> +void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
+>>   void pcie_print_link_status(struct pci_dev *dev);
+>>   int pcie_flr(struct pci_dev *dev);
+>>   int __pci_reset_function_locked(struct pci_dev *dev);
+> 
