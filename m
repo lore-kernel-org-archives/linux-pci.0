@@ -1,14 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Nipun Gupta <nipun.gupta@nxp.com>
-To: robin.murphy@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
- robh@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
- gregkh@linuxfoundation.org, laurentiu.tudor@nxp.com, bhelgaas@google.com,
- hch@lst.de
-Subject: [PATCH 0/7 v6] Support for fsl-mc bus and its devices in SMMU
-Date: Mon,  9 Jul 2018 16:48:16 +0530
-Message-Id: <1531135103-10699-1-git-send-email-nipun.gupta@nxp.com>
 MIME-Version: 1.0
+References: <cover.1532090446.git.leonard.crestez@nxp.com>
+ <221deb47d7d38ecd6e0c7636f9a87ab693a3c539.1532090446.git.leonard.crestez@nxp.com>
+ <CAHQ1cqF6TphuN8Ls54YA6bjty-bJF8twYboaG-RM=jox8CeQPA@mail.gmail.com>
+ <42ff53eeea3067b19e3e16bed8392706502c8f23.camel@nxp.com>
+In-Reply-To: <42ff53eeea3067b19e3e16bed8392706502c8f23.camel@nxp.com>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+Date: Mon, 23 Jul 2018 11:38:26 -0700
+Message-ID: <CAHQ1cqF7u2gjwYt1-16u-uimXHZ2SWsquabZSDftQn_yRurhSQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/3] Revert "ARM: dts: imx7d: Invert legacy PCI irq
+ mapping"
+To: Leonard Crestez <leonard.crestez@nxp.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,80 +19,65 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, stuyoder@gmail.com, bharat.bhushan@nxp.com,
- shawnguo@kernel.org, joro@8bytes.org, linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, leoyang.li@nxp.com,
- iommu@lists.linux-foundation.org, Nipun Gupta <nipun.gupta@nxp.com>,
- linux-pci@vger.kernel.org, frowand.list@gmail.com,
- linux-arm-kernel@lists.infradead.org, m.szyprowski@samsung.com
+Cc: Dong Aisheng <aisheng.dong@nxp.com>, lorenzo.pieralisi@arm.com,
+ Richard Zhu <hongxing.zhu@nxp.com>, linux-pm@vger.kernel.org,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Joao.Pinto@synopsys.com,
+ linux-imx@nxp.com, Sascha Hauer <kernel@pengutronix.de>,
+ linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
+ Shawn Guo <shawnguo@kernel.org>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+ Lucas Stach <l.stach@pengutronix.de>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset defines IOMMU DT binding for fsl-mc bus and adds
-support in SMMU for fsl-mc bus.
+On Mon, Jul 23, 2018 at 5:41 AM Leonard Crestez <leonard.crestez@nxp.com> wrote:
+>
+> On Fri, 2018-07-20 at 08:33 -0700, Andrey Smirnov wrote:
+> > On Fri, Jul 20, 2018 at 5:48 AM Leonard Crestez <leonard.crestez@nxp.com> wrote:
+> > >
+> > > This reverts commit 1c86c9dd82f859b474474a7fee0d5195da2c9c1d.
+> > >
+> > > That commit followed the reference manual but unfortunately the imx7d
+> > > manual is incorrect.
+> >
+> > I'd also add similar comment to DT file to prevent people from trying
+> > to "fix" this in the future.
+>
+> I'll try to see if I can follow up internally with docs team to get
+> this updated in the next revision of the reference manual.
+>
 
-The patch series is based on top of dma-mapping tree (for-next branch):
-http://git.infradead.org/users/hch/dma-mapping.git
+Not sure if we are on the same page here, but what I meant is adding
+the same explanation that is in your commit message to Device Tree
+file as well so that if anyone looks at DT code and goes "Huh?" in the
+future, they wouldn't have to research commit history to see the
+reason why things the way they are.
 
-These patches
-  - Define property 'iommu-map' for fsl-mc bus (patch 1)
-  - Integrates the fsl-mc bus with the SMMU using this
-    IOMMU binding (patch 2,3,4)
-  - Adds the dma configuration support for fsl-mc bus (patch 5, 6)
-  - Updates the fsl-mc device node with iommu/dma related changes (patch 7)
+> > Also, this change is going to break QEMU's mapping found here:
+>
+> I had no idea that existed, I guess somebody needs to fix that as well.
+>
 
-Changes in v2:
-  - use iommu-map property for fsl-mc bus
-  - rebase over patchset https://patchwork.kernel.org/patch/10317337/
-    and make corresponding changes for dma configuration of devices on
-    fsl-mc bus
+I take it it's a no to my "any chance you can fix that as well?" ;-).
+I'll see if I can find time to do that this week.
 
-Changes in v3:
-  - move of_map_rid in drivers/of/address.c
+> Do you have an imx7d board using pci or did you just test in emulation?
+>
 
-Changes in v4:
-  - move of_map_rid in drivers/of/base.c
+I used real i.MX7D Sabre board with i210 network card, when I was
+porting i.MX7 PCIe patches. However, as per note I made in the
+original submission:
 
-Changes in v5:
-  - break patch 5 in two separate patches (now patch 5/7 and patch 6/7)
-  - add changelog text in patch 3/7 and patch 5/7
-  - typo fix
+https://lkml.org/lkml/2017/10/9/913
 
-Changes in v6:
-  - Updated fsl_mc_device_group() API to be more rational
-  - Added dma-coherent property in the LS2 smmu device node
-  - Minor fixes in the device-tree documentation
+this IRQ swap patch came up as a result of "connecting" emulated ICH4
+in QEMU which was using legacy interrupts.
 
-Nipun Gupta (7):
-  Documentation: fsl-mc: add iommu-map device-tree binding for fsl-mc
-    bus
-  iommu/of: make of_pci_map_rid() available for other devices too
-  iommu/of: support iommu configuration for fsl-mc devices
-  iommu/arm-smmu: Add support for the fsl-mc bus
-  bus: fsl-mc: support dma configure for devices on fsl-mc bus
-  bus: fsl-mc: set coherent dma mask for devices on fsl-mc bus
-  arm64: dts: ls208xa: comply with the iommu map binding for fsl_mc
-
- .../devicetree/bindings/misc/fsl,qoriq-mc.txt      |  39 ++++++++
- arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi     |   7 +-
- drivers/bus/fsl-mc/fsl-mc-bus.c                    |  16 +++-
- drivers/iommu/arm-smmu.c                           |   7 ++
- drivers/iommu/iommu.c                              |  13 +++
- drivers/iommu/of_iommu.c                           |  25 ++++-
- drivers/of/base.c                                  | 102 +++++++++++++++++++++
- drivers/of/irq.c                                   |   5 +-
- drivers/pci/of.c                                   | 101 --------------------
- include/linux/fsl/mc.h                             |   8 ++
- include/linux/iommu.h                              |   2 +
- include/linux/of.h                                 |  11 +++
- include/linux/of_pci.h                             |  10 --
- 13 files changed, 224 insertions(+), 122 deletions(-)
-
--- 
-1.9.1
-
+Thanks,
+Andrey Smirnov
 
 _______________________________________________
 linux-arm-kernel mailing list
