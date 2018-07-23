@@ -1,109 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:49100 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933475AbeGJPiZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Jul 2018 11:38:25 -0400
-Date: Tue, 10 Jul 2018 16:40:17 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "Songxiaowei (Kirin_DRV)" <songxiaowei@hisilicon.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "chenyao (F)" <chenyao11@huawei.com>
-Subject: Re: =?utf-8?B?562U5aSN?= =?utf-8?Q?=3A?= [PATCH v5 1/1] PCI: kirin:
- Add MSI support
-Message-ID: <20180710154017.GA16825@red-moon>
-References: <20180628124803.110315-1-songxiaowei@hisilicon.com>
- <20180628124803.110315-2-songxiaowei@hisilicon.com>
- <99B4C6BADD9E3241B25E52B02BA737C5412D2511@dggema525-mbx.china.huawei.com>
+Return-Path: <SRS0=I4wA=KH=gmail.com=mr.nuke.me@kernel.org>
+Return-Path: <SRS0=I4wA=KH=gmail.com=mr.nuke.me@kernel.org>
+Subject: Re: [PATCH v3] PCI: Check for PCIe downtraining conditions
+To: Tal Gilboa <talgi@mellanox.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, alex_gagniuc@dellteam.com, austin_bolen@dell.com,
+ shyam_iyer@dell.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+ Ariel Elior <ariel.elior@cavium.com>,
+ Michael Chan <michael.chan@broadcom.com>,
+ Ganesh Goudar <ganeshgr@chelsio.com>, Tariq Toukan <tariqt@mellanox.com>,
+ Jakub Kicinski <jakub.kicinski@netronome.com>,
+ Dave Airlie <airlied@gmail.com>, Alex Deucher <alexander.deucher@amd.com>
+References: <20180604155523.14906-1-mr.nuke.me@gmail.com>
+ <20180716211706.GB12391@bhelgaas-glaptop.roam.corp.google.com>
+ <628346bc-b455-05f2-2051-35a807076ea0@mellanox.com>
+ <25e4f647-f830-e1cc-bffc-0cc894885667@gmail.com>
+ <9d752b75-eab2-6fd1-f9da-09985966436c@mellanox.com>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <757729fb-1eb5-e1fa-899b-5cef0cc3106c@gmail.com>
+Date: Mon, 23 Jul 2018 12:01:48 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <99B4C6BADD9E3241B25E52B02BA737C5412D2511@dggema525-mbx.china.huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <9d752b75-eab2-6fd1-f9da-09985966436c@mellanox.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 09, 2018 at 01:54:07AM +0000, Songxiaowei (Kirin_DRV) wrote:
-> Hi Bjorn Helgaas,
+On 07/23/2018 12:21 AM, Tal Gilboa wrote:
+> On 7/19/2018 6:49 PM, Alex G. wrote:
+>>
+>>
+>> On 07/18/2018 08:38 AM, Tal Gilboa wrote:
+>>> On 7/16/2018 5:17 PM, Bjorn Helgaas wrote:
+>>>> [+cc maintainers of drivers that already use pcie_print_link_status()
+>>>> and GPU folks]
+>> [snip]
+>>>>
+>>>>> +    /* Multi-function PCIe share the same link/status. */
+>>>>> +    if ((PCI_FUNC(dev->devfn) != 0) || dev->is_virtfn)
+>>>>> +        return;
+>>>>> +
+>>>>> +    pcie_print_link_status(dev);
+>>>>> +}
+>>>
+>>> Is this function called by default for every PCIe device? What about 
+>>> VFs? We make an exception for them on our driver since a VF doesn't 
+>>> have access to the needed information in order to provide a 
+>>> meaningful message.
+>>
+>> I'm assuming VF means virtual function. pcie_print_link_status() 
+>> doesn't care if it's passed a virtual function. It will try to do its 
+>> job. That's why I bail out three lines above, with 'dev->is_virtfn' 
+>> check.
+>>
+>> Alex
 > 
-> Would you help to review this patch?
-> 
-> Best regards,
-> 
-> Xiaowei.
-> 
-> > -----邮件原件-----
-> > 发件人: Songxiaowei (Kirin_DRV)
-> > 发送时间: 2018年6月28日 20:48
-> > 收件人: Wangbinghui <wangbinghui@hisilicon.com>; bhelgaas@google.com;
-> > robh+dt@kernel.org; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > dimitrysh@google.com
-> > 抄送: chenyao (F) <chenyao11@huawei.com>; Songxiaowei (Kirin_DRV)
-> > <songxiaowei@hisilicon.com>
-> > 主题: [PATCH v5 1/1] PCI: kirin: Add MSI support
-> > 
-> > Add support for MSI.
-> > 
-> > Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
-> > ---
-> >  drivers/pci/dwc/pcie-kirin.c | 28 ++++++++++++++++++++++++++++
-> >  1 file changed, 28 insertions(+)
-> > 
-> > diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c index
-> > d2970a009eb5..6997276eb69c 100644
-> > --- a/drivers/pci/dwc/pcie-kirin.c
-> > +++ b/drivers/pci/dwc/pcie-kirin.c
-> > @@ -430,6 +430,9 @@ static int kirin_pcie_host_init(struct pcie_port *pp)
-> > {
-> >  	kirin_pcie_establish_link(pp);
-> > 
-> > +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> > +		dw_pcie_msi_init(pp);
-> > +
-> >  	return 0;
-> >  }
-> > 
-> > @@ -445,9 +448,34 @@ static const struct dw_pcie_host_ops
-> > kirin_pcie_host_ops = {
-> >  	.host_init = kirin_pcie_host_init,
-> >  };
-> > 
-> > +static int kirin_pcie_add_msi(struct dw_pcie *pci,
-> > +				struct platform_device *pdev)
-> > +{
-> > +	int ret = 0;
-> > +
-> > +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> > +		ret = platform_get_irq(pdev, 0);
-> > +		if (ret < 0) {
-> > +			dev_err(&pdev->dev,
-> > +				"failed to get MSI IRQ (%d)\n", ret);
-> > +			return ret;
-> > +		}
-> > +
-> > +		pci->pp.msi_irq = ret;
-> > +	}
-> > +
-> > +	return ret;
-> > +}
-> > +
-> >  static int __init kirin_add_pcie_port(struct dw_pcie *pci,
-> >  				      struct platform_device *pdev)  {
-> > +	int ret;
-> > +
-> > +	ret = kirin_pcie_add_msi(pci, pdev);
-> > +	if (ret)
-> > +		return ret;
+> That's the point - we don't want to call pcie_print_link_status() for 
+> virtual functions. We make the distinction in our driver. If you want to 
+> change the code to call this function by default it shouldn't affect the 
+> current usage.
 
-If kirin_pcie_add_msi() returns an IRQ number we return from
-this function here, is that what you really want ?
+I'm not understanding very well what you're asking. I understand you 
+want to avoid printing this message on virtual functions, and that's 
+already taken care of. I'm also not changing current behavior.  Let's 
+get v2 out and start the discussion again based on that.
 
-Lorenzo
-
-> > +
-> >  	pci->pp.ops = &kirin_pcie_host_ops;
-> > 
-> >  	return dw_pcie_host_init(&pci->pp);
-> > --
-> > 2.11.GIT
-> 
+Alex
