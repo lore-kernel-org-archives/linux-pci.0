@@ -1,68 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 12 Jul 2018 11:24:46 +0200
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi
- <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/3] PCI: emulated PCI bridge common logic
-Message-ID: <20180712112446.74998bd9@windsurf>
-In-Reply-To: <20180629092231.32207-1-thomas.petazzoni@bootlin.com>
-References: <20180629092231.32207-1-thomas.petazzoni@bootlin.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:56320 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388105AbeGWXOs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 23 Jul 2018 19:14:48 -0400
+Date: Mon, 23 Jul 2018 17:11:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Anders Roxell <anders.roxell@linaro.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers/pci/probe: Move variable bridge inside ifdef
+Message-ID: <20180723221129.GW128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180721214556.25651-1-anders.roxell@linaro.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Russell King <linux@arm.linux.org.uk>,
- Antoine Tenart <antoine.tenart@bootlin.com>,
- Gregory Clement <gregory.clement@bootlin.com>,
- Maxime Chevallier <maxime.chevallier@bootlin.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- =?UTF-8?B?TWlxdcOobA==?= Raynal <miquel.raynal@bootlin.com>,
- Zachary Zhang <zhangzg@marvell.com>, Wilson Ding <dingwei@marvell.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20180721214556.25651-1-anders.roxell@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, Lorenzo,
-
-On Fri, 29 Jun 2018 11:22:28 +0200, Thomas Petazzoni wrote:
-
-> The pci-mvebu driver already contains some logic to emulate a root
-> port PCI bridge. It turns out that we have a similar need for the
-> pci-aardvark driver. Instead of duplicating the same logic in two
-> drivers, this patch series starts by adding a small common
-> infrastructure that helps emulate a root port PCI bridge, converts
-> pci-mvebu to use it, and finally extends pci-aardvark to use it as
-> well.
+On Sat, Jul 21, 2018 at 11:45:56PM +0200, Anders Roxell wrote:
+> When CONFIG_PCI_QUIRKS isn't enabled we get the warning below:
+> drivers/pci/probe.c: In function ‘pci_bus_read_dev_vendor_id’:
+> drivers/pci/probe.c:2221:18: warning: unused variable ‘bridge’ [-Wunused-variable]
+>   struct pci_dev *bridge = bus->self;
+>                   ^~~~~~
 > 
-> Thanks to this, Marvell Armada 3720 based systems, which use the
-> Aarkvark PCI controller, will have better PCI support, by having a
-> root port PCI bridge exposed.
+> Move the declaration of variable bridge to inside the ifdef
+> CONFIG_PCI_QUIRKS.
 > 
-> The emulated PCI bridge common logic is a proposal, I very much
-> welcome comments and suggestions. Also, if you feel that adding a
-> common logic for only two drivers is too early, I'm fine with
-> duplicating a bit of code betwen pci-mvebu and pci-aardvark.
+> Fixes: ac5ea104a279 ("PCI: Workaround IDT switch ACS Source Validation erratum")
+> Signed-off-by: Anders Roxell <anders.roxell@linaro.org>
 
-I was wondering if you had any feedback on this patch series. Not
-necessarily a detailed review, but at least some general
-feeling/feedback on the overall approach would be very nice.
+I folded this into the original commit on pci/enumeration, thanks!
 
-Thanks a lot,
-
-Thomas Petazzoni
--- 
-Thomas Petazzoni, CTO, Bootlin (formerly Free Electrons)
-Embedded Linux and Kernel engineering
-https://bootlin.com
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/pci/probe.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 1c581346c5b9..7a5323798312 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2218,9 +2218,9 @@ bool pci_bus_generic_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+>  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+>  				int timeout)
+>  {
+> +#ifdef CONFIG_PCI_QUIRKS
+>  	struct pci_dev *bridge = bus->self;
+>  
+> -#ifdef CONFIG_PCI_QUIRKS
+>  	/*
+>  	 * Certain IDT switches have an issue where they improperly trigger
+>  	 * ACS Source Validation errors on completions for config reads.
+> -- 
+> 2.18.0
+> 
