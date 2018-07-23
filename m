@@ -1,98 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:35193 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729770AbeGMQRl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2018 12:17:41 -0400
-Subject: Re: [PATCH v9 00/12] Add MSI-X support on pcitest tool
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "kishon@ti.com" <kishon@ti.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "adouglas@cadence.com" <adouglas@cadence.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
-        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1531155252.git.gustavo.pimentel@synopsys.com>
- <20180713132513.GD18515@red-moon>
-From: Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Message-ID: <aabf72f0-e325-b5d2-0d2e-048acb6c1721@synopsys.com>
-Date: Fri, 13 Jul 2018 16:59:58 +0100
-MIME-Version: 1.0
-In-Reply-To: <20180713132513.GD18515@red-moon>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1532338865.3163.95.camel@pengutronix.de>
+Subject: Re: [PATCH v2 2/3] reset: imx7: Fix always writing bits as 0
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Leonard Crestez <leonard.crestez@nxp.com>, Richard Zhu
+ <hongxing.zhu@nxp.com>, Andrey Smirnov <andrew.smirnov@gmail.com>, Philipp
+ Zabel <p.zabel@pengutronix.de>
+Date: Mon, 23 Jul 2018 11:41:05 +0200
+In-Reply-To: <54f436a1d2a11a379af642a3327312367ef95343.1532090446.git.leonard.crestez@nxp.com>
+References: <cover.1532090446.git.leonard.crestez@nxp.com>
+ <54f436a1d2a11a379af642a3327312367ef95343.1532090446.git.leonard.crestez@nxp.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ linux-pm@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
+ linux-kernel@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-imx@nxp.com,
+ kernel@pengutronix.de, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
-
-On 13/07/2018 14:25, Lorenzo Pieralisi wrote:
-> On Mon, Jul 09, 2018 at 06:42:38PM +0100, Gustavo Pimentel wrote:
->> Patch series made against Lorenzo's master branch.
->>
->> Fix EP link notification implementation.
->>
->> Add MSI-X support on pcitest tool.
->>
->> Add new callbacks methods and handlers to trigger the MSI-X interrupts
->> on the EP DesignWare IP driver.
->>
->> Allow to set/get MSI-X EP maximum capability number.
->>
->> Rework on set/get and triggering MSI methods on EP DesignWare IP driver.
->>
->> Add a new input parameter (msix) to pcitest tool to test MSI-X feature.
->>
->> Update the pcitest.sh script to support MSI-X feature tests.
->>
->> Gustavo Pimentel (12):
->>   PCI: dwc: Fix EP link notification implementation
->>   PCI: endpoint: Add MSI-X interfaces
->>   PCI: Update xxx_pcie_ep_raise_irq() and pci_epc_raise_irq() signatures
->>   PCI: dwc: Add MSI-X callbacks handler
->>   PCI: dwc: Rework MSI callbacks handler
->>   PCI: dwc: Add legacy interrupt callback handler
->>   pci-epf-test/pci_endpoint_test: Cleanup PCI_ENDPOINT_TEST memspace
->>   pci-epf-test/pci_endpoint_test: Use irq_type module parameter
->>   pci-epf-test/pci_endpoint_test: Add MSI-X support
->>   pci_endpoint_test: Add 2 ioctl commands
->>   tools: PCI: Add MSI-X support
->>   PCI: endpoint: Add MSI set maximum restriction
->>
->>  Documentation/PCI/endpoint/pci-test-function.txt  |   8 +-
->>  Documentation/ioctl/ioctl-number.txt              |   1 +
->>  Documentation/misc-devices/pci-endpoint-test.txt  |   6 +
->>  drivers/misc/pci_endpoint_test.c                  | 260 ++++++++++++++++------
->>  drivers/pci/controller/dwc/pci-dra7xx.c           |   2 +-
->>  drivers/pci/controller/dwc/pcie-artpec6.c         |   2 +-
->>  drivers/pci/controller/dwc/pcie-designware-ep.c   | 217 ++++++++++++++++--
->>  drivers/pci/controller/dwc/pcie-designware-plat.c |  11 +-
->>  drivers/pci/controller/dwc/pcie-designware.h      |  31 ++-
->>  drivers/pci/controller/pcie-cadence-ep.c          |   3 +-
->>  drivers/pci/controller/pcie-rockchip-ep.c         |   2 +-
->>  drivers/pci/endpoint/functions/pci-epf-test.c     |  86 +++++--
->>  drivers/pci/endpoint/pci-ep-cfs.c                 |  24 ++
->>  drivers/pci/endpoint/pci-epc-core.c               |  68 +++++-
->>  include/linux/pci-epc.h                           |  16 +-
->>  include/linux/pci-epf.h                           |   1 +
->>  include/uapi/linux/pcitest.h                      |   3 +
->>  tools/pci/pcitest.c                               |  51 ++++-
->>  tools/pci/pcitest.sh                              |  15 ++
->>  19 files changed, 664 insertions(+), 143 deletions(-)
-> 
-> Gustavo, Kishon,
-> 
-> it seems like this series has been thoroughly reviewed and it is
-> ready to go, please let me know if there is any pending change.
-
-I just sent the patch # 10 based on Kishon's latest review.
-For me it's nearly perfect. :)
-
-Gustavo
-
-> 
-> Lorenzo
-> 
+QXMgdGhpcyBkb2Vzbid0IGRlcGVuZCBvbiBhbnkgb3RoZXIgcGF0Y2ggaW4gdGhpcyBzZXJpZXMs
+IEkgdGhpbmsgaXQKd291bGQgYmUgZmluZSBpZiBQaGlsaXBwwqB0YWtlcyB0aGlzIHBhdGNoIHRo
+cm91Z2ggdGhlIHJlc2V0IHRyZWUuCgpSZWdhcmRzLApMdWNhcwoKQW0gRnJlaXRhZywgZGVuIDIw
+LjA3LjIwMTgsIDE1OjQ3ICswMzAwIHNjaHJpZWIgTGVvbmFyZCBDcmVzdGV6Ogo+IFJpZ2h0IG5v
+dyB0aGUgb25seSB1c2VyIG9mIHJlc2V0LWlteDcgaXMgcGNpLWlteDYgYW5kIHRoZQo+IHJlc2V0
+X2NvbnRyb2xfYXNzZXJ0IGFuZCBkZWFzc2VydCBjYWxscyBvbiBwY2llcGh5X3Jlc2V0IGRvbid0
+IHRvZ2dsZQo+IHRoZSBQQ0lFUEhZX0JUTiBhbmQgUENJRVBIWV9HX1JTVCBiaXRzIGFzIGV4cGVj
+dGVkLiBGaXggdGhpcyBieSB3cml0aW5nCj4gMSBvciAwIHJlc3BlY3RpdmVseS4KPiAKPiBUaGUg
+cmVmZXJlbmNlIG1hbnVhbCBpcyBub3QgdmVyeSBjbGVhciByZWdhcmRpbmcgU1JDX1BDSUVQSFlf
+UkNSIGJ1dCBmb3IKPiBvdGhlciByZWdpc3RlcnMgbGlrZSBNSVBJUEhZIGFuZCBIU0lDUEhZIHRo
+ZSBiaXRzIGFyZSBleHBsaWNpdGx5Cj4gZG9jdW1lbnRlZCBhcyAiMSBtZWFucyBhc3NlcnQsIDAg
+bWVhbnMgZGVhc3NlcnQiLgo+IAo+IFRoZSB2YWx1ZXMgYXJlIHN0aWxsIHJldmVyc2VkIGZvciBJ
+TVg3X1JFU0VUX1BDSUVfQ1RSTF9BUFBTX0VOLgo+IAo+ID4gU2lnbmVkLW9mZi1ieTogTGVvbmFy
+ZCBDcmVzdGV6IDxsZW9uYXJkLmNyZXN0ZXpAbnhwLmNvbT4KPiA+IFJldmlld2VkLWJ5OiBMdWNh
+cyBTdGFjaCA8bC5zdGFjaEBwZW5ndXRyb25peC5kZT4KPiAtLS0KPiDCoGRyaXZlcnMvcmVzZXQv
+cmVzZXQtaW14Ny5jIHwgMiArLQo+IMKgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAx
+IGRlbGV0aW9uKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcmVzZXQvcmVzZXQtaW14Ny5j
+IGIvZHJpdmVycy9yZXNldC9yZXNldC1pbXg3LmMKPiBpbmRleCA0ZGIxNzdiYzg5YmMuLmZkZWFj
+MTk0NjQyOSAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3Jlc2V0L3Jlc2V0LWlteDcuYwo+ICsrKyBi
+L2RyaXZlcnMvcmVzZXQvcmVzZXQtaW14Ny5jCj4gQEAgLTc4LDExICs3OCwxMSBAQCBzdGF0aWMg
+c3RydWN0IGlteDdfc3JjICp0b19pbXg3X3NyYyhzdHJ1Y3QgcmVzZXRfY29udHJvbGxlcl9kZXYg
+KnJjZGV2KQo+IMKgc3RhdGljIGludCBpbXg3X3Jlc2V0X3NldChzdHJ1Y3QgcmVzZXRfY29udHJv
+bGxlcl9kZXYgKnJjZGV2LAo+ID4gwqAJCQnCoMKgdW5zaWduZWQgbG9uZyBpZCwgYm9vbCBhc3Nl
+cnQpCj4gwqB7Cj4gPiDCoAlzdHJ1Y3QgaW14N19zcmMgKmlteDdzcmMgPSB0b19pbXg3X3NyYyhy
+Y2Rldik7Cj4gPiDCoAljb25zdCBzdHJ1Y3QgaW14N19zcmNfc2lnbmFsICpzaWduYWwgPSAmaW14
+N19zcmNfc2lnbmFsc1tpZF07Cj4gPiAtCXVuc2lnbmVkIGludCB2YWx1ZSA9IDA7Cj4gPiArCXVu
+c2lnbmVkIGludCB2YWx1ZSA9IGFzc2VydCA/IHNpZ25hbC0+Yml0IDogMDsKPiDCoAo+ID4gwqAJ
+c3dpdGNoIChpZCkgewo+ID4gwqAJY2FzZSBJTVg3X1JFU0VUX1BDSUVQSFk6Cj4gPiDCoAkJLyoK
+PiA+IMKgCQnCoCogd2FpdCBmb3IgbW9yZSB0aGFuIDEwdXMgdG8gcmVsZWFzZSBwaHkgZ19yc3Qg
+YW5kCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51
+eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVh
+ZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1h
+cm0ta2VybmVsCg==
