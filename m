@@ -1,87 +1,207 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55130 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726762AbeG3TC6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Jul 2018 15:02:58 -0400
-Date: Mon, 30 Jul 2018 12:26:56 -0500
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 23 Jul 2018 17:45:33 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Rajat Jain <rajatja@google.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mayurkumar.patel@intel.com, rajatxjain@gmail.com,
-        Richard Hughes <rhughes@redhat.com>,
-        Carlos Garnacho <cgarnach@redhat.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Takashi Iwai <tiwai@suse.de>
-Subject: Re: [PATCH v2] pci/aspm: Remove CONFIG_PCIEASPM_DEBUG
-Message-ID: <20180730172656.GL173328@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180508230148.121852-1-rajatja@google.com>
- <20180510233912.96454-1-rajatja@google.com>
- <20180727202619.GD173328@bhelgaas-glaptop.roam.corp.google.com>
- <20180730083210.GA9641@wunner.de>
+To: Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH 2/2] PCI: NVMe device specific reset quirk
+Message-ID: <20180723224533.GX128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180723221533.4371.90064.stgit@gimli.home>
+ <20180723222431.4371.25962.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180730083210.GA9641@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180723222431.4371.25962.stgit@gimli.home>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 30, 2018 at 10:32:10AM +0200, Lukas Wunner wrote:
-> On Fri, Jul 27, 2018 at 03:26:19PM -0500, Bjorn Helgaas wrote:
-> > The question is where those sysfs files should be.  Currently they are
-> > associated with the device at the *upstream* end of the link.  In the
-> > example above, they're associated with the Root Port:
-> > 
-> >   /sys/devices/pci0000:00/0000:00:1c.2/power/link_state
-> > 
-> > I don't know if that's the right place, or if they should be
-> > associated with the device at the *downstream* end of the link, i.e.,
-> > 04:00.0.  The downstream end might be better because:
-> > 
-> >   - It's easier to associate the downstream end with a device the user
-> >     cares about, e.g., a NIC, GPU, etc.  This is mostly a user-
-> >     interface issue.
-> > 
-> >   - A link can lead to a multi-function device, and the spec allows
-> >     those functions to have different ASPM settings (see PCIe r4.0,
-> >     sec 5.4.1).  With the sysfs files at the upstream end of the link,
-> >     we have no way to configure those functions individually.
-> > 
-> > Any thoughts?
+On Mon, Jul 23, 2018 at 04:24:31PM -0600, Alex Williamson wrote:
+> Take advantage of NVMe devices using a standard interface to quiesce
+> the controller prior to reset, including device specific delays before
+> and after that reset.  This resolves several NVMe device assignment
+> scenarios with two different vendors.  The Intel DC P3700 controller
+> has been shown to only work as a VM boot device on the initial VM
+> startup, failing after reset or reboot, and also fails to initialize
+> after hot-plug into a VM.  Adding a delay after FLR resolves these
+> cases.  The Samsung SM961/PM961 (960 EVO) sometimes fails to return
+> from FLR with the PCI config space reading back as -1.  A reproducible
+> instance of this behavior is resolved by clearing the enable bit in
+> the configuration register and waiting for the ready status to clear
+> (disabling the NVMe controller) prior to FLR.
 > 
-> Conceivably, could the downstream end not be enumerated at all?
-> (E.g. a hotplug or rescan is necessary for it to be enumerated?)
+> As all NVMe devices make use of this standard interface and the NVMe
+> specification also requires PCIe FLR support, we can apply this quirk
+> to all devices with matching class code.
+
+Do you have any pointers to problem reports or bugzilla entries that
+we could include here?
+
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/pci/quirks.c |  112 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 112 insertions(+)
 > 
-> If so, the upstream end might be better because the ASPM settings
-> can be configured in advance, before the downstream end appears.
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index e72c8742aafa..83853562f220 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -28,6 +28,7 @@
+>  #include <linux/platform_data/x86/apple.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/switchtec.h>
+> +#include <linux/nvme.h>
+>  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+>  #include "pci.h"
+>  
+> @@ -3669,6 +3670,116 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
+>  #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+>  #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+>  
+> +/* NVMe controller needs delay before testing ready status */
+> +#define NVME_QUIRK_CHK_RDY_DELAY	(1 << 0)
+> +/* NVMe controller needs post-FLR delay */
+> +#define NVME_QUIRK_POST_FLR_DELAY	(1 << 1)
+> +
+> +static const struct pci_device_id nvme_reset_tbl[] = {
+> +	{ PCI_DEVICE(0x1bb1, 0x0100),   /* Seagate Nytro Flash Storage */
+> +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
+> +	{ PCI_DEVICE(0x1c58, 0x0003),   /* HGST adapter */
+> +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
+> +	{ PCI_DEVICE(0x1c58, 0x0023),   /* WDC SN200 adapter */
+> +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
+> +	{ PCI_DEVICE(0x1c5f, 0x0540),   /* Memblaze Pblaze4 adapter */
+> +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
+> +	{ PCI_DEVICE(0x144d, 0xa821),   /* Samsung PM1725 */
 
-Yes, of course there may be ports (root ports or switch downstream
-ports) that have nothing connected yet.  The ASPM Control on a
-hot-added device would normally be 0 (ASPM disabled).  Usually we can
-enable features on the upstream end before the downstream end, but
-this sentence in sec 5.4.1.3 is concerning:
+We do have PCI_VENDOR_ID_SAMSUNG if you want to use it here.  I
+don't see Seagate, HGST, etc.
 
-  Software must not enable L0s in either direction on a given Link
-  unless components on both sides of the Link each support L0s;
-  otherwise, the result is undefined.
+> +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
+> +	{ PCI_DEVICE(0x144d, 0xa822),   /* Samsung PM1725a */
+> +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x0953),   /* Intel DC P3700 */
+> +		.driver_data = NVME_QUIRK_POST_FLR_DELAY, },
+> +	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_EXPRESS, 0xffffff) },
+> +	{ 0 }
+> +};
+> +
+> +/*
+> + * The NVMe specification requires that controllers support PCIe FLR, but
+> + * but some Samsung SM961/PM961 controllers fail to recover after FLR (-1
+> + * config space) unless the device is quiesced prior to FLR.  Do this for
+> + * all NVMe devices by disabling the controller before reset.  Some Intel
+> + * controllers also require an additional post-FLR delay or else attempts
+> + * to re-enable will timeout, do that here as well with heuristically
+> + * determined delay value.  Also maintain the delay between disabling and
+> + * checking ready status as used by the native NVMe driver.
+> + */
+> +static int reset_nvme(struct pci_dev *dev, int probe)
+> +{
+> +	const struct pci_device_id *id;
+> +	void __iomem *bar;
+> +	u16 cmd;
+> +	u32 cfg;
+> +
+> +	id = pci_match_id(nvme_reset_tbl, dev);
+> +	if (!id || !pcie_has_flr(dev) || !pci_resource_start(dev, 0))
+> +		return -ENOTTY;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	bar = pci_iomap(dev, 0, NVME_REG_CC + sizeof(cfg));
+> +	if (!bar)
+> +		return -ENOTTY;
+> +
+> +	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> +	pci_write_config_word(dev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
+> +
+> +	cfg = readl(bar + NVME_REG_CC);
 
-If we can trust that statement, if we enable ASPM on the upstream end,
-then hot-add a device that doesn't support L0s, the result may be
-undefined.  So I'm a little wary of configuring ASPM before a
-downstream device is present.
+Apparently this is part of some NVMe spec and all controllers support
+this?  Is there a public reference you could cite for the details?
 
-I think the sysfs control files are absent if there's no downstream
-device, but we create them when the hot-add happens, in paths like
-this:
+> +
+> +	/* Disable controller if enabled */
+> +	if (cfg & NVME_CC_ENABLE) {
+> +		u64 cap = readq(bar + NVME_REG_CAP);
+> +		unsigned long timeout;
+> +
+> +		/*
+> +		 * Per nvme_disable_ctrl() skip shutdown notification as it
+> +		 * could complete commands to the admin queue.  We only intend
+> +		 * to quiesce the device before reset.
+> +		 */
+> +		cfg &= ~(NVME_CC_SHN_MASK | NVME_CC_ENABLE);
+> +
+> +		writel(cfg, bar + NVME_REG_CC);
+> +
+> +		/* A heuristic value, matches NVME_QUIRK_DELAY_AMOUNT */
+> +		if (id->driver_data & NVME_QUIRK_CHK_RDY_DELAY)
+> +			msleep(2300);
+> +
+> +		/* Cap register provides max timeout in 500ms increments */
+> +		timeout = ((NVME_CAP_TIMEOUT(cap) + 1) * HZ / 2) + jiffies;
+> +
+> +		for (;;) {
+> +			u32 status = readl(bar + NVME_REG_CSTS);
+> +
+> +			/* Ready status becomes zero on disable complete */
+> +			if (!(status & NVME_CSTS_RDY))
+> +				break;
+> +
+> +			msleep(100);
+> +
+> +			if (time_after(jiffies, timeout)) {
+> +				pci_warn(dev, "Timeout waiting for NVMe ready status to clear after disable\n");
+> +				break;
+> +			}
+> +		}
+> +	}
+> +
+> +	pci_iounmap(dev, bar);
+> +
+> +	/*
+> +	 * We could use the optional NVM Subsystem Reset here, hardware
+> +	 * supporting this is simply unavailable at the time of this code
+> +	 * to validate in comparison to PCIe FLR.  NVMe spec dictates that
+> +	 * NVMe devices shall implement PCIe FLR.
+> +	 */
+> +	pcie_flr(dev);
+> +
+> +	if (id->driver_data & NVME_QUIRK_POST_FLR_DELAY)
+> +		msleep(250); /* Heuristic based on Intel DC P3700 */
+> +
+> +	return 0;
+> +}
+> +
+>  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>  		 reset_intel_82599_sfp_virtfn },
+> @@ -3678,6 +3789,7 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  		reset_ivb_igd },
+>  	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+>  		reset_chelsio_generic_dev },
+> +	{ PCI_ANY_ID, PCI_ANY_ID, reset_nvme },
+>  	{ 0 }
+>  };
+>  
+> 
+> 
+> _______________________________________________
+> Linux-nvme mailing list
+> Linux-nvme@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-nvme
 
-  pciehp_configure_device
-    pci_scan_slot(bus)
-      pcie_aspm_init_link_state(bus->self)
-
-It seems ugly to me that this ASPM init is attached to the *parent*
-instead of being done somewhere like pci_configure_device().
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
