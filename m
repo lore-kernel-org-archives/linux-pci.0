@@ -1,113 +1,79 @@
-Return-Path: <SRS0=5A5a=JY=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=5A5a=JY=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr30050.outbound.protection.outlook.com ([40.107.3.50]:8859
+        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2388111AbeGWWjB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 23 Jul 2018 18:39:01 -0400
+Subject: Re: [PATCH v3] PCI: Check for PCIe downtraining conditions
+To: "Alex G." <mr.nuke.me@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, alex_gagniuc@dellteam.com,
+        austin_bolen@dell.com, shyam_iyer@dell.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Ganesh Goudar <ganeshgr@chelsio.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Dave Airlie <airlied@gmail.com>,
+        Alex Deucher <alexander.deucher@amd.com>
+References: <20180604155523.14906-1-mr.nuke.me@gmail.com>
+ <20180716211706.GB12391@bhelgaas-glaptop.roam.corp.google.com>
+ <628346bc-b455-05f2-2051-35a807076ea0@mellanox.com>
+ <25e4f647-f830-e1cc-bffc-0cc894885667@gmail.com>
+ <9d752b75-eab2-6fd1-f9da-09985966436c@mellanox.com>
+ <757729fb-1eb5-e1fa-899b-5cef0cc3106c@gmail.com>
+From: Tal Gilboa <talgi@mellanox.com>
+Message-ID: <d7da53d3-1631-7d3f-5b78-15a8af30a759@mellanox.com>
+Date: Tue, 24 Jul 2018 00:35:39 +0300
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <CAFgQCTsCjkDWJsNog_sTnS-ZaZ87fMFpKq1ekVSUG4MDs6K_jw@mail.gmail.com>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
- <6281446.GoJLz6Hq6C@aspire.rjw.lan> <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
- <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com>
- <20180706083603.GA9063@wunner.de> <CAJZ5v0j6+m8NGMneG45tF9L1s6ahtFo91wPCO=3YOTEyAOL+VQ@mail.gmail.com>
- <CAFgQCTugu5XO06_xXb4ihkdfGJxtFX0813g2J-Jk2JeYtPP1vA@mail.gmail.com> <CAFgQCTsCjkDWJsNog_sTnS-ZaZ87fMFpKq1ekVSUG4MDs6K_jw@mail.gmail.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Sun, 8 Jul 2018 10:25:14 +0200
-Message-ID: <CAJZ5v0gxJ9LJ328WbgPrZCV-0SEiO31trsTSYYS8L95P4kfkbA@mail.gmail.com>
-Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
- ordering in device_kset
-To: Pingfan Liu <kernelfans@gmail.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux PM <linux-pm@vger.kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <757729fb-1eb5-e1fa-899b-5cef0cc3106c@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 7, 2018 at 6:24 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
-> On Fri, Jul 6, 2018 at 9:55 PM Pingfan Liu <kernelfans@gmail.com> wrote:
+On 7/23/2018 8:01 PM, Alex G. wrote:
+> On 07/23/2018 12:21 AM, Tal Gilboa wrote:
+>> On 7/19/2018 6:49 PM, Alex G. wrote:
+>>>
+>>>
+>>> On 07/18/2018 08:38 AM, Tal Gilboa wrote:
+>>>> On 7/16/2018 5:17 PM, Bjorn Helgaas wrote:
+>>>>> [+cc maintainers of drivers that already use pcie_print_link_status()
+>>>>> and GPU folks]
+>>> [snip]
+>>>>>
+>>>>>> +    /* Multi-function PCIe share the same link/status. */
+>>>>>> +    if ((PCI_FUNC(dev->devfn) != 0) || dev->is_virtfn)
+>>>>>> +        return;
+>>>>>> +
+>>>>>> +    pcie_print_link_status(dev);
+>>>>>> +}
+>>>>
+>>>> Is this function called by default for every PCIe device? What about 
+>>>> VFs? We make an exception for them on our driver since a VF doesn't 
+>>>> have access to the needed information in order to provide a 
+>>>> meaningful message.
+>>>
+>>> I'm assuming VF means virtual function. pcie_print_link_status() 
+>>> doesn't care if it's passed a virtual function. It will try to do its 
+>>> job. That's why I bail out three lines above, with 'dev->is_virtfn' 
+>>> check.
+>>>
+>>> Alex
 >>
->> On Fri, Jul 6, 2018 at 4:47 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
->> >
->> > On Fri, Jul 6, 2018 at 10:36 AM, Lukas Wunner <lukas@wunner.de> wrote:
->> > > [cc += Kishon Vijay Abraham]
->> > >
->> > > On Thu, Jul 05, 2018 at 11:18:28AM +0200, Rafael J. Wysocki wrote:
->> > >> OK, so calling devices_kset_move_last() from really_probe() clearly is
->> > >> a mistake.
->> > >>
->> > >> I'm not really sure what the intention of it was as the changelog of
->> > >> commit 52cdbdd49853d doesn't really explain that (why would it be
->> > >> insufficient without that change?)
->> > >
->> > > It seems 52cdbdd49853d fixed an issue with boards which have an MMC
->> > > whose reset pin needs to be driven high on shutdown, lest the MMC
->> > > won't be found on the next boot.
->> > >
->> > > The boards' devicetrees use a kludge wherein the reset pin is modelled
->> > > as a regulator.  The regulator is enabled when the MMC probes and
->> > > disabled on driver unbind and shutdown.  As a result, the pin is driven
->> > > low on shutdown and the MMC is not found on the next boot.
->> > >
->> > > To fix this, another kludge was invented wherein the GPIO expander
->> > > driving the reset pin unconditionally drives all its pins high on
->> > > shutdown, see pcf857x_shutdown() in drivers/gpio/gpio-pcf857x.c
->> > > (commit adc284755055, "gpio: pcf857x: restore the initial line state
->> > > of all pcf lines").
->> > >
->> > > For this kludge to work, the GPIO expander's ->shutdown hook needs to
->> > > be executed after the MMC expander's ->shutdown hook.
->> > >
->> > > Commit 52cdbdd49853d achieved that by reordering devices_kset according
->> > > to the probe order.  Apparently the MMC probes after the GPIO expander,
->> > > possibly because it returns -EPROBE_DEFER if the vmmc regulator isn't
->> > > available yet, see mmc_regulator_get_supply().
->> > >
->> > > Note, I'm just piecing the information together from git history,
->> > > I'm not responsible for these kludges.  (I'm innocent!)
->> >
->> > Sure enough. :-)
->> >
->> > In any case, calling devices_kset_move_last() in really_probe() is
->> > plain broken and if its only purpose was to address a single, arguably
->> > kludgy, use case, let's just get rid of it in the first place IMO.
->> >
->> Yes, if it is only used for a single use case.
->>
-> Think it again, I saw other potential issue with the current code.
-> device_link_add->device_reorder_to_tail() can break the
-> "supplier<-consumer" order. During moving children after parent's
-> supplier, it ignores the order of child's consumer.
+>> That's the point - we don't want to call pcie_print_link_status() for 
+>> virtual functions. We make the distinction in our driver. If you want 
+>> to change the code to call this function by default it shouldn't 
+>> affect the current usage.
+> 
+> I'm not understanding very well what you're asking. I understand you 
+> want to avoid printing this message on virtual functions, and that's 
+> already taken care of. I'm also not changing current behavior.  Let's 
+> get v2 out and start the discussion again based on that.
+> 
+> Alex
 
-What do you mean?
-
-> Beside this, essentially both devices_kset_move_after/_before() and
-> device_pm_move_after/_before() expose  the shutdown order to the
-> indirect caller,  and we can not expect that the caller can not handle
-> it correctly. It should be a job of drivers core.
-
-Arguably so, but that's how those functions were designed and the
-callers should be aware of the limitation.
-
-If they aren't, there is a bug in the caller.
-
-> It is hard to extract high dimension info and pack them into one dimension
-> linked-list.
-
-Well, yes and no.
-
-We know it for a fact that there is a linear ordering that will work.
-It is inefficient to figure it out every time during system suspend
-and resume, for one and that's why we have dpm_list.
-
-Now, if we have it for suspend and resume, it can also be used for shutdown.
-
-> And in theory, it is warranted that the shutdown seq is
-> correct by using device tree info. More important, it is cheap with
-> the data structure in hand. So I think it is time to resolve the issue
-> once for all.
-
-Not the way you want to do that, though.
-
-Thanks,
-Rafael
+Oh ok I see. In this case, please remove the explicit call in mlx4/5 
+drivers so it won't be duplicated.
