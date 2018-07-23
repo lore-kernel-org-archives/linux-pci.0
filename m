@@ -1,50 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34030 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728912AbeGRUYV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Jul 2018 16:24:21 -0400
-Subject: [PATCH v3 6/7] PCI/AER: Clear device status bits during ERR_COR
- handling
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Timur Tabi <timur@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 18 Jul 2018 14:44:57 -0500
-Message-ID: <153194309786.191586.2771045363400479470.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <153194245964.191586.14782253252654776509.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v5] PCI: Check for PCIe downtraining conditions
+To: Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Tal Gilboa <talgi@mellanox.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "keith.busch@intel.com" <keith.busch@intel.com>,
+        "alex_gagniuc@dellteam.com" <alex_gagniuc@dellteam.com>,
+        "austin_bolen@dell.com" <austin_bolen@dell.com>,
+        "shyam_iyer@dell.com" <shyam_iyer@dell.com>,
+        "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+        "ariel.elior@cavium.com" <ariel.elior@cavium.com>,
+        "michael.chan@broadcom.com" <michael.chan@broadcom.com>,
+        "ganeshgr@chelsio.com" <ganeshgr@chelsio.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        "airlied@gmail.com" <airlied@gmail.com>,
+        "alexander.deucher@amd.com" <alexander.deucher@amd.com>,
+        "mike.marciniszyn@intel.com" <mike.marciniszyn@intel.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20180718215359.GG128988@bhelgaas-glaptop.roam.corp.google.com>
+ <20180723200339.23943-1-mr.nuke.me@gmail.com>
+ <20180723140143.1a46902f@cakuba.netronome.com>
+ <b9a6b3b8-56cf-8bb5-2568-071ccd8a4f28@mellanox.com>
+ <20180723151439.50524a2a@cakuba.netronome.com>
+From: "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <2bb6e96c-a48d-62ea-90a3-ec978536372f@gmail.com>
+Date: Mon, 23 Jul 2018 18:59:06 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20180723151439.50524a2a@cakuba.netronome.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Oza Pawandeep <poza@codeaurora.org>
 
-In case of correctable error, the Correctable Error Detected bit in the
-Device Status register is set.  Clear it after handling the error.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/aer.c |    1 +
- 1 file changed, 1 insertion(+)
+On 07/23/2018 05:14 PM, Jakub Kicinski wrote:
+> On Tue, 24 Jul 2018 00:52:22 +0300, Tal Gilboa wrote:
+>> On 7/24/2018 12:01 AM, Jakub Kicinski wrote:
+>>> On Mon, 23 Jul 2018 15:03:38 -0500, Alexandru Gagniuc wrote:
+>>>> PCIe downtraining happens when both the device and PCIe port are
+>>>> capable of a larger bus width or higher speed than negotiated.
+>>>> Downtraining might be indicative of other problems in the system, and
+>>>> identifying this from userspace is neither intuitive, nor
+>>>> straightforward.
+>>>>
+>>>> The easiest way to detect this is with pcie_print_link_status(),
+>>>> since the bottleneck is usually the link that is downtrained. It's not
+>>>> a perfect solution, but it works extremely well in most cases.
+>>>>
+>>>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+>>>> ---
+>>>>
+>>>> For the sake of review, I've created a __pcie_print_link_status() which
+>>>> takes a 'verbose' argument. If we agree want to go this route, and update
+>>>> the users of pcie_print_link_status(), I can split this up in two patches.
+>>>> I prefer just printing this information in the core functions, and letting
+>>>> drivers not have to worry about this. Though there seems to be strong for
+>>>> not going that route, so here it goes:
+>>>
+>>> FWIW the networking drivers print PCIe BW because sometimes the network
+>>> bandwidth is simply over-provisioned on multi port cards, e.g. 80Gbps
+>>> card on a x8 link.
+>>>
+>>> Sorry to bike shed, but currently the networking cards print the info
+>>> during probe.  Would it make sense to move your message closer to probe
+>>> time?  Rather than when device is added.  If driver structure is
+>>> available, we could also consider adding a boolean to struct pci_driver
+>>> to indicate if driver wants the verbose message?  This way we avoid
+>>> duplicated prints.
+>>>
+>>> I have no objection to current patch, it LGTM.  Just a thought.
+>>
+>> I don't see the reason for having two functions. What's the problem with
+>> adding the verbose argument to the original function?
+> 
+> IMHO it's reasonable to keep the default parameter to what 90% of users
+> want by a means on a wrapper.  The non-verbose output is provided by
+> the core already for all devices.
+> 
+> What do you think of my proposal above Tal?  That would make the extra
+> wrapper unnecessary since the verbose parameter would be part of the
+> driver structure, and it would avoid the duplicated output.
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index dc67f52b002f..2accfd7a4c9d 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -827,6 +827,7 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
- 		if (pos)
- 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
- 					info->status);
-+		pci_aer_clear_device_status(dev);
- 	} else if (info->severity == AER_NONFATAL)
- 		pcie_do_nonfatal_recovery(dev);
- 	else if (info->severity == AER_FATAL)
+I see how it might make sense to add another member to the driver 
+struct, but is it worth the extra learning curve? It seems to be 
+something with the potential to confuse new driver developers, and 
+having a very marginal benefit.
+Although, if that's what people want...
+
+Alex
