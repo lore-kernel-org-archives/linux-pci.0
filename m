@@ -1,273 +1,115 @@
-Return-Path: <SRS0=9yFa=KD=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=9yFa=KD=kernel.crashing.org=benh@kernel.org>
-Message-ID: <65dd986d0b8b2ebe5132b365dabb2dbaaed9177f.camel@kernel.crashing.org>
-Subject: Re: [PATCH v3] PCI: Data corruption happening due to race condition
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, Hari Vyas <hari.vyas@broadcom.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, ray.jui@broadcom.com,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>, linuxppc-dev@lists.ozlabs.org
-Date: Thu, 19 Jul 2018 14:18:09 +1000
-In-Reply-To: <20180718232904.GJ128988@bhelgaas-glaptop.roam.corp.google.com>
-References: <1530608741-30664-1-git-send-email-hari.vyas@broadcom.com>
-	 <1530608741-30664-2-git-send-email-hari.vyas@broadcom.com>
-	 <20180718232904.GJ128988@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:39670 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388241AbeGXMH7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jul 2018 08:07:59 -0400
+From: "Lee, Chun-Yi" <joeyli.kernel@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H . Peter Anvin" <hpa@zytor.com>
+Cc: x86@kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, "Lee, Chun-Yi" <jlee@suse.com>
+Subject: [PATCH] x86/PCI: Claim the resources of firmware enabled IOAPIC before children bus
+Date: Tue, 24 Jul 2018 19:01:44 +0800
+Message-Id: <20180724110144.16442-1-jlee@suse.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2018-07-18 at 18:29 -0500, Bjorn Helgaas wrote:
-> [+cc Paul, Michael, linuxppc-dev]
-> 
+I got a machine that the resource of firmware enabled IOAPIC conflicts
+with the resource of a children bus when the PCI host bus be hotplug.
 
-   ..../...
+[ 3182.243325] PCI host bridge to bus 0001:40
+[ 3182.243328] pci_bus 0001:40: root bus resource [io  0xc000-0xdfff window]
+[ 3182.243330] pci_bus 0001:40: root bus resource [mem 0xdc000000-0xebffffff window]
+[ 3182.243331] pci_bus 0001:40: root bus resource [mem 0x212400000000-0x2125ffffffff window]
+[ 3182.243334] pci_bus 0001:40: root bus resource [bus 40-7e]
+...
+[ 3182.244737] pci 0001:40:05.4: [8086:6f2c] type 00 class 0x080020
+[ 3182.244746] pci 0001:40:05.4: reg 0x10: [mem 0xdc000000-0xdc000fff]
+...
+[ 3182.246697] pci 0001:40:02.0: PCI bridge to [bus 41]
+[ 3182.246702] pci 0001:40:02.0:   bridge window [mem 0xdc000000-0xdc7fffff]
+...
+pci 0001:40:05.4: can't claim BAR 0 [mem 0xdc000000-0xdc000fff]: address conflict with PCI Bus 0001:41 [mem 0xdc000000-0xdc7fffff]
 
-> > Debugging revealed a race condition between pcie core driver
-> > enabling is_added bit(pci_bus_add_device()) and nvme driver
-> > reset work-queue enabling is_busmaster bit (by pci_set_master()).
-> > As both fields are not handled in atomic manner and that clears
-> > is_added bit.
-> > 
-> > Fix moves device addition is_added bit to separate private flag
-> > variable and use different atomic functions to set and retrieve
-> > device addition state. As is_added shares different memory
-> > location so race condition is avoided.
-> 
-> Really nice bit of debugging!
+The bus topology:
 
-Indeed. However I'm not fan of the solution. Shouldn't we instead have
-some locking for the content of pci_dev ? I've always been wary of us
-having other similar races in there.
+ +-[0001:40]-+-02.0-[41]--
+ |           +-03.0-[41]--
+ |           +-03.2-[41]--+-00.0  Intel Corporation I350 Gigabit Network Connection
+ |           |            +-00.1  Intel Corporation I350 Gigabit Network Connection
+ |           |            +-00.2  Intel Corporation I350 Gigabit Network Connection
+ |           |            \-00.3  Intel Corporation I350 Gigabit Network Connection
+ |           +-05.0  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D Map/VTd_Misc/System Management
+ |           +-05.1  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D IIO Hot Plug
+ |           +-05.2  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D IIO RAS/Control Status/Global Errors
+ |           \-05.4  Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D I/O APIC
 
-As for the powerpc bits, I'm probably the one who wrote them, however,
-I'm on vacation this week and right now, no bandwidth to context switch
-all that back in :-) So give me a few days and/or ping me next week.
+This problem causes that the NIC behine the child bus was not available
+after PCI host bridge hotpluged.
 
-The powerpc PCI code contains a lot of cruft coming from the depth of
-history, including rather nasty assumptions. We want to progressively
-clean it up, starting with EEH, but it will take time.
+Kernel does not want to change resource of firmware enabled IOAPIC, but
+the priority of children bus's resources are higher than any other devices.
+So this conflict can not be handled by the reassigning logic of kernel.
 
-Cheers,
-Ben.
+This patch claims the resources of firmware enabled IOAPIC before
+children bus. Then kernel gets a chance to reassign the resources of
+children bus to avoid the conflict.
 
-> > Signed-off-by: Hari Vyas <hari.vyas@broadcom.com>
-> > ---
-> >  arch/powerpc/kernel/pci-common.c          |  4 +++-
-> >  arch/powerpc/platforms/powernv/pci-ioda.c |  3 ++-
-> >  arch/powerpc/platforms/pseries/setup.c    |  3 ++-
-> >  drivers/pci/bus.c                         |  6 +++---
-> >  drivers/pci/hotplug/acpiphp_glue.c        |  2 +-
-> >  drivers/pci/pci.h                         | 11 +++++++++++
-> >  drivers/pci/probe.c                       |  4 ++--
-> >  drivers/pci/remove.c                      |  5 +++--
-> >  include/linux/pci.h                       |  1 -
-> >  9 files changed, 27 insertions(+), 12 deletions(-)
-> > 
-> > diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> > index fe9733f..471aac3 100644
-> > --- a/arch/powerpc/kernel/pci-common.c
-> > +++ b/arch/powerpc/kernel/pci-common.c
-> > @@ -42,6 +42,8 @@
-> >  #include <asm/ppc-pci.h>
-> >  #include <asm/eeh.h>
-> >  
-> > +#include "../../../drivers/pci/pci.h"
-> 
-> I see why you need it, but this include path is really ugly.  Outside
-> of bootloaders and tools, there are very few instances of includes
-> like this that reference a different top-level directory, and I'm not
-> very keen about adding more.
-> 
-> Obviously powerpc is the only arch that needs dev->is_added.  It seems
-> to be because "We can only call pcibios_setup_device() after bus setup
-> is complete, since some of the platform specific DMA setup code
-> depends on it."
-> 
-> I don't know powerpc, but it does raise the question in my mind of
-> whether powerpc could be changed to do the DMA setup more like other
-> arches do to remove this ordering dependency and the need to use
-> dev->is_added.
-> 
-> That sounds like a lot of work, but it would have the benefit of
-> unifying some code that is probably needlessly arch-specific.
-> 
-> >  /* hose_spinlock protects accesses to the the phb_bitmap. */
-> >  static DEFINE_SPINLOCK(hose_spinlock);
-> >  LIST_HEAD(hose_list);
-> > @@ -1014,7 +1016,7 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
-> >  		/* Cardbus can call us to add new devices to a bus, so ignore
-> >  		 * those who are already fully discovered
-> >  		 */
-> > -		if (dev->is_added)
-> > +		if (pci_dev_is_added(dev))
-> >  			continue;
-> >  
-> >  		pcibios_setup_device(dev);
-> > diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> > index 5bd0eb6..70b2e1e 100644
-> > --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> > +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> > @@ -46,6 +46,7 @@
-> >  
-> >  #include "powernv.h"
-> >  #include "pci.h"
-> > +#include "../../../../drivers/pci/pci.h"
-> >  
-> >  #define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs	*/
-> >  #define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR	*/
-> > @@ -3138,7 +3139,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
-> >  	struct pci_dn *pdn;
-> >  	int mul, total_vfs;
-> >  
-> > -	if (!pdev->is_physfn || pdev->is_added)
-> > +	if (!pdev->is_physfn || pci_dev_is_added(pdev))
-> >  		return;
-> >  
-> >  	pdn = pci_get_pdn(pdev);
-> > diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-> > index 139f0af..8a4868a 100644
-> > --- a/arch/powerpc/platforms/pseries/setup.c
-> > +++ b/arch/powerpc/platforms/pseries/setup.c
-> > @@ -71,6 +71,7 @@
-> >  #include <asm/security_features.h>
-> >  
-> >  #include "pseries.h"
-> > +#include "../../../../drivers/pci/pci.h"
-> >  
-> >  int CMO_PrPSP = -1;
-> >  int CMO_SecPSP = -1;
-> > @@ -664,7 +665,7 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
-> >  	const int *indexes;
-> >  	struct device_node *dn = pci_device_to_OF_node(pdev);
-> >  
-> > -	if (!pdev->is_physfn || pdev->is_added)
-> > +	if (!pdev->is_physfn || pci_dev_is_added(pdev))
-> >  		return;
-> >  	/*Firmware must support open sriov otherwise dont configure*/
-> >  	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
-> > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> > index 35b7fc8..5cb40b2 100644
-> > --- a/drivers/pci/bus.c
-> > +++ b/drivers/pci/bus.c
-> > @@ -330,7 +330,7 @@ void pci_bus_add_device(struct pci_dev *dev)
-> >  		return;
-> >  	}
-> >  
-> > -	dev->is_added = 1;
-> > +	pci_dev_assign_added(dev, true);
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_bus_add_device);
-> >  
-> > @@ -347,14 +347,14 @@ void pci_bus_add_devices(const struct pci_bus *bus)
-> >  
-> >  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> >  		/* Skip already-added devices */
-> > -		if (dev->is_added)
-> > +		if (pci_dev_is_added(dev))
-> >  			continue;
-> >  		pci_bus_add_device(dev);
-> >  	}
-> >  
-> >  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> >  		/* Skip if device attach failed */
-> > -		if (!dev->is_added)
-> > +		if (!pci_dev_is_added(dev))
-> >  			continue;
-> >  		child = dev->subordinate;
-> >  		if (child)
-> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> > index 3a17b29..ef0b1b6 100644
-> > --- a/drivers/pci/hotplug/acpiphp_glue.c
-> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> > @@ -509,7 +509,7 @@ static void enable_slot(struct acpiphp_slot *slot)
-> >  
-> >  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> >  		/* Assume that newly added devices are powered on already. */
-> > -		if (!dev->is_added)
-> > +		if (!pci_dev_is_added(dev))
-> >  			dev->current_state = PCI_D0;
-> >  	}
-> >  
-> > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> > index 882f1f9..0881725 100644
-> > --- a/drivers/pci/pci.h
-> > +++ b/drivers/pci/pci.h
-> > @@ -288,6 +288,7 @@ struct pci_sriov {
-> >  
-> >  /* pci_dev priv_flags */
-> >  #define PCI_DEV_DISCONNECTED 0
-> > +#define PCI_DEV_ADDED 1
-> >  
-> >  static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
-> >  {
-> > @@ -300,6 +301,16 @@ static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
-> >  	return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
-> >  }
-> >  
-> > +static inline void pci_dev_assign_added(struct pci_dev *dev, bool added)
-> > +{
-> > +	assign_bit(PCI_DEV_ADDED, &dev->priv_flags, added);
-> > +}
-> > +
-> > +static inline bool pci_dev_is_added(const struct pci_dev *dev)
-> > +{
-> > +	return test_bit(PCI_DEV_ADDED, &dev->priv_flags);
-> > +}
-> > +
-> >  #ifdef CONFIG_PCI_ATS
-> >  void pci_restore_ats_state(struct pci_dev *dev);
-> >  #else
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index ac876e3..611adcd 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -2433,13 +2433,13 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
-> >  	dev = pci_scan_single_device(bus, devfn);
-> >  	if (!dev)
-> >  		return 0;
-> > -	if (!dev->is_added)
-> > +	if (!pci_dev_is_added(dev))
-> >  		nr++;
-> >  
-> >  	for (fn = next_fn(bus, dev, 0); fn > 0; fn = next_fn(bus, dev, fn)) {
-> >  		dev = pci_scan_single_device(bus, devfn + fn);
-> >  		if (dev) {
-> > -			if (!dev->is_added)
-> > +			if (!pci_dev_is_added(dev))
-> >  				nr++;
-> >  			dev->multifunction = 1;
-> >  		}
-> > diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> > index 6f072ea..5e3d0dc 100644
-> > --- a/drivers/pci/remove.c
-> > +++ b/drivers/pci/remove.c
-> > @@ -19,11 +19,12 @@ static void pci_stop_dev(struct pci_dev *dev)
-> >  {
-> >  	pci_pme_active(dev, false);
-> >  
-> > -	if (dev->is_added) {
-> > +	if (pci_dev_is_added(dev)) {
-> >  		device_release_driver(&dev->dev);
-> >  		pci_proc_detach_device(dev);
-> >  		pci_remove_sysfs_dev_files(dev);
-> > -		dev->is_added = 0;
-> > +
-> > +		pci_dev_assign_added(dev, false);
-> >  	}
-> >  
-> >  	if (dev->bus->self)
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 340029b..506125b 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -368,7 +368,6 @@ struct pci_dev {
-> >  	unsigned int	transparent:1;		/* Subtractive decode bridge */
-> >  	unsigned int	multifunction:1;	/* Multi-function device */
-> >  
-> > -	unsigned int	is_added:1;
-> >  	unsigned int	is_busmaster:1;		/* Is busmaster */
-> >  	unsigned int	no_msi:1;		/* May not use MSI */
-> >  	unsigned int	no_64bit_msi:1; 	/* May only use 32-bit MSIs */
-> > -- 
-> > 1.9.1
-> > 
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Signed-off-by: "Lee, Chun-Yi" <jlee@suse.com>
+---
+ arch/x86/pci/i386.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index ed4ac215305d..6413eda87c72 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -230,13 +230,40 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ 	}
+ }
+ 
++static bool ioapic_firmware_enabled(struct pci_dev *dev)
++{
++	u16 class = dev->class >> 8;
++
++	if (class == PCI_CLASS_SYSTEM_PIC) {
++		u16 command;
++
++		pci_read_config_word(dev, PCI_COMMAND, &command);
++		if (command & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY))
++			return true;
++	}
++
++	return false;
++}
++
++static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass);
++
+ static void pcibios_allocate_bus_resources(struct pci_bus *bus)
+ {
+ 	struct pci_bus *child;
++	struct pci_dev *dev;
+ 
+ 	/* Depth-First Search on bus tree */
+ 	if (bus->self)
+ 		pcibios_allocate_bridge_resources(bus->self);
++
++	/* allocate firmware enabled APIC before children bus */
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		if (ioapic_firmware_enabled(dev)) {
++			pcibios_allocate_dev_resources(dev, 0);
++			pcibios_allocate_dev_resources(dev, 1);
++		}
++	}
++
+ 	list_for_each_entry(child, &bus->children, node)
+ 		pcibios_allocate_bus_resources(child);
+ }
+-- 
+2.13.6
