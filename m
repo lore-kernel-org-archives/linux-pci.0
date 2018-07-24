@@ -1,391 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        joao.pinto@synopsys.com, jingoohan1@gmail.com, kishon@ti.com,
-        adouglas@cadence.com, jesper.nilsson@axis.com,
-        shawn.lin@rock-chips.com
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v13 10/12] pci_endpoint_test: Add 2 ioctl commands
-Date: Tue, 17 Jul 2018 12:26:25 +0200
-Message-Id: <cc83f43a15819364492d322498baa3785cc1c0de.1531822532.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
-References: <cover.1531822532.git.gustavo.pimentel@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1532461998.20066.5.camel@gmail.com>
+Subject: Re: [PATCH v3 2/3] PCI: Samsung SM961/PM961 NVMe disable before FLR
+ quirk
+From: Minwoo Im <minwoo.im.dev@gmail.com>
+To: Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org
+Date: Wed, 25 Jul 2018 04:53:18 +0900
+In-Reply-To: <20180724161440.2729.89835.stgit@gimli.home>
+References: <20180724160440.2729.75178.stgit@gimli.home>
+ <20180724161440.2729.89835.stgit@gimli.home>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add MSI-X support and update driver documentation accordingly.
-
-Add 2 new IOCTL commands:
- - Allow to reconfigure driver IRQ type in runtime.
- - Allow to retrieve current driver IRQ type configured.
-
-Add IRQ type validation before executing the READ/WRITE/COPY tests.
-
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v2->v3:
- - New patch file created base on the previous patch
-"misc: pci_endpoint_test: Add MSI-X support" patch file following
-Kishon's suggestion.
-Change v3->v4:
- - Rebased to Lorenzo's master branch v4.18-rc1.
-Change v4->v5:
- - Nothing changed, just to follow the patch set version.
-Change v5->v6:
- - Moved PCITEST_SET_IRQTYPE and PCITEST_GET_IRQTYPE ioctl entries
-from patch #10 to here.
- - Increased ioctl parameters range associated to
-drivers/misc/pci_endpoint_test.c driver.
-Change v6->v7:
- - irq_type variable update just before returning the function.
-Change v7->v8:
- - Re-sending the patch series.
-Change v8->v9:
- - Added a extra parameter to pci_endpoint_test_alloc_irq_vectors,
-that specifies which irq type should be allocated.
-Change v9->v10:
- - Fixed bug, report available: https://lkml.org/lkml/2018/7/16/11
- - Added IRQ type validation before executing the READ/WRITE/COPY
-tests.
-Change v11->v12:
- - Exchange pci_endpoint_test_release_irq() and
-pci_endpoint_test_free_irq_vectors() content.
- - Refactor all previous calls to those functions.
-Change v12->v13:
- - Re-sending the patch series.
-
- Documentation/ioctl/ioctl-number.txt             |   2 +-
- Documentation/misc-devices/pci-endpoint-test.txt |   3 +
- drivers/misc/pci_endpoint_test.c                 | 193 +++++++++++++++++------
- include/uapi/linux/pcitest.h                     |   2 +
- 4 files changed, 152 insertions(+), 48 deletions(-)
-
-diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
-index 65259d4..c15c4f3 100644
---- a/Documentation/ioctl/ioctl-number.txt
-+++ b/Documentation/ioctl/ioctl-number.txt
-@@ -166,7 +166,7 @@ Code  Seq#(hex)	Include File		Comments
- 'P'	all	linux/soundcard.h	conflict!
- 'P'	60-6F	sound/sscape_ioctl.h	conflict!
- 'P'	00-0F	drivers/usb/class/usblp.c	conflict!
--'P'	01-07	drivers/misc/pci_endpoint_test.c	conflict!
-+'P'	01-09	drivers/misc/pci_endpoint_test.c	conflict!
- 'Q'	all	linux/soundcard.h
- 'R'	00-1F	linux/random.h		conflict!
- 'R'	01	linux/rfkill.h		conflict!
-diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
-index fdfa0f6..58ccca4 100644
---- a/Documentation/misc-devices/pci-endpoint-test.txt
-+++ b/Documentation/misc-devices/pci-endpoint-test.txt
-@@ -28,6 +28,9 @@ ioctl
- 	      to be tested should be passed as argument.
-  PCITEST_MSIX: Tests message signalled interrupts. The MSI-X number
- 	      to be tested should be passed as argument.
-+ PCITEST_SET_IRQTYPE: Changes driver IRQ type configuration. The IRQ type
-+	      should be passed as argument (0: Legacy, 1:MSI, 2:MSI-X).
-+ PCITEST_GET_IRQTYPE: Gets driver IRQ type configuration.
-  PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
- 		as argument.
-  PCITEST_READ: Perform read tests. The size of the buffer should be passed
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index f4fef10..c9a7d0b 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -37,6 +37,7 @@
- 
- #define DRV_MODULE_NAME				"pci-endpoint-test"
- 
-+#define IRQ_TYPE_UNDEFINED			-1
- #define IRQ_TYPE_LEGACY				0
- #define IRQ_TYPE_MSI				1
- #define IRQ_TYPE_MSIX				2
-@@ -157,6 +158,87 @@ static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
- 	return IRQ_HANDLED;
- }
- 
-+static void pci_endpoint_test_free_irq_vectors(struct pci_endpoint_test *test)
-+{
-+	struct pci_dev *pdev = test->pdev;
-+
-+	pci_free_irq_vectors(pdev);
-+}
-+
-+static bool pci_endpoint_test_alloc_irq_vectors(struct pci_endpoint_test *test,
-+						int type)
-+{
-+	int irq = -1;
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+	bool res = true;
-+
-+	switch (type) {
-+	case IRQ_TYPE_LEGACY:
-+		irq = 0;
-+		break;
-+	case IRQ_TYPE_MSI:
-+		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
-+		if (irq < 0)
-+			dev_err(dev, "Failed to get MSI interrupts\n");
-+		break;
-+	case IRQ_TYPE_MSIX:
-+		irq = pci_alloc_irq_vectors(pdev, 1, 2048, PCI_IRQ_MSIX);
-+		if (irq < 0)
-+			dev_err(dev, "Failed to get MSI-X interrupts\n");
-+		break;
-+	default:
-+		dev_err(dev, "Invalid IRQ type selected\n");
-+	}
-+
-+	if (irq < 0) {
-+		irq = 0;
-+		res = false;
-+	}
-+	test->num_irqs = irq;
-+
-+	return res;
-+}
-+
-+static void pci_endpoint_test_release_irq(struct pci_endpoint_test *test)
-+{
-+	int i;
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+
-+	for (i = 0; i < test->num_irqs; i++)
-+		devm_free_irq(dev, pci_irq_vector(pdev, i), test);
-+
-+	test->num_irqs = 0;
-+}
-+
-+static bool pci_endpoint_test_request_irq(struct pci_endpoint_test *test)
-+{
-+	int i;
-+	int err;
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+
-+	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
-+			       IRQF_SHARED, DRV_MODULE_NAME, test);
-+	if (err) {
-+		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
-+		return false;
-+	}
-+
-+	for (i = 1; i < test->num_irqs; i++) {
-+		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
-+				       pci_endpoint_test_irqhandler,
-+				       IRQF_SHARED, DRV_MODULE_NAME, test);
-+		if (err)
-+			dev_err(dev, "Failed to request IRQ %d for MSI%s %d\n",
-+				pci_irq_vector(pdev, i),
-+				irq_type == IRQ_TYPE_MSIX ? "-X" : "", i + 1);
-+	}
-+
-+	return true;
-+}
-+
- static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
- 				  enum pci_barno barno)
- {
-@@ -247,6 +329,11 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
- 	if (size > SIZE_MAX - alignment)
- 		goto err;
- 
-+	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
-+		dev_err(dev, "Invalid IRQ type option\n");
-+		goto err;
-+	}
-+
- 	orig_src_addr = dma_alloc_coherent(dev, size + alignment,
- 					   &orig_src_phys_addr, GFP_KERNEL);
- 	if (!orig_src_addr) {
-@@ -337,6 +424,11 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
- 	if (size > SIZE_MAX - alignment)
- 		goto err;
- 
-+	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
-+		dev_err(dev, "Invalid IRQ type option\n");
-+		goto err;
-+	}
-+
- 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
- 				       GFP_KERNEL);
- 	if (!orig_addr) {
-@@ -400,6 +492,11 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 	if (size > SIZE_MAX - alignment)
- 		goto err;
- 
-+	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
-+		dev_err(dev, "Invalid IRQ type option\n");
-+		goto err;
-+	}
-+
- 	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
- 				       GFP_KERNEL);
- 	if (!orig_addr) {
-@@ -440,6 +537,38 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
- 	return ret;
- }
- 
-+static bool pci_endpoint_test_set_irq(struct pci_endpoint_test *test,
-+				      int req_irq_type)
-+{
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+
-+	if (req_irq_type < IRQ_TYPE_LEGACY || req_irq_type > IRQ_TYPE_MSIX) {
-+		dev_err(dev, "Invalid IRQ type option\n");
-+		return false;
-+	}
-+
-+	if (irq_type == req_irq_type)
-+		return true;
-+
-+	pci_endpoint_test_release_irq(test);
-+	pci_endpoint_test_free_irq_vectors(test);
-+
-+	if (!pci_endpoint_test_alloc_irq_vectors(test, req_irq_type))
-+		goto err;
-+
-+	if (!pci_endpoint_test_request_irq(test))
-+		goto err;
-+
-+	irq_type = req_irq_type;
-+	return true;
-+
-+err:
-+	pci_endpoint_test_free_irq_vectors(test);
-+	irq_type = IRQ_TYPE_UNDEFINED;
-+	return false;
-+}
-+
- static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
- 				    unsigned long arg)
- {
-@@ -471,6 +600,12 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
- 	case PCITEST_COPY:
- 		ret = pci_endpoint_test_copy(test, arg);
- 		break;
-+	case PCITEST_SET_IRQTYPE:
-+		ret = pci_endpoint_test_set_irq(test, arg);
-+		break;
-+	case PCITEST_GET_IRQTYPE:
-+		ret = irq_type;
-+		break;
- 	}
- 
- ret:
-@@ -486,9 +621,7 @@ static const struct file_operations pci_endpoint_test_fops = {
- static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 				   const struct pci_device_id *ent)
- {
--	int i;
- 	int err;
--	int irq = 0;
- 	int id;
- 	char name[20];
- 	enum pci_barno bar;
-@@ -537,41 +670,11 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 
- 	pci_set_master(pdev);
- 
--	switch (irq_type) {
--	case IRQ_TYPE_LEGACY:
--		break;
--	case IRQ_TYPE_MSI:
--		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
--		if (irq < 0)
--			dev_err(dev, "Failed to get MSI interrupts\n");
--		test->num_irqs = irq;
--		break;
--	case IRQ_TYPE_MSIX:
--		irq = pci_alloc_irq_vectors(pdev, 1, 2048, PCI_IRQ_MSIX);
--		if (irq < 0)
--			dev_err(dev, "Failed to get MSI-X interrupts\n");
--		test->num_irqs = irq;
--		break;
--	default:
--		dev_err(dev, "Invalid IRQ type selected\n");
--	}
--
--	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
--			       IRQF_SHARED, DRV_MODULE_NAME, test);
--	if (err) {
--		dev_err(dev, "Failed to request IRQ %d\n", pdev->irq);
--		goto err_disable_msi;
--	}
-+	if (!pci_endpoint_test_alloc_irq_vectors(test, irq_type))
-+		goto err_disable_irq;
- 
--	for (i = 1; i < irq; i++) {
--		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
--				       pci_endpoint_test_irqhandler,
--				       IRQF_SHARED, DRV_MODULE_NAME, test);
--		if (err)
--			dev_err(dev, "Failed to request IRQ %d for MSI%s %d\n",
--				pci_irq_vector(pdev, i),
--				irq_type == IRQ_TYPE_MSIX ? "-X" : "", i + 1);
--	}
-+	if (!pci_endpoint_test_request_irq(test))
-+		goto err_disable_irq;
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++) {
- 		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
-@@ -630,13 +733,10 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 		if (test->bar[bar])
- 			pci_iounmap(pdev, test->bar[bar]);
- 	}
-+	pci_endpoint_test_release_irq(test);
- 
--	for (i = 0; i < irq; i++)
--		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, i), test);
--
--err_disable_msi:
--	pci_disable_msi(pdev);
--	pci_disable_msix(pdev);
-+err_disable_irq:
-+	pci_endpoint_test_free_irq_vectors(test);
- 	pci_release_regions(pdev);
- 
- err_disable_pdev:
-@@ -648,7 +748,6 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- static void pci_endpoint_test_remove(struct pci_dev *pdev)
- {
- 	int id;
--	int i;
- 	enum pci_barno bar;
- 	struct pci_endpoint_test *test = pci_get_drvdata(pdev);
- 	struct miscdevice *misc_device = &test->miscdev;
-@@ -665,10 +764,10 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
- 		if (test->bar[bar])
- 			pci_iounmap(pdev, test->bar[bar]);
- 	}
--	for (i = 0; i < test->num_irqs; i++)
--		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, i), test);
--	pci_disable_msi(pdev);
--	pci_disable_msix(pdev);
-+
-+	pci_endpoint_test_release_irq(test);
-+	pci_endpoint_test_free_irq_vectors(test);
-+
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
- }
-diff --git a/include/uapi/linux/pcitest.h b/include/uapi/linux/pcitest.h
-index d746fb1..cbf422e 100644
---- a/include/uapi/linux/pcitest.h
-+++ b/include/uapi/linux/pcitest.h
-@@ -17,5 +17,7 @@
- #define PCITEST_READ		_IOW('P', 0x5, unsigned long)
- #define PCITEST_COPY		_IOW('P', 0x6, unsigned long)
- #define PCITEST_MSIX		_IOW('P', 0x7, int)
-+#define PCITEST_SET_IRQTYPE	_IOW('P', 0x8, int)
-+#define PCITEST_GET_IRQTYPE	_IO('P', 0x9)
- 
- #endif /* __UAPI_LINUX_PCITEST_H */
--- 
-2.7.4
+SGkgQWxleCwKCk9uIFR1ZSwgMjAxOC0wNy0yNCBhdCAxMDoxNCAtMDYwMCwgQWxleCBXaWxsaWFt
+c29uIHdyb3RlOgo+IFRoZSBTYW1zdW5nIFNNOTYxL1BNOTYxICg5NjAgRVZPKSBzb21ldGltZXMg
+ZmFpbHMgdG8gcmV0dXJuIGZyb20gRkxSCj4gd2l0aCB0aGUgUENJIGNvbmZpZyBzcGFjZSByZWFk
+aW5nIGJhY2sgYXMgLTEuwqDCoEEgcmVwcm9kdWNpYmxlIGluc3RhbmNlCj4gb2YgdGhpcyBiZWhh
+dmlvciBpcyByZXNvbHZlZCBieSBjbGVhcmluZyB0aGUgZW5hYmxlIGJpdCBpbiB0aGUgTlZNZQo+
+IGNvbmZpZ3VyYXRpb24gcmVnaXN0ZXIgYW5kIHdhaXRpbmcgZm9yIHRoZSByZWFkeSBzdGF0dXMg
+dG8gY2xlYXIKPiAoZGlzYWJsaW5nIHRoZSBOVk1lIGNvbnRyb2xsZXIpIHByaW9yIHRvIEZMUi4K
+PiAKPiBTaWduZWQtb2ZmLWJ5OiBBbGV4IFdpbGxpYW1zb24gPGFsZXgud2lsbGlhbXNvbkByZWRo
+YXQuY29tPgo+IC0tLQo+IMKgZHJpdmVycy9wY2kvcXVpcmtzLmMgfMKgwqDCoDgzCj4gKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKPiDCoDEgZmlsZSBj
+aGFuZ2VkLCA4MyBpbnNlcnRpb25zKCspCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3F1
+aXJrcy5jIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMKPiBpbmRleCBlNzJjODc0MmFhZmEuLjM4OTlj
+ZGQyNTE0YiAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3BjaS9xdWlya3MuYwo+ICsrKyBiL2RyaXZl
+cnMvcGNpL3F1aXJrcy5jCj4gQEAgLTI4LDYgKzI4LDcgQEAKPiDCoCNpbmNsdWRlIDxsaW51eC9w
+bGF0Zm9ybV9kYXRhL3g4Ni9hcHBsZS5oPgo+IMKgI2luY2x1ZGUgPGxpbnV4L3BtX3J1bnRpbWUu
+aD4KPiDCoCNpbmNsdWRlIDxsaW51eC9zd2l0Y2h0ZWMuaD4KPiArI2luY2x1ZGUgPGxpbnV4L252
+bWUuaD4KPiDCoCNpbmNsdWRlIDxhc20vZG1hLmg+CS8qIGlzYV9kbWFfYnJpZGdlX2J1Z2d5ICov
+Cj4gwqAjaW5jbHVkZSAicGNpLmgiCj4gwqAKPiBAQCAtMzY2OSw2ICszNjcwLDg3IEBAIHN0YXRp
+YyBpbnQgcmVzZXRfY2hlbHNpb19nZW5lcmljX2RldihzdHJ1Y3QgcGNpX2Rldgo+ICpkZXYsIGlu
+dCBwcm9iZSkKPiDCoCNkZWZpbmUgUENJX0RFVklDRV9JRF9JTlRFTF9JVkJfTV9WR0HCoMKgwqDC
+oMKgwqAweDAxNTYKPiDCoCNkZWZpbmUgUENJX0RFVklDRV9JRF9JTlRFTF9JVkJfTTJfVkdBwqDC
+oMKgwqDCoDB4MDE2Ngo+IMKgCj4gKy8qCj4gKyAqIFRoZSBTYW1zdW5nIFNNOTYxL1BNOTYxIGNv
+bnRyb2xsZXIgY2FuIHNvbWV0aW1lcyBlbnRlciBhIGZhdGFsIHN0YXRlIGFmdGVyCj4gKyAqIEZM
+UiB3aGVyZSBjb25maWcgc3BhY2UgcmVhZHMgZnJvbSB0aGUgZGV2aWNlIHJldHVybiAtMS7CoMKg
+V2Ugc2VlbSB0byBiZQo+ICsgKiBhYmxlIHRvIGF2b2lkIHRoaXMgY29uZGl0aW9uIGlmIHdlIGRp
+c2FibGUgdGhlIE5WTWUgY29udHJvbGxlciBwcmlvciB0bwo+ICsgKiBGTFIuwqDCoFRoaXMgcXVp
+cmsgaXMgZ2VuZXJpYyBmb3IgYW55IE5WTWUgY2xhc3MgZGV2aWNlIHJlcXVpcmluZyBzaW1pbGFy
+Cj4gKyAqIGFzc2lzdGFuY2UgdG8gcXVpZXNjZSB0aGUgZGV2aWNlIHByaW9yIHRvIEZMUi4KPiAr
+ICoKPiArICogTlZNZSBzcGVjaWZpY2F0aW9uOiBodHRwczovL252bWV4cHJlc3Mub3JnL3Jlc291
+cmNlcy9zcGVjaWZpY2F0aW9ucy8KPiArICogUmV2aXNpb24gMS4wZToKCkl0IHNlZW1zIHRvbyBv
+bGQgdmVyc2lvbiBvZiBOVk1lIHNwZWNpZmljYXRpb24uIMKgRG8geW91IGhhdmUgYW55IHNwZWNp
+YWwgcmVhc29uCnRvIGNvbW1lbnQgdGhlIHNwZWNpZmllZCAxLjAgdmVyc2lvbiBpbnN0ZWFkIG9m
+IDEuMyBvciBzb21ldGhpbmcgbmV3ZXI/Cgo+ICsgKsKgwqDCoMKgQ2hhcHRlciAyOiBSZXF1aXJl
+ZCBhbmQgb3B0aW9uYWwgUENJIGNvbmZpZyByZWdpc3RlcnMKPiArICrCoMKgwqDCoENoYXB0ZXIg
+MzogTlZNZSBjb250cm9sIHJlZ2lzdGVycwo+ICsgKsKgwqDCoMKgQ2hhcHRlciA3LjM6IFJlc2V0
+IGJlaGF2aW9yCj4gKyAqLwo+ICtzdGF0aWMgaW50IG52bWVfZGlzYWJsZV9hbmRfZmxyKHN0cnVj
+dCBwY2lfZGV2ICpkZXYsIGludCBwcm9iZSkKClRoZSBuYW1lIG9mIHRoaXMgZnVuY3Rpb24gc2Vl
+bXMgYWJsZSB0byBiZSBzdGFydGVkIHdpdGggJ3Jlc2V0XycgcHJlZml4IGp1c3QKbGlrZSBvdGhl
+ciBxdWlya3MgZm9yIHJlc2V0LgpXaGF0IGFib3V0IHJlc2V0X3NhbXN1bmdfcG05NjEgb3Igc29t
+ZXRoaW5nPwoKPiArewo+ICsJdm9pZCBfX2lvbWVtICpiYXI7Cj4gKwl1MTYgY21kOwo+ICsJdTMy
+IGNmZzsKPiArCj4gKwlpZiAoZGV2LT5jbGFzcyAhPSBQQ0lfQ0xBU1NfU1RPUkFHRV9FWFBSRVNT
+IHx8Cj4gKwnCoMKgwqDCoCFwY2llX2hhc19mbHIoZGV2KSB8fCAhcGNpX3Jlc291cmNlX3N0YXJ0
+KGRldiwgMCkpCj4gKwkJcmV0dXJuIC1FTk9UVFk7Cj4gKwo+ICsJaWYgKHByb2JlKQo+ICsJCXJl
+dHVybiAwOwo+ICsKPiArCWJhciA9IHBjaV9pb21hcChkZXYsIDAsIE5WTUVfUkVHX0NDICsgc2l6
+ZW9mKGNmZykpOwo+ICsJaWYgKCFiYXIpCj4gKwkJcmV0dXJuIC1FTk9UVFk7Cj4gKwo+ICsJcGNp
+X3JlYWRfY29uZmlnX3dvcmQoZGV2LCBQQ0lfQ09NTUFORCwgJmNtZCk7Cj4gKwlwY2lfd3JpdGVf
+Y29uZmlnX3dvcmQoZGV2LCBQQ0lfQ09NTUFORCwgY21kIHwgUENJX0NPTU1BTkRfTUVNT1JZKTsK
+PiArCj4gKwljZmcgPSByZWFkbChiYXIgKyBOVk1FX1JFR19DQyk7Cj4gKwo+ICsJLyogRGlzYWJs
+ZSBjb250cm9sbGVyIGlmIGVuYWJsZWQgKi8KPiArCWlmIChjZmcgJiBOVk1FX0NDX0VOQUJMRSkg
+ewo+ICsJCXU2NCBjYXAgPSByZWFkcShiYXIgKyBOVk1FX1JFR19DQVApOwo+ICsJCXVuc2lnbmVk
+IGxvbmcgdGltZW91dDsKPiArCj4gKwkJLyoKPiArCQnCoCogUGVyIG52bWVfZGlzYWJsZV9jdHJs
+KCkgc2tpcCBzaHV0ZG93biBub3RpZmljYXRpb24gYXMgaXQKPiArCQnCoCogY291bGQgY29tcGxl
+dGUgY29tbWFuZHMgdG8gdGhlIGFkbWluIHF1ZXVlLsKgwqBXZSBvbmx5Cj4gaW50ZW5kCj4gKwkJ
+wqAqIHRvIHF1aWVzY2UgdGhlIGRldmljZSBiZWZvcmUgcmVzZXQuCj4gKwkJwqAqLwo+ICsJCWNm
+ZyAmPSB+KE5WTUVfQ0NfU0hOX01BU0sgfCBOVk1FX0NDX0VOQUJMRSk7Cj4gKwo+ICsJCXdyaXRl
+bChjZmcsIGJhciArIE5WTUVfUkVHX0NDKTsKPiArCj4gKwkJLyoKPiArCQnCoCogU29tZSBjb250
+cm9sbGVycyByZXF1aXJlIGFuIGFkZGl0aW9uYWwgZGVsYXkgaGVyZSwgc2VlCj4gKwkJwqAqIE5W
+TUVfUVVJUktfREVMQVlfQkVGT1JFX0NIS19SRFkuwqDCoE5vbmUgb2YgdGhvc2UgYXJlIHlldAo+
+ICsJCcKgKiBzdXBwb3J0ZWQgYnkgdGhpcyBxdWlyay4KPiArCQnCoCovCj4gKwo+ICsJCS8qIENh
+cCByZWdpc3RlciBwcm92aWRlcyBtYXggdGltZW91dCBpbiA1MDBtcyBpbmNyZW1lbnRzICovCj4g
+KwkJdGltZW91dCA9ICgoTlZNRV9DQVBfVElNRU9VVChjYXApICsgMSkgKiBIWiAvIDIpICsgamlm
+ZmllczsKPiArCj4gKwkJZm9yICg7Oykgewo+ICsJCQl1MzIgc3RhdHVzID0gcmVhZGwoYmFyICsg
+TlZNRV9SRUdfQ1NUUyk7Cj4gKwo+ICsJCQkvKiBSZWFkeSBzdGF0dXMgYmVjb21lcyB6ZXJvIG9u
+IGRpc2FibGUgY29tcGxldGUgKi8KPiArCQkJaWYgKCEoc3RhdHVzICYgTlZNRV9DU1RTX1JEWSkp
+Cj4gKwkJCQlicmVhazsKPiArCj4gKwkJCW1zbGVlcCgxMDApOwo+ICsKPiArCQkJaWYgKHRpbWVf
+YWZ0ZXIoamlmZmllcywgdGltZW91dCkpIHsKPiArCQkJCXBjaV93YXJuKGRldiwgIlRpbWVvdXQg
+d2FpdGluZyBmb3IgTlZNZSByZWFkeQo+IHN0YXR1cyB0byBjbGVhciBhZnRlciBkaXNhYmxlXG4i
+KTsKPiArCQkJCWJyZWFrOwo+ICsJCQl9Cj4gKwkJfQo+ICsJfQo+ICsKPiArCXBjaV9pb3VubWFw
+KGRldiwgYmFyKTsKPiArCj4gKwlwY2llX2ZscihkZXYpOwo+ICsKPiArCXJldHVybiAwOwo+ICt9
+Cj4gKwo+IMKgc3RhdGljIGNvbnN0IHN0cnVjdCBwY2lfZGV2X3Jlc2V0X21ldGhvZHMgcGNpX2Rl
+dl9yZXNldF9tZXRob2RzW10gPSB7Cj4gwqAJeyBQQ0lfVkVORE9SX0lEX0lOVEVMLCBQQ0lfREVW
+SUNFX0lEX0lOVEVMXzgyNTk5X1NGUF9WRiwKPiDCoAkJwqByZXNldF9pbnRlbF84MjU5OV9zZnBf
+dmlydGZuIH0sCj4gQEAgLTM2NzYsNiArMzc1OCw3IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgcGNp
+X2Rldl9yZXNldF9tZXRob2RzCj4gcGNpX2Rldl9yZXNldF9tZXRob2RzW10gPSB7Cj4gwqAJCXJl
+c2V0X2l2Yl9pZ2QgfSwKPiDCoAl7IFBDSV9WRU5ET1JfSURfSU5URUwsIFBDSV9ERVZJQ0VfSURf
+SU5URUxfSVZCX00yX1ZHQSwKPiDCoAkJcmVzZXRfaXZiX2lnZCB9LAo+ICsJeyBQQ0lfVkVORE9S
+X0lEX1NBTVNVTkcsIDB4YTgwNCwgbnZtZV9kaXNhYmxlX2FuZF9mbHIgfSwKCldoeSBkb24ndCB3
+ZSBqdXN0IGRlZmluZSBhIG1hY3JvIGp1c3QgbGlrZSBvdGhlciBERVZJQ0VfSURzLiAoZS5nLgpQ
+Q0lFX0RFVklDRV9JRF9JTlRFTF84MjU5OV9TRlBfVkYpLgoKI2RlZmluZSBQQ0lfREVWSUNFX0lE
+X1NBTVNVTkdfUE05NjEgwqAweGE4MDQKCj4gwqAJeyBQQ0lfVkVORE9SX0lEX0NIRUxTSU8sIFBD
+SV9BTllfSUQsCj4gwqAJCXJlc2V0X2NoZWxzaW9fZ2VuZXJpY19kZXYgfSwKPiDCoAl7IDAgfQo+
+IAo+IAo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4g
+TGludXgtbnZtZSBtYWlsaW5nIGxpc3QKPiBMaW51eC1udm1lQGxpc3RzLmluZnJhZGVhZC5vcmcK
+PiBodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW52bWUK
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4LW52
+bWUgbWFpbGluZyBsaXN0CkxpbnV4LW52bWVAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlz
+dHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW52bWUK
