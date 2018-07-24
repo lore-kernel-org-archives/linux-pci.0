@@ -1,87 +1,176 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35630 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729410AbeGZOQv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 26 Jul 2018 10:16:51 -0400
-Date: Thu, 26 Jul 2018 14:59:57 +0200
-From: Michal Hocko <mhocko@kernel.org>
-To: Baoquan He <bhe@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, robh+dt@kernel.org,
-        dan.j.williams@intel.com, nicolas.pitre@linaro.org,
-        josh@joshtriplett.org, fengguang.wu@intel.com, bp@suse.de,
-        andy.shevchenko@gmail.com, patrik.r.jakobsson@gmail.com,
-        airlied@linux.ie, kys@microsoft.com, haiyangz@microsoft.com,
-        sthemmin@microsoft.com, dmitry.torokhov@gmail.com,
-        frowand.list@gmail.com, keith.busch@intel.com,
-        jonathan.derrick@intel.com, lorenzo.pieralisi@arm.com,
-        bhelgaas@google.com, tglx@linutronix.de, brijesh.singh@amd.com,
-        jglisse@redhat.com, thomas.lendacky@amd.com,
-        gregkh@linuxfoundation.org, baiyaowei@cmss.chinamobile.com,
-        richard.weiyang@gmail.com, devel@linuxdriverproject.org,
-        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        ebiederm@xmission.com, vgoyal@redhat.com, dyoung@redhat.com,
-        yinghai@kernel.org, monstr@monstr.eu, davem@davemloft.net,
-        chris@zankel.net, jcmvbkbc@gmail.com, gustavo@padovan.org,
-        maarten.lankhorst@linux.intel.com, seanpaul@chromium.org,
-        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        kexec@lists.infradead.org
-Subject: Re: [PATCH v7 4/4] kexec_file: Load kernel at top of system RAM if
- required
-Message-ID: <20180726125957.GH28386@dhcp22.suse.cz>
-References: <20180718024944.577-1-bhe@redhat.com>
- <20180718024944.577-5-bhe@redhat.com>
- <20180718153326.b795e9ea7835432a56cd7011@linux-foundation.org>
- <20180719151753.GB7147@localhost.localdomain>
- <20180723143443.GD18181@dhcp22.suse.cz>
- <20180725064813.GI6480@MiWiFi-R3L-srv>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Leonard Crestez <leonard.crestez@nxp.com>
+To: Ulf Hansson <ulf.hansson@linaro.org>, Lucas Stach <l.stach@pengutronix.de>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: [RFC] PCI: imx: Add multi-pd support
+Date: Tue, 24 Jul 2018 21:17:38 +0300
+Message-Id: <8018069bc772376caef29e76280e4d0facffdb68.1532455922.git.leonard.crestez@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20180725064813.GI6480@MiWiFi-R3L-srv>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>, Anson Huang <Anson.Huang@nxp.com>,
+ linux-pm@vger.kernel.org, Andrey Smirnov <andrew.smirnov@gmail.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Jon Hunter <jonathanh@nvidia.com>, linux-imx@nxp.com, kernel@pengutronix.de,
+ Fabio Estevam <fabio.estevam@nxp.com>, Shawn Guo <shawnguo@kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed 25-07-18 14:48:13, Baoquan He wrote:
-> On 07/23/18 at 04:34pm, Michal Hocko wrote:
-> > On Thu 19-07-18 23:17:53, Baoquan He wrote:
-> > > Kexec has been a formal feature in our distro, and customers owning
-> > > those kind of very large machine can make use of this feature to speed
-> > > up the reboot process. On uefi machine, the kexec_file loading will
-> > > search place to put kernel under 4G from top to down. As we know, the
-> > > 1st 4G space is DMA32 ZONE, dma, pci mmcfg, bios etc all try to consume
-> > > it. It may have possibility to not be able to find a usable space for
-> > > kernel/initrd. From the top down of the whole memory space, we don't
-> > > have this worry. 
-> > 
-> > I do not have the full context here but let me note that you should be
-> > careful when doing top-down reservation because you can easily get into
-> > hotplugable memory and break the hotremove usecase. We even warn when
-> > this is done. See memblock_find_in_range_node
-> 
-> Kexec read kernel/initrd file into buffer, just search usable positions
-> for them to do the later copying. You can see below struct kexec_segment, 
-> for the old kexec_load, kernel/initrd are read into user space buffer,
-> the @buf stores the user space buffer address, @mem stores the position
-> where kernel/initrd will be put. In kernel, it calls
-> kimage_load_normal_segment() to copy user space buffer to intermediate
-> pages which are allocated with flag GFP_KERNEL. These intermediate pages
-> are recorded as entries, later when user execute "kexec -e" to trigger
-> kexec jumping, it will do the final copying from the intermediate pages
-> to the real destination pages which @mem pointed. Because we can't touch
-> the existed data in 1st kernel when do kexec kernel loading. With my
-> understanding, GFP_KERNEL will make those intermediate pages be
-> allocated inside immovable area, it won't impact hotplugging. But the
-> @mem we searched in the whole system RAM might be lost along with
-> hotplug. Hence we need do kexec kernel again when hotplug event is
-> detected.
+On some chips the PCIE and PCIE_PHY blocks are in separate power domains
+which can be power-gated independently. The driver needs to handle this
+by keeping both domain active.
 
-I am not sure I am following. If @mem is placed at movable node then the
-memory hotremove simply won't work, because we are seeing reserved pages
-and do not know what to do about them. They are not migrateable.
-Allocating intermediate pages from other nodes doesn't really help.
+This is intended for imx6sx where PCIE is in DISPMIX and PCIE_PHY in
+it's own domain. Defining the DISPMIX domain requires a way for pcie to
+keep it active or it will break when displays are off.
 
-The memblock code warns exactly for that reason.
+The power-domains on imx6sx are meant to look like this:
+	power-domains = <&pd_disp>, <&pd_pci>;
+	power-domain-names = "pcie", "pcie_phy";
+
+Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
+---
+
+Right now if a device has a single power domain it will be activated
+before probe but if it has multiple domains they need to be explicitly
+"attached" to and controlled. Supporting both is a bit awkward, this
+patch makes the distinction based on (dev->pm_domain != NULL).
+
+Maybe the PM core should make this distinction based on a flag in struct
+device_driver instead of number of power-domains? So by default when a
+device has multiple power domains they would would be activated
+together and this patch would be unnecessary.
+
+This is marked as "RFC" mostly because I believe it should be handled
+inside PM core, without driver code. Does this make sense to anyone else?
+
+This is independent of recent patches adding suspend/resume support to
+imx pci, but supporting suspend with multi-pd requires adding device
+links, not just activating pds at probe time.
+
+The device_link is marked as "STATELESS" because otherwise a warning is
+triggered in device_links_driver_bound. This seems to happen because the
+pd devices are always marked as "DL_DEV_NO_DRIVER". Maybe they should be
+instead always be marked as DL_DEV_DRIVER_BOUND?
+
+The imx pci driver doesn't support unbind or removal anyway so this is
+not handled for multi-pd either.
+
+Previously: https://lkml.org/lkml/2018/7/10/230
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 48 +++++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index fc9529619469..7403918010e9 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -25,10 +25,12 @@
+ #include <linux/resource.h>
+ #include <linux/signal.h>
+ #include <linux/types.h>
+ #include <linux/interrupt.h>
+ #include <linux/reset.h>
++#include <linux/pm_domain.h>
++#include <linux/pm_runtime.h>
+ 
+ #include "pcie-designware.h"
+ 
+ #define to_imx6_pcie(x)	dev_get_drvdata((x)->dev)
+ 
+@@ -57,10 +59,15 @@ struct imx6_pcie {
+ 	u32			tx_deemph_gen2_6db;
+ 	u32			tx_swing_full;
+ 	u32			tx_swing_low;
+ 	int			link_gen;
+ 	struct regulator	*vpcie;
++
++	/* power domain for pcie itself (dispmix) */
++	struct device		*pd_pcie;
++	/* power domain for pcie phy */
++	struct device		*pd_pcie_phy;
+ };
+ 
+ /* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */
+ #define PHY_PLL_LOCK_WAIT_MAX_RETRIES	2000
+ #define PHY_PLL_LOCK_WAIT_USLEEP_MIN	50
+@@ -805,10 +812,47 @@ static int imx6_pcie_resume_noirq(struct device *dev)
+ static const struct dev_pm_ops imx6_pcie_pm_ops = {
+ 	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(imx6_pcie_suspend_noirq,
+ 				      imx6_pcie_resume_noirq)
+ };
+ 
++static int imx6_pcie_attach_pd(struct device *dev)
++{
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++	struct device_link *link;
++
++	/* Do nothing when in a single power domain */
++	if (dev->pm_domain)
++		return 0;
++
++	imx6_pcie->pd_pcie = dev_pm_domain_attach_by_name(dev, "pcie");
++	if (IS_ERR(imx6_pcie->pd_pcie))
++		return PTR_ERR(imx6_pcie->pd_pcie);
++	link = device_link_add(dev, imx6_pcie->pd_pcie,
++			DL_FLAG_STATELESS |
++			DL_FLAG_PM_RUNTIME |
++			DL_FLAG_RPM_ACTIVE);
++	if (IS_ERR(link)) {
++		dev_err(dev, "Failed to add device_link to pcie pd: %ld\n", PTR_ERR(link));
++		return PTR_ERR(link);
++	}
++
++	imx6_pcie->pd_pcie_phy = dev_pm_domain_attach_by_name(dev, "pcie_phy");
++	if (IS_ERR(imx6_pcie->pd_pcie_phy))
++		return PTR_ERR(imx6_pcie->pd_pcie_phy);
++
++	device_link_add(dev, imx6_pcie->pd_pcie_phy,
++			DL_FLAG_STATELESS |
++			DL_FLAG_PM_RUNTIME |
++			DL_FLAG_RPM_ACTIVE);
++	if (IS_ERR(link)) {
++		dev_err(dev, "Failed to add device_link to pcie_phy pd: %ld\n", PTR_ERR(link));
++		return PTR_ERR(link);
++	}
++
++	return 0;
++}
++
+ static int imx6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct dw_pcie *pci;
+ 	struct imx6_pcie *imx6_pcie;
+@@ -945,10 +989,14 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 		imx6_pcie->vpcie = NULL;
+ 	}
+ 
+ 	platform_set_drvdata(pdev, imx6_pcie);
+ 
++	ret = imx6_pcie_attach_pd(dev);
++	if (ret)
++		return ret;
++
+ 	ret = imx6_add_pcie_port(imx6_pcie, pdev);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	return 0;
 -- 
-Michal Hocko
-SUSE Labs
+2.17.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
