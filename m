@@ -1,91 +1,108 @@
-Return-Path: <SRS0=npwa=JV=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=npwa=JV=gmail.com=rjwysocki@kernel.org>
-MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
-References: <1530600642-25090-1-git-send-email-kernelfans@gmail.com>
- <4685360.VNmeYLh0dQ@aspire.rjw.lan> <CAFgQCTusBM0-E=wAJgRJA7g-RnDi9ts==-M7KezNBwSWnyO=HA@mail.gmail.com>
- <6281446.GoJLz6Hq6C@aspire.rjw.lan> <CAFgQCTt7VfqM=UyCnvNFxrSw8Z6cUtAi3HUwR4_xPAc03SgHjQ@mail.gmail.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Thu, 5 Jul 2018 11:18:28 +0200
-Message-ID: <CAJZ5v0jo5-z0ZYDzdNPpn54+oAxpdG_=EvVDdz-HKxp7psu-EA@mail.gmail.com>
-Subject: Re: [PATCHv3 0/4] drivers/base: bugfix for supplier<-consumer
- ordering in device_kset
-To: Pingfan Liu <kernelfans@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grygorii Strashko <grygorii.strashko@ti.com>,
-	Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>, Dave Young <dyoung@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Linux PM <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1532426953.32306.5.camel@pengutronix.de>
+Subject: Re: [PATCH v2 3/3] PCI: imx: Initial imx7d pm support
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Leonard Crestez <leonard.crestez@nxp.com>, Richard Zhu
+ <hongxing.zhu@nxp.com>, Fabio Estevam <fabio.estevam@nxp.com>
+Date: Tue, 24 Jul 2018 12:09:13 +0200
+In-Reply-To: <e8be199b2d5559001a93abb52ba46c283e4454a9.camel@nxp.com>
+References: <cover.1532090446.git.leonard.crestez@nxp.com>
+ <e42a6bb8ff0ddd6eaa31fe381875425a3730a73f.1532090446.git.leonard.crestez@nxp.com>
+ <1532338685.3163.93.camel@pengutronix.de>
+ <e8be199b2d5559001a93abb52ba46c283e4454a9.camel@nxp.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "A.s. Dong" <aisheng.dong@nxp.com>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+ "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
+ "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+ dl-linux-imx <linux-imx@nxp.com>,
+ "kernel@pengutronix.de" <kernel@pengutronix.de>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 5, 2018 at 4:44 AM, Pingfan Liu <kernelfans@gmail.com> wrote:
-> On Wed, Jul 4, 2018 at 6:23 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->>
->> On Wednesday, July 4, 2018 4:47:07 AM CEST Pingfan Liu wrote:
->> > On Tue, Jul 3, 2018 at 10:36 PM Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> > >
->> > > On Tuesday, July 3, 2018 8:50:38 AM CEST Pingfan Liu wrote:
->> > > > commit 52cdbdd49853 ("driver core: correct device's shutdown order")
->> > > > places an assumption of supplier<-consumer order on the process of probe.
->> > > > But it turns out to break down the parent <- child order in some scene.
->> > > > E.g in pci, a bridge is enabled by pci core, and behind it, the devices
->> > > > have been probed. Then comes the bridge's module, which enables extra
->> > > > feature(such as hotplug) on this bridge.
->> > >
->> > > So what *exactly* does happen in that case?
->> > >
->> > I saw the  shpc_probe() is called on the bridge, although the probing
->> > failed on that bare-metal. But if it success, then it will enable the
->> > hotplug feature on the bridge.
->>
->> I don't understand what you are saying here, sorry.
->>
-> On the system, I observe the following:
-> [    2.114986] devices_kset: Moving 0004:00:00.0 to end of list
-> <---pcie port drive's probe, but it failed
-> [    2.115192] devices_kset: Moving 0004:01:00.0 to end of list
-> [    2.115591] devices_kset: Moving 0004:02:02.0 to end of list
-> [    2.115923] devices_kset: Moving 0004:02:0a.0 to end of list
-> [    2.116141] devices_kset: Moving 0004:02:0b.0 to end of list
-> [    2.116358] devices_kset: Moving 0004:02:0c.0 to end of list
-> [    3.181860] devices_kset: Moving 0004:03:00.0 to end of list
-> <---the ata disk controller which sits behind the bridge
-> [   10.267081] devices_kset: Moving 0004:00:00.0 to end of list
->  <---shpc_probe() on this bridge, failed too.
->
-> As you can the the parent device "0004:00:00.0" is moved twice, and
-> finally, it is after the "0004:03:00.0", this will break the
-> "parent<-child" order in devices_kset. This is caused by the code
-> really_probe()->devices_kset_move_last(). Apparently, it makes
-> assumption that child device's probing comes after its parent's. But
-> it does not stand up in the case.
->
->> device_reorder_to_tail() walks the entire device hierarchy below the target
->> and moves all of the children in there *after* their parents.
->>
-> As described, the bug is not related with device_reorder_to_tail(), it
-> is related with really_probe()->devices_kset_move_last().
-
-OK, so calling devices_kset_move_last() from really_probe() clearly is
-a mistake.
-
-I'm not really sure what the intention of it was as the changelog of
-commit 52cdbdd49853d doesn't really explain that (why would it be
-insufficient without that change?) and I'm quite sure that in the
-majority of cases it is unnecessary.
-
-I *think* that it attempted to cover a use case similar to the device
-links one, but it should have moved children along with the parent
-every time like device_link_add() does.
-
-> So [2/4] uses different method to achieve the "parent<-child" and
-> "supplier<-consumer" order. The [3/4] clean up some code in
-> device_reorder_to_tail(), since I need to revert the commit.
-
-OK, let me look at that one.
-
-Thanks,
-Rafael
+QW0gTW9udGFnLCBkZW4gMjMuMDcuMjAxOCwgMTI6MzcgKzAwMDAgc2NocmllYiBMZW9uYXJkIENy
+ZXN0ZXo6Cj4gT24gTW9uLCAyMDE4LTA3LTIzIGF0IDExOjM4ICswMjAwLCBMdWNhcyBTdGFjaCB3
+cm90ZToKPiA+IEhpIExlb25hcmQsCj4gPiAKPiA+IEFtIEZyZWl0YWcsIGRlbiAyMC4wNy4yMDE4
+LCAxNTo0NyArMDMwMCBzY2hyaWViIExlb25hcmQgQ3Jlc3RlejoKPiA+ID4gT24gaW14N2QgdGhl
+IHBjaWUtcGh5IHBvd2VyIGRvbWFpbiBpcyB0dXJuZWQgb2ZmIGluIHN1c3BlbmQgYW5kIHRoaXMg
+Y2FuCj4gPiA+IG1ha2UgdGhlIHN5c3RlbSBoYW5nIGFmdGVyIHJlc3VtZSB3aGVuIGF0dGVtcHRp
+bmcgYW55IHJlYWQgZnJvbSBQQ0kuCj4gPiA+IAo+ID4gPiBGaXggdGhpcyBieSBhZGRpbmcgbWlu
+aW1hbCBzdXNwZW5kL3Jlc3VtZSBjb2RlIGZyb20gdGhlIG54cCBpbnRlcm5hbAo+ID4gPiB0cmVl
+LiBUaGlzIHdpbGwgcHJlcGFyZSBmb3IgcG93ZXJpbmcgZG93biBvbiBzdXNwZW5kIGFuZCByZXNl
+dCB0aGUgYmxvY2sKPiA+ID4gb24gcmVzdW1lLgo+ID4gPiAKPiA+ID4gQ29kZSBpcyBvbmx5IGZv
+ciBpbXg3ZCBidXQgYSB2ZXJ5IHNpbWlsYXIgc2VxdWVuY2UgY2FuIGJlIHVzZWQgZm9yCj4gPiA+
+IG90aGVyIHNvY3MuCj4gPiA+IAo+ID4gPiArc3RhdGljIHZvaWQgaW14Nl9wY2llX2x0c3NtX2Rp
+c2FibGUoc3RydWN0IGRldmljZSAqZGV2KQo+ID4gPiArewo+ID4gPiA+ID4gPiArCXN0cnVjdCBp
+bXg2X3BjaWUgKmlteDZfcGNpZSA9IGRldl9nZXRfZHJ2ZGF0YShkZXYpOwo+ID4gPiArCj4gPiA+
+ID4gPiA+ICsJc3dpdGNoIChpbXg2X3BjaWUtPnZhcmlhbnQpIHsKPiA+ID4gPiA+ID4gKwljYXNl
+IElNWDZROgo+ID4gPiA+ID4gPiArCWNhc2UgSU1YNlNYOgo+ID4gPiA+ID4gPiArCWNhc2UgSU1Y
+NlFQOgo+ID4gPiA+ID4gPiArCQlyZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNf
+Z3ByLCBJT01VWENfR1BSMTIsCj4gPiA+ICsJCQkJwqDCoMKgSU1YNlFfR1BSMTJfUENJRV9DVExf
+MiwgMCk7Cj4gPiAKPiA+IEhhcyB0aGlzIGJlZW4gdGVzdGVkIG9uIGkuTVg2PyBMVFNTTSBkaXNh
+YmxlIHJlcXVpcmVzIGEgbW9yZSBjb21wbGV4Cj4gPiBzZXF1ZW5jZSBvbiB0aGlzIFNvQyB0byBh
+dm9pZCBoYW5naW5nIHRoZSBzeXN0ZW0uIFNlZSBjb21taXQKPiA+IDNlM2U0MDZlMzgwNyAiUENJ
+OiBpbXg2OiBQdXQgTFRTU00gaW4gIkRldGVjdCIgc3RhdGUgYmVmb3JlIGRpc2FibGluZwo+ID4g
+aXQiLgo+IAo+IFRoaXMgcGF0Y2ggb25seSBlbmFibGVzIHN1c3BlbmQvcmVzdW1lIGZvciBpbXg3
+ZCB3aXRoIG90aGVyIFNPQ3MgdG8KPiBmb2xsb3cgbGF0ZXIuIFRoZSBsdHNzbV9kaXNhYmxlIGZ1
+bmN0aW9uIGlzIGp1c3Qgc3ltbWV0cmljIHdpdGgKPiBsdHNzbV9lbmFibGUuCj4gCj4gVGhlIDZR
+IHBhcnRzIGFyZSBhZmZlY3RlZCBieSBlcnJhdGEgIkVSUjAwNTcyMyBQQ0llOiBQQ0llIGRvZXMg
+bm90Cj4gc3VwcG9ydCBMMiBwb3dlciBkb3duIFtpLk1YIDZEdWFsLzZRdWFkIE9ubHldIi4KPiAK
+PiBUaGlzIGRlc2lnbiBlcnJvciBzZWVtcyB0byBoYXZlIHRoZSBzYW1lIHJvb3QgY2F1c2UgYXMg
+eW91ciBwcm9ibGVtIChubwo+IGRlZGljYXRlZCByZXNldCBjb250cm9sKSBzbyB0aGlzIHdvcmtz
+IG91dCBxdWl0ZSBuaWNlbHk6IHRoZSBzb2x1dGlvbgo+IGlzIHRvIG5ldmVyIHBvd2VyIGRvd24g
+cGNpIG9uIGFmZmVjdGVkIGNoaXBzLgoKSSBkb24ndCBxdWl0ZSBsaWtlIGNvZGUgdGhhdCBsb29r
+cyBsaWtlIGl0IGlzIGRvaW5nIHRoZSByaWdodCB0aGluZywKYnV0IHRoZW4gZG9lc24ndC4gQ2Fu
+IHdlIGF0IGxlYXN0IGVtaXQgYSB3YXJuaW5nIHRoYXQgdGhlcmUgbWlnaHQgYmUKZHJhZ29ucyBp
+ZiBhbnlvbmUgdHJpZXMgdG8gY2FsbCB0aGlzIG9uIGkuTVg2PwoKPiA+ID4gK3N0YXRpYyBpbnQg
+aW14Nl9wY2llX3Jlc3VtZV9ub2lycShzdHJ1Y3QgZGV2aWNlICpkZXYpCj4gPiA+ICt7Cj4gPiA+
+ID4gPiA+ICsJaW50IHJldCA9IDA7Cj4gPiA+ID4gPiA+ICsJc3RydWN0IGlteDZfcGNpZSAqaW14
+Nl9wY2llID0gZGV2X2dldF9kcnZkYXRhKGRldik7Cj4gPiA+ID4gPiA+ICsJc3RydWN0IHBjaWVf
+cG9ydCAqcHAgPSAmaW14Nl9wY2llLT5wY2ktPnBwOwo+ID4gPiArCj4gPiA+ID4gPiA+ICsJaWYg
+KGlteDZfcGNpZS0+dmFyaWFudCAhPSBJTVg3RCkKPiA+ID4gPiA+ID4gKwkJcmV0dXJuIDA7Cj4g
+PiA+ICsKPiA+ID4gPiA+ID4gKwlpbXg2X3BjaWVfYXNzZXJ0X2NvcmVfcmVzZXQoaW14Nl9wY2ll
+KTsKPiA+ID4gPiA+ID4gKwlpbXg2X3BjaWVfaW5pdF9waHkoaW14Nl9wY2llKTsKPiA+ID4gPiA+
+ID4gKwlpbXg2X3BjaWVfZGVhc3NlcnRfY29yZV9yZXNldChpbXg2X3BjaWUpOwo+ID4gPiA+ID4g
+PiArCWR3X3BjaWVfc2V0dXBfcmMocHApOwo+ID4gPiArCj4gPiA+ID4gPiA+ICsJcmV0ID0gaW14
+Nl9wY2llX2VzdGFibGlzaF9saW5rKGlteDZfcGNpZSk7Cj4gPiA+ID4gPiA+ICsJaWYgKHJldCA8
+IDApCj4gPiA+ICsJCXByX2VycigicGNpZSBsaW5rIGlzIGRvd24gYWZ0ZXIgcmVzdW1lLlxuIik7
+Cj4gPiAKPiA+IGRldl9lcnIoKSwgcGxlYXNlLgo+IAo+IFRoZSBpbXg2X3BjaWVfZXN0YWJsaXNo
+X2xpbmsgZnVuY3Rpb24gYWxyZWFkeSBzZWVtcyB0byBsaW5rIGVycm9yCj4gaW5mb3JtYXRpb24g
+c28gdGhlIG1lc3NhZ2UgY291bGQgYmUgZHJvcHBlZC4gSG93ZXZlciBpdCdzIHN0aWxsIGhlbHBm
+dWwKPiB0byBrbm93IHRoYXQgdGhvc2UgcGNpIGxpbmsgZXJyb3JzIGFyZSBzcGVjaWZpY2FsbHkg
+cmVsYXRlZCB0byByZXN1bWUuCj4gCj4gRmFiaW8gc3VnZ2VzdGVkIEkgcHJvcGFnYXRlIHRoZSBy
+ZXR1cm4gY29kZSBidXQgSSdtIG5vdCBzdXJlIHRoYXQncwo+IGhlbHBmdWwgc2luY2UgImxpbmsg
+ZG93biIgaXMgd2hhdCBoYXBwZW5zIHdoZW4gdGhlIHNsb3QgaXMgZW1wdHkgYW5kCj4gdGhpcyBp
+cyBjbGVhcmx5IG5vdCBhICJlcnJvciIgb3IgImZhaWx1cmUiLiBJdCdzIG5vdCBjbGVhciBpZiAi
+c2xvdAo+IGVtcHR5IiBjYW4gYmUgZGlzdGluZ3Vpc2hlZCBpbiBzb21lIHdheS4KCkkgZG9uJ3Qg
+dGhpbmsgd2UgaGF2ZSBhIGdlbmVyaWMgd2F5IHRvIGRpc3Rpbmd1aXNoIGJldHdlZW4gdGhlIHR3
+bwpjYXNlcy4KCj4gSSdsbCBzd2l0Y2ggdG8gZGV2X2luZm8gYW5kIGRyb3AgdGhlIGVycm9yIGNv
+ZGUsIGlzIHRoaXMgT0s/CgpZZXMsIHRoYXQncyBmaW5lIHdpdGggbWUuCgo+IAo+IE9uZSBhc3Bl
+Y3QgdGhhdCBJIHNraXBwZWQgaXMgUE1FX1R1cm5fT2ZmIHN1cHBvcnQ6IFRoZSBQQ0kgc3RhbmRh
+cmQKPiBtYW5kYXRlcyB0aGF0IHRoaXMgaXMgc2VudCBiZWZvcmUgZW50ZXJpbmcgTDIvTDMgYW5k
+IHRoZSBkZXNpZ253YXJlCj4gY29yZSBzdXBwb3J0cyB0aGlzIGJ1dCBpdCdzIG5vdCBwYXJ0IG9m
+IHRoaXMgcGF0Y2guCj4gCj4gSXMgaXQgZmluZSBpZiBJIHBvc3QgdGhpcyBzZXBhcmF0ZWx5IG9y
+IHNob3VsZCBpdCBiZSBwYXJ0IG9mIHRoZSBzYW1lCj4gc2VyaWVzPyBUaGUgdHVybm9mZiBiaXQg
+aXMgaW4gSU9NVVggZ3ByIGZvciBpbXg2IGJ1dCBTUkMgZm9yIGlteDcgc28gaXQKPiB3b3VsZCBy
+ZXF1aXJlIGFkZGl0aW9uYWwgcGF0Y2hlcyBpbiByZXNldCwgZHRzIGFuZCB0aGVuIHBjaS4KCklN
+TyBpdCBpcyBmaW5lIHRvIGhhdmUgdGhpcyBhcyBhIGZvbGxvdyBvbiBwYXRjaHNldC4KClJlZ2Fy
+ZHMsCkx1Y2FzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+XwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmlu
+ZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9s
+aW51eC1hcm0ta2VybmVsCg==
