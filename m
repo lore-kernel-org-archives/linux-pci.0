@@ -1,59 +1,79 @@
-Return-Path: <Okaya@kernel.org>
-Return-Path: <Okaya@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Leonard Crestez <leonard.crestez@nxp.com>
+To: "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>
+Subject: Re: [PATCH v2 1/3] Revert "ARM: dts: imx7d: Invert legacy PCI irq
+ mapping"
+Date: Tue, 24 Jul 2018 11:34:48 +0000
+Message-ID: <dfad19eec11f7f3affc51f1ecc41d3f6eaa65e7c.camel@nxp.com>
+References: <cover.1532090446.git.leonard.crestez@nxp.com>
+ <221deb47d7d38ecd6e0c7636f9a87ab693a3c539.1532090446.git.leonard.crestez@nxp.com>
+ <CAHQ1cqF6TphuN8Ls54YA6bjty-bJF8twYboaG-RM=jox8CeQPA@mail.gmail.com>
+ <42ff53eeea3067b19e3e16bed8392706502c8f23.camel@nxp.com>
+ <CAHQ1cqF7u2gjwYt1-16u-uimXHZ2SWsquabZSDftQn_yRurhSQ@mail.gmail.com>
+In-Reply-To: <CAHQ1cqF7u2gjwYt1-16u-uimXHZ2SWsquabZSDftQn_yRurhSQ@mail.gmail.com>
 MIME-Version: 1.0
-References: <153030390808.57832.2200774416664543563.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <153030406630.57832.11564334393458981467.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <153030406630.57832.11564334393458981467.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <Okaya@kernel.org>
-Date: Tue, 3 Jul 2018 00:56:03 -0400
-Message-ID: <CAK9iUCNk8UpzO4UeyJMRF1ZRcbzPtRk6yg9SCXusyqExtXKK3w@mail.gmail.com>
-Subject: Re: [PATCH v1 2/2] PCI: Document ACPI description of PCI host bridges
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: multipart/alternative; boundary="00000000000056b5ad0570112245"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "A.s. Dong" <aisheng.dong@nxp.com>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>,
+ "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+ "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+ dl-linux-imx <linux-imx@nxp.com>,
+ "kernel@pengutronix.de" <kernel@pengutronix.de>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Fabio Estevam <fabio.estevam@nxp.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
---00000000000056b5ad0570112245
-Content-Type: text/plain; charset="UTF-8"
+On Mon, 2018-07-23 at 11:38 -0700, Andrey Smirnov wrote:
+> On Mon, Jul 23, 2018 at 5:41 AM Leonard Crestez <leonard.crestez@nxp.com> wrote:
+> > On Fri, 2018-07-20 at 08:33 -0700, Andrey Smirnov wrote:
+> > > On Fri, Jul 20, 2018 at 5:48 AM Leonard Crestez <leonard.crestez@nxp.com> wrote:
+> > > > 
+> > > > This reverts commit 1c86c9dd82f859b474474a7fee0d5195da2c9c1d.
+> > > > 
+> > > > That commit followed the reference manual but unfortunately the imx7d
+> > > > manual is incorrect.
+> > > 
+> > > I'd also add similar comment to DT file to prevent people from trying
+> > > to "fix" this in the future.
+> > 
+> > I'll try to see if I can follow up internally with docs team to get
+> > this updated in the next revision of the reference manual.
+> 
+> Not sure if we are on the same page here, but what I meant is adding
+> the same explanation that is in your commit message to Device Tree
+> file as well so that if anyone looks at DT code and goes "Huh?" in the
+> future, they wouldn't have to research commit history to see the
+> reason why things the way they are.
 
-On Fri, Jun 29, 2018, 16:28 Bjorn Helgaas <helgaas@kernel.org> wrote:
+OK, I will add a comment on irq mappings in the next version explaining
+that the reference manual is incorrect.
 
-> From: Bjorn Helgaas <bhelgaas@google.com>
->
-> Add a writeup about how PCI host bridges should be described in ACPI
-> using PNP0A03/PNP0A08 devices, PNP0C02 devices, and the MCFG table.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->
->
->
-> Reviewed-by: Sinan Kaya <okaya@kernel.org>
+> > > Also, this change is going to break QEMU's mapping found here:
+> > 
+> > I had no idea that existed, I guess somebody needs to fix that as well.
+> 
+> I take it it's a no to my "any chance you can fix that as well?" ;-).
+> I'll see if I can find time to do that this week.
 
---00000000000056b5ad0570112245
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"auto"><div><br><br><div class=3D"gmail_quote"><div dir=3D"ltr">=
-On Fri, Jun 29, 2018, 16:28 Bjorn Helgaas &lt;<a href=3D"mailto:helgaas@ker=
-nel.org" target=3D"_blank" rel=3D"noreferrer">helgaas@kernel.org</a>&gt; wr=
-ote:<br></div><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;=
-border-left:1px #ccc solid;padding-left:1ex">From: Bjorn Helgaas &lt;<a hre=
-f=3D"mailto:bhelgaas@google.com" rel=3D"noreferrer noreferrer" target=3D"_b=
-lank">bhelgaas@google.com</a>&gt;<br>
-<br>
-Add a writeup about how PCI host bridges should be described in ACPI<br>
-using PNP0A03/PNP0A08 devices, PNP0C02 devices, and the MCFG table.<br>
-<br>
-Signed-off-by: Bjorn Helgaas &lt;<a href=3D"mailto:bhelgaas@google.com" rel=
-=3D"noreferrer noreferrer" target=3D"_blank">bhelgaas@google.com</a>&gt;<br=
-><br>
-</blockquote><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;b=
-order-left:1px #ccc solid;padding-left:1ex"><br></blockquote><blockquote cl=
-ass=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;p=
-adding-left:1ex"><br></blockquote><blockquote class=3D"gmail_quote" style=
-=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">Reviewed=
--by: Sinan Kaya &lt;<a href=3D"mailto:okaya@kernel.org">okaya@kernel.org</a=
->&gt;</blockquote></div></div></div>
-
---00000000000056b5ad0570112245--
+Sorry, I'm not familiar with qemu source at all.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
