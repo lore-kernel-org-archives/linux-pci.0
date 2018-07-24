@@ -1,146 +1,139 @@
-Return-Path: <SRS0=b4Ma=KA=oracle.com=thomas.tai@kernel.org>
-Return-Path: <SRS0=b4Ma=KA=oracle.com=thomas.tai@kernel.org>
-Subject: Re: [PATCH V2, 0/1] PCI/AER: fix use-after-free in
- pcie_do_fatal_recovery
-To: poza@codeaurora.org, Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>
-References: <1531416823-17841-1-git-send-email-thomas.tai@oracle.com>
- <20180712215151.GD28466@bhelgaas-glaptop.roam.corp.google.com>
- <a7eccede32492b13f9ba84404fbb997a@codeaurora.org>
-From: Thomas Tai <thomas.tai@oracle.com>
-Message-ID: <fc4c4069-ced9-3198-f30c-3c419f69156d@oracle.com>
-Date: Mon, 16 Jul 2018 10:17:14 -0400
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 24 Jul 2018 14:09:31 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Minwoo Im <minwoo.im.dev@gmail.com>
+Subject: Re: [PATCH v3 2/3] PCI: Samsung SM961/PM961 NVMe disable before FLR
+ quirk
+Message-ID: <20180724140931.040a2d97@t450s.home>
+In-Reply-To: <1532461998.20066.5.camel@gmail.com>
+References: <20180724160440.2729.75178.stgit@gimli.home>
+ <20180724161440.2729.89835.stgit@gimli.home>
+ <1532461998.20066.5.camel@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <a7eccede32492b13f9ba84404fbb997a@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 07/15/2018 02:55 PM, poza@codeaurora.org wrote:
-> On 2018-07-13 03:21, Bjorn Helgaas wrote:
->> [+cc Keith for DPC question]
->>
->> On Thu, Jul 12, 2018 at 11:33:42AM -0600, Thomas Tai wrote:
->>> Hi Bjorn,
->>> Thank you very much to review the V1 patch. I reworked the patch as
->>> you have suggested. Your suggestion is indeed better and cleaner.
->>> Would you please have a look for me?
->>>
->>> FYI, I did not clear the device structure in aer_isr_one_error()
->>> just to avoid over complicated the fix.
->>
->> I think that was a bad idea anyway.  I think the problem there is that
->> add_error_device() copies the pci_dev pointer without taking a
->> reference on it:
->>
->>   aer_isr
->>     get_e_source              # dequeue from rpc->e_sources[]
->>       *e_src = rpc->e_sources[x]
->>     aer_isr_one_error
->>       pdev = rpc->rpd         # pdev = Root Port pci_dev
->>       find_source_device(pdev)
->>     find_device_iter
->>       add_error_device
->>         e_info->dev[i] = dev   # <-- save pci_dev pointer
->>       aer_process_err_devices
->>     handle_error_source(e_info->dev[i])
->>       pcie_do_fatal_recovery
->>
->> At this point, we have pci_dev pointers in e_info->dev[] that are
->> potentially stale.  Right now nobody uses them, but I think it's
->> sloppy that we still have them at all.
->>
->> I think a better way to fix this would be to call pci_dev_get() in
->> add_error_device() when we save the pointer, and then do the
->> corresponding pci_dev_put() in aer_isr_one_error(), after we return
->> from aer_process_err_devices().
->>
->> This could be done with a little helper function that iterates through
->> e_info->dev[i], calls pci_dev_put() for each, and clears
->> e_info->error_dev_num (which could then be removed from
->> find_source_device()).
->>
->> I think this would fix the problem you're seeing, so we wouldn't need
->> the change in pcie_do_fatal_recovery().
->>
->> However, I think we're also slightly exposed in dpc_work(), in basically
->> the same (possibly harmless) way.
->>
->>   dpc_irq
->>     schedule_work(&dpc->work)
->>   ...
->>   dpc_work
->>     pdev = dpc->dev->port
->>     pcie_do_fatal_recovery(pdev)
->>
->> pdev may be removed by pcie_do_fatal_recovery(), but dpc_work() is still
->> holding onto a pointer (which it never uses again).
->>
->> The DPC driver should be holding a reference to pdev (through some black
->> magic I don't understand), but that would be released when pdev is 
->> removed,
->> and I don't know what ensures that dpc_work() runs before that release.
->>
-> 
-> Is not that dpc_work() is calling pcie_do_fatal_recovery() which in-turn 
-> is removing pdev.
-> I do not see DPC is using any more reference beyond that.
-
-Agree.
-
-> So, isnt it safe to assume that no matter when the dpc_work() run, the 
-> pdev it reference is always intact.
-> this is with the fact, that both AER and DPC can not trigger 
-> simultaneously, and and hence no race for removal.
-> who else would remove that pdev other than AER and DPC ?
-
-Looks like no one is removing it other than the pcie_do_fatal_recovery(pdev)
-
-> 
-> With Keith's patch, are not we just improving the latency with threaded 
-> irq instead of workqueue ?
-
-I think the most important is that the threaded_irq hold the device 
-until it finished the bottom half. Although I can't see where in the 
-threaded_irq code increase the device reference count. I may be missing 
-some info here, either way I am trying out the threaded_irq to see if it 
-fixed the issue or not.
-
-> 
-> the potential problem is another interrupt arriving while we have 
-> acknowledged it in dpc_reset_link() and we are about to remove the devices.
-> The acknowledgement of DPC status trigger and re-enabling interrupt can 
-> be done in
-> dpc_work() or threaded_handler() after we are done with 
-> pcie_do_fatal_recovery()
-
-Good point. the pcie_do_fatal_recovery() use 
-pci_stop_and_remove_bus_device() to remove the device, isn't it will 
-stop the device from sending out anymore interrupts? Once we remove the 
-device, we probably no need to reset the device.
-
--Thomas
-
-> 
-> dpc_reset_link()
-> {
->          following can be moved after pcie_do_fatal_recovery() ??
->      pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
->                    PCI_EXP_DPC_STATUS_TRIGGER);
-> 
->      pci_read_config_word(pdev, cap + PCI_EXP_DPC_CTL, &ctl);
->      pci_write_config_word(pdev, cap + PCI_EXP_DPC_CTL,
->                    ctl | PCI_EXP_DPC_CTL_INT_EN);
-> }
-> 
-> and probably following also one also can be done after recovery.
-> 
-> pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
->                    PCI_EXP_DPC_STATUS_INTERRUPT);
-> 
-> I am not sure if this was the concern or I did talk about something else 
-> all together !
-> 
->> Bjorn
+T24gV2VkLCAyNSBKdWwgMjAxOCAwNDo1MzoxOCArMDkwMApNaW53b28gSW0gPG1pbndvby5pbS5k
+ZXZAZ21haWwuY29tPiB3cm90ZToKCj4gSGkgQWxleCwKPiAKPiBPbiBUdWUsIDIwMTgtMDctMjQg
+YXQgMTA6MTQgLTA2MDAsIEFsZXggV2lsbGlhbXNvbiB3cm90ZToKPiA+IFRoZSBTYW1zdW5nIFNN
+OTYxL1BNOTYxICg5NjAgRVZPKSBzb21ldGltZXMgZmFpbHMgdG8gcmV0dXJuIGZyb20gRkxSCj4g
+PiB3aXRoIHRoZSBQQ0kgY29uZmlnIHNwYWNlIHJlYWRpbmcgYmFjayBhcyAtMS7CoMKgQSByZXBy
+b2R1Y2libGUgaW5zdGFuY2UKPiA+IG9mIHRoaXMgYmVoYXZpb3IgaXMgcmVzb2x2ZWQgYnkgY2xl
+YXJpbmcgdGhlIGVuYWJsZSBiaXQgaW4gdGhlIE5WTWUKPiA+IGNvbmZpZ3VyYXRpb24gcmVnaXN0
+ZXIgYW5kIHdhaXRpbmcgZm9yIHRoZSByZWFkeSBzdGF0dXMgdG8gY2xlYXIKPiA+IChkaXNhYmxp
+bmcgdGhlIE5WTWUgY29udHJvbGxlcikgcHJpb3IgdG8gRkxSLgo+ID4gCj4gPiBTaWduZWQtb2Zm
+LWJ5OiBBbGV4IFdpbGxpYW1zb24gPGFsZXgud2lsbGlhbXNvbkByZWRoYXQuY29tPgo+ID4gLS0t
+Cj4gPiDCoGRyaXZlcnMvcGNpL3F1aXJrcy5jIHzCoMKgwqA4Mwo+ID4gKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKPiA+IMKgMSBmaWxlIGNoYW5nZWQs
+IDgzIGluc2VydGlvbnMoKykKPiA+IAo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3F1aXJr
+cy5jIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMKPiA+IGluZGV4IGU3MmM4NzQyYWFmYS4uMzg5OWNk
+ZDI1MTRiIDEwMDY0NAo+ID4gLS0tIGEvZHJpdmVycy9wY2kvcXVpcmtzLmMKPiA+ICsrKyBiL2Ry
+aXZlcnMvcGNpL3F1aXJrcy5jCj4gPiBAQCAtMjgsNiArMjgsNyBAQAo+ID4gwqAjaW5jbHVkZSA8
+bGludXgvcGxhdGZvcm1fZGF0YS94ODYvYXBwbGUuaD4KPiA+IMKgI2luY2x1ZGUgPGxpbnV4L3Bt
+X3J1bnRpbWUuaD4KPiA+IMKgI2luY2x1ZGUgPGxpbnV4L3N3aXRjaHRlYy5oPgo+ID4gKyNpbmNs
+dWRlIDxsaW51eC9udm1lLmg+Cj4gPiDCoCNpbmNsdWRlIDxhc20vZG1hLmg+CS8qIGlzYV9kbWFf
+YnJpZGdlX2J1Z2d5ICovCj4gPiDCoCNpbmNsdWRlICJwY2kuaCIKPiA+IMKgCj4gPiBAQCAtMzY2
+OSw2ICszNjcwLDg3IEBAIHN0YXRpYyBpbnQgcmVzZXRfY2hlbHNpb19nZW5lcmljX2RldihzdHJ1
+Y3QgcGNpX2Rldgo+ID4gKmRldiwgaW50IHByb2JlKQo+ID4gwqAjZGVmaW5lIFBDSV9ERVZJQ0Vf
+SURfSU5URUxfSVZCX01fVkdBwqDCoMKgwqDCoMKgMHgwMTU2Cj4gPiDCoCNkZWZpbmUgUENJX0RF
+VklDRV9JRF9JTlRFTF9JVkJfTTJfVkdBwqDCoMKgwqDCoDB4MDE2Ngo+ID4gwqAKPiA+ICsvKgo+
+ID4gKyAqIFRoZSBTYW1zdW5nIFNNOTYxL1BNOTYxIGNvbnRyb2xsZXIgY2FuIHNvbWV0aW1lcyBl
+bnRlciBhIGZhdGFsIHN0YXRlIGFmdGVyCj4gPiArICogRkxSIHdoZXJlIGNvbmZpZyBzcGFjZSBy
+ZWFkcyBmcm9tIHRoZSBkZXZpY2UgcmV0dXJuIC0xLsKgwqBXZSBzZWVtIHRvIGJlCj4gPiArICog
+YWJsZSB0byBhdm9pZCB0aGlzIGNvbmRpdGlvbiBpZiB3ZSBkaXNhYmxlIHRoZSBOVk1lIGNvbnRy
+b2xsZXIgcHJpb3IgdG8KPiA+ICsgKiBGTFIuwqDCoFRoaXMgcXVpcmsgaXMgZ2VuZXJpYyBmb3Ig
+YW55IE5WTWUgY2xhc3MgZGV2aWNlIHJlcXVpcmluZyBzaW1pbGFyCj4gPiArICogYXNzaXN0YW5j
+ZSB0byBxdWllc2NlIHRoZSBkZXZpY2UgcHJpb3IgdG8gRkxSLgo+ID4gKyAqCj4gPiArICogTlZN
+ZSBzcGVjaWZpY2F0aW9uOiBodHRwczovL252bWV4cHJlc3Mub3JnL3Jlc291cmNlcy9zcGVjaWZp
+Y2F0aW9ucy8KPiA+ICsgKiBSZXZpc2lvbiAxLjBlOiAgCj4gCj4gSXQgc2VlbXMgdG9vIG9sZCB2
+ZXJzaW9uIG9mIE5WTWUgc3BlY2lmaWNhdGlvbi4gwqBEbyB5b3UgaGF2ZSBhbnkgc3BlY2lhbCBy
+ZWFzb24KPiB0byBjb21tZW50IHRoZSBzcGVjaWZpZWQgMS4wIHZlcnNpb24gaW5zdGVhZCBvZiAx
+LjMgb3Igc29tZXRoaW5nIG5ld2VyPwoKSSB3YW50ZWQgdG8gc2hvdyB0aGF0IEknbSB1c2luZyBO
+Vk1lIGZlYXR1cmVzIHRoYXQgaGF2ZSBiZWVuIGF2YWlsYWJsZQpzaW5jZSB0aGUgaW5pdGlhbCBy
+ZWxlYXNlIGFuZCB0aGVyZSdzIG5vIHJlYXNvbiB0byBjaGVjayB0aGUgdmVyc2lvbgpmaWVsZCBm
+b3IgdGhlaXIgc3VwcG9ydC4KCj4gPiArICrCoMKgwqDCoENoYXB0ZXIgMjogUmVxdWlyZWQgYW5k
+IG9wdGlvbmFsIFBDSSBjb25maWcgcmVnaXN0ZXJzCj4gPiArICrCoMKgwqDCoENoYXB0ZXIgMzog
+TlZNZSBjb250cm9sIHJlZ2lzdGVycwo+ID4gKyAqwqDCoMKgwqBDaGFwdGVyIDcuMzogUmVzZXQg
+YmVoYXZpb3IKPiA+ICsgKi8KPiA+ICtzdGF0aWMgaW50IG52bWVfZGlzYWJsZV9hbmRfZmxyKHN0
+cnVjdCBwY2lfZGV2ICpkZXYsIGludCBwcm9iZSkgIAo+IAo+IFRoZSBuYW1lIG9mIHRoaXMgZnVu
+Y3Rpb24gc2VlbXMgYWJsZSB0byBiZSBzdGFydGVkIHdpdGggJ3Jlc2V0XycgcHJlZml4IGp1c3QK
+PiBsaWtlIG90aGVyIHF1aXJrcyBmb3IgcmVzZXQuCj4gV2hhdCBhYm91dCByZXNldF9zYW1zdW5n
+X3BtOTYxIG9yIHNvbWV0aGluZz8KCkknbSBmaW5lIHdpdGggYW55IGdlbmVyaWMgcHJlZml4LCBi
+dXQgSSdtIG5vdCBmaW5lIHdpdGggb2JmdXNjYXRpbmcgdGhlCnB1cnBvc2Ugb2YgdGhlIGZ1bmN0
+aW9uIGJlaGluZCBhIHZlbmRvci9kZXZpY2Ugc3BlY2lmaWMgbmFtZS4gIElmCnNvbWVvbmUgZWxz
+ZSBjb21lcyBhbG9uZyBuZWVkaW5nIHRoaXMgc2FtZSBmdW5jdGlvbmFsaXR5LCB0aGV5J2xsCnBy
+b2JhYmx5IGJlIHJlbHVjdGFudCB0byBldmVuIGxvb2sgYXQgd2hhdCBhICJyZXNldF9zYW1zdW5n
+X3NtOTYxIgpmdW5jdGlvbiBkb2VzLiAgSWYgdGhleSBkbywgdGhleSBtaWdodCBzdGlsbCBiZSBy
+ZWx1Y3RhbnQgdG8gcmV1c2UKc29tZXRoaW5nIHNvIG9idmlvdXNseSBtYWRlIGZvciBhIHNwZWNp
+ZmljIGRldmljZS4gIEkgdGhvdWdodCB0aGlzIHdhcwpwcmV0dHkgZGVzY3JpcHRpdmUgb2Ygd2hh
+dCBpdCdzIGRvaW5nLiAgUHJlZml4aW5nIHdpdGggJ3Jlc2V0XycgaXMgYQp0YWQgcmVkdW5kYW50
+LgoKPiA+ICt7Cj4gPiArCXZvaWQgX19pb21lbSAqYmFyOwo+ID4gKwl1MTYgY21kOwo+ID4gKwl1
+MzIgY2ZnOwo+ID4gKwo+ID4gKwlpZiAoZGV2LT5jbGFzcyAhPSBQQ0lfQ0xBU1NfU1RPUkFHRV9F
+WFBSRVNTIHx8Cj4gPiArCcKgwqDCoMKgIXBjaWVfaGFzX2ZscihkZXYpIHx8ICFwY2lfcmVzb3Vy
+Y2Vfc3RhcnQoZGV2LCAwKSkKPiA+ICsJCXJldHVybiAtRU5PVFRZOwo+ID4gKwo+ID4gKwlpZiAo
+cHJvYmUpCj4gPiArCQlyZXR1cm4gMDsKPiA+ICsKPiA+ICsJYmFyID0gcGNpX2lvbWFwKGRldiwg
+MCwgTlZNRV9SRUdfQ0MgKyBzaXplb2YoY2ZnKSk7Cj4gPiArCWlmICghYmFyKQo+ID4gKwkJcmV0
+dXJuIC1FTk9UVFk7Cj4gPiArCj4gPiArCXBjaV9yZWFkX2NvbmZpZ193b3JkKGRldiwgUENJX0NP
+TU1BTkQsICZjbWQpOwo+ID4gKwlwY2lfd3JpdGVfY29uZmlnX3dvcmQoZGV2LCBQQ0lfQ09NTUFO
+RCwgY21kIHwgUENJX0NPTU1BTkRfTUVNT1JZKTsKPiA+ICsKPiA+ICsJY2ZnID0gcmVhZGwoYmFy
+ICsgTlZNRV9SRUdfQ0MpOwo+ID4gKwo+ID4gKwkvKiBEaXNhYmxlIGNvbnRyb2xsZXIgaWYgZW5h
+YmxlZCAqLwo+ID4gKwlpZiAoY2ZnICYgTlZNRV9DQ19FTkFCTEUpIHsKPiA+ICsJCXU2NCBjYXAg
+PSByZWFkcShiYXIgKyBOVk1FX1JFR19DQVApOwo+ID4gKwkJdW5zaWduZWQgbG9uZyB0aW1lb3V0
+Owo+ID4gKwo+ID4gKwkJLyoKPiA+ICsJCcKgKiBQZXIgbnZtZV9kaXNhYmxlX2N0cmwoKSBza2lw
+IHNodXRkb3duIG5vdGlmaWNhdGlvbiBhcyBpdAo+ID4gKwkJwqAqIGNvdWxkIGNvbXBsZXRlIGNv
+bW1hbmRzIHRvIHRoZSBhZG1pbiBxdWV1ZS7CoMKgV2Ugb25seQo+ID4gaW50ZW5kCj4gPiArCQnC
+oCogdG8gcXVpZXNjZSB0aGUgZGV2aWNlIGJlZm9yZSByZXNldC4KPiA+ICsJCcKgKi8KPiA+ICsJ
+CWNmZyAmPSB+KE5WTUVfQ0NfU0hOX01BU0sgfCBOVk1FX0NDX0VOQUJMRSk7Cj4gPiArCj4gPiAr
+CQl3cml0ZWwoY2ZnLCBiYXIgKyBOVk1FX1JFR19DQyk7Cj4gPiArCj4gPiArCQkvKgo+ID4gKwkJ
+wqAqIFNvbWUgY29udHJvbGxlcnMgcmVxdWlyZSBhbiBhZGRpdGlvbmFsIGRlbGF5IGhlcmUsIHNl
+ZQo+ID4gKwkJwqAqIE5WTUVfUVVJUktfREVMQVlfQkVGT1JFX0NIS19SRFkuwqDCoE5vbmUgb2Yg
+dGhvc2UgYXJlIHlldAo+ID4gKwkJwqAqIHN1cHBvcnRlZCBieSB0aGlzIHF1aXJrLgo+ID4gKwkJ
+wqAqLwo+ID4gKwo+ID4gKwkJLyogQ2FwIHJlZ2lzdGVyIHByb3ZpZGVzIG1heCB0aW1lb3V0IGlu
+IDUwMG1zIGluY3JlbWVudHMgKi8KPiA+ICsJCXRpbWVvdXQgPSAoKE5WTUVfQ0FQX1RJTUVPVVQo
+Y2FwKSArIDEpICogSFogLyAyKSArIGppZmZpZXM7Cj4gPiArCj4gPiArCQlmb3IgKDs7KSB7Cj4g
+PiArCQkJdTMyIHN0YXR1cyA9IHJlYWRsKGJhciArIE5WTUVfUkVHX0NTVFMpOwo+ID4gKwo+ID4g
+KwkJCS8qIFJlYWR5IHN0YXR1cyBiZWNvbWVzIHplcm8gb24gZGlzYWJsZSBjb21wbGV0ZSAqLwo+
+ID4gKwkJCWlmICghKHN0YXR1cyAmIE5WTUVfQ1NUU19SRFkpKQo+ID4gKwkJCQlicmVhazsKPiA+
+ICsKPiA+ICsJCQltc2xlZXAoMTAwKTsKPiA+ICsKPiA+ICsJCQlpZiAodGltZV9hZnRlcihqaWZm
+aWVzLCB0aW1lb3V0KSkgewo+ID4gKwkJCQlwY2lfd2FybihkZXYsICJUaW1lb3V0IHdhaXRpbmcg
+Zm9yIE5WTWUgcmVhZHkKPiA+IHN0YXR1cyB0byBjbGVhciBhZnRlciBkaXNhYmxlXG4iKTsKPiA+
+ICsJCQkJYnJlYWs7Cj4gPiArCQkJfQo+ID4gKwkJfQo+ID4gKwl9Cj4gPiArCj4gPiArCXBjaV9p
+b3VubWFwKGRldiwgYmFyKTsKPiA+ICsKPiA+ICsJcGNpZV9mbHIoZGV2KTsKPiA+ICsKPiA+ICsJ
+cmV0dXJuIDA7Cj4gPiArfQo+ID4gKwo+ID4gwqBzdGF0aWMgY29uc3Qgc3RydWN0IHBjaV9kZXZf
+cmVzZXRfbWV0aG9kcyBwY2lfZGV2X3Jlc2V0X21ldGhvZHNbXSA9IHsKPiA+IMKgCXsgUENJX1ZF
+TkRPUl9JRF9JTlRFTCwgUENJX0RFVklDRV9JRF9JTlRFTF84MjU5OV9TRlBfVkYsCj4gPiDCoAkJ
+wqByZXNldF9pbnRlbF84MjU5OV9zZnBfdmlydGZuIH0sCj4gPiBAQCAtMzY3Niw2ICszNzU4LDcg
+QEAgc3RhdGljIGNvbnN0IHN0cnVjdCBwY2lfZGV2X3Jlc2V0X21ldGhvZHMKPiA+IHBjaV9kZXZf
+cmVzZXRfbWV0aG9kc1tdID0gewo+ID4gwqAJCXJlc2V0X2l2Yl9pZ2QgfSwKPiA+IMKgCXsgUENJ
+X1ZFTkRPUl9JRF9JTlRFTCwgUENJX0RFVklDRV9JRF9JTlRFTF9JVkJfTTJfVkdBLAo+ID4gwqAJ
+CXJlc2V0X2l2Yl9pZ2QgfSwKPiA+ICsJeyBQQ0lfVkVORE9SX0lEX1NBTVNVTkcsIDB4YTgwNCwg
+bnZtZV9kaXNhYmxlX2FuZF9mbHIgfSwgIAo+IAo+IFdoeSBkb24ndCB3ZSBqdXN0IGRlZmluZSBh
+IG1hY3JvIGp1c3QgbGlrZSBvdGhlciBERVZJQ0VfSURzLiAoZS5nLgo+IFBDSUVfREVWSUNFX0lE
+X0lOVEVMXzgyNTk5X1NGUF9WRikuCj4gCj4gI2RlZmluZSBQQ0lfREVWSUNFX0lEX1NBTVNVTkdf
+UE05NjEgwqAweGE4MDQKCmluY2x1ZGUvbGludXgvcGNpX2lkcy5oIgovKgogKiAgICAgIFBDSSBD
+bGFzcywgVmVuZG9yIGFuZCBEZXZpY2UgSURzCiAqCiAqICAgICAgUGxlYXNlIGtlZXAgc29ydGVk
+LgogKgogKiAgICAgIERvIG5vdCBhZGQgbmV3IGVudHJpZXMgdG8gdGhpcyBmaWxlIHVubGVzcyB0
+aGUgZGVmaW5pdGlvbnMKICogICAgICBhcmUgc2hhcmVkIGJldHdlZW4gbXVsdGlwbGUgZHJpdmVy
+cy4KICovCgpUaG9zZSBvdGhlciBkZXZpY2VzIGFyZSByZWxhdGl2ZWx5IG9sZCwgdGhleSB3ZXJl
+IHByb2JhYmx5ICNkZWZpbmUnZApiZWZvcmUgd2Ugc3RhcnRlZCB0aGUgcG9saWN5IGluIHRoZSBo
+ZWFkZXIuICBUaGFua3MsCgpBbGV4Cgo+ID4gwqAJeyBQQ0lfVkVORE9SX0lEX0NIRUxTSU8sIFBD
+SV9BTllfSUQsCj4gPiDCoAkJcmVzZXRfY2hlbHNpb19nZW5lcmljX2RldiB9LAo+ID4gwqAJeyAw
+IH0KPiA+IAo+ID4gCj4gPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwo+ID4gTGludXgtbnZtZSBtYWlsaW5nIGxpc3QKPiA+IExpbnV4LW52bWVAbGlzdHMu
+aW5mcmFkZWFkLm9yZwo+ID4gaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0
+aW5mby9saW51eC1udm1lICAKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwpMaW51eC1udm1lIG1haWxpbmcgbGlzdApMaW51eC1udm1lQGxpc3RzLmluZnJh
+ZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51
+eC1udm1lCg==
