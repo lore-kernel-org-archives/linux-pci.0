@@ -1,80 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50924 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726400AbeG2SaH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 29 Jul 2018 14:30:07 -0400
-Received: from mail-oi0-f46.google.com (mail-oi0-f46.google.com [209.85.218.46])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 16D73208A2
-        for <linux-pci@vger.kernel.org>; Sun, 29 Jul 2018 16:59:04 +0000 (UTC)
-Received: by mail-oi0-f46.google.com with SMTP id i12-v6so17250149oik.2
-        for <linux-pci@vger.kernel.org>; Sun, 29 Jul 2018 09:59:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180729120901.GA8489@wunner.de>
-References: <47727551-86ce-040a-2516-efa47ee3a76e@gmail.com>
- <20180727071813.GA6128@wunner.de> <f6aa0b881a824b4f82a29dad300aaaea@ausx13mps321.AMER.DELL.COM>
- <20180727170543.GA5326@wunner.de> <99604d46a7554eb38ee6c1579c53d835@ausx13mps321.AMER.DELL.COM>
- <20180728183130.GA21482@wunner.de> <29894244-e682-9394-c408-bd989fb4716a@kernel.org>
- <20180729120901.GA8489@wunner.de>
-From: Sinan Kaya <Okaya@kernel.org>
-Date: Sun, 29 Jul 2018 09:59:02 -0700
-Message-ID: <CAK9iUCNZvHLsW=-MKAcJs_MWR08HHGsm1aUqbiO1ea_LFCfAdA@mail.gmail.com>
-Subject: Re: Should a PCIe Link Down event set the PCI_DEV_DISCONNECTED bit?
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Alex_Gagniuc@dellteam.com, mr.nuke.me@gmail.com,
-        keith.busch@intel.com, linux-pci@vger.kernel.org,
-        Austin.Bolen@dell.com, Stuart.Hayes@dell.com, Narendra.K@dell.com,
-        Christopher.Arzola@dell.com, David.Chalfant@dell.com
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1532435314.32306.7.camel@pengutronix.de>
+Subject: Re: [PATCH v2 3/3] PCI: imx: Initial imx7d pm support
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Leonard Crestez <leonard.crestez@nxp.com>, Richard Zhu
+ <hongxing.zhu@nxp.com>, Fabio Estevam <fabio.estevam@nxp.com>
+Date: Tue, 24 Jul 2018 14:28:34 +0200
+In-Reply-To: <24ba42f6028a90836c73317af1f9e9be2d27ba03.camel@nxp.com>
+References: <cover.1532090446.git.leonard.crestez@nxp.com>
+ <e42a6bb8ff0ddd6eaa31fe381875425a3730a73f.1532090446.git.leonard.crestez@nxp.com>
+ <1532338685.3163.93.camel@pengutronix.de>
+ <e8be199b2d5559001a93abb52ba46c283e4454a9.camel@nxp.com>
+ <1532426953.32306.5.camel@pengutronix.de>
+ <24ba42f6028a90836c73317af1f9e9be2d27ba03.camel@nxp.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "A.s. Dong" <aisheng.dong@nxp.com>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+ "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
+ "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+ dl-linux-imx <linux-imx@nxp.com>,
+ "kernel@pengutronix.de" <kernel@pengutronix.de>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/29/18, Lukas Wunner <lukas@wunner.de> wrote:
-> On Sat, Jul 28, 2018 at 05:26:57PM -0700, Sinan Kaya wrote:
->> On 7/28/2018 11:31 AM, Lukas Wunner wrote:
->> >The knowledge whether a surprise removal or a safe removal is at hand
->> >does exist further up in the call stack:  A surprise removal is
->> >initiated by pciehp_handle_presence_or_link_change(), a safe removal by
->> >pciehp_handle_disable_request().
->>
->> Can you also check if platform supports surprise link down error
->> reporting (Link Capabilities Register) and reports a surprise link
->> down event in AER Uncorrectable Error Status Register for the
->> hotplug code to make it more reliable?
->
-> We read the Link Capabilities register in pcie_init() to determine if
-> Data Link Layer Link Active Reporting is supported.  (That's a feature
-> added in the PCIe r1.1 Base Spec.  Old devices that strictly adhere to
-> PCIe r1.0 don't support it.)
->
-> We could likewise cache the Surprise Down Error Reporting Capable bit
-> in struct controller.  But I don't quite understand yet how and when
-> you want it to be used by pciehp?  If the link goes down, pciehp doesn't
-> care whether that's caused by a fatal error or removal by the user.
-> It seems correct to me to also remove devices on a fatal error, after all
-> they're no longer accessible until the error is cleared (IIUC).
-> Do you agree or disagree?
-
-Yes, we have to remove the devices for both. However, I don't think
-pciehp is the right place for fatal error link events. I am trying to
-separate these two execution paths.
-
-If we fail, someone will have to take the challenge and unify link
-code for both.
-Right now, two threads are trying to do the same thing in parallel.
-
-Why surprise link down check...
-
-Data link layer can change due to signal integrity issues.
-Spec defines surprise link down bit to separate device removal
->From other link quality issues.
-
-That's why, i was suggesting to check it if a pcie device supports
-It.
-
->
-> Thanks,
->
-> Lukas
->
+QW0gRGllbnN0YWcsIGRlbiAyNC4wNy4yMDE4LCAxMjowNCArMDAwMCBzY2hyaWViIExlb25hcmQg
+Q3Jlc3RlejoKPiBPbiBUdWUsIDIwMTgtMDctMjQgYXQgMTI6MDkgKzAyMDAsIEx1Y2FzIFN0YWNo
+IHdyb3RlOgo+ID4gQW0gTW9udGFnLCBkZW4gMjMuMDcuMjAxOCwgMTI6MzcgKzAwMDAgc2Nocmll
+YiBMZW9uYXJkIENyZXN0ZXo6Cj4gPiA+IE9uIE1vbiwgMjAxOC0wNy0yMyBhdCAxMTozOCArMDIw
+MCwgTHVjYXMgU3RhY2ggd3JvdGU6Cj4gPiA+ID4gQW0gRnJlaXRhZywgZGVuIDIwLjA3LjIwMTgs
+IDE1OjQ3ICswMzAwIHNjaHJpZWIgTGVvbmFyZCBDcmVzdGV6Ogo+ID4gPiA+ID4gT24gaW14N2Qg
+dGhlIHBjaWUtcGh5IHBvd2VyIGRvbWFpbiBpcyB0dXJuZWQgb2ZmIGluIHN1c3BlbmQgYW5kIHRo
+aXMgY2FuCj4gPiA+ID4gPiBtYWtlIHRoZSBzeXN0ZW0gaGFuZyBhZnRlciByZXN1bWUgd2hlbiBh
+dHRlbXB0aW5nIGFueSByZWFkIGZyb20gUENJLgo+ID4gPiA+ID4gCj4gPiA+ID4gPiBGaXggdGhp
+cyBieSBhZGRpbmcgbWluaW1hbCBzdXNwZW5kL3Jlc3VtZSBjb2RlIGZyb20gdGhlIG54cCBpbnRl
+cm5hbAo+ID4gPiA+ID4gdHJlZS4gVGhpcyB3aWxsIHByZXBhcmUgZm9yIHBvd2VyaW5nIGRvd24g
+b24gc3VzcGVuZCBhbmQgcmVzZXQgdGhlIGJsb2NrCj4gPiA+ID4gPiBvbiByZXN1bWUuCj4gPiA+
+ID4gPiAKPiA+ID4gPiA+IENvZGUgaXMgb25seSBmb3IgaW14N2QgYnV0IGEgdmVyeSBzaW1pbGFy
+IHNlcXVlbmNlIGNhbiBiZSB1c2VkIGZvcgo+ID4gPiA+ID4gb3RoZXIgc29jcy4KPiA+ID4gPiA+
+IAo+ID4gPiA+ID4gK3N0YXRpYyB2b2lkIGlteDZfcGNpZV9sdHNzbV9kaXNhYmxlKHN0cnVjdCBk
+ZXZpY2UgKmRldikKPiA+ID4gPiA+ICt7Cj4gPiA+ID4gPiA+ID4gPiA+ID4gKwlzdHJ1Y3QgaW14
+Nl9wY2llICppbXg2X3BjaWUgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsKPiA+ID4gPiA+ICsKPiA+
+ID4gPiA+ID4gPiA+ID4gPiArCXN3aXRjaCAoaW14Nl9wY2llLT52YXJpYW50KSB7Cj4gPiA+ID4g
+PiA+ID4gPiA+ID4gKwljYXNlIElNWDZROgo+ID4gPiA+ID4gPiA+ID4gPiA+ICsJY2FzZSBJTVg2
+U1g6Cj4gPiA+ID4gPiA+ID4gPiA+ID4gKwljYXNlIElNWDZRUDoKPiA+ID4gPiA+ID4gPiA+ID4g
+PiArCQlyZWdtYXBfdXBkYXRlX2JpdHMoaW14Nl9wY2llLT5pb211eGNfZ3ByLCBJT01VWENfR1BS
+MTIsCj4gPiA+ID4gPiArCQkJCcKgwqDCoElNWDZRX0dQUjEyX1BDSUVfQ1RMXzIsIDApOwo+ID4g
+PiA+IAo+ID4gPiA+IEhhcyB0aGlzIGJlZW4gdGVzdGVkIG9uIGkuTVg2PyBMVFNTTSBkaXNhYmxl
+IHJlcXVpcmVzIGEgbW9yZSBjb21wbGV4Cj4gPiA+ID4gc2VxdWVuY2Ugb24gdGhpcyBTb0MgdG8g
+YXZvaWQgaGFuZ2luZyB0aGUgc3lzdGVtLiBTZWUgY29tbWl0Cj4gPiA+ID4gM2UzZTQwNmUzODA3
+ICJQQ0k6IGlteDY6IFB1dCBMVFNTTSBpbiAiRGV0ZWN0IiBzdGF0ZSBiZWZvcmUgZGlzYWJsaW5n
+Cj4gPiA+ID4gaXQiLgo+ID4gPiAKPiA+ID4gVGhpcyBwYXRjaCBvbmx5IGVuYWJsZXMgc3VzcGVu
+ZC9yZXN1bWUgZm9yIGlteDdkIHdpdGggb3RoZXIgU09DcyB0bwo+ID4gPiBmb2xsb3cgbGF0ZXIu
+IFRoZSBsdHNzbV9kaXNhYmxlIGZ1bmN0aW9uIGlzIGp1c3Qgc3ltbWV0cmljIHdpdGgKPiA+ID4g
+bHRzc21fZW5hYmxlLgo+ID4gPiAKPiA+ID4gVGhlIDZRIHBhcnRzIGFyZSBhZmZlY3RlZCBieSBl
+cnJhdGEgIkVSUjAwNTcyMyBQQ0llOiBQQ0llIGRvZXMgbm90Cj4gPiA+IHN1cHBvcnQgTDIgcG93
+ZXIgZG93biBbaS5NWCA2RHVhbC82UXVhZCBPbmx5XSIuCj4gPiA+IAo+ID4gPiBUaGlzIGRlc2ln
+biBlcnJvciBzZWVtcyB0byBoYXZlIHRoZSBzYW1lIHJvb3QgY2F1c2UgYXMgeW91ciBwcm9ibGVt
+IChubwo+ID4gPiBkZWRpY2F0ZWQgcmVzZXQgY29udHJvbCkgc28gdGhpcyB3b3JrcyBvdXQgcXVp
+dGUgbmljZWx5OiB0aGUgc29sdXRpb24KPiA+ID4gaXMgdG8gbmV2ZXIgcG93ZXIgZG93biBwY2kg
+b24gYWZmZWN0ZWQgY2hpcHMuCj4gPiAKPiA+IEkgZG9uJ3QgcXVpdGUgbGlrZSBjb2RlIHRoYXQg
+bG9va3MgbGlrZSBpdCBpcyBkb2luZyB0aGUgcmlnaHQgdGhpbmcsCj4gPiBidXQgdGhlbiBkb2Vz
+bid0LiBDYW4gd2UgYXQgbGVhc3QgZW1pdCBhIHdhcm5pbmcgdGhhdCB0aGVyZSBtaWdodCBiZQo+
+ID4gZHJhZ29ucyBpZiBhbnlvbmUgdHJpZXMgdG8gY2FsbCB0aGlzIG9uIGkuTVg2Pwo+IAo+IEJ1
+dCB0aGUgZnVuY3Rpb24gd2lsbCBpbmRlZWQgdG9nZ2xlIHRoZSByaWdodCBiaXRzIHRvIGluaXRp
+YXRlIGx0c3NtCj4gZGlzYWJsaW5nLiBJZiB0aGlzIGlzIG5vdCB1c2VmdWwgb3IgY2FuJ3QgYmUg
+dXNlZCByaWdodCB0aGVuIGl0J3MgdGhlCj4gY2FsbGVyJ3MgcHJvYmxlbSA6KQoKSSBkb24ndCBh
+Z3JlZSB3aXRoIHRoYXQuIEkgd291bGQgZXhwZWN0IGEgZnVuY3Rpb24gdGhhdCBpcyBjYWxsZWQK
+bHRzc21fZGlzYWJsZSB0byBkbyBzbyBpbiBhIHdheSB0aGF0IGlzIHNhZmUgb24gdGhlIGhhcmR3
+YXJlIHRoYXQgaXQKY2xhaW1zIHRvIGhhbmRsZSwgd2hpY2ggaW4gY2FzZSBvZiBpLk1YNiBtZWFu
+cyBiYXNoaW5nIHRoZSBMVFNTTSBpbnRvCmRldGVjdCBzdGF0ZSBiZWZvcmUgdG9nZ2xpbmcgdGhl
+IEdQUiBiaXQuCgo+IEkgY2FuIGFkZCBhIGRlZmF1bHQ6IGNsYXVzZSB0byB0aGUgc3dpdGNoIHdo
+aWNoIHJldHVybnMgLUVOT1NZUyBhbmQgbGV0Cj4gSU1YNlEgZmFsbCB0aGF0IHdheSwgd291bGQg
+dGhhdCBiZSBPSz8gVGhpcyB3b3VsZCBhbHNvIGhlbHAgd2hlbiBhZGRpbmcKPiBuZXcgdmFyaWFu
+dHMuCgpZZXMsIGdpdmVuIHRoYXQgdGhlcmUgaXMgY3VycmVudGx5IG5vIHdheSB0byB0ZXN0IHRo
+aXMgb24gaS5NWDYsCnJldHVybmluZyAtRU5PU1lTIHNvdW5kIG11Y2ggYmV0dGVyLiBUaGlzIGF0
+IGxlYXN0IHRlbGxzIGFueW9uZSB3aG8KaW50ZW5kcyB0byB1c2UgdGhpcyBmdW5jdGlvbiB0aGF0
+IHRoZXJlIGlzIGluZGVlZCBtaXNzaW5nIGZ1bmN0aW9uYWxpdHkKdGhlcmUuCgpSZWdhcmRzLApM
+dWNhcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGlu
+dXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRl
+YWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgt
+YXJtLWtlcm5lbAo=
