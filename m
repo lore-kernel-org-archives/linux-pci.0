@@ -1,32 +1,41 @@
-Return-Path: <okaya@kernel.org>
-Return-Path: <okaya@kernel.org>
-Subject: Re: [REPLACEMENT PATCH] PCI: pciehp: Avoid slot access during reset
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-pci@vger.kernel.org
-References: <9c58b565d0c1bac1fd6e16742caae7097348268e.1532752826.git.lukas@wunner.de>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 2/2] PCI: NVMe device specific reset quirk
+To: Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org
+References: <20180724000944.7671.64284.stgit@gimli.home>
+ <20180724001310.7671.41243.stgit@gimli.home>
 From: Sinan Kaya <okaya@kernel.org>
-Message-ID: <db5db1bc-7652-e668-786c-9910e8a02902@kernel.org>
-Date: Sat, 28 Jul 2018 13:01:07 -0700
+Message-ID: <abc86e6b-7df5-a84c-7e98-107c605812c6@kernel.org>
+Date: Mon, 23 Jul 2018 17:40:02 -0700
 MIME-Version: 1.0
-In-Reply-To: <9c58b565d0c1bac1fd6e16742caae7097348268e.1532752826.git.lukas@wunner.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20180724001310.7671.41243.stgit@gimli.home>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-nvme/>
+List-Post: <mailto:linux-nvme@lists.infradead.org>
+List-Help: <mailto:linux-nvme-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-nvme>,
+ <mailto:linux-nvme-request@lists.infradead.org?subject=subscribe>
+Cc: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "Linux-nvme" <linux-nvme-bounces@lists.infradead.org>
+Errors-To: linux-nvme-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/27/2018 10:18 PM, Lukas Wunner wrote:
-> According to Sinan Kaya:
-> 
->   "I know for a fact that bus reset clears the Data Link Layer Active bit
->    as soon as link goes down.  It gets set again following link up.
->    Presence detect depends on the HW implementation.  QDT root ports
->    don't change presence detect for instance since nobody actually
->    removed the card.  If an implementation supports in-band presence
->    detect, the answer is yes.  As soon as the link goes down, presence
->    detect bit will get cleared until recovery."
->    https://lkml.kernel.org/r/42e72f83-3b24-f7ef-e5bc-290fae99259a@codeaurora.org
+On 7/23/2018 5:13 PM, Alex Williamson wrote:
+> + * The NVMe specification requires that controllers support PCIe FLR, but
+> + * but some Samsung SM961/PM961 controllers fail to recover after FLR (-1
+> + * config space) unless the device is quiesced prior to FLR.
 
-You can put a reference to the table in the spec.
+Does disabling the memory bit in PCI config space as part of the FLR 
+reset function help? (like the very first thing)
 
-PCIe Specification 3.0
-Table 4-14: Link Status Mapped to the LTSSM
-Column: In-Band Presence.
+Can we do that in the pcie_flr() function to cover other endpoint types
+that might be pushing traffic while code is trying to do a reset?
+
+
+
+_______________________________________________
+Linux-nvme mailing list
+Linux-nvme@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-nvme
