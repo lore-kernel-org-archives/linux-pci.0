@@ -1,55 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50732 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730357AbeGYWN2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 25 Jul 2018 18:13:28 -0400
-Date: Wed, 25 Jul 2018 15:59:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        ath9k-devel@qca.qualcomm.com, linuxwifi@intel.com,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v1 0/4] PCI: Remove unnecessary includes of
- <linux/pci-aspm.h>
-Message-ID: <20180725205929.GB173328@bhelgaas-glaptop.roam.corp.google.com>
-References: <153254813164.92573.10755585465477668768.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <43748afd-712a-48e5-97a9-0b6046f575b3@kernel.org>
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:34506 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388324AbeGXSik (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jul 2018 14:38:40 -0400
+From: Vignesh R <vigneshr@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Vignesh R <vigneshr@ti.com>
+Subject: [PATCH v3 1/4] dt-bindings: PCI: dra7xx: Add bindings for unaligned access in host mode
+Date: Tue, 24 Jul 2018 23:01:47 +0530
+Message-ID: <20180724173150.2701-2-vigneshr@ti.com>
+In-Reply-To: <20180724173150.2701-1-vigneshr@ti.com>
+References: <20180724173150.2701-1-vigneshr@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43748afd-712a-48e5-97a9-0b6046f575b3@kernel.org>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 25, 2018 at 01:33:23PM -0700, Sinan Kaya wrote:
-> On 7/25/2018 12:52 PM, Bjorn Helgaas wrote:
-> > emove includes of <linux/pci-aspm.h> from files that don't need
-> > it.  I'll apply all these via the PCI tree unless there's objection.
-> > 
-> > ---
-> > 
-> > Bjorn Helgaas (4):
-> >        igb: Remove unnecessary include of <linux/pci-aspm.h>
-> >        ath9k: Remove unnecessary include of <linux/pci-aspm.h>
-> >        iwlwifi: Remove unnecessary include of <linux/pci-aspm.h>
-> >        PCI: Remove unnecessary include of <linux/pci-aspm.h>
-> 
-> Thanks.
-> 
-> Reviewed-by: Sinan Kaya <okaya@kernel.org>
-> 
-> Is it possible to kill that file altogether? I haven't looked who is
-> using outside of pci directory.
+Update device tree binding documentation of TI's dra7xx PCI controller
+for enabling unaligned mem access as applicable not just in EP mode but
+in host mode as well.
 
-Thanks for taking a look!
+Signed-off-by: Vignesh R <vigneshr@ti.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+ Documentation/devicetree/bindings/pci/ti-pci.txt | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-It's possible we could remove it altogether; there's very little in
-it, and in most cases the only reason drivers include it is to disable
-certain ASPM link states to work around hardware defects.  It might
-make sense to just move that interface into <linux/pci.h>.
+diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+index 7f7af3044016..452fe48c4fdd 100644
+--- a/Documentation/devicetree/bindings/pci/ti-pci.txt
++++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+@@ -26,6 +26,11 @@ HOST MODE
+    ranges,
+    interrupt-map-mask,
+    interrupt-map : as specified in ../designware-pcie.txt
++ - ti,syscon-unaligned-access: phandle to the syscon DT node. The 1st argument
++			       should contain the register offset within syscon
++			       and the 2nd argument should contain the bit field
++			       for setting the bit to enable unaligned
++			       access.
+ 
+ DEVICE MODE
+ ===========
+-- 
+2.18.0
