@@ -1,47 +1,203 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40166 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731637AbeHAAcp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Jul 2018 20:32:45 -0400
-Subject: [PATCH] PCI/AER: Remove duplicate PCI_EXP_AER_FLAGS definition
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Oza Pawandeep <poza@codeaurora.org>,
-        Rajat Jain <rajatja@google.com>
-Date: Tue, 31 Jul 2018 17:50:10 -0500
-Message-ID: <153307741056.12895.16173953885240310937.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Leonard Crestez <leonard.crestez@nxp.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+ Andrey Smirnov <andrew.smirnov@gmail.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>, Shawn Guo <shawnguo@kernel.org>
+Subject: [PATCH v3 2/2] PCI: imx: Initial imx7d pm support
+Date: Tue, 24 Jul 2018 19:14:20 +0300
+Message-Id: <acafccc294f15a281cf1d253c15a3eec2d1c8cc5.1532448745.git.leonard.crestez@nxp.com>
+In-Reply-To: <cover.1532448745.git.leonard.crestez@nxp.com>
+References: <cover.1532448745.git.leonard.crestez@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Dong Aisheng <aisheng.dong@nxp.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ kernel@pengutronix.de, Anson Huang <Anson.Huang@nxp.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
+ Fabio Estevam <fabio.estevam@nxp.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-imx@nxp.com,
+ Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On imx7d the pcie-phy power domain is turned off in suspend and this can
+make the system hang after resume when attempting any read from PCI.
 
-PCI_EXP_AER_FLAGS was defined twice (with identical definitions), once
-under #ifdef CONFIG_ACPI_APEI, and again at the top level.  This looks like
-my merge error from these commits:
+Fix this by adding minimal suspend/resume code from the nxp internal
+tree. This will prepare for powering down on suspend and reset the block
+on resume.
 
-  fd3362cb73de ("PCI/AER: Squash aerdrv_core.c into aerdrv.c")
-  41cbc9eb1a82 ("PCI/AER: Squash ecrc.c into aerdrv.c")
+Code is only for imx7d but a very similar sequence can be used for
+other socs.
 
-Remove the duplicate PCI_EXP_AER_FLAGS definition.
+The original author is mostly Richard Zhu <hongxing.zhu@nxp.com>, this
+patch adjusts the code to the upstream imx7d implemention using reset
+controls and power domains.
 
-Fixes: 41cbc9eb1a82 ("PCI/AER: Squash ecrc.c into aerdrv.c")
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
 ---
- drivers/pci/pcie/aer.c |    2 --
- 1 file changed, 2 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 97 +++++++++++++++++++++++++--
+ 1 file changed, 92 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 2b344c9e2d46..c6cc855bfa22 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -329,8 +329,6 @@ int pcie_aer_get_firmware_first(struct pci_dev *dev)
- 		aer_set_firmware_first(dev);
- 	return dev->__aer_firmware_first;
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 4a9a673b4777..65b6d1015723 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -540,10 +540,28 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
+ 
+ 	dev_err(dev, "Speed change timeout\n");
+ 	return -EINVAL;
  }
--#define	PCI_EXP_AER_FLAGS	(PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE | \
--				 PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE)
  
- static bool aer_firmware_first;
++static void imx6_pcie_ltssm_enable(struct device *dev)
++{
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++
++	switch (imx6_pcie->variant) {
++	case IMX6Q:
++	case IMX6SX:
++	case IMX6QP:
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX6Q_GPR12_PCIE_CTL_2,
++				   IMX6Q_GPR12_PCIE_CTL_2);
++		break;
++	case IMX7D:
++		reset_control_deassert(imx6_pcie->apps_reset);
++		break;
++	}
++}
++
+ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ {
+ 	struct dw_pcie *pci = imx6_pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	u32 tmp;
+@@ -558,15 +576,11 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+ 	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
+ 	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
  
+ 	/* Start LTSSM. */
+-	if (imx6_pcie->variant == IMX7D)
+-		reset_control_deassert(imx6_pcie->apps_reset);
+-	else
+-		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				   IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
++	imx6_pcie_ltssm_enable(dev);
+ 
+ 	ret = imx6_pcie_wait_for_link(imx6_pcie);
+ 	if (ret)
+ 		goto err_reset_phy;
+ 
+@@ -680,10 +694,82 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+ 
+ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.link_up = imx6_pcie_link_up,
+ };
+ 
++#ifdef CONFIG_PM_SLEEP
++static void imx6_pcie_ltssm_disable(struct device *dev)
++{
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++
++	switch (imx6_pcie->variant) {
++	case IMX6SX:
++	case IMX6QP:
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX6Q_GPR12_PCIE_CTL_2, 0);
++		break;
++	case IMX7D:
++		reset_control_assert(imx6_pcie->apps_reset);
++		break;
++	default:
++		dev_err(dev, "ltssm_disable not supported\n");
++	}
++}
++
++static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
++{
++	clk_disable_unprepare(imx6_pcie->pcie);
++	clk_disable_unprepare(imx6_pcie->pcie_phy);
++	clk_disable_unprepare(imx6_pcie->pcie_bus);
++
++	if (imx6_pcie->variant == IMX7D) {
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL,
++				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL);
++	}
++}
++
++static int imx6_pcie_suspend_noirq(struct device *dev)
++{
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++
++	if (imx6_pcie->variant != IMX7D)
++		return 0;
++
++	imx6_pcie_clk_disable(imx6_pcie);
++	imx6_pcie_ltssm_disable(dev);
++
++	return 0;
++}
++
++static int imx6_pcie_resume_noirq(struct device *dev)
++{
++	int ret;
++	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
++	struct pcie_port *pp = &imx6_pcie->pci->pp;
++
++	if (imx6_pcie->variant != IMX7D)
++		return 0;
++
++	imx6_pcie_assert_core_reset(imx6_pcie);
++	imx6_pcie_init_phy(imx6_pcie);
++	imx6_pcie_deassert_core_reset(imx6_pcie);
++	dw_pcie_setup_rc(pp);
++
++	ret = imx6_pcie_establish_link(imx6_pcie);
++	if (ret < 0)
++		dev_info(dev, "pcie link is down after resume.\n");
++
++	return 0;
++}
++#endif
++
++static const struct dev_pm_ops imx6_pcie_pm_ops = {
++	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(imx6_pcie_suspend_noirq,
++				      imx6_pcie_resume_noirq)
++};
++
+ static int imx6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct dw_pcie *pci;
+ 	struct imx6_pcie *imx6_pcie;
+@@ -846,10 +932,11 @@ static const struct of_device_id imx6_pcie_of_match[] = {
+ static struct platform_driver imx6_pcie_driver = {
+ 	.driver = {
+ 		.name	= "imx6q-pcie",
+ 		.of_match_table = imx6_pcie_of_match,
+ 		.suppress_bind_attrs = true,
++		.pm = &imx6_pcie_pm_ops,
+ 	},
+ 	.probe    = imx6_pcie_probe,
+ 	.shutdown = imx6_pcie_shutdown,
+ };
+ 
+-- 
+2.17.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
