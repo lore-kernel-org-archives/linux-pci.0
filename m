@@ -1,115 +1,211 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 2 Jul 2018 08:16:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alex G <mr.nuke.me@gmail.com>
-Cc: bhelgaas@google.com, keith.busch@intel.com,
-        alex_gagniuc@dellteam.com, austin_bolen@dell.com,
-        shyam_iyer@dell.com, Frederick Lawler <fred@fredlawl.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Borislav Petkov <bp@suse.de>
-Subject: Re: [PATCH v2] PCI/AER: Fix aerdrv loading with "pcie_ports=native"
- parameter
-Message-ID: <20180702131645.GA15983@bhelgaas-glaptop.roam.corp.google.com>
-References: <20180619195835.5423-1-mr.nuke.me@gmail.com>
- <20180630213140.GG9547@bhelgaas-glaptop.roam.corp.google.com>
- <fdc547c3-e4f7-4967-7216-9379e6d28139@gmail.com>
+Return-Path: <SRS0=Wshg=KI=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=Wshg=KI=redhat.com=alex.williamson@kernel.org>
+Date: Mon, 23 Jul 2018 18:11:12 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org
+Subject: Re: [PATCH 2/2] PCI: NVMe device specific reset quirk
+Message-ID: <20180723181112.054b2c19@t450s.home>
+In-Reply-To: <20180723224533.GX128988@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180723221533.4371.90064.stgit@gimli.home>
+	<20180723222431.4371.25962.stgit@gimli.home>
+	<20180723224533.GX128988@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <fdc547c3-e4f7-4967-7216-9379e6d28139@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 30, 2018 at 11:39:00PM -0500, Alex G wrote:
-> On 06/30/2018 04:31 PM, Bjorn Helgaas wrote:
-> > [+cc Borislav, linux-acpi, since this involves APEI/HEST]
-> 
-> Borislav is not the relevant maintainer here, since we're not contingent on
-> APEI handling. I think Keith has a lot more experience with this part of the
-> kernel.
+On Mon, 23 Jul 2018 17:45:33 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-Thanks for adding Keith.
-
-> > On Tue, Jun 19, 2018 at 02:58:20PM -0500, Alexandru Gagniuc wrote:
-> > > According to the documentation, "pcie_ports=native", linux should use
-> > > native AER and DPC services. While that is true for the _OSC method
-> > > parsing, this is not the only place that is checked. Should the HEST
-> > > table list PCIe ports as firmware-first, linux will not use native
-> > > services.
+> On Mon, Jul 23, 2018 at 04:24:31PM -0600, Alex Williamson wrote:
+> > Take advantage of NVMe devices using a standard interface to quiesce
+> > the controller prior to reset, including device specific delays before
+> > and after that reset.  This resolves several NVMe device assignment
+> > scenarios with two different vendors.  The Intel DC P3700 controller
+> > has been shown to only work as a VM boot device on the initial VM
+> > startup, failing after reset or reboot, and also fails to initialize
+> > after hot-plug into a VM.  Adding a delay after FLR resolves these
+> > cases.  The Samsung SM961/PM961 (960 EVO) sometimes fails to return
+> > from FLR with the PCI config space reading back as -1.  A reproducible
+> > instance of this behavior is resolved by clearing the enable bit in
+> > the configuration register and waiting for the ready status to clear
+> > (disabling the NVMe controller) prior to FLR.
 > > 
-> > Nothing in ACPI-land looks at pcie_ports_native.  How should ACPI
-> > things work in the "pcie_ports=native" case?  I guess we still have to
-> > expect to receive error records from the firmware, because it may
-> > certainly send us non-PCI errors (machine checks, etc) and maybe even
-> > some PCI errors (even if the Linux AER driver claims AER interrupts,
-> > we don't know what notification mechanisms the firmware may be using).
+> > As all NVMe devices make use of this standard interface and the NVMe
+> > specification also requires PCIe FLR support, we can apply this quirk
+> > to all devices with matching class code.  
 > 
-> I think ACPI land shouldn't care about this. We care about it from the PCIe
-> stand point at the interface with ACPI. FW might see a delta in the sense
-> that we request control of some features via _OSC, which we otherwise would
-> not do without pcie_ports=native.
-> 
-> > I guess best-case, we'll get ACPI error records for all non-PCI
-> > things, and the Linux AER driver will see all the AER errors.
-> 
-> It might affect FW's ability to catch errors, but that's dependent on the
-> root port implementation.
-> 
-> > Worst-case, I don't really know what to expect.  Duplicate reporting
-> > of AER errors via firmware and Linux AER driver?  Some kind of
-> > confusion about who acknowledges and clears them?
-> 
-> Once user enters pcie_ports=native, all bets are off: you broke the contract
-> you have with the FW -- whether or not you have this patch.
-> 
-> > Out of curiosity, what is your use case for "pcie_ports=native"?
-> > Presumably there's something that works better when using it, and
-> > things work even *better* with this patch?
-> 
-> Corectness. It bothers me that actual behavior does not match the
-> documentation:
-> 
->  native  Use native PCIe services associated with PCIe ports
->                         unconditionally.
-> 
-> 
-> > I know people do use it, because I often see it mentioned in forums
-> > and bug reports, but I really don't expect it to work very well
-> > because we're ignoring the usage model the firmware is designed
-> > around.  My unproven suspicion is that most uses are in the black
-> > magic category of "there's a bug here, and we don't know how to fix
-> > it, but pcie_ports=native makes it work better".
-> 
-> There exist cases that firmware didn't consider. I would not call them
-> "firmware bugs", but there are cases where the user understands the platform
-> better than firmware.
-> Example: on certain PCIe switches, a hardware PCIe error may bring the
-> switch downstream ports into a state where they stop notifying hotplug
-> events. Depending on the platform, firmware may or may not fix this
-> condition, but "pcie_ports=native" enables DPC. DPC contains the error
-> without the switch downstream port entering the weird error state in the
-> first place.
-> 
-> All bets are off at this point.
+> Do you have any pointers to problem reports or bugzilla entries that
+> we could include here?
 
-If a user needs "pcie_ports=native", I claim that's a user experience
-problem, and the underlying cause is a hardware, firmware, or OS
-defect.
+Yes, https://bugzilla.redhat.com/show_bug.cgi?id=1592654
 
-I have no doubt the situation you describe is real, but this doesn't
-make any progress toward resolving the user experience problem.  In
-fact, it propagates the folklore that using "pcie_ports=native" is an
-appropriate final solution.  It's fine as a temporary workaround while
-we figure out a better solution, but we need some mechanism for
-analyzing the problem and eventually removing the need to use
-"pcie_ports=native".
+This only covers the Intel P3700 issue.  The Samsung issue has been
+reported via a couple bugs, but was not reproducible until recently.
+Those bugs were previously closed due to lack of information.  I'll add
+the above link.
 
-I have a minor comment on the patch, but I think it makes sense.  This
-might be a good time to resurrect Prarit's "taint-on-pci-parameters"
-patch.  If somebody uses "pcie_ports=native", I think it makes sense
-to taint the kernel both because (1) we broke the contract with the
-firmware and we don't really know what to expect, and (2) it's an
-opportunity to encourage the user to raise a bug report.
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> >  drivers/pci/quirks.c |  112 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 112 insertions(+)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index e72c8742aafa..83853562f220 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -28,6 +28,7 @@
+> >  #include <linux/platform_data/x86/apple.h>
+> >  #include <linux/pm_runtime.h>
+> >  #include <linux/switchtec.h>
+> > +#include <linux/nvme.h>
+> >  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+> >  #include "pci.h"
+> >  
+> > @@ -3669,6 +3670,116 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
+> >  #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+> >  #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+> >  
+> > +/* NVMe controller needs delay before testing ready status */
+> > +#define NVME_QUIRK_CHK_RDY_DELAY	(1 << 0)
+> > +/* NVMe controller needs post-FLR delay */
+> > +#define NVME_QUIRK_POST_FLR_DELAY	(1 << 1)
+> > +
+> > +static const struct pci_device_id nvme_reset_tbl[] = {
+> > +	{ PCI_DEVICE(0x1bb1, 0x0100),   /* Seagate Nytro Flash Storage */
+> > +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
+> > +	{ PCI_DEVICE(0x1c58, 0x0003),   /* HGST adapter */
+> > +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
+> > +	{ PCI_DEVICE(0x1c58, 0x0023),   /* WDC SN200 adapter */
+> > +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
+> > +	{ PCI_DEVICE(0x1c5f, 0x0540),   /* Memblaze Pblaze4 adapter */
+> > +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
+> > +	{ PCI_DEVICE(0x144d, 0xa821),   /* Samsung PM1725 */  
+> 
+> We do have PCI_VENDOR_ID_SAMSUNG if you want to use it here.  I
+> don't see Seagate, HGST, etc.
 
-Bjorn
+Oops, cut and pasted those from the nvme driver, I'll use the Samsung
+macro.
+ 
+> > +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
+> > +	{ PCI_DEVICE(0x144d, 0xa822),   /* Samsung PM1725a */
+> > +		.driver_data = NVME_QUIRK_CHK_RDY_DELAY, },
+> > +	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x0953),   /* Intel DC P3700 */
+> > +		.driver_data = NVME_QUIRK_POST_FLR_DELAY, },
+> > +	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_EXPRESS, 0xffffff) },
+> > +	{ 0 }
+> > +};
+> > +
+> > +/*
+> > + * The NVMe specification requires that controllers support PCIe FLR, but
+> > + * but some Samsung SM961/PM961 controllers fail to recover after FLR (-1
+> > + * config space) unless the device is quiesced prior to FLR.  Do this for
+> > + * all NVMe devices by disabling the controller before reset.  Some Intel
+> > + * controllers also require an additional post-FLR delay or else attempts
+> > + * to re-enable will timeout, do that here as well with heuristically
+> > + * determined delay value.  Also maintain the delay between disabling and
+> > + * checking ready status as used by the native NVMe driver.
+> > + */
+> > +static int reset_nvme(struct pci_dev *dev, int probe)
+> > +{
+> > +	const struct pci_device_id *id;
+> > +	void __iomem *bar;
+> > +	u16 cmd;
+> > +	u32 cfg;
+> > +
+> > +	id = pci_match_id(nvme_reset_tbl, dev);
+> > +	if (!id || !pcie_has_flr(dev) || !pci_resource_start(dev, 0))
+> > +		return -ENOTTY;
+> > +
+> > +	if (probe)
+> > +		return 0;
+> > +
+> > +	bar = pci_iomap(dev, 0, NVME_REG_CC + sizeof(cfg));
+> > +	if (!bar)
+> > +		return -ENOTTY;
+> > +
+> > +	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> > +	pci_write_config_word(dev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
+> > +
+> > +	cfg = readl(bar + NVME_REG_CC);  
+> 
+> Apparently this is part of some NVMe spec and all controllers support
+> this?  Is there a public reference you could cite for the details?
+
+Yep, I'll add a link in the comments, it's all public.  Thanks,
+
+Alex
+
+> > +
+> > +	/* Disable controller if enabled */
+> > +	if (cfg & NVME_CC_ENABLE) {
+> > +		u64 cap = readq(bar + NVME_REG_CAP);
+> > +		unsigned long timeout;
+> > +
+> > +		/*
+> > +		 * Per nvme_disable_ctrl() skip shutdown notification as it
+> > +		 * could complete commands to the admin queue.  We only intend
+> > +		 * to quiesce the device before reset.
+> > +		 */
+> > +		cfg &= ~(NVME_CC_SHN_MASK | NVME_CC_ENABLE);
+> > +
+> > +		writel(cfg, bar + NVME_REG_CC);
+> > +
+> > +		/* A heuristic value, matches NVME_QUIRK_DELAY_AMOUNT */
+> > +		if (id->driver_data & NVME_QUIRK_CHK_RDY_DELAY)
+> > +			msleep(2300);
+> > +
+> > +		/* Cap register provides max timeout in 500ms increments */
+> > +		timeout = ((NVME_CAP_TIMEOUT(cap) + 1) * HZ / 2) + jiffies;
+> > +
+> > +		for (;;) {
+> > +			u32 status = readl(bar + NVME_REG_CSTS);
+> > +
+> > +			/* Ready status becomes zero on disable complete */
+> > +			if (!(status & NVME_CSTS_RDY))
+> > +				break;
+> > +
+> > +			msleep(100);
+> > +
+> > +			if (time_after(jiffies, timeout)) {
+> > +				pci_warn(dev, "Timeout waiting for NVMe ready status to clear after disable\n");
+> > +				break;
+> > +			}
+> > +		}
+> > +	}
+> > +
+> > +	pci_iounmap(dev, bar);
+> > +
+> > +	/*
+> > +	 * We could use the optional NVM Subsystem Reset here, hardware
+> > +	 * supporting this is simply unavailable at the time of this code
+> > +	 * to validate in comparison to PCIe FLR.  NVMe spec dictates that
+> > +	 * NVMe devices shall implement PCIe FLR.
+> > +	 */
+> > +	pcie_flr(dev);
+> > +
+> > +	if (id->driver_data & NVME_QUIRK_POST_FLR_DELAY)
+> > +		msleep(250); /* Heuristic based on Intel DC P3700 */
+> > +
+> > +	return 0;
+> > +}
+> > +
+> >  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+> >  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+> >  		 reset_intel_82599_sfp_virtfn },
+> > @@ -3678,6 +3789,7 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+> >  		reset_ivb_igd },
+> >  	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+> >  		reset_chelsio_generic_dev },
+> > +	{ PCI_ANY_ID, PCI_ANY_ID, reset_nvme },
+> >  	{ 0 }
+> >  };
+> >  
+> > 
+> > 
+> > _______________________________________________
+> > Linux-nvme mailing list
+> > Linux-nvme@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-nvme  
